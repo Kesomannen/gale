@@ -9,9 +9,7 @@ mod io_util;
 
 use tauri::Manager;
 
-pub struct NetworkClient {
-    client: reqwest::Client,
-}
+pub struct NetworkClient(reqwest::Client);
 
 impl NetworkClient {
     fn create() -> Result<Self, reqwest::Error> {
@@ -20,7 +18,7 @@ impl NetworkClient {
             .user_agent("Kesomannen-ModManager")
             .build()?;
 
-        Ok(Self { client })
+        Ok(Self(client))
     }
 }
 
@@ -35,9 +33,7 @@ fn main() {
             open,
 
             thunderstore::commands::query_all_mods,
-            thunderstore::commands::get_mod,
-            thunderstore::commands::get_mod_by_id,
-
+            
             prefs::commands::get_pref,
             prefs::commands::set_pref,
 
@@ -59,10 +55,19 @@ fn main() {
         .setup(|app| {
             app.manage(NetworkClient::create()?);
             app.manage(thunderstore::ThunderstoreState::new());
+            app.manage(thunderstore::query::QueryState::new());
 
             let handle = app.handle();
+            tauri::async_runtime::spawn(
+                async move {
+                    if let Err(e) = thunderstore::load_mods(handle).await {
+                        eprintln!("Error while loading mods: {:?}", e);
+                    }
+                } 
+            );
 
-            tauri::async_runtime::spawn(thunderstore::load_mods(handle.clone()));
+            let handle = app.handle();
+            tauri::async_runtime::spawn(thunderstore::query::query_loop(handle.clone()));
 
             let config = prefs::PrefsState::init(&handle)?;
             app.manage(manager::ModManager::init(&config.lock())?);

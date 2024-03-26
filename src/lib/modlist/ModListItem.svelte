@@ -15,7 +15,7 @@
 	on:mouseenter={() => (isHovered = true)}
 	on:mouseleave={() => (isHovered = false)}
 >
-	<img src={mod.version.icon} alt="Mod icon" class="w-12 h-12 rounded-lg" />
+	<img src={mod.version.icon} alt="Mod icon" class="w-12 h-12 rounded-lg group-hover:shadow-xl" />
 	<div class="pl-4 overflow-hidden flex-grow">
 		<div class="flex flex-row">
 			<div class="text-slate-100 group-hover:text-white font-semibold">

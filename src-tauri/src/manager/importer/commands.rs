@@ -11,16 +11,18 @@ use super::ModpackArgs;
 type Result<T> = util::CommandResult<T>;
 
 #[tauri::command]
-pub fn export_pack(
+pub async fn export_pack(
     path: PathBuf,
     args: ModpackArgs,
-    manager: tauri::State<ModManager>,
-    thunderstore: tauri::State<ThunderstoreState>,
+    manager: tauri::State<'_ ,ModManager>,
+    thunderstore: tauri::State<'_, ThunderstoreState>,
 ) -> Result<()> {
+    thunderstore.wait_for_load().await;
+
     let mut profiles = manager.profiles.lock().unwrap();
     let profile = manager::get_active_profile(&mut profiles, &manager)?;
 
-    let mod_map = thunderstore.all_mods.lock().unwrap();
+    let mod_map = thunderstore.packages.lock().unwrap();
 
     let zip_path = path.join(&args.name).with_extension("zip");
     profile.export_pack(&zip_path, args, &mod_map)?;

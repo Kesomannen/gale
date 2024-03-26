@@ -41,12 +41,14 @@ pub fn set_active_profile(
 }
 
 #[tauri::command]
-pub fn query_mods_in_profile(
+pub async fn query_mods_in_profile(
     args: QueryModsArgs,
     manager: tauri::State<'_, ModManager>,
     thunderstore: tauri::State<'_, ThunderstoreState>,
 ) -> Result<Vec<OwnedMod>> {
-    let mod_map = thunderstore.all_mods.lock().unwrap();
+    thunderstore.wait_for_load().await;
+
+    let mod_map = thunderstore.packages.lock().unwrap();
     let mut profiles = manager.profiles.lock().unwrap();
     let profile = super::get_active_profile(&mut profiles, &manager)?;
 
@@ -63,7 +65,7 @@ pub fn get_download_size(
     let mut profiles = manager.profiles.lock().unwrap();
     let profile = super::get_active_profile(&mut profiles, &manager)?;
 
-    let mod_map = thunderstore.all_mods.lock().unwrap();
+    let mod_map = thunderstore.packages.lock().unwrap();
     let package = mod_map.get(&package_uuid).context("package not found")?;
     let target_mod = BorrowedMod {
         package,

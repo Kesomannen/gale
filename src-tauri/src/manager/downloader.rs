@@ -1,8 +1,8 @@
 use std::{fs, io::Cursor, iter, path::Path};
 
-use ordered_hash_map::OrderedHashMap;
+use indexmap::IndexMap;
 use uuid::Uuid;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{bail, Context, Result};
 
 use crate::{
     io_util, prefs::Prefs, thunderstore::{self, models::PackageListing, BorrowedMod}
@@ -23,10 +23,10 @@ impl Profile {
         &self,
         config: &Prefs,
         borrowed_mod: BorrowedMod<'_>,
-        mod_map: &OrderedHashMap<Uuid, PackageListing>,
+        packages: &IndexMap<Uuid, PackageListing>,
     ) -> Result<u64> {
         Ok(self
-            .missing_deps(&borrowed_mod, mod_map)
+            .missing_deps(&borrowed_mod, packages)
             .into_iter()
             .chain(iter::once(borrowed_mod))
             .filter(|mod_to_install| {
@@ -47,27 +47,27 @@ impl Profile {
     pub fn missing_deps<'a>(
         &self,
         borrowed_mod: &BorrowedMod<'a>,
-        mod_map: &'a OrderedHashMap<Uuid, PackageListing>,
+        packages: &'a IndexMap<Uuid, PackageListing>,
     ) -> Vec<BorrowedMod<'a>> {
-        thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, mod_map)
+        thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, packages)
             .into_iter()
             .filter(move |dep| !self.has_mod(dep.package.uuid4))
             .collect()
     }
 
     pub fn install<'a>(
-        &'a mut self,
+        &mut self,
         borrowed_mod: BorrowedMod<'a>,
         cache_path: &Path,
-        mod_map: &'a OrderedHashMap<Uuid, PackageListing>,
+        packages: &'a IndexMap<Uuid, PackageListing>,
     ) -> Result<Vec<ModDownloadData>> {
         if self.has_mod(borrowed_mod.package.uuid4) {
-            return Err(anyhow!("mod {} already installed", borrowed_mod.package.full_name));
+            bail!("mod {} already installed", borrowed_mod.package.full_name);
         }
 
         println!("preparing to install: {}", borrowed_mod.version.full_name);
 
-        let mut to_install = self.missing_deps(&borrowed_mod, mod_map);
+        let mut to_install = self.missing_deps(&borrowed_mod, packages);
         to_install.push(borrowed_mod);
 
         self.mods.extend(to_install.iter().map(|m| ProfileMod {
@@ -75,7 +75,8 @@ impl Profile {
             version_uuid: m.version.uuid4,
         }));
 
-        self.install_from_cache(&mut to_install, cache_path)?;
+        self.install_from_cache(&mut to_install, cache_path)
+            .context("failed to install from cache")?;
 
         Ok(to_install
             .iter()
@@ -94,9 +95,8 @@ impl Profile {
             let mod_to_install = &to_install[i];
             let name = &mod_to_install.package.full_name;
 
-            let mod_cache_path = cache_path
-                .join(name)
-                .join(&mod_to_install.version.version_number);
+            let mut mod_cache_path = cache_path.join(name);
+            mod_cache_path.push(&mod_to_install.version.version_number);
 
             if mod_cache_path.try_exists().unwrap_or(false) {
                 println!("installing from cache: {}", name);

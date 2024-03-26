@@ -2,7 +2,7 @@
 	import Popup from '../Popup.svelte';
 	import { Button, Dialog } from 'bits-ui';
 	import { refreshProfiles } from '$lib/profile';
-	import { invokeCommand } from '$lib/error';
+	import { invokeCommand } from '$lib/invoke';
 
 	export let open = false;
 

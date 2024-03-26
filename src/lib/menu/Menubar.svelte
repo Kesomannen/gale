@@ -9,7 +9,7 @@
 
 	import { open } from '$lib/util';
 	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
-	import { invokeCommand } from '$lib/error';
+	import { invokeCommand } from '$lib/invoke';
 	import { appWindow } from '@tauri-apps/api/window';
 
 	let newProfileOpen = false;
@@ -17,8 +17,8 @@
 	let exportPackOpen = false;
 </script>
 
-<div data-tauri-drag-region class="h-9 flex bg-gray-800 flex-shrink-0">
-	<Menubar.Root class="pl-4 py-1">
+<div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
+	<Menubar.Root class="pl-4 py-0.5">
 		<Menubar.Menu>
 			<MenubarTrigger>File</MenubarTrigger>
 			<Menubar.Content

@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api';
 import { writable, type Writable } from 'svelte/store';
 
-const errorDuration = 5000;
+const errorDuration = 7500;
 const maxErrors = 5;
 
 interface Error { name: string, message: string }

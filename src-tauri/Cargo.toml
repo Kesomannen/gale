@@ -24,7 +24,7 @@ anyhow = "1.0"
 thiserror = "1.0"
 justerror = "1.0"
 
-ordered_hash_map = "0.4"
+indexmap = "2.2"
 open = "5.1"
 itertools = "0.12"
 zip = "0.6"

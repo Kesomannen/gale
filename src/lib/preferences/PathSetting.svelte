@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { open } from '@tauri-apps/api/dialog';
 
-	import { invokeCommand } from '$lib/error';
+	import { invokeCommand } from '$lib/invoke';
 	import { onMount } from 'svelte';
 	import type { ConfigValue as ConfigEntry } from '$lib/models';
 	import PathField from '$lib/PathField.svelte';

@@ -1,6 +1,6 @@
 use std::sync::atomic::{self, AtomicUsize};
 
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use tauri::Manager;
 use uuid::Uuid;
 
@@ -23,6 +23,10 @@ pub async fn install_mod(
     thunderstore: tauri::State<'_, ThunderstoreState>,
     network_client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
+    if !*thunderstore.finished_loading.lock().unwrap() {
+        return Err(anyhow!("all mods not loaded yet").into());
+    }
+
     let (to_download, target_path, cache_path) = {
         println!("installing mod: {}", package_uuid);
         let config = config.lock();
@@ -31,7 +35,7 @@ pub async fn install_mod(
         let mut profiles = manager.profiles.lock().unwrap();
         let profile = manager::get_active_profile(&mut profiles, &manager)?;
 
-        let mod_map = thunderstore.all_mods.lock().unwrap();
+        let mod_map = thunderstore.packages.lock().unwrap();
         let package = mod_map.get(&package_uuid).context("mod not found")?;
         let target_mod = BorrowedMod {
             package,
@@ -55,7 +59,7 @@ pub async fn install_mod(
             to_download,
             &cache_path,
             &target_path,
-            &network_client.client,
+            &network_client.0,
             || {
                 let current = completed.fetch_add(1, atomic::Ordering::SeqCst) + 1;
                 let _ = app.emit_all("install_progress", (current, total));

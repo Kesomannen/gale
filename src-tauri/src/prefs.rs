@@ -1,5 +1,6 @@
 use std::{fs, path::PathBuf, sync::Mutex};
 
+use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
@@ -22,12 +23,12 @@ type Result<T> = anyhow::Result<T>;
 
 impl PrefsState {
     pub fn init(app: &AppHandle) -> Result<Self> {
-        println!("initiating config");
+        println!("initiating preferences");
 
         let path_resolver = app.path_resolver();
         let config_path = path_resolver
             .app_config_dir()
-            .expect("failed to resolve app config dir");
+            .context("failed to get config directory")?;
         fs::create_dir_all(&config_path)?;
 
         let save_path = config_path.join("config.json");

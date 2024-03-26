@@ -1,19 +1,22 @@
-use std::{str::Split, sync::Mutex};
+use std::{
+    str::{self, Split},
+    sync::Mutex, time::Duration,
+};
 
+use anyhow::{Context, Result};
+use indexmap::IndexMap;
 use itertools::Itertools;
-use ordered_hash_map::OrderedHashMap;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
-use anyhow::{Context, Result};
 
 use crate::NetworkClient;
 
 use self::models::{PackageListing, PackageVersion};
 
 pub mod commands;
-pub mod query;
 pub mod models;
+pub mod query;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct OwnedMod {
@@ -49,15 +52,21 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
 }
 
 pub struct ThunderstoreState {
-    finished_loading: Mutex<bool>,
-    pub all_mods: Mutex<OrderedHashMap<Uuid, PackageListing>>,
+    pub finished_loading: Mutex<bool>,
+    pub packages: Mutex<IndexMap<Uuid, PackageListing>>,
 }
 
 impl ThunderstoreState {
     pub fn new() -> Self {
         Self {
             finished_loading: Mutex::new(false),
-            all_mods: Mutex::new(OrderedHashMap::new()),
+            packages: Mutex::new(IndexMap::new()),
+        }
+    }
+
+    pub async fn wait_for_load(&self) {
+        while !*self.finished_loading.lock().unwrap() {
+            tokio::time::sleep(Duration::from_millis(100)).await;
         }
     }
 }
@@ -66,19 +75,52 @@ const URL: &'static str = "https://thunderstore.io/c/lethal-company/api/v1/packa
 
 pub async fn load_mods(app_handle: AppHandle) -> Result<()> {
     let state = app_handle.state::<ThunderstoreState>();
-    let client = &app_handle.state::<NetworkClient>().client;
+    let client = &app_handle.state::<NetworkClient>().0;
 
-    let response: Vec<PackageListing> = client.get(URL)
-        .send().await?
-        .json().await?;
+    let mut response = client.get(URL).send().await?;
 
-    let mut all_mods = state.all_mods.lock().unwrap();
-    for mod_listing in response.into_iter() {
-        all_mods.insert(mod_listing.uuid4, mod_listing);
+    let mut is_first_chunk = true;
+    let mut buffer = String::new();
+    let mut byte_buffer = Vec::new();
+
+    while let Some(chunk) = response.chunk().await? {
+        if chunk.is_empty() {
+            break;
+        }
+
+        byte_buffer.extend_from_slice(&chunk);
+        let chunk = str::from_utf8(&byte_buffer);
+
+        if let Err(_) = chunk {
+            continue;
+        }
+
+        let chunk = chunk.unwrap();
+        match is_first_chunk {
+            true => {
+                is_first_chunk = false;
+                buffer.extend(chunk.chars().skip(1)); // remove leading [
+            }
+            false => buffer.push_str(chunk),
+        };
+
+        byte_buffer.clear();
+
+        {
+            let mut packages = state.packages.lock().unwrap();
+            while let Some(index) = buffer.find("}]},") {
+                let (json, _) = buffer.split_at(index + 3);
+
+                let package: PackageListing = serde_json::from_str(json)?;
+
+                packages.insert(package.uuid4.clone(), package);
+
+                buffer.replace_range(..index + 4, "");
+            }
+        }
     }
 
-    println!("loaded {} mods", all_mods.len());
-
+    println!("finished loading mods");
     *state.finished_loading.lock().unwrap() = true;
 
     Ok(())
@@ -86,29 +128,39 @@ pub async fn load_mods(app_handle: AppHandle) -> Result<()> {
 
 pub fn find_package<'a>(
     full_name: &str,
-    mod_list: &'a OrderedHashMap<Uuid, PackageListing>,
+    packages: &'a IndexMap<Uuid, PackageListing>,
 ) -> Option<&'a PackageListing> {
-    mod_list.values()
+    packages
+        .values()
         .find(|mod_listing| mod_listing.full_name == full_name)
+}
+
+pub fn latest_versions(
+    packages: &IndexMap<Uuid, PackageListing>,
+) -> impl Iterator<Item = BorrowedMod> {
+    packages.values().map(|package| BorrowedMod {
+        package,
+        version: &package.versions[0],
+    })
 }
 
 pub fn resolve_deps_all<'a>(
     dependency_strings: &'a Vec<String>,
-    mod_map: &'a OrderedHashMap<Uuid, PackageListing>,
+    packages: &'a IndexMap<Uuid, PackageListing>,
 ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
-    return inner(dependency_strings, mod_map).unique_by(|dep| dep.package.uuid4);
+    return inner(dependency_strings, packages).unique_by(|dep| dep.package.uuid4);
 
     fn inner<'a>(
         dependency_strings: &'a Vec<String>,
-        mod_map: &'a OrderedHashMap<Uuid, PackageListing>,
+        packages: &'a IndexMap<Uuid, PackageListing>,
     ) -> Box<dyn Iterator<Item = BorrowedMod<'a>> + 'a> {
         Box::new(
             dependency_strings
                 .iter()
                 .filter_map(move |dependency| {
-                    let dep = resolve_dep(dependency, mod_map).ok()?;
+                    let dep = resolve_dep(dependency, packages).ok()?;
 
-                    Some(inner(&dep.version.dependencies, mod_map).chain(std::iter::once(dep)))
+                    Some(inner(&dep.version.dependencies, packages).chain(std::iter::once(dep)))
                 })
                 .flatten(),
         )
@@ -117,24 +169,28 @@ pub fn resolve_deps_all<'a>(
 
 pub fn resolve_deps<'a>(
     dependency_strings: &'a Vec<String>,
-    mod_map: &'a OrderedHashMap<Uuid, PackageListing>,
+    packages: &'a IndexMap<Uuid, PackageListing>,
 ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
     dependency_strings
         .iter()
-        .map(move |dependency| resolve_dep(dependency, mod_map))
+        .map(move |dependency| resolve_dep(dependency, packages))
 }
 
 pub fn resolve_dep<'a>(
     dependency_string: &'a String,
-    mod_map: &'a OrderedHashMap<Uuid, PackageListing>,
+    packages: &'a IndexMap<Uuid, PackageListing>,
 ) -> Result<BorrowedMod<'a>> {
-    let mut split = dependency_string.split('-');
+    let split = dependency_string.split('-');
 
-    let (author, name, version) = parts(split).context("invalid dependency string format")?;
+    let (author, name, version) = parts(split)
+        .with_context(|| format!("invalid dependency string format {}", dependency_string))?;
 
     let full_name = format!("{}-{}", author, name);
-    let package = find_package(&full_name, &mod_map).context("package not found")?;
-    let version = package.get_version_with_num(version).context("version not found")?;
+    let package = find_package(&full_name, &packages)
+        .with_context(|| format!("package {} not found", full_name))?;
+    let version = package
+        .get_version_with_num(version)
+        .with_context(|| format!("version {} not found in package {}", version, full_name))?;
 
     return Ok((package, version).into());
 

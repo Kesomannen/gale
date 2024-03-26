@@ -1,57 +1,26 @@
-use std::time::Duration;
-
-use uuid::Uuid;
-use anyhow::Context;
-
 use crate::util;
 
-use super::{models::PackageListing, query::{self, QueryModsArgs}, BorrowedMod, OwnedMod, ThunderstoreState};
+use super::{query::{self, QueryModsArgs}, OwnedMod, ThunderstoreState};
 
 type Result<T> = util::CommandResult<T>;
 
 #[tauri::command]
-pub async fn query_all_mods(
+pub fn query_all_mods(
     args: QueryModsArgs,
-    state: tauri::State<'_, ThunderstoreState>,
-) -> Result<Vec<OwnedMod>> {
-    wait_for_load(&state).await;
+    thunderstore: tauri::State<'_, ThunderstoreState>,
+    query_state: tauri::State<'_, query::QueryState>,
+) -> Result<Option<Vec<OwnedMod>>> {
+    let finished_loading = thunderstore.finished_loading.lock().unwrap();
 
-    let mod_list = state.all_mods.lock().unwrap();
-    Ok(query::query_mods(
-        args,
-        mod_list.values().map(|package| BorrowedMod {
-            package,
-            version: &package.versions[0],
-        }),
-    ))
-}
-
-#[tauri::command]
-pub async fn get_mod(
-    full_name: String,
-    state: tauri::State<'_, ThunderstoreState>,
-) -> Result<PackageListing> {
-    wait_for_load(&state).await;
-
-    let all_mods = state.all_mods.lock().unwrap();
-    super::find_package(&full_name, &all_mods).cloned().context("mod not found")
-        .map_err(|e| e.into())
-}
-
-#[tauri::command]
-pub async fn get_mod_by_id(
-    id: Uuid,
-    state: tauri::State<'_, ThunderstoreState>,
-) -> Result<PackageListing> {
-    wait_for_load(&state).await;
-
-    let all_mods = state.all_mods.lock().unwrap();
-    all_mods.get(&id).cloned().context("mod not found")
-        .map_err(|e| e.into())
-}
-
-async fn wait_for_load(state: &tauri::State<'_, ThunderstoreState>) {
-    while !*state.finished_loading.lock().unwrap() {
-        tokio::time::sleep(Duration::from_millis(100)).await;
+    match *finished_loading {
+        true => {
+            let packages = thunderstore.packages.lock().unwrap();
+            Ok(Some(query::query_mods(&args, super::latest_versions(&packages))))
+        }
+        false => {
+            let mut current_query = query_state.current_query.lock().unwrap();
+            *current_query = Some(args);
+            Ok(None)
+        }
     }
 }

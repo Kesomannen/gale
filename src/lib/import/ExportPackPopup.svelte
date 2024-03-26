@@ -2,7 +2,7 @@
 	import InputField from '$lib/InputField.svelte';
 	import PathField from '$lib/PathField.svelte';
 	import Popup from '$lib/Popup.svelte';
-	import { invokeCommand } from '$lib/error';
+	import { invokeCommand } from '$lib/invoke';
 	import { currentProfile } from '$lib/profile';
 	import { open } from '@tauri-apps/api/dialog';
 

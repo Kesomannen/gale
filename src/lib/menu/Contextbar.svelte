@@ -9,10 +9,12 @@
 		refreshProfiles,
 		setActiveProfile
 	} from '$lib/profile';
+	import { invokeCommand } from '$lib/invoke';
+	
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
+
 	import { slide } from 'svelte/transition';
-	import { invokeCommand } from '$lib/error';
 
 	let profilesOpen = false;
 	let startingGame = false;
@@ -33,8 +35,7 @@
 	<Button.Root
 		class="flex flex-row items-center px-6 w-48 border-r border-gray-600 relative hover:bg-gray-800 cursor-default group"
 		on:click={() => {
-			invokeCommand('start_game')
-				.then(() => startingGame = true)
+			invokeCommand('start_game').then(() => (startingGame = true));
 		}}
 	>
 		<Icon icon="mdi:play-circle" class="text-green-400 group-hover:text-green-300 text-xl mr-2" />
@@ -56,7 +57,7 @@
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-2 w-48 rounded-lg border border-gray-600"
+			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 w-48 rounded-lg border border-gray-600"
 			transition={slide}
 			transitionConfig={{ duration: 100 }}
 		>

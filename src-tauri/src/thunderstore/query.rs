@@ -1,9 +1,23 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, sync::Mutex};
 
 use itertools::Itertools;
 use serde::Deserialize;
+use anyhow::Result;
+use tauri::{AppHandle, Manager};
 
-use super::{BorrowedMod, OwnedMod};
+use super::{BorrowedMod, OwnedMod, ThunderstoreState};
+
+pub struct QueryState {
+    pub current_query: Mutex<Option<QueryModsArgs>>,
+}
+
+impl QueryState {
+    pub fn new() -> Self {
+        Self {
+            current_query: Mutex::new(None),
+        }
+    }
+}
 
 #[derive(Deserialize, Debug)]
 pub enum SortBy {
@@ -24,11 +38,37 @@ pub struct QueryModsArgs {
     descending: bool,
 }
 
-pub fn query_mods<'a, T>(mut args: QueryModsArgs, mods: T) -> Vec<OwnedMod>
+pub async fn query_loop(app: AppHandle) -> Result<()> {
+    loop {
+        let finished = {
+            let thunderstore = app.state::<ThunderstoreState>();
+            let query_state = app.state::<QueryState>();
+
+            let current_query = query_state.current_query.lock().unwrap();
+            if let Some(args) = current_query.as_ref() {
+                let packages = thunderstore.packages.lock().unwrap();
+                let mods = query_mods(args, super::latest_versions(&packages));
+
+                app.emit_all("mod_query_result", mods)?;
+            }
+
+            let finished_loading = thunderstore.finished_loading.lock().unwrap();
+            *finished_loading
+        };
+
+        if finished {
+            return Ok(());
+        }
+
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    }
+}
+
+pub fn query_mods<'a, T>(args: &QueryModsArgs, mods: T) -> Vec<OwnedMod>
 where
     T: Iterator<Item = BorrowedMod<'a>>,
 {
-    args.search_term = args.search_term.map(|s| s.to_lowercase());
+    let search_term = args.search_term.as_ref().map(|s| s.to_lowercase());
 
     let result = mods
         .filter(|borrowed_mod| {
@@ -40,7 +80,7 @@ where
                 return false;
             }
 
-            if let Some(search_term) = &args.search_term {
+            if let Some(search_term) = &search_term {
                 if !package.full_name.to_lowercase().contains(search_term) {
                     return false;
                 }

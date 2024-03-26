@@ -12,9 +12,9 @@
 	const dependenciesShown: number = 15;
 </script>
 
-<div class="flex flex-col p-6 min-w-80 w-[40%] bg-gray-700 text-white border-l border-gray-600">
+<div class="flex flex-col px-6 pb-4 pt-6 min-w-80 w-[40%] bg-gray-700 text-white border-l border-gray-600 relative">
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class="absolute right-4 top-18 rounded-full hover:bg-slate-600 p-1">
+		<DropdownMenu.Trigger class="absolute right-2 top-18 rounded-full hover:bg-slate-600 p-1">
 			<Icon class="text-slate-200 text-2xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content

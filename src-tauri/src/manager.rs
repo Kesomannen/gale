@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf, process::Command, sync::Mutex};
 
 use anyhow::{anyhow, Context, Result};
-use ordered_hash_map::OrderedHashMap;
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -32,20 +32,20 @@ struct ManagerSaveData {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct ProfileMod {
     package_uuid: Uuid,
-    version_uuid: Uuid,
+    version_uuid: Uuid
 }
 
 impl ProfileMod {
-    fn get<'a>(
-        &self,
-        mod_map: &'a OrderedHashMap<Uuid, PackageListing>,
-    ) -> Result<BorrowedMod<'a>> {
-        let package = mod_map
+    fn get<'a>(&self, packages: &'a IndexMap<Uuid, PackageListing>) -> Result<BorrowedMod<'a>> {
+        let package = packages
             .get(&self.package_uuid)
-            .context("package not found")?;
-        let version = package
-            .get_version(self.version_uuid)
-            .context("version not found")?;
+            .with_context(|| format!("package with id {} not found", self.package_uuid))?;
+        let version = package.get_version(&self.version_uuid).with_context(|| {
+            format!(
+                "version with id {} not found in package {}",
+                self.version_uuid, &package.full_name
+            )
+        })?;
 
         Ok((package, version).into())
     }
@@ -62,15 +62,15 @@ impl Profile {
     fn query_mods(
         &self,
         args: QueryModsArgs,
-        mod_map: &OrderedHashMap<Uuid, PackageListing>,
+        packages: &IndexMap<Uuid, PackageListing>,
     ) -> Result<Vec<OwnedMod>> {
         let mods = self
             .mods
             .iter()
-            .map(|p| p.get(&mod_map))
+            .map(|p| p.get(&packages))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(query::query_mods(args, mods.into_iter()))
+        Ok(query::query_mods(&args, mods.into_iter()))
     }
 
     fn get_mod<'a>(&'a self, package_uuid: Uuid) -> Option<&'a ProfileMod> {
@@ -84,7 +84,7 @@ impl Profile {
     fn dependants_of<'a>(
         &'a self,
         package_uuid: Uuid,
-        mod_map: &OrderedHashMap<Uuid, PackageListing>,
+        packages: &IndexMap<Uuid, PackageListing>,
     ) -> Result<Vec<&'a ProfileMod>> {
         let target_mod = self.get_mod(package_uuid).context("mod not found")?;
 
@@ -95,11 +95,11 @@ impl Profile {
                     return None;
                 }
 
-                match other.get(mod_map) {
+                match other.get(packages) {
                     Ok(borrowed_other) => {
                         match thunderstore::resolve_deps(
                             &borrowed_other.version.dependencies,
-                            mod_map,
+                            packages,
                         )
                         .any(|dep| match dep {
                             Ok(dep) => dep.package.uuid4 == target_mod.package_uuid,

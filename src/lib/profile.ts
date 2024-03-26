@@ -1,6 +1,5 @@
-import { invoke } from '@tauri-apps/api';
 import { writable } from 'svelte/store';
-import { invokeCommand } from './error';
+import { invokeCommand } from './invoke';
 
 export let activeProfileIndex: number = 0;
 export let profileNames: string[] = [];

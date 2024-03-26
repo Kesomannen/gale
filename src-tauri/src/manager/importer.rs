@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use ordered_hash_map::OrderedHashMap;
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use zip::{write::FileOptions, ZipWriter};
@@ -31,12 +31,12 @@ impl Profile {
         &self,
         path: &Path,
         args: ModpackArgs,
-        mod_map: &OrderedHashMap<Uuid, PackageListing>,
+        packages: &IndexMap<Uuid, PackageListing>,
     ) -> Result<()> {
         let dependencies = self
             .mods
             .iter()
-            .map(|p| Ok(p.get(mod_map)?.version.full_name.clone()))
+            .map(|p| Ok(p.get(packages)?.version.full_name.clone()))
             .collect::<Result<Vec<_>>>()?;
 
         let manifest = PackageManifest {

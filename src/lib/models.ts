@@ -36,6 +36,19 @@ export interface Mod {
 	version: PackageVersion;
 }
 
+export type SortBy = "LastUpdated" | "Downloads" | "Rating";
+
+export interface ModQueryArgs {
+	page: number,
+	page_size: number,
+	search_term: string | undefined,
+	categories: string[],
+	include_nsfw: boolean,
+	include_deprecated: boolean,
+	sort_by: undefined | SortBy,
+	descending: boolean,
+}
+
 export type ConfigType = 'Path' | 'OptionPath' | 'Bool';
 
 export interface ConfigValue {
