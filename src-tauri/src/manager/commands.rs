@@ -1,5 +1,3 @@
-use std::fs;
-
 use anyhow::Context;
 use serde::Serialize;
 use uuid::Uuid;
@@ -127,17 +125,6 @@ pub fn start_game(
     let mut profiles = manager.profiles.lock().unwrap();
     let profile = super::get_active_profile(&mut profiles, &manager)?;
     profile.run_game(&prefs.lock())?;
-    Ok(())
-}
-
-#[tauri::command]
-pub fn clear_download_cache(prefs: tauri::State<PrefsState>) -> Result<()> {
-    let cache_path = prefs.lock().cache_path.clone();
-    if cache_path.try_exists().unwrap_or(false) {
-        fs::remove_dir_all(&cache_path).context("failed to delete cache dir")?;
-    }
-
-    fs::create_dir_all(&cache_path).context("failed to recreate cache dir")?;
     Ok(())
 }
 

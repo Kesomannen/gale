@@ -6,7 +6,9 @@ mod manager;
 mod thunderstore;
 mod util;
 mod io_util;
+mod config;
 
+use anyhow::Context;
 use tauri::Manager;
 
 pub struct NetworkClient(reqwest::Client);
@@ -23,8 +25,9 @@ impl NetworkClient {
 }
 
 #[tauri::command]
-fn open(url: String) -> Result<(), String> {
-    open::that(url).map_err(|e| e.to_string())
+fn open(url: String) -> util::CommandResult<()> {
+    open::that(&url).with_context(|| format!("failed to open {}", url))?;
+    Ok(())
 }
 
 fn main() {
@@ -46,9 +49,9 @@ fn main() {
             manager::commands::remove_mod,
             manager::commands::reveal_project_dir,
             manager::commands::start_game,
-            manager::commands::clear_download_cache,
-
+            
             manager::downloader::commands::install_mod,
+            manager::downloader::commands::clear_download_cache,
 
             manager::importer::commands::export_pack
         ])

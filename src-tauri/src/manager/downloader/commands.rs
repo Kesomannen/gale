@@ -1,4 +1,4 @@
-use std::sync::atomic::{self, AtomicUsize};
+use std::{fs, sync::atomic::{self, AtomicUsize}};
 
 use anyhow::{anyhow, Context};
 use tauri::Manager;
@@ -67,4 +67,15 @@ pub async fn install_mod(
         )
         .await?
     )
+}
+
+#[tauri::command]
+pub fn clear_download_cache(prefs: tauri::State<PrefsState>) -> Result<()> {
+    let cache_path = prefs.lock().cache_path.clone();
+    if cache_path.try_exists().unwrap_or(false) {
+        fs::remove_dir_all(&cache_path).context("failed to delete cache dir")?;
+    }
+
+    fs::create_dir_all(&cache_path).context("failed to recreate cache dir")?;
+    Ok(())
 }

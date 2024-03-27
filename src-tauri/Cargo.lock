@@ -91,6 +91,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "uuid",
+ "walkdir",
  "zip",
  "zip-extract",
 ]
