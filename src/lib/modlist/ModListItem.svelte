@@ -10,7 +10,7 @@
 </script>
 
 <Button.Root
-	class="flex hover:bg-gray-700 rounded-xl p-2 pl-r items-center group"
+	class="flex hover:bg-gray-700 rounded-xl p-2 items-center group"
 	on:click={() => onClick(mod)}
 	on:mouseenter={() => (isHovered = true)}
 	on:mouseleave={() => (isHovered = false)}

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
+    config,
     prefs::Prefs,
     thunderstore::{
         self,
@@ -190,6 +191,8 @@ impl ModManager {
         );
 
         let is_empty = profiles.is_empty();
+
+        println!("{:?}", config::parse_config_files(&profiles[0].path));
 
         let manager = Self {
             profiles: Mutex::new(profiles),
