@@ -52,7 +52,7 @@
 			<Icon
 				icon="mdi:expand-more"
 				class="
-                text-slate-300 group-hover:text-slate-200 text-xl absolute right-4
+                text-slate-300 group-hover:text-slate-200 text-xl absolute right-4 transition-all
                 transform origin-center {profilesOpen ? 'rotate-180' : 'rotate-0'}"
 			/>
 		</DropdownMenu.Trigger>

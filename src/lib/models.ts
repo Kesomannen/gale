@@ -1,34 +1,118 @@
+export type ConfigValue =
+	| { type: 'boolean'; content: boolean }
+	| { type: 'string'; content: string }
+	| {
+			type: 'enum';
+			content: {
+				value: string;
+				options: string[];
+			};
+	  }
+	| {
+			type: 'flags';
+			content: {
+				values: string[];
+				options: string[];
+			};
+	  }
+	| { type: 'int32'; content: ConfigNum }
+	| { type: 'single'; content: ConfigNum }
+	| { type: 'double'; content: ConfigNum }
+	| { type: 'other'; content: string };
+
+export interface ConfigEntry {
+	name: string;
+	description: string;
+	typeName: string;
+	defaultValue?: ConfigValue;
+	value: ConfigValue;
+}
+
+export interface ConfigSection {
+	name: string;
+	entries: ConfigEntry[];
+}
+
+export interface ConfigFile {
+	name: string;
+	sections: ConfigSection[];
+}
+
+export interface ConfigNum {
+	value: number;
+	range?: ConfigRange;
+}
+
+export interface ConfigRange {
+	start: number;
+	end: number;
+}
+
+export type GetConfigResult =
+	| { type: 'ok', content: ConfigFile }
+	| { type: 'error', content: {
+		file: string;
+		error: string;
+	} };
+
+export type PrefValue =
+	| { type: 'Path'; content: string }
+	| { type: 'OptionPath'; content?: string }
+	| { type: 'Bool'; content: boolean };
+
+export interface PrefEntry {
+	name: string;
+	value: PrefValue;
+}
+
 export interface PackageVersion {
-	date_created: string;
+	dateCreated: string;
 	dependencies: string[];
 	description: string;
-	download_url: string;
+	downloadUrl: string;
 	downloads: number;
-	file_size: number;
-	full_name: string;
+	fileSize: number;
+	fullName: string;
 	icon: string;
-	is_active: boolean;
+	isActive: boolean;
 	name: string;
 	uuid4: string;
-	version_number: string;
-	website_url: string;
+	versionNumber: string;
+	websiteUrl: string;
 }
 
 export interface PackageListing {
 	categories: string[];
-	date_created: string;
-	date_updated: string;
-	donation_link: string | undefined;
-	full_name: string;
-	has_nsfw_content: boolean;
-	is_deprecated: boolean;
-	is_pinned: boolean;
+	dateCreated: string;
+	dateUpdated: string;
+	donationLink?: string;
+	fullName: string;
+	hasNsfwContent: boolean;
+	isDeprecated: boolean;
+	isPinned: boolean;
 	name: string;
 	owner: string;
-	package_url: string;
-	rating_score: number;
+	packageUrl: string;
+	ratingScore: number;
 	uuid4: string;
 	versions: PackageVersion[];
+}
+
+export interface LegacyProfileCreateResponse {
+	key: string;
+}
+
+export interface PackageInstaller {
+	identifier: string;
+}
+
+export interface PackageManifest {
+	name: string;
+	description: string;
+	versionNumber: string;
+	dependencies: string[];
+	websiteUrl: string;
+	installers?: PackageInstaller[];
 }
 
 export interface Mod {
@@ -36,25 +120,24 @@ export interface Mod {
 	version: PackageVersion;
 }
 
-export type SortBy = "LastUpdated" | "Downloads" | "Rating";
-
-export interface ModQueryArgs {
-	page: number,
-	page_size: number,
-	search_term: string | undefined,
-	categories: string[],
-	include_nsfw: boolean,
-	include_deprecated: boolean,
-	sort_by: undefined | SortBy,
-	descending: boolean,
+export enum SortBy {
+	LastUpdated = 'lastUpdated',
+	Downloads = 'downloads',
+	Rating = 'rating'
 }
 
-export type ConfigType = 'Path' | 'OptionPath' | 'Bool';
+export interface QueryModsArgs {
+	page: number;
+	pageSize: number;
+	searchTerm?: string;
+	categories: string[];
+	includeNsfw: boolean;
+	includeDeprecated: boolean;
+	sortBy?: SortBy;
+	descending: boolean;
+}
 
-export interface ConfigValue {
-	name: string;
-	value: {
-		type: ConfigType;
-		content: any;
-	};
+export interface SelectItem {
+	value: string;
+	label: string;
 }

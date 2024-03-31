@@ -23,10 +23,6 @@ pub async fn install_mod(
     thunderstore: tauri::State<'_, ThunderstoreState>,
     network_client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
-    if !*thunderstore.finished_loading.lock().unwrap() {
-        return Err(anyhow!("all mods not loaded yet").into());
-    }
-
     let (to_download, target_path, cache_path) = {
         println!("installing mod: {}", package_uuid);
         let config = config.lock();

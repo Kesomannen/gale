@@ -22,3 +22,13 @@ export function getTotalDownloads(pkg: PackageListing): number {
 export function open(url: string) {
 	invoke('open', { url });
 }
+
+export function pascalToSentence(pascalCase: string): string {
+	const sentenceCase = pascalCase
+		.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.trim()
+		.toLowerCase();
+
+	return sentenceCase.charAt(0).toUpperCase() + sentenceCase.slice(1);
+}

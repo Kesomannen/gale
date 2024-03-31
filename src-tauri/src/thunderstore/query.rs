@@ -4,6 +4,7 @@ use itertools::Itertools;
 use serde::Deserialize;
 use anyhow::Result;
 use tauri::{AppHandle, Manager};
+use typeshare::typeshare;
 
 use super::{BorrowedMod, OwnedMod, ThunderstoreState};
 
@@ -19,14 +20,18 @@ impl QueryState {
     }
 }
 
+#[typeshare]
 #[derive(Deserialize, Debug)]
+#[serde(rename_all="camelCase")]
 pub enum SortBy {
     LastUpdated,
     Downloads,
     Rating,
 }
 
+#[typeshare]
 #[derive(Deserialize, Debug)]
+#[serde(rename_all="camelCase")]
 pub struct QueryModsArgs {
     page: usize,
     page_size: usize,

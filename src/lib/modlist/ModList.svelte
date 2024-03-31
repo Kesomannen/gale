@@ -3,7 +3,7 @@
 	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
 	import ModListSortOption from '$lib/modlist/ModListSortOption.svelte';
 
-	import type { Mod, ModQueryArgs, SortBy } from '$lib/models';
+	import { SortBy, type Mod, type QueryModsArgs } from '$lib/models';
 
 	import Icon from '@iconify/svelte';
 	import { Button, Popover, Select, Separator } from 'bits-ui';
@@ -19,9 +19,9 @@
 	const pageSize = 10;
 	const sortOptions: SortOption[] = [
 		{ value: undefined, label: 'Relevance' },
-		{ value: 'Rating', label: 'Rating' },
-		{ value: 'Downloads', label: 'Downloads' },
-		{ value: 'LastUpdated', label: 'Last updated' }
+		{ value: SortBy.Rating, label: 'Rating' },
+		{ value: SortBy.Downloads, label: 'Downloads' },
+		{ value: SortBy.LastUpdated, label: 'Last updated' }
 	];
 
 	const allCategories = [
@@ -48,26 +48,26 @@
 
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined = undefined;
-	export let queryArgs: ModQueryArgs = {
-    page: page,
-    page_size: pageSize,
-    search_term: searchTerm,
-    categories,
-    include_nsfw: includeNsfw,
-    include_deprecated: includeDeprecated,
-    descending: true,
-    sort_by: sortBy.value
+	export let queryArgs: QueryModsArgs = {
+    	page,
+    	pageSize,
+    	searchTerm,
+    	categories,
+    	includeNsfw,
+    	includeDeprecated,
+    	descending: true,
+    	sortBy: sortBy.value
   };
 
 	$: queryArgs = {
-		page: page,
-		page_size: pageSize,
-		search_term: searchTerm,
-		categories,
-		include_nsfw: includeNsfw,
-		include_deprecated: includeDeprecated,
-		descending: true,
-		sort_by: sortBy.value
+		page,
+    	pageSize,
+    	searchTerm,
+    	categories,
+    	includeNsfw,
+    	includeDeprecated,
+    	descending: true,
+    	sortBy: sortBy.value
 	};
 
 	function onModClicked(mod: Mod) {

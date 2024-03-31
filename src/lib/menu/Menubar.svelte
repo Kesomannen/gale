@@ -11,6 +11,7 @@
 	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import { appWindow } from '@tauri-apps/api/window';
+	import { Root } from 'postcss';
 
 	let newProfileOpen = false;
 	let preferencesOpen = false;
@@ -18,7 +19,19 @@
 </script>
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
-	<Menubar.Root class="pl-4 py-0.5">
+	<Menubar.Root class="pl-3 py-1 flex items-center">
+		<Button.Root 
+			class="hover:bg-gray-700 rounded p-1 mr-1 group"
+			on:click={() => history.back()}
+		>
+			<Icon icon="mdi:arrow-left" class="text-gray-400 group-hover:text-gray-300 text-lg" />
+		</Button.Root>
+		<Button.Root 
+			class="hover:bg-gray-700 rounded p-1 mr-2 group"
+			on:click={() => history.forward()}
+		>
+			<Icon icon="mdi:arrow-right" class="text-gray-400 group-hover:text-gray-300 text-lg" />
+		</Button.Root>
 		<Menubar.Menu>
 			<MenubarTrigger>File</MenubarTrigger>
 			<Menubar.Content

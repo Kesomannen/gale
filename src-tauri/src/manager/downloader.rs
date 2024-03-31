@@ -1,11 +1,12 @@
 use std::{fs, io::Cursor, iter, path::Path};
 
 use indexmap::IndexMap;
+use itertools::Itertools;
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
 
 use crate::{
-    io_util, prefs::Prefs, thunderstore::{self, models::PackageListing, BorrowedMod}
+    fs_util, prefs::Prefs, thunderstore::{self, models::PackageListing, BorrowedMod}
 };
 
 use super::{Profile, ProfileMod};
@@ -28,6 +29,7 @@ impl Profile {
         Ok(self
             .missing_deps(&borrowed_mod, packages)
             .into_iter()
+            .filter_map(|dep| dep.ok())
             .chain(iter::once(borrowed_mod))
             .filter(|mod_to_install| {
                 let name = &mod_to_install.package.full_name;
@@ -48,10 +50,9 @@ impl Profile {
         &self,
         borrowed_mod: &BorrowedMod<'a>,
         packages: &'a IndexMap<Uuid, PackageListing>,
-    ) -> Vec<BorrowedMod<'a>> {
+    ) -> Vec<Result<BorrowedMod<'a>>> {
         thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, packages)
-            .into_iter()
-            .filter(move |dep| !self.has_mod(dep.package.uuid4))
+            .filter_ok(move |dep| !self.has_mod(dep.package.uuid4))
             .collect()
     }
 
@@ -67,7 +68,12 @@ impl Profile {
 
         println!("preparing to install: {}", borrowed_mod.version.full_name);
 
-        let mut to_install = self.missing_deps(&borrowed_mod, packages);
+        let mut to_install = {
+            self.missing_deps(&borrowed_mod, packages)
+                .into_iter()
+                .collect::<Result<Vec<_>>>()
+                .context("failed to resolve dependencies")?
+        };
         to_install.push(borrowed_mod);
 
         self.mods.extend(to_install.iter().map(|m| ProfileMod {
@@ -155,9 +161,9 @@ where
 
     zip_extract::extract(Cursor::new(response), &mod_cache_path, true)?;
 
-    io_util::flatten_if_exists(&mod_cache_path.join("BepInExPack"))?;
-    io_util::flatten_if_exists(&mod_cache_path.join("BepInEx"))?;
-    io_util::flatten_if_exists(&mod_cache_path.join("plugins"))?;
+    fs_util::flatten_if_exists(&mod_cache_path.join("BepInExPack"))?;
+    fs_util::flatten_if_exists(&mod_cache_path.join("BepInEx"))?;
+    fs_util::flatten_if_exists(&mod_cache_path.join("plugins"))?;
 
     install_mod_from_disk(&mod_cache_path, target_path, &data.name)?;
 
@@ -187,7 +193,7 @@ fn install_mod_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
             if entry_name == "config" {
                 let target_path = target_path.join("config");
                 fs::create_dir_all(&target_path)?;
-                io_util::copy_contents(&entry_path, &target_path)?;
+                fs_util::copy_contents(&entry_path, &target_path)?;
                 continue;
             }
 
@@ -200,7 +206,7 @@ fn install_mod_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
             };
 
             fs::create_dir_all(&target_path.parent().unwrap())?;
-            io_util::copy_dir(&entry_path, &target_path)
+            fs_util::copy_dir(&entry_path, &target_path)
                 .with_context(|| format!("error while copying directory {:?}", entry_path))?;
         } else {
             let parent = match is_bepinex {

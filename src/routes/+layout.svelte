@@ -11,6 +11,16 @@
 
 	import { expoOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
+	import { onMount } from 'svelte';
+	import { listen } from '@tauri-apps/api/event';
+
+	let status: string | undefined;
+
+	onMount(() => {
+		listen<string | undefined>('status_update', (evt) => {
+			status = evt.payload;
+		})
+	});
 </script>
 
 <main
@@ -20,6 +30,13 @@
 	<Contextbar />
 
 	<slot />
+
+	{#if status}
+		<div class="w-full flex items-center px-3 py-1 text-sm border-t border-gray-700 text-slate-400">
+			<Icon icon="mdi:loading" class="animate-spin" />
+			<span class="ml-2">{status}</span>
+		</div>
+	{/if}
 
 	<div class="bottom-0 right-0 w-full max-w-[50rem] p-2 gap-1 absolute flex flex-col-reverse">
 		{#each $errors as error, i}

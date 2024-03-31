@@ -1,9 +1,12 @@
 use std::hash::Hash;
 
 use serde::{Deserialize, Serialize};
+use typeshare::typeshare;
 use uuid::Uuid;
 
+#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
+#[serde(rename_all(serialize="camelCase"))]
 pub struct PackageListing {
     pub categories: Vec<String>,
     pub date_created: String,
@@ -47,7 +50,9 @@ impl Hash for PackageListing {
     }
 }
 
+#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
+#[serde(rename_all(serialize="camelCase"))]
 pub struct PackageVersion {
     pub date_created: String,
     pub dependencies: Vec<String>,
@@ -76,12 +81,16 @@ impl Hash for PackageVersion {
     }
 }
 
+#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all(serialize="camelCase"))]
 pub struct LegacyProfileCreateResponse {
     pub key: Uuid,
 }
 
+#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all(serialize="camelCase"))]
 pub struct PackageManifest {
     pub name: String,
     pub description: String,
@@ -91,7 +100,9 @@ pub struct PackageManifest {
     pub installers: Option<Vec<PackageInstaller>>,
 }
 
+#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all(serialize="camelCase"))]
 pub struct PackageInstaller {
     pub identifier: String,
 }

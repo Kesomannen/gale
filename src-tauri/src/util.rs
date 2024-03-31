@@ -3,7 +3,7 @@ use std::fmt::{self, Display};
 use serde::Serialize;
 
 #[derive(Debug)]
-pub struct CommandError(anyhow::Error);
+pub struct CommandError(pub anyhow::Error);
 
 impl std::error::Error for CommandError {}
 

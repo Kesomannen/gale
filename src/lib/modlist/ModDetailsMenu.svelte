@@ -33,7 +33,7 @@
 			</DropdownMenu.Item>
 			<DropdownMenu.Item
 				class="flex items-center px-3 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"
-				on:click={() => open(mod.version.website_url)}
+				on:click={() => open(mod.version.websiteUrl)}
 			>
 				Open website
 			</DropdownMenu.Item>
@@ -49,7 +49,7 @@
 	<div class="truncate mr-8">
 		<span class="text-slate-200 font-semibold text-2xl align-middle">{mod.version.name}</span>
 		<span class="text-slate-300 font-light text-lg pl-2 align-middle"
-			>{mod.version.version_number}</span
+			>{mod.version.versionNumber}</span
 		>
 	</div>
 
@@ -74,7 +74,7 @@
 	<div class="flex my-4 gap-6">
 		<div class="inline-flex items-center gap-2">
 			<Icon class="text-yellow-400 text-lg" icon="mdi:star" />
-			<span class="text-yellow-400 text-md">{shortenNum(mod.package.rating_score)}</span>
+			<span class="text-yellow-400 text-md">{shortenNum(mod.package.ratingScore)}</span>
 		</div>
 		<div class="inline-flex items-center gap-2">
 			<Icon class="text-green-400 text-lg" icon="mdi:download" />

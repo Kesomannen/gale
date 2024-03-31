@@ -3,7 +3,7 @@
 </script>
 
 <Menubar.Trigger
-	class="h-full px-4 mx-[-4px] rounded text-sm text-slate-400 hover:bg-gray-700 hover:text-gray-200 cursor-default"
+	class="h-full px-3 mx-[-1px] rounded text-sm text-slate-400 hover:bg-gray-700 hover:text-gray-200 cursor-default"
 >
 	<slot />
 </Menubar.Trigger>

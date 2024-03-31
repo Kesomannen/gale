@@ -2,6 +2,7 @@ use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Context};
 use serde::{Deserialize, Serialize};
+use typeshare::typeshare;
 
 use crate::util;
 
@@ -9,6 +10,7 @@ use super::PrefsState;
 
 type Result<T> = util::CommandResult<T>;
 
+#[typeshare]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type", content = "content")]
 pub enum PrefValue {
@@ -41,6 +43,7 @@ impl PrefValue {
     }
 }
 
+#[typeshare]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PrefEntry {
     name: String,

@@ -1,4 +1,4 @@
-use std::{fs, io, path::Path};
+use std::{fs, io, path::{Path, PathBuf}};
 
 pub fn flatten_if_exists(path: &Path) -> Result<bool, io::Error> {
     if !path.try_exists()? {
@@ -42,4 +42,16 @@ pub fn copy_contents(src: &Path, dest: &Path) -> Result<(), io::Error> {
     }
 
     Ok(())
+}
+
+pub fn add_extension<P: AsRef<Path>>(path: &mut PathBuf, extension: P) {
+    match path.extension() {
+        Some(ext) => {
+            let mut ext = ext.to_os_string();
+            ext.push(".");
+            ext.push(extension.as_ref());
+            path.set_extension(ext)
+        }
+        None => path.set_extension(extension.as_ref()),
+    };
 }

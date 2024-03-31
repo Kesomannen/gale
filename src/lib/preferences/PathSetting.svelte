@@ -3,7 +3,7 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import { onMount } from 'svelte';
-	import type { ConfigValue as ConfigEntry } from '$lib/models';
+	import type { PrefEntry } from '$lib/models';
 	import PathField from '$lib/PathField.svelte';
 
 	export let label: string;
@@ -13,7 +13,7 @@
 	let value: string | null = null;
 
 	onMount(async () => {
-		value = (await invokeCommand<ConfigEntry>('get_pref', { name })).value.content;
+		value = (await invokeCommand<PrefEntry>('get_pref', { name })).value.content as string;
 	});
 
 	function browse() {

@@ -5,8 +5,7 @@ mod prefs;
 mod manager;
 mod thunderstore;
 mod util;
-mod io_util;
-mod config;
+mod fs_util;
 
 use anyhow::Context;
 use tauri::Manager;
@@ -53,7 +52,11 @@ fn main() {
             manager::downloader::commands::install_mod,
             manager::downloader::commands::clear_download_cache,
 
-            manager::importer::commands::export_pack
+            manager::importer::commands::export_pack,
+
+            manager::config::commands::get_config_files,
+            manager::config::commands::set_config_entry,
+            manager::config::commands::reset_config_entry,
         ])
         .setup(|app| {
             app.manage(NetworkClient::create()?);

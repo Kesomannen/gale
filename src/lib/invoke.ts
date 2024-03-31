@@ -8,10 +8,9 @@ interface Error { name: string, message: string }
 
 export const errors: Writable<Error[]> = writable([]);
 
-export async function invokeCommand<T>(cmd: string, args?: any | undefined): Promise<T> {
+export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 	try {
-		let result = await invoke<T>(cmd, args);
-		return result;
+		return await invoke<T>(cmd, args);
 	} catch (error: any) {
 		errors.update((errs) => {
 			let errStr = error as string;

@@ -5,15 +5,11 @@
 
 	export let mod: Mod;
 	export let onClick: (mod: Mod) => void;
-
-	let isHovered = false;
 </script>
 
 <Button.Root
 	class="flex hover:bg-gray-700 rounded-xl p-2 items-center group"
 	on:click={() => onClick(mod)}
-	on:mouseenter={() => (isHovered = true)}
-	on:mouseleave={() => (isHovered = false)}
 >
 	<img src={mod.version.icon} alt="Mod icon" class="w-12 h-12 rounded-lg group-hover:shadow-xl" />
 	<div class="pl-4 overflow-hidden flex-grow">
@@ -22,9 +18,9 @@
 				{mod.version.name}
 			</div>
 			<div class="text-slate-500 group-hover:text-slate-400 font-light pl-2">
-				{mod.version.version_number}
+				{mod.version.versionNumber}
 			</div>
-			{#if mod.package.is_pinned}
+			{#if mod.package.isPinned}
 				<Icon class="ml-2 mt-1 text-slate-400" icon="mdi:pin" />
 			{/if}
 		</div>
@@ -32,7 +28,4 @@
 			{mod.version.description}
 		</div>
 	</div>
-	{#if isHovered}
-		<slot />
-	{/if}
 </Button.Root>

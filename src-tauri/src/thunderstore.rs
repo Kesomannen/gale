@@ -1,6 +1,5 @@
 use std::{
-    str::{self, Split},
-    sync::Mutex, time::Duration,
+    collections::HashSet, iter, str::{self, Split}, sync::Mutex, time::Duration
 };
 
 use anyhow::{Context, Result};
@@ -117,12 +116,15 @@ pub async fn load_mods(app_handle: AppHandle) -> Result<()> {
 
                 buffer.replace_range(..index + 4, "");
             }
+
+            let _ = app_handle.emit_all("status_update", Some(format!("Fetching mods from Thunderstore... {}/?", packages.len())));
         }
     }
 
     println!("finished loading mods");
     *state.finished_loading.lock().unwrap() = true;
 
+    let _ = app_handle.emit_all("status_update", None::<String>);
     Ok(())
 }
 
@@ -147,22 +149,28 @@ pub fn latest_versions(
 pub fn resolve_deps_all<'a>(
     dependency_strings: &'a Vec<String>,
     packages: &'a IndexMap<Uuid, PackageListing>,
-) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
-    return inner(dependency_strings, packages).unique_by(|dep| dep.package.uuid4);
+) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
+    let mut unique_map = HashSet::new();
+    return inner(dependency_strings, packages)
+        .filter_ok(move |dep| unique_map.insert(dep.package.uuid4));
 
     fn inner<'a>(
         dependency_strings: &'a Vec<String>,
         packages: &'a IndexMap<Uuid, PackageListing>,
-    ) -> Box<dyn Iterator<Item = BorrowedMod<'a>> + 'a> {
+    ) -> Box<dyn Iterator<Item = Result<BorrowedMod<'a>>> + 'a> {
         Box::new(
             dependency_strings
                 .iter()
-                .filter_map(move |dependency| {
-                    let dep = resolve_dep(dependency, packages).ok()?;
-
-                    Some(inner(&dep.version.dependencies, packages).chain(std::iter::once(dep)))
+                .map(move |dependency| {
+                    let dep = resolve_dep(dependency, packages);
+    
+                    dep.map(|dep| 
+                        inner(&dep.version.dependencies, packages)
+                            .chain(iter::once(Ok(dep)))
+                    )
                 })
-                .flatten(),
+                .flatten_ok()
+                .flatten_ok()
         )
     }
 }
@@ -177,7 +185,7 @@ pub fn resolve_deps<'a>(
 }
 
 pub fn resolve_dep<'a>(
-    dependency_string: &'a String,
+    dependency_string: &String,
     packages: &'a IndexMap<Uuid, PackageListing>,
 ) -> Result<BorrowedMod<'a>> {
     let split = dependency_string.split('-');

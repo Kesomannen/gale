@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
-	import type { Mod, ModQueryArgs } from '$lib/models';
+	import type { Mod, QueryModsArgs } from '$lib/models';
 	import { shortenFileSize } from '$lib/util';
 
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
@@ -12,7 +12,7 @@
 	import { listen } from '@tauri-apps/api/event';
 
 	let mods: Mod[];
-	let queryArgs: ModQueryArgs;
+	let queryArgs: QueryModsArgs;
 	let activeMod: Mod | undefined;
 	let activeDownloadSize: number | undefined;
 	

@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, process::Command, sync::Mutex};
+use std::{fs, path::{Path, PathBuf}, process::Command, sync::Mutex};
 
 use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    config,
     prefs::Prefs,
     thunderstore::{
         self,
@@ -19,18 +18,21 @@ use crate::{
 pub mod commands;
 pub mod downloader;
 pub mod importer;
+pub mod config;
 
 pub struct ModManager {
     profiles: Mutex<Vec<Profile>>,
     active_profile_index: Mutex<usize>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 struct ManagerSaveData {
     active_profile_index: usize,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
 struct ProfileMod {
     package_uuid: Uuid,
     version_uuid: Uuid
@@ -52,11 +54,11 @@ impl ProfileMod {
     }
 }
 
-#[derive(Debug, Clone)]
 struct Profile {
     name: String,
     path: PathBuf,
     mods: Vec<ProfileMod>,
+    config: Vec<config::LoadedFile>,
 }
 
 impl Profile {
@@ -115,9 +117,7 @@ impl Profile {
             })
             .collect()
     }
-}
-
-impl Profile {
+    
     const GAME_ID: u32 = 1966720;
 
     fn run_game(&self, config: &Prefs) -> Result<()> {
@@ -162,13 +162,14 @@ impl ModManager {
         let save_path = options.data_path.join("manager.json");
         let save_data = match save_path.try_exists()? {
             true => {
-                let data = fs::read_to_string(save_path)?;
-                serde_json::from_str(&data).context("failed to parse manager save data")
+                let json = fs::read_to_string(save_path)?;
+                let data = serde_json::from_str(&json).context("failed to parse manager save data")?;
+                data
             }
-            false => Ok(ManagerSaveData {
+            false => ManagerSaveData {
                 active_profile_index: 0,
-            }),
-        }?;
+            },
+        };
 
         let profiles_path = options.data_path.join("profiles");
         fs::create_dir_all(&profiles_path)?;
@@ -177,11 +178,10 @@ impl ModManager {
         for entry in profiles_path.read_dir()? {
             let path = entry?.path();
             if path.is_dir() {
-                let name = path.file_name().unwrap().to_str().unwrap().to_string();
-                let mods = fs::read_to_string(path.join("profile.json"))?;
-                let mods: Vec<ProfileMod> =
-                    serde_json::from_str(&mods).context("failed to parse profile mods")?;
-                profiles.push(Profile { name, path, mods });
+                profiles.push(
+                    load_profile(&path)
+                        .with_context(|| format!("failed to load profile at {:?}", &path))?
+                );
             }
         }
 
@@ -191,8 +191,6 @@ impl ModManager {
         );
 
         let is_empty = profiles.is_empty();
-
-        println!("{:?}", config::parse_config_files(&profiles[0].path));
 
         let manager = Self {
             profiles: Mutex::new(profiles),
@@ -217,13 +215,16 @@ impl ModManager {
         fs::write(save_path, json)?;
 
         let profiles = self.profiles.lock().unwrap();
+        let mut path = prefs.data_path.join("profiles");
         for profile in profiles.iter() {
             let json = serde_json::to_string(&profile.mods)?;
-            let mut path = prefs.data_path.join("profiles");
             path.push(&profile.name);
-            path.push("profile.json");
+            path.push("manifest.json");
 
-            fs::write(path, json)?;
+            fs::write(&path, json)?;
+
+            path.pop();
+            path.pop();
         }
 
         Ok(())
@@ -243,6 +244,7 @@ impl ModManager {
             name,
             path,
             mods: Vec::new(),
+            config: Vec::new(),
         };
         profiles.push(profile);
 
@@ -282,6 +284,19 @@ impl ModManager {
     }
 }
 
+fn load_profile(path: &Path) -> Result<Profile, anyhow::Error> {
+    let name = path.file_name().unwrap().to_string_lossy().to_string();
+    let mods = fs::read_to_string(path.join("manifest.json"))
+        .context("failed to read profile manifest")?;
+
+    let mods: Vec<ProfileMod> = serde_json::from_str(&mods)
+        .context("failed to parse profile manifest")?;
+
+    let config = config::load_config(&path).collect();
+    
+    Ok(Profile { name, path: path.to_owned(), mods, config })
+}
+
 fn get_active_profile<'a>(
     profiles: &'a mut Vec<Profile>,
     manager: &ModManager,
@@ -289,5 +304,5 @@ fn get_active_profile<'a>(
     let active_profile_index = *manager.active_profile_index.lock().unwrap();
     profiles
         .get_mut(active_profile_index)
-        .context("active profile not found")
+        .context("active profile out of range")
 }
