@@ -7,6 +7,7 @@ use tauri::AppHandle;
 pub mod commands;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(rename_all="camelCase")]
 pub struct Prefs {
     pub steam_exe_path: Option<PathBuf>,
     pub cache_path: PathBuf,
@@ -26,12 +27,12 @@ impl PrefsState {
         println!("initiating preferences");
 
         let path_resolver = app.path_resolver();
-        let config_path = path_resolver
+        let prefs_path = path_resolver
             .app_config_dir()
             .context("failed to get config directory")?;
-        fs::create_dir_all(&config_path)?;
+        fs::create_dir_all(&prefs_path)?;
 
-        let save_path = config_path.join("config.json");
+        let save_path = prefs_path.join("prefs.json");
         let save_data = match save_path.try_exists()? {
             true => {
                 let data = fs::read_to_string(&save_path)?;

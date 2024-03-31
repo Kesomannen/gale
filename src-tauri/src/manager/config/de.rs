@@ -7,28 +7,42 @@ use super::*;
 pub const FLAGS_MESSAGE: &'static str =
     "# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)";
 
-impl<T> Num<T> 
-where 
+impl<T> Num<T>
+where
     T: Serialize + FromStr + PartialOrd + Display,
     <T as FromStr>::Err: Send + Sync + std::error::Error + 'static,
 {
     fn parse(value: &str, range: Option<(&str, &str)>) -> Result<Self> {
-        let value = value.parse()
+        let value = value
+            .parse()
             .with_context(|| format!("failed to parse value '{}'", value))?;
 
         let range = match range {
             Some((min, max)) => {
-                let min = min.parse()
-                    .with_context(|| format!("failed to parse minimum value '{}'", min))?;
-                let max = max.parse()
-                    .with_context(|| format!("failed to parse maximum value '{}'", max))?;
+                let min = min
+                    .parse()
+                    .with_context(|| format!("invalid minimum value '{}'", min))?;
+                let max = max
+                    .parse()
+                    .with_context(|| format!("invalid maximum value '{}'", max))?;
 
-                ensure!(min <= max, "minimum value '{}' is greater than maximum value '{}'", min, max);
-                ensure!(value >= min && value <= max, "value '{}' is out of range [{}, {}]", value, min, max);
+                ensure!(
+                    min <= max,
+                    "minimum value '{}' is greater than maximum value '{}'",
+                    min,
+                    max
+                );
+                ensure!(
+                    value >= min && value <= max,
+                    "value '{}' is out of range [{}, {}]",
+                    value,
+                    min,
+                    max
+                );
 
                 Some(min..max)
-            },
-            None => None
+            }
+            None => None,
         };
 
         Ok(Self { value, range })
@@ -68,7 +82,7 @@ impl<'a> Parser<'a> {
             } else if line.starts_with('#') {
                 if let Some(entry) = self.parse_entry()? {
                     ensure!(!self.sections.is_empty(), "config entry has no section");
-                    
+
                     let section = self.sections.last_mut().unwrap();
                     section.entries.push(entry);
                 }
@@ -107,7 +121,7 @@ impl<'a> Parser<'a> {
         let name = &line[1..line.len() - 1];
         self.sections.push(Section {
             name: name.to_owned(),
-            entries: Vec::new(), 
+            entries: Vec::new(),
         });
 
         Ok(())
@@ -191,7 +205,7 @@ impl<'a> Parser<'a> {
             value_str,
             default_value_str,
             type_name,
-            range
+            range,
         )?;
 
         Ok(Some(Entry {
@@ -210,27 +224,45 @@ fn parse_value(
     value_str: &str,
     default_value_str: Option<&str>,
     type_name: &str,
-    range: Option<(&str, &str)>
+    range: Option<(&str, &str)>,
 ) -> Result<(Value, Option<Value>)> {
     Ok(match acceptable_values {
         Some(options) => match is_flags {
-            true => {(
-                Value::Flags { values: parse_flags(value_str), options: options.clone() },
-                default_value_str.map(|s| Value::Flags { values: parse_flags(s), options }),
-            )}
-            false => {(
-                Value::Enum { value: value_str.to_owned(), options: options.clone() },
-                default_value_str.map(|s| Value::Enum { value: s.to_owned(), options }),
-            )}
+            true => (
+                Value::Flags {
+                    values: parse_flags(value_str),
+                    options: options.clone(),
+                },
+                default_value_str.map(|s| Value::Flags {
+                    values: parse_flags(s),
+                    options,
+                }),
+            ),
+            false => (
+                Value::Enum {
+                    value: value_str.to_owned(),
+                    options: options.clone(),
+                },
+                default_value_str.map(|s| Value::Enum {
+                    value: s.to_owned(),
+                    options,
+                }),
+            ),
         },
-        None => {(
+        None => (
             parse_simple_value(type_name, value_str, range)?,
-            default_value_str.map(|s| parse_simple_value(type_name, s, range)).transpose()?,
-        )}
+            default_value_str
+                .map(|s| parse_simple_value(type_name, s, range))
+                .transpose()?,
+        ),
     })
 }
 
-fn parse_simple_value(type_name: &str, value_str: &str, range: Option<(&str, &str)>) -> Result<Value> {
+fn parse_simple_value(
+    type_name: &str,
+    value_str: &str,
+    range: Option<(&str, &str)>,
+) -> Result<Value> {
     Ok(match type_name {
         "Boolean" => Value::Boolean(value_str == "true"),
         "String" => Value::String(value_str.to_owned()),

@@ -13,17 +13,17 @@
 </script>
 
 <Collapsible.Root bind:open={open}>
-    <Collapsible.Trigger class="pl-3 pr-6 text-slate-200 hover:text-slate-100 font-semibold flex items-center justify-between"> 
+    <Collapsible.Trigger class="flex pl-3 pr-6 w-full rtl text-slate-200 hover:text-white items-center"> 
         <Icon
             icon="mdi:expand-more"
-            class="text-xl {open ? 'rotate-180' : 'rotate-0'} transition-all mr-1"
+            class="text-xl {open ? 'rotate-180' : 'rotate-0'} transition-all mr-1 flex-shrink-0"
         />
         {file.name}
     </Collapsible.Trigger>
     <Collapsible.Content
-        class="flex flex-col mt-0.5" 
+        class="flex flex-col mt-0.5 mb-1" 
         transition={slide}
-        transitionConfig={{ duration: 150, easing: quadOut }}
+        transitionConfig={{ duration: 100, easing: quadOut }}
     >
         {#each file.sections as section}
             <Button.Root 

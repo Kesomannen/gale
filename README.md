@@ -1,3 +1,23 @@
 # Kesomannen Mod Manager
 
-A lightweight and extremely fast mod manager for Lethal Company.
+A lightweight and fast mod manager for Lethal Company, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/). Currently very much in development.
+
+[screenshot](images/screenshot.png)
+
+## Installation
+
+Since this project is early in development, I've decided to not release any binaries yet.
+
+You can however clone the repository and build the project yourself. The only dependencies you should need are [Node.js](https://nodejs.org/en/download) and [Rust](https://www.rust-lang.org/tools/install).
+
+## Features & Roadmap
+
+- [x] Browse & install mods
+- [x] Config editor
+- [ ] Import & export profiles
+- [ ] Support for other BepInEx compatible games
+- [ ] Support for other modding frameworks
+
+## License
+
+[GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/#)

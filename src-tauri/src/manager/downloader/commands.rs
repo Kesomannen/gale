@@ -1,15 +1,17 @@
-use std::{fs, sync::atomic::{self, AtomicUsize}};
+use std::{
+    fs,
+    sync::atomic::{self, AtomicUsize},
+};
 
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use tauri::Manager;
 use uuid::Uuid;
 
 use crate::{
-    manager::{self, ModManager}, 
-    prefs::PrefsState, 
-    thunderstore::{BorrowedMod, ThunderstoreState}, 
-    util, 
-    NetworkClient
+    manager::{self, ModManager},
+    prefs::PrefsState,
+    thunderstore::{BorrowedMod, ThunderstoreState},
+    util, NetworkClient,
 };
 
 type Result<T> = util::CommandResult<T>;
@@ -23,7 +25,7 @@ pub async fn install_mod(
     thunderstore: tauri::State<'_, ThunderstoreState>,
     network_client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
-    let (to_download, target_path, cache_path) = {
+    let (to_download, total, target_path, cache_path) = {
         println!("installing mod: {}", package_uuid);
         let config = config.lock();
         let cache_path = config.cache_path.clone();
@@ -38,31 +40,27 @@ pub async fn install_mod(
             version: &package.versions[0],
         };
 
-        let to_download = profile.install(target_mod, &cache_path, &mod_map)?;
+        let (to_download, total) = profile.install(target_mod, &cache_path, &mod_map)?;
 
-        (to_download, profile.path.clone(), cache_path)
+        (to_download, total, profile.path.clone(), cache_path)
     };
 
     manager.save(&config.lock())?;
 
     let completed = AtomicUsize::new(0);
-    let total = to_download.len();
+    let _ = app.emit_all("install_progress", (total - to_download.len(), total));
 
-    let _ = app.emit_all("install_progress", (0, total));
-
-    Ok(
-        super::install_by_download(
-            to_download,
-            &cache_path,
-            &target_path,
-            &network_client.0,
-            || {
-                let current = completed.fetch_add(1, atomic::Ordering::SeqCst) + 1;
-                let _ = app.emit_all("install_progress", (current, total));
-            },
-        )
-        .await?
+    Ok(super::install_by_download(
+        to_download,
+        &cache_path,
+        &target_path,
+        &network_client.0,
+        || {
+            let current = completed.fetch_add(1, atomic::Ordering::SeqCst) + 1;
+            let _ = app.emit_all("install_progress", (current, total));
+        },
     )
+    .await?)
 }
 
 #[tauri::command]

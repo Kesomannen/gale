@@ -11,7 +11,6 @@
 	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import { appWindow } from '@tauri-apps/api/window';
-	import { Root } from 'postcss';
 
 	let newProfileOpen = false;
 	let preferencesOpen = false;

@@ -1,9 +1,9 @@
 use std::{fmt::Display, fs, io, ops::Range, path::Path, str::FromStr};
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
-use walkdir::WalkDir;
 use typeshare::typeshare;
+use walkdir::WalkDir;
 
 use crate::fs_util;
 
@@ -70,12 +70,7 @@ pub struct Entry {
 }
 
 impl Entry {
-    fn new(
-        name: &str,
-        description: &str,
-        default_value: Option<Value>,
-        value: Value,
-    ) -> Self {
+    fn new(name: &str, description: &str, default_value: Option<Value>, value: Value) -> Self {
         let type_name = match &value {
             Value::Boolean(_) => "Boolean",
             Value::String(_) => "String",
@@ -105,7 +100,9 @@ impl Entry {
     }
 
     fn reset(&mut self) -> Result<()> {
-        self.value = self.default_value.clone()
+        self.value = self
+            .default_value
+            .clone()
             .ok_or_else(|| anyhow!("no default value"))?;
         Ok(())
     }
@@ -113,7 +110,7 @@ impl Entry {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(tag="type",content="content",rename_all="camelCase")]
+#[serde(tag = "type", content = "content", rename_all = "camelCase")]
 pub enum Value {
     Boolean(bool),
     String(String),
@@ -128,7 +125,7 @@ pub enum Value {
     Int32(Num<i32>),
     Single(Num<f32>),
     Double(Num<f64>),
-    Other(String)
+    Other(String),
 }
 
 impl Value {
@@ -136,7 +133,7 @@ impl Value {
         match self {
             Self::Enum { options, .. } => Some(options),
             Self::Flags { options, .. } => Some(options),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -145,7 +142,8 @@ impl Value {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Num<T>
-where T: Serialize + ToString
+where
+    T: Serialize + ToString,
 {
     pub value: T,
     pub range: Option<Range<T>>,
@@ -157,18 +155,26 @@ impl Profile {
     }
 
     fn modify_config<F, R>(&mut self, file: &str, section: &str, entry: &str, f: F) -> Result<R>
-    where F: FnOnce(&mut Entry) -> R
+    where
+        F: FnOnce(&mut Entry) -> R,
     {
-        let file = self.config
+        let file = self
+            .config
             .iter_mut()
             .filter_map(|f| f.as_mut().ok())
             .find(|f| f.name == file)
             .ok_or_else(|| anyhow!("config file {} not found", file))?;
 
-        let section = file.sections.iter_mut().find(|s| s.name == section)
+        let section = file
+            .sections
+            .iter_mut()
+            .find(|s| s.name == section)
             .ok_or_else(|| anyhow!("section {} not found in {}", section, self.name))?;
 
-        let mut entry = section.entries.iter_mut().find(|e| e.name == entry)
+        let mut entry = section
+            .entries
+            .iter_mut()
+            .find(|e| e.name == entry)
             .ok_or_else(|| anyhow!("entry {} not found in section {}", entry, self.name))?;
 
         let result = f(&mut entry);
@@ -189,9 +195,8 @@ pub fn load_config(profile_path: &Path) -> impl Iterator<Item = LoadedFile> {
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "cfg"))
         .map(move |entry| {
-            println!("Scanning {:?}", entry.path());
-
-            let name = entry.path()
+            let name = entry
+                .path()
                 .strip_prefix(&config_path)
                 .unwrap()
                 .with_extension("")
@@ -199,10 +204,10 @@ pub fn load_config(profile_path: &Path) -> impl Iterator<Item = LoadedFile> {
                 .to_string();
 
             let content = fs::read_to_string(entry.path())
-                .map_err(|err| (name.clone(), anyhow!(err).context("failed to read file")))?;
+                .map_err(|err| (name.clone(), anyhow!(err)))?;
 
             let sections = de::from_str(&content)
-                .map_err(|err| (name.clone(), anyhow!(err).context("failed to parse file")))?;
+                .map_err(|err| (name.clone(), anyhow!(err)))?;
 
             Ok(File { name, sections })
         })

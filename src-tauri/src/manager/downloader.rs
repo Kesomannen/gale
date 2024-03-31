@@ -1,12 +1,14 @@
 use std::{fs, io::Cursor, iter, path::Path};
 
+use anyhow::{bail, Context, Result};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use uuid::Uuid;
-use anyhow::{bail, Context, Result};
 
 use crate::{
-    fs_util, prefs::Prefs, thunderstore::{self, models::PackageListing, BorrowedMod}
+    fs_util,
+    prefs::Prefs,
+    thunderstore::{self, models::PackageListing, BorrowedMod},
 };
 
 use super::{Profile, ProfileMod};
@@ -26,34 +28,24 @@ impl Profile {
         borrowed_mod: BorrowedMod<'_>,
         packages: &IndexMap<Uuid, PackageListing>,
     ) -> Result<u64> {
-        Ok(self
-            .missing_deps(&borrowed_mod, packages)
-            .into_iter()
-            .filter_map(|dep| dep.ok())
-            .chain(iter::once(borrowed_mod))
-            .filter(|mod_to_install| {
-                let name = &mod_to_install.package.full_name;
+        Ok(
+            thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, packages)
+                .filter_map(|dep| dep.ok())
+                .filter(move |dep| !self.has_mod(dep.package.uuid4))
+                .chain(iter::once(borrowed_mod))
+                .filter(|mod_to_install| {
+                    let name = &mod_to_install.package.full_name;
 
-                let mod_cache_path = config
-                    .cache_path
-                    .join(name)
-                    .join(&mod_to_install.version.version_number);
+                    let mod_cache_path = config
+                        .cache_path
+                        .join(name)
+                        .join(&mod_to_install.version.version_number);
 
-                !mod_cache_path.try_exists().unwrap_or(false)
-            })
-            .map(|mod_to_install| mod_to_install.version.file_size as u64)
-            .sum()
+                    !mod_cache_path.try_exists().unwrap_or(false)
+                })
+                .map(|mod_to_install| mod_to_install.version.file_size as u64)
+                .sum(),
         )
-    }
-
-    pub fn missing_deps<'a>(
-        &self,
-        borrowed_mod: &BorrowedMod<'a>,
-        packages: &'a IndexMap<Uuid, PackageListing>,
-    ) -> Vec<Result<BorrowedMod<'a>>> {
-        thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, packages)
-            .filter_ok(move |dep| !self.has_mod(dep.package.uuid4))
-            .collect()
     }
 
     pub fn install<'a>(
@@ -61,19 +53,19 @@ impl Profile {
         borrowed_mod: BorrowedMod<'a>,
         cache_path: &Path,
         packages: &'a IndexMap<Uuid, PackageListing>,
-    ) -> Result<Vec<ModDownloadData>> {
+    ) -> Result<(Vec<ModDownloadData>, usize)> {
         if self.has_mod(borrowed_mod.package.uuid4) {
             bail!("mod {} already installed", borrowed_mod.package.full_name);
         }
 
         println!("preparing to install: {}", borrowed_mod.version.full_name);
 
-        let mut to_install = {
-            self.missing_deps(&borrowed_mod, packages)
-                .into_iter()
+        let mut to_install =
+            thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, packages)
+                .filter_ok(|dep| !self.has_mod(dep.package.uuid4))
                 .collect::<Result<Vec<_>>>()
-                .context("failed to resolve dependencies")?
-        };
+                .context("failed to resolve dependencies")?;
+
         to_install.push(borrowed_mod);
 
         self.mods.extend(to_install.iter().map(|m| ProfileMod {
@@ -81,21 +73,29 @@ impl Profile {
             version_uuid: m.version.uuid4,
         }));
 
+        let total = to_install.len();
+
         self.install_from_cache(&mut to_install, cache_path)
             .context("failed to install from cache")?;
 
-        Ok(to_install
-            .iter()
-            .map(|m| ModDownloadData {
-                name: m.package.full_name.clone(),
-                version: m.version.version_number.clone(),
-                url: m.version.download_url.clone(),
-            })
-            .collect::<Vec<_>>()
-        )
+        Ok((
+            to_install
+                .iter()
+                .map(|m| ModDownloadData {
+                    name: m.package.full_name.clone(),
+                    version: m.version.version_number.clone(),
+                    url: m.version.download_url.clone(),
+                })
+                .collect::<Vec<_>>(),
+            total,
+        ))
     }
 
-    fn install_from_cache<'a>(&self, to_install: &mut Vec<BorrowedMod<'a>>, cache_path: &Path) -> Result<()> {
+    fn install_from_cache<'a>(
+        &self,
+        to_install: &mut Vec<BorrowedMod<'a>>,
+        cache_path: &Path,
+    ) -> Result<()> {
         let mut i = 0;
         while i < to_install.len() {
             let mod_to_install = &to_install[i];
@@ -107,7 +107,7 @@ impl Profile {
             if mod_cache_path.try_exists().unwrap_or(false) {
                 println!("installing from cache: {}", name);
                 install_mod_from_disk(&mod_cache_path, &self.path, &name)?;
-                
+
                 to_install.remove(i);
             } else {
                 i += 1;
@@ -153,9 +153,14 @@ where
 
     println!("downloading: {}", data.url);
 
-    let response = client.get(&data.url)
-        .send().await.context("failed to download mod")?
-        .bytes().await.context("failed to download mod")?;
+    let response = client
+        .get(&data.url)
+        .send()
+        .await
+        .context("failed to download mod")?
+        .bytes()
+        .await
+        .context("failed to download mod")?;
 
     println!("extracting: {}", data.name);
 
@@ -181,8 +186,7 @@ fn install_mod_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
     let target_path = dest.join("BepInEx");
     let target_plugins_path = target_path.join("plugins").join(name);
     if !is_bepinex {
-        fs::create_dir_all(&target_plugins_path)
-            .context("failed to create plugins directory")?;
+        fs::create_dir_all(&target_plugins_path).context("failed to create plugins directory")?;
     }
 
     for entry in fs::read_dir(src)? {

@@ -45,14 +45,14 @@
         <Icon class="text-slate-400 text-xl ml-auto" icon="mdi:chevron-down" />
     </Select.Trigger>
     <Select.Content
-        class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-2 rounded-lg border border-gray-600"
+        class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600"
         transition={slide}
         transitionConfig={{ duration: 100 }}
     >
         {#each options as option}
             <Select.Item
                 value={option}
-                class="flex items-center px-3 py-1 text-slate-400 hover:text-slate-200 text-left rounded-lg hover:bg-gray-700 cursor-default"
+                class="flex items-center px-3 py-1 truncate text-sm text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
             >
                 {option}
             </Select.Item>

@@ -36,7 +36,7 @@ impl Serializer {
         self.push_str(&section.name);
         self.push_line("]");
         self.new_line();
-    
+
         for entry in section.entries.iter() {
             self.write_entry(entry);
             self.new_line();
@@ -45,7 +45,8 @@ impl Serializer {
     }
 
     fn write_num_comment<T>(&mut self, num: &Num<T>)
-    where T: Serialize + ToString
+    where
+        T: Serialize + ToString,
     {
         if let Some(range) = &num.range {
             self.push_str("# Acceptable value range: From ");
@@ -74,17 +75,17 @@ impl Serializer {
             self.push_str("## ");
             self.push_line(line);
         }
-    
+
         self.push_str("# Setting type: ");
         self.push_line(&entry.type_name);
-    
+
         self.push_str("# Default value:");
         if let Some(default) = &entry.default_value {
             self.push_char(' ');
             self.write_value(default);
         }
         self.new_line();
-    
+
         if let Some(options) = entry.value.options() {
             self.push_str("# Acceptable values: ");
             let mut is_first = true;
@@ -93,24 +94,24 @@ impl Serializer {
                     self.push_str(", ");
                 }
                 is_first = false;
-    
+
                 self.push_str(&option);
             }
 
             self.new_line();
         }
-    
+
         if let Value::Flags { .. } = entry.value {
             self.push_line(FLAGS_MESSAGE);
         }
-    
+
         match entry.value {
             Value::Int32(ref num) => self.write_num_comment(num),
             Value::Single(ref num) => self.write_num_comment(num),
             Value::Double(ref num) => self.write_num_comment(num),
-            _ => { }
+            _ => {}
         }
-    
+
         self.push_str(&entry.name);
         self.push_str(" = ");
         self.write_value(&entry.value);

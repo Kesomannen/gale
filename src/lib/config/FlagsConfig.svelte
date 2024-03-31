@@ -13,6 +13,7 @@
 
     let content = entry.value.content as { values: string[], options: string[] };
     $: options = content.options;
+    $: items = options.map(valueToItem);
 
     let selectedItems = content.values.map(valueToItem);
     $: selectedValues = selectedItems.map(itemToValue);
@@ -43,25 +44,29 @@
     }
 </script>
 
-<Select.Root items={options} bind:selected={selectedItems} multiple={true}>
+<Select.Root {items} bind:selected={selectedItems} multiple={true}>
     <Select.Trigger
         class="flex items-center flex-grow bg-gray-900 rounded-lg px-3 py-1 text-sm
-                border border-gray-500 border-opacity-0 hover:border-opacity-100"
+                border border-gray-500 border-opacity-0 hover:border-opacity-100 truncate"
     >
         <Select.Value class="text-slate-300 text-left w-full" />
         <Icon class="text-slate-400 text-xl ml-auto" icon="mdi:chevron-down" />
     </Select.Trigger>
     <Select.Content
-        class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-2 rounded-lg border border-gray-600"
+        class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600"
         transition={slide}
         transitionConfig={{ duration: 100 }}
     >
-        {#each options as option}
+        {#each items as item}
             <Select.Item
-                value={option}
-                class="flex items-center px-3 py-1 text-slate-400 hover:text-slate-200 text-left rounded-lg hover:bg-gray-700 cursor-default"
+                value={item.value}
+                label={item.label}
+                class="flex items-center px-3 py-1 truncate text-sm text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
             >
-                {option}
+                {item.label}
+                <Select.ItemIndicator class="ml-auto">
+                    <Icon icon="mdi:check" class="text-green-400 text-lg" />
+                </Select.ItemIndicator>
             </Select.Item>
         {/each}
     </Select.Content>
