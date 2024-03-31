@@ -2,7 +2,7 @@
 
 A lightweight and fast mod manager for Lethal Company, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/). Currently very much in development.
 
-[screenshot](/images/screenshot.png)
+![screenshot](/images/screenshot.png)
 
 ## Installation
 
