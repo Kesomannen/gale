@@ -1,28 +1,24 @@
 <script lang="ts">
-	import InputField from "$lib/InputField.svelte";
-	import { invokeCommand } from "$lib/invoke";
-	import type { ConfigEntry, ConfigValue } from "$lib/models";
-	import ResetConfigButton from "./ResetConfigButton.svelte";
+	import InputField from '$lib/InputField.svelte';
+	import { setConfig } from '$lib/invoke';
+	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 
-    export let file: string;
-    export let section: string;
-    export let entry: ConfigEntry;
+	import ResetConfigButton from './ResetConfigButton.svelte';
 
-    let value: string = entry.value.content as string;
+	export let entryId: ConfigEntryId;
+    export let isOther: boolean = false;
 
-    function onReset(newValue: ConfigValue) {
-        value = newValue.content as string;
-    }
+	let content = entryId.entry.value.content as string;
 
-    $: {
-        let configValue: ConfigValue = {
-            type: "string",
-            content: value
-        }
+	function onReset(value: ConfigValue) {
+		content = value.content as string;
+	}
 
-        invokeCommand('set_config_entry', { file, section, entry: entry.name, value: configValue });
-    }
+	$: setConfig(entryId, {
+		type: isOther ? 'other' : 'string',
+		content: content
+	});
 </script>
 
-<InputField bind:value={value} />
-<ResetConfigButton {file} {section} {entry} {onReset} />
+<InputField bind:value={content} />
+<ResetConfigButton {entryId} {onReset} />

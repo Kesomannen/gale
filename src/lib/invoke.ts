@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api';
 import { writable, type Writable } from 'svelte/store';
+import type { ConfigEntryId, ConfigValue } from './models';
 
 const errorDuration = 7500;
 const maxErrors = 5;
@@ -40,5 +41,14 @@ export function removeError(index: number) {
 	errors.update((errs) => {
 		errs.splice(index, 1);
 		return errs;
+	});
+}
+
+export function setConfig(id: ConfigEntryId, value: ConfigValue) {
+	invokeCommand('set_config_entry', { 
+		file: id.file.name,
+		section: id.section.name,
+		entry: id.entry.name,
+		value 
 	});
 }

@@ -141,3 +141,9 @@ export interface SelectItem {
 	value: string;
 	label: string;
 }
+
+export interface ConfigEntryId {
+	file: ConfigFile;
+	section: ConfigSection;
+	entry: ConfigEntry;
+}

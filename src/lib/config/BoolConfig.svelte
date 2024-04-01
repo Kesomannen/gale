@@ -1,42 +1,38 @@
 <script lang="ts">
-	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigEntry, ConfigValue } from '$lib/models';
+	import { setConfig } from '$lib/invoke';
+	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import { Checkbox } from 'bits-ui';
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Icon from '@iconify/svelte';
 
-	export let file: string;
-	export let section: string;
-	export let entry: ConfigEntry;
+	export let entryId: ConfigEntryId;
 
-	let value: boolean = entry.value.content as boolean;
+	let content = entryId.entry.value.content as boolean;
 
 	function onReset(newValue: ConfigValue) {
-		value = newValue.content as boolean;
+		content = newValue.content as boolean;
 	}
 
-	$: {
-		let configValue: ConfigValue = {
-			type: 'boolean',
-			content: value
-		};
+	function onCheckedChange(newValue: boolean | 'indeterminate') {
+		if (newValue === 'indeterminate') return;
 
-		invokeCommand('set_config_entry', { file, section, entry: entry.name, value: configValue });
+		content = newValue;
+		setConfig(entryId, { type: 'boolean', content });
 	}
 </script>
 
 <div class="flex items-center flex-grow">
-	<Checkbox.Root id="checkbox" bind:checked={value}>
+	<Checkbox.Root bind:checked={content} {onCheckedChange}>
 		<Checkbox.Indicator
 			class="rounded-md w-5 h-5 p-1 
-            bg-{value ? 'green-700' : 'gray-800'}
-            hover:bg-{value ? 'green-600' : 'gray-700'}
-            {value ? '' : 'border border-gray-500'}"
+            bg-{content ? 'green-700' : 'gray-800'}
+            hover:bg-{content ? 'green-600' : 'gray-700'}
+            {content ? '' : 'border border-gray-500'}"
 		>
-			{#if value}
+			{#if content}
 				<Icon class="text-white w-full h-full font-bold" icon="mdi:check" />
 			{/if}
 		</Checkbox.Indicator>
 	</Checkbox.Root>
 </div>
-<ResetConfigButton {file} {section} {entry} {onReset} />
+<ResetConfigButton {entryId} {onReset} />

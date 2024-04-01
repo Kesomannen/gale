@@ -1,50 +1,49 @@
 <script lang="ts">
-	import InputField from "$lib/InputField.svelte";
-	import { invokeCommand } from "$lib/invoke";
-	import type { ConfigEntry, ConfigValue, SelectItem } from "$lib/models";
+	import { setConfig } from "$lib/invoke";
+	import type { ConfigEntryId, ConfigValue, SelectItem } from "$lib/models";
 	import { Select } from "bits-ui";
 	import ResetConfigButton from "./ResetConfigButton.svelte";
 	import { slide } from "svelte/transition";
 	import Icon from "@iconify/svelte";
 
-    export let file: string;
-    export let section: string;
-    export let entry: ConfigEntry;
+    export let entryId: ConfigEntryId;
 
-    let content = entry.value.content as { values: string[], options: string[] };
-    $: options = content.options;
-    $: items = options.map(valueToItem);
+    let content = entryId.entry.value.content as { values: string[], options: string[] };
+    let items = content.options.map(valueToItem);
 
     let selectedItems = content.values.map(valueToItem);
-    $: selectedValues = selectedItems.map(itemToValue);
-
-    function onReset(newValue: ConfigValue) {
-        let entryValue = newValue.content as { values: string[], options: string[] }
-        selectedItems = entryValue.values.map(valueToItem);
-    }
 
     function valueToItem(value: string): SelectItem {
         return { value: value, label: value };
     }
 
-    function itemToValue(item: SelectItem): string {
-        return item.value;
+    function onReset(newValue: ConfigValue) {
+        content = newValue.content as { values: string[], options: string[] };
+        selectedItems = content.values.map(valueToItem);
     }
 
-    $: {
-        let configValue: ConfigValue = {
+    function onSelectedChange(newValues: string[]) {
+        content.values = newValues;
+        setConfig(entryId, {
             type: 'flags',
             content: {
-                values: selectedValues,
-                options
+                values: newValues,
+                options: content.options
             }
-        }
-
-        invokeCommand('set_config_entry', { file, section, entry: entry.name, value: configValue });
+        });   
     }
 </script>
 
-<Select.Root {items} bind:selected={selectedItems} multiple={true}>
+<Select.Root
+    {items}
+    bind:selected={selectedItems}
+    onSelectedChange={selection => {
+        if (selection) {
+            onSelectedChange(selection.map(item => item.value)) 
+        }
+    }}
+    multiple={true}
+>
     <Select.Trigger
         class="flex items-center flex-grow bg-gray-900 rounded-lg px-3 py-1 text-sm
                 border border-gray-500 border-opacity-0 hover:border-opacity-100 truncate"
@@ -71,4 +70,4 @@
         {/each}
     </Select.Content>
 </Select.Root>
-<ResetConfigButton {file} {section} {entry} {onReset} />
+<ResetConfigButton {entryId} {onReset} />

@@ -17,7 +17,7 @@
 		bind:value
 		{placeholder}
 		{pattern}
-		class="ml-auto flex-grow px-3 py-1 min-w-0 rounded-lg bg-gray-900 text-sm
+		class="ml-auto flex-grow px-3 py-1 rounded-lg bg-gray-900 text-sm
 			 text-slate-300 hover:text-slate-100 border border-gray-500 border-opacity-0 hover:border-opacity-100"
 	/>
 </div>

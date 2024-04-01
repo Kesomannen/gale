@@ -3,7 +3,7 @@
 	import EnumConfig from '$lib/config/EnumConfig.svelte';
 	import StringConfig from '$lib/config/StringConfig.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigEntry, ConfigFile, ConfigSection, ConfigValue, GetConfigResult } from '$lib/models';
+	import type { ConfigEntry, ConfigEntryId, ConfigFile, ConfigSection, ConfigValue, GetConfigResult } from '$lib/models';
 	import { Button, Collapsible, Slider, Tooltip } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
@@ -56,6 +56,14 @@
 	function isNum(config: ConfigValue) {
 		return config.type === 'int32' || config.type === 'double' || config.type === 'single';
 	}
+
+	function entryId(entry: ConfigEntry): ConfigEntryId {
+		return {
+			file: selectedFile!,
+			section: selectedSection!,
+			entry
+		}
+	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
@@ -95,7 +103,7 @@
 
 	{#if selectedFile && selectedSection}
 		<div class="flex flex-col flex-grow p-4 gap-1 overflow-y-auto">
-			<h1 class="text-slate-200 text-lg font-semibold pb-1 truncate">
+			<h1 class="text-slate-200 text-lg font-semibold pb-1 truncate flex-shrink-0">
 				{selectedFile.name}
 				<span class="text-slate-400">/</span>
 				{selectedSection.name}
@@ -132,18 +140,20 @@
 						</Tooltip.Content>
 					</Tooltip.Root>
 					{#if entry.value.type === 'string'}
-						<StringConfig file={selectedFile.name} section={selectedSection.name} {entry} />
+						<StringConfig entryId={entryId(entry)} />
 					{:else if entry.value.type === 'enum'}
-						<EnumConfig file={selectedFile.name} section={selectedSection.name} {entry} />
+						<EnumConfig entryId={entryId(entry)} />
 					{:else if entry.value.type === 'flags'}
-						<FlagsConfig file={selectedFile.name} section={selectedSection.name} {entry} />
+						<FlagsConfig entryId={entryId(entry)} />
 					{:else if entry.value.type === 'boolean'}
-						<BoolConfig file={selectedFile.name} section={selectedSection.name} {entry} />
+						<BoolConfig entryId={entryId(entry)} />
+					{:else if entry.value.type == 'other'}
+						<StringConfig entryId={entryId(entry)} isOther={true} />
 					{:else if isNum(entry.value)}
-						{#if entry.value.content.range === undefined}
-							PLACEHOLDER
+						{#if entry.value.content.range}
+							<SliderConfig entryId={entryId(entry)} />
 						{:else}
-							<SliderConfig file={selectedFile.name} section={selectedSection.name} {entry} />
+							PLACEHOLDER
 						{/if}
 					{/if}
 				</div>

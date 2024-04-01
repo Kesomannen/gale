@@ -12,22 +12,21 @@
 </script>
 
 <Checkbox.Root 
-	id="checkbox"
 	class="inline-flex gap-2"
 	bind:checked={value} 
 	{onCheckedChange}
 >
 	<Checkbox.Indicator
 		class="rounded-md w-5 h-5 p-1 
-          bg-{value ? 'green-600' : 'gray-800'}
-          hover:bg-{value ? 'green-500' : 'gray-700'}
+          bg-{value ? 'green-700' : 'gray-800'}
+          hover:bg-{value ? 'green-600' : 'gray-700'}
           {value ? '' : 'border border-gray-500'}"
 	>
 		{#if value}
 			<Icon class="text-slate-200 w-full h-full" icon="mdi:check" />
 		{/if}
 	</Checkbox.Indicator>
-	<Label.Root for="checkbox">
+	<Label.Root>
 		<Checkbox.Input />
 		<div class="text-slate-400 text-sm">{label}</div>
 	</Label.Root>

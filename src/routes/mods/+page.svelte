@@ -22,7 +22,6 @@
 	onMount(() => {
 		listen<Mod[]>('mod_query_result', (evt) => {
 			mods = evt.payload;
-			console.log('Received mods', mods);
 		});
 	})
 
