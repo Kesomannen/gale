@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf, sync::Mutex};
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
@@ -20,8 +20,6 @@ pub struct PrefsState {
     inner: Mutex<Prefs>,
 }
 
-type Result<T> = anyhow::Result<T>;
-
 impl PrefsState {
     pub fn init(app: &AppHandle) -> Result<Self> {
         println!("initiating preferences");
@@ -29,7 +27,7 @@ impl PrefsState {
         let path_resolver = app.path_resolver();
         let prefs_path = path_resolver
             .app_config_dir()
-            .context("failed to get config directory")?;
+            .context("failed to resolve preference directory")?;
         fs::create_dir_all(&prefs_path)?;
 
         let save_path = prefs_path.join("prefs.json");
@@ -53,14 +51,14 @@ impl PrefsState {
             }
         };
 
-        let options = Self {
+        let prefs = Self {
             path: save_path,
             inner: Mutex::new(save_data),
         };
 
-        options.save()?;
+        prefs.save()?;
 
-        Ok(options)
+        Ok(prefs)
     }
 
     pub fn lock(&self) -> std::sync::MutexGuard<Prefs> {
@@ -68,7 +66,7 @@ impl PrefsState {
     }
 
     pub fn save(&self) -> Result<()> {
-        let json = serde_json::to_string(&*self.lock())?;
+        let json = serde_json::to_string_pretty(&*self.lock())?;
         fs::write(&self.path, json)?;
         Ok(())
     }

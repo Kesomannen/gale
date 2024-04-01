@@ -157,7 +157,7 @@ impl<'a> Parser<'a> {
 
         let line = self.consume_or_eof()?;
         let default_value = line
-            .strip_prefix("# Default value: ")
+            .strip_prefix("# Default value:")
             .with_context(|| format!("expected default value, found '{}'", line))?
             .trim();
 

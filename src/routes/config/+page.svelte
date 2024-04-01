@@ -69,7 +69,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col truncate py-4 w-[25%] gap-1 bg-gray-700 text-white border-r border-gray-600 overflow-y-auto"
+		class="flex flex-col py-4 w-[25%] gap-1 bg-gray-700 text-white border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 	>
 		{#each files as file}
 			{#if file.type == 'ok'}

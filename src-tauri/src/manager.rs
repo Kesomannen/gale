@@ -280,14 +280,14 @@ impl ModManager {
             active_profile_index: *self.active_profile_index.lock().unwrap(),
         };
 
-        let json = serde_json::to_string(&manager_save_data)?;
+        let json = serde_json::to_string_pretty(&manager_save_data)?;
         let save_path = prefs.data_path.join("manager.json");
         fs::write(save_path, json)?;
 
         let profiles = self.profiles.lock().unwrap();
         let mut path = prefs.data_path.join("profiles");
         for profile in profiles.iter() {
-            let json = serde_json::to_string(&profile.mods)?;
+            let json = serde_json::to_string_pretty(&profile.mods)?;
             path.push(&profile.name);
             path.push("manifest.json");
 
