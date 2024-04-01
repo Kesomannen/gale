@@ -131,10 +131,33 @@ pub async fn load_mods(app_handle: AppHandle) -> Result<()> {
 pub fn find_package<'a>(
     full_name: &str,
     packages: &'a IndexMap<Uuid, PackageListing>,
-) -> Option<&'a PackageListing> {
+) -> Result<&'a PackageListing> {
     packages
         .values()
         .find(|mod_listing| mod_listing.full_name == full_name)
+        .with_context(|| format!("package {} not found", full_name))
+}
+
+pub fn get_package<'a>(
+    uuid: &Uuid,
+    packages: &'a IndexMap<Uuid, PackageListing>,
+) -> Result<&'a PackageListing> {
+    packages
+        .get(uuid)
+        .with_context(|| format!("package with id {} not found", uuid))
+}
+
+pub fn get_mod<'a>(
+    package_uuid: &Uuid,
+    version_uuid: &Uuid,
+    packages: &'a IndexMap<Uuid, PackageListing>,
+) -> Result<BorrowedMod<'a>> {
+    let package = get_package(package_uuid, packages)?;
+    let version = package
+        .get_version(version_uuid)
+        .with_context(|| format!("version with id {} not found in package {}", version_uuid, package.full_name))?;
+
+    Ok((package, version).into())
 }
 
 pub fn latest_versions(
@@ -194,8 +217,7 @@ pub fn resolve_dep<'a>(
         .with_context(|| format!("invalid dependency string format {}", dependency_string))?;
 
     let full_name = format!("{}-{}", author, name);
-    let package = find_package(&full_name, &packages)
-        .with_context(|| format!("package {} not found", full_name))?;
+    let package = find_package(&full_name, &packages)?;
     let version = package
         .get_version_with_num(version)
         .with_context(|| format!("version {} not found in package {}", version, full_name))?;

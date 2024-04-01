@@ -57,7 +57,7 @@
 	}
 </script>
 
-<ModList bind:activeMod={activeMod} bind:mods={mods} bind:queryArgs={queryArgs}>
+<ModList bind:activeMod bind:mods bind:queryArgs>
 	<Button.Root
 		slot="details"
 		class="flex items-center justify-center gap-2 rounded-lg text-lg font-medium text-slate-100

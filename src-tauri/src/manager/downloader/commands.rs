@@ -10,7 +10,7 @@ use uuid::Uuid;
 use crate::{
     manager::{self, ModManager},
     prefs::PrefsState,
-    thunderstore::{BorrowedMod, ThunderstoreState},
+    thunderstore::{self, BorrowedMod, ThunderstoreState},
     util, NetworkClient,
 };
 
@@ -21,31 +21,31 @@ pub async fn install_mod(
     package_uuid: Uuid,
     app: tauri::AppHandle,
     manager: tauri::State<'_, ModManager>,
-    config: tauri::State<'_, PrefsState>,
+    prefs: tauri::State<'_, PrefsState>,
     thunderstore: tauri::State<'_, ThunderstoreState>,
     network_client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
     let (to_download, total, target_path, cache_path) = {
         println!("installing mod: {}", package_uuid);
-        let config = config.lock();
-        let cache_path = config.cache_path.clone();
+        let pref = prefs.lock();
+        let cache_path = pref.cache_path.clone();
 
         let mut profiles = manager.profiles.lock().unwrap();
         let profile = manager::get_active_profile(&mut profiles, &manager)?;
 
-        let mod_map = thunderstore.packages.lock().unwrap();
-        let package = mod_map.get(&package_uuid).context("mod not found")?;
+        let packages = thunderstore.packages.lock().unwrap();
+        let package = thunderstore::get_package(&package_uuid, &packages)?;
         let target_mod = BorrowedMod {
             package,
             version: &package.versions[0],
         };
 
-        let (to_download, total) = profile.install(target_mod, &cache_path, &mod_map)?;
+        let (to_download, total) = profile.install(target_mod, &cache_path, &packages)?;
 
         (to_download, total, profile.path.clone(), cache_path)
     };
 
-    manager.save(&config.lock())?;
+    manager.save(&prefs.lock())?;
 
     let completed = AtomicUsize::new(0);
     let _ = app.emit_all("install_progress", (total - to_download.len(), total));

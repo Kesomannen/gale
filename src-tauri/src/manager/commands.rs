@@ -7,7 +7,7 @@ use crate::{
     thunderstore::{query::QueryModsArgs, BorrowedMod, OwnedMod, ThunderstoreState}, util,
 };
 
-use super::ModManager;
+use super::{ModManager, RemoveModResponse};
 
 type Result<T> = util::CommandResult<T>;
 
@@ -98,15 +98,44 @@ pub fn delete_profile(
 
 #[tauri::command]
 pub fn remove_mod(
-    index: usize,
-    manager: tauri::State<ModManager>,
-    prefs: tauri::State<PrefsState>,
-) -> Result<()> {
-    let mut profiles = manager.profiles.lock().unwrap();
-    let profile = super::get_active_profile(&mut profiles, &manager)?;
+    package_uuid: Uuid,
+    manager: tauri::State<'_, ModManager>,
+    prefs: tauri::State<'_, PrefsState>,
+    thunderstore: tauri::State<'_, ThunderstoreState>,
+) -> Result<RemoveModResponse> {
+    let response = {
+        let mut profiles = manager.profiles.lock().unwrap();
+        let profile = super::get_active_profile(&mut profiles, &manager)?;
 
-    profile.mods.remove(index);
-    save(&manager, &prefs)
+        let packages = thunderstore.packages.lock().unwrap();
+        profile.remove_mod(package_uuid, &packages)?
+    };
+
+    save(&manager, &prefs)?;
+
+    Ok(response)
+}
+
+#[tauri::command]
+pub fn force_remove_mods(
+    package_uuids: Vec<Uuid>,
+    manager: tauri::State<'_, ModManager>,
+    prefs: tauri::State<'_, PrefsState>,
+    thunderstore: tauri::State<'_, ThunderstoreState>,
+) -> Result<()> {
+    {
+        let mut profiles = manager.profiles.lock().unwrap();
+        let profile = super::get_active_profile(&mut profiles, &manager)?;
+    
+        let packages = thunderstore.packages.lock().unwrap();
+        for package_uuid in package_uuids {
+            profile.force_remove_mod(package_uuid, &packages)?;
+        }
+    }
+
+    save(&manager, &prefs)?;
+
+    Ok(())
 }
 
 #[tauri::command]

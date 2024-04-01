@@ -1,15 +1,38 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import type { Mod } from '../models';
+	import type { DropdownOption, Mod } from '../models';
 	import { getTotalDownloads, open, shortenNum } from '../util';
 	import { Button, Collapsible, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
 	import { quadOut } from 'svelte/easing';
 
+	const dependenciesShown: number = 15;
+
 	export let mod: Mod;
 	export let onClose: () => void;
+	export let extraDropdownOptions: DropdownOption[] = [];
 
-	const dependenciesShown: number = 15;
+	const defaultDropdownOptions = [
+		{ label: 'View on Thunderstore', onClick: () => open(`https://thunderstore.io/c/lethal-company/p/${mod.package.owner}/${mod.package.name}/`) },
+		{ label: 'Open website', onClick: () => open(mod.version.websiteUrl) },
+		{ label: 'Close', onClick: onClose },
+	];
+
+	let dropdownOptions = defaultDropdownOptions;
+
+	$: {
+		let options = [...defaultDropdownOptions];
+		
+		if (extraDropdownOptions.length > 0) {
+			options.splice(2, 0, ...extraDropdownOptions);
+		}
+
+		if (mod.package.donationLink) {
+			options.splice(2, 0, { label: 'Donate', onClick: () => open(mod.package.donationLink!) });
+		}
+
+		dropdownOptions = options;
+	}
 </script>
 
 <div class="flex flex-col px-6 pb-4 pt-6 min-w-80 w-[40%] bg-gray-700 text-white border-l border-gray-600 relative">
@@ -22,27 +45,14 @@
 			transition={slide}
 			transitionConfig={{ duration: 100 }}
 		>
-			<DropdownMenu.Item
-				class="flex items-center px-3 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"
-				on:click={() =>
-					open(
-						`https://thunderstore.io/c/lethal-company/p/${mod.package.owner}/${mod.package.name}/`
-					)}
-			>
-				View on Thunderstore
-			</DropdownMenu.Item>
-			<DropdownMenu.Item
-				class="flex items-center px-3 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"
-				on:click={() => open(mod.version.websiteUrl)}
-			>
-				Open website
-			</DropdownMenu.Item>
-			<DropdownMenu.Item
-				class="flex items-center px-3 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"
-				on:click={onClose}
-			>
-				Close
-			</DropdownMenu.Item>
+			{#each dropdownOptions as option}
+				<DropdownMenu.Item
+					class="flex items-center px-3 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"
+					on:click={option.onClick}
+				>
+					{option.label}
+				</DropdownMenu.Item>
+			{/each}
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 

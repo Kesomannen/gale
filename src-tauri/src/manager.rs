@@ -1,24 +1,27 @@
-use std::{fs, path::{Path, PathBuf}, process::Command, sync::Mutex};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+    sync::Mutex,
+};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use typeshare::typeshare;
 use uuid::Uuid;
 
 use crate::{
     prefs::Prefs,
     thunderstore::{
-        self,
-        models::PackageListing,
-        query::{self, QueryModsArgs},
-        BorrowedMod, OwnedMod,
+        self, models::PackageListing, query::{self, QueryModsArgs}, resolve_deps, resolve_deps_all, BorrowedMod, OwnedMod
     },
 };
 
 pub mod commands;
+pub mod config;
 pub mod downloader;
 pub mod importer;
-pub mod config;
 
 pub struct ModManager {
     profiles: Mutex<Vec<Profile>>,
@@ -26,31 +29,21 @@ pub struct ModManager {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all="camelCase")]
+#[serde(rename_all = "camelCase")]
 struct ManagerSaveData {
     active_profile_index: usize,
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(rename_all="camelCase")]
+#[serde(rename_all = "camelCase")]
 struct ProfileMod {
     package_uuid: Uuid,
-    version_uuid: Uuid
+    version_uuid: Uuid,
 }
 
 impl ProfileMod {
     fn get<'a>(&self, packages: &'a IndexMap<Uuid, PackageListing>) -> Result<BorrowedMod<'a>> {
-        let package = packages
-            .get(&self.package_uuid)
-            .with_context(|| format!("package with id {} not found", self.package_uuid))?;
-        let version = package.get_version(&self.version_uuid).with_context(|| {
-            format!(
-                "version with id {} not found in package {}",
-                self.version_uuid, &package.full_name
-            )
-        })?;
-
-        Ok((package, version).into())
+        thunderstore::get_mod(&self.package_uuid, &self.version_uuid, packages)
     }
 }
 
@@ -85,39 +78,42 @@ impl Profile {
     }
 
     fn dependants_of<'a>(
-        &'a self,
+        &self,
         package_uuid: Uuid,
-        packages: &IndexMap<Uuid, PackageListing>,
-    ) -> Result<Vec<&'a ProfileMod>> {
-        let target_mod = self.get_mod(package_uuid).context("mod not found")?;
+        packages: &'a IndexMap<Uuid, PackageListing>,
+    ) -> Result<Vec<BorrowedMod<'a>>> {
+        let target_mod = self
+            .get_mod(package_uuid)
+            .context("mod not found in profile")?;
+
+        let target_package = target_mod.get(packages)?.package;
 
         self.mods
             .iter()
-            .filter_map(|other| {
-                if other.package_uuid == package_uuid {
-                    return None;
-                }
+            .filter(|other| other.package_uuid != package_uuid)
+            .map(|other| other.get(packages))
+            .filter_map(|other| match other {
+                Ok(other) => {
+                    let deps = resolve_deps_all(&other.version.dependencies, packages)
+                        .collect::<Result<Vec<_>>>()
+                        .context("failed to resolve dependencies");
 
-                match other.get(packages) {
-                    Ok(borrowed_other) => {
-                        match thunderstore::resolve_deps(
-                            &borrowed_other.version.dependencies,
-                            packages,
-                        )
-                        .any(|dep| match dep {
-                            Ok(dep) => dep.package.uuid4 == target_mod.package_uuid,
-                            Err(_) => false,
-                        }) {
+                    match deps {
+                        Ok(deps) => match deps
+                            .into_iter()
+                            .any(|dep| dep.package.uuid4 == target_package.uuid4)
+                        {
                             true => Some(Ok(other)),
                             false => None,
-                        }
+                        },
+                        Err(err) => Some(Err(err)),
                     }
-                    Err(e) => Some(Err(e)),
                 }
-            })
+                Err(_) => Some(other),
+            }) // filter out packages that do not depend on the target one, while keeping errors
             .collect()
     }
-    
+
     const GAME_ID: u32 = 1966720;
 
     fn run_game(&self, config: &Prefs) -> Result<()> {
@@ -148,10 +144,83 @@ impl Profile {
         fn resolve_path<'a>(path: &'a PathBuf, name: &'static str) -> Result<&'a str> {
             let str = path.to_str();
             if !path.try_exists()? || str.is_none() {
-                return Err(anyhow!("{} path could not be resolved", name));
+                bail!("{} path could not be resolved", name);
             }
             Ok(str.unwrap())
         }
+    }
+}
+
+#[typeshare]
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Dependant {
+    pub name: String,
+    pub uuid: Uuid,
+}
+
+#[typeshare]
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
+pub enum RemoveModResponse {
+    Removed,
+    HasDependants(Vec<Dependant>),
+}
+
+impl Profile {
+    fn remove_mod(
+        &mut self,
+        package_uuid: Uuid,
+        packages: &IndexMap<Uuid, PackageListing>,
+    ) -> Result<RemoveModResponse> {
+        let dependants = self.dependants_of(package_uuid, packages)?;
+
+        if !dependants.is_empty() {
+            let response = dependants
+                .iter()
+                .map(|m| Dependant {
+                    name: m.package.name.clone(),
+                    uuid: m.package.uuid4,
+                })
+                .collect();
+
+            return Ok(RemoveModResponse::HasDependants(response));
+        }
+
+        self.force_remove_mod(package_uuid, packages)?;
+
+        Ok(RemoveModResponse::Removed)
+    }
+
+    fn force_remove_mod(
+        &mut self,
+        package_uuid: Uuid,
+        packages: &IndexMap<Uuid, PackageListing>,
+    ) -> Result<()> {
+        let index = self
+            .mods
+            .iter()
+            .position(|m| m.package_uuid == package_uuid)
+            .context("mod not found in profile")?;
+
+        let package = thunderstore::get_package(&package_uuid, packages)?;
+
+        let mut path = self.path.join("BepInEx");
+        for dir in ["core", "patchers", "plugins"].iter() {
+            path.push(dir);
+            path.push(&package.full_name);
+
+            if path.try_exists().unwrap_or(false) {
+                fs::remove_dir_all(&path).context("failed to remove mod directory")?;
+            }
+
+            path.pop();
+            path.pop();
+        }
+
+        self.mods.remove(index);
+
+        Ok(())
     }
 }
 
@@ -163,7 +232,8 @@ impl ModManager {
         let save_data = match save_path.try_exists()? {
             true => {
                 let json = fs::read_to_string(save_path)?;
-                let data = serde_json::from_str(&json).context("failed to parse manager save data")?;
+                let data =
+                    serde_json::from_str(&json).context("failed to parse manager save data")?;
                 data
             }
             false => ManagerSaveData {
@@ -180,7 +250,7 @@ impl ModManager {
             if path.is_dir() {
                 profiles.push(
                     load_profile(&path)
-                        .with_context(|| format!("failed to load profile at {:?}", &path))?
+                        .with_context(|| format!("failed to load profile at {:?}", &path))?,
                 );
             }
         }
@@ -289,12 +359,17 @@ fn load_profile(path: &Path) -> Result<Profile, anyhow::Error> {
     let mods = fs::read_to_string(path.join("manifest.json"))
         .context("failed to read profile manifest")?;
 
-    let mods: Vec<ProfileMod> = serde_json::from_str(&mods)
-        .context("failed to parse profile manifest")?;
+    let mods: Vec<ProfileMod> =
+        serde_json::from_str(&mods).context("failed to parse profile manifest")?;
 
     let config = config::load_config(&path).collect();
-    
-    Ok(Profile { name, path: path.to_owned(), mods, config })
+
+    Ok(Profile {
+        name,
+        path: path.to_owned(),
+        mods,
+        config,
+    })
 }
 
 fn get_active_profile<'a>(

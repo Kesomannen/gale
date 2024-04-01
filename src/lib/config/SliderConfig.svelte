@@ -7,8 +7,8 @@
     export let entryId: ConfigEntryId;
 
     let content = entryId.entry.value.content as ConfigNum;
-    $: type = entryId.entry.value.type as 'int32' | 'double' | 'single';
-    $: range = content.range as ConfigRange;
+    let type = entryId.entry.value.type as 'int32' | 'double' | 'single';
+    let range = content.range as ConfigRange;
     $: sliderValue = [content.value];
 
     function onReset(newValue: ConfigValue) {

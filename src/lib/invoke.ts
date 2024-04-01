@@ -50,5 +50,5 @@ export function setConfig(id: ConfigEntryId, value: ConfigValue) {
 		section: id.section.name,
 		entry: id.entry.name,
 		value 
-	});
+	}).then(() => id.entry.value = value);
 }

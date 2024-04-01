@@ -13,6 +13,7 @@
 	import { Render } from '@jill64/svelte-sanitize';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
 	import Icon from '@iconify/svelte';
+	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
 
 	let files: GetConfigResult[] = [];
 
@@ -68,7 +69,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-4 min-w-40 w-[25%] gap-1 bg-gray-700 text-white border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col truncate py-4 w-[25%] gap-1 bg-gray-700 text-white border-r border-gray-600 overflow-y-auto"
 	>
 		{#each files as file}
 			{#if file.type == 'ok'}
@@ -94,6 +95,7 @@
 						transitionConfig={{ duration: 100 }}
 						side="right"
 					>
+						<Tooltip.Arrow class="rounded-[2px] border-l border-t border-gray-600" />
 						{file.content.error}
 					</Tooltip.Content>
 				</Tooltip.Root>
@@ -109,7 +111,7 @@
 				{selectedSection.name}
 			</h1>
 
-			{#each selectedSection.entries as entry}
+			{#each selectedSection.entries as entry (entry.name)}
 				<div class="flex items-center text-slate-300 pl-1 h-7">
 					<Tooltip.Root openDelay={200}>
 						<Tooltip.Trigger
@@ -153,7 +155,7 @@
 						{#if entry.value.content.range}
 							<SliderConfig entryId={entryId(entry)} />
 						{:else}
-							PLACEHOLDER
+							<NumberInputConfig entryId={entryId(entry)} />
 						{/if}
 					{/if}
 				</div>

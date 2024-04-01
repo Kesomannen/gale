@@ -46,6 +46,7 @@ fn main() {
             manager::commands::create_profile,
             manager::commands::delete_profile,
             manager::commands::remove_mod,
+            manager::commands::force_remove_mods,
             manager::commands::reveal_project_dir,
             manager::commands::start_game,
             

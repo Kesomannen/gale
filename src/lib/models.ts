@@ -147,3 +147,17 @@ export interface ConfigEntryId {
 	section: ConfigSection;
 	entry: ConfigEntry;
 }
+
+export interface DropdownOption {
+	label: string;
+	onClick: () => void;
+}
+
+export interface Dependant {
+	name: string;
+	uuid: string;
+}
+
+export type RemoveModResponse = 
+	| { type: "removed", data?: undefined }
+	| { type: "hasDependants", data: Dependant[] };

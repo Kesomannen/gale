@@ -3,7 +3,7 @@
 	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
 	import ModListSortOption from '$lib/modlist/ModListSortOption.svelte';
 
-	import { SortBy, type Mod, type QueryModsArgs } from '$lib/models';
+	import { SortBy, type Mod, type QueryModsArgs, type DropdownOption } from '$lib/models';
 
 	import Icon from '@iconify/svelte';
 	import { Button, Popover, Select, Separator } from 'bits-ui';
@@ -48,6 +48,7 @@
 
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined = undefined;
+	export let extraDropdownOptions: DropdownOption[] = [];
 	export let queryArgs: QueryModsArgs = {
     	page,
     	pageSize,
@@ -191,7 +192,7 @@
 	</div>
 
 	{#if activeMod}
-		<ModDetailsMenu mod={activeMod} onClose={() => (activeMod = undefined)}>
+		<ModDetailsMenu mod={activeMod} onClose={() => (activeMod = undefined)} {extraDropdownOptions}>
 			<slot name="details" />
 		</ModDetailsMenu>
 	{/if}

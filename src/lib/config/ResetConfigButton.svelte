@@ -12,7 +12,10 @@
 			file: entryId.file.name,
 			section: entryId.section.name,
 			entry: entryId.entry.name
-		}).then((result) => onReset(result));
+		}).then((result) => { 
+			entryId.entry.value = result;
+			onReset(result);
+		});
 	}
 </script>
 

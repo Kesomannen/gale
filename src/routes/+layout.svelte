@@ -13,6 +13,7 @@
 	import { slide } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import { listen } from '@tauri-apps/api/event';
+	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 
 	let status: string | undefined;
 
@@ -29,7 +30,15 @@
 	<Menubar />
 	<Contextbar />
 
-	<slot />
+	<div class="flex flex-grow overflow-hidden">
+		<div class="flex flex-col gap-1 items-center p-2 w-14 bg-gray-900 border-r border-gray-600 flex-shrink-0">
+			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
+			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
+			<NavbarLink to="/config" icon="mdi:settings" tooltip="Edit mod config" />
+		</div>
+
+		<slot />
+	</div>
 
 	{#if status}
 		<div class="w-full flex items-center px-3 py-1 text-sm border-t border-gray-700 text-slate-400">
