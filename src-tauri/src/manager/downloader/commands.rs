@@ -4,11 +4,12 @@ use std::{
 };
 
 use anyhow::Context;
+use itertools::Itertools;
 use tauri::Manager;
 use uuid::Uuid;
 
 use crate::{
-    manager::{self, ModManager},
+    manager::{self, commands::{save, save_unlocked}, downloader::ModDownloadData, ModManager},
     prefs::PrefsState,
     thunderstore::{self, BorrowedMod, ThunderstoreState},
     util, NetworkClient,
@@ -27,8 +28,8 @@ pub async fn install_mod(
 ) -> Result<()> {
     let (to_download, total, target_path, cache_path) = {
         println!("installing mod: {}", package_uuid);
-        let pref = prefs.lock();
-        let cache_path = pref.cache_path.clone();
+        let prefs = prefs.lock();
+        let cache_path = prefs.cache_path.clone();
 
         let mut profiles = manager.profiles.lock().unwrap();
         let profile = manager::get_active_profile(&mut profiles, &manager)?;
@@ -40,24 +41,42 @@ pub async fn install_mod(
             version: &package.versions[0],
         };
 
-        let (to_download, total) = profile.install(target_mod, &cache_path, &packages)?;
+        let to_install = profile.prepare_install(target_mod, &packages)?;
+        let total = to_install.len();
+
+        let to_download = profile.install_from_cache(to_install, &cache_path)
+            .context("failed to install from cache")?
+            .into_iter()
+            .map(|mod_to_download| ModDownloadData::from(&mod_to_download))
+            .collect_vec();
 
         (to_download, total, profile.path.clone(), cache_path)
     };
 
-    manager.save(&prefs.lock())?;
+    save(&manager, &prefs)?;
 
-    let completed = AtomicUsize::new(0);
-    let _ = app.emit_all("install_progress", (total - to_download.len(), total));
+    let completed = total - to_download.len();
+    let _ = app.emit_all("install_progress", (completed, total));
+    let completed = AtomicUsize::new(completed);
 
     Ok(super::install_by_download(
         to_download,
         &cache_path,
         &target_path,
         &network_client.0,
-        || {
+        |profile_mod| {
             let current = completed.fetch_add(1, atomic::Ordering::SeqCst) + 1;
             let _ = app.emit_all("install_progress", (current, total));
+
+            {
+                let mut profiles = manager.profiles.lock().unwrap();
+                let profile = manager::get_active_profile(&mut profiles, &manager)?;
+                
+                profile.mods.push(profile_mod);
+            }
+
+            save_unlocked(&manager, &prefs.lock())?;
+            Ok(())
         },
     )
     .await?)

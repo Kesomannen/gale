@@ -3,8 +3,15 @@
 	import EnumConfig from '$lib/config/EnumConfig.svelte';
 	import StringConfig from '$lib/config/StringConfig.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigEntry, ConfigEntryId, ConfigFile, ConfigSection, ConfigValue, GetConfigResult } from '$lib/models';
-	import { Button, Collapsible, Slider, Tooltip } from 'bits-ui';
+	import type {
+		ConfigEntry,
+		ConfigEntryId,
+		ConfigFile,
+		ConfigSection,
+		ConfigValue,
+		GetConfigResult
+	} from '$lib/models';
+	import { Tooltip } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { pascalToSentence } from '$lib/util';
@@ -45,12 +52,17 @@
 
 	function typeName(config: ConfigEntry) {
 		switch (config.value.type) {
-            case 'int32': return 'Integer'
-            case 'double': return 'Decimal'
-            case 'single': return 'Decimal'
-            case 'string': return 'String'
-            case 'boolean': return 'Bool'
-			default: return config.typeName;
+			case 'int32':
+				return 'Integer';
+			case 'double':
+			case 'single':
+				return 'Decimal';
+			case 'string':
+				return 'String';
+			case 'boolean':
+				return 'Bool';
+			default:
+				return config.typeName;
 		}
 	}
 
@@ -63,13 +75,13 @@
 			file: selectedFile!,
 			section: selectedSection!,
 			entry
-		}
+		};
 	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-4 w-[25%] gap-1 bg-gray-700 text-white border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col py-4 min-w-60 w-[25%] gap-1 bg-gray-700 text-white border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 	>
 		{#each files as file}
 			{#if file.type == 'ok'}
@@ -84,10 +96,12 @@
 			{:else}
 				<Tooltip.Root openDelay={100}>
 					<Tooltip.Trigger
-						class="flex items-center text-slate bg-red-600 text-left px-4 cursor-default"
+						class="flex items-center text-white bg-red-600 pl-3 pr-2 cursor-default"
 					>
-						<Icon icon="mdi:alert" class="mr-2" />
-						{file.content.file}
+						<Icon icon="mdi:error" class="mr-2 flex-shrink-0" />
+						<div class="flex-shrink truncate">
+							{file.content.file}
+						</div>
 					</Tooltip.Trigger>
 					<Tooltip.Content
 						class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[30rem] shadow-lg"

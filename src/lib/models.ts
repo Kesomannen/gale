@@ -149,6 +149,7 @@ export interface ConfigEntryId {
 }
 
 export interface DropdownOption {
+	icon?: string;
 	label: string;
 	onClick: () => void;
 }

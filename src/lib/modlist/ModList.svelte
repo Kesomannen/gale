@@ -16,7 +16,7 @@
 		label: string;
 	}
 
-	const pageSize = 10;
+	const pageSize = 14;
 	const sortOptions: SortOption[] = [
 		{ value: undefined, label: 'Relevance' },
 		{ value: SortBy.Rating, label: 'Rating' },
@@ -49,27 +49,24 @@
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined = undefined;
 	export let extraDropdownOptions: DropdownOption[] = [];
-	export let queryArgs: QueryModsArgs = {
-    	page,
-    	pageSize,
-    	searchTerm,
-    	categories,
-    	includeNsfw,
-    	includeDeprecated,
-    	descending: true,
-    	sortBy: sortBy.value
-  };
+	export let queryArgs: QueryModsArgs;
 
 	$: queryArgs = {
 		page,
-    	pageSize,
-    	searchTerm,
-    	categories,
-    	includeNsfw,
-    	includeDeprecated,
-    	descending: true,
-    	sortBy: sortBy.value
+		pageSize,
+		searchTerm,
+		categories,
+		includeNsfw,
+		includeDeprecated,
+		descending: true,
+		sortBy: sortBy.value
 	};
+
+	$: {
+		if (mods.length === 0 && page > 0) {
+			page--;
+		}
+	}
 
 	function onModClicked(mod: Mod) {
 		if (activeMod === undefined || activeMod.package.uuid4 !== mod.package.uuid4) {
@@ -89,8 +86,8 @@
 </script>
 
 <div class="flex flex-grow overflow-hidden">
-	<div class="flex flex-col flex-grow w-[60%] pt-4 pl-4 pr-2 overflow-hidden">
-		<div class="flex gap-2 mb-2 pr-2">
+	<div class="flex flex-col flex-grow w-[60%] pt-3 pl-3 overflow-hidden">
+		<div class="flex gap-2 mb-2 pr-3">
 			<div class="relative flex-grow">
 				<input
 					type="text"
@@ -127,10 +124,10 @@
 			</Select.Root>
 		</div>
 
-		<div class="flex gap-2 mb-2 pr-2">
+		<div class="flex gap-2 mb-2 pr-3">
 			<div class="flex items-center flex-shrink-0">
 				<Button.Root
-					class="p-1 hover:bg-gray-700 rounded-lg transition-all group"
+					class="p-1 hover:bg-gray-700 disabled:bg-opacity-0 disabled:cursor-not-allowed rounded-lg transition-all group"
 					on:click={() => page--}
 					disabled={page === 0}
 				>
@@ -142,8 +139,15 @@
 
 				<div class="text-md px-4 text-slate-200">Page {page + 1}</div>
 
-				<Button.Root class="p-1 hover:bg-gray-700 rounded-lg" on:click={() => page++}>
-					<Icon class="text-white text-2xl align-middle" icon="mdi:chevron-right" />
+				<Button.Root 
+					class="p-1 hover:bg-gray-700 disabled:bg-opacity-0 disabled:cursor-not-allowed rounded-lg transition-all group"
+					on:click={() => page++}
+					disabled={mods.length < pageSize}
+				>
+					<Icon
+					class="text-white text-2xl group-disabled:text-slate-400 align-middle"
+						icon="mdi:chevron-right"
+					/>
 				</Button.Root>
 			</div>
 
@@ -182,11 +186,9 @@
 			</Popover.Root>
 		</div>
 
-		<div class="flex flex-col flex-grow overflow-y-auto pr-2">
-			{#each mods as mod}
-				<ModListItem onClick={onModClicked} {mod}>
-					<slot name="mod" />
-				</ModListItem>
+		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3">
+			{#each mods.slice(0, pageSize - 1) as mod}
+				<ModListItem onClick={onModClicked} {mod} />
 			{/each}
 		</div>
 	</div>

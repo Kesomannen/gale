@@ -157,11 +157,11 @@ pub fn start_game(
     Ok(())
 }
 
-fn save(manager: &ModManager, prefs: &PrefsState) -> Result<()> {
+pub fn save(manager: &ModManager, prefs: &PrefsState) -> Result<()> {
     save_unlocked(manager, &prefs.lock())
 }
 
-fn save_unlocked(manager: &ModManager, prefs: &Prefs) -> Result<()> {
+pub fn save_unlocked(manager: &ModManager, prefs: &Prefs) -> Result<()> {
     manager.save(prefs).context("failed to save manager state")?;
     Ok(())
 }

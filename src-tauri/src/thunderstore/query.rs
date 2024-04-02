@@ -1,8 +1,8 @@
 use std::{cmp::Ordering, sync::Mutex};
 
+use anyhow::Result;
 use itertools::Itertools;
 use serde::Deserialize;
-use anyhow::Result;
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
@@ -22,7 +22,7 @@ impl QueryState {
 
 #[typeshare]
 #[derive(Deserialize, Debug)]
-#[serde(rename_all="camelCase")]
+#[serde(rename_all = "camelCase")]
 pub enum SortBy {
     LastUpdated,
     Downloads,
@@ -31,7 +31,7 @@ pub enum SortBy {
 
 #[typeshare]
 #[derive(Deserialize, Debug)]
-#[serde(rename_all="camelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct QueryModsArgs {
     page: usize,
     page_size: usize,
@@ -65,7 +65,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
             return Ok(());
         }
 
-        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
     }
 }
 

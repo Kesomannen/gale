@@ -1,5 +1,5 @@
 use std::{
-    collections::HashSet, iter, str::{self, Split}, sync::Mutex, time::Duration
+    collections::HashSet, iter, str::{self, Split}, sync::Mutex, time::{Duration, Instant}
 };
 
 use anyhow::{Context, Result};
@@ -81,6 +81,9 @@ pub async fn load_mods(app_handle: AppHandle) -> Result<()> {
     let mut is_first_chunk = true;
     let mut buffer = String::new();
     let mut byte_buffer = Vec::new();
+    let mut i = 0;
+
+    let start_time = Instant::now();
 
     while let Some(chunk) = response.chunk().await? {
         if chunk.is_empty() {
@@ -111,17 +114,20 @@ pub async fn load_mods(app_handle: AppHandle) -> Result<()> {
                 let (json, _) = buffer.split_at(index + 3);
 
                 let package: PackageListing = serde_json::from_str(json)?;
-
                 packages.insert(package.uuid4.clone(), package);
-
+                
                 buffer.replace_range(..index + 4, "");
             }
 
-            let _ = app_handle.emit_all("status_update", Some(format!("Fetching mods from Thunderstore... {}/?", packages.len())));
+            if i % 100 == 0 {
+                let _ = app_handle.emit_all("status_update", Some(format!("Fetching mods from Thunderstore... {} of unknown", packages.len())));
+            }
         }
+
+        i += 1;
     }
 
-    println!("finished loading mods");
+    println!("finished loading mods in {:?}", start_time.elapsed());
     *state.finished_loading.lock().unwrap() = true;
 
     let _ = app_handle.emit_all("status_update", None::<String>);
@@ -169,7 +175,7 @@ pub fn latest_versions(
     })
 }
 
-pub fn resolve_deps_all<'a>(
+pub fn resolve_deps<'a>(
     dependency_strings: &'a Vec<String>,
     packages: &'a IndexMap<Uuid, PackageListing>,
 ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
@@ -196,15 +202,6 @@ pub fn resolve_deps_all<'a>(
                 .flatten_ok()
         )
     }
-}
-
-pub fn resolve_deps<'a>(
-    dependency_strings: &'a Vec<String>,
-    packages: &'a IndexMap<Uuid, PackageListing>,
-) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
-    dependency_strings
-        .iter()
-        .map(move |dependency| resolve_dep(dependency, packages))
 }
 
 pub fn resolve_dep<'a>(

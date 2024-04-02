@@ -1,6 +1,6 @@
 use std::{fs, io::Cursor, iter, path::Path};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{ensure, Context, Result};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use uuid::Uuid;
@@ -19,6 +19,18 @@ pub struct ModDownloadData {
     pub name: String,
     pub version: String,
     pub url: String,
+    pub profile_mod: ProfileMod,
+}
+
+impl From<&BorrowedMod<'_>> for ModDownloadData {
+    fn from(borrowed_mod: &BorrowedMod<'_>) -> Self {
+        Self {
+            name: borrowed_mod.package.full_name.clone(),
+            version: borrowed_mod.version.version_number.clone(),
+            url: borrowed_mod.version.download_url.clone(),
+            profile_mod: ProfileMod::from(borrowed_mod),
+        }
+    }
 }
 
 impl Profile {
@@ -29,7 +41,7 @@ impl Profile {
         packages: &IndexMap<Uuid, PackageListing>,
     ) -> Result<u64> {
         Ok(
-            thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, packages)
+            thunderstore::resolve_deps(&borrowed_mod.version.dependencies, packages)
                 .filter_map(|dep| dep.ok())
                 .filter(move |dep| !self.has_mod(dep.package.uuid4))
                 .chain(iter::once(borrowed_mod))
@@ -48,54 +60,34 @@ impl Profile {
         )
     }
 
-    pub fn install<'a>(
+    pub fn prepare_install<'a>(
         &mut self,
         borrowed_mod: BorrowedMod<'a>,
-        cache_path: &Path,
         packages: &'a IndexMap<Uuid, PackageListing>,
-    ) -> Result<(Vec<ModDownloadData>, usize)> {
-        if self.has_mod(borrowed_mod.package.uuid4) {
-            bail!("mod {} already installed", borrowed_mod.package.full_name);
-        }
+    ) -> Result<Vec<BorrowedMod<'a>>> {
+        ensure!(
+            !self.has_mod(borrowed_mod.package.uuid4),
+            "mod {} already installed",
+            borrowed_mod.package.full_name
+        );
 
         println!("preparing to install: {}", borrowed_mod.version.full_name);
 
         let mut to_install =
-            thunderstore::resolve_deps_all(&borrowed_mod.version.dependencies, packages)
+            thunderstore::resolve_deps(&borrowed_mod.version.dependencies, packages)
                 .filter_ok(|dep| !self.has_mod(dep.package.uuid4))
                 .collect::<Result<Vec<_>>>()
                 .context("failed to resolve dependencies")?;
 
         to_install.push(borrowed_mod);
-
-        self.mods.extend(to_install.iter().map(|m| ProfileMod {
-            package_uuid: m.package.uuid4,
-            version_uuid: m.version.uuid4,
-        }));
-
-        let total = to_install.len();
-
-        self.install_from_cache(&mut to_install, cache_path)
-            .context("failed to install from cache")?;
-
-        Ok((
-            to_install
-                .iter()
-                .map(|m| ModDownloadData {
-                    name: m.package.full_name.clone(),
-                    version: m.version.version_number.clone(),
-                    url: m.version.download_url.clone(),
-                })
-                .collect::<Vec<_>>(),
-            total,
-        ))
+        Ok(to_install)
     }
 
-    fn install_from_cache<'a>(
-        &self,
-        to_install: &mut Vec<BorrowedMod<'a>>,
+    pub fn install_from_cache<'a>(
+        &mut self,
+        mut to_install: Vec<BorrowedMod<'a>>,
         cache_path: &Path,
-    ) -> Result<()> {
+    ) -> Result<Vec<BorrowedMod<'a>>> {
         let mut i = 0;
         while i < to_install.len() {
             let mod_to_install = &to_install[i];
@@ -107,6 +99,7 @@ impl Profile {
             if mod_cache_path.try_exists().unwrap_or(false) {
                 println!("installing from cache: {}", name);
                 install_mod_from_disk(&mod_cache_path, &self.path, &name)?;
+                self.mods.push(ProfileMod::from(mod_to_install));
 
                 to_install.remove(i);
             } else {
@@ -114,7 +107,7 @@ impl Profile {
             }
         }
 
-        Ok(())
+        Ok(to_install)
     }
 }
 
@@ -123,11 +116,17 @@ pub async fn install_by_download<'a>(
     cache_path: &Path,
     target_path: &Path,
     client: &reqwest::Client,
-    on_mod_complete: impl Fn() -> (),
+    on_mod_complete: impl Fn(ProfileMod) -> Result<()>,
 ) -> Result<()> {
     let futures = to_install
         .into_iter()
-        .map(|download| download_mod(download, cache_path, target_path, client, &on_mod_complete));
+        .map(|download| download_mod(
+            download,
+            cache_path,
+            target_path,
+            client,
+            &on_mod_complete
+        ));
 
     futures_util::future::join_all(futures)
         .await
@@ -145,7 +144,7 @@ async fn download_mod<F>(
     on_complete: &F,
 ) -> Result<()>
 where
-    F: Fn() -> (),
+    F: Fn(ProfileMod) -> Result<()>,
 {
     let mod_cache_path = cache_path.join(&data.name).join(&data.version);
 
@@ -173,55 +172,72 @@ where
     install_mod_from_disk(&mod_cache_path, target_path, &data.name)?;
 
     println!("done: {}", data.name);
-    on_complete();
-
-    Ok(())
+    on_complete(data.profile_mod)
 }
 
 const BEPINEX_NAME: &str = "BepInEx-BepInExPack";
 
 fn install_mod_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
-    let is_bepinex = name == BEPINEX_NAME;
-
-    let target_path = dest.join("BepInEx");
-    let target_plugins_path = target_path.join("plugins").join(name);
-    if !is_bepinex {
+    fn install_other(src: &Path, dest: &Path, name: &str) -> Result<()> {
+        let target_path = dest.join("BepInEx");
+        let target_plugins_path = target_path.join("plugins").join(name);
         fs::create_dir_all(&target_plugins_path).context("failed to create plugins directory")?;
-    }
 
-    for entry in fs::read_dir(src)? {
-        let entry_path = entry?.path();
-        let entry_name = entry_path.file_name().unwrap();
+        for entry in fs::read_dir(src)? {
+            let entry_path = entry?.path();
+            let entry_name = entry_path.file_name().unwrap();
 
-        if entry_path.is_dir() {
-            if entry_name == "config" {
-                let target_path = target_path.join("config");
-                fs::create_dir_all(&target_path)?;
-                fs_util::copy_contents(&entry_path, &target_path)?;
-                continue;
+            if entry_path.is_dir() {
+                if entry_name == "config" {
+                    let target_path = target_path.join("config");
+                    fs::create_dir_all(&target_path)?;
+                    fs_util::copy_contents(&entry_path, &target_path)
+                        .with_context(|| format!("error while copying config {:?}", entry_path))?;
+                } else {
+                    let target_path = match entry_name.to_string_lossy().as_ref() {
+                        "patchers" | "core" => target_path.join(entry_name).join(name),
+                        "plugins" => target_plugins_path.clone(),
+                        _ => target_plugins_path.join(entry_name),
+                    };
+
+                    fs::create_dir_all(&target_path.parent().unwrap())?;
+                    fs_util::copy_dir(&entry_path, &target_path).with_context(|| {
+                        format!("error while copying directory {:?}", entry_path)
+                    })?;
+                }
+            } else {
+                fs::copy(&entry_path, &target_plugins_path.join(entry_name))
+                    .with_context(|| format!("error while copying file {:?}", entry_path))?;
             }
-
-            let target_path = match entry_name.to_str().unwrap() {
-                "patchers" | "core" => match is_bepinex {
-                    true => target_path.join(entry_name),
-                    false => target_path.join(entry_name).join(name),
-                },
-                _ => target_plugins_path.join(entry_name),
-            };
-
-            fs::create_dir_all(&target_path.parent().unwrap())?;
-            fs_util::copy_dir(&entry_path, &target_path)
-                .with_context(|| format!("error while copying directory {:?}", entry_path))?;
-        } else {
-            let parent = match is_bepinex {
-                true => dest,
-                false => &target_plugins_path,
-            };
-
-            fs::copy(&entry_path, parent.join(entry_name))
-                .with_context(|| format!("error while copying file {:?}", entry_path))?;
         }
+
+        Ok(())
     }
 
-    Ok(())
+    fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
+        let target_path = dest.join("BepInEx");
+
+        for entry in fs::read_dir(src)? {
+            let entry_path = entry?.path();
+            let entry_name = entry_path.file_name().unwrap();
+
+            if entry_path.is_dir() {
+                let target_path = target_path.join(entry_name);
+                fs::create_dir_all(&target_path)?;
+
+                fs_util::copy_contents(&entry_path, &target_path)
+                    .with_context(|| format!("error while copying directory {:?}", entry_path))?;
+            } else if entry_name == "winhttp.dll" {
+                fs::copy(&entry_path, dest.join(entry_name))
+                    .with_context(|| format!("error while copying file {:?}", entry_path))?;
+            }
+        }
+
+        Ok(())
+    }
+
+    match name {
+        BEPINEX_NAME => install_bepinex(src, dest),
+        _ => install_other(src, dest, name),
+    }
 }

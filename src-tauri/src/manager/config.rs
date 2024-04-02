@@ -22,22 +22,11 @@ pub struct File {
 }
 
 impl File {
-    fn new(name: &str, sections: Vec<Section>) -> Self {
-        Self {
-            name: name.to_owned(),
-            sections,
-        }
-    }
-
     pub fn save(&self, dir: &Path) -> io::Result<()> {
         let mut path = dir.join(&self.name);
         fs_util::add_extension(&mut path, "cfg");
         let contents = ser::to_string(self);
         fs::write(path, contents)
-    }
-
-    pub fn entries(&self) -> impl Iterator<Item = &Entry> {
-        self.sections.iter().flat_map(|s| s.entries.iter())
     }
 }
 
@@ -47,15 +36,6 @@ impl File {
 pub struct Section {
     name: String,
     entries: Vec<Entry>,
-}
-
-impl Section {
-    fn new(name: &str, entries: Vec<Entry>) -> Self {
-        Self {
-            name: name.to_owned(),
-            entries,
-        }
-    }
 }
 
 #[typeshare]
@@ -70,35 +50,6 @@ pub struct Entry {
 }
 
 impl Entry {
-    fn new(name: &str, description: &str, default_value: Option<Value>, value: Value) -> Self {
-        let type_name = match &value {
-            Value::Boolean(_) => "Boolean",
-            Value::String(_) => "String",
-            Value::Int32(_) => "Int32",
-            Value::Single(_) => "Single",
-            Value::Double(_) => "Double",
-            _ => panic!("cannot determine type name"),
-        };
-
-        Self::new_typed(name, description, type_name, default_value, value)
-    }
-
-    fn new_typed(
-        name: &str,
-        description: &str,
-        type_name: &str,
-        default_value: Option<Value>,
-        value: Value,
-    ) -> Entry {
-        Self {
-            name: name.to_owned(),
-            description: description.to_owned(),
-            type_name: type_name.to_owned(),
-            default_value,
-            value,
-        }
-    }
-
     fn reset(&mut self) -> Result<()> {
         self.value = self
             .default_value

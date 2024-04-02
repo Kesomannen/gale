@@ -1,5 +1,54 @@
 use super::*;
 
+impl File {
+    fn new(name: &str, sections: Vec<Section>) -> Self {
+        Self {
+            name: name.to_owned(),
+            sections,
+        }
+    }
+}
+
+impl Section {
+    fn new(name: &str, entries: Vec<Entry>) -> Self {
+        Self {
+            name: name.to_owned(),
+            entries,
+        }
+    }
+}
+
+impl Entry {
+    fn new(name: &str, description: &str, default_value: Option<Value>, value: Value) -> Self {
+        let type_name = match &value {
+            Value::Boolean(_) => "Boolean",
+            Value::String(_) => "String",
+            Value::Int32(_) => "Int32",
+            Value::Single(_) => "Single",
+            Value::Double(_) => "Double",
+            _ => panic!("cannot determine type name"),
+        };
+
+        Self::new_typed(name, description, type_name, default_value, value)
+    }
+
+    fn new_typed(
+        name: &str,
+        description: &str,
+        type_name: &str,
+        default_value: Option<Value>,
+        value: Value,
+    ) -> Entry {
+        Self {
+            name: name.to_owned(),
+            description: description.to_owned(),
+            type_name: type_name.to_owned(),
+            default_value,
+            value,
+        }
+    }
+}
+
 #[test]
 fn test_to_string() {
     let file = File::new(

@@ -5,7 +5,7 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
@@ -14,7 +14,7 @@ use uuid::Uuid;
 use crate::{
     prefs::Prefs,
     thunderstore::{
-        self, models::PackageListing, query::{self, QueryModsArgs}, resolve_deps, resolve_deps_all, BorrowedMod, OwnedMod
+        self, models::PackageListing, query::{self, QueryModsArgs}, resolve_deps, BorrowedMod, OwnedMod
     },
 };
 
@@ -36,7 +36,7 @@ struct ManagerSaveData {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct ProfileMod {
+pub struct ProfileMod {
     package_uuid: Uuid,
     version_uuid: Uuid,
 }
@@ -44,6 +44,15 @@ struct ProfileMod {
 impl ProfileMod {
     fn get<'a>(&self, packages: &'a IndexMap<Uuid, PackageListing>) -> Result<BorrowedMod<'a>> {
         thunderstore::get_mod(&self.package_uuid, &self.version_uuid, packages)
+    }
+}
+
+impl From<&BorrowedMod<'_>> for ProfileMod {
+    fn from(borrowed_mod: &BorrowedMod<'_>) -> Self {
+        Self {
+            package_uuid: borrowed_mod.package.uuid4,
+            version_uuid: borrowed_mod.version.uuid4,
+        }
     }
 }
 
@@ -94,9 +103,9 @@ impl Profile {
             .map(|other| other.get(packages))
             .filter_map(|other| match other {
                 Ok(other) => {
-                    let deps = resolve_deps_all(&other.version.dependencies, packages)
+                    let deps = resolve_deps(&other.version.dependencies, packages)
                         .collect::<Result<Vec<_>>>()
-                        .context("failed to resolve dependencies");
+                        .with_context(|| format!("failed to resolve dependencies of {}", other.package.full_name));
 
                     match deps {
                         Ok(deps) => match deps
@@ -255,11 +264,6 @@ impl ModManager {
             }
         }
 
-        println!(
-            "loaded profiles: {:?}",
-            profiles.iter().map(|p| &p.name).collect::<Vec<_>>()
-        );
-
         let is_empty = profiles.is_empty();
 
         let manager = Self {
@@ -302,9 +306,10 @@ impl ModManager {
 
     fn create_profile(&self, name: String, options: &Prefs) -> Result<usize> {
         let mut profiles = self.profiles.lock().unwrap();
-        if profiles.iter().any(|p| p.name == name) {
-            return Err(anyhow!("profile with name {} already exists", name));
-        }
+        ensure!(
+            !profiles.iter().any(|p| p.name == name),
+            "profile with name '{}' already exists", name
+        );
 
         let mut path = options.data_path.join("profiles");
         path.push(&name);

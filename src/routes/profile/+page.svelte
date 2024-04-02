@@ -58,6 +58,7 @@
 <ModList bind:mods bind:queryArgs bind:activeMod extraDropdownOptions={
 	[
 		{
+			icon: 'mdi:delete',
 			label: 'Uninstall',
 			onClick: removeMod
 		}
