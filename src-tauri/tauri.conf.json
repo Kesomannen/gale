@@ -17,6 +17,20 @@
 			},
 			"window": {
 				"all": true
+			},
+			"shell": {
+				"all": false,
+				"open": true
+			},
+			"clipboard": {
+				"all": true
+			},
+			"http": {
+				"all": false,
+				"request": true,
+				"scope": [
+					"https://thunderstore.io/api/experimental/package/*"
+				]
 			}
 		},
 		"bundle": {

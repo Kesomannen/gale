@@ -14,7 +14,7 @@
 	import { Tooltip } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { pascalToSentence } from '$lib/util';
+	import { sentenceCase } from '$lib/util';
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
 	import { Render } from '@jill64/svelte-sanitize';
@@ -27,9 +27,7 @@
 	let selectedFile: ConfigFile | undefined;
 	let selectedSection: ConfigSection | undefined;
 
-	onMount(async () => {
-		files = await invokeCommand<GetConfigResult[]>('get_config_files');
-	});
+	onMount(refresh);
 
 	function configValueToString(config: ConfigValue) {
 		switch (config.type) {
@@ -77,44 +75,55 @@
 			entry
 		};
 	}
+
+	async function refresh() {
+		files = await invokeCommand<GetConfigResult[]>('get_config_files');
+	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-4 min-w-60 w-[25%] gap-1 bg-gray-700 text-white border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col py-4 min-w-60 w-[25%] gap-1 bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 	>
-		{#each files as file}
-			{#if file.type == 'ok'}
-				<ConfigFileTreeItem
-					file={file.content}
-					{selectedSection}
-					onClick={(file, section) => {
-						selectedFile = file;
-						selectedSection = section;
-					}}
-				/>
-			{:else}
-				<Tooltip.Root openDelay={100}>
-					<Tooltip.Trigger
-						class="flex items-center text-white bg-red-600 pl-3 pr-2 cursor-default"
-					>
-						<Icon icon="mdi:error" class="mr-2 flex-shrink-0" />
-						<div class="flex-shrink truncate">
-							{file.content.file}
-						</div>
-					</Tooltip.Trigger>
-					<Tooltip.Content
-						class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[30rem] shadow-lg"
-						transition={fly}
-						transitionConfig={{ duration: 100 }}
-						side="right"
-					>
-						<Tooltip.Arrow class="rounded-[2px] border-l border-t border-gray-600" />
-						{file.content.error}
-					</Tooltip.Content>
-				</Tooltip.Root>
-			{/if}
-		{/each}
+		{#if files.length === 0}
+			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">
+				No config files found
+			</div>
+		{:else}
+			{#each files as file}
+				{#if file.type == 'ok'}
+					<ConfigFileTreeItem
+						file={file.content}
+						{selectedSection}
+						onClick={(file, section) => {
+							selectedFile = file;
+							selectedSection = section;
+						}}
+						onDeleted={(_) => refresh()}
+					/>
+				{:else}
+					<Tooltip.Root openDelay={100}>
+						<Tooltip.Trigger
+							class="flex items-center text-white bg-red-600 pl-3 pr-2 cursor-default"
+						>
+							<Icon icon="mdi:error" class="mr-2 flex-shrink-0" />
+							<div class="flex-shrink truncate">
+								{file.content.file}
+							</div>
+						</Tooltip.Trigger>
+						<Tooltip.Content
+							class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[30rem] shadow-lg"
+							transition={fly}
+							transitionConfig={{ duration: 100 }}
+							side="right"
+						>
+							<Tooltip.Arrow class="rounded-[2px] border-l border-t border-gray-600" />
+							{file.content.error}
+						</Tooltip.Content>
+					</Tooltip.Root>
+				{/if}
+			{/each}
+		{/if}
 	</div>
 
 	{#if selectedFile && selectedSection}
@@ -129,9 +138,9 @@
 				<div class="flex items-center text-slate-300 pl-1 h-7">
 					<Tooltip.Root openDelay={200}>
 						<Tooltip.Trigger
-							class="text-slate-300 mr-auto pr-2 cursor-auto w-72 text-left truncate flex-shrink-0"
+							class="text-slate-300 mr-auto pr-2 cursor-auto w-[40%] text-left truncate flex-shrink-0"
 						>
-							{pascalToSentence(entry.name)}
+							{sentenceCase(entry.name)}
 						</Tooltip.Trigger>
 						<Tooltip.Content
 							class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[35rem] shadow-lg"

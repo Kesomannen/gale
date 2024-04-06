@@ -1,31 +1,48 @@
 use std::path::PathBuf;
 
 use crate::{
-    manager::{self, ModManager},
-    thunderstore::ThunderstoreState,
-    util,
+    command_util::{Result, StateMutex},
+    manager::ModManager,
+    prefs::Prefs,
+    thunderstore::Thunderstore,
+    NetworkClient,
 };
 
 use super::ModpackArgs;
-
-type Result<T> = util::CommandResult<T>;
+use tauri::{AppHandle, State};
+use uuid::Uuid;
 
 #[tauri::command]
-pub async fn export_pack(
+pub async fn export_code(
+    client: State<'_, NetworkClient>,
+    manager: StateMutex<'_, ModManager>,
+    thunderstore: StateMutex<'_, Thunderstore>,
+    prefs: StateMutex<'_, Prefs>,
+) -> Result<Uuid> {
+    let key = super::export_code(&client.0, manager, thunderstore, prefs).await?;
+
+    Ok(key)
+}
+
+#[tauri::command]
+pub async fn import_code(key: Uuid, app: AppHandle) -> Result<()> {
+    super::import_code(key, &app).await?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn export_pack(
     path: PathBuf,
     args: ModpackArgs,
-    manager: tauri::State<'_ ,ModManager>,
-    thunderstore: tauri::State<'_, ThunderstoreState>,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
 ) -> Result<()> {
-    thunderstore.wait_for_load().await;
-
-    let mut profiles = manager.profiles.lock().unwrap();
-    let profile = manager::get_active_profile(&mut profiles, &manager)?;
-
-    let mod_map = thunderstore.packages.lock().unwrap();
+    let manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
 
     let zip_path = path.join(&args.name).with_extension("zip");
-    profile.export_pack(&zip_path, args, &mod_map)?;
+    super::export_pack(manager.active_profile(), &zip_path, args, &thunderstore)?;
 
     let _ = open::that(&zip_path);
     Ok(())

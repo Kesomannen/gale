@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import { invokeCommand } from './invoke';
+import type { ProfileInfo } from './models';
 
 export let activeProfileIndex: number = 0;
 export let profileNames: string[] = [];
@@ -9,14 +10,9 @@ export const inProfile = writable<boolean>(false);
 
 refreshProfiles();
 
-interface ProfileInfo {
-	active_index: number;
-	names: string[];
-}
-
 export async function refreshProfiles() {
 	const info: ProfileInfo = await invokeCommand('get_profile_info');
-	activeProfileIndex = info.active_index;
+	activeProfileIndex = info.activeIndex;
 	profileNames = info.names;
 	currentProfile.set(profileNames[activeProfileIndex]);
 }

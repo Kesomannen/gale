@@ -1,12 +1,12 @@
+use std::fs;
+
+use anyhow::Context;
 use serde::Serialize;
 use typeshare::typeshare;
 
 use crate::{
-    manager::{self, ModManager},
-    util::{self},
+    command_util::{Result, StateMutex}, manager::ModManager, util::IoResultExt
 };
-
-type Result<T> = util::CommandResult<T>;
 
 #[typeshare]
 #[derive(Serialize)]
@@ -17,13 +17,13 @@ pub enum GetConfigResult {
 }
 
 #[tauri::command]
-pub fn get_config_files(manager: tauri::State<ModManager>) -> Result<Vec<GetConfigResult>> {
-    let mut profiles = manager.profiles.lock().unwrap();
-    let active_profile = manager::get_active_profile(&mut profiles, &manager)?;
+pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<GetConfigResult>> {
+    let mut manager = manager.lock().unwrap();
+    let profile = manager.active_profile_mut();
 
-    active_profile.refresh_config();
+    profile.refresh_config();
 
-    Ok(active_profile
+    Ok(profile
         .config
         .iter()
         .map(|res| match res {
@@ -42,12 +42,16 @@ pub fn set_config_entry(
     section: &str,
     entry: &str,
     value: super::Value,
-    manager: tauri::State<ModManager>,
+    manager: StateMutex<ModManager>,
 ) -> Result<()> {
-    let mut profiles = manager.profiles.lock().unwrap();
-    let active_profile = manager::get_active_profile(&mut profiles, &manager)?;
+    let mut manager = manager.lock().unwrap();
 
-    active_profile.modify_config(file, section, entry, move |entry| entry.value = value)?;
+    manager
+        .active_profile_mut()
+        .modify_config(file, section, entry, move |entry| { 
+            entry.value = value;
+        })?;
+
     Ok(())
 }
 
@@ -56,13 +60,36 @@ pub fn reset_config_entry(
     file: &str,
     section: &str,
     entry: &str,
-    manager: tauri::State<ModManager>,
+    manager: StateMutex<ModManager>,
 ) -> Result<super::Value> {
-    let mut profiles = manager.profiles.lock().unwrap();
-    let active_profile = manager::get_active_profile(&mut profiles, &manager)?;
+    let mut manager = manager.lock().unwrap();
 
-    active_profile.modify_config(file, section, entry, |entry| {
-        entry.reset()?;
-        Ok(entry.value.clone())
-    })?
+    manager
+        .active_profile_mut()
+        .modify_config(file, section, entry, |entry| {
+            entry.reset()?;
+            Ok(entry.value.clone())
+        })?
+}
+
+#[tauri::command]
+pub fn open_config_file(file: &str, manager: StateMutex<ModManager>) -> Result<()> {
+    let manager = manager.lock().unwrap();
+
+    let profile = manager.active_profile();
+    let path = profile.find_config_file(file)?.path_from(&profile.path);
+    open::that(&path).with_context(|| format!("failed to open config file {}", path.display()))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_config_file(file: &str, manager: StateMutex<ModManager>) -> Result<()> {
+    let manager = manager.lock().unwrap();
+
+    let profile = manager.active_profile();
+    let path = profile.find_config_file(file)?.path_from(&profile.path);
+    fs::remove_file(&path).fs_context("deleting config file", &path)?;
+
+    Ok(())
 }

@@ -3,7 +3,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quartIn, quartOut } from 'svelte/easing';
 
-	export let title: string;
+	export let title: string | undefined = undefined;
 	export let open: boolean;
 	export let canClose: boolean = true;
 </script>
@@ -23,14 +23,16 @@
 		/>
 		<Dialog.Content
 			class="
-                fixed left-[50%] top-[50%] w-full max-w-[40rem] translate-x-[-50%] translate-y-[-50%]
+                fixed left-[50%] top-[50%] w-full max-w-[40rem] max-h-[90%] translate-x-[-50%] translate-y-[-50%] overflow-y-auto overflow-x-hidden
                 z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600"
 			inTransition={scale}
 			inTransitionConfig={{ duration: 200, easing: quartOut, start: 0.5 }}
 			outTransition={scale}
 			outTransitionConfig={{ duration: 100, easing: quartIn }}
 		>
-			<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
+			{#if title}
+				<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
+			{/if}
 
 			<slot />
 		</Dialog.Content>

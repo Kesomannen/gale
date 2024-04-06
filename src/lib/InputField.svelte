@@ -8,7 +8,7 @@
 
 <div class="flex items-center cursor-auto flex-grow">
 	{#if label}
-		<Label.Root class="text-slate-300 text-md">{label}</Label.Root>
+		<Label.Root class="text-slate-300 text-md w-36">{label}</Label.Root>
 	{/if}
 
 	<input

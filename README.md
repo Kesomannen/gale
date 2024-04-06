@@ -14,7 +14,7 @@ You can however clone the repository and build the project yourself. The only de
 
 - [x] Browse & install mods
 - [x] Config editor
-- [ ] Import & export profiles
+- [x] Import & export profiles
 - [ ] Support for other BepInEx compatible games
 - [ ] Support for other modding frameworks
 

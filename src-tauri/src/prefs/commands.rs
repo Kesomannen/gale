@@ -1,14 +1,12 @@
-use std::{fs, path::PathBuf};
+use std::{fs, path::{Path, PathBuf}};
 
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, ensure};
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
-use crate::util;
+use crate::{command_util::{Result, StateMutex}, util::IoResultExt};
 
-use super::PrefsState;
-
-type Result<T> = util::CommandResult<T>;
+use super::Prefs;
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug)]
@@ -58,8 +56,8 @@ impl PrefEntry {
         }
     }
 
-    fn path(name: &str, value: &PathBuf) -> Self {
-        Self::new(name, PrefValue::Path(value.clone()))
+    fn path(name: &str, value: &Path) -> Self {
+        Self::new(name, PrefValue::Path(value.to_path_buf()))
     }
 
     fn option_path(name: &str, value: Option<&PathBuf>) -> Self {
@@ -72,46 +70,48 @@ impl PrefEntry {
 }
 
 #[tauri::command]
-pub fn get_pref(name: String, prefs: tauri::State<PrefsState>) -> Result<PrefEntry> {
-    let config = prefs.lock();
+pub fn get_pref(name: String, prefs: StateMutex<Prefs>) -> Result<PrefEntry> {
+    let prefs = prefs.lock().unwrap();
 
     match name.as_str() {
-        "steam_exe_path" => Ok(PrefEntry::option_path("steam_exe_path", config.steam_exe_path.as_ref())),
-        "cache_path" => Ok(PrefEntry::path("cache_path", &config.cache_path)),
-        "data_path" => Ok(PrefEntry::path("data_path", &config.data_path)),
-        "auto_start" => Ok(PrefEntry::bool("auto_start", config.auto_start)),
+        "steam_exe_path" => Ok(PrefEntry::option_path("steam_exe_path", prefs.steam_exe_path.as_ref())),
+        "cache_path" => Ok(PrefEntry::path("cache_path", &prefs.cache_path)),
+        "temp_path" => Ok(PrefEntry::path("temp_path", &prefs.temp_path)),
+        "data_path" => Ok(PrefEntry::path("data_path", &prefs.data_path)),
         _ => Err(anyhow!("config {} not found", name).into())
     }
 }
 
 #[tauri::command]
-pub fn set_pref(entry: PrefEntry, prefs: tauri::State<PrefsState>) -> Result<()> {
-    inner(entry, &prefs)?;
+pub fn set_pref(entry: PrefEntry, prefs: StateMutex<Prefs>) -> Result<()> {
+    let mut prefs = prefs.lock().unwrap();
+
+    match entry.name.as_str() {
+        "steam_exe_path" => prefs.steam_exe_path = entry.value.as_option_path()?,
+        "cache_path" => move_dir(&mut prefs.cache_path, &entry.value, "cache")?,
+        "temp_path" => move_dir(&mut prefs.temp_path, &entry.value, "temp")?,
+        "data_path" => move_dir(&mut prefs.data_path, &entry.value, "data")?,
+        _ => Err(anyhow!("config {} not found", entry.name))?
+    };
+
     prefs.save()?;
+
     return Ok(());
 
-    fn inner(entry: PrefEntry, prefs: &PrefsState) -> Result<()> {
-        let mut config = prefs.lock();
-        let value = entry.value;
-        match entry.name.as_str() {
-            "steam_exe_path" => config.steam_exe_path = value.as_option_path()?,
-            "cache_path" => {
-                let path = value.as_path()?;
-                fs::rename(&config.cache_path, &path)
-                    .context("failed to move cache")?;
-                config.cache_path = path;
-            },
-            "data_path" => {
-                let path = value.as_path()?;
-                fs::rename(&config.data_path, &path)
-                    .context("failed to move data")?;
-                config.data_path = path;
-            },
-            "auto_start" => {
-                config.auto_start = value.as_bool()?
-            },
-            _ => Err(anyhow!("config {} not found", entry.name))?
-        };
+    fn move_dir(current: &mut PathBuf, new: &PrefValue, name: &str) -> anyhow::Result<()> {
+        let new_path = new.as_path()?;
+
+        ensure!(new_path.exists(), "{} does not exist", new_path.display());
+        ensure!(new_path.is_dir(), "{} is not a directory", new_path.display());
+        ensure!(new_path.read_dir()?.count() == 0, "{} is not empty", new_path.display());
+
+        fs::remove_dir_all(&new_path)
+            .fs_context(&format!("removing {} dir", name), &new_path)?;
+
+        fs::rename(&current, &new_path)
+            .fs_context(&format!("moving {} dir", name), &new_path)?;
+
+        *current = new_path;
 
         Ok(())
     }

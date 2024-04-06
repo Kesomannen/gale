@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invokeCommand } from "$lib/invoke";
 	import type { ConfigFile, ConfigSection } from "$lib/models";
 	import Icon from "@iconify/svelte";
 	import { Button, Collapsible } from "bits-ui";
@@ -8,30 +9,38 @@
     export let file: ConfigFile;
     export let selectedSection: ConfigSection | undefined;
     export let onClick: (file: ConfigFile, section: ConfigSection) => void;
+    export let onDeleted: (file: ConfigFile) => void;
 
     let open = false;
 </script>
 
 <Collapsible.Root bind:open={open}>
-    <Collapsible.Trigger class="flex pl-3 pr-2 w-full text-slate-200 hover:text-white items-center group"> 
-        <Icon
-            icon="mdi:expand-more"
-            class="text-xl {open ? 'rotate-180' : 'rotate-0'} transition-all mr-1 flex-shrink-0"
-        />
-        <div class="truncate flex-shrink">
-            {file.name}
-        </div>
+    <div class="flex pl-3 pr-2 w-full text-slate-200 hover:text-white items-center group">
+        <Collapsible.Trigger class="inline-flex items-center truncate mr-1"> 
+            <Icon
+                icon="mdi:expand-more"
+                class="text-xl {open ? 'rotate-180' : 'rotate-0'} transition-all mr-1 flex-shrink-0"
+            />
+            <div class="truncate flex-shrink">
+                {file.name}
+            </div>
+        </Collapsible.Trigger>
         <Button.Root 
-            class="ml-auto flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-gray-600"
-        >
-            <Icon icon="mdi:delete" />
-        </Button.Root>
-        <Button.Root 
-            class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-gray-600"
+            class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-gray-600 ml-auto"
+            on:click={() => invokeCommand('open_config_file', { file: file.name })}
         >
             <Icon icon="mdi:open-in-new" />
         </Button.Root>
-    </Collapsible.Trigger>
+        <Button.Root 
+            class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-gray-600"
+            on:click={async () => {
+                await invokeCommand('delete_config_file', { file: file.name });
+                onDeleted(file);
+            }}
+        >
+            <Icon icon="mdi:delete" />
+        </Button.Root>
+    </div>
     <Collapsible.Content
         class="flex flex-col mt-0.5 mb-1" 
         transition={slide}

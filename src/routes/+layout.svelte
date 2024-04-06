@@ -14,6 +14,7 @@
 	import { onMount } from 'svelte';
 	import { listen } from '@tauri-apps/api/event';
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
+	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 
 	let status: string | undefined;
 
@@ -32,6 +33,7 @@
 
 	<div class="flex flex-grow overflow-hidden">
 		<div class="flex flex-col gap-1 items-center p-2 w-14 bg-gray-900 border-r border-gray-600 flex-shrink-0">
+			<NavbarLink to="/" icon="mdi:home" tooltip="Home page" />
 			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
 			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/config" icon="mdi:settings" tooltip="Edit mod config" />
@@ -53,7 +55,7 @@
 				class="bg-red-600 pl-4 pr-8 py-2 rounded-md relative" 
 				transition:slide={{ duration: 200, easing: expoOut }}
 			>
-				<span class="text-red-200">Failed to execute '{error.name}' -</span>
+				<span class="text-red-200">{error.name} -</span>
 				<span class="text-red-100 font-medium ml-1">{error.message}</span>
 
 				<Button.Root class="absolute top-3 right-3" on:click={() => removeError(i)}>
@@ -63,3 +65,5 @@
 		{/each}
 	</div>
 </main>
+
+<InstallProgressPopup />

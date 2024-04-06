@@ -1,25 +1,28 @@
-use crate::util;
+use crate::command_util::{Result, StateMutex};
 
-use super::{query::{self, QueryModsArgs}, OwnedMod, ThunderstoreState};
-
-type Result<T> = util::CommandResult<T>;
+use super::{
+    query::{self, QueryModsArgs, QueryState},
+    OwnedMod, Thunderstore,
+};
 
 #[tauri::command]
 pub fn query_all_mods(
     args: QueryModsArgs,
-    thunderstore: tauri::State<'_, ThunderstoreState>,
-    query_state: tauri::State<'_, query::QueryState>,
+    thunderstore: StateMutex<Thunderstore>,
+    query_state: StateMutex<QueryState>,
 ) -> Result<Option<Vec<OwnedMod>>> {
-    let finished_loading = thunderstore.finished_loading.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
 
-    match *finished_loading {
+    match thunderstore.finished_loading {
         true => {
-            let packages = thunderstore.packages.lock().unwrap();
-            Ok(Some(query::query_mods(&args, super::latest_versions(&packages))))
+            Ok(Some(query::query_mods(
+                &args,
+                thunderstore.latest_versions(),
+            )))
         }
         false => {
-            let mut current_query = query_state.current_query.lock().unwrap();
-            *current_query = Some(args);
+            let mut query_state = query_state.lock().unwrap();
+            query_state.current_query = Some(args);
             Ok(None)
         }
     }

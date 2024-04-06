@@ -1,31 +1,30 @@
-use std::fmt::{self, Display};
+use std::path::Path;
 
 use serde::Serialize;
+use tauri::{AppHandle, Manager};
+use anyhow::Context;
 
-#[derive(Debug)]
-pub struct CommandError(pub anyhow::Error);
-
-impl std::error::Error for CommandError {}
-
-impl Display for CommandError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#}", self.0)
-    }
+#[derive(Serialize, Clone)]
+struct JsError<'a> {
+    name: &'a str,
+    message: String,
 }
 
-impl Serialize for CommandError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&format!("{:#}", self.0))
-    }
+pub fn print_err(context: &str, error: &anyhow::Error, handle: &AppHandle) {
+    eprintln!("failed to {}: {:#}", context, error);
+    let _ = handle.emit_all("error", JsError {
+        name: context,
+        message: format!("{:#}", error),
+    });
 }
 
-impl From<anyhow::Error> for CommandError {
-    fn from(error: anyhow::Error) -> Self {
-        Self(error)
-    }
+pub trait IoResultExt<T> {
+    fn fs_context(self, op: &str, path: &Path) -> anyhow::Result<T>;
 }
 
-pub type CommandResult<T> = std::result::Result<T, CommandError>;
+impl<T, E> IoResultExt<T> for std::result::Result<T, E>
+where E: std::error::Error + Send + Sync + 'static {
+    fn fs_context(self, op: &str, path: &Path) -> anyhow::Result<T> {
+        self.with_context(|| format!("error while {} (at {})", op, path.display()))
+    }
+}

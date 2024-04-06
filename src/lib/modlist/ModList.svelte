@@ -12,16 +12,15 @@
 	import { quadOut } from 'svelte/easing';
 
 	interface SortOption {
-		value: SortBy | undefined;
+		value: SortBy;
 		label: string;
 	}
 
 	const pageSize = 14;
 	const sortOptions: SortOption[] = [
-		{ value: undefined, label: 'Relevance' },
+		{ value: SortBy.LastUpdated, label: 'Last updated' },
 		{ value: SortBy.Rating, label: 'Rating' },
 		{ value: SortBy.Downloads, label: 'Downloads' },
-		{ value: SortBy.LastUpdated, label: 'Last updated' }
 	];
 
 	const allCategories = [
@@ -108,7 +107,7 @@
 					<Icon class="text-slate-400 text-2xl ml-auto" icon="mdi:chevron-down" />
 				</Select.Trigger>
 				<Select.Content
-					class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-2 w-48 rounded-lg border border-gray-600"
+					class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 w-48 rounded-lg border border-gray-600"
 					transition={slide}
 					transitionConfig={{ duration: 100 }}
 				>
@@ -187,6 +186,9 @@
 		</div>
 
 		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3">
+			{#if mods.length === 0}
+				<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
+			{/if}
 			{#each mods.slice(0, pageSize - 1) as mod}
 				<ModListItem onClick={onModClicked} {mod} />
 			{/each}

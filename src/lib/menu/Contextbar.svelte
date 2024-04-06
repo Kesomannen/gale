@@ -14,8 +14,6 @@
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 
-	import { slide } from 'svelte/transition';
-
 	let profilesOpen = false;
 	let startingGame = false;
 
@@ -58,8 +56,6 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
 			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 w-48 rounded-lg border border-gray-600"
-			transition={slide}
-			transitionConfig={{ duration: 100 }}
 		>
 			{#each profileNames as profile, i}
 				<DropdownMenu.Item
@@ -76,7 +72,10 @@
 						{#if i == activeProfileIndex}
 							<Icon icon="mdi:check" class=" text-green-400 text-lg" />
 						{/if}
-						<Button.Root class="group" on:click={() => deleteProfile(i)}>
+						<Button.Root class="group" on:click={(evt) => {
+								evt.stopPropagation();
+								deleteProfile(i);
+							}}>
 							<Icon icon="mdi:delete" class="text-red-400 hover:text-red-300 text-lg ml-2" />
 						</Button.Root>
 					</div>

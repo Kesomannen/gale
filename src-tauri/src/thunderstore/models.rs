@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
-#[serde(rename_all(serialize="camelCase"))]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageListing {
     pub categories: Vec<String>,
     pub date_created: String,
@@ -29,8 +29,8 @@ impl PackageListing {
         self.versions.iter().find(|v| v.uuid4 == *uuid)
     }
 
-    pub fn get_version_with_num(&self, version: &str) -> Option<&PackageVersion> {
-        self.versions.iter().find(|v| v.version_number == version)
+    pub fn get_version_with_num(&self, version: &semver::Version) -> Option<&PackageVersion> {
+        self.versions.iter().find(|v| v.version_number == *version)
     }
 
     pub fn total_downloads(&self) -> u32 {
@@ -52,7 +52,7 @@ impl Hash for PackageListing {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
-#[serde(rename_all(serialize="camelCase"))]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageVersion {
     pub date_created: String,
     pub dependencies: Vec<String>,
@@ -65,7 +65,7 @@ pub struct PackageVersion {
     pub is_active: bool,
     pub name: String,
     pub uuid4: Uuid,
-    pub version_number: String,
+    pub version_number: semver::Version,
     pub website_url: String,
 }
 
@@ -83,14 +83,14 @@ impl Hash for PackageVersion {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all(serialize="camelCase"))]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct LegacyProfileCreateResponse {
     pub key: Uuid,
 }
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all(serialize="camelCase"))]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageManifest {
     pub name: String,
     pub description: String,
@@ -102,7 +102,7 @@ pub struct PackageManifest {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all(serialize="camelCase"))]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageInstaller {
     pub identifier: String,
 }

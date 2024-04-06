@@ -49,9 +49,43 @@ impl Entry {
     }
 }
 
-#[test]
-fn test_to_string() {
-    let file = File::new(
+const TEST_STR: &str = r###"[Section1]
+
+## This is entry 1
+# Setting type: String
+# Default value: Default
+Entry1 = Value1
+
+## This is entry 2
+# Setting type: LogLevel
+# Default value: Info, Warning, Error
+# Acceptable values: Debug, Info, Warning, Error
+# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)
+LogLevels = Info, Warning
+
+## This is entry 3
+# Setting type: Difficulty
+# Default value: Medium
+# Acceptable values: Easy, Medium, Hard
+Entry3 = Easy
+
+[Section2]
+
+## This is entry 4
+# Setting type: Int32
+# Default value:
+# Acceptable value range: From 0 to 10
+Entry4 = 5
+
+## This is entry 5
+# Setting type: Double
+# Default value: 2
+Entry5 = 3.13
+
+"###;
+
+fn test_file() -> File {
+    File::new(
         "test",
         vec![
             Section::new(
@@ -133,49 +167,22 @@ fn test_to_string() {
                             range: None,
                         })),
                         Value::Double(Num {
-                            value: 3.14,
+                            value: 3.13,
                             range: None,
                         }),
                     ),
                 ],
             ),
         ],
-    );
+    )
+}
 
-    let expected = r###"[Section1]
+#[test]
+fn test_to_string() {
+    assert_eq!(ser::to_string(&test_file()), TEST_STR);
+}
 
-## This is entry 1
-# Setting type: String
-# Default value: Default
-Entry1 = Value1
-
-## This is entry 2
-# Setting type: LogLevel
-# Default value: Info, Warning, Error
-# Acceptable values: Debug, Info, Warning, Error
-# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)
-LogLevels = Info, Warning
-
-## This is entry 3
-# Setting type: Difficulty
-# Default value: Medium
-# Acceptable values: Easy, Medium, Hard
-Entry3 = Easy
-
-[Section2]
-
-## This is entry 4
-# Setting type: Int32
-# Default value:
-# Acceptable value range: From 0 to 10
-Entry4 = 5
-
-## This is entry 5
-# Setting type: Double
-# Default value: 2
-Entry5 = 3.14
-
-"###;
-
-    assert_eq!(to_string(&file), expected);
+#[test]
+fn test_from_string() {
+    assert_eq!(de::from_str(TEST_STR).unwrap(), test_file().sections);
 }

@@ -1,4 +1,10 @@
-use std::{fmt::Display, fs, io, ops::Range, path::Path, str::FromStr};
+use std::{
+    fmt::Display,
+    fs, io,
+    ops::Range,
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -8,10 +14,17 @@ use walkdir::WalkDir;
 use crate::fs_util;
 
 use super::Profile;
+use tauri::AppHandle;
 
 pub mod commands;
-mod de;
-mod ser;
+pub mod de;
+pub mod ser;
+#[cfg(test)]
+mod tests;
+
+pub fn setup(_app: &AppHandle) -> Result<()> {
+    Ok(())
+}
 
 #[typeshare]
 #[derive(Serialize, Clone)]
@@ -22,16 +35,23 @@ pub struct File {
 }
 
 impl File {
-    pub fn save(&self, dir: &Path) -> io::Result<()> {
-        let mut path = dir.join(&self.name);
+    pub fn path_relative(&self) -> PathBuf {
+        let mut path = ["BepInEx", "config", &self.name].iter().collect();
         fs_util::add_extension(&mut path, "cfg");
-        let contents = ser::to_string(self);
-        fs::write(path, contents)
+        path
+    }
+
+    pub fn path_from(&self, root: &Path) -> PathBuf {
+        root.join(self.path_relative())
+    }
+
+    pub fn save(&self, root: &Path) -> io::Result<()> {
+        fs::write(self.path_from(root), ser::to_string(self))
     }
 }
 
 #[typeshare]
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Section {
     name: String,
@@ -39,7 +59,7 @@ pub struct Section {
 }
 
 #[typeshare]
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Entry {
     name: String,
@@ -60,7 +80,7 @@ impl Entry {
 }
 
 #[typeshare]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(tag = "type", content = "content", rename_all = "camelCase")]
 pub enum Value {
     Boolean(bool),
@@ -90,7 +110,7 @@ impl Value {
 }
 
 #[typeshare]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Num<T>
 where
@@ -101,37 +121,44 @@ where
 }
 
 impl Profile {
-    fn refresh_config(&mut self) {
-        self.config = load_config(&self.path).collect();
+    pub fn refresh_config(&mut self) {
+        self.config = load_config(self.path.clone()).collect();
+    }
+
+    fn find_config_file<'a>(&'a self, name: &str) -> Result<&'a File> {
+        self.config
+            .iter()
+            .filter_map(|f| f.as_ref().ok())
+            .find(|f| f.name == name)
+            .ok_or_else(|| anyhow!("config file {} not found in profile {}", name, self.name))
     }
 
     fn modify_config<F, R>(&mut self, file: &str, section: &str, entry: &str, f: F) -> Result<R>
     where
         F: FnOnce(&mut Entry) -> R,
     {
-        let file = self
-            .config
+        let file = self.config
             .iter_mut()
             .filter_map(|f| f.as_mut().ok())
             .find(|f| f.name == file)
-            .ok_or_else(|| anyhow!("config file {} not found", file))?;
+            .ok_or_else(|| anyhow!("config file {} not found in profile {}", file, self.name))?;
 
         let section = file
             .sections
             .iter_mut()
             .find(|s| s.name == section)
-            .ok_or_else(|| anyhow!("section {} not found in {}", section, self.name))?;
+            .ok_or_else(|| anyhow!("section {} not found in file {}", section, self.name))?;
 
-        let mut entry = section
+        let entry = section
             .entries
             .iter_mut()
             .find(|e| e.name == entry)
             .ok_or_else(|| anyhow!("entry {} not found in section {}", entry, self.name))?;
 
-        let result = f(&mut entry);
+        let result = f(entry);
 
-        let config_dir = self.path.join("BepInEx").join("config");
-        file.save(&config_dir).context("failed to save file")?;
+        file.save(&self.path)
+            .context("failed to save config file")?;
 
         Ok(result)
     }
@@ -139,26 +166,27 @@ impl Profile {
 
 pub type LoadedFile = anyhow::Result<File, (String, anyhow::Error)>;
 
-pub fn load_config(profile_path: &Path) -> impl Iterator<Item = LoadedFile> {
-    let config_path = profile_path.join("BepInEx").join("config");
-    WalkDir::new(&config_path)
+pub fn load_config(mut path: PathBuf) -> impl Iterator<Item = LoadedFile> {
+    path.push("BepInEx");
+    path.push("config");
+
+    WalkDir::new(&path)
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "cfg"))
         .map(move |entry| {
             let name = entry
                 .path()
-                .strip_prefix(&config_path)
+                .strip_prefix(&path)
                 .unwrap()
                 .with_extension("")
                 .to_string_lossy()
                 .to_string();
 
-            let content = fs::read_to_string(entry.path())
-                .map_err(|err| (name.clone(), anyhow!(err)))?;
+            let content =
+                fs::read_to_string(entry.path()).map_err(|err| (name.clone(), anyhow!(err)))?;
 
-            let sections = de::from_str(&content)
-                .map_err(|err| (name.clone(), anyhow!(err)))?;
+            let sections = de::from_str(&content).map_err(|err| (name.clone(), anyhow!(err)))?;
 
             Ok(File { name, sections })
         })

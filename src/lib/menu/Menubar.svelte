@@ -7,14 +7,20 @@
 	import NewProfilePopup from '$lib/menu/NewProfilePopup.svelte';
 	import PreferencesPopup from '$lib/preferences/PreferencesPopup.svelte';
 
-	import { open } from '$lib/util';
 	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
+
+	import { open } from '@tauri-apps/api/shell';
 	import { appWindow } from '@tauri-apps/api/window';
+	import { clipboard } from '@tauri-apps/api';
+	import ImportCodePopup from '$lib/import/ImportCodePopup.svelte';
+	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
 
 	let newProfileOpen = false;
 	let preferencesOpen = false;
 	let exportPackOpen = false;
+	let importCodeOpen = false;
+	let exportCodePopup: ExportCodePopup;
 </script>
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
@@ -22,10 +28,10 @@
 		<Menubar.Menu>
 			<MenubarTrigger>File</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-2 mt-0.5 rounded-lg border border-gray-600"
+				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem onClick={() => (newProfileOpen = true)}>New profile</MenubarItem>
-				<MenubarItem onClick={() => invokeCommand('reveal_project_dir')}
+				<MenubarItem onClick={() => invokeCommand('reveal_profile_dir')}
 					>Show profile in explorer</MenubarItem
 				>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-2" />
@@ -39,12 +45,18 @@
 		</Menubar.Menu>
 		<Menubar.Menu>
 			<MenubarTrigger>Import</MenubarTrigger>
+			<Menubar.Content
+				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
+			>
+				<MenubarItem onClick={() => (importCodeOpen = true)}>Profile from code</MenubarItem>
+			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
 			<MenubarTrigger>Export</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
+				<MenubarItem onClick={() => exportCodePopup.open()}>Profile as code</MenubarItem>
 				<MenubarItem onClick={() => (exportPackOpen = true)}>Profile as modpack</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
@@ -53,6 +65,9 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
+				<MenubarItem onClick={() => open('https://discord.gg/lcmod')}
+					>Modding discord server</MenubarItem
+				>
 				<MenubarItem onClick={() => open('https://github.com/Kesomannen/ModManager/issues/')}
 					>Report a bug</MenubarItem
 				>
@@ -74,3 +89,5 @@
 <NewProfilePopup bind:open={newProfileOpen} />
 <PreferencesPopup bind:open={preferencesOpen} />
 <ExportPackPopup bind:isOpen={exportPackOpen} />
+<ImportCodePopup bind:open={importCodeOpen} />
+<ExportCodePopup bind:this={exportCodePopup} />

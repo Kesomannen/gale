@@ -1,117 +1,125 @@
 use anyhow::Context;
 use serde::Serialize;
+use typeshare::typeshare;
 use uuid::Uuid;
 
 use crate::{
-    prefs::{Prefs, PrefsState},
-    thunderstore::{query::QueryModsArgs, BorrowedMod, OwnedMod, ThunderstoreState}, util,
+    prefs::Prefs,
+    thunderstore::{query::QueryModsArgs, OwnedMod, Thunderstore},
+    command_util::{Result, StateMutex},
 };
 
 use super::{ModManager, RemoveModResponse};
 
-type Result<T> = util::CommandResult<T>;
-
+#[typeshare]
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ProfileInfo {
     names: Vec<String>,
     active_index: usize,
 }
 
 #[tauri::command]
-pub fn get_profile_info(manager: tauri::State<ModManager>) -> ProfileInfo {
-    let profiles = manager.profiles.lock().unwrap();
-    let active_profile_index = *manager.active_profile_index.lock().unwrap();
+pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfileInfo {
+    let manager = manager.lock().unwrap();
 
     ProfileInfo {
-        names: profiles.iter().map(|p| p.name.clone()).collect(),
-        active_index: active_profile_index,
+        names: manager.profiles.iter().map(|p| p.name.clone()).collect(),
+        active_index: manager.active_profile_index,
     }
 }
 
 #[tauri::command]
 pub fn set_active_profile(
     index: usize,
-    manager: tauri::State<'_, ModManager>,
-    prefs: tauri::State<'_, PrefsState>,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
 ) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
     manager.set_active_profile(index)?;
-    save(&manager, &prefs)
+    save(&manager, &prefs)?;
+    Ok(())
 }
 
 #[tauri::command]
-pub async fn query_mods_in_profile(
+pub async fn query_mods_in_profile<'r>(
     args: QueryModsArgs,
-    manager: tauri::State<'_, ModManager>,
-    thunderstore: tauri::State<'_, ThunderstoreState>,
+    manager: StateMutex<'_, ModManager>,
+    thunderstore: StateMutex<'_, Thunderstore>,
 ) -> Result<Vec<OwnedMod>> {
-    thunderstore.wait_for_load().await;
+    let manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
 
-    let mod_map = thunderstore.packages.lock().unwrap();
-    let mut profiles = manager.profiles.lock().unwrap();
-    let profile = super::get_active_profile(&mut profiles, &manager)?;
+    let result = manager
+        .active_profile()
+        .query_mods(&args, &thunderstore)?;
 
-    Ok(profile.query_mods(args, &mod_map)?)
+    Ok(result)
 }
 
 #[tauri::command]
-pub fn get_download_size(
-    package_uuid: Uuid,
-    manager: tauri::State<'_, ModManager>,
-    prefs: tauri::State<'_, PrefsState>,
-    thunderstore: tauri::State<'_, ThunderstoreState>,
-) -> Result<u64> {
-    let mut profiles = manager.profiles.lock().unwrap();
-    let profile = super::get_active_profile(&mut profiles, &manager)?;
+pub fn is_mod_installed(package_uuid: Uuid, manager: StateMutex<ModManager>) -> Result<bool> {
+    let manager = manager.lock().unwrap();
 
-    let mod_map = thunderstore.packages.lock().unwrap();
-    let package = mod_map.get(&package_uuid).context("package not found")?;
-    let target_mod = BorrowedMod {
-        package,
-        version: &package.versions[0],
-    };
+    let result = manager
+        .active_profile()
+        .mods
+        .iter()
+        .any(|m| m.package_uuid == package_uuid);
 
-    Ok(profile.total_download_size(&prefs.lock(),target_mod, &mod_map)?)
+    Ok(result)
 }
 
 #[tauri::command]
 pub fn create_profile(
     name: String,
-    manager: tauri::State<'_, ModManager>,
-    prefs: tauri::State<'_, PrefsState>,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
 ) -> Result<()> {
-    let prefs = prefs.lock();
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
 
-    let index = manager.create_profile(name, &prefs)?;
-    manager.set_active_profile(index)?;
-    save_unlocked(&manager, &prefs)
+    manager.create_profile(name, &prefs)?;
+    save(&manager, &prefs)?;
+
+    Ok(())
 }
 
 #[tauri::command]
 pub fn delete_profile(
     index: usize,
-    manager: tauri::State<'_, ModManager>,
-    prefs: tauri::State<'_, PrefsState>,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
 ) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
     manager.delete_profile(index)?;
-    save(&manager, &prefs)
+    save(&manager, &prefs)?;
+
+    Ok(())
 }
 
 #[tauri::command]
 pub fn remove_mod(
     package_uuid: Uuid,
-    manager: tauri::State<'_, ModManager>,
-    prefs: tauri::State<'_, PrefsState>,
-    thunderstore: tauri::State<'_, ThunderstoreState>,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+    prefs: StateMutex<Prefs>,
 ) -> Result<RemoveModResponse> {
-    let response = {
-        let mut profiles = manager.profiles.lock().unwrap();
-        let profile = super::get_active_profile(&mut profiles, &manager)?;
+    let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
 
-        let packages = thunderstore.packages.lock().unwrap();
-        profile.remove_mod(package_uuid, &packages)?
-    };
+    let response = manager
+        .active_profile_mut()
+        .remove_mod(&package_uuid, &thunderstore)?;
 
-    save(&manager, &prefs)?;
+    if let RemoveModResponse::Removed = response {
+        save(&manager, &prefs)?;
+    }
 
     Ok(response)
 }
@@ -119,18 +127,17 @@ pub fn remove_mod(
 #[tauri::command]
 pub fn force_remove_mods(
     package_uuids: Vec<Uuid>,
-    manager: tauri::State<'_, ModManager>,
-    prefs: tauri::State<'_, PrefsState>,
-    thunderstore: tauri::State<'_, ThunderstoreState>,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+    prefs: StateMutex<Prefs>,
 ) -> Result<()> {
-    {
-        let mut profiles = manager.profiles.lock().unwrap();
-        let profile = super::get_active_profile(&mut profiles, &manager)?;
-    
-        let packages = thunderstore.packages.lock().unwrap();
-        for package_uuid in package_uuids {
-            profile.force_remove_mod(package_uuid, &packages)?;
-        }
+    let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let profile = manager.active_profile_mut();
+    for package_uuid in &package_uuids {
+        profile.force_remove_mod(package_uuid, &thunderstore)?;
     }
 
     save(&manager, &prefs)?;
@@ -139,29 +146,29 @@ pub fn force_remove_mods(
 }
 
 #[tauri::command]
-pub fn reveal_project_dir(manager: tauri::State<ModManager>) -> Result<()> {
-    let mut profiles = manager.profiles.lock().unwrap();
-    let profile = super::get_active_profile(&mut profiles, &manager)?;
-    open::that(&profile.path).context("failed to open directory")?;
+pub fn reveal_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
+    let manager = manager.lock().unwrap();
+    
+    let path = &manager.active_profile().path;
+    open::that(path).with_context(|| format!("failed to open dir {}", path.display()))?;
+
     Ok(())
 }
 
 #[tauri::command]
 pub fn start_game(
-    manager: tauri::State<ModManager>,
-    prefs: tauri::State<PrefsState>,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
 ) -> Result<()> {
-    let mut profiles = manager.profiles.lock().unwrap();
-    let profile = super::get_active_profile(&mut profiles, &manager)?;
-    profile.run_game(&prefs.lock())?;
+    let manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    manager.active_profile().run_game(&prefs)?;
     Ok(())
 }
 
-pub fn save(manager: &ModManager, prefs: &PrefsState) -> Result<()> {
-    save_unlocked(manager, &prefs.lock())
-}
-
-pub fn save_unlocked(manager: &ModManager, prefs: &Prefs) -> Result<()> {
+pub fn save(manager: &ModManager, prefs: &Prefs) -> Result<()> {
     manager.save(prefs).context("failed to save manager state")?;
+
     Ok(())
 }

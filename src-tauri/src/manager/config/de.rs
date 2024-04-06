@@ -4,7 +4,7 @@ use anyhow::{bail, ensure, Context, Result};
 
 use super::*;
 
-pub const FLAGS_MESSAGE: &'static str =
+pub const FLAGS_MESSAGE: &str =
     "# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)";
 
 impl<T> Num<T>
@@ -77,7 +77,7 @@ impl<'a> Parser<'a> {
                 continue;
             }
 
-            if line.starts_with("[") {
+            if line.starts_with('[') {
                 self.parse_section()?;
             } else if line.starts_with('#') {
                 if let Some(entry) = self.parse_entry()? {
@@ -114,7 +114,7 @@ impl<'a> Parser<'a> {
     fn parse_section(&mut self) -> Result<()> {
         let line = self.consume_or_eof()?;
 
-        if !line.starts_with("[") || !line.ends_with("]") {
+        if !line.starts_with('[') || !line.ends_with(']') {
             bail!("expected section header, found '{}'", line);
         }
 
@@ -131,12 +131,12 @@ impl<'a> Parser<'a> {
         let mut description = String::new();
 
         while let Some(line) = self.peek() {
-            if line.starts_with("##") {
+            if let Some(comment) = line.strip_prefix("##") {
                 if !description.is_empty() {
                     description.push('\n');
                 }
 
-                description.push_str(&line[2..].trim());
+                description.push_str(comment.trim());
                 self.consume();
             } else {
                 break;

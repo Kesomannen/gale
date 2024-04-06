@@ -12,19 +12,19 @@
 
 	let name: string;
 	let description: string;
-	let version: string;
-	let webiste: string;
-	let iconPath: string;
+	let versionNumber: string;
+	let websiteUrl: string;
+	let icon: string;
 
 	function browseIcon() {
 		open({
-			defaultPath: iconPath ?? undefined,
+			defaultPath: icon ?? undefined,
 			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }],
 			title: 'Select icon',
 			multiple: false
 		}).then((result) => {
 			if (result === null) return;
-			iconPath = result as string;
+			icon = result as string;
 		});
 	}
 
@@ -41,9 +41,9 @@
 				args: {
 					name,
 					description,
-					version_number: version,
-					website_url: webiste,
-					icon: iconPath
+					versionNumber,
+					websiteUrl,
+					icon
 				}
 			})
 
@@ -57,17 +57,17 @@
 		Export {$currentProfile} as a Thunderstore modpack
 	</Dialog.Description>
 	<div class="flex flex-col mt-4 gap-1">
-		<InputField label="Name" placeholder="Enter a name..." pattern="[A-Z]" bind:value={name} />
+		<InputField label="Name" placeholder="Enter a name..." bind:value={name} />
 		<InputField label="Description" placeholder="Enter a short description..." bind:value={description} />
 
 		<div class="h-1" />
 
-		<InputField label="Website" placeholder="Enter a website URL... (optional)" bind:value={webiste} />
-		<InputField label="Version" placeholder="Version number (e.g. 1.2.3)" bind:value={version} />
+		<InputField label="Website" placeholder="Enter a website URL... (optional)" bind:value={websiteUrl} />
+		<InputField label="Version" placeholder="Version number (e.g. 1.2.3)" bind:value={versionNumber} />
 
 		<div class="h-1" />
 
-		<PathField label="Icon" onClick={browseIcon} bind:value={iconPath} icon="mdi:file-image" />
+		<PathField label="Icon" onClick={browseIcon} bind:value={icon} icon="mdi:file-image" />
 	</div>
 	<div class="flex w-full justify-end mt-3">
 		<Button.Root

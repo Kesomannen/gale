@@ -115,6 +115,11 @@ export interface PackageManifest {
 	installers?: PackageInstaller[];
 }
 
+export interface ProfileInfo {
+	activeIndex: number;
+	names: string[];
+}
+
 export interface Mod {
 	package: PackageListing;
 	version: PackageVersion;
@@ -133,7 +138,7 @@ export interface QueryModsArgs {
 	categories: string[];
 	includeNsfw: boolean;
 	includeDeprecated: boolean;
-	sortBy?: SortBy;
+	sortBy: SortBy;
 	descending: boolean;
 }
 
@@ -162,3 +167,38 @@ export interface Dependant {
 export type RemoveModResponse = 
 	| { type: "removed", data?: undefined }
 	| { type: "hasDependants", data: Dependant[] };
+
+	export type InstallTask = 
+	| { type: "installing", content?: undefined }
+	| { type: "extracting", content?: undefined }
+	| { type: "downloading", content: {
+		total: number;
+		downloaded: number;
+	} };
+
+export interface InstallProgress {
+	installedMods: number;
+	totalMods: number;
+	downloadedBytes: number;
+	totalBytes: number;
+	currentModName: string;
+	currentTask: InstallTask;
+}
+
+export type InstallProgressPayload = 
+	| { type: "inProgress", content: InstallProgress }
+	| { type: "done", content?: undefined }
+	| { type: "error", content?: undefined };
+
+export interface ModpackArgs {
+	name: string;
+	description: string;
+	versionNumber: string;
+	icon: string;
+	websiteUrl?: string;
+}
+
+export interface ModRef {
+	packageUuid: string;
+	versionUuid: string;
+}

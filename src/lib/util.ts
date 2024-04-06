@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api';
 
-import type { PackageListing } from './models';
+import type { Mod, ModRef, PackageListing } from './models';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -19,16 +19,19 @@ export function getTotalDownloads(pkg: PackageListing): number {
 	return pkg.versions.reduce((acc, version) => acc + version.downloads, 0);
 }
 
-export function open(url: string) {
-	invoke('open', { url });
-}
-
-export function pascalToSentence(pascalCase: string): string {
-	const sentenceCase = pascalCase
-		.replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
-		.replace(/([a-z])([A-Z])/g, '$1 $2')
-		.trim()
+export function sentenceCase(str: string): string {
+	const textcase = String(str)
+		.replace(/^[^A-Za-z0-9]*|[^A-Za-z0-9]*$/g, '')
+		.replace(/([a-z])([A-Z])/g, (m, a, b) => `${a}_${b.toLowerCase()}`)
+		.replace(/[^A-Za-z0-9]+|_+/g, ' ')
 		.toLowerCase();
 
-	return sentenceCase.charAt(0).toUpperCase() + sentenceCase.slice(1);
+	return textcase.charAt(0).toUpperCase() + textcase.slice(1);
+}
+
+export function modRef(mod: Mod): ModRef {
+	return {
+		packageUuid: mod.package.uuid4,
+		versionUuid: mod.version.uuid4
+	};
 }

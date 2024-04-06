@@ -2,9 +2,6 @@ use serde::Serialize;
 
 use super::{de::FLAGS_MESSAGE, Entry, File, Num, Section, Value};
 
-#[cfg(test)]
-mod tests;
-
 struct Serializer {
     buffer: String,
 }
@@ -95,7 +92,7 @@ impl Serializer {
                 }
                 is_first = false;
 
-                self.push_str(&option);
+                self.push_str(option);
             }
 
             self.new_line();
