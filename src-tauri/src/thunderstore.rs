@@ -1,30 +1,36 @@
 use std::{
-    collections::HashSet,
-    iter,
-    str::{self, Split},
-    sync::Mutex,
-    time::{Duration, Instant},
+    collections::HashSet, iter, str::{self, Split}, sync::Mutex, time::{Duration, Instant}
 };
 
 use anyhow::{Context, Result};
+use indexmap::IndexMap;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
-use indexmap::IndexMap;
+use heck::ToKebabCase;
 
-use crate::{util::{self}, NetworkClient};
+use crate::{
+    games::{self, Game, GAMES}, manager::ModManager, util, NetworkClient
+};
 
-use self::models::{PackageListing, PackageVersion};
+use self::{
+    models::{PackageListing, PackageVersion},
+    query::Queryable,
+};
 
 pub mod commands;
 pub mod models;
 pub mod query;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
-    app.manage(Mutex::new(Thunderstore::new()));
+    let manager = app.state::<Mutex<ModManager>>();
+    let manager = manager.lock().unwrap();
 
-    tauri::async_runtime::spawn(load_mods_loop(app.clone()));
+    let mut thunderstore = Thunderstore::new();
+    thunderstore.switch_game(manager.active_game, app.clone());
+
+    app.manage(Mutex::new(thunderstore));
 
     query::setup(app).context("failed to initialize query")?;
 
@@ -87,6 +93,7 @@ impl ModRef {
 }
 
 pub struct Thunderstore {
+    pub load_mods_handle: Option<JoinHandle<()>>,
     pub finished_loading: bool,
     // IndexMap is not used for ordering here, but for fast iteration,
     // since we iterate over all mods when querying and resolving dependencies
@@ -96,15 +103,33 @@ pub struct Thunderstore {
 impl Thunderstore {
     pub fn new() -> Self {
         Self {
+            load_mods_handle: None,
             finished_loading: false,
             packages: IndexMap::new(),
         }
     }
 
-    pub fn latest_versions(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
-        self.packages.values().map(move |package| BorrowedMod {
-            package,
-            version: &package.versions[0],
+    pub fn switch_game(&mut self, new_game: u32, app: AppHandle) {
+        if let Some(handle) = self.load_mods_handle.take() {
+            handle.abort();
+        }
+
+        self.finished_loading = false;
+        self.packages.clear();
+
+        let new_game = games::from_steam_id(new_game).unwrap();
+        let game_name = new_game.name.to_kebab_case();
+        let load_mods_handle = tauri::async_runtime::spawn(load_mods_loop(app, game_name));
+
+        self.load_mods_handle = Some(load_mods_handle);
+    }
+
+    pub fn queryable(&self) -> impl Iterator<Item = Queryable<'_>> {
+        self.packages.values().map(move |package| {
+            Queryable::Online(BorrowedMod {
+                package,
+                version: &package.versions[0],
+            })
         })
     }
 
@@ -133,20 +158,16 @@ impl Thunderstore {
                 version_uuid, package.full_name
             )
         })?;
-    
+
         Ok((package, version).into())
     }
 
-    pub fn find_mod<'a>(
-        &'a self,
-        identifier: &str,
-        delimeter: char,
-    ) -> Result<BorrowedMod<'a>> {
+    pub fn find_mod<'a>(&'a self, identifier: &str, delimeter: char) -> Result<BorrowedMod<'a>> {
         let split = identifier.split(delimeter);
-    
+
         let (author, name, version) = parts(split)
             .with_context(|| format!("invalid dependency string format {}", identifier))?;
-    
+
         let full_name = format!("{}-{}", author, name);
         let version = semver::Version::parse(version)
             .with_context(|| format!("invalid version format {}", version))?;
@@ -155,14 +176,14 @@ impl Thunderstore {
         let version = package
             .get_version_with_num(&version)
             .with_context(|| format!("version {} not found in package {}", version, full_name))?;
-    
+
         return Ok((package, version).into());
-    
+
         fn parts(mut s: Split<'_, char>) -> Option<(&str, &str, &str)> {
             let author = s.next()?;
             let name = s.next()?;
             let version = s.next()?;
-    
+
             Some((author, name, version))
         }
     }
@@ -174,7 +195,7 @@ impl Thunderstore {
         let mut unique_map = HashSet::new();
         return inner(self, dependency_strings)
             .filter_ok(move |dep| unique_map.insert(dep.package.uuid4));
-    
+
         fn inner<'a>(
             this: &'a Thunderstore,
             dependency_strings: &'a [String],
@@ -184,10 +205,9 @@ impl Thunderstore {
                     .iter()
                     .map(move |dependency| {
                         let dep = this.find_mod(dependency, '-');
-    
+
                         dep.map(|dep| {
-                            inner(this, &dep.version.dependencies)
-                                .chain(iter::once(Ok(dep)))
+                            inner(this, &dep.version.dependencies).chain(iter::once(Ok(dep)))
                         })
                     })
                     .flatten_ok()
@@ -196,19 +216,20 @@ impl Thunderstore {
         }
     }
 
-    pub fn dependencies<'a>(&'a self, version: &'a PackageVersion)
-        -> impl Iterator<Item = anyhow::Result<BorrowedMod<'a>>>
-    {
+    pub fn dependencies<'a>(
+        &'a self,
+        version: &'a PackageVersion,
+    ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> {
         self.resolve_deps(&version.dependencies)
     }
 }
 
 const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 10);
 
-async fn load_mods_loop(app: AppHandle) {
+async fn load_mods_loop(app: AppHandle, game_name: String) {
     let mut is_first = true;
     loop {
-        if let Err(err) = load_mods(&app, is_first).await {
+        if let Err(err) = load_mods(&app, &game_name, is_first).await {
             util::print_err("error while loading mods from Thunderstore", &err, &app);
         }
 
@@ -217,14 +238,16 @@ async fn load_mods_loop(app: AppHandle) {
     }
 }
 
-const URL: &str = "https://thunderstore.io/c/lethal-company/api/v1/package/";
 const IGNORED_NAMES: [&str; 1] = ["r2modman"];
 
-async fn load_mods(app: &AppHandle, write_directly: bool) -> Result<()> {
+async fn load_mods(app: &AppHandle, game_name: &str, write_directly: bool) -> Result<()> {
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
 
-    let mut response = client.get(URL).send().await?;
+    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game_name);
+    let mut response = client.get(url)
+        .send().await?
+        .error_for_status()?;
 
     let mut is_first_chunk = true;
     let mut buffer = String::new();
@@ -270,7 +293,6 @@ async fn load_mods(app: &AppHandle, write_directly: bool) -> Result<()> {
                 let package: PackageListing = serde_json::from_str(json)?;
 
                 if !IGNORED_NAMES.contains(&package.name.as_str()) {
-    
                     map.insert(package.uuid4, package);
                 }
 
@@ -298,7 +320,11 @@ async fn load_mods(app: &AppHandle, write_directly: bool) -> Result<()> {
 
     state.finished_loading = true;
 
-    println!("loaded {} mods in {:?}", state.packages.len(), start_time.elapsed());
+    println!(
+        "loaded {} mods in {:?}",
+        state.packages.len(),
+        start_time.elapsed()
+    );
 
     let _ = app.emit_all("status_update", None::<String>);
     Ok(())

@@ -21,16 +21,17 @@
 
 	function refresh() {
 		if (queryArgs) {
-			invokeCommand<Mod[]>('query_mods_in_profile', { args: queryArgs })
-				.then((result) => mods = result)
+			invokeCommand<Mod[]>('query_mods_in_profile', { args: queryArgs }).then(
+				(result) => (mods = result)
+			);
 		}
 	}
 
 	async function removeMod() {
 		if (!activeMod) return;
 
-		let response = await invokeCommand<RemoveModResponse>('remove_mod', { 
-			packageUuid: activeMod.package.uuid4
+		let response = await invokeCommand<RemoveModResponse>('remove_mod', {
+			uuid: activeMod.uuid
 		});
 
 		if (response.type == 'removed') {
@@ -44,34 +45,35 @@
 	}
 
 	function forceRemoveDependants() {
-		let packageUuids = dependants.map(d => d.uuid).concat(activeMod!.package.uuid4);
+		let packageUuids = dependants.map((d) => d.uuid).concat(activeMod!.uuid);
 
 		invokeCommand('force_remove_mods', { packageUuids }).then(() => {
 			activeMod = undefined;
 			dependants = [];
 			removeDependantsPopupOpen = false;
 			refresh();
-		})
+		});
 	}
 </script>
 
-<ModList bind:mods bind:queryArgs bind:activeMod extraDropdownOptions={
-	[
+<ModList
+	bind:mods
+	bind:queryArgs
+	bind:activeMod
+	extraDropdownOptions={[
 		{
 			icon: 'mdi:delete',
 			label: 'Uninstall',
 			onClick: removeMod
 		}
-	]
-}/>
+	]}
+/>
 
 {#if activeMod}
-	<Popup 
-		title="Confirm removal"
-		bind:open={removeDependantsPopupOpen}
-	>
+	<Popup title="Confirm removal" bind:open={removeDependantsPopupOpen}>
 		<Dialog.Description class="text-slate-300">
-			The following mods depend on {activeMod.package.name} and <strong>will be also be removed if you proceed:</strong>
+			The following mods depend on {activeMod.name} and
+			<strong>will be also be removed if you proceed:</strong>
 			<ul class="mt-1">
 				{#each dependants as dependant}
 					<li>- {dependant.name}</li>
@@ -91,7 +93,7 @@
 			<Dialog.Close>
 				<Button.Root
 					class="rounded-xl px-4 py-2 text-slate-100 bg-red-600 hover:bg-red-500"
-					on:click={() => removeDependantsPopupOpen = false}
+					on:click={() => (removeDependantsPopupOpen = false)}
 				>
 					Cancel
 				</Button.Root>

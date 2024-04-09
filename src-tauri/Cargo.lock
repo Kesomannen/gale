@@ -86,6 +86,7 @@ dependencies = [
  "anyhow",
  "base64 0.22.0",
  "futures-util",
+ "heck 0.5.0",
  "image 0.25.1",
  "indexmap 2.2.6",
  "itertools",

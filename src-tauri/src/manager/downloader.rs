@@ -21,7 +21,7 @@ use crate::{
     NetworkClient,
 };
 
-use super::{commands::save, ModManager, ModRef, Profile};
+use super::{commands::save, ModManager, ModRef, Profile, ProfileMod};
 use futures_util::StreamExt;
 
 pub mod commands;
@@ -39,7 +39,7 @@ fn missing_deps<'a>(
 ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> {
     thunderstore
         .dependencies(borrowed_mod.version)
-        .filter_ok(|dep| !profile.has_package(&dep.package.uuid4))
+        .filter_ok(|dep| !profile.has_mod(&dep.package.uuid4))
         .chain(iter::once(Ok(borrowed_mod)))
 }
 
@@ -77,7 +77,7 @@ fn try_cache_install(
         true => {
             let name = &borrowed_mod.package.full_name;
             install_from_disk(path, &profile.path, name)?;
-            profile.mods.push(ModRef::from(borrowed_mod));
+            profile.mods.push(ProfileMod::Remote(borrowed_mod.into()));
             Ok(true)
         }
         false => Ok(false),
@@ -120,6 +120,7 @@ async fn install_mod(
 
     let mut stream = client.get(&url)
         .send().await?
+        .error_for_status()?
         .bytes_stream();
 
     let mut i = 0;
@@ -156,11 +157,7 @@ async fn install_mod(
     zip_extract::extract(Cursor::new(response), &path, true)
         .fs_context("extracting mod", &path)?;
 
-    for dir in ["BepInExPack", "BepInEx", "plugins"].iter() {
-        path.push(dir);
-        fs_util::flatten_if_exists(&path)?;
-        path.pop();
-    }
+    normalize_mod_structure(&mut path)?;
 
     on_task_update(InstallTask::Installing, 0);
 
@@ -172,6 +169,16 @@ async fn install_mod(
     ensure!(result, "mod not found in cache after download");
 
     save(&manager, &prefs)?;
+
+    Ok(())
+}
+
+pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
+    for dir in ["BepInExPack", "BepInEx", "plugins"].iter() {
+        path.push(dir);
+        fs_util::flatten_if_exists(&*path)?;
+        path.pop();
+    }
 
     Ok(())
 }
@@ -284,7 +291,10 @@ pub async fn install_mods(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result
     }
 }
 
-pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Result<()> {
+pub async fn install_deps<F>(get_deps: F, app: &tauri::AppHandle) -> Result<()>
+where
+    F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<ModRef>>,
+{
     let to_install = {
         let manager = app.state::<Mutex<ModManager>>();
         let thunderstore = app.state::<Mutex<Thunderstore>>();
@@ -292,19 +302,25 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
-        let borrowed_mod = mod_ref.borrow(&thunderstore)?;
-        missing_deps(borrowed_mod, manager.active_profile(), &thunderstore)
-            .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
-            .collect::<Result<Vec<_>>>()
-            .context("failed to resolve dependencies")?
+        get_deps(&manager, &thunderstore).context("failed to resolve dependencies")?
     };
 
     install_mods(&to_install, app).await
 }
 
+pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Result<()> {
+    install_deps(move |manager, thunderstore| {
+        let borrowed_mod = mod_ref.borrow(thunderstore)?;
+
+        missing_deps(borrowed_mod, manager.active_profile(), thunderstore)
+            .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
+            .collect::<Result<Vec<_>>>()
+    }, app).await
+}
+
 const BEPINEX_NAME: &str = "BepInEx-BepInExPack";
 
-fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
+pub fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
     match name {
         BEPINEX_NAME => install_from_disk_bepinex(src, dest),
         _ => install_from_disk_default(src, dest, name),

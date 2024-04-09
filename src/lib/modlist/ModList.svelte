@@ -16,7 +16,7 @@
 		label: string;
 	}
 
-	const pageSize = 14;
+	const pageSize = 20;
 	const sortOptions: SortOption[] = [
 		{ value: SortBy.LastUpdated, label: 'Last updated' },
 		{ value: SortBy.Rating, label: 'Rating' },
@@ -68,7 +68,7 @@
 	}
 
 	function onModClicked(mod: Mod) {
-		if (activeMod === undefined || activeMod.package.uuid4 !== mod.package.uuid4) {
+		if (activeMod === undefined || activeMod.uuid !== mod.uuid) {
 			activeMod = mod;
 		} else {
 			activeMod = undefined;

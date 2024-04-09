@@ -28,6 +28,7 @@
 <main
 	class="h-screen overflow-hidden flex flex-col rounded-lg border border-gray-600 bg-gray-800 relative"
 >
+
 	<Menubar />
 	<Contextbar />
 
@@ -43,7 +44,10 @@
 	</div>
 
 	{#if status}
-		<div class="w-full flex items-center px-3 py-1 text-sm border-t border-gray-700 text-slate-400">
+		<div 
+			class="w-full flex items-center px-3 py-1 text-sm border-t border-gray-700 text-slate-400"
+			transition:slide={{ duration: 200, easing: expoOut }}
+		>
 			<Icon icon="mdi:loading" class="animate-spin" />
 			<span class="ml-2">{status}</span>
 		</div>

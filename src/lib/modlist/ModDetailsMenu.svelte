@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { DropdownOption, Mod } from '../models';
-	import { getTotalDownloads, shortenNum } from '../util';
+	import { shortenNum } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
 	import Popup from '$lib/Popup.svelte';
@@ -31,19 +31,19 @@
 			options.splice(0, 0, ...extraDropdownOptions);
 		}
 
-		if (mod.version.websiteUrl.length > 0) {
+		if (mod.websiteUrl && mod.websiteUrl.length > 0) {
 			options.splice(0, 0, {
 				icon: 'mdi:open-in-new',
 				label: 'Open website',
-				onClick: () => open(mod.version.websiteUrl)
+				onClick: () => open(mod.websiteUrl!)
 			});
 		}
 
-		if (mod.package.donationLink) {
+		if (mod.donateUrl) {
 			options.splice(0, 0, {
 				icon: 'mdi:heart',
 				label: 'Donate',
-				onClick: () => open(mod.package.donationLink!)
+				onClick: () => open(mod.donateUrl!)
 			});
 		}
 
@@ -62,7 +62,7 @@
 	function fetchReadme() {
 		if (currentReadme === mod) return;
 
-		let url = `https://thunderstore.io/api/experimental/package/${mod.package.owner}/${mod.package.name}/${mod.version.versionNumber}/readme/`;
+		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
 		readmePromise = fetch<MarkdownResponse>(url, { method: 'GET' })
 	}
 </script>
@@ -98,44 +98,52 @@
 			class="text-slate-200 font-semibold text-2xl hover:underline truncate"
 			on:click={() =>
 				open(
-					`https://thunderstore.io/c/lethal-company/p/${mod.package.owner}/${mod.package.name}/`
-				)}>{mod.version.name}</Button.Root
+					`https://thunderstore.io/c/lethal-company/p/${mod.author}/${mod.name}/`
+				)}>{mod.name}</Button.Root
 		>
-		<span class="text-slate-300 font-light text-lg align-middle ml-1"
-			>v{mod.version.versionNumber}</span
+		{#if mod.version}
+			<span class="text-slate-300 font-light text-lg pl-2 align-middle"
+			>{mod.version}</span
 		>
+		{/if}
 	</div>
 
-	<span class="text-slate-400 text-lg">
-		By
-		<Button.Root
-			class="hover:underline"
-			on:click={() => open('https://thunderstore.io/c/lethal-company/p/' + mod.package.owner)}
-		>
-			{mod.package.owner}
-		</Button.Root>
-	</span>
+	{#if mod.author}
+		<span class="text-slate-400 text-lg">
+			By
+			<Button.Root
+				class="hover:underline"
+				on:click={() => open('https://thunderstore.io/c/lethal-company/p/' + mod.author)}
+			>
+				{mod.author}
+			</Button.Root>
+		</span>
+	{/if}
 
-	<div class="flex gap-1 mt-2 flex-wrap">
-		{#each mod.package.categories as category}
-			<div class="bg-slate-600 rounded-full px-3 py-1 text-blue-100 text-sm">
-				{category}
+	{#if mod.categories}
+		<div class="flex gap-1 mt-2 flex-wrap">
+			{#each mod.categories as category}
+				<div class="bg-slate-600 rounded-full px-3 py-1 text-blue-100 text-sm">
+					{category}
+				</div>
+			{/each}
+		</div>
+	{/if}
+
+	{#if mod.rating && mod.downloads}
+		<div class="mt-3">
+			<div class="inline-flex items-center gap-2 mr-6">
+				<Icon class="text-yellow-400 text-lg" icon="mdi:star" />
+				<span class="text-yellow-400 text-md">{shortenNum(mod.rating)}</span>
 			</div>
-		{/each}
-	</div>
-
-	<div class="mt-3">
-		<div class="inline-flex items-center gap-2 mr-6">
-			<Icon class="text-yellow-400 text-lg" icon="mdi:star" />
-			<span class="text-yellow-400 text-md">{shortenNum(mod.package.ratingScore)}</span>
+			<div class="inline-flex items-center gap-2">
+				<Icon class="text-green-400 text-lg" icon="mdi:download" />
+				<span class="text-green-400 text-md">{shortenNum(mod.downloads)}</span>
+			</div>
 		</div>
-		<div class="inline-flex items-center gap-2">
-			<Icon class="text-green-400 text-lg" icon="mdi:download" />
-			<span class="text-green-400 text-md">{shortenNum(getTotalDownloads(mod.package))}</span>
-		</div>
-	</div>
+	{/if}
 
-	<p class="text-slate-300 text-lg">{mod.version.description}</p>
+	<p class="text-slate-300 text-lg">{mod.description ?? ""}</p>
 
 	<Button.Root
 		class="flex items-center w-full mt-auto text-white pl-3 pr-1.5 py-1 rounded-md bg-gray-600 hover:bg-gray-500 group"
@@ -146,7 +154,7 @@
 		Details
 	</Button.Root>
 
-	{#if mod.version.dependencies.length > 0}
+	{#if mod.dependencies && mod.dependencies.length > 0}
 		<Button.Root
 			class="flex items-center w-full mt-1 text-white pl-3 pr-1 py-1 rounded-md bg-gray-600 hover:bg-gray-500 group"
 			on:click={() => (dependenciesOpen = true)}
@@ -154,7 +162,7 @@
 			<Icon icon="material-symbols:network-node" class="text-lg mr-1" />
 			Dependencies
 			<div class="bg-gray-500 group-hover:bg-gray-400 px-3 py-0.5 text-sm rounded-md ml-auto">
-				{mod.version.dependencies.length}
+				{mod.dependencies.length}
 			</div>
 		</Button.Root>
 	{/if}
@@ -162,21 +170,23 @@
 	<slot />
 </div>
 
-<Popup title="Dependencies of {mod.package.name}" bind:open={dependenciesOpen}>
-	<table class="mt-2">
-		<tr class="text-slate-100 text-left">
-			<th>Author</th>
-			<th>Name</th>
-			<th>Preferred Version</th>
-		</tr>
-		{#each mod.version.dependencies as dependency}
-			<tr class="text-slate-300">
-				{#each dependency.split('-') as segment}
-					<td class="pr-4">{segment}</td>
-				{/each}
+<Popup title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
+	{#if mod.dependencies}
+		<table class="mt-2">
+			<tr class="text-slate-100 text-left">
+				<th>Author</th>
+				<th>Name</th>
+				<th>Preferred Version</th>
 			</tr>
-		{/each}
-	</table>
+			{#each mod.dependencies as dependency}
+				<tr class="text-slate-300">
+					{#each dependency.split('-') as segment}
+						<td class="pr-4">{segment}</td>
+					{/each}
+				</tr>
+			{/each}
+		</table>
+	{/if}
 </Popup>
 
 <Popup bind:open={readmeOpen}>

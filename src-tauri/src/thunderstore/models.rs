@@ -93,8 +93,9 @@ pub struct LegacyProfileCreateResponse {
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageManifest {
     pub name: String,
+    pub author: Option<String>,
     pub description: String,
-    pub version_number: String,
+    pub version_number: semver::Version,
     pub dependencies: Vec<String>,
     pub website_url: String,
     pub installers: Option<Vec<PackageInstaller>>,
@@ -105,4 +106,33 @@ pub struct PackageManifest {
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageInstaller {
     pub identifier: String,
+}
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum FrontendModKind {
+    Local,
+    #[default]
+    Remote,
+}
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendMod {
+    pub name: String,
+    pub description: Option<String>,
+    pub categories: Option<Vec<String>>,
+    pub version: Option<semver::Version>,
+    pub author: Option<String>,
+    pub rating: Option<u32>,
+    pub downloads: Option<u32>,
+    pub website_url: Option<String>,
+    pub donate_url: Option<String>,
+    pub icon: Option<String>,
+    pub dependencies: Option<Vec<String>>,
+    pub is_pinned: bool,
+    pub uuid: Uuid,
+    pub latest_version_uuid: Option<Uuid>,
+    #[serde(rename = "type")]
+    pub kind: FrontendModKind,
 }

@@ -94,3 +94,7 @@ pub fn zip(path: &Path) -> Result<Zip, io::Error> {
 
     Ok(Zip { writer, options })
 }
+
+pub fn file_name(path: &Path) -> String {
+    path.file_name().unwrap().to_string_lossy().to_string()
+}

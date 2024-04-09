@@ -5,22 +5,30 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use image::{imageops::FilterType, io::Reader as ImageReader};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
 use crate::{
-    command_util::StateMutex, fs_util, prefs::Prefs, thunderstore::{
+    command_util::StateMutex,
+    fs_util,
+    manager::{commands::save, LocalMod, ProfileMod},
+    prefs::{self, Prefs},
+    thunderstore::{
         models::{LegacyProfileCreateResponse, PackageManifest},
         BorrowedMod, ModRef, Thunderstore,
-    }, util::IoResultExt, NetworkClient
+    },
+    util::IoResultExt,
+    NetworkClient,
 };
 
 use super::{config, downloader, ModManager, Profile};
-use uuid::Uuid;
 use base64::{prelude::BASE64_STANDARD, Engine};
+use uuid::Uuid;
+use itertools::Itertools;
+use reqwest::StatusCode;
 
 pub mod commands;
 
@@ -96,12 +104,10 @@ const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore) -> Result<()> {
     dir.push(&profile.name);
     dir.set_extension("r2z");
-    let mut zip = fs_util::zip(dir)
-        .fs_context("creating zip archive", dir)?;
+    let mut zip = fs_util::zip(dir).fs_context("creating zip archive", dir)?;
 
     let mods = profile
-        .mods
-        .iter()
+        .remote_mods()
         .map(|mod_ref| {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
             Ok(ExportMod::from(borrowed_mod))
@@ -114,8 +120,7 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
         mods,
     };
 
-    let yaml = serde_yaml::to_string(&manifest)
-        .context("failed to serialize profile manifest")?;
+    let yaml = serde_yaml::to_string(&manifest).context("failed to serialize profile manifest")?;
 
     zip.write_str("export.r2x", &yaml)
         .context("failed to write profile manifest")?;
@@ -170,7 +175,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
         let manager = app.state::<Mutex<ModManager>>();
         let thunderstore = app.state::<Mutex<Thunderstore>>();
         let prefs = app.state::<Mutex<Prefs>>();
-            
+
         let mut manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
         let prefs = prefs.lock().unwrap();
@@ -187,7 +192,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
             serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
 
         let name = manifest.profile_name.to_owned();
-        let profile = manager.create_profile(name, &prefs)?;
+        let profile = manager.active_game_mut().create_profile(name)?;
 
         let mut config_dir = profile.path.clone();
         config_dir.push("BepInEx");
@@ -224,18 +229,25 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<()> {
         .get(&url)
         .send()
         .await?
-        .error_for_status()?
+        .error_for_status()
+        .map_err(|err| match err.status() {
+            Some(status) if status == StatusCode::NOT_FOUND => {
+                anyhow!("profile code is expired or invalid")
+            }
+            _ => err.into(),
+        })?
         .text()
         .await?;
 
     match response.strip_prefix(PROFILE_DATA_PREFIX) {
         Some(data) => {
-            let bytes = BASE64_STANDARD.decode(data)
+            let bytes = BASE64_STANDARD
+                .decode(data)
                 .context("failed to decode base64 data")?;
 
             import_file(Cursor::new(bytes), app).await
         }
-        None => Err(anyhow::anyhow!("invalid profile data")),
+        None => Err(anyhow!("invalid profile data")),
     }
 }
 
@@ -245,7 +257,7 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<()> {
 pub struct ModpackArgs {
     pub name: String,
     pub description: String,
-    pub version_number: String,
+    pub version_number: semver::Version,
     pub icon: PathBuf,
     pub website_url: Option<String>,
 }
@@ -257,9 +269,11 @@ fn export_pack(
     thunderstore: &Thunderstore,
 ) -> Result<()> {
     let dep_strings = profile
-        .mods
-        .iter()
-        .map(|p| Ok(p.borrow(thunderstore)?.version.full_name.clone()))
+        .remote_mods()
+        .map(|mod_ref| {
+            let borrowed_mod = mod_ref.borrow(thunderstore)?;
+            Ok(borrowed_mod.version.full_name.clone())
+        })
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve modpack dependencies")?;
 
@@ -270,6 +284,7 @@ fn export_pack(
         website_url: args.website_url.unwrap_or_default(),
         dependencies: dep_strings,
         installers: None,
+        author: None,
     };
 
     let mut zip = fs_util::zip(path)?;
@@ -297,6 +312,94 @@ fn write_config(profile: &Profile, zip: &mut fs_util::Zip) -> Result<()> {
         let path = path.strip_prefix("BepInEx").unwrap();
         zip.write_str(path.to_str().unwrap(), &content)
             .fs_context("writing config file", path)?;
+    }
+
+    Ok(())
+}
+
+async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
+    ensure!(path.is_dir(), "mod path is not a directory");
+
+    path.push("manifest.json");
+    let manifest = match path.exists() {
+        true => {
+            let json = fs::read_to_string(&path).fs_context("reading manifest", &path)?;
+
+            let manifest: PackageManifest =
+                serde_json::from_str(&json).context("failed to parse manifest")?;
+
+            Some(manifest)
+        }
+        false => None,
+    };
+    path.pop();
+
+    let uuid = Uuid::new_v4();
+
+    let mut local_mod = match manifest {
+        Some(manifest) => LocalMod {
+            uuid,
+            name: manifest.name,
+            author: manifest.author,
+            description: Some(manifest.description),
+            version: Some(manifest.version_number),
+            dependencies: Some(manifest.dependencies),
+            ..Default::default()
+        },
+        None => LocalMod {
+            uuid,
+            name: fs_util::file_name(&path),
+            ..Default::default()
+        },
+    };
+
+    if let Some(ref deps) = local_mod.dependencies {
+        downloader::install_deps(|manager, thunderstore| {
+            let profile = manager.active_profile();
+
+            thunderstore
+                .resolve_deps(deps)
+                .filter_ok(|dep| !profile.has_mod(&dep.package.uuid4))
+                .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
+                .collect::<Result<Vec<_>>>()
+                .context("failed to resolve dependencies")
+        }, app).await?;
+    }
+
+    {
+        let manager = app.state::<Mutex<ModManager>>();
+        let thunderstore = app.state::<Mutex<Thunderstore>>();
+        let prefs = app.state::<Mutex<Prefs>>();
+
+        let mut manager = manager.lock().unwrap();
+        let thunderstore = thunderstore.lock().unwrap();
+        let prefs = prefs.lock().unwrap();
+
+        let profile = manager.active_profile_mut();
+
+        if profile.local_mods().any(|m| m.name == local_mod.name) {
+            profile.force_remove_mod(&uuid, &thunderstore)
+                .context("failed to remove existing mod")?;
+        }
+    
+        downloader::install_from_disk(&path, &profile.path, &local_mod.name)
+            .context("failed to install local mod")?;
+
+        let mut mod_path = profile.path.clone();
+        mod_path.push("BepInEx");
+        mod_path.push("plugins");
+        mod_path.push(&local_mod.name);
+
+        downloader::normalize_mod_structure(&mut mod_path)?;
+
+        mod_path.push("icon.png");
+        if mod_path.exists() {
+            local_mod.icon = Some(mod_path);
+        }
+    
+        profile.mods.push(ProfileMod::Local(local_mod));
+
+        save(&manager, &prefs)?;
     }
 
     Ok(())

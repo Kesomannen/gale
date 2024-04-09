@@ -65,64 +65,32 @@ export interface PrefEntry {
 	value: PrefValue;
 }
 
-export interface PackageVersion {
-	dateCreated: string;
-	dependencies: string[];
-	description: string;
-	downloadUrl: string;
-	downloads: number;
-	fileSize: number;
-	fullName: string;
-	icon: string;
-	isActive: boolean;
-	name: string;
-	uuid4: string;
-	versionNumber: string;
-	websiteUrl: string;
-}
-
-export interface PackageListing {
-	categories: string[];
-	dateCreated: string;
-	dateUpdated: string;
-	donationLink?: string;
-	fullName: string;
-	hasNsfwContent: boolean;
-	isDeprecated: boolean;
-	isPinned: boolean;
-	name: string;
-	owner: string;
-	packageUrl: string;
-	ratingScore: number;
-	uuid4: string;
-	versions: PackageVersion[];
-}
-
-export interface LegacyProfileCreateResponse {
-	key: string;
-}
-
-export interface PackageInstaller {
-	identifier: string;
-}
-
-export interface PackageManifest {
-	name: string;
-	description: string;
-	versionNumber: string;
-	dependencies: string[];
-	websiteUrl: string;
-	installers?: PackageInstaller[];
-}
-
 export interface ProfileInfo {
 	activeIndex: number;
 	names: string[];
 }
 
+export interface GameInfo {
+	active: Game;
+	all: Game[];
+}
+
 export interface Mod {
-	package: PackageListing;
-	version: PackageVersion;
+	name: string;
+	description?: string,
+	categories?: string[],
+	version?: string,
+	author?: string,
+	rating?: number,
+	downloads?: number,
+	websiteUrl?: string,
+	donateUrl?: string,
+	icon?: string,
+	dependencies?: string[],
+	isPinned: boolean,
+	uuid: string;
+	latestVersionUuid?: string;
+	type: 'local' | 'remote';
 }
 
 export enum SortBy {
@@ -198,7 +166,8 @@ export interface ModpackArgs {
 	websiteUrl?: string;
 }
 
-export interface ModRef {
-	packageUuid: string;
-	versionUuid: string;
+export interface Game {
+	name: string,
+	displayName: string,
+	steamId: number,
 }

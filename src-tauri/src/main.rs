@@ -7,6 +7,7 @@ mod thunderstore;
 mod util;
 mod command_util;
 mod fs_util;
+mod games;
 
 use anyhow::Context;
 use tauri::Manager;
@@ -35,9 +36,11 @@ fn main() {
             prefs::commands::get_pref,
             prefs::commands::set_pref,
 
-            manager::commands::query_mods_in_profile,
+            manager::commands::get_game_info,
+            manager::commands::set_active_game,
             manager::commands::get_profile_info,
             manager::commands::set_active_profile,
+            manager::commands::query_mods_in_profile,
             manager::commands::is_mod_installed,
             manager::commands::create_profile,
             manager::commands::delete_profile,
@@ -53,6 +56,7 @@ fn main() {
             manager::importer::commands::export_code,
             manager::importer::commands::import_code,
             manager::importer::commands::export_pack,
+            manager::importer::commands::import_local_mod,
 
             manager::config::commands::get_config_files,
             manager::config::commands::set_config_entry,
@@ -65,8 +69,8 @@ fn main() {
 
             let handle = app.handle();
             prefs::setup(&handle).context("failed to initialize preferences")?;
-            thunderstore::setup(&handle).context("failed to initialize Thunderstore")?;
             manager::setup(&handle).context("failed to initialize manager")?;
+            thunderstore::setup(&handle).context("failed to initialize Thunderstore")?;
 
             Ok(())
         })

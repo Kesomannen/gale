@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
 	import type { Mod, QueryModsArgs } from '$lib/models';
-	import { modRef, shortenFileSize } from '$lib/util';
+	import { shortenFileSize } from '$lib/util';
 
 	import ModList from '$lib/modlist/ModList.svelte';
 
@@ -9,11 +9,17 @@
 	import { Button } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { listen } from '@tauri-apps/api/event';
+	import { currentGame } from '$lib/profile';
 
 	let mods: Mod[];
 	let queryArgs: QueryModsArgs;
 	let activeMod: Mod | undefined;
 	let activeDownloadSize: number | undefined;
+
+	$: modRef = {
+		packageUuid: activeMod?.uuid,
+		versionUuid: activeMod?.latestVersionUuid,
+	};
 
 	let isModInstalled = false;
 
@@ -24,6 +30,7 @@
 	});
 
 	$: {
+		$currentGame;
 		if (queryArgs) {
 			invokeCommand<Mod[] | null>('query_all_mods', { args: queryArgs }).then((result) => {
 				if (!result) return;
@@ -34,14 +41,14 @@
 
 	$: {
 		if (activeMod) {
-			invokeCommand<number>('get_download_size', { modRef: modRef(activeMod) }).then(
+			invokeCommand<number>('get_download_size', { modRef }).then(
 				(size) => (activeDownloadSize = size)
 			);
 		}
 	}
 
 	$: if (activeMod) {
-		invokeCommand<boolean>('is_mod_installed', { packageUuid: activeMod.package.uuid4 }).then(
+		invokeCommand<boolean>('is_mod_installed', { uuid: activeMod.uuid }).then(
 			(result) => (isModInstalled = result)
 		);
 	}
@@ -55,10 +62,7 @@
 								disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
 		on:click={() => {
 			if (activeMod) {
-				invokeCommand('install_mod', { modRef: {
-					packageUuid: activeMod.package.uuid4,
-					versionUuid: activeMod.version.uuid4
-				}})
+				invokeCommand('install_mod', { modRef })
 			}
 		}}
 		disabled={isModInstalled}

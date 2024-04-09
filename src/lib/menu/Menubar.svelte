@@ -12,15 +12,25 @@
 
 	import { open } from '@tauri-apps/api/shell';
 	import { appWindow } from '@tauri-apps/api/window';
-	import { clipboard } from '@tauri-apps/api';
 	import ImportCodePopup from '$lib/import/ImportCodePopup.svelte';
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
+	import { dialog } from '@tauri-apps/api';
 
 	let newProfileOpen = false;
 	let preferencesOpen = false;
 	let exportPackOpen = false;
 	let importCodeOpen = false;
 	let exportCodePopup: ExportCodePopup;
+
+	async function importLocal() {
+		let path = await dialog.open({
+			directory: true,
+			title: 'Select the root of the mod to import'
+		});
+
+		if (!path) return;
+		invokeCommand('import_local_mod', { path });
+	}
 </script>
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
@@ -48,6 +58,7 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
+				<MenubarItem onClick={importLocal}>Local mod</MenubarItem>
 				<MenubarItem onClick={() => (importCodeOpen = true)}>Profile from code</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>

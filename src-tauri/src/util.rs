@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{iter, path::Path};
 
 use serde::Serialize;
 use tauri::{AppHandle, Manager};

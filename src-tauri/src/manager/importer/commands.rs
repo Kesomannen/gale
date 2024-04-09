@@ -47,3 +47,13 @@ pub fn export_pack(
     let _ = open::that(&zip_path);
     Ok(())
 }
+
+#[tauri::command]
+pub async fn import_local_mod(
+    path: PathBuf,
+    app: AppHandle,
+) -> Result<()> {
+    super::import_local_mod(path, &app).await?;
+
+    Ok(())
+}
