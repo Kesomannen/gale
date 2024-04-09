@@ -17,24 +17,24 @@
 >
 	<Dialog.Portal>
 		<Dialog.Overlay
-			class="fixed inset-0 z-50 bg-black/60"
+			class="fixed inset-0 z-0 bg-black/60"
 			transition={fade}
 			transitionConfig={{ duration: 150 }}
 		/>
 		<Dialog.Content
-			class="
-                fixed left-[50%] top-[50%] w-full max-w-[40rem] max-h-[90%] translate-x-[-50%] translate-y-[-50%] overflow-y-auto overflow-x-hidden
-                z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600"
+			class="fixed inset-0 flex items-center justify-center pointer-events-none"
 			inTransition={scale}
-			inTransitionConfig={{ duration: 200, easing: quartOut, start: 0.5 }}
+			inTransitionConfig={{ duration: 200, easing: quartOut, start: 0.8 }}
 			outTransition={scale}
-			outTransitionConfig={{ duration: 100, easing: quartIn }}
+			outTransitionConfig={{ duration: 100, easing: quartIn, start: 0.8 }}
 		>
-			{#if title}
-				<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
-			{/if}
+			<div class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden w-full max-w-[40rem] max-h-[90%] pointer-events-auto">
+				{#if title}
+					<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
+				{/if}
 
-			<slot />
+				<slot />
+			</div>
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>

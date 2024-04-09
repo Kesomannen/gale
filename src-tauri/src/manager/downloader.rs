@@ -371,7 +371,7 @@ fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
 fn resolve_deep_link(url: String, thunderstore: &Thunderstore) -> Result<ModRef> {
     let id = url
         .strip_prefix("ror2mm://v1/install/thunderstore.io/")
-        .ok_or_else(|| anyhow!("invalid deep link url: {}", url))?;
+        .ok_or_else(|| anyhow!("Invalid deep link url: '{}'", url))?;
 
     let borrowed_mod = thunderstore.find_mod(id, '/')?;
 
@@ -387,7 +387,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
             match resolve_deep_link(url, &thunderstore) {
                 Ok(mod_ref) => mod_ref,
                 Err(e) => {
-                    print_err("resolve deep link", &e, &app);
+                    print_err("Failed to resolve deep link", &e, &app);
                     return;
                 }
             }

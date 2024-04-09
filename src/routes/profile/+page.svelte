@@ -39,7 +39,7 @@
 			return;
 		}
 
-		dependants = response.data;
+		dependants = response.content;
 		removeDependantsPopupOpen = true;
 	}
 

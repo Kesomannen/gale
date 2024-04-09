@@ -11,7 +11,7 @@ struct JsError<'a> {
 }
 
 pub fn print_err(context: &str, error: &anyhow::Error, handle: &AppHandle) {
-    eprintln!("failed to {}: {:#}", context, error);
+    eprintln!("{}: {:#}", context, error);
     let _ = handle.emit_all("error", JsError {
         name: context,
         message: format!("{:#}", error),

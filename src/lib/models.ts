@@ -165,10 +165,10 @@ export interface Dependant {
 }
 
 export type RemoveModResponse = 
-	| { type: "removed", data?: undefined }
-	| { type: "hasDependants", data: Dependant[] };
+	| { type: "removed", content?: undefined }
+	| { type: "hasDependants", content: Dependant[] };
 
-	export type InstallTask = 
+export type InstallTask = 
 	| { type: "installing", content?: undefined }
 	| { type: "extracting", content?: undefined }
 	| { type: "downloading", content: {

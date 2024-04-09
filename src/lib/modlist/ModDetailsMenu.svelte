@@ -93,16 +93,16 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<div class="truncate mr-8">
+	<div class="mr-8 flex items-center justify-between">
 		<Button.Root
-			class="text-slate-200 font-semibold text-2xl align-middle hover:underline"
+			class="text-slate-200 font-semibold text-2xl hover:underline truncate"
 			on:click={() =>
 				open(
 					`https://thunderstore.io/c/lethal-company/p/${mod.package.owner}/${mod.package.name}/`
 				)}>{mod.version.name}</Button.Root
 		>
-		<span class="text-slate-300 font-light text-lg pl-2 align-middle"
-			>{mod.version.versionNumber}</span
+		<span class="text-slate-300 font-light text-lg align-middle ml-1"
+			>v{mod.version.versionNumber}</span
 		>
 	</div>
 
