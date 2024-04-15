@@ -1,6 +1,6 @@
 # Kesomannen Mod Manager
 
-A lightweight and fast mod manager for Lethal Company, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/). Currently very much in development.
+A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/). Currently very much in development.
 
 ![screenshot](/images/screenshot.png)
 
@@ -15,7 +15,7 @@ You can however clone the repository and build the project yourself. The only de
 - [x] Browse & install mods
 - [x] Config editor
 - [x] Import & export profiles
-- [ ] Support for other BepInEx compatible games
+- [x] Support for other BepInEx compatible games
 - [ ] Support for other modding frameworks
 
 ## License
