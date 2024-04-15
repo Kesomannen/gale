@@ -73,6 +73,7 @@ export interface ProfileInfo {
 export interface GameInfo {
 	active: Game;
 	all: Game[];
+	favorites: string[];
 }
 
 export interface Mod {
@@ -167,7 +168,8 @@ export interface ModpackArgs {
 }
 
 export interface Game {
-	name: string,
+	id: string,
 	displayName: string,
 	steamId: number,
+	favorite: boolean,
 }

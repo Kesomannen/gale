@@ -8,10 +8,9 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
-use heck::ToKebabCase;
 
 use crate::{
-    games::{self, Game, GAMES}, manager::ModManager, util, NetworkClient
+    games::Game, manager::ModManager, util, NetworkClient
 };
 
 use self::{
@@ -109,7 +108,7 @@ impl Thunderstore {
         }
     }
 
-    pub fn switch_game(&mut self, new_game: u32, app: AppHandle) {
+    pub fn switch_game(&mut self, game: &'static Game, app: AppHandle) {
         if let Some(handle) = self.load_mods_handle.take() {
             handle.abort();
         }
@@ -117,9 +116,7 @@ impl Thunderstore {
         self.finished_loading = false;
         self.packages.clear();
 
-        let new_game = games::from_steam_id(new_game).unwrap();
-        let game_name = new_game.name.to_kebab_case();
-        let load_mods_handle = tauri::async_runtime::spawn(load_mods_loop(app, game_name));
+        let load_mods_handle = tauri::async_runtime::spawn(load_mods_loop(app, game));
 
         self.load_mods_handle = Some(load_mods_handle);
     }
@@ -226,10 +223,10 @@ impl Thunderstore {
 
 const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 10);
 
-async fn load_mods_loop(app: AppHandle, game_name: String) {
+async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let mut is_first = true;
     loop {
-        if let Err(err) = load_mods(&app, &game_name, is_first).await {
+        if let Err(err) = load_mods(&app, game, is_first).await {
             util::print_err("error while loading mods from Thunderstore", &err, &app);
         }
 
@@ -240,12 +237,11 @@ async fn load_mods_loop(app: AppHandle, game_name: String) {
 
 const IGNORED_NAMES: [&str; 1] = ["r2modman"];
 
-async fn load_mods(app: &AppHandle, game_name: &str, write_directly: bool) -> Result<()> {
+async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
 
-    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game_name);
-    let mut response = client.get(url)
+    let mut response = client.get(&game.url)
         .send().await?
         .error_for_status()?;
 
@@ -299,7 +295,7 @@ async fn load_mods(app: &AppHandle, game_name: &str, write_directly: bool) -> Re
                 buffer.replace_range(..index + 4, "");
             }
 
-            if i % 200 == 0 {
+            if i % 200 == 0 && start_time.elapsed().as_secs() > 1 {
                 let _ = app.emit_all(
                     "status_update",
                     Some(format!(

@@ -15,7 +15,7 @@ use crate::{
     command_util::StateMutex,
     fs_util,
     manager::{commands::save, LocalMod, ProfileMod},
-    prefs::{self, Prefs},
+    prefs::Prefs,
     thunderstore::{
         models::{LegacyProfileCreateResponse, PackageManifest},
         BorrowedMod, ModRef, Thunderstore,

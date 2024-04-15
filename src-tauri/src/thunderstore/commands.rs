@@ -1,7 +1,7 @@
-use crate::command_util::{Result, StateMutex};
+use crate::command_util::StateMutex;
 
 use super::{
-    models::FrontendMod, query::{self, QueryModsArgs, QueryState}, Thunderstore
+    models::FrontendMod, query::{QueryModsArgs, QueryState}, Thunderstore
 };
 
 #[tauri::command]
@@ -9,8 +9,17 @@ pub fn query_all_mods(
     args: QueryModsArgs,
     thunderstore: StateMutex<Thunderstore>,
     query_state: StateMutex<QueryState>,
-) -> Result<Option<Vec<FrontendMod>>> {
-    let mut query_state = query_state.lock().unwrap();
-    query_state.current_query = Some(args);
-    Ok(None)
+) -> Option<Vec<FrontendMod>> {
+    let thunderstore = thunderstore.lock().unwrap();
+
+    match thunderstore.finished_loading {
+        true => {
+            Some(super::query::query_mods(&args, thunderstore.queryable()))
+        },
+        false => {
+            let mut query_state = query_state.lock().unwrap();
+            query_state.current_query = Some(args);
+            None
+        }
+    }
 }

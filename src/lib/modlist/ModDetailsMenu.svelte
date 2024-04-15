@@ -9,6 +9,8 @@
 
 	import { open } from '@tauri-apps/api/shell';
 	import { fetch, Response } from '@tauri-apps/api/http';
+	import { currentGame } from '$lib/profile';
+	import { get } from 'svelte/store';
 
 	export let mod: Mod;
 	export let onClose: () => void;
@@ -65,6 +67,15 @@
 		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
 		readmePromise = fetch<MarkdownResponse>(url, { method: 'GET' })
 	}
+
+	function openCommunityUrl(tail?: string) {
+		if (!tail) return;
+
+		let game = get(currentGame);
+		if (!game) return;
+		
+		open(`https://thunderstore.io/c/${game.id}/p/${tail}/`)
+	}
 </script>
 
 <div
@@ -96,10 +107,7 @@
 	<div class="mr-8 flex items-center justify-between">
 		<Button.Root
 			class="text-slate-200 font-semibold text-2xl hover:underline truncate"
-			on:click={() =>
-				open(
-					`https://thunderstore.io/c/lethal-company/p/${mod.author}/${mod.name}/`
-				)}>{mod.name}</Button.Root
+			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}>{mod.name}</Button.Root
 		>
 		{#if mod.version}
 			<span class="text-slate-300 font-light text-lg pl-2 align-middle"
@@ -113,7 +121,7 @@
 			By
 			<Button.Root
 				class="hover:underline"
-				on:click={() => open('https://thunderstore.io/c/lethal-company/p/' + mod.author)}
+				on:click={() => openCommunityUrl(mod.author)}
 			>
 				{mod.author}
 			</Button.Root>
@@ -172,16 +180,16 @@
 
 <Popup title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
-		<table class="mt-2">
+		<table class="mt-2 w-full">
 			<tr class="text-slate-100 text-left">
 				<th>Author</th>
 				<th>Name</th>
 				<th>Preferred Version</th>
 			</tr>
 			{#each mod.dependencies as dependency}
-				<tr class="text-slate-300">
+				<tr class="text-slate-200 even:bg-gray-700">
 					{#each dependency.split('-') as segment}
-						<td class="pr-4">{segment}</td>
+						<td class="pr-4 pl-2">{segment}</td>
 					{/each}
 				</tr>
 			{/each}

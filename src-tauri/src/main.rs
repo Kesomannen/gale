@@ -1,6 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use anyhow::Context;
+use tauri::Manager;
+
+#[macro_use]
+extern crate lazy_static;
+
 mod prefs;
 mod manager;
 mod thunderstore;
@@ -8,9 +14,6 @@ mod util;
 mod command_util;
 mod fs_util;
 mod games;
-
-use anyhow::Context;
-use tauri::Manager;
 
 #[derive(Debug)]
 pub struct NetworkClient(reqwest::Client);
@@ -37,6 +40,7 @@ fn main() {
             prefs::commands::set_pref,
 
             manager::commands::get_game_info,
+            manager::commands::favorite_game,
             manager::commands::set_active_game,
             manager::commands::get_profile_info,
             manager::commands::set_active_profile,

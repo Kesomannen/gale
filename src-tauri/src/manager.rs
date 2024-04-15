@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap, fs, path::{Path, PathBuf}, process::Command, str::FromStr, sync::Mutex
+    collections::HashMap, fs, path::{Path, PathBuf}, process::Command, sync::Mutex
 };
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
@@ -38,25 +38,27 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 }
 
 pub struct ModManager {
-    games: HashMap<u32, ManagerGame>,
-    pub active_game: u32,
+    games: HashMap<&'static String, ManagerGame>,
+    pub active_game: &'static Game,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ManagerSaveData {
-    active_game: u32
+    active_game: String
 }
 
 pub struct ManagerGame {
     profiles: Vec<Profile>,
     path: PathBuf,
+    favorite: bool,
     active_profile_index: usize,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ManagerGameSaveData {
+    favorite: bool,
     active_profile_index: usize,
 }
 
@@ -359,7 +361,7 @@ impl ManagerGame {
         Ok(())
     }
 
-    fn load(mut path: PathBuf) -> Result<(u32, Self)> {
+    fn load(mut path: PathBuf) -> Result<(&'static Game, Self)> {
         let file_name = fs_util::file_name(&path);
         let game = games::from_name(&file_name)
             .ok_or_else(|| anyhow!("invalid game directory name: {}", file_name))?;
@@ -386,9 +388,10 @@ impl ManagerGame {
 
         path.pop();
 
-        Ok((game.steam_id, Self {
+        Ok((game, Self {
             profiles,
             path,
+            favorite: data.favorite,
             active_profile_index: data.active_profile_index,
         }))
     }
@@ -405,7 +408,7 @@ impl ModManager {
                 serde_json::from_str(&json).context("failed to parse manager save data")?
             }
             false => ManagerSaveData {
-                active_game: games::from_name("LethalCompany").unwrap().steam_id,
+                active_game: games::from_name("lethal-company").unwrap().id.to_owned(),
             },
         };
 
@@ -416,14 +419,14 @@ impl ModManager {
 
             if path.is_dir() {
                 let (game, game_data) = ManagerGame::load(path)?;
-                games.insert(game, game_data);
+                games.insert(&game.id, game_data);
             }
         }
 
-        let mut manager = Self {
-            games,
-            active_game: save_data.active_game,
-        };
+        let active_game = games::from_name(&save_data.active_game)
+            .unwrap_or_else(|| games::from_name("lethal-company").unwrap());
+
+        let mut manager = Self { games, active_game };
 
         manager.ensure_game(manager.active_game, prefs)?;
         manager.save(prefs)?;
@@ -433,13 +436,13 @@ impl ModManager {
 
     fn active_game(&self) -> &ManagerGame {
         self.games
-            .get(&self.active_game)
+            .get(&self.active_game.id)
             .expect("active game not found")
     }
 
     fn active_game_mut(&mut self) -> &mut ManagerGame {
         self.games
-            .get_mut(&self.active_game)
+            .get_mut(&self.active_game.id)
             .expect("active game not found")
     }
 
@@ -451,22 +454,20 @@ impl ModManager {
         self.active_game_mut().active_profile_mut()
     }
 
-    fn ensure_game(&mut self, steam_id: u32, prefs: &Prefs) -> Result<()> {
-        if self.games.get(&steam_id).is_some() {
+    fn ensure_game(&mut self, game: &'static Game, prefs: &Prefs) -> Result<()> {
+        if self.games.get(&game.id).is_some() {
             return Ok(());
         }
 
-        let game = games::from_steam_id(steam_id)
-            .ok_or_else(|| anyhow!("invalid game steam id: {}", steam_id))?;
-
-        let mut new_game = ManagerGame {
+        let mut manager_game = ManagerGame {
             profiles: Vec::new(),
-            path: prefs.data_path.join(game.name),
+            path: prefs.data_path.join(&game.id),
+            favorite: false,
             active_profile_index: 0,
         };
 
-        new_game.create_profile("Default".to_owned())?;
-        self.games.insert(steam_id, new_game);
+        manager_game.create_profile("Default".to_owned())?;
+        self.games.insert(&game.id, manager_game);
 
         Ok(())
     }
@@ -475,7 +476,7 @@ impl ModManager {
         let mut path = prefs.data_path.clone();
 
         let data = ManagerSaveData {
-            active_game: self.active_game,
+            active_game: self.active_game.id.to_owned(),
         };
 
         let json = serde_json::to_string_pretty(&data)?;
@@ -485,12 +486,10 @@ impl ModManager {
         path.pop();
 
         for (game_id, manager_game) in &self.games {
-            let game = games::from_steam_id(*game_id)
-                .ok_or_else(|| anyhow!("invalid game steam id: {}", game_id))?;
-
-            path.push(game.name);
+            path.push(game_id);
 
             let data = ManagerGameSaveData {
+                favorite: manager_game.favorite,
                 active_profile_index: manager_game.active_profile_index,
             };
 
@@ -535,7 +534,7 @@ impl ModManager {
 
         Command::new(steam_path)
             .arg("-applaunch")
-            .arg(self.active_game.to_string())
+            .arg(self.active_game.steam_id.to_string())
             .arg("--doorstop-enable")
             .arg("true")
             .arg("--doorstop-target")

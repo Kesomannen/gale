@@ -60,12 +60,15 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
 
     loop {
         {
-            let query_state = query_state.lock().unwrap();
             let thunderstore = thunderstore.lock().unwrap();
 
-            if let Some(args) = query_state.current_query.as_ref() {
-                let mods = query_mods(args, thunderstore.queryable());
-                app.emit_all("mod_query_result", &mods)?;
+            if !thunderstore.finished_loading {
+                let query_state = query_state.lock().unwrap();
+            
+                if let Some(args) = query_state.current_query.as_ref() {
+                    let mods = query_mods(args, thunderstore.queryable());
+                    app.emit_all("mod_query_result", &mods)?;
+                }
             }
         };
 

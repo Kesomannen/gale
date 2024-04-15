@@ -15,23 +15,54 @@ use super::{ModManager, RemoveModResponse};
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameInfo {
-    all: Vec<Game>,
-    active: Game,
+    all: &'static[Game],
+    active: &'static Game,
+    favorites: Vec<&'static str>,
 }
 
 #[tauri::command]
 pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo {
     let manager = manager.lock().unwrap();
 
+    let favorites = manager
+        .games
+        .iter()
+        .filter_map(|(id, game)| match game.favorite {
+            true => Some(id.as_str()),
+            false => None,
+        })
+        .collect();
+
     GameInfo {
-        all: GAMES.iter().cloned().collect(),
-        active: games::from_steam_id(manager.active_game).unwrap().clone()
+        all: &*GAMES,
+        active: manager.active_game,
+        favorites
     }
 }
 
 #[tauri::command]
+pub fn favorite_game(
+    id: String,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let game = games::from_name(&id).context("invalid game id")?;
+    manager.ensure_game(game, &prefs)?;
+
+    let manager_game = manager.games.get_mut(&id).unwrap();
+    manager_game.favorite = !manager_game.favorite;
+
+    save(&manager, &prefs)?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn set_active_game(
-    steam_id: u32,
+    id: &str,
     app: tauri::AppHandle,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
@@ -41,11 +72,16 @@ pub fn set_active_game(
     let mut thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager.ensure_game(steam_id, &prefs)?;
-    manager.active_game = steam_id;
-    thunderstore.switch_game(steam_id, app);
+    let game = games::from_name(id).context("invalid game id")?;
 
-    save(&manager, &prefs)?;
+    manager.ensure_game(game, &prefs)?;
+
+    if manager.active_game.id != game.id {
+        manager.active_game = game;
+        thunderstore.switch_game(game, app);
+    
+        save(&manager, &prefs)?;
+    }
 
     Ok(())
 }

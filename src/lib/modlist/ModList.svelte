@@ -144,7 +144,7 @@
 					disabled={mods.length < pageSize}
 				>
 					<Icon
-					class="text-white text-2xl group-disabled:text-slate-400 align-middle"
+						class="text-white text-2xl group-disabled:text-slate-400 align-middle"
 						icon="mdi:chevron-right"
 					/>
 				</Button.Root>
