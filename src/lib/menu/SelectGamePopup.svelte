@@ -9,22 +9,24 @@
 	export let open = false;
 
 	let shownGames = games;
-	let searchTerm = "";
+	let searchTerm = '';
 
-    $: {
-        searchTerm;
-        refresh();
-    }
+	$: {
+		searchTerm;
+		refresh();
+	}
 
-    function refresh() {
-        if (searchTerm.length > 0) {
+	refresh();
+
+	function refresh() {
+		if (searchTerm.length > 0) {
 			shownGames = games
-                .filter(game => game.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
-                .toSorted((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+				.filter((game) => game.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
+				.toSorted((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
 		} else {
 			shownGames = games;
 		}
-    }
+	}
 </script>
 
 <Popup title="Browse games" bind:open>
@@ -38,11 +40,11 @@
 		<Icon class="absolute left-[12px] top-[9px] text-slate-400 text-2xl" icon="mdi:magnify" />
 	</div>
 
-	<div class="flex flex-col mt-2 min-h-96">
+	<div class="flex flex-col mt-2 h-96 overflow-y-auto">
 		{#if shownGames.length > 0}
-			{#each shownGames as game, i}
+			{#each shownGames as game}
 				<Button.Root
-					class="flex hover:bg-gray-700 rounded-lg p-1 items-center group"
+					class="flex hover:bg-gray-700 rounded-lg p-1 items-center group mr-2"
 					on:click={() => {
 						setActiveGame(game);
 						open = false;
@@ -51,26 +53,28 @@
 					<img
 						src="games/{game.id}.png"
 						alt={game.displayName}
-						class="w-8 h-8 rounded-md group-hover:shadow-xl mr-3"
+						class="w-8 h-8 rounded group-hover:shadow-xl mr-2"
 					/>
 
 					<span class="flex-grow text-left text-slate-200">
 						{game.displayName}
 					</span>
 
-					<Button.Root 
-                        class="{game.favorite ? 'block' : 'hidden group-hover:block'} p-1 mr-1 rounded-md hover:bg-gray-600"
-                        on:click={evt => {
-                            evt.stopPropagation();
-                            game.favorite = !game.favorite;
-                            refresh();
-                            invokeCommand('favorite_game', { id: game.id });
-                        }}
-                    >
-						<Icon 
-                            icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
-                            class="text-yellow-400 text-xl"
-                        />
+					<Button.Root
+						class="{game.favorite
+							? 'block'
+							: 'hidden group-hover:block'} p-1 mr-1 rounded-md hover:bg-gray-600"
+						on:click={(evt) => {
+							evt.stopPropagation();
+							game.favorite = !game.favorite;
+							refresh();
+							invokeCommand('favorite_game', { id: game.id });
+						}}
+					>
+						<Icon
+							icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
+							class="text-yellow-400 text-xl"
+						/>
 					</Button.Root>
 				</Button.Root>
 			{/each}

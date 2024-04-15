@@ -173,3 +173,13 @@ export interface Game {
 	steamId: number,
 	favorite: boolean,
 }
+
+export interface PackageCategory {
+	id: string;
+	name: string;
+	slug: string;
+}
+
+export interface FiltersResponse {
+	package_categories: PackageCategory[];
+}

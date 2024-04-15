@@ -11,6 +11,7 @@
 	import { fetch, Response } from '@tauri-apps/api/http';
 	import { currentGame } from '$lib/profile';
 	import { get } from 'svelte/store';
+	import ModInfoPopup from './ModInfoPopup.svelte';
 
 	export let mod: Mod;
 	export let onClose: () => void;
@@ -53,20 +54,12 @@
 	}
 
 	let dependenciesOpen = false;
+
 	let readmeOpen = false;
-	let readmePromise: Promise<Response<MarkdownResponse>> | null = null;
-	let currentReadme: Mod | null = null;
+	let readme: ModInfoPopup;
 
-	interface MarkdownResponse {
-		markdown: string;
-	}
-
-	function fetchReadme() {
-		if (currentReadme === mod) return;
-
-		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
-		readmePromise = fetch<MarkdownResponse>(url, { method: 'GET' })
-	}
+	let changelogOpen = false;
+	let changelog: ModInfoPopup;
 
 	function openCommunityUrl(tail?: string) {
 		if (!tail) return;
@@ -155,7 +148,16 @@
 
 	<Button.Root
 		class="flex items-center w-full mt-auto text-white pl-3 pr-1.5 py-1 rounded-md bg-gray-600 hover:bg-gray-500 group"
-		on:mouseenter={fetchReadme}
+		on:mouseenter={changelog.fetchMarkdown}
+		on:click={() => (changelogOpen = true)}
+	>
+		<Icon icon="mdi:file-document" class="text-lg mr-1" />
+		Changelog
+	</Button.Root>
+
+	<Button.Root
+		class="flex items-center w-full mt-1 text-white pl-3 pr-1.5 py-1 rounded-md bg-gray-600 hover:bg-gray-500 group"
+		on:mouseenter={readme.fetchMarkdown}
 		on:click={() => (readmeOpen = true)}
 	>
 		<Icon icon="mdi:info" class="text-lg mr-1" />
@@ -197,16 +199,5 @@
 	{/if}
 </Popup>
 
-<Popup bind:open={readmeOpen}>
-	{#await readmePromise}
-		<Icon class="text-slate-300 text-4xl animate-spin" icon="mdi:loading" />
-	{:then value}
-		{#if value?.ok}
-			<Markdown source={value.data.markdown} />
-		{:else}
-			<p class="text-red-300">Failed to load README: error code {value?.status}</p>
-		{/if}
-	{:catch error}
-		<p class="text-red-300">Failed to load README: {error}</p>
-	{/await}
-</Popup>
+<ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} path="readme" />
+<ModInfoPopup bind:this={changelog} bind:open={changelogOpen} {mod} path="changelog" />

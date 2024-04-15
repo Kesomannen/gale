@@ -58,8 +58,8 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={importLocal}>Local mod</MenubarItem>
-				<MenubarItem onClick={() => (importCodeOpen = true)}>Profile from code</MenubarItem>
+				<MenubarItem onClick={() => (importCodeOpen = true)}>...profile from code</MenubarItem>
+				<MenubarItem onClick={importLocal}>...local mod</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -67,8 +67,8 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => exportCodePopup.open()}>Profile as code</MenubarItem>
-				<MenubarItem onClick={() => (exportPackOpen = true)}>Profile as modpack</MenubarItem>
+				<MenubarItem onClick={() => exportCodePopup.open()}>...profile as code</MenubarItem>
+				<MenubarItem onClick={() => (exportPackOpen = true)}>...profile as modpack</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>

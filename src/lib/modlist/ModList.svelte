@@ -4,6 +4,7 @@
 	import ModListSortOption from '$lib/modlist/ModListSortOption.svelte';
 
 	import { SortBy, type Mod, type QueryModsArgs, type DropdownOption } from '$lib/models';
+	import { categories as allCategories } from '$lib/profile';
 
 	import Icon from '@iconify/svelte';
 	import { Button, Popover, Select, Separator } from 'bits-ui';
@@ -21,20 +22,6 @@
 		{ value: SortBy.LastUpdated, label: 'Last updated' },
 		{ value: SortBy.Rating, label: 'Rating' },
 		{ value: SortBy.Downloads, label: 'Downloads' },
-	];
-
-	const allCategories = [
-		'Mods',
-		'Modpacks',
-		'Interiors',
-		'Audio',
-		'Tools',
-		'Moons',
-		'Client-side',
-		'Server-side',
-		'Emotes',
-		'Cosmetics',
-		'TV Videos'
 	];
 
 	let page = 0;

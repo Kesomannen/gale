@@ -1,8 +1,10 @@
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { invokeCommand } from './invoke';
-import type { Game, GameInfo, ProfileInfo } from './models';
+import type { FiltersResponse, Game, GameInfo, ProfileInfo } from './models';
+import { fetch } from '@tauri-apps/api/http';
 
 export let games: Game[] = [];
+export let categories: string[] = [];
 export const currentGame = writable<Game | undefined>(undefined);
 
 export let activeProfileIndex: number = 0;
@@ -21,11 +23,20 @@ export async function refreshGames() {
 
 	currentGame.set(info.active);
 	refreshProfiles();
+	refreshCategories();
 }
 
 export async function setActiveGame(game: Game) {
 	await invokeCommand('set_active_game', { id: game.id });
 	refreshGames();
+}
+
+export async function refreshCategories() {
+	let gameId = get(currentGame)?.id;
+	if (!gameId) return;
+
+	let response = await fetch<FiltersResponse>(`https://thunderstore.io/api/cyberstorm/community/${gameId}/filters/`);
+	categories = response.data.package_categories.map(c => c.name);
 }
 
 export async function refreshProfiles() {

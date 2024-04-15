@@ -65,7 +65,7 @@
 
 		<Icon
 			icon="mdi:dots-vertical"
-			class="text-slate-300 group-hover:text-slate-200 text-xl transition-all flex-shrink-0"
+			class="text-slate-300 group-hover:text-slate-200 text-xl transition-all flex-shrink-0 ml-2"
 		/>
 	</Button.Root>
 

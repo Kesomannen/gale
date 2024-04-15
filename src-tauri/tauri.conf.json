@@ -29,7 +29,7 @@
 				"all": false,
 				"request": true,
 				"scope": [
-					"https://thunderstore.io/api/experimental/package/*"
+					"https://thunderstore.io/api/*"
 				]
 			}
 		},
@@ -81,8 +81,8 @@
 				"title": "Kesomannen Mod Manager",
 				"transparent": true,
 				"width": 800,
-				"minWidth": 500,
-				"minHeight": 400
+				"minWidth": 600,
+				"minHeight": 500
 			}
 		]
 	}

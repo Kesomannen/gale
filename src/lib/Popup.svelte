@@ -22,13 +22,13 @@
 			transitionConfig={{ duration: 150 }}
 		/>
 		<Dialog.Content
-			class="fixed inset-0 flex items-center justify-center pointer-events-none"
+			class="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
 			inTransition={scale}
 			inTransitionConfig={{ duration: 200, easing: quartOut, start: 0.8 }}
 			outTransition={scale}
 			outTransitionConfig={{ duration: 100, easing: quartIn, start: 0.8 }}
 		>
-			<div class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden w-full max-w-[40rem] max-h-[90%] pointer-events-auto">
+			<div class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden w-[90%] max-w-[48rem] max-h-[90%] pointer-events-auto">
 				{#if title}
 					<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
 				{/if}

@@ -59,11 +59,11 @@
   }
 
   .markdown :global(pre) {
-    @apply bg-gray-900 text-slate-300 py-1 rounded-md overflow-x-auto;
+    @apply bg-gray-900 text-slate-300 py-1 px-3 rounded-md overflow-x-auto;
   }
 
   .markdown :global(code) {
-    @apply bg-gray-900 text-slate-300 px-1 rounded-md
+    @apply bg-gray-900 text-slate-300 rounded-md
   }
 
   .markdown :global(img) {
