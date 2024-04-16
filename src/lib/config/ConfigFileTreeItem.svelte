@@ -16,12 +16,12 @@
 
 <Collapsible.Root bind:open={open}>
     <div class="flex pl-3 pr-2 w-full text-slate-200 hover:text-white items-center group">
-        <Collapsible.Trigger class="inline-flex items-center truncate mr-1"> 
+        <Collapsible.Trigger class="flex items-center overflow-hidden mr-1"> 
             <Icon
                 icon="mdi:expand-more"
                 class="text-xl {open ? 'rotate-180' : 'rotate-0'} transition-all mr-1 flex-shrink-0"
             />
-            <div class="truncate flex-shrink">
+            <div class="truncate flex-shrink" style="direction: rtl;">
                 {file.name}
             </div>
         </Collapsible.Trigger>

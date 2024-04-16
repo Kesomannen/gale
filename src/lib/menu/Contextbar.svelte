@@ -6,10 +6,8 @@
 		activeProfileIndex,
 		currentGame,
 		currentProfile,
-		games,
 		profileNames,
 		refreshProfiles,
-		setActiveGame,
 		setActiveProfile
 	} from '$lib/profile';
 	import { invokeCommand } from '$lib/invoke';
@@ -42,7 +40,7 @@
 		}}
 	>
 		<Icon icon="mdi:play-circle" class="text-xl mr-2" />
-		<div class="font-medium truncate">Run game</div>
+		<div class="font-medium">Run game</div>
 	</Button.Root>
 
 	<Button.Root
