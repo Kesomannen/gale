@@ -3,7 +3,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import type { Dependant, Mod, QueryModsArgs, RemoveModResponse } from '$lib/models';
 	import ModList from '$lib/modlist/ModList.svelte';
-	import { currentProfile } from '$lib/profile';
+	import { currentGame, currentProfile } from '$lib/profile';
 	import { Button, Dialog } from 'bits-ui';
 
 	let mods: Mod[];
@@ -16,6 +16,7 @@
 	$: {
 		queryArgs;
 		$currentProfile;
+		$currentGame;
 		refresh();
 	}
 

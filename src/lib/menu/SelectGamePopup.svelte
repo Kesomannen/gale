@@ -13,19 +13,24 @@
 
 	$: {
 		searchTerm;
+		open;
 		refresh();
 	}
 
-	refresh();
-
 	function refresh() {
-		if (searchTerm.length > 0) {
-			shownGames = games
-				.filter((game) => game.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
-				.toSorted((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
-		} else {
-			shownGames = games;
-		}
+		console.log('searching for ' + searchTerm);
+		let newGames =
+			searchTerm.length > 0
+				? games.filter((game) => game.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
+				: games;
+
+		newGames.sort((a, b) => {
+			if (a.favorite && !b.favorite) return -1;
+			if (!a.favorite && b.favorite) return 1;
+			return 0;
+		});
+
+		shownGames = newGames;
 	}
 </script>
 
@@ -42,7 +47,7 @@
 
 	<div class="flex flex-col mt-2 h-96 overflow-y-auto">
 		{#if shownGames.length > 0}
-			{#each shownGames as game}
+			{#each shownGames as game, i}
 				<Button.Root
 					class="flex hover:bg-gray-700 rounded-lg p-1 items-center group mr-2"
 					on:click={() => {
@@ -55,7 +60,7 @@
 						alt={game.displayName}
 						class="w-8 h-8 rounded group-hover:shadow-xl mr-2"
 					/>
-
+                    
 					<span class="flex-grow text-left text-slate-200">
 						{game.displayName}
 					</span>

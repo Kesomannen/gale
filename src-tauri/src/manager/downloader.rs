@@ -318,11 +318,11 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
     }, app).await
 }
 
-const BEPINEX_NAME: &str = "BepInEx-BepInExPack";
-
 pub fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
-    match name {
-        BEPINEX_NAME => install_from_disk_bepinex(src, dest),
+    let author = name.split('-').next().context("invalid name")?;
+
+    match author {
+        "BepInEx" => install_from_disk_bepinex(src, dest),
         _ => install_from_disk_default(src, dest, name),
     }
 }

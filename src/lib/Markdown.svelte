@@ -4,7 +4,7 @@
   export let source: string;
 </script>
 
-<div class="markdown">
+<div class="markdown overflow-x-hidden">
   <SvelteMarkdown {source} />
 </div>
 
@@ -68,5 +68,25 @@
 
   .markdown :global(img) {
     @apply my-2;
+  }
+
+  .markdown :global(table) {
+    @apply border border-gray-900 border-collapse max-w-full;
+  }
+
+  .markdown :global(th) {
+    @apply bg-gray-900 text-slate-300 font-semibold px-2 py-1 text-left;
+  }
+
+  .markdown :global(tr) {
+    @apply border-b border-gray-900;
+  }
+
+  .markdown :global(tr:nth-child(2n)) {
+    @apply bg-gray-900;
+  }
+
+  .markdown :global(td) {
+    @apply px-2 py-1 text-left;
   }
 </style>
