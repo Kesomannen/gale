@@ -15,7 +15,7 @@
 >
 	<img src={mod.icon ?? FALLBACK_ICON} alt="Mod icon" class="w-12 h-12 rounded-lg group-hover:shadow-xl" />
 	<div class="pl-4 overflow-hidden flex-grow">
-		<div class="flex flex-row">
+		<div class="flex items-center">
 			<div class="text-slate-100 group-hover:text-white font-semibold">
 				{mod.name}
 			</div>
@@ -23,7 +23,10 @@
 				{mod.version ?? ""}
 			</div>
 			{#if mod.isPinned}
-				<Icon class="ml-2 mt-1 text-slate-400" icon="mdi:pin" />
+				<Icon class="ml-2 text-blue-400" icon="mdi:pin" />
+			{/if}
+			{#if mod.isDeprecated}
+				<Icon class="ml-2 text-red-400" icon="mdi:alert" />
 			{/if}
 		</div>
 		<div class="text-slate-300 group-hover:text-slate-200 truncate text-left">

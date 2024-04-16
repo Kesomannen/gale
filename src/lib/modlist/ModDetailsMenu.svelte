@@ -121,6 +121,12 @@
 		</span>
 	{/if}
 
+	{#if mod.isDeprecated}
+		<div class="rounded-lg bg-red-700 text-white px-3 py-0.5 max-w-fit my-1">
+			Deprecated
+		</div>
+	{/if}
+
 	{#if mod.categories}
 		<div class="flex gap-1 mt-2 flex-wrap">
 			{#each mod.categories as category}

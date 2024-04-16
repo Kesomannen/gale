@@ -131,6 +131,7 @@ pub struct FrontendMod {
     pub icon: Option<String>,
     pub dependencies: Option<Vec<String>>,
     pub is_pinned: bool,
+    pub is_deprecated: bool,
     pub uuid: Uuid,
     pub latest_version_uuid: Option<Uuid>,
     #[serde(rename = "type")]

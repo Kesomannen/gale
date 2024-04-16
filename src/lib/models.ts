@@ -89,6 +89,7 @@ export interface Mod {
 	icon?: string,
 	dependencies?: string[],
 	isPinned: boolean,
+	isDeprecated: boolean,
 	uuid: string;
 	latestVersionUuid?: string;
 	type: 'local' | 'remote';

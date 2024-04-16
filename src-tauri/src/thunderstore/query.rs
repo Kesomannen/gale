@@ -118,6 +118,7 @@ impl From<Queryable<'_>> for FrontendMod {
                     icon: Some(vers.icon.clone()),
                     dependencies: Some(vers.dependencies.clone()),
                     is_pinned: pkg.is_pinned,
+                    is_deprecated: pkg.is_deprecated,
                     uuid: pkg.uuid4,
                     latest_version_uuid: Some(vers.uuid4),
                     kind: FrontendModKind::Remote,
