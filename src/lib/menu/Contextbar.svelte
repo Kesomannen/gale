@@ -16,9 +16,10 @@
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 	import SelectGamePopup from './SelectGamePopup.svelte';
 
+	let launchGamePopupOpen = false;
+
 	let gamesOpen = false;
 	let profilesOpen = false;
-	let startingGame = false;
 
 	function deleteProfile(index: number) {
 		confirm(`Are you sure you want to delete ${profileNames[index]}?`, {
@@ -34,9 +35,9 @@
 
 <div class="h-12 flex flex-row flex-shrink-0 bg-gray-900 border-b border-t border-gray-600">
 	<Button.Root
-		class="flex flex-row items-center pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 cursor-default"
+		class="flex items-center pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 cursor-default"
 		on:click={() => {
-			invokeCommand('start_game').then(() => (startingGame = true));
+			invokeCommand('launch_game').then(() => (launchGamePopupOpen = true));
 		}}
 	>
 		<Icon icon="mdi:play-circle" class="text-xl mr-2" />
@@ -45,41 +46,40 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="flex items-center justify-between gap-2 pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 cursor-default"
+		class="flex items-center justify-between pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-slate-300 group-hover:text-slate-200 cursor-default"
 	>
 		{#if $currentGame}
 			<img
 				src="games/{$currentGame.id}.png"
-				class="max-w-8 max-h-8 rounded"
+				class="max-w-8 max-h-8 rounded mr-2"
 				alt={$currentGame.displayName}
 			/>
 
-			<div class="text-slate-300 group-hover:text-slate-200 truncate">
-				{$currentGame.displayName}
-			</div>
+			{$currentGame.displayName}
 		{:else}
-			<div class="text-slate-300 group-hover:text-slate-200 truncate">Loading...</div>
+			Loading...
 		{/if}
 
 		<Icon
-			icon="mdi:dots-vertical"
-			class="text-slate-300 group-hover:text-slate-200 text-xl transition-all flex-shrink-0 ml-2"
+			icon="mdi:menu"
+			class="text-slate-300 group-hover:text-slate-200 text-xl transition-all flex-shrink-0 ml-6"
 		/>
 	</Button.Root>
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="flex items-center justify-between gap-2 w-40 pl-6 pr-4 group border-r border-gray-600 relative hover:bg-gray-800 cursor-default"
+			class="flex items-center justify-between gap-2 w-40 pl-6 pr-4 group border-r border-gray-600 
+						text-slate-300 group-hover:text-slate-200 hover:bg-gray-800 cursor-default"
 		>
-			<div class="text-slate-300 group-hover:text-slate-200 flex-shrink truncate">
+			<div class="flex-shrink truncate">
 				{$currentProfile}
 			</div>
 
 			<Icon
 				icon="mdi:expand-more"
-				class="
-                text-slate-300 group-hover:text-slate-200 text-xl transition-all
-                transform origin-center {profilesOpen ? 'rotate-180' : 'rotate-0'}"
+				class="text-xl transition-all transform origin-center {profilesOpen
+					? 'rotate-180'
+					: 'rotate-0'}"
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
@@ -106,6 +106,7 @@
 							on:click={(evt) => {
 								evt.stopPropagation();
 								deleteProfile(i);
+								profilesOpen = false;
 							}}
 						>
 							<Icon icon="mdi:delete" />
@@ -117,10 +118,10 @@
 	</DropdownMenu.Root>
 </div>
 
-<Popup title="Starting game..." bind:open={startingGame}>
+<Popup title="Launching {$currentGame?.displayName}..." bind:open={launchGamePopupOpen}>
 	<Dialog.Description class="text-slate-400">
-		Click outside this window to continue modding. 
-		If it's taking a while, it's probably because Steam is starting up.
+		If the game is taking a while to start, it's probably because Steam is starting
+		up.
 	</Dialog.Description>
 </Popup>
 

@@ -55,16 +55,8 @@ export type GetConfigResult =
 		error: string;
 	} };
 
-export type PrefValue =
-	| { type: 'Path'; content: string }
-	| { type: 'OptionPath'; content?: string }
-	| { type: 'Bool'; content: boolean };
-
-export interface PrefEntry {
-	name: string;
-	value: PrefValue;
-}
-
+export type PrefValue = string | LaunchMode;
+	
 export interface ProfileInfo {
 	activeIndex: number;
 	names: string[];
@@ -184,3 +176,7 @@ export interface PackageCategory {
 export interface FiltersResponse {
 	package_categories: PackageCategory[];
 }
+
+export type LaunchMode = 
+	| { type: 'steam', content?: undefined }
+	| { type: 'direct', content: { instances: number } };

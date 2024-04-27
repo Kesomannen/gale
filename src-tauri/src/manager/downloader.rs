@@ -51,21 +51,20 @@ fn total_download_size(
 ) -> u64 {
     missing_deps(borrowed_mod, profile, thunderstore)
         .filter_map(Result::ok)
-        .filter(|borrowed_mod| {
-            let cache_path = cache_path(borrowed_mod, prefs);
-
-            !cache_path.try_exists().unwrap_or(false)
+        .filter(|borrowed_mod| match cache_path(borrowed_mod, prefs) {
+            Ok(cache_path) => !cache_path.exists(),
+            Err(_) => true,
         })
         .map(|borrowed_mod| borrowed_mod.version.file_size as u64)
         .sum()
 }
 
-fn cache_path(borrowed_mod: &BorrowedMod<'_>, prefs: &Prefs) -> PathBuf {
-    let mut path = prefs.cache_path.clone();
+fn cache_path(borrowed_mod: &BorrowedMod<'_>, prefs: &Prefs) -> Result<PathBuf> {
+    let mut path = prefs.get_path_or_err("cache_dir")?.to_path_buf();
     path.push(&borrowed_mod.package.full_name);
     path.push(&borrowed_mod.version.version_number.to_string());
 
-    path
+    Ok(path)
 }
 
 fn try_cache_install(
@@ -99,12 +98,12 @@ async fn install_mod(
 
         let borrowed_mod = mod_ref.borrow(&thunderstore)?;
         let profile = manager.active_profile_mut();
-        let cache_path = cache_path(&borrowed_mod, &prefs);
+        let cache_path = cache_path(&borrowed_mod, &prefs)?;
 
-        let result = try_cache_install(&borrowed_mod, profile, &cache_path)
+        let was_cached = try_cache_install(&borrowed_mod, profile, &cache_path)
             .context("failed to install from cache")?;
 
-        if result {
+        if was_cached {
             let diff = borrowed_mod.version.file_size;
             on_task_update(InstallTask::Installing, diff);
 
@@ -118,8 +117,10 @@ async fn install_mod(
         )
     }; // we can't carry the locks across await points
 
-    let mut stream = client.get(&url)
-        .send().await?
+    let mut stream = client
+        .get(&url)
+        .send()
+        .await?
         .error_for_status()?
         .bytes_stream();
 
@@ -130,7 +131,7 @@ async fn install_mod(
     while let Some(item) = stream.next().await {
         let item = item?;
         response.extend_from_slice(&item);
-        
+
         if i % 50 == 0 {
             let downloaded = response.len() as u32;
             let diff = downloaded - prev_update;
@@ -147,16 +148,12 @@ async fn install_mod(
     let prefs = prefs.lock().unwrap();
 
     let borrowed_mod = mod_ref.borrow(&thunderstore)?;
-    let mut path = cache_path(&borrowed_mod, &prefs);
+    let mut path = cache_path(&borrowed_mod, &prefs)?;
 
-    fs::create_dir_all(&path)
-        .fs_context("create mod cache dir", &path)?;
+    fs::create_dir_all(&path).fs_context("create mod cache dir", &path)?;
 
     on_task_update(InstallTask::Extracting, 0);
-
-    zip_extract::extract(Cursor::new(response), &path, true)
-        .fs_context("extracting mod", &path)?;
-
+    zip_extract::extract(Cursor::new(response), &path, true).fs_context("extracting mod", &path)?;
     normalize_mod_structure(&mut path)?;
 
     on_task_update(InstallTask::Installing, 0);
@@ -213,10 +210,7 @@ struct InstallProgress<'a> {
 enum InstallTask {
     Installing,
     Extracting,
-    Downloading {
-        total: u32,
-        downloaded: u32,
-    }
+    Downloading { total: u32, downloaded: u32 },
 }
 
 pub async fn install_mods(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result<()> {
@@ -230,8 +224,9 @@ pub async fn install_mods(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result
     let mod_info = {
         let thunderstore = thunderstore.lock().unwrap();
 
-        mod_refs.iter()
-            .map(|mod_ref| { 
+        mod_refs
+            .iter()
+            .map(|mod_ref| {
                 let borrowed_mod = mod_ref.borrow(&thunderstore)?;
 
                 Ok((
@@ -264,7 +259,7 @@ pub async fn install_mods(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result
             |task, diff| {
                 downloaded_bytes += diff;
                 progress.downloaded_bytes = downloaded_bytes;
-                
+
                 progress.current_task = task;
                 update(app, InstallProgressPayload::InProgress(&progress));
             },
@@ -309,13 +304,17 @@ where
 }
 
 pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Result<()> {
-    install_deps(move |manager, thunderstore| {
-        let borrowed_mod = mod_ref.borrow(thunderstore)?;
+    install_deps(
+        move |manager, thunderstore| {
+            let borrowed_mod = mod_ref.borrow(thunderstore)?;
 
-        missing_deps(borrowed_mod, manager.active_profile(), thunderstore)
-            .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
-            .collect::<Result<Vec<_>>>()
-    }, app).await
+            missing_deps(borrowed_mod, manager.active_profile(), thunderstore)
+                .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
+                .collect::<Result<Vec<_>>>()
+        },
+        app,
+    )
+    .await
 }
 
 pub fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {

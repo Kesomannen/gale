@@ -9,7 +9,7 @@
 </script>
 
 <div class="flex items-center">
-	<div class="text-slate-300 text-md w-52 truncate">{label}</div>
+	<div class="text-slate-300 text-md min-w-60 truncate">{label}</div>
 
 	<Button.Root
 		class="flex flex-grow px-3 py-1.5 items-center text-right rounded-md group bg-gray-900 truncate
@@ -17,11 +17,11 @@
 		on:click={onClick}
 	>
 		<div class="mr-2 rounded">
-			<Icon {icon} class="align-middle text-slate-400 group-hover:text-slate-200" />
+			<Icon {icon} class="align-middle text-slate-300 group-hover:text-slate-200" />
 		</div>
 
 		<div
-			class="font-light text-slate-400 group-hover:text-slate-200 truncate text-sm"
+			class="font-light text-slate-300 group-hover:text-slate-200 truncate text-sm"
 			style="direction: rtl;"
 		>
 			{value ?? 'Not set'}

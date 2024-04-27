@@ -19,12 +19,13 @@ pub async fn install_mod(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
 #[tauri::command]
 pub fn clear_download_cache(prefs: StateMutex<Prefs>) -> Result<()> {
     let prefs = prefs.lock().unwrap();
+    let cache_dir = prefs.get_path_or_err("cache_dir")?;
 
-    if prefs.cache_path.try_exists().unwrap_or(false) {
-        fs::remove_dir_all(&prefs.cache_path).context("failed to delete cache dir")?;
+    if cache_dir.exists() {
+        fs::remove_dir_all(cache_dir).context("failed to delete cache dir")?;
     }
 
-    fs::create_dir_all(&prefs.cache_path).context("failed to recreate cache dir")?;
+    fs::create_dir_all(cache_dir).context("failed to recreate cache dir")?;
     Ok(())
 }
 

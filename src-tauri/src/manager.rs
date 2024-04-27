@@ -1,8 +1,8 @@
 use std::{
-    collections::HashMap, fs, path::{Path, PathBuf}, process::Command, sync::Mutex
+    collections::HashMap, fs, path::PathBuf, sync::Mutex
 };
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -20,6 +20,7 @@ pub mod commands;
 pub mod config;
 pub mod downloader;
 pub mod importer;
+pub mod launcher;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     {
@@ -399,7 +400,7 @@ impl ManagerGame {
 
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
-        let save_path = prefs.data_path.join("manager.json");
+        let save_path = prefs.get_path_or_err("data_dir")?.join("manager.json");
         let save_data = match save_path.try_exists()? {
             true => {
                 let json = fs::read_to_string(&save_path)
@@ -414,7 +415,7 @@ impl ModManager {
 
         let mut games = HashMap::new();
 
-        for entry in prefs.data_path.read_dir()? {
+        for entry in prefs.get_path_or_err("data_dir")?.read_dir()? {
             let path = entry?.path();
 
             if path.is_dir() {
@@ -461,7 +462,7 @@ impl ModManager {
 
         let mut manager_game = ManagerGame {
             profiles: Vec::new(),
-            path: prefs.data_path.join(&game.id),
+            path: prefs.get_path_or_err("data_dir")?.join(&game.id),
             favorite: false,
             active_profile_index: 0,
         };
@@ -473,7 +474,7 @@ impl ModManager {
     }
 
     fn save(&self, prefs: &Prefs) -> Result<()> {
-        let mut path = prefs.data_path.clone();
+        let mut path = prefs.get_path_or_err("data_dir")?.clone();
 
         let data = ManagerSaveData {
             active_game: self.active_game.id.to_owned(),
@@ -516,39 +517,5 @@ impl ModManager {
         }
 
         Ok(())
-    }
-
-    fn run_game(&self, prefs: &Prefs) -> Result<()> {
-        let steam_path = prefs
-            .steam_exe_path
-            .as_ref()
-            .context("steam exe path not set")?;
-
-        let steam_path = resolve_path(steam_path, "steam")?;
-
-        let mut preloader_path = self.active_profile().path.join("BepInEx");
-        preloader_path.push("core");
-        preloader_path.push("BepInEx.Preloader.dll");
-
-        let preloader_path = resolve_path(&preloader_path, "preloader")?;
-
-        Command::new(steam_path)
-            .arg("-applaunch")
-            .arg(self.active_game.steam_id.to_string())
-            .arg("--doorstop-enable")
-            .arg("true")
-            .arg("--doorstop-target")
-            .arg(preloader_path)
-            .spawn()?;
-
-        return Ok(());
-
-        fn resolve_path<'a>(path: &'a Path, name: &'static str) -> Result<&'a str> {
-            let str = path.to_str();
-            if !path.try_exists()? || str.is_none() {
-                bail!("{} path could not be resolved", name);
-            }
-            Ok(str.unwrap())
-        }
     }
 }

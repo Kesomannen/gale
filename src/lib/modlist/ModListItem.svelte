@@ -10,10 +10,10 @@
 </script>
 
 <Button.Root
-	class="flex hover:bg-gray-700 rounded-xl p-2 items-center group"
+	class="flex hover:bg-gray-700 rounded-lg p-2 items-center group"
 	on:click={() => onClick(mod)}
 >
-	<img src={mod.icon ?? FALLBACK_ICON} alt="Mod icon" class="w-12 h-12 rounded-lg group-hover:shadow-xl" />
+	<img src={mod.icon ?? FALLBACK_ICON} alt="Mod icon" class="w-12 h-12 rounded-md group-hover:shadow-xl" />
 	<div class="pl-4 overflow-hidden flex-grow">
 		<div class="flex items-center">
 			<div class="text-slate-100 group-hover:text-white font-semibold">
@@ -23,7 +23,7 @@
 				{mod.version ?? ""}
 			</div>
 			{#if mod.isPinned}
-				<Icon class="ml-2 text-blue-400" icon="mdi:pin" />
+				<Icon class="ml-2 text-slate-500" icon="mdi:pin" />
 			{/if}
 			{#if mod.isDeprecated}
 				<Icon class="ml-2 text-red-400" icon="mdi:alert" />

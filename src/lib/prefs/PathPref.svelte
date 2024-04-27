@@ -3,31 +3,38 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import { onMount } from 'svelte';
-	import type { PrefEntry } from '$lib/models';
 	import PathField from '$lib/PathField.svelte';
+	import type { PrefValue } from '$lib/models';
 
 	export let label: string;
-	export let name: string;
+	export let key: string;
 	export let type: 'exe' | 'dir';
+
+	export let setValue: (value: string | null) => void = (value) => {
+		invokeCommand('set_pref', { key, value });
+	};
+
+	export let getValue: () => Promise<string | null> = async () => {
+		return await invokeCommand<PrefValue | null>('get_pref', { key }) as string;
+	};
 
 	let value: string | null = null;
 
 	onMount(async () => {
-		value = (await invokeCommand<PrefEntry>('get_pref', { name })).value.content as string;
+		value = await getValue();
 	});
 
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
 			filters: type === 'exe' ? [{ name: 'Executable', extensions: ['exe'] }] : undefined,
-			title: 'Select ' + name,
-			multiple: false,
+			title: 'Select ' + key,
 			directory: type === 'dir'
 		}).then((result) => {
 			if (result === null) return;
 
 			value = result as string;
-			invokeCommand('set_pref', { entry: { name, value: { content: value, type: 'Path' }}});
+			setValue(value);
 		});
 	}
 </script>

@@ -225,15 +225,6 @@ pub fn reveal_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
-pub fn start_game(manager: StateMutex<ModManager>, prefs: StateMutex<Prefs>) -> Result<()> {
-    let manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
-
-    manager.run_game(&prefs)?;
-    Ok(())
-}
-
 pub fn save(manager: &ModManager, prefs: &Prefs) -> Result<()> {
     manager
         .save(prefs)

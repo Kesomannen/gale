@@ -5,7 +5,7 @@
 	import MenubarTrigger from '$lib/menu/MenubarTrigger.svelte';
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
 	import NewProfilePopup from '$lib/menu/NewProfilePopup.svelte';
-	import PreferencesPopup from '$lib/preferences/PreferencesPopup.svelte';
+	import PreferencesPopup from '$lib/prefs/PrefsPopup.svelte';
 
 	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';

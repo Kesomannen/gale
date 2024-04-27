@@ -51,8 +51,9 @@ fn main() {
             manager::commands::remove_mod,
             manager::commands::force_remove_mods,
             manager::commands::reveal_profile_dir,
-            manager::commands::start_game,
-            
+
+            manager::launcher::commands::launch_game,
+
             manager::downloader::commands::install_mod,
             manager::downloader::commands::clear_download_cache,
             manager::downloader::commands::get_download_size,

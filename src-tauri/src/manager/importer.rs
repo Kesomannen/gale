@@ -144,7 +144,7 @@ async fn export_code(
         let profile = manager.active_profile_mut();
         profile.refresh_config();
 
-        let mut path = prefs.temp_path.join("exports");
+        let mut path = prefs.get_path_or_err("temp_dir")?.join("exports");
         fs::create_dir_all(&path)?;
         export_file(profile, &mut path, &thunderstore)?;
 
@@ -180,7 +180,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
         let thunderstore = thunderstore.lock().unwrap();
         let prefs = prefs.lock().unwrap();
 
-        let temp_path = prefs.temp_path.join("import");
+        let temp_path = prefs.get_path_or_err("temp_dir")?.join("imports");
         fs::create_dir_all(&temp_path)?;
 
         zip_extract::extract(source, &temp_path, true)?;
@@ -221,12 +221,8 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<()> {
     let client = app.state::<NetworkClient>();
     let client = &client.0;
 
-    let url = format!(
-        "https://thunderstore.io/api/experimental/legacyprofile/get/{}/",
-        key
-    );
     let response = client
-        .get(&url)
+        .get(&format!("https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"))
         .send()
         .await?
         .error_for_status()
