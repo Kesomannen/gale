@@ -10,10 +10,10 @@ struct JsError<'a> {
     message: String,
 }
 
-pub fn print_err(context: &str, error: &anyhow::Error, handle: &AppHandle) {
-    eprintln!("{}: {:#}", context, error);
+pub fn print_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
+    eprintln!("{}: {:#}", name, error);
     let _ = handle.emit_all("error", JsError {
-        name: context,
+        name,
         message: format!("{:#}", error),
     });
 }

@@ -59,7 +59,7 @@ pub struct PackageVersion {
     pub description: String,
     pub download_url: String,
     pub downloads: u32,
-    pub file_size: u32,
+    pub file_size: u64,
     pub full_name: String,
     pub icon: String,
     pub is_active: bool,

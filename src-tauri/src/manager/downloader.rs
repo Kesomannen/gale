@@ -55,7 +55,7 @@ fn total_download_size(
             Ok(cache_path) => !cache_path.exists(),
             Err(_) => true,
         })
-        .map(|borrowed_mod| borrowed_mod.version.file_size as u64)
+        .map(|borrowed_mod| borrowed_mod.version.file_size)
         .sum()
 }
 
@@ -85,7 +85,7 @@ fn try_cache_install(
 
 async fn install_mod(
     mod_ref: &ModRef,
-    mut on_task_update: impl FnMut(InstallTask, u32),
+    mut on_task_update: impl FnMut(InstallTask, u64),
     client: &reqwest::Client,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
@@ -133,7 +133,7 @@ async fn install_mod(
         response.extend_from_slice(&item);
 
         if i % 50 == 0 {
-            let downloaded = response.len() as u32;
+            let downloaded = response.len() as u64;
             let diff = downloaded - prev_update;
             prev_update = downloaded;
 
@@ -197,8 +197,8 @@ struct InstallProgress<'a> {
     installed_mods: usize,
     total_mods: usize,
 
-    downloaded_bytes: u32,
-    total_bytes: u32,
+    downloaded_bytes: u64,
+    total_bytes: u64,
 
     current_mod_name: &'a str,
     current_task: InstallTask,
@@ -210,7 +210,7 @@ struct InstallProgress<'a> {
 enum InstallTask {
     Installing,
     Extracting,
-    Downloading { total: u32, downloaded: u32 },
+    Downloading { total: u64, downloaded: u64 },
 }
 
 pub async fn install_mods(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result<()> {

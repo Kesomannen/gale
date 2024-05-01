@@ -2,7 +2,7 @@ use std::{
     collections::HashSet, iter, str::{self, Split}, sync::Mutex, time::{Duration, Instant}
 };
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -286,10 +286,18 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
             while let Some(index) = buffer.find("}]},") {
                 let (json, _) = buffer.split_at(index + 3);
 
-                let package: PackageListing = serde_json::from_str(json)?;
+                let package = serde_json::from_str::<PackageListing>(json);
 
-                if !IGNORED_NAMES.contains(&package.name.as_str()) {
-                    map.insert(package.uuid4, package);
+                match package {
+                    Ok(package) => {
+                        if !IGNORED_NAMES.contains(&package.name.as_str()) {
+                            map.insert(package.uuid4, package);
+                        }
+                    }
+                    Err(err) => {
+                        println!("{}", json);
+                        util::print_err("Failed to load mod", &anyhow!(err), app)
+                    }
                 }
 
                 buffer.replace_range(..index + 4, "");
@@ -299,7 +307,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                 let _ = app.emit_all(
                     "status_update",
                     Some(format!(
-                        "Fetching mods from Thunderstore... {} out of unknown",
+                        "Fetching mods from Thunderstore... {}",
                         map.len()
                     )),
                 );
