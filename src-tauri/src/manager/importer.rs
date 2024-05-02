@@ -32,7 +32,7 @@ use reqwest::StatusCode;
 
 pub mod commands;
 
-pub fn setup(app: &AppHandle) -> Result<()> {
+pub fn setup(_app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
@@ -210,7 +210,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
             .context("failed to resolve mod references")?
     };
 
-    downloader::install_mods(&mod_refs, app)
+    downloader::install_mod_refs(&mod_refs, app)
         .await
         .context("error while importing mods")?;
 
@@ -350,7 +350,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     };
 
     if let Some(ref deps) = local_mod.dependencies {
-        downloader::install_deps(|manager, thunderstore| {
+        downloader::install_mods(|manager, thunderstore| {
             let profile = manager.active_profile();
 
             thunderstore

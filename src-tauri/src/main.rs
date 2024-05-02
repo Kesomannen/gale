@@ -57,6 +57,8 @@ fn main() {
             manager::downloader::commands::install_mod,
             manager::downloader::commands::clear_download_cache,
             manager::downloader::commands::get_download_size,
+            manager::downloader::commands::update_mod,
+            manager::downloader::commands::update_all,
 
             manager::importer::commands::export_code,
             manager::importer::commands::import_code,

@@ -23,6 +23,7 @@ use crate::{
 
 use super::{commands::save, ModManager, ModRef, Profile, ProfileMod};
 use futures_util::StreamExt;
+use uuid::Uuid;
 
 pub mod commands;
 
@@ -213,7 +214,7 @@ enum InstallTask {
     Downloading { total: u64, downloaded: u64 },
 }
 
-pub async fn install_mods(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result<()> {
+pub async fn install_mod_refs(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result<()> {
     let client = app.state::<NetworkClient>();
     let client = &client.0;
 
@@ -286,7 +287,7 @@ pub async fn install_mods(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result
     }
 }
 
-pub async fn install_deps<F>(get_deps: F, app: &tauri::AppHandle) -> Result<()>
+pub async fn install_mods<F>(get_deps: F, app: &tauri::AppHandle) -> Result<()>
 where
     F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<ModRef>>,
 {
@@ -300,11 +301,11 @@ where
         get_deps(&manager, &thunderstore).context("failed to resolve dependencies")?
     };
 
-    install_mods(&to_install, app).await
+    install_mod_refs(&to_install, app).await
 }
 
 pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Result<()> {
-    install_deps(
+    install_mods(
         move |manager, thunderstore| {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
 
@@ -315,6 +316,46 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
         app,
     )
     .await
+}
+
+pub async fn update_mod(uuid: Uuid, app: &tauri::AppHandle) -> Result<()> {
+    let mod_ref = {
+        let manager = app.state::<Mutex<ModManager>>();
+        let mut manager = manager.lock().unwrap();
+
+        let thunderstore = app.state::<Mutex<Thunderstore>>();
+        let thunderstore = thunderstore.lock().unwrap();
+
+        let installed = &manager
+            .active_profile()
+            .get_mod(&uuid)
+            .ok_or(anyhow!("mod with id {} not found in profile", uuid))?
+            .as_remote()
+            .ok_or(anyhow!("cannot update local mod"))?
+            .borrow(&thunderstore)?
+            .version
+            .version_number;
+    
+        let latest = thunderstore
+            .get_package(&uuid)?
+            .versions
+            .first()
+            .expect("package should have at least one version");
+    
+        if installed >= &latest.version_number {
+            return Ok(());
+        }
+
+        manager.active_profile_mut()
+            .force_remove_mod(&uuid, &thunderstore)?;
+
+        ModRef {
+            package_uuid: uuid,
+            version_uuid: latest.uuid4,
+        }
+    };
+
+    install_with_deps(&mod_ref, &app).await
 }
 
 pub fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {

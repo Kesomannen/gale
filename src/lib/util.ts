@@ -1,4 +1,4 @@
-import type { GetConfigResult } from "./models";
+import type { GetConfigResult, Mod } from "./models";
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -29,4 +29,8 @@ export function fileName(configFile: GetConfigResult) {
 	}
 
 	return configFile.content.file;
+}
+
+export function isOutdated(mod: Mod): boolean {
+	return mod.version !== mod.versions[0].name;
 }

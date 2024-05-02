@@ -2,6 +2,7 @@
 	import { Button } from 'bits-ui';
 	import type { Mod } from '../models';
 	import Icon from '@iconify/svelte';
+	import { isOutdated } from '$lib/util';
 
 	const FALLBACK_ICON = 'https://sm.ign.com/t/ign_es/cover/l/lethal-com/lethal-company_817h.300.jpg';
 
@@ -26,7 +27,10 @@
 				<Icon class="ml-2 text-slate-500" icon="mdi:pin" />
 			{/if}
 			{#if mod.isDeprecated}
-				<Icon class="ml-2 text-red-400" icon="mdi:alert" />
+				<Icon class="ml-2 text-red-500 text-lg" icon="mdi:error" />
+			{/if}
+			{#if isOutdated(mod)}
+				<Icon class="ml-2 text-blue-500 text-lg" icon="mdi:arrow-up-circle" />
 			{/if}
 		</div>
 		<div class="text-slate-300 group-hover:text-slate-200 truncate text-left">

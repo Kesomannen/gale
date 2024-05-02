@@ -100,7 +100,7 @@ impl From<Queryable<'_>> for FrontendMod {
             },
             Queryable::Online(borrowed_mod) => {
                 let pkg = borrowed_mod.package;
-                let vers = &pkg.versions[0];
+                let vers = pkg.get_version(&borrowed_mod.version.uuid4).unwrap();
 
                 FrontendMod {
                     name: pkg.name.clone(),

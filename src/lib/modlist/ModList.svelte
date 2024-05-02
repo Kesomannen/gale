@@ -29,7 +29,7 @@
 	let searchTerm: string | undefined;
 	let categories: string[] = [];
 	let includeNsfw = false;
-	let includeDeprecated = false;
+	let includeDeprecated = true;
 	let sortBy: SortOption = sortOptions[0];
 
 	export let mods: Mod[] = [];

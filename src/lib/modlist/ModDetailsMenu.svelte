@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { DropdownOption, Mod } from '../models';
-	import { shortenNum } from '../util';
+	import { isOutdated as updateAvailable, shortenNum } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
 	import Popup from '$lib/Popup.svelte';
@@ -122,8 +122,16 @@
 	{/if}
 
 	{#if mod.isDeprecated}
-		<div class="rounded-lg bg-red-700 text-white px-3 py-0.5 max-w-fit my-1">
+		<div class="flex items-center rounded-lg bg-red-700 text-white px-3 py-1 max-w-fit my-1">
+			<Icon class="text-xl mr-1" icon="mdi:error" />
 			Deprecated
+		</div>
+	{/if}
+
+	{#if updateAvailable(mod)}
+		<div class="flex items-center rounded-lg bg-blue-600 text-white px-3 py-1 max-w-fit my-1">
+			<Icon class="text-xl mr-1" icon="mdi:arrow-up-circle" />
+			Update available
 		</div>
 	{/if}
 
@@ -150,10 +158,10 @@
 		</div>
 	{/if}
 
-	<p class="text-slate-300 text-lg">{mod.description ?? ""}</p>
+	<p class="text-slate-300 text-lg flex-shrink overflow-hidden">{mod.description ?? ""}</p>
 
 	<Button.Root
-		class="flex items-center w-full mt-auto text-white pl-3 pr-1.5 py-1 rounded-md bg-gray-600 hover:bg-gray-500 group"
+		class="flex items-center w-full mt-auto text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
 		on:mouseenter={changelog.fetchMarkdown}
 		on:click={() => (changelogOpen = true)}
 	>
@@ -162,7 +170,7 @@
 	</Button.Root>
 
 	<Button.Root
-		class="flex items-center w-full mt-1 text-white pl-3 pr-1.5 py-1 rounded-md bg-gray-600 hover:bg-gray-500 group"
+		class="flex items-center w-full mt-1 text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
 		on:mouseenter={readme.fetchMarkdown}
 		on:click={() => (readmeOpen = true)}
 	>
@@ -172,12 +180,12 @@
 
 	{#if mod.dependencies && mod.dependencies.length > 0}
 		<Button.Root
-			class="flex items-center w-full mt-1 text-white pl-3 pr-1 py-1 rounded-md bg-gray-600 hover:bg-gray-500 group"
+			class="flex items-center w-full mt-1 text-white pl-3 pr-1 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
 			on:click={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="text-lg mr-1" />
 			Dependencies
-			<div class="bg-gray-500 group-hover:bg-gray-400 px-3 py-0.5 text-sm rounded-md ml-auto">
+			<div class="bg-slate-500 group-hover:bg-slate-400 px-3 py-0.5 text-sm rounded-md ml-auto">
 				{mod.dependencies.length}
 			</div>
 		</Button.Root>
