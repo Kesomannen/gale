@@ -1,3 +1,5 @@
+import type { GetConfigResult } from "./models";
+
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
 	return (size / Math.pow(1024, i)).toFixed(1) + ['B', 'kB', 'MB', 'GB', 'TB'][i];
@@ -19,4 +21,12 @@ export function sentenceCase(str: string): string {
 		.toLowerCase();
 
 	return textcase.charAt(0).toUpperCase() + textcase.slice(1);
+}
+
+export function fileName(configFile: GetConfigResult) {
+	if (configFile.type == "ok") {
+		return configFile.content.name;
+	}
+
+	return configFile.content.file;
 }

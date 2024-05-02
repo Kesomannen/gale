@@ -18,7 +18,7 @@
 
 	$: modRef = {
 		packageUuid: activeMod?.uuid,
-		versionUuid: activeMod?.latestVersionUuid,
+		versionUuid: activeMod?.versions[0].uuid
 	};
 
 	let isModInstalled = false;
@@ -39,17 +39,13 @@
 		}
 	}
 
-	$: {
-		if (activeMod) {
-			invokeCommand<number>('get_download_size', { modRef }).then(
-				(size) => (activeDownloadSize = size)
-			);
-		}
-	}
-
 	$: if (activeMod) {
 		invokeCommand<boolean>('is_mod_installed', { uuid: activeMod.uuid }).then(
 			(result) => (isModInstalled = result)
+		);
+
+		invokeCommand<number>('get_download_size', { modRef }).then(
+			(size) => (activeDownloadSize = size)
 		);
 	}
 </script>
@@ -62,7 +58,7 @@
 								disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
 		on:click={() => {
 			if (activeMod) {
-				invokeCommand('install_mod', { modRef })
+				invokeCommand('install_mod', { modRef });
 			}
 		}}
 		disabled={isModInstalled}

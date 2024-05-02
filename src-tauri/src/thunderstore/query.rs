@@ -6,7 +6,7 @@ use serde::Deserialize;
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
-use super::{models::{FrontendMod, FrontendModKind}, BorrowedMod, Thunderstore};
+use super::{models::{FrontendMod, FrontendModKind, FrontendVersion}, BorrowedMod, Thunderstore};
 use crate::manager::LocalMod;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
@@ -120,7 +120,14 @@ impl From<Queryable<'_>> for FrontendMod {
                     is_pinned: pkg.is_pinned,
                     is_deprecated: pkg.is_deprecated,
                     uuid: pkg.uuid4,
-                    latest_version_uuid: Some(vers.uuid4),
+                    versions: pkg
+                        .versions
+                        .iter()
+                        .map(|v| FrontendVersion {
+                            name: v.version_number.clone(),
+                            uuid: v.uuid4,
+                        })
+                        .collect(),
                     kind: FrontendModKind::Remote,
                 }
             }

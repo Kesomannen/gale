@@ -128,7 +128,7 @@
 	{/if}
 
 	{#if mod.categories}
-		<div class="flex gap-1 mt-2 flex-wrap">
+		<div class="flex gap-1 mt-2 flex-wrap mb-3">
 			{#each mod.categories as category}
 				<div class="bg-slate-600 rounded-full px-3 py-1 text-blue-100 text-sm">
 					{category}
@@ -138,7 +138,7 @@
 	{/if}
 
 	{#if mod.rating && mod.downloads}
-		<div class="mt-3">
+		<div>
 			<div class="inline-flex items-center gap-2 mr-6">
 				<Icon class="text-yellow-400 text-lg" icon="mdi:star" />
 				<span class="text-yellow-400 text-md">{shortenNum(mod.rating)}</span>

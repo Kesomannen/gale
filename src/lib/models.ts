@@ -83,7 +83,10 @@ export interface Mod {
 	isPinned: boolean,
 	isDeprecated: boolean,
 	uuid: string;
-	latestVersionUuid?: string;
+	versions: {
+		name: string,
+		uuid: string
+	}[];
 	type: 'local' | 'remote';
 }
 

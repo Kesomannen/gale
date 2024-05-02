@@ -14,20 +14,31 @@
 	import { Tooltip } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { sentenceCase } from '$lib/util';
+	import { fileName, sentenceCase } from '$lib/util';
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
 	import { Render } from '@jill64/svelte-sanitize';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
 	import Icon from '@iconify/svelte';
 	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
+	import { currentProfile } from '$lib/profile';
 
-	let files: GetConfigResult[] = [];
+	let files: GetConfigResult[] | undefined;
+
+	let searchTerm: string | undefined;
 
 	let selectedFile: ConfigFile | undefined;
 	let selectedSection: ConfigSection | undefined;
 
-	onMount(refresh);
+	$: {
+		$currentProfile;
+		files = undefined;
+		refresh();
+	}
+
+	$: shownFiles = searchTerm?.length ?? 0 > 1
+		? files!.filter((file) => fileName(file).toLowerCase().includes(searchTerm!.toLowerCase()))
+		: files
 
 	function configValueToString(config: ConfigValue) {
 		switch (config.type) {
@@ -85,12 +96,26 @@
 	<div
 		class="flex flex-col py-4 min-w-60 w-[25%] gap-1 bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 	>
-		{#if files.length === 0}
+		{#if files === undefined}
+			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
+				<Icon icon="mdi:loading" class="animate-spin mr-2" />
+				Loading config...
+			</div>
+		{:else if files.length === 0}
 			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">
 				No config files found
 			</div>
 		{:else}
-			{#each files as file}
+			<div class="relative mx-2 mb-2">
+				<input
+					type="text"
+					class="w-full py-1.5 pr-10 pl-10 rounded-md bg-gray-800 text-slate-200 truncate"
+					bind:value={searchTerm}
+					placeholder="Search for files..."
+				/>
+				<Icon class="absolute left-[10px] top-[9px] text-slate-300 text-xl" icon="mdi:magnify" />
+			</div>
+			{#each shownFiles ?? [] as file}
 				{#if file.type == 'ok'}
 					<ConfigFileTreeItem
 						file={file.content}
@@ -138,7 +163,7 @@
 				<div class="flex items-center text-slate-300 pl-1 h-7">
 					<Tooltip.Root openDelay={200}>
 						<Tooltip.Trigger
-							class="text-slate-300 mr-auto pr-2 cursor-auto w-[40%] text-left truncate flex-shrink-0"
+							class="text-slate-300 mr-auto pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
 						>
 							{sentenceCase(entry.name)}
 						</Tooltip.Trigger>

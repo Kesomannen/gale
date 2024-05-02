@@ -18,7 +18,6 @@
 	}
 
 	function refresh() {
-		console.log('searching for ' + searchTerm);
 		let newGames =
 			searchTerm.length > 0
 				? games.filter((game) => game.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -47,7 +46,7 @@
 
 	<div class="flex flex-col mt-2 h-96 overflow-y-auto">
 		{#if shownGames.length > 0}
-			{#each shownGames as game, i}
+			{#each shownGames as game}
 				<Button.Root
 					class="flex hover:bg-gray-700 rounded-lg p-1 items-center group mr-2"
 					on:click={() => {

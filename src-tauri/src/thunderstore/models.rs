@@ -133,7 +133,14 @@ pub struct FrontendMod {
     pub is_pinned: bool,
     pub is_deprecated: bool,
     pub uuid: Uuid,
-    pub latest_version_uuid: Option<Uuid>,
+    pub versions: Vec<FrontendVersion>,
     #[serde(rename = "type")]
     pub kind: FrontendModKind,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendVersion {
+    pub name: semver::Version,
+    pub uuid: Uuid,
 }
