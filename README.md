@@ -9,6 +9,12 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 Since this project is early in development, I've decided to not release any binaries yet.
 
 You can however clone the repository and build the project yourself. The only dependencies you should need are [Node.js](https://nodejs.org/en/download) and [Rust](https://www.rust-lang.org/tools/install).
+After those are installed, do:
+```bash
+npm install
+cargo tauri dev
+```
+or `cargo tauri build` to build an installer. Do keep in mind the [license](https://choosealicense.com/licenses/gpl-3.0/#) if you intend to modify/distribute it on your own.
 
 ## Features & Roadmap
 
