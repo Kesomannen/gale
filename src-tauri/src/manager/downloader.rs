@@ -287,7 +287,7 @@ pub async fn install_mod_refs(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Re
     }
 }
 
-pub async fn install_mods<F>(get_deps: F, app: &tauri::AppHandle) -> Result<()>
+pub async fn install_mods<F>(get_mods: F, app: &tauri::AppHandle) -> Result<()>
 where
     F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<ModRef>>,
 {
@@ -298,7 +298,7 @@ where
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
-        get_deps(&manager, &thunderstore).context("failed to resolve dependencies")?
+        get_mods(&manager, &thunderstore).context("failed to resolve dependencies")?
     };
 
     install_mod_refs(&to_install, app).await
@@ -318,44 +318,50 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
     .await
 }
 
-pub async fn update_mod(uuid: Uuid, app: &tauri::AppHandle) -> Result<()> {
-    let mod_ref = {
+pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
+    let to_update = {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
 
         let thunderstore = app.state::<Mutex<Thunderstore>>();
         let thunderstore = thunderstore.lock().unwrap();
 
-        let installed = &manager
-            .active_profile()
-            .get_mod(&uuid)
-            .ok_or(anyhow!("mod with id {} not found in profile", uuid))?
-            .as_remote()
-            .ok_or(anyhow!("cannot update local mod"))?
-            .borrow(&thunderstore)?
-            .version
-            .version_number;
-    
-        let latest = thunderstore
-            .get_package(&uuid)?
-            .versions
-            .first()
-            .expect("package should have at least one version");
-    
-        if installed >= &latest.version_number {
-            return Ok(());
-        }
-
-        manager.active_profile_mut()
-            .force_remove_mod(&uuid, &thunderstore)?;
-
-        ModRef {
-            package_uuid: uuid,
-            version_uuid: latest.uuid4,
-        }
+        uuids
+            .iter()
+            .map(|uuid| {
+                let installed = &manager
+                    .active_profile()
+                    .get_mod(uuid)
+                    .ok_or(anyhow!("mod with id {} not found in profile", uuid))?
+                    .as_remote()
+                    .ok_or(anyhow!("cannot update local mod"))?
+                    .borrow(&thunderstore)?
+                    .version
+                    .version_number;
+        
+                let latest = thunderstore
+                    .get_package(uuid)?
+                    .versions
+                    .first()
+                    .expect("package should have at least one version");
+        
+                if installed >= &latest.version_number {
+                    return Ok(None);
+                }
+        
+                manager.active_profile_mut()
+                    .force_remove_mod(uuid, &thunderstore)?;
+        
+                Ok(Some(ModRef {
+                    package_uuid: *uuid,
+                    version_uuid: latest.uuid4,
+                }))
+            })
+            .filter_map_ok(|x| x) // get rid of Ok(None)s
+            .collect::<Result<Vec<_>>>()?
     };
 
-    install_with_deps(&mod_ref, &app).await
+    install_mod_refs(&to_update, app).await
 }
 
 pub fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
@@ -404,6 +410,17 @@ fn install_from_disk_default(src: &Path, dest: &Path, name: &str) -> Result<()> 
 
 fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
     let target_path = dest.join("BepInEx");
+
+    // Some BepInEx packs come with a subfolder where the actual BepInEx files are
+    for entry in fs::read_dir(src)? {
+        let entry_path = entry?.path();
+        let entry_name = fs_util::file_name(&entry_path);
+
+        if entry_path.is_dir() && entry_name.contains("BepInEx") {
+            fs_util::flatten_if_exists(&entry_path)?;
+            fs_util::flatten_if_exists(&entry_path.join("BepInex"))?;
+        }
+    }
 
     for entry in fs::read_dir(src)? {
         let entry_path = entry?.path();

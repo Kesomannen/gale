@@ -58,7 +58,7 @@ pub async fn update_mod(
     uuid: Uuid,
     app: tauri::AppHandle,
 ) -> Result<()> {
-    super::update_mod(uuid, &app).await?;
+    super::update_mods(&[uuid], &app).await?;
 
     Ok(())
 }
@@ -72,9 +72,7 @@ pub async fn update_all(app: tauri::AppHandle) -> Result<()> {
         manager.active_profile().remote_mods().map(|m| m.package_uuid).collect_vec()
     };
 
-    for uuid in uuids {
-        super::update_mod(uuid, &app).await?;
-    }
+    super::update_mods(&uuids, &app).await?;
 
     Ok(())
 }

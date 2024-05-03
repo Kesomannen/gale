@@ -172,6 +172,8 @@
 			</Popover.Root>
 		</div>
 
+		<slot name="header" />
+
 		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3">
 			{#if mods.length === 0}
 				<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>

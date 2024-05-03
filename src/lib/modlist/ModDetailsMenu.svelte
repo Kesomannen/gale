@@ -122,16 +122,9 @@
 	{/if}
 
 	{#if mod.isDeprecated}
-		<div class="flex items-center rounded-lg bg-red-700 text-white px-3 py-1 max-w-fit my-1">
+		<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 max-w-fit my-1">
 			<Icon class="text-xl mr-1" icon="mdi:error" />
 			Deprecated
-		</div>
-	{/if}
-
-	{#if updateAvailable(mod)}
-		<div class="flex items-center rounded-lg bg-blue-600 text-white px-3 py-1 max-w-fit my-1">
-			<Icon class="text-xl mr-1" icon="mdi:arrow-up-circle" />
-			Update available
 		</div>
 	{/if}
 
