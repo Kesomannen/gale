@@ -13,8 +13,8 @@ You can however clone the repository and build the project yourself. The only de
 ## Features & Roadmap
 
 - [x] Browse & install mods
-- [x] Config editor
-- [x] Import & export profiles
+- [x] Mod config editor
+- [x] Import & export profiles (compatible with r2modman/thunderstore)
 - [x] Support for other BepInEx compatible games
 - [ ] Support for other modding frameworks
 
