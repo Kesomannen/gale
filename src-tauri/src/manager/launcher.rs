@@ -101,7 +101,8 @@ fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()>{
     preloader_path.push("core");
     preloader_path.push("BepInEx.Preloader.dll");
 
-    let preloader_path = resolve_path(&preloader_path, "preloader")?;
+    let preloader_path = resolve_path(&preloader_path, "preloader")
+        .map_err(|_| anyhow!("failed to resolve BepInEx preloader path, is BepInEx installed?"))?;
 
     command
         .arg("--doorstop-enable")

@@ -1,24 +1,21 @@
 <script lang="ts">
-  let versions = [
-    {
-      num: '1.0.0',
-      date: '2021-10-10',
-      changes: [
-        'Initial release'
-      ]
-    },
-  ];
+	import Markdown from "$lib/Markdown.svelte";
+	import { onMount } from "svelte";
+
+  let changelogPromise: Promise<string>;
+
+  onMount(async () => {
+    let response = await fetch("https://raw.githubusercontent.com/Kesomannen/ModManager/master/CHANGELOG.md");
+    changelogPromise = response.text();
+  });
 </script>
 
-<div class="p-6 overflow-y-auto">
-  <h1 class="text-white font-bold text-2xl">Welcome to Kesomannen Mod Manager!</h1>
-  <h2 class="text-slate-100 font-semibold text-xl mt-2">Changelog</h2>
-  {#each versions as version}
-    <h3 class="text-slate-200 font-medium text-lg mt-2">Version {version.num}</h3>
-    <ul>
-      {#each version.changes as change}
-        <li class="text-slate-300">- {change}</li>
-      {/each}
-    </ul>
-  {/each}
+<div class="px-6 overflow-y-auto text-slate-100">
+  {#await changelogPromise}
+    Loading changelog...
+  {:then changelog}
+    <Markdown source={changelog} />
+  {:catch error}
+    Failed to load changelog: {error.message}
+  {/await}
 </div>

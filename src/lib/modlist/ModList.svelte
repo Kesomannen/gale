@@ -174,12 +174,12 @@
 
 		<slot name="header" />
 
-		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3">
+		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3 gap-0.5">
 			{#if mods.length === 0}
 				<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
 			{/if}
 			{#each mods.slice(0, pageSize - 1) as mod}
-				<ModListItem onClick={onModClicked} {mod} />
+				<ModListItem onClick={onModClicked} {mod} isSelected={activeMod == mod} />
 			{/each}
 		</div>
 	</div>

@@ -417,8 +417,10 @@ fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
         let entry_name = fs_util::file_name(&entry_path);
 
         if entry_path.is_dir() && entry_name.contains("BepInEx") {
+            // ... and some have even more subfolders ...
+            // do this first, since otherwise entry_path will be removed already
+            fs_util::flatten_if_exists(&entry_path.join("BepInEx"))?;
             fs_util::flatten_if_exists(&entry_path)?;
-            fs_util::flatten_if_exists(&entry_path.join("BepInex"))?;
         }
     }
 

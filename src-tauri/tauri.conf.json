@@ -29,7 +29,8 @@
 				"all": false,
 				"request": true,
 				"scope": [
-					"https://thunderstore.io/api/*"
+					"https://thunderstore.io/api/*",
+					"https://raw.githubusercontent.com/Kesomannen/ModManager/master/CHANGELOG.md"
 				]
 			}
 		},
@@ -69,9 +70,6 @@
 		"security": {
 			"csp": null
 		},
-		"updater": {
-			"active": false
-		},
 		"windows": [
 			{
 				"decorations": false,
@@ -84,6 +82,13 @@
 				"minWidth": 600,
 				"minHeight": 500
 			}
-		]
+		],
+		"updater": {
+			"active": false,
+			"endpoints": [
+			],
+			"dialog": true,
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRkNCMzE4NDIyOTQ1QjQKUldTMFJTbENHTFA4UE9Fd1RocjRDRm9uVmdiUlUxdmw1ZEwvaXRJZW45VFVSeXozUkYxaUFmZEsK"
+		}
 	}
 }

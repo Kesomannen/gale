@@ -80,37 +80,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0952808a6c2afd1aa8947271f3a60f1a6763c7b912d210184c5149b5cf147247"
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64 0.22.0",
- "futures-util",
- "heck 0.5.0",
- "image 0.25.1",
- "indexmap 2.2.6",
- "itertools",
- "justerror",
- "lazy_static",
- "open 5.1.2",
- "reqwest 0.12.2",
- "semver",
- "serde",
- "serde_json",
- "serde_yaml",
- "tauri",
- "tauri-build",
- "tauri-plugin-deep-link",
- "thiserror",
- "tokio",
- "typeshare",
- "uuid",
- "walkdir",
- "zip",
- "zip-extract",
-]
-
-[[package]]
 name = "arbitrary"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2309,6 +2278,37 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "mod_manager"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.0",
+ "futures-util",
+ "heck 0.5.0",
+ "image 0.25.1",
+ "indexmap 2.2.6",
+ "itertools",
+ "justerror",
+ "lazy_static",
+ "open 5.1.2",
+ "reqwest 0.12.2",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-deep-link",
+ "thiserror",
+ "tokio",
+ "typeshare",
+ "uuid",
+ "walkdir",
+ "zip",
+ "zip-extract",
 ]
 
 [[package]]

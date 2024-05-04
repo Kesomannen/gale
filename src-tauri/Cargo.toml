@@ -1,11 +1,11 @@
 [package]
-name = "app"
+name = "mod_manager"
 version = "0.1.0"
-description = "A Tauri App"
+description = "A lightweight and fast mod manager for Thunderstore"
 authors = ["Kesomannen"]
-license = ""
+license = "GPL-3.0"
 repository = ""
-default-run = "app"
+default-run = "mod_manager"
 edition = "2021"
 rust-version = "1.60"
 

@@ -7,17 +7,18 @@
 	const FALLBACK_ICON = 'https://sm.ign.com/t/ign_es/cover/l/lethal-com/lethal-company_817h.300.jpg';
 
 	export let mod: Mod;
+	export let isSelected: boolean;
 	export let onClick: (mod: Mod) => void;
 </script>
 
 <Button.Root
-	class="flex hover:bg-gray-700 rounded-lg p-2 items-center group"
+	class="flex border border-slate-500 {isSelected ? 'bg-slate-700' : 'hover:bg-slate-700 border-opacity-0'} rounded-lg p-2 items-center group"
 	on:click={() => onClick(mod)}
 >
 	<img src={mod.icon ?? FALLBACK_ICON} alt="Mod icon" class="w-12 h-12 rounded-md group-hover:shadow-xl" />
 	<div class="pl-4 overflow-hidden flex-grow">
 		<div class="flex items-center">
-			<div class="text-slate-100 group-hover:text-white font-semibold">
+			<div class="text-slate-100 group-hover:text-white font-medium">
 				{mod.name}
 			</div>
 			<div class="text-slate-500 group-hover:text-slate-400 font-light pl-2">
