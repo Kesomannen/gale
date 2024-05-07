@@ -1,7 +1,6 @@
 name: 'publish'
 
-on:
-  
+on: workflow_dispatch
 
 jobs:
   publish-tauri:
@@ -52,6 +51,6 @@ jobs:
         with:
           tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: '__VERSION__'
-          releaseDraft: false
+          releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
