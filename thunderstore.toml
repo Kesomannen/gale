@@ -1,0 +1,33 @@
+[config]
+schemaVersion = "0.0.1"
+
+[general]
+repository = "https://thunderstore.io"
+
+[package]
+namespace = "Kesomannen"
+name = "GaleModManager"
+description = "A modern and lightweight mod manager for many games on Thunderstore"
+websiteUrl = "https://github.com/Kesomannen/gale"
+containsNsfwContent = false
+
+[build]
+icon = "src-tauri\\icons\\icon.png"
+
+[[build.copy]]
+source = "CHANGELOG.md"
+target = "CHANGELOG.md"
+
+[[build.copy]]
+source = "LICENSE.md"
+target = "LICENSE.md"
+
+[[build.copy]]
+source = "src-tauri\\target\\release\\bundle\\msi"
+target = ""
+
+[publish]
+communities = ["lethal-company"]
+
+[publish.categories]
+lethal-company = ["tools"]
