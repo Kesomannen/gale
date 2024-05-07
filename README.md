@@ -4,7 +4,7 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 
 ## Installation
 
-Go to Releases and downlad the latest one for your platform and run the installer. Alternatively, download it from Thunderstore (Windows only) and run the installer.
+Go to Releases, downlad the latest one for your platform and run the installer. Alternatively, download it from Thunderstore (Windows only) and run the installer.
 
 ## Features
 
@@ -12,8 +12,10 @@ Go to Releases and downlad the latest one for your platform and run the installe
 - A performant and response UI with a tiny download and disk size (5 MB!)
 - Import & export profiles (compatible with r2modman/thunderstore mod manager)
 - Feature rich mod config editor
-- Launch through Steam *or* directly 
+- Launch games through Steam *or* directly, with any number of instances
+- Can be used with the "Install with Mod Manager" button on Thunderstore
 - Automatic app updates
+- Local mod imports
 
 **Coming soon**
 
