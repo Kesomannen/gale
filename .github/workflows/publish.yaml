@@ -35,7 +35,7 @@ jobs:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        if: matrix.platform == 'ubuntu-20.04' # This must match the platform value defined above.
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
@@ -48,6 +48,8 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
           tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: '__VERSION__'
