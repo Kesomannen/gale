@@ -20,8 +20,8 @@ source = "LICENSE.md"
 target = "LICENSE.md"
 
 [[build.copy]]
-source = "src-tauri\\target\\release\\bundle\\nsis\\*.exe"
-target = "gale-installer.exe"
+source = "src-tauri\\target\\release\\bundle\\nsis"
+target = ""
 
 [publish]
 communities = ["lethal-company"]
