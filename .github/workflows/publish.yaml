@@ -56,3 +56,18 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+  publish-thunderstore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: GreenTF/upload-thunderstore-package@v4.2
+        with:
+          namespace: Kesomannen
+          description: A lightweight and sleek mod manager for many games on Thunderstore
+          token: ${{ secrets.THUNDERSTORE_TOKEN }}
+          name: GaleModManager
+          version: ${{ github.ref_name }} # Use the tag as the package version
+          community: Lethal Company
+          repo: thunderstore.io/c/lethal-company/
+          categories: |
+            tools
