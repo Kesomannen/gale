@@ -31,19 +31,16 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04' # This must match the platform value defined above.
+        if: matrix.platform == 'ubuntu-20.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
-        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
       - name: install frontend dependencies
-        run: npm install # change this to npm, pnpm or bun depending on which one you use.
+        run: npm install
 
       - uses: tauri-apps/tauri-action@v0
         env:
@@ -56,18 +53,20 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-  publish-thunderstore:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: GreenTF/upload-thunderstore-package@v4.2
+
+      - name: setup .NET
+        if: matrix.platform == 'windows-latest'
+        uses: actions/setup-dotnet@v3
         with:
-          namespace: Kesomannen
-          description: A lightweight and sleek mod manager for many games on Thunderstore
-          token: ${{ secrets.THUNDERSTORE_TOKEN }}
-          name: GaleModManager
-          version: ${{ github.ref_name }} # Use the tag as the package version
-          community: Lethal Company
-          repo: thunderstore.io/c/lethal-company/
-          categories: |
-            tools
+          dotnet-version: 7.0.405
+
+      - name: install thunderstore cli
+        if: matrix.platform == 'windows-latest'
+        shell: bash
+        run: dotnet tool install -g tcli
+
+      - name: publish to thunderstore
+        if: matrix.platform == 'windows-latest'
+        env:
+          TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
+        run: tcli publish
