@@ -1,4 +1,4 @@
-# Kesomannen Mod Manager
+# Gale Mod Manager
 
 A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/). Currently very much in development.
 
