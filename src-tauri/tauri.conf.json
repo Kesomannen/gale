@@ -6,7 +6,7 @@
 		"distDir": "../build"
 	},
 	"package": {
-		"productName": "modmanager",
+		"productName": "Gale",
 		"version": "0.1.0"
 	},
 	"tauri": {
@@ -30,7 +30,7 @@
 				"request": true,
 				"scope": [
 					"https://thunderstore.io/api/*",
-					"https://raw.githubusercontent.com/Kesomannen/ModManager/master/CHANGELOG.md"
+					"https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md"
 				]
 			}
 		},
@@ -49,7 +49,7 @@
 				"icons/icon.icns",
 				"icons/icon.ico"
 			],
-			"identifier": "com.kesomannen.modmanager",
+			"identifier": "com.kesomannen.gale",
 			"longDescription": "",
 			"macOS": {
 				"entitlements": null,
@@ -74,18 +74,19 @@
 			{
 				"decorations": false,
 				"fullscreen": false,
-				"height": 600,
-				"resizable": true,
-				"title": "Kesomannen Mod Manager",
 				"transparent": true,
+				"resizable": true,
+				"height": 600,
 				"width": 800,
+				"title": "Gale Mod Manager",
 				"minWidth": 600,
 				"minHeight": 500
 			}
 		],
 		"updater": {
-			"active": false,
+			"active": true,
 			"endpoints": [
+				"https://gist.githubusercontent.com/Kesomannen/535c6b2882547be0350be5396c455389/raw/3a96668fd8f6ee6443d6240a2d2152fe7e1e1e3c/releases.json"
 			],
 			"dialog": true,
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRkNCMzE4NDIyOTQ1QjQKUldTMFJTbENHTFA4UE9Fd1RocjRDRm9uVmdiUlUxdmw1ZEwvaXRJZW45VFVSeXozUkYxaUFmZEsK"

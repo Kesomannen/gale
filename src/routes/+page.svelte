@@ -5,7 +5,7 @@
   let changelogPromise: Promise<string>;
 
   onMount(async () => {
-    let response = await fetch("https://raw.githubusercontent.com/Kesomannen/ModManager/master/CHANGELOG.md");
+    let response = await fetch("https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md");
     changelogPromise = response.text();
   });
 </script>
