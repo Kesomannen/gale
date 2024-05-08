@@ -235,7 +235,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     }
 }
 
-const IGNORED_NAMES: [&str; 1] = ["r2modman"];
+const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
 
 async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
     let state = app.state::<Mutex<Thunderstore>>();

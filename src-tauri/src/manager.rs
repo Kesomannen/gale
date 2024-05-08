@@ -2,7 +2,7 @@ use std::{
     collections::HashMap, fs, path::PathBuf, sync::Mutex
 };
 
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -362,10 +362,12 @@ impl ManagerGame {
         Ok(())
     }
 
-    fn load(mut path: PathBuf) -> Result<(&'static Game, Self)> {
+    fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
         let file_name = fs_util::file_name(&path);
-        let game = games::from_name(&file_name)
-            .ok_or_else(|| anyhow!("invalid game directory name: {}", file_name))?;
+        let game = match games::from_name(&file_name) {
+            Some(game) => game,
+            None => return Ok(None),
+        };
         
         path.push("game.json");
 
@@ -389,12 +391,12 @@ impl ManagerGame {
 
         path.pop();
 
-        Ok((game, Self {
+        Ok(Some((game, Self {
             profiles,
             path,
             favorite: data.favorite,
             active_profile_index: data.active_profile_index,
-        }))
+        })))
     }
 }
 
@@ -419,8 +421,9 @@ impl ModManager {
             let path = entry?.path();
 
             if path.is_dir() {
-                let (game, game_data) = ManagerGame::load(path)?;
-                games.insert(&game.id, game_data);
+                if let Some((game, game_data)) = ManagerGame::load(path)? {
+                    games.insert(&game.id, game_data);
+                }
             }
         }
 

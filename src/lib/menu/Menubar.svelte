@@ -34,7 +34,8 @@
 </script>
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
-	<Menubar.Root class="pl-3 py-1 flex items-center">
+	<Menubar.Root class="py-1 flex items-center">
+		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-1 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
 			<MenubarTrigger>File</MenubarTrigger>
 			<Menubar.Content
