@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 (2024-05-08)
+## 0.2.0 (2024-05-08)
 
 - Added proper logo & icons
 - Gale iself is now hidden in the mod list
