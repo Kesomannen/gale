@@ -4,12 +4,12 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 
 ## Installation
 
-Go to Releases, downlad the latest one for your platform and run the installer. Alternatively, download it from Thunderstore (Windows only) and run the installer.
+Go to Releases, download the latest one for your platform and run the installer. Alternatively, download it from Thunderstore (Windows only) and run the installer.
 
 ## Features
 
 - Support for most of the games on Thunderstore, including Lethal Company, Risk of Rain 2 and Content Warning
-- A performant and response UI with a tiny download and disk size (5 MB!)
+- A performant and responsive UI with a tiny download and disk size (5 MB!)
 - Import & export profiles (compatible with r2modman/thunderstore mod manager)
 - Feature rich mod config editor
 - Launch games through Steam *or* directly, with any number of instances
