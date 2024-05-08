@@ -30,6 +30,8 @@ impl NetworkClient {
 }
 
 fn main() {
+    fix_path_env::fix().ok();
+
     tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
 
     tauri::Builder::default()

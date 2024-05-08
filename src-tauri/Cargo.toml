@@ -39,6 +39,7 @@ serde_yaml = "0.9"
 base64 = "0.22"
 lazy_static = "1.4"
 heck = "0.5"
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 [features]
 custom-protocol = [ "tauri/custom-protocol" ]
