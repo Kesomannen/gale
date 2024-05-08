@@ -4,6 +4,7 @@
 
 - Added proper logo & icons
 - Gale iself is now hidden in the mod list
+- Config entrys are no longer required to be in the acceptable range
 - Fixed crash when opening on Linux (hopefully) (thanks testaccount666 on discord)
 - Fixed screenshots in the Thunderstore README
 
