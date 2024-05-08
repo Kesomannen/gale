@@ -2,10 +2,6 @@
 
 A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
-## Installation
-
-Go to Releases, download the latest one for your platform and run the installer. Alternatively, download it from Thunderstore (Windows only) and run the installer.
-
 ## Features
 
 - Support for most of the games on Thunderstore, including Lethal Company, Risk of Rain 2 and Content Warning
@@ -22,6 +18,43 @@ Go to Releases, download the latest one for your platform and run the installer.
 - CLI
 - Support for modding frameworks other than BepInEx
 
+## Installation
+
+### Windows
+
+**Through Thunderstore**
+- Go to the [thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and press "Manual Download".
+- Unzip the downloaded .zip file (for example by right-clicking and choosing "Extract All").
+- Run the `Gale_X.X.X_x64-setup.exe` file inside of the unzipped folder.
+
+**Through Github**
+- Go to [Releases](https://github.com/Kesomannen/gale/releases).
+- Download the `Gale_X.X.X_x64-setup.exe` file for your desired version (the latest is recommended).
+- Run the downloaded file.
+
+> **Note:** You might get a prompt saying "Windows has protected your PC". In this case, click `More Info` and `Run Anyway`.
+
+> If you're unsure about the safety of this app, I would suggest running it through a service like [VirusTotal](https://www.virustotal.com).
+> It's also worth noting that this project is fully open-source, which means anyone can look at the code and could easily find any malware.
+
+### MacOS
+
+TBD
+
+### Linux
+
+TBD
+
+### Building from source
+
+Make sure you have done all of the [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites).
+After you have cloned the repository, run
+```sh
+npm install
+cargo tauri dev
+```
+to start a dev server. Alternatively, do `cargo tauri build` to build an installer for your platform. If you want to modify/distribute the app, keep in mind the [license](https://choosealicense.com/licenses/gpl-3.0/#).
+
 ## Screenshots
 
 *Browse mods*
@@ -35,6 +68,10 @@ Go to Releases, download the latest one for your platform and run the installer.
 *Config editor*
 
 ![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/0.1.0/images/screenshot3.png)
+
+## Credits
+
+Logo font based on [Poppins](https://fonts.google.com/specimen/Poppins)
 
 ## License
 
