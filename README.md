@@ -26,15 +26,15 @@ Go to Releases, download the latest one for your platform and run the installer.
 
 *Browse mods*
 
-![screenshot](/images/screenshot1.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/0.1.0/images/screenshot1.png)
 
 *Profile*
 
-![screenshot](/images/screenshot2.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/0.1.0/images/screenshot2.png)
 
 *Config editor*
 
-![screenshot](/images/screenshot3.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/0.1.0/images/screenshot3.png)
 
 ## License
 
