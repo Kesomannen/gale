@@ -26,20 +26,6 @@ where
                     .parse()
                     .with_context(|| format!("invalid maximum value '{}'", max))?;
 
-                ensure!(
-                    min <= max,
-                    "minimum value '{}' is greater than maximum value '{}'",
-                    min,
-                    max
-                );
-                ensure!(
-                    value >= min && value <= max,
-                    "value '{}' is out of range [{}, {}]",
-                    value,
-                    min,
-                    max
-                );
-
                 Some(min..max)
             }
             None => None,
