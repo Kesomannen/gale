@@ -22,7 +22,7 @@ impl NetworkClient {
     fn create() -> Result<Self, reqwest::Error> {
         let client = reqwest::Client::builder()
             .http1_only()
-            .user_agent("Kesomannen-ModManager")
+            .user_agent("Kesomannen-gale")
             .build()?;
 
         Ok(Self(client))
