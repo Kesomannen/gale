@@ -69,4 +69,4 @@ jobs:
         if: matrix.platform == 'windows-latest'
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: tcli publish
+        run: tcli publish --package-version ${{ github.event.release.tag_name }}
