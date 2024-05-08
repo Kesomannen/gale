@@ -10,11 +10,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+          - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest' # for Intel based macs.
+          - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-20.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+          - platform: 'ubuntu-20.04'
             args: ''
           - platform: 'windows-latest'
             args: ''
@@ -43,6 +43,7 @@ jobs:
         run: npm install
 
       - uses: tauri-apps/tauri-action@v0
+        id: tauri
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -65,14 +66,8 @@ jobs:
         shell: bash
         run: dotnet tool install -g tcli
 
-      - name: build thunderstore package
+      - name: publish thunderstore package
         if: matrix.platform == 'windows-latest'
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: tcli build --package-version 0.1.0
-
-      - name: add thunderstore package to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file: Kesomannen-Gale-0.1.0.zip
-          overwrite: true
+        run: tcli publish --package-version ${{ steps.tauri.outputs.appVersion }}
