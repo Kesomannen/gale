@@ -7,6 +7,9 @@ namespace = "Kesomannen"
 description = "A modern and lightweight mod manager for many games on Thunderstore"
 websiteUrl = "https://github.com/Kesomannen/gale"
 
+[package.dependencies]
+BepInEx-BepInExPack = "5.4.2100"
+
 [build]
 icon = "src-tauri\\icons\\icon.png"
 
