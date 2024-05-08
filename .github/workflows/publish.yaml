@@ -65,8 +65,14 @@ jobs:
         shell: bash
         run: dotnet tool install -g tcli
 
-      - name: publish to thunderstore
+      - name: build thunderstore package
         if: matrix.platform == 'windows-latest'
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: tcli publish --package-version ${{ github.event.release.tag_name }}
+        run: tcli build --package-version 0.1.0
+
+      - name: add thunderstore package to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: Kesomannen-Gale-0.1.0.zip
+          overwrite: true
