@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+- Added profile import from file
+- Added profile export to file
+
 ## 0.2.0 (2024-05-08)
 
 - Added proper logo & icons

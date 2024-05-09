@@ -15,6 +15,7 @@
 	import ImportCodePopup from '$lib/import/ImportCodePopup.svelte';
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
 	import { dialog } from '@tauri-apps/api';
+	import { refreshProfiles } from '$lib/profile';
 
 	let newProfileOpen = false;
 	let preferencesOpen = false;
@@ -30,6 +31,27 @@
 
 		if (!path) return;
 		invokeCommand('import_local_mod', { path });
+	}
+
+	async function importFile() {
+		let path = await dialog.open({
+			title: 'Select the file to import',
+			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
+		});
+
+		if (!path) return;
+		await invokeCommand('import_file', { path });
+		refreshProfiles();
+	}
+
+	async function exportFile() {
+		let dir = await dialog.open({
+			directory: true,
+			title: 'Select the directory to export the profile to',
+		});
+
+		if (!dir) return;
+		invokeCommand('export_file', { dir });
 	}
 </script>
 
@@ -60,6 +82,7 @@
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem onClick={() => (importCodeOpen = true)}>...profile from code</MenubarItem>
+				<MenubarItem onClick={importFile}>...profile from file</MenubarItem>
 				<MenubarItem onClick={importLocal}>...local mod</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
@@ -69,6 +92,7 @@
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem onClick={() => exportCodePopup.open()}>...profile as code</MenubarItem>
+				<MenubarItem onClick={exportFile}>...profile as file</MenubarItem>
 				<MenubarItem onClick={() => (exportPackOpen = true)}>...profile as modpack</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>

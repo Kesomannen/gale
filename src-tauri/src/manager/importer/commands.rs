@@ -25,8 +25,30 @@ pub async fn export_code(
 }
 
 #[tauri::command]
+pub fn export_file(
+    mut dir: PathBuf,
+    manager: StateMutex<'_, ModManager>,
+    thunderstore: StateMutex<'_, Thunderstore>,
+) -> Result<()> {
+    let manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+
+    super::export_file(manager.active_profile(), &mut dir, &thunderstore)?;
+    let _ = open::that(dir.parent().unwrap());
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn import_code(key: Uuid, app: AppHandle) -> Result<()> {
     super::import_code(key, &app).await?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn import_file(path: PathBuf, app: AppHandle) -> Result<()> {
+    super::import_file_from_path(path, &app).await?;
 
     Ok(())
 }
@@ -49,10 +71,7 @@ pub fn export_pack(
 }
 
 #[tauri::command]
-pub async fn import_local_mod(
-    path: PathBuf,
-    app: AppHandle,
-) -> Result<()> {
+pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
     super::import_local_mod(path, &app).await?;
 
     Ok(())

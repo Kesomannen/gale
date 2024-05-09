@@ -4,7 +4,7 @@ repository = "https://thunderstore.io"
 [package]
 name = "GaleModManager"
 namespace = "Kesomannen"
-description = "A modern and lightweight mod manager for many games on Thunderstore. INSTALL FROM THUNDERSTORE.IO!"
+description = "A modern and lightweight mod manager for many games on Thunderstore. Read install instructions in README.md!"
 websiteUrl = "https://github.com/Kesomannen/gale"
 
 [package.dependencies]

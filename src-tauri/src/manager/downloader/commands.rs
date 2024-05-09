@@ -69,7 +69,7 @@ pub async fn update_all(app: tauri::AppHandle) -> Result<()> {
         let manager = app.state::<Mutex<ModManager>>();
         let manager = manager.lock().unwrap();
 
-        manager.active_profile().remote_mods().map(|m| m.package_uuid).collect_vec()
+        manager.active_profile().remote_mods().map(|(m, _)| m.package_uuid).collect_vec()
     };
 
     super::update_mods(&uuids, &app).await?;

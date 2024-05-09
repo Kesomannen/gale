@@ -1,9 +1,5 @@
 use std::{
-    fs,
-    io::Cursor,
-    iter,
-    path::{Path, PathBuf},
-    sync::Mutex,
+    default, fs, io::Cursor, iter, path::{Path, PathBuf}, sync::Mutex
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
@@ -77,10 +73,127 @@ fn try_cache_install(
         true => {
             let name = &borrowed_mod.package.full_name;
             install_from_disk(path, &profile.path, name)?;
-            profile.mods.push(ProfileMod::Remote(borrowed_mod.into()));
+            profile.mods.push(ProfileMod::remote(borrowed_mod.into()));
             Ok(true)
         }
         false => Ok(false),
+    }
+}
+
+struct Downloader<'a> {
+    to_install: Vec<(ModRef, bool)>,
+    progress: InstallProgress<'a>,
+    
+    app: &'a AppHandle,
+    client: &'a reqwest::Client,
+    manager: StateMutex<'a, ModManager>,
+    thunderstore: StateMutex<'a, Thunderstore>,
+    prefs: StateMutex<'a, Prefs>,
+}
+
+impl<'a> Downloader<'a> {
+    fn new(to_install: Vec<(ModRef, bool)>, app: &'a AppHandle) -> Result<Self> {
+        let client = app.state::<NetworkClient>();
+        let client = &client.0;
+        
+        let manager = app.state::<Mutex<ModManager>>();
+        let thunderstore = app.state::<Mutex<Thunderstore>>();
+        let prefs = app.state::<Mutex<Prefs>>();
+        
+        let mut total_bytes = 0u64;
+        let ts_lock = thunderstore.lock().unwrap();
+
+        for (mod_ref, _) in &to_install {
+            let borrowed_mod = mod_ref.borrow(&ts_lock)?;
+            total_bytes += borrowed_mod.version.file_size;
+        }
+
+        let progress = InstallProgress {
+            total_bytes,
+            total_mods: to_install.len(),
+            ..Default::default()
+        };
+
+        Ok(Self {
+            to_install,
+            progress,
+            app,
+            client,
+            manager,
+            thunderstore,
+            prefs,
+        })
+    }
+
+    fn emit(&self, payload: &InstallProgressPayload<'a>) {
+        let _ = self.app.emit_all("install_progress", payload);
+    }
+
+    fn progress(&mut self, update_progress: impl FnOnce(&mut InstallProgress)) {
+        update_progress(&mut self.progress);
+        self.emit(&InstallProgressPayload::InProgress(&self.progress));
+    }
+
+    fn get_info(&self, mod_ref: &ModRef) -> Result<(String, String, u64)> {
+        let thunderstore = self.thunderstore.lock().unwrap();
+        let (pkg, ver) = mod_ref.borrow(&thunderstore)?.into();
+
+        Ok((
+            pkg.full_name.clone(),
+            ver.download_url,
+            ver.file_size,
+        ))
+    }
+
+    async fn install_all(&mut self) -> Result<()> {
+        while let Some((next, enabled)) = self.to_install.pop() {
+            let (name, url, size) = self.get_info(&next)?;
+
+            self.progress(|progress| {
+                progress.current_mod_name = &name;
+                progress.current_task = InstallTask::Installing;
+            })
+        }
+
+        for (i, mod_ref) in self.to.iter().enumerate() {
+            let info = &mod_info[i];
+            let mut progress = InstallProgress {
+                installed_mods: i,
+                total_mods,
+                downloaded_bytes,
+                total_bytes,
+                current_mod_name: &info.0,
+                current_task: InstallTask::Installing,
+            };
+    
+            update(app, InstallProgressPayload::InProgress(&progress));
+    
+            let result = install_mod(
+                mod_ref,
+                |task, diff| {
+                    downloaded_bytes += diff;
+                    progress.downloaded_bytes = downloaded_bytes;
+    
+                    progress.current_task = task;
+                    update(app, InstallProgressPayload::InProgress(&progress));
+                },
+                client,
+                manager.clone(),
+                thunderstore.clone(),
+                prefs.clone(),
+            )
+            .await;
+    
+            if let Err(err) = result {
+                update(app, InstallProgressPayload::Error);
+                let err = err.context(format!("failed to install mod {}", info.0));
+                return Err(err);
+            }
+        }
+    
+        update(app, InstallProgressPayload::Done);
+    
+        return Ok(());
     }
 }
 
@@ -192,7 +305,7 @@ enum InstallProgressPayload<'a> {
 }
 
 #[typeshare]
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 struct InstallProgress<'a> {
     installed_mods: usize,
@@ -206,37 +319,17 @@ struct InstallProgress<'a> {
 }
 
 #[typeshare]
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase", tag = "type", content = "content")]
 enum InstallTask {
+    #[default]
     Installing,
     Extracting,
     Downloading { total: u64, downloaded: u64 },
 }
 
 pub async fn install_mod_refs(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result<()> {
-    let client = app.state::<NetworkClient>();
-    let client = &client.0;
 
-    let manager = app.state::<Mutex<ModManager>>();
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    let mod_info = {
-        let thunderstore = thunderstore.lock().unwrap();
-
-        mod_refs
-            .iter()
-            .map(|mod_ref| {
-                let borrowed_mod = mod_ref.borrow(&thunderstore)?;
-
-                Ok((
-                    borrowed_mod.package.name.clone(),
-                    borrowed_mod.version.file_size,
-                ))
-            })
-            .collect::<Result<Vec<_>>>()?
-    };
 
     let total_mods = mod_info.len();
     let total_bytes = mod_info.iter().map(|(_, size)| size).sum();
@@ -335,6 +428,7 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
                     .ok_or(anyhow!("mod with id {} not found in profile", uuid))?
                     .as_remote()
                     .ok_or(anyhow!("cannot update local mod"))?
+                    .0
                     .borrow(&thunderstore)?
                     .version
                     .version_number;

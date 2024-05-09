@@ -64,6 +64,8 @@ fn main() {
 
             manager::importer::commands::export_code,
             manager::importer::commands::import_code,
+            manager::importer::commands::export_file,
+            manager::importer::commands::import_file,
             manager::importer::commands::export_pack,
             manager::importer::commands::import_local_mod,
 

@@ -18,7 +18,7 @@ use crate::{
     prefs::Prefs,
     thunderstore::{
         models::{LegacyProfileCreateResponse, PackageManifest},
-        BorrowedMod, ModRef, Thunderstore,
+        ModRef, Thunderstore,
     },
     util::IoResultExt,
     NetworkClient,
@@ -26,9 +26,9 @@ use crate::{
 
 use super::{config, downloader, ModManager, Profile};
 use base64::{prelude::BASE64_STANDARD, Engine};
-use uuid::Uuid;
 use itertools::Itertools;
 use reqwest::StatusCode;
+use uuid::Uuid;
 
 pub mod commands;
 
@@ -38,23 +38,23 @@ pub fn setup(_app: &AppHandle) -> Result<()> {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ExportManifest {
-    profile_name: String,
-    mods: Vec<ExportMod>,
+struct ExportManifest<'a> {
+    profile_name: &'a str,
+    mods: Vec<ExportMod<'a>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct ExportMod {
-    name: String,
+struct ExportMod<'a> {
+    name: &'a str,
     version: ExportVersion,
     enabled: bool,
 }
 
-impl ExportMod {
-    fn mod_ref(self, thunderstore: &Thunderstore) -> Result<ModRef> {
-        let package = thunderstore.find_package(&self.name)?;
-        let semver: semver::Version = self.version.into();
+impl<'a> ExportMod<'a> {
+    fn into_mod_ref(self, thunderstore: &Thunderstore) -> Result<ModRef> {
+        let package = thunderstore.find_package(self.name)?;
+        let semver = semver::Version::from(self.version);
         let version = package.get_version_with_num(&semver).with_context(|| {
             format!(
                 "failed to find version {} for package {}",
@@ -67,21 +67,14 @@ impl ExportMod {
             version_uuid: version.uuid4,
         })
     }
-}
 
-impl From<BorrowedMod<'_>> for ExportMod {
-    fn from(value: BorrowedMod<'_>) -> Self {
-        let version = &value.version.version_number;
-
-        Self {
-            name: value.package.full_name.clone(),
-            version: ExportVersion {
-                major: version.major,
-                minor: version.minor,
-                patch: version.patch,
-            },
-            enabled: true,
-        }
+    fn from_mod_ref(mod_ref: &ModRef, enabled: bool, thunderstore: &'a Thunderstore) -> Result<Self> {
+        let borrowed = mod_ref.borrow(thunderstore)?;
+        Ok(Self {
+            name: &borrowed.package.full_name,
+            version: ExportVersion::from(&borrowed.version.version_number),
+            enabled,
+        })
     }
 }
 
@@ -99,6 +92,16 @@ impl From<ExportVersion> for semver::Version {
     }
 }
 
+impl From<&semver::Version> for ExportVersion {
+    fn from(value: &semver::Version) -> Self {
+        Self {
+            major: value.major,
+            minor: value.minor,
+            patch: value.patch,
+        }
+    }
+}
+
 const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
 fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore) -> Result<()> {
@@ -108,15 +111,14 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
 
     let mods = profile
         .remote_mods()
-        .map(|mod_ref| {
-            let borrowed_mod = mod_ref.borrow(thunderstore)?;
-            Ok(ExportMod::from(borrowed_mod))
+        .map(|(mod_ref, enabled)| { 
+            ExportMod::from_mod_ref(mod_ref, enabled, thunderstore) 
         })
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve profile mods")?;
 
     let manifest = ExportManifest {
-        profile_name: profile.name.clone(),
+        profile_name: &profile.name,
         mods,
     };
 
@@ -170,6 +172,14 @@ async fn export_code(
     Ok(response.key)
 }
 
+async fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<()> {
+    ensure!(path.exists(), "file does not exist");
+    ensure!(path.is_file(), "path is not a file");
+
+    let file = fs::File::open(&path).fs_context("opening file", &path)?;
+    import_file(file, app).await
+}
+
 async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
     let mod_refs = {
         let manager = app.state::<Mutex<ModManager>>();
@@ -180,6 +190,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
         let thunderstore = thunderstore.lock().unwrap();
         let prefs = prefs.lock().unwrap();
 
+        // extract archive to temp path
         let temp_path = prefs.get_path_or_err("temp_dir")?.join("imports");
         fs::create_dir_all(&temp_path)?;
 
@@ -188,6 +199,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
         let manifest = fs::read_to_string(temp_path.join("export.r2x"))
             .context("failed to read profile manifest")?;
 
+        // manifest is in r2modman's yaml format
         let manifest: ExportManifest =
             serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
 
@@ -205,7 +217,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
         manifest
             .mods
             .into_iter()
-            .map(|export_mod| export_mod.mod_ref(&thunderstore))
+            .map(|export_mod| export_mod.into_mod_ref(&thunderstore))
             .collect::<Result<Vec<_>>>()
             .context("failed to resolve mod references")?
     };
@@ -222,7 +234,9 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<()> {
     let client = &client.0;
 
     let response = client
-        .get(&format!("https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"))
+        .get(&format!(
+            "https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"
+        ))
         .send()
         .await?
         .error_for_status()
@@ -266,7 +280,8 @@ fn export_pack(
 ) -> Result<()> {
     let dep_strings = profile
         .remote_mods()
-        .map(|mod_ref| {
+        .filter(|(_, enabled)| *enabled) // filter out disabled mods
+        .map(|(mod_ref, _)| {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
             Ok(borrowed_mod.version.full_name.clone())
         })
@@ -316,19 +331,7 @@ fn write_config(profile: &Profile, zip: &mut fs_util::Zip) -> Result<()> {
 async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     ensure!(path.is_dir(), "mod path is not a directory");
 
-    path.push("manifest.json");
-    let manifest = match path.exists() {
-        true => {
-            let json = fs::read_to_string(&path).fs_context("reading manifest", &path)?;
-
-            let manifest: PackageManifest =
-                serde_json::from_str(&json).context("failed to parse manifest")?;
-
-            Some(manifest)
-        }
-        false => None,
-    };
-    path.pop();
+    let manifest = read_manifest(&mut path)?;
 
     let uuid = Uuid::new_v4();
 
@@ -350,53 +353,75 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     };
 
     if let Some(ref deps) = local_mod.dependencies {
-        downloader::install_mods(|manager, thunderstore| {
-            let profile = manager.active_profile();
+        downloader::install_mods(
+            |manager, thunderstore| {
+                let profile = manager.active_profile();
 
-            thunderstore
-                .resolve_deps(deps)
-                .filter_ok(|dep| !profile.has_mod(&dep.package.uuid4))
-                .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
-                .collect::<Result<Vec<_>>>()
-                .context("failed to resolve dependencies")
-        }, app).await?;
+                thunderstore
+                    .resolve_deps(deps)
+                    .filter_ok(|dep| !profile.has_mod(&dep.package.uuid4))
+                    .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
+                    .collect::<Result<Vec<_>>>()
+                    .context("failed to resolve dependencies")
+            },
+            app,
+        )
+        .await?;
     }
 
-    {
-        let manager = app.state::<Mutex<ModManager>>();
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-        let prefs = app.state::<Mutex<Prefs>>();
+    let manager = app.state::<Mutex<ModManager>>();
+    let thunderstore = app.state::<Mutex<Thunderstore>>();
+    let prefs = app.state::<Mutex<Prefs>>();
 
-        let mut manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
-        let prefs = prefs.lock().unwrap();
+    let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
 
-        let profile = manager.active_profile_mut();
+    let profile = manager.active_profile_mut();
 
-        if profile.local_mods().any(|m| m.name == local_mod.name) {
-            profile.force_remove_mod(&uuid, &thunderstore)
-                .context("failed to remove existing mod")?;
-        }
-    
-        downloader::install_from_disk(&path, &profile.path, &local_mod.name)
-            .context("failed to install local mod")?;
-
-        let mut mod_path = profile.path.clone();
-        mod_path.push("BepInEx");
-        mod_path.push("plugins");
-        mod_path.push(&local_mod.name);
-
-        downloader::normalize_mod_structure(&mut mod_path)?;
-
-        mod_path.push("icon.png");
-        if mod_path.exists() {
-            local_mod.icon = Some(mod_path);
-        }
-    
-        profile.mods.push(ProfileMod::Local(local_mod));
-
-        save(&manager, &prefs)?;
+    if profile.local_mods().any(|(m, _)| m.name == local_mod.name) {
+        profile
+            .force_remove_mod(&uuid, &thunderstore)
+            .context("failed to remove existing mod")?;
     }
+
+    downloader::install_from_disk(&path, &profile.path, &local_mod.name)
+        .context("failed to install local mod")?;
+
+    let mut mod_path = profile.path.clone();
+    mod_path.push("BepInEx");
+    mod_path.push("plugins");
+    mod_path.push(&local_mod.name);
+
+    downloader::normalize_mod_structure(&mut mod_path)?;
+
+    mod_path.push("icon.png");
+    if mod_path.exists() {
+        local_mod.icon = Some(mod_path);
+    }
+
+    profile.mods.push(ProfileMod::local(local_mod));
+
+    save(&manager, &prefs)?;
 
     Ok(())
+}
+
+fn read_manifest(path: &mut PathBuf) -> Result<Option<PackageManifest>> {
+    path.push("manifest.json");
+
+    let manifest = match path.exists() {
+        true => {
+            let json = fs::read_to_string(&*path).fs_context("reading manifest", &*path)?;
+    
+            let manifest: PackageManifest =
+                serde_json::from_str(&json).context("failed to parse manifest")?;
+    
+            Some(manifest)
+        }
+        false => None,
+    };
+    path.pop();
+
+    Ok(manifest)
 }

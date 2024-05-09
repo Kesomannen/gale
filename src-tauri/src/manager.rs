@@ -80,29 +80,67 @@ pub struct LocalMod {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
 enum ProfileMod {
-    Local(LocalMod),
-    Remote(ModRef),
+    Local {
+        #[serde(default="default_true")]
+        enabled: bool,
+        #[serde(flatten)]
+        data: Box<LocalMod>,
+    },
+    Remote {
+        #[serde(default="default_true")]
+        enabled: bool,
+        #[serde(flatten)]
+        mod_ref: ModRef,
+    },
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl ProfileMod {
+    fn local(data: LocalMod) -> Self {
+        ProfileMod::Local { enabled: true, data: Box::new(data) }
+    }
+
+    fn remote(mod_ref: ModRef) -> Self {
+        ProfileMod::Remote { enabled: true, mod_ref }
+    }
+
+    fn enabled(&self) -> bool {
+        match self {
+            ProfileMod::Local { enabled, .. } | ProfileMod::Remote { enabled, .. } => *enabled,
+        }
+    }
+
     fn uuid(&self) -> &Uuid {
         match self {
-            ProfileMod::Local(local) => &local.uuid,
-            ProfileMod::Remote(mod_ref) => &mod_ref.package_uuid,
+            ProfileMod::Local { data, .. } => &data.uuid,
+            ProfileMod::Remote { mod_ref, ..} => &mod_ref.package_uuid,
         }
     }
 
-    fn as_remote(&self) -> Option<&ModRef> {
+    fn as_remote(&self) -> Option<(&ModRef, bool)> {
         match self {
-            ProfileMod::Remote(mod_ref) => Some(mod_ref),
+            ProfileMod::Remote { mod_ref, enabled } => Some((mod_ref, *enabled)),
             _ => None,
         }
     }
 
-    fn as_local(&self) -> Option<&LocalMod> {
+    fn as_local(&self) -> Option<(&LocalMod, bool)> {
         match self {
-            ProfileMod::Local(local) => Some(local),
+            ProfileMod::Local { data, enabled } => Some((data, *enabled)),
             _ => None,
+        }
+    }
+
+    fn name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
+        match self {
+            ProfileMod::Local { data, .. } => Ok(&data.name),
+            ProfileMod::Remote { mod_ref, .. } => {
+                let package = thunderstore.get_package(&mod_ref.package_uuid)?;
+                Ok(&package.name)
+            }
         }
     }
 }
@@ -130,11 +168,11 @@ impl Profile {
         self.get_mod(uuid).is_some()
     }
 
-    fn remote_mods(&self) -> impl Iterator<Item = &'_ ModRef> {
+    fn remote_mods(&self) -> impl Iterator<Item = (&'_ ModRef, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_remote)
     }
 
-    fn local_mods(&self) -> impl Iterator<Item = &'_ LocalMod> {
+    fn local_mods(&self) -> impl Iterator<Item = (&'_ LocalMod, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_local)
     }
 
@@ -154,8 +192,8 @@ impl Profile {
             .mods
             .iter()
             .map(|p| match p {
-                ProfileMod::Local(local) => Ok(Queryable::Local(local)),
-                ProfileMod::Remote(mod_ref) => mod_ref.borrow(thunderstore).map(Queryable::Online),
+                ProfileMod::Local { data, .. } => Ok(Queryable::Local(data)),
+                ProfileMod::Remote { mod_ref, .. } => mod_ref.borrow(thunderstore).map(Queryable::Online),
             })
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -168,8 +206,8 @@ impl Profile {
         thunderstore: &'a Thunderstore,
     ) -> Result<Vec<BorrowedMod<'a>>> {
         self.remote_mods()
-            .filter(|other| other.package_uuid != target_mod.package.uuid4)
-            .map(|other| other.borrow(thunderstore))
+            .filter(|(other, _)| other.package_uuid != target_mod.package.uuid4)
+            .map(|(other, _)| other.borrow(thunderstore))
             .filter_map(|other| match other {
                 Ok(other) => {
                     let deps = thunderstore
@@ -243,7 +281,7 @@ impl Profile {
     ) -> Result<RemoveModResponse> {
         let profile_mod = self.get_mod(uuid).context("mod not found in profile")?;
 
-        if let ProfileMod::Remote(mod_ref) = profile_mod {
+        if let Some((mod_ref, _)) = profile_mod.as_remote() {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
             let dependants = self.dependants(borrowed_mod, thunderstore)?;
 
@@ -272,13 +310,7 @@ impl Profile {
             .position(|m| m.uuid() == uuid)
             .context("mod not found in profile")?;
 
-        let name = match &self.mods[index] {
-            ProfileMod::Local(local) => &local.name,
-            ProfileMod::Remote(mod_ref) => {
-                let package = thunderstore.get_package(&mod_ref.package_uuid)?;
-                &package.full_name
-            }
-        };
+        let name = self.mods[index].name(thunderstore)?;
 
         let mut path = self.path.join("BepInEx");
         for dir in ["core", "patchers", "plugins"].iter() {
