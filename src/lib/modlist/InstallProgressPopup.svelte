@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Popup from '$lib/Popup.svelte';
-	import type { InstallProgress, InstallProgressPayload } from '$lib/models';
+	import type { InstallProgress } from '$lib/models';
 	import { shortenFileSize } from '$lib/util';
 
 	import { listen } from '@tauri-apps/api/event';
@@ -11,32 +11,27 @@
 	let open = false;
 
 	let progress: InstallProgress = {
+		totalProgress: 0,
 		installedMods: 0,
 		totalMods: 0,
-		downloadedBytes: 0,
-		totalBytes: 0,
-		currentModName: '',
-		currentTask: {
-			type: 'installing',
+		currentName: '',
+		task: {
+			kind: 'installing'
 		}
 	};
 
 	onMount(() => {
-		listen<InstallProgressPayload>('install_progress', (event) => {
-			let payload = event.payload;
+		listen<InstallProgress>('install_progress', (event) => {
+			progress = event.payload;
+			console.log(progress);
 
-			switch (payload.type) {
+			switch (progress.task.kind) {
 				case 'done':
-					progress.downloadedBytes = progress.totalBytes;
+					progress.totalProgress = 1;
 					progress.installedMods = progress.totalMods;
 					setTimeout(() => {
 						open = false;
 					}, 500);
-					break;
-
-				case 'inProgress':
-					progress = payload.content;
-					open = true;
 					break;
 				
 				case 'error':
@@ -44,7 +39,8 @@
 					break;
 
 				default:
-					
+					open = true;
+					break;
 			}
 		});
 	});
@@ -56,25 +52,25 @@
 	canClose={false}
 >
 	<Dialog.Description class="text-slate-400">
-		{#if progress.downloadedBytes === progress.totalBytes}
+		{#if progress.task.kind == 'done'}
 			Done!
-		{:else if progress.currentTask.type == 'downloading'}
-			Downloading {progress.currentModName} ({shortenFileSize(progress.currentTask.content.downloaded)}/{shortenFileSize(progress.currentTask.content.total)})
-		{:else if progress.currentTask.type == 'extracting'}
-			Extracting {progress.currentModName}
-		{:else if progress.currentTask.type == 'installing'}
-			Installing {progress.currentModName}
+		{:else if progress.task.kind == 'downloading'}
+			Downloading {progress.currentName} ({shortenFileSize(progress.task.payload.downloaded)}/{shortenFileSize(progress.task.payload.total)})
+		{:else if progress.task.kind == 'extracting'}
+			Extracting {progress.currentName}
+		{:else if progress.task.kind == 'installing'}
+			Installing {progress.currentName}
 		{/if}
 	</Dialog.Description>
 
 	<Progress.Root
-		value={progress.downloadedBytes}
-		max={progress.totalBytes}
+		value={progress.totalProgress}
+		max={1}
 		class="relative w-full h-4 mt-2 bg-gray-900 rounded-full overflow-hidden"
 	>
 		<div
 			class="absolute top-0 left-0 h-full bg-green-600 rounded-full transition-all"
-			style="width: {(progress.downloadedBytes / progress.totalBytes) * 100}%"
+			style="width: {progress.totalProgress * 100}%"
 		/>
 	</Progress.Root>
 </Popup>

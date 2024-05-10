@@ -61,13 +61,21 @@ jobs:
         with:
           dotnet-version: 7.0.405
 
-      - name: install thunderstore cli
-        if: matrix.platform == 'windows-latest'
-        shell: bash
-        run: dotnet tool install -g tcli
+      - name: clone thunderstore cli (fork)
+        uses: actions/checkout@v4
+        if: matrix.platform == 'windows
+        with:
+          repository: Kesomannen/thunderstore-cli
+          path: tcli
 
-      - name: publish thunderstore package
-        if: matrix.platform == 'windows-latest'
+      - name: build thunderstore cli
+        if: matrix.platform == 'windows'
+        working-directory: tcli/ThunderstoreCLI
+        run: dotnet build --release
+
+      - name: publish to thunderstore
+        if: matrix.platform == 'windows'
+        working-directory: tcli/ThunderstoreCLI
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: tcli publish --package-version ${{ steps.tauri.outputs.appVersion }}
+        run: ./bin/release/net7.0/tcli.exe publish --package-version ${{ steps.tauri.outputs.appVersion }}

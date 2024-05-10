@@ -52,7 +52,7 @@ struct ExportMod<'a> {
 }
 
 impl<'a> ExportMod<'a> {
-    fn into_mod_ref(self, thunderstore: &Thunderstore) -> Result<ModRef> {
+    fn into_mod_ref(self, thunderstore: &Thunderstore) -> Result<(ModRef, bool)> {
         let package = thunderstore.find_package(self.name)?;
         let semver = semver::Version::from(self.version);
         let version = package.get_version_with_num(&semver).with_context(|| {
@@ -62,10 +62,10 @@ impl<'a> ExportMod<'a> {
             )
         })?;
 
-        Ok(ModRef {
+        Ok((ModRef {
             package_uuid: package.uuid4,
             version_uuid: version.uuid4,
-        })
+        }, self.enabled))
     }
 
     fn from_mod_ref(mod_ref: &ModRef, enabled: bool, thunderstore: &'a Thunderstore) -> Result<Self> {
@@ -181,7 +181,7 @@ async fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<()> {
 }
 
 async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
-    let mod_refs = {
+    let to_install = {
         let manager = app.state::<Mutex<ModManager>>();
         let thunderstore = app.state::<Mutex<Thunderstore>>();
         let prefs = app.state::<Mutex<Prefs>>();
@@ -222,7 +222,7 @@ async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
             .context("failed to resolve mod references")?
     };
 
-    downloader::install_mod_refs(&mod_refs, app)
+    downloader::install_mod_refs(&to_install, app)
         .await
         .context("error while importing mods")?;
 
@@ -360,7 +360,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
                 thunderstore
                     .resolve_deps(deps)
                     .filter_ok(|dep| !profile.has_mod(&dep.package.uuid4))
-                    .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
+                    .map_ok(|borrowed_mod| (ModRef::from(borrowed_mod), true))
                     .collect::<Result<Vec<_>>>()
                     .context("failed to resolve dependencies")
             },

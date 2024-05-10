@@ -4,6 +4,8 @@
 
 - Added profile import from file
 - Added profile export to file
+- Added option to disable mods
+- Fixed decimal config sliders only allowing whole number values
 
 ## 0.2.0 (2024-05-08)
 

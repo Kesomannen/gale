@@ -1,11 +1,12 @@
 use std::{
-    collections::HashMap, fs, path::PathBuf, sync::Mutex
+    collections::HashMap, fs, path::{Path, PathBuf}, sync::Mutex
 };
 
 use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
+use walkdir::WalkDir;
 
 use crate::{
     fs_util, games::{self, Game}, prefs::Prefs, thunderstore::{
@@ -113,6 +114,12 @@ impl ProfileMod {
         }
     }
 
+    fn enabled_mut(&mut self) -> &mut bool {
+        match self {
+            ProfileMod::Local { enabled, .. } | ProfileMod::Remote { enabled, .. } => enabled,
+        }
+    }
+
     fn uuid(&self) -> &Uuid {
         match self {
             ProfileMod::Local { data, .. } => &data.uuid,
@@ -134,12 +141,12 @@ impl ProfileMod {
         }
     }
 
-    fn name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
+    fn full_name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
         match self {
             ProfileMod::Local { data, .. } => Ok(&data.name),
             ProfileMod::Remote { mod_ref, .. } => {
                 let package = thunderstore.get_package(&mod_ref.package_uuid)?;
-                Ok(&package.name)
+                Ok(&package.full_name)
             }
         }
     }
@@ -160,12 +167,16 @@ struct Profile {
 }
 
 impl Profile {
-    fn get_mod<'a>(&'a self, uuid: &Uuid) -> Option<&'a ProfileMod> {
-        self.mods.iter().find(|p| p.uuid() == uuid)
+    fn get_mod<'a>(&'a self, uuid: &Uuid) -> Result<&'a ProfileMod> {
+        self.mods.iter().find(|p| p.uuid() == uuid).context("mod not found in profile")
+    }
+
+    fn get_mod_mut<'a>(&'a mut self, uuid: &Uuid) -> Result<&'a mut ProfileMod> {
+        self.mods.iter_mut().find(|p| p.uuid() == uuid).context("mod not found in profile")
     }
 
     fn has_mod(&self, uuid: &Uuid) -> bool {
-        self.get_mod(uuid).is_some()
+        self.get_mod(uuid).is_ok()
     }
 
     fn remote_mods(&self) -> impl Iterator<Item = (&'_ ModRef, bool)> {
@@ -279,7 +290,7 @@ impl Profile {
         uuid: &Uuid,
         thunderstore: &Thunderstore,
     ) -> Result<RemoveModResponse> {
-        let profile_mod = self.get_mod(uuid).context("mod not found in profile")?;
+        let profile_mod = self.get_mod(uuid)?;
 
         if let Some((mod_ref, _)) = profile_mod.as_remote() {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
@@ -310,24 +321,67 @@ impl Profile {
             .position(|m| m.uuid() == uuid)
             .context("mod not found in profile")?;
 
-        let name = self.mods[index].name(thunderstore)?;
+        self.scan_mod(&self.mods[index], thunderstore, |dir| {
+            fs::remove_dir_all(dir).fs_context("removing mod directory", dir)
+        })?;
 
+        self.mods.remove(index);
+
+        Ok(())
+    }
+
+    fn toggle_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
+        let profile_mod = self.get_mod(uuid)?;
+        let state = profile_mod.enabled();
+        let new_state = !state;
+
+        self.scan_mod(profile_mod, thunderstore, |dir| {
+            let files = WalkDir::new(dir)
+                .into_iter()
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_type().is_file());
+            
+            for file in files {
+                let path = file.path();
+                if new_state {
+                    // remove ".old" extension
+                    if let Some(ext) = path.extension() {
+                        if ext == "old" {
+                            fs::rename(path, path.with_extension(""))?;
+                        }
+                    }
+                } else {
+                    let mut new = path.to_path_buf();
+                    fs_util::add_extension(&mut new, "old");
+                    fs::rename(path, &new)?;
+                }
+            }
+
+            Ok(())
+        })?;
+
+        *self.get_mod_mut(uuid).unwrap().enabled_mut() = new_state;
+
+        Ok(())
+    }
+
+    fn scan_mod<'a, F>(&'a self, profile_mod: &'a ProfileMod, thunderstore: &'a Thunderstore, scan_dir: F) -> Result<()>
+    where F: Fn(&Path) -> Result<()> 
+    {
+        let name = profile_mod.full_name(thunderstore)?;
         let mut path = self.path.join("BepInEx");
-        for dir in ["core", "patchers", "plugins"].iter() {
+
+        for dir in ["core", "patchers", "plugins"].into_iter() {
             path.push(dir);
             path.push(name);
 
-            if path.try_exists().unwrap_or(false) {
-                fs::remove_dir_all(&path).with_context(|| {
-                    format!("failed to remove mod directory at {}", path.display())
-                })?;
+            if path.exists() {
+                scan_dir(&path)?;
             }
 
             path.pop();
             path.pop();
         }
-
-        self.mods.remove(index);
 
         Ok(())
     }

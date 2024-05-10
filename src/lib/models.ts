@@ -134,26 +134,22 @@ export type RemoveModResponse =
 	| { type: "hasDependants", content: Dependant[] };
 
 export type InstallTask = 
-	| { type: "installing", content?: undefined }
-	| { type: "extracting", content?: undefined }
-	| { type: "downloading", content: {
+	| { kind: "done", payload?: undefined }
+	| { kind: "error", payload?: undefined }
+	| { kind: "installing", payload?: undefined }
+	| { kind: "extracting", payload?: undefined }
+	| { kind: "downloading", payload: {
 		total: number;
 		downloaded: number;
 	} };
 
 export interface InstallProgress {
+	totalProgress: number;
 	installedMods: number;
 	totalMods: number;
-	downloadedBytes: number;
-	totalBytes: number;
-	currentModName: string;
-	currentTask: InstallTask;
+	currentName: string;
+	task: InstallTask;
 }
-
-export type InstallProgressPayload = 
-	| { type: "inProgress", content: InstallProgress }
-	| { type: "done", content?: undefined }
-	| { type: "error", content?: undefined };
 
 export interface ModpackArgs {
 	name: string;

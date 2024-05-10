@@ -1,5 +1,5 @@
 use std::{
-    default, fs, io::Cursor, iter, path::{Path, PathBuf}, sync::Mutex
+    fs, io::Cursor, iter, path::{Path, PathBuf}, sync::Mutex, time::Instant
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
@@ -24,9 +24,16 @@ use uuid::Uuid;
 pub mod commands;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
+    app.manage(Mutex::new(InstallState::default()));
+
     tauri_plugin_deep_link::register("ror2mm", deep_link_handler(app.clone()))?;
 
     Ok(())
+}
+
+#[derive(Default)]
+struct InstallState {
+    cancelled: bool,
 }
 
 fn missing_deps<'a>(
@@ -65,11 +72,11 @@ fn cache_path(borrowed_mod: &BorrowedMod<'_>, prefs: &Prefs) -> Result<PathBuf> 
 }
 
 fn try_cache_install(
-    borrowed_mod: &BorrowedMod<'_>,
+    borrowed_mod: BorrowedMod<'_>,
     profile: &mut Profile,
     path: &Path,
 ) -> Result<bool> {
-    match path.try_exists().fs_context("check cache", path)? {
+    match path.try_exists().fs_context("checking cache", path)? {
         true => {
             let name = &borrowed_mod.package.full_name;
             install_from_disk(path, &profile.path, name)?;
@@ -80,208 +87,240 @@ fn try_cache_install(
     }
 }
 
-struct Downloader<'a> {
-    to_install: Vec<(ModRef, bool)>,
-    progress: InstallProgress<'a>,
-    
-    app: &'a AppHandle,
-    client: &'a reqwest::Client,
-    manager: StateMutex<'a, ModManager>,
-    thunderstore: StateMutex<'a, Thunderstore>,
-    prefs: StateMutex<'a, Prefs>,
+#[typeshare]
+#[derive(Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+struct InstallProgress<'a> {
+    total_progress: f32,
+    installed_mods: usize,
+    total_mods: usize,
+    current_name: &'a str,
+    task: InstallTask,
 }
 
-impl<'a> Downloader<'a> {
-    fn new(to_install: Vec<(ModRef, bool)>, app: &'a AppHandle) -> Result<Self> {
-        let client = app.state::<NetworkClient>();
-        let client = &client.0;
-        
+#[typeshare]
+#[derive(Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase", tag = "kind", content = "payload")]
+enum InstallTask {
+    Done,
+    Error,
+    Downloading {
+        total: u64,
+        downloaded: u64,  
+    },
+    Extracting,
+    Installing,
+}
+
+struct Installer<'a> {
+    to_install: &'a [(ModRef, bool)],
+    index: usize,
+    current_name: String,
+
+    total_bytes: u64,
+    completed_bytes: u64,
+
+    app: &'a AppHandle,
+    client: &'a reqwest::Client,
+
+    thunderstore: StateMutex<'a, Thunderstore>,
+    manager: StateMutex<'a, ModManager>,
+    prefs: StateMutex<'a, Prefs>,
+    install_state: StateMutex<'a, InstallState>,
+}
+
+enum InstallMethod {
+    Cached,
+    Download {
+        url: String,
+        size: u64,
+    }
+}
+
+impl<'a> Installer<'a> {
+    fn create(to_install: &'a [(ModRef, bool)], client: &'a reqwest::Client, app: &'a AppHandle) -> Result<Self> {
         let manager = app.state::<Mutex<ModManager>>();
         let thunderstore = app.state::<Mutex<Thunderstore>>();
         let prefs = app.state::<Mutex<Prefs>>();
-        
+        let install_state = app.state::<Mutex<InstallState>>();
+
         let mut total_bytes = 0u64;
-        let ts_lock = thunderstore.lock().unwrap();
-
-        for (mod_ref, _) in &to_install {
-            let borrowed_mod = mod_ref.borrow(&ts_lock)?;
-            total_bytes += borrowed_mod.version.file_size;
+        
+        {
+            let ts_lock = thunderstore.lock().unwrap();
+    
+            for (mod_ref, _) in to_install {
+                let borrowed_mod = mod_ref.borrow(&ts_lock)?;
+                total_bytes += borrowed_mod.version.file_size;
+            }
         }
-
-        let progress = InstallProgress {
-            total_bytes,
-            total_mods: to_install.len(),
-            ..Default::default()
-        };
 
         Ok(Self {
             to_install,
-            progress,
+            index: 0,
             app,
             client,
+            total_bytes,
+            completed_bytes: 0,
+            current_name: String::new(),
             manager,
             thunderstore,
             prefs,
+            install_state,
         })
     }
 
-    fn emit(&self, payload: &InstallProgressPayload<'a>) {
-        let _ = self.app.emit_all("install_progress", payload);
+    fn is_cancelled(&self) -> bool {
+        self.install_state.lock().unwrap().cancelled
     }
 
-    fn progress(&mut self, update_progress: impl FnOnce(&mut InstallProgress)) {
-        update_progress(&mut self.progress);
-        self.emit(&InstallProgressPayload::InProgress(&self.progress));
+    fn update(&self, task: InstallTask) {
+        let total_progress = self.completed_bytes as f32 / self.total_bytes as f32;
+
+        self.app.emit_all("install_progress", InstallProgress {
+            task,
+            total_progress,
+            installed_mods: self.index,
+            total_mods: self.to_install.len(),
+            current_name: &self.current_name,
+        }).ok();
     }
 
-    fn get_info(&self, mod_ref: &ModRef) -> Result<(String, String, u64)> {
+    fn prepare_install(&mut self, mod_ref: &ModRef, enabled: bool) -> Result<InstallMethod> {
+        let mut manager = self.manager.lock().unwrap();
         let thunderstore = self.thunderstore.lock().unwrap();
-        let (pkg, ver) = mod_ref.borrow(&thunderstore)?.into();
+        let prefs = self.prefs.lock().unwrap();
 
-        Ok((
-            pkg.full_name.clone(),
-            ver.download_url,
-            ver.file_size,
-        ))
+        let borrowed = mod_ref.borrow(&thunderstore)?;
+        let profile = manager.active_profile_mut();
+        let path = cache_path(&borrowed, &prefs)?;
+
+        self.current_name = borrowed.package.name.clone();
+        self.update(InstallTask::Installing);
+
+        if try_cache_install(borrowed.clone(), profile, &path)? {
+            if !enabled {
+                profile.toggle_mod(&mod_ref.package_uuid, &thunderstore)
+                    .context("failed to disable installed mod")?;
+            }
+
+            self.completed_bytes += borrowed.version.file_size;
+            save(&manager, &prefs)?;
+            return Ok(InstallMethod::Cached);
+        }
+
+        Ok(InstallMethod::Download {
+            url: borrowed.version.download_url.clone(),
+            size: borrowed.version.file_size,
+        })
+    }
+
+    async fn download(&mut self, url: &str, file_size: u64) -> Result<Vec<u8>> {
+        self.update(InstallTask::Downloading {
+            total: file_size,
+            downloaded: 0,
+        });
+
+        let mut stream = self
+            .client
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .bytes_stream();
+
+        let mut last_update = Instant::now();
+        let mut response = Vec::new();
+        
+        while let Some(item) = stream.next().await {
+            let item = item?;
+            self.completed_bytes += item.len() as u64;
+            response.extend_from_slice(&item);
+        
+            if last_update.elapsed().as_secs_f32() >= 0.2 {
+                self.update(InstallTask::Downloading {
+                    total: file_size,
+                    downloaded: response.len() as u64,
+                });
+
+                last_update = Instant::now();
+
+                if self.is_cancelled() {
+                    return Err(anyhow!("cancelled"));
+                }
+            };
+        }
+
+        Ok(response)
+    }
+
+    fn install_from_download(&mut self, data: Vec<u8>, mod_ref: &ModRef, enabled: bool) -> Result<()> {
+        let mut manager = self.manager.lock().unwrap();
+        let thunderstore = self.thunderstore.lock().unwrap();
+        let prefs = self.prefs.lock().unwrap();
+    
+        let borrowed_mod = mod_ref.borrow(&thunderstore)?;
+        let mut path = cache_path(&borrowed_mod, &prefs)?;
+    
+        fs::create_dir_all(&path).fs_context("create mod cache dir", &path)?;
+    
+        self.update(InstallTask::Extracting);
+
+        zip_extract::extract(Cursor::new(data), &path, true).fs_context("extracting mod", &path)?;
+        normalize_mod_structure(&mut path)?;
+    
+        self.update(InstallTask::Installing);
+    
+        let profile = manager.active_profile_mut();
+    
+        let result = try_cache_install(borrowed_mod, profile, &path)
+            .context("failed to install after download")?;
+    
+        ensure!(result, "mod not found in cache after download"); // it should have been installed
+    
+        if !enabled {
+            todo!();
+        }
+
+        save(&manager, &prefs)?;
+    
+        Ok(())
+    }
+
+    async fn install(&mut self, next: ModRef, enabled: bool) -> Result<()> {
+        if let InstallMethod::Download { url, size } = self.prepare_install(&next, enabled)? {
+            // this means we didn't install from cache
+            let response = self.download(&url, size).await?;
+            self.install_from_download(response, &next, enabled)?;
+        }
+
+        Ok(())
     }
 
     async fn install_all(&mut self) -> Result<()> {
-        while let Some((next, enabled)) = self.to_install.pop() {
-            let (name, url, size) = self.get_info(&next)?;
+        self.install_state.lock().unwrap().cancelled = false;
 
-            self.progress(|progress| {
-                progress.current_mod_name = &name;
-                progress.current_task = InstallTask::Installing;
-            })
-        }
+        for i in 0..self.to_install.len() {
+            self.index = i;
+            let (mod_ref, enabled) = &self.to_install[i];
 
-        for (i, mod_ref) in self.to.iter().enumerate() {
-            let info = &mod_info[i];
-            let mut progress = InstallProgress {
-                installed_mods: i,
-                total_mods,
-                downloaded_bytes,
-                total_bytes,
-                current_mod_name: &info.0,
-                current_task: InstallTask::Installing,
-            };
-    
-            update(app, InstallProgressPayload::InProgress(&progress));
-    
-            let result = install_mod(
-                mod_ref,
-                |task, diff| {
-                    downloaded_bytes += diff;
-                    progress.downloaded_bytes = downloaded_bytes;
-    
-                    progress.current_task = task;
-                    update(app, InstallProgressPayload::InProgress(&progress));
-                },
-                client,
-                manager.clone(),
-                thunderstore.clone(),
-                prefs.clone(),
-            )
-            .await;
-    
-            if let Err(err) = result {
-                update(app, InstallProgressPayload::Error);
-                let err = err.context(format!("failed to install mod {}", info.0));
-                return Err(err);
+            if let Err(err) = self.install(mod_ref.clone(), *enabled).await {
+                self.update(InstallTask::Error);
+                
+                let thunderstore = self.app.state::<Mutex<Thunderstore>>();
+                let thunderstore = thunderstore.lock().unwrap();
+
+                let borrowed = mod_ref.borrow(&thunderstore)?;
+                let name = borrowed.package.full_name.clone();
+
+                return Err(err.context(format!("failed to install mod {}", name)));
             }
         }
-    
-        update(app, InstallProgressPayload::Done);
-    
-        return Ok(());
+
+        self.update(InstallTask::Done);
+
+        Ok(())
     }
-}
-
-async fn install_mod(
-    mod_ref: &ModRef,
-    mut on_task_update: impl FnMut(InstallTask, u64),
-    client: &reqwest::Client,
-    manager: StateMutex<'_, ModManager>,
-    thunderstore: StateMutex<'_, Thunderstore>,
-    prefs: StateMutex<'_, Prefs>,
-) -> Result<()> {
-    let (url, total) = {
-        let mut manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
-        let prefs = prefs.lock().unwrap();
-
-        let borrowed_mod = mod_ref.borrow(&thunderstore)?;
-        let profile = manager.active_profile_mut();
-        let cache_path = cache_path(&borrowed_mod, &prefs)?;
-
-        let was_cached = try_cache_install(&borrowed_mod, profile, &cache_path)
-            .context("failed to install from cache")?;
-
-        if was_cached {
-            let diff = borrowed_mod.version.file_size;
-            on_task_update(InstallTask::Installing, diff);
-
-            save(&manager, &prefs)?;
-            return Ok(());
-        }
-
-        (
-            borrowed_mod.version.download_url.clone(),
-            borrowed_mod.version.file_size,
-        )
-    }; // we can't carry the locks across await points
-
-    let mut stream = client
-        .get(&url)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes_stream();
-
-    let mut i = 0;
-    let mut prev_update = 0;
-    let mut response = Vec::new();
-
-    while let Some(item) = stream.next().await {
-        let item = item?;
-        response.extend_from_slice(&item);
-
-        if i % 50 == 0 {
-            let downloaded = response.len() as u64;
-            let diff = downloaded - prev_update;
-            prev_update = downloaded;
-
-            on_task_update(InstallTask::Downloading { downloaded, total }, diff);
-        }
-
-        i += 1;
-    }
-
-    let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
-
-    let borrowed_mod = mod_ref.borrow(&thunderstore)?;
-    let mut path = cache_path(&borrowed_mod, &prefs)?;
-
-    fs::create_dir_all(&path).fs_context("create mod cache dir", &path)?;
-
-    on_task_update(InstallTask::Extracting, 0);
-    zip_extract::extract(Cursor::new(response), &path, true).fs_context("extracting mod", &path)?;
-    normalize_mod_structure(&mut path)?;
-
-    on_task_update(InstallTask::Installing, 0);
-
-    let profile = manager.active_profile_mut();
-
-    let result = try_cache_install(&borrowed_mod, profile, &path)
-        .context("failed to install from cache after download")?;
-
-    ensure!(result, "mod not found in cache after download");
-
-    save(&manager, &prefs)?;
-
-    Ok(())
 }
 
 pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
@@ -294,95 +333,15 @@ pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
     Ok(())
 }
 
-#[typeshare]
-#[derive(Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase", tag = "type", content = "content")]
-enum InstallProgressPayload<'a> {
-    #[serde(rename_all = "camelCase")]
-    InProgress(&'a InstallProgress<'a>),
-    Done,
-    Error,
-}
-
-#[typeshare]
-#[derive(Serialize, Debug, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-struct InstallProgress<'a> {
-    installed_mods: usize,
-    total_mods: usize,
-
-    downloaded_bytes: u64,
-    total_bytes: u64,
-
-    current_mod_name: &'a str,
-    current_task: InstallTask,
-}
-
-#[typeshare]
-#[derive(Serialize, Debug, Clone, Default)]
-#[serde(rename_all = "camelCase", tag = "type", content = "content")]
-enum InstallTask {
-    #[default]
-    Installing,
-    Extracting,
-    Downloading { total: u64, downloaded: u64 },
-}
-
-pub async fn install_mod_refs(mod_refs: &[ModRef], app: &tauri::AppHandle) -> Result<()> {
-
-
-    let total_mods = mod_info.len();
-    let total_bytes = mod_info.iter().map(|(_, size)| size).sum();
-    let mut downloaded_bytes = 0;
-
-    for (i, mod_ref) in mod_refs.iter().enumerate() {
-        let info = &mod_info[i];
-        let mut progress = InstallProgress {
-            installed_mods: i,
-            total_mods,
-            downloaded_bytes,
-            total_bytes,
-            current_mod_name: &info.0,
-            current_task: InstallTask::Installing,
-        };
-
-        update(app, InstallProgressPayload::InProgress(&progress));
-
-        let result = install_mod(
-            mod_ref,
-            |task, diff| {
-                downloaded_bytes += diff;
-                progress.downloaded_bytes = downloaded_bytes;
-
-                progress.current_task = task;
-                update(app, InstallProgressPayload::InProgress(&progress));
-            },
-            client,
-            manager.clone(),
-            thunderstore.clone(),
-            prefs.clone(),
-        )
-        .await;
-
-        if let Err(err) = result {
-            update(app, InstallProgressPayload::Error);
-            let err = err.context(format!("failed to install mod {}", info.0));
-            return Err(err);
-        }
-    }
-
-    update(app, InstallProgressPayload::Done);
-
-    return Ok(());
-
-    fn update(app: &AppHandle, payload: InstallProgressPayload) {
-        let _ = app.emit_all("install_progress", payload);
-    }
+pub async fn install_mod_refs(mod_refs: &[(ModRef, bool)], app: &tauri::AppHandle) -> Result<()> {
+    let client = app.state::<NetworkClient>();
+    let mut downloader = Installer::create(mod_refs, &client.0, app)?;
+    downloader.install_all().await
 }
 
 pub async fn install_mods<F>(get_mods: F, app: &tauri::AppHandle) -> Result<()>
 where
-    F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<ModRef>>,
+    F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<(ModRef, bool)>>,
 {
     let to_install = {
         let manager = app.state::<Mutex<ModManager>>();
@@ -403,7 +362,7 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
 
             missing_deps(borrowed_mod, manager.active_profile(), thunderstore)
-                .map_ok(|borrowed_mod| ModRef::from(&borrowed_mod))
+                .map_ok(|borrowed_mod| (ModRef::from(borrowed_mod), true))
                 .collect::<Result<Vec<_>>>()
         },
         app,
@@ -424,10 +383,11 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
             .map(|uuid| {
                 let installed = &manager
                     .active_profile()
-                    .get_mod(uuid)
-                    .ok_or(anyhow!("mod with id {} not found in profile", uuid))?
+                    .get_mod(uuid)?
                     .as_remote()
-                    .ok_or(anyhow!("cannot update local mod"))?
+                    .ok_or(anyhow!("cannot update local mod"))?;
+
+                let installed_vers = &installed
                     .0
                     .borrow(&thunderstore)?
                     .version
@@ -439,17 +399,19 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
                     .first()
                     .expect("package should have at least one version");
         
-                if installed >= &latest.version_number {
+                if installed_vers >= &latest.version_number {
                     return Ok(None);
                 }
+
+                let enabled = installed.1; // borrow checker :(
         
                 manager.active_profile_mut()
                     .force_remove_mod(uuid, &thunderstore)?;
         
-                Ok(Some(ModRef {
+                Ok(Some((ModRef {
                     package_uuid: *uuid,
                     version_uuid: latest.uuid4,
-                }))
+                }, enabled)))
             })
             .filter_map_ok(|x| x) // get rid of Ok(None)s
             .collect::<Result<Vec<_>>>()?
@@ -544,7 +506,7 @@ fn resolve_deep_link(url: String, thunderstore: &Thunderstore) -> Result<ModRef>
 
     let borrowed_mod = thunderstore.find_mod(id, '/')?;
 
-    Ok((&borrowed_mod).into())
+    Ok(borrowed_mod.into())
 }
 
 pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {

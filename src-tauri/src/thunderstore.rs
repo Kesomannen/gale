@@ -76,8 +76,8 @@ pub struct ModRef {
     pub version_uuid: Uuid,
 }
 
-impl From<&BorrowedMod<'_>> for ModRef {
-    fn from(borrowed_mod: &BorrowedMod<'_>) -> Self {
+impl From<BorrowedMod<'_>> for ModRef {
+    fn from(borrowed_mod: BorrowedMod<'_>) -> Self {
         Self {
             package_uuid: borrowed_mod.package.uuid4,
             version_uuid: borrowed_mod.version.uuid4,

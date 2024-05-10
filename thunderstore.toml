@@ -4,11 +4,8 @@ repository = "https://thunderstore.io"
 [package]
 name = "GaleModManager"
 namespace = "Kesomannen"
-description = "A modern and lightweight mod manager for many games on Thunderstore. Read install instructions in README.md!"
+description = "A modern and lightweight mod manager for many games on Thunderstore. Read install instructions in the README!"
 websiteUrl = "https://github.com/Kesomannen/gale"
-
-[package.dependencies]
-BepInEx-BepInExPack = "5.4.2100"
 
 [build]
 icon = "app-icon@0,25x.png"
@@ -22,7 +19,7 @@ source = "LICENSE.md"
 target = "LICENSE.md"
 
 [[build.copy]]
-source = "src-tauri\\target\\release\\bundle\\nsis"
+pattern = "src-tauri/target/release/bundle/nsis/*.exe"
 target = ""
 
 [publish]
