@@ -18,7 +18,7 @@
 	<img src={mod.icon ?? FALLBACK_ICON} alt="Mod icon" class="w-12 h-12 rounded-md group-hover:shadow-xl" />
 	<div class="pl-4 overflow-hidden flex-grow">
 		<div class="flex items-center">
-			<div class="text-slate-100 group-hover:text-white font-medium">
+			<div class="text-slate-100 group-hover:text-white font-medium {mod.enabled ?? true ? '' : 'line-through'}">
 				{mod.name}
 			</div>
 			<div class="text-slate-500 group-hover:text-slate-400 font-light pl-2">
@@ -28,14 +28,18 @@
 				<Icon class="ml-2 text-slate-500" icon="mdi:pin" />
 			{/if}
 			{#if mod.isDeprecated}
-				<Icon class="ml-2 text-red-500 text-lg" icon="mdi:error" />
+				<Icon class="ml-2 text-red-500" icon="mdi:error" />
 			{/if}
 			{#if isOutdated(mod)}
-				<Icon class="ml-2 text-blue-500 text-lg" icon="mdi:arrow-up-circle" />
+				<Icon class="ml-2 text-blue-500" icon="mdi:arrow-up-circle" />
 			{/if}
 		</div>
 		<div class="text-slate-300 group-hover:text-slate-200 truncate text-left">
 			{mod.description ?? ""}
 		</div>
+	</div>
+
+	<div class="h-12 w-12 hidden group-hover:block">
+		<slot />
 	</div>
 </Button.Root>

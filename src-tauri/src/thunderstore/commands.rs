@@ -1,7 +1,7 @@
 use crate::command_util::StateMutex;
 
 use super::{
-    models::FrontendMod, query::{QueryModsArgs, QueryState}, Thunderstore
+    models::FrontendMod, query::{self, QueryModsArgs, QueryState}, Thunderstore
 };
 
 #[tauri::command]
@@ -14,7 +14,7 @@ pub fn query_all_mods(
 
     match thunderstore.finished_loading {
         true => {
-            Some(super::query::query_mods(&args, thunderstore.queryable()))
+            Some(query::query_frontend_mods(&args, thunderstore.latest()))
         },
         false => {
             let mut query_state = query_state.lock().unwrap();

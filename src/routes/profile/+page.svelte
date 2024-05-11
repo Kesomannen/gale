@@ -6,7 +6,7 @@
 	import { currentGame, currentProfile } from '$lib/profile';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button, Dialog } from 'bits-ui';
+	import { Button, Dialog, Switch } from 'bits-ui';
 
 	let mods: Mod[];
 	let activeMod: Mod | undefined;
@@ -49,9 +49,7 @@
 		removeDependantsPopupOpen = true;
 	}
 
-	function forceRemoveDependants() {
-		let packageUuids = dependants.map((d) => d.uuid).concat(activeMod!.uuid);
-
+	function forceRemove(packageUuids: string[]) {
 		invokeCommand('force_remove_mods', { packageUuids }).then(() => {
 			activeMod = undefined;
 			dependants = [];
@@ -103,13 +101,22 @@
 			</div>
 		{/if}
 	</div>
+	<div slot="item" let:mod>
+		<Switch.Root
+			checked={mod.enabled ?? true}
+			onCheckedChange={_ => invokeCommand('toggle_mod', { uuid: mod.uuid }).then(refresh)}
+			class="rounded-full bg-gray-900 w-12 h-6"
+		>
+			<Switch.Thumb class="h-full bg-gray-200" />
+		</Switch.Root>
+	</div>
 </ModList>
 
 {#if activeMod}
 	<Popup title="Confirm removal" bind:open={removeDependantsPopupOpen}>
 		<Dialog.Description class="text-slate-300">
 			The following mods depend on {activeMod.name} and
-			<strong>will be also be removed if you proceed:</strong>
+			<strong>will not work if {activeMod.name} is removed!</strong>
 			<ul class="mt-1">
 				{#each dependants as dependant}
 					<li>- {dependant.name}</li>
@@ -125,10 +132,18 @@
 			</Dialog.Close>
 			<Dialog.Close>
 				<Button.Root
-					class="rounded-xl px-4 py-2 text-gray-200 bg-red-600 hover:bg-red-500"
-					on:click={forceRemoveDependants}
+					class="rounded-xl px-4 py-2 text-gray-200 bg-blue-600 hover:bg-blue-500"
+					on:click={() => forceRemove(dependants.map(dep => dep.uuid))}
 				>
-					Proceed
+					Remove all (recommended)
+				</Button.Root>
+			</Dialog.Close>
+			<Dialog.Close>
+				<Button.Root
+					class="rounded-xl px-4 py-2 text-gray-300 bg-red-600 hover:bg-red-500"
+					on:click={() => forceRemove([activeMod.uuid])}
+				>
+					Remove {activeMod.name} only
 				</Button.Root>
 			</Dialog.Close>
 		</div>

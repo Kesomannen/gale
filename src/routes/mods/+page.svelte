@@ -103,4 +103,14 @@
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</div>
+	<Button.Root slot="item" class="w-full h-full text-center rounded-lg bg-green-600" let:mod on:click={evt => {
+		evt.stopPropagation();
+
+		invokeCommand('install_mod', { 
+			modRef: mod.uuid,
+			versionUuid: mod.versions[0].uuid
+		})
+	}}>
+		<Icon icon="mdi:download" class="text-xl text-slate-100" />
+	</Button.Root>
 </ModList>

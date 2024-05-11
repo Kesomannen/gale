@@ -13,10 +13,7 @@ use crate::{
     games::Game, manager::ModManager, util, NetworkClient
 };
 
-use self::{
-    models::{PackageListing, PackageVersion},
-    query::Queryable,
-};
+use self::models::{PackageListing, PackageVersion};
 
 pub mod commands;
 pub mod models;
@@ -121,12 +118,12 @@ impl Thunderstore {
         self.load_mods_handle = Some(load_mods_handle);
     }
 
-    pub fn queryable(&self) -> impl Iterator<Item = Queryable<'_>> {
+    pub fn latest<'a>(&'a self) -> impl Iterator<Item = BorrowedMod<'a>> {
         self.packages.values().map(move |package| {
-            Queryable::Online(BorrowedMod {
+            BorrowedMod {
                 package,
                 version: &package.versions[0],
-            })
+            }
         })
     }
 

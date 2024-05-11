@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
     command_util::{Result, StateMutex}, games::{self, Game, GAMES}, prefs::Prefs, thunderstore::{
-        models::FrontendMod, query::QueryModsArgs, Thunderstore
+        models::FrontendProfileMod, query::QueryModsArgs, Thunderstore
     }
 };
 
@@ -15,7 +15,7 @@ use super::{ModManager, RemoveModResponse};
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameInfo {
-    all: &'static[Game],
+    all: &'static [Game],
     active: &'static Game,
     favorites: Vec<&'static str>,
 }
@@ -124,7 +124,7 @@ pub fn query_mods_in_profile(
     args: QueryModsArgs,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
-) -> Result<Vec<FrontendMod>> {
+) -> Result<Vec<FrontendProfileMod>> {
     let manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 

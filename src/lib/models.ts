@@ -88,6 +88,7 @@ export interface Mod {
 		uuid: string
 	}[];
 	type: 'local' | 'remote';
+	enabled: boolean;
 }
 
 export enum SortBy {
@@ -103,6 +104,7 @@ export interface QueryModsArgs {
 	categories: string[];
 	includeNsfw: boolean;
 	includeDeprecated: boolean;
+	includeDisabled: boolean;
 	sortBy: SortBy;
 	descending: boolean;
 }

@@ -144,3 +144,11 @@ pub struct FrontendVersion {
     pub name: semver::Version,
     pub uuid: Uuid,
 }
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendProfileMod {
+    pub enabled: bool,
+    #[serde(flatten)]
+    pub data: FrontendMod,
+}

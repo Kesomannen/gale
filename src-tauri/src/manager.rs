@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap, fs, path::{Path, PathBuf}, sync::Mutex
+    cmp::Ordering, collections::HashMap, fs, path::{Path, PathBuf}, sync::Mutex
 };
 
 use anyhow::{ensure, Context, Result};
@@ -10,7 +10,7 @@ use walkdir::WalkDir;
 
 use crate::{
     fs_util, games::{self, Game}, prefs::Prefs, thunderstore::{
-        models::FrontendMod,
+        models::FrontendProfileMod,
         query::{self, QueryModsArgs, Queryable},
         BorrowedMod, ModRef, Thunderstore,
     }, util::IoResultExt
@@ -79,72 +79,96 @@ pub struct LocalMod {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct ProfileMod {
+    enabled: bool,
+    #[serde(flatten)]
+    kind: ProfileModKind,
+}
+
+impl ProfileMod {
+    fn new(kind: ProfileModKind) -> Self {
+        Self { kind, enabled: true }
+    }
+
+    fn local(data: LocalMod) -> Self {
+        Self::new(ProfileModKind::Local(Box::new(data)))
+    }
+
+    fn remote(mod_ref: ModRef) -> Self {
+        Self::new(ProfileModKind::Remote(mod_ref))
+    }
+
+    fn uuid(&self) -> &Uuid {
+        self.kind.uuid()
+    }
+
+    fn as_remote(&self) -> Option<(&ModRef, bool)> {
+        self.kind.as_remote().map(|remote| (remote, self.enabled))
+    }
+
+    fn as_local(&self) -> Option<(&LocalMod, bool)> {
+        self.kind.as_local().map(|local| (local, self.enabled))
+    }
+
+    fn full_name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
+        self.kind.full_name(thunderstore)
+    }
+
+    fn queryable<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<QueryableProfileMod<'a>> {
+        let kind = match &self.kind {
+            ProfileModKind::Local(local) => QueryableProfileModKind::Local(local),
+            ProfileModKind::Remote(mod_ref) => {
+                let borrow = mod_ref.borrow(thunderstore)?;
+                QueryableProfileModKind::Remote(borrow)
+            }
+        };
+
+        Ok(QueryableProfileMod {
+            kind,
+            enabled: self.enabled,
+        })
+    }
+}
+
+#[typeshare]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
-enum ProfileMod {
-    Local {
-        #[serde(default="default_true")]
-        enabled: bool,
-        #[serde(flatten)]
-        data: Box<LocalMod>,
-    },
-    Remote {
-        #[serde(default="default_true")]
-        enabled: bool,
-        #[serde(flatten)]
-        mod_ref: ModRef,
-    },
+enum ProfileModKind {
+    Local(Box<LocalMod>),
+    Remote(ModRef),
 }
 
 fn default_true() -> bool {
     true
 }
 
-impl ProfileMod {
-    fn local(data: LocalMod) -> Self {
-        ProfileMod::Local { enabled: true, data: Box::new(data) }
-    }
-
-    fn remote(mod_ref: ModRef) -> Self {
-        ProfileMod::Remote { enabled: true, mod_ref }
-    }
-
-    fn enabled(&self) -> bool {
-        match self {
-            ProfileMod::Local { enabled, .. } | ProfileMod::Remote { enabled, .. } => *enabled,
-        }
-    }
-
-    fn enabled_mut(&mut self) -> &mut bool {
-        match self {
-            ProfileMod::Local { enabled, .. } | ProfileMod::Remote { enabled, .. } => enabled,
-        }
-    }
-
+impl ProfileModKind {
     fn uuid(&self) -> &Uuid {
         match self {
-            ProfileMod::Local { data, .. } => &data.uuid,
-            ProfileMod::Remote { mod_ref, ..} => &mod_ref.package_uuid,
+            ProfileModKind::Local(local_mod) => &local_mod.uuid,
+            ProfileModKind::Remote(mod_ref) => &mod_ref.package_uuid,
         }
     }
 
-    fn as_remote(&self) -> Option<(&ModRef, bool)> {
+    fn as_remote(&self) -> Option<&ModRef> {
         match self {
-            ProfileMod::Remote { mod_ref, enabled } => Some((mod_ref, *enabled)),
+            ProfileModKind::Remote(mod_ref) => Some(mod_ref),
             _ => None,
         }
     }
 
-    fn as_local(&self) -> Option<(&LocalMod, bool)> {
+    fn as_local(&self) -> Option<&LocalMod> {
         match self {
-            ProfileMod::Local { data, enabled } => Some((data, *enabled)),
+            ProfileModKind::Local(local) => Some(local),
             _ => None,
         }
     }
 
     fn full_name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
         match self {
-            ProfileMod::Local { data, .. } => Ok(&data.name),
-            ProfileMod::Remote { mod_ref, .. } => {
+            ProfileModKind::Local(local) => Ok(&local.name),
+            ProfileModKind::Remote(mod_ref) => {
                 let package = thunderstore.get_package(&mod_ref.package_uuid)?;
                 Ok(&package.full_name)
             }
@@ -152,10 +176,66 @@ impl ProfileMod {
     }
 }
 
+struct QueryableProfileMod<'a> {
+    enabled: bool,
+    kind: QueryableProfileModKind<'a>,
+}
+
+impl<'a> Queryable for QueryableProfileMod<'a> {
+    fn full_name(&self) -> &str {
+        use QueryableProfileModKind as Kind;
+
+        match &self.kind {
+            Kind::Local(local) => &local.name,
+            Kind::Remote(remote) => &remote.package.full_name,
+        }
+    }
+
+    fn matches(&self, args: &QueryModsArgs) -> bool {
+        use QueryableProfileModKind as Kind;
+
+        if !args.include_disabled && !self.enabled {
+            return false;
+        }
+
+        match &self.kind {
+            Kind::Local(local) => local.matches(args),
+            Kind::Remote(remote) => remote.matches(args),
+        }
+    }
+
+    fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
+        use QueryableProfileModKind as Kind;
+
+        match (&self.kind, &other.kind) {
+            (Kind::Remote(a), Kind::Remote(b)) => a.cmp(b, args),
+            (Kind::Local(a), Kind::Local(b)) => a.cmp(b, args),
+            (Kind::Local(_), _) => Ordering::Greater,
+            (_, Kind::Local(_)) => Ordering::Less,
+        }
+    }
+}
+
+impl From<QueryableProfileMod<'_>> for FrontendProfileMod {
+    fn from(value: QueryableProfileMod<'_>) -> Self {
+        let data = match value.kind {
+            QueryableProfileModKind::Local(local) => local.clone().into(),
+            QueryableProfileModKind::Remote(remote) => remote.into(),
+        };
+
+        FrontendProfileMod { data, enabled: value.enabled }
+    }
+}
+
+enum QueryableProfileModKind<'a> {
+    Local(&'a LocalMod),
+    Remote(BorrowedMod<'a>),
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProfileManifest {
-    name: String,
+pub struct ProfileManifest<'a> {
+    name: &'a str,
     mods: Vec<ProfileMod>,
 }
 
@@ -179,17 +259,17 @@ impl Profile {
         self.get_mod(uuid).is_ok()
     }
 
-    fn remote_mods(&self) -> impl Iterator<Item = (&'_ ModRef, bool)> {
+    fn remote_mods(&self) -> impl Iterator<Item = (&ModRef, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_remote)
     }
 
-    fn local_mods(&self) -> impl Iterator<Item = (&'_ LocalMod, bool)> {
+    fn local_mods(&self) -> impl Iterator<Item = (&LocalMod, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_local)
     }
 
     fn manifest(&self) -> ProfileManifest {
         ProfileManifest {
-            name: self.name.clone(),
+            name: &self.name,
             mods: self.mods.clone(),
         }
     }
@@ -198,17 +278,18 @@ impl Profile {
         &self,
         args: &QueryModsArgs,
         thunderstore: &Thunderstore,
-    ) -> Result<Vec<FrontendMod>> {
+    ) -> Result<Vec<FrontendProfileMod>> {
         let queryables = self
             .mods
             .iter()
-            .map(|p| match p {
-                ProfileMod::Local { data, .. } => Ok(Queryable::Local(data)),
-                ProfileMod::Remote { mod_ref, .. } => mod_ref.borrow(thunderstore).map(Queryable::Online),
-            })
+            .map(|p| p.queryable(thunderstore))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(query::query_mods(args, queryables.into_iter()))
+        Ok(
+            query::query_mods(args, queryables.into_iter())
+                .map(|queryable| queryable.into())
+                .collect()
+        )
     }
 
     fn dependants<'a>(
@@ -260,10 +341,10 @@ impl Profile {
         let config = config::load_config(path.clone()).collect();
     
         Ok(Profile {
-            name: manifest.name,
-            path,
+            name: manifest.name.to_owned(),
             mods: manifest.mods,
             config,
+            path,
         })
     }
 }
@@ -321,7 +402,7 @@ impl Profile {
             .position(|m| m.uuid() == uuid)
             .context("mod not found in profile")?;
 
-        self.scan_mod(&self.mods[index], thunderstore, |dir| {
+        self.scan_mod(&self.mods[index].kind, thunderstore, |dir| {
             fs::remove_dir_all(dir).fs_context("removing mod directory", dir)
         })?;
 
@@ -332,10 +413,10 @@ impl Profile {
 
     fn toggle_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
-        let state = profile_mod.enabled();
+        let state = profile_mod.enabled;
         let new_state = !state;
 
-        self.scan_mod(profile_mod, thunderstore, |dir| {
+        self.scan_mod(&profile_mod.kind, thunderstore, |dir| {
             let files = WalkDir::new(dir)
                 .into_iter()
                 .filter_map(|e| e.ok())
@@ -360,12 +441,12 @@ impl Profile {
             Ok(())
         })?;
 
-        *self.get_mod_mut(uuid).unwrap().enabled_mut() = new_state;
+        self.get_mod_mut(uuid).unwrap().enabled = new_state;
 
         Ok(())
     }
 
-    fn scan_mod<'a, F>(&'a self, profile_mod: &'a ProfileMod, thunderstore: &'a Thunderstore, scan_dir: F) -> Result<()>
+    fn scan_mod<'a, F>(&'a self, profile_mod: &'a ProfileModKind, thunderstore: &'a Thunderstore, scan_dir: F) -> Result<()>
     where F: Fn(&Path) -> Result<()> 
     {
         let name = profile_mod.full_name(thunderstore)?;

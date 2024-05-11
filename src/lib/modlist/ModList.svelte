@@ -29,7 +29,7 @@
 	let searchTerm: string | undefined;
 	let categories: string[] = [];
 	let includeNsfw = false;
-	let includeDeprecated = true;
+	let includeDeprecated = false;
 	let sortBy: SortOption = sortOptions[0];
 
 	export let mods: Mod[] = [];
@@ -44,6 +44,7 @@
 		categories,
 		includeNsfw,
 		includeDeprecated,
+		includeDisabled: true,
 		descending: true,
 		sortBy: sortBy.value
 	};
@@ -179,7 +180,9 @@
 				<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
 			{/if}
 			{#each mods.slice(0, pageSize - 1) as mod}
-				<ModListItem onClick={onModClicked} {mod} isSelected={activeMod == mod} />
+				<ModListItem onClick={onModClicked} {mod} isSelected={activeMod == mod}>
+					<slot name="item" {mod} />
+				</ModListItem>
 			{/each}
 		</div>
 	</div>
