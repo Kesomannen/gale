@@ -118,7 +118,7 @@ impl Thunderstore {
         self.load_mods_handle = Some(load_mods_handle);
     }
 
-    pub fn latest<'a>(&'a self) -> impl Iterator<Item = BorrowedMod<'a>> {
+    pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
         self.packages.values().map(move |package| {
             BorrowedMod {
                 package,

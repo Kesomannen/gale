@@ -9,7 +9,7 @@
 
 	function onClick() {
 		invokeCommand<ConfigValue>('reset_config_entry', {
-			file: entryId.file.name,
+			file: entryId.file.content.name,
 			section: entryId.section.name,
 			entry: entryId.entry.name
 		}).then((result) => { 

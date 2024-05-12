@@ -128,6 +128,13 @@
 		</div>
 	{/if}
 
+	{#if mod.enabled === false}
+		<div class="flex items-center rounded-lg bg-yellow-400 text-slate-800 px-3 py-1 max-w-fit my-1">
+			<Icon class="text-xl mr-1" icon="mdi:eye-off" />
+			Disabled
+		</div>
+	{/if}
+
 	{#if mod.categories}
 		<div class="flex gap-1 mt-2 flex-wrap mb-3">
 			{#each mod.categories as category}

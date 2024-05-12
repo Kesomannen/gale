@@ -243,7 +243,7 @@ struct Profile {
     name: String,
     path: PathBuf,
     mods: Vec<ProfileMod>,
-    config: Vec<config::LoadedFile>,
+    config: Vec<config::LoadFileResult>,
 }
 
 impl Profile {

@@ -25,6 +25,9 @@
 			"clipboard": {
 				"all": true
 			},
+			"app": {
+				"all": true
+			},
 			"http": {
 				"all": false,
 				"request": true,

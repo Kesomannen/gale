@@ -3,6 +3,7 @@ use std::{iter, str};
 use anyhow::{bail, ensure, Context, Result};
 
 use super::*;
+use itertools::Itertools;
 
 pub const FLAGS_MESSAGE: &str =
     "# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)";
@@ -35,24 +36,112 @@ where
     }
 }
 
-pub fn from_str(text: &str) -> Result<Vec<Section>> {
+pub fn from_str(text: &str, name: String) -> LoadFileResult {
     let mut parser = Parser {
         lines: text.lines().peekable(),
         sections: Vec::new(),
+        metadata: None,
         line: 1,
     };
 
-    parser
-        .parse()
-        .with_context(|| format!("error parsing config file at line {}", parser.line))?;
+    match parser.parse() {
+        Ok(_) => {
+            let file = File {
+                name,
+                metadata: parser.metadata,
+                sections: parser.sections,
+            };
 
-    Ok(parser.sections)
+            LoadFileResult::Ok(file)
+        }
+        Err(err) => {
+            let err = err.context(format!("error parsing config file at line {}", parser.line));
+            LoadFileResult::Err {
+                name,
+                error: format!("{:#}", err),
+            }
+        }
+    }
 }
 
 struct Parser<'a> {
     lines: iter::Peekable<str::Lines<'a>>,
     sections: Vec<Section>,
+    metadata: Option<FileMetadata>,
     line: usize,
+}
+
+#[derive(Default)]
+struct EntryBuilder<'a> {
+    description: Option<String>,
+    type_name: Option<&'a str>,
+    default_value: Option<&'a str>,
+    acceptable_values: Option<Vec<&'a str>>,
+    is_flags: bool,
+    range: Option<(&'a str, &'a str)>,
+    name: Option<&'a str>,
+    value: Option<&'a str>,
+}
+
+impl EntryBuilder<'_> {
+    fn build(self) -> Result<TaggedEntry> {
+        let name = self.name.context("missing setting name")?.to_owned();
+        let type_name = self.type_name.context("missing setting type")?.to_owned();
+
+        let value = self.value.context("missing setting value")?;
+        let value = self.parse_value(value)?;
+
+        let default_value = self
+            .default_value
+            .map(|s| self.parse_value(s))
+            .transpose()?;
+        let description = self.description.unwrap_or_default();
+
+        Ok(TaggedEntry {
+            name,
+            description,
+            type_name,
+            default_value,
+            value,
+        })
+    }
+
+    fn parse_list(&self, str: &str) -> Vec<String> {
+        str.split(", ").map(|s| s.to_owned()).collect()
+    }
+
+    fn parse_value(&self, str: &str) -> Result<Value> {
+        match &self.acceptable_values {
+            Some(options) => Ok(self.parse_enum(str, options)),
+            None => self.parse_simple_value(str),
+        }
+    }
+
+    fn parse_enum(&self, str: &str, options: &[&str]) -> Value {
+        let options = options.iter().map(|s| (*s).to_owned()).collect();
+
+        match self.is_flags {
+            true => Value::Flags {
+                values: self.parse_list(str),
+                options,
+            },
+            false => Value::Enum {
+                value: str.to_owned(),
+                options,
+            },
+        }
+    }
+
+    fn parse_simple_value(&self, value: &str) -> Result<Value> {
+        Ok(match self.type_name.context("missing setting type")? {
+            "Boolean" => Value::Boolean(value == "true"),
+            "String" => Value::String(value.to_owned()),
+            "Int32" => Value::Int32(Num::parse(value, self.range)?),
+            "Single" => Value::Single(Num::parse(value, self.range)?),
+            "Double" => Value::Double(Num::parse(value, self.range)?),
+            _ => Value::Other(value.to_owned()),
+        })
+    }
 }
 
 impl<'a> Parser<'a> {
@@ -65,15 +154,19 @@ impl<'a> Parser<'a> {
 
             if line.starts_with('[') {
                 self.parse_section()?;
-            } else if line.starts_with('#') {
-                if let Some(entry) = self.parse_entry()? {
-                    ensure!(!self.sections.is_empty(), "config entry has no section");
-
-                    let section = self.sections.last_mut().unwrap();
-                    section.entries.push(entry);
+            } else if line.starts_with("##") {
+                if line.starts_with("## Settings file was created by plugin ") {
+                    self.parse_metadata()?;
+                } else {
+                    let entry = self.parse_tagged_entry()?;
+                    self.push_entry(Entry::Tagged(entry))?;
                 }
             } else {
-                bail!("unexpected line '{}'", line);
+                let (name, value) = self.parse_untagged_entry()?;
+                let name = name.to_owned();
+                let value = value.to_owned();
+
+                self.push_entry(Entry::Untagged { name, value })?;
             }
         }
 
@@ -97,6 +190,38 @@ impl<'a> Parser<'a> {
         self.consume().context("unexpected EOF")
     }
 
+    fn parse_metadata(&mut self) -> Result<()> {
+        let mut split = self
+            .consume_or_eof()?
+            .strip_prefix("## Settings file was created by plugin ")
+            .context("expected metadata")?
+            .split(' ');
+
+        let plugin_version = split
+            .next_back()
+            .context("expected plugin version")?
+            .strip_prefix('v')
+            .context("invalid plugin version")?
+            .parse()
+            .context("invalid plugin version")?;
+
+        let plugin_name = split.join(" ");
+
+        let plugin_guid = self
+            .consume_or_eof()?
+            .strip_prefix("## Plugin GUID: ")
+            .context("expected plugin GUID")?
+            .to_owned();
+
+        self.metadata = Some(FileMetadata {
+            plugin_name,
+            plugin_version,
+            plugin_guid,
+        });
+
+        Ok(())
+    }
+
     fn parse_section(&mut self) -> Result<()> {
         let line = self.consume_or_eof()?;
 
@@ -113,152 +238,83 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
-    fn parse_entry(&mut self) -> Result<Option<Entry>> {
-        let mut description = String::new();
+    fn parse_multiline_comment(&mut self, prefix: &str) -> String {
+        let mut buffer = String::new();
 
         while let Some(line) = self.peek() {
-            if let Some(comment) = line.strip_prefix("##") {
-                if !description.is_empty() {
-                    description.push('\n');
+            if let Some(line) = line.strip_prefix(prefix) {
+                if !buffer.is_empty() {
+                    buffer.push('\n');
                 }
 
-                description.push_str(comment.trim());
+                buffer.push_str(line.trim());
                 self.consume();
             } else {
                 break;
             }
         }
 
-        let line = self.consume();
-        if line.is_none() {
-            return Ok(None);
-        }
+        buffer
+    }
 
-        let line = line.unwrap();
-
-        let type_name = match line.strip_prefix("# Setting type: ") {
-            Some(type_id) => type_id,
-            None => return Ok(None),
+    fn parse_tagged_entry(&mut self) -> Result<TaggedEntry> {
+        let mut builder = EntryBuilder {
+            description: Some(self.parse_multiline_comment("##")),
+            ..Default::default()
         };
 
-        let line = self.consume_or_eof()?;
-        let default_value = line
-            .strip_prefix("# Default value:")
-            .with_context(|| format!("expected default value, found '{}'", line))?
-            .trim();
+        loop {
+            let line = self.peek().context("unexpected EOF")?;
 
-        let default_value_str = match default_value.is_empty() {
-            true => None,
-            false => Some(default_value),
-        };
-
-        let line = self.peek_or_eof()?;
-        let acceptable_values = line
-            .strip_prefix("# Acceptable values: ")
-            .map(|s| s.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>());
-
-        let mut is_flags = false;
-
-        if acceptable_values.is_some() {
-            self.consume();
-            let line = self.peek_or_eof()?;
-            if *line == FLAGS_MESSAGE {
+            if line == &FLAGS_MESSAGE {
                 self.consume();
-                is_flags = true;
+
+                builder.is_flags = true;
+            } else if let Some(line) = line.strip_prefix("# ") {
+                self.consume();
+
+                if let Some(type_name) = line.strip_prefix("Setting type: ") {
+                    builder.type_name = Some(type_name);
+                } else if let Some(default_value) = line.strip_prefix("Default value: ") {
+                    builder.default_value = Some(default_value);
+                } else if let Some(acceptable_values) = line.strip_prefix("Acceptable values: ") {
+                    builder.acceptable_values = Some(acceptable_values.split(", ").collect());
+                } else if let Some(range) = line.strip_prefix("Acceptable value range: From ") {
+                    let mut split = range.split(" to ");
+                    builder.range = Some((
+                        split.next().context("expected minimum value")?,
+                        split.next().context("expected maximum value")?,
+                    ));
+                }
+            } else {
+                let (name, value) = self.parse_untagged_entry()?;
+                builder.name = Some(name);
+                builder.value = Some(value);
+                break;
             }
         }
 
-        let line = self.peek_or_eof()?;
-        let range = match line.strip_prefix("# Acceptable value range: From ") {
-            Some(s) => {
-                self.consume();
-                let mut split = s.split(" to ");
-                Some((
-                    split.next().context("expected minimum value")?,
-                    split.next().context("expected maximum value")?,
-                ))
-            }
-            None => None,
-        };
+        builder.build()
+    }
 
+    fn parse_untagged_entry(&mut self) -> Result<(&str, &str)> {
         let mut split = self.consume_or_eof()?.split(" = ");
         let name = split.next().context("expected setting name")?;
         let value_str = split.next().context("expected setting value")?;
 
-        let (value, default_value) = parse_value(
-            acceptable_values,
-            is_flags,
-            value_str,
-            default_value_str,
-            type_name,
-            range,
-        )?;
-
-        Ok(Some(Entry {
-            name: name.to_owned(),
-            type_name: type_name.to_owned(),
-            description,
-            default_value,
-            value,
-        }))
+        Ok((name, value_str))
     }
-}
 
-fn parse_value(
-    acceptable_values: Option<Vec<String>>,
-    is_flags: bool,
-    value_str: &str,
-    default_value_str: Option<&str>,
-    type_name: &str,
-    range: Option<(&str, &str)>,
-) -> Result<(Value, Option<Value>)> {
-    Ok(match acceptable_values {
-        Some(options) => match is_flags {
-            true => (
-                Value::Flags {
-                    values: parse_flags(value_str),
-                    options: options.clone(),
-                },
-                default_value_str.map(|s| Value::Flags {
-                    values: parse_flags(s),
-                    options,
-                }),
-            ),
-            false => (
-                Value::Enum {
-                    value: value_str.to_owned(),
-                    options: options.clone(),
-                },
-                default_value_str.map(|s| Value::Enum {
-                    value: s.to_owned(),
-                    options,
-                }),
-            ),
-        },
-        None => (
-            parse_simple_value(type_name, value_str, range)?,
-            default_value_str
-                .map(|s| parse_simple_value(type_name, s, range))
-                .transpose()?,
-        ),
-    })
-}
+    fn push_entry(&mut self, entry: Entry) -> Result<()> {
+        ensure!(
+            !self.sections.is_empty(),
+            "config entry {} has no section",
+            entry.name()
+        );
 
-fn parse_simple_value(
-    type_name: &str,
-    value_str: &str,
-    range: Option<(&str, &str)>,
-) -> Result<Value> {
-    Ok(match type_name {
-        "Boolean" => Value::Boolean(value_str == "true"),
-        "String" => Value::String(value_str.to_owned()),
-        "Int32" => Value::Int32(Num::parse(value_str, range)?),
-        "Single" => Value::Single(Num::parse(value_str, range)?),
-        "Double" => Value::Double(Num::parse(value_str, range)?),
-        _ => Value::Other(value_str.to_string()),
-    })
-}
+        let section = self.sections.last_mut().unwrap();
+        section.entries.push(entry);
 
-fn parse_flags(value_str: &str) -> Vec<String> {
-    value_str.split(", ").map(|s| s.to_owned()).collect()
+        Ok(())
+    }
 }

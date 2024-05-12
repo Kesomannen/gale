@@ -1,33 +1,32 @@
 <script lang="ts">
 	import ConfigFileTreeItem from '$lib/config/ConfigFileTreeItem.svelte';
-	import EnumConfig from '$lib/config/EnumConfig.svelte';
-	import StringConfig from '$lib/config/StringConfig.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type {
-		ConfigEntry,
+		TaggedConfigEntry,
 		ConfigEntryId,
-		ConfigFile,
 		ConfigSection,
 		ConfigValue,
-		GetConfigResult
+		LoadFileResult,
+		ConfigEntry
 	} from '$lib/models';
-	import { Tooltip } from 'bits-ui';
-	import { onMount } from 'svelte';
-	import { fly } from 'svelte/transition';
-	import { fileName, sentenceCase } from '$lib/util';
+	import { capitalize, fileName, sentenceCase } from '$lib/util';
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
-	import { Render } from '@jill64/svelte-sanitize';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
 	import Icon from '@iconify/svelte';
-	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
 	import { currentProfile } from '$lib/profile';
+	import { Tooltip } from 'bits-ui';
+	import { Render } from '@jill64/svelte-sanitize';
+	import { fly } from 'svelte/transition';
+	import StringConfig from '$lib/config/StringConfig.svelte';
+	import EnumConfig from '$lib/config/EnumConfig.svelte';
+	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
 
-	let files: GetConfigResult[] | undefined;
+	let files: LoadFileResult[] | undefined;
 
 	let searchTerm: string | undefined;
 
-	let selectedFile: ConfigFile | undefined;
+	let selectedFile: LoadFileResult | undefined;
 	let selectedSection: ConfigSection | undefined;
 
 	$: {
@@ -36,9 +35,10 @@
 		refresh();
 	}
 
-	$: shownFiles = searchTerm?.length ?? 0 > 1
-		? files!.filter((file) => fileName(file).toLowerCase().includes(searchTerm!.toLowerCase()))
-		: files
+	$: shownFiles =
+		searchTerm?.length ?? 0 > 1
+			? files!.filter((file) => fileName(file).toLowerCase().includes(searchTerm!.toLowerCase()))
+			: files;
 
 	function configValueToString(config: ConfigValue) {
 		switch (config.type) {
@@ -59,7 +59,7 @@
 		}
 	}
 
-	function typeName(config: ConfigEntry) {
+	function typeName(config: TaggedConfigEntry) {
 		switch (config.value.type) {
 			case 'int32':
 				return 'Integer';
@@ -79,7 +79,7 @@
 		return config.type === 'int32' || config.type === 'double' || config.type === 'single';
 	}
 
-	function entryId(entry: ConfigEntry): ConfigEntryId {
+	function entryId(entry: TaggedConfigEntry): ConfigEntryId {
 		return {
 			file: selectedFile!,
 			section: selectedSection!,
@@ -88,13 +88,13 @@
 	}
 
 	async function refresh() {
-		files = await invokeCommand<GetConfigResult[]>('get_config_files');
+		files = await invokeCommand<LoadFileResult[]>('get_config_files');
 	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-4 min-w-60 w-[25%] gap-1 bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col py-4 min-w-60 w-[25%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
@@ -102,9 +102,7 @@
 				Loading config...
 			</div>
 		{:else if files.length === 0}
-			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">
-				No config files found
-			</div>
+			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">No config files found</div>
 		{:else}
 			<div class="relative mx-2 mb-2">
 				<input
@@ -116,98 +114,116 @@
 				<Icon class="absolute left-[10px] top-[9px] text-slate-300 text-xl" icon="mdi:magnify" />
 			</div>
 			{#each shownFiles ?? [] as file}
-				{#if file.type == 'ok'}
-					<ConfigFileTreeItem
-						file={file.content}
-						{selectedSection}
-						onClick={(file, section) => {
-							selectedFile = file;
-							selectedSection = section;
-						}}
-						onDeleted={(_) => refresh()}
-					/>
-				{:else}
-					<Tooltip.Root openDelay={100}>
-						<Tooltip.Trigger
-							class="flex items-center text-white bg-red-600 pl-3 pr-2 cursor-default"
-						>
-							<Icon icon="mdi:error" class="mr-2 flex-shrink-0" />
-							<div class="flex-shrink truncate">
-								{file.content.file}
-							</div>
-						</Tooltip.Trigger>
-						<Tooltip.Content
-							class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[30rem] shadow-lg"
-							transition={fly}
-							transitionConfig={{ duration: 100 }}
-							side="right"
-						>
-							<Tooltip.Arrow class="rounded-[2px] border-l border-t border-gray-600" />
-							{file.content.error}
-						</Tooltip.Content>
-					</Tooltip.Root>
-				{/if}
+				<ConfigFileTreeItem
+					{file}
+					{selectedSection}
+					onErrorFileClicked={(file) => {
+						selectedFile = file;
+						selectedSection = undefined;
+					}}
+					onSectionClicked={(file, section) => {
+						selectedFile = {
+							type: 'ok',
+							content: file
+						};
+						selectedSection = section;
+					}}
+					onDeleted={() => {
+						refresh();
+						selectedFile = undefined;
+					}}
+				/>
 			{/each}
 		{/if}
 	</div>
 
-	{#if selectedFile && selectedSection}
-		<div class="flex flex-col flex-grow p-4 gap-1 overflow-y-auto">
-			<h1 class="text-slate-200 text-lg font-semibold pb-1 truncate flex-shrink-0">
-				{selectedFile.name}
-				<span class="text-slate-400">/</span>
-				{selectedSection.name}
-			</h1>
+	<div class="flex flex-col flex-grow p-4 overflow-y-auto">
+		{#if selectedFile}
+			<div class="text-slate-200 text-lg font-semibold truncate flex-shrink-0">
+				{selectedFile.content.name}
+				{#if selectedSection}
+					<span class="text-slate-400">/</span>
+					{selectedSection.name}
+				{/if}
+			</div>
 
-			{#each selectedSection.entries as entry (entry.name)}
-				<div class="flex items-center text-slate-300 pl-1 h-7">
-					<Tooltip.Root openDelay={200}>
-						<Tooltip.Trigger
-							class="text-slate-300 mr-auto pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
-						>
-							{sentenceCase(entry.name)}
-						</Tooltip.Trigger>
-						<Tooltip.Content
-							class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[35rem] shadow-lg"
-							transition={fly}
-							transitionConfig={{ duration: 150 }}
-							side="top"
-							sideOffset={2}
-						>
-							<Tooltip.Arrow class="rounded-[2px] border-l border-t border-gray-600" />
-							<div>
-								<span class="font-semibold text-slate-200 text-md">{entry.name}</span>
-								<span class="text-slate-400"> ({typeName(entry)})</span>
-							</div>
+			{#if selectedSection && selectedFile.type === 'ok'}
+				{#if selectedFile.content.metadata}
+					<div class="text-slate-400 text-sm">
+						Created by {selectedFile.content.metadata.pluginName} v{selectedFile.content.metadata.pluginVersion} 
+					</div>
+				{/if}
 
-							<Render html={entry.description.replace(/\n/g, '<br/>')} />
-							{#if entry.defaultValue}
-								<p class="mt-1">
-									<span class="font-bold">Default: </span>
-									{configValueToString(entry.defaultValue)}
-								</p>
+				<div class="h-1 flex-shrink-0" />
+
+				{#each selectedSection.entries as entry (entry.content)}
+					{#if entry.type === 'untagged'}
+						Untagged entry
+					{:else}
+						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">
+							<Tooltip.Root openDelay={200}>
+								<Tooltip.Trigger
+									class="text-slate-300 mr-auto pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
+								>
+									{sentenceCase(entry.content.name)}
+								</Tooltip.Trigger>
+								<Tooltip.Content
+									class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[35rem] shadow-lg"
+									transition={fly}
+									transitionConfig={{ duration: 150 }}
+									side="top"
+									sideOffset={2}
+								>
+									<Tooltip.Arrow class="rounded-[2px] border-l border-t border-gray-600" />
+									<div>
+										<span class="font-semibold text-slate-200 text-md">{entry.content.name}</span>
+										<span class="text-slate-400"> ({typeName(entry.content)})</span>
+									</div>
+
+									<Render html={entry.content.description.replace(/\n/g, '<br/>')} />
+
+									<div class="h-1" />
+
+									{#if entry.content.defaultValue}
+										<p>
+											<span class="font-bold">Default: </span>
+											{configValueToString(entry.content.defaultValue)}
+										</p>
+									{/if}
+
+									{#if (entry.content.value.type === 'int32' || entry.content.value.type === 'double' || entry.content.value.type === 'single') && entry.content.value.content.range}
+										<p>
+											<span class="font-bold">Range: </span>
+											{entry.content.value.content.range.start} - {entry.content.value.content.range.end}
+										</p>
+									{/if}
+								</Tooltip.Content>
+							</Tooltip.Root>
+							{#if entry.content.value.type === 'string'}
+								<StringConfig entryId={entryId(entry.content)} />
+							{:else if entry.content.value.type === 'enum'}
+								<EnumConfig entryId={entryId(entry.content)} />
+							{:else if entry.content.value.type === 'flags'}
+								<FlagsConfig entryId={entryId(entry.content)} />
+							{:else if entry.content.value.type === 'boolean'}
+								<BoolConfig entryId={entryId(entry.content)} />
+							{:else if entry.content.value.type == 'other'}
+								<StringConfig entryId={entryId(entry.content)} isOther={true} />
+							{:else if isNum(entry.content.value)}
+								{#if entry.content.value.content.range}
+									<SliderConfig entryId={entryId(entry.content)} />
+								{:else}
+									<NumberInputConfig entryId={entryId(entry.content)} />
+								{/if}
 							{/if}
-						</Tooltip.Content>
-					</Tooltip.Root>
-					{#if entry.value.type === 'string'}
-						<StringConfig entryId={entryId(entry)} />
-					{:else if entry.value.type === 'enum'}
-						<EnumConfig entryId={entryId(entry)} />
-					{:else if entry.value.type === 'flags'}
-						<FlagsConfig entryId={entryId(entry)} />
-					{:else if entry.value.type === 'boolean'}
-						<BoolConfig entryId={entryId(entry)} />
-					{:else if entry.value.type == 'other'}
-						<StringConfig entryId={entryId(entry)} isOther={true} />
-					{:else if isNum(entry.value)}
-						{#if entry.value.content.range}
-							<SliderConfig entryId={entryId(entry)} />
-						{:else}
-							<NumberInputConfig entryId={entryId(entry)} />
-						{/if}
+						</div>
 					{/if}
-				</div>
-			{/each}
-		</div>
-	{/if}
+				{/each}
+			{:else if selectedFile.type === 'err'}
+				<code class="text-red-400 bg-gray-900 px-2 py-1 rounded-md">
+					{capitalize(selectedFile.content.error)}
+				</code>
+			{/if}
+		{/if}
+	</div>
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Popup from '$lib/Popup.svelte';
+	import { invokeCommand } from '$lib/invoke';
 	import type { InstallProgress } from '$lib/models';
 	import { shortenFileSize } from '$lib/util';
 
@@ -49,7 +50,10 @@
 <Popup
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	bind:open
-	canClose={false}
+	onClose={() => {
+		console.log('closed');
+		invokeCommand('cancel_install')
+	}}
 >
 	<Dialog.Description class="text-slate-400">
 		{#if progress.task.kind == 'done'}

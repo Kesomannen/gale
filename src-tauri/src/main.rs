@@ -51,12 +51,14 @@ fn main() {
             manager::commands::create_profile,
             manager::commands::delete_profile,
             manager::commands::remove_mod,
+            manager::commands::toggle_mod,
             manager::commands::force_remove_mods,
             manager::commands::reveal_profile_dir,
 
             manager::launcher::commands::launch_game,
 
             manager::downloader::commands::install_mod,
+            manager::downloader::commands::cancel_install,
             manager::downloader::commands::clear_download_cache,
             manager::downloader::commands::get_download_size,
             manager::downloader::commands::update_mod,
@@ -70,7 +72,8 @@ fn main() {
             manager::importer::commands::import_local_mod,
 
             manager::config::commands::get_config_files,
-            manager::config::commands::set_config_entry,
+            manager::config::commands::set_tagged_config_entry,
+            manager::config::commands::set_untagged_config_entry,
             manager::config::commands::reset_config_entry,
             manager::config::commands::open_config_file,
             manager::config::commands::delete_config_file,

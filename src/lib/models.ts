@@ -20,7 +20,11 @@ export type ConfigValue =
 	| { type: 'double'; content: ConfigNum }
 	| { type: 'other'; content: string };
 
-export interface ConfigEntry {
+export type ConfigEntry =
+  | { type: 'tagged', content: TaggedConfigEntry }
+	| { type: 'untagged', content: { name: string; value: string; } };
+
+export interface TaggedConfigEntry {
 	name: string;
 	description: string;
 	typeName: string;
@@ -35,6 +39,11 @@ export interface ConfigSection {
 
 export interface ConfigFile {
 	name: string;
+	metadata?: {
+		pluginName: string;
+		pluginVersion: string;
+		pluginGuid: string;
+	}
 	sections: ConfigSection[];
 }
 
@@ -48,10 +57,10 @@ export interface ConfigRange {
 	end: number;
 }
 
-export type GetConfigResult =
+export type LoadFileResult =
 	| { type: 'ok', content: ConfigFile }
-	| { type: 'error', content: {
-		file: string;
+	| { type: 'err', content: {
+		name: string;
 		error: string;
 	} };
 
@@ -115,9 +124,9 @@ export interface SelectItem {
 }
 
 export interface ConfigEntryId {
-	file: ConfigFile;
+	file: LoadFileResult;
 	section: ConfigSection;
-	entry: ConfigEntry;
+	entry: TaggedConfigEntry;
 }
 
 export interface DropdownOption {

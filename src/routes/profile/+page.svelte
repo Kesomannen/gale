@@ -49,6 +49,14 @@
 		removeDependantsPopupOpen = true;
 	}
 
+	function removeAll() {
+		forceRemove(dependants.map((dep) => dep.uuid).concat(activeMod!.uuid));
+	}
+
+	function removeOnlyActive() {
+		forceRemove([activeMod!.uuid]);
+	}
+
 	function forceRemove(packageUuids: string[]) {
 		invokeCommand('force_remove_mods', { packageUuids }).then(() => {
 			activeMod = undefined;
@@ -105,9 +113,9 @@
 		<Switch.Root
 			checked={mod.enabled ?? true}
 			onCheckedChange={_ => invokeCommand('toggle_mod', { uuid: mod.uuid }).then(refresh)}
-			class="rounded-full bg-gray-900 w-12 h-6"
+			class="rounded-full bg-slate-800 w-12 h-6"
 		>
-			<Switch.Thumb class="h-full bg-gray-200" />
+			<Switch.Thumb class="h-full w-6 bg-slate-600" />
 		</Switch.Root>
 	</div>
 </ModList>
@@ -116,7 +124,7 @@
 	<Popup title="Confirm removal" bind:open={removeDependantsPopupOpen}>
 		<Dialog.Description class="text-slate-300">
 			The following mods depend on {activeMod.name} and
-			<strong>will not work if {activeMod.name} is removed!</strong>
+			<strong>will likely not work if {activeMod.name} is removed!</strong>
 			<ul class="mt-1">
 				{#each dependants as dependant}
 					<li>- {dependant.name}</li>
@@ -132,18 +140,18 @@
 			</Dialog.Close>
 			<Dialog.Close>
 				<Button.Root
-					class="rounded-xl px-4 py-2 text-gray-200 bg-blue-600 hover:bg-blue-500"
-					on:click={() => forceRemove(dependants.map(dep => dep.uuid))}
+					class="rounded-xl px-4 py-2 text-red-400 hover:text-red-300 border border-red-500 hover:border-red-400"
+					on:click={removeOnlyActive}
 				>
-					Remove all (recommended)
+					Remove {activeMod.name} only
 				</Button.Root>
 			</Dialog.Close>
 			<Dialog.Close>
 				<Button.Root
-					class="rounded-xl px-4 py-2 text-gray-300 bg-red-600 hover:bg-red-500"
-					on:click={() => forceRemove([activeMod.uuid])}
+					class="rounded-xl px-4 py-2 text-white bg-red-600 hover:bg-red-500"
+					on:click={removeAll}
 				>
-					Remove {activeMod.name} only
+					Remove all
 				</Button.Root>
 			</Dialog.Close>
 		</div>

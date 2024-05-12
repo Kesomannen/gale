@@ -172,11 +172,11 @@ impl Queryable for LocalMod {
         &self.name
     }
 
-    fn matches(&self, args: &QueryModsArgs) -> bool {
+    fn matches(&self, _args: &QueryModsArgs) -> bool {
         true
     }
 
-    fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
+    fn cmp(&self, _other: &Self, _args: &QueryModsArgs) -> Ordering {
         Ordering::Greater
     }
 }

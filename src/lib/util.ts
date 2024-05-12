@@ -1,4 +1,4 @@
-import type { GetConfigResult, Mod } from "./models";
+import type { LoadFileResult, Mod } from "./models";
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -23,14 +23,18 @@ export function sentenceCase(str: string): string {
 	return textcase.charAt(0).toUpperCase() + textcase.slice(1);
 }
 
-export function fileName(configFile: GetConfigResult) {
+export function fileName(configFile: LoadFileResult) {
 	if (configFile.type == "ok") {
 		return configFile.content.name;
 	}
 
-	return configFile.content.file;
+	return configFile.content.name;
 }
 
 export function isOutdated(mod: Mod): boolean {
 	return mod.version !== mod.versions[0].name;
+}
+
+export function capitalize(str: string): string {
+	return str.charAt(0).toUpperCase() + str.slice(1);
 }

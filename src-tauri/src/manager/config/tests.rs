@@ -1,9 +1,14 @@
 use super::*;
 
 impl File {
-    fn new(name: &str, sections: Vec<Section>) -> Self {
+    fn new(name: &str, plugin_name: &str, plugin_version: semver::Version, plugin_guid: &str, sections: Vec<Section>) -> Self {
         Self {
             name: name.to_owned(),
+            metadata: Some(FileMetadata {
+                plugin_name: plugin_name.to_owned(),
+                plugin_version,
+                plugin_guid: plugin_guid.to_owned(),
+            }),
             sections,
         }
     }
@@ -19,7 +24,14 @@ impl Section {
 }
 
 impl Entry {
-    fn new(name: &str, description: &str, default_value: Option<Value>, value: Value) -> Self {
+    fn untagged(name: &str, value: &str) -> Self {
+        Self::Untagged {
+            name: name.to_owned(),
+            value: value.to_owned(),
+        }
+    }
+
+    fn tagged(name: &str, description: &str, default_value: Option<Value>, value: Value) -> Self {
         let type_name = match &value {
             Value::Boolean(_) => "Boolean",
             Value::String(_) => "String",
@@ -29,27 +41,30 @@ impl Entry {
             _ => panic!("cannot determine type name"),
         };
 
-        Self::new_typed(name, description, type_name, default_value, value)
+        Self::tagged_typed(name, description, type_name, default_value, value)
     }
 
-    fn new_typed(
+    fn tagged_typed(
         name: &str,
         description: &str,
         type_name: &str,
         default_value: Option<Value>,
         value: Value,
-    ) -> Entry {
-        Self {
+    ) -> Self {
+        TaggedEntry {
             name: name.to_owned(),
             description: description.to_owned(),
             type_name: type_name.to_owned(),
             default_value,
             value,
-        }
+        }.into()
     }
 }
 
-const TEST_STR: &str = r###"[Section1]
+const TEST_STR: &str = r###"## Settings file was created by plugin Plugin v1.0.0
+## Plugin GUID: Author.PluginGuid
+
+[Section1]
 
 ## This is entry 1
 # Setting type: String
@@ -82,22 +97,27 @@ Entry4 = 5
 # Default value: 2
 Entry5 = 3.13
 
+UntaggedEntry = Hi!
+
 "###;
 
 fn test_file() -> File {
     File::new(
         "test",
+        "Plugin",
+        semver::Version::new(1, 0, 0),
+        "Author.PluginGuid",
         vec![
             Section::new(
                 "Section1",
                 vec![
-                    Entry::new(
+                    Entry::tagged(
                         "Entry1",
                         "This is entry 1",
                         Some(Value::String("Default".to_owned())),
                         Value::String("Value1".to_owned()),
                     ),
-                    Entry::new_typed(
+                    Entry::tagged_typed(
                         "LogLevels",
                         "This is entry 2",
                         "LogLevel",
@@ -124,7 +144,7 @@ fn test_file() -> File {
                             ],
                         },
                     ),
-                    Entry::new_typed(
+                    Entry::tagged_typed(
                         "Entry3",
                         "This is entry 3",
                         "Difficulty",
@@ -150,7 +170,7 @@ fn test_file() -> File {
             Section::new(
                 "Section2",
                 vec![
-                    Entry::new(
+                    Entry::tagged(
                         "Entry4",
                         "This is entry 4",
                         None,
@@ -159,7 +179,7 @@ fn test_file() -> File {
                             range: Some(0..10),
                         }),
                     ),
-                    Entry::new(
+                    Entry::tagged(
                         "Entry5",
                         "This is entry 5",
                         Some(Value::Double(Num {
@@ -171,6 +191,7 @@ fn test_file() -> File {
                             range: None,
                         }),
                     ),
+                    Entry::untagged("UntaggedEntry", "Hi!"),
                 ],
             ),
         ],
@@ -184,5 +205,5 @@ fn test_to_string() {
 
 #[test]
 fn test_from_string() {
-    assert_eq!(de::from_str(TEST_STR).unwrap(), test_file().sections);
+    assert_eq!(de::from_str(TEST_STR, "test".to_owned()), LoadFileResult::Ok(test_file()));
 }

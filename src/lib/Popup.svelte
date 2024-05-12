@@ -6,6 +6,11 @@
 	export let title: string | undefined = undefined;
 	export let open: boolean;
 	export let canClose: boolean = true;
+	export let onClose: () => void = () => {};
+
+	$: {
+		if (!open) onClose();
+	}
 </script>
 
 <Dialog.Root

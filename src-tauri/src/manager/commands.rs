@@ -195,6 +195,16 @@ pub fn remove_mod(
 }
 
 #[tauri::command]
+pub fn toggle_mod(uuid: Uuid, manager: StateMutex<ModManager>, thunderstore: StateMutex<Thunderstore>) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+
+    manager.active_profile_mut().toggle_mod(&uuid, &thunderstore)?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn force_remove_mods(
     package_uuids: Vec<Uuid>,
     manager: StateMutex<ModManager>,

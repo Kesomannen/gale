@@ -1,43 +1,45 @@
 use std::fs;
 
 use anyhow::Context;
-use serde::Serialize;
-use typeshare::typeshare;
 
 use crate::{
     command_util::{Result, StateMutex}, manager::ModManager, util::IoResultExt
 };
+use super::LoadFileResult;
 
-#[typeshare]
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "content")]
-pub enum GetConfigResult {
-    Ok(super::File),
-    Err { file: String, error: String },
-}
 
 #[tauri::command]
-pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<GetConfigResult>> {
+pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<LoadFileResult>> {
     let mut manager = manager.lock().unwrap();
     let profile = manager.active_profile_mut();
 
     profile.refresh_config();
 
-    Ok(profile
-        .config
-        .iter()
-        .map(|res| match res {
-            Ok(file) => GetConfigResult::Ok(file.clone()),
-            Err((name, err)) => GetConfigResult::Err {
-                file: name.clone(),
-                error: format!("{:#}", err),
-            },
-        })
-        .collect())
+    Ok(profile.config.clone())
 }
 
 #[tauri::command]
-pub fn set_config_entry(
+pub fn set_untagged_config_entry(
+    file: &str,
+    section: &str,
+    entry: &str,
+    value: String,
+    manager: StateMutex<ModManager>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+
+    manager
+        .active_profile_mut()
+        .modify_config(file, section, entry, move |entry| {
+            *entry.as_untagged_mut()? = value;
+            Ok(())
+        })?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_tagged_config_entry(
     file: &str,
     section: &str,
     entry: &str,
@@ -48,8 +50,9 @@ pub fn set_config_entry(
 
     manager
         .active_profile_mut()
-        .modify_config(file, section, entry, move |entry| { 
-            entry.value = value;
+        .modify_config(file, section, entry, move |entry| {
+            entry.as_tagged_mut()?.value = value;
+            Ok(())
         })?;
 
     Ok(())
@@ -64,12 +67,16 @@ pub fn reset_config_entry(
 ) -> Result<super::Value> {
     let mut manager = manager.lock().unwrap();
 
-    manager
+    let new_value = manager
         .active_profile_mut()
         .modify_config(file, section, entry, |entry| {
-            entry.reset()?;
-            Ok(entry.value.clone())
-        })?
+            let tagged = entry.as_tagged_mut()?;
+            
+            tagged.reset()?;
+            Ok(tagged.value.clone())
+        })?;
+
+    Ok(new_value)
 }
 
 #[tauri::command]

@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use super::{de::FLAGS_MESSAGE, Entry, File, Num, Section, Value};
+use super::{de::FLAGS_MESSAGE, Entry, File, FileMetadata, Num, Section, TaggedEntry, Value};
 
 struct Serializer {
     buffer: String,
@@ -28,6 +28,12 @@ impl Serializer {
         self.new_line();
     }
 
+    fn write_metadata(&mut self, metadata: &FileMetadata) {
+        self.push_line(&format!("## Settings file was created by plugin {} v{}", metadata.plugin_name, metadata.plugin_version));
+        self.push_line(&format!("## Plugin GUID: {}", metadata.plugin_guid));
+        self.new_line();
+    }
+
     fn write_section(&mut self, section: &Section) {
         self.push_char('[');
         self.push_str(&section.name);
@@ -36,7 +42,6 @@ impl Serializer {
 
         for entry in section.entries.iter() {
             self.write_entry(entry);
-            self.new_line();
             self.new_line();
         }
     }
@@ -68,6 +73,13 @@ impl Serializer {
     }
 
     fn write_entry(&mut self, entry: &Entry) {
+        match entry {
+            Entry::Tagged(tagged) => self.write_tagged_entry(tagged),
+            Entry::Untagged { name, value } => self.write_untagged_entry(name, value),
+        }
+    }
+
+    fn write_tagged_entry(&mut self, entry: &TaggedEntry) {
         for line in entry.description.lines() {
             self.push_str("## ");
             self.push_line(line);
@@ -102,16 +114,24 @@ impl Serializer {
             self.push_line(FLAGS_MESSAGE);
         }
 
-        match entry.value {
-            Value::Int32(ref num) => self.write_num_comment(num),
-            Value::Single(ref num) => self.write_num_comment(num),
-            Value::Double(ref num) => self.write_num_comment(num),
+        match &entry.value {
+            Value::Int32(num) => self.write_num_comment(num),
+            Value::Single(num) => self.write_num_comment(num),
+            Value::Double(num) => self.write_num_comment(num),
             _ => {}
         }
 
         self.push_str(&entry.name);
         self.push_str(" = ");
         self.write_value(&entry.value);
+        self.new_line();
+    }
+
+    fn write_untagged_entry(&mut self, name: &str, value: &str) {
+        self.push_str(name);
+        self.push_str(" = ");
+        self.push_str(value);
+        self.new_line();
     }
 }
 
@@ -119,6 +139,10 @@ pub fn to_string(file: &File) -> String {
     let mut serializer = Serializer {
         buffer: String::new(),
     };
+
+    if let Some(metadata) = &file.metadata {
+        serializer.write_metadata(metadata);
+    }
 
     for section in file.sections.iter() {
         serializer.write_section(section);

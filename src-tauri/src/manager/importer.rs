@@ -62,13 +62,20 @@ impl<'a> ExportMod<'a> {
             )
         })?;
 
-        Ok((ModRef {
-            package_uuid: package.uuid4,
-            version_uuid: version.uuid4,
-        }, self.enabled))
+        Ok((
+            ModRef {
+                package_uuid: package.uuid4,
+                version_uuid: version.uuid4,
+            },
+            self.enabled,
+        ))
     }
 
-    fn from_mod_ref(mod_ref: &ModRef, enabled: bool, thunderstore: &'a Thunderstore) -> Result<Self> {
+    fn from_mod_ref(
+        mod_ref: &ModRef,
+        enabled: bool,
+        thunderstore: &'a Thunderstore,
+    ) -> Result<Self> {
         let borrowed = mod_ref.borrow(thunderstore)?;
         Ok(Self {
             name: &borrowed.package.full_name,
@@ -111,9 +118,7 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
 
     let mods = profile
         .remote_mods()
-        .map(|(mod_ref, enabled)| { 
-            ExportMod::from_mod_ref(mod_ref, enabled, thunderstore) 
-        })
+        .map(|(mod_ref, enabled)| ExportMod::from_mod_ref(mod_ref, enabled, thunderstore))
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve profile mods")?;
 
@@ -317,7 +322,7 @@ fn export_pack(
 fn write_config(profile: &Profile, zip: &mut fs_util::Zip) -> Result<()> {
     zip.add_dir("config")?;
 
-    for file in profile.config.iter().flatten() {
+    for file in profile.ok_config() {
         let content = config::ser::to_string(file);
         let path = file.path_relative();
         let path = path.strip_prefix("BepInEx").unwrap();
@@ -413,10 +418,10 @@ fn read_manifest(path: &mut PathBuf) -> Result<Option<PackageManifest>> {
     let manifest = match path.exists() {
         true => {
             let json = fs::read_to_string(&*path).fs_context("reading manifest", &*path)?;
-    
+
             let manifest: PackageManifest =
                 serde_json::from_str(&json).context("failed to parse manifest")?;
-    
+
             Some(manifest)
         }
         false => None,

@@ -1,59 +1,77 @@
 <script lang="ts">
 	import { invokeCommand } from "$lib/invoke";
-	import type { ConfigFile, ConfigSection } from "$lib/models";
+	import type { ConfigFile, ConfigSection, LoadFileResult } from "$lib/models";
 	import Icon from "@iconify/svelte";
 	import { Button, Collapsible } from "bits-ui";
 	import { quadOut } from "svelte/easing";
 	import { slide } from "svelte/transition";
 
-    export let file: ConfigFile;
+    export let file: LoadFileResult;
     export let selectedSection: ConfigSection | undefined;
-    export let onClick: (file: ConfigFile, section: ConfigSection) => void;
-    export let onDeleted: (file: ConfigFile) => void;
+    export let onDeleted: () => void;
+    export let onErrorFileClicked: (file: LoadFileResult) => void;
+    export let onSectionClicked: (file: ConfigFile, section: ConfigSection) => void;
 
     let open = false;
+
+    $: isError = file.type !== 'ok';
+    $: isSelected = selectedSection && file.type === 'ok' && file.content.sections.includes(selectedSection);
 </script>
 
-<Collapsible.Root bind:open={open}>
-    <div class="flex pl-3 pr-2 w-full text-slate-200 hover:text-white items-center group">
-        <Collapsible.Trigger class="flex items-center overflow-hidden mr-1"> 
-            <Icon
-                icon="mdi:expand-more"
-                class="text-xl {open ? 'rotate-180' : 'rotate-0'} transition-all mr-1 flex-shrink-0"
-            />
-            <div class="truncate flex-shrink" style="direction: rtl;">
-                {file.name}
-            </div>
-        </Collapsible.Trigger>
+<Collapsible.Root bind:open>
+    <Collapsible.Trigger 
+        class="flex {isError ? 'text-red-400' : 'text-slate-200'} {isSelected ? 'bg-slate-600' : 'hover:bg-slate-600'} items-center group w-full overflow-hidden px-2 py-0.5"
+        on:click={() => {
+            if (isError) {
+                onErrorFileClicked(file);
+            }
+        }}
+    >
+        <Icon
+            icon={isError ? 'mdi:error' : 'mdi:chevron-down'}
+            class="text-lg transition-all mr-1 flex-shrink-0 
+                    {open ? 'rotate-180' : 'rotate-0'}"
+        />
+
+        <div class="truncate flex-shrink mr-1" style="direction: rtl;">
+            {file.content.name}
+        </div>
+
         <Button.Root 
-            class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-gray-600 ml-auto"
-            on:click={() => invokeCommand('open_config_file', { file: file.name })}
+            class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-slate-500 ml-auto"
+            on:click={evt => {
+                evt.stopPropagation();
+                invokeCommand('open_config_file', { file: file.content.name }) 
+            }}
         >
             <Icon icon="mdi:open-in-new" />
         </Button.Root>
         <Button.Root 
-            class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-gray-600"
-            on:click={async () => {
-                await invokeCommand('delete_config_file', { file: file.name });
-                onDeleted(file);
+            class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-slate-500"
+            on:click={async evt => {
+                evt.stopPropagation();
+                await invokeCommand('delete_config_file', { file: file.content.name });
+                onDeleted();
             }}
         >
             <Icon icon="mdi:delete" />
         </Button.Root>
-    </div>
-    <Collapsible.Content
-        class="flex flex-col mt-0.5 mb-1" 
-        transition={slide}
-        transitionConfig={{ duration: 100, easing: quadOut }}
-    >
-        {#each file.sections as section}
-            <Button.Root 
-                class="text-sm pl-9 pr-2 py-0.5 text-left truncate
-                      {selectedSection === section ? 'bg-gray-600 text-slate-200 font-medium' : 'text-slate-300 hover:bg-gray-600 hover:text-slate-200 font-light'}"
-                on:click={() => onClick(file, section)}
-            >
-                {section.name}
-            </Button.Root>
-        {/each}
-    </Collapsible.Content>
+    </Collapsible.Trigger>
+    {#if file.type == 'ok'}
+        <Collapsible.Content
+            class="flex flex-col mb-1" 
+            transition={slide}
+            transitionConfig={{ duration: 100, easing: quadOut }}
+        >
+            {#each file.content.sections as section}
+                <Button.Root 
+                    class="text-sm pl-9 pr-2 py-0.5 text-left truncate
+                    {selectedSection === section ? 'text-slate-200 bg-slate-600' : 'text-slate-300 hover:bg-slate-600'}"
+                    on:click={() => onSectionClicked(file.content, section)}
+                >
+                    {section.name}
+                </Button.Root>
+            {/each}
+        </Collapsible.Content>
+    {/if}
 </Collapsible.Root>

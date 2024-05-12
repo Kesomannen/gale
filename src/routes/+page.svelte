@@ -1,21 +1,33 @@
 <script lang="ts">
-	import Markdown from "$lib/Markdown.svelte";
-	import { onMount } from "svelte";
+	import Markdown from '$lib/Markdown.svelte';
+	import { getVersion } from '@tauri-apps/api/app';
+	import { onMount } from 'svelte';
 
-  let changelogPromise: Promise<string>;
+	let version: string;
+	let changelogPromise: Promise<string>;
 
-  onMount(async () => {
-    let response = await fetch("https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md");
-    changelogPromise = response.text();
-  });
+	onMount(async () => {
+		getVersion().then((v) => {
+			version = v;
+		});
+
+		let response = await fetch(
+			'https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md'
+		);
+		changelogPromise = response.text();
+	});
 </script>
 
 <div class="px-6 overflow-y-auto text-slate-100">
-  {#await changelogPromise}
-    Loading changelog...
-  {:then changelog}
-    <Markdown source={changelog} />
-  {:catch error}
-    Failed to load changelog: {error.message}
-  {/await}
+	{#await changelogPromise}
+		Loading changelog...
+	{:then changelog}
+		<Markdown source={changelog} />
+	{:catch error}
+		Failed to load changelog: {error.message}
+	{/await}
+</div>
+
+<div class="absolute right-3 bottom-1 text-slate-400">
+	Gale v{version}
 </div>

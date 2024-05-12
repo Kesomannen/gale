@@ -54,8 +54,8 @@ export function removeError(index: number) {
 }
 
 export function setConfig(id: ConfigEntryId, value: ConfigValue) {
-	invokeCommand('set_config_entry', { 
-		file: id.file.name,
+	invokeCommand('set_tagged_config_entry', { 
+		file: id.file.content.name,
 		section: id.section.name,
 		entry: id.entry.name,
 		value 

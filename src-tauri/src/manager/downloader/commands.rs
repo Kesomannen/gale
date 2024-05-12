@@ -11,10 +11,18 @@ use crate::{
 use uuid::Uuid;
 use tauri::Manager;
 use itertools::Itertools;
+use super::InstallState;
 
 #[tauri::command]
 pub async fn install_mod(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
     super::install_with_deps(&mod_ref, &app).await?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn cancel_install(install_state: StateMutex<InstallState>) -> Result<()> {
+    install_state.lock().unwrap().cancelled = true;
 
     Ok(())
 }
