@@ -23,6 +23,10 @@ export function sentenceCase(str: string): string {
 	return textcase.charAt(0).toUpperCase() + textcase.slice(1);
 }
 
+export function titleCase(str: string): string {
+	return str.replace(/\b\w/g, l => l.toUpperCase());
+}
+
 export function fileName(configFile: LoadFileResult) {
 	if (configFile.type == "ok") {
 		return configFile.content.name;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setConfig } from '$lib/invoke';
+	import { setTaggedConfig } from '$lib/invoke';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import { Checkbox } from 'bits-ui';
 	import ResetConfigButton from './ResetConfigButton.svelte';
@@ -17,7 +17,7 @@
 		if (newValue === 'indeterminate') return;
 
 		content = newValue;
-		setConfig(entryId, { type: 'boolean', content });
+		setTaggedConfig(entryId, { type: 'boolean', content });
 	}
 </script>
 

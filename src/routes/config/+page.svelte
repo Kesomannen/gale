@@ -158,7 +158,9 @@
 
 				{#each selectedSection.entries as entry (entry.content)}
 					{#if entry.type === 'untagged'}
-						Untagged entry
+						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">
+
+						</div>
 					{:else}
 						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">
 							<Tooltip.Root openDelay={200}>

@@ -154,7 +154,7 @@ impl<'a> Parser<'a> {
 
             if line.starts_with('[') {
                 self.parse_section()?;
-            } else if line.starts_with("##") {
+            } else if line.starts_with('#') {
                 if line.starts_with("## Settings file was created by plugin ") {
                     self.parse_metadata()?;
                 } else {

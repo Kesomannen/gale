@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setConfig } from '$lib/invoke';
+	import { setTaggedConfig } from '$lib/invoke';
 	import type { ConfigEntryId, ConfigValue, SelectItem } from '$lib/models';
 	import { Select } from 'bits-ui';
 	import ResetConfigButton from './ResetConfigButton.svelte';
@@ -26,7 +26,7 @@
 
 	function onSelectedChange(newValues: string[]) {
 		content.values = newValues;
-		setConfig(entryId, {
+		setTaggedConfig(entryId, {
 			type: 'flags',
 			content: {
 				values: newValues,

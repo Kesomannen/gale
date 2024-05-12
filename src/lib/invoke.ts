@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api';
 import { writable, type Writable } from 'svelte/store';
-import type { ConfigEntryId, ConfigValue } from './models';
+import type { ConfigEntryId, ConfigFile, ConfigSection, ConfigValue } from './models';
 import { listen } from '@tauri-apps/api/event';
 
 const errorDuration = 7500;
@@ -53,11 +53,20 @@ export function removeError(index: number) {
 	});
 }
 
-export function setConfig(id: ConfigEntryId, value: ConfigValue) {
+export function setTaggedConfig(id: ConfigEntryId, value: ConfigValue) {
 	invokeCommand('set_tagged_config_entry', { 
 		file: id.file.content.name,
 		section: id.section.name,
 		entry: id.entry.name,
 		value 
 	}).then(() => id.entry.value = value);
+}
+
+export function setUntaggedConfig(file: ConfigFile, section: ConfigSection, name: string, value: string) {
+	invokeCommand('set_untagged_config_entry', { 
+		file: file.name,
+		section: section.name,
+		entry: name,
+		value 
+	});
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setConfig } from "$lib/invoke";
+	import { setTaggedConfig } from "$lib/invoke";
 	import type { ConfigValue, ConfigNum, ConfigEntryId, ConfigRange } from "$lib/models";
 	import { Slider } from "bits-ui";
 	import ResetConfigButton from "./ResetConfigButton.svelte";
@@ -17,7 +17,7 @@
 
     function onValueChange(newValue: number) {
         content.value = newValue;
-        setConfig(entryId, { type, content });
+        setTaggedConfig(entryId, { type, content });
     }
 </script>
 

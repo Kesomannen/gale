@@ -4,7 +4,7 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import { slide } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
-	import { setConfig } from '$lib/invoke';
+	import { setTaggedConfig } from '$lib/invoke';
 
 	export let entryId: ConfigEntryId;
 
@@ -25,7 +25,7 @@
 	}
 
 	function onSelectChange(value: string) {
-		setConfig(entryId, {
+		setTaggedConfig(entryId, {
 			type: 'enum',
 			content: {
 				value,
