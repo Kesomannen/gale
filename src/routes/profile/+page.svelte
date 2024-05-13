@@ -6,7 +6,7 @@
 	import { currentGame, currentProfile } from '$lib/profile';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button, Dialog, Switch } from 'bits-ui';
+	import { Button, Dialog, Switch, Tooltip } from 'bits-ui';
 
 	let mods: Mod[];
 	let activeMod: Mod | undefined;
@@ -113,9 +113,15 @@
 		<Switch.Root
 			checked={mod.enabled ?? true}
 			onCheckedChange={_ => invokeCommand('toggle_mod', { uuid: mod.uuid }).then(refresh)}
-			class="rounded-full bg-slate-800 w-12 h-6"
+			on:click={evt => evt.stopPropagation()}
+			class="peer flex items-center px-1 py-1 rounded-full w-12 h-6 ml-2 group
+						bg-slate-600 hover:bg-slate-500
+						data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
 		>
-			<Switch.Thumb class="h-full w-6 bg-slate-600" />
+			<Switch.Thumb class="pointer-events-none h-full w-4 rounded-full transition-transform ease-out duration-75
+													bg-slate-300 hover:bg-slate-200
+													data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100" 
+			/>
 		</Switch.Root>
 	</div>
 </ModList>

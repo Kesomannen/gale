@@ -33,7 +33,8 @@
 			outTransition={scale}
 			outTransitionConfig={{ duration: 100, easing: quartIn, start: 0.8 }}
 		>
-			<div class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden w-full max-w-[40rem] max-h-[90%] pointer-events-auto">
+			<div class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden max-h-[90%] pointer-events-auto
+								 min-w-[45rem] w-fit max-w-[85%]">
 				{#if title}
 					<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
 				{/if}

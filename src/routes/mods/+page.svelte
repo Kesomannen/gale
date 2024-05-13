@@ -10,6 +10,7 @@
 	import { onMount } from 'svelte';
 	import { listen } from '@tauri-apps/api/event';
 	import { currentGame } from '$lib/profile';
+	import { slide } from 'svelte/transition';
 
 	let mods: Mod[];
 	let queryArgs: QueryModsArgs;
@@ -80,7 +81,7 @@
 						disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
 				disabled={isModInstalled}
 			>
-				<Icon icon="mdi:dots-vertical" class="align-middle" />
+				<Icon icon="mdi:chevron-down" class="text-xl align-middle" />
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content
 				class="flex flex-col bg-gray-700 gap-0.5 shadow-xl p-1 w-48 rounded-lg border border-gray-500 max-h-72 overflow-y-auto"

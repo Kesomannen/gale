@@ -9,6 +9,7 @@
 - The config parser now supports untagged entries
 - Imported profiles with disabled mods are now handled correctly
 - Fixed decimal config sliders only allowing whole number values
+- Various UI changes
 
 ## 0.2.0 (2024-05-08)
 

@@ -1,4 +1,4 @@
-use std::{path::Path, process::Command};
+use std::{io::Read, os::windows::io::AsHandle, path::Path, process::Command};
 
 use anyhow::{anyhow, bail, ensure, Result};
 
@@ -105,10 +105,12 @@ fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()>{
         .map_err(|_| anyhow!("failed to resolve BepInEx preloader path, is BepInEx installed?"))?;
 
     command
-        .arg("--doorstop-enable")
-        .arg("true")
-        .arg("--doorstop-target")
-        .arg(preloader_path);
+        .args([
+            "--doorstop-enable",
+            "true",
+            "--doorstop-target",
+            preloader_path,
+        ]);
 
     Ok(())
 }

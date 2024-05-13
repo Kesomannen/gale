@@ -11,6 +11,7 @@ use crate::{
 use super::ModpackArgs;
 use tauri::{AppHandle, State};
 use uuid::Uuid;
+use anyhow::Context;
 
 #[tauri::command]
 pub async fn export_code(
@@ -40,7 +41,8 @@ pub fn export_file(
 }
 
 #[tauri::command]
-pub async fn import_code(key: Uuid, app: AppHandle) -> Result<()> {
+pub async fn import_code(key: &str, app: AppHandle) -> Result<()> {
+    let key = Uuid::parse_str(key).context("invalid code")?;
     super::import_code(key, &app).await?;
 
     Ok(())
