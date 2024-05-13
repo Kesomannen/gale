@@ -230,7 +230,7 @@ impl<'a> Installer<'a> {
         if try_cache_install(borrowed.clone(), profile, &path)? {
             if !enabled {
                 profile
-                    .toggle_mod(&mod_ref.package_uuid, &thunderstore)
+                    .force_toggle_mod(&mod_ref.package_uuid, &thunderstore)
                     .context("failed to disable installed mod")?;
             }
 
@@ -316,7 +316,7 @@ impl<'a> Installer<'a> {
 
         if !enabled {
             profile
-                .toggle_mod(&mod_ref.package_uuid, &thunderstore)
+                .force_toggle_mod(&mod_ref.package_uuid, &thunderstore)
                 .context("failed to disable installed mod")?;
         }
 

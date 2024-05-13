@@ -51,7 +51,6 @@
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	bind:open
 	onClose={() => {
-		console.log('closed');
 		invokeCommand('cancel_install')
 	}}
 >

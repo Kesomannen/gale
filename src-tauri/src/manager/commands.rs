@@ -4,12 +4,13 @@ use typeshare::typeshare;
 use uuid::Uuid;
 
 use crate::{
-    command_util::{Result, StateMutex}, games::{self, Game, GAMES}, prefs::Prefs, thunderstore::{
-        models::FrontendProfileMod, query::QueryModsArgs, Thunderstore
-    }
+    command_util::{Result, StateMutex},
+    games::{self, Game, GAMES},
+    prefs::Prefs,
+    thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore},
 };
 
-use super::{ModManager, RemoveModResponse};
+use super::{ModActionResponse, ModManager, Profile};
 
 #[typeshare]
 #[derive(Serialize)]
@@ -36,7 +37,7 @@ pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo {
     GameInfo {
         all: &*GAMES,
         active: manager.active_game,
-        favorites
+        favorites,
     }
 }
 
@@ -79,7 +80,7 @@ pub fn set_active_game(
     if manager.active_game.id != game.id {
         manager.active_game = game;
         thunderstore.switch_game(game, app);
-    
+
         save(&manager, &prefs)?;
     }
 
@@ -178,16 +179,49 @@ pub fn remove_mod(
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
-) -> Result<RemoveModResponse> {
+) -> Result<ModActionResponse> {
+    mod_action_command(
+        uuid,
+        manager,
+        thunderstore,
+        prefs,
+        |profile, uuid, thunderstore| profile.remove_mod(uuid, thunderstore),
+    )
+}
+
+#[tauri::command]
+pub fn toggle_mod(
+    uuid: Uuid,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+    prefs: StateMutex<Prefs>,
+) -> Result<ModActionResponse> {
+    mod_action_command(
+        uuid,
+        manager,
+        thunderstore,
+        prefs,
+        |profile, uuid, thunderstore| profile.toggle_mod(uuid, thunderstore),
+    )
+}
+
+fn mod_action_command<F>(
+    uuid: Uuid,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+    prefs: StateMutex<Prefs>,
+    action: F,
+) -> Result<ModActionResponse>
+where
+    F: FnOnce(&mut Profile, &Uuid, &Thunderstore) -> anyhow::Result<ModActionResponse>,
+{
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let response = manager
-        .active_profile_mut()
-        .remove_mod(&uuid, &thunderstore)?;
+    let response = action(manager.active_profile_mut(), &uuid, &thunderstore)?;
 
-    if let RemoveModResponse::Removed = response {
+    if let ModActionResponse::Done = response {
         save(&manager, &prefs)?;
     }
 
@@ -195,18 +229,8 @@ pub fn remove_mod(
 }
 
 #[tauri::command]
-pub fn toggle_mod(uuid: Uuid, manager: StateMutex<ModManager>, thunderstore: StateMutex<Thunderstore>) -> Result<()> {
-    let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
-
-    manager.active_profile_mut().toggle_mod(&uuid, &thunderstore)?;
-
-    Ok(())
-}
-
-#[tauri::command]
 pub fn force_remove_mods(
-    package_uuids: Vec<Uuid>,
+    uuids: Vec<Uuid>,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
@@ -216,8 +240,29 @@ pub fn force_remove_mods(
     let prefs = prefs.lock().unwrap();
 
     let profile = manager.active_profile_mut();
-    for package_uuid in &package_uuids {
+    for package_uuid in &uuids {
         profile.force_remove_mod(package_uuid, &thunderstore)?;
+    }
+
+    save(&manager, &prefs)?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn force_toggle_mods(
+    uuids: Vec<Uuid>,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+    prefs: StateMutex<Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let profile = manager.active_profile_mut();
+    for package_uuid in &uuids {
+        profile.force_toggle_mod(package_uuid, &thunderstore)?;
     }
 
     save(&manager, &prefs)?;

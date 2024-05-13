@@ -1,5 +1,9 @@
 use std::{
-    cmp::Ordering, collections::HashMap, fs, path::{Path, PathBuf}, sync::Mutex
+    cmp::Ordering,
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    sync::Mutex,
 };
 
 use anyhow::{ensure, Context, Result};
@@ -9,11 +13,15 @@ use uuid::Uuid;
 use walkdir::WalkDir;
 
 use crate::{
-    fs_util, games::{self, Game}, prefs::Prefs, thunderstore::{
+    fs_util,
+    games::{self, Game},
+    prefs::Prefs,
+    thunderstore::{
         models::FrontendProfileMod,
         query::{self, QueryModsArgs, Queryable},
         BorrowedMod, ModRef, Thunderstore,
-    }, util::IoResultExt
+    },
+    util::IoResultExt,
 };
 use tauri::{AppHandle, Manager};
 
@@ -47,7 +55,7 @@ pub struct ModManager {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ManagerSaveData {
-    active_game: String
+    active_game: String,
 }
 
 pub struct ManagerGame {
@@ -88,7 +96,10 @@ struct ProfileMod {
 
 impl ProfileMod {
     fn new(kind: ProfileModKind) -> Self {
-        Self { kind, enabled: true }
+        Self {
+            kind,
+            enabled: true,
+        }
     }
 
     fn local(data: LocalMod) -> Self {
@@ -223,7 +234,10 @@ impl From<QueryableProfileMod<'_>> for FrontendProfileMod {
             QueryableProfileModKind::Remote(remote) => remote.into(),
         };
 
-        FrontendProfileMod { data, enabled: value.enabled }
+        FrontendProfileMod {
+            data,
+            enabled: value.enabled,
+        }
     }
 }
 
@@ -248,11 +262,17 @@ struct Profile {
 
 impl Profile {
     fn get_mod<'a>(&'a self, uuid: &Uuid) -> Result<&'a ProfileMod> {
-        self.mods.iter().find(|p| p.uuid() == uuid).context("mod not found in profile")
+        self.mods
+            .iter()
+            .find(|p| p.uuid() == uuid)
+            .context("mod not found in profile")
     }
 
     fn get_mod_mut<'a>(&'a mut self, uuid: &Uuid) -> Result<&'a mut ProfileMod> {
-        self.mods.iter_mut().find(|p| p.uuid() == uuid).context("mod not found in profile")
+        self.mods
+            .iter_mut()
+            .find(|p| p.uuid() == uuid)
+            .context("mod not found in profile")
     }
 
     fn has_mod(&self, uuid: &Uuid) -> bool {
@@ -285,11 +305,9 @@ impl Profile {
             .map(|p| p.queryable(thunderstore))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(
-            query::query_mods(args, queryables.into_iter())
-                .map(|queryable| queryable.into())
-                .collect()
-        )
+        Ok(query::query_mods(args, queryables.into_iter())
+            .map(|queryable| queryable.into())
+            .collect())
     }
 
     fn dependants<'a>(
@@ -330,16 +348,16 @@ impl Profile {
 
     fn load(mut path: PathBuf) -> Result<Self> {
         path.push("profile.json");
-    
+
         let manifest = fs::read_to_string(&path).fs_context("read profile manifest", &path)?;
-    
+
         path.pop();
-    
+
         let manifest: ProfileManifest =
             serde_json::from_str(&manifest).context("failed to parse profile manifest")?;
-    
+
         let config = config::load_config(path.clone()).collect();
-    
+
         Ok(Profile {
             name: manifest.name.to_owned(),
             mods: manifest.mods,
@@ -360,8 +378,8 @@ pub struct Dependant {
 #[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type", content = "content")]
-pub enum RemoveModResponse {
-    Removed,
+pub enum ModActionResponse {
+    Done,
     HasDependants(Vec<Dependant>),
 }
 
@@ -370,29 +388,13 @@ impl Profile {
         &mut self,
         uuid: &Uuid,
         thunderstore: &Thunderstore,
-    ) -> Result<RemoveModResponse> {
-        let profile_mod = self.get_mod(uuid)?;
-
-        if let Some((mod_ref, _)) = profile_mod.as_remote() {
-            let borrowed_mod = mod_ref.borrow(thunderstore)?;
-            let dependants = self.dependants(borrowed_mod, thunderstore)?;
-
-            if !dependants.is_empty() {
-                let response = dependants
-                    .iter()
-                    .map(|m| Dependant {
-                        name: m.package.name.clone(),
-                        uuid: m.package.uuid4,
-                    })
-                    .collect();
-
-                return Ok(RemoveModResponse::HasDependants(response));
-            }
-        };
-
-        self.force_remove_mod(uuid, thunderstore)?;
-
-        Ok(RemoveModResponse::Removed)
+    ) -> Result<ModActionResponse> {
+        self.do_mod_action(
+            uuid,
+            thunderstore,
+            |_| true,
+            |this| this.force_remove_mod(uuid, thunderstore),
+        )
     }
 
     fn force_remove_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
@@ -411,7 +413,20 @@ impl Profile {
         Ok(())
     }
 
-    fn toggle_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
+    fn toggle_mod(
+        &mut self,
+        uuid: &Uuid,
+        thunderstore: &Thunderstore,
+    ) -> Result<ModActionResponse> {
+        self.do_mod_action(
+            uuid,
+            thunderstore,
+            |profile_mod| profile_mod.enabled, // only check if we are disabling
+            |this| this.force_toggle_mod(uuid, thunderstore),
+        )
+    }
+
+    fn force_toggle_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
         let state = profile_mod.enabled;
         let new_state = !state;
@@ -421,7 +436,7 @@ impl Profile {
                 .into_iter()
                 .filter_map(|e| e.ok())
                 .filter(|e| e.file_type().is_file());
-            
+
             for file in files {
                 let path = file.path();
                 if new_state {
@@ -446,8 +461,56 @@ impl Profile {
         Ok(())
     }
 
-    fn scan_mod<'a, F>(&'a self, profile_mod: &'a ProfileModKind, thunderstore: &'a Thunderstore, scan_dir: F) -> Result<()>
-    where F: Fn(&Path) -> Result<()> 
+    fn do_mod_action<F, G>(
+        &mut self,
+        uuid: &Uuid,
+        thunderstore: &Thunderstore,
+        should_check: F,
+        action: G,
+    ) -> Result<ModActionResponse>
+    where
+        F: FnOnce(&ProfileMod) -> bool,
+        G: FnOnce(&mut Self) -> Result<()>,
+    {
+        let profile_mod = self.get_mod(uuid)?;
+
+        if should_check(profile_mod) {
+            if let Some((mod_ref, _)) = profile_mod.as_remote() {
+                let borrowed_mod = mod_ref.borrow(thunderstore)?;
+
+                let ignored_category = "Modpacks".to_string();
+                let dependants = self.dependants(borrowed_mod, thunderstore)?
+                    .into_iter()
+                    .filter(|m| !m.package.categories.contains(&ignored_category))
+                    .collect::<Vec<_>>();
+
+                if !dependants.is_empty() {
+                    let dependants = dependants
+                        .iter()
+                        .map(|m| Dependant {
+                            name: m.package.name.clone(),
+                            uuid: m.package.uuid4,
+                        })
+                        .collect();
+
+                    return Ok(ModActionResponse::HasDependants(dependants));
+                }
+            }
+        }
+
+        action(self)?;
+
+        Ok(ModActionResponse::Done)
+    }
+
+    fn scan_mod<'a, F>(
+        &'a self,
+        profile_mod: &'a ProfileModKind,
+        thunderstore: &'a Thunderstore,
+        scan_dir: F,
+    ) -> Result<()>
+    where
+        F: Fn(&Path) -> Result<()>,
     {
         let name = profile_mod.full_name(thunderstore)?;
         let mut path = self.path.join("BepInEx");
@@ -535,12 +598,12 @@ impl ManagerGame {
             Some(game) => game,
             None => return Ok(None),
         };
-        
+
         path.push("game.json");
 
         let json = fs::read_to_string(&path).fs_context("reading game save data", &path)?;
-        let data: ManagerGameSaveData = serde_json::from_str(&json)
-            .context("failed to parse game save data")?;
+        let data: ManagerGameSaveData =
+            serde_json::from_str(&json).context("failed to parse game save data")?;
 
         path.pop();
 
@@ -558,12 +621,15 @@ impl ManagerGame {
 
         path.pop();
 
-        Ok(Some((game, Self {
-            profiles,
-            path,
-            favorite: data.favorite,
-            active_profile_index: data.active_profile_index,
-        })))
+        Ok(Some((
+            game,
+            Self {
+                profiles,
+                path,
+                favorite: data.favorite,
+                active_profile_index: data.active_profile_index,
+            },
+        )))
     }
 }
 

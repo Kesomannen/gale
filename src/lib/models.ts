@@ -141,7 +141,7 @@ export interface Dependant {
 }
 
 export type RemoveModResponse = 
-	| { type: "removed", content?: undefined }
+	| { type: "done", content?: undefined }
 	| { type: "hasDependants", content: Dependant[] };
 
 export type InstallTask = 
