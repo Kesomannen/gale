@@ -81,8 +81,8 @@
 		<Switch.Root
 			checked={mod.enabled ?? true}
 			onCheckedChange={evt => {
+				mod.enabled = !evt;
 				disableDependants.tryExecute(mod);
-				
 			}}
 			on:click={(evt) => evt.stopPropagation()}
 			class="peer flex items-center px-1 py-1 rounded-full w-12 h-6 ml-2 group

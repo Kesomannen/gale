@@ -49,7 +49,7 @@
 	}
 </script>
 
-<Popup title="Confirm action" bind:open>
+<Popup title="Confirm action" bind:open onClose={onExecute}>
 	{#if mod}
 		<Dialog.Description class="text-slate-300">
 			The following mods depend on {mod.name} and

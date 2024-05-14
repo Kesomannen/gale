@@ -24,7 +24,6 @@
 	onMount(() => {
 		listen<InstallProgress>('install_progress', (event) => {
 			progress = event.payload;
-			console.log(progress);
 
 			switch (progress.task.kind) {
 				case 'done':

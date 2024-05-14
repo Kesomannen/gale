@@ -90,20 +90,20 @@ pub struct LegacyProfileCreateResponse {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageManifest {
     pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
     pub description: String,
     pub version_number: semver::Version,
     pub dependencies: Vec<String>,
     pub website_url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<PackageInstaller>>,
 }
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageInstaller {
     pub identifier: String,
 }

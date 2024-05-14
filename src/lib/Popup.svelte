@@ -7,10 +7,6 @@
 	export let open: boolean;
 	export let canClose: boolean = true;
 	export let onClose: () => void = () => {};
-
-	$: {
-		if (!open) onClose();
-	}
 </script>
 
 <Dialog.Root
@@ -18,6 +14,9 @@
 	closeOnEscape={canClose}
 	onOutsideClick={(evt) => {
 		if (!canClose) evt.preventDefault();
+	}}
+	onOpenChange={state => {
+		if (!state) onClose();
 	}}
 >
 	<Dialog.Portal>
