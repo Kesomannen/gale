@@ -81,7 +81,6 @@
 		<Switch.Root
 			checked={mod.enabled ?? true}
 			onCheckedChange={evt => {
-				mod.enabled = !evt;
 				disableDependants.tryExecute(mod);
 			}}
 			on:click={(evt) => evt.stopPropagation()}
@@ -102,7 +101,10 @@
 	bind:this={removeDependants}
 	verb="Remove"
 	commandName="remove_mod"
-	onExecute={refresh}
+	onExecute={() => {
+		refresh();
+		activeMod = undefined;
+	}}
 />
 
 <DependantsPopup

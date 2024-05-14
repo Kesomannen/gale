@@ -18,17 +18,14 @@
 	<img src={mod.icon ?? FALLBACK_ICON} alt="Mod icon" class="w-12 h-12 rounded-md group-hover:shadow-xl" />
 	<div class="pl-4 overflow-hidden flex-grow flex-shrink">
 		<div class="flex items-center">
-			<div class="text-slate-100 group-hover:text-white font-medium {mod.enabled === false && 'line-through'}">
+			<div class="font-medium {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}">
 				{mod.name}
 			</div>
-			<div class="text-slate-400 font-light pl-2 pr-1 {mod.enabled === false && 'line-through'}">
+			<div class="font-light pl-2 pr-1 {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-400'}">
 				{mod.version ?? ""}
 			</div>
 			{#if mod.isPinned}
 				<Icon class="ml-1 text-slate-500" icon="mdi:pin" />
-			{/if}
-			{#if mod.enabled === false}
-				<Icon class="ml-1 text-yellow-400" icon="mdi:eye-off" />
 			{/if}
 			{#if mod.isDeprecated}
 				<Icon class="ml-1 text-red-500" icon="mdi:error" />
@@ -37,7 +34,7 @@
 				<Icon class="ml-1 text-blue-500" icon="mdi:arrow-up-circle" />
 			{/if}
 		</div>
-		<div class="text-slate-300 group-hover:text-slate-200 truncate text-left {mod.enabled === false && 'line-through'}">
+		<div class="truncate text-left {mod.enabled === false ? 'line-through text-slate-400' : 'text-slate-300'}">
 			{mod.description ?? ""}
 		</div>
 	</div>
