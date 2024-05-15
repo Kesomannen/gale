@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 (2024-05-15)
+
+### Fixed
+
+- Compatibility with profiles created prior to 0.3.0
+
 ## 0.3.0 (2024-05-15)
 
 ### Added
