@@ -71,7 +71,7 @@ jobs:
       - name: build thunderstore cli
         if: matrix.platform == 'windows-latest'
         working-directory: tcli/ThunderstoreCLI
-        run: dotnet build --release
+        run: dotnet build --configuration Release
 
       - name: publish to thunderstore
         if: matrix.platform == 'windows-latest'
