@@ -77,4 +77,4 @@ jobs:
         if: matrix.platform == 'windows-latest'
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: tcli/ThunderstoreCLI/bin/release/net7.0/tcli.exe publish --package-version ${{ steps.tauri.outputs.appVersion }}
+        run: ./tcli/ThunderstoreCLI/bin/release/net7.0/tcli.exe publish --package-version ${{ steps.tauri.outputs.appVersion }}
