@@ -41,7 +41,7 @@ pub fn from_str(text: &str, name: String) -> LoadFileResult {
         lines: text.lines().peekable(),
         sections: Vec::new(),
         metadata: None,
-        line: 1,
+        line: 0,
     };
 
     match parser.parse() {
@@ -85,10 +85,10 @@ struct EntryBuilder<'a> {
 
 impl EntryBuilder<'_> {
     fn build(self) -> Result<TaggedEntry> {
-        let name = self.name.context("missing setting name")?.to_owned();
-        let type_name = self.type_name.context("missing setting type")?.to_owned();
+        let name = self.name.context("missing entry name")?.to_owned();
+        let type_name = self.type_name.context("missing entry type")?.to_owned();
 
-        let value = self.value.context("missing setting value")?;
+        let value = self.value.context("missing entry value")?;
         let value = self.parse_value(value)?;
 
         let default_value = self
@@ -133,8 +133,8 @@ impl EntryBuilder<'_> {
     }
 
     fn parse_simple_value(&self, value: &str) -> Result<Value> {
-        Ok(match self.type_name.context("missing setting type")? {
-            "Boolean" => Value::Boolean(value == "true"),
+        Ok(match self.type_name.context("missing entry type")? {
+            "Boolean" => Value::Boolean(value.parse()?),
             "String" => Value::String(value.to_owned()),
             "Int32" => Value::Int32(Num::parse(value, self.range)?),
             "Single" => Value::Single(Num::parse(value, self.range)?),
@@ -299,8 +299,8 @@ impl<'a> Parser<'a> {
 
     fn parse_untagged_entry(&mut self) -> Result<(&str, &str)> {
         let mut split = self.consume_or_eof()?.split(" = ");
-        let name = split.next().context("expected setting name")?;
-        let value_str = split.next().context("expected setting value")?;
+        let name = split.next().context("expected entry name")?;
+        let value_str = split.next().context("expected entry value")?;
 
         Ok((name, value_str))
     }
@@ -308,7 +308,7 @@ impl<'a> Parser<'a> {
     fn push_entry(&mut self, entry: Entry) -> Result<()> {
         ensure!(
             !self.sections.is_empty(),
-            "config entry {} has no section",
+            "entry {} has no section",
             entry.name()
         );
 

@@ -21,6 +21,7 @@
 	import StringConfig from '$lib/config/StringConfig.svelte';
 	import EnumConfig from '$lib/config/EnumConfig.svelte';
 	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
+	import UntaggedConfig from '$lib/config/UntaggedConfig.svelte';
 
 	let files: LoadFileResult[] | undefined;
 
@@ -159,7 +160,17 @@
 				{#each selectedSection.entries as entry (entry.content)}
 					{#if entry.type === 'untagged'}
 						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">
-
+							<div
+								class="text-slate-300 mr-auto pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
+							>
+								{sentenceCase(entry.content.name)}
+							</div>
+							<UntaggedConfig 
+								file={selectedFile.content}
+								section={selectedSection}
+								name={entry.content.name}
+								value={entry.content.value}
+							/>
 						</div>
 					{:else}
 						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">

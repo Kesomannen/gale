@@ -1,7 +1,7 @@
 <script lang="ts">
 	import InputField from '$lib/InputField.svelte';
 	import { setUntaggedConfig } from '$lib/invoke';
-	import type { ConfigFile, ConfigSection, LoadFileResult } from '$lib/models';
+	import type { ConfigFile, ConfigSection } from '$lib/models';
 
 	export let file: ConfigFile;
 	export let section: ConfigSection;
