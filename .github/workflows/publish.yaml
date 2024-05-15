@@ -63,18 +63,18 @@ jobs:
 
       - name: clone thunderstore cli (fork)
         uses: actions/checkout@v4
-        if: matrix.platform == 'windows
+        if: matrix.platform == 'windows-latest'
         with:
           repository: Kesomannen/thunderstore-cli
           path: tcli
 
       - name: build thunderstore cli
-        if: matrix.platform == 'windows'
+        if: matrix.platform == 'windows-latest'
         working-directory: tcli/ThunderstoreCLI
         run: dotnet build --release
 
       - name: publish to thunderstore
-        if: matrix.platform == 'windows'
+        if: matrix.platform == 'windows-latest'
         working-directory: tcli/ThunderstoreCLI
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
