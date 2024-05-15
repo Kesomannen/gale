@@ -89,6 +89,7 @@ pub struct LocalMod {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct ProfileMod {
+    #[serde(default = "default_true")]
     enabled: bool,
     #[serde(flatten)]
     kind: ProfileModKind,
