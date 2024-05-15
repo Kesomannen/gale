@@ -75,7 +75,6 @@ jobs:
 
       - name: publish to thunderstore
         if: matrix.platform == 'windows-latest'
-        working-directory: tcli/ThunderstoreCLI
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: ./bin/release/net7.0/tcli.exe publish --package-version ${{ steps.tauri.outputs.appVersion }}
+        run: tcli/ThunderstoreCLI/bin/release/net7.0/tcli.exe publish --package-version ${{ steps.tauri.outputs.appVersion }}
