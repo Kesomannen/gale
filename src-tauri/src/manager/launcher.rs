@@ -1,4 +1,4 @@
-use std::{io::Read, os::windows::io::AsHandle, path::Path, process::Command};
+use std::{path::Path, process::Command};
 
 use anyhow::{anyhow, bail, ensure, Result};
 
