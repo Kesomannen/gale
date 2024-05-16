@@ -1,3 +1,5 @@
+![logo](https://raw.githubusercontent.com/Kesomannen/gale/master/app-icon@0,25x.png)
+
 # Gale Mod Manager
 
 A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
@@ -59,15 +61,15 @@ to start a dev server. Alternatively, do `cargo tauri build` to build an install
 
 *Browse mods*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/0.1.0/images/screenshot1.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot1.png)
 
 *Profile*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/0.1.0/images/screenshot2.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot2.png)
 
 *Config editor*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/0.1.0/images/screenshot3.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot3.png)
 
 ## Credits
 
