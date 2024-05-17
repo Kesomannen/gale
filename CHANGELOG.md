@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Dialog when enabling a mod which has disabled dependencies
+- Close button to all dialogs
+
 ## 0.3.1 (2024-05-15)
 
 ### Fixed

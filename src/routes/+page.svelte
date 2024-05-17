@@ -18,7 +18,11 @@
 	});
 </script>
 
-<div class="px-6 overflow-y-auto text-slate-100">
+<div class="absolute right-6 bottom-1 text-slate-400">
+	Gale v{version}
+</div>
+
+<div class="px-6 overflow-y-auto text-slate-100 w-full">
 	{#await changelogPromise}
 		Loading changelog...
 	{:then changelog}
@@ -26,8 +30,4 @@
 	{:catch error}
 		Failed to load changelog: {error.message}
 	{/await}
-</div>
-
-<div class="absolute right-3 bottom-1 text-slate-400">
-	Gale v{version}
 </div>

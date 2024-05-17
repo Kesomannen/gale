@@ -36,6 +36,10 @@ export function fileName(configFile: LoadFileResult) {
 }
 
 export function isOutdated(mod: Mod): boolean {
+	if (mod.versions.length === 0) {
+		return false;
+	}
+
 	return mod.version !== mod.versions[0].name;
 }
 

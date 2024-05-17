@@ -24,6 +24,7 @@ use crate::{
     util::IoResultExt,
 };
 use tauri::{AppHandle, Manager};
+use itertools::Itertools;
 
 pub mod commands;
 pub mod config;
@@ -376,12 +377,22 @@ pub struct Dependant {
     pub uuid: Uuid,
 }
 
+impl From<BorrowedMod<'_>> for Dependant {
+    fn from(value: BorrowedMod) -> Self {
+        Self {
+            name: value.package.name.clone(),
+            uuid: value.package.uuid4,
+        }
+    }
+}
+
 #[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type", content = "content")]
 pub enum ModActionResponse {
     Done,
     HasDependants(Vec<Dependant>),
+    HasDependencies(Vec<Dependant>),
 }
 
 impl Profile {
@@ -390,12 +401,20 @@ impl Profile {
         uuid: &Uuid,
         thunderstore: &Thunderstore,
     ) -> Result<ModActionResponse> {
-        self.do_mod_action(
-            uuid,
-            thunderstore,
-            |_| true,
-            |this| this.force_remove_mod(uuid, thunderstore),
-        )
+        let profile_mod = self.get_mod(uuid)?;
+
+        if profile_mod.enabled {
+            if let Some((mod_ref, _)) = profile_mod.as_remote() {
+                let borrowed = mod_ref.borrow(thunderstore)?;
+
+                if let Some(dependants) = self.check_dependants(borrowed, thunderstore)? {
+                    return Ok(ModActionResponse::HasDependants(dependants));
+                }
+            }
+        }
+
+        self.force_remove_mod(uuid, thunderstore)?;
+        Ok(ModActionResponse::Done)
     }
 
     fn force_remove_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
@@ -419,12 +438,22 @@ impl Profile {
         uuid: &Uuid,
         thunderstore: &Thunderstore,
     ) -> Result<ModActionResponse> {
-        self.do_mod_action(
-            uuid,
-            thunderstore,
-            |profile_mod| profile_mod.enabled, // only check if we are disabling
-            |this| this.force_toggle_mod(uuid, thunderstore),
-        )
+        let profile_mod = self.get_mod(uuid)?;
+
+        if let Some((mod_ref, _)) = profile_mod.as_remote() {
+            let borrowed = mod_ref.borrow(thunderstore)?;
+
+            if profile_mod.enabled {
+                if let Some(dependants) = self.check_dependants(borrowed.clone(), thunderstore)? {
+                    return Ok(ModActionResponse::HasDependants(dependants));
+                }
+            } else if let Some(deps) = self.check_deps(borrowed, thunderstore)? {
+                return Ok(ModActionResponse::HasDependencies(deps));
+            }
+        }
+
+        self.force_toggle_mod(uuid, thunderstore)?;
+        Ok(ModActionResponse::Done)
     }
 
     fn force_toggle_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
@@ -462,46 +491,54 @@ impl Profile {
         Ok(())
     }
 
-    fn do_mod_action<F, G>(
-        &mut self,
-        uuid: &Uuid,
+    fn check_dependants(
+        &self,
+        borrowed_mod: BorrowedMod,
         thunderstore: &Thunderstore,
-        should_check: F,
-        action: G,
-    ) -> Result<ModActionResponse>
-    where
-        F: FnOnce(&ProfileMod) -> bool,
-        G: FnOnce(&mut Self) -> Result<()>,
-    {
-        let profile_mod = self.get_mod(uuid)?;
+    ) -> Result<Option<Vec<Dependant>>> {
+        let ignored_category = "Modpacks".to_string();
+        let dependants = self
+            .dependants(borrowed_mod, thunderstore)?
+            .into_iter()
+            // filter out modpacks and disabled mods
+            .filter(|m| {
+                !m.package.categories.contains(&ignored_category)
+                    && self.get_mod(&m.package.uuid4).unwrap().enabled
+            })
+            .map(Dependant::from)
+            .collect::<Vec<_>>();
 
-        if should_check(profile_mod) {
-            if let Some((mod_ref, _)) = profile_mod.as_remote() {
-                let borrowed_mod = mod_ref.borrow(thunderstore)?;
+        Ok(match dependants.is_empty() {
+            true => None,
+            false => Some(dependants),
+        })
+    }
 
-                let ignored_category = "Modpacks".to_string();
-                let dependants = self.dependants(borrowed_mod, thunderstore)?
-                    .into_iter()
-                    .filter(|m| !m.package.categories.contains(&ignored_category))
-                    .collect::<Vec<_>>();
+    fn check_deps(
+        &self,
+        borrowed_mod: BorrowedMod,
+        thunderstore: &Thunderstore,
+    ) -> Result<Option<Vec<Dependant>>> {
+        let disabled_deps = thunderstore
+            .dependencies(borrowed_mod.version)
+            .filter_map(|dep| match dep {
+                Ok(dep) => match self.get_mod(&dep.package.uuid4) {
+                    Ok(profile_mod) => match profile_mod.enabled {
+                        true => None,
+                        false => Some(Ok(dep)),
+                    },
+                    Err(e) => Some(Err(e)),
+                },
+                Err(e) => Some(Err(e)),
 
-                if !dependants.is_empty() {
-                    let dependants = dependants
-                        .iter()
-                        .map(|m| Dependant {
-                            name: m.package.name.clone(),
-                            uuid: m.package.uuid4,
-                        })
-                        .collect();
+            })
+            .map_ok(Dependant::from)
+            .collect::<Result<Vec<_>>>()?;
 
-                    return Ok(ModActionResponse::HasDependants(dependants));
-                }
-            }
-        }
-
-        action(self)?;
-
-        Ok(ModActionResponse::Done)
+        Ok(match disabled_deps.is_empty() {
+            true => None,
+            false => Some(disabled_deps),
+        })
     }
 
     fn scan_mod<'a, F>(

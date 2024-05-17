@@ -2,7 +2,7 @@
 	import Popup from '$lib/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
-	import type { Dependant, Mod, QueryModsArgs, RemoveModResponse } from '$lib/models';
+	import type { Dependant, Mod, ModActionResponse, QueryModsArgs } from '$lib/models';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { currentGame, currentProfile } from '$lib/profile';
 	import { isOutdated } from '$lib/util';
@@ -15,6 +15,7 @@
 
 	let removeDependants: DependantsPopup;
 	let disableDependants: DependantsPopup;
+	let enableDependencies: DependantsPopup;
 
 	$: outdatedMods = mods?.filter((mod) => isOutdated(mod));
 
@@ -32,6 +33,39 @@
 			);
 		}
 	}
+
+	async function toggleMod(new_value: boolean, mod: Mod) {
+		let response = await invokeCommand<ModActionResponse>("toggle_mod", {
+			uuid: mod.uuid
+		});
+
+		if (response.type == 'done') {
+			refresh();
+			return;
+		}
+
+		if (new_value) {
+			enableDependencies.openFor(mod, response.content);
+		} else {
+			disableDependants.openFor(mod, response.content);
+		}
+	}
+
+	async function removeMod() {
+		if (!activeMod) return;
+
+		let response = await invokeCommand<ModActionResponse>("remove_mod", {
+			uuid: activeMod.uuid
+		});
+
+		if (response.type == 'done') {
+			refresh();
+			activeMod = undefined;
+			return;
+		}
+
+		removeDependants.openFor(activeMod, response.content);
+	}
 </script>
 
 <ModList
@@ -42,7 +76,7 @@
 		{
 			icon: 'mdi:delete',
 			label: 'Uninstall',
-			onClick: () => removeDependants.tryExecute(activeMod)
+			onClick: removeMod
 		}
 	]}
 >
@@ -80,9 +114,7 @@
 	<div slot="item" let:mod>
 		<Switch.Root
 			checked={mod.enabled ?? true}
-			onCheckedChange={evt => {
-				disableDependants.tryExecute(mod);
-			}}
+			onCheckedChange={(checked) => toggleMod(checked, mod)}
 			on:click={(evt) => evt.stopPropagation()}
 			class="peer flex items-center px-1 py-1 rounded-full w-12 h-6 ml-2 group
 						bg-slate-600 hover:bg-slate-500
@@ -99,7 +131,9 @@
 
 <DependantsPopup
 	bind:this={removeDependants}
+	title="Confirm removal"
 	verb="Remove"
+	description="The following mods depend on %s and will likely not work if it is removed!"
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();
@@ -109,7 +143,19 @@
 
 <DependantsPopup
 	bind:this={disableDependants}
+	title="Confirm disabling"
 	verb="Disable"
+	description="The following mods depend on %s and will likely not work if it is disabled!"
 	commandName="toggle_mod"
 	onExecute={refresh}
+/>
+
+<DependantsPopup
+	bind:this={enableDependencies}
+	title="Confirm enabling"
+	verb="Enable"
+	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled!"
+	commandName="toggle_mod"
+	onExecute={refresh}
+	isPositive={true}
 />

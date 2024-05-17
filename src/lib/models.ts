@@ -140,9 +140,10 @@ export interface Dependant {
 	uuid: string;
 }
 
-export type RemoveModResponse = 
+export type ModActionResponse = 
 	| { type: "done", content?: undefined }
-	| { type: "hasDependants", content: Dependant[] };
+	| { type: "hasDependants", content: Dependant[] }
+	| { type: "hasDependencies", content: Dependant[] }
 
 export type InstallTask = 
 	| { kind: "done", payload?: undefined }

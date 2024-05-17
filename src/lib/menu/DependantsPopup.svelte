@@ -1,17 +1,26 @@
 <script lang="ts">
 	import Popup from '$lib/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { Dependant, Mod, RemoveModResponse as MoActionResponse } from '$lib/models';
+	import type { Dependant, Mod, ModActionResponse } from '$lib/models';
 	import { Button, Dialog } from 'bits-ui';
 
+	export let title: string;
 	export let verb: string;
+	export let description: string;
 	export let commandName: string;
+	export let isPositive: boolean = false;
 	export let onExecute: () => void;
   
   let mod: Mod | undefined;
 	let open: boolean;
-	let dependants: Dependant[] = []
+	let dependants: Dependant[];
   
+	export function openFor(_mod: Mod, _dependants: Dependant[]) {
+		mod = _mod;
+		dependants = _dependants;
+		open = true;
+	}
+
   async function executeAll() {
     if (!mod) return;
     await execute(dependants.map((d) => d.uuid).concat(mod.uuid));
@@ -28,32 +37,12 @@
 		dependants = [];
 		onExecute();
 	}
-
-	export async function tryExecute(target_mod: Mod | undefined) {
-    mod = target_mod;
-		if (!mod) return;
-
-		let response = await invokeCommand<MoActionResponse>(commandName, {
-			uuid: mod.uuid
-		});
-
-		if (response.type == 'done') {
-			mod = undefined;
-			dependants = [];
-      onExecute();
-			return;
-		}
-
-		dependants = response.content;
-		open = true;
-	}
 </script>
 
-<Popup title="Confirm action" bind:open onClose={onExecute}>
+<Popup {title} bind:open onClose={onExecute}>
 	{#if mod}
 		<Dialog.Description class="text-slate-300">
-			The following mods depend on {mod.name} and
-			<strong>will likely not work if {mod.name} is {verb.toLowerCase()}d!</strong>
+			{description.replaceAll('%s', mod.name)}
 			<ul class="mt-1">
 				{#each dependants as dependant}
 					<li>- {dependant.name}</li>
@@ -69,7 +58,7 @@
 			</Dialog.Close>
 			<Dialog.Close>
 				<Button.Root
-					class="rounded-xl px-4 py-2 text-red-400 hover:text-red-300 border border-red-500 hover:border-red-400"
+					class="rounded-xl px-4 py-2 font-semibold text-red-400 hover:text-red-300 border-2 border-red-500 hover:border-red-400"
 					on:click={executeOne}
 				>
 					{verb} {mod.name} only
@@ -77,7 +66,7 @@
 			</Dialog.Close>
 			<Dialog.Close>
 				<Button.Root
-					class="rounded-xl px-4 py-2 text-white bg-red-600 hover:bg-red-500"
+					class="rounded-xl px-4 py-2 text-white {isPositive ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'}"
 					on:click={executeAll}
 				>
 					{verb} all
