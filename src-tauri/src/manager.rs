@@ -17,18 +17,20 @@ use crate::{
     games::{self, Game},
     prefs::Prefs,
     thunderstore::{
+        self,
         models::FrontendProfileMod,
         query::{self, QueryModsArgs, Queryable},
         BorrowedMod, ModRef, Thunderstore,
     },
     util::IoResultExt,
 };
-use tauri::{AppHandle, Manager};
 use itertools::Itertools;
+use tauri::{AppHandle, Manager};
 
 pub mod commands;
 pub mod config;
 pub mod downloader;
+pub mod exporter;
 pub mod importer;
 pub mod launcher;
 
@@ -89,7 +91,7 @@ pub struct LocalMod {
 #[typeshare]
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct ProfileMod {
+pub struct ProfileMod {
     #[serde(default = "default_true")]
     enabled: bool,
     #[serde(flatten)]
@@ -116,16 +118,16 @@ impl ProfileMod {
         self.kind.uuid()
     }
 
+    fn into_remote(self) -> Option<(ModRef, bool)> {
+        self.kind.into_remote().map(|remote| (remote, self.enabled))
+    }
+
     fn as_remote(&self) -> Option<(&ModRef, bool)> {
         self.kind.as_remote().map(|remote| (remote, self.enabled))
     }
 
     fn as_local(&self) -> Option<(&LocalMod, bool)> {
         self.kind.as_local().map(|local| (local, self.enabled))
-    }
-
-    fn full_name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
-        self.kind.full_name(thunderstore)
     }
 
     fn queryable<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<QueryableProfileMod<'a>> {
@@ -161,6 +163,13 @@ impl ProfileModKind {
         match self {
             ProfileModKind::Local(local_mod) => &local_mod.uuid,
             ProfileModKind::Remote(mod_ref) => &mod_ref.package_uuid,
+        }
+    }
+
+    fn into_remote(self) -> Option<ModRef> {
+        match self {
+            ProfileModKind::Remote(mod_ref) => Some(mod_ref),
+            _ => None,
         }
     }
 
@@ -322,25 +331,14 @@ impl Profile {
             .map(|(other, _)| other.borrow(thunderstore))
             .filter_map(|other| match other {
                 Ok(other) => {
-                    let deps = thunderstore
-                        .dependencies(other.version)
-                        .collect::<Result<Vec<_>>>()
-                        .with_context(|| {
-                            format!(
-                                "failed to resolve dependencies of {}",
-                                other.package.full_name
-                            )
-                        });
-
-                    match deps {
-                        Ok(deps) => match deps
-                            .into_iter()
-                            .any(|dep| dep.package.uuid4 == target_mod.package.uuid4)
-                        {
-                            true => Some(Ok(other)),
-                            false => None,
-                        },
-                        Err(e) => Some(Err(e)),
+                    match other.version.dependencies.iter().any(|dep| {
+                        // don't look for the exact version, just the package name
+                        thunderstore::parse_mod_ident(dep, '-')
+                            .map(|(full_name, _)| full_name == target_mod.package.full_name)
+                            .unwrap_or(false)
+                    }) {
+                        true => Some(Ok(other)),
+                        false => None,
                     }
                 }
                 Err(_) => Some(other),
@@ -358,7 +356,8 @@ impl Profile {
         let manifest: ProfileManifest =
             serde_json::from_str(&manifest).context("failed to parse profile manifest")?;
 
-        let config = config::load_config(path.clone()).collect();
+        let mut config = Vec::new();
+        config::load_config(path.clone(), &mut config);
 
         Ok(Profile {
             name: manifest.name.to_owned(),
@@ -520,17 +519,14 @@ impl Profile {
         thunderstore: &Thunderstore,
     ) -> Result<Option<Vec<Dependant>>> {
         let disabled_deps = thunderstore
-            .dependencies(borrowed_mod.version)
-            .filter_map(|dep| match dep {
-                Ok(dep) => match self.get_mod(&dep.package.uuid4) {
-                    Ok(profile_mod) => match profile_mod.enabled {
-                        true => None,
-                        false => Some(Ok(dep)),
-                    },
-                    Err(e) => Some(Err(e)),
+            .dependencies(borrowed_mod.version)?
+            .into_iter()
+            .filter_map(|dep| match self.get_mod(&dep.package.uuid4) {
+                Ok(profile_mod) => match profile_mod.enabled {
+                    true => None,
+                    false => Some(Ok(dep)),
                 },
                 Err(e) => Some(Err(e)),
-
             })
             .map_ok(Dependant::from)
             .collect::<Result<Vec<_>>>()?;

@@ -29,7 +29,7 @@ impl Serializer {
     }
 
     fn write_metadata(&mut self, metadata: &FileMetadata) {
-        self.push_line(&format!("## Settings file was created by plugin {} v{}", metadata.plugin_name, metadata.plugin_version));
+        self.push_line(&format!("## Settings file was created by plugin {} {}", metadata.plugin_name, metadata.plugin_version));
         self.push_line(&format!("## Plugin GUID: {}", metadata.plugin_guid));
         self.new_line();
     }

@@ -16,12 +16,15 @@
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
 	import { dialog } from '@tauri-apps/api';
 	import { refreshProfiles } from '$lib/profile';
+	import type { ImportData } from '$lib/models';
 
 	let newProfileOpen = false;
 	let preferencesOpen = false;
 	let exportPackOpen = false;
-	let importCodeOpen = false;
 	let exportCodePopup: ExportCodePopup;
+
+	let importCodeOpen = false;
+	let importProfileData: ImportData | undefined = undefined;
 
 	async function importLocal() {
 		let path = await dialog.open({
@@ -40,8 +43,9 @@
 		});
 
 		if (!path) return;
-		await invokeCommand('import_file', { path });
-		refreshProfiles();
+		let data = await invokeCommand<ImportData>('import_file', { path });
+		importProfileData = data;
+		importCodeOpen = true;
 	}
 
 	async function exportFile() {
@@ -125,5 +129,5 @@
 <NewProfilePopup bind:open={newProfileOpen} />
 <PreferencesPopup bind:open={preferencesOpen} />
 <ExportPackPopup bind:isOpen={exportPackOpen} />
-<ImportCodePopup bind:open={importCodeOpen} />
+<ImportCodePopup bind:open={importCodeOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />

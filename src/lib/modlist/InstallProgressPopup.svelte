@@ -2,7 +2,7 @@
 	import Popup from '$lib/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { InstallProgress } from '$lib/models';
-	import { shortenFileSize } from '$lib/util';
+	import { formatTime, shortenFileSize } from '$lib/util';
 
 	import { listen } from '@tauri-apps/api/event';
 
@@ -49,6 +49,10 @@
 <Popup
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	bind:open
+	confirmClose={progress.installedMods === 0 ? undefined : {
+		title: 'Abort installation',
+		message: 'This will remove all the installed mods so far. Are you sure?'
+	}}
 	onClose={() => {
 		invokeCommand('cancel_install')
 	}}

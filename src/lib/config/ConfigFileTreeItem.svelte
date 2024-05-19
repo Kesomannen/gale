@@ -20,7 +20,9 @@
 
 <Collapsible.Root bind:open>
     <Collapsible.Trigger 
-        class="flex {isError ? 'text-red-400' : 'text-slate-200'} {isSelected ? 'bg-slate-600' : 'hover:bg-slate-600'} items-center group w-full overflow-hidden px-2 py-0.5"
+        class="flex items-center group w-full overflow-hidden px-2 py-0.5
+                    {isError ? 'text-red-400' : 'text-slate-200'} 
+                    {isSelected ? 'bg-slate-600 font-semibold' : 'hover:bg-slate-600'}"
         on:click={() => {
             if (isError) {
                 onErrorFileClicked(file);
@@ -66,7 +68,7 @@
             {#each file.content.sections as section}
                 <Button.Root 
                     class="text-sm pl-9 pr-2 py-0.5 text-left truncate
-                    {selectedSection === section ? 'text-slate-200 bg-slate-600' : 'text-slate-300 hover:bg-slate-600'}"
+                    {selectedSection === section ? 'text-slate-200 bg-slate-600 font-semibold' : 'text-slate-300 hover:bg-slate-600'}"
                     on:click={() => onSectionClicked(file.content, section)}
                 >
                     {section.name}

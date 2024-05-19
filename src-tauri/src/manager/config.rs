@@ -4,10 +4,12 @@ use std::{
     ops::Range,
     path::{Path, PathBuf},
     str::FromStr,
+    time::SystemTime,
 };
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 use typeshare::typeshare;
 use walkdir::WalkDir;
 
@@ -15,6 +17,7 @@ use crate::fs_util;
 
 use super::Profile;
 use tauri::AppHandle;
+use log::debug;
 
 pub mod commands;
 pub mod de;
@@ -26,54 +29,35 @@ pub fn setup(_app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[typeshare]
-#[derive(Serialize, Clone, PartialEq, Debug)]
-#[serde(rename_all = "camelCase", tag = "type", content = "content")]
-pub enum LoadFileResult {
-    Ok(File),
-    Err {
-        name: String,
-        error: String,
-    },
+#[derive(Error, Debug)]
+#[error("failed to load config file: {error}")]
+pub struct LoadFileError {
+    name: String,
+    error: anyhow::Error,
 }
 
-impl LoadFileResult {
-    pub fn name(&self) -> &str {
+pub type LoadFileResult = std::result::Result<File, LoadFileError>;
+
+pub trait LoadFileResultExt {
+    fn name(&self) -> &str;
+    fn path_relative(&self) -> PathBuf;
+    fn path_from(&self, root: &Path) -> PathBuf;
+}
+
+impl LoadFileResultExt for LoadFileResult {
+    fn name(&self) -> &str {
         match self {
-            Self::Ok(f) => &f.name,
-            Self::Err { name, .. } => name,
+            Ok(file) => &file.name,
+            Err(err) => &err.name,
         }
     }
 
-    pub fn path_relative(&self) -> PathBuf {
+    fn path_relative(&self) -> PathBuf {
         path_relative(self.name())
     }
 
-    pub fn path_from(&self, root: &Path) -> PathBuf {
+    fn path_from(&self, root: &Path) -> PathBuf {
         path_from(self.name(), root)
-    }
-
-    pub fn ok_ref(&self) -> Option<&File> {
-        match self {
-            Self::Ok(f) => Some(f),
-            Self::Err { .. } => None,
-        }
-    }
-
-    pub fn ok_mut(&mut self) -> Option<&mut File> {
-        match self {
-            Self::Ok(f) => Some(f),
-            Self::Err { .. } => None,
-        }
-    }
-}
-
-impl From<std::result::Result<File, (String, anyhow::Error)>> for LoadFileResult {
-    fn from(value: std::result::Result<File, (String, anyhow::Error)>) -> Self {
-        match value {
-            Ok(f) => Self::Ok(f),
-            Err((name, error)) => Self::Err { name, error: format!("{:#}", error) },
-        }
     }
 }
 
@@ -82,11 +66,22 @@ impl From<std::result::Result<File, (String, anyhow::Error)>> for LoadFileResult
 #[serde(rename_all = "camelCase")]
 pub struct File {
     name: String,
+    #[serde(skip)]
+    read_time: SystemTime,
     metadata: Option<FileMetadata>,
     sections: Vec<Section>,
 }
 
 impl File {
+    pub fn new(name: String, sections: Vec<Section>, metadata: Option<FileMetadata>) -> Self {
+        Self {
+            name,
+            read_time: SystemTime::now(),
+            metadata,
+            sections,
+        }
+    }
+
     pub fn path_relative(&self) -> PathBuf {
         path_relative(&self.name)
     }
@@ -105,7 +100,7 @@ impl File {
 #[serde(rename_all = "camelCase")]
 pub struct FileMetadata {
     plugin_name: String,
-    plugin_version: semver::Version,
+    plugin_version: String,
     plugin_guid: String,
 }
 
@@ -228,11 +223,11 @@ where
 
 impl Profile {
     pub fn refresh_config(&mut self) {
-        self.config = load_config(self.path.clone()).collect();
+        load_config(self.path.clone(), &mut self.config);
     }
 
     pub fn ok_config(&self) -> impl Iterator<Item = &File> {
-        self.config.iter().filter_map(|res| res.ok_ref())
+        self.config.iter().filter_map(|res| res.as_ref().ok())
     }
 
     fn find_config_file<'a>(&'a self, name: &str) -> Result<&'a LoadFileResult> {
@@ -249,7 +244,7 @@ impl Profile {
         let file = self
             .config
             .iter_mut()
-            .filter_map(|f| f.ok_mut())
+            .filter_map(|f| f.as_mut().ok())
             .find(|f| f.name == file)
             .ok_or_else(|| anyhow!("config file {} not found in profile {}", file, self.name))?;
 
@@ -274,29 +269,58 @@ impl Profile {
     }
 }
 
-pub fn load_config(mut path: PathBuf) -> impl Iterator<Item = LoadFileResult> {
-    path.push("BepInEx");
-    path.push("config");
+pub fn load_config(mut root: PathBuf, vec: &mut Vec<LoadFileResult>) {
+    root.push("BepInEx");
+    root.push("config");
 
-    WalkDir::new(&path)
+    let files = WalkDir::new(&root)
         .into_iter()
         .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "cfg"))
-        .map(move |entry| {
-            let name = entry
-                .path()
-                .strip_prefix(&path)
-                .unwrap()
-                .with_extension("")
-                .to_string_lossy()
-                .to_string();
+        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "cfg"));
 
-            match fs::read_to_string(entry.path()) {
-                Ok(content) => de::from_str(&content, name),
-                Err(err) => LoadFileResult::Err {
-                    name,
-                    error: format!("failed to read file: {:#}", err),
-                },
+    for entry in files {
+        load_config_file(entry, &root, vec);
+    }
+}
+
+fn load_config_file(entry: walkdir::DirEntry, root: &Path, vec: &mut Vec<LoadFileResult>) {
+    let name = entry
+        .path()
+        .strip_prefix(root)
+        .unwrap()
+        .with_extension("")
+        .to_string_lossy()
+        .to_string();
+
+    let curr_index = vec.iter().position(|f| f.name() == name);
+
+    if let Some(curr_index) = curr_index {
+        if let Ok(curr_file) = &vec[curr_index] {
+            if let Ok(metadata) = entry.metadata() {
+                if let Ok(modified) = metadata.modified() {
+                    if modified <= curr_file.read_time {
+                        debug!("skipping config file {}", name);
+                        return; // file is not modified
+                    }
+                }
             }
-        })
+        }
+    }
+
+    debug!("reading config file {}", name);
+
+    let data = fs::read_to_string(entry.path())
+        .context("failed to read file")
+        .and_then(|text| de::from_str(&text).context("failed to parse file"));
+
+    let res = match data {
+        Ok((sections, metadata)) => Ok(File::new(name, sections, metadata)),
+        Err(error) => Err(LoadFileError { name, error }),
+    };
+
+    if let Some(curr_index) = curr_index {
+        vec[curr_index] = res; // replace the old file
+    } else {
+        vec.push(res);
+    }
 }

@@ -2,18 +2,19 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use anyhow::Context;
+use simple_logger::SimpleLogger;
 use tauri::Manager;
 
 #[macro_use]
 extern crate lazy_static;
 
-mod prefs;
-mod manager;
-mod thunderstore;
-mod util;
 mod command_util;
 mod fs_util;
 mod games;
+mod manager;
+mod prefs;
+mod thunderstore;
+mod util;
 
 #[derive(Debug)]
 pub struct NetworkClient(reqwest::Client);
@@ -30,6 +31,18 @@ impl NetworkClient {
 }
 
 fn main() {
+    let log_level = if cfg!(debug_assertions) {
+        log::LevelFilter::Debug
+    } else {
+        log::LevelFilter::Info
+    };
+
+    SimpleLogger::new()
+        .with_level(log_level)
+        .without_timestamps()
+        .init()
+        .expect("failed to initialize logger");
+
     fix_path_env::fix().ok();
 
     tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
@@ -37,7 +50,7 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             thunderstore::commands::query_all_mods,
-            
+
             prefs::commands::get_pref,
             prefs::commands::set_pref,
 
@@ -62,15 +75,18 @@ fn main() {
             manager::downloader::commands::cancel_install,
             manager::downloader::commands::clear_download_cache,
             manager::downloader::commands::get_download_size,
-            manager::downloader::commands::update_mod,
-            manager::downloader::commands::update_all,
 
-            manager::importer::commands::export_code,
+            manager::downloader::updater::commands::update_mod,
+            manager::downloader::updater::commands::update_all,
+            
+            manager::importer::commands::import_data,
             manager::importer::commands::import_code,
-            manager::importer::commands::export_file,
             manager::importer::commands::import_file,
-            manager::importer::commands::export_pack,
             manager::importer::commands::import_local_mod,
+            
+            manager::exporter::commands::export_code,
+            manager::exporter::commands::export_file,
+            manager::exporter::commands::export_pack,
 
             manager::config::commands::get_config_files,
             manager::config::commands::set_tagged_config_entry,

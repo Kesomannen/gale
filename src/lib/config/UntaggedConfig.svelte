@@ -11,4 +11,4 @@
 	$: setUntaggedConfig(file, section, name, value);
 </script>
 
-<InputField bind:value />
+<InputField bind:value size='sm' />

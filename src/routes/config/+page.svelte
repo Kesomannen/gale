@@ -15,7 +15,7 @@
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
 	import Icon from '@iconify/svelte';
 	import { currentProfile } from '$lib/profile';
-	import { Tooltip } from 'bits-ui';
+	import { Button, Tooltip } from 'bits-ui';
 	import { Render } from '@jill64/svelte-sanitize';
 	import { fly } from 'svelte/transition';
 	import StringConfig from '$lib/config/StringConfig.svelte';
@@ -95,7 +95,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-4 min-w-60 w-[25%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col py-2 min-w-60 w-[25%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
@@ -151,7 +151,7 @@
 			{#if selectedSection && selectedFile.type === 'ok'}
 				{#if selectedFile.content.metadata}
 					<div class="text-slate-400 text-sm">
-						Created by {selectedFile.content.metadata.pluginName} v{selectedFile.content.metadata.pluginVersion} 
+						Created by {selectedFile.content.metadata.pluginName} {selectedFile.content.metadata.pluginVersion} 
 					</div>
 				{/if}
 

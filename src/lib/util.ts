@@ -5,6 +5,14 @@ export function shortenFileSize(size: number): string {
 	return (size / Math.pow(1024, i)).toFixed(1) + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
+export function formatTime(seconds: number): string {
+	var hours = Math.floor(seconds / 3600);
+	var minutes = Math.floor((seconds % 3600) / 60);
+	var secs = Math.floor(seconds % 60);
+
+	return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
 export function shortenNum(value: number): string {
 	var i = value == 0 ? 0 : Math.floor(Math.log(value) / Math.log(1000));
 	if (i === 0) {

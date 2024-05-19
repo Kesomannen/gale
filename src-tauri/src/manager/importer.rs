@@ -1,34 +1,32 @@
 use std::{
     fs,
     io::{Cursor, Read, Seek},
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::Mutex,
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
-use image::{imageops::FilterType, io::Reader as ImageReader};
-use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use typeshare::typeshare;
 
 use crate::{
-    command_util::StateMutex,
     fs_util,
     manager::{commands::save, LocalMod, ProfileMod},
     prefs::Prefs,
-    thunderstore::{
-        models::{LegacyProfileCreateResponse, PackageManifest},
-        ModRef, Thunderstore,
-    },
+    thunderstore::{models::PackageManifest, ModRef, Thunderstore},
     util::IoResultExt,
     NetworkClient,
 };
 
-use super::{config, downloader, ModManager, Profile};
+use super::{
+    downloader,
+    exporter::{ExportManifest, PROFILE_DATA_PREFIX},
+    ModManager,
+};
 use base64::{prelude::BASE64_STANDARD, Engine};
-use itertools::Itertools;
 use reqwest::StatusCode;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use itertools::Itertools;
 
 pub mod commands;
 
@@ -36,205 +34,94 @@ pub fn setup(_app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct ExportManifest<'a> {
-    profile_name: &'a str,
-    mods: Vec<ExportMod<'a>>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct ExportMod<'a> {
-    name: &'a str,
-    version: ExportVersion,
-    enabled: bool,
-}
-
-impl<'a> ExportMod<'a> {
-    fn into_mod_ref(self, thunderstore: &Thunderstore) -> Result<(ModRef, bool)> {
-        let package = thunderstore.find_package(self.name)?;
-        let semver = semver::Version::from(self.version);
-        let version = package.get_version_with_num(&semver).with_context(|| {
-            format!(
-                "failed to find version {} for package {}",
-                semver, self.name
-            )
-        })?;
-
-        Ok((
-            ModRef {
-                package_uuid: package.uuid4,
-                version_uuid: version.uuid4,
-            },
-            self.enabled,
-        ))
-    }
-
-    fn from_mod_ref(
-        mod_ref: &ModRef,
-        enabled: bool,
-        thunderstore: &'a Thunderstore,
-    ) -> Result<Self> {
-        let borrowed = mod_ref.borrow(thunderstore)?;
-        Ok(Self {
-            name: &borrowed.package.full_name,
-            version: ExportVersion::from(&borrowed.version.version_number),
-            enabled,
-        })
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct ExportVersion {
-    major: u64,
-    minor: u64,
-    patch: u64,
-}
-
-impl From<ExportVersion> for semver::Version {
-    fn from(value: ExportVersion) -> Self {
-        semver::Version::new(value.major, value.minor, value.patch)
-    }
-}
-
-impl From<&semver::Version> for ExportVersion {
-    fn from(value: &semver::Version) -> Self {
-        Self {
-            major: value.major,
-            minor: value.minor,
-            patch: value.patch,
-        }
-    }
-}
-
-const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
-
-fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore) -> Result<()> {
-    dir.push(&profile.name);
-    dir.set_extension("r2z");
-    let mut zip = fs_util::zip(dir).fs_context("creating zip archive", dir)?;
-
-    let mods = profile
-        .remote_mods()
-        .map(|(mod_ref, enabled)| ExportMod::from_mod_ref(mod_ref, enabled, thunderstore))
-        .collect::<Result<Vec<_>>>()
-        .context("failed to resolve profile mods")?;
-
-    let manifest = ExportManifest {
-        profile_name: &profile.name,
-        mods,
-    };
-
-    let yaml = serde_yaml::to_string(&manifest).context("failed to serialize profile manifest")?;
-
-    zip.write_str("export.r2x", &yaml)
-        .context("failed to write profile manifest")?;
-
-    write_config(profile, &mut zip)?;
-
-    Ok(())
-}
-
-async fn export_code(
-    client: &reqwest::Client,
-    manager: StateMutex<'_, ModManager>,
-    thunderstore: StateMutex<'_, Thunderstore>,
-    prefs: StateMutex<'_, Prefs>,
-) -> Result<Uuid> {
-    let base64 = {
-        let mut manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
-        let prefs = prefs.lock().unwrap();
-
-        let profile = manager.active_profile_mut();
-        profile.refresh_config();
-
-        let mut path = prefs.get_path_or_err("temp_dir")?.join("exports");
-        fs::create_dir_all(&path)?;
-        export_file(profile, &mut path, &thunderstore)?;
-
-        let data = fs::read(path).unwrap();
-        let mut base64 = String::from(PROFILE_DATA_PREFIX);
-        base64.push_str(&BASE64_STANDARD.encode(data));
-
-        base64
-    };
-
-    const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
-
-    let response = client
-        .post(URL)
-        .header("Content-Type", "application/octet-stream")
-        .body(base64)
-        .send()
-        .await?
-        .error_for_status()?
-        .json::<LegacyProfileCreateResponse>()
-        .await?;
-
-    Ok(response.key)
-}
-
-async fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<()> {
+fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
     ensure!(path.exists(), "file does not exist");
     ensure!(path.is_file(), "path is not a file");
 
     let file = fs::File::open(&path).fs_context("opening file", &path)?;
-    import_file(file, app).await
+    import_file(file, app)
 }
 
-async fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<()> {
-    let to_install = {
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportData {
+    pub name: String,
+    pub temp_path: PathBuf,
+    pub mods: Vec<ProfileMod>,
+}
+
+fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData> {
+    let thunderstore = app.state::<Mutex<Thunderstore>>();
+    let prefs = app.state::<Mutex<Prefs>>();
+
+    let thunderstore = thunderstore.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    // extract archive to temp path
+    let temp_path = prefs.get_path_or_err("temp_dir")?.join("imports");
+    if temp_path.exists() {
+        fs::remove_dir_all(&temp_path)?;
+    }
+    fs::create_dir_all(&temp_path)?;
+
+    zip_extract::extract(source, &temp_path, true)?;
+
+    let manifest = fs::read_to_string(temp_path.join("export.r2x"))
+        .context("failed to read profile manifest")?;
+
+    // manifest is in r2modman's yaml format
+    let manifest: ExportManifest =
+        serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
+
+    let mods = manifest
+        .mods
+        .into_iter()
+        .map(|export_mod| export_mod.into_profile_mod(&thunderstore))
+        .collect::<Result<Vec<_>>>()
+        .context("failed to resolve mod references")?;
+
+    Ok(ImportData {
+        mods,
+        temp_path,
+        name: manifest.profile_name.to_owned(),
+    })
+}
+
+async fn import_data(data: ImportData, app: &AppHandle) -> Result<()> {
+    {
         let manager = app.state::<Mutex<ModManager>>();
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-        let prefs = app.state::<Mutex<Prefs>>();
-
         let mut manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
-        let prefs = prefs.lock().unwrap();
 
-        // extract archive to temp path
-        let temp_path = prefs.get_path_or_err("temp_dir")?.join("imports");
-        fs::create_dir_all(&temp_path)?;
+        let game = manager.active_game_mut();
+        if let Some(index) = game.profiles.iter().position(|p| p.name == data.name) {
+            game.profiles.remove(index);
+        }
 
-        zip_extract::extract(source, &temp_path, true)?;
-
-        let manifest = fs::read_to_string(temp_path.join("export.r2x"))
-            .context("failed to read profile manifest")?;
-
-        // manifest is in r2modman's yaml format
-        let manifest: ExportManifest =
-            serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
-
-        let name = manifest.profile_name.to_owned();
-        let profile = manager.active_game_mut().create_profile(name)?;
+        let profile = game.create_profile(data.name)?;
 
         let mut config_dir = profile.path.clone();
         config_dir.push("BepInEx");
         config_dir.push("config");
         fs::create_dir_all(&config_dir)?;
 
-        fs_util::copy_contents(&temp_path.join("config"), &config_dir, true)
+        fs_util::copy_contents(&data.temp_path.join("config"), &config_dir, true)
             .context("error while importing config")?;
-
-        manifest
-            .mods
-            .into_iter()
-            .map(|export_mod| export_mod.into_mod_ref(&thunderstore))
-            .collect::<Result<Vec<_>>>()
-            .context("failed to resolve mod references")?
     };
 
-    downloader::install_mod_refs(&to_install, app)
+    let mod_refs = data
+        .mods
+        .into_iter()
+        .filter_map(|profile_mod| profile_mod.into_remote())
+        .collect_vec();
+
+    downloader::install_mod_refs(&mod_refs, app)
         .await
         .context("error while importing mods")?;
 
     Ok(())
 }
 
-async fn import_code(key: Uuid, app: &AppHandle) -> Result<()> {
+async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     let client = app.state::<NetworkClient>();
     let client = &client.0;
 
@@ -260,77 +147,10 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<()> {
                 .decode(data)
                 .context("failed to decode base64 data")?;
 
-            import_file(Cursor::new(bytes), app).await
+            import_file(Cursor::new(bytes), app)
         }
         None => Err(anyhow!("invalid profile data")),
     }
-}
-
-#[typeshare]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ModpackArgs {
-    pub name: String,
-    pub description: String,
-    pub version_number: semver::Version,
-    pub icon: PathBuf,
-    pub website_url: Option<String>,
-}
-
-fn export_pack(
-    profile: &Profile,
-    path: &Path,
-    args: ModpackArgs,
-    thunderstore: &Thunderstore,
-) -> Result<()> {
-    let dep_strings = profile
-        .remote_mods()
-        .filter(|(_, enabled)| *enabled) // filter out disabled mods
-        .map(|(mod_ref, _)| {
-            let borrowed_mod = mod_ref.borrow(thunderstore)?;
-            Ok(borrowed_mod.version.full_name.clone())
-        })
-        .collect::<Result<Vec<_>>>()
-        .context("failed to resolve modpack dependencies")?;
-
-    let manifest = PackageManifest {
-        name: args.name,
-        description: args.description,
-        version_number: args.version_number,
-        website_url: args.website_url.unwrap_or_default(),
-        dependencies: dep_strings,
-        installers: None,
-        author: None,
-    };
-
-    let mut zip = fs_util::zip(path)?;
-
-    zip.write_str("manifest.json", &serde_json::to_string_pretty(&manifest)?)?;
-
-    let readme = format!("# {}\n\n{}", manifest.name, manifest.description);
-    zip.write_str("README.md", &readme)?;
-
-    let img = ImageReader::open(&args.icon)?.decode()?;
-    img.resize_exact(256, 256, FilterType::Lanczos3);
-    zip.write("icon.png", img.as_bytes())?;
-
-    write_config(profile, &mut zip)?;
-
-    Ok(())
-}
-
-fn write_config(profile: &Profile, zip: &mut fs_util::Zip) -> Result<()> {
-    zip.add_dir("config")?;
-
-    for file in profile.ok_config() {
-        let content = config::ser::to_string(file);
-        let path = file.path_relative();
-        let path = path.strip_prefix("BepInEx").unwrap();
-        zip.write_str(path.to_str().unwrap(), &content)
-            .fs_context("writing config file", path)?;
-    }
-
-    Ok(())
 }
 
 async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
@@ -362,12 +182,13 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             |manager, thunderstore| {
                 let profile = manager.active_profile();
 
-                thunderstore
-                    .resolve_deps(deps)
-                    .filter_ok(|dep| !profile.has_mod(&dep.package.uuid4))
-                    .map_ok(|borrowed_mod| (ModRef::from(borrowed_mod), true))
-                    .collect::<Result<Vec<_>>>()
-                    .context("failed to resolve dependencies")
+                Ok(thunderstore
+                    .resolve_deps(deps.iter())
+                    .context("failed to resolve dependencies")?
+                    .into_iter()
+                    .filter(|dep| !profile.has_mod(&dep.package.uuid4))
+                    .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
+                    .collect::<Vec<_>>())
             },
             app,
         )

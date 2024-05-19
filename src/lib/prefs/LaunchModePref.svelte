@@ -34,7 +34,7 @@
 </script>
 
 <div class="flex items-center">
-	<div class="text-slate-300 text-md min-w-60 truncate">Launch mode</div>
+	<div class="text-slate-300 min-w-60 truncate">Launch mode</div>
 
 	<Select.Root
 		items={[
@@ -47,7 +47,7 @@
 		onSelectedChange={set}
 	>
 		<Select.Trigger
-			class="flex items-center flex-grow bg-gray-900 rounded-lg px-3 py-1 text-sm
+			class="flex items-center flex-grow bg-gray-900 rounded-lg px-3 py-1
 							border border-gray-500 border-opacity-0 hover:border-opacity-100"
 		>
 			<Select.Value class="text-slate-300 text-left w-full" />
@@ -64,7 +64,7 @@
 		>
 			<Select.Item
 				value="steam"
-				class="flex items-center px-3 py-1 truncate text-sm text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
+				class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
 			>
 				<Icon icon="mdi:steam" class="text-lg mr-1" />
 				Steam
@@ -74,7 +74,7 @@
 			</Select.Item>
 			<Select.Item
 				value="direct"
-				class="flex items-center px-3 py-1 truncate text-sm text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
+				class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
 			>
 				<Icon icon="mdi:launch" class="text-lg mr-1" />
 				Direct
@@ -90,7 +90,7 @@
 		disabled={value?.type !== 'direct'}
 		bind:value={instances}
 		on:input={() => set({ value: 'direct', label: 'Direct' })}
-		class="px-3 py-1 rounded-lg bg-gray-900 text-sm ml-1
+		class="px-3 py-1 rounded-lg bg-gray-900 ml-1
 	 			text-slate-300 hover:text-slate-100 disabled:text-slate-400 border border-gray-500 border-opacity-0 enabled:hover:border-opacity-100"
 	/>
 </div>

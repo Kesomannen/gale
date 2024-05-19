@@ -66,7 +66,7 @@
 			</Dialog.Close>
 			<Dialog.Close>
 				<Button.Root
-					class="rounded-xl px-4 py-2 text-white {isPositive ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'}"
+					class="rounded-xl px-4 py-2 font-medium text-white {isPositive ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'}"
 					on:click={executeAll}
 				>
 					{verb} all

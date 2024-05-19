@@ -11,6 +11,7 @@ use crate::{
 };
 
 use super::{ModActionResponse, ModManager, Profile};
+use itertools::Itertools;
 
 #[typeshare]
 #[derive(Serialize)]
@@ -120,18 +121,50 @@ pub fn set_active_profile(
     Ok(())
 }
 
+#[typeshare]
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendAvailableUpdate {
+    pub name: String,
+    pub uuid: Uuid,
+    pub old: semver::Version,
+    pub new: semver::Version,
+}
+
+#[typeshare]
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileQuery {
+    pub updates: Vec<FrontendAvailableUpdate>,
+    pub mods: Vec<FrontendProfileMod>,
+}
+
 #[tauri::command]
 pub fn query_mods_in_profile(
     args: QueryModsArgs,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
-) -> Result<Vec<FrontendProfileMod>> {
+) -> Result<ProfileQuery> {
     let manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let result = manager.active_profile().query_mods(&args, &thunderstore)?;
+    let profile = manager.active_profile();
+    let mods = profile.query_mods(&args, &thunderstore)?;
+    let updates = profile
+        .available_updates(&thunderstore)
+        .map_ok(|update| {
+            let borrow = update.mod_ref.borrow(&thunderstore)?;
+            Ok::<_, anyhow::Error>(FrontendAvailableUpdate {
+                name: borrow.package.name.clone(),
+                uuid: borrow.package.uuid4,
+                old: update.current.clone(),
+                new: update.latest.version.version_number.clone(),
+            })
+        })
+        .flatten_ok()
+        .collect::<anyhow::Result<Vec<_>>>()?;
 
-    Ok(result)
+    Ok(ProfileQuery { updates, mods })
 }
 
 #[tauri::command]

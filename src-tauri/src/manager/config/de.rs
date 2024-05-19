@@ -36,7 +36,7 @@ where
     }
 }
 
-pub fn from_str(text: &str, name: String) -> LoadFileResult {
+pub fn from_str(text: &str) -> Result<(Vec<Section>, Option<FileMetadata>)> {
     let mut parser = Parser {
         lines: text.lines().peekable(),
         sections: Vec::new(),
@@ -45,22 +45,8 @@ pub fn from_str(text: &str, name: String) -> LoadFileResult {
     };
 
     match parser.parse() {
-        Ok(_) => {
-            let file = File {
-                name,
-                metadata: parser.metadata,
-                sections: parser.sections,
-            };
-
-            LoadFileResult::Ok(file)
-        }
-        Err(err) => {
-            let err = err.context(format!("error parsing config file at line {}", parser.line));
-            LoadFileResult::Err {
-                name,
-                error: format!("{:#}", err),
-            }
-        }
+        Ok(_) => Ok((parser.sections, parser.metadata)),
+        Err(err) => Err(err.context(format!("error parsing config file at line {}", parser.line))),
     }
 }
 
@@ -200,10 +186,7 @@ impl<'a> Parser<'a> {
         let plugin_version = split
             .next_back()
             .context("expected plugin version")?
-            .strip_prefix('v')
-            .context("invalid plugin version")?
-            .parse()
-            .context("invalid plugin version")?;
+            .to_owned();
 
         let plugin_name = split.join(" ");
 
@@ -300,7 +283,7 @@ impl<'a> Parser<'a> {
     fn parse_untagged_entry(&mut self) -> Result<(&str, &str)> {
         let mut split = self.consume_or_eof()?.split(" = ");
         let name = split.next().context("expected entry name")?;
-        let value_str = split.next().context("expected entry value")?;
+        let value_str = split.next().unwrap_or_default();
 
         Ok((name, value_str))
     }

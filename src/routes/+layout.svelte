@@ -39,8 +39,8 @@
 	<div class="flex flex-grow overflow-hidden relative">
 		<div class="flex flex-col gap-1 items-center p-2 w-14 bg-gray-900 border-r border-gray-600 flex-shrink-0">
 			<NavbarLink to="/" icon="mdi:home" tooltip="Home page" />
-			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
 			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
+			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
 			<NavbarLink to="/config" icon="mdi:settings" tooltip="Edit mod config" />
 		</div>
 

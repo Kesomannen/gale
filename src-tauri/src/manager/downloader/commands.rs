@@ -1,4 +1,4 @@
-use std::{fs, sync::Mutex};
+use std::fs;
 
 use anyhow::Context;
 
@@ -8,9 +8,7 @@ use crate::{
     prefs::Prefs,
     thunderstore::{ModRef, Thunderstore},
 };
-use uuid::Uuid;
-use tauri::Manager;
-use itertools::Itertools;
+
 use super::InstallState;
 
 #[tauri::command]
@@ -58,29 +56,5 @@ pub fn get_download_size(
         &thunderstore,
     );
 
-    Ok(result)
-}
-
-#[tauri::command]
-pub async fn update_mod(
-    uuid: Uuid,
-    app: tauri::AppHandle,
-) -> Result<()> {
-    super::update_mods(&[uuid], &app).await?;
-
-    Ok(())
-}
-
-#[tauri::command]
-pub async fn update_all(app: tauri::AppHandle) -> Result<()> {
-    let uuids = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let manager = manager.lock().unwrap();
-
-        manager.active_profile().remote_mods().map(|(m, _)| m.package_uuid).collect_vec()
-    };
-
-    super::update_mods(&uuids, &app).await?;
-
-    Ok(())
+    Ok(result.unwrap_or(0))
 }

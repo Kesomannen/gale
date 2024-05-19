@@ -2,20 +2,39 @@ use std::fs;
 
 use anyhow::Context;
 
+use super::{File, LoadFileResultExt};
 use crate::{
-    command_util::{Result, StateMutex}, manager::ModManager, util::IoResultExt
+    command_util::{Result, StateMutex},
+    manager::ModManager,
+    util::IoResultExt,
 };
-use super::LoadFileResult;
+use serde::Serialize;
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "content")]
+pub enum FrontendLoadFileResult {
+    Ok(File),
+    Err { name: String, error: String },
+}
 
 #[tauri::command]
-pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<LoadFileResult>> {
+pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<FrontendLoadFileResult>> {
     let mut manager = manager.lock().unwrap();
     let profile = manager.active_profile_mut();
 
     profile.refresh_config();
 
-    Ok(profile.config.clone())
+    Ok(profile
+        .config
+        .iter()
+        .map(|res| match res {
+            Ok(file) => FrontendLoadFileResult::Ok(file.clone()),
+            Err(err) => FrontendLoadFileResult::Err {
+                name: err.name.clone(),
+                error: format!("{:#}", err.error),
+            },
+        })
+        .collect())
 }
 
 #[tauri::command]
@@ -71,7 +90,7 @@ pub fn reset_config_entry(
         .active_profile_mut()
         .modify_config(file, section, entry, |entry| {
             let tagged = entry.as_tagged_mut()?;
-            
+
             tagged.reset()?;
             Ok(tagged.value.clone())
         })?;
@@ -92,10 +111,16 @@ pub fn open_config_file(file: &str, manager: StateMutex<ModManager>) -> Result<(
 
 #[tauri::command]
 pub fn delete_config_file(file: &str, manager: StateMutex<ModManager>) -> Result<()> {
-    let manager = manager.lock().unwrap();
+    let mut manager = manager.lock().unwrap();
 
-    let profile = manager.active_profile();
-    let path = profile.find_config_file(file)?.path_from(&profile.path);
+    let profile = manager.active_profile_mut();
+    let index = match profile.config.iter().position(|f| f.name() == file) {
+        Some(index) => index,
+        None => return Ok(()), // just ignore if the file doesn't exist
+    };
+
+    let file = profile.config.remove(index);
+    let path = file.path_from(&profile.path);
     fs::remove_file(&path).fs_context("deleting config file", &path)?;
 
     Ok(())

@@ -8,13 +8,11 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use itertools::Itertools;
+use futures_util::StreamExt;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
-use typeshare::typeshare;
-use futures_util::StreamExt;
 use thiserror::Error;
-use uuid::Uuid;
+use typeshare::typeshare;
 
 use crate::{
     command_util::StateMutex,
@@ -28,6 +26,7 @@ use crate::{
 use super::{commands::save, ModManager, ModRef, Profile, ProfileMod};
 
 pub mod commands;
+pub mod updater;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     app.manage(Mutex::new(InstallState::default()));
@@ -46,11 +45,12 @@ fn missing_deps<'a>(
     borrowed_mod: BorrowedMod<'a>,
     profile: &'a Profile,
     thunderstore: &'a Thunderstore,
-) -> impl Iterator<Item = Result<BorrowedMod<'a>>> {
-    thunderstore
-        .dependencies(borrowed_mod.version)
-        .chain(iter::once(Ok(borrowed_mod)))
-        .filter_ok(|dep| !profile.has_mod(&dep.package.uuid4))
+) -> Result<impl Iterator<Item = BorrowedMod<'a>>> {
+    Ok(thunderstore
+        .dependencies(borrowed_mod.version)?
+        .into_iter()
+        .chain(iter::once(borrowed_mod))
+        .filter(|dep| !profile.has_mod(&dep.package.uuid4)))
 }
 
 fn total_download_size(
@@ -58,15 +58,14 @@ fn total_download_size(
     profile: &Profile,
     prefs: &Prefs,
     thunderstore: &Thunderstore,
-) -> u64 {
-    missing_deps(borrowed_mod, profile, thunderstore)
-        .filter_map(Result::ok)
+) -> Result<u64> {
+    Ok(missing_deps(borrowed_mod, profile, thunderstore)?
         .filter(|borrowed_mod| match cache_path(borrowed_mod, prefs) {
             Ok(cache_path) => !cache_path.exists(),
             Err(_) => true,
         })
         .map(|borrowed_mod| borrowed_mod.version.file_size)
-        .sum()
+        .sum())
 }
 
 fn cache_path(borrowed_mod: &BorrowedMod<'_>, prefs: &Prefs) -> Result<PathBuf> {
@@ -320,8 +319,7 @@ impl<'a> Installer<'a> {
                 .context("failed to disable installed mod")?;
         }
 
-        save(&manager, &prefs)
-            .map_err(|err| InstallError::Error(err.into()))?;
+        save(&manager, &prefs).map_err(|err| InstallError::Error(err.into()))?;
 
         Ok(())
     }
@@ -356,7 +354,8 @@ impl<'a> Installer<'a> {
                     for j in 0..i {
                         let (mod_ref, _) = &self.to_install[j];
 
-                        profile.force_remove_mod(&mod_ref.package_uuid, &thunderstore)
+                        profile
+                            .force_remove_mod(&mod_ref.package_uuid, &thunderstore)
                             .context("failed to clean up after cancellation")?;
                     }
 
@@ -419,71 +418,25 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
         move |manager, thunderstore| {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
 
-            missing_deps(borrowed_mod, manager.active_profile(), thunderstore)
-                .map_ok(|borrowed_mod| (ModRef::from(borrowed_mod), true))
-                .collect::<Result<Vec<_>>>()
+            Ok(
+                missing_deps(borrowed_mod, manager.active_profile(), thunderstore)?
+                    .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
+                    .collect(),
+            )
         },
         app,
     )
     .await
 }
 
-pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
-    let to_update = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let mut manager = manager.lock().unwrap();
-
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-        let thunderstore = thunderstore.lock().unwrap();
-
-        uuids
-            .iter()
-            .map(|uuid| {
-                let installed = &manager
-                    .active_profile()
-                    .get_mod(uuid)?
-                    .as_remote()
-                    .ok_or(anyhow!("cannot update local mod"))?;
-
-                let installed_vers = &installed.0.borrow(&thunderstore)?.version.version_number;
-
-                let latest = thunderstore
-                    .get_package(uuid)?
-                    .versions
-                    .first()
-                    .expect("package should have at least one version");
-
-                if installed_vers >= &latest.version_number {
-                    return Ok(None);
-                }
-
-                let enabled = installed.1; // borrow checker :(
-
-                manager
-                    .active_profile_mut()
-                    .force_remove_mod(uuid, &thunderstore)?;
-
-                Ok(Some((
-                    ModRef {
-                        package_uuid: *uuid,
-                        version_uuid: latest.uuid4,
-                    },
-                    enabled,
-                )))
-            })
-            .filter_map_ok(|x| x) // get rid of Ok(None)s
-            .collect::<Result<Vec<_>>>()?
-    };
-
-    install_mod_refs(&to_update, app).await
-}
-
 pub fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
-    let author = name.split('-').next().context("invalid name")?;
+    let mut split = name.split('-');
+    split.next();
+    let name = split.next().unwrap_or(name);
 
-    match author {
-        "BepInEx" => install_from_disk_bepinex(src, dest),
-        _ => install_from_disk_default(src, dest, name),
+    match name.starts_with("BepInExPack") {
+        true => install_from_disk_bepinex(src, dest),
+        false => install_from_disk_default(src, dest, name),
     }
 }
 

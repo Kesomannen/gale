@@ -9,7 +9,7 @@
 </script>
 
 <div class="flex items-center">
-	<div class="text-slate-300 text-md min-w-60 truncate">{label}</div>
+	<div class="text-slate-300  min-w-60 truncate">{label}</div>
 
 	<Button.Root
 		class="flex flex-grow px-3 py-1.5 items-center text-right rounded-md group bg-gray-900 truncate

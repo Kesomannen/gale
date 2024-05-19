@@ -1,13 +1,13 @@
 use std::{
-    collections::HashSet, iter, str::{self, Split}, sync::Mutex, time::{Duration, Instant}
+    collections::HashSet, str::{self, Split}, sync::Mutex, time::{Duration, Instant}
 };
 
 use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
+use log::debug;
 
 use crate::{
     games::Game, manager::ModManager, util, NetworkClient
@@ -23,7 +23,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
-    let mut thunderstore = Thunderstore::new();
+    let mut thunderstore = Thunderstore::default();
     thunderstore.switch_game(manager.active_game, app.clone());
 
     app.manage(Mutex::new(thunderstore));
@@ -48,10 +48,16 @@ impl From<BorrowedMod<'_>> for OwnedMod {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
 pub struct BorrowedMod<'a> {
     pub package: &'a PackageListing,
     pub version: &'a PackageVersion,
+}
+
+impl<'a> BorrowedMod<'a> {
+    pub fn reference(self) -> ModRef {
+        self.into()
+    }
 }
 
 impl<'a> From<BorrowedMod<'a>> for (&'a PackageListing, &'a PackageVersion) {
@@ -88,6 +94,23 @@ impl ModRef {
     }
 }
 
+pub fn parse_mod_ident(identifier: &str, delimeter: char) -> Result<(String, &str)> {
+    let (author, name, version) = parts(identifier.split(delimeter))
+        .with_context(|| format!("invalid dependency string format {}", identifier))?;
+
+    let full_name = format!("{}-{}", author, name);
+    return Ok((full_name, version));
+
+    fn parts(mut s: Split<'_, char>) -> Option<(&str, &str, &str)> {
+        let author = s.next()?;
+        let name = s.next()?;
+        let version = s.next()?;
+
+        Some((author, name, version))
+    }
+}
+
+#[derive(Default)]
 pub struct Thunderstore {
     pub load_mods_handle: Option<JoinHandle<()>>,
     pub finished_loading: bool,
@@ -97,14 +120,6 @@ pub struct Thunderstore {
 }
 
 impl Thunderstore {
-    pub fn new() -> Self {
-        Self {
-            load_mods_handle: None,
-            finished_loading: false,
-            packages: IndexMap::new(),
-        }
-    }
-
     pub fn switch_game(&mut self, game: &'static Game, app: AppHandle) {
         if let Some(handle) = self.load_mods_handle.take() {
             handle.abort();
@@ -157,12 +172,8 @@ impl Thunderstore {
     }
 
     pub fn find_mod<'a>(&'a self, identifier: &str, delimeter: char) -> Result<BorrowedMod<'a>> {
-        let split = identifier.split(delimeter);
+        let (full_name, version) = parse_mod_ident(identifier, delimeter)?;
 
-        let (author, name, version) = parts(split)
-            .with_context(|| format!("invalid dependency string format {}", identifier))?;
-
-        let full_name = format!("{}-{}", author, name);
         let version = semver::Version::parse(version)
             .with_context(|| format!("invalid version format {}", version))?;
 
@@ -171,54 +182,50 @@ impl Thunderstore {
             .get_version_with_num(&version)
             .with_context(|| format!("version {} not found in package {}", version, full_name))?;
 
-        return Ok((package, version).into());
-
-        fn parts(mut s: Split<'_, char>) -> Option<(&str, &str, &str)> {
-            let author = s.next()?;
-            let name = s.next()?;
-            let version = s.next()?;
-
-            Some((author, name, version))
-        }
+        Ok((package, version).into())
     }
 
     pub fn resolve_deps<'a>(
         &'a self,
-        dependency_strings: &'a [String],
-    ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
-        let mut unique_map = HashSet::new();
-        return inner(self, dependency_strings)
-            .filter_ok(move |dep| unique_map.insert(dep.package.uuid4));
+        dependency_strings: impl Iterator<Item = &'a String>,
+    ) -> Result<HashSet<BorrowedMod<'a>>> {
+        let mut result = HashSet::new();
+        let mut stack = dependency_strings.map(String::as_str).collect::<Vec<_>>();
+        let mut visited = stack.iter().map(|s| parse_author_and_name(s)).collect::<HashSet<_>>();
 
-        fn inner<'a>(
-            this: &'a Thunderstore,
-            dependency_strings: &'a [String],
-        ) -> Box<dyn Iterator<Item = Result<BorrowedMod<'a>>> + 'a> {
-            Box::new(
-                dependency_strings
-                    .iter()
-                    .map(move |dependency| {
-                        let dep = this.find_mod(dependency, '-');
+        while let Some(id) = stack.pop() {
+            let dependency = self.find_mod(id, '-')?;
 
-                        dep.map(|dep| {
-                            inner(this, &dep.version.dependencies).chain(iter::once(Ok(dep)))
-                        })
-                    })
-                    .flatten_ok()
-                    .flatten_ok(),
-            )
+            for dep in &dependency.version.dependencies {
+                let (author, name) = parse_author_and_name(dep);
+
+                if !visited.insert((author, name)) {
+                    continue;
+                }
+
+                stack.push(dep.as_str());
+            }
+
+            result.insert(dependency);
+        }
+
+        return Ok(result);
+
+        fn parse_author_and_name(s: &str) -> (&str, &str) {
+            let mut split = s.split('-');
+            (split.next().unwrap(), split.next().unwrap())
         }
     }
 
     pub fn dependencies<'a>(
         &'a self,
         version: &'a PackageVersion,
-    ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> {
-        self.resolve_deps(&version.dependencies)
+    ) -> Result<HashSet<BorrowedMod<'a>>> {
+        self.resolve_deps(version.dependencies.iter())
     }
 }
 
-const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 10);
+const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
 
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let mut is_first = true;
@@ -321,11 +328,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
 
     state.finished_loading = true;
 
-    println!(
-        "loaded {} mods in {:?}",
-        state.packages.len(),
-        start_time.elapsed()
-    );
+    debug!("Loaded {} mods in {:?}", state.packages.len(), start_time.elapsed());
 
     let _ = app.emit_all("status_update", None::<String>);
     Ok(())

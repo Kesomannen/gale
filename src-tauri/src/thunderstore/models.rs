@@ -38,15 +38,15 @@ impl PackageListing {
     }
 }
 
-impl PartialEq for PackageListing {
-    fn eq(&self, other: &Self) -> bool {
-        self.uuid4 == other.uuid4
-    }
-}
-
 impl Hash for PackageListing {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.uuid4.hash(state);
+    }
+}
+
+impl PartialEq for PackageListing {
+    fn eq(&self, other: &Self) -> bool {
+        self.uuid4 == other.uuid4
     }
 }
 

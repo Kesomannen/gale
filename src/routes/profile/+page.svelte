@@ -2,7 +2,7 @@
 	import Popup from '$lib/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
-	import type { Dependant, Mod, ModActionResponse, QueryModsArgs } from '$lib/models';
+	import type { Dependant, Mod, ModActionResponse, QueryModsArgs, ProfileQuery, AvailableUpdate } from '$lib/models';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { currentGame, currentProfile } from '$lib/profile';
 	import { isOutdated } from '$lib/util';
@@ -10,6 +10,7 @@
 	import { Button, Dialog, Switch, Tooltip } from 'bits-ui';
 
 	let mods: Mod[];
+	let updates: AvailableUpdate[] = [];
 	let activeMod: Mod | undefined;
 	let queryArgs: QueryModsArgs;
 
@@ -17,7 +18,7 @@
 	let disableDependants: DependantsPopup;
 	let enableDependencies: DependantsPopup;
 
-	$: outdatedMods = mods?.filter((mod) => isOutdated(mod));
+	let updateAllOpen = false;
 
 	$: {
 		queryArgs;
@@ -28,8 +29,11 @@
 
 	function refresh() {
 		if (queryArgs) {
-			invokeCommand<Mod[]>('query_mods_in_profile', { args: queryArgs }).then(
-				(result) => (mods = result)
+			invokeCommand<ProfileQuery>('query_mods_in_profile', { args: queryArgs }).then(
+				(result) => {
+					mods = result.mods;
+					updates = result.updates;
+				}
 			);
 		}
 	}
@@ -90,20 +94,20 @@
 				}}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl align-middle" />
-				Update
+				Update to {activeMod?.versions[0].name}
 			</Button.Root>
 		{/if}
 	</div>
 	<div slot="header">
-		{#if outdatedMods?.length > 0}
-			<div class="text-slate-200 bg-blue-600 ml-2 mr-6 mb-2 px-4 py-2 rounded-lg">
+		{#if updates.length > 0}
+			<div class="text-blue-100 bg-blue-600 ml-2 mr-6 mb-2 px-4 py-2 rounded-lg">
 				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-1 mb-0.5 inline" />
-				There {outdatedMods.length === 1 ? 'is' : 'are'} <strong>{outdatedMods.length}</strong>
-				updates available.
+				There {updates.length === 1 ? 'is' : 'are'} <strong>{updates.length}</strong>
+				{updates.length === 1 ? ' update' : ' updates'} available.
 				<Button.Root
-					class="underline"
+					class="hover:underline hover:text-blue-100 text-slate-100 font-semibold"
 					on:click={() => {
-						invokeCommand('update_all').then(refresh);
+						updateAllOpen = true;
 					}}
 				>
 					Update all?
@@ -128,6 +132,41 @@
 		</Switch.Root>
 	</div>
 </ModList>
+
+<Popup title="Confirm update" bind:open={updateAllOpen}>
+	<Dialog.Description class="text-slate-400">
+		The following mods will be updated:
+	</Dialog.Description>
+
+	<ul class="mt-2">
+		{#each updates as update}
+			<li>
+				<span class="text-slate-300">{update.name}</span> 
+				<span class="text-slate-400 text-light">{update.old} > </span> 
+				<span class="text-slate-100 font-medium">{update.new}</span>
+			</li>
+		{/each}
+	</ul>
+
+	<div class="flex w-full justify-end mt-3 mr-0.5 gap-2">
+		<Dialog.Close>
+			<Button.Root class="rounded-xl px-4 py-2 text-slate-100 bg-gray-700 hover:bg-gray-600">
+				Cancel
+			</Button.Root>
+		</Dialog.Close>
+		<Dialog.Close>
+			<Button.Root
+				class="rounded-xl px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-500"
+				on:click={() => {
+					invokeCommand('update_all').then(refresh);
+					updateAllOpen = false;
+				}}
+			>
+				Update all
+			</Button.Root>
+		</Dialog.Close>
+	</div>
+</Popup>
 
 <DependantsPopup
 	bind:this={removeDependants}

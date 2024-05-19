@@ -5,7 +5,22 @@
 ### Added
 
 - Dialog when enabling a mod which has disabled dependencies
+- Dialog before updating all mods
+- More options when importing profiles (similarly to r2modman/Thunderstore Mod Manager)
 - Close button to all dialogs
+- Confirm dialog when aborting mod installation
+
+### Changed
+
+- Config parser now allows invalid semver versions
+
+### Fixed
+
+- Improve performance for dependency trees
+- Improve performance of config parsing
+- Parsing config entries without a value
+- "Update all" banner showing the wrong number of mods
+- Config files being copied from other profiles when importing from code
 
 ## 0.3.1 (2024-05-15)
 
@@ -18,7 +33,7 @@
 ### Added
 
 - Profile import from file
-- profile export to file
+- Profile export to file
 - Ability to cancel mod installation
 - Ability to remove mod without its dependencies
 - Mod disabling and enabling

@@ -3,6 +3,7 @@ use std::path::Path;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
 use anyhow::Context;
+use log::error;
 
 #[derive(Serialize, Clone)]
 struct JsError<'a> {
@@ -11,7 +12,7 @@ struct JsError<'a> {
 }
 
 pub fn print_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
-    eprintln!("{}: {:#}", name, error);
+    error!("{}: {:#}", name, error);
     let _ = handle.emit_all("error", JsError {
         name,
         message: format!("{:#}", error),

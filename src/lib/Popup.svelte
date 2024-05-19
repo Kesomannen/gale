@@ -1,24 +1,33 @@
 <script lang="ts">
-	import { Dialog } from 'bits-ui';
+	import { Button, Dialog } from 'bits-ui';
 	import { fade, scale } from 'svelte/transition';
 	import { quartIn, quartOut } from 'svelte/easing';
 	import Icon from '@iconify/svelte';
+	import { dialog } from '@tauri-apps/api';
 
 	export let title: string | undefined = undefined;
 	export let open: boolean;
-	export let canClose: boolean = true;
+	export let confirmClose: { title: string, message: string } | undefined = undefined;
 	export let onClose: () => void = () => {};
+
+	async function close(evt: UIEvent) {
+		if (confirmClose) {
+			evt.preventDefault();
+			let result = await dialog.confirm(confirmClose.message, { title: confirmClose.title });
+			if (!result) {
+				return;
+			}
+		}
+
+		open = false;
+		onClose();
+	}
 </script>
 
 <Dialog.Root
 	bind:open
-	closeOnEscape={canClose}
-	onOutsideClick={(evt) => {
-		if (!canClose) evt.preventDefault();
-	}}
-	onOpenChange={state => {
-		if (!state) onClose();
-	}}
+	closeOnEscape={confirmClose === undefined}
+	onOutsideClick={close}
 >
 	<Dialog.Portal>
 		<Dialog.Overlay
@@ -41,9 +50,12 @@
 
 				<slot />
 
-				<Dialog.Close class="absolute top-6 right-4 p-0.5 rounded-md text-slate-400 hover:text-slate-300 hover:bg-slate-700 text-3xl">
+				<Button.Root 
+					class="absolute top-5 right-5 p-0.5 rounded-md text-slate-400 hover:text-slate-300 hover:bg-slate-700 text-3xl"
+					on:click={close}
+				>
 					<Icon icon="mdi:close" />
-				</Dialog.Close>
+				</Button.Root>
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>

@@ -20,5 +20,5 @@
 	});
 </script>
 
-<InputField bind:value={content} />
+<InputField bind:value={content} size='sm' />
 <ResetConfigButton {entryId} {onReset} />

@@ -19,6 +19,7 @@
 
 	export function fetchMarkdown() {
 		if (currentMod === mod) return;
+		currentMod = mod;
 
 		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/${path}/`;
 		promise = fetch<MarkdownResponse>(url, { method: 'GET' })

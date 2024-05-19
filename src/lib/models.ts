@@ -191,3 +191,25 @@ export interface FiltersResponse {
 export type LaunchMode = 
 	| { type: 'steam', content?: undefined }
 	| { type: 'direct', content: { instances: number } };
+
+export interface AvailableUpdate {
+	name: string;
+	uuid: string;
+	old: string;
+	new: string;
+}
+
+export interface ProfileQuery {
+	mods: Mod[];
+	updates: AvailableUpdate[];
+}
+
+export interface ImportData {
+	name: string;
+	temp_path: string;
+	mods: {
+		enabled: boolean;
+		packageUuid: string;
+		versionUuid: string;
+	}[]
+};

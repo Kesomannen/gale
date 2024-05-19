@@ -1,19 +1,5 @@
 use super::*;
 
-impl File {
-    fn new(name: &str, plugin_name: &str, plugin_version: semver::Version, plugin_guid: &str, sections: Vec<Section>) -> Self {
-        Self {
-            name: name.to_owned(),
-            metadata: Some(FileMetadata {
-                plugin_name: plugin_name.to_owned(),
-                plugin_version,
-                plugin_guid: plugin_guid.to_owned(),
-            }),
-            sections,
-        }
-    }
-}
-
 impl Section {
     fn new(name: &str, entries: Vec<Entry>) -> Self {
         Self {
@@ -103,10 +89,7 @@ UntaggedEntry = Hi!
 
 fn test_file() -> File {
     File::new(
-        "test",
-        "Plugin",
-        semver::Version::new(1, 0, 0),
-        "Author.PluginGuid",
+        "test".to_owned(),
         vec![
             Section::new(
                 "Section1",
@@ -195,6 +178,11 @@ fn test_file() -> File {
                 ],
             ),
         ],
+        Some(FileMetadata { 
+            plugin_name: "Plugin".to_owned(),
+            plugin_version: "1.0.0".to_owned(),
+            plugin_guid: "Author.PluginGuid".to_owned(),
+        })
     )
 }
 
@@ -205,5 +193,6 @@ fn test_to_string() {
 
 #[test]
 fn test_from_string() {
-    assert_eq!(de::from_str(TEST_STR, "test".to_owned()), LoadFileResult::Ok(test_file()));
+    let (sections, metadata) = de::from_str(TEST_STR).unwrap();
+    assert_eq!(File::new("test".to_owned(), sections, metadata), test_file());
 }

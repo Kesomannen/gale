@@ -71,7 +71,7 @@
 	</div>
 	<div class="flex w-full justify-end mt-3">
 		<Button.Root
-			class="rounded-lg px-6 py-2 mr-0.5 text-white font-medium bg-green-700 hover:bg-green-600 disabled:bg-gray-600/80 disabled:hover:bg-gray-600/80 disabled:text-gray-200/80"
+			class="rounded-xl px-6 py-2 mr-0.5 text-white font-medium bg-green-700 hover:bg-green-600 disabled:bg-gray-600/80 disabled:hover:bg-gray-600/80 disabled:text-gray-200/80"
 			on:click={submit}
 		>
 			Export
