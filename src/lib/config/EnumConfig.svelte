@@ -10,25 +10,30 @@
 
 	let open = false;
 
-	let content = entryId.entry.value.content as { value: string; options: string[] };
+	let content = entryId.entry.value.content as { index: number; options: string[] };
 	let items = content.options.map(valueToItem);
 
-	let selectedItem = valueToItem(content.value);
+	let selectedItem = indexToItem(content.index);
+
+	function indexToItem(index: number): SelectItem {
+		return valueToItem(content.options[index]);
+	}
 
 	function valueToItem(value: string): SelectItem {
-		return { value: value, label: value };
+		return { value, label: value };
 	}
 
 	function onReset(newValue: ConfigValue) {
-		content = newValue.content as { value: string; options: string[] };
-		selectedItem = valueToItem(content.value);
+		content = newValue.content as { index: number; options: string[] };
+		selectedItem = indexToItem(content.index);
 	}
 
 	function onSelectChange(value: string) {
+		let index = content.options.indexOf(value);
 		setTaggedConfig(entryId, {
 			type: 'enum',
 			content: {
-				value,
+				index,
 				options: content.options
 			}
 		});

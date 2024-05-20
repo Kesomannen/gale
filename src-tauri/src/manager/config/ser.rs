@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use serde::Serialize;
 
 use super::{de::FLAGS_MESSAGE, Entry, File, FileMetadata, Num, Section, TaggedEntry, Value};
@@ -63,8 +64,10 @@ impl Serializer {
         match value {
             Value::Boolean(b) => self.push(&b),
             Value::String(s) => self.push_str(s),
-            Value::Enum { value, .. } => self.push_str(value),
-            Value::Flags { values, .. } => self.push_str(&values.join(", ")),
+            Value::Enum { index, options } => self.push_str(&options[*index]),
+            Value::Flags { indicies, options } => {
+                self.push_str(&indicies.iter().map(|i| &options[*i]).join(", "))
+            },
             Value::Int32(num) => self.push(&num.value),
             Value::Single(num) => self.push(&num.value),
             Value::Double(num) => self.push(&num.value),

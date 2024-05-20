@@ -187,11 +187,11 @@ pub enum Value {
     Boolean(bool),
     String(String),
     Enum {
-        value: String,
+        index: usize,
         options: Vec<String>,
     },
     Flags {
-        values: Vec<String>,
+        indicies: Vec<usize>,
         options: Vec<String>,
     },
     Int32(Num<i32>),

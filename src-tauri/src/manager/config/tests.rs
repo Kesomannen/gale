@@ -105,11 +105,7 @@ fn test_file() -> File {
                         "This is entry 2",
                         "LogLevel",
                         Some(Value::Flags {
-                            values: vec![
-                                "Info".to_owned(),
-                                "Warning".to_owned(),
-                                "Error".to_owned(),
-                            ],
+                            indicies: vec![1, 2, 3],
                             options: vec![
                                 "Debug".to_owned(),
                                 "Info".to_owned(),
@@ -118,7 +114,7 @@ fn test_file() -> File {
                             ],
                         }),
                         Value::Flags {
-                            values: vec!["Info".to_owned(), "Warning".to_owned()],
+                            indicies: vec![1, 2],
                             options: vec![
                                 "Debug".to_owned(),
                                 "Info".to_owned(),
@@ -132,7 +128,7 @@ fn test_file() -> File {
                         "This is entry 3",
                         "Difficulty",
                         Some(Value::Enum {
-                            value: "Medium".to_owned(),
+                            index: 1,
                             options: vec![
                                 "Easy".to_owned(),
                                 "Medium".to_owned(),
@@ -140,7 +136,7 @@ fn test_file() -> File {
                             ],
                         }),
                         Value::Enum {
-                            value: "Easy".to_owned(),
+                            index: 0,
                             options: vec![
                                 "Easy".to_owned(),
                                 "Medium".to_owned(),

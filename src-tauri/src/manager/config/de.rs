@@ -92,10 +92,6 @@ impl EntryBuilder<'_> {
         })
     }
 
-    fn parse_list(&self, str: &str) -> Vec<String> {
-        str.split(", ").map(|s| s.to_owned()).collect()
-    }
-
     fn parse_value(&self, str: &str) -> Result<Value> {
         match &self.acceptable_values {
             Some(options) => Ok(self.parse_enum(str, options)),
@@ -104,15 +100,21 @@ impl EntryBuilder<'_> {
     }
 
     fn parse_enum(&self, str: &str, options: &[&str]) -> Value {
-        let options = options.iter().map(|s| (*s).to_owned()).collect();
+        let options = options.iter().map(|s| (*s).to_owned()).collect_vec();
 
         match self.is_flags {
             true => Value::Flags {
-                values: self.parse_list(str),
+                indicies: str
+                    .split(", ")
+                    .filter_map(|value| options.iter().position(|opt| opt == value))
+                    .collect(),
                 options,
             },
             false => Value::Enum {
-                value: str.to_owned(),
+                index: options
+                    .iter()
+                    .position(|opt| opt == str)
+                    .unwrap_or_default(),
                 options,
             },
         }
@@ -142,7 +144,7 @@ impl<'a> Parser<'a> {
                 self.parse_section()?;
             } else if line.starts_with('#') {
                 if line.starts_with("## Settings file was created by plugin ") {
-                    self.parse_metadata()?;
+                    self.parse_metadata().ok();
                 } else {
                     let entry = self.parse_tagged_entry()?;
                     self.push_entry(Entry::Tagged(entry))?;
@@ -161,10 +163,6 @@ impl<'a> Parser<'a> {
 
     fn peek(&mut self) -> Option<&&'a str> {
         self.lines.peek()
-    }
-
-    fn peek_or_eof(&mut self) -> Result<&&'a str> {
-        self.peek().context("unexpected EOF")
     }
 
     fn consume(&mut self) -> Option<&'a str> {

@@ -10,28 +10,29 @@
 
 	let open = false;
 
-	let content = entryId.entry.value.content as { values: string[]; options: string[] };
+	let content = entryId.entry.value.content as { indicies: number[]; options: string[] };
 	let items = content.options.map(valueToItem);
 
-	let selectedItems = content.values.map(valueToItem);
+	let selectedItems = content.indicies.map(indexToItem);
+
+	function indexToItem(index: number): SelectItem {
+		return valueToItem(content.options[index]);
+	}
 
 	function valueToItem(value: string): SelectItem {
-		return { value: value, label: value };
+		return { value, label: value };
 	}
 
 	function onReset(newValue: ConfigValue) {
-		content = newValue.content as { values: string[]; options: string[] };
-		selectedItems = content.values.map(valueToItem);
+		content = newValue.content as { indicies: number[]; options: string[] };
+		selectedItems = content.options.map(valueToItem);
 	}
 
 	function onSelectedChange(newValues: string[]) {
-		content.values = newValues;
+		content.indicies = newValues.map(value => content.options.indexOf(value));
 		setTaggedConfig(entryId, {
 			type: 'flags',
-			content: {
-				values: newValues,
-				options: content.options
-			}
+			content
 		});
 	}
 </script>

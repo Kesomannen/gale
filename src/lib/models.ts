@@ -4,14 +4,14 @@ export type ConfigValue =
 	| {
 			type: 'enum';
 			content: {
-				value: string;
+				index: number;
 				options: string[];
 			};
 	  }
 	| {
 			type: 'flags';
 			content: {
-				values: string[];
+				indicies: number[];
 				options: string[];
 			};
 	  }

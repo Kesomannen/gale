@@ -52,9 +52,9 @@
 			case 'single':
 				return config.content.value.toString();
 			case 'enum':
-				return config.content.value;
+				return config.content.options[config.content.index];
 			case 'flags':
-				return config.content.values.join(', ');
+				return config.content.indicies.map(i => config.content.options[i]).join(', ');
 			case 'other':
 				return config.content;
 		}
