@@ -1,13 +1,22 @@
 <script lang="ts">
-	import Popup from '$lib/Popup.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
-	import type { Dependant, Mod, ModActionResponse, QueryModsArgs, ProfileQuery, AvailableUpdate } from '$lib/models';
+	import type {
+		Dependant,
+		Mod,
+		ModActionResponse,
+		QueryModsArgs,
+		ProfileQuery,
+		AvailableUpdate
+	} from '$lib/models';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { currentGame, currentProfile } from '$lib/profile';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
+	import { tauri } from '@tauri-apps/api';
 	import { Button, Dialog, Switch, Tooltip } from 'bits-ui';
+	import { onMount } from 'svelte';
 
 	let mods: Mod[];
 	let updates: AvailableUpdate[] = [];
@@ -29,17 +38,15 @@
 
 	function refresh() {
 		if (queryArgs) {
-			invokeCommand<ProfileQuery>('query_mods_in_profile', { args: queryArgs }).then(
-				(result) => {
-					mods = result.mods;
-					updates = result.updates;
-				}
-			);
+			invokeCommand<ProfileQuery>('query_mods_in_profile', { args: queryArgs }).then((result) => {
+				mods = result.mods;
+				updates = result.updates;
+			});
 		}
 	}
 
 	async function toggleMod(new_value: boolean, mod: Mod) {
-		let response = await invokeCommand<ModActionResponse>("toggle_mod", {
+		let response = await invokeCommand<ModActionResponse>('toggle_mod', {
 			uuid: mod.uuid
 		});
 
@@ -58,7 +65,7 @@
 	async function removeMod() {
 		if (!activeMod) return;
 
-		let response = await invokeCommand<ModActionResponse>("remove_mod", {
+		let response = await invokeCommand<ModActionResponse>('remove_mod', {
 			uuid: activeMod.uuid
 		});
 
@@ -141,8 +148,8 @@
 	<ul class="mt-2">
 		{#each updates as update}
 			<li>
-				<span class="text-slate-300">{update.name}</span> 
-				<span class="text-slate-400 text-light">{update.old} > </span> 
+				<span class="text-slate-300">{update.name}</span>
+				<span class="text-slate-400 text-light">{update.old} > </span>
 				<span class="text-slate-100 font-medium">{update.new}</span>
 			</li>
 		{/each}
@@ -178,6 +185,7 @@
 		refresh();
 		activeMod = undefined;
 	}}
+	onCancel={refresh}
 />
 
 <DependantsPopup
@@ -187,6 +195,7 @@
 	description="The following mods depend on %s and will likely not work if it is disabled!"
 	commandName="toggle_mod"
 	onExecute={refresh}
+	onCancel={refresh}
 />
 
 <DependantsPopup
@@ -196,5 +205,6 @@
 	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled!"
 	commandName="toggle_mod"
 	onExecute={refresh}
+	onCancel={refresh}
 	isPositive={true}
 />

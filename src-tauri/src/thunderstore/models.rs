@@ -133,6 +133,7 @@ pub struct FrontendMod {
     pub is_pinned: bool,
     pub is_deprecated: bool,
     pub uuid: Uuid,
+    pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,
     #[serde(rename = "type")]
     pub kind: FrontendModKind,

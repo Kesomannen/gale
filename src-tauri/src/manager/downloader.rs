@@ -318,7 +318,7 @@ impl<'a> Installer<'a> {
                 .context("failed to disable installed mod")?;
         }
 
-        save(&manager, &prefs).map_err(|err| InstallError::Error(err.into()))?;
+        manager.save(&prefs).context("failed to save manager state")?;
 
         Ok(())
     }
@@ -428,14 +428,14 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
     .await
 }
 
-pub fn install_from_disk(src: &Path, dest: &Path, name: &str) -> Result<()> {
-    let mut split = name.split('-');
+pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
+    let mut split = full_name.split('-');
     split.next();
-    let name = split.next().unwrap_or(name);
+    let name = split.next().unwrap_or(full_name);
 
     match name.starts_with("BepInExPack") {
         true => install_from_disk_bepinex(src, dest),
-        false => install_from_disk_default(src, dest, name),
+        false => install_from_disk_default(src, dest, full_name),
     }
 }
 
@@ -453,7 +453,7 @@ fn install_from_disk_default(src: &Path, dest: &Path, name: &str) -> Result<()> 
                 let target_path = target_path.join("config");
                 fs::create_dir_all(&target_path)?;
                 fs_util::copy_contents(&entry_path, &target_path, false)
-                    .context("error while copying config")?;
+                    .fs_context("copying config", &entry_path)?;
             } else {
                 let target_path = match entry_name.to_string_lossy().as_ref() {
                     "patchers" | "core" => target_path.join(entry_name).join(name),
@@ -463,11 +463,11 @@ fn install_from_disk_default(src: &Path, dest: &Path, name: &str) -> Result<()> 
 
                 fs::create_dir_all(target_path.parent().unwrap())?;
                 fs_util::copy_dir(&entry_path, &target_path)
-                    .context("error while copying directory")?;
+                    .fs_context("copying directory", &entry_path)?;
             }
         } else {
             fs::copy(&entry_path, &target_plugins_path.join(entry_name))
-                .context("error while copying file")?;
+                .fs_context("copying file", &entry_path)?;
         }
     }
 
@@ -499,10 +499,10 @@ fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
             fs::create_dir_all(&target_path)?;
 
             fs_util::copy_contents(&entry_path, &target_path, false)
-                .with_context(|| format!("error while copying directory {:?}", entry_path))?;
-        } else {
+                .fs_context("copying directory", &entry_path)?;
+        } else if ["winhttp.dll", ".doorstop_version"].into_iter().any(|name| entry_name == name) {
             fs::copy(&entry_path, dest.join(entry_name))
-                .with_context(|| format!("error while copying file {:?}", entry_path))?;
+                .fs_context("copying file", &entry_path)?;
         }
     }
 

@@ -17,6 +17,6 @@
 		bind:value
 		{placeholder}
 		class="ml-auto flex-grow px-3 py-1 rounded-lg bg-gray-900
-			 text-slate-300 hover:text-slate-100 border border-gray-500 border-opacity-0 hover:border-opacity-100"
+			 text-slate-300 hover:text-slate-200 border border-slate-500 border-opacity-0 hover:border-opacity-100"
 	/>
 </div>

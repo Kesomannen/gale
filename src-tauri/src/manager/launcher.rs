@@ -1,4 +1,8 @@
-use std::{fs, path::Path, process::Command};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 
@@ -54,23 +58,8 @@ impl ModManager {
     }
 
     fn launch_game_direct(&self, prefs: &Prefs, instances: u32) -> Result<()> {
-        let mut game_path = prefs
-            .get_path_or_err("steam_exe_path")?
-            .parent()
-            .unwrap()
-            .to_path_buf();
-
-        game_path.push("steamapps");
-        game_path.push("common");
-        game_path.push(&self.active_game.display_name);
-
-        ensure!(
-            game_path.exists(),
-            "game path not found (at {})",
-            game_path.display()
-        );
-
-        let exe_path = game_path
+        let exe_path = self
+            .game_path(prefs)?
             .read_dir()?
             .filter_map(|entry| entry.ok())
             .find(|entry| {
@@ -105,6 +94,26 @@ impl ModManager {
 
         Ok(())
     }
+
+    pub fn game_path(&self, prefs: &Prefs) -> Result<PathBuf> {
+        let mut game_path = prefs
+            .get_path_or_err("steam_exe_path")?
+            .parent()
+            .unwrap()
+            .to_path_buf();
+
+        game_path.push("steamapps");
+        game_path.push("common");
+        game_path.push(&self.active_game.display_name);
+
+        ensure!(
+            game_path.exists(),
+            "game path not found (at {})",
+            game_path.display()
+        );
+
+        Ok(game_path)
+    }
 }
 
 fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()> {
@@ -116,11 +125,12 @@ fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()> {
     let preloader_path = resolve_path(&preloader_path, "preloader")
         .map_err(|_| anyhow!("failed to resolve BepInEx preloader path, is BepInEx installed?"))?;
 
-    let target_name = match doorstop_version(root_path)? {
-        3 => "doorstop-target",
-        4 => "doorstop-target-assembly",
-        vers => bail!("unsupported doorstop version: {}", vers),
-    };
+    let target_name =
+        match doorstop_version(root_path).context("failed to determine doorstop version")? {
+            3 => "doorstop-target",
+            4 => "doorstop-target-assembly",
+            vers => bail!("unsupported doorstop version: {}", vers),
+        };
 
     command.args(["--doorstop-enable", "true", target_name, preloader_path]);
 

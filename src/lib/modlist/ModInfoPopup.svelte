@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Markdown from "$lib/Markdown.svelte";
-	import Popup from "$lib/Popup.svelte";
+	import Markdown from "$lib/components/Markdown.svelte";
+	import Popup from "$lib/components/Popup.svelte";
 	import type { Mod } from "$lib/models";
 	import Icon from "@iconify/svelte";
   import { Response, fetch } from "@tauri-apps/api/http";

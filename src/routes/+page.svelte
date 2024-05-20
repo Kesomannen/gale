@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Markdown from '$lib/Markdown.svelte';
+	import Markdown from '$lib/components/Markdown.svelte';
 	import { getVersion } from '@tauri-apps/api/app';
 	import { onMount } from 'svelte';
 

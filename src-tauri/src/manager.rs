@@ -552,7 +552,7 @@ impl Profile {
         for dir in ["core", "patchers", "plugins"].into_iter() {
             path.push(dir);
             path.push(name);
-
+            
             if path.exists() {
                 scan_dir(&path)?;
             }

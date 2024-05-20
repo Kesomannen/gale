@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '$lib/Popup.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { InstallProgress } from '$lib/models';
 	import { formatTime, shortenFileSize } from '$lib/util';

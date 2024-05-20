@@ -9,10 +9,17 @@
 - More options when importing profiles (similarly to r2modman/Thunderstore Mod Manager)
 - Close button to all dialogs
 - Confirm dialog when aborting mod installation
+- Zoom preference
+
+### Removed
+
+- Quit button
 
 ### Changed
 
 - Config parser now allows invalid semver versions
+- Increased interval between fetching mods from Thunderstore
+- Various UI improvements
 
 ### Fixed
 
@@ -22,6 +29,7 @@
 - "Update all" banner showing the wrong number of mods
 - Config files being copied from other profiles when importing from code
 - Launching games with doorstop v4
+- Uninstalled mods sometimes not being deleted from the file system
 
 ## 0.3.1 (2024-05-15)
 

@@ -4,9 +4,17 @@
 use anyhow::Context;
 use simple_logger::SimpleLogger;
 use tauri::Manager;
+use games::GAMES;
 
 #[macro_use]
 extern crate lazy_static;
+
+#[cfg(target_os = "linux")]
+extern crate webkit2gtk;
+
+#[cfg(target_os = "macos")]
+#[macro_use]
+extern crate objc;
 
 mod command_util;
 mod fs_util;
@@ -30,6 +38,26 @@ impl NetworkClient {
     }
 }
 
+fn zoom_window(window: &tauri::Window, scale_factor: f64) -> tauri::Result<()> {
+    window.with_webview(move |webview| {
+        #[cfg(target_os = "linux")]
+        {
+            use webkit2gtk::traits::WebViewExt;
+            webview.inner().set_zoom_level(scale_factor);
+        }
+
+        #[cfg(windows)]
+        unsafe {
+            webview.controller().SetZoomFactor(scale_factor).unwrap();
+        }
+
+        #[cfg(target_os = "macos")]
+        unsafe {
+            let () = msg_send![webview.inner(), setPageZoom: scale_factor];
+        }
+    })
+}
+
 fn main() {
     let log_level = if cfg!(debug_assertions) {
         log::LevelFilter::Debug
@@ -47,8 +75,12 @@ fn main() {
 
     tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
 
+    for game in GAMES.iter() {
+        println!("{}=[\"tools\"]", game.id);
+    }
+
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
+        .invoke_handler(tauri::generate_handler![            
             thunderstore::commands::query_all_mods,
 
             prefs::commands::get_pref,
@@ -68,6 +100,7 @@ fn main() {
             manager::commands::toggle_mod,
             manager::commands::force_toggle_mods,
             manager::commands::reveal_profile_dir,
+            manager::commands::open_logs,
 
             manager::launcher::commands::launch_game,
 
@@ -78,12 +111,12 @@ fn main() {
 
             manager::downloader::updater::commands::update_mod,
             manager::downloader::updater::commands::update_all,
-            
+
             manager::importer::commands::import_data,
             manager::importer::commands::import_code,
             manager::importer::commands::import_file,
             manager::importer::commands::import_local_mod,
-            
+
             manager::exporter::commands::export_code,
             manager::exporter::commands::export_file,
             manager::exporter::commands::export_pack,

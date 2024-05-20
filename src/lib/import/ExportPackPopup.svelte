@@ -1,7 +1,8 @@
 <script lang="ts">
-	import InputField from '$lib/InputField.svelte';
-	import PathField from '$lib/PathField.svelte';
-	import Popup from '$lib/Popup.svelte';
+	import BigButton from '$lib/components/BigButton.svelte';
+import InputField from '$lib/components/InputField.svelte';
+	import PathField from '$lib/components/PathField.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import { currentProfile } from '$lib/profile';
 	import { open } from '@tauri-apps/api/dialog';
@@ -70,11 +71,8 @@
 		<PathField label="Icon" onClick={browseIcon} bind:value={icon} icon="mdi:file-image" />
 	</div>
 	<div class="flex w-full justify-end mt-3">
-		<Button.Root
-			class="rounded-xl px-6 py-2 mr-0.5 text-white font-medium bg-green-700 hover:bg-green-600 disabled:bg-gray-600/80 disabled:hover:bg-gray-600/80 disabled:text-gray-200/80"
-			on:click={submit}
-		>
+		<BigButton onClick={submit}>
 			Export
-		</Button.Root>
+		</BigButton>
 	</div>
 </Popup>

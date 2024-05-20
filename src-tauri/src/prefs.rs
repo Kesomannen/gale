@@ -19,6 +19,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(untagged,rename_all="camelCase")]
 pub enum PrefValue {
+    Float(f32),
     Path(PathBuf),
     LaunchMode(LaunchMode),
 }
@@ -91,6 +92,9 @@ impl Prefs {
         
         map.entry("launch_mode".to_owned())
             .or_insert(PrefValue::LaunchMode(LaunchMode::Steam));
+
+        map.entry("zoom_factor".to_owned())
+            .or_insert(PrefValue::Float(1.0));
 
         let prefs = Self { path, map };
 

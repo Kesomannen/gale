@@ -2,7 +2,7 @@ use std::fs;
 
 use anyhow::{anyhow, ensure};
 
-use crate::{command_util::{Result, StateMutex}, util::IoResultExt};
+use crate::{command_util::{Result, StateMutex}, util::IoResultExt, zoom_window};
 
 use super::{PrefValue, Prefs};
 
@@ -14,11 +14,18 @@ pub fn get_pref(key: &str, prefs: StateMutex<Prefs>) -> Result<PrefValue> {
 }
 
 #[tauri::command]
-pub fn set_pref(key: &str, value: PrefValue, prefs: StateMutex<Prefs>) -> Result<()> {
+pub fn set_pref(key: &str, value: PrefValue, prefs: StateMutex<Prefs>, window: tauri::Window) -> Result<()> {
     let mut prefs = prefs.lock().unwrap();
 
     match key {
         "data_dir" | "cache_dir" | "temp_dir" => move_dir(key, value, &mut prefs)?,
+        "zoom_factor" => match value {
+            PrefValue::Float(factor) => {
+                zoom_window(&window, factor as f64).map_err(|e| anyhow!(e))?;
+                prefs.set(key, value)?
+            },
+            _ => return Err(anyhow!("value is not a float").into())
+        },
         _ => prefs.set(key, value)?
     };
 

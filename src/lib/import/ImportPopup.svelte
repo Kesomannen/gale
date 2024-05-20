@@ -1,30 +1,31 @@
 <script lang="ts">
-	import Popup from '$lib/Popup.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ImportData } from '$lib/models';
-	import { Button, Dialog, Select, Tabs } from 'bits-ui';
+	import { Dialog, Select, Tabs } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 	import { clipboard } from '@tauri-apps/api';
-	import InputField from '$lib/InputField.svelte';
+	import InputField from '$lib/components/InputField.svelte';
 	import { profileNames } from '$lib/profile';
-	import { slide } from 'svelte/transition';
+	import BigButton from '$lib/components/BigButton.svelte';
 
 	export let open: boolean;
 	export let data: ImportData | undefined;
 
 	let key: string;
-	let loading: boolean;
-
 	let name: string;
-	$: if (data && !name) {
-		name = data.name;
-	}
-
+	let loading: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
 
 	$: if (open) {
 		getKeyFromClipboard();
 	}
+
+	$: if (data && !name) {
+		name = data.name;
+	}
+
+	$: nameAvailable = mode === 'overwrite' || !profileNames.includes(name);
 
 	async function getKeyFromClipboard() {
 		key = (await clipboard.readText()) ?? '';
@@ -42,7 +43,7 @@
 	}
 </script>
 
-<Popup title="Import profile" bind:open>
+<Popup title="Import profile" bind:open onClose={() => (data = undefined)}>
 	{#if data}
 		<Tabs.Root bind:value={mode}>
 			<Tabs.List class="flex p-1 my-1 gap-1 rounded-xl text-slate-300 bg-gray-900">
@@ -65,6 +66,12 @@
 			</Tabs.List>
 			<Tabs.Content value="new">
 				<InputField label="Profile name" bind:value={name} />
+				{#if !nameAvailable}
+					<p class="text-red-400 text-md pl-36 mt-1">
+						<Icon icon="mdi:error" class="text-lg inline" />
+						Profile '{name}' already exists
+					</p>
+				{/if}
 			</Tabs.Content>
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
@@ -73,6 +80,7 @@
 					<Select.Root
 						items={profileNames.map((name) => ({ value: name, label: name }))}
 						selected={{ value: name, label: name }}
+						onSelectedChange={(selection) => (name = selection?.value ?? name)}
 					>
 						<Select.Trigger
 							class="flex items-center flex-grow bg-gray-900 rounded-lg px-3 py-1
@@ -87,12 +95,11 @@
 						</Select.Trigger>
 						<Select.Content
 							class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600"
-							transition={slide}
 							transitionConfig={{ duration: 100 }}
 						>
 							{#each profileNames as profileName}
 								<Select.Item
-									value="direct"
+									value={profileName}
 									class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
 								>
 									{profileName}
@@ -111,39 +118,33 @@
 
 		<div class="flex w-full justify-end items-center mt-1 gap-2 text-slate-400">
 			{data.mods.length} mods will be installed
-			
+
 			<Dialog.Close>
-				<Button.Root
-					class="rounded-xl px-4 py-2 font-medium text-white bg-green-600 hover:bg-green-500"
+				<BigButton
+					disabled={!nameAvailable || loading}
+					onClick={() => {
+						if (!data) return;
+						data.name = name;
+						invokeCommand('import_data', { data });
+						data = undefined;
+						open = false;
+					}}
 				>
 					Import
-				</Button.Root>
+				</BigButton>
 			</Dialog.Close>
 		</div>
 	{:else}
-		<div class="flex mt-2">
-			<input
-				type="text"
-				bind:value={key}
-				on:keydown={(e) => {
-					if (e.key !== 'Enter') return;
-					submitKey();
-				}}
-				placeholder="Enter import code..."
-				class="w-full px-3 py-2 rounded-lg bg-gray-900 text-slate-100 select-none"
-			/>
-			<Button.Root
-				class="rounded-xl px-4 py-2 ml-3 text-slate-100 bg-green-600 hover:bg-green-500
-							disabled:bg-gray-600/80 disabled:hover:bg-gray-600/80 disabled:text-gray-200/80"
-				on:click={submitKey}
-				disabled={loading}
-			>
+		<div class="flex gap-2 mt-1">
+			<InputField bind:value={key} size="lg" placeholder="Enter import code..." />
+
+			<BigButton onClick={submitKey} disabled={loading}>
 				{#if loading}
 					<Icon icon="mdi:loading" class="animate-spin" />
 				{:else}
 					Import
 				{/if}
-			</Button.Root>
+			</BigButton>
 		</div>
 	{/if}
 </Popup>

@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use serde::Serialize;
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -16,14 +16,14 @@ use itertools::Itertools;
 #[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GameInfo {
-    all: &'static [Game],
-    active: &'static Game,
-    favorites: Vec<&'static str>,
+pub struct GameInfo<'a> {
+    all: &'a [Game],
+    active: &'a Game,
+    favorites: Vec<&'a str>,
 }
 
 #[tauri::command]
-pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo {
+pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo<'static> {
     let manager = manager.lock().unwrap();
 
     let favorites = manager
@@ -308,7 +308,31 @@ pub fn reveal_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let path = &manager.active_profile().path;
-    open::that(path).with_context(|| format!("failed to open dir {}", path.display()))?;
+    open::that(path).context("failed to open profile directory")?;
+
+    Ok(())
+}
+
+fn log_path(manager: &ModManager, prefs: &Prefs) -> Result<std::path::PathBuf> {
+    let path = manager
+        .game_path(prefs)?
+        .join("BepInEx")
+        .join("LogOutput.log");
+
+    if !path.exists() {
+        return Err(anyhow!("no log file found").into());
+    }
+
+    Ok(path)
+}
+
+#[tauri::command]
+pub fn open_logs(manager: StateMutex<ModManager>, prefs: StateMutex<Prefs>) -> Result<()> {
+    let manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let path = log_path(&manager, &prefs)?;
+    open::that(path).context("failed to open log file")?;
 
     Ok(())
 }

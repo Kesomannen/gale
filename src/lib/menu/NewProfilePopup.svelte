@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '../Popup.svelte';
+	import Popup from '../components/Popup.svelte';
 	import { Button, Dialog } from 'bits-ui';
 	import { refreshProfiles } from '$lib/profile';
 	import { invokeCommand } from '$lib/invoke';

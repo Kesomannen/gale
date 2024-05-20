@@ -1,11 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { DropdownOption, Mod } from '../models';
-	import { isOutdated as updateAvailable, shortenNum } from '../util';
+	import { isOutdated, shortenNum, timeSince } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
-	import Popup from '$lib/Popup.svelte';
-	import Markdown from '$lib/Markdown.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 
 	import { open } from '@tauri-apps/api/shell';
 	import { fetch, Response } from '@tauri-apps/api/http';
@@ -99,7 +98,7 @@
 
 	<div class="mr-8 flex items-center justify-between">
 		<Button.Root
-			class="text-slate-200 font-semibold text-2xl hover:underline truncate"
+			class="text-slate-100 font-bold text-2xl hover:underline truncate"
 			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}>{mod.name}</Button.Root
 		>
 		{#if mod.version}
@@ -110,7 +109,7 @@
 	</div>
 
 	{#if mod.author}
-		<span class="text-slate-400 text-lg">
+		<span class="text-slate-300 text-xl">
 			By
 			<Button.Root
 				class="hover:underline"
@@ -136,29 +135,29 @@
 	{/if}
 
 	{#if mod.categories}
-		<div class="flex gap-1 mt-2 flex-wrap mb-3">
+		<div class="flex gap-1 mt-2 flex-wrap text-sm">
 			{#each mod.categories as category}
-				<div class="bg-slate-600 rounded-full px-3 py-1 text-blue-100 text-sm">
+				<div class="bg-slate-600 rounded-full px-3 py-1 text-blue-100">
 					{category}
 				</div>
 			{/each}
 		</div>
 	{/if}
 
-	{#if mod.rating && mod.downloads}
-		<div>
-			<div class="inline-flex items-center gap-2 mr-6">
-				<Icon class="text-yellow-400 text-lg" icon="mdi:star" />
-				<span class="text-yellow-400 text-md">{shortenNum(mod.rating)}</span>
-			</div>
-			<div class="inline-flex items-center gap-2">
-				<Icon class="text-green-400 text-lg" icon="mdi:download" />
-				<span class="text-green-400 text-md">{shortenNum(mod.downloads)}</span>
-			</div>
+	<div class="my-2 flex items-center gap-2">
+		<Icon class="text-yellow-400 text-xl" icon="mdi:star" />
+		<span class="text-yellow-400 text-lg mr-4">{shortenNum(mod.rating ?? 0)}</span>
+		<Icon class="text-green-400 text-xl" icon="mdi:download" />
+		<span class="text-green-400 text-lg">{shortenNum(mod.downloads ?? 0)}</span>
+	</div>
+
+	{#if mod.lastUpdated}
+		<div class="text-slate-400 mb-2 text-md">
+			Last updated: {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}
 
-	<p class="text-slate-300 text-lg flex-shrink overflow-hidden">{mod.description ?? ""}</p>
+	<p class="text-slate-300 text-xl flex-shrink overflow-hidden">{mod.description ?? ""}</p>
 
 	<Button.Root
 		class="flex items-center w-full mt-auto text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"

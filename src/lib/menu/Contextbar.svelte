@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { confirm } from '@tauri-apps/api/dialog';
 
-	import Popup from '$lib/Popup.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import {
 		activeProfileIndex,
 		currentGame,

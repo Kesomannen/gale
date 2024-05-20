@@ -1,5 +1,5 @@
 <script lang="ts">
-	import InputField from '$lib/InputField.svelte';
+	import InputField from '$lib/components/InputField.svelte';
 	import { setTaggedConfig } from '$lib/invoke';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 

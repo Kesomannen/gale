@@ -8,5 +8,9 @@ export default {
 			}
 		}
 	},
+	safelist: [
+		'bg-green-700',
+		'hover:bg-green-600'
+	],
 	plugins: []
 };

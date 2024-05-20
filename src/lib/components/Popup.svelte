@@ -5,9 +5,9 @@
 	import Icon from '@iconify/svelte';
 	import { dialog } from '@tauri-apps/api';
 
-	export let title: string | undefined = undefined;
 	export let open: boolean;
-	export let confirmClose: { title: string, message: string } | undefined = undefined;
+	export let title: string | undefined = undefined;
+	export let confirmClose: { title: string; message: string } | undefined = undefined;
 	export let onClose: () => void = () => {};
 
 	async function close(evt: UIEvent) {
@@ -24,14 +24,10 @@
 	}
 </script>
 
-<Dialog.Root
-	bind:open
-	closeOnEscape={confirmClose === undefined}
-	onOutsideClick={close}
->
+<Dialog.Root bind:open closeOnEscape={confirmClose === undefined} onOutsideClick={close}>
 	<Dialog.Portal>
 		<Dialog.Overlay
-			class="fixed inset-0 z-0 bg-black/60"
+			class="fixed inset-0 z-0 bg-black/60 rounded-lg"
 			transition={fade}
 			transitionConfig={{ duration: 150 }}
 		/>
@@ -42,20 +38,22 @@
 			outTransition={scale}
 			outTransitionConfig={{ duration: 100, easing: quartIn, start: 0.8 }}
 		>
-			<div class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden max-h-[90%] pointer-events-auto
-								 min-w-[45rem] w-fit max-w-[85%] relative">
+			<div
+				class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden max-h-[90%] pointer-events-auto
+							min-w-[40rem] w-fit max-w-[85%] relative"
+			>
+				<Button.Root
+					class="absolute top-5 right-5 p-0.5 rounded-md text-slate-400 hover:text-red-100 hover:bg-red-600/80 text-3xl"
+					on:click={close}
+				>
+					<Icon icon="mdi:close" />
+				</Button.Root>
+
 				{#if title}
 					<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
 				{/if}
 
 				<slot />
-
-				<Button.Root 
-					class="absolute top-5 right-5 p-0.5 rounded-md text-slate-400 hover:text-slate-300 hover:bg-slate-700 text-3xl"
-					on:click={close}
-				>
-					<Icon icon="mdi:close" />
-				</Button.Root>
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>

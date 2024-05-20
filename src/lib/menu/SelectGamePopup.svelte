@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '$lib/Popup.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import { games, refreshGames, setActiveGame } from '$lib/profile';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';

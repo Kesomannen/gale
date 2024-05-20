@@ -34,7 +34,7 @@
 				<Icon class="ml-1 text-blue-500" icon="mdi:arrow-up-circle" />
 			{/if}
 		</div>
-		<div class="truncate text-left {mod.enabled === false ? 'line-through text-slate-400' : 'text-slate-300'}">
+		<div class="truncate text-left {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-300/80'}">
 			{mod.description ?? ""}
 		</div>
 	</div>

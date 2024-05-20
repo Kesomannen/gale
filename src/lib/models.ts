@@ -64,7 +64,7 @@ export type LoadFileResult =
 		error: string;
 	} };
 
-export type PrefValue = string | LaunchMode;
+export type PrefValue = string | LaunchMode | number;
 	
 export interface ProfileInfo {
 	activeIndex: number;
@@ -92,6 +92,7 @@ export interface Mod {
 	isPinned: boolean,
 	isDeprecated: boolean,
 	uuid: string;
+	lastUpdated: string;
 	versions: {
 		name: string,
 		uuid: string

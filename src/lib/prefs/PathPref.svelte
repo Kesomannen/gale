@@ -3,7 +3,7 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import { onMount } from 'svelte';
-	import PathField from '$lib/PathField.svelte';
+	import PathField from '$lib/components/PathField.svelte';
 	import type { PrefValue } from '$lib/models';
 
 	export let label: string;

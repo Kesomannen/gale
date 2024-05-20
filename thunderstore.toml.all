@@ -1,0 +1,185 @@
+[general]
+repository = "https://thunderstore.io"
+
+[package]
+name = "GaleModManager"
+namespace = "Kesomannen"
+description = "A modern and lightweight mod manager for many games on Thunderstore. Read install instructions in the README!"
+websiteUrl = "https://github.com/Kesomannen/gale"
+
+[build]
+icon = "app-icon@0,25x.png"
+
+[[build.copy]]
+source = "CHANGELOG.md"
+target = "CHANGELOG.md"
+
+[[build.copy]]
+source = "LICENSE.md"
+target = "LICENSE.md"
+
+[[build.copy]]
+pattern = "src-tauri/target/release/bundle/nsis/*.exe"
+target = ""
+
+[publish]
+communities = [
+  "riskofrain2",
+  "dyson-sphere-program",
+  "valheim",
+  "gtfo",
+  "outward",
+  "talespire",
+  "h3vr",
+  "rounds",
+  "mechanica",
+  "muck",
+  "lethal-league-blaze",
+  "timberborn",
+  "totally-accurate-battle-simulator",
+  "nasb",
+  "inscryption",
+  "starsand",
+  "cats-are-liquid",
+  "potion-craft",
+  "nearly-dead",
+  "against",
+  "rogue-tower",
+  "hotds",
+  "for-the-king",
+  "subnautica",
+  "belowzero",
+  "core-keeper",
+  "peglin",
+  "v-rising",
+  "20-minutes-till-dawn",
+  "green-hell-vr",
+  "vtol-vr",
+  "stacklands",
+  "enter-the-gungeon",
+  "ravenfield",
+  "aloft",
+  "cult-of-the-lamb",
+  "chrono-ark",
+  "bonelab",
+  "trombone-champ",
+  "rogue-genesia",
+  "across-the-obelisk",
+  "ultrakill",
+  "ultimate-chicken-horse",
+  "atrio-the-dark-wild",
+  "ancient-dungeon-vr",
+  "rumble",
+  "skul-the-hero-slayer",
+  "sons-of-the-forest",
+  "the-ouroboros-king",
+  "wrestling-empire",
+  "receiver-2",
+  "the-planet-crafter",
+  "patch-quest",
+  "shadows-over-loathing",
+  "west-of-loathing",
+  "sun-haven",
+  "wildfrost",
+  "shadows-of-doubt",
+  "garfield-kart-furious-racing",
+  "techtonica",
+  "thronefall",
+  "we-love-katamari-reroll-royal-reverie",
+  "wizard-of-legend",
+  "bomb-rush-cyberfunk",
+  "touhou-lost-branch-of-legend",
+  "wizard-with-a-gun",
+  "sunkenland",
+  "atomicrops",
+  "erenshor",
+  "last-train-outta-wormtown",
+  "dredge",
+  "cities-skylines-ii",
+  "lethal-company",
+  "meeple-station",
+  "void-crew",
+  "sailwind",
+  "plasma",
+  "content-warning",
+]
+
+[publish.categories]
+riskofrain2 = ["tools"]
+dyson-sphere-program = ["tools"]
+valheim = ["tools"]
+gtfo = ["tools"]
+outward = ["tools"]
+talespire = ["tools"]
+h3vr = ["tools"]
+rounds = ["tools"]
+mechanica = ["tools"]
+muck = ["tools"]
+lethal-league-blaze = ["tools"]
+timberborn = ["tools"]
+totally-accurate-battle-simulator = ["tools"]
+nasb = ["tools"]
+inscryption = ["tools"]
+starsand = ["tools"]
+cats-are-liquid = ["tools"]
+potion-craft = ["tools"]
+nearly-dead = ["tools"]
+against = ["tools"]
+rogue-tower = ["tools"]
+hotds = ["tools"]
+for-the-king = ["tools"]
+subnautica = ["tools"]
+belowzero = ["tools"]
+core-keeper = ["tools"]
+peglin = ["tools"]
+v-rising = ["tools"]
+20-minutes-till-dawn = ["tools"]
+green-hell-vr = ["tools"]
+vtol-vr = ["tools"]
+stacklands = ["tools"]
+enter-the-gungeon = ["tools"]
+ravenfield = ["tools"]
+aloft = ["tools"]
+cult-of-the-lamb = ["tools"]
+chrono-ark = ["tools"]
+bonelab = ["tools"]
+trombone-champ = ["tools"]
+rogue-genesia = ["tools"]
+across-the-obelisk = ["tools"]
+ultrakill = ["tools"]
+ultimate-chicken-horse = ["tools"]
+atrio-the-dark-wild = ["tools"]
+ancient-dungeon-vr = ["tools"]
+rumble = ["tools"]
+skul-the-hero-slayer = ["tools"]
+sons-of-the-forest = ["tools"]
+the-ouroboros-king = ["tools"]
+wrestling-empire = ["tools"]
+receiver-2 = ["tools"]
+the-planet-crafter = ["tools"]
+patch-quest = ["tools"]
+shadows-over-loathing = ["tools"]
+west-of-loathing = ["tools"]
+sun-haven = ["tools"]
+wildfrost = ["tools"]
+shadows-of-doubt = ["tools"]
+garfield-kart-furious-racing = ["tools"]
+techtonica = ["tools"]
+thronefall = ["tools"]
+we-love-katamari-reroll-royal-reverie = ["tools"]
+wizard-of-legend = ["tools"]
+bomb-rush-cyberfunk = ["tools"]
+touhou-lost-branch-of-legend = ["tools"]
+wizard-with-a-gun = ["tools"]
+sunkenland = ["tools"]
+atomicrops = ["tools"]
+erenshor = ["tools"]
+last-train-outta-wormtown = ["tools"]
+dredge = ["tools"]
+cities-skylines-ii = ["tools"]
+lethal-company = ["tools"]
+meeple-station = ["tools"]
+void-crew = ["tools"]
+sailwind = ["tools"]
+plasma = ["tools"]
+content-warning = ["tools"]

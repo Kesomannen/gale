@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '$lib/Popup.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { Dependant, Mod, ModActionResponse } from '$lib/models';
 	import { Button, Dialog } from 'bits-ui';
@@ -10,6 +10,7 @@
 	export let commandName: string;
 	export let isPositive: boolean = false;
 	export let onExecute: () => void;
+	export let onCancel: () => void;
   
   let mod: Mod | undefined;
 	let open: boolean;
@@ -52,13 +53,16 @@
 
 		<div class="flex w-full justify-end mt-3 mr-0.5 gap-2">
 			<Dialog.Close>
-				<Button.Root class="rounded-xl px-4 py-2 text-slate-100 bg-gray-700 hover:bg-gray-600">
+				<Button.Root 
+					class="rounded-xl px-4 py-2 text-slate-100 bg-gray-700 hover:bg-gray-600"
+					on:click={onCancel}
+				>
 					Cancel
 				</Button.Root>
 			</Dialog.Close>
 			<Dialog.Close>
 				<Button.Root
-					class="rounded-xl px-4 py-2 font-semibold text-red-400 hover:text-red-300 border-2 border-red-500 hover:border-red-400"
+					class="rounded-xl px-4 py-2 font-semibold text-red-400 hover:text-red-300 border border-red-500 hover:border-red-400"
 					on:click={executeOne}
 				>
 					{verb} {mod.name} only

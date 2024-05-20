@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '$lib/Popup.svelte';
+	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import { currentProfile, refreshProfiles } from '$lib/profile';
 	import Icon from '@iconify/svelte';

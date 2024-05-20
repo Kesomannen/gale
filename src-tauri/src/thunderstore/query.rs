@@ -6,7 +6,10 @@ use serde::Deserialize;
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
-use super::{models::{FrontendMod, FrontendModKind, FrontendVersion}, BorrowedMod, Thunderstore};
+use super::{
+    models::{FrontendMod, FrontendModKind, FrontendVersion},
+    BorrowedMod, Thunderstore,
+};
 use crate::manager::LocalMod;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
@@ -65,7 +68,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
 
             if !thunderstore.finished_loading {
                 let query_state = query_state.lock().unwrap();
-            
+
                 if let Some(args) = query_state.current_query.as_ref() {
                     let mods = query_frontend_mods(args, thunderstore.latest());
                     app.emit_all("mod_query_result", &mods)?;
@@ -154,6 +157,7 @@ impl From<BorrowedMod<'_>> for FrontendMod {
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
             uuid: pkg.uuid4,
+            last_updated: Some(pkg.versions[0].date_created.clone()),
             versions: pkg
                 .versions
                 .iter()
@@ -206,8 +210,7 @@ where
         .collect()
 }
 
-
-pub fn query_mods<'a, T, I>(args: &QueryModsArgs, mods: I) -> impl Iterator<Item = T> + 'a 
+pub fn query_mods<'a, T, I>(args: &QueryModsArgs, mods: I) -> impl Iterator<Item = T> + 'a
 where
     T: Queryable + 'a,
     I: Iterator<Item = T> + 'a,
