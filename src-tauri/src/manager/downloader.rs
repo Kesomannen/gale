@@ -255,8 +255,7 @@ impl<'a> Installer<'a> {
             .get(url)
             .send()
             .await
-            .map_err(|err| InstallError::Error(err.into()))?
-            .error_for_status()
+            .and_then(|r| r.error_for_status())
             .map_err(|err| InstallError::Error(err.into()))?
             .bytes_stream();
 
@@ -501,7 +500,7 @@ fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
 
             fs_util::copy_contents(&entry_path, &target_path, false)
                 .with_context(|| format!("error while copying directory {:?}", entry_path))?;
-        } else if entry_name == "winhttp.dll" {
+        } else {
             fs::copy(&entry_path, dest.join(entry_name))
                 .with_context(|| format!("error while copying file {:?}", entry_path))?;
         }
@@ -529,7 +528,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
             match resolve_deep_link(url, &thunderstore) {
                 Ok(mod_ref) => mod_ref,
                 Err(e) => {
-                    print_err("Failed to resolve deep link", &e, &app);
+                    print_err("failed to resolve deep link", &e, &app);
                     return;
                 }
             }

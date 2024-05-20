@@ -21,6 +21,7 @@
 - Parsing config entries without a value
 - "Update all" banner showing the wrong number of mods
 - Config files being copied from other profiles when importing from code
+- Launching games with doorstop v4
 
 ## 0.3.1 (2024-05-15)
 
