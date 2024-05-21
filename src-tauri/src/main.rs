@@ -4,7 +4,6 @@
 use anyhow::Context;
 use simple_logger::SimpleLogger;
 use tauri::Manager;
-use games::GAMES;
 
 #[macro_use]
 extern crate lazy_static;

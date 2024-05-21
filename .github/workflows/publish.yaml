@@ -51,8 +51,7 @@ jobs:
         with:
           tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: '__VERSION__'
-          releaseDraft: true
-          prerelease: false
+          releaseDraft: false
           args: ${{ matrix.args }}
 
       - name: setup .NET
@@ -78,3 +77,12 @@ jobs:
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
         run: ./tcli/ThunderstoreCLI/bin/release/net7.0/tcli.exe publish --package-version ${{ steps.tauri.outputs.appVersion }}
+
+      - name: update latest.json github gist
+        uses: exuanbo/actions-deploy-gist@v1
+        if: matrix.platform == 'windows-latest'
+        with:
+          token: ${{ secrets.GIST_TOKEN }}
+          gist_id: https://gist.github.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d
+          gist_description: Auto-updater endpoint for gale
+          file_path: latest.json

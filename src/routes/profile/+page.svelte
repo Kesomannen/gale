@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BigButton from '$lib/components/BigButton.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
@@ -155,24 +156,21 @@
 		{/each}
 	</ul>
 
-	<div class="flex w-full justify-end mt-3 mr-0.5 gap-2">
-		<Dialog.Close>
-			<Button.Root class="rounded-xl px-4 py-2 text-slate-100 bg-gray-700 hover:bg-gray-600">
-				Cancel
-			</Button.Root>
-		</Dialog.Close>
-		<Dialog.Close>
-			<Button.Root
-				class="rounded-xl px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-500"
-				on:click={() => {
-					invokeCommand('update_all').then(refresh);
-					updateAllOpen = false;
-				}}
-			>
-				Update all
-			</Button.Root>
-		</Dialog.Close>
-	</div>
+	<Dialog.Close class="flex w-full justify-end mt-3 mr-0.5 gap-2">
+		<BigButton color="gray">
+			Cancel
+		</BigButton>
+		<BigButton
+			color="blue"
+			fontWeight="medium"
+			onClick={() => {
+				invokeCommand('update_all').then(refresh);
+				updateAllOpen = false;
+			}}
+		>
+			Update all
+		</BigButton>
+	</Dialog.Close>
 </Popup>
 
 <DependantsPopup

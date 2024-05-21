@@ -89,7 +89,7 @@
 		"updater": {
 			"active": true,
 			"endpoints": [
-				"https://gist.githubusercontent.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d/raw/0f86dd02fc0e40d9302304ba85c8bb10c7134ea5/latest.json"
+				"https://gist.githubusercontent.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d/raw/"
 			],
 			"dialog": true,
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRkNCMzE4NDIyOTQ1QjQKUldTMFJTbENHTFA4UE9Fd1RocjRDRm9uVmdiUlUxdmw1ZEwvaXRJZW45VFVSeXozUkYxaUFmZEsK"

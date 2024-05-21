@@ -23,6 +23,7 @@
 
 ### Fixed
 
+- Auto updater not working (*not retroactive; you still need to manually update to this version*)
 - Improve performance for dependency trees
 - Improve performance of config parsing
 - Parsing config entries without a value
