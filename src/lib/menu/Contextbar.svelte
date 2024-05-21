@@ -35,13 +35,13 @@
 
 <div class="h-12 flex flex-row flex-shrink-0 bg-gray-900 border-b border-t border-gray-600">
 	<Button.Root
-		class="flex items-center pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 cursor-default"
+		class="flex items-center flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 cursor-default"
 		on:click={() => {
 			invokeCommand('launch_game').then(() => (launchGamePopupOpen = true));
 		}}
 	>
 		<Icon icon="mdi:play-circle" class="text-xl mr-2" />
-		<div class="font-medium">Run game</div>
+		<div class="font-medium">Launch game</div>
 	</Button.Root>
 
 	<Button.Root
@@ -68,7 +68,7 @@
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="flex items-center justify-between gap-2 w-40 pl-6 pr-4 group border-r border-gray-600 
+			class="flex flex-shrink items-center justify-between min-w-40 pl-6 pr-4 group border-r border-gray-600 
 						text-slate-300 group-hover:text-slate-200 hover:bg-gray-800 cursor-default"
 		>
 			<div class="flex-shrink truncate">
@@ -77,13 +77,13 @@
 
 			<Icon
 				icon="mdi:expand-more"
-				class="text-xl transition-all transform origin-center {profilesOpen
+				class="flex-shrink-0 text-xl transition-all transform origin-center ml-6 {profilesOpen
 					? 'rotate-180'
 					: 'rotate-0'}"
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 w-40 rounded-lg border border-gray-600"
+			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600"
 		>
 			{#each profileNames as profile, i}
 				<DropdownMenu.Item
@@ -93,11 +93,11 @@
 						profilesOpen = false;
 					}}
 				>
-					<span class="flex-shrink truncate">
+					<span class="flex-shrink truncate mr-5">
 						{profile}
 					</span>
 
-					<div class="ml-auto inline-flex">
+					<div class="ml-auto inline-flex"> 
 						{#if i == activeProfileIndex}
 							<Icon icon="mdi:check" class=" text-green-400 text-lg" />
 						{/if}

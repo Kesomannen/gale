@@ -98,7 +98,7 @@
 
 	<div class="mr-8 flex items-center justify-between">
 		<Button.Root
-			class="text-slate-100 font-bold text-2xl hover:underline truncate"
+			class="text-slate-100 font-bold text-3xl hover:underline truncate"
 			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}>{mod.name}</Button.Root
 		>
 		{#if mod.version}
@@ -135,16 +135,16 @@
 	{/if}
 
 	{#if mod.categories}
-		<div class="flex gap-1 mt-2 flex-wrap text-sm">
+		<div class="flex gap-1 my-2 flex-wrap text-md">
 			{#each mod.categories as category}
-				<div class="bg-slate-600 rounded-full px-3 py-1 text-blue-100">
+				<div class="bg-slate-600 rounded-full px-4 py-1 text-blue-100">
 					{category}
 				</div>
 			{/each}
 		</div>
 	{/if}
 
-	<div class="my-2 flex items-center gap-2">
+	<div class="my-1 flex items-center gap-2">
 		<Icon class="text-yellow-400 text-xl" icon="mdi:star" />
 		<span class="text-yellow-400 text-lg mr-4">{shortenNum(mod.rating ?? 0)}</span>
 		<Icon class="text-green-400 text-xl" icon="mdi:download" />
@@ -152,7 +152,7 @@
 	</div>
 
 	{#if mod.lastUpdated}
-		<div class="text-slate-400 mb-2 text-md">
+		<div class="text-slate-400 mb-4 text-lg">
 			Last updated: {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}

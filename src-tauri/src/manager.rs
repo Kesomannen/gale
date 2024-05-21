@@ -568,6 +568,12 @@ impl Profile {
 impl ManagerGame {
     fn create_profile(&mut self, name: String) -> Result<&Profile> {
         ensure!(
+            fs_util::is_valid_dir_name(&name),
+            "profile name '{}' is invalid",
+            name
+        );
+
+        ensure!(
             !self.profiles.iter().any(|p| p.name == name),
             "profile with name '{}' already exists",
             name
@@ -590,8 +596,8 @@ impl ManagerGame {
         Ok(&self.profiles[index])
     }
 
-    fn delete_profile(&mut self, index: usize) -> Result<()> {
-        ensure!(self.profiles.len() > 1, "cannot delete last profile");
+    fn delete_profile(&mut self, index: usize, allow_delete_last: bool) -> Result<()> {
+        ensure!(allow_delete_last || self.profiles.len() > 1, "cannot delete last profile");
 
         let profile = self
             .profiles

@@ -94,7 +94,7 @@ async fn import_data(data: ImportData, app: &AppHandle) -> Result<()> {
 
         let game = manager.active_game_mut();
         if let Some(index) = game.profiles.iter().position(|p| p.name == data.name) {
-            game.profiles.remove(index);
+            game.delete_profile(index, true).context("failed to delete existing profile")?;
         }
 
         let profile = game.create_profile(data.name)?;

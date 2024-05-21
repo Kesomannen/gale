@@ -75,10 +75,6 @@ fn main() {
 
     tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
 
-    for game in GAMES.iter() {
-        println!("{}=[\"tools\"]", game.id);
-    }
-
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![            
             thunderstore::commands::query_all_mods,

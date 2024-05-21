@@ -17,6 +17,8 @@
 	let activeMod: Mod | undefined;
 	let activeDownloadSize: number | undefined;
 
+	let versionsDropdownOpen = false;
+
 	$: modRef = {
 		packageUuid: activeMod?.uuid,
 		versionUuid: activeMod?.versions[0].uuid
@@ -55,7 +57,7 @@
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg
-								enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-medium
+								enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-semibold
 								disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
 			on:click={() => {
 				if (activeMod) {
@@ -74,14 +76,19 @@
 				{/if}
 			{/if}
 		</Button.Root>
-		<DropdownMenu.Root>
+		<DropdownMenu.Root bind:open={versionsDropdownOpen}>
 			<DropdownMenu.Trigger
 				class="gap-2 rounded-r-lg py-2 px-1.5 ml-0.5 text-2xl
 						enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-medium
 						disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
 				disabled={isModInstalled}
 			>
-				<Icon icon="mdi:chevron-down" class="text-xl align-middle" />
+				<Icon
+					icon="mdi:chevron-down"
+					class="text-xl align-middle transform transition-transform origin-center {versionsDropdownOpen
+						? 'rotate-180'
+						: 'rotate-0'}"
+				/>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content
 				class="flex flex-col bg-gray-700 gap-0.5 shadow-xl p-1 w-48 rounded-lg border border-gray-500 max-h-72 overflow-y-auto"

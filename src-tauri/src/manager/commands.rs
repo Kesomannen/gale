@@ -200,7 +200,7 @@ pub fn delete_profile(
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager.active_game_mut().delete_profile(index)?;
+    manager.active_game_mut().delete_profile(index, false)?;
     save(&manager, &prefs)?;
 
     Ok(())

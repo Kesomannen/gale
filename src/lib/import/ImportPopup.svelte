@@ -10,6 +10,7 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 
 	export let open: boolean;
+	export let profileDropdownOpen: boolean;
 	export let data: ImportData | undefined;
 
 	let key: string;
@@ -19,10 +20,6 @@
 
 	$: if (open) {
 		getKeyFromClipboard();
-	}
-
-	$: if (data && !name) {
-		name = data.name;
 	}
 
 	$: nameAvailable = mode === 'overwrite' || !profileNames.includes(name);
@@ -35,6 +32,8 @@
 		loading = true;
 		try {
 			data = await invokeCommand<ImportData>('import_code', { key });
+			name = data.name;
+			mode = profileNames.includes(name) ? 'overwrite' : 'new';
 		} catch (e) {
 			open = false;
 		} finally {
@@ -81,6 +80,7 @@
 						items={profileNames.map((name) => ({ value: name, label: name }))}
 						selected={{ value: name, label: name }}
 						onSelectedChange={(selection) => (name = selection?.value ?? name)}
+						bind:open={profileDropdownOpen}
 					>
 						<Select.Trigger
 							class="flex items-center flex-grow bg-gray-900 rounded-lg px-3 py-1
@@ -89,7 +89,7 @@
 							<Select.Value class="text-slate-300 text-left w-full" />
 							<Icon
 								class="text-slate-400 text-xl ml-auto transition-all
-																transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+																transform origin-center {profileDropdownOpen ? 'rotate-180' : 'rotate-0'}"
 								icon="mdi:chevron-down"
 							/>
 						</Select.Trigger>

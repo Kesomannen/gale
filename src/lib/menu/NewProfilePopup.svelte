@@ -3,6 +3,8 @@
 	import { Button, Dialog } from 'bits-ui';
 	import { refreshProfiles } from '$lib/profile';
 	import { invokeCommand } from '$lib/invoke';
+	import BigButton from '$lib/components/BigButton.svelte';
+	import InputField from '$lib/components/InputField.svelte';
 
 	export let open = false;
 
@@ -17,27 +19,11 @@
 </script>
 
 <Popup title="New Profile" bind:open>
-	<Dialog.Description class="text-slate-400">Enter a name for the new profile</Dialog.Description>
-	<input
-		type="text"
-		bind:value={newProfileName}
-		on:keydown={(e) => {
-			if (e.key !== 'Enter') return;
-			createProfile();
-			open = false;
-		}}
-		placeholder="Profile name"
-		class="w-full my-2 px-3 py-2 rounded-lg bg-gray-900 text-slate-100 select-none"
-	/>
-	<div class="flex w-full justify-end mt-3">
+	<Dialog.Description class="text-slate-400 mb-1">Enter a name for the new profile</Dialog.Description>
+	<InputField bind:value={newProfileName} placeholder="Enter profile name..." size='lg' />
+	<div class="flex w-full justify-end mt-1">
 		<Dialog.Close>
-			<Button.Root
-				class="rounded-xl px-4 py-2 mr-0.5 text-slate-100 bg-green-600 hover:bg-green-500 disabled:bg-gray-600/80 disabled:hover:bg-gray-600/80 disabled:text-gray-200/80"
-				disabled={newProfileName.length === 0}
-				on:click={createProfile}
-			>
-				Create
-			</Button.Root>
+			<BigButton disabled={newProfileName.length === 0} onClick={createProfile}>Create</BigButton>
 		</Dialog.Close>
 	</div>
 </Popup>

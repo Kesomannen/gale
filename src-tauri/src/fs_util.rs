@@ -2,6 +2,14 @@ use std::{fs::{self, File}, io::{self, Write}, path::{Path, PathBuf}};
 
 use zip::{write::FileOptions, ZipWriter};
 
+pub fn is_valid_dir_name(name: &str) -> bool {
+    if name.is_empty() {
+        return false;
+    }
+
+    name.chars().all(|c| matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '-' | '.'))
+}
+
 pub fn flatten_if_exists(path: &Path) -> Result<bool, io::Error> {
     if !path.try_exists()? {
         return Ok(false);

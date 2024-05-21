@@ -14,6 +14,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
 use typeshare::typeshare;
+use log::debug;
 
 pub mod commands;
 
@@ -51,6 +52,8 @@ impl ModManager {
             .arg(self.active_game.steam_id.to_string());
 
         add_bepinex_args(&mut command, &self.active_profile().path)?;
+
+        debug!("launching game with command: {:?}", command);
 
         command.spawn()?;
 
@@ -108,7 +111,7 @@ impl ModManager {
 
         ensure!(
             game_path.exists(),
-            "game path not found (at {})",
+            "game path not found (at {}). Is the game installed on Steam?",
             game_path.display()
         );
 
@@ -127,12 +130,12 @@ fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()> {
 
     let target_name =
         match doorstop_version(root_path).context("failed to determine doorstop version")? {
-            3 => "doorstop-target",
-            4 => "doorstop-target-assembly",
+            3 => "--doorstop-target",
+            4 => "--doorstop-target-assembly",
             vers => bail!("unsupported doorstop version: {}", vers),
         };
 
-    command.args(["--doorstop-enable", "true", target_name, preloader_path]);
+    command.args(["--doorstop-enabled", "true", target_name, preloader_path]);
 
     Ok(())
 }
