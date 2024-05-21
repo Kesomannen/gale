@@ -456,7 +456,7 @@ fn install_from_disk_default(src: &Path, dest: &Path, name: &str) -> Result<()> 
                     .fs_context("copying config", &entry_path)?;
             } else {
                 let target_path = match entry_name.to_string_lossy().as_ref() {
-                    "patchers" | "core" => target_path.join(entry_name).join(name),
+                    "patchers" | "core" | "monomod" => target_path.join(entry_name).join(name),
                     "plugins" => target_plugins_path.clone(),
                     _ => target_plugins_path.join(entry_name),
                 };
