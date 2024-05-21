@@ -11,7 +11,7 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 - Import & export profiles (compatible with r2modman/thunderstore mod manager)
 - Feature rich mod config editor
 - Launch games through Steam *or* directly, with any number of instances
-- Can be used with the "Install with Mod Manager" button on Thunderstore
+- Useable with the "Install with Mod Manager" button on Thunderstore
 - Automatic app updates
 - Local mod imports
 
@@ -37,7 +37,7 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 > **Note:** You might get a prompt saying "Windows has protected your PC". In this case, click `More Info` and `Run Anyway`.
 
 > If you're unsure about the safety of this app, I would suggest running it through a service like [VirusTotal](https://www.virustotal.com).
-> It's also worth noting that this project is fully open-source, which means anyone can look at the code and could easily find any malware.
+> It's also worth noting that this project is fully open-source, which means any developer could look at the code and easily spot any malware.
 
 ### MacOS
 
