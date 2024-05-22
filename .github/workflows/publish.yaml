@@ -51,7 +51,7 @@ jobs:
         with:
           tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: '__VERSION__'
-          releaseDraft: false
+          releaseDraft: true
           args: ${{ matrix.args }}
 
       - name: setup .NET
