@@ -83,6 +83,6 @@ jobs:
         if: matrix.platform == 'windows-latest'
         with:
           token: ${{ secrets.GIST_TOKEN }}
-          gist_id: https://gist.github.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d
+          gist_id: 58b4f08009e7b7b5baaea253ebccb94d
           gist_description: Auto-updater endpoint for gale
           file_path: latest.json
