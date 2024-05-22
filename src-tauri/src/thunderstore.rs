@@ -191,13 +191,13 @@ impl Thunderstore {
     ) -> Result<HashSet<BorrowedMod<'a>>> {
         let mut result = HashSet::new();
         let mut stack = dependency_strings.map(String::as_str).collect::<Vec<_>>();
-        let mut visited = stack.iter().map(|s| parse_author_and_name(s)).collect::<HashSet<_>>();
+        let mut visited = stack.iter().map(|s| s.split_once('-').unwrap()).collect::<HashSet<_>>();
 
         while let Some(id) = stack.pop() {
             let dependency = self.find_mod(id, '-')?;
 
             for dep in &dependency.version.dependencies {
-                let (author, name) = parse_author_and_name(dep);
+                let (author, name) = dep.split_once('-').unwrap();
 
                 if !visited.insert((author, name)) {
                     continue;
@@ -209,12 +209,7 @@ impl Thunderstore {
             result.insert(dependency);
         }
 
-        return Ok(result);
-
-        fn parse_author_and_name(s: &str) -> (&str, &str) {
-            let mut split = s.split('-');
-            (split.next().unwrap(), split.next().unwrap())
-        }
+        Ok(result)
     }
 
     pub fn dependencies<'a>(
@@ -232,9 +227,10 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     loop {
         if let Err(err) = load_mods(&app, game, is_first).await {
             util::print_err("error while loading mods from Thunderstore", &err, &app);
+        } else {
+            is_first = false;
         }
 
-        is_first = false;
         tokio::time::sleep(TIME_BETWEEN_LOADS).await;
     }
 }

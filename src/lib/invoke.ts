@@ -53,7 +53,9 @@ export function removeError(index: number) {
 	});
 }
 
-export function setTaggedConfig(id: ConfigEntryId, value: ConfigValue) {
+export function setTaggedConfig(id: ConfigEntryId, value?: ConfigValue) {
+	if (!value) return;
+
 	invokeCommand('set_tagged_config_entry', { 
 		file: id.file.content.name,
 		section: id.section.name,
@@ -62,11 +64,13 @@ export function setTaggedConfig(id: ConfigEntryId, value: ConfigValue) {
 	}).then(() => id.entry.value = value);
 }
 
-export function setUntaggedConfig(file: ConfigFile, section: ConfigSection, name: string, value: string) {
+export function setUntaggedConfig(file: ConfigFile, section: ConfigSection, name: string, value?: string) {
+	if (!value) return;
+	
 	invokeCommand('set_untagged_config_entry', { 
 		file: file.name,
 		section: section.name,
 		entry: name,
-		value 
+		value
 	});
 }

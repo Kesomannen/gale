@@ -128,14 +128,14 @@ fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()> {
     let preloader_path = resolve_path(&preloader_path, "preloader")
         .map_err(|_| anyhow!("failed to resolve BepInEx preloader path, is BepInEx installed?"))?;
 
-    let target_name =
+    let (enable_name, target_name) =
         match doorstop_version(root_path).context("failed to determine doorstop version")? {
-            3 => "--doorstop-target",
-            4 => "--doorstop-target-assembly",
+            3 => ("--dorstop-enable", "--doorstop-target"),
+            4 => ("--doorstop-enabled", "--doorstop-target-assembly"),
             vers => bail!("unsupported doorstop version: {}", vers),
         };
 
-    command.args(["--doorstop-enabled", "true", target_name, preloader_path]);
+    command.args([enable_name, "true", target_name, preloader_path]);
 
     Ok(())
 }

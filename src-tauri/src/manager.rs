@@ -17,7 +17,6 @@ use crate::{
     games::{self, Game},
     prefs::Prefs,
     thunderstore::{
-        self,
         models::FrontendProfileMod,
         query::{self, QueryModsArgs, Queryable},
         BorrowedMod, ModRef, Thunderstore,
@@ -329,20 +328,17 @@ impl Profile {
         self.remote_mods()
             .filter(|(other, _)| other.package_uuid != target_mod.package.uuid4)
             .map(|(other, _)| other.borrow(thunderstore))
-            .filter_map(|other| match other {
-                Ok(other) => {
-                    match other.version.dependencies.iter().any(|dep| {
-                        // don't look for the exact version, just the package name
-                        thunderstore::parse_mod_ident(dep, '-')
-                            .map(|(full_name, _)| full_name == target_mod.package.full_name)
-                            .unwrap_or(false)
-                    }) {
+            .filter_map_ok(|other| match thunderstore.dependencies(other.version) {
+                Ok(deps) => {
+                    let is_dependant = deps.iter().any(|dep| dep.package == target_mod.package);
+                    match is_dependant {
                         true => Some(Ok(other)),
                         false => None,
                     }
                 }
-                Err(_) => Some(other),
-            }) // filter out packages that do not depend on the target one, while keeping errors
+                Err(e) => Some(Err(e)),
+            })
+            .flatten_ok() // filter out packages that do not depend on the target one, while keeping errors
             .collect()
     }
 
@@ -552,7 +548,7 @@ impl Profile {
         for dir in ["core", "patchers", "plugins"].into_iter() {
             path.push(dir);
             path.push(name);
-            
+
             if path.exists() {
                 scan_dir(&path)?;
             }
@@ -597,7 +593,10 @@ impl ManagerGame {
     }
 
     fn delete_profile(&mut self, index: usize, allow_delete_last: bool) -> Result<()> {
-        ensure!(allow_delete_last || self.profiles.len() > 1, "cannot delete last profile");
+        ensure!(
+            allow_delete_last || self.profiles.len() > 1,
+            "cannot delete last profile"
+        );
 
         let profile = self
             .profiles
