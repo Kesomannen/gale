@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+
+- Open log file button
+
+## 0.4.1 (2024-05-23)
+
 ### Added
 
 - Log file

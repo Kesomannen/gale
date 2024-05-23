@@ -1,4 +1,6 @@
-use anyhow::{anyhow, Context};
+use std::path::PathBuf;
+
+use anyhow::{bail, Context};
 use serde::Serialize;
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -313,25 +315,25 @@ pub fn reveal_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
     Ok(())
 }
 
-fn log_path(manager: &ModManager, prefs: &Prefs) -> Result<std::path::PathBuf> {
+fn log_path(manager: &ModManager) -> anyhow::Result<PathBuf> {
     let path = manager
-        .game_path(prefs)?
+        .active_profile()
+        .path
         .join("BepInEx")
         .join("LogOutput.log");
 
     if !path.exists() {
-        return Err(anyhow!("no log file found").into());
+        bail!("no log file found");
     }
 
     Ok(path)
 }
 
 #[tauri::command]
-pub fn open_logs(manager: StateMutex<ModManager>, prefs: StateMutex<Prefs>) -> Result<()> {
+pub fn open_logs(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
 
-    let path = log_path(&manager, &prefs)?;
+    let path = log_path(&manager)?;
     open::that(path).context("failed to open log file")?;
 
     Ok(())
