@@ -311,7 +311,7 @@ fn load_config_file(entry: walkdir::DirEntry, root: &Path, vec: &mut Vec<LoadFil
 
     let data = fs::read_to_string(entry.path())
         .context("failed to read file")
-        .and_then(|text| de::from_str(&text).context("failed to parse file"));
+        .and_then(|text| de::from_str(&text));
 
     let res = match data {
         Ok((sections, metadata)) => Ok(File::new(name, sections, metadata)),

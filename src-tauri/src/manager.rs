@@ -271,6 +271,10 @@ struct Profile {
 }
 
 impl Profile {
+    fn is_valid_name(name: &str) -> bool {
+        name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    }
+
     fn get_mod<'a>(&'a self, uuid: &Uuid) -> Result<&'a ProfileMod> {
         self.mods
             .iter()
@@ -564,7 +568,7 @@ impl Profile {
 impl ManagerGame {
     fn create_profile(&mut self, name: String) -> Result<&Profile> {
         ensure!(
-            fs_util::is_valid_dir_name(&name),
+            Profile::is_valid_name(&name),
             "profile name '{}' is invalid",
             name
         );

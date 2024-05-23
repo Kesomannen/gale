@@ -191,13 +191,13 @@ impl Thunderstore {
     ) -> Result<HashSet<BorrowedMod<'a>>> {
         let mut result = HashSet::new();
         let mut stack = dependency_strings.map(String::as_str).collect::<Vec<_>>();
-        let mut visited = stack.iter().map(|s| s.split_once('-').unwrap()).collect::<HashSet<_>>();
+        let mut visited = stack.iter().map(|s| parse_author_name(s)).collect::<HashSet<_>>();
 
         while let Some(id) = stack.pop() {
             let dependency = self.find_mod(id, '-')?;
 
             for dep in &dependency.version.dependencies {
-                let (author, name) = dep.split_once('-').unwrap();
+                let (author, name) = parse_author_name(dep);
 
                 if !visited.insert((author, name)) {
                     continue;
@@ -209,7 +209,12 @@ impl Thunderstore {
             result.insert(dependency);
         }
 
-        Ok(result)
+        return Ok(result);
+
+        fn parse_author_name(s: &str) -> (&str, &str) {
+            let mut split = s.split('-');
+            (split.next().unwrap(), split.next().unwrap())
+        }
     }
 
     pub fn dependencies<'a>(

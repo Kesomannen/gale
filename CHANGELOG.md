@@ -20,6 +20,7 @@
 
 - Crash when launching on Linux
 - Deserializing config files with commas as decimal separators
+- Multiple versions of the same mod being installed as dependencies
 
 ## 0.4.0 (2024-05-22)
 

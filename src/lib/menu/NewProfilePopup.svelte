@@ -20,7 +20,7 @@
 	}
 </script>
 
-<Popup title="New Profile" bind:open>
+<Popup title="New profile" bind:open>
 	<div class="h-1" />
 	<InputField
 		bind:value={name}

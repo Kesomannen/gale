@@ -7,7 +7,7 @@
 	},
 	"package": {
 		"productName": "Gale",
-		"version": "0.4.0"
+		"version": "0.4.1"
 	},
 	"tauri": {
 		"allowlist": {
@@ -79,11 +79,11 @@
 				"fullscreen": false,
 				"transparent": true,
 				"resizable": true,
-				"title": "Gale Mod Manager",
+				"title": "Gale",
 				"width": 800,
-				"height": 600,
-				"minWidth": 800,
-				"minHeight": 600
+				"height": 800,
+				"minWidth": 600,
+				"minHeight": 400
 			}
 		],
 		"updater": {
