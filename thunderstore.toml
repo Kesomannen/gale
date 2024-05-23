@@ -19,7 +19,7 @@ source = "LICENSE.md"
 target = "LICENSE.md"
 
 [[build.copy]]
-pattern = "src-tauri/target/release/bundle/nsis/*.exe"
+pattern = "src-tauri/target/release/bundle/msi/*.msi"
 target = ""
 
 [publish]

@@ -238,7 +238,7 @@
 				</code>
 			{/if}
 		{:else}
-			<div class="text-lg text-slate-400 w-full text-center pt-4">
+			<div class="flex items-center justify-center text-lg text-slate-400 w-full h-full">
 				Select a config file to start editing
 			</div>
 		{/if}

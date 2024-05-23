@@ -2,8 +2,18 @@
 
 ## Unreleased
 
+### Added
+
+- Soft cache clear (only removes unused mods)
+
+### Changed
+
+- Made msi the preferred installer for Windows
+- Renamed "Preferences" to "Settings"
+
 ### Fixed
 
+- Zoom factor not being applied when reopening the app
 - Open log file button
 
 ## 0.4.1 (2024-05-23)

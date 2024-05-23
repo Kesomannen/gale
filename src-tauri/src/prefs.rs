@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
-use crate::{manager::launcher::LaunchMode, util::IoResultExt};
+use crate::{manager::launcher::LaunchMode, util::IoResultExt, zoom_window};
 
 pub mod commands;
 
@@ -93,8 +93,19 @@ impl Prefs {
         map.entry("launch_mode".to_owned())
             .or_insert(PrefValue::LaunchMode(LaunchMode::Steam));
 
-        map.entry("zoom_factor".to_owned())
-            .or_insert(PrefValue::Float(1.0));
+        match map.get("zoom_factor") {
+            Some(value) => {
+                let zoom_factor = match value {
+                    PrefValue::Float(f) => *f,
+                    _ => 1.0,
+                };
+
+                zoom_window(&app.get_window("main").unwrap(), zoom_factor as f64).ok();
+            },
+            None => {
+                map.insert("zoom_factor".to_owned(), PrefValue::Float(1.0));
+            }
+        }
 
         let prefs = Self { path, map };
 

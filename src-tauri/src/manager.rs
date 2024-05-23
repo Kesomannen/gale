@@ -272,7 +272,8 @@ struct Profile {
 
 impl Profile {
     fn is_valid_name(name: &str) -> bool {
-        name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ')
+        name.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ')
     }
 
     fn get_mod<'a>(&'a self, uuid: &Uuid) -> Result<&'a ProfileMod> {
@@ -633,6 +634,17 @@ impl ManagerGame {
         self.active_profile_index = index;
 
         Ok(())
+    }
+
+    fn installed_mods<'a>(
+        &'a self,
+        thunderstore: &'a Thunderstore,
+    ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
+        self.profiles.iter().flat_map(|profile| {
+            profile
+                .remote_mods()
+                .map(|(mod_ref, _)| mod_ref.borrow(thunderstore))
+        })
     }
 
     fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {

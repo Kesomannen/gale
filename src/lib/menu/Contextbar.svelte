@@ -51,7 +51,7 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="flex items-center justify-between font-semibold pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-slate-300 group-hover:text-slate-200 cursor-default"
+		class="flex flex-shrink-0 items-center justify-between font-semibold pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-slate-300 group-hover:text-slate-200 cursor-default"
 	>
 		{#if $currentGame}
 			<img

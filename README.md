@@ -7,7 +7,7 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 ## Features
 
 - Support for most of the games on Thunderstore, including Lethal Company, Risk of Rain 2 and Content Warning
-- A performant and responsive UI with a tiny download and disk size (5 MB!)
+- A performant and responsive UI with a tiny download and disk size (8 MB!)
 - Import & export profiles (compatible with r2modman/thunderstore mod manager)
 - Feature rich mod config editor
 - Launch games through Steam *or* directly, with any number of instances
@@ -27,11 +27,11 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 **Through Thunderstore**
 - Go to the [thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and press "Manual Download".
 - Unzip the downloaded .zip file (for example by right-clicking and choosing "Extract All").
-- Run the `Gale_X.X.X_x64-setup.exe` file inside of the unzipped folder.
+- Run the `Gale_X.X.X_x64_en-US.msi` file inside of the unzipped folder.
 
 **Through Github**
 - Go to [Releases](https://github.com/Kesomannen/gale/releases).
-- Download the `Gale_X.X.X_x64-setup.exe` file for your desired version (the latest is recommended).
+- Download the `Gale_X.X.X_x64_en-US.msi` file for your desired version (the latest is recommended).
 - Run the downloaded file.
 
 > **Note:** You might get a prompt saying "Windows has protected your PC". In this case, click `More Info` and `Run Anyway`.

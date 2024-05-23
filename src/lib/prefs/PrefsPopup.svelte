@@ -8,7 +8,7 @@
 	export let open = false;
 </script>
 
-<Popup title="Preferences" bind:open>
+<Popup title="Settings" bind:open>
 	<div class="flex flex-col gap-1 pt-2">
 		<LaunchModePref />
 		<ZoomLevelPref />

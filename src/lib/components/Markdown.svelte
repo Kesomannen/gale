@@ -15,7 +15,7 @@
 
   .markdown :global(h1),
   .markdown :global(h2) {
-    @apply pt-4 pb-1 mb-3 border-b border-slate-200;
+    @apply pt-4 pb-1 mb-3 border-b border-slate-400;
   }
 
   .markdown :global(h1) {
@@ -27,11 +27,11 @@
   }
 
   .markdown :global(h3) {
-    @apply text-slate-100 font-semibold text-lg pb-1 pt-2;
+    @apply text-slate-200 font-semibold text-lg pb-1 pt-2;
   }
 
   .markdown :global(h4) {
-    @apply text-slate-100 font-medium text-lg pb-0.5 pt-1;
+    @apply text-slate-300 font-medium text-lg pb-0.5 pt-1;
   }
 
   .markdown :global(a) {

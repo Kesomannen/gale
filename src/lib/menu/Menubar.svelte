@@ -15,6 +15,7 @@
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
 	import { dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
+	import { fly } from 'svelte/transition';
 
 	let preferencesOpen = false;
 	let exportPackOpen = false;
@@ -58,28 +59,31 @@
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
 	<Menubar.Root class="py-1 flex items-center">
-		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-1 h-5 w-5 opacity-50" />
+		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
 			<MenubarTrigger>File</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
+				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem onClick={() => invokeCommand('reveal_profile_dir')}
 					>Show profile in explorer</MenubarItem
 				>
 				<MenubarItem onClick={() => invokeCommand('open_logs')}>Open game logs</MenubarItem>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-2" />
-				<MenubarItem onClick={() => invokeCommand('clear_download_cache')}
-					>Clear download cache</MenubarItem
+				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<MenubarItem onClick={() => invokeCommand('clear_download_cache', { soft: true })}
+					>Clear unused mod cache</MenubarItem
 				>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-2" />
-				<MenubarItem onClick={() => (preferencesOpen = true)}>Preferences</MenubarItem>
+				<MenubarItem onClick={() => invokeCommand('clear_download_cache', { soft: false })}
+					>Clear all cached mods</MenubarItem
+				>
+				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<MenubarItem onClick={() => (preferencesOpen = true)}>Settings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
 			<MenubarTrigger>Import</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
+				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem onClick={() => (importCodeOpen = true)}>...profile from code</MenubarItem>
 				<MenubarItem onClick={importFile}>...profile from file</MenubarItem>
@@ -89,7 +93,7 @@
 		<Menubar.Menu>
 			<MenubarTrigger>Export</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
+				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem onClick={() => exportCodePopup.open()}>...profile as code</MenubarItem>
 				<MenubarItem onClick={exportFile}>...profile as file</MenubarItem>
@@ -99,11 +103,8 @@
 		<Menubar.Menu>
 			<MenubarTrigger>Help</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
+				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => open('https://discord.gg/lcmod')}
-					>Modding discord server</MenubarItem
-				>
 				<MenubarItem onClick={() => open('https://github.com/Kesomannen/ModManager/issues/')}
 					>Report a bug</MenubarItem
 				>

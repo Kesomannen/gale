@@ -6,7 +6,7 @@
 	import Icon from '@iconify/svelte';
 	import { clipboard, dialog } from '@tauri-apps/api';
 	import InputField from '$lib/components/InputField.svelte';
-	import { profileNames } from '$lib/profile';
+	import { profileNames, refreshProfiles } from '$lib/profile';
 	import BigButton from '$lib/components/BigButton.svelte';
 
 	export let open: boolean;
@@ -55,7 +55,7 @@
 			if (!confirmed) return;
 		}
 
-		invokeCommand('import_data', { data });
+		invokeCommand('import_data', { data }).then(refreshProfiles);
 		data = undefined;
 		open = false;
 	}
