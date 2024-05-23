@@ -8,22 +8,27 @@
 
 	export let open = false;
 
-	let newProfileName = '';
+	let name = '';
 
 	async function createProfile() {
-		if (newProfileName.length === 0) return;
+		if (name.length === 0) return;
 
-		invokeCommand('create_profile', { name: newProfileName }).then(() => refreshProfiles());
-		newProfileName = '';
+		await invokeCommand('create_profile', { name });
+		refreshProfiles();
+		name = '';
+		open = false;
 	}
 </script>
 
 <Popup title="New Profile" bind:open>
-	<Dialog.Description class="text-slate-400 mb-1">Enter a name for the new profile</Dialog.Description>
-	<InputField bind:value={newProfileName} placeholder="Enter profile name..." size='lg' />
+	<div class="h-1" />
+	<InputField
+		bind:value={name}
+		placeholder="Enter profile name..."
+		size="lg"
+		onSubmit={createProfile}
+	/>
 	<div class="flex w-full justify-end mt-1">
-		<Dialog.Close>
-			<BigButton disabled={newProfileName.length === 0} onClick={createProfile}>Create</BigButton>
-		</Dialog.Close>
+		<BigButton disabled={name.length === 0} onClick={createProfile}>Create</BigButton>
 	</div>
 </Popup>

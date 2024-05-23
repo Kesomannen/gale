@@ -1,23 +1,21 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { Button, Menubar } from 'bits-ui';
-	
+
 	import MenubarTrigger from '$lib/menu/MenubarTrigger.svelte';
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
-	import NewProfilePopup from '$lib/menu/NewProfilePopup.svelte';
 	import PreferencesPopup from '$lib/prefs/PrefsPopup.svelte';
-	
+
 	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	
+
 	import { open } from '@tauri-apps/api/shell';
 	import { appWindow } from '@tauri-apps/api/window';
 	import ImportCodePopup from '$lib/import/ImportPopup.svelte';
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
-	import { dialog, clipboard } from '@tauri-apps/api';
+	import { dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
 
-	let newProfileOpen = false;
 	let preferencesOpen = false;
 	let exportPackOpen = false;
 	let exportCodePopup: ExportCodePopup;
@@ -50,7 +48,7 @@
 	async function exportFile() {
 		let dir = await dialog.open({
 			directory: true,
-			title: 'Select the directory to export the profile to',
+			title: 'Select the directory to export the profile to'
 		});
 
 		if (!dir) return;
@@ -66,15 +64,14 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 p-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => (newProfileOpen = true)}>New profile</MenubarItem>
 				<MenubarItem onClick={() => invokeCommand('reveal_profile_dir')}
 					>Show profile in explorer</MenubarItem
 				>
+				<MenubarItem onClick={() => invokeCommand('open_logs')}>Open game logs</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-2" />
 				<MenubarItem onClick={() => invokeCommand('clear_download_cache')}
 					>Clear download cache</MenubarItem
 				>
-				<MenubarItem onClick={() => invokeCommand('open_logs')}>Open game logs</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-2" />
 				<MenubarItem onClick={() => (preferencesOpen = true)}>Preferences</MenubarItem>
 			</Menubar.Content>
@@ -125,7 +122,6 @@
 	</Button.Root>
 </div>
 
-<NewProfilePopup bind:open={newProfileOpen} />
 <PreferencesPopup bind:open={preferencesOpen} />
 <ExportPackPopup bind:isOpen={exportPackOpen} />
 <ImportCodePopup bind:open={importCodeOpen} bind:data={importProfileData} />

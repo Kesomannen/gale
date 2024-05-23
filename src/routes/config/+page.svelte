@@ -95,7 +95,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-2 min-w-60 w-[25%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col py-2 min-w-72 w-[30%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
@@ -237,6 +237,10 @@
 					{capitalize(selectedFile.content.error)}
 				</code>
 			{/if}
+		{:else}
+			<div class="text-lg text-slate-400 w-full text-center pt-4">
+				Select a config file to start editing
+			</div>
 		{/if}
 	</div>
 </div>

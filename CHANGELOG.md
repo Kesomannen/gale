@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Log file
+- Dialog when overwriting a profile
+
+### Removed
+
+- Deep link functionality on Linux
+
+### Changed
+
+- Moved "New Profile" to the profile list, instead of the menubar
+- Various UI improvements
+
+### Fixed
+
+- Crash when launching on Linux
+- Deserializing config files with commas as decimal separators
+
 ## 0.4.0 (2024-05-22)
 
 ### Added

@@ -4,20 +4,21 @@
 	import type { ImportData } from '$lib/models';
 	import { Dialog, Select, Tabs } from 'bits-ui';
 	import Icon from '@iconify/svelte';
-	import { clipboard } from '@tauri-apps/api';
+	import { clipboard, dialog } from '@tauri-apps/api';
 	import InputField from '$lib/components/InputField.svelte';
 	import { profileNames } from '$lib/profile';
 	import BigButton from '$lib/components/BigButton.svelte';
 
 	export let open: boolean;
-	export let profileDropdownOpen: boolean;
 	export let data: ImportData | undefined;
-
+	
 	let key: string;
 	let name: string;
 	let loading: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
-
+	
+	let profileDropdownOpen: boolean;
+	
 	$: if (open) {
 		getKeyFromClipboard();
 	}
@@ -40,6 +41,24 @@
 			loading = false;
 		}
 	}
+
+	async function importData() {
+		if (!data) return;
+
+		data.name = name;
+
+		if (mode === 'overwrite') {
+			let confirmed = await dialog.confirm(`Are you sure you want to override '${data.name}'?`, {
+				title: 'Overwrite profile'
+			});
+
+			if (!confirmed) return;
+		}
+
+		invokeCommand('import_data', { data });
+		data = undefined;
+		open = false;
+	}
 </script>
 
 <Popup title="Import profile" bind:open onClose={() => (data = undefined)}>
@@ -52,7 +71,7 @@
 				                               hover:bg-gray-800 hover:text-slate-100
 																			 data-[state=active]:bg-gray-700 data-[state=active]:text-slate-100 data-[state=active]:font-semibold"
 				>
-					New profile
+					Create new
 				</Tabs.Trigger>
 				<Tabs.Trigger
 					value="overwrite"
@@ -66,10 +85,10 @@
 			<Tabs.Content value="new">
 				<InputField label="Profile name" bind:value={name} />
 				{#if !nameAvailable}
-					<p class="text-red-400 text-md pl-36 mt-1">
-						<Icon icon="mdi:error" class="text-lg inline" />
+					<div class="flex items-center gap-1 text-red-400 text-md font-bold pl-36 mt-1">
+						<Icon icon="mdi:error" class="text-lg" />
 						Profile '{name}' already exists
-					</p>
+					</div>
 				{/if}
 			</Tabs.Content>
 			<Tabs.Content value="overwrite">
@@ -119,20 +138,7 @@
 		<div class="flex w-full justify-end items-center mt-1 gap-2 text-slate-400">
 			{data.mods.length} mods will be installed
 
-			<Dialog.Close>
-				<BigButton
-					disabled={!nameAvailable || loading}
-					onClick={() => {
-						if (!data) return;
-						data.name = name;
-						invokeCommand('import_data', { data });
-						data = undefined;
-						open = false;
-					}}
-				>
-					Import
-				</BigButton>
-			</Dialog.Close>
+			<BigButton disabled={!nameAvailable || loading} onClick={importData}>Import</BigButton>
 		</div>
 	{:else}
 		<div class="flex gap-2 mt-1">

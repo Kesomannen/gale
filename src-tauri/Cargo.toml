@@ -39,9 +39,8 @@ serde_yaml = "0.9"
 base64 = "0.22"
 lazy_static = "1.4"
 heck = "0.5"
-fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 log = "0.4"
-simple_logger = "5.0"
+simplelog = "0.12"
 
 [target.'cfg(target_os="macos")'.dependencies]
 objc = "0.2"

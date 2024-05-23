@@ -2,6 +2,8 @@
 	import { confirm } from '@tauri-apps/api/dialog';
 
 	import Popup from '$lib/components/Popup.svelte';
+	import NewProfilePopup from '$lib/menu/NewProfilePopup.svelte';
+
 	import {
 		activeProfileIndex,
 		currentGame,
@@ -15,8 +17,11 @@
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 	import SelectGamePopup from './SelectGamePopup.svelte';
+	import { fly, slide } from 'svelte/transition';
+	import { quartOut } from 'svelte/easing';
 
 	let launchGamePopupOpen = false;
+	let newProfilePopupOpen = false;
 
 	let gamesOpen = false;
 	let profilesOpen = false;
@@ -41,12 +46,12 @@
 		}}
 	>
 		<Icon icon="mdi:play-circle" class="text-xl mr-2" />
-		<div class="font-medium">Launch game</div>
+		<div class="font-semibold">Launch game</div>
 	</Button.Root>
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="flex items-center justify-between pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-slate-300 group-hover:text-slate-200 cursor-default"
+		class="flex items-center justify-between font-semibold pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-slate-300 group-hover:text-slate-200 cursor-default"
 	>
 		{#if $currentGame}
 			<img
@@ -71,7 +76,7 @@
 			class="flex flex-shrink items-center justify-between min-w-40 pl-6 pr-4 group border-r border-gray-600 
 						text-slate-300 group-hover:text-slate-200 hover:bg-gray-800 cursor-default"
 		>
-			<div class="flex-shrink truncate">
+			<div class="flex-shrink truncate font-semibold">
 				{$currentProfile}
 			</div>
 
@@ -83,26 +88,29 @@
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600"
+			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 min-w-40"
+			transition={fly}
+			transitionConfig={{ duration: 100, easing: quartOut }}
 		>
 			{#each profileNames as profile, i}
 				<DropdownMenu.Item
-					class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
+					class="flex pl-3 pr-1 py-1 cursor-default hover:bg-gray-700 rounded-md text-left
+						{i == activeProfileIndex
+						? 'font-medium text-slate-300 hover:text-slate-200'
+						: 'text-slate-400 hover:text-slate-300'}"
 					on:click={() => {
 						setActiveProfile(i);
 						profilesOpen = false;
 					}}
 				>
-					<span class="flex-shrink truncate mr-5">
-						{profile}
-					</span>
+					{profile}
 
-					<div class="ml-auto inline-flex"> 
+					<div class="ml-auto inline-flex items-center">
 						{#if i == activeProfileIndex}
-							<Icon icon="mdi:check" class=" text-green-400 text-lg" />
+							<Icon icon="mdi:check" class=" text-green-400 text-lg ml-2" />
 						{/if}
 						<Button.Root
-							class="text-red-500 hover:text-red-400 text-lg ml-1"
+							class="text-slate-400 hover:bg-red-600 hover:text-red-200 p-1 rounded ml-1"
 							on:click={(evt) => {
 								evt.stopPropagation();
 								deleteProfile(i);
@@ -114,15 +122,23 @@
 					</div>
 				</DropdownMenu.Item>
 			{/each}
+
+			<DropdownMenu.Item
+				class="flex items-center justify-center py-1 cursor-default rounded-md font-semibold text-white bg-green-600/60 hover:bg-green-600"
+				on:click={() => (newProfilePopupOpen = true)}
+			>
+				<Icon icon="mdi:plus" class="text-xl mr-1" />
+				New profile
+			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 </div>
 
 <Popup title="Launching {$currentGame?.displayName}..." bind:open={launchGamePopupOpen}>
 	<Dialog.Description class="text-slate-400">
-		If the game is taking a while to start, it's probably because Steam is starting
-		up.
+		If the game is taking a while to start, it's probably because Steam is starting up.
 	</Dialog.Description>
 </Popup>
 
 <SelectGamePopup bind:open={gamesOpen} />
+<NewProfilePopup bind:open={newProfilePopupOpen} />

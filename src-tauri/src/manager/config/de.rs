@@ -15,15 +15,18 @@ where
 {
     fn parse(value: &str, range: Option<(&str, &str)>) -> Result<Self> {
         let value = value
+            .replace(',', ".")
             .parse()
             .with_context(|| format!("failed to parse value '{}'", value))?;
 
         let range = match range {
             Some((min, max)) => {
                 let min = min
+                    .replace(',', ".")
                     .parse()
                     .with_context(|| format!("invalid minimum value '{}'", min))?;
                 let max = max
+                    .replace(',', ".")
                     .parse()
                     .with_context(|| format!("invalid maximum value '{}'", max))?;
 

@@ -660,13 +660,17 @@ impl ManagerGame {
 
         path.pop();
 
+        let active_profile_index = data
+            .active_profile_index
+            .min(profiles.len().saturating_sub(1));
+
         Ok(Some((
             game,
             Self {
                 profiles,
                 path,
                 favorite: data.favorite,
-                active_profile_index: data.active_profile_index,
+                active_profile_index,
             },
         )))
     }

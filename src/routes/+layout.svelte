@@ -57,7 +57,7 @@
 		</div>
 	{/if}
 
-	<div class="bottom-0 right-0 w-full max-w-[50rem] p-2 gap-1 absolute flex flex-col-reverse">
+	<div class="bottom-0 right-0 w-full max-w-[50rem] p-2 gap-1 absolute flex flex-col-reverse z-10">
 		{#each $errors as error, i}
 			<div
 				class="bg-red-600 pl-4 pr-8 py-2 rounded-md relative" 
