@@ -272,7 +272,7 @@ struct Profile {
 
 impl Profile {
     fn is_valid_name(name: &str) -> bool {
-        name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ')
     }
 
     fn get_mod<'a>(&'a self, uuid: &Uuid) -> Result<&'a ProfileMod> {

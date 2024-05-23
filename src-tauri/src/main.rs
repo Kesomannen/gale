@@ -86,8 +86,6 @@ fn logger_setup(app: &AppHandle) -> anyhow::Result<()> {
 }
 
 fn main() {
-
-
     if !cfg!(target_os = "linux") {
         // doesn't work on linux for some reason :/
         tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
