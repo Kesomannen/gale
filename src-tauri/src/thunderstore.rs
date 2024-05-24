@@ -1,17 +1,19 @@
 use std::{
-    collections::HashSet, str::{self, Split}, sync::Mutex, time::{Duration, Instant}
+    collections::HashSet,
+    fs, io,
+    str::{self, Split},
+    sync::Mutex,
+    time::{Duration, Instant},
 };
 
 use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
-use log::debug;
 
-use crate::{
-    games::Game, manager::ModManager, util, NetworkClient
-};
+use crate::{games::Game, manager::ModManager, util, NetworkClient};
 
 use self::models::{PackageListing, PackageVersion};
 
@@ -134,11 +136,9 @@ impl Thunderstore {
     }
 
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
-        self.packages.values().map(move |package| {
-            BorrowedMod {
-                package,
-                version: &package.versions[0],
-            }
+        self.packages.values().map(move |package| BorrowedMod {
+            package,
+            version: &package.versions[0],
         })
     }
 
@@ -191,7 +191,10 @@ impl Thunderstore {
     ) -> Result<HashSet<BorrowedMod<'a>>> {
         let mut result = HashSet::new();
         let mut stack = dependency_strings.map(String::as_str).collect::<Vec<_>>();
-        let mut visited = stack.iter().map(|s| parse_author_name(s)).collect::<HashSet<_>>();
+        let mut visited = stack
+            .iter()
+            .map(|s| parse_author_name(s))
+            .collect::<HashSet<_>>();
 
         while let Some(id) = stack.pop() {
             let dependency = self.find_mod(id, '-')?;
@@ -227,6 +230,40 @@ impl Thunderstore {
 
 const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
 
+fn load_from_cache(app: &AppHandle) -> Result<bool> {
+    let start = Instant::now();
+
+    let manager = app.state::<Mutex<ModManager>>();
+    let manager = manager.lock().unwrap();
+
+    let path = manager.active_game().path().join("thunderstore_cache.json");
+
+    if !path.exists() {
+        debug!("No cache file found at {:?}", path);
+        return Ok(false);
+    }
+
+    let contents = fs::read_to_string(&path).context("failed to read cache file")?;
+    debug!("{}", contents[230..1230].to_string());
+
+    let file = fs::File::open(path).context("failed to open cache file")?;
+    let reader = io::BufReader::new(file);
+
+    let thunderstore = app.state::<Mutex<Thunderstore>>();
+    let mut thunderstore = thunderstore.lock().unwrap();
+
+    let packages = serde_json::from_reader(reader).context("failed to deserialize cache")?;
+    thunderstore.packages = packages;
+
+    debug!(
+        "Loaded {} mods from cache in {:?}",
+        thunderstore.packages.len(),
+        start.elapsed()
+    );
+
+    Ok(true)
+}
+
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let mut is_first = true;
     loop {
@@ -246,9 +283,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
 
-    let mut response = client.get(&game.url)
-        .send().await?
-        .error_for_status()?;
+    let mut response = client.get(&game.url).send().await?.error_for_status()?;
 
     let mut is_first_chunk = true;
     let mut buffer = String::new();
@@ -311,10 +346,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
             if i % 200 == 0 && start_time.elapsed().as_secs() > 1 {
                 let _ = app.emit_all(
                     "status_update",
-                    Some(format!(
-                        "Fetching mods from Thunderstore... {}",
-                        map.len()
-                    )),
+                    Some(format!("Fetching mods from Thunderstore... {}", map.len())),
                 );
             }
         }
@@ -329,7 +361,11 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
 
     state.finished_loading = true;
 
-    debug!("Loaded {} mods in {:?}", state.packages.len(), start_time.elapsed());
+    debug!(
+        "Loaded {} mods in {:?}",
+        state.packages.len(),
+        start_time.elapsed()
+    );
 
     let _ = app.emit_all("status_update", None::<String>);
     Ok(())

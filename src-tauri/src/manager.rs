@@ -567,6 +567,10 @@ impl Profile {
 }
 
 impl ManagerGame {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
     fn create_profile(&mut self, name: String) -> Result<&Profile> {
         ensure!(
             Profile::is_valid_name(&name),
@@ -730,7 +734,7 @@ impl ModManager {
         Ok(manager)
     }
 
-    fn active_game(&self) -> &ManagerGame {
+    pub fn active_game(&self) -> &ManagerGame {
         self.games
             .get(&self.active_game.id)
             .expect("active game not found")

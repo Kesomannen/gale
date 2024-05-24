@@ -6,7 +6,6 @@ use uuid::Uuid;
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
-#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageListing {
     pub categories: Vec<String>,
     pub date_created: String,
@@ -52,7 +51,6 @@ impl PartialEq for PackageListing {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
-#[serde(rename_all(serialize = "camelCase"))]
 pub struct PackageVersion {
     pub date_created: String,
     pub dependencies: Vec<String>,
