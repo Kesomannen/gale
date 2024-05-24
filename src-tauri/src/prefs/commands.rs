@@ -1,8 +1,8 @@
 use std::fs;
 
-use anyhow::{anyhow, ensure};
+use anyhow::{anyhow, bail, ensure};
 
-use crate::{command_util::{Result, StateMutex}, util::IoResultExt, zoom_window};
+use crate::{command_util::{Result, StateMutex}, fs_util, zoom_window};
 
 use super::{PrefValue, Prefs};
 
@@ -37,19 +37,25 @@ pub fn set_pref(key: &str, value: PrefValue, prefs: StateMutex<Prefs>, window: t
 fn move_dir(key: &str, value: PrefValue, prefs: &mut Prefs) -> anyhow::Result<()> {
     let new_path = match value {
         PrefValue::Path(path) => path,
-        _ => return Err(anyhow!("value is not a path"))
+        _ => bail!("value is not a path")
     };
+
+    let old_path = match prefs.get(key) {
+        Some(PrefValue::Path(path)) => Some(path),
+        _ => None,
+    };
+
+    ensure!(old_path != Some(&new_path), "{} is already set to {}", key, new_path.display());
 
     ensure!(new_path.exists(), "{} does not exist", new_path.display());
     ensure!(new_path.is_dir(), "{} is not a directory", new_path.display());
     ensure!(new_path.read_dir()?.count() == 0, "{} is not empty", new_path.display());
-
-    fs::remove_dir_all(&new_path)
-        .fs_context(&format!("removing {} dir", key), &new_path)?;
-
-    if let Some(PrefValue::Path(old_path)) = prefs.get(key) {
-        fs::rename(old_path, &new_path)
-            .fs_context(&format!("moving {} dir", key), &new_path)?;
+    
+    if let Some(old_path) = old_path {
+        fs_util::copy_dir(old_path, &new_path)?;
+        fs::remove_dir_all(old_path)?;
+    } else {
+        fs::create_dir_all(&new_path)?;
     }
 
     prefs.set(key, PrefValue::Path(new_path))?;

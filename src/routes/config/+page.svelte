@@ -1,13 +1,13 @@
 <script lang="ts">
 	import ConfigFileTreeItem from '$lib/config/ConfigFileTreeItem.svelte';
+	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type {
 		TaggedConfigEntry,
 		ConfigEntryId,
 		ConfigSection,
 		ConfigValue,
-		LoadFileResult,
-		ConfigEntry
+		LoadFileResult
 	} from '$lib/models';
 	import { capitalize, fileName, sentenceCase } from '$lib/util';
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
@@ -15,9 +15,7 @@
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
 	import Icon from '@iconify/svelte';
 	import { currentProfile } from '$lib/profile';
-	import { Button, Tooltip } from 'bits-ui';
 	import { Render } from '@jill64/svelte-sanitize';
-	import { fly } from 'svelte/transition';
 	import StringConfig from '$lib/config/StringConfig.svelte';
 	import EnumConfig from '$lib/config/EnumConfig.svelte';
 	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
@@ -54,7 +52,7 @@
 			case 'enum':
 				return config.content.options[config.content.index];
 			case 'flags':
-				return config.content.indicies.map(i => config.content.options[i]).join(', ');
+				return config.content.indicies.map((i) => config.content.options[i]).join(', ');
 			case 'other':
 				return config.content;
 		}
@@ -151,7 +149,8 @@
 			{#if selectedSection && selectedFile.type === 'ok'}
 				{#if selectedFile.content.metadata}
 					<div class="text-slate-400 text-sm">
-						Created by {selectedFile.content.metadata.pluginName} {selectedFile.content.metadata.pluginVersion} 
+						Created by {selectedFile.content.metadata.pluginName}
+						{selectedFile.content.metadata.pluginVersion}
 					</div>
 				{/if}
 
@@ -165,7 +164,7 @@
 							>
 								{sentenceCase(entry.content.name)}
 							</div>
-							<UntaggedConfig 
+							<UntaggedConfig
 								file={selectedFile.content}
 								section={selectedSection}
 								name={entry.content.name}
@@ -174,20 +173,12 @@
 						</div>
 					{:else}
 						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">
-							<Tooltip.Root openDelay={200}>
-								<Tooltip.Trigger
-									class="text-slate-300 mr-auto pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
-								>
-									{sentenceCase(entry.content.name)}
-								</Tooltip.Trigger>
-								<Tooltip.Content
-									class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 max-w-[35rem] shadow-lg"
-									transition={fly}
-									transitionConfig={{ duration: 150 }}
-									side="top"
-									sideOffset={2}
-								>
-									<Tooltip.Arrow class="rounded-[2px] border-l border-t border-gray-600" />
+							<Tooltip
+								side="top"
+								class="w-[50%] text-slate-300 mr-auto pr-2 cursor-auto text-left truncate flex-shrink-0"
+							>
+								{sentenceCase(entry.content.name)}
+								<svelte:fragment slot="tooltip">
 									<div>
 										<span class="font-semibold text-slate-200 text-md">{entry.content.name}</span>
 										<span class="text-slate-400"> ({typeName(entry.content)})</span>
@@ -207,11 +198,12 @@
 									{#if (entry.content.value.type === 'int32' || entry.content.value.type === 'double' || entry.content.value.type === 'single') && entry.content.value.content.range}
 										<p>
 											<span class="font-bold">Range: </span>
-											{entry.content.value.content.range.start} - {entry.content.value.content.range.end}
+											{entry.content.value.content.range.start} - {entry.content.value.content.range
+												.end}
 										</p>
 									{/if}
-								</Tooltip.Content>
-							</Tooltip.Root>
+								</svelte:fragment>
+							</Tooltip>
 							{#if entry.content.value.type === 'string'}
 								<StringConfig entryId={entryId(entry.content)} />
 							{:else if entry.content.value.type === 'enum'}

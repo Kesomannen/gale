@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { invokeCommand } from '$lib/invoke';
+	import Label from '$lib/components/Label.svelte';
+import { invokeCommand } from '$lib/invoke';
 	import type { LaunchMode, PrefValue, SelectItem } from '$lib/models';
 	import Icon from '@iconify/svelte';
 	import { Select, type Selected } from 'bits-ui';
@@ -35,7 +36,9 @@
 </script>
 
 <div class="flex items-center">
-	<div class="text-slate-300 min-w-60 truncate">Zoom factor</div>
+	<Label text="Zoom factor">
+		Changes the zoom level of the mod manager.
+	</Label>
 
 	<Select.Root
 		items={items}

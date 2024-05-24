@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use anyhow::Context;
-use std::{fs, path::{Path, PathBuf}};
+use std::{fs, io::Cursor, path::{Path, PathBuf}};
 use uuid::Uuid;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use typeshare::typeshare;
-use image::{imageops::FilterType, io::Reader as ImageReader};
+use image::{imageops::FilterType, io::Reader as ImageReader, ImageFormat};
 
 use super::{config, ModManager, Profile, ProfileMod, ProfileModKind, Result};
 
@@ -198,8 +198,11 @@ fn export_pack(
     zip.write_str("README.md", &readme)?;
 
     let img = ImageReader::open(&args.icon)?.decode()?;
-    img.resize_exact(256, 256, FilterType::Lanczos3);
-    zip.write("icon.png", img.as_bytes())?;
+    let img = img.resize_exact(256, 256, FilterType::Lanczos3);
+    
+    let mut bytes = Vec::new();
+    img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
+    zip.write("icon.png", &bytes)?;
 
     write_config(profile, &mut zip)?;
 

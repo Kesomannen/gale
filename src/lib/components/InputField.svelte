@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Label } from 'bits-ui';
+	import Label from './Label.svelte';
 
 	export let label: string | undefined = undefined;
 	export let placeholder: string = '';
@@ -11,7 +11,9 @@
 
 <div class="flex items-center cursor-auto flex-grow text-{size}">
 	{#if label}
-		<Label.Root class="text-slate-300 w-36">{label}</Label.Root>
+		<Label text={label}>
+			<slot />
+		</Label>
 	{/if}
 
 	<input

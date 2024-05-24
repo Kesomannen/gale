@@ -9,7 +9,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button, Popover, Select, Separator } from 'bits-ui';
 
-	import { slide } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
 	import { quadOut } from 'svelte/easing';
 
 	interface SortOption {
@@ -141,12 +141,12 @@
 			<Popover.Root>
 				<Popover.Trigger
 					class="flex items-center bg-gray-900 rounded-lg px-3 py-1.5
-                                        border border-gray-500 border-opacity-0 hover:border-opacity-100 truncate"
+                 border border-gray-500 border-opacity-0 hover:border-opacity-100 truncate"
 				>
 					<Icon class="text-slate-400 mr-2 text-xl flex-shrink-0" icon="mdi:filter" />
 					<div class="text-slate-300 text-left mr-2">Filter</div>
 					{#if categories.length > 0}
-						<div class="text-slate-500 truncate italic">
+						<div class="text-slate-400 truncate italic">
 							{categories.join(', ')}
 						</div>
 					{/if}
@@ -154,8 +154,8 @@
 				</Popover.Trigger>
 				<Popover.Content
 					class="flex flex-col bg-gray-800 gap-2 shadow-xl py-4 pl-4 pr-8 rounded-lg border border-gray-600"
-					transition={slide}
-					transitionConfig={{ duration: 150, easing: quadOut }}
+					transition={fly}
+					transitionConfig={{ duration: 100 }}
 				>
 					<ModListSortOption label="Include NSFW" bind:value={includeNsfw} />
 					<ModListSortOption label="Include deprecated" bind:value={includeDeprecated} />

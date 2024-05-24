@@ -10,11 +10,13 @@
 
 - Made msi the preferred installer for Windows
 - Renamed "Preferences" to "Settings"
+- Numerous UI changes
 
 ### Fixed
 
 - Zoom factor not being applied when reopening the app
 - Open log file button
+- Modpack icon resizing outputing an incorrect PNG
 
 ## 0.4.1 (2024-05-23)
 

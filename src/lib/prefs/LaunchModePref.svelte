@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Label from '$lib/components/Label.svelte';
+	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { LaunchMode, PrefValue } from '$lib/models';
 	import Icon from '@iconify/svelte';
@@ -34,7 +36,17 @@
 </script>
 
 <div class="flex items-center">
-	<div class="text-slate-300 min-w-60 truncate">Launch mode</div>
+	<Label text="Launch mode">
+		<p>Determines how the game is launched.</p>
+		<p class="my-1.5">
+			<b>Steam:</b> Launches through Steam, which slower than directly. However, some games require Steam
+			to be running, including Lethal Company.
+		</p>
+		<p>
+			<b>Direct:</b> Launches the game directly from the executable. Also allows you to launch multiple
+			instances at once.
+		</p>
+	</Label>
 
 	<Select.Root
 		items={[
@@ -66,7 +78,6 @@
 				value="steam"
 				class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
 			>
-				<Icon icon="mdi:steam" class="text-lg mr-1" />
 				Steam
 				<Select.ItemIndicator class="ml-auto">
 					<Icon icon="mdi:check" class="text-green-400 text-lg" />
@@ -76,7 +87,6 @@
 				value="direct"
 				class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
 			>
-				<Icon icon="mdi:launch" class="text-lg mr-1" />
 				Direct
 				<Select.ItemIndicator class="ml-auto">
 					<Icon icon="mdi:check" class="text-green-400 text-lg" />

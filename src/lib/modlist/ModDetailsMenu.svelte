@@ -74,7 +74,7 @@
 	class="flex flex-col px-6 pt-6 pb-4 min-w-80 w-[40%] bg-gray-700 text-white border-l border-gray-600 relative"
 >
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class="absolute right-2 top-18 rounded-full hover:bg-slate-600 p-1">
+		<DropdownMenu.Trigger class="absolute right-2 mt-0.5 rounded-full hover:bg-slate-600 p-1">
 			<Icon class="text-slate-200 text-2xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
@@ -96,13 +96,13 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<div class="mr-8 flex items-center justify-between">
+	<div class="mr-6 flex items-center justify-between">
 		<Button.Root
 			class="text-slate-100 font-bold text-3xl hover:underline truncate"
 			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}>{mod.name}</Button.Root
 		>
 		{#if mod.version}
-			<span class="text-slate-300 font-light text-lg pl-2 align-middle"
+			<span class="text-slate-300 font-light text-lg pl-1 align-middle"
 			>{mod.version}</span
 		>
 		{/if}

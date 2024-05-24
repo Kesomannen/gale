@@ -39,4 +39,6 @@
 	}
 </script>
 
-<PathField {label} {value} onClick={browse} icon={type === 'exe' ? 'mdi:file' : 'mdi:folder'} />
+<PathField {label} {value} onClick={browse} icon={type === 'exe' ? 'mdi:file' : 'mdi:folder'}>
+	<slot />
+</PathField>
