@@ -4,7 +4,7 @@
 
   export let text: string = ""
   export let side: "top" | "right" | "bottom" | "left" = "top";
-  export let openDelay: number = 300;
+  export let openDelay: number = 200;
 
   let triggerClass: string = "";
 
