@@ -10,7 +10,6 @@
 	import { Button, Popover, Select, Separator } from 'bits-ui';
 
 	import { fly, slide } from 'svelte/transition';
-	import { quadOut } from 'svelte/easing';
 
 	interface SortOption {
 		value: SortBy;
@@ -37,6 +36,8 @@
 	export let extraDropdownOptions: DropdownOption[] = [];
 	export let queryArgs: QueryModsArgs;
 
+	let list: HTMLDivElement;
+
 	$: queryArgs = {
 		page,
 		pageSize,
@@ -49,10 +50,8 @@
 		sortBy: sortBy.value
 	};
 
-	$: {
-		if (mods.length === 0 && page > 0) {
-			page--;
-		}
+	$: if (mods.length === 0 && page > 0) {
+		page--;
 	}
 
 	function onModClicked(mod: Mod) {
@@ -115,7 +114,10 @@
 			<div class="flex items-center flex-shrink-0">
 				<Button.Root
 					class="p-1 hover:bg-gray-700 disabled:bg-opacity-0 disabled:cursor-not-allowed rounded-lg transition-all group"
-					on:click={() => page--}
+					on:click={() => {
+						page--;
+						list.scrollTop = 0;
+					}}
 					disabled={page === 0}
 				>
 					<Icon
@@ -128,7 +130,10 @@
 
 				<Button.Root 
 					class="p-1 hover:bg-gray-700 disabled:bg-opacity-0 disabled:cursor-not-allowed rounded-lg transition-all group"
-					on:click={() => page++}
+					on:click={() => {
+						page++;
+						list.scrollTop = 0;
+					}}
 					disabled={mods.length < pageSize}
 				>
 					<Icon
@@ -175,7 +180,7 @@
 
 		<slot name="header" />
 
-		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3 gap-0.5">
+		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3 gap-0.5" bind:this={list}>
 			{#if mods.length === 0}
 				<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
 			{/if}

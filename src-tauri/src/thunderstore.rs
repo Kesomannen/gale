@@ -1,6 +1,8 @@
 use std::{
     collections::HashSet,
-    fs, io,
+    fs,
+    io::{self, Write},
+    path::PathBuf,
     str::{self, Split},
     sync::Mutex,
     time::{Duration, Instant},
@@ -236,15 +238,12 @@ fn load_from_cache(app: &AppHandle) -> Result<bool> {
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
-    let path = manager.active_game().path().join("thunderstore_cache.json");
+    let path = cache_path(&manager);
 
     if !path.exists() {
         debug!("No cache file found at {:?}", path);
         return Ok(false);
     }
-
-    let contents = fs::read_to_string(&path).context("failed to read cache file")?;
-    debug!("{}", contents[230..1230].to_string());
 
     let file = fs::File::open(path).context("failed to open cache file")?;
     let reader = io::BufReader::new(file);
@@ -252,8 +251,13 @@ fn load_from_cache(app: &AppHandle) -> Result<bool> {
     let thunderstore = app.state::<Mutex<Thunderstore>>();
     let mut thunderstore = thunderstore.lock().unwrap();
 
-    let packages = serde_json::from_reader(reader).context("failed to deserialize cache")?;
-    thunderstore.packages = packages;
+    let packages: Vec<PackageListing> =
+        serde_json::from_reader(reader).context("failed to deserialize cache")?;
+
+    thunderstore.packages = packages
+        .into_iter()
+        .map(|package| (package.uuid4, package))
+        .collect();
 
     debug!(
         "Loaded {} mods from cache in {:?}",
@@ -265,6 +269,18 @@ fn load_from_cache(app: &AppHandle) -> Result<bool> {
 }
 
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
+    /* 
+    match load_from_cache(&app) {
+        Ok(true) => {
+            tokio::time::sleep(TIME_BETWEEN_LOADS / 2).await;
+        }
+        Ok(false) => {}
+        Err(err) => {
+            util::print_err("error while loading mods from cache", &err, &app);
+        }
+    }
+    */
+
     let mut is_first = true;
     loop {
         if let Err(err) = load_mods(&app, game, is_first).await {
@@ -286,7 +302,8 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
     let mut response = client.get(&game.url).send().await?.error_for_status()?;
 
     let mut is_first_chunk = true;
-    let mut buffer = String::new();
+    let mut text_index = 0;
+    let mut text = String::new();
     let mut byte_buffer = Vec::new();
     let mut package_buffer = match write_directly {
         true => None,
@@ -308,9 +325,9 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
         match is_first_chunk {
             true => {
                 is_first_chunk = false;
-                buffer.extend(chunk.chars().skip(1)); // remove leading [
+                text.extend(chunk.chars().skip(1)); // remove leading [
             }
-            false => buffer.push_str(chunk),
+            false => text.push_str(chunk),
         };
 
         byte_buffer.clear();
@@ -323,24 +340,22 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                 None => &mut state.packages,
             };
 
-            while let Some(index) = buffer.find("}]},") {
-                let (json, _) = buffer.split_at(index + 3);
+            while let Some(index) = text[text_index..].find("}]},") {
+                let (json, _) = text[text_index..].split_at(index + 3);
 
-                let package = serde_json::from_str::<PackageListing>(json);
-
-                match package {
+                match serde_json::from_str::<PackageListing>(json) {
                     Ok(package) => {
                         if !IGNORED_NAMES.contains(&package.name.as_str()) {
                             map.insert(package.uuid4, package);
                         }
                     }
                     Err(err) => {
-                        println!("{}", json);
-                        util::print_err("Failed to load mod", &anyhow!(err), app)
+                        debug!("{}", json);
+                        util::print_err("failed to load mod", &anyhow!(err), app)
                     }
                 }
 
-                buffer.replace_range(..index + 4, "");
+                text_index += index + 4;
             }
 
             if i % 200 == 0 && start_time.elapsed().as_secs() > 1 {
@@ -368,5 +383,19 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
     );
 
     let _ = app.emit_all("status_update", None::<String>);
+
+    /* 
+    let manager = app.state::<Mutex<ModManager>>();
+    let manager = manager.lock().unwrap();
+    
+    let mut file = fs::File::create(cache_path(&manager)).context("failed to create cache file")?;
+    file.write_all(b"[")?;
+    file.write_all(text.as_bytes())?;
+    */
+
     Ok(())
+}
+
+fn cache_path(manager: &ModManager) -> PathBuf {
+    manager.active_game().path().join("thunderstore_cache.json")
 }

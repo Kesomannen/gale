@@ -215,7 +215,7 @@
 							{:else if entry.content.value.type == 'other'}
 								<StringConfig entryId={entryId(entry.content)} isOther={true} />
 							{:else if isNum(entry.content.value)}
-								{#if entry.content.value.content.range}
+								{#if entry.content.value.content.range && entry.content.value.content.range.end - entry.content.value.content.range.start < 100}
 									<SliderConfig entryId={entryId(entry.content)} />
 								{:else}
 									<NumberInputConfig entryId={entryId(entry.content)} />
