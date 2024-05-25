@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Infinite scroll instead of pagination
 - Made msi the preferred installer for Windows
 - Renamed "Preferences" to "Settings"
 - Numerous UI changes

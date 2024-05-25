@@ -45,8 +45,7 @@ pub enum SortBy {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryModsArgs {
-    pub page: usize,
-    pub page_size: usize,
+    pub max_count: usize,
     pub search_term: Option<String>,
     pub categories: Vec<String>,
     pub include_nsfw: bool,
@@ -227,6 +226,5 @@ where
         queryable.matches(args)
     })
     .sorted_by(|a, b| a.cmp(b, args))
-    .skip(args.page * args.page_size)
-    .take(args.page_size)
+    .take(args.max_count)
 }

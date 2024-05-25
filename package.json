@@ -32,6 +32,7 @@
 	"type": "module",
 	"dependencies": {
 		"@jill64/svelte-sanitize": "^1.2.12",
+		"@sveltejs/svelte-virtual-list": "^3.0.1",
 		"@tauri-apps/api": "^1.5.3",
 		"bits-ui": "0.19.6",
 		"svelte-markdown": "^0.4.1",

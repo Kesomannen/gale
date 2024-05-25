@@ -153,7 +153,7 @@
 
 	{#if mod.lastUpdated}
 		<div class="text-slate-400 mb-4 text-lg">
-			Last updated: {timeSince(new Date(mod.lastUpdated))} ago
+			Last updated {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}
 

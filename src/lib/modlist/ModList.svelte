@@ -10,21 +10,24 @@
 	import { Button, Popover, Select, Separator } from 'bits-ui';
 
 	import { fly, slide } from 'svelte/transition';
+	import VirtualList from '@sveltejs/svelte-virtual-list';
+	import { listen } from '@tauri-apps/api/event';
 
 	interface SortOption {
 		value: SortBy;
 		label: string;
 	}
 
-	const pageSize = 20;
 	const sortOptions: SortOption[] = [
 		{ value: SortBy.LastUpdated, label: 'Last updated' },
 		{ value: SortBy.Rating, label: 'Rating' },
-		{ value: SortBy.Downloads, label: 'Downloads' },
+		{ value: SortBy.Downloads, label: 'Downloads' }
 	];
 
-	let page = 0;
+	let listStart = 0;
+	let listEnd = 0;
 
+	let maxCount = 20;
 	let searchTerm: string | undefined;
 	let categories: string[] = [];
 	let includeNsfw = false;
@@ -36,11 +39,8 @@
 	export let extraDropdownOptions: DropdownOption[] = [];
 	export let queryArgs: QueryModsArgs;
 
-	let list: HTMLDivElement;
-
 	$: queryArgs = {
-		page,
-		pageSize,
+		maxCount,
 		searchTerm,
 		categories,
 		includeNsfw,
@@ -49,10 +49,6 @@
 		descending: true,
 		sortBy: sortBy.value
 	};
-
-	$: if (mods.length === 0 && page > 0) {
-		page--;
-	}
 
 	function onModClicked(mod: Mod) {
 		if (activeMod === undefined || activeMod.uuid !== mod.uuid) {
@@ -68,6 +64,10 @@
 		} else {
 			categories = categories.filter((c) => c !== category);
 		}
+	}
+
+	$: if (listEnd > mods.length - 1 && mods.length === maxCount) {
+		maxCount += 20;
 	}
 </script>
 
@@ -111,38 +111,6 @@
 		</div>
 
 		<div class="flex gap-2 mb-2 pr-3">
-			<div class="flex items-center flex-shrink-0">
-				<Button.Root
-					class="p-1 hover:bg-gray-700 disabled:bg-opacity-0 disabled:cursor-not-allowed rounded-lg transition-all group"
-					on:click={() => {
-						page--;
-						list.scrollTop = 0;
-					}}
-					disabled={page === 0}
-				>
-					<Icon
-						class="text-white text-2xl group-disabled:text-slate-400 align-middle"
-						icon="mdi:chevron-left"
-					/>
-				</Button.Root>
-
-				<div class="text-md px-4 text-slate-200">Page {page + 1}</div>
-
-				<Button.Root 
-					class="p-1 hover:bg-gray-700 disabled:bg-opacity-0 disabled:cursor-not-allowed rounded-lg transition-all group"
-					on:click={() => {
-						page++;
-						list.scrollTop = 0;
-					}}
-					disabled={mods.length < pageSize}
-				>
-					<Icon
-						class="text-white text-2xl group-disabled:text-slate-400 align-middle"
-						icon="mdi:chevron-right"
-					/>
-				</Button.Root>
-			</div>
-
 			<Popover.Root>
 				<Popover.Trigger
 					class="flex items-center bg-gray-900 rounded-lg px-3 py-1.5
@@ -180,16 +148,21 @@
 
 		<slot name="header" />
 
-		<div class="flex flex-col flex-grow overflow-y-auto pr-2 pb-3 gap-0.5" bind:this={list}>
-			{#if mods.length === 0}
-				<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
-			{/if}
-			{#each mods.slice(0, pageSize - 1) as mod}
-				<ModListItem onClick={onModClicked} {mod} isSelected={activeMod == mod}>
-					<slot name="item" {mod} />
+		{#if mods.length === 0}
+			<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
+		{:else}
+			<VirtualList
+				itemHeight={48 + 16}
+				items={mods}
+				let:item
+				bind:start={listStart}
+				bind:end={listEnd}
+			>
+				<ModListItem onClick={onModClicked} mod={item} isSelected={activeMod == item}>
+					<slot name="item" mod={item} />
 				</ModListItem>
-			{/each}
-		</div>
+			</VirtualList>
+		{/if}
 	</div>
 
 	{#if activeMod}

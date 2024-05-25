@@ -108,8 +108,7 @@ export enum SortBy {
 }
 
 export interface QueryModsArgs {
-	page: number;
-	pageSize: number;
+	maxCount: number;
 	searchTerm?: string;
 	categories: string[];
 	includeNsfw: boolean;
