@@ -1,17 +1,15 @@
 <script lang="ts">
 	import ModListItem from '$lib/modlist/ModListItem.svelte';
 	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
-	import ModListSortOption from '$lib/modlist/ModListSortOption.svelte';
 
 	import { SortBy, type Mod, type QueryModsArgs, type DropdownOption } from '$lib/models';
-	import { categories as allCategories } from '$lib/profile';
 
 	import Icon from '@iconify/svelte';
-	import { Button, Popover, Select, Separator } from 'bits-ui';
+	import { Select } from 'bits-ui';
 
-	import { fly, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import VirtualList from '@sveltejs/svelte-virtual-list';
-	import { listen } from '@tauri-apps/api/event';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	interface SortOption {
 		value: SortBy;
@@ -87,7 +85,7 @@
 			<Select.Root items={sortOptions} bind:selected={sortBy}>
 				<Select.Trigger
 					class="flex items-center flex-shrink-0 w-48 bg-gray-900 rounded-lg px-3 
-                                       border border-gray-500 border-opacity-0 hover:border-opacity-100"
+								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					<Icon class="text-slate-400 text-2xl mr-2" icon="mdi:sort" />
 					<Select.Value class="text-slate-300 text-left w-full" />
@@ -110,40 +108,11 @@
 			</Select.Root>
 		</div>
 
-		<div class="flex gap-2 mb-2 pr-3">
-			<Popover.Root>
-				<Popover.Trigger
-					class="flex items-center bg-gray-900 rounded-lg px-3 py-1.5
-                 border border-gray-500 border-opacity-0 hover:border-opacity-100 truncate"
-				>
-					<Icon class="text-slate-400 mr-2 text-xl flex-shrink-0" icon="mdi:filter" />
-					<div class="text-slate-300 text-left mr-2">Filter</div>
-					{#if categories.length > 0}
-						<div class="text-slate-400 truncate italic">
-							{categories.join(', ')}
-						</div>
-					{/if}
-					<Icon class="text-slate-400 ml-2 text-xl flex-shrink-0" icon="mdi:chevron-down" />
-				</Popover.Trigger>
-				<Popover.Content
-					class="flex flex-col bg-gray-800 gap-2 shadow-xl py-4 pl-4 pr-8 rounded-lg border border-gray-600"
-					transition={fly}
-					transitionConfig={{ duration: 100 }}
-				>
-					<ModListSortOption label="Include NSFW" bind:value={includeNsfw} />
-					<ModListSortOption label="Include deprecated" bind:value={includeDeprecated} />
-					<Separator.Root class="w-full h-[1px] bg-gray-600 my-1" />
-					<div class="grid gap-y-2 gap-x-4 grid-cols-3">
-						{#each allCategories as category}
-							<ModListSortOption
-								label={category}
-								value={categories.includes(category)}
-								onChange={(value) => onFilterChange(category, value)}
-							/>
-						{/each}
-					</div>
-				</Popover.Content>
-			</Popover.Root>
+		<div class="flex gap-2 pb-1 pr-4 text-slate-300">
+			
+
+			<Checkbox bind:value={includeNsfw} /> <span class="mr-3">Show NSFW</span>
+			<Checkbox bind:value={includeDeprecated} /> <span>Show deprecated</span>
 		</div>
 
 		<slot name="header" />

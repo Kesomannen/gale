@@ -54,7 +54,6 @@ export function removeError(index: number) {
 }
 
 export function setTaggedConfig(id: ConfigEntryId, value: ConfigValue) {
-	if (!value.content) return;
 	if ((value.type === 'int32' || value.type === 'double' || value.type === 'single') && !value.content.value) return;
 
 	invokeCommand('set_tagged_config_entry', { 
