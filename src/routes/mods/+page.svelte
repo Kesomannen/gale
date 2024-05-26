@@ -1,16 +1,25 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
-	import type { Mod, QueryModsArgs } from '$lib/models';
+	import { SortBy, type Mod, type QueryModsArgs } from '$lib/models';
 	import { shortenFileSize } from '$lib/util';
 
 	import ModList from '$lib/modlist/ModList.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { Button, DropdownMenu } from 'bits-ui';
+	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { listen } from '@tauri-apps/api/event';
 	import { currentGame } from '$lib/profile';
 	import { fly, slide } from 'svelte/transition';
+	import Popup from '$lib/components/Popup.svelte';
+	import BigButton from '$lib/components/BigButton.svelte';
+	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
+
+	const sortOptions = [
+		{ value: SortBy.LastUpdated, label: 'Last updated' },
+		{ value: SortBy.Rating, label: 'Rating' },
+		{ value: SortBy.Downloads, label: 'Downloads' }
+	];
 
 	let mods: Mod[];
 	let queryArgs: QueryModsArgs;
@@ -19,10 +28,15 @@
 
 	let versionsDropdownOpen = false;
 
-	$: modRef = {
-		packageUuid: activeMod?.uuid,
-		versionUuid: activeMod?.versions[0].uuid
-	};
+	let missingDepsOpen = false;
+	let missingDeps: string[] = [];
+
+	$: activeModRef = activeMod
+		? {
+				packageUuid: activeMod.uuid,
+				versionUuid: activeMod.versions[0].uuid
+			}
+		: undefined;
 
 	let isModInstalled = false;
 
@@ -47,21 +61,31 @@
 			(result) => (isModInstalled = result)
 		);
 
-		invokeCommand<number>('get_download_size', { modRef }).then(
+		invokeCommand<number>('get_download_size', { modRef: activeModRef }).then(
 			(size) => (activeDownloadSize = size)
 		);
 	}
+
+	async function install(modRef: { packageUuid: string; versionUuid: string }) {
+		missingDeps = await invokeCommand<string[]>('missing_deps', { modRef });
+		if (missingDeps.length > 0) {
+			missingDepsOpen = true;
+			return;
+		}
+
+		await invokeCommand('install_mod', { modRef });
+	}
 </script>
 
-<ModList bind:activeMod bind:mods bind:queryArgs>
+<ModList bind:activeMod bind:mods bind:queryArgs {sortOptions}>
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg
 								enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-semibold
 								disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
 			on:click={() => {
-				if (activeMod) {
-					invokeCommand('install_mod', { modRef });
+				if (activeModRef) {
+					install(activeModRef);
 				}
 			}}
 			disabled={isModInstalled}
@@ -99,12 +123,12 @@
 					<DropdownMenu.Item
 						class="flex flex-shrink-0 items-center px-3 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"
 						on:click={() => {
-							let versionedModRef = {
-								packageUuid: activeMod?.uuid,
-								versionUuid: version.uuid
-							};
+							if (!activeMod) return;
 
-							invokeCommand('install_mod', { modRef: versionedModRef });
+							install({
+								packageUuid: activeMod.uuid,
+								versionUuid: version.uuid
+							});
 						}}
 					>
 						{version.name}
@@ -114,3 +138,25 @@
 		</DropdownMenu.Root>
 	</div>
 </ModList>
+
+<ConfirmPopup
+	title="Missing dependencies"
+	description="Some of {activeMod?.name}'s dependencies could not be found:"
+	bind:open={missingDepsOpen}
+	items={missingDeps}
+	let:item
+>
+	<li>- {item}</li>
+
+	<svelte:fragment slot="buttons">
+		<BigButton
+			color="red"
+			fontWeight="semibold"
+			onClick={() => {
+				invokeCommand('install_mod', { modRef: activeModRef });
+			}}
+		>
+			Install anyway
+		</BigButton>
+	</svelte:fragment>
+</ConfirmPopup>

@@ -13,44 +13,36 @@
 </script>
 
 <Button.Root
-	class="flex border border-slate-500 {isSelected
+	class="flex border border-slate-500 rounded-lg p-2 group w-full {isSelected
 		? 'bg-slate-700'
-		: 'hover:bg-slate-700 border-opacity-0'} rounded-lg p-2 items-center group w-full"
+		: 'hover:bg-slate-700 border-opacity-0'}"
 	on:click={() => onClick(mod)}
 >
-	<img
-		src={mod.icon ?? FALLBACK_ICON}
-		alt="Mod icon"
-		class="w-12 h-12 rounded-md group-hover:shadow-xl"
-	/>
-	<div class="pl-4 overflow-hidden flex-grow flex-shrink">
-		<div class="flex items-center">
-			<div
-				class="font-medium {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"
-			>
-				{mod.name}
-			</div>
-			<div
-				class="font-light pl-2 pr-1 {mod.enabled === false
-					? 'line-through text-slate-500'
-					: 'text-slate-400'}"
-			>
-				{mod.version ?? ''}
-			</div>
-			{#if mod.isPinned}
-				<Icon class="ml-1 text-slate-500" icon="mdi:pin" />
-			{/if}
-			{#if mod.isDeprecated}
-				<Icon class="ml-1 text-red-500" icon="mdi:error" />
-			{/if}
-			{#if isOutdated(mod)}
-				<Icon class="ml-1 text-blue-500" icon="mdi:arrow-up-circle" />
-			{/if}
-		</div>
-		<div
-			class="truncate text-left {mod.enabled === false
+	<img src={mod.icon ?? FALLBACK_ICON} alt={mod.name} class="w-12 h-12 rounded-md" />
+	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
+		<span
+			class="font-medium {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"
+		>
+			{mod.name}
+		</span>
+		<span
+			class="font-light px-1 {mod.enabled === false
 				? 'line-through text-slate-500'
-				: 'text-slate-300/80'}"
+				: 'text-slate-400'}"
+		>
+			{mod.version ?? ''}
+		</span>
+		{#if mod.isPinned}
+			<Icon class="text-slate-500 inline mb-1" icon="mdi:pin" />
+		{/if}
+		{#if mod.isDeprecated}
+			<Icon class="text-red-500 inline mb-1" icon="mdi:error" />
+		{/if}
+		{#if isOutdated(mod)}
+			<Icon class=" text-blue-500 inline mb-1" icon="mdi:arrow-up-circle" />
+		{/if}
+		<div
+			class="truncate {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-300/80'}"
 		>
 			{mod.description ?? ''}
 		</div>

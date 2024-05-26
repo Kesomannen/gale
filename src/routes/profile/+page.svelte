@@ -1,23 +1,31 @@
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
+	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
-	import type {
-		Dependant,
-		Mod,
-		ModActionResponse,
-		QueryModsArgs,
-		ProfileQuery,
-		AvailableUpdate
+	import {
+		type Dependant,
+		type Mod,
+		type ModActionResponse,
+		type QueryModsArgs,
+		type ProfileQuery,
+		type AvailableUpdate,
+		SortBy
 	} from '$lib/models';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { currentGame, currentProfile } from '$lib/profile';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { tauri } from '@tauri-apps/api';
-	import { Button, Dialog, Switch, Tooltip } from 'bits-ui';
+	import { Button, Dialog, Switch } from 'bits-ui';
 	import { onMount } from 'svelte';
+
+	const sortOptions = [
+		{ value: SortBy.LastInstalled, label: 'Last installed' },
+		{ value: SortBy.LastUpdated, label: 'Last updated' },
+		{ value: SortBy.Rating, label: 'Rating' },
+		{ value: SortBy.Downloads, label: 'Downloads' }
+	];
 
 	let mods: Mod[];
 	let updates: AvailableUpdate[] = [];
@@ -84,6 +92,7 @@
 	bind:mods
 	bind:queryArgs
 	bind:activeMod
+	{sortOptions}
 	extraDropdownOptions={[
 		{
 			icon: 'mdi:delete',
@@ -128,41 +137,34 @@
 			checked={mod.enabled ?? true}
 			onCheckedChange={(checked) => toggleMod(checked, mod)}
 			on:click={(evt) => evt.stopPropagation()}
-			class="peer flex items-center px-1 py-1 rounded-full w-12 h-6 ml-2 group
+			class="flex px-1 py-1 rounded-full w-12 h-6 ml-2 group mt-3
 						bg-slate-600 hover:bg-slate-500
 						data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
 		>
 			<Switch.Thumb
 				class="pointer-events-none h-full w-4 rounded-full transition-transform ease-out duration-75
-													bg-slate-300 hover:bg-slate-200
-													data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
+							bg-slate-300 hover:bg-slate-200
+							data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
 			/>
 		</Switch.Root>
 	</div>
 </ModList>
 
-<Popup title="Confirm update" bind:open={updateAllOpen}>
-	<Dialog.Description class="text-slate-400">
-		The following mods will be updated:
-	</Dialog.Description>
+<ConfirmPopup
+	title="Confirm update"
+	bind:open={updateAllOpen}
+	description="The following mods will be updated:"
+	items={updates}
+	let:item
+>
+	<span class="text-slate-300">{item.name}</span>
+	<span class="text-slate-400 text-light">{item.old} > </span>
+	<span class="text-slate-100 font-medium">{item.new}</span>
 
-	<ul class="mt-2">
-		{#each updates as update}
-			<li>
-				<span class="text-slate-300">{update.name}</span>
-				<span class="text-slate-400 text-light">{update.old} > </span>
-				<span class="text-slate-100 font-medium">{update.new}</span>
-			</li>
-		{/each}
-	</ul>
-
-	<Dialog.Close class="flex w-full justify-end mt-3 mr-0.5 gap-2">
-		<BigButton color="gray">
-			Cancel
-		</BigButton>
+	<svelte:fragment slot="buttons">
 		<BigButton
 			color="blue"
-			fontWeight="medium"
+			fontWeight="semibold"
 			onClick={() => {
 				invokeCommand('update_all').then(refresh);
 				updateAllOpen = false;
@@ -170,8 +172,8 @@
 		>
 			Update all
 		</BigButton>
-	</Dialog.Close>
-</Popup>
+	</svelte:fragment>
+</ConfirmPopup>
 
 <DependantsPopup
 	bind:this={removeDependants}

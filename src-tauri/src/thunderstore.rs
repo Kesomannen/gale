@@ -190,8 +190,9 @@ impl Thunderstore {
     pub fn resolve_deps<'a>(
         &'a self,
         dependency_strings: impl Iterator<Item = &'a String>,
-    ) -> Result<HashSet<BorrowedMod<'a>>> {
+    ) -> (HashSet<BorrowedMod<'a>>, Vec<&'a str>) {
         let mut result = HashSet::new();
+        let mut errors = Vec::new();
         let mut stack = dependency_strings.map(String::as_str).collect::<Vec<_>>();
         let mut visited = stack
             .iter()
@@ -199,22 +200,27 @@ impl Thunderstore {
             .collect::<HashSet<_>>();
 
         while let Some(id) = stack.pop() {
-            let dependency = self.find_mod(id, '-')?;
+            match self.find_mod(id, '-') {
+                Ok(dependency) => {
+                    for dep in &dependency.version.dependencies {
+                        let (author, name) = parse_author_name(dep);
 
-            for dep in &dependency.version.dependencies {
-                let (author, name) = parse_author_name(dep);
+                        if !visited.insert((author, name)) {
+                            continue;
+                        }
 
-                if !visited.insert((author, name)) {
-                    continue;
+                        stack.push(dep.as_str());
+                    }
+
+                    result.insert(dependency);
                 }
-
-                stack.push(dep.as_str());
+                Err(e) => {
+                    errors.push(id);
+                }
             }
-
-            result.insert(dependency);
         }
 
-        return Ok(result);
+        return (result, errors);
 
         fn parse_author_name(s: &str) -> (&str, &str) {
             let mut split = s.split('-');
@@ -225,7 +231,7 @@ impl Thunderstore {
     pub fn dependencies<'a>(
         &'a self,
         version: &'a PackageVersion,
-    ) -> Result<HashSet<BorrowedMod<'a>>> {
+    ) -> (HashSet<BorrowedMod<'a>>, Vec<&'a str>) {
         self.resolve_deps(version.dependencies.iter())
     }
 }
@@ -269,7 +275,7 @@ fn load_from_cache(app: &AppHandle) -> Result<bool> {
 }
 
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
-    /* 
+    /*
     match load_from_cache(&app) {
         Ok(true) => {
             tokio::time::sleep(TIME_BETWEEN_LOADS / 2).await;
@@ -384,10 +390,10 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
 
     let _ = app.emit_all("status_update", None::<String>);
 
-    /* 
+    /*
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
-    
+
     let mut file = fs::File::create(cache_path(&manager)).context("failed to create cache file")?;
     file.write_all(b"[")?;
     file.write_all(text.as_bytes())?;

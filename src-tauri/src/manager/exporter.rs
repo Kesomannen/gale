@@ -9,6 +9,7 @@ use image::{imageops::FilterType, io::Reader as ImageReader, ImageFormat};
 use super::{config, ModManager, Profile, ProfileMod, ProfileModKind, Result};
 
 use crate::{command_util::StateMutex, fs_util, prefs::Prefs, thunderstore::{models::{LegacyProfileCreateResponse, PackageManifest}, ModRef, Thunderstore}, util::IoResultExt};
+use chrono::Utc;
 
 pub mod commands;
 
@@ -40,6 +41,7 @@ impl<'a> ExportMod<'a> {
 
         Ok(ProfileMod {
             enabled: self.enabled,
+            install_time: Utc::now(),
             kind: ProfileModKind::Remote(ModRef { 
                 package_uuid: package.uuid4,
                 version_uuid: version.uuid4,

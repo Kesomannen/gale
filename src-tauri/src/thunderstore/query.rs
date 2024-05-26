@@ -39,6 +39,7 @@ pub enum SortBy {
     LastUpdated,
     Downloads,
     Rating,
+    LastInstalled,
 }
 
 #[typeshare]
@@ -125,6 +126,7 @@ impl Queryable for BorrowedMod<'_> {
             SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
             SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
             SortBy::Rating => a.rating_score.cmp(&b.rating_score),
+            SortBy::LastInstalled => Ordering::Equal,
         };
 
         match args.descending {

@@ -104,7 +104,8 @@ export interface Mod {
 export enum SortBy {
 	LastUpdated = 'lastUpdated',
 	Downloads = 'downloads',
-	Rating = 'rating'
+	Rating = 'rating',
+	LastInstalled = 'lastInstalled',
 }
 
 export interface QueryModsArgs {

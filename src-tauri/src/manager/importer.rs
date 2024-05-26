@@ -184,7 +184,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 
                 Ok(thunderstore
                     .resolve_deps(deps.iter())
-                    .context("failed to resolve dependencies")?
+                    .0
                     .into_iter()
                     .filter(|dep| !profile.has_mod(&dep.package.uuid4))
                     .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
@@ -226,7 +226,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
         local_mod.icon = Some(mod_path);
     }
 
-    profile.mods.push(ProfileMod::local(local_mod));
+    profile.mods.push(ProfileMod::local_now(local_mod));
 
     save(&manager, &prefs)?;
 

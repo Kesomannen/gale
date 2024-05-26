@@ -94,6 +94,7 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![            
             thunderstore::commands::query_all_mods,
+            thunderstore::commands::missing_deps,
 
             prefs::commands::get_pref,
             prefs::commands::set_pref,

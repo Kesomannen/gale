@@ -16,11 +16,10 @@
 		label: string;
 	}
 
-	const sortOptions: SortOption[] = [
-		{ value: SortBy.LastUpdated, label: 'Last updated' },
-		{ value: SortBy.Rating, label: 'Rating' },
-		{ value: SortBy.Downloads, label: 'Downloads' }
-	];
+	export let sortOptions: {
+		value: SortBy;
+		label: string;
+	}[];
 
 	let listStart = 0;
 	let listEnd = 0;
@@ -67,6 +66,10 @@
 	$: if (listEnd > mods.length - 1 && mods.length === maxCount) {
 		maxCount += 20;
 	}
+
+	$: if (mods.length < maxCount) {
+		console.log('out of mods');
+	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
@@ -108,14 +111,14 @@
 			</Select.Root>
 		</div>
 
-		<div class="flex gap-2 pb-1 pr-4 text-slate-300">
-			
-
+		<div class="flex gap-2 pr-4 pl-1 text-slate-300">
 			<Checkbox bind:value={includeNsfw} /> <span class="mr-3">Show NSFW</span>
 			<Checkbox bind:value={includeDeprecated} /> <span>Show deprecated</span>
 		</div>
 
 		<slot name="header" />
+
+		<div class="h-[1px] my-3 mr-4 bg-gray-600" />
 
 		{#if mods.length === 0}
 			<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>

@@ -18,11 +18,12 @@ use crate::{
     prefs::Prefs,
     thunderstore::{
         models::FrontendProfileMod,
-        query::{self, QueryModsArgs, Queryable},
+        query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
     },
     util::IoResultExt,
 };
+use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use tauri::{AppHandle, Manager};
 
@@ -93,24 +94,31 @@ pub struct LocalMod {
 pub struct ProfileMod {
     #[serde(default = "default_true")]
     enabled: bool,
+    #[serde(default = "Utc::now")]
+    install_time: DateTime<Utc>,
     #[serde(flatten)]
     kind: ProfileModKind,
 }
 
 impl ProfileMod {
-    fn new(kind: ProfileModKind) -> Self {
+    fn new(install_time: DateTime<Utc>, kind: ProfileModKind) -> Self {
         Self {
             kind,
+            install_time,
             enabled: true,
         }
     }
 
-    fn local(data: LocalMod) -> Self {
-        Self::new(ProfileModKind::Local(Box::new(data)))
+    fn now(kind: ProfileModKind) -> Self {
+        Self::new(Utc::now(), kind)
     }
 
-    fn remote(mod_ref: ModRef) -> Self {
-        Self::new(ProfileModKind::Remote(mod_ref))
+    fn local_now(data: LocalMod) -> Self {
+        Self::now(ProfileModKind::Local(Box::new(data)))
+    }
+
+    fn remote_now(mod_ref: ModRef) -> Self {
+        Self::now(ProfileModKind::Remote(mod_ref))
     }
 
     fn uuid(&self) -> &Uuid {
@@ -140,6 +148,7 @@ impl ProfileMod {
 
         Ok(QueryableProfileMod {
             kind,
+            install_time: self.install_time,
             enabled: self.enabled,
         })
     }
@@ -199,6 +208,7 @@ impl ProfileModKind {
 
 struct QueryableProfileMod<'a> {
     enabled: bool,
+    install_time: DateTime<Utc>,
     kind: QueryableProfileModKind<'a>,
 }
 
@@ -227,6 +237,10 @@ impl<'a> Queryable for QueryableProfileMod<'a> {
 
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
         use QueryableProfileModKind as Kind;
+
+        if let SortBy::LastInstalled = args.sort_by {
+            return self.install_time.cmp(&other.install_time).reverse();
+        }
 
         match (&self.kind, &other.kind) {
             (Kind::Remote(a), Kind::Remote(b)) => a.cmp(b, args),
@@ -333,17 +347,13 @@ impl Profile {
         self.remote_mods()
             .filter(|(other, _)| other.package_uuid != target_mod.package.uuid4)
             .map(|(other, _)| other.borrow(thunderstore))
-            .filter_map_ok(|other| match thunderstore.dependencies(other.version) {
-                Ok(deps) => {
-                    let is_dependant = deps.iter().any(|dep| dep.package == target_mod.package);
-                    match is_dependant {
-                        true => Some(Ok(other)),
-                        false => None,
-                    }
+            .filter_map_ok(|other| {
+                let deps = thunderstore.dependencies(other.version).0;
+                match deps.iter().any(|dep| dep.package == target_mod.package) {
+                    true => Some(other),
+                    false => None,
                 }
-                Err(e) => Some(Err(e)),
             })
-            .flatten_ok() // filter out packages that do not depend on the target one, while keeping errors
             .collect()
     }
 
@@ -520,7 +530,8 @@ impl Profile {
         thunderstore: &Thunderstore,
     ) -> Result<Option<Vec<Dependant>>> {
         let disabled_deps = thunderstore
-            .dependencies(borrowed_mod.version)?
+            .dependencies(borrowed_mod.version)
+            .0
             .into_iter()
             .filter_map(|dep| match self.get_mod(&dep.package.uuid4) {
                 Ok(profile_mod) => match profile_mod.enabled {

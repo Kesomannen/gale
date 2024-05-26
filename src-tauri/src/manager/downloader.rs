@@ -49,7 +49,8 @@ fn missing_deps<'a>(
     thunderstore: &'a Thunderstore,
 ) -> Result<impl Iterator<Item = BorrowedMod<'a>>> {
     Ok(thunderstore
-        .dependencies(borrowed_mod.version)?
+        .dependencies(borrowed_mod.version)
+        .0
         .into_iter()
         .chain(iter::once(borrowed_mod))
         .filter(|dep| !profile.has_mod(&dep.package.uuid4)))
@@ -87,7 +88,7 @@ fn try_cache_install(
         true => {
             let name = &borrowed_mod.package.full_name;
             install_from_disk(path, &profile.path, name)?;
-            profile.mods.push(ProfileMod::remote(borrowed_mod.into()));
+            profile.mods.push(ProfileMod::remote_now(borrowed_mod.reference()));
             Ok(true)
         }
         false => Ok(false),

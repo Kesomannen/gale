@@ -1,9 +1,8 @@
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
-	import Popup from '$lib/components/Popup.svelte';
+	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { Dependant, Mod, ModActionResponse } from '$lib/models';
-	import { Button, Dialog } from 'bits-ui';
+	import type { Dependant, Mod } from '$lib/models';
 
 	export let title: string;
 	export let verb: string;
@@ -41,26 +40,23 @@
 	}
 </script>
 
-<Popup {title} bind:open onClose={onExecute}>
-	{#if mod}
-		<Dialog.Description class="text-slate-300">
-			{description.replaceAll('%s', mod.name)}
-			<ul class="mt-1">
-				{#each dependants as dependant}
-					<li>- {dependant.name}</li>
-				{/each}
-			</ul>
-		</Dialog.Description>
+<ConfirmPopup
+	{title}
+	{onCancel}
+	bind:open
+	items={dependants}
+	description={description.replaceAll('%s', mod?.name ?? "Unknown")}
+	let:item
+>
+	<li>- {item.name}</li>
 
-		<Dialog.Close class="flex w-full justify-end mt-3 mr-0.5 gap-2">
-			<BigButton onClick={onCancel} color="gray">Cancel</BigButton>
-			<BigButton onClick={executeOne} color="red" outline={true}>
-				{verb}
-				{mod.name} only
-			</BigButton>
-			<BigButton onClick={executeAll} color={isPositive ? 'blue' : 'red'} fontWeight="semibold">
-				{verb} all
-			</BigButton>
-		</Dialog.Close>
-	{/if}
-</Popup>
+	<svelte:fragment slot="buttons">
+		<BigButton onClick={executeOne} color="red" outline={true}>
+			{verb}
+			{mod?.name} only
+		</BigButton>
+		<BigButton onClick={executeAll} color={isPositive ? 'blue' : 'red'} fontWeight="semibold">
+			{verb} all
+		</BigButton>
+	</svelte:fragment>
+</ConfirmPopup>
