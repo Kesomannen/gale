@@ -5,6 +5,7 @@
 ### Added
 
 - Soft cache clear (only removes unused mods)
+- Dialog when installing a mod with missing dependencies (instead of throwing an error)
 
 ### Changed
 
