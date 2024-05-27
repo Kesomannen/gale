@@ -1,4 +1,8 @@
-use std::{fs::{self, File}, io::{self, Write}, path::{Path, PathBuf}};
+use std::{
+    fs::{self, DirEntry, File},
+    io::{self, Write},
+    path::{Path, PathBuf},
+};
 
 use zip::{write::FileOptions, ZipWriter};
 
@@ -29,8 +33,7 @@ pub fn copy_dir(src: &Path, dest: &Path) -> Result<(), io::Error> {
 }
 
 pub fn copy_contents(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io::Error> {
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
+    for entry in read_dir(src)? {
         let entry_path = entry.path();
         let file_name = entry_path.file_name().unwrap();
         let new_path = dest.join(file_name);
@@ -48,6 +51,10 @@ pub fn copy_contents(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io:
     }
 
     Ok(())
+}
+
+pub fn read_dir(path: &Path) -> io::Result<impl Iterator<Item = DirEntry>> {
+    fs::read_dir(path).map(|entries| entries.filter_map(Result::ok))
 }
 
 pub fn add_extension<P: AsRef<Path>>(path: &mut PathBuf, extension: P) {
@@ -70,7 +77,8 @@ pub struct Zip {
 impl Zip {
     pub fn write<P: AsRef<Path>>(&mut self, path: P, data: &[u8]) -> Result<(), io::Error> {
         #[allow(deprecated)]
-        self.writer.start_file_from_path(path.as_ref(), self.options)?;
+        self.writer
+            .start_file_from_path(path.as_ref(), self.options)?;
         self.writer.write_all(data)?;
         Ok(())
     }
@@ -81,7 +89,8 @@ impl Zip {
 
     pub fn add_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<(), io::Error> {
         #[allow(deprecated)]
-        self.writer.add_directory_from_path(path.as_ref(), self.options)?;
+        self.writer
+            .add_directory_from_path(path.as_ref(), self.options)?;
         Ok(())
     }
 }
@@ -89,8 +98,7 @@ impl Zip {
 pub fn zip(path: &Path) -> Result<Zip, io::Error> {
     let writer = ZipWriter::new(File::create(path)?);
 
-    let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Stored);
+    let options = FileOptions::default().compression_method(zip::CompressionMethod::Stored);
 
     Ok(Zip { writer, options })
 }

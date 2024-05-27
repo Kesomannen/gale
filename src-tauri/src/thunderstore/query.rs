@@ -128,7 +128,7 @@ impl Queryable for BorrowedMod<'_> {
 
         match args.sort_by {
             SortBy::Newest => a.date_created.cmp(&b.date_created),
-            SortBy::Name => a.full_name.cmp(&b.full_name),
+            SortBy::Name => a.name.cmp(&b.name),
             SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
             SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
             SortBy::Rating => a.rating_score.cmp(&b.rating_score),

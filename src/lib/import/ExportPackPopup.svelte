@@ -30,7 +30,7 @@
 		icon;
 
 	function reset() {
-		name = get(currentProfile);
+		name = get(currentProfile).name;
 		description = '';
 		versionNumber = '1.0.0';
 		websiteUrl = '';
@@ -75,7 +75,7 @@
 
 <Popup title="Export modpack" bind:open={isOpen}>
 	<Dialog.Description class="text-slate-400">
-		Export {$currentProfile} as a Thunderstore modpack
+		Export {$currentProfile.name} as a Thunderstore modpack
 	</Dialog.Description>
 	<div class="flex flex-col mt-4 gap-1">
 		<InputField label="Name" placeholder="Enter a name..." bind:value={name}>

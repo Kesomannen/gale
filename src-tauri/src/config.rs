@@ -13,15 +13,15 @@ use thiserror::Error;
 use typeshare::typeshare;
 use walkdir::WalkDir;
 
-use crate::fs_util;
+use crate::{fs_util, manager::Profile};
 
-use super::Profile;
-use tauri::AppHandle;
 use log::debug;
+use tauri::AppHandle;
 
 pub mod commands;
 pub mod de;
 pub mod ser;
+
 #[cfg(test)]
 mod tests;
 

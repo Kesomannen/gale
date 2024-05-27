@@ -4,6 +4,7 @@
 
 ### Added
 
+- Option to automatically transfer profiles from r2modman/Thunderstore Mod Manager
 - Soft cache clear (only removes unused mods)
 - Dialog when installing a mod with missing dependencies (instead of throwing an error)
 
@@ -19,7 +20,7 @@
 
 - Zoom factor not being applied when reopening the app
 - Open log file button
-- Modpack icon resizing outputing an incorrect PNG
+- Modpack icon resizing outputting an incorrect PNG
 
 ## 0.4.1 (2024-05-23)
 

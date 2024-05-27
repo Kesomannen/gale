@@ -19,16 +19,17 @@ use crate::{
 
 use super::{
     downloader,
-    exporter::{ExportManifest, PROFILE_DATA_PREFIX},
+    exporter::{R2Manifest, R2Mod, PROFILE_DATA_PREFIX},
     ModManager,
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
+use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use itertools::Itertools;
 
 pub mod commands;
+pub mod r2modman;
 
 pub fn setup(_app: &AppHandle) -> Result<()> {
     Ok(())
@@ -46,7 +47,7 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
     pub name: String,
-    pub temp_path: PathBuf,
+    pub config_path: PathBuf,
     pub mods: Vec<ProfileMod>,
 }
 
@@ -69,22 +70,23 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     let manifest = fs::read_to_string(temp_path.join("export.r2x"))
         .context("failed to read profile manifest")?;
 
-    // manifest is in r2modman's yaml format
-    let manifest: ExportManifest =
+    let manifest: R2Manifest =
         serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
 
-    let mods = manifest
-        .mods
-        .into_iter()
-        .map(|export_mod| export_mod.into_profile_mod(&thunderstore))
-        .collect::<Result<Vec<_>>>()
-        .context("failed to resolve mod references")?;
-
     Ok(ImportData {
-        mods,
-        temp_path,
+        mods: resolve_r2mods(manifest.mods.into_iter(), &thunderstore)?,
+        config_path: temp_path.join("config"),
         name: manifest.profile_name.to_owned(),
     })
+}
+
+fn resolve_r2mods<'a>(
+    mods: impl Iterator<Item = R2Mod<'a>>,
+    thunderstore: &Thunderstore,
+) -> Result<Vec<ProfileMod>> {
+    mods.map(|r2_mod| r2_mod.into_profile_mod(thunderstore))
+        .collect::<Result<Vec<_>>>()
+        .context("failed to resolve mod references")
 }
 
 async fn import_data(data: ImportData, app: &AppHandle) -> Result<()> {
@@ -94,7 +96,8 @@ async fn import_data(data: ImportData, app: &AppHandle) -> Result<()> {
 
         let game = manager.active_game_mut();
         if let Some(index) = game.profiles.iter().position(|p| p.name == data.name) {
-            game.delete_profile(index, true).context("failed to delete existing profile")?;
+            game.delete_profile(index, true)
+                .context("failed to delete existing profile")?;
         }
 
         let profile = game.create_profile(data.name)?;
@@ -104,7 +107,7 @@ async fn import_data(data: ImportData, app: &AppHandle) -> Result<()> {
         config_dir.push("config");
         fs::create_dir_all(&config_dir)?;
 
-        fs_util::copy_contents(&data.temp_path.join("config"), &config_dir, true)
+        fs_util::copy_contents(&data.config_path, &config_dir, true)
             .context("error while importing config")?;
     };
 
@@ -156,7 +159,7 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
 async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     ensure!(path.is_dir(), "mod path is not a directory");
 
-    let manifest = read_manifest(&mut path)?;
+    let manifest = read_local_manifest(&mut path)?;
 
     let uuid = Uuid::new_v4();
 
@@ -233,7 +236,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn read_manifest(path: &mut PathBuf) -> Result<Option<PackageManifest>> {
+fn read_local_manifest(path: &mut PathBuf) -> Result<Option<PackageManifest>> {
     path.push("manifest.json");
 
     let manifest = match path.exists() {

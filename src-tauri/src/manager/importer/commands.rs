@@ -5,7 +5,7 @@ use crate::command_util::Result;
 use anyhow::anyhow;
 use tauri::AppHandle;
 use uuid::Uuid;
-use super::ImportData;
+use super::{r2modman, ImportData};
 
 #[tauri::command]
 pub async fn import_data(data: ImportData, app: AppHandle) -> Result<()> {
@@ -32,6 +32,14 @@ pub fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
 #[tauri::command]
 pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
     super::import_local_mod(path, &app).await?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn import_r2modman(app: AppHandle) -> Result<()> {
+    let path = PathBuf::from(r"C:\Users\bobbo\AppData\Roaming\r2modmanPlus-local");
+    r2modman::import_r2modman(&path, &app).await?;
 
     Ok(())
 }

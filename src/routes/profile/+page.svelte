@@ -1,11 +1,9 @@
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
 	import {
-		type Dependant,
 		type Mod,
 		type ModActionResponse,
 		type QueryModsArgs,
@@ -17,16 +15,15 @@
 	import { currentGame, currentProfile } from '$lib/profile';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button, Dialog, Switch } from 'bits-ui';
-	import { onMount } from 'svelte';
+	import { Button, Switch } from 'bits-ui';
 
 	const sortOptions = [
-		{ value: SortBy.InstallDate, label: 'Last installed' },
-		{ value: SortBy.LastUpdated, label: 'Last updated' },
-		{ value: SortBy.Newest, label: 'Newest' },
-		{ value: SortBy.Rating, label: 'Rating' },
-		{ value: SortBy.Downloads, label: 'Downloads' },
-		{ value: SortBy.Name, label: 'Name' }
+		SortBy.InstallDate,
+		SortBy.LastUpdated,
+		SortBy.Newest,
+		SortBy.Rating,
+		SortBy.Downloads,
+		SortBy.Name
 	];
 
 	let mods: Mod[];

@@ -403,5 +403,5 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
 }
 
 fn cache_path(manager: &ModManager) -> PathBuf {
-    manager.active_game().path().join("thunderstore_cache.json")
+    manager.active_game().path.join("thunderstore_cache.json")
 }

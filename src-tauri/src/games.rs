@@ -10,7 +10,7 @@ pub struct Game {
     pub steam_id: u32,
 }
 
-fn get_default_package_url(id: &str) -> String {
+fn default_package_url(id: &str) -> String {
     format!("https://thunderstore.io/c/{}/api/v1/package/", id)
 }
 
@@ -19,7 +19,7 @@ impl Game {
         let id = display_name.to_kebab_case();
 
         Self {
-            url: get_default_package_url(&id),
+            url: default_package_url(&id),
             id,
             display_name: display_name.to_owned(),
             steam_id,
@@ -33,7 +33,7 @@ impl Game {
 
     fn with_id(mut self, id: &'static str) -> Self {
         self.id = id.to_owned();
-        self.url = get_default_package_url(id);
+        self.url = default_package_url(id);
         self
     }
 }

@@ -19,6 +19,7 @@
 	import SelectGamePopup from './SelectGamePopup.svelte';
 	import { fly, slide } from 'svelte/transition';
 	import { quartOut } from 'svelte/easing';
+	import BigButton from '$lib/components/BigButton.svelte';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -116,9 +117,7 @@
 						{profile.name}
 					</span>
 
-					{#if i == activeProfileIndex}
-						<Icon icon="mdi:check" class="text-green-500 text-lg ml-2 mr-2" />
-					{/if}
+					<Icon icon="mdi:check" class="text-green-500 text-lg mx-2 {i !== activeProfileIndex && 'invisible'}" />
 
 					<div
 						class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs font-bold mr-1"
@@ -148,6 +147,10 @@
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
+
+	<BigButton color="red" onClick={() => invokeCommand('import_r2modman')}>
+		Import from r2modman
+	</BigButton>
 </div>
 
 <Popup title="Launching {$currentGame?.displayName}..." bind:open={launchGamePopupOpen}>

@@ -15,12 +15,7 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 
-	const sortOptions = [
-		{ value: SortBy.LastUpdated, label: 'Last updated' },
-		{ value: SortBy.Newest, label: 'Newest' },
-		{ value: SortBy.Rating, label: 'Rating' },
-		{ value: SortBy.Downloads, label: 'Downloads' },
-	];
+	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
 	let mods: Mod[];
 	let queryArgs: QueryModsArgs;

@@ -136,7 +136,7 @@
 		{/if}
 	</div>
 
-	<div class="flex flex-col flex-grow p-4 overflow-y-auto">
+	<div class="flex-grow p-4 overflow-y-auto">
 		{#if selectedFile}
 			<div class="text-slate-200 text-lg font-semibold truncate flex-shrink-0">
 				{selectedFile.content.name}
@@ -158,9 +158,9 @@
 
 				{#each selectedSection.entries as entry (entry.content)}
 					{#if entry.type === 'untagged'}
-						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">
+						<div class="flex items-center text-slate-300 pl-2 h-7 my-0.5">
 							<div
-								class="text-slate-300 mr-auto pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
+								class="text-slate-300 pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
 							>
 								{sentenceCase(entry.content.name)}
 							</div>
@@ -172,7 +172,7 @@
 							/>
 						</div>
 					{:else}
-						<div class="flex items-center text-slate-300 pl-2 h-7 mb-1">
+						<div class="flex items-center text-slate-300 pl-2 h-7 my-1">
 							<Tooltip
 								side="top"
 								class="w-[50%] text-slate-300 mr-auto pr-2 cursor-auto text-left truncate flex-shrink-0"

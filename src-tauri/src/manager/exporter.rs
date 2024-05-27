@@ -1,34 +1,48 @@
-use serde::{Deserialize, Serialize};
 use anyhow::Context;
-use std::{fs, io::Cursor, path::{Path, PathBuf}};
-use uuid::Uuid;
 use base64::{prelude::BASE64_STANDARD, Engine};
-use typeshare::typeshare;
 use image::{imageops::FilterType, io::Reader as ImageReader, ImageFormat};
+use serde::{Deserialize, Serialize};
+use std::{
+    fs,
+    io::Cursor,
+    path::{Path, PathBuf},
+};
+use typeshare::typeshare;
+use uuid::Uuid;
 
-use super::{config, ModManager, Profile, ProfileMod, ProfileModKind, Result};
+use super::{ModManager, Profile, ProfileMod, ProfileModKind, Result};
 
-use crate::{command_util::StateMutex, fs_util, prefs::Prefs, thunderstore::{models::{LegacyProfileCreateResponse, PackageManifest}, ModRef, Thunderstore}, util::IoResultExt};
+use crate::{
+    command_util::StateMutex,
+    config, fs_util,
+    prefs::Prefs,
+    thunderstore::{
+        models::{LegacyProfileCreateResponse, PackageManifest},
+        ModRef, Thunderstore,
+    },
+    util::IoResultExt,
+};
 use chrono::Utc;
 
 pub mod commands;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ExportManifest<'a> {
+pub struct R2Manifest<'a> {
     pub profile_name: &'a str,
-    pub mods: Vec<ExportMod<'a>>,
+    pub mods: Vec<R2Mod<'a>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ExportMod<'a> {
+pub struct R2Mod<'a> {
     pub name: &'a str,
+    #[serde(alias = "versionNumber")]
     pub version: ExportVersion,
     pub enabled: bool,
 }
 
-impl<'a> ExportMod<'a> {
+impl<'a> R2Mod<'a> {
     pub fn into_profile_mod(self, thunderstore: &Thunderstore) -> Result<ProfileMod> {
         let package = thunderstore.find_package(self.name)?;
         let semver = semver::Version::from(self.version);
@@ -42,10 +56,10 @@ impl<'a> ExportMod<'a> {
         Ok(ProfileMod {
             enabled: self.enabled,
             install_time: Utc::now(),
-            kind: ProfileModKind::Remote(ModRef { 
+            kind: ProfileModKind::Remote(ModRef {
                 package_uuid: package.uuid4,
                 version_uuid: version.uuid4,
-            })
+            }),
         })
     }
 
@@ -96,11 +110,11 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
 
     let mods = profile
         .remote_mods()
-        .map(|(mod_ref, enabled)| ExportMod::from_mod_ref(mod_ref, enabled, thunderstore))
+        .map(|(mod_ref, enabled)| R2Mod::from_mod_ref(mod_ref, enabled, thunderstore))
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve profile mods")?;
 
-    let manifest = ExportManifest {
+    let manifest = R2Manifest {
         profile_name: &profile.name,
         mods,
     };
@@ -201,7 +215,7 @@ fn export_pack(
 
     let img = ImageReader::open(&args.icon)?.decode()?;
     let img = img.resize_exact(256, 256, FilterType::Lanczos3);
-    
+
     let mut bytes = Vec::new();
     img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
     zip.write("icon.png", &bytes)?;

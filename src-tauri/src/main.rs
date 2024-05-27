@@ -18,11 +18,12 @@ extern crate webkit2gtk;
 extern crate objc;
 
 mod command_util;
-mod fs_util;
 mod games;
 mod manager;
 mod prefs;
 mod thunderstore;
+mod config;
+mod fs_util;
 mod util;
 
 #[derive(Debug)]
@@ -129,17 +130,18 @@ fn main() {
             manager::importer::commands::import_code,
             manager::importer::commands::import_file,
             manager::importer::commands::import_local_mod,
+            manager::importer::commands::import_r2modman,
 
             manager::exporter::commands::export_code,
             manager::exporter::commands::export_file,
             manager::exporter::commands::export_pack,
 
-            manager::config::commands::get_config_files,
-            manager::config::commands::set_tagged_config_entry,
-            manager::config::commands::set_untagged_config_entry,
-            manager::config::commands::reset_config_entry,
-            manager::config::commands::open_config_file,
-            manager::config::commands::delete_config_file,
+            config::commands::get_config_files,
+            config::commands::set_tagged_config_entry,
+            config::commands::set_untagged_config_entry,
+            config::commands::reset_config_entry,
+            config::commands::open_config_file,
+            config::commands::delete_config_file,
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -149,6 +151,7 @@ fn main() {
 
             prefs::setup(&handle).context("failed to initialize preferences")?;
             manager::setup(&handle).context("failed to initialize manager")?;
+            config::setup(&handle).context("failed to initialize mod config")?;
             thunderstore::setup(&handle).context("failed to initialize Thunderstore")?;
 
             Ok(())

@@ -28,9 +28,9 @@
     min={range.start}
     max={range.end}
     step={type === 'int32' ? 1 : 0.01}
-    class="flex-grow relative flex items-center group transition-none"
+    class="flex flex-grow relative items-center group transition-none"
 >
-    <div class="flex-grow bg-gray-900 h-2 rounded-full">
+    <div class="bg-gray-900 h-2 rounded-full w-full">
         <Slider.Range class="h-full rounded-full bg-gray-700" />
     </div>
     {#each thumbs as thumb}

@@ -27,7 +27,7 @@
 	<Dialog.Description class="flex flex-center text-slate-400 mb-2">
 		{#await codePromise}
 			<Icon icon="mdi:loading" class="animate-spin text-lg mr-2" />
-			Exporting {$currentProfile} as code...
+			Exporting {$currentProfile.name} as code...
 		{:then}
 			Export complete! The code has been copied to your clipboard.
 		{/await}

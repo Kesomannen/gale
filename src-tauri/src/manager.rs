@@ -13,22 +13,17 @@ use uuid::Uuid;
 use walkdir::WalkDir;
 
 use crate::{
-    fs_util,
-    games::{self, Game},
-    prefs::Prefs,
-    thunderstore::{
+    config, fs_util, games::{self, Game}, prefs::Prefs, thunderstore::{
         models::FrontendProfileMod,
         query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
-    },
-    util::IoResultExt,
+    }, util::IoResultExt
 };
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use tauri::{AppHandle, Manager};
 
 pub mod commands;
-pub mod config;
 pub mod downloader;
 pub mod exporter;
 pub mod importer;
@@ -45,13 +40,12 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 
     importer::setup(app).context("failed to initialize importer")?;
     downloader::setup(app).context("failed to initialize downloader")?;
-    config::setup(app).context("failed to initialize mod config")?;
 
     Ok(())
 }
 
 pub struct ModManager {
-    games: HashMap<&'static String, ManagerGame>,
+    pub games: HashMap<&'static String, ManagerGame>,
     pub active_game: &'static Game,
 }
 
@@ -62,10 +56,10 @@ struct ManagerSaveData {
 }
 
 pub struct ManagerGame {
-    profiles: Vec<Profile>,
-    path: PathBuf,
-    favorite: bool,
-    active_profile_index: usize,
+    pub profiles: Vec<Profile>,
+    pub path: PathBuf,
+    pub favorite: bool,
+    pub active_profile_index: usize,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -277,11 +271,11 @@ pub struct ProfileManifest<'a> {
     mods: Vec<ProfileMod>,
 }
 
-struct Profile {
-    name: String,
-    path: PathBuf,
-    mods: Vec<ProfileMod>,
-    config: Vec<config::LoadFileResult>,
+pub struct Profile {
+    pub name: String,
+    pub path: PathBuf,
+    pub mods: Vec<ProfileMod>,
+    pub config: Vec<config::LoadFileResult>,
 }
 
 impl Profile {
@@ -578,10 +572,6 @@ impl Profile {
 }
 
 impl ManagerGame {
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
-
     fn create_profile(&mut self, name: String) -> Result<&Profile> {
         ensure!(
             Profile::is_valid_name(&name),
@@ -751,17 +741,17 @@ impl ModManager {
             .expect("active game not found")
     }
 
-    fn active_game_mut(&mut self) -> &mut ManagerGame {
+    pub fn active_game_mut(&mut self) -> &mut ManagerGame {
         self.games
             .get_mut(&self.active_game.id)
             .expect("active game not found")
     }
 
-    fn active_profile(&self) -> &Profile {
+    pub fn active_profile(&self) -> &Profile {
         self.active_game().active_profile()
     }
 
-    fn active_profile_mut(&mut self) -> &mut Profile {
+    pub fn active_profile_mut(&mut self) -> &mut Profile {
         self.active_game_mut().active_profile_mut()
     }
 

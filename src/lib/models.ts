@@ -131,11 +131,6 @@ export interface QueryModsArgs {
 	sortOrder: SortOrder;
 }
 
-export interface SelectItem {
-	value: string;
-	label: string;
-}
-
 export interface ConfigEntryId {
 	file: LoadFileResult;
 	section: ConfigSection;
