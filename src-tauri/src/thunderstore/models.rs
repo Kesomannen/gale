@@ -3,13 +3,14 @@ use std::hash::Hash;
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
+use chrono::{DateTime, Utc};
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
     pub categories: Vec<String>,
-    pub date_created: String,
-    pub date_updated: String,
+    pub date_created: DateTime<Utc>,
+    pub date_updated: DateTime<Utc>,
     pub donation_link: Option<String>,
     pub full_name: String,
     pub has_nsfw_content: bool,
@@ -52,7 +53,7 @@ impl PartialEq for PackageListing {
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageVersion {
-    pub date_created: String,
+    pub date_created: DateTime<Utc>,
     pub dependencies: Vec<String>,
     pub description: String,
     pub download_url: String,

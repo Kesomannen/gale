@@ -6,8 +6,9 @@
 	import Icon from '@iconify/svelte';
 	import { clipboard, dialog } from '@tauri-apps/api';
 	import InputField from '$lib/components/InputField.svelte';
-	import { profileNames, refreshProfiles } from '$lib/profile';
+	import { profiles, refreshProfiles } from '$lib/profile';
 	import BigButton from '$lib/components/BigButton.svelte';
+	import Label from '$lib/components/Label.svelte';
 
 	export let open: boolean;
 	export let data: ImportData | undefined;
@@ -23,7 +24,7 @@
 		getKeyFromClipboard();
 	}
 
-	$: nameAvailable = mode === 'overwrite' || !profileNames.includes(name);
+	$: nameAvailable = mode === 'overwrite' || !profiles.includes(name);
 
 	async function getKeyFromClipboard() {
 		key = (await clipboard.readText()) ?? '';
@@ -34,7 +35,7 @@
 		try {
 			data = await invokeCommand<ImportData>('import_code', { key });
 			name = data.name;
-			mode = profileNames.includes(name) ? 'overwrite' : 'new';
+			mode = profiles.includes(name) ? 'overwrite' : 'new';
 		} catch (e) {
 			open = false;
 		} finally {
@@ -68,16 +69,16 @@
 				<Tabs.Trigger
 					value="new"
 					class="flex-grow rounded-lg px-2 py-0.5
-				                               hover:bg-gray-800 hover:text-slate-100
-																			 data-[state=active]:bg-gray-700 data-[state=active]:text-slate-100 data-[state=active]:font-semibold"
+								hover:bg-gray-800 hover:text-slate-100
+								data-[state=active]:bg-gray-700 data-[state=active]:text-slate-100 data-[state=active]:font-semibold"
 				>
 					Create new
 				</Tabs.Trigger>
 				<Tabs.Trigger
 					value="overwrite"
 					class="flex-grow rounded-lg px-2 py-0.5
-																							hover:bg-gray-800 hover:text-slate-100
-																							data-[state=active]:bg-gray-700 data-[state=active]:text-slate-100 data-[state=active]:font-semibold"
+							hover:bg-gray-800 hover:text-slate-100
+							data-[state=active]:bg-gray-700 data-[state=active]:text-slate-100 data-[state=active]:font-semibold"
 				>
 					Overwrite existing
 				</Tabs.Trigger>
@@ -85,7 +86,7 @@
 			<Tabs.Content value="new">
 				<InputField label="Profile name" bind:value={name} />
 				{#if !nameAvailable}
-					<div class="flex items-center gap-1 text-red-400 text-md font-bold pl-36 mt-1">
+					<div class="flex items-center gap-1 text-red-400 text-md font-bold pl-52 mt-1">
 						<Icon icon="mdi:error" class="text-lg" />
 						Profile '{name}' already exists
 					</div>
@@ -93,10 +94,10 @@
 			</Tabs.Content>
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
-					<div class="text-slate-300 w-36 truncate">Choose profile</div>
+					<Label text="Choose profile" />
 
 					<Select.Root
-						items={profileNames.map((name) => ({ value: name, label: name }))}
+						items={profiles.map((name) => ({ value: name, label: name }))}
 						selected={{ value: name, label: name }}
 						onSelectedChange={(selection) => (name = selection?.value ?? name)}
 						bind:open={profileDropdownOpen}
@@ -116,7 +117,7 @@
 							class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600"
 							transitionConfig={{ duration: 100 }}
 						>
-							{#each profileNames as profileName}
+							{#each profiles as profileName}
 								<Select.Item
 									value={profileName}
 									class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"

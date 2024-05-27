@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { invokeCommand } from './invoke';
-import type { FiltersResponse, Game, GameInfo, ProfileInfo } from './models';
+import type { FiltersResponse, Game, GameInfo, ProfileInfo, ProfilesInfo } from './models';
 import { fetch } from '@tauri-apps/api/http';
 
 export let games: Game[] = [];
@@ -8,8 +8,11 @@ export let categories: string[] = [];
 export const currentGame = writable<Game | undefined>(undefined);
 
 export let activeProfileIndex: number = 0;
-export let profileNames: string[] = [];
-export const currentProfile = writable<string>('Loading...');
+export let profiles: ProfileInfo[] = [];
+export const currentProfile = writable<ProfileInfo>({
+	name: '',
+	modCount: 0
+});
 
 refreshGames();
 
@@ -40,10 +43,10 @@ export async function refreshCategories() {
 }
 
 export async function refreshProfiles() {
-	const info: ProfileInfo = await invokeCommand('get_profile_info');
+	const info: ProfilesInfo = await invokeCommand('get_profile_info');
 	activeProfileIndex = info.activeIndex;
-	profileNames = info.names;
-	currentProfile.set(profileNames[activeProfileIndex]);
+	profiles = info.profiles;
+	currentProfile.set(profiles[activeProfileIndex]);
 }
 
 export async function setActiveProfile(index: number) {

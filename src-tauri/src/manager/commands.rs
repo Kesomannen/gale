@@ -93,18 +93,29 @@ pub fn set_active_game(
 #[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProfileInfo {
-    names: Vec<String>,
+pub struct ProfilesInfo {
+    profiles: Vec<ProfileInfo>,
     active_index: usize,
 }
 
+#[typeshare]
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileInfo {
+    name: String,
+    mod_count: usize,
+}
+
 #[tauri::command]
-pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfileInfo {
+pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfilesInfo {
     let manager = manager.lock().unwrap();
     let game = manager.active_game();
 
-    ProfileInfo {
-        names: game.profiles.iter().map(|p| p.name.clone()).collect(),
+    ProfilesInfo {
+        profiles: game.profiles.iter().map(|p| ProfileInfo { 
+            name: p.name.clone(),
+            mod_count: p.mods.len(),
+        }).collect(),
         active_index: game.active_profile_index,
     }
 }

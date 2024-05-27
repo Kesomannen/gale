@@ -21,10 +21,12 @@
 	import { onMount } from 'svelte';
 
 	const sortOptions = [
-		{ value: SortBy.LastInstalled, label: 'Last installed' },
+		{ value: SortBy.InstallDate, label: 'Last installed' },
 		{ value: SortBy.LastUpdated, label: 'Last updated' },
+		{ value: SortBy.Newest, label: 'Newest' },
 		{ value: SortBy.Rating, label: 'Rating' },
-		{ value: SortBy.Downloads, label: 'Downloads' }
+		{ value: SortBy.Downloads, label: 'Downloads' },
+		{ value: SortBy.Name, label: 'Name' }
 	];
 
 	let mods: Mod[];
@@ -117,7 +119,7 @@
 	</div>
 	<div slot="header">
 		{#if updates.length > 0}
-			<div class="text-blue-100 bg-blue-600 ml-2 mr-6 mb-2 px-4 py-2 rounded-lg">
+			<div class="text-blue-100 bg-blue-600 ml-1 mr-6 mb-2 px-4 py-2 rounded-lg">
 				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-1 mb-0.5 inline" />
 				There {updates.length === 1 ? 'is' : 'are'} <strong>{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.

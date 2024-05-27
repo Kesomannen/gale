@@ -32,14 +32,11 @@
 		>
 			{mod.version ?? ''}
 		</span>
-		{#if mod.isPinned}
-			<Icon class="text-slate-500 inline mb-1" icon="mdi:pin" />
-		{/if}
 		{#if mod.isDeprecated}
 			<Icon class="text-red-500 inline mb-1" icon="mdi:error" />
 		{/if}
 		{#if isOutdated(mod)}
-			<Icon class=" text-blue-500 inline mb-1" icon="mdi:arrow-up-circle" />
+			<Icon class=" text-blue-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
 		{/if}
 		<div
 			class="truncate {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-300/80'}"

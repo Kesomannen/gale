@@ -238,8 +238,8 @@ impl<'a> Queryable for QueryableProfileMod<'a> {
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
         use QueryableProfileModKind as Kind;
 
-        if let SortBy::LastInstalled = args.sort_by {
-            return self.install_time.cmp(&other.install_time).reverse();
+        if let SortBy::InstallDate = args.sort_by {
+            return self.install_time.cmp(&other.install_time);
         }
 
         match (&self.kind, &other.kind) {

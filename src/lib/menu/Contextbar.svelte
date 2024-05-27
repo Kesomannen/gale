@@ -8,7 +8,7 @@
 		activeProfileIndex,
 		currentGame,
 		currentProfile,
-		profileNames,
+		profiles,
 		refreshProfiles,
 		setActiveProfile
 	} from '$lib/profile';
@@ -27,9 +27,12 @@
 	let profilesOpen = false;
 
 	function deleteProfile(index: number) {
-		confirm(`Are you sure you want to delete ${profileNames[index]}?`, {
-			title: 'Delete profile'
-		}).then(async (result) => {
+		confirm(
+			`Are you sure you want to delete ${profiles[index].name}?`,
+			{
+				title: 'Delete profile'
+			}
+		).then(async (result) => {
 			if (result) {
 				await invokeCommand('delete_profile', { index });
 				refreshProfiles();
@@ -73,28 +76,34 @@
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="flex flex-shrink items-center justify-between min-w-40 pl-6 pr-4 group border-r border-gray-600 
+			class="flex flex-shrink items-center min-w-40 pl-6 pr-4 group border-r border-gray-600 
 						text-slate-300 group-hover:text-slate-200 hover:bg-gray-800 cursor-default"
 		>
-			<div class="flex-shrink truncate font-semibold">
-				{$currentProfile}
+			<span class="flex-shrink truncate font-semibold mr-auto">
+				{$currentProfile.name}
+			</span>
+
+			<div
+				class="rounded bg-gray-800 group-hover:bg-gray-700 px-2 py-0.5 text-sm ml-6 mr-2 font-medium"
+			>
+				{$currentProfile.modCount}
 			</div>
 
 			<Icon
 				icon="mdi:expand-more"
-				class="flex-shrink-0 text-xl transition-all transform origin-center ml-6 {profilesOpen
+				class="flex-shrink-0 text-xl transition-all transform origin-center {profilesOpen
 					? 'rotate-180'
 					: 'rotate-0'}"
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
 			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 min-w-40"
-			transition={fly}
-			transitionConfig={{ duration: 100, easing: quartOut }}
+			inTransition={fly}
+			inTransitionConfig={{ duration: 50 }}
 		>
-			{#each profileNames as profile, i}
+			{#each profiles as profile, i}
 				<DropdownMenu.Item
-					class="flex pl-3 pr-1 py-1 cursor-default hover:bg-gray-700 rounded-md text-left
+					class="flex items-center pl-3 pr-1 py-1 cursor-default hover:bg-gray-700 rounded-md text-left group
 						{i == activeProfileIndex
 						? 'font-medium text-slate-300 hover:text-slate-200'
 						: 'text-slate-400 hover:text-slate-300'}"
@@ -103,23 +112,30 @@
 						profilesOpen = false;
 					}}
 				>
-					{profile}
+					<span class="flex-grow mr-3">
+						{profile.name}
+					</span>
 
-					<div class="ml-auto inline-flex items-center">
-						{#if i == activeProfileIndex}
-							<Icon icon="mdi:check" class=" text-green-400 text-lg ml-2" />
-						{/if}
-						<Button.Root
-							class="text-slate-400 hover:bg-red-600 hover:text-red-200 p-1 rounded ml-1"
-							on:click={(evt) => {
-								evt.stopPropagation();
-								deleteProfile(i);
-								profilesOpen = false;
-							}}
-						>
-							<Icon icon="mdi:delete" />
-						</Button.Root>
+					{#if i == activeProfileIndex}
+						<Icon icon="mdi:check" class="text-green-500 text-lg ml-2 mr-2" />
+					{/if}
+
+					<div
+						class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs font-bold mr-1"
+					>
+						{profile.modCount}
 					</div>
+
+					<Button.Root
+						class="text-slate-400 hover:bg-red-600 hover:text-red-200 p-1 rounded"
+						on:click={(evt) => {
+							evt.stopPropagation();
+							deleteProfile(i);
+							profilesOpen = false;
+						}}
+					>
+						<Icon icon="mdi:delete" />
+					</Button.Root>
 				</DropdownMenu.Item>
 			{/each}
 

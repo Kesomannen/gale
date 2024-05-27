@@ -36,10 +36,20 @@ impl QueryState {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum SortBy {
+    Newest,
+    Name,
     LastUpdated,
     Downloads,
     Rating,
-    LastInstalled,
+    InstallDate,
+}
+
+#[typeshare]
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum SortOrder {
+    Ascending,
+    Descending,
 }
 
 #[typeshare]
@@ -53,7 +63,7 @@ pub struct QueryModsArgs {
     pub include_deprecated: bool,
     pub include_disabled: bool,
     pub sort_by: SortBy,
-    pub descending: bool,
+    pub sort_order: SortOrder,
 }
 
 const TIME_BETWEEN_QUERIES: Duration = Duration::from_millis(250);
@@ -116,22 +126,13 @@ impl Queryable for BorrowedMod<'_> {
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
         let (a, b) = (self.package, other.package);
 
-        match (a.is_pinned, b.is_pinned) {
-            (true, false) => return Ordering::Less,
-            (false, true) => return Ordering::Greater,
-            _ => (),
-        }
-
-        let ordering = match args.sort_by {
+        match args.sort_by {
+            SortBy::Newest => a.date_created.cmp(&b.date_created),
+            SortBy::Name => a.full_name.cmp(&b.full_name),
             SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
             SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
             SortBy::Rating => a.rating_score.cmp(&b.rating_score),
-            SortBy::LastInstalled => Ordering::Equal,
-        };
-
-        match args.descending {
-            true => ordering.reverse(),
-            false => ordering,
+            SortBy::InstallDate => Ordering::Equal,
         }
     }
 }
@@ -158,7 +159,7 @@ impl From<BorrowedMod<'_>> for FrontendMod {
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
             uuid: pkg.uuid4,
-            last_updated: Some(pkg.versions[0].date_created.clone()),
+            last_updated: Some(pkg.versions[0].date_created.to_string()),
             versions: pkg
                 .versions
                 .iter()
@@ -181,8 +182,11 @@ impl Queryable for LocalMod {
         true
     }
 
-    fn cmp(&self, _other: &Self, _args: &QueryModsArgs) -> Ordering {
-        Ordering::Greater
+    fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
+        match args.sort_by {
+            SortBy::Name => self.name.cmp(&other.name),
+            _ => Ordering::Equal,
+        }
     }
 }
 
@@ -227,6 +231,9 @@ where
 
         queryable.matches(args)
     })
-    .sorted_by(|a, b| a.cmp(b, args))
+    .sorted_by(|a, b| match args.sort_order {
+        SortOrder::Ascending => a.cmp(b, args),
+        SortOrder::Descending => b.cmp(a, args),
+    })
     .take(args.max_count)
 }

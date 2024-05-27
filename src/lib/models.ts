@@ -67,8 +67,13 @@ export type LoadFileResult =
 export type PrefValue = string | LaunchMode | number;
 	
 export interface ProfileInfo {
+	name: string;
+	modCount: number;
+}
+
+export interface ProfilesInfo {
+	profiles: ProfileInfo[];
 	activeIndex: number;
-	names: string[];
 }
 
 export interface GameInfo {
@@ -102,10 +107,17 @@ export interface Mod {
 }
 
 export enum SortBy {
+	Newest = 'newest',
+	Name = 'name',
 	LastUpdated = 'lastUpdated',
 	Downloads = 'downloads',
 	Rating = 'rating',
-	LastInstalled = 'lastInstalled',
+	InstallDate = 'installDate',
+}
+
+export enum SortOrder {
+	Ascending = 'ascending',
+	Descending = 'descending',
 }
 
 export interface QueryModsArgs {
@@ -116,7 +128,7 @@ export interface QueryModsArgs {
 	includeDeprecated: boolean;
 	includeDisabled: boolean;
 	sortBy: SortBy;
-	descending: boolean;
+	sortOrder: SortOrder;
 }
 
 export interface SelectItem {

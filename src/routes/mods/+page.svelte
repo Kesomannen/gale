@@ -17,8 +17,9 @@
 
 	const sortOptions = [
 		{ value: SortBy.LastUpdated, label: 'Last updated' },
+		{ value: SortBy.Newest, label: 'Newest' },
 		{ value: SortBy.Rating, label: 'Rating' },
-		{ value: SortBy.Downloads, label: 'Downloads' }
+		{ value: SortBy.Downloads, label: 'Downloads' },
 	];
 
 	let mods: Mod[];
