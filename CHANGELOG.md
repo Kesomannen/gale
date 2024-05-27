@@ -9,6 +9,7 @@
 
 ### Changed
 
+- Overhauled sorting and filtering options
 - Infinite scroll instead of pagination
 - Made msi the preferred installer for Windows
 - Renamed "Preferences" to "Settings"

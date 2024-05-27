@@ -7,7 +7,7 @@
 	},
 	"package": {
 		"productName": "Gale",
-		"version": "0.4.1"
+		"version": "0.5.0"
 	},
 	"tauri": {
 		"allowlist": {
