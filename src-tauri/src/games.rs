@@ -15,7 +15,7 @@ fn default_package_url(id: &str) -> String {
 }
 
 impl Game {
-    fn new(display_name: &'static str, steam_id: u32) -> Self {
+    fn new(display_name: &str, steam_id: u32) -> Self {
         let id = display_name.to_kebab_case();
 
         Self {
@@ -26,12 +26,12 @@ impl Game {
         }
     }
 
-    fn with_url(mut self, url: &'static str) -> Self {
+    fn with_url(mut self, url: &str) -> Self {
         self.url = url.to_owned();
         self
     }
 
-    fn with_id(mut self, id: &'static str) -> Self {
+    fn with_id(mut self, id: &str) -> Self {
         self.id = id.to_owned();
         self.url = default_package_url(id);
         self
