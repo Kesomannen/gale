@@ -309,7 +309,7 @@ impl<'a> Installer<'a> {
         self.check_cancelled()?;
         self.update(InstallTask::Extracting);
 
-        zip_extract::extract(Cursor::new(data), &path, true).fs_context("extracting mod", &path)?;
+        zip_extract::extract(Cursor::new(data), &path, false).fs_context("extracting mod", &path)?;
         normalize_mod_structure(&mut path)?;
 
         self.check_cancelled()?;

@@ -9,6 +9,7 @@
 	export let title: string | undefined = undefined;
 	export let confirmClose: { title: string; message: string } | undefined = undefined;
 	export let canClose: boolean = true;
+	export let maxWidth: string | undefined = undefined;
 	export let onClose: () => void = () => {};
 
 	async function close(evt: UIEvent) {
@@ -50,7 +51,7 @@
 		>
 			<div
 				class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden max-h-[90%] pointer-events-auto
-							min-w-[40rem] w-fit max-w-[85%] relative"
+							min-w-[40rem] w-fit max-w-{maxWidth ?? "[85%]"} relative"
 			>
 				{#if canClose}
 					<Button.Root

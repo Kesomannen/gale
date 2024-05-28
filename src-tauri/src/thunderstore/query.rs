@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, sync::Mutex, time::Duration};
+use std::{cmp::Ordering, collections::HashSet, sync::Mutex, time::Duration};
 
 use anyhow::Result;
 use itertools::Itertools;
@@ -58,7 +58,8 @@ pub enum SortOrder {
 pub struct QueryModsArgs {
     pub max_count: usize,
     pub search_term: Option<String>,
-    pub categories: Vec<String>,
+    pub include_categories: HashSet<String>,
+    pub exclude_categories: HashSet<String>,
     pub include_nsfw: bool,
     pub include_deprecated: bool,
     pub include_disabled: bool,
@@ -110,17 +111,19 @@ impl Queryable for BorrowedMod<'_> {
             return false;
         }
 
-        if args.categories.is_empty() {
-            return true;
+        if !args.include_categories.is_empty()
+            && args.include_categories.is_disjoint(&pkg.categories)
+        {
+            return false;
         }
 
-        for category in &args.categories {
-            if pkg.categories.contains(category) {
-                return true;
-            }
+        if !args.exclude_categories.is_empty()
+            && !args.exclude_categories.is_disjoint(&pkg.categories)
+        {
+            return false;
         }
 
-        false
+        true
     }
 
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
@@ -220,7 +223,10 @@ where
     T: Queryable + 'a,
     I: Iterator<Item = T> + 'a,
 {
-    let search_term = args.search_term.as_ref().map(|s| s.to_lowercase().replace(" ", ""));
+    let search_term = args
+        .search_term
+        .as_ref()
+        .map(|s| s.to_lowercase().replace(' ', ""));
 
     mods.filter(|queryable| {
         if let Some(search_term) = &search_term {

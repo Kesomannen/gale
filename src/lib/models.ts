@@ -123,7 +123,8 @@ export enum SortOrder {
 export interface QueryModsArgs {
 	maxCount: number;
 	searchTerm?: string;
-	categories: string[];
+	includeCategories: string[];
+	excludeCategories: string[];
 	includeNsfw: boolean;
 	includeDeprecated: boolean;
 	includeDisabled: boolean;

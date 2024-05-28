@@ -20,8 +20,97 @@ use crate::{
 };
 
 lazy_static! {
-    static ref ID_TO_DIR_NAME: HashMap<&'static str, &'static str> =
-        HashMap::from([("lethal-company", "LethalCompany"),]);
+    static ref ID_TO_R2_DIR: HashMap<&'static str, &'static str> = HashMap::from([
+        ("ror2", "RiskOfRain2"),
+        ("dsp", "DysonSphereProgram"),
+        ("valheim", "Valheim"),
+        ("gtfo", "GTFO"),
+        ("outward", "Outward"),
+        ("talespire", "TaleSpire"),
+        ("h3vr", "H3VR"),
+        ("rounds", "ROUNDS"),
+        ("mechanica", "Mechanica"),
+        ("muck", "Muck"),
+        ("boneworks", "BONEWORKS"),
+        ("lethal-league-blaze", "LethalLeagueBlaze"),
+        ("timberborn", "Timberborn"),
+        ("totally-accurate-battle-simulator", "TABS"),
+        ("nasb", "NASB"),
+        ("inscryption", "Inscryption"),
+        ("starsand", "Starsand"),
+        ("cats-are-liquid", "CatsAreLiquidABP"),
+        ("potion-craft", "PotionCraft"),
+        ("nearly-dead", "NearlyDead"),
+        ("against", "AGAINST"),
+        ("rogue-tower", "RogueTower"),
+        ("hotds", "HOTDS"),
+        ("for-the-king", "ForTheKing"),
+        ("subnautica", "Subnautica"),
+        ("belowzero", "SubnauticaBZ"),
+        ("core-keeper", "CoreKeeper"),
+        ("northstar", "Titanfall2"),
+        ("peglin", "Peglin"),
+        ("v-rising", "VRising"),
+        ("hard-bullet", "HardBullet"),
+        ("20-minutes-till-dawn", "20MinutesTillDawn"),
+        ("green-hell-vr", "GreenHellVR"),
+        ("vtol-vr", "VTOL_VR"),
+        ("backpack-hero", "BackpackHero"),
+        ("stacklands", "Stacklands"),
+        ("enter-the-gungeon", "ETG"),
+        ("ravenfield", "Ravenfield"),
+        ("aloft", "Aloft"),
+        ("cult-of-the-lamb", "COTL"),
+        ("chrono-ark", "ChronoArk"),
+        ("bonelab", "BONELAB"),
+        ("trombone-champ", "TromboneChamp"),
+        ("rogue-genesia", "RogueGenesia"),
+        ("across-the-obelisk", "AcrossTheObelisk"),
+        ("ultrakill", "ULTRAKILL"),
+        ("ultimate-chicken-horse", "UltimateChickenHorse"),
+        ("atrio-the-dark-wild", "AtrioTheDarkWild"),
+        ("brotato", "Brotato"),
+        ("ancient-dungeon-vr", "AncientDungeonVR"),
+        ("rumble", "RUMBLE"),
+        ("dome-keeper", "DomeKeeper"),
+        ("skul-the-hero-slayer", "SkulTheHeroSlayer"),
+        ("sons-of-the-forest", "SonsOfTheForest"),
+        ("the-ouroboros-king", "TheOuroborosKing"),
+        ("wrestling-empire", "WrestlingEmpire"),
+        ("receiver-2", "Receiver2"),
+        ("the-planet-crafter", "ThePlanetCrafter"),
+        ("patch-quest", "PatchQuest"),
+        ("shadows-over-loathing", "ShadowsOverLoathing"),
+        ("west-of-loathing", "WestofLoathing"),
+        ("sun-haven", "SunHaven"),
+        ("wildfrost", "Wildfrost"),
+        ("shadows-of-doubt", "ShadowsofDoubt"),
+        ("garfield-kart-furious-racing", "GarfieldKartFuriousRacing"),
+        ("techtonica", "Techtonica"),
+        ("thronefall", "Thronefall"),
+        (
+            "we-love-katamari-reroll-royal-reverie",
+            "WeLoveKatamariRerollRoyalReverie"
+        ),
+        ("wizard-of-legend", "WizardOfLegend"),
+        ("bomb-rush-cyberfunk", "BombRushCyberfunk"),
+        ("touhou-lost-branch-of-legend", "TouhouLostBranchOfLegend"),
+        ("wizard-with-a-gun", "WizardWithAGun"),
+        ("sunkenland", "Sunkenland"),
+        ("atomicrops", "Atomicrops"),
+        ("erenshor", "Erenshor"),
+        ("last-train-outta-wormtown", "LastTrainOuttaWormtown"),
+        ("dredge", "Dredge"),
+        ("cities-skylines-ii", "CitiesSkylines2"),
+        ("lethal-company", "LethalCompany"),
+        ("meeple-station", "MeepleStation"),
+        ("void-crew", "VoidCrew"),
+        ("sailwind", "Sailwind"),
+        ("voices-of-the-void", "VotV"),
+        ("palworld", "Palworld"),
+        ("plasma", "Plasma"),
+        ("content-warning", "ContentWarning"),
+    ]);
 }
 
 pub async fn import(app: &AppHandle) -> Result<()> {
@@ -34,14 +123,12 @@ pub async fn import(app: &AppHandle) -> Result<()> {
     for profile_dir in find_profiles(path, app)? {
         let name = profile_dir.file_name().unwrap();
 
-        match import_profile(profile_dir.clone(), app).await {
-            Ok(true) => info!("imported profile {:?}", name),
-            Ok(false) => {}
-            Err(err) => util::print_err(
+        if let Err(err) = import_profile(profile_dir.clone(), app).await {
+            util::print_err(
                 "Error while importing from r2modman",
                 &err.context(format!("Failed to import profile {:?}", name)),
                 app,
-            ),
+            );
         };
     }
 
@@ -52,7 +139,7 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
-    let dir_name = ID_TO_DIR_NAME
+    let dir_name = ID_TO_R2_DIR
         .get(manager.active_game.id.as_str())
         .ok_or_else(|| anyhow!("current game unsupported"))?;
 
@@ -192,9 +279,25 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 }
 
 fn find_path() -> Result<PathBuf> {
-    Ok(PathBuf::from(
-        r"C:\Users\bobbo\AppData\Roaming\r2modmanPlus-local",
-    ))
+    let mut path = tauri::api::path::data_dir().unwrap();
+
+    path.push("r2modmanPlus-local");
+
+    if path.exists() {
+        return Ok(path);
+    }
+
+    path.pop();
+    path.push("Thunderstore Mod Manager");
+    path.push("DataFolder");
+
+    ensure!(
+        path.exists(),
+        "r2modman directory not found at {}",
+        path.display()
+    );
+
+    Ok(path)
 }
 
 fn emit_update(message: &str, app: &AppHandle) {

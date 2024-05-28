@@ -10,15 +10,15 @@
 
 ### Changed
 
-- Changelog on main page now hides unreleased change
+- Changelog on main page now hides unreleased changes
 - Overhauled sorting and filtering options
 - Infinite scroll instead of pagination
 - Made msi the preferred installer for Windows
-- Renamed "Preferences" to "Settings"
 - Numerous UI changes
 
 ### Fixed
 
+- Config sliders with large ranges causing performance issues or freezing
 - Zoom factor not being applied when reopening the app
 - Open log file button
 - Modpack icon resizing outputting an incorrect PNG

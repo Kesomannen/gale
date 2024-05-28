@@ -12,9 +12,12 @@
 	} from '$lib/models';
 
 	import Icon from '@iconify/svelte';
-	import { Select } from 'bits-ui';
+	import { Button, DropdownMenu, Select } from 'bits-ui';
 
 	import VirtualList from '@sveltejs/svelte-virtual-list';
+	import { categories } from '$lib/profile';
+	import { Root } from 'postcss';
+	import { scale, slide } from 'svelte/transition';
 
 	export let sortOptions: SortBy[];
 
@@ -23,7 +26,8 @@
 
 	let maxCount = 20;
 	let searchTerm: string | undefined;
-	let categories: string[] = [];
+	let includeCategories: string[] = [];
+	let excludeCategories: string[] = [];
 	let includeNsfw = false;
 	let includeDeprecated = false;
 	let sortBy = sortOptions[0];
@@ -37,7 +41,8 @@
 	$: queryArgs = {
 		maxCount,
 		searchTerm,
-		categories,
+		includeCategories,
+		excludeCategories,
 		includeNsfw,
 		includeDeprecated,
 		includeDisabled: true,
@@ -53,15 +58,7 @@
 		}
 	}
 
-	function onFilterChange(category: string, value: boolean) {
-		if (value) {
-			categories = [...categories, category];
-		} else {
-			categories = categories.filter((c) => c !== category);
-		}
-	}
-
-	$: if (listEnd > mods.length - 1 && mods.length === maxCount) {
+	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
 		maxCount += 20;
 	}
 
@@ -90,16 +87,16 @@
 					let:text
 					let:open
 					slot="trigger"
-					class="flex items-center flex-shrink-0 w-48 bg-gray-900 rounded-lg px-3 
+					class="flex items-center gap-2 w-48 bg-gray-900 rounded-lg px-3 text-slate-300
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					<Icon
-						class="text-slate-400 text-2xl mr-2"
+						class="text-slate-400 text-lg"
 						icon={sortOrder === SortOrder.Descending ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
 					/>
-					<div class="text-slate-300 text-left w-full">{text}</div>
+					<span class="flex-shrink truncate">{text}</span>
 					<Icon
-						class="text-slate-400 text-xl transition-all flex-shrink-0 duration-100 ease-out
+						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
 					transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
@@ -111,14 +108,100 @@
 					let:text
 					let:open
 					slot="trigger"
-					class="flex items-center flex-shrink-0 w-48 bg-gray-900 rounded-lg px-3 
+					class="flex items-center gap-2 w-48 bg-gray-900 rounded-lg px-3 text-slate-300
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
-					<Icon class="text-slate-400 text-2xl mr-2" icon="mdi:sort" />
-					<div class="text-slate-300 text-left w-full">{text}</div>
+					<Icon class="text-slate-400 text-lg" icon="mdi:sort" />
+					<span class="flex-shr truncate">{text}</span>
 					<Icon
-						class="text-slate-400 text-xl transition-all flex-shrink-0 duration-100 ease-out
-					transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
+										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						icon="mdi:chevron-down"
+					/>
+				</Select.Trigger>
+			</Dropdown>
+		</div>
+
+		<div class="flex gap-1.5 mb-1.5 pr-3">
+			<Dropdown
+				items={categories.filter((category) => !excludeCategories.includes(category)).toSorted()}
+				getLabel={(category) => category}
+				multiple={true}
+				bind:selected={includeCategories}
+			>
+				<Select.Trigger
+					let:open
+					slot="trigger"
+					class="flex items-center w-1/2 bg-gray-900 rounded-lg px-3 py-1.5 overflow-hidden
+								border border-gray-500 border-opacity-0 hover:border-opacity-100"
+				>
+					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter" />
+					{#if includeCategories.length === 0}
+						<span class="text-slate-300">Include categories</span>
+					{:else}
+						<div class="flex flex-wrap gap-1">
+							{#each includeCategories as category}
+								<div class="bg-blue-600 text-white rounded-full pl-3 pr-0.5 py-0.5 text-sm">
+									<span class="truncate overflow-hidden">{category}</span>
+
+									<Button.Root
+										class="px-1.5 rounded-full hover:bg-blue-500"
+										on:click={(evt) => {
+											evt.stopPropagation();
+											includeCategories = includeCategories.filter((c) => c !== category);
+										}}
+									>
+										x
+									</Button.Root>
+								</div>
+							{/each}
+						</div>
+					{/if}
+					<Icon
+						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
+										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						icon="mdi:chevron-down"
+					/>
+				</Select.Trigger>
+			</Dropdown>
+
+			<Dropdown
+				items={categories.filter((category) => !includeCategories.includes(category)).toSorted()}
+				getLabel={(category) => category}
+				multiple={true}
+				bind:selected={excludeCategories}
+			>
+				<Select.Trigger
+					let:open
+					slot="trigger"
+					class="flex items-center w-1/2 bg-gray-900 rounded-lg px-3 py-1.5 overflow-hidden
+							border border-gray-500 border-opacity-0 hover:border-opacity-100"
+				>
+					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter" />
+					{#if excludeCategories.length === 0}
+						<span class="text-slate-300">Exclude categories</span>
+					{:else}
+						<div class="flex flex-wrap gap-1">
+							{#each excludeCategories as category}
+								<div class="bg-red-600 text-white rounded-full pl-3 pr-0.5 py-0.5 text-sm">
+									<span class="truncate overflow-hidden">{category}</span>
+
+									<Button.Root
+										class="px-1.5 rounded-full hover:bg-red-500"
+										on:click={(evt) => {
+											evt.stopPropagation();
+											excludeCategories = excludeCategories.filter((c) => c !== category);
+										}}
+									>
+										x
+									</Button.Root>
+								</div>
+							{/each}
+						</div>
+					{/if}
+					<Icon
+						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
+									transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>

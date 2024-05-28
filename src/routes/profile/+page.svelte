@@ -160,7 +160,7 @@
 			<li>-
 				<span class="text-slate-300">{update.name}</span>
 				<span class="text-slate-400 text-light">{update.old} > </span>
-				<span class="text-slate-100 font-medium">{update.new}</span>
+				<span class="text-green-200 font-medium">{update.new}</span>
 			</li>
 		{/each}
 	</ul>

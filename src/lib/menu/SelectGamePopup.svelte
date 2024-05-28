@@ -84,7 +84,7 @@
 			{/each}
 		{:else}
 			<div class="text-slate-300 text-center mt-4">No games found</div>
-			<div class="text-slate-400 text-sm">
+			<div class="text-slate-400 text-sm max-w-[35rem]">
 				Your game missing? If the game is new there's a chance Thunderstore have yet to add it. If
 				you can find it on
 				<button

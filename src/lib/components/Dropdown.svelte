@@ -13,7 +13,7 @@
 	export let size: 'sm' | 'md' | 'lg' = 'md';
 	export let onSelectedChange = (items: T[]) => {};
 	export let onSelectedChangeSingle = (item: T) => {};
-	export let getLabel: (item: T) => string = (item) => sentenceCase(item as string);
+	export let getLabel = (item: T) => sentenceCase(item as string);
 
 	let className: string = '';
 
@@ -34,11 +34,11 @@
 
 		onSelectedChange(values);
 
-		if (values.length === 1) {
+		if (multiple) {
+			selected = values;
+		} else {
 			onSelectedChangeSingle(values[0]);
 			selected = values[0];
-		} else {
-			selected = values;
 		}
 	}}
 	selected={Array.isArray(selected)
@@ -63,7 +63,7 @@
 		</Select.Trigger>
 	</slot>
 	<Select.Content
-		class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 w-48 rounded-lg border border-gray-600"
+		class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 max-h-96 overflow-y-auto"
 		transition={slide}
 		transitionConfig={{ duration: 75, easing: quadOut }}
 	>

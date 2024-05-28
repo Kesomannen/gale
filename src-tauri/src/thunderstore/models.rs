@@ -1,4 +1,4 @@
-use std::hash::Hash;
+use std::{collections::HashSet, hash::Hash};
 
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
-    pub categories: Vec<String>,
+    pub categories: HashSet<String>,
     pub date_created: DateTime<Utc>,
     pub date_updated: DateTime<Utc>,
     pub donation_link: Option<String>,
@@ -120,7 +120,7 @@ pub enum FrontendModKind {
 pub struct FrontendMod {
     pub name: String,
     pub description: Option<String>,
-    pub categories: Option<Vec<String>>,
+    pub categories: Option<HashSet<String>>,
     pub version: Option<semver::Version>,
     pub author: Option<String>,
     pub rating: Option<u32>,

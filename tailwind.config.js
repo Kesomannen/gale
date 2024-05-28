@@ -16,7 +16,9 @@ export default {
 		'bg-blue-700',
 		'hover:bg-blue-600',
 		'border-red-600',
-		'font-semibold'
+		'font-semibold',
+		'max-w-[55%]',
+		'max-w-[85%]'
 	],
 	plugins: []
 };

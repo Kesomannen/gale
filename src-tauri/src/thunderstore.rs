@@ -214,7 +214,7 @@ impl Thunderstore {
 
                     result.insert(dependency);
                 }
-                Err(e) => {
+                Err(_) => {
                     errors.push(id);
                 }
             }

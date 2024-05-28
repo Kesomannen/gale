@@ -137,12 +137,15 @@
 
 <ConfirmPopup
 	title="Missing dependencies"
-	description="Some of {activeMod?.name}'s dependencies could not be found:"
 	bind:open={missingDepsOpen}
-	items={missingDeps}
-	let:item
 >
-	<li>- {item}</li>
+	Some of {activeMod?.name}'s dependencies could not be found:
+
+	<ul class="mt-1">
+		{#each missingDeps as dep}
+			<li>- {dep}</li>
+ 		{/each}
+	</ul>
 
 	<svelte:fragment slot="buttons">
 		<BigButton
