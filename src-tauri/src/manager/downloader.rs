@@ -72,7 +72,7 @@ fn total_download_size(
 }
 
 fn cache_path(borrowed_mod: &BorrowedMod<'_>, prefs: &Prefs) -> Result<PathBuf> {
-    let mut path = prefs.get_path_or_err("cache_dir")?.to_path_buf();
+    let mut path = prefs.get_path_or_err("cache_dir")?.clone();
     path.push(&borrowed_mod.package.full_name);
     path.push(&borrowed_mod.version.version_number.to_string());
 

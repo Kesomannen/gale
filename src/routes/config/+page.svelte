@@ -225,7 +225,7 @@
 					{/if}
 				{/each}
 			{:else if selectedFile.type === 'err'}
-				<code class="text-red-400 bg-gray-900 px-2 py-1 rounded-md">
+				<code class="text-red-400 bg-gray-900 px-2 py-1 rounded-md flex">
 					{capitalize(selectedFile.content.error)}
 				</code>
 			{/if}

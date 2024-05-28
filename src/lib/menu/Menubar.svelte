@@ -11,7 +11,7 @@
 
 	import { open } from '@tauri-apps/api/shell';
 	import { appWindow } from '@tauri-apps/api/window';
-	import ImportCodePopup from '$lib/import/ImportPopup.svelte';
+	import ImportProfilePopup from '$lib/import/ImportProfilePopup.svelte';
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
 	import { dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
@@ -21,7 +21,7 @@
 	let exportPackOpen = false;
 	let exportCodePopup: ExportCodePopup;
 
-	let importCodeOpen = false;
+	let importProfileOpen = false;
 	let importProfileData: ImportData | undefined = undefined;
 
 	async function importLocal() {
@@ -43,7 +43,7 @@
 		if (!path) return;
 		let data = await invokeCommand<ImportData>('import_file', { path });
 		importProfileData = data;
-		importCodeOpen = true;
+		importProfileOpen = true;
 	}
 
 	async function exportFile() {
@@ -85,7 +85,7 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => (importCodeOpen = true)}>...profile from code</MenubarItem>
+				<MenubarItem onClick={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
 				<MenubarItem onClick={importFile}>...profile from file</MenubarItem>
 				<MenubarItem onClick={importLocal}>...local mod</MenubarItem>
 			</Menubar.Content>
@@ -125,5 +125,5 @@
 
 <PreferencesPopup bind:open={preferencesOpen} />
 <ExportPackPopup bind:isOpen={exportPackOpen} />
-<ImportCodePopup bind:open={importCodeOpen} bind:data={importProfileData} />
+<ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />

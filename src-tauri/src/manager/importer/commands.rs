@@ -38,8 +38,7 @@ pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
 
 #[tauri::command]
 pub async fn import_r2modman(app: AppHandle) -> Result<()> {
-    let path = PathBuf::from(r"C:\Users\bobbo\AppData\Roaming\r2modmanPlus-local");
-    r2modman::import_r2modman(&path, &app).await?;
+    r2modman::import(&app).await?;
 
     Ok(())
 }

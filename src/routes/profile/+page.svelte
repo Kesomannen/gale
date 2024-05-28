@@ -116,7 +116,7 @@
 	</div>
 	<div slot="header">
 		{#if updates.length > 0}
-			<div class="text-blue-100 bg-blue-600 ml-1 mr-6 mb-2 px-4 py-2 rounded-lg">
+			<div class="text-blue-100 bg-blue-600 mr-3 mb-2 px-4 py-2 rounded-lg">
 				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-1 mb-0.5 inline" />
 				There {updates.length === 1 ? 'is' : 'are'} <strong>{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.
