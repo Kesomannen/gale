@@ -6,22 +6,15 @@
 	export let title = '';
 	export let description = '';
 	export let open = false;
-  
-	export let items: any[];
-  export let onCancel: () => void = () => {};
+
+	export let onCancel: () => void = () => {};
 </script>
 
 <Popup {title} onClose={onCancel} bind:open>
 	<Dialog.Description class="text-slate-300">
-		{description}
-
-		<ul class="mt-2">
-			{#each items as item}
-				<li>
-					<slot {item} />
-				</li>
-			{/each}
-		</ul>
+		<slot>
+			{description}
+		</slot>
 	</Dialog.Description>
 
 	<Dialog.Close class="flex w-full justify-end mt-3 mr-0.5 gap-2">

@@ -13,7 +13,7 @@ use std::{
 use super::ImportData;
 use crate::{
     fs_util,
-    manager::{exporter::R2Mod, ModManager},
+    manager::{downloader, exporter::R2Mod, ModManager},
     prefs::Prefs,
     thunderstore::Thunderstore,
     util::{self, IoResultExt},
@@ -80,7 +80,7 @@ async fn import_profile(path: PathBuf, app: &AppHandle) -> Result<bool> {
 
     info!("importing profile '{}'", data.name);
     emit_update(&format!("Importing profile '{}'...", data.name), app);
-    super::import_data(data, app).await?;
+    super::import_data(data, false, app).await?;
 
     Ok(true)
 }
@@ -177,13 +177,14 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             let package_name = package.file_name().into_string().unwrap();
             let version_name = version.file_name().into_string().unwrap();
 
-            let new_path = cache_dir.join(&package_name).join(&version_name);
+            let mut new_path = cache_dir.join(&package_name).join(&version_name);
             if new_path.exists() {
                 continue;
             }
 
             debug!("transferring cached mod: {}-{}", package_name, version_name);
             fs_util::copy_dir(&version.path(), &new_path)?;
+            downloader::normalize_mod_structure(&mut new_path)?;
         }
     }
 
@@ -192,7 +193,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 
 fn find_path() -> Result<PathBuf> {
     Ok(PathBuf::from(
-        r"C:\Users\22boro\AppData\Roaming\r2modmanPlus-local",
+        r"C:\Users\bobbo\AppData\Roaming\r2modmanPlus-local",
     ))
 }
 

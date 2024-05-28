@@ -16,6 +16,7 @@
 		installedMods: 0,
 		totalMods: 0,
 		currentName: '',
+		canCancel: false,
 		task: {
 			kind: 'installing'
 		}
@@ -48,6 +49,7 @@
 
 <Popup
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
+	canClose={progress.canCancel}
 	bind:open
 	confirmClose={progress.installedMods === 0 ? undefined : {
 		title: 'Abort installation',

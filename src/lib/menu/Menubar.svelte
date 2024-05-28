@@ -16,8 +16,10 @@
 	import { dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
 	import { fly } from 'svelte/transition';
+	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 
 	let preferencesOpen = false;
+	let importR2Open = false;
 	let exportPackOpen = false;
 	let exportCodePopup: ExportCodePopup;
 
@@ -88,6 +90,7 @@
 				<MenubarItem onClick={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
 				<MenubarItem onClick={importFile}>...profile from file</MenubarItem>
 				<MenubarItem onClick={importLocal}>...local mod</MenubarItem>
+				<MenubarItem onClick={() => (importR2Open = true)}>...profiles from r2modman</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -127,3 +130,4 @@
 <ExportPackPopup bind:isOpen={exportPackOpen} />
 <ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />
+<ImportR2Popup bind:open={importR2Open} />

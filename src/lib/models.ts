@@ -168,6 +168,7 @@ export interface InstallProgress {
 	installedMods: number;
 	totalMods: number;
 	currentName: string;
+	canCancel: boolean;
 	task: InstallTask;
 }
 

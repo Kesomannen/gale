@@ -89,5 +89,5 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
         to_update
     };
 
-    install_mod_refs(&to_update, app).await
+    install_mod_refs(&to_update, false, app).await
 }

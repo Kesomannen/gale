@@ -44,12 +44,15 @@
 	{title}
 	{onCancel}
 	bind:open
-	items={dependants}
-	description={description.replaceAll('%s', mod?.name ?? "Unknown")}
-	let:item
 >
-	<li>- {item.name}</li>
+	{description.replaceAll('%s', mod?.name ?? "Unknown")}
 
+	<ul class="mt-1">
+		{#each dependants as dependant}
+			<li>- {dependant.name}</li>
+		{/each}
+	</ul>
+	
 	<svelte:fragment slot="buttons">
 		<BigButton onClick={executeOne} color="red" outline={true}>
 			{verb}

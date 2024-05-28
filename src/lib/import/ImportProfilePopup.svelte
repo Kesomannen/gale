@@ -9,6 +9,7 @@
 	import { profiles, refreshProfiles } from '$lib/profile';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import Label from '$lib/components/Label.svelte';
+	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	export let open: boolean;
 	export let data: ImportData | undefined;
@@ -17,14 +18,12 @@
 	let name: string;
 	let loading: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
-	
-	let profileDropdownOpen: boolean;
-	
+		
 	$: if (open) {
 		getKeyFromClipboard();
 	}
 
-	$: nameAvailable = mode === 'overwrite' || !profiles.includes(name);
+	$: nameAvailable = mode === 'overwrite' || isAvailable(name);
 
 	async function getKeyFromClipboard() {
 		key = (await clipboard.readText()) ?? '';
@@ -35,7 +34,7 @@
 		try {
 			data = await invokeCommand<ImportData>('import_code', { key });
 			name = data.name;
-			mode = profiles.includes(name) ? 'overwrite' : 'new';
+			mode = isAvailable(name) ? 'overwrite' : 'new';
 		} catch (e) {
 			open = false;
 		} finally {
@@ -59,6 +58,10 @@
 		invokeCommand('import_data', { data }).then(refreshProfiles);
 		data = undefined;
 		open = false;
+	}
+
+	function isAvailable(name: string) {
+		return !profiles.some((profile) => profile.name === name);
 	}
 </script>
 
@@ -96,42 +99,7 @@
 				<div class="flex items-center">
 					<Label text="Choose profile" />
 
-					<Select.Root
-						items={profiles.map((name) => ({ value: name, label: name }))}
-						selected={{ value: name, label: name }}
-						onSelectedChange={(selection) => (name = selection?.value ?? name)}
-						bind:open={profileDropdownOpen}
-					>
-						<Select.Trigger
-							class="flex items-center flex-grow bg-gray-900 rounded-lg px-3 py-1
-											border border-gray-500 border-opacity-0 hover:border-opacity-100"
-						>
-							<Select.Value class="text-slate-300 text-left w-full" />
-							<Icon
-								class="text-slate-400 text-xl ml-auto transition-all
-																transform origin-center {profileDropdownOpen ? 'rotate-180' : 'rotate-0'}"
-								icon="mdi:chevron-down"
-							/>
-						</Select.Trigger>
-						<Select.Content
-							class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600"
-							transitionConfig={{ duration: 100 }}
-						>
-							{#each profiles as profileName}
-								<Select.Item
-									value={profileName}
-									class="flex items-center px-3 py-1 truncate text-slate-400 hover:text-slate-200 text-left rounded-md hover:bg-gray-700 cursor-default"
-								>
-									{profileName}
-									{#if profileName === name}
-										<Select.ItemIndicator class="ml-auto">
-											<Icon icon="mdi:check" class="text-green-400 text-lg" />
-										</Select.ItemIndicator>
-									{/if}
-								</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
+					<Dropdown class="flex-grow" items={profiles.map(profile => profile.name)} bind:selected={name} />
 				</div>
 			</Tabs.Content>
 		</Tabs.Root>

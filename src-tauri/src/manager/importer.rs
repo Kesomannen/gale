@@ -89,7 +89,7 @@ fn resolve_r2mods<'a>(
         .context("failed to resolve mod references")
 }
 
-async fn import_data(data: ImportData, app: &AppHandle) -> Result<()> {
+async fn import_data(data: ImportData, can_cancel: bool, app: &AppHandle) -> Result<()> {
     {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
@@ -117,7 +117,7 @@ async fn import_data(data: ImportData, app: &AppHandle) -> Result<()> {
         .filter_map(|profile_mod| profile_mod.into_remote())
         .collect_vec();
 
-    downloader::install_mod_refs(&mod_refs, app)
+    downloader::install_mod_refs(&mod_refs, can_cancel, app)
         .await
         .context("error while importing mods")?;
 
@@ -193,6 +193,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
                     .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
                     .collect::<Vec<_>>())
             },
+            false,
             app,
         )
         .await?;

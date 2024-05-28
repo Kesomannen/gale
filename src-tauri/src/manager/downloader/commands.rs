@@ -15,7 +15,7 @@ use itertools::Itertools;
 
 #[tauri::command]
 pub async fn install_mod(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
-    super::install_with_deps(&mod_ref, &app).await?;
+    super::install_with_deps(&mod_ref, true, &app).await?;
 
     Ok(())
 }

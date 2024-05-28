@@ -9,7 +9,7 @@ use super::{r2modman, ImportData};
 
 #[tauri::command]
 pub async fn import_data(data: ImportData, app: AppHandle) -> Result<()> {
-    super::import_data(data, &app).await?;
+    super::import_data(data, true, &app).await?;
 
     Ok(())
 }

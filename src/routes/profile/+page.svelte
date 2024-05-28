@@ -152,13 +152,18 @@
 <ConfirmPopup
 	title="Confirm update"
 	bind:open={updateAllOpen}
-	description="The following mods will be updated:"
-	items={updates}
-	let:item
 >
-	<span class="text-slate-300">{item.name}</span>
-	<span class="text-slate-400 text-light">{item.old} > </span>
-	<span class="text-slate-100 font-medium">{item.new}</span>
+	The following mods will be updated:
+
+	<ul class="mt-2">
+		{#each updates as update}
+			<li>-
+				<span class="text-slate-300">{update.name}</span>
+				<span class="text-slate-400 text-light">{update.old} > </span>
+				<span class="text-slate-100 font-medium">{update.new}</span>
+			</li>
+		{/each}
+	</ul>
 
 	<svelte:fragment slot="buttons">
 		<BigButton

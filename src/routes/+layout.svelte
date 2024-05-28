@@ -66,7 +66,7 @@
 				<span class="text-red-200">{error.name} -</span>
 				<span class="text-red-100 font-medium ml-1">{error.message}</span>
 
-				<Button.Root class="absolute right-1 top-1 p-2 hover:bg-red-500 rounded-md" on:click={() => removeError(i)}>
+				<Button.Root class="absolute right-1 top-0.5 p-2 hover:bg-red-500 rounded-md" on:click={() => removeError(i)}>
 					<Icon icon="mdi:close" class="text-red-100 text-lg" />
 				</Button.Root>
 			</div>

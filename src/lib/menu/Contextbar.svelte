@@ -147,10 +147,6 @@
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
-
-	<BigButton color="red" onClick={() => invokeCommand('import_r2modman')}>
-		Import from r2modman
-	</BigButton>
 </div>
 
 <Popup title="Launching {$currentGame?.displayName}..." bind:open={launchGamePopupOpen}>

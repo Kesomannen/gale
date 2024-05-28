@@ -105,6 +105,7 @@ struct InstallProgress<'a> {
     installed_mods: usize,
     total_mods: usize,
     current_name: &'a str,
+    can_cancel: bool,
     task: InstallTask,
 }
 
@@ -121,6 +122,7 @@ enum InstallTask {
 
 struct Installer<'a> {
     to_install: &'a [(ModRef, bool)],
+    can_cancel: bool,
     index: usize,
     current_name: String,
 
@@ -155,6 +157,7 @@ type InstallResult<T> = std::result::Result<T, InstallError>;
 impl<'a> Installer<'a> {
     fn create(
         to_install: &'a [(ModRef, bool)],
+        can_cancel: bool,
         client: &'a reqwest::Client,
         app: &'a AppHandle,
     ) -> Result<Self> {
@@ -176,6 +179,7 @@ impl<'a> Installer<'a> {
 
         Ok(Self {
             to_install,
+            can_cancel,
             index: 0,
             app,
             client,
@@ -190,7 +194,7 @@ impl<'a> Installer<'a> {
     }
 
     fn is_cancelled(&self) -> bool {
-        self.install_state.lock().unwrap().cancelled
+        self.can_cancel && self.install_state.lock().unwrap().cancelled
     }
 
     fn check_cancelled(&self) -> InstallResult<()> {
@@ -211,6 +215,7 @@ impl<'a> Installer<'a> {
                     total_progress,
                     installed_mods: self.index,
                     total_mods: self.to_install.len(),
+                    can_cancel: self.can_cancel,
                     current_name: &self.current_name,
                 },
             )
@@ -392,13 +397,13 @@ pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub async fn install_mod_refs(mod_refs: &[(ModRef, bool)], app: &tauri::AppHandle) -> Result<()> {
+pub async fn install_mod_refs(mod_refs: &[(ModRef, bool)], can_cancel: bool, app: &tauri::AppHandle) -> Result<()> {
     let client = app.state::<NetworkClient>();
-    let mut downloader = Installer::create(mod_refs, &client.0, app)?;
+    let mut downloader = Installer::create(mod_refs, can_cancel, &client.0, app)?;
     downloader.install_all().await
 }
 
-pub async fn install_mods<F>(get_mods: F, app: &tauri::AppHandle) -> Result<()>
+pub async fn install_mods<F>(get_mods: F, can_cancel: bool, app: &tauri::AppHandle) -> Result<()>
 where
     F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<(ModRef, bool)>>,
 {
@@ -412,10 +417,10 @@ where
         get_mods(&manager, &thunderstore).context("failed to resolve dependencies")?
     };
 
-    install_mod_refs(&to_install, app).await
+    install_mod_refs(&to_install, can_cancel, app).await
 }
 
-pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Result<()> {
+pub async fn install_with_deps(mod_ref: &ModRef, can_cancel: bool, app: &tauri::AppHandle) -> Result<()> {
     install_mods(
         move |manager, thunderstore| {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
@@ -426,6 +431,7 @@ pub async fn install_with_deps(mod_ref: &ModRef, app: &tauri::AppHandle) -> Resu
                     .collect(),
             )
         },
+        can_cancel,
         app,
     )
     .await
@@ -539,7 +545,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
 
         let handle = app.clone();
         tauri::async_runtime::spawn(async move {
-            install_with_deps(&mod_ref, &handle)
+            install_with_deps(&mod_ref, true, &handle)
                 .await
                 .unwrap_or_else(|e| {
                     print_err("install mod from deep link", &e, &handle);
