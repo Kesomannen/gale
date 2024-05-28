@@ -220,7 +220,7 @@ where
     T: Queryable + 'a,
     I: Iterator<Item = T> + 'a,
 {
-    let search_term = args.search_term.as_ref().map(|s| s.to_lowercase());
+    let search_term = args.search_term.as_ref().map(|s| s.to_lowercase().replace(" ", ""));
 
     mods.filter(|queryable| {
         if let Some(search_term) = &search_term {

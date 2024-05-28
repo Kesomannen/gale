@@ -15,7 +15,7 @@
 
   .markdown :global(h1),
   .markdown :global(h2) {
-    @apply pt-4 pb-1 mb-3 border-b border-slate-400;
+    @apply pt-4 pb-1 mb-3 border-b-2 border-slate-500;
   }
 
   .markdown :global(h1) {

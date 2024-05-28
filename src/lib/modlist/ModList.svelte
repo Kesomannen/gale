@@ -15,7 +15,6 @@
 	import { Select } from 'bits-ui';
 
 	import VirtualList from '@sveltejs/svelte-virtual-list';
-	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	export let sortOptions: SortBy[];
 
@@ -29,8 +28,6 @@
 	let includeDeprecated = false;
 	let sortBy = sortOptions[0];
 	let sortOrder = SortOrder.Descending;
-
-	$: console.log(sortOrder);
 
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined = undefined;
@@ -80,7 +77,7 @@
 			<div class="relative flex-grow">
 				<input
 					type="text"
-					class="w-full py-1.5 px-11 rounded-lg bg-gray-900 text-slate-300 placeholder-slate-400 truncate 
+					class="w-full py-1.5 px-11 rounded-lg bg-gray-900 text-slate-300 placeholder-slate-400 truncate
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 					bind:value={searchTerm}
 					placeholder="Search for mods..."
@@ -91,6 +88,7 @@
 			<Dropdown items={[SortOrder.Descending, SortOrder.Ascending]} bind:selected={sortOrder}>
 				<Select.Trigger
 					let:text
+					let:open
 					slot="trigger"
 					class="flex items-center flex-shrink-0 w-48 bg-gray-900 rounded-lg px-3 
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
@@ -100,20 +98,29 @@
 						icon={sortOrder === SortOrder.Descending ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
 					/>
 					<div class="text-slate-300 text-left w-full">{text}</div>
-					<Icon class="text-slate-400 text-2xl ml-auto" icon="mdi:chevron-down" />
+					<Icon
+						class="text-slate-400 text-xl transition-all flex-shrink-0 duration-100 ease-out
+					transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						icon="mdi:chevron-down"
+					/>
 				</Select.Trigger>
 			</Dropdown>
 
 			<Dropdown items={sortOptions} bind:selected={sortBy}>
 				<Select.Trigger
 					let:text
+					let:open
 					slot="trigger"
 					class="flex items-center flex-shrink-0 w-48 bg-gray-900 rounded-lg px-3 
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					<Icon class="text-slate-400 text-2xl mr-2" icon="mdi:sort" />
 					<div class="text-slate-300 text-left w-full">{text}</div>
-					<Icon class="text-slate-400 text-2xl ml-auto" icon="mdi:chevron-down" />
+					<Icon
+						class="text-slate-400 text-xl transition-all flex-shrink-0 duration-100 ease-out
+					transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						icon="mdi:chevron-down"
+					/>
 				</Select.Trigger>
 			</Dropdown>
 		</div>

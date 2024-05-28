@@ -10,6 +10,7 @@
 
 ### Changed
 
+- Changelog on main page now hides unreleased change
 - Overhauled sorting and filtering options
 - Infinite scroll instead of pagination
 - Made msi the preferred installer for Windows
