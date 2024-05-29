@@ -1,8 +1,11 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
+	import TabsMenu from '$lib/components/TabsMenu.svelte';
+
+	import { Tabs } from 'bits-ui';
+
 	import { invokeCommand } from '$lib/invoke';
 	import type { ImportData } from '$lib/models';
-	import { Dialog, Select, Tabs } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 	import { clipboard, dialog } from '@tauri-apps/api';
 	import InputField from '$lib/components/InputField.svelte';
@@ -13,12 +16,12 @@
 
 	export let open: boolean;
 	export let data: ImportData | undefined;
-	
+
 	let key: string;
 	let name: string;
 	let loading: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
-		
+
 	$: if (open) {
 		getKeyFromClipboard();
 	}
@@ -67,25 +70,13 @@
 
 <Popup title="Import profile" bind:open onClose={() => (data = undefined)}>
 	{#if data}
-		<Tabs.Root bind:value={mode}>
-			<Tabs.List class="flex p-1 my-1 gap-1 rounded-xl text-slate-300 bg-gray-900">
-				<Tabs.Trigger
-					value="new"
-					class="flex-grow rounded-lg px-2 py-0.5
-								hover:bg-gray-800 hover:text-slate-100
-								data-[state=active]:bg-gray-700 data-[state=active]:text-slate-100 data-[state=active]:font-semibold"
-				>
-					Create new
-				</Tabs.Trigger>
-				<Tabs.Trigger
-					value="overwrite"
-					class="flex-grow rounded-lg px-2 py-0.5
-							hover:bg-gray-800 hover:text-slate-100
-							data-[state=active]:bg-gray-700 data-[state=active]:text-slate-100 data-[state=active]:font-semibold"
-				>
-					Overwrite existing
-				</Tabs.Trigger>
-			</Tabs.List>
+		<TabsMenu
+			bind:value={mode}
+			options={[
+				{ value: 'new', label: 'Create new' },
+				{ value: 'overwrite', label: 'Overwrite existing' }
+			]}
+		>
 			<Tabs.Content value="new">
 				<InputField label="Profile name" bind:value={name} />
 				{#if !nameAvailable}
@@ -95,14 +86,19 @@
 					</div>
 				{/if}
 			</Tabs.Content>
+
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
 					<Label text="Choose profile" />
 
-					<Dropdown class="flex-grow" items={profiles.map(profile => profile.name)} bind:selected={name} />
+					<Dropdown
+						class="flex-grow"
+						items={profiles.map((profile) => profile.name)}
+						bind:selected={name}
+					/>
 				</div>
 			</Tabs.Content>
-		</Tabs.Root>
+		</TabsMenu>
 
 		<div class="flex w-full justify-end items-center mt-1 gap-2 text-slate-400">
 			{data.mods.length} mods will be installed

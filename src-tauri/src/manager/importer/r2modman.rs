@@ -18,6 +18,7 @@ use crate::{
     thunderstore::Thunderstore,
     util::{self, IoResultExt},
 };
+use serde::Serialize;
 
 lazy_static! {
     static ref ID_TO_R2_DIR: HashMap<&'static str, &'static str> = HashMap::from([
@@ -113,14 +114,49 @@ lazy_static! {
     ]);
 }
 
-pub async fn import(app: &AppHandle) -> Result<()> {
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManagerData<T> {
+    r2modman: Option<T>,
+    thunderstore: Option<T>,
+}
+
+impl<T> ManagerData<T> {
+    pub fn and_then<U, F: FnOnce(T) -> Option<U> + Copy>(self, f: F) -> ManagerData<U> {
+        ManagerData {
+            r2modman: self.r2modman.and_then(f),
+            thunderstore: self.thunderstore.and_then(f),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileImportData {
+    path: PathBuf,
+    profiles: Vec<String>,
+}
+
+pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
+    find_paths().and_then(|path| {
+        let profiles = find_profiles(path.clone(), false, app)
+            .ok()?
+            .map(|path| fs_util::file_name(&path))
+            .collect();
+        Some(ProfileImportData { path, profiles })
+    })
+}
+
+pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<()> {
     wait_for_mods(app).await;
 
-    let path = find_path()?;
+    info!("importing profiles from {}", path.display());
 
-    info!("importing r2modman profiles from {}", path.display());
+    for (i, profile_dir) in find_profiles(path, true, app)?.enumerate() {
+        if !include[i] {
+            continue;
+        }
 
-    for profile_dir in find_profiles(path, app)? {
         let name = profile_dir.file_name().unwrap();
 
         if let Err(err) = import_profile(profile_dir.clone(), app).await {
@@ -135,7 +171,7 @@ pub async fn import(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
+fn find_profiles(mut path: PathBuf, transfer_cache: bool, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
@@ -145,9 +181,11 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
 
     path.push(dir_name);
 
-    if let Err(e) = import_cache(path.clone(), app) {
-        util::print_err("failed to transfer r2modman cache", &e, app);
-    };
+    if transfer_cache {
+        if let Err(e) = import_cache(path.clone(), app) {
+            util::print_err("failed to transfer r2modman cache", &e, app);
+        };
+    }
 
     path.push("profiles");
 
@@ -230,7 +268,7 @@ async fn wait_for_mods(app: &AppHandle) {
             }
         }
 
-        emit_update("Waiting for mod fecthing...", app);
+        emit_update("Waiting for mod fetching...", app);
 
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
@@ -278,26 +316,20 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn find_path() -> Result<PathBuf> {
-    let mut path = tauri::api::path::data_dir().unwrap();
+fn find_paths() -> ManagerData<PathBuf> {
+    let data_dir = tauri::api::path::data_dir().unwrap();
 
-    path.push("r2modmanPlus-local");
+    return ManagerData {
+        r2modman: check_dir(data_dir.join("r2modmanPlus-local")),
+        thunderstore: check_dir(data_dir.join("Thunderstore Mod Manager").join("DataFolder")),
+    };
 
-    if path.exists() {
-        return Ok(path);
+    fn check_dir(path: PathBuf) -> Option<PathBuf> {
+        match path.exists() {
+            true => Some(path),
+            false => None,
+        }
     }
-
-    path.pop();
-    path.push("Thunderstore Mod Manager");
-    path.push("DataFolder");
-
-    ensure!(
-        path.exists(),
-        "r2modman directory not found at {}",
-        path.display()
-    );
-
-    Ok(path)
 }
 
 fn emit_update(message: &str, app: &AppHandle) {

@@ -16,24 +16,21 @@
 
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
-	import SelectGamePopup from './SelectGamePopup.svelte';
-	import { fly, slide } from 'svelte/transition';
-	import { quartOut } from 'svelte/easing';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import { fly } from 'svelte/transition';
+	import GameSelection from '$lib/components/GameSelection.svelte';
+	import WelcomePopup from './WelcomePopup.svelte';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
+	let welcomePopupOpen = true;
 
 	let gamesOpen = false;
 	let profilesOpen = false;
 
 	function deleteProfile(index: number) {
-		confirm(
-			`Are you sure you want to delete ${profiles[index].name}?`,
-			{
-				title: 'Delete profile'
-			}
-		).then(async (result) => {
+		confirm(`Are you sure you want to delete ${profiles[index].name}?`, {
+			title: 'Delete profile'
+		}).then(async (result) => {
 			if (result) {
 				await invokeCommand('delete_profile', { index });
 				refreshProfiles();
@@ -117,7 +114,10 @@
 						{profile.name}
 					</span>
 
-					<Icon icon="mdi:check" class="text-green-500 text-lg mx-2 {i !== activeProfileIndex && 'invisible'}" />
+					<Icon
+						icon="mdi:check"
+						class="text-green-500 text-lg mx-2 {i !== activeProfileIndex && 'invisible'}"
+					/>
 
 					<div
 						class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs font-bold mr-1"
@@ -155,5 +155,10 @@
 	</Dialog.Description>
 </Popup>
 
-<SelectGamePopup bind:open={gamesOpen} />
+<Popup title="Select game" bind:open={gamesOpen}>
+	<GameSelection onSelect={() => (gamesOpen = false)} />
+</Popup>
+
+<WelcomePopup bind:open={welcomePopupOpen} />
+
 <NewProfilePopup bind:open={newProfilePopupOpen} />

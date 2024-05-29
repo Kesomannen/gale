@@ -695,6 +695,8 @@ impl ManagerGame {
     }
 }
 
+const DEFAULT_GAME: &str = "content-warning";
+
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
         let save_path = prefs.get_path_or_err("data_dir")?.join("manager.json");
@@ -706,7 +708,7 @@ impl ModManager {
                 serde_json::from_str(&json).context("failed to parse manager save data")?
             }
             false => ManagerSaveData {
-                active_game: games::from_name("lethal-company").unwrap().id.to_owned(),
+                active_game: games::from_name(DEFAULT_GAME).unwrap().id.to_owned(),
             },
         };
 
@@ -723,7 +725,7 @@ impl ModManager {
         }
 
         let active_game = games::from_name(&save_data.active_game)
-            .unwrap_or_else(|| games::from_name("lethal-company").unwrap());
+            .unwrap_or_else(|| games::from_name(DEFAULT_GAME).unwrap());
 
         let mut manager = Self { games, active_game };
 

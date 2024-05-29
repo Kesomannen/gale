@@ -130,6 +130,7 @@ fn main() {
             manager::importer::commands::import_code,
             manager::importer::commands::import_file,
             manager::importer::commands::import_local_mod,
+            manager::importer::commands::get_r2modman_info,
             manager::importer::commands::import_r2modman,
 
             manager::exporter::commands::export_code,

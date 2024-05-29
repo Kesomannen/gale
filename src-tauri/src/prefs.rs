@@ -17,7 +17,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(untagged,rename_all="camelCase")]
+#[serde(untagged, rename_all = "camelCase")]
 pub enum PrefValue {
     Float(f32),
     Path(PathBuf),
@@ -47,6 +47,7 @@ impl Prefs {
         fs::create_dir_all(&config_path)?;
 
         let path = config_path.join("prefs.json");
+        let is_first_run = !path.exists();
         let mut map = path
             .exists()
             .then(|| -> Result<HashMap<String, PrefValue>> {
@@ -89,7 +90,7 @@ impl Prefs {
                 .context("failed to resolve app temp dir")
                 .map(|cache_dir| cache_dir.join("temp"))
         })?;
-        
+
         map.entry("launch_mode".to_owned())
             .or_insert(PrefValue::LaunchMode(LaunchMode::Steam));
 
@@ -101,7 +102,7 @@ impl Prefs {
                 };
 
                 zoom_window(&app.get_window("main").unwrap(), zoom_factor as f64).ok();
-            },
+            }
             None => {
                 map.insert("zoom_factor".to_owned(), PrefValue::Float(1.0));
             }
@@ -113,16 +114,13 @@ impl Prefs {
 
         return Ok(prefs);
 
-        fn insert_default_path<F>(
+        fn insert_default_path(
             map: &mut HashMap<String, PrefValue>,
             key: &str,
-            get_default: F,
-        ) -> Result<()>
-        where
-            F: FnOnce() -> Result<PathBuf>,
-        {
+            default: impl FnOnce() -> Result<PathBuf>,
+        ) -> Result<()> {
             if map.get(key).is_none() {
-                map.insert(key.to_owned(), PrefValue::Path(get_default()?));
+                map.insert(key.to_owned(), PrefValue::Path(default()?));
             }
 
             Ok(())

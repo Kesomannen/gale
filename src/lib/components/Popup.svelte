@@ -63,7 +63,7 @@
 				{/if}
 
 				{#if title}
-					<Dialog.Title class="w-full text-slate-100 font-bold text-2xl">{title}</Dialog.Title>
+					<Dialog.Title class="w-full text-white font-bold text-2xl">{title}</Dialog.Title>
 				{/if}
 
 				<slot />
