@@ -131,6 +131,7 @@ pub struct FrontendMod {
     pub dependencies: Option<Vec<String>>,
     pub is_pinned: bool,
     pub is_deprecated: bool,
+    pub contains_nsfw: bool,
     pub uuid: Uuid,
     pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,

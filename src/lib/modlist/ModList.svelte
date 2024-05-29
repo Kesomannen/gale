@@ -12,14 +12,18 @@
 	} from '$lib/models';
 
 	import Icon from '@iconify/svelte';
-	import { Button, DropdownMenu, Select } from 'bits-ui';
+	import { Button, Select } from 'bits-ui';
 
 	import VirtualList from '@sveltejs/svelte-virtual-list';
 	import { categories } from '$lib/profile';
-	import { Root } from 'postcss';
-	import { scale, slide } from 'svelte/transition';
 
 	export let sortOptions: SortBy[];
+
+	export let mods: Mod[] = [];
+	export let activeMod: Mod | undefined = undefined;
+	export let extraDropdownOptions: DropdownOption[] = [];
+	export let queryArgs: QueryModsArgs;
+	export let showExtraFilters = false;
 
 	let listStart = 0;
 	let listEnd = 0;
@@ -28,15 +32,10 @@
 	let searchTerm: string | undefined;
 	let includeCategories: string[] = [];
 	let excludeCategories: string[] = [];
-	let includeNsfw = false;
-	let includeDeprecated = false;
+	let includeNsfw = !showExtraFilters;
+	let includeDeprecated = !showExtraFilters;
 	let sortBy = sortOptions[0];
 	let sortOrder = SortOrder.Descending;
-
-	export let mods: Mod[] = [];
-	export let activeMod: Mod | undefined = undefined;
-	export let extraDropdownOptions: DropdownOption[] = [];
-	export let queryArgs: QueryModsArgs;
 
 	$: queryArgs = {
 		maxCount,
@@ -132,7 +131,7 @@
 				>
 					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter" />
 					{#if includeCategories.length === 0}
-						<span class="text-slate-300">Include categories</span>
+						<span class="text-slate-300 truncate">Include categories</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each includeCategories as category}
@@ -172,14 +171,14 @@
 					class="flex items-center w-1/2 bg-gray-900 rounded-lg px-3 py-1.5 overflow-hidden
 							border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
-					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter" />
+					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter-remove" />
 					{#if excludeCategories.length === 0}
-						<span class="text-slate-300">Exclude categories</span>
+						<span class="text-slate-300 truncate">Exclude categories</span>
 					{:else}
-						<div class="flex flex-wrap gap-1">
+						<div class="flex flex-wrap gap-1 mr-2">
 							{#each excludeCategories as category}
-								<div class="bg-red-600 text-white rounded-full pl-3 pr-0.5 py-0.5 text-sm">
-									<span class="truncate overflow-hidden">{category}</span>
+								<div class="bg-red-600 text-white rounded-xl pl-3 pr-0.5 py-0.5 text-sm text-left align-middle">
+									{category}
 
 									<Button.Root
 										class="px-1.5 rounded-full hover:bg-red-500"
@@ -197,6 +196,31 @@
 					<Icon
 						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
 									transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						icon="mdi:chevron-down"
+					/>
+				</Select.Trigger>
+			</Dropdown>
+
+			<Dropdown
+				items={['Deprecated', 'NSFW']}
+				getLabel={(s) => s}
+				multiple={true}
+				onSelectedChange={(items) => {
+					includeDeprecated = items.includes('Deprecated');
+					includeNsfw = items.includes('NSFW');
+				}}
+			>
+				<Select.Trigger
+					let:open
+					slot="trigger"
+					class="flex items-center bg-gray-900 text-slate-300 rounded-lg pl-3 pr-2 py-1
+								border border-gray-500 border-opacity-0 hover:border-opacity-100"
+				>
+					<Icon class="text-slate-400 text-lg flex-shrink-0 mr-2" icon="mdi:filter-variant" />
+					Include
+					<Icon
+						class="text-slate-400 text-xl transition-all ml-6 flex-shrink-0 duration-100 ease-out
+										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>

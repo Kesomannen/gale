@@ -7,7 +7,7 @@
 	import { sentenceCase } from '$lib/util';
 
 	export let items: T[];
-	export let selected: T | T[];
+	export let selected: T | T[] = [];
 	export let open = false;
 	export let multiple = false;
 	export let size: 'sm' | 'md' | 'lg' = 'md';

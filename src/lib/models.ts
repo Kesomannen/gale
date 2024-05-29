@@ -96,6 +96,7 @@ export interface Mod {
 	dependencies?: string[],
 	isPinned: boolean,
 	isDeprecated: boolean,
+	containsNsfw: boolean,
 	uuid: string;
 	lastUpdated: string;
 	versions: {
@@ -109,6 +110,7 @@ export interface Mod {
 export enum SortBy {
 	Newest = 'newest',
 	Name = 'name',
+	Author = 'author',
 	LastUpdated = 'lastUpdated',
 	Downloads = 'downloads',
 	Rating = 'rating',

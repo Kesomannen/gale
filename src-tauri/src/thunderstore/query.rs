@@ -39,6 +39,7 @@ impl QueryState {
 pub enum SortBy {
     Newest,
     Name,
+    Author,
     LastUpdated,
     Downloads,
     Rating,
@@ -132,7 +133,8 @@ impl Queryable for BorrowedMod<'_> {
 
         match args.sort_by {
             SortBy::Newest => a.date_created.cmp(&b.date_created),
-            SortBy::Name => a.name.cmp(&b.name),
+            SortBy::Name => b.name.cmp(&a.name),
+            SortBy::Author => b.full_name.cmp(&a.full_name),
             SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
             SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
             SortBy::Rating => a.rating_score.cmp(&b.rating_score),
@@ -162,6 +164,7 @@ impl From<BorrowedMod<'_>> for FrontendMod {
             dependencies: Some(vers.dependencies.clone()),
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
+            contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid4,
             last_updated: Some(pkg.versions[0].date_created.to_string()),
             versions: pkg
@@ -188,7 +191,13 @@ impl Queryable for LocalMod {
 
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
         match args.sort_by {
-            SortBy::Name => self.name.cmp(&other.name),
+            SortBy::Name => other.name.cmp(&self.name),
+            SortBy::Author => match (&other.author, &self.author) {
+                (Some(a), Some(b)) => a.cmp(b),
+                (Some(_), None) => Ordering::Greater,
+                (None, Some(_)) => Ordering::Less,
+                (None, None) => Ordering::Equal,
+            },
             _ => Ordering::Equal,
         }
     }
@@ -229,20 +238,22 @@ where
         .as_ref()
         .map(|s| s.to_lowercase().replace(' ', ""));
 
-    let result = mods.filter(|queryable| {
-        if let Some(search_term) = &search_term {
-            if !queryable.full_name().to_lowercase().contains(search_term) {
-                return false;
+    let mut result = mods
+        .filter(|queryable| {
+            if let Some(search_term) = &search_term {
+                if !queryable.full_name().to_lowercase().contains(search_term) {
+                    return false;
+                }
             }
-        }
 
-        queryable.matches(args)
-    })
-    .sorted_by(|a, b| match args.sort_order {
+            queryable.matches(args)
+        })
+        .collect_vec();
+
+    result.sort_by(|a, b| match args.sort_order {
         SortOrder::Ascending => a.cmp(b, args),
         SortOrder::Descending => b.cmp(a, args),
-    })
-    .collect_vec();
+    });
 
     debug!("{} mods matched query", result.len());
 

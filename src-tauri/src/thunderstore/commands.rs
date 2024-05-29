@@ -8,17 +8,17 @@ use super::{
 
 #[tauri::command]
 pub fn query_all_mods(
-    args: QueryModsArgs,
+    args: Option<QueryModsArgs>,
     thunderstore: StateMutex<Thunderstore>,
     query_state: StateMutex<QueryState>,
 ) -> Option<Vec<FrontendMod>> {
     let thunderstore = thunderstore.lock().unwrap();
 
-    match thunderstore.finished_loading {
-        true => Some(query::query_frontend_mods(&args, thunderstore.latest())),
-        false => {
+    match (args, thunderstore.finished_loading) {
+        (Some(args), true) => Some(query::query_frontend_mods(&args, thunderstore.latest())),
+        (args, _) => {
             let mut query_state = query_state.lock().unwrap();
-            query_state.current_query = Some(args);
+            query_state.current_query = args;
             None
         }
     }

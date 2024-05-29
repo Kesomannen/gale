@@ -65,8 +65,8 @@
 
 		let game = get(currentGame);
 		if (!game) return;
-		
-		open(`https://thunderstore.io/c/${game.id}/p/${tail}/`)
+
+		open(`https://thunderstore.io/c/${game.id}/p/${tail}/`);
 	}
 </script>
 
@@ -102,37 +102,41 @@
 			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}>{mod.name}</Button.Root
 		>
 		{#if mod.version}
-			<span class="text-slate-300 font-light text-lg pl-1 align-middle"
-			>{mod.version}</span
-		>
+			<span class="text-slate-300 font-light text-lg pl-1 align-middle">{mod.version}</span>
 		{/if}
 	</div>
 
 	{#if mod.author}
 		<span class="text-slate-300 text-xl">
 			By
-			<Button.Root
-				class="hover:underline"
-				on:click={() => openCommunityUrl(mod.author)}
-			>
+			<Button.Root class="hover:underline" on:click={() => openCommunityUrl(mod.author)}>
 				{mod.author}
 			</Button.Root>
 		</span>
 	{/if}
 
-	{#if mod.isDeprecated}
-		<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 max-w-fit my-1">
-			<Icon class="text-xl mr-1" icon="mdi:error" />
-			Deprecated
-		</div>
-	{/if}
+	<div class="flex gap-1 flex-wrap">
+		{#if mod.enabled === false}
+			<div class="flex items-center rounded-lg bg-yellow-400 text-slate-800 px-3 py-1 my-1">
+				<Icon class="text-xl mr-1" icon="mdi:eye-off" />
+				Disabled
+			</div>
+		{/if}
 
-	{#if mod.enabled === false}
-		<div class="flex items-center rounded-lg bg-yellow-400 text-slate-800 px-3 py-1 max-w-fit my-1">
-			<Icon class="text-xl mr-1" icon="mdi:eye-off" />
-			Disabled
-		</div>
-	{/if}
+		{#if mod.isDeprecated}
+			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
+				<Icon class="text-xl mr-1" icon="mdi:error" />
+				Deprecated
+			</div>
+		{/if}
+
+		{#if mod.containsNsfw}
+			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
+				<Icon class="text-xl mr-1" icon="mdi:alert" />
+				Contains NSFW
+			</div>
+		{/if}
+	</div>
 
 	{#if mod.categories}
 		<div class="flex gap-1 my-2 flex-wrap text-md">
@@ -157,7 +161,7 @@
 		</div>
 	{/if}
 
-	<p class="text-slate-300 text-xl flex-shrink overflow-hidden">{mod.description ?? ""}</p>
+	<p class="text-slate-300 text-xl flex-shrink overflow-hidden">{mod.description ?? ''}</p>
 
 	<Button.Root
 		class="flex items-center w-full mt-auto text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"

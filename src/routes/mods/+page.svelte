@@ -50,6 +50,7 @@
 			if (unlistenFromQuery) {
 				unlistenFromQuery();
 			}
+			invokeCommand('query_all_mods', { args: null });
 		};
 	});
 
@@ -84,7 +85,7 @@
 	}
 </script>
 
-<ModList bind:activeMod bind:mods bind:queryArgs {sortOptions}>
+<ModList bind:activeMod bind:mods bind:queryArgs {sortOptions} showExtraFilters={true}>
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg
@@ -146,16 +147,13 @@
 	</div>
 </ModList>
 
-<ConfirmPopup
-	title="Missing dependencies"
-	bind:open={missingDepsOpen}
->
+<ConfirmPopup title="Missing dependencies" bind:open={missingDepsOpen}>
 	Some of {activeMod?.name}'s dependencies could not be found:
 
 	<ul class="mt-1">
 		{#each missingDeps as dep}
 			<li>- {dep}</li>
- 		{/each}
+		{/each}
 	</ul>
 
 	<svelte:fragment slot="buttons">

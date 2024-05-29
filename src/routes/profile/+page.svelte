@@ -23,7 +23,8 @@
 		SortBy.Newest,
 		SortBy.Rating,
 		SortBy.Downloads,
-		SortBy.Name
+		SortBy.Name,
+		SortBy.Author,
 	];
 
 	let mods: Mod[];
