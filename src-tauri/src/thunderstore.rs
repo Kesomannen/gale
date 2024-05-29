@@ -2,7 +2,7 @@ use std::{
     collections::HashSet,
     fs,
     io::{self, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
     str::{self, Split},
     sync::Mutex,
     time::{Duration, Instant},
@@ -10,7 +10,7 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
-use log::debug;
+use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
@@ -130,7 +130,7 @@ impl Thunderstore {
         }
 
         self.finished_loading = false;
-        self.packages.clear();
+        self.packages = IndexMap::new();
 
         let load_mods_handle = tauri::async_runtime::spawn(load_mods_loop(app, game));
 
@@ -238,54 +238,24 @@ impl Thunderstore {
 
 const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
 
-fn load_from_cache(app: &AppHandle) -> Result<bool> {
-    let start = Instant::now();
-
-    let manager = app.state::<Mutex<ModManager>>();
-    let manager = manager.lock().unwrap();
-
-    let path = cache_path(&manager);
-
-    if !path.exists() {
-        debug!("No cache file found at {:?}", path);
-        return Ok(false);
-    }
-
-    let file = fs::File::open(path).context("failed to open cache file")?;
-    let reader = io::BufReader::new(file);
-
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-    let mut thunderstore = thunderstore.lock().unwrap();
-
-    let packages: Vec<PackageListing> =
-        serde_json::from_reader(reader).context("failed to deserialize cache")?;
-
-    thunderstore.packages = packages
-        .into_iter()
-        .map(|package| (package.uuid4, package))
-        .collect();
-
-    debug!(
-        "Loaded {} mods from cache in {:?}",
-        thunderstore.packages.len(),
-        start.elapsed()
-    );
-
-    Ok(true)
-}
-
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
-    /*
-    match load_from_cache(&app) {
-        Ok(true) => {
-            tokio::time::sleep(TIME_BETWEEN_LOADS / 2).await;
-        }
-        Ok(false) => {}
-        Err(err) => {
-            util::print_err("error while loading mods from cache", &err, &app);
+    {
+        let manager = app.state::<Mutex<ModManager>>();
+        let manager = manager.lock().unwrap();
+
+        match read_cache(&cache_path(&manager)) {
+            Ok(Some(mods)) => {
+                let thunderstore = app.state::<Mutex<Thunderstore>>();
+                let mut thunderstore = thunderstore.lock().unwrap();
+
+                for package in mods {
+                    thunderstore.packages.insert(package.uuid4, package);
+                }
+            },
+            Ok(None) => (),
+            Err(err) => warn!("failed to read cache: {}", err),
         }
     }
-    */
 
     let mut is_first = true;
     loop {
@@ -308,8 +278,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
     let mut response = client.get(&game.url).send().await?.error_for_status()?;
 
     let mut is_first_chunk = true;
-    let mut text_index = 0;
-    let mut text = String::new();
+    let mut buffer = String::new();
     let mut byte_buffer = Vec::new();
     let mut package_buffer = match write_directly {
         true => None,
@@ -331,9 +300,9 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
         match is_first_chunk {
             true => {
                 is_first_chunk = false;
-                text.extend(chunk.chars().skip(1)); // remove leading [
+                buffer.extend(chunk.chars().skip(1)); // remove leading [
             }
-            false => text.push_str(chunk),
+            false => buffer.push_str(chunk),
         };
 
         byte_buffer.clear();
@@ -346,8 +315,8 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                 None => &mut state.packages,
             };
 
-            while let Some(index) = text[text_index..].find("}]},") {
-                let (json, _) = text[text_index..].split_at(index + 3);
+            while let Some(index) = buffer.find("}]},") {
+                let (json, _) = buffer.split_at(index + 3);
 
                 match serde_json::from_str::<PackageListing>(json) {
                     Ok(package) => {
@@ -361,14 +330,15 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                     }
                 }
 
-                text_index += index + 4;
+                buffer.replace_range(..index + 4, "");
             }
 
             if i % 200 == 0 && start_time.elapsed().as_secs() > 1 {
-                let _ = app.emit_all(
+                app.emit_all(
                     "status_update",
                     Some(format!("Fetching mods from Thunderstore... {}", map.len())),
-                );
+                )
+                .ok();
             }
         }
 
@@ -390,18 +360,58 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
 
     let _ = app.emit_all("status_update", None::<String>);
 
-    /*
-    let manager = app.state::<Mutex<ModManager>>();
-    let manager = manager.lock().unwrap();
+    {
+        let manager = app.state::<Mutex<ModManager>>();
+        let manager = manager.lock().unwrap();
 
-    let mut file = fs::File::create(cache_path(&manager)).context("failed to create cache file")?;
-    file.write_all(b"[")?;
-    file.write_all(text.as_bytes())?;
-    */
+        manager.cache_mods(&state)?;
+    }
 
     Ok(())
 }
 
-fn cache_path(manager: &ModManager) -> PathBuf {
+fn read_cache(path: &Path) -> Result<Option<Vec<PackageListing>>> {
+    let start = Instant::now();
+
+    if !path.exists() {
+        debug!("no cache file found at {}", path.display());
+        return Ok(None);
+    }
+
+    let file = fs::File::open(path).context("failed to open cache file")?;
+    let reader = io::BufReader::new(file);
+
+    let result: Vec<PackageListing> =
+        serde_json::from_reader(reader).context("failed to deserialize cache")?;
+
+    debug!(
+        "Read {} mods from cache in {:?}",
+        result.len(),
+        start.elapsed()
+    );
+
+    Ok(Some(result))
+}
+
+pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
+    if packages.is_empty() {
+        return Ok(());
+    }
+    
+    let start = Instant::now();
+
+    let file = fs::File::create(path).context("failed to create cache file")?;
+    serde_json::to_writer(file, packages).context("failed to serialize cache")?;
+
+    debug!(
+        "Wrote {} mods to cache in {:?}",
+        packages.len(),
+        start.elapsed()
+    );
+
+    Ok(())
+}
+
+pub fn cache_path(manager: &ModManager) -> PathBuf {
     manager.active_game().path.join("thunderstore_cache.json")
 }

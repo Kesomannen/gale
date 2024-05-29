@@ -11,6 +11,7 @@ use super::{
     BorrowedMod, Thunderstore,
 };
 use crate::manager::LocalMod;
+use log::debug;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     app.manage(Mutex::new(QueryState::new()));
@@ -228,7 +229,7 @@ where
         .as_ref()
         .map(|s| s.to_lowercase().replace(' ', ""));
 
-    mods.filter(|queryable| {
+    let result = mods.filter(|queryable| {
         if let Some(search_term) = &search_term {
             if !queryable.full_name().to_lowercase().contains(search_term) {
                 return false;
@@ -241,5 +242,9 @@ where
         SortOrder::Ascending => a.cmp(b, args),
         SortOrder::Descending => b.cmp(a, args),
     })
-    .take(args.max_count)
+    .collect_vec();
+
+    debug!("{} mods matched query", result.len());
+
+    result.into_iter().take(args.max_count)
 }

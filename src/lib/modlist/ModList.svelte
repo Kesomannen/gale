@@ -61,11 +61,6 @@
 	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
 		maxCount += 20;
 	}
-
-	$: {
-		mods;
-		console.log('mods changed');
-	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">

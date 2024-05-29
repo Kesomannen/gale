@@ -4,6 +4,7 @@
 
 ### Added
 
+- Cache for mods that are used in profiles, which decreases load times significantly
 - Option to automatically transfer profiles from r2modman/Thunderstore Mod Manager
 - Soft cache clear (only removes unused mods)
 - Dialog when installing a mod with missing dependencies (instead of throwing an error)

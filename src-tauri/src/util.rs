@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use anyhow::Context;
-use chrono::format::Item;
 use log::error;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};

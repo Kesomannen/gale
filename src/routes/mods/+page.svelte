@@ -8,7 +8,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 	import { onMount } from 'svelte';
-	import { listen } from '@tauri-apps/api/event';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { currentGame } from '$lib/profile';
 	import { fly, slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
@@ -36,10 +36,21 @@
 
 	let isModInstalled = false;
 
+	let unlistenFromQuery: UnlistenFn | undefined;
+
 	onMount(() => {
 		listen<Mod[]>('mod_query_result', (evt) => {
+			console.log('got mods', evt.payload);
 			mods = evt.payload;
+		}).then((unlisten) => {
+			unlistenFromQuery = unlisten;
 		});
+
+		return () => {
+			if (unlistenFromQuery) {
+				unlistenFromQuery();
+			}
+		};
 	});
 
 	$: {

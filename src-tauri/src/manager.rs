@@ -14,9 +14,7 @@ use walkdir::WalkDir;
 
 use crate::{
     config, fs_util, games::{self, Game}, prefs::Prefs, thunderstore::{
-        models::FrontendProfileMod,
-        query::{self, QueryModsArgs, Queryable, SortBy},
-        BorrowedMod, ModRef, Thunderstore,
+        self, models::FrontendProfileMod, query::{self, QueryModsArgs, Queryable, SortBy}, BorrowedMod, ModRef, Thunderstore
     }, util::IoResultExt
 };
 use chrono::{DateTime, Utc};
@@ -771,6 +769,25 @@ impl ModManager {
         self.games.insert(&game.id, manager_game);
 
         Ok(())
+    }
+
+    pub fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
+        let packages = self
+            .active_game()
+            .profiles
+            .iter()
+            .flat_map(|profile| {
+                profile
+                    .remote_mods()
+                    .map(|(mod_ref, _)| mod_ref.borrow(thunderstore))
+            })
+            .filter_map(Result::ok)
+            .map(|borrowed| borrowed.package)
+            .unique()
+            .collect_vec();
+        
+        let path = thunderstore::cache_path(self);
+        thunderstore::write_cache(&packages, &path)
     }
 
     fn save(&self, prefs: &Prefs) -> Result<()> {
