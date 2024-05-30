@@ -23,7 +23,7 @@
 	export let activeMod: Mod | undefined = undefined;
 	export let extraDropdownOptions: DropdownOption[] = [];
 	export let queryArgs: QueryModsArgs;
-	export let showExtraFilters = false;
+	export let includeNsfwDeprecated = false;
 
 	let listStart = 0;
 	let listEnd = 0;
@@ -32,8 +32,8 @@
 	let searchTerm: string | undefined;
 	let includeCategories: string[] = [];
 	let excludeCategories: string[] = [];
-	let includeNsfw = !showExtraFilters;
-	let includeDeprecated = !showExtraFilters;
+	let includeNsfw = includeNsfwDeprecated;
+	let includeDeprecated = includeNsfwDeprecated;
 	let sortBy = sortOptions[0];
 	let sortOrder = SortOrder.Descending;
 
@@ -203,6 +203,7 @@
 
 			<Dropdown
 				items={['Deprecated', 'NSFW']}
+				selected={includeNsfwDeprecated ? ['Deprecated', 'NSFW'] : []}
 				getLabel={(s) => s}
 				multiple={true}
 				onSelectedChange={(items) => {

@@ -4,7 +4,8 @@
 
 ### Added
 
-- Cache for mods that are used in profiles, which decreases load times significantly
+- Setup flow for first-time users
+- Cache for mods that are used in profiles, which drastically decreases load times
 - Option to automatically transfer profiles from r2modman/Thunderstore Mod Manager
 - Soft cache clear (only removes unused mods)
 - Dialog when installing a mod with missing dependencies (instead of throwing an error)
@@ -19,6 +20,7 @@
 
 ### Fixed
 
+- "steam_exe_path pref not found" error when opening settings
 - Config sliders with large ranges causing performance issues or freezing
 - Zoom factor not being applied when reopening the app
 - Open log file button

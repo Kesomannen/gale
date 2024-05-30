@@ -13,7 +13,11 @@ use std::{
 use super::ImportData;
 use crate::{
     fs_util,
-    manager::{downloader, exporter::R2Mod, ModManager},
+    manager::{
+        downloader::{self, InstallOptions},
+        exporter::R2Mod,
+        ModManager,
+    },
     prefs::Prefs,
     thunderstore::Thunderstore,
     util::{self, IoResultExt},
@@ -171,7 +175,11 @@ pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<
     Ok(())
 }
 
-fn find_profiles(mut path: PathBuf, transfer_cache: bool, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
+fn find_profiles(
+    mut path: PathBuf,
+    transfer_cache: bool,
+    app: &AppHandle,
+) -> Result<impl Iterator<Item = PathBuf>> {
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
@@ -205,7 +213,14 @@ async fn import_profile(path: PathBuf, app: &AppHandle) -> Result<bool> {
 
     info!("importing profile '{}'", data.name);
     emit_update(&format!("Importing profile '{}'...", data.name), app);
-    super::import_data(data, false, app).await?;
+    super::import_data(
+        data,
+        InstallOptions::default()
+            .can_cancel(false)
+            .send_progress(false),
+        app,
+    )
+    .await?;
 
     Ok(true)
 }

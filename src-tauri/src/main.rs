@@ -99,6 +99,7 @@ fn main() {
 
             prefs::commands::get_pref,
             prefs::commands::set_pref,
+            prefs::commands::is_first_run,
 
             manager::commands::get_game_info,
             manager::commands::favorite_game,

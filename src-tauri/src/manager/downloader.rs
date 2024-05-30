@@ -88,7 +88,9 @@ fn try_cache_install(
         true => {
             let name = &borrowed_mod.package.full_name;
             install_from_disk(path, &profile.path, name)?;
-            profile.mods.push(ProfileMod::remote_now(borrowed_mod.reference()));
+            profile
+                .mods
+                .push(ProfileMod::remote_now(borrowed_mod.reference()));
             Ok(true)
         }
         false => Ok(false),
@@ -96,6 +98,32 @@ fn try_cache_install(
 }
 
 const DOWNLOAD_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
+
+pub struct InstallOptions {
+    can_cancel: bool,
+    send_progress: bool,
+}
+
+impl Default for InstallOptions {
+    fn default() -> Self {
+        Self {
+            can_cancel: true,
+            send_progress: true,
+        }
+    }
+}
+
+impl InstallOptions {
+    pub fn can_cancel(mut self, can_cancel: bool) -> Self {
+        self.can_cancel = can_cancel;
+        self
+    }
+
+    pub fn send_progress(mut self, send_progress: bool) -> Self {
+        self.send_progress = send_progress;
+        self
+    }
+}
 
 #[typeshare]
 #[derive(Serialize, Debug, Clone)]
@@ -122,7 +150,7 @@ enum InstallTask {
 
 struct Installer<'a> {
     to_install: &'a [(ModRef, bool)],
-    can_cancel: bool,
+    options: InstallOptions,
     index: usize,
     current_name: String,
 
@@ -157,7 +185,7 @@ type InstallResult<T> = std::result::Result<T, InstallError>;
 impl<'a> Installer<'a> {
     fn create(
         to_install: &'a [(ModRef, bool)],
-        can_cancel: bool,
+        options: InstallOptions,
         client: &'a reqwest::Client,
         app: &'a AppHandle,
     ) -> Result<Self> {
@@ -179,7 +207,7 @@ impl<'a> Installer<'a> {
 
         Ok(Self {
             to_install,
-            can_cancel,
+            options,
             index: 0,
             app,
             client,
@@ -194,7 +222,7 @@ impl<'a> Installer<'a> {
     }
 
     fn is_cancelled(&self) -> bool {
-        self.can_cancel && self.install_state.lock().unwrap().cancelled
+        self.options.can_cancel && self.install_state.lock().unwrap().cancelled
     }
 
     fn check_cancelled(&self) -> InstallResult<()> {
@@ -205,6 +233,10 @@ impl<'a> Installer<'a> {
     }
 
     fn update(&self, task: InstallTask) {
+        if !self.options.send_progress {
+            return;
+        }
+
         let total_progress = self.completed_bytes as f32 / self.total_bytes as f32;
 
         self.app
@@ -215,7 +247,7 @@ impl<'a> Installer<'a> {
                     total_progress,
                     installed_mods: self.index,
                     total_mods: self.to_install.len(),
-                    can_cancel: self.can_cancel,
+                    can_cancel: self.options.can_cancel,
                     current_name: &self.current_name,
                 },
             )
@@ -234,7 +266,7 @@ impl<'a> Installer<'a> {
         self.current_name = borrowed.package.name.clone();
         self.update(InstallTask::Installing);
 
-        if try_cache_install(borrowed.clone(), profile, &path)? {
+        if try_cache_install(borrowed, profile, &path)? {
             if !enabled {
                 profile
                     .force_toggle_mod(&mod_ref.package_uuid, &thunderstore)
@@ -309,7 +341,9 @@ impl<'a> Installer<'a> {
         self.check_cancelled()?;
         self.update(InstallTask::Extracting);
 
-        zip_extract::extract(Cursor::new(data), &path, false).fs_context("extracting mod", &path)?;
+        zip_extract::extract(Cursor::new(data), &path, false)
+            .fs_context("extracting mod", &path)?;
+
         normalize_mod_structure(&mut path)?;
 
         self.check_cancelled()?;
@@ -326,7 +360,9 @@ impl<'a> Installer<'a> {
                 .context("failed to disable installed mod")?;
         }
 
-        manager.save(&prefs).context("failed to save manager state")?;
+        manager
+            .save(&prefs)
+            .context("failed to save manager state")?;
 
         Ok(())
     }
@@ -383,6 +419,11 @@ impl<'a> Installer<'a> {
 
         self.update(InstallTask::Done);
 
+        let manager = self.manager.lock().unwrap();
+        let thunderstore = self.thunderstore.lock().unwrap();
+
+        manager.cache_mods(&thunderstore).ok();
+
         Ok(())
     }
 }
@@ -397,13 +438,21 @@ pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub async fn install_mod_refs(mod_refs: &[(ModRef, bool)], can_cancel: bool, app: &tauri::AppHandle) -> Result<()> {
+pub async fn install_mod_refs(
+    mod_refs: &[(ModRef, bool)],
+    options: InstallOptions,
+    app: &AppHandle,
+) -> Result<()> {
     let client = app.state::<NetworkClient>();
-    let mut downloader = Installer::create(mod_refs, can_cancel, &client.0, app)?;
+    let mut downloader = Installer::create(mod_refs, options, &client.0, app)?;
     downloader.install_all().await
 }
 
-pub async fn install_mods<F>(get_mods: F, can_cancel: bool, app: &tauri::AppHandle) -> Result<()>
+pub async fn install_mods<F>(
+    get_mods: F,
+    options: InstallOptions,
+    app: &tauri::AppHandle,
+) -> Result<()>
 where
     F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<(ModRef, bool)>>,
 {
@@ -417,10 +466,14 @@ where
         get_mods(&manager, &thunderstore).context("failed to resolve dependencies")?
     };
 
-    install_mod_refs(&to_install, can_cancel, app).await
+    install_mod_refs(&to_install, options, app).await
 }
 
-pub async fn install_with_deps(mod_ref: &ModRef, can_cancel: bool, app: &tauri::AppHandle) -> Result<()> {
+pub async fn install_with_deps(
+    mod_ref: &ModRef,
+    options: InstallOptions,
+    app: &tauri::AppHandle,
+) -> Result<()> {
     install_mods(
         move |manager, thunderstore| {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;
@@ -431,16 +484,14 @@ pub async fn install_with_deps(mod_ref: &ModRef, can_cancel: bool, app: &tauri::
                     .collect(),
             )
         },
-        can_cancel,
+        options,
         app,
     )
     .await
 }
 
 pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
-    let mut split = full_name.split('-');
-    split.next();
-    let name = split.next().unwrap_or(full_name);
+    let name = full_name.split_once('-').unwrap().1;
 
     match name.starts_with("BepInExPack") {
         true => install_from_disk_bepinex(src, dest),
@@ -509,9 +560,11 @@ fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
 
             fs_util::copy_contents(&entry_path, &target_path, false)
                 .fs_context("copying directory", &entry_path)?;
-        } else if ["winhttp.dll", ".doorstop_version"].into_iter().any(|name| entry_name == name) {
-            fs::copy(&entry_path, dest.join(entry_name))
-                .fs_context("copying file", &entry_path)?;
+        } else if ["winhttp.dll", ".doorstop_version"]
+            .into_iter()
+            .any(|name| entry_name == name)
+        {
+            fs::copy(&entry_path, dest.join(entry_name)).fs_context("copying file", &entry_path)?;
         }
     }
 
@@ -545,7 +598,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
 
         let handle = app.clone();
         tauri::async_runtime::spawn(async move {
-            install_with_deps(&mod_ref, true, &handle)
+            install_with_deps(&mod_ref, InstallOptions::default(), &handle)
                 .await
                 .unwrap_or_else(|e| {
                     print_err("install mod from deep link", &e, &handle);

@@ -15,6 +15,7 @@
 	import { listen } from '@tauri-apps/api/event';
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
+	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 
 	let status: string | undefined;
 
@@ -75,3 +76,4 @@
 </main>
 
 <InstallProgressPopup />
+<WelcomePopup />

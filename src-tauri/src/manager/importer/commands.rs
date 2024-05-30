@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::command_util::Result;
+use crate::{command_util::Result, manager::downloader::InstallOptions};
 
 use anyhow::anyhow;
 use tauri::AppHandle;
@@ -9,7 +9,7 @@ use super::{r2modman::{self, ManagerData, ProfileImportData}, ImportData};
 
 #[tauri::command]
 pub async fn import_data(data: ImportData, app: AppHandle) -> Result<()> {
-    super::import_data(data, true, &app).await?;
+    super::import_data(data, InstallOptions::default(), &app).await?;
 
     Ok(())
 }

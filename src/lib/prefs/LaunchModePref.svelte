@@ -50,8 +50,7 @@
 
 	<Tooltip
 		text="Number of instances to launch. Only available in direct mode."
-		side="right"
-		sideOffset={-10}
+		side="top"
 	>
 		<input
 			type="number"

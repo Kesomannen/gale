@@ -52,7 +52,7 @@ impl From<BorrowedMod<'_>> for OwnedMod {
     }
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, Hash)]
 pub struct BorrowedMod<'a> {
     pub package: &'a PackageListing,
     pub version: &'a PackageVersion,
@@ -401,10 +401,11 @@ pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
     let start = Instant::now();
 
     let file = fs::File::create(path).context("failed to create cache file")?;
-    serde_json::to_writer(file, packages).context("failed to serialize cache")?;
+    let writer = io::BufWriter::new(file);
+    serde_json::to_writer(writer, packages).context("failed to serialize cache")?;
 
     debug!(
-        "Wrote {} mods to cache in {:?}",
+        "wrote {} mods to cache in {:?}",
         packages.len(),
         start.elapsed()
     );

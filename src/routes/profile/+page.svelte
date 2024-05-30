@@ -93,6 +93,7 @@
 	bind:queryArgs
 	bind:activeMod
 	{sortOptions}
+	includeNsfwDeprecated={true}
 	extraDropdownOptions={[
 		{
 			icon: 'mdi:delete',

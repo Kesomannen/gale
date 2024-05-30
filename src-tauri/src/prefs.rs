@@ -1,10 +1,10 @@
 use std::{collections::HashMap, env, fs, path::PathBuf, sync::Mutex};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
-use crate::{manager::launcher::LaunchMode, util::IoResultExt, zoom_window};
+use crate::{fs_util, manager::launcher::LaunchMode, util::IoResultExt, zoom_window};
 
 pub mod commands;
 
@@ -35,6 +35,7 @@ impl PrefValue {
 
 pub struct Prefs {
     path: PathBuf,
+    is_first_run: bool,
     map: HashMap<String, PrefValue>,
 }
 
@@ -108,7 +109,7 @@ impl Prefs {
             }
         }
 
-        let prefs = Self { path, map };
+        let prefs = Self { path, is_first_run, map };
 
         prefs.save()?;
 
@@ -151,6 +152,35 @@ impl Prefs {
     pub fn set(&mut self, key: impl Into<String>, value: PrefValue) -> Result<()> {
         self.map.insert(key.into(), value);
         self.save()?;
+        Ok(())
+    }
+
+    fn move_dir(&mut self, key: &str, value: PrefValue) -> Result<()> {
+        let new_path = match value {
+            PrefValue::Path(path) => path,
+            _ => bail!("value is not a path")
+        };
+    
+        let old_path = match self.get(key) {
+            Some(PrefValue::Path(path)) => Some(path),
+            _ => None,
+        };
+    
+        ensure!(old_path != Some(&new_path), "{} is already set to {}", key, new_path.display());
+    
+        ensure!(new_path.exists(), "{} does not exist", new_path.display());
+        ensure!(new_path.is_dir(), "{} is not a directory", new_path.display());
+        ensure!(new_path.read_dir()?.count() == 0, "{} is not empty", new_path.display());
+        
+        if let Some(old_path) = old_path {
+            fs_util::copy_dir(old_path, &new_path)?;
+            fs::remove_dir_all(old_path)?;
+        } else {
+            fs::create_dir_all(&new_path)?;
+        }
+    
+        self.set(key, PrefValue::Path(new_path))?;
+    
         Ok(())
     }
 }

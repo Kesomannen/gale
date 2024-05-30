@@ -10,12 +10,12 @@ use crate::{
     thunderstore::{ModRef, Thunderstore},
 };
 
-use super::InstallState;
+use super::{InstallOptions, InstallState};
 use itertools::Itertools;
 
 #[tauri::command]
 pub async fn install_mod(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
-    super::install_with_deps(&mod_ref, true, &app).await?;
+    super::install_with_deps(&mod_ref, InstallOptions::default(), &app).await?;
 
     Ok(())
 }

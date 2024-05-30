@@ -1,14 +1,14 @@
 use uuid::Uuid;
 
-use super::install_mod_refs;
+use super::{install_mod_refs, InstallOptions};
 use crate::{
     manager::{ModManager, Profile, Result},
     thunderstore::{BorrowedMod, ModRef, Thunderstore},
 };
+use anyhow::Context;
 use itertools::Itertools;
 use std::sync::Mutex;
 use tauri::Manager;
-use anyhow::Context;
 
 pub mod commands;
 
@@ -89,5 +89,5 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
         to_update
     };
 
-    install_mod_refs(&to_update, false, app).await
+    install_mod_refs(&to_update, InstallOptions::default().can_cancel(false), app).await
 }

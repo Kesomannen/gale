@@ -18,11 +18,9 @@
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 	import GameSelection from '$lib/components/GameSelection.svelte';
-	import WelcomePopup from './WelcomePopup.svelte';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
-	let welcomePopupOpen = true;
 
 	let gamesOpen = false;
 	let profilesOpen = false;
@@ -158,7 +156,5 @@
 <Popup title="Select game" bind:open={gamesOpen}>
 	<GameSelection onSelect={() => (gamesOpen = false)} />
 </Popup>
-
-<WelcomePopup bind:open={welcomePopupOpen} />
 
 <NewProfilePopup bind:open={newProfilePopupOpen} />

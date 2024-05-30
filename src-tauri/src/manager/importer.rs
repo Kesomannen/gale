@@ -10,7 +10,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::{
     fs_util,
-    manager::{commands::save, LocalMod, ProfileMod},
+    manager::{commands::save, downloader::InstallOptions, LocalMod, ProfileMod},
     prefs::Prefs,
     thunderstore::{models::PackageManifest, ModRef, Thunderstore},
     util::IoResultExt,
@@ -89,7 +89,7 @@ fn resolve_r2mods<'a>(
         .context("failed to resolve mod references")
 }
 
-async fn import_data(data: ImportData, can_cancel: bool, app: &AppHandle) -> Result<()> {
+async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
     {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
@@ -117,7 +117,7 @@ async fn import_data(data: ImportData, can_cancel: bool, app: &AppHandle) -> Res
         .filter_map(|profile_mod| profile_mod.into_remote())
         .collect_vec();
 
-    downloader::install_mod_refs(&mod_refs, can_cancel, app)
+    downloader::install_mod_refs(&mod_refs, options, app)
         .await
         .context("error while importing mods")?;
 
@@ -193,7 +193,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
                     .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
                     .collect::<Vec<_>>())
             },
-            false,
+            InstallOptions::default().can_cancel(false),
             app,
         )
         .await?;
