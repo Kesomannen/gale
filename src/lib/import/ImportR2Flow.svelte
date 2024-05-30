@@ -48,11 +48,11 @@
 
 {#if loading}
 	<div
-		class="inset-0 absolute z-50 flex flex-col gap-3 items-center justify-center bg-black/60"
+		class="inset-0 absolute z-50 flex flex-col gap-4 items-center justify-center bg-black/60"
 		transition:fade={{ duration: 50 }}
 	>
-		<Icon icon="mdi:loading" class="text-6xl text-slate-400 animate-spin" />
-		<div class="text-lg font-bold text-slate-400">{loadingText}</div>
+		<Icon icon="mdi:loading" class="text-4xl text-slate-300 animate-spin" />
+		<div class="text-slate-300">{loadingText}</div>
 	</div>
 {/if}
 

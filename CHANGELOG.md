@@ -20,12 +20,13 @@
 
 ### Fixed
 
-- Improved startup time by not parsing config files
+- Moving the window while a dialog is open
+- Improve startup time by not parsing config files
 - "steam_exe_path pref not found" error when opening settings
 - Config sliders with large ranges causing performance issues or freezing
 - Zoom factor not being applied when reopening the app
 - Open log file button
-- Modpack icon resizing outputting an incorrect PNG
+- Modpack export creating an incorrect PNG
 
 ## 0.4.1 (2024-05-23)
 

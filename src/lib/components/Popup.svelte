@@ -34,6 +34,7 @@
 <Dialog.Root
 	bind:open
 	closeOnEscape={canClose && confirmClose === undefined}
+	closeOnOutsideClick={canClose && confirmClose === undefined}
 	onOutsideClick={close}
 >
 	<Dialog.Portal>
