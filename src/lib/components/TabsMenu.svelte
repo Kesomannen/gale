@@ -1,13 +1,12 @@
 <script lang="ts">
   import { Tabs } from "bits-ui";
-	import Label from "./Label.svelte";
 
   export let value: string;
   export let options: { value: string, label: string }[];
 </script>
 
 <Tabs.Root bind:value>
-  <Tabs.List class="flex p-1 my-1 gap-1 rounded-xl text-slate-300 bg-gray-900">
+  <Tabs.List class="flex gap-1 p-1 my-1 rounded-xl text-slate-300 bg-gray-900">
     {#each options as option}
       <Tabs.Trigger
         value={option.value}

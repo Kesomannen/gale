@@ -359,13 +359,10 @@ impl Profile {
         let manifest: ProfileManifest =
             serde_json::from_str(&manifest).context("failed to parse profile manifest")?;
 
-        let mut config = Vec::new();
-        config::load_config(path.clone(), &mut config);
-
         Ok(Profile {
             name: manifest.name.to_owned(),
             mods: manifest.mods,
-            config,
+            config: Vec::new(),
             path,
         })
     }

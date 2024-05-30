@@ -225,3 +225,16 @@ export interface ImportData {
 		versionUuid: string;
 	}[]
 };
+
+export interface R2ImportData {
+	r2modman?: {
+		path: string;
+		profiles: string[];
+		include: boolean[];
+	};
+	thunderstore?: {
+		path: string;
+		profiles: string[];
+		include: boolean[];
+	};
+}

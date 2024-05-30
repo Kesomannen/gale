@@ -20,6 +20,7 @@
 
 ### Fixed
 
+- Improved startup time by not parsing config files
 - "steam_exe_path pref not found" error when opening settings
 - Config sliders with large ranges causing performance issues or freezing
 - Zoom factor not being applied when reopening the app

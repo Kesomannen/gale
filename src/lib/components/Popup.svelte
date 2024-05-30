@@ -38,6 +38,7 @@
 >
 	<Dialog.Portal>
 		<Dialog.Overlay
+			data-tauri-drag-region
 			class="fixed inset-0 z-0 bg-black/60 rounded-lg"
 			transition={fade}
 			transitionConfig={{ duration: 150 }}

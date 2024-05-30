@@ -360,12 +360,10 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
 
     let _ = app.emit_all("status_update", None::<String>);
 
-    {
-        let manager = app.state::<Mutex<ModManager>>();
-        let manager = manager.lock().unwrap();
-
-        manager.cache_mods(&state)?;
-    }
+    let manager = app.state::<Mutex<ModManager>>();
+    let manager = manager.lock().unwrap();
+    
+    manager.cache_mods(&state)?;
 
     Ok(())
 }

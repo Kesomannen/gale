@@ -10,41 +10,24 @@
 	import PathSetting from '$lib/prefs/PathPref.svelte';
 
 	import { refreshProfiles } from '$lib/profile';
-
-	import Icon from '@iconify/svelte';
-
-	import { fade } from 'svelte/transition';
+	import type { R2ImportData } from '$lib/models';
 
 	import { invokeCommand } from '$lib/invoke';
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
-	import { Separator } from 'bits-ui';
-
-	interface ImportData {
-		r2modman?: {
-			path: string;
-			profiles: string[];
-			include: boolean[];
-		};
-		thunderstore?: {
-			path: string;
-			profiles: string[];
-			include: boolean[];
-		};
-	}
+	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 
 	export let open = false;
 
-	let loading = false;
-	let loadingText = '';
-
 	let stage: 'gameSelect' | 'importProfiles' | 'settings' | 'end' = 'gameSelect';
 
-	let importData: ImportData = {
+	let importFrom: 'r2modman' | 'thunderstore' = 'r2modman';
+	let importData: R2ImportData = {
 		r2modman: undefined,
 		thunderstore: undefined
 	};
-	let importFrom: 'r2modman' | 'thunderstore' = 'r2modman';
+
+	let importFlow: ImportR2Flow;
 
 	$: title = stage === 'importProfiles' ? 'Import profiles' : 'Welcome to Gale!';
 	$: importText =
@@ -61,12 +44,10 @@
 	});
 
 	async function onSelectGame() {
-		loading = true;
-		let result = await invokeCommand<ImportData>('get_r2modman_info');
+		let result = await invokeCommand<R2ImportData>('get_r2modman_info');
 
 		if (!result.r2modman && !result.thunderstore) {
 			stage = 'settings';
-			loading = false;
 			return;
 		}
 
@@ -83,44 +64,15 @@
 		}
 
 		stage = 'importProfiles';
-		loading = false;
 	}
 
 	async function importProfiles() {
-		let data = importData[importFrom];
-
-		if (!data) {
-			return;
-		}
-
-		loading = true;
-
-		let unlisten = await listen<string>('transfer_update', (evt) => {
-			loadingText = evt.payload;
-		});
-
-		try {
-			await invokeCommand('import_r2modman', { path: data.path, include: data.include });
-			refreshProfiles();
-			stage = 'settings';
-		} finally {
-			unlisten();
-			loading = false;
-		}
+		await importFlow.doImport();
+		stage = 'settings';
 	}
 </script>
 
 <Popup {title} canClose={stage === 'end'} bind:open maxWidth="[55%]">
-	{#if loading}
-		<div
-			class="inset-0 absolute z-50 flex flex-col gap-3 items-center justify-center bg-black/60"
-			transition:fade={{ duration: 50 }}
-		>
-			<Icon icon="mdi:loading" class="text-6xl text-slate-600 animate-spin" />
-			<div class="text-lg text-slate-400">{loadingText}</div>
-		</div>
-	{/if}
-
 	<div class="text-slate-300">
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
@@ -139,30 +91,7 @@
 				You can always import profiles later by going to <b>Import > ...from r2modman</b>.
 			</p>
 
-			<h3 class="text-lg text-slate-200 font-semibold mt-3">Choose profiles to import</h3>
-
-			{#if importData.r2modman && importData.thunderstore}
-				<TabsMenu
-					bind:value={importFrom}
-					options={[
-						{ value: 'r2modman', label: 'r2modman' },
-						{ value: 'thunderstore', label: 'Thunderstore Mod Manager' }
-					]}
-				/>
-			{/if}
-
-			<div class="flex flex-col h-72 overflow-y-auto">
-				{#each importData[importFrom].profiles as profile, index}
-					<div class="flex items-center justify-between py-1">
-						{profile}
-
-						<Checkbox
-							value={importData[importFrom].include[index]}
-							onValueChanged={(value) => (importData[importFrom].include[index] = value)}
-						/>
-					</div>
-				{/each}
-			</div>
+			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
 
 			<div class="flex mt-2 gap-1.5">
 				<BigButton color="gray" onClick={() => (stage = 'gameSelect')}>Back</BigButton>
@@ -172,7 +101,7 @@
 			</div>
 		{:else if stage === 'settings'}
 			<p>
-				Lastly, let's make sure the settings are to your liking.
+				Lastly, make sure your settings are correct.
 			</p>
 
 			<p class="mt-1">
