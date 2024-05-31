@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2024-05-31)
+## 0.5.1 (2024-05-31)
 
 ### Added
 
