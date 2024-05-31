@@ -41,8 +41,6 @@
 		if (await invokeCommand<boolean>('is_first_run')) {
 			open = true;
 		}
-
-		open = true;
 	});
 
 	async function onSelectGame() {

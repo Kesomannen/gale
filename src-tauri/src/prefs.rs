@@ -173,23 +173,27 @@ impl Prefs {
         ensure!(new_path.read_dir()?.count() == 0, "{} needs to be empty", new_path.display());
         
         if let Some(old_path) = old_path {
-            fs_util::copy_dir(old_path, &new_path)?;
-            if let Some(excludes) = excludes {
-                for exclude in excludes {
-                    fs::remove_file(new_path.join(exclude)).ok();
-                }
-                
-                for entry in fs_util::read_dir(old_path)? {
-                    if !excludes.iter().any(|exclude| entry.file_name() == *exclude) {
-                        if entry.file_type()?.is_dir() {
-                            fs::remove_dir_all(entry.path())?;
-                        } else {
-                            fs::remove_file(entry.path())?;
+            if old_path.exists() {
+                fs_util::copy_dir(old_path, &new_path)?;
+                if let Some(excludes) = excludes {
+                    for exclude in excludes {
+                        fs::remove_file(new_path.join(exclude)).ok();
+                    }
+                    
+                    for entry in fs_util::read_dir(old_path)? {
+                        if !excludes.iter().any(|exclude| entry.file_name() == *exclude) {
+                            if entry.file_type()?.is_dir() {
+                                fs::remove_dir_all(entry.path())?;
+                            } else {
+                                fs::remove_file(entry.path())?;
+                            }
                         }
                     }
+                } else {
+                    fs::remove_dir_all(old_path)?;
                 }
             } else {
-                fs::remove_dir_all(old_path)?;
+                fs::create_dir_all(&new_path)?;
             }
         } else {
             fs::create_dir_all(&new_path)?;
