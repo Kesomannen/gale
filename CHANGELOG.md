@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.5.1 (2024-05-31)
+## Unreleased
 
 ### Added
 
+- Disable and enable all mods button
 - Open Gale logs button
 
 ### Fixed
