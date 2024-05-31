@@ -6,6 +6,7 @@ use super::{File, LoadFileResultExt};
 use crate::{
     command_util::{Result, StateMutex},
     manager::ModManager,
+    thunderstore::Thunderstore,
     util::IoResultExt,
 };
 use serde::Serialize;
@@ -18,11 +19,16 @@ pub enum FrontendLoadFileResult {
 }
 
 #[tauri::command]
-pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<FrontendLoadFileResult>> {
+pub fn get_config_files(
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+) -> Result<Vec<FrontendLoadFileResult>> {
     let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+
     let profile = manager.active_profile_mut();
 
-    profile.refresh_config();
+    profile.refresh_config(Some(&thunderstore));
 
     Ok(profile
         .config

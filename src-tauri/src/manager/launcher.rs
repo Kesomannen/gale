@@ -14,7 +14,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
 use typeshare::typeshare;
-use log::debug;
+use log::{debug, info};
 
 pub mod commands;
 
@@ -53,7 +53,7 @@ impl ModManager {
 
         add_bepinex_args(&mut command, &self.active_profile().path)?;
 
-        debug!("launching game with command: {:?}", command);
+        info!("launching from steam with command: {:?}", command);
 
         command.spawn()?;
 
@@ -78,6 +78,8 @@ impl ModManager {
         let mut command = Command::new(exe_path);
 
         add_bepinex_args(&mut command, &self.active_profile().path)?;
+
+        info!("launching locally with command: {:?}", command);
 
         match instances {
             0 => bail!("instances must be greater than 0"),

@@ -26,7 +26,7 @@
 		</PathSetting>
 
 		<PathSetting label="Data directory" key="data_dir" type="dir">
-			Directory where the profiles, logs and other app data is stored. 
+			Directory where profiles, logs and other app data is stored. 
 			<br/>
 			Changing this will move the existing data.
 		</PathSetting>

@@ -13,7 +13,7 @@ use thiserror::Error;
 use typeshare::typeshare;
 use walkdir::WalkDir;
 
-use crate::{fs_util, manager::Profile};
+use crate::{fs_util, manager::Profile, thunderstore::Thunderstore};
 
 use log::debug;
 use tauri::AppHandle;
@@ -222,12 +222,37 @@ where
 }
 
 impl Profile {
-    pub fn refresh_config(&mut self) {
+    pub fn refresh_config(&mut self, thunderstore: Option<&Thunderstore>) {
         load_config(self.path.clone(), &mut self.config);
+        if let Some(thunderstore) = thunderstore {
+            self.create_mod_config_map(thunderstore);
+        }
     }
 
     pub fn ok_config(&self) -> impl Iterator<Item = &File> {
         self.config.iter().filter_map(|res| res.as_ref().ok())
+    }
+
+    fn create_mod_config_map(&mut self, thunderstore: &Thunderstore) {
+        for profile_mod in &self.mods {
+            let name = match profile_mod.kind.name(thunderstore) {
+                Ok(name) => name,
+                Err(_) => {
+                    continue;
+                }
+            };
+
+            let file = self.ok_config().find(|file| match &file.metadata {
+                Some(meta) => meta.plugin_guid == name,
+                None => false,
+            });
+
+            if let Some(file) = file {
+                debug!("linked {} to config file {}", name, file.name);
+                self.mod_config_map
+                    .insert(*profile_mod.uuid(), file.name.clone());
+            }
+        }
     }
 
     fn find_config_file<'a>(&'a self, name: &str) -> Result<&'a LoadFileResult> {

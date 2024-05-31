@@ -105,6 +105,7 @@ export interface Mod {
 	}[];
 	type: 'local' | 'remote';
 	enabled: boolean;
+	configFile?: string;
 }
 
 export enum SortBy {

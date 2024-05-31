@@ -85,11 +85,11 @@ pub struct LocalMod {
 #[serde(rename_all = "camelCase")]
 pub struct ProfileMod {
     #[serde(default = "default_true")]
-    enabled: bool,
+    pub enabled: bool,
     #[serde(default = "Utc::now")]
-    install_time: DateTime<Utc>,
+    pub install_time: DateTime<Utc>,
     #[serde(flatten)]
-    kind: ProfileModKind,
+    pub kind: ProfileModKind,
 }
 
 impl ProfileMod {
@@ -113,7 +113,7 @@ impl ProfileMod {
         Self::now(ProfileModKind::Remote(mod_ref))
     }
 
-    fn uuid(&self) -> &Uuid {
+    pub fn uuid(&self) -> &Uuid {
         self.kind.uuid()
     }
 
@@ -149,7 +149,7 @@ impl ProfileMod {
 #[typeshare]
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
-enum ProfileModKind {
+pub enum ProfileModKind {
     Local(Box<LocalMod>),
     Remote(ModRef),
 }
@@ -159,40 +159,50 @@ fn default_true() -> bool {
 }
 
 impl ProfileModKind {
-    fn uuid(&self) -> &Uuid {
+    pub fn uuid(&self) -> &Uuid {
         match self {
             ProfileModKind::Local(local_mod) => &local_mod.uuid,
             ProfileModKind::Remote(mod_ref) => &mod_ref.package_uuid,
         }
     }
 
-    fn into_remote(self) -> Option<ModRef> {
+    pub fn into_remote(self) -> Option<ModRef> {
         match self {
             ProfileModKind::Remote(mod_ref) => Some(mod_ref),
             _ => None,
         }
     }
 
-    fn as_remote(&self) -> Option<&ModRef> {
+    pub fn as_remote(&self) -> Option<&ModRef> {
         match self {
             ProfileModKind::Remote(mod_ref) => Some(mod_ref),
             _ => None,
         }
     }
 
-    fn as_local(&self) -> Option<&LocalMod> {
+    pub fn as_local(&self) -> Option<&LocalMod> {
         match self {
             ProfileModKind::Local(local) => Some(local),
             _ => None,
         }
     }
 
-    fn full_name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
+    pub fn full_name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
         match self {
             ProfileModKind::Local(local) => Ok(&local.name),
             ProfileModKind::Remote(mod_ref) => {
                 let package = thunderstore.get_package(&mod_ref.package_uuid)?;
                 Ok(&package.full_name)
+            }
+        }
+    }
+
+    pub fn name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
+        match self {
+            ProfileModKind::Local(local) => Ok(&local.name),
+            ProfileModKind::Remote(mod_ref) => {
+                let package = thunderstore.get_package(&mod_ref.package_uuid)?;
+                Ok(&package.name)
             }
         }
     }
@@ -243,20 +253,6 @@ impl<'a> Queryable for QueryableProfileMod<'a> {
     }
 }
 
-impl From<QueryableProfileMod<'_>> for FrontendProfileMod {
-    fn from(value: QueryableProfileMod<'_>) -> Self {
-        let data = match value.kind {
-            QueryableProfileModKind::Local(local) => local.clone().into(),
-            QueryableProfileModKind::Remote(remote) => remote.into(),
-        };
-
-        FrontendProfileMod {
-            data,
-            enabled: value.enabled,
-        }
-    }
-}
-
 enum QueryableProfileModKind<'a> {
     Local(&'a LocalMod),
     Remote(BorrowedMod<'a>),
@@ -274,6 +270,7 @@ pub struct Profile {
     pub path: PathBuf,
     pub mods: Vec<ProfileMod>,
     pub config: Vec<config::LoadFileResult>,
+    pub mod_config_map: HashMap<Uuid, String>,
 }
 
 impl Profile {
@@ -324,10 +321,21 @@ impl Profile {
             .mods
             .iter()
             .map(|p| p.queryable(thunderstore))
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(query::query_mods(args, queryables.into_iter())
-            .map(|queryable| queryable.into())
+            .map(|queryable| {
+                let (data, uuid) = match queryable.kind {
+                    QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
+                    QueryableProfileModKind::Remote(remote) => (remote.into() , remote.package.uuid4),
+                };
+        
+                FrontendProfileMod {
+                    data,
+                    enabled: queryable.enabled,
+                    config_file: self.mod_config_map.get(&uuid).cloned(),
+                }
+            })
             .collect())
     }
 
@@ -363,6 +371,7 @@ impl Profile {
             name: manifest.name.to_owned(),
             mods: manifest.mods,
             config: Vec::new(),
+            mod_config_map: HashMap::new(),
             path,
         })
     }
@@ -589,6 +598,7 @@ impl ManagerGame {
             path,
             mods: Vec::new(),
             config: Vec::new(),
+            mod_config_map: HashMap::new(),
         };
         self.profiles.push(profile);
 

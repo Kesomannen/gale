@@ -11,6 +11,7 @@
 
 ### Changed
 
+- Minor UI tweaks
 - Moved settings to Edit menu
 
 ### Fixed

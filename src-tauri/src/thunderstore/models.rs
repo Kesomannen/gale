@@ -150,6 +150,7 @@ pub struct FrontendVersion {
 #[serde(rename_all = "camelCase")]
 pub struct FrontendProfileMod {
     pub enabled: bool,
+    pub config_file: Option<String>,
     #[serde(flatten)]
     pub data: FrontendMod,
 }

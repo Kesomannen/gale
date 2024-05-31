@@ -141,7 +141,7 @@ async fn export_code(
         let prefs = prefs.lock().unwrap();
 
         let profile = manager.active_profile_mut();
-        profile.refresh_config();
+        profile.refresh_config(Some(&thunderstore));
 
         let mut path = prefs.get_path_or_err("temp_dir")?.join("exports");
         fs::create_dir_all(&path)?;

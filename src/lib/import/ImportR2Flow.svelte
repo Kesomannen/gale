@@ -81,4 +81,6 @@
       </div>
     {/each}
   </div>
+{:else}
+	<div class="text-red-300 w-full text-center">No profiles found</div>
 {/if}
