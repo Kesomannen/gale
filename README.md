@@ -61,11 +61,11 @@ to start a dev server. Alternatively, do `cargo tauri build` to build an install
 
 *Browse mods*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot1.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot2.png)
 
 *Profile*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot2.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot1.png)
 
 *Config editor*
 
