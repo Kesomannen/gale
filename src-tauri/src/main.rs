@@ -2,10 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use anyhow::Context;
-use tauri::{AppHandle, Manager};
-use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
-use log::LevelFilter;
-use std::fs::{self, File};
+use tauri::Manager;
 
 #[macro_use]
 extern crate lazy_static;
@@ -23,6 +20,7 @@ mod manager;
 mod prefs;
 mod thunderstore;
 mod config;
+mod log;
 mod fs_util;
 mod util;
 
@@ -60,32 +58,6 @@ fn zoom_window(window: &tauri::Window, scale_factor: f64) -> tauri::Result<()> {
     })
 }
 
-fn logger_setup(app: &AppHandle) -> anyhow::Result<()> {
-    let log_dir = app.path_resolver()
-        .app_log_dir()
-        .context("failed to resolve log directory")?;
-
-    fs::create_dir_all(&log_dir)
-        .context("failed to create log directory")?;
-
-    let log_file = File::create(log_dir.join("log.log"))
-        .context("failed to create log file")?;
-
-    let term_filter = match cfg!(debug_assertions) {
-        true => LevelFilter::Debug,
-        false => LevelFilter::Info,
-    };
-
-    CombinedLogger::init(
-        vec![
-            TermLogger::new(term_filter, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-            WriteLogger::new(LevelFilter::Info, Config::default(), log_file),
-        ]
-    )?;
-
-    Ok(())
-}
-
 fn main() {
     if !cfg!(target_os = "linux") {
         // doesn't work on linux for some reason :/
@@ -93,7 +65,9 @@ fn main() {
     }
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![            
+        .invoke_handler(tauri::generate_handler![        
+            log::open_gale_log,
+
             thunderstore::commands::query_all_mods,
             thunderstore::commands::missing_deps,
 
@@ -114,8 +88,9 @@ fn main() {
             manager::commands::force_remove_mods,
             manager::commands::toggle_mod,
             manager::commands::force_toggle_mods,
-            manager::commands::reveal_profile_dir,
-            manager::commands::open_logs,
+            manager::commands::set_all_mods_state,
+            manager::commands::open_profile_dir,
+            manager::commands::open_bepinex_log,
 
             manager::launcher::commands::launch_game,
 
@@ -147,7 +122,7 @@ fn main() {
         ])
         .setup(|app| {
             let handle = app.handle();
-            logger_setup(&handle).context("failed to initialize logger")?;
+            log::setup(&handle).ok();
 
             app.manage(NetworkClient::create()?);
 

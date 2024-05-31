@@ -112,10 +112,14 @@ pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfilesInfo {
     let game = manager.active_game();
 
     ProfilesInfo {
-        profiles: game.profiles.iter().map(|p| ProfileInfo { 
-            name: p.name.clone(),
-            mod_count: p.mods.len(),
-        }).collect(),
+        profiles: game
+            .profiles
+            .iter()
+            .map(|p| ProfileInfo {
+                name: p.name.clone(),
+                mod_count: p.mods.len(),
+            })
+            .collect(),
         active_index: game.active_profile_index,
     }
 }
@@ -296,6 +300,34 @@ pub fn force_remove_mods(
 }
 
 #[tauri::command]
+pub fn set_all_mods_state(
+    enable: bool,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+    prefs: StateMutex<Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let profile = manager.active_profile_mut();
+    let uuids = profile
+        .mods
+        .iter()
+        .filter(|profile_mod| profile_mod.enabled != enable)
+        .map(|profile_mod| *profile_mod.uuid())
+        .collect_vec();
+
+    for uuid in uuids {
+        profile.force_toggle_mod(&uuid, &thunderstore)?;
+    }
+    
+    save(&manager, &prefs)?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn force_toggle_mods(
     uuids: Vec<Uuid>,
     manager: StateMutex<ModManager>,
@@ -317,7 +349,7 @@ pub fn force_toggle_mods(
 }
 
 #[tauri::command]
-pub fn reveal_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
+pub fn open_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let path = &manager.active_profile().path;
@@ -341,7 +373,7 @@ fn log_path(manager: &ModManager) -> anyhow::Result<PathBuf> {
 }
 
 #[tauri::command]
-pub fn open_logs(manager: StateMutex<ModManager>) -> Result<()> {
+pub fn open_bepinex_log(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let path = log_path(&manager)?;

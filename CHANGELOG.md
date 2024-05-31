@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased (2024-05-31)
+
+### Added
+
+- Open Gale logs button
+
+### Changed
+
+- Moved Settings to Edit, instead of File
+
 ## 0.5.0 (2024-05-30)
 
 ### Added
@@ -21,7 +31,7 @@
 ### Fixed
 
 - Moving the window while a dialog is open
-- Improve startup time by not parsing config files
+- Improve startup time by not parsing config files immediately
 - "steam_exe_path pref not found" error when opening settings
 - Config sliders with large ranges causing performance issues or freezing
 - Zoom factor not being applied when reopening the app

@@ -48,10 +48,7 @@
 		onSelectedChangeSingle={set}
 	/>
 
-	<Tooltip
-		text="Number of instances to launch. Only available in direct mode."
-		side="top"
-	>
+	<Tooltip text="Number of instances to launch. Only available in direct mode." side="top">
 		<input
 			type="number"
 			step="int32"
@@ -59,7 +56,8 @@
 			bind:value={instances}
 			on:input={() => set('direct')}
 			class="px-3 py-1 rounded-lg bg-gray-900 ml-1
-					text-slate-300 hover:text-slate-100 disabled:text-slate-400 border border-gray-500 border-opacity-0 enabled:hover:border-opacity-100"
+					text-slate-300 hover:text-slate-100 disabled:text-slate-400 border border-gray-500 border-opacity-0 
+					enabled:hover:border-opacity-100"
 		/>
 	</Tooltip>
 </div>

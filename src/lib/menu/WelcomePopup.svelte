@@ -105,7 +105,7 @@
 			</p>
 
 			<p class="mt-1">
-				You can always edit these later by going to <b>File > Settings</b>.
+				You can always edit these later by going to <b>Edit > Settings</b>.
 			</p>
 
 			<div class="flex flex-col mt-3 gap-1">

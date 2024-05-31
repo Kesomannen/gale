@@ -16,7 +16,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged, rename_all = "camelCase")]
 pub enum PrefValue {
     Float(f32),
@@ -155,7 +155,7 @@ impl Prefs {
         Ok(())
     }
 
-    fn move_dir(&mut self, key: &str, value: PrefValue) -> Result<()> {
+    fn move_dir(&mut self, key: &str, value: PrefValue, excludes: Option<&[&str]>) -> Result<()> {
         let new_path = match value {
             PrefValue::Path(path) => path,
             _ => bail!("value is not a path")
@@ -170,11 +170,27 @@ impl Prefs {
     
         ensure!(new_path.exists(), "{} does not exist", new_path.display());
         ensure!(new_path.is_dir(), "{} is not a directory", new_path.display());
-        ensure!(new_path.read_dir()?.count() == 0, "{} is not empty", new_path.display());
+        ensure!(new_path.read_dir()?.count() == 0, "{} needs to be empty", new_path.display());
         
         if let Some(old_path) = old_path {
             fs_util::copy_dir(old_path, &new_path)?;
-            fs::remove_dir_all(old_path)?;
+            if let Some(excludes) = excludes {
+                for exclude in excludes {
+                    fs::remove_file(new_path.join(exclude)).ok();
+                }
+                
+                for entry in fs_util::read_dir(old_path)? {
+                    if !excludes.iter().any(|exclude| entry.file_name() == *exclude) {
+                        if entry.file_type()?.is_dir() {
+                            fs::remove_dir_all(entry.path())?;
+                        } else {
+                            fs::remove_file(entry.path())?;
+                        }
+                    }
+                }
+            } else {
+                fs::remove_dir_all(old_path)?;
+            }
         } else {
             fs::create_dir_all(&new_path)?;
         }

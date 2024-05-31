@@ -67,10 +67,11 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => invokeCommand('reveal_profile_dir')}
+				<MenubarItem onClick={() => invokeCommand('open_profile_dir')}
 					>Show profile in explorer</MenubarItem
 				>
-				<MenubarItem onClick={() => invokeCommand('open_logs')}>Open game logs</MenubarItem>
+				<MenubarItem onClick={() => invokeCommand('open_bepinex_log')}>Open game logs</MenubarItem>
+				<MenubarItem onClick={() => invokeCommand('open_gale_log')}>Open Gale logs</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem onClick={() => invokeCommand('clear_download_cache', { soft: true })}
 					>Clear unused mod cache</MenubarItem
@@ -78,7 +79,22 @@
 				<MenubarItem onClick={() => invokeCommand('clear_download_cache', { soft: false })}
 					>Clear all cached mods</MenubarItem
 				>
+			</Menubar.Content>
+		</Menubar.Menu>
+		<Menubar.Menu>
+			<MenubarTrigger>Edit</MenubarTrigger>
+			<Menubar.Content
+				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
+			>
+			<!--
+				<MenubarItem onClick={() => invokeCommand('set_all_mods_state', { enable: true })}
+					>Enable all mods</MenubarItem
+				>
+				<MenubarItem onClick={() => invokeCommand('set_all_mods_state', { enable: false })}
+					>Disable all mods</MenubarItem
+				>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+			-->
 				<MenubarItem onClick={() => (preferencesOpen = true)}>Settings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>

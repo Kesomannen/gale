@@ -10,11 +10,11 @@
 	export let key: string;
 	export let type: 'exe' | 'dir';
 
-	export let setValue: (value: string | null) => void = (value) => {
+	export let setValue = (value: string | null) => {
 		invokeCommand('set_pref', { key, value });
 	};
 
-	export let getValue: () => Promise<string | null> = async () => {
+	export let getValue = async () => {
 		return await invokeCommand<PrefValue | null>('get_pref', { key }) as string;
 	};
 
@@ -30,7 +30,7 @@
 			filters: type === 'exe' ? [{ name: 'Executable', extensions: ['exe'] }] : undefined,
 			title: 'Select ' + key,
 			directory: type === 'dir'
-		}).then((result) => {
+		}).then(async (result) => {
 			if (result === null) return;
 
 			value = result as string;

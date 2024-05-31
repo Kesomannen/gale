@@ -19,7 +19,6 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 **Coming soon**
 
 - Support for modding frameworks other than BepInEx
-- CLI
 
 ## Installation
 
