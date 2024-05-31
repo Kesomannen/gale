@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { games, setActiveGame } from '$lib/profile';
+	import { games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
 	import { open as openLink } from '@tauri-apps/api/shell';

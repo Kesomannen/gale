@@ -4,7 +4,7 @@
 	import PathField from '$lib/components/PathField.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import { currentProfile } from '$lib/profile';
+	import { currentProfile } from '$lib/stores';
 	import { open } from '@tauri-apps/api/dialog';
 
 	import { Button, Dialog } from 'bits-ui';

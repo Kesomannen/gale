@@ -4,7 +4,7 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import type { R2ImportData } from '$lib/models';
-	import { refreshProfiles } from '$lib/profile';
+	import { refreshProfiles } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { listen } from '@tauri-apps/api/event';
 	import { fade } from 'svelte/transition';

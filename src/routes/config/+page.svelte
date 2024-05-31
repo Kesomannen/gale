@@ -14,7 +14,7 @@
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
 	import Icon from '@iconify/svelte';
-	import { currentProfile } from '$lib/profile';
+	import { currentProfile } from '$lib/stores';
 	import { Render } from '@jill64/svelte-sanitize';
 	import StringConfig from '$lib/config/StringConfig.svelte';
 	import EnumConfig from '$lib/config/EnumConfig.svelte';

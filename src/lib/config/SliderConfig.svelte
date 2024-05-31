@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setTaggedConfig } from "$lib/invoke";
+	import { setTaggedConfig } from "$lib/config";
 	import type { ConfigValue, ConfigNum, ConfigEntryId, ConfigRange } from "$lib/models";
 	import { Slider } from "bits-ui";
 	import ResetConfigButton from "./ResetConfigButton.svelte";

@@ -65,12 +65,31 @@ impl Profile {
     }
 }
 
+pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<()> {
+    let enabled = {
+        let manager = app.state::<Mutex<ModManager>>();
+        let thunderstore = app.state::<Mutex<Thunderstore>>();
+                
+        let mut manager = manager.lock().unwrap();
+        let thunderstore = thunderstore.lock().unwrap();
+
+        let profile = manager.active_profile_mut();
+        let enabled = profile.get_mod(&mod_ref.package_uuid)?.enabled;
+
+        profile.force_remove_mod(&mod_ref.package_uuid, &thunderstore)?;
+
+        enabled
+    };
+
+    install_mod_refs(&[(mod_ref, enabled)], InstallOptions::default().can_cancel(false), app).await
+}
+
 pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
     let to_update = {
         let manager = app.state::<Mutex<ModManager>>();
-        let mut manager = manager.lock().unwrap();
-
         let thunderstore = app.state::<Mutex<Thunderstore>>();
+
+        let mut manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
         let profile = manager.active_profile_mut();

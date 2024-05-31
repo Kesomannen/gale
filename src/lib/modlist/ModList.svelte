@@ -15,13 +15,12 @@
 	import { Button, Select } from 'bits-ui';
 
 	import VirtualList from '@sveltejs/svelte-virtual-list';
-	import { categories } from '$lib/profile';
+	import { categories } from '$lib/stores';
 
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined = undefined;
-	export let extraDropdownOptions: DropdownOption[] = [];
 	export let queryArgs: QueryModsArgs;
 	export let includeNsfwDeprecated = false;
 
@@ -91,7 +90,7 @@
 					<span class="flex-shrink truncate">{text}</span>
 					<Icon
 						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
-					transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -248,8 +247,11 @@
 	</div>
 
 	{#if activeMod}
-		<ModDetailsMenu mod={activeMod} onClose={() => (activeMod = undefined)} {extraDropdownOptions}>
+		<ModDetailsMenu mod={activeMod} onClose={() => (activeMod = undefined)}>
 			<slot name="details" />
+			<svelte:fragment slot="dropdown">
+				<slot name="dropdown" />
+			</svelte:fragment>
 		</ModDetailsMenu>
 	{/if}
 </div>

@@ -9,7 +9,7 @@
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { currentGame } from '$lib/profile';
+	import { currentGame } from '$lib/stores';
 	import { fly, slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
@@ -85,7 +85,7 @@
 	}
 </script>
 
-<ModList bind:activeMod bind:mods bind:queryArgs {sortOptions} showExtraFilters={true}>
+<ModList bind:activeMod bind:mods bind:queryArgs {sortOptions}>
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg

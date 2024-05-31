@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import { currentProfile, refreshProfiles } from '$lib/profile';
+	import { currentProfile, refreshProfiles } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { clipboard } from '@tauri-apps/api';
 	import { Dialog } from 'bits-ui';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setTaggedConfig } from "$lib/invoke";
+	import { setTaggedConfig } from "$lib/config";
 	import type { ConfigEntryId, ConfigNum, ConfigValue } from "$lib/models";
 	import ResetConfigButton from "./ResetConfigButton.svelte";
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import InputField from '$lib/components/InputField.svelte';
-	import { setTaggedConfig } from '$lib/invoke';
+	import { setTaggedConfig } from '$lib/config';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 
 	import ResetConfigButton from './ResetConfigButton.svelte';

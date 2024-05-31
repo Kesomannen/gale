@@ -43,7 +43,7 @@ export async function refreshCategories() {
 }
 
 export async function refreshProfiles() {
-	const info: ProfilesInfo = await invokeCommand('get_profile_info');
+	const info = await invokeCommand<ProfilesInfo>('get_profile_info');
 	activeProfileIndex = info.activeIndex;
 	profiles = info.profiles;
 	currentProfile.set(profiles[activeProfileIndex]);

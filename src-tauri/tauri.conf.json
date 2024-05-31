@@ -88,7 +88,7 @@
 		],
 		"updater": {
 			"active": true,
-			"dialog": true,
+			"dialog": false,
 			"endpoints": [
 				"https://gist.githubusercontent.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d/raw/"
 			],

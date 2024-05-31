@@ -9,7 +9,7 @@
 	import ZoomLevelPref from '$lib/prefs/ZoomFactorPref.svelte';
 	import PathSetting from '$lib/prefs/PathPref.svelte';
 
-	import { refreshProfiles } from '$lib/profile';
+	import { refreshProfiles } from '$lib/stores';
 	import type { R2ImportData } from '$lib/models';
 
 	import { invokeCommand } from '$lib/invoke';
@@ -105,7 +105,7 @@
 			</p>
 
 			<p class="mt-1">
-				You can always edit these later by going to <b>File > Settings</b>.
+				You can always edit these later by going to <b>Edit > Settings</b>.
 			</p>
 
 			<div class="flex flex-col mt-3 gap-1">

@@ -12,10 +12,11 @@
 		SortBy
 	} from '$lib/models';
 	import ModList from '$lib/modlist/ModList.svelte';
-	import { currentGame, currentProfile } from '$lib/profile';
+	import { currentGame, currentProfile } from '$lib/stores';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button, Switch } from 'bits-ui';
+	import { Button, DropdownMenu, Switch } from 'bits-ui';
+	import { fly } from 'svelte/transition';
 
 	const sortOptions = [
 		SortBy.InstallDate,
@@ -24,7 +25,7 @@
 		SortBy.Rating,
 		SortBy.Downloads,
 		SortBy.Name,
-		SortBy.Author,
+		SortBy.Author
 	];
 
 	let mods: Mod[];
@@ -71,7 +72,7 @@
 		}
 	}
 
-	async function removeMod() {
+	async function uninstall() {
 		if (!activeMod) return;
 
 		let response = await invokeCommand<ModActionResponse>('remove_mod', {
@@ -86,29 +87,23 @@
 
 		removeDependants.openFor(activeMod, response.content);
 	}
+
+	async function changeVersion(uuid: string) {
+		if (!activeMod) return;
+
+		await invokeCommand('update_mod', { uuid: activeMod.uuid, version: { specific: uuid } });
+		refresh();
+	}
 </script>
 
-<ModList
-	bind:mods
-	bind:queryArgs
-	bind:activeMod
-	{sortOptions}
-	includeNsfwDeprecated={true}
-	extraDropdownOptions={[
-		{
-			icon: 'mdi:delete',
-			label: 'Uninstall',
-			onClick: removeMod
-		}
-	]}
->
+<ModList bind:mods bind:queryArgs bind:activeMod {sortOptions} includeNsfwDeprecated={true}>
 	<div slot="details">
 		{#if activeMod && isOutdated(activeMod)}
 			<Button.Root
 				class="flex items-center justify-center w-full gap-2 py-2 rounded-lg mt-2
 						bg-blue-600 hover:bg-blue-500 font-medium text-lg"
 				on:click={() => {
-					invokeCommand('update_mod', { uuid: activeMod?.uuid }).then(refresh);
+					invokeCommand('update_mod', { uuid: activeMod?.uuid, version: 'latest' }).then(refresh);
 				}}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl align-middle" />
@@ -116,6 +111,45 @@
 			</Button.Root>
 		{/if}
 	</div>
+
+	<svelte:fragment slot="dropdown">
+		<DropdownMenu.Sub>
+			<DropdownMenu.SubTrigger
+				class="flex items-center pl-3 pr-1 py-1 truncate text-slate-300 hover:text-slate-100 
+							text-left rounded-md hover:bg-gray-600 cursor-default"
+			>
+				<Icon class="text-xl mr-1" icon="mdi:edit" />
+				Change version
+				<Icon class="text-xl ml-3" icon="mdi:chevron-right" />
+			</DropdownMenu.SubTrigger>
+			<DropdownMenu.SubContent
+				class="flex flex-col max-h-96 overflow-y-auto bg-gray-700 gap-0.5 mr-2
+							shadow-xl p-1 rounded-lg border border-gray-500"
+				transition={fly}
+				transitionConfig={{ duration: 50 }}
+			>
+				{#each activeMod?.versions ?? [] as version}
+					<DropdownMenu.Item
+						class="flex flex-shrink-0 items-center pl-3 pr-12 py-1 truncate text-slate-300 hover:text-slate-100 
+									text-left rounded-md hover:bg-gray-600 cursor-default"
+						on:click={() => changeVersion(version.uuid)}
+					>
+						{version.name}
+					</DropdownMenu.Item>
+				{/each}
+			</DropdownMenu.SubContent>
+		</DropdownMenu.Sub>
+
+		<DropdownMenu.Item
+			class="flex items-center pl-3 pr-5 py-1 truncate text-slate-300 hover:text-slate-100 
+						text-left rounded-md hover:bg-gray-600 cursor-default"
+			on:click={uninstall}
+		>
+			<Icon class="text-xl mr-1" icon="mdi:delete" />
+			Uninstall
+		</DropdownMenu.Item>
+	</svelte:fragment>
+
 	<div slot="header">
 		{#if updates.length > 0}
 			<div class="text-blue-100 bg-blue-600 mr-3 mb-2 px-4 py-2 rounded-lg">
@@ -151,15 +185,13 @@
 	</div>
 </ModList>
 
-<ConfirmPopup
-	title="Confirm update"
-	bind:open={updateAllOpen}
->
+<ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
 	The following mods will be updated:
 
 	<ul class="mt-2">
 		{#each updates as update}
-			<li>-
+			<li>
+				-
 				<span class="text-slate-300">{update.name}</span>
 				<span class="text-slate-400 text-light">{update.old} > </span>
 				<span class="text-green-200 font-medium">{update.new}</span>

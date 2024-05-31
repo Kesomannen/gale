@@ -17,6 +17,8 @@
 	import type { ImportData } from '$lib/models';
 	import { fly } from 'svelte/transition';
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
+	import { currentProfile } from '$lib/stores';
+	import { get } from 'svelte/store';
 
 	let preferencesOpen = false;
 	let importR2Open = false;
@@ -57,6 +59,11 @@
 		if (!dir) return;
 		invokeCommand('export_file', { dir });
 	}
+
+	async function setAllModsState(enable: boolean) {
+		await invokeCommand('set_all_mods_state', { enable });
+		currentProfile.update((p) => p);
+	}
 </script>
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
@@ -79,26 +86,22 @@
 				<MenubarItem onClick={() => invokeCommand('clear_download_cache', { soft: false })}
 					>Clear all cached mods</MenubarItem
 				>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
-				<MenubarItem onClick={() => (preferencesOpen = true)}>Settings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<!--
 			<MenubarTrigger>Edit</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => invokeCommand('set_all_mods_state', { enable: true })}
+				<MenubarItem onClick={() => setAllModsState(true)}
 					>Enable all mods</MenubarItem
 				>
-				<MenubarItem onClick={() => invokeCommand('set_all_mods_state', { enable: false })}
+				<MenubarItem onClick={() => setAllModsState(false)}
 					>Disable all mods</MenubarItem
 				>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />				
+				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<MenubarItem onClick={() => (preferencesOpen = true)}>Settings</MenubarItem>
 			</Menubar.Content>
-			-->
-
 		</Menubar.Menu>
 		<Menubar.Menu>
 			<MenubarTrigger>Import</MenubarTrigger>

@@ -9,7 +9,7 @@
 	import Icon from '@iconify/svelte';
 	import { clipboard, dialog } from '@tauri-apps/api';
 	import InputField from '$lib/components/InputField.svelte';
-	import { profiles, refreshProfiles } from '$lib/profile';
+	import { profiles, refreshProfiles } from '$lib/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';

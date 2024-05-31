@@ -11,13 +11,14 @@
 		profiles,
 		refreshProfiles,
 		setActiveProfile
-	} from '$lib/profile';
+	} from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
 
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 	import GameSelection from '$lib/components/GameSelection.svelte';
+	import Updater from './Updater.svelte';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -41,7 +42,8 @@
 	<Button.Root
 		class="flex items-center flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 cursor-default"
 		on:click={() => {
-			invokeCommand('launch_game').then(() => (launchGamePopupOpen = true));
+			invokeCommand('launch_game');
+			launchGamePopupOpen = true;
 		}}
 	>
 		<Icon icon="mdi:play-circle" class="text-xl mr-2" />
@@ -145,6 +147,8 @@
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
+
+	<Updater />
 </div>
 
 <Popup title="Launching {$currentGame?.displayName}..." bind:open={launchGamePopupOpen}>
@@ -153,7 +157,7 @@
 	</Dialog.Description>
 </Popup>
 
-<Popup title="Select game" bind:open={gamesOpen}>
+<Popup title="Select game to mod" bind:open={gamesOpen}>
 	<GameSelection onSelect={() => (gamesOpen = false)} />
 </Popup>
 

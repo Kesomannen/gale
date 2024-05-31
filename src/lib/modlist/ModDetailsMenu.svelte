@@ -8,13 +8,12 @@
 
 	import { open } from '@tauri-apps/api/shell';
 	import { fetch, Response } from '@tauri-apps/api/http';
-	import { currentGame } from '$lib/profile';
+	import { currentGame } from '$lib/stores';
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
 
 	export let mod: Mod;
 	export let onClose: () => void;
-	export let extraDropdownOptions: DropdownOption[] = [];
 
 	const defaultDropdownOptions: DropdownOption[] = [
 		{
@@ -28,10 +27,6 @@
 
 	$: {
 		let options = [...defaultDropdownOptions];
-
-		if (extraDropdownOptions.length > 0) {
-			options.splice(0, 0, ...extraDropdownOptions);
-		}
 
 		if (mod.websiteUrl && mod.websiteUrl.length > 0) {
 			options.splice(0, 0, {
@@ -82,6 +77,8 @@
 			transition={slide}
 			transitionConfig={{ duration: 100 }}
 		>
+		<slot name="dropdown" />
+
 			{#each dropdownOptions as option}
 				<DropdownMenu.Item
 					class="flex items-center pl-3 pr-5 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"

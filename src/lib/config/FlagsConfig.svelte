@@ -1,10 +1,7 @@
 <script lang="ts">
-	import { setTaggedConfig } from '$lib/invoke';
+	import { setTaggedConfig } from '$lib/config';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
-	import { Select } from 'bits-ui';
 	import ResetConfigButton from './ResetConfigButton.svelte';
-	import { slide } from 'svelte/transition';
-	import Icon from '@iconify/svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	export let entryId: ConfigEntryId;

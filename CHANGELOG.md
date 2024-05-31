@@ -4,8 +4,14 @@
 
 ### Added
 
+- "Change version" option to profile mod dropdown
+- Icon in the top right to indicate if an app update is available
 - Disable and enable all mods button
-- Open Gale logs button
+- Open Gale log button
+
+### Changed
+
+- Moved settings to Edit menu
 
 ### Fixed
 

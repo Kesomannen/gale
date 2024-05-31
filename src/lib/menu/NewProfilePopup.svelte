@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Popup from '../components/Popup.svelte';
 	import { Button, Dialog } from 'bits-ui';
-	import { refreshProfiles } from '$lib/profile';
+	import { refreshProfiles } from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import InputField from '$lib/components/InputField.svelte';
