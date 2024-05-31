@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     fs,
-    io::{self, Write},
+    io::{self},
     path::{Path, PathBuf},
     str::{self, Split},
     sync::Mutex,

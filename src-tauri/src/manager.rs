@@ -443,7 +443,7 @@ impl Profile {
             let borrowed = mod_ref.borrow(thunderstore)?;
 
             if profile_mod.enabled {
-                if let Some(dependants) = self.check_dependants(borrowed.clone(), thunderstore)? {
+                if let Some(dependants) = self.check_dependants(borrowed, thunderstore)? {
                     return Ok(ModActionResponse::HasDependants(dependants));
                 }
             } else if let Some(deps) = self.check_deps(borrowed, thunderstore)? {

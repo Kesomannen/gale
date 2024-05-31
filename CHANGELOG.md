@@ -6,9 +6,10 @@
 
 - Open Gale logs button
 
-### Changed
+### Fixed
 
-- Moved Settings to Edit, instead of File
+- Moving data directory throwing an erorr
+- Moving cache directory before any mods are installed
 
 ## 0.5.0 (2024-05-30)
 
