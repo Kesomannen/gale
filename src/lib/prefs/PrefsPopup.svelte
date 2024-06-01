@@ -15,7 +15,7 @@
 
 		<Separator.Root class="h-[1px] my-2 bg-gray-500" />
 
-		<PathSetting label="Steam executable" key="steam_exe_path" type="exe">
+		<PathSetting label="Steam executable" key="steam_exe_path" type="file">
 			Path to the Steam executable.
 		</PathSetting>
 

@@ -7,7 +7,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use futures_util::StreamExt;
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
@@ -474,6 +474,15 @@ pub async fn install_with_deps(
     options: InstallOptions,
     app: &tauri::AppHandle,
 ) -> Result<()> {
+    {
+        let manager = app.state::<Mutex<ModManager>>();
+        let manager = manager.lock().unwrap();
+
+        if manager.active_profile().has_mod(&mod_ref.package_uuid) {
+            bail!("mod already installed");
+        }
+    }
+
     install_mods(
         move |manager, thunderstore| {
             let borrowed_mod = mod_ref.borrow(thunderstore)?;

@@ -8,7 +8,7 @@
 
 	export let label: string;
 	export let key: string;
-	export let type: 'exe' | 'dir';
+	export let type: 'dir' | 'file';
 
 	export let setValue = (value: string | null) => {
 		invokeCommand('set_pref', { key, value });
@@ -27,7 +27,6 @@
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			filters: type === 'exe' ? [{ name: 'Executable', extensions: ['exe'] }] : undefined,
 			title: 'Select ' + key,
 			directory: type === 'dir'
 		}).then(async (result) => {
@@ -39,6 +38,6 @@
 	}
 </script>
 
-<PathField {label} {value} onClick={browse} icon={type === 'exe' ? 'mdi:file' : 'mdi:folder'}>
+<PathField {label} {value} onClick={browse} icon={type === 'file' ? 'mdi:file' : 'mdi:folder'}>
 	<slot />
 </PathField>

@@ -229,11 +229,12 @@ fn write_config(profile: &Profile, zip: &mut fs_util::Zip) -> Result<()> {
     zip.add_dir("config")?;
 
     for file in profile.ok_config() {
-        let content = config::ser::to_string(file);
         let path = file.path_relative();
         let path = path.strip_prefix("BepInEx").unwrap();
-        zip.write_str(path.to_str().unwrap(), &content)
-            .fs_context("writing config file", path)?;
+
+        let writer = zip.writer(path)?;
+        config::ser::to_writer(file, writer)
+            .with_context(|| format!("failed to write config file {}", path.display()))?;
     }
 
     Ok(())

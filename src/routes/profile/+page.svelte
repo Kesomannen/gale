@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -11,6 +12,7 @@
 		type AvailableUpdate,
 		SortBy
 	} from '$lib/models';
+	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { currentGame, currentProfile } from '$lib/stores';
 	import { isOutdated } from '$lib/util';
@@ -118,9 +120,9 @@
 				class="flex items-center pl-3 pr-1 py-1 truncate text-slate-300 hover:text-slate-100 
 							text-left rounded-md hover:bg-gray-600 cursor-default"
 			>
-				<Icon class="text-xl mr-1" icon="mdi:edit" />
+				<Icon class="text-lg mr-1.5" icon="mdi:edit" />
 				Change version
-				<Icon class="text-xl ml-3" icon="mdi:chevron-right" />
+				<Icon class="text-xl ml-4" icon="mdi:chevron-right" />
 			</DropdownMenu.SubTrigger>
 			<DropdownMenu.SubContent
 				class="flex flex-col max-h-96 overflow-y-auto bg-gray-700 gap-0.5 mr-2
@@ -140,14 +142,25 @@
 			</DropdownMenu.SubContent>
 		</DropdownMenu.Sub>
 
-		<DropdownMenu.Item
-			class="flex items-center pl-3 pr-5 py-1 truncate text-slate-300 hover:text-slate-100 
-						text-left rounded-md hover:bg-gray-600 cursor-default"
-			on:click={uninstall}
-		>
-			<Icon class="text-xl mr-1" icon="mdi:delete" />
-			Uninstall
-		</DropdownMenu.Item>
+		<ModDetailsDropdownItem
+			label="Show in explorer"
+			icon="mdi:folder"
+			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
+		/>
+
+		{#if activeMod?.configFile}
+			<ModDetailsDropdownItem
+				label="Edit config"
+				icon="mdi:settings"
+				onClick={() => goto("/config?file=" + activeMod?.configFile)}
+			/>
+		{/if}
+
+		<ModDetailsDropdownItem
+			label="Uninstall"
+			icon="mdi:delete"
+			onClick={uninstall}
+		/>
 	</svelte:fragment>
 
 	<div slot="header">
@@ -167,6 +180,7 @@
 			</div>
 		{/if}
 	</div>
+
 	<div slot="item" let:mod>
 		<Switch.Root
 			checked={mod.enabled ?? true}
@@ -194,7 +208,7 @@
 				-
 				<span class="text-slate-300">{update.name}</span>
 				<span class="text-slate-400 text-light">{update.old} > </span>
-				<span class="text-green-200 font-medium">{update.new}</span>
+				<span class="text-blue-200 font-medium">{update.new}</span>
 			</li>
 		{/each}
 	</ul>

@@ -176,7 +176,7 @@ fn test_file() -> File {
         ],
         Some(FileMetadata { 
             plugin_name: "Plugin".to_owned(),
-            plugin_version: "1.0.0".to_owned(),
+            plugin_version: "v1.0.0".to_owned(),
             plugin_guid: "Author.PluginGuid".to_owned(),
         })
     )
@@ -184,11 +184,16 @@ fn test_file() -> File {
 
 #[test]
 fn test_to_string() {
-    assert_eq!(ser::to_string(&test_file()), TEST_STR);
+    assert_eq!(ser::to_string(&test_file()).unwrap(), TEST_STR);
 }
 
 #[test]
 fn test_from_string() {
     let (sections, metadata) = de::from_str(TEST_STR).unwrap();
-    assert_eq!(File::new("test".to_owned(), sections, metadata), test_file());
+    let mut left = File::new("test".to_owned(), sections, metadata);
+    let right = test_file();
+
+    left.read_time = right.read_time;
+
+    assert_eq!(left, right);
 }

@@ -91,7 +91,8 @@ impl File {
     }
 
     pub fn save(&self, root: &Path) -> io::Result<()> {
-        fs::write(self.path_from(root), ser::to_string(self))
+        let mut file = fs::File::create(self.path_from(root))?;
+        ser::to_writer(self, &mut file)
     }
 }
 
@@ -243,12 +244,12 @@ impl Profile {
             };
 
             let file = self.ok_config().find(|file| match &file.metadata {
-                Some(meta) => meta.plugin_guid == name,
+                Some(meta) => name == meta.plugin_name,
                 None => false,
             });
 
             if let Some(file) = file {
-                debug!("linked {} to config file {}", name, file.name);
+                debug!("linked {} to config file", name);
                 self.mod_config_map
                     .insert(*profile_mod.uuid(), file.name.clone());
             }

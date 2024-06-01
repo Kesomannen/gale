@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, Context};
+use anyhow::{bail, anyhow, Context};
 use serde::Serialize;
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -321,7 +321,7 @@ pub fn set_all_mods_state(
     for uuid in uuids {
         profile.force_toggle_mod(&uuid, &thunderstore)?;
     }
-    
+
     save(&manager, &prefs)?;
 
     Ok(())
@@ -353,12 +353,35 @@ pub fn open_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let path = &manager.active_profile().path;
-    open::that(path).context("failed to open profile directory")?;
+    open::that(path).context("failed to open directory")?;
 
     Ok(())
 }
 
-fn log_path(manager: &ModManager) -> anyhow::Result<PathBuf> {
+#[tauri::command]
+pub fn open_plugin_dir(
+    uuid: Uuid,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+) -> Result<()> {
+    let manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+
+    let profile = manager.active_profile();
+    let full_name = profile.get_mod(&uuid)?.kind.full_name(&thunderstore)?;
+
+    let path = profile.path.join("BepInEx").join("plugins").join(full_name);
+    
+    if !path.exists() {
+        return Err(anyhow!("plugin directory not found").into());
+    }
+
+    open::that(path).context("failed to open directory")?;
+
+    Ok(())
+}
+
+fn bepinex_log_path(manager: &ModManager) -> anyhow::Result<PathBuf> {
     let path = manager
         .active_profile()
         .path
@@ -376,7 +399,7 @@ fn log_path(manager: &ModManager) -> anyhow::Result<PathBuf> {
 pub fn open_bepinex_log(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
-    let path = log_path(&manager)?;
+    let path = bepinex_log_path(&manager)?;
     open::that(path).context("failed to open log file")?;
 
     Ok(())

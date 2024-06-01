@@ -56,7 +56,11 @@
 	</div>
 {/if}
 
-<h3 class="text-lg text-slate-200 font-semibold mt-3">Choose profiles to import</h3>
+{#if importData.r2modman || importData.thunderstore}
+	<h3 class="text-lg text-slate-200 font-semibold mt-3">Choose profiles to import</h3>
+{:else}
+	<div class="text-lg font-semibold text-red-400 w-full text-center mt-3">No profiles found</div>
+{/if}
 
 {#if importData.r2modman && importData.thunderstore}
 	<TabsMenu
@@ -81,6 +85,4 @@
       </div>
     {/each}
   </div>
-{:else}
-	<div class="text-red-300 w-full text-center">No profiles found</div>
 {/if}

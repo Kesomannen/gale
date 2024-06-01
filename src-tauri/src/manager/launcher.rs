@@ -14,7 +14,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
 use typeshare::typeshare;
-use log::{debug, info};
+use log::info;
 
 pub mod commands;
 

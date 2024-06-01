@@ -75,19 +75,21 @@ pub struct Zip {
 }
 
 impl Zip {
-    pub fn write<P: AsRef<Path>>(&mut self, path: P, data: &[u8]) -> Result<(), io::Error> {
+    pub fn writer(&mut self, path: impl AsRef<Path>) -> io::Result<&mut ZipWriter<File>> {
         #[allow(deprecated)]
-        self.writer
-            .start_file_from_path(path.as_ref(), self.options)?;
-        self.writer.write_all(data)?;
-        Ok(())
+        self.writer.start_file_from_path(path.as_ref(), self.options)?;
+        Ok(&mut self.writer)
     }
 
-    pub fn write_str<P: AsRef<Path>>(&mut self, path: P, data: &str) -> Result<(), io::Error> {
-        self.write(path.as_ref(), data.as_bytes())
+    pub fn write(&mut self, path: impl AsRef<Path>, data: &[u8]) -> io::Result<()> {
+        self.writer(path)?.write_all(data)
     }
 
-    pub fn add_dir<P: AsRef<Path>>(&mut self, path: P) -> Result<(), io::Error> {
+    pub fn write_str(&mut self, path: impl AsRef<Path>, data: &str) -> io::Result<()> {
+        self.write(path, data.as_bytes())
+    }
+
+    pub fn add_dir(&mut self, path: impl AsRef<Path>) -> io::Result<()> {
         #[allow(deprecated)]
         self.writer
             .add_directory_from_path(path.as_ref(), self.options)?;

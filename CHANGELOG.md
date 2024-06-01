@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Quick install button in mod list
+- "Edit config" and "Open in explorer" options to profile mod dropdown
+
+### Fixed
+
+- Improve performance of config serialization
+- Config editor sometimes freezing when switching between profiles
+
 ## 0.5.1 (2024-05-31)
 
 ### Added
@@ -16,7 +28,7 @@
 
 ### Fixed
 
-- Moving data directory throwing an erorr
+- Moving data directory
 - Moving cache directory before any mods are installed
 
 ## 0.5.0 (2024-05-30)

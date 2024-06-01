@@ -49,7 +49,7 @@ TBD
 
 ### Building from source
 
-Make sure you have done all of the [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites).
+Make sure you have done all of the [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) and installed the tauri CLI with `cargo install tauri-cli`.
 After you have cloned the repository, run
 ```sh
 npm install

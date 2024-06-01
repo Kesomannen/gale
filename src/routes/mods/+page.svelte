@@ -34,7 +34,7 @@
 			}
 		: undefined;
 
-	let isModInstalled = false;
+	let isActiveModInstalled = false;
 
 	let unlistenFromQuery: UnlistenFn | undefined;
 
@@ -66,7 +66,7 @@
 
 	$: if (activeMod) {
 		invokeCommand<boolean>('is_mod_installed', { uuid: activeMod.uuid }).then(
-			(result) => (isModInstalled = result)
+			(result) => (isActiveModInstalled = result)
 		);
 
 		invokeCommand<number>('get_download_size', { modRef: activeModRef }).then(
@@ -74,7 +74,7 @@
 		);
 	}
 
-	async function install(modRef: { packageUuid: string; versionUuid: string }) {
+	async function install(modRef?: { packageUuid: string; versionUuid: string }) {
 		missingDeps = await invokeCommand<string[]>('missing_deps', { modRef });
 		if (missingDeps.length > 0) {
 			missingDepsOpen = true;
@@ -91,14 +91,10 @@
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg
 								enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-semibold
 								disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
-			on:click={() => {
-				if (activeModRef) {
-					install(activeModRef);
-				}
-			}}
-			disabled={isModInstalled}
+			on:click={() => install(activeModRef)}
+			disabled={isActiveModInstalled}
 		>
-			{#if isModInstalled}
+			{#if isActiveModInstalled}
 				Mod already installed
 			{:else}
 				<Icon icon="mdi:download" class="text-xl align-middle" />
@@ -113,7 +109,7 @@
 				class="gap-2 rounded-r-lg py-2 px-1.5 ml-0.5 text-2xl
 						enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-medium
 						disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
-				disabled={isModInstalled}
+				disabled={isActiveModInstalled}
 			>
 				<Icon
 					icon="mdi:chevron-down"
@@ -144,6 +140,23 @@
 				{/each}
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
+	</div>
+
+	<div slot="item" let:mod>
+		<Button.Root
+			class="bg-green-600 hover:bg-green-500 p-3 ml-2 mt-0.5 mr-0.5 
+							rounded-lg text-white text-xl align-middle hidden group-hover:inline"
+			on:click={() => {
+				let modRef = {
+					packageUuid: mod.uuid,
+					versionUuid: mod.versions[0].uuid
+				};
+
+				install(modRef);
+			}}
+		>
+			<Icon icon="mdi:download" />
+		</Button.Root>
 	</div>
 </ModList>
 

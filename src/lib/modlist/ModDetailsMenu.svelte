@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import type { DropdownOption, Mod } from '../models';
+	import type { Mod } from '../models';
 	import { isOutdated, shortenNum, timeSince } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
@@ -11,41 +11,10 @@
 	import { currentGame } from '$lib/stores';
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
+	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 
 	export let mod: Mod;
 	export let onClose: () => void;
-
-	const defaultDropdownOptions: DropdownOption[] = [
-		{
-			icon: 'mdi:close',
-			label: 'Close',
-			onClick: onClose
-		}
-	];
-
-	let dropdownOptions = defaultDropdownOptions;
-
-	$: {
-		let options = [...defaultDropdownOptions];
-
-		if (mod.websiteUrl && mod.websiteUrl.length > 0) {
-			options.splice(0, 0, {
-				icon: 'mdi:open-in-new',
-				label: 'Open website',
-				onClick: () => open(mod.websiteUrl!)
-			});
-		}
-
-		if (mod.donateUrl) {
-			options.splice(0, 0, {
-				icon: 'mdi:heart',
-				label: 'Donate',
-				onClick: () => open(mod.donateUrl!)
-			});
-		}
-
-		dropdownOptions = options;
-	}
 
 	let dependenciesOpen = false;
 
@@ -63,6 +32,10 @@
 
 		open(`https://thunderstore.io/c/${game.id}/p/${tail}/`);
 	}
+
+	function openIfDefined(url?: string) {
+		if (url) open(url);
+	}
 </script>
 
 <div
@@ -77,19 +50,25 @@
 			transition={slide}
 			transitionConfig={{ duration: 100 }}
 		>
-		<slot name="dropdown" />
+			<slot name="dropdown" />
 
-			{#each dropdownOptions as option}
-				<DropdownMenu.Item
-					class="flex items-center pl-3 pr-5 py-1 truncate text-slate-300 hover:text-slate-100 text-left rounded-md hover:bg-gray-600 cursor-default"
-					on:click={option.onClick}
-				>
-					{#if option.icon}
-						<Icon class="text-xl mr-1" icon={option.icon} />
-					{/if}
-					{option.label}
-				</DropdownMenu.Item>
-			{/each}
+			{#if mod.websiteUrl && mod.websiteUrl.length > 0}
+				<ModDetailsDropdownItem
+					icon="mdi:open-in-new"
+					label="Open website"
+					onClick={() => openIfDefined(mod.websiteUrl)}
+				/>
+			{/if}
+
+			{#if mod.donateUrl}
+				<ModDetailsDropdownItem
+					icon="mdi:heart"
+					label="Donate"
+					onClick={() => openIfDefined(mod.donateUrl)}
+				/>
+			{/if}
+
+			<ModDetailsDropdownItem icon="mdi:close" label="Close" onClick={onClose} />
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 

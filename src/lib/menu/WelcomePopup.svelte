@@ -111,7 +111,7 @@
 			<div class="flex flex-col mt-3 gap-1">
 				<ZoomLevelPref />
 
-				<PathSetting label="Steam executable" key="steam_exe_path" type="exe">
+				<PathSetting label="Steam executable" key="steam_exe_path" type="file">
 					Path to the Steam executable.
 				</PathSetting>
 

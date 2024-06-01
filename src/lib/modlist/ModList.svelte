@@ -7,7 +7,6 @@
 		SortBy,
 		type Mod,
 		type QueryModsArgs,
-		type DropdownOption,
 		SortOrder
 	} from '$lib/models';
 

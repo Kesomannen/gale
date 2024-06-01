@@ -141,12 +141,6 @@ export interface ConfigEntryId {
 	entry: TaggedConfigEntry;
 }
 
-export interface DropdownOption {
-	icon?: string;
-	label: string;
-	onClick: () => void;
-}
-
 export interface Dependant {
 	name: string;
 	uuid: string;

@@ -90,6 +90,7 @@ fn main() {
             manager::commands::force_toggle_mods,
             manager::commands::set_all_mods_state,
             manager::commands::open_profile_dir,
+            manager::commands::open_plugin_dir,
             manager::commands::open_bepinex_log,
 
             manager::launcher::commands::launch_game,

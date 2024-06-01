@@ -20,23 +20,28 @@
 	import EnumConfig from '$lib/config/EnumConfig.svelte';
 	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
 	import UntaggedConfig from '$lib/config/UntaggedConfig.svelte';
+	import { page } from '$app/stores';
 
 	let files: LoadFileResult[] | undefined;
 
-	let searchTerm: string | undefined;
+	let searchTerm: string | null;
 
 	let selectedFile: LoadFileResult | undefined;
 	let selectedSection: ConfigSection | undefined;
 
+	let scrollContainer: HTMLDivElement;
+
 	$: {
 		$currentProfile;
 		files = undefined;
+		selectedFile = undefined;
+		selectedSection = undefined;
 		refresh();
 	}
 
 	$: shownFiles =
 		searchTerm?.length ?? 0 > 1
-			? files!.filter((file) => fileName(file).toLowerCase().includes(searchTerm!.toLowerCase()))
+			? files?.filter((file) => fileName(file).toLowerCase().includes(searchTerm!.toLowerCase())) ?? []
 			: files;
 
 	function configValueToString(config: ConfigValue) {
@@ -87,13 +92,31 @@
 	}
 
 	async function refresh() {
+		searchTerm = null;
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
+
+		let file = $page.url.searchParams.get('file');
+		if (file) {
+			selectedFile = files.find((f) => fileName(f) === file);
+			if (!selectedFile) {
+				return;
+			}
+
+			if (selectedFile.type === 'ok') {
+				selectedSection = selectedFile.content.sections[0];
+			}
+
+			searchTerm = selectedFile.content.name;
+		}
+
+		$page.url.searchParams.delete('file');
 	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
 	<div
 		class="flex flex-col py-2 min-w-72 w-[30%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		bind:this={scrollContainer}
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
