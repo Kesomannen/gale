@@ -10,7 +10,6 @@ use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion},
     BorrowedMod, Thunderstore,
 };
-use log::debug;
 
 use crate::manager::LocalMod;
 
@@ -266,8 +265,6 @@ where
         SortOrder::Ascending => a.cmp(b, args),
         SortOrder::Descending => b.cmp(a, args),
     });
-
-    debug!("{} mods matched query", result.len());
 
     result.into_iter().take(args.max_count)
 }

@@ -12,14 +12,22 @@ pub fn query_thunderstore(
     thunderstore: StateMutex<Thunderstore>,
     state: StateMutex<QueryState>,
 ) -> Vec<FrontendMod> {
+    let start = std::time::Instant::now();
+
     let thunderstore = thunderstore.lock().unwrap();
-    let mut state = state.lock().unwrap();
-
+    
     let result = query::query_frontend_mods(&args, thunderstore.latest());
-
+    
     if !thunderstore.finished_loading {
+        let mut state = state.lock().unwrap();
         state.current_query = Some(args);
     }
+
+    log::debug!(
+        "query took {:?}ms, found {} mods",
+        start.elapsed(),
+        result.len()
+    );
 
     result
 }
