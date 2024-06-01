@@ -103,7 +103,7 @@ sudo apt install libwebkit2gtk-4.0-dev \
 sudo apt install cargo
 ```
 
-***NVM***
+**NVM**
 
 If your system does not have the latest node available you can install nvm by following the instructions [here](https://www.freecodecamp.org/news/node-version-manager-nvm-install-guide/)
 
