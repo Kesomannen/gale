@@ -332,11 +332,15 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 }
 
 fn find_paths() -> ManagerData<PathBuf> {
-    let data_dir = tauri::api::path::data_dir().unwrap();
+    let parent_dir = match cfg!(target_os = "linux") {
+        // r2modman uses the config dir instead of the data dir on linux.
+        true => tauri::api::path::config_dir(),
+        false => tauri::api::path::data_dir(),
+    }.unwrap();
 
     return ManagerData {
-        r2modman: check_dir(data_dir.join("r2modmanPlus-local")),
-        thunderstore: check_dir(data_dir.join("Thunderstore Mod Manager").join("DataFolder")),
+        r2modman: check_dir(parent_dir.join("r2modmanPlus-local")),
+        thunderstore: check_dir(parent_dir.join("Thunderstore Mod Manager").join("DataFolder")),
     };
 
     fn check_dir(path: PathBuf) -> Option<PathBuf> {
