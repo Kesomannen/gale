@@ -30,7 +30,6 @@
 	class="flex-grow overflow-hidden"
 	bind:selected
 	onSelectedChangeSingle={onSelectChange}
-	getLabel={(value) => value}
 	size='sm'
 />
 <ResetConfigButton {entryId} {onReset} />

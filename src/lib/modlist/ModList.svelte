@@ -11,6 +11,7 @@
 	import VirtualList from '@sveltejs/svelte-virtual-list';
 	import { categories } from '$lib/stores';
 	import type { Writable } from 'svelte/store';
+	import { sentenceCase } from '$lib/util';
 
 	export let sortOptions: SortBy[];
 
@@ -40,7 +41,7 @@
 			includeDeprecated,
 			includeDisabled: true,
 			sortBy,
-			sortOrder,
+			sortOrder
 		};
 	}
 
@@ -71,7 +72,11 @@
 				<Icon class="absolute left-[12px] top-[8px] text-slate-500 text-2xl" icon="mdi:magnify" />
 			</div>
 
-			<Dropdown items={[SortOrder.Descending, SortOrder.Ascending]} bind:selected={sortOrder}>
+			<Dropdown
+				items={[SortOrder.Descending, SortOrder.Ascending]}
+				bind:selected={sortOrder}
+				getLabel={sentenceCase}
+			>
 				<Select.Trigger
 					let:text
 					let:open
@@ -92,7 +97,7 @@
 				</Select.Trigger>
 			</Dropdown>
 
-			<Dropdown items={sortOptions} bind:selected={sortBy}>
+			<Dropdown items={sortOptions} bind:selected={sortBy} getLabel={sentenceCase}>
 				<Select.Trigger
 					let:text
 					let:open
@@ -114,7 +119,6 @@
 		<div class="flex gap-1.5 mb-1.5 pr-3">
 			<Dropdown
 				items={categories.filter((category) => !excludeCategories.includes(category)).toSorted()}
-				getLabel={(category) => category}
 				multiple={true}
 				bind:selected={includeCategories}
 			>
@@ -156,7 +160,6 @@
 
 			<Dropdown
 				items={categories.filter((category) => !includeCategories.includes(category)).toSorted()}
-				getLabel={(category) => category}
 				multiple={true}
 				bind:selected={excludeCategories}
 			>
@@ -200,7 +203,7 @@
 
 			<Dropdown
 				items={['Deprecated', 'NSFW']}
-				getLabel={(s) => s}
+				selected={[includeDeprecated ? 'Deprecated' : '', includeNsfw ? 'NSFW' : '']}
 				multiple={true}
 				onSelectedChange={(items) => {
 					includeDeprecated = items.includes('Deprecated');

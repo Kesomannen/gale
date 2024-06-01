@@ -13,7 +13,7 @@
 	export let size: 'sm' | 'md' | 'lg' = 'md';
 	export let onSelectedChange = (items: T[]) => {};
 	export let onSelectedChangeSingle = (item: T) => {};
-	export let getLabel = (item: T) => sentenceCase(item as string);
+	export let getLabel = (item: T) => item as string;
 
 	let className: string = '';
 

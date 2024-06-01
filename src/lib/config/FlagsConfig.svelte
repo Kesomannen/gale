@@ -28,7 +28,6 @@
 	bind:selected
 	{onSelectedChange}
 	multiple={true}
-	getLabel={(value) => value}
 	size='sm'
 />
 <ResetConfigButton {entryId} {onReset} />

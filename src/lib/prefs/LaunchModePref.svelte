@@ -5,6 +5,7 @@
 	import type { LaunchMode, PrefValue } from '$lib/models';
 	import { onMount } from 'svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
+	import { sentenceCase } from '$lib/util';
 
 	let value: LaunchMode | undefined;
 	let instances = 1;
@@ -44,6 +45,7 @@
 	<Dropdown
 		class="flex-grow"
 		items={['steam', 'direct']}
+		getLabel={sentenceCase}
 		selected={value?.type ?? 'steam'}
 		onSelectedChangeSingle={set}
 	/>

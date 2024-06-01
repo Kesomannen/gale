@@ -9,11 +9,12 @@
 
 ### Changed
 
-- Filters, sorting and search queries are now saved between page navigations
+- Search queries, filters and sorting options are now saved between page navigations
 - UI tweaks
 
 ### Fixed
 
+- Profile names being capitalized in the import profile dialog
 - R2modman/TMM profiles not being found on Linux
 - Improve performance of config serialization
 - Config editor sometimes freezing when switching between profiles
