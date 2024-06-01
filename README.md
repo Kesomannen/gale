@@ -64,21 +64,30 @@ TBD
 
 ## Building from source
 
-### On Windows
+### Windows
 
-Make sure you have done all of the [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) and installed the tauri CLI with `cargo install tauri-cli`.
-After you have cloned the repository, run
+Firstly, make sure you have done all of the [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites).
+
+Additionally, make sure you have git and the tauri CLI installed (or install it with `cargo install tauri-cli`).
+
+After you have cloned the repository, run the following to start a dev server:
 ```sh
 npm install
 cargo tauri dev
 ```
-to start a dev server. Alternatively, do `cargo tauri build` to build an installer for your platform. If you want to modify/distribute the app, keep in mind the [license](https://choosealicense.com/licenses/gpl-3.0/#).
+To build Gale, run:
+```sh
+cargo tauri build
+```
+After a while, it will output both an .msi and an .exe installer in the `src-tauri/target/release/bundle` folder.
 
-### On Linux
+> If you want to modify/distribute the app, keep in mind the [license](/LICENSE).
+
+### Linux
 
 **Install the required tools and build chain**
 
-Notice: The examples use a Debian flavor package manager. Use your system specific package manager such as Yum/Pacman instead`
+> **Note:** The examples use a Debian flavor package manager. Use your system specific package manager such as Yum or Pacman instead.
 
 To build Gale on Linux you will likely require the following packages:
 
@@ -105,9 +114,9 @@ sudo apt install cargo
 
 **NVM**
 
-If your system does not have the latest node available you can install nvm by following the instructions [here](https://www.freecodecamp.org/news/node-version-manager-nvm-install-guide/)
+If your system does not have the latest node available you can install nvm by following the instructions [here](https://www.freecodecamp.org/news/node-version-manager-nvm-install-guide/).
 
-You can install a version of node that will work with Gale by using
+You can install a version of node that will work with Gale by using:
 
 ```sh
 nvm install 20
@@ -121,25 +130,30 @@ nvm use 20
 
 You will need to set your node version before using any NPM commands later in this guide.
 
-**Install TauriCLI**
+**Install the Tauri CLI**
 
 ```sh
 cargo install tauri-cli
 ```
 
-This will take a while, especially if you've never compiled anything with rust before.
+This will take a while, especially if you've never compiled anything with Rust before.
 
-Congrats, you're now ready to actually start building.
-
-**Build Gale**
+**Start the dev server**
 
 ```sh
 nvm use 20
 npm install
-cargo tauri build
+cargo tauri dev
 ```
 
-This will take a decent chunk of time if its your first time compiling Gale. There will be some ignorable warnings but it will output both an installable package (a .deb for debian flavor systems) and an executable (eg: a bundled appimage) under `src-tauri/target/release/bundle`
+**Build Gale**
+
+```sh
+cargo tauri build
+```
+After a while, this it will output both an executable and an installable package (a .deb for debian-based systems) in the `src-tauri/target/release/bundle` directory.
+
+> If you want to modify/distribute the app, keep in mind the [license](/LICENSE).
 
 ## Screenshots
 
