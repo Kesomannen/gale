@@ -1,6 +1,6 @@
 ![logo](https://raw.githubusercontent.com/Kesomannen/gale/master/app-icon@0,25x.png)
 
-<h2> Gale Mod Manager </h2>
+<h1> Gale Mod Manager </h1>
 
 A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
