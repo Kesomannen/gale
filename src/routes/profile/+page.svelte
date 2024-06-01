@@ -7,19 +7,20 @@
 	import {
 		type Mod,
 		type ModActionResponse,
-		type QueryModsArgs,
 		type ProfileQuery,
 		type AvailableUpdate,
-		SortBy
+		SortBy,
+
+		type QueryModsArgs
+
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
-	import { currentGame, currentProfile } from '$lib/stores';
+	import { currentProfile, profileQuery } from '$lib/stores';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
 	import { fly } from 'svelte/transition';
-	import type { PageData } from './$types';
 
 	const sortOptions = [
 		SortBy.InstallDate,
@@ -31,12 +32,9 @@
 		SortBy.Author
 	];
 
-	export let data: PageData;
-
 	let mods: Mod[] = [];
 	let updates: AvailableUpdate[] = [];
 	let activeMod: Mod | undefined;
-	let queryArgs = data.queryArgs;
 
 	let removeDependants: DependantsPopup;
 	let disableDependants: DependantsPopup;
@@ -45,19 +43,15 @@
 	let updateAllOpen = false;
 
 	$: {
-		queryArgs;
-		$currentProfile;
-		$currentGame;
+		$profileQuery;
 		refresh();
 	}
 
 	function refresh() {
-		if (queryArgs) {
-			invokeCommand<ProfileQuery>('query_profile', { args: queryArgs }).then((result) => {
-				mods = result.mods;
-				updates = result.updates;
-			});
-		}
+		invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery }).then((result) => {
+			mods = result.mods;
+			updates = result.updates;
+		});
 	}
 
 	async function toggleMod(new_value: boolean, mod: Mod) {
@@ -103,9 +97,9 @@
 
 <ModList
 	bind:mods
-	bind:queryArgs
 	bind:activeMod
 	{sortOptions}
+	queryArgs={profileQuery}
 >
 	<div slot="details">
 		{#if activeMod && isOutdated(activeMod)}

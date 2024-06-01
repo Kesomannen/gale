@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
-use log::debug;
 use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion},
     BorrowedMod, Thunderstore,
 };
+use log::debug;
 
 use crate::manager::LocalMod;
 
@@ -22,18 +22,9 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ModSource {
-    Thunderstore,
-    Profile,
-}
-
 #[derive(Default)]
 pub struct QueryState {
-    pub profile_args: QueryModsArgs,
-    pub thunderstore_args: QueryModsArgs,
-    pub query_passively: bool,
+    pub current_query: Option<QueryModsArgs>,
 }
 
 #[typeshare]
@@ -98,17 +89,16 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
         {
             let mut state = query_state.lock().unwrap();
 
-            if state.query_passively {
+            if let Some(args) = &state.current_query {
                 let thunderstore = thunderstore.lock().unwrap();
 
-                let mods = query_frontend_mods(&state.thunderstore_args, thunderstore.latest());
+                let mods = query_frontend_mods(args, thunderstore.latest());
                 app.emit_all("mod_query_result", &mods)?;
 
                 if thunderstore.finished_loading {
-                    state.query_passively = false;
+                    state.current_query = None;
                 }
             }
-
         };
 
         tokio::time::sleep(TIME_BETWEEN_QUERIES).await;

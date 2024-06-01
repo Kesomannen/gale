@@ -9,19 +9,14 @@
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { currentGame } from '$lib/stores';
 	import { fly } from 'svelte/transition';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import type { PageData } from './$types';
+	import { modQuery } from '$lib/stores';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
-	export let data: PageData;
-
 	let mods: Mod[];
-	let queryArgs: QueryModsArgs = data.queryArgs;
-
 	let activeMod: Mod | undefined;
 	let activeDownloadSize: number | undefined;
 
@@ -56,14 +51,9 @@
 		};
 	});
 
-	$: {
-		$currentGame;
-		if (queryArgs) {
-			invokeCommand<Mod[]>('query_thunderstore', { args: queryArgs }).then((result) => {
-				mods = result;
-			});
-		}
-	}
+	$: invokeCommand<Mod[]>('query_thunderstore', { args: $modQuery }).then((result) => {
+		mods = result;
+	});
 
 	$: if (activeMod) {
 		invokeCommand<boolean>('is_mod_installed', { uuid: activeMod.uuid }).then(
@@ -86,7 +76,7 @@
 	}
 </script>
 
-<ModList bind:activeMod bind:mods bind:queryArgs {sortOptions}>
+<ModList bind:activeMod bind:mods queryArgs={modQuery} {sortOptions}>
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg

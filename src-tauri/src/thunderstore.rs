@@ -133,7 +133,6 @@ impl Thunderstore {
         self.packages = IndexMap::new();
 
         let load_mods_handle = tauri::async_runtime::spawn(load_mods_loop(app, game));
-
         self.load_mods_handle = Some(load_mods_handle);
     }
 

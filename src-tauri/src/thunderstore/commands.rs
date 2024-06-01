@@ -2,7 +2,7 @@ use crate::command_util::{Result, StateMutex};
 
 use super::{
     models::FrontendMod,
-    query::{self, ModSource, QueryModsArgs, QueryState},
+    query::{self, QueryModsArgs, QueryState},
     ModRef, Thunderstore,
 };
 
@@ -11,34 +11,23 @@ pub fn query_thunderstore(
     args: QueryModsArgs,
     thunderstore: StateMutex<Thunderstore>,
     state: StateMutex<QueryState>,
-) -> Option<Vec<FrontendMod>> {
+) -> Vec<FrontendMod> {
     let thunderstore = thunderstore.lock().unwrap();
-
     let mut state = state.lock().unwrap();
 
+    let result = query::query_frontend_mods(&args, thunderstore.latest());
+
     if !thunderstore.finished_loading {
-        state.query_passively = true;   
+        state.current_query = Some(args);
     }
 
-    let result = query::query_frontend_mods(&args, thunderstore.latest());
-    state.thunderstore_args = args;
-
-    Some(result)
+    result
 }
 
 #[tauri::command]
 pub fn stop_querying_thunderstore(state: StateMutex<QueryState>) {
     let mut state = state.lock().unwrap();
-    state.query_passively = false;
-}
-
-#[tauri::command]
-pub fn get_query_args(source: ModSource, query_state: StateMutex<QueryState>) -> QueryModsArgs {
-    let query_state = query_state.lock().unwrap();
-    match source {
-        ModSource::Thunderstore => &query_state.thunderstore_args,
-        ModSource::Profile => &query_state.profile_args,
-    }.clone()
+    state.current_query = None;
 }
 
 #[tauri::command]

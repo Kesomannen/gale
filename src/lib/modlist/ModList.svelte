@@ -10,36 +10,39 @@
 
 	import VirtualList from '@sveltejs/svelte-virtual-list';
 	import { categories } from '$lib/stores';
+	import type { Writable } from 'svelte/store';
 
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined = undefined;
-	export let queryArgs: QueryModsArgs;
+	export let queryArgs: Writable<QueryModsArgs>;
 
 	let listStart = 0;
 	let listEnd = 0;
 
 	let maxCount = 20;
-	let searchTerm = queryArgs.searchTerm;
-	let includeCategories = queryArgs.includeCategories;
-	let excludeCategories = queryArgs.excludeCategories;
-	let includeNsfw = queryArgs.includeNsfw;
-	let includeDeprecated = queryArgs.includeDeprecated;
-	let sortBy = queryArgs.sortBy;
-	let sortOrder = queryArgs.sortOrder;
+	let searchTerm = $queryArgs.searchTerm;
+	let includeCategories = $queryArgs.includeCategories;
+	let excludeCategories = $queryArgs.excludeCategories;
+	let includeNsfw = $queryArgs.includeNsfw;
+	let includeDeprecated = $queryArgs.includeDeprecated;
+	let sortBy = $queryArgs.sortBy;
+	let sortOrder = $queryArgs.sortOrder;
 
-	$: queryArgs = {
-		maxCount,
-		searchTerm,
-		includeCategories,
-		excludeCategories,
-		includeNsfw,
-		includeDeprecated,
-		includeDisabled: true,
-		sortBy,
-		sortOrder
-	};
+	$: {
+		$queryArgs = {
+			maxCount,
+			searchTerm,
+			includeCategories,
+			excludeCategories,
+			includeNsfw,
+			includeDeprecated,
+			includeDisabled: true,
+			sortBy,
+			sortOrder,
+		};
+	}
 
 	function onModClicked(mod: Mod) {
 		if (activeMod === undefined || activeMod.uuid !== mod.uuid) {

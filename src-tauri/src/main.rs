@@ -68,7 +68,6 @@ fn main() {
         .invoke_handler(tauri::generate_handler![        
             log::open_gale_log,
             
-            thunderstore::commands::get_query_args,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::missing_deps,

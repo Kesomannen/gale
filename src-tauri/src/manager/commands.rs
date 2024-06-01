@@ -9,7 +9,7 @@ use crate::{
     command_util::{Result, StateMutex},
     games::{self, Game, GAMES},
     prefs::Prefs,
-    thunderstore::{models::FrontendProfileMod, query::{QueryModsArgs, QueryState}, Thunderstore},
+    thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore},
 };
 
 use super::{ModActionResponse, ModManager, Profile};
@@ -161,11 +161,9 @@ pub fn query_profile(
     args: QueryModsArgs,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
-    query_state: StateMutex<QueryState>,
 ) -> Result<ProfileQuery> {
     let manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
-    let mut query_state = query_state.lock().unwrap();
 
     let profile = manager.active_profile();
     let mods = profile.query_mods(&args, &thunderstore)?;
@@ -182,8 +180,6 @@ pub fn query_profile(
         })
         .flatten_ok()
         .collect::<anyhow::Result<Vec<_>>>()?;
-
-    query_state.profile_args = args;
 
     Ok(ProfileQuery { updates, mods })
 }

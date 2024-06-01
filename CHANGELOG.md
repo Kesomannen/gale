@@ -9,6 +9,7 @@
 
 ### Changed
 
+- Filters, sorting and search queries are now saved between page navigations
 - UI tweaks
 
 ### Fixed

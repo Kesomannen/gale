@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { invokeCommand } from './invoke';
-import type { FiltersResponse, Game, GameInfo, ProfileInfo, ProfilesInfo } from './models';
+import { SortBy, SortOrder, type FiltersResponse, type Game, type GameInfo, type ProfileInfo, type ProfilesInfo, type QueryModsArgs } from './models';
 import { fetch } from '@tauri-apps/api/http';
 
 export let games: Game[] = [];
@@ -15,6 +15,34 @@ export const currentProfile = writable<ProfileInfo>({
 });
 
 refreshGames();
+
+const defaultModQuery: QueryModsArgs = {
+	maxCount: 20,
+	searchTerm: '',
+	includeCategories: [],
+	excludeCategories: [],
+	includeNsfw: false,
+	includeDeprecated: false,
+	includeDisabled: false,
+	sortBy: SortBy.LastUpdated,
+	sortOrder: SortOrder.Descending
+}
+
+export let modQuery = writable(defaultModQuery);
+
+const defaultProfileQuery: QueryModsArgs = {
+	maxCount: 20,
+	searchTerm: '',
+	includeCategories: [],
+	excludeCategories: [],
+	includeNsfw: true,
+	includeDeprecated: true,
+	includeDisabled: true,
+	sortBy: SortBy.InstallDate,
+	sortOrder: SortOrder.Descending
+}
+
+export let profileQuery = writable(defaultProfileQuery);
 
 export async function refreshGames() {
 	const info: GameInfo = await invokeCommand('get_game_info');
