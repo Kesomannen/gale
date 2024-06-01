@@ -75,7 +75,7 @@
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem onClick={() => invokeCommand('open_profile_dir')}
-					>Open profile folder</MenubarItem
+					>Open profile directory</MenubarItem
 				>
 				<MenubarItem onClick={() => invokeCommand('open_bepinex_log')}>Open game logs</MenubarItem>
 				<MenubarItem onClick={() => invokeCommand('open_gale_log')}>Open gale logs</MenubarItem>
