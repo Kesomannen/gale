@@ -43,6 +43,7 @@
 	let updateAllOpen = false;
 
 	$: {
+		$currentProfile;
 		$profileQuery;
 		refresh();
 	}
@@ -145,7 +146,7 @@
 		</DropdownMenu.Sub>
 
 		<ModDetailsDropdownItem
-			label="Show in explorer"
+			label="Open directory"
 			icon="mdi:folder"
 			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>

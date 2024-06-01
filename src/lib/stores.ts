@@ -16,7 +16,7 @@ export const currentProfile = writable<ProfileInfo>({
 
 refreshGames();
 
-const defaultModQuery: QueryModsArgs = {
+const defaultModQuery: () => QueryModsArgs = () => ({
 	maxCount: 20,
 	searchTerm: '',
 	includeCategories: [],
@@ -26,11 +26,15 @@ const defaultModQuery: QueryModsArgs = {
 	includeDisabled: false,
 	sortBy: SortBy.LastUpdated,
 	sortOrder: SortOrder.Descending
-}
+})
 
-export let modQuery = writable(defaultModQuery);
+export let modQuery = writable(defaultModQuery());
 
-const defaultProfileQuery: QueryModsArgs = {
+currentGame.subscribe(() => {
+	modQuery.set(defaultModQuery());
+});
+
+export let profileQuery = writable({
 	maxCount: 20,
 	searchTerm: '',
 	includeCategories: [],
@@ -40,9 +44,7 @@ const defaultProfileQuery: QueryModsArgs = {
 	includeDisabled: true,
 	sortBy: SortBy.InstallDate,
 	sortOrder: SortOrder.Descending
-}
-
-export let profileQuery = writable(defaultProfileQuery);
+});
 
 export async function refreshGames() {
 	const info: GameInfo = await invokeCommand('get_game_info');

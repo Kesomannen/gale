@@ -135,8 +135,8 @@
 
 	<div slot="item" let:mod>
 		<Button.Root
-			class="bg-green-600 hover:bg-green-500 p-3 ml-2 mt-0.5 mr-0.5 
-							rounded-lg text-white text-xl align-middle hidden group-hover:inline"
+			class="bg-green-600 hover:bg-green-500 p-2.5 ml-2 mt-0.5 mr-0.5 
+							rounded-lg text-white text-2xl align-middle hidden group-hover:inline"
 			on:click={() => {
 				let modRef = {
 					packageUuid: mod.uuid,

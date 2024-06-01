@@ -46,7 +46,10 @@
 		{#each shownGames as game}
 			<Button.Root
 				class="flex hover:bg-gray-700 rounded-lg p-1 items-center group mr-2"
-				on:click={() => setActiveGame(game).then(onSelect)}
+				on:click={() => {
+					setActiveGame(game);
+					onSelect();
+				}}
 			>
 				<img
 					src="games/{game.id}.png"

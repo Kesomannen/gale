@@ -5,7 +5,7 @@
 ### Added
 
 - Quick install button in mod list
-- "Edit config" and "Open in explorer" options to profile mod dropdown
+- "Edit config" and "Open directory" options to profile mod dropdown
 
 ### Changed
 
