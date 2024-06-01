@@ -76,13 +76,13 @@ to start a dev server. Alternatively, do `cargo tauri build` to build an install
 
 ### On Linux
 
-***Install the required tools and build chain***
+**Install the required tools and build chain**
 
 Notice: The examples use a Debian flavor package manager. Use your system specific package manager such as Yum/Pacman instead`
 
 To build Gale on Linux you will likely require the following packages:
 
-***Rust Dependencies***
+**Rust Dependencies**
 
 ```sh
 sudo apt update
@@ -97,7 +97,7 @@ sudo apt install libwebkit2gtk-4.0-dev \
     librsvg2-dev
 ```
 
-***Cargo/Rust***
+**Cargo/Rust**
 
 ```sh
 sudo apt install cargo
@@ -121,7 +121,7 @@ nvm use 20
 
 You will need to set your node version before using any NPM commands later in this guide.
 
-***Install TauriCLI***
+**Install TauriCLI**
 
 ```sh
 cargo install tauri-cli
@@ -131,7 +131,7 @@ This will take a while, especially if you've never compiled anything with rust b
 
 Congrats, you're now ready to actually start building.
 
-***Build Gale***
+**Build Gale**
 
 ```sh
 nvm use 20
