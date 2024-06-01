@@ -1,8 +1,23 @@
 ![logo](https://raw.githubusercontent.com/Kesomannen/gale/master/app-icon@0,25x.png)
 
-# Gale Mod Manager
+<h1> Gale Mod Manager </h1>
 
 A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
+
+<h2> Table of Contents </h2>
+
+- [Features](#features)
+- [Installation](#installation)
+  - [Windows](#windows)
+  - [MacOS](#macos)
+  - [Linux](#linux)
+- [Building from source](#building-from-source)
+  - [On Windows](#on-windows)
+  - [On Linux](#on-linux)
+- [Screenshots](#screenshots)
+- [Credits](#credits)
+- [License](#license)
+
 
 ## Features
 
@@ -47,7 +62,9 @@ TBD
 
 TBD
 
-### Building from source
+## Building from source
+
+### On Windows
 
 Make sure you have done all of the [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites) and installed the tauri CLI with `cargo install tauri-cli`.
 After you have cloned the repository, run
@@ -56,6 +73,73 @@ npm install
 cargo tauri dev
 ```
 to start a dev server. Alternatively, do `cargo tauri build` to build an installer for your platform. If you want to modify/distribute the app, keep in mind the [license](https://choosealicense.com/licenses/gpl-3.0/#).
+
+### On Linux
+
+**Install the required tools and build chain**
+
+Notice: The examples use a Debian flavor package manager. Use your system specific package manager such as Yum/Pacman instead`
+
+To build Gale on Linux you will likely require the following packages:
+
+**Rust Dependencies**
+
+```sh
+sudo apt update
+sudo apt install libwebkit2gtk-4.0-dev \
+    build-essential \
+    curl \
+    wget \
+    file \
+    libssl-dev \
+    libgtk-3-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev
+```
+
+**Cargo/Rust**
+
+```sh
+sudo apt install cargo
+```
+
+**NVM**
+
+If your system does not have the latest node available you can install nvm by following the instructions [here](https://www.freecodecamp.org/news/node-version-manager-nvm-install-guide/)
+
+You can install a version of node that will work with Gale by using
+
+```sh
+nvm install 20
+```
+
+Then you set the node version for your current terminal by using this command:
+
+```sh
+nvm use 20
+```
+
+You will need to set your node version before using any NPM commands later in this guide.
+
+**Install TauriCLI**
+
+```sh
+cargo install tauri-cli
+```
+
+This will take a while, especially if you've never compiled anything with rust before.
+
+Congrats, you're now ready to actually start building.
+
+**Build Gale**
+
+```sh
+nvm use 20
+npm install
+cargo tauri build
+```
+
+This will take a decent chunk of time if its your first time compiling Gale. There will be some ignorable warnings but it will output both an installable package (a .deb for debian flavor systems) and an executable (eg: a bundled appimage) under `src-tauri/target/release/bundle`
 
 ## Screenshots
 
