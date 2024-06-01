@@ -6,19 +6,22 @@
 	import ModList from '$lib/modlist/ModList.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { Button, Dialog, DropdownMenu } from 'bits-ui';
+	import { Button, DropdownMenu } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { currentGame } from '$lib/stores';
-	import { fly, slide } from 'svelte/transition';
-	import Popup from '$lib/components/Popup.svelte';
+	import { fly } from 'svelte/transition';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
+	import type { PageData } from './$types';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
+	export let data: PageData;
+
 	let mods: Mod[];
-	let queryArgs: QueryModsArgs;
+	let queryArgs: QueryModsArgs = data.queryArgs;
+
 	let activeMod: Mod | undefined;
 	let activeDownloadSize: number | undefined;
 
@@ -40,7 +43,6 @@
 
 	onMount(() => {
 		listen<Mod[]>('mod_query_result', (evt) => {
-			console.log('got mods', evt.payload);
 			mods = evt.payload;
 		}).then((unlisten) => {
 			unlistenFromQuery = unlisten;
@@ -50,15 +52,14 @@
 			if (unlistenFromQuery) {
 				unlistenFromQuery();
 			}
-			invokeCommand('query_all_mods', { args: null });
+			invokeCommand('stop_querying_thunderstore');
 		};
 	});
 
 	$: {
 		$currentGame;
 		if (queryArgs) {
-			invokeCommand<Mod[] | null>('query_all_mods', { args: queryArgs }).then((result) => {
-				if (!result) return;
+			invokeCommand<Mod[]>('query_thunderstore', { args: queryArgs }).then((result) => {
 				mods = result;
 			});
 		}

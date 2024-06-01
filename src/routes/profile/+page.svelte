@@ -19,6 +19,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
 	import { fly } from 'svelte/transition';
+	import type { PageData } from './$types';
 
 	const sortOptions = [
 		SortBy.InstallDate,
@@ -30,10 +31,12 @@
 		SortBy.Author
 	];
 
-	let mods: Mod[];
+	export let data: PageData;
+
+	let mods: Mod[] = [];
 	let updates: AvailableUpdate[] = [];
 	let activeMod: Mod | undefined;
-	let queryArgs: QueryModsArgs;
+	let queryArgs = data.queryArgs;
 
 	let removeDependants: DependantsPopup;
 	let disableDependants: DependantsPopup;
@@ -50,7 +53,7 @@
 
 	function refresh() {
 		if (queryArgs) {
-			invokeCommand<ProfileQuery>('query_mods_in_profile', { args: queryArgs }).then((result) => {
+			invokeCommand<ProfileQuery>('query_profile', { args: queryArgs }).then((result) => {
 				mods = result.mods;
 				updates = result.updates;
 			});
@@ -98,7 +101,12 @@
 	}
 </script>
 
-<ModList bind:mods bind:queryArgs bind:activeMod {sortOptions} includeNsfwDeprecated={true}>
+<ModList
+	bind:mods
+	bind:queryArgs
+	bind:activeMod
+	{sortOptions}
+>
 	<div slot="details">
 		{#if activeMod && isOutdated(activeMod)}
 			<Button.Root
@@ -152,15 +160,11 @@
 			<ModDetailsDropdownItem
 				label="Edit config"
 				icon="mdi:settings"
-				onClick={() => goto("/config?file=" + activeMod?.configFile)}
+				onClick={() => goto('/config?file=' + activeMod?.configFile)}
 			/>
 		{/if}
 
-		<ModDetailsDropdownItem
-			label="Uninstall"
-			icon="mdi:delete"
-			onClick={uninstall}
-		/>
+		<ModDetailsDropdownItem label="Uninstall" icon="mdi:delete" onClick={uninstall} />
 	</svelte:fragment>
 
 	<div slot="header">

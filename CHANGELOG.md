@@ -7,8 +7,13 @@
 - Quick install button in mod list
 - "Edit config" and "Open in explorer" options to profile mod dropdown
 
+### Changed
+
+- UI tweaks
+
 ### Fixed
 
+- R2modman/TMM profiles not being found on Linux
 - Improve performance of config serialization
 - Config editor sometimes freezing when switching between profiles
 

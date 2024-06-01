@@ -67,8 +67,10 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![        
             log::open_gale_log,
-
-            thunderstore::commands::query_all_mods,
+            
+            thunderstore::commands::get_query_args,
+            thunderstore::commands::query_thunderstore,
+            thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::missing_deps,
 
             prefs::commands::get_pref,
@@ -80,8 +82,8 @@ fn main() {
             manager::commands::set_active_game,
             manager::commands::get_profile_info,
             manager::commands::set_active_profile,
-            manager::commands::query_mods_in_profile,
             manager::commands::is_mod_installed,
+            manager::commands::query_profile,
             manager::commands::create_profile,
             manager::commands::delete_profile,
             manager::commands::remove_mod,

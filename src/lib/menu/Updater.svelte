@@ -35,8 +35,6 @@
 		let unlisten: UnlistenFn | undefined;
 
 		onUpdaterEvent(({ error, status }) => {
-			console.log(status);
-
 			if (error) {
 				pushError(
 					{

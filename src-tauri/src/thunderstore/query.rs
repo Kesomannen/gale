@@ -2,39 +2,42 @@ use std::{cmp::Ordering, collections::HashSet, sync::Mutex, time::Duration};
 
 use anyhow::Result;
 use itertools::Itertools;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 
+use log::debug;
 use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion},
     BorrowedMod, Thunderstore,
 };
+
 use crate::manager::LocalMod;
-use log::debug;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
-    app.manage(Mutex::new(QueryState::new()));
+    app.manage(Mutex::new(QueryState::default()));
 
     tauri::async_runtime::spawn(query_loop(app.clone()));
 
     Ok(())
 }
 
-pub struct QueryState {
-    pub current_query: Option<QueryModsArgs>,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ModSource {
+    Thunderstore,
+    Profile,
 }
 
-impl QueryState {
-    pub fn new() -> Self {
-        Self {
-            current_query: None,
-        }
-    }
+#[derive(Default)]
+pub struct QueryState {
+    pub profile_args: QueryModsArgs,
+    pub thunderstore_args: QueryModsArgs,
+    pub query_passively: bool,
 }
 
 #[typeshare]
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum SortBy {
     Newest,
@@ -47,7 +50,7 @@ pub enum SortBy {
 }
 
 #[typeshare]
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum SortOrder {
     Ascending,
@@ -55,7 +58,7 @@ pub enum SortOrder {
 }
 
 #[typeshare]
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryModsArgs {
     pub max_count: usize,
@@ -69,6 +72,22 @@ pub struct QueryModsArgs {
     pub sort_order: SortOrder,
 }
 
+impl Default for QueryModsArgs {
+    fn default() -> Self {
+        Self {
+            max_count: 20,
+            search_term: None,
+            include_categories: HashSet::new(),
+            exclude_categories: HashSet::new(),
+            include_nsfw: false,
+            include_deprecated: false,
+            include_disabled: false,
+            sort_by: SortBy::LastUpdated,
+            sort_order: SortOrder::Descending,
+        }
+    }
+}
+
 const TIME_BETWEEN_QUERIES: Duration = Duration::from_millis(250);
 
 pub async fn query_loop(app: AppHandle) -> Result<()> {
@@ -77,16 +96,19 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
 
     loop {
         {
-            let thunderstore = thunderstore.lock().unwrap();
+            let mut state = query_state.lock().unwrap();
 
-            if !thunderstore.finished_loading {
-                let query_state = query_state.lock().unwrap();
+            if state.query_passively {
+                let thunderstore = thunderstore.lock().unwrap();
 
-                if let Some(args) = query_state.current_query.as_ref() {
-                    let mods = query_frontend_mods(args, thunderstore.latest());
-                    app.emit_all("mod_query_result", &mods)?;
+                let mods = query_frontend_mods(&state.thunderstore_args, thunderstore.latest());
+                app.emit_all("mod_query_result", &mods)?;
+
+                if thunderstore.finished_loading {
+                    state.query_passively = false;
                 }
             }
+
         };
 
         tokio::time::sleep(TIME_BETWEEN_QUERIES).await;

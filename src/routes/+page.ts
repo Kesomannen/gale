@@ -3,9 +3,8 @@ import type { PageLoad } from './$types';
 
 const URL = 'https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md';
 
-export const load: PageLoad = async () => {
+export const load: PageLoad = async ({ fetch }) => {
 	let changelog = await fetch(URL).then((res) => res.text());
-
 
   // remove Unreleased section
 	let unreleasedIndex = changelog.indexOf('## Unreleased');

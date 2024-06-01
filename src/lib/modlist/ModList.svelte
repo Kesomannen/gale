@@ -3,12 +3,7 @@
 	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
-	import {
-		SortBy,
-		type Mod,
-		type QueryModsArgs,
-		SortOrder
-	} from '$lib/models';
+	import { SortBy, type Mod, type QueryModsArgs, SortOrder } from '$lib/models';
 
 	import Icon from '@iconify/svelte';
 	import { Button, Select } from 'bits-ui';
@@ -21,19 +16,18 @@
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined = undefined;
 	export let queryArgs: QueryModsArgs;
-	export let includeNsfwDeprecated = false;
 
 	let listStart = 0;
 	let listEnd = 0;
 
 	let maxCount = 20;
-	let searchTerm: string | undefined;
-	let includeCategories: string[] = [];
-	let excludeCategories: string[] = [];
-	let includeNsfw = includeNsfwDeprecated;
-	let includeDeprecated = includeNsfwDeprecated;
-	let sortBy = sortOptions[0];
-	let sortOrder = SortOrder.Descending;
+	let searchTerm = queryArgs.searchTerm;
+	let includeCategories = queryArgs.includeCategories;
+	let excludeCategories = queryArgs.excludeCategories;
+	let includeNsfw = queryArgs.includeNsfw;
+	let includeDeprecated = queryArgs.includeDeprecated;
+	let sortBy = queryArgs.sortBy;
+	let sortOrder = queryArgs.sortOrder;
 
 	$: queryArgs = {
 		maxCount,
@@ -43,8 +37,8 @@
 		includeNsfw,
 		includeDeprecated,
 		includeDisabled: true,
-		sortOrder,
-		sortBy
+		sortBy,
+		sortOrder
 	};
 
 	function onModClicked(mod: Mod) {
@@ -175,7 +169,9 @@
 					{:else}
 						<div class="flex flex-wrap gap-1 mr-2">
 							{#each excludeCategories as category}
-								<div class="bg-red-600 text-white rounded-xl pl-3 pr-0.5 py-0.5 text-sm text-left align-middle">
+								<div
+									class="bg-red-600 text-white rounded-xl pl-3 pr-0.5 py-0.5 text-sm text-left align-middle"
+								>
 									{category}
 
 									<Button.Root
@@ -201,7 +197,6 @@
 
 			<Dropdown
 				items={['Deprecated', 'NSFW']}
-				selected={includeNsfwDeprecated ? ['Deprecated', 'NSFW'] : []}
 				getLabel={(s) => s}
 				multiple={true}
 				onSelectedChange={(items) => {
