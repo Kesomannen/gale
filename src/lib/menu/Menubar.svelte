@@ -15,10 +15,8 @@
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
 	import { dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
-	import { fly } from 'svelte/transition';
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 	import { currentProfile } from '$lib/stores';
-	import { get } from 'svelte/store';
 
 	let preferencesOpen = false;
 	let importR2Open = false;

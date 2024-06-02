@@ -13,13 +13,10 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { modQuery } from '$lib/stores';
-	import type { PageData } from './$types';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
-	export let data: PageData;
-
-	let mods = data.mods;
+	let mods: Mod[] = [];
 	let activeMod: Mod | undefined;
 	let activeDownloadSize: number | undefined;
 

@@ -39,10 +39,8 @@
 		SortBy.Author
 	];
 
-	export let data: PageData;
-
-	let mods = data.mods;
-	let updates = data.updates;
+	let mods: Mod[] = [];
+	let updates: AvailableUpdate[] = [];
 	let activeMod: Mod | undefined;
 
 	let removeDependants: DependantsPopup;

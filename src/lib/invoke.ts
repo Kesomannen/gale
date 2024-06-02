@@ -1,6 +1,5 @@
 import { invoke } from '@tauri-apps/api';
 import { writable, type Writable } from 'svelte/store';
-import type { ConfigEntryId, ConfigFile, ConfigSection, ConfigValue } from './models';
 import { listen } from '@tauri-apps/api/event';
 
 const errorDuration = 7500;
