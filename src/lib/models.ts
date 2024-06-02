@@ -233,3 +233,8 @@ export interface R2ImportData {
 		include: boolean[];
 	};
 }
+
+export interface MarkdownResponse { 
+	markdown?: string;
+	detail?: string;
+}

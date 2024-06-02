@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import type { Mod } from '../models';
+	import type { MarkdownResponse, Mod } from '../models';
 	import { isOutdated, shortenNum, timeSince } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
@@ -12,6 +12,8 @@
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
+	import Markdown from '$lib/components/Markdown.svelte';
+	import { read } from '$app/server';
 
 	export let mod: Mod;
 	export let onClose: () => void;
@@ -35,6 +37,22 @@
 
 	function openIfDefined(url?: string) {
 		if (url) open(url);
+	}
+
+	let readmePromise: Promise<string | undefined>;
+
+	$: {
+		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
+		readmePromise = fetch<MarkdownResponse>(url).then((res) => {
+			if (!res.data.markdown) {
+				return undefined;
+			} else {
+				return res.data.markdown
+					.split('\n')
+					.filter((line) => !line.startsWith('# '))
+					.join('\n');
+			}
+		});
 	}
 </script>
 
@@ -74,16 +92,18 @@
 
 	<div class="mr-6 flex items-center justify-between">
 		<Button.Root
-			class="text-slate-100 font-bold text-3xl hover:underline truncate"
+			class="text-slate-100 font-bold text-3xl xl:text-4xl hover:underline truncate"
 			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}>{mod.name}</Button.Root
 		>
 		{#if mod.version}
-			<span class="text-slate-300 font-light text-lg pl-1 align-middle">{mod.version}</span>
+			<span class="text-slate-300 font-light text-lg xl:text-xl pl-2 align-middle"
+				>{mod.version}</span
+			>
 		{/if}
 	</div>
 
 	{#if mod.author}
-		<span class="text-slate-300 text-xl">
+		<span class="text-slate-300 text-xl xl:text-2xl">
 			By
 			<Button.Root class="hover:underline" on:click={() => openCommunityUrl(mod.author)}>
 				{mod.author}
@@ -124,23 +144,42 @@
 		</div>
 	{/if}
 
-	<div class="my-1 flex items-center gap-2">
-		<Icon class="text-yellow-400 text-xl" icon="mdi:star" />
-		<span class="text-yellow-400 text-lg mr-4">{shortenNum(mod.rating ?? 0)}</span>
-		<Icon class="text-green-400 text-xl" icon="mdi:download" />
-		<span class="text-green-400 text-lg">{shortenNum(mod.downloads ?? 0)}</span>
+	<div class="my-1 flex items-center gap-2 text-lg">
+		<Icon class="text-yellow-400" icon="mdi:star" />
+		<span class="text-yellow-400 mr-4">{shortenNum(mod.rating ?? 0)}</span>
+		<Icon class="text-green-400" icon="mdi:download" />
+		<span class="text-green-400">{shortenNum(mod.downloads ?? 0)}</span>
 	</div>
 
 	{#if mod.lastUpdated}
-		<div class="text-slate-400 mb-4 text-lg">
+		<div class="text-slate-400 text-lg">
 			Last updated {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}
 
-	<p class="text-slate-300 text-xl flex-shrink overflow-hidden">{mod.description ?? ''}</p>
+	<p class="text-slate-300 text-xl flex-shrink overflow-hidden mt-3 xl:hidden">
+		{mod.description ?? ''}
+	</p>
+
+	{#await readmePromise then readme}
+		{#if readme}
+			<Markdown source={readme} class="hidden xl:block" />
+		{/if}
+	{/await}
+
+	<div class="flex-grow" />
+
+	{#if mod.configFile}
+		<div
+			class="flex items-center gap-2 text-green-400 hover:text-green-300 text-lg hover:underline my-2"
+		>
+			<Icon class="text-xl" icon="mdi:file-cog" />
+			<a href={'/config?file=' + mod.configFile}>Edit config</a>
+		</div>
+	{/if}
 
 	<Button.Root
-		class="flex items-center w-full mt-auto text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
+		class="flex items-center text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
 		on:mouseenter={changelog.fetchMarkdown}
 		on:click={() => (changelogOpen = true)}
 	>
@@ -149,7 +188,7 @@
 	</Button.Root>
 
 	<Button.Root
-		class="flex items-center w-full mt-1 text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
+		class="flex items-center mt-1 text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
 		on:mouseenter={readme.fetchMarkdown}
 		on:click={() => (readmeOpen = true)}
 	>
@@ -159,7 +198,7 @@
 
 	{#if mod.dependencies && mod.dependencies.length > 0}
 		<Button.Root
-			class="flex items-center w-full mt-1 text-white pl-3 pr-1 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
+			class="flex items-center mt-1 text-white pl-3 pr-1 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
 			on:click={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="text-lg mr-1" />

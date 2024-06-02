@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Markdown from "$lib/components/Markdown.svelte";
 	import Popup from "$lib/components/Popup.svelte";
-	import type { Mod } from "$lib/models";
+	import type { MarkdownResponse, Mod } from "$lib/models";
 	import Icon from "@iconify/svelte";
   import { Response, fetch } from "@tauri-apps/api/http";
 
@@ -11,18 +11,13 @@
 
 	let promise: Promise<Response<MarkdownResponse>> | null = null;
 	let currentMod: Mod | null = null;
-
-  type MarkdownResponse = { 
-    markdown?: string;
-    detail?: string;
-  }
-
+	
 	export function fetchMarkdown() {
 		if (currentMod === mod) return;
 		currentMod = mod;
 
 		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/${path}/`;
-		promise = fetch<MarkdownResponse>(url, { method: 'GET' })
+		promise = fetch<MarkdownResponse>(url)
 	}
 </script>
 

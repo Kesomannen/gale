@@ -1,3 +1,9 @@
+<script lang="ts" context="module">
+	import { writable } from 'svelte/store';
+
+	const updateBannerThreshold = writable(0);
+</script>
+
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import BigButton from '$lib/components/BigButton.svelte';
@@ -21,6 +27,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
 	import { fly } from 'svelte/transition';
+	import type { PageData } from './$types';
 
 	const sortOptions = [
 		SortBy.InstallDate,
@@ -32,8 +39,10 @@
 		SortBy.Author
 	];
 
-	let mods: Mod[] = [];
-	let updates: AvailableUpdate[] = [];
+	export let data: PageData;
+
+	let mods = data.mods;
+	let updates = data.updates;
 	let activeMod: Mod | undefined;
 
 	let removeDependants: DependantsPopup;
@@ -151,21 +160,13 @@
 			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>
 
-		{#if activeMod?.configFile}
-			<ModDetailsDropdownItem
-				label="Edit config"
-				icon="mdi:settings"
-				onClick={() => goto('/config?file=' + activeMod?.configFile)}
-			/>
-		{/if}
-
 		<ModDetailsDropdownItem label="Uninstall" icon="mdi:delete" onClick={uninstall} />
 	</svelte:fragment>
 
-	<div slot="header">
-		{#if updates.length > 0}
-			<div class="text-blue-100 bg-blue-600 mr-3 mb-2 px-4 py-2 rounded-lg">
-				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-1 mb-0.5 inline" />
+	<div slot="banner">
+		{#if updates.length > $updateBannerThreshold}
+			<div class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-2 pl-4 pr-2 py-1.5 rounded-lg gap-1">
+				<Icon icon="mdi:arrow-up-circle" class="text-xl" />
 				There {updates.length === 1 ? 'is' : 'are'} <strong>{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.
 				<Button.Root
@@ -175,6 +176,13 @@
 					}}
 				>
 					Update all?
+				</Button.Root>
+
+				<Button.Root 
+					class="ml-auto rounded-md text-xl hover:bg-blue-500 p-1"
+					on:click={() => $updateBannerThreshold = updates.length}
+				>
+					<Icon icon="mdi:close" />
 				</Button.Root>
 			</div>
 		{/if}

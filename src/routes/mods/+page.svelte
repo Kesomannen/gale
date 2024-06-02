@@ -13,10 +13,13 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { modQuery } from '$lib/stores';
+	import type { PageData } from './$types';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
-	let mods: Mod[];
+	export let data: PageData;
+
+	let mods = data.mods;
 	let activeMod: Mod | undefined;
 	let activeDownloadSize: number | undefined;
 
@@ -51,10 +54,6 @@
 		};
 	});
 
-	$: invokeCommand<Mod[]>('query_thunderstore', { args: $modQuery }).then((result) => {
-		mods = result;
-	});
-
 	$: if (activeMod) {
 		invokeCommand<boolean>('is_mod_installed', { uuid: activeMod.uuid }).then(
 			(result) => (isActiveModInstalled = result)
@@ -63,6 +62,15 @@
 		invokeCommand<number>('get_download_size', { modRef: activeModRef }).then(
 			(size) => (activeDownloadSize = size)
 		);
+	}
+
+	$: {
+		$modQuery;
+		refresh();
+	}
+
+	async function refresh() {
+		mods = await invokeCommand<Mod[]>('query_thunderstore', { args: $modQuery });
 	}
 
 	async function install(modRef?: { packageUuid: string; versionUuid: string }) {

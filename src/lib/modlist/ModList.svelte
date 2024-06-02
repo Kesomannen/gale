@@ -16,7 +16,7 @@
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
-	export let activeMod: Mod | undefined = undefined;
+	export let activeMod: Mod | undefined;
 	export let queryArgs: Writable<QueryModsArgs>;
 
 	let listStart = 0;
@@ -227,7 +227,7 @@
 			</Dropdown>
 		</div>
 
-		<slot name="header" />
+		<slot name="banner" />
 
 		{#if mods.length === 0}
 			<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>

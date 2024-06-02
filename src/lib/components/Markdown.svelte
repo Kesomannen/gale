@@ -1,11 +1,18 @@
 <script lang="ts">
 	import SvelteMarkdown from "svelte-markdown";
+	import MarkdownLink from "./MarkdownLink.svelte";
 
   export let source: string;
+
+  let className = '';
+
+  export { className as class };
 </script>
 
-<div class="markdown overflow-x-hidden">
-  <SvelteMarkdown {source} />
+<div class="markdown overflow-x-hidden {className}">
+  <SvelteMarkdown {source} renderers={{
+    link: MarkdownLink
+  }} />
 </div>
 
 <style global lang="postcss">
@@ -71,7 +78,7 @@
   }
 
   .markdown :global(table) {
-    @apply border border-gray-900 border-collapse max-w-full;
+    @apply border border-gray-900 border-collapse overflow-x-auto max-w-full;
   }
 
   .markdown :global(th) {

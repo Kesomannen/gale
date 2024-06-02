@@ -13,7 +13,7 @@
 </script>
 
 <Button.Root
-	class="flex border border-slate-500 rounded-lg p-2 group w-full {isSelected
+	class="flex border border-slate-500 rounded-lg p-2 group my-0.5 w-full {isSelected
 		? 'bg-slate-700'
 		: 'hover:bg-slate-700 border-opacity-0'}"
 	on:click={() => onClick(mod)}
