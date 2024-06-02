@@ -16,7 +16,7 @@
 
 ### Fixed
 
-- Links in README replacing the entire page instead of opening in the browser
+- Links replacing the entire page instead of opening in the browser
 - Crash when importing local mod
 - Profile names being capitalized in the import profile dialog
 - R2modman/TMM profiles not being found on Linux

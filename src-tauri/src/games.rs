@@ -1,11 +1,12 @@
-use serde::Serialize;
 use heck::ToKebabCase;
+use serde::Serialize;
 
 #[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct Game {
     pub id: String,
     pub display_name: String,
+    pub aliases: Vec<String>,
     pub url: String,
     pub steam_id: u32,
 }
@@ -20,9 +21,10 @@ impl Game {
 
         Self {
             url: default_package_url(&id),
-            id,
             display_name: display_name.to_owned(),
+            aliases: Vec::new(),
             steam_id,
+            id,
         }
     }
 
@@ -36,12 +38,20 @@ impl Game {
         self.url = default_package_url(id);
         self
     }
+
+    fn aka(mut self, alias: &str) -> Self {
+        self.aliases.push(alias.to_owned());
+        self
+    }
 }
 
 lazy_static! {
     pub static ref GAMES: [Game; 78] = [
-        Game::new("Risk of Rain 2", 632360).with_id("ror2").with_url("https://thunderstore.io/api/v1/package/"),
-        Game::new("Dyson Sphere Program", 1366540),
+        Game::new("Risk of Rain 2", 632360)
+            .with_id("ror2")
+            .with_url("https://thunderstore.io/api/v1/package/")
+            .aka("ror2"),
+        Game::new("Dyson Sphere Program", 1366540).aka("dsp"),
         Game::new("Valheim", 892970),
         Game::new("GTFO", 493520).with_id("gtfo"),
         Game::new("Outward", 794260),
@@ -50,10 +60,10 @@ lazy_static! {
         Game::new("ROUNDS", 1557740),
         Game::new("Mechanica", 1226990),
         Game::new("Muck", 1625450),
-        Game::new("Lethal League Blaze", 553310),
+        Game::new("Lethal League Blaze", 553310).aka("llb"),
         Game::new("Timberborn", 1062090),
         Game::new("TABS", 508440).with_id("totally-accurate-battle-simulator"),
-        Game::new("Nickelodeon All-Star Brawl", 1414850).with_id("nasb"),
+        Game::new("Nickelodeon All-Star Brawl", 1414850).with_id("nasb").aka("nasb"),
         Game::new("Inscryption", 1092790),
         Game::new("Starsand", 1380220),
         Game::new("Cats are Liquid - A Better Place", 1188080).with_id("cats-are-liquid"),
@@ -101,7 +111,8 @@ lazy_static! {
         Game::new("Garfield Kart - Furious Racing", 1085510),
         Game::new("Techtonica", 1457320),
         Game::new("Thronefall", 2239150),
-        Game::new("We Love Katamari REROLL+ Royal Reverie", 1730700).with_id("we-love-katamari-reroll-royal-reverie"),
+        Game::new("We Love Katamari REROLL+ Royal Reverie", 1730700)
+            .with_id("we-love-katamari-reroll-royal-reverie"),
         Game::new("Wizard of Legend", 445980),
         Game::new("Bomb Rush Cyberfunk", 1353230),
         Game::new("TouhouLostBranchOfLegend", 1140150),
@@ -112,12 +123,12 @@ lazy_static! {
         Game::new("Last Train Outta' Wormtown", 2318480).with_id("last-train-outta-wormtown"),
         Game::new("DREDGE", 1562430),
         Game::new("Cities: Skylines II", 949230).with_id("cities-skylines-ii"),
-        Game::new("Lethal Company", 1966720),
+        Game::new("Lethal Company", 1966720).aka("lc"),
         Game::new("Meeple Station", 900010),
         Game::new("Void Crew", 1063420),
         Game::new("Sailwind", 1764530),
         Game::new("Plasma", 1409160),
-        Game::new("Content Warning", 2881650),
+        Game::new("Content Warning", 2881650).aka("cw"),
     ];
 }
 
