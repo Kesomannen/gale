@@ -129,7 +129,7 @@ impl ProfileMod {
         self.kind.as_local().map(|local| (local, self.enabled))
     }
 
-    fn queryable<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<QueryableProfileMod<'a>> {
+    fn queryable<'a>(&'a self, index: usize, thunderstore: &'a Thunderstore) -> Result<QueryableProfileMod<'a>> {
         let kind = match &self.kind {
             ProfileModKind::Local(local) => QueryableProfileModKind::Local(local),
             ProfileModKind::Remote(mod_ref) => {
@@ -140,6 +140,7 @@ impl ProfileMod {
 
         Ok(QueryableProfileMod {
             kind,
+            index,
             install_time: self.install_time,
             enabled: self.enabled,
         })
@@ -210,6 +211,7 @@ impl ProfileModKind {
 
 struct QueryableProfileMod<'a> {
     enabled: bool,
+    index: usize,
     install_time: DateTime<Utc>,
     kind: QueryableProfileModKind<'a>,
 }
@@ -240,9 +242,11 @@ impl<'a> Queryable for QueryableProfileMod<'a> {
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
         use QueryableProfileModKind as Kind;
 
-        if let SortBy::InstallDate = args.sort_by {
-            return self.install_time.cmp(&other.install_time);
-        }
+        match args.sort_by {
+            SortBy::InstallDate => return self.install_time.cmp(&other.install_time),
+            SortBy::Custom => return self.index.cmp(&other.index),
+            _ => (),
+        };
 
         match (&self.kind, &other.kind) {
             (Kind::Remote(a), Kind::Remote(b)) => a.cmp(b, args),
@@ -320,7 +324,8 @@ impl Profile {
         let queryables = self
             .mods
             .iter()
-            .map(|p| p.queryable(thunderstore))
+            .enumerate()
+            .map(|(i, p)| p.queryable(i, thunderstore))
             .collect::<Result<Vec<_>>>()?;
 
         Ok(query::query_mods(args, queryables.into_iter())
@@ -570,6 +575,16 @@ impl Profile {
             path.pop();
             path.pop();
         }
+
+        Ok(())
+    }
+
+    fn reorder_mod(&mut self, uuid: &Uuid, delta: i32) -> Result<()> {
+        let index = self.mods.iter().position(|m| m.uuid() == uuid)
+            .context("mod not found in profile")?;
+
+        let target = (index as i32 + delta).clamp(0, self.mods.len() as i32 - 1) as usize;
+        self.mods.swap(index, target);
 
         Ok(())
     }

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Button } from 'bits-ui';
 	import type { Mod } from '../models';
 	import Icon from '@iconify/svelte';
 	import { isOutdated } from '$lib/util';
@@ -9,14 +8,19 @@
 
 	export let mod: Mod;
 	export let isSelected: boolean;
-	export let onClick: (mod: Mod) => void;
+	export let draggable = false;
 </script>
 
-<Button.Root
+<button
 	class="flex border border-slate-500 rounded-lg p-2 group w-full {isSelected
 		? 'bg-slate-700'
 		: 'hover:bg-slate-700 border-opacity-0'}"
-	on:click={() => onClick(mod)}
+	data-uuid={mod.uuid}
+	on:click
+	on:dragstart
+	on:dragover
+	on:dragend
+	{draggable}
 >
 	<img src={mod.icon ?? FALLBACK_ICON} alt={mod.name} class="w-12 h-12 rounded-md" />
 	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
@@ -49,4 +53,4 @@
 	<div class="contents" on:click={(evt) => evt.stopPropagation()} role="none">
 		<slot />
 	</div>
-</Button.Root>
+</button>

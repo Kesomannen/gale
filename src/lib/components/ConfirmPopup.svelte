@@ -18,7 +18,7 @@
 	</Dialog.Description>
 
 	<Dialog.Close class="flex w-full justify-end mt-3 mr-0.5 gap-2">
-		<BigButton color="gray" onClick={onCancel}>Cancel</BigButton>
+		<BigButton color="gray" on:click={onCancel}>Cancel</BigButton>
 		<slot name="buttons" />
 	</Dialog.Close>
 </Popup>

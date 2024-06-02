@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{bail, anyhow, Context};
+use anyhow::{anyhow, bail, Context};
 use serde::Serialize;
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -240,6 +240,25 @@ pub fn remove_mod(
 }
 
 #[tauri::command]
+pub fn reorder_mod(
+    uuid: Uuid,
+    delta: i32,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    manager
+        .active_profile_mut()
+        .reorder_mod(&uuid, delta)?;
+
+    save(&manager, &prefs)?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn toggle_mod(
     uuid: Uuid,
     manager: StateMutex<ModManager>,
@@ -371,7 +390,7 @@ pub fn open_plugin_dir(
     let full_name = profile.get_mod(&uuid)?.kind.full_name(&thunderstore)?;
 
     let path = profile.path.join("BepInEx").join("plugins").join(full_name);
-    
+
     if !path.exists() {
         return Err(anyhow!("plugin directory not found").into());
     }

@@ -602,7 +602,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
             match resolve_deep_link(url, &thunderstore) {
                 Ok(mod_ref) => mod_ref,
                 Err(e) => {
-                    print_err("failed to resolve deep link", &e, &app);
+                    print_err("Failed to resolve deep link", &e, &app);
                     return;
                 }
             }
@@ -613,7 +613,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
             install_with_deps(&mod_ref, InstallOptions::default(), &handle)
                 .await
                 .unwrap_or_else(|e| {
-                    print_err("install mod from deep link", &e, &handle);
+                    print_err("Failed to install mod from deep link", &e, &handle);
                 });
         });
     }

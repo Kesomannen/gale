@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
@@ -32,13 +33,7 @@
 </script>
 
 <div class="relative flex-grow mt-1">
-	<input
-		type="text"
-		class="w-full py-2 pr-10 pl-12 rounded-lg bg-gray-900 text-slate-300 truncate"
-		bind:value={searchTerm}
-		placeholder="Search for games..."
-	/>
-	<Icon class="absolute left-[12px] top-[9px] text-slate-400 text-2xl" icon="mdi:magnify" />
+	<SearchBar bind:value={searchTerm} placeholder="Search for games..." />
 </div>
 
 <div class="flex flex-col mt-2 h-96 overflow-y-auto">

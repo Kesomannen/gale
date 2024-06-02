@@ -42,7 +42,7 @@ export let profileQuery = writable({
 	includeNsfw: true,
 	includeDeprecated: true,
 	includeDisabled: true,
-	sortBy: SortBy.InstallDate,
+	sortBy: SortBy.Custom,
 	sortOrder: SortOrder.Descending
 });
 

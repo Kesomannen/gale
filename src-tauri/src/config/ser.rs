@@ -175,6 +175,7 @@ pub fn to_writer<W: io::Write>(file: &File, writer: W) -> io::Result<()> {
     serializer.writer.flush()
 }
 
+#[allow(unused)]
 pub fn to_string(file: &File) -> io::Result<String> {
     let mut vec = Vec::new();
     to_writer(file, &mut vec)?;

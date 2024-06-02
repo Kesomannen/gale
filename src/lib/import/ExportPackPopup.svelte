@@ -115,6 +115,6 @@
 		</PathField>
 	</div>
 	<div class="flex w-full justify-end mt-3">
-		<BigButton onClick={submit} disabled={!isValid}>Export</BigButton>
+		<BigButton on:click={submit} disabled={!isValid}>Export</BigButton>
 	</div>
 </Popup>

@@ -13,6 +13,8 @@
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
+	import SearchBar from '$lib/components/SearchBar.svelte';
+
 	import Icon from '@iconify/svelte';
 	import { currentProfile } from '$lib/stores';
 	import { Render } from '@jill64/svelte-sanitize';
@@ -24,7 +26,7 @@
 
 	let files: LoadFileResult[] | undefined;
 
-	let searchTerm: string | null;
+	let searchTerm: string;
 
 	let selectedFile: LoadFileResult | undefined;
 	let selectedSection: ConfigSection | undefined;
@@ -92,7 +94,7 @@
 	}
 
 	async function refresh() {
-		searchTerm = null;
+		searchTerm = '';
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
 
 		let file = $page.url.searchParams.get('file');
@@ -115,7 +117,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-2 min-w-72 w-[30%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col py-3 min-w-72 w-[30%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 		bind:this={scrollContainer}
 	>
 		{#if files === undefined}
@@ -126,15 +128,10 @@
 		{:else if files.length === 0}
 			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">No config files found</div>
 		{:else}
-			<div class="relative mx-2 mb-2">
-				<input
-					type="text"
-					class="w-full py-1.5 pr-10 pl-10 rounded-md bg-gray-800 text-slate-200 truncate"
-					bind:value={searchTerm}
-					placeholder="Search for files..."
-				/>
-				<Icon class="absolute left-[10px] top-[9px] text-slate-300 text-xl" icon="mdi:magnify" />
+			<div class="relative mx-3 mb-2">
+				<SearchBar bind:value={searchTerm} placeholder="Search for files..." brightness={800} />
 			</div>
+
 			{#each shownFiles ?? [] as file}
 				<ConfigFileTreeItem
 					{file}

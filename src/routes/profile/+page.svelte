@@ -30,6 +30,7 @@
 	import type { PageData } from './$types';
 
 	const sortOptions = [
+		SortBy.Custom,
 		SortBy.InstallDate,
 		SortBy.LastUpdated,
 		SortBy.Newest,
@@ -101,12 +102,26 @@
 		await invokeCommand('update_mod', { uuid: activeMod.uuid, version: { specific: uuid } });
 		refresh();
 	}
+
+	async function onReorder(uuid: string, delta: number) {
+		let oldIndex = mods.findIndex((mod) => mod.uuid === uuid);
+		let newIndex = oldIndex + delta;
+
+		if (newIndex < 0 || newIndex >= mods.length) return;
+		let temp = mods[newIndex];
+		mods[newIndex] = mods[oldIndex];
+		mods[oldIndex] = temp;
+
+		console.log('Moved', uuid, 'from', oldIndex, 'to', newIndex);
+	}
 </script>
 
 <ModList
 	bind:mods
 	bind:activeMod
+	on:reorder={({ detail: { uuid, delta } }) => onReorder(uuid, delta)}
 	{sortOptions}
+	reorderable={$profileQuery.sortBy === SortBy.Custom}
 	queryArgs={profileQuery}
 >
 	<div slot="details">
@@ -222,7 +237,7 @@
 		<BigButton
 			color="blue"
 			fontWeight="semibold"
-			onClick={() => {
+			on:click={() => {
 				invokeCommand('update_all').then(refresh);
 				updateAllOpen = false;
 			}}

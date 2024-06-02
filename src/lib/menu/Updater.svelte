@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { updated } from '$app/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { pushError } from '$lib/invoke';
 	import Icon from '@iconify/svelte';
-	import { dialog, os } from '@tauri-apps/api';
+	import { dialog } from '@tauri-apps/api';
 	import { getVersion } from '@tauri-apps/api/app';
 	import type { UnlistenFn } from '@tauri-apps/api/event';
 	import { platform } from '@tauri-apps/api/os';
@@ -14,7 +13,6 @@
 		installUpdate,
 		onUpdaterEvent,
 		type UpdateManifest,
-		type UpdateStatus
 	} from '@tauri-apps/api/updater';
 	import { Button, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
@@ -79,16 +77,17 @@
 
 {#if updateAvailable}
 	<Button.Root
-		class="flex justify-center items-center h-9 w-9 rounded-lg font-semibold text-slate-100 
-            my-auto ml-auto mr-1.5 bg-blue-600 hover:bg-blue-500"
+		class="flex items-center py-1 px-3 rounded-md font-semibold text-slate-100 
+            my-auto ml-auto mr-1.5 bg-blue-600 enabled:hover:bg-blue-500"
     disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
 		{#if loading}
-			<Icon icon="mdi:loading" class="animate-spin" />
+			<Icon icon="mdi:loading" class="animate-spin mr-1.5" />
 		{:else}
-			<Icon icon="mdi:arrow-up-circle" class="text-xl" />
+			<Icon icon="mdi:arrow-up-circle" class="text-xl mr-1.5" />
 		{/if}
+		<span class="text-sm">{loading ? "Downloading update..." : "Update available"}</span>
 	</Button.Root>
 {/if}
 
@@ -108,6 +107,6 @@
 	</Dialog.Description>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="blue" fontWeight="semibold" onClick={update}>Install</BigButton>
+		<BigButton color="blue" fontWeight="semibold" on:click={update}>Install</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

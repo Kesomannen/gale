@@ -89,6 +89,7 @@ fn main() {
             manager::commands::force_remove_mods,
             manager::commands::toggle_mod,
             manager::commands::force_toggle_mods,
+            manager::commands::reorder_mod,
             manager::commands::set_all_mods_state,
             manager::commands::open_profile_dir,
             manager::commands::open_plugin_dir,

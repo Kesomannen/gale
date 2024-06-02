@@ -116,6 +116,7 @@ export enum SortBy {
 	Downloads = 'downloads',
 	Rating = 'rating',
 	InstallDate = 'installDate',
+	Custom = 'custom',
 }
 
 export enum SortOrder {
@@ -125,7 +126,7 @@ export enum SortOrder {
 
 export interface QueryModsArgs {
 	maxCount: number;
-	searchTerm?: string;
+	searchTerm: string;
 	includeCategories: string[];
 	excludeCategories: string[];
 	includeNsfw: boolean;

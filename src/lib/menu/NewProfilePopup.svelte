@@ -29,6 +29,6 @@
 		onSubmit={createProfile}
 	/>
 	<div class="flex w-full justify-end mt-1">
-		<BigButton disabled={name.length === 0} onClick={createProfile}>Create</BigButton>
+		<BigButton disabled={name.length === 0} on:click={createProfile}>Create</BigButton>
 	</div>
 </Popup>

@@ -1,4 +1,4 @@
-import type { LoadFileResult, Mod } from "./models";
+import type { LoadFileResult, Mod } from './models';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -36,33 +36,33 @@ export function timeSince(date: Date): string {
 	var interval = Math.floor(seconds / 31536000);
 
 	if (interval > 1) {
-		return interval + " years";
+		return interval + ' years';
 	}
 	interval = Math.floor(seconds / 2592000);
 	if (interval > 1) {
-		return interval + " months";
+		return interval + ' months';
 	}
 	interval = Math.floor(seconds / 86400);
 	if (interval > 1) {
-		return interval + " days";
+		return interval + ' days';
 	}
 	interval = Math.floor(seconds / 3600);
 	if (interval > 1) {
-		return interval + " hours";
+		return interval + ' hours';
 	}
 	interval = Math.floor(seconds / 60);
 	if (interval > 1) {
-		return interval + " minutes";
+		return interval + ' minutes';
 	}
-	return Math.floor(seconds) + " seconds";
+	return Math.floor(seconds) + ' seconds';
 }
 
 export function titleCase(str: string): string {
-	return str.replace(/\b\w/g, l => l.toUpperCase());
+	return str.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 export function fileName(configFile: LoadFileResult) {
-	if (configFile.type == "ok") {
+	if (configFile.type == 'ok') {
 		return configFile.content.name;
 	}
 
@@ -79,4 +79,11 @@ export function isOutdated(mod: Mod): boolean {
 
 export function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function isBefore(el1: HTMLElement, el2: HTMLElement) {
+	if (el2.parentNode === el1.parentNode)
+		for (var cur = el1.previousSibling; cur && cur.nodeType !== 9; cur = cur.previousSibling)
+			if (cur === el2) return true;
+	return false;
 }

@@ -10,6 +10,7 @@
 	export let selected: T | T[] = [];
 	export let open = false;
 	export let multiple = false;
+	export let avoidCollisions = true;
 	export let size: 'sm' | 'md' | 'lg' = 'md';
 	export let onSelectedChange = (items: T[]) => {};
 	export let onSelectedChangeSingle = (item: T) => {};
@@ -66,6 +67,7 @@
 		class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 max-h-96 overflow-y-auto"
 		transition={slide}
 		transitionConfig={{ duration: 75, easing: quadOut }}
+		{avoidCollisions}
 	>
 		{#each items as item}
 			<slot name="item" {item}>

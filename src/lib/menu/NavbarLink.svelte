@@ -18,13 +18,5 @@
 		"
 	>
 		<Icon {icon} />
-
-		<!--
-		{#if active}
-		<div class="absolute right-[-5px] bottom-[-5px] px-1 py-0.5 bg-green-600 text-xs text-slate-100 rounded-md">
-			100
-		</div>
-		{/if}
-		-->
 	</a>
 </Tooltip>

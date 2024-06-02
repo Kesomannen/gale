@@ -88,7 +88,8 @@
 				"width": 1000,
 				"height": 800,
 				"minWidth": 800,
-				"minHeight": 600
+				"minHeight": 600,
+				"fileDropEnabled": false
 			}
 		],
 		"updater": {

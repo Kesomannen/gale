@@ -85,8 +85,8 @@
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg
-								enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-semibold
-								disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
+							enabled:bg-green-600 enabled:hover:bg-green-500 enabled:font-semibold
+							disabled:bg-gray-600 disabled:opacity-80 disabled:cursor-not-allowed"
 			on:click={() => install(activeModRef)}
 			disabled={isActiveModInstalled}
 		>
@@ -169,7 +169,7 @@
 		<BigButton
 			color="red"
 			fontWeight="semibold"
-			onClick={() => {
+			on:click={() => {
 				invokeCommand('install_mod', { modRef: activeModRef });
 			}}
 		>

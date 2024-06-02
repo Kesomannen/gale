@@ -26,6 +26,10 @@
 		getKeyFromClipboard();
 	}
 
+	$: if (mode === 'overwrite' && isAvailable(name)) {
+		name = profiles[0].name;
+	}
+
 	$: nameAvailable = mode === 'overwrite' || isAvailable(name);
 
 	async function getKeyFromClipboard() {
@@ -37,7 +41,7 @@
 		try {
 			data = await invokeCommand<ImportData>('import_code', { key });
 			name = data.name;
-			mode = isAvailable(name) ? 'overwrite' : 'new';
+			mode = isAvailable(name) ? 'new' : 'overwrite';
 		} catch (e) {
 			open = false;
 		} finally {
@@ -94,6 +98,7 @@
 					<Dropdown
 						class="flex-grow"
 						items={profiles.map((profile) => profile.name)}
+						avoidCollisions={false}
 						bind:selected={name}
 					/>
 				</div>
@@ -103,13 +108,13 @@
 		<div class="flex w-full justify-end items-center mt-1 gap-2 text-slate-400">
 			{data.mods.length} mods will be installed
 
-			<BigButton disabled={!nameAvailable || loading} onClick={importData}>Import</BigButton>
+			<BigButton disabled={!nameAvailable || loading} on:click={importData}>Import</BigButton>
 		</div>
 	{:else}
 		<div class="flex gap-2 mt-1">
 			<InputField bind:value={key} size="lg" placeholder="Enter import code..." />
 
-			<BigButton onClick={submitKey} disabled={loading}>
+			<BigButton on:click={submitKey} disabled={loading}>
 				{#if loading}
 					<Icon icon="mdi:loading" class="animate-spin" />
 				{:else}

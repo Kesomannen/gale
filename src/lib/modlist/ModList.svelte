@@ -2,7 +2,9 @@
 	import ModListItem from '$lib/modlist/ModListItem.svelte';
 	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
+	import SearchBar from '$lib/components/SearchBar.svelte';
 
+	import { sentenceCase, isBefore } from '$lib/util';
 	import { SortBy, type Mod, type QueryModsArgs, SortOrder } from '$lib/models';
 
 	import Icon from '@iconify/svelte';
@@ -11,13 +13,14 @@
 	import VirtualList from '@sveltejs/svelte-virtual-list';
 	import { categories } from '$lib/stores';
 	import type { Writable } from 'svelte/store';
-	import { sentenceCase } from '$lib/util';
+	import { createEventDispatcher } from 'svelte';
 
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined;
 	export let queryArgs: Writable<QueryModsArgs>;
+	export let reorderable = false;
 
 	let listStart = 0;
 	let listEnd = 0;
@@ -30,6 +33,13 @@
 	let includeDeprecated = $queryArgs.includeDeprecated;
 	let sortBy = $queryArgs.sortBy;
 	let sortOrder = $queryArgs.sortOrder;
+
+	const dispatch = createEventDispatcher<{
+		reorder: {
+			uuid: string;
+			delta: number;
+		};
+	}>();
 
 	$: {
 		$queryArgs = {
@@ -45,6 +55,10 @@
 		};
 	}
 
+	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
+		maxCount += 20;
+	}
+
 	function onModClicked(mod: Mod) {
 		if (activeMod === undefined || activeMod.uuid !== mod.uuid) {
 			activeMod = mod;
@@ -53,23 +67,45 @@
 		}
 	}
 
-	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
-		maxCount += 20;
+	let dragElement: HTMLElement | null;
+
+	function onDragStart(evt: DragEvent) {
+		if (!reorderable) return;
+
+		if (evt.dataTransfer) {
+			dragElement = evt.currentTarget as HTMLElement;
+			evt.dataTransfer.effectAllowed = 'move';
+			evt.dataTransfer.setData('text/html', dragElement.outerHTML);
+		}
+	}
+
+	function onDragOver(evt: DragEvent) {
+		if (!reorderable || !dragElement) return;
+		if (evt.currentTarget === dragElement) return;
+
+		let target = evt.currentTarget as HTMLElement;
+
+		if (isBefore(dragElement, target)) {
+			target.parentNode!.insertBefore(dragElement, target);
+			dispatch('reorder', { uuid: dragElement.dataset.uuid!, delta: -1 });
+		} else {
+			target.parentNode!.insertBefore(dragElement, target.nextSibling);
+			dispatch('reorder', { uuid: dragElement.dataset.uuid!, delta: 1 });
+		}
+	}
+
+	function onDragEnd(evt: DragEvent) {
+		if (!reorderable || !dragElement) return;
+
+		dragElement = null;
 	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
 	<div class="flex flex-col flex-grow w-[60%] pt-3 pl-3 overflow-hidden">
 		<div class="flex gap-1.5 mb-1.5 pr-3">
-			<div class="relative flex-grow">
-				<input
-					type="text"
-					class="w-full py-1.5 px-11 rounded-lg bg-gray-900 text-slate-300 placeholder-slate-400 truncate
-								border border-gray-500 border-opacity-0 hover:border-opacity-100"
-					bind:value={searchTerm}
-					placeholder="Search for mods..."
-				/>
-				<Icon class="absolute left-[12px] top-[8px] text-slate-500 text-2xl" icon="mdi:magnify" />
+			<div class="flex-grow relative">
+				<SearchBar bind:value={searchTerm} placeholder="Search for mods..." />
 			</div>
 
 			<Dropdown
@@ -235,12 +271,20 @@
 			<VirtualList
 				itemHeight={48 + 16}
 				items={mods}
-				let:item
+				let:item={mod}
 				bind:start={listStart}
 				bind:end={listEnd}
 			>
-				<ModListItem onClick={onModClicked} mod={item} isSelected={activeMod == item}>
-					<slot name="item" mod={item} />
+				<ModListItem
+					on:click={() => onModClicked(mod)}
+					on:dragstart={onDragStart}
+					on:dragover={onDragOver}
+					on:dragend={onDragEnd}
+					{mod}
+					draggable={reorderable}
+					isSelected={activeMod?.uuid == mod.uuid}
+				>
+					<slot name="item" {mod} />
 				</ModListItem>
 			</VirtualList>
 		{/if}

@@ -54,11 +54,11 @@
 	</ul>
 	
 	<svelte:fragment slot="buttons">
-		<BigButton onClick={executeOne} color="red" outline={true}>
+		<BigButton on:click={executeOne} color="red" outline={true}>
 			{verb}
 			{mod?.name} only
 		</BigButton>
-		<BigButton onClick={executeAll} color={isPositive ? 'blue' : 'red'} fontWeight="semibold">
+		<BigButton on:click={executeAll} color={isPositive ? 'blue' : 'red'} fontWeight="semibold">
 			{verb} all
 		</BigButton>
 	</svelte:fragment>

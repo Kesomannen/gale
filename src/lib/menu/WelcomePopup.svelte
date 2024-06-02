@@ -94,10 +94,10 @@
 			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
 
 			<div class="flex mt-2 gap-1.5">
-				<BigButton color="gray" onClick={() => (stage = 'gameSelect')}>Back</BigButton>
+				<BigButton color="gray" on:click={() => (stage = 'gameSelect')}>Back</BigButton>
 				<div class="flex-grow" />
-				<BigButton color="gray" onClick={() => (stage = 'settings')}>Skip</BigButton>
-				<BigButton color="green" onClick={importProfiles}>Import</BigButton>
+				<BigButton color="gray" on:click={() => (stage = 'settings')}>Skip</BigButton>
+				<BigButton color="green" on:click={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
 			<p>
@@ -135,9 +135,9 @@
 			<div class="flex mt-3 justify-between">
 				<BigButton
 					color="gray"
-					onClick={() => (stage = importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}>Back</BigButton
+					on:click={() => (stage = importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}>Back</BigButton
 				>
-				<BigButton color="green" onClick={() => (stage = 'end')}>Next</BigButton>
+				<BigButton color="green" on:click={() => (stage = 'end')}>Next</BigButton>
 			</div>
 		{:else if stage === 'end'}
 			<p>That's it, you're all set up to start modding!</p>

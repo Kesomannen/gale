@@ -56,7 +56,7 @@
 	<ImportR2Flow bind:this={importFlow} bind:importData bind:importFrom bind:loading />
 
 	<div class="flex gap-2 justify-end w-full mr-0.5 mt-3">
-		<BigButton color="gray" onClick={() => (open = false)}>Cancel</BigButton>
-		<BigButton color="green" onClick={doImport}>Import</BigButton>
+		<BigButton color="gray" on:click={() => (open = false)}>Cancel</BigButton>
+		<BigButton color="green" on:click={doImport}>Import</BigButton>
 	</div>
 </Popup>
