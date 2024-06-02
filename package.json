@@ -1,6 +1,6 @@
 {
-	"name": "modmanager",
-	"version": "0.0.1",
+	"name": "gale",
+	"version": "0.5.2",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",

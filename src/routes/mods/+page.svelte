@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
-	import { SortBy, type Mod, type QueryModsArgs } from '$lib/models';
+	import { SortBy, type Mod } from '$lib/models';
 	import { shortenFileSize } from '$lib/util';
 
 	import ModList from '$lib/modlist/ModList.svelte';

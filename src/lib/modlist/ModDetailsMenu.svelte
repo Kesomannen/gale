@@ -1,19 +1,18 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { MarkdownResponse, Mod } from '../models';
-	import { isOutdated, shortenNum, timeSince } from '../util';
+	import { shortenNum, timeSince } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
 
 	import { open } from '@tauri-apps/api/shell';
-	import { fetch, Response } from '@tauri-apps/api/http';
+	import { fetch } from '@tauri-apps/api/http';
 	import { currentGame } from '$lib/stores';
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
-	import { read } from '$app/server';
 
 	export let mod: Mod;
 	export let onClose: () => void;
