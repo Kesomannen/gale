@@ -4,16 +4,20 @@
 
 ### Added
 
+- README to mod details menu, if the window is large enough
 - Quick install button in mod list
 - "Edit config" and "Open directory" options to profile mod dropdown
 
 ### Changed
 
+- Update banner can be dismissed
 - Search queries, filters and sorting options are now saved between page navigations
-- UI tweaks
+- Various UI improvements
 
 ### Fixed
 
+- Links in README replacing the entire page instead of opening in the browser
+- Crash when importing local mod
 - Profile names being capitalized in the import profile dialog
 - R2modman/TMM profiles not being found on Linux
 - Improve performance of config serialization
@@ -50,7 +54,7 @@
 
 ### Changed
 
-- Changelog on main page now hides unreleased changes
+- Changelog on the home page now hides unreleased changes
 - Overhauled sorting and filtering options
 - Infinite scroll instead of pagination
 - Made msi the preferred installer for Windows

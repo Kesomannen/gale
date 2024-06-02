@@ -500,7 +500,10 @@ pub async fn install_with_deps(
 }
 
 pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
-    let name = full_name.split_once('-').unwrap().1;
+    let name = match full_name.split_once('-') {
+        Some((_, name)) => name,
+        None => full_name,
+    };
 
     match name.starts_with("BepInExPack") {
         true => install_from_disk_bepinex(src, dest),
