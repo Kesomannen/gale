@@ -17,7 +17,7 @@
 
 <style global lang="postcss">
   .markdown :global(*) {
-    @apply text-slate-300;
+    @apply text-slate-200;
   }
 
   .markdown :global(h1),
@@ -34,11 +34,11 @@
   }
 
   .markdown :global(h3) {
-    @apply text-slate-200 font-semibold text-lg pb-1 pt-2;
+    @apply font-semibold text-lg pb-1 pt-2;
   }
 
   .markdown :global(h4) {
-    @apply text-slate-300 font-medium text-lg pb-0.5 pt-1;
+    @apply font-medium text-lg pb-0.5 pt-1;
   }
 
   .markdown :global(a) {

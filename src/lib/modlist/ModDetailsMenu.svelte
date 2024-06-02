@@ -128,7 +128,7 @@
 
 		{#if mod.containsNsfw}
 			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
-				<Icon class="text-xl mr-1" icon="mdi:alert" />
+				<Icon class="text-xl mr-1" icon="material-symbols:explicit" />
 				Contains NSFW
 			</div>
 		{/if}
@@ -144,12 +144,14 @@
 		</div>
 	{/if}
 
-	<div class="my-1 flex items-center gap-2 text-lg">
-		<Icon class="text-yellow-400" icon="mdi:star" />
-		<span class="text-yellow-400 mr-4">{shortenNum(mod.rating ?? 0)}</span>
-		<Icon class="text-green-400" icon="mdi:download" />
-		<span class="text-green-400">{shortenNum(mod.downloads ?? 0)}</span>
-	</div>
+	{#if mod.rating || mod.downloads}
+		<div class="my-1 flex items-center gap-2 text-lg">
+			<Icon class="text-yellow-400" icon="mdi:star" />
+			<span class="text-yellow-400 mr-4">{shortenNum(mod.rating ?? 0)}</span>
+			<Icon class="text-green-400" icon="mdi:download" />
+			<span class="text-green-400">{shortenNum(mod.downloads ?? 0)}</span>
+		</div>
+	{/if}
 
 	{#if mod.lastUpdated}
 		<div class="text-slate-400 text-lg">
@@ -164,6 +166,10 @@
 	{#await readmePromise then readme}
 		{#if readme}
 			<Markdown source={readme} class="hidden xl:block" />
+		{:else}
+			<p class="text-slate-300 text-xl flex-shrink overflow-hidden mt-3 hidden xl:block">
+				{mod.description ?? ''}
+			</p>
 		{/if}
 	{/await}
 
@@ -178,23 +184,25 @@
 		</div>
 	{/if}
 
-	<Button.Root
-		class="flex items-center text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
-		on:mouseenter={changelog.fetchMarkdown}
-		on:click={() => (changelogOpen = true)}
-	>
-		<Icon icon="mdi:file-document" class="text-lg mr-1" />
-		Changelog
-	</Button.Root>
+	{#if mod.type === 'remote'}
+		<Button.Root
+			class="flex items-center text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
+			on:mouseenter={changelog.fetchMarkdown}
+			on:click={() => (changelogOpen = true)}
+		>
+			<Icon icon="mdi:file-document" class="text-lg mr-1" />
+			Changelog
+		</Button.Root>
 
-	<Button.Root
-		class="flex items-center mt-1 text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
-		on:mouseenter={readme.fetchMarkdown}
-		on:click={() => (readmeOpen = true)}
-	>
-		<Icon icon="mdi:info" class="text-lg mr-1" />
-		Details
-	</Button.Root>
+		<Button.Root
+			class="flex items-center mt-1 text-white pl-3 pr-1.5 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
+			on:mouseenter={readme.fetchMarkdown}
+			on:click={() => (readmeOpen = true)}
+		>
+			<Icon icon="mdi:info" class="text-lg mr-1" />
+			Details
+		</Button.Root>
+	{/if}
 
 	{#if mod.dependencies && mod.dependencies.length > 0}
 		<Button.Root

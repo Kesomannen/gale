@@ -11,12 +11,13 @@
 
 ### Changed
 
-- Update banner can be dismissed
+- Update banner can now be dismissed
 - Search queries, filters and sorting options are now saved between page navigations
 - Various UI improvements
 
 ### Fixed
 
+- Local mod icons not being displayed
 - Links replacing the entire page instead of opening in the browser
 - Crash when importing local mod
 - Profile names being capitalized in the import profile dialog

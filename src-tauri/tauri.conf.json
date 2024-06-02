@@ -28,6 +28,11 @@
 			"app": {
 				"all": true
 			},
+			"fs": {
+				"all": false,
+				"readFile": true,
+				"scope": ["$APPDATA/*"]
+			},
 			"http": {
 				"all": false,
 				"request": true,
