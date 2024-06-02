@@ -4,9 +4,10 @@
 
 ### Added
 
-- README to mod details menu, if the window is large enough
+- README to mod details menu, shown if the window is large enough
+- "Edit config" button to mod details menu
 - Quick install button in mod list
-- "Edit config" and "Open directory" options to profile mod dropdown
+- "Open directory" options to profile mod dropdown
 
 ### Changed
 
