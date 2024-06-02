@@ -171,9 +171,9 @@ After a while, this it will output both an executable and an installable package
 
 ## Credits
 
-Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
+Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
 
-Logo font based on [Poppins](https://fonts.google.com/specimen/Poppins).
+Logo font based on [Poppins](https://fonts.google.com/specimen/Poppins)
 
 ## License
 
