@@ -13,9 +13,16 @@ use uuid::Uuid;
 use walkdir::WalkDir;
 
 use crate::{
-    config, fs_util, games::{self, Game}, prefs::Prefs, thunderstore::{
-        self, models::FrontendProfileMod, query::{self, QueryModsArgs, Queryable, SortBy}, BorrowedMod, ModRef, Thunderstore
-    }, util::IoResultExt
+    config, fs_util,
+    games::{self, Game},
+    prefs::Prefs,
+    thunderstore::{
+        self,
+        models::FrontendProfileMod,
+        query::{self, QueryModsArgs, Queryable, SortBy},
+        BorrowedMod, ModRef, Thunderstore,
+    },
+    util::{self, IoResultExt},
 };
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
@@ -129,7 +136,11 @@ impl ProfileMod {
         self.kind.as_local().map(|local| (local, self.enabled))
     }
 
-    fn queryable<'a>(&'a self, index: usize, thunderstore: &'a Thunderstore) -> Result<QueryableProfileMod<'a>> {
+    fn queryable<'a>(
+        &'a self,
+        index: usize,
+        thunderstore: &'a Thunderstore,
+    ) -> Result<QueryableProfileMod<'a>> {
         let kind = match &self.kind {
             ProfileModKind::Local(local) => QueryableProfileModKind::Local(local),
             ProfileModKind::Remote(mod_ref) => {
@@ -264,8 +275,8 @@ enum QueryableProfileModKind<'a> {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProfileManifest<'a> {
-    name: &'a str,
+pub struct ProfileManifest {
+    name: String,
     mods: Vec<ProfileMod>,
 }
 
@@ -274,7 +285,7 @@ pub struct Profile {
     pub path: PathBuf,
     pub mods: Vec<ProfileMod>,
     pub config: Vec<config::LoadFileResult>,
-    pub mod_config_map: HashMap<Uuid, String>,
+    pub linked_config: HashMap<Uuid, String>,
 }
 
 impl Profile {
@@ -311,7 +322,7 @@ impl Profile {
 
     fn manifest(&self) -> ProfileManifest {
         ProfileManifest {
-            name: &self.name,
+            name: self.name.clone(),
             mods: self.mods.clone(),
         }
     }
@@ -332,13 +343,15 @@ impl Profile {
             .map(|queryable| {
                 let (data, uuid) = match queryable.kind {
                     QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
-                    QueryableProfileModKind::Remote(remote) => (remote.into() , remote.package.uuid4),
+                    QueryableProfileModKind::Remote(remote) => {
+                        (remote.into(), remote.package.uuid4)
+                    }
                 };
-        
+
                 FrontendProfileMod {
                     data,
                     enabled: queryable.enabled,
-                    config_file: self.mod_config_map.get(&uuid).cloned(),
+                    config_file: self.linked_config.get(&uuid).cloned(),
                 }
             })
             .collect())
@@ -365,20 +378,20 @@ impl Profile {
     fn load(mut path: PathBuf) -> Result<Self> {
         path.push("profile.json");
 
-        let manifest = fs::read_to_string(&path).fs_context("read profile manifest", &path)?;
+        let manifest: ProfileManifest =
+            util::read_json(&path).context("failed to read profile manifest")?;
 
         path.pop();
 
-        let manifest: ProfileManifest =
-            serde_json::from_str(&manifest).context("failed to parse profile manifest")?;
-
-        Ok(Profile {
+        let profile = Profile {
             name: manifest.name.to_owned(),
             mods: manifest.mods,
+            linked_config: HashMap::new(),
             config: Vec::new(),
-            mod_config_map: HashMap::new(),
             path,
-        })
+        };
+
+        Ok(profile)
     }
 }
 
@@ -580,7 +593,10 @@ impl Profile {
     }
 
     fn reorder_mod(&mut self, uuid: &Uuid, delta: i32) -> Result<()> {
-        let index = self.mods.iter().position(|m| m.uuid() == uuid)
+        let index = self
+            .mods
+            .iter()
+            .position(|m| m.uuid() == uuid)
             .context("mod not found in profile")?;
 
         let target = (index as i32 + delta).clamp(0, self.mods.len() as i32 - 1) as usize;
@@ -613,7 +629,7 @@ impl ManagerGame {
             path,
             mods: Vec::new(),
             config: Vec::new(),
-            mod_config_map: HashMap::new(),
+            linked_config: HashMap::new(),
         };
         self.profiles.push(profile);
 
@@ -649,7 +665,11 @@ impl ManagerGame {
         &mut self.profiles[self.active_profile_index]
     }
 
-    fn set_active_profile(&mut self, index: usize) -> Result<()> {
+    fn set_active_profile(
+        &mut self,
+        index: usize,
+        thunderstore: Option<&Thunderstore>,
+    ) -> Result<()> {
         ensure!(
             index < self.profiles.len(),
             "profile index {} is out of bounds",
@@ -657,6 +677,7 @@ impl ManagerGame {
         );
 
         self.active_profile_index = index;
+        self.active_profile_mut().refresh_config(thunderstore);
 
         Ok(())
     }
@@ -672,18 +693,19 @@ impl ManagerGame {
         })
     }
 
-    fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
+    fn load(
+        mut path: PathBuf,
+    ) -> Result<Option<(&'static Game, Self)>> {
         let file_name = fs_util::file_name(&path);
-        let game = match games::from_name(&file_name) {
+        let game = match games::from_id(&file_name) {
             Some(game) => game,
             None => return Ok(None),
         };
 
         path.push("game.json");
 
-        let json = fs::read_to_string(&path).fs_context("reading game save data", &path)?;
         let data: ManagerGameSaveData =
-            serde_json::from_str(&json).context("failed to parse game save data")?;
+            util::read_json(&path).context("failed to read game save data")?;
 
         path.pop();
 
@@ -717,20 +739,15 @@ impl ManagerGame {
     }
 }
 
-const DEFAULT_GAME: &str = "content-warning";
+const DEFAULT_GAME_ID: &str = "lethal-company";
 
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
         let save_path = prefs.get_path_or_err("data_dir")?.join("manager.json");
         let save_data = match save_path.try_exists()? {
-            true => {
-                let json = fs::read_to_string(&save_path)
-                    .fs_context("read manager save data", &save_path)?;
-
-                serde_json::from_str(&json).context("failed to parse manager save data")?
-            }
+            true => util::read_json(&save_path).context("failed to read manager save data")?,
             false => ManagerSaveData {
-                active_game: games::from_name(DEFAULT_GAME).unwrap().id.to_owned(),
+                active_game: DEFAULT_GAME_ID.to_owned(),
             },
         };
 
@@ -746,8 +763,8 @@ impl ModManager {
             }
         }
 
-        let active_game = games::from_name(&save_data.active_game)
-            .unwrap_or_else(|| games::from_name(DEFAULT_GAME).unwrap());
+        let active_game = games::from_id(&save_data.active_game)
+            .unwrap_or_else(|| games::from_id(DEFAULT_GAME_ID).unwrap());
 
         let mut manager = Self { games, active_game };
 
@@ -809,7 +826,7 @@ impl ModManager {
             .map(|borrowed| borrowed.package)
             .unique()
             .collect_vec();
-        
+
         let path = thunderstore::cache_path(self);
         thunderstore::write_cache(&packages, &path)
     }

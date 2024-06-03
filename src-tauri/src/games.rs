@@ -132,6 +132,6 @@ lazy_static! {
     ];
 }
 
-pub fn from_name(name: &str) -> Option<&'static Game> {
-    GAMES.iter().find(|g| g.id == name)
+pub fn from_id(id: &str) -> Option<&'static Game> {
+    GAMES.iter().find(|game| game.id == id)
 }

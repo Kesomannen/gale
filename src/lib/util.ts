@@ -61,12 +61,23 @@ export function titleCase(str: string): string {
 	return str.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-export function fileName(configFile: LoadFileResult) {
+export function configFileName(configFile: LoadFileResult) {
 	if (configFile.type == 'ok') {
 		return configFile.content.name;
 	}
 
 	return configFile.content.name;
+}
+
+export function configDisplayName(configFile: LoadFileResult) {
+	let name: string;
+	if (configFile.type == 'ok') {
+		name = configFile.content.metadata?.pluginName ?? configFile.content.name;
+	} else {
+		name = configFile.content.name;
+	}
+
+	return name.replace(/[-_ ]/g, '');
 }
 
 export function isOutdated(mod: Mod): boolean {
@@ -82,8 +93,5 @@ export function capitalize(str: string): string {
 }
 
 export function isBefore(el1: HTMLElement, el2: HTMLElement) {
-	if (el2.parentNode === el1.parentNode)
-		for (var cur = el1.previousSibling; cur && cur.nodeType !== 9; cur = cur.previousSibling)
-			if (cur === el2) return true;
-	return false;
+	return el1.compareDocumentPosition(el2) === Node.DOCUMENT_POSITION_PRECEDING;
 }

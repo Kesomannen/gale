@@ -16,6 +16,7 @@
 		? 'bg-slate-700'
 		: 'hover:bg-slate-700 border-opacity-0'}"
 	data-uuid={mod.uuid}
+	data-name={mod.name}
 	on:click
 	on:dragstart
 	on:dragover

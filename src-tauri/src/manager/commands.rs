@@ -53,7 +53,7 @@ pub fn favorite_game(
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = games::from_name(&id).context("invalid game id")?;
+    let game = games::from_id(&id).context("invalid game id")?;
     manager.ensure_game(game, &prefs)?;
 
     let manager_game = manager.games.get_mut(&id).unwrap();
@@ -76,7 +76,7 @@ pub fn set_active_game(
     let mut thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = games::from_name(id).context("invalid game id")?;
+    let game = games::from_id(id).context("invalid game id")?;
 
     manager.ensure_game(game, &prefs)?;
 
@@ -128,12 +128,14 @@ pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfilesInfo {
 pub fn set_active_profile(
     index: usize,
     manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
 ) -> Result<()> {
     let mut manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager.active_game_mut().set_active_profile(index)?;
+    manager.active_game_mut().set_active_profile(index, Some(&thunderstore))?;
     save(&manager, &prefs)?;
     Ok(())
 }

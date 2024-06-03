@@ -149,8 +149,7 @@ export interface Dependant {
 
 export type ModActionResponse = 
 	| { type: "done", content?: undefined }
-	| { type: "hasDependants", content: Dependant[] }
-	| { type: "hasDependencies", content: Dependant[] }
+	| { type: "hasDependants" | "hasDependencies", content: Dependant[] }
 
 export type InstallTask = 
 	| { kind: "done", payload?: undefined }

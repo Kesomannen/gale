@@ -9,7 +9,7 @@
 		ConfigValue,
 		LoadFileResult
 	} from '$lib/models';
-	import { capitalize, fileName, sentenceCase } from '$lib/util';
+	import { capitalize, configDisplayName, configFileName, sentenceCase } from '$lib/util';
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
@@ -41,10 +41,16 @@
 		refresh();
 	}
 
-	$: shownFiles =
-		searchTerm?.length ?? 0 > 1
-			? files?.filter((file) => fileName(file).toLowerCase().includes(searchTerm!.toLowerCase())) ?? []
-			: files;
+	$: shownFiles = searchTerm?.length ?? 0 > 1 ? files?.filter(matchesSearch) ?? [] : files;
+
+	function matchesSearch(file: LoadFileResult) {
+		let lowerSearch = searchTerm.toLowerCase();
+
+		return (
+			configFileName(file).toLowerCase().includes(lowerSearch) ||
+			configDisplayName(file).toLowerCase().includes(lowerSearch)
+		);
+	}
 
 	function configValueToString(config: ConfigValue) {
 		switch (config.type) {
@@ -99,7 +105,7 @@
 
 		let file = $page.url.searchParams.get('file');
 		if (file) {
-			selectedFile = files.find((f) => fileName(f) === file);
+			selectedFile = files.find((f) => configFileName(f) === file);
 			if (!selectedFile) {
 				return;
 			}
@@ -117,7 +123,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-3 min-w-72 w-[30%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="flex flex-col py-3 min-w-72 w-[20%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
 		bind:this={scrollContainer}
 	>
 		{#if files === undefined}
@@ -179,9 +185,7 @@
 				{#each selectedSection.entries as entry (entry.content)}
 					{#if entry.type === 'untagged'}
 						<div class="flex items-center text-slate-300 pl-2 h-7 my-0.5">
-							<div
-								class="text-slate-300 pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0"
-							>
+							<div class="text-slate-300 pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0">
 								{sentenceCase(entry.content.name)}
 							</div>
 							<UntaggedConfig

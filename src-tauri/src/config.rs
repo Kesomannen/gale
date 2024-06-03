@@ -226,7 +226,7 @@ impl Profile {
     pub fn refresh_config(&mut self, thunderstore: Option<&Thunderstore>) {
         load_config(self.path.clone(), &mut self.config);
         if let Some(thunderstore) = thunderstore {
-            self.create_mod_config_map(thunderstore);
+            self.link_config(thunderstore);
         }
     }
 
@@ -234,7 +234,7 @@ impl Profile {
         self.config.iter().filter_map(|res| res.as_ref().ok())
     }
 
-    fn create_mod_config_map(&mut self, thunderstore: &Thunderstore) {
+    fn link_config(&mut self, thunderstore: &Thunderstore) {
         for profile_mod in &self.mods {
             let name = match profile_mod.kind.name(thunderstore) {
                 Ok(name) => name,
@@ -243,16 +243,33 @@ impl Profile {
                 }
             };
 
-            let file = self.ok_config().find(|file| match &file.metadata {
-                Some(meta) => name == meta.plugin_name,
-                None => false,
-            });
+            let file = self.config.iter().find(|file| matches(file, name));
 
             if let Some(file) = file {
                 debug!("linked {} to config file", name);
-                self.mod_config_map
-                    .insert(*profile_mod.uuid(), file.name.clone());
+                self.linked_config
+                    .insert(*profile_mod.uuid(), file.name().to_owned());
             }
+        }
+
+        fn matches(file: &LoadFileResult, mod_name: &str) -> bool {
+            if file.name() == mod_name {
+                return true;
+            }
+
+            let file = match file {
+                Ok(file) => file,
+                Err(_) => return false,
+            };
+
+            let meta = match &file.metadata {
+                Some(meta) => meta,
+                None => return false,
+            };
+
+            mod_name == meta.plugin_name
+                || mod_name == meta.plugin_guid
+                || mod_name.replace('_', "") == meta.plugin_name.replace(' ', "")
         }
     }
 

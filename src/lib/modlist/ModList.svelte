@@ -38,6 +38,7 @@
 		reorder: {
 			uuid: string;
 			delta: number;
+			name: string;
 		};
 	}>();
 
@@ -81,16 +82,19 @@
 
 	function onDragOver(evt: DragEvent) {
 		if (!reorderable || !dragElement) return;
-		if (evt.currentTarget === dragElement) return;
 
 		let target = evt.currentTarget as HTMLElement;
+		let draggingUuid = dragElement.dataset.uuid;
+		let targetUuid = target.dataset.uuid;
+
+		if (draggingUuid === targetUuid) return;
+
+		let name = dragElement.dataset.name!;
 
 		if (isBefore(dragElement, target)) {
-			target.parentNode!.insertBefore(dragElement, target);
-			dispatch('reorder', { uuid: dragElement.dataset.uuid!, delta: -1 });
+			dispatch('reorder', { uuid: draggingUuid!, delta: -1, name });
 		} else {
-			target.parentNode!.insertBefore(dragElement, target.nextSibling);
-			dispatch('reorder', { uuid: dragElement.dataset.uuid!, delta: 1 });
+			dispatch('reorder', { uuid: draggingUuid!, delta: 1, name });
 		}
 	}
 
@@ -271,20 +275,20 @@
 			<VirtualList
 				itemHeight={48 + 16}
 				items={mods}
-				let:item={mod}
+				let:item
 				bind:start={listStart}
 				bind:end={listEnd}
 			>
 				<ModListItem
-					on:click={() => onModClicked(mod)}
+					on:click={() => onModClicked(item)}
 					on:dragstart={onDragStart}
 					on:dragover={onDragOver}
 					on:dragend={onDragEnd}
-					{mod}
 					draggable={reorderable}
-					isSelected={activeMod?.uuid == mod.uuid}
+					isSelected={activeMod?.uuid == item.uuid}
+					mod={item}
 				>
-					<slot name="item" {mod} />
+					<slot name="item" mod={item} />
 				</ModListItem>
 			</VirtualList>
 		{/if}

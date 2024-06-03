@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
 	import type { ConfigFile, ConfigSection, LoadFileResult } from '$lib/models';
+	import { configDisplayName } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button, Collapsible } from 'bits-ui';
 	import { quadOut } from 'svelte/easing';
@@ -37,7 +38,7 @@
 		/>
 
 		<div class="truncate flex-shrink mr-1" style="direction: rtl;">
-			{file.content.name}
+			{configDisplayName(file)}
 		</div>
 
 		<Button.Root

@@ -63,7 +63,7 @@
 		});
 	}
 
-	async function toggleMod(new_value: boolean, mod: Mod) {
+	async function toggleMod(enable: boolean, mod: Mod) {
 		let response = await invokeCommand<ModActionResponse>('toggle_mod', {
 			uuid: mod.uuid
 		});
@@ -73,7 +73,7 @@
 			return;
 		}
 
-		if (new_value) {
+		if (enable) {
 			enableDependencies.openFor(mod, response.content);
 		} else {
 			disableDependants.openFor(mod, response.content);
@@ -103,23 +103,27 @@
 		refresh();
 	}
 
-	async function onReorder(uuid: string, delta: number) {
+	async function onReorder(uuid: string, delta: number, name: string) {
 		let oldIndex = mods.findIndex((mod) => mod.uuid === uuid);
+
+		if (oldIndex === -1) {
+			console.warn('Could not find mod with uuid', uuid);
+			return;
+		}
+
 		let newIndex = oldIndex + delta;
 
 		if (newIndex < 0 || newIndex >= mods.length) return;
 		let temp = mods[newIndex];
 		mods[newIndex] = mods[oldIndex];
 		mods[oldIndex] = temp;
-
-		console.log('Moved', uuid, 'from', oldIndex, 'to', newIndex);
 	}
 </script>
 
 <ModList
 	bind:mods
 	bind:activeMod
-	on:reorder={({ detail: { uuid, delta } }) => onReorder(uuid, delta)}
+	on:reorder={({ detail: { uuid, delta, name } }) => onReorder(uuid, delta, name)}
 	{sortOptions}
 	reorderable={$profileQuery.sortBy === SortBy.Custom}
 	queryArgs={profileQuery}

@@ -131,8 +131,8 @@ fn main() {
 
             prefs::setup(&handle).context("failed to initialize preferences")?;
             manager::setup(&handle).context("failed to initialize manager")?;
+            thunderstore::setup(&handle).context("failed to initialize thunderstore client")?;
             config::setup(&handle).context("failed to initialize mod config")?;
-            thunderstore::setup(&handle).context("failed to initialize Thunderstore")?;
 
             Ok(())
         })

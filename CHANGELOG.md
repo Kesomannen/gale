@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Config editor shows cleaner file names
+
+### Fixed
+
+- Config files not being linked until the config editor page is visited
+- Improve config file linking
+
 ## 0.5.2 (2024-06-02)
 
 ### Added
