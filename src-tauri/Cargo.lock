@@ -1150,7 +1150,7 @@ dependencies = [
 
 [[package]]
 name = "gale"
-version = "0.5.2"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",

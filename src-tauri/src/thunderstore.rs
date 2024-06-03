@@ -139,7 +139,7 @@ impl Thunderstore {
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
         self.packages.values().map(move |package| BorrowedMod {
             package,
-            version: &package.versions[0],
+            version: package.latest(),
         })
     }
 

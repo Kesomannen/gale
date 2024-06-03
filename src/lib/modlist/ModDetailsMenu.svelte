@@ -13,17 +13,21 @@
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
+	import { invokeCommand } from '$lib/invoke';
 
 	export let mod: Mod;
 	export let onClose: () => void;
 
 	let dependenciesOpen = false;
+	let dependantsOpen = false;
 
 	let readmeOpen = false;
 	let readme: ModInfoPopup;
 
 	let changelogOpen = false;
 	let changelog: ModInfoPopup;
+
+	let dependats: string[] | undefined;
 
 	function openCommunityUrl(tail?: string) {
 		if (!tail) return;
@@ -36,6 +40,16 @@
 
 	function openIfDefined(url?: string) {
 		if (url) open(url);
+	}
+
+	async function openDependants() {
+		dependats = undefined;
+		dependantsOpen = true;
+
+		dependats = await invokeCommand<string[]>('get_dependants', {
+			fullName: `${mod.author}-${mod.name}`
+		});
+		dependats.sort();
 	}
 
 	let readmePromise: Promise<string | undefined>;
@@ -84,6 +98,12 @@
 					onClick={() => openIfDefined(mod.donateUrl)}
 				/>
 			{/if}
+
+			<ModDetailsDropdownItem
+				icon="mdi:source-branch"
+				label="Dependants"
+				onClick={openDependants}
+			/>
 
 			<ModDetailsDropdownItem icon="mdi:close" label="Close" onClick={onClose} />
 		</DropdownMenu.Content>
@@ -189,7 +209,7 @@
 			on:mouseenter={changelog.fetchMarkdown}
 			on:click={() => (changelogOpen = true)}
 		>
-			<Icon icon="mdi:file-document" class="text-lg mr-1" />
+			<Icon icon="mdi:file-document" class="text-lg mr-2" />
 			Changelog
 		</Button.Root>
 
@@ -198,7 +218,7 @@
 			on:mouseenter={readme.fetchMarkdown}
 			on:click={() => (readmeOpen = true)}
 		>
-			<Icon icon="mdi:info" class="text-lg mr-1" />
+			<Icon icon="mdi:info" class="text-lg mr-2" />
 			Details
 		</Button.Root>
 	{/if}
@@ -208,7 +228,7 @@
 			class="flex items-center mt-1 text-white pl-3 pr-1 py-1 rounded-md bg-slate-600 hover:bg-slate-500 group"
 			on:click={() => (dependenciesOpen = true)}
 		>
-			<Icon icon="material-symbols:network-node" class="text-lg mr-1" />
+			<Icon icon="material-symbols:network-node" class="text-lg mr-2" />
 			Dependencies
 			<div class="bg-slate-500 group-hover:bg-slate-400 px-3 py-0.5 text-sm rounded-md ml-auto">
 				{mod.dependencies.length}
@@ -227,15 +247,41 @@
 				<th>Name</th>
 				<th>Preferred Version</th>
 			</tr>
-			{#each mod.dependencies as dependency}
+			{#each mod.dependencies as dep}
 				<tr class="text-slate-200 even:bg-gray-700">
-					{#each dependency.split('-') as segment}
-						<td class="pr-4 pl-2">{segment}</td>
+					{#each dep.split('-') as segment}
+						<td class="pl-1 pr-12">{segment}</td>
 					{/each}
 				</tr>
 			{/each}
 		</table>
 	{/if}
+</Popup>
+
+<Popup title="Dependants of {mod.name}" bind:open={dependantsOpen}>
+	<div class="text-slate-300 text-center mt-4">
+		{#if dependats}
+			{#if dependats.length === 0}
+				No dependants found
+			{:else}
+				<table class="mt-2 w-full text-left">
+					<tr class="text-slate-100 text-left">
+						<th>Author</th>
+						<th>Name</th>
+					</tr>
+					{#each dependats as dep}
+						<tr class="text-slate-200 even:bg-gray-700">
+							{#each dep.split('-') as segment}
+								<td class="pl-1 pr-12">{segment}</td>
+							{/each}
+						</tr>
+					{/each}
+				</table>
+			{/if}
+		{:else}
+			Loading...
+		{/if}
+	</div>
 </Popup>
 
 <ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} path="readme" />

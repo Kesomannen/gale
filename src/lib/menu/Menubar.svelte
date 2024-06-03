@@ -13,7 +13,7 @@
 	import { appWindow } from '@tauri-apps/api/window';
 	import ImportProfilePopup from '$lib/import/ImportProfilePopup.svelte';
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
-	import { dialog } from '@tauri-apps/api';
+	import { clipboard, dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 	import { currentProfile } from '$lib/stores';
@@ -61,6 +61,11 @@
 	async function setAllModsState(enable: boolean) {
 		await invokeCommand('set_all_mods_state', { enable });
 		currentProfile.update((p) => p);
+	}
+
+	async function copyDependencyStrings() {
+		let text = await invokeCommand<string>('export_dep_string');
+		await clipboard.writeText(text);
 	}
 </script>
 
@@ -120,6 +125,7 @@
 				<MenubarItem onClick={() => exportCodePopup.open()}>...profile as code</MenubarItem>
 				<MenubarItem onClick={exportFile}>...profile as file</MenubarItem>
 				<MenubarItem onClick={() => (exportPackOpen = true)}>...profile as modpack</MenubarItem>
+				<MenubarItem onClick={copyDependencyStrings}>...copy dependency strings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>

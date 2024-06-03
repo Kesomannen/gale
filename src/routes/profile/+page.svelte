@@ -5,7 +5,6 @@
 </script>
 
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -16,9 +15,6 @@
 		type ProfileQuery,
 		type AvailableUpdate,
 		SortBy,
-
-		type QueryModsArgs
-
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -27,7 +23,6 @@
 	import Icon from '@iconify/svelte';
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
 	import { fly } from 'svelte/transition';
-	import type { PageData } from './$types';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -54,6 +49,23 @@
 		$currentProfile;
 		$profileQuery;
 		refresh();
+	}
+
+	// really ugly hack because reactive statements run once immediately no matter what :/
+	let isFirst = true;
+
+	$: {
+		$currentProfile;
+		resetBannerThreshold();
+	}
+
+	function resetBannerThreshold() {
+		if (isFirst) {
+			isFirst = false;
+			return;
+		}
+
+		$updateBannerThreshold = 0;
 	}
 
 	function refresh() {

@@ -71,7 +71,7 @@
 	}
 
 	async function install(modRef?: { packageUuid: string; versionUuid: string }) {
-		missingDeps = await invokeCommand<string[]>('missing_deps', { modRef });
+		missingDeps = await invokeCommand<string[]>('get_missing_deps', { modRef });
 		if (missingDeps.length > 0) {
 			missingDepsOpen = true;
 			return;

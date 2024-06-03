@@ -2,12 +2,19 @@
 
 ## Unreleased
 
+### Added
+
+- Ability to copy dependency strings to clipboard
+- Button to view dependants in mod details menu dropdown
+
 ### Changed
 
-- Config editor shows cleaner file names
+- Config editor now shows cleaner file names
+- Several user interface alterations
 
 ### Fixed
 
+- Update banner sometimes not showing until the app is restarted
 - Config files not being linked until the config editor page is visited
 - Improve config file linking
 

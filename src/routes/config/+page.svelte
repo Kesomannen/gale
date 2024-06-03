@@ -31,8 +31,6 @@
 	let selectedFile: LoadFileResult | undefined;
 	let selectedSection: ConfigSection | undefined;
 
-	let scrollContainer: HTMLDivElement;
-
 	$: {
 		$currentProfile;
 		files = undefined;
@@ -124,7 +122,6 @@
 <div class="flex flex-grow overflow-hidden">
 	<div
 		class="flex flex-col py-3 min-w-72 w-[20%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
-		bind:this={scrollContainer}
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">

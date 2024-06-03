@@ -70,7 +70,8 @@ fn main() {
             
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
-            thunderstore::commands::missing_deps,
+            thunderstore::commands::get_missing_deps,
+            thunderstore::commands::get_dependants,
 
             prefs::commands::get_pref,
             prefs::commands::set_pref,
@@ -94,28 +95,29 @@ fn main() {
             manager::commands::open_profile_dir,
             manager::commands::open_plugin_dir,
             manager::commands::open_bepinex_log,
-
+            
             manager::launcher::commands::launch_game,
-
+            
             manager::downloader::commands::install_mod,
             manager::downloader::commands::cancel_install,
             manager::downloader::commands::clear_download_cache,
             manager::downloader::commands::get_download_size,
-
+            
             manager::downloader::updater::commands::update_mod,
             manager::downloader::updater::commands::update_all,
-
+            
             manager::importer::commands::import_data,
             manager::importer::commands::import_code,
             manager::importer::commands::import_file,
             manager::importer::commands::import_local_mod,
             manager::importer::commands::get_r2modman_info,
             manager::importer::commands::import_r2modman,
-
+            
             manager::exporter::commands::export_code,
             manager::exporter::commands::export_file,
             manager::exporter::commands::export_pack,
-
+            manager::exporter::commands::export_dep_string,
+            
             config::commands::get_config_files,
             config::commands::set_tagged_config_entry,
             config::commands::set_untagged_config_entry,

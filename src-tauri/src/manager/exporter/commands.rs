@@ -1,8 +1,14 @@
-use crate::{command_util::{Result, StateMutex}, manager::ModManager, prefs::Prefs, thunderstore::Thunderstore, NetworkClient};
-use std::path::PathBuf;
-use uuid::Uuid;
-use tauri::State;
 use super::ModpackArgs;
+use crate::{
+    command_util::{Result, StateMutex},
+    manager::ModManager,
+    prefs::Prefs,
+    thunderstore::Thunderstore,
+    NetworkClient,
+};
+use std::path::PathBuf;
+use tauri::State;
+use uuid::Uuid;
 
 #[tauri::command]
 pub async fn export_code(
@@ -46,4 +52,23 @@ pub fn export_pack(
 
     let _ = open::that(&zip_path);
     Ok(())
+}
+
+#[tauri::command]
+pub fn export_dep_string(
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+) -> Result<String> {
+    let manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+
+    manager
+        .active_profile()
+        .remote_mods()
+        .map(|(mod_ref, _)| {
+            let borrowed = mod_ref.borrow(&thunderstore)?;
+            Ok(borrowed.version.full_name.clone())
+        })
+        .collect::<Result<Vec<_>>>()
+        .map(|deps| deps.join("\n"))
 }
