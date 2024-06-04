@@ -314,7 +314,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                 None => &mut state.packages,
             };
 
-            while let Some(index) = buffer.find("}]},") {
+            while let Some(index) = buffer.find("}]},") { // 😏
                 let (json, _) = buffer.split_at(index + 3);
 
                 match serde_json::from_str::<PackageListing>(json) {

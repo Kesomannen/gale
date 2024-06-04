@@ -89,8 +89,9 @@ fn resolve_r2mods<'a>(
 }
 
 async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
+    let manager = app.state::<Mutex<ModManager>>();
+
     {
-        let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
 
         let game = manager.active_game_mut();
@@ -100,14 +101,6 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         }
 
         let profile = game.create_profile(data.name)?;
-
-        let mut config_dir = profile.path.clone();
-        config_dir.push("BepInEx");
-        config_dir.push("config");
-        fs::create_dir_all(&config_dir)?;
-
-        util::io::copy_contents(&data.path, &config_dir, true)
-            .context("error while importing config")?;
     };
 
     let mod_refs = data
@@ -119,6 +112,16 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
     downloader::install_mod_refs(&mod_refs, options, app)
         .await
         .context("error while importing mods")?;
+
+    let manager = manager.lock().unwrap();
+
+    let mut config_dir = profile.path.clone();
+    config_dir.push("BepInEx");
+    config_dir.push("config");
+    fs::create_dir_all(&config_dir)?;
+
+    util::io::copy_contents(&data.path, &config_dir, true)
+        .context("error while importing config")?;
 
     Ok(())
 }
