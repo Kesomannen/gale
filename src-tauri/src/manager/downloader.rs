@@ -82,7 +82,7 @@ fn try_cache_install(
     profile: &mut Profile,
     path: &Path,
 ) -> Result<bool> {
-    match path.try_exists().fs_context("checking cache", path)? {
+    match path.exists() {
         true => {
             let name = &borrowed_mod.package.full_name;
             install_from_disk(path, &profile.path, name)?;
@@ -442,8 +442,8 @@ pub async fn install_mod_refs(
     app: &AppHandle,
 ) -> Result<()> {
     let client = app.state::<NetworkClient>();
-    let mut downloader = Installer::create(mod_refs, options, &client.0, app)?;
-    downloader.install_all().await
+    let mut installer = Installer::create(mod_refs, options, &client.0, app)?;
+    installer.install_all().await
 }
 
 pub async fn install_mods<F>(
@@ -532,7 +532,7 @@ fn install_from_disk_default(src: &Path, dest: &Path, name: &str) -> Result<()> 
                 };
 
                 fs::create_dir_all(target_path.parent().unwrap())?;
-                util::io::copy_dir(&entry_path, &target_path)
+                util::io::copy_dir(&entry_path, &target_path, false)
                     .fs_context("copying directory", &entry_path)?;
             }
         } else {

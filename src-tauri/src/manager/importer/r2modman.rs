@@ -14,7 +14,7 @@ use super::ImportData;
 use crate::{
     manager::{
         downloader::{self, InstallOptions},
-        exporter::R2Mod,
+        exporter::{self, R2Mod},
         ModManager,
     },
     prefs::Prefs,
@@ -263,11 +263,12 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
     }
 
     let mods = super::resolve_r2mods(mods.into_iter(), &thunderstore)?;
+    let includes = exporter::find_includes(&path.join("BepInEx")).collect();
 
     Ok(Some(ImportData {
         mods,
         name,
-        path: path.join("BepInEx"),
+        includes,
     }))
 }
 
@@ -313,8 +314,8 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             .fs_context("reading cache directory", &path)?
             .filter(|entry| entry.file_type().unwrap().is_dir())
         {
-            let package_name = package.file_name().into_string().unwrap();
-            let version_name = version.file_name().into_string().unwrap();
+            let package_name = util::io::file_name(&package.path());
+            let version_name = util::io::file_name(&version.path());
 
             let mut new_path = cache_dir.join(&package_name).join(&version_name);
             if new_path.exists() {
@@ -322,7 +323,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             }
 
             debug!("transferring cached mod: {}-{}", package_name, version_name);
-            util::io::copy_dir(&version.path(), &new_path)?;
+            util::io::copy_dir(&version.path(), &new_path, true)?;
             downloader::normalize_mod_structure(&mut new_path)?;
         }
     }

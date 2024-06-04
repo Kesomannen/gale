@@ -15,7 +15,7 @@
 
 ### Fixed
 
-- Config files outside of the `config` directory not being exported
+- Config files outside of the `config` directory not being exported/imported
 - Update banner sometimes not showing until the app is restarted
 - Config files not being linked until the config editor page is visited
 - Improve config file linking

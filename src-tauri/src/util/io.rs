@@ -27,9 +27,9 @@ pub fn flatten_if_exists(path: &Path) -> Result<bool, io::Error> {
     Ok(true)
 }
 
-pub fn copy_dir(src: &Path, dest: &Path) -> Result<(), io::Error> {
+pub fn copy_dir(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io::Error> {
     fs::create_dir_all(dest)?;
-    copy_contents(src, dest, true)?;
+    copy_contents(src, dest, overwrite)?;
     Ok(())
 }
 

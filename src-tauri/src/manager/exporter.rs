@@ -3,9 +3,7 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use image::{imageops::FilterType, io::Reader as ImageReader, ImageFormat};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs,
-    io::{self, Cursor},
-    path::{Path, PathBuf},
+    fs, io::{self, Cursor}, path::{Path, PathBuf}
 };
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -98,7 +96,6 @@ impl From<&semver::Version> for ExportVersion {
     }
 }
 
-pub const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
 pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
 fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore) -> Result<()> {
@@ -120,7 +117,7 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
     let writer = zip.writer("export.r2x")?;
     serde_yaml::to_writer(writer, &manifest).context("failed to write profile manifest")?;
 
-    write_config(profile, &mut zip)?;
+    write_includes(profile, &mut zip)?;
 
     Ok(())
 }
@@ -216,45 +213,40 @@ fn export_pack(
     img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
     zip.write("icon.png", &bytes)?;
 
-    write_config(profile, &mut zip)?;
+    write_includes(profile, &mut zip)?;
 
     Ok(())
 }
 
-fn write_config(profile: &Profile, zip: &mut util::io::Zip) -> Result<()> {
-    let include_paths = WalkDir::new(&profile.path)
+fn write_includes(profile: &Profile, zip: &mut util::io::Zip) -> Result<()> {
+    for (source, destination) in find_includes(&profile.path) {
+        let writer = zip.writer(destination)?;
+        let mut reader = fs::File::open(&source)?;
+        io::copy(&mut reader, writer)?;
+    }
+
+    Ok(())
+}
+
+const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
+const EXCLUDE_FILES: [&str; 2] = ["profile.json", "manifest.json"];
+
+pub fn find_includes(root: &Path) -> impl Iterator<Item = (PathBuf, PathBuf)> + '_ {
+    WalkDir::new(root)
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
         .map(|entry| entry.into_path())
         .filter(|path| {
-            path.file_name().unwrap() != "manifest.json"
-                && match path.extension() {
-                    Some(ext) => INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext),
-                    None => false,
-                }
-        });
-
-    for path in include_paths {
-        let mut relative = path.strip_prefix(&profile.path).unwrap();
-        if relative.as_os_str() == "profile.json" {
-            // skip Gale's profile data
-            continue;
-        }
-
-        relative = strip(relative, "BepInEx");
-
-        let writer = zip.writer(relative)?;
-        let mut reader = fs::File::open(&path)?;
-        io::copy(&mut reader, writer)?;
-    }
-
-    return Ok(());
-
-    fn strip<'a>(path: &'a Path, prefix: &str) -> &'a Path {
-        match path.strip_prefix(prefix) {
-            Ok(stripped) => stripped,
-            Err(_) => path,
-        }
-    }
+            let name = path.file_name().unwrap();
+            !EXCLUDE_FILES.iter().any(|exc| name == *exc)
+        })
+        .filter(|path| match path.extension() {
+            Some(ext) => INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext),
+            None => false,
+        })
+        .map(move |path| {
+            let relative = path.strip_prefix(root).unwrap().to_path_buf();
+            (path, relative)
+        })
 }

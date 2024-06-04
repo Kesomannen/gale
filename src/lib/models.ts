@@ -21,8 +21,8 @@ export type ConfigValue =
 	| { type: 'other'; content: string };
 
 export type ConfigEntry =
-  | { type: 'tagged', content: TaggedConfigEntry }
-	| { type: 'untagged', content: { name: string; value: string; } };
+	| { type: 'tagged'; content: TaggedConfigEntry }
+	| { type: 'untagged'; content: { name: string; value: string } };
 
 export interface TaggedConfigEntry {
 	name: string;
@@ -43,7 +43,7 @@ export interface ConfigFile {
 		pluginName: string;
 		pluginVersion: string;
 		pluginGuid: string;
-	}
+	};
 	sections: ConfigSection[];
 }
 
@@ -58,14 +58,17 @@ export interface ConfigRange {
 }
 
 export type LoadFileResult =
-	| { type: 'ok', content: ConfigFile }
-	| { type: 'err', content: {
-		name: string;
-		error: string;
-	} };
+	| { type: 'ok'; content: ConfigFile }
+	| {
+			type: 'err';
+			content: {
+				name: string;
+				error: string;
+			};
+	  };
 
 export type PrefValue = string | LaunchMode | number;
-	
+
 export interface ProfileInfo {
 	name: string;
 	modCount: number;
@@ -84,24 +87,24 @@ export interface GameInfo {
 
 export interface Mod {
 	name: string;
-	description?: string,
-	categories?: string[],
-	version?: string,
-	author?: string,
-	rating?: number,
-	downloads?: number,
-	websiteUrl?: string,
-	donateUrl?: string,
-	icon?: string,
-	dependencies?: string[],
-	isPinned: boolean,
-	isDeprecated: boolean,
-	containsNsfw: boolean,
+	description?: string;
+	categories?: string[];
+	version?: string;
+	author?: string;
+	rating?: number;
+	downloads?: number;
+	websiteUrl?: string;
+	donateUrl?: string;
+	icon?: string;
+	dependencies?: string[];
+	isPinned: boolean;
+	isDeprecated: boolean;
+	containsNsfw: boolean;
 	uuid: string;
 	lastUpdated: string;
 	versions: {
-		name: string,
-		uuid: string
+		name: string;
+		uuid: string;
 	}[];
 	type: 'local' | 'remote';
 	enabled: boolean;
@@ -116,12 +119,12 @@ export enum SortBy {
 	Downloads = 'downloads',
 	Rating = 'rating',
 	InstallDate = 'installDate',
-	Custom = 'custom',
+	Custom = 'custom'
 }
 
 export enum SortOrder {
 	Ascending = 'ascending',
-	Descending = 'descending',
+	Descending = 'descending'
 }
 
 export interface QueryModsArgs {
@@ -147,19 +150,22 @@ export interface Dependant {
 	uuid: string;
 }
 
-export type ModActionResponse = 
-	| { type: "done", content?: undefined }
-	| { type: "hasDependants" | "hasDependencies", content: Dependant[] }
+export type ModActionResponse =
+	| { type: 'done'; content?: undefined }
+	| { type: 'hasDependants' | 'hasDependencies'; content: Dependant[] };
 
-export type InstallTask = 
-	| { kind: "done", payload?: undefined }
-	| { kind: "error", payload?: undefined }
-	| { kind: "installing", payload?: undefined }
-	| { kind: "extracting", payload?: undefined }
-	| { kind: "downloading", payload: {
-		total: number;
-		downloaded: number;
-	} };
+export type InstallTask =
+	| { kind: 'done'; payload?: undefined }
+	| { kind: 'error'; payload?: undefined }
+	| { kind: 'installing'; payload?: undefined }
+	| { kind: 'extracting'; payload?: undefined }
+	| {
+			kind: 'downloading';
+			payload: {
+				total: number;
+				downloaded: number;
+			};
+	  };
 
 export interface InstallProgress {
 	totalProgress: number;
@@ -179,10 +185,10 @@ export interface ModpackArgs {
 }
 
 export interface Game {
-	id: string,
-	displayName: string,
-	steamId: number,
-	favorite: boolean,
+	id: string;
+	displayName: string;
+	steamId: number;
+	favorite: boolean;
 }
 
 export interface PackageCategory {
@@ -195,9 +201,9 @@ export interface FiltersResponse {
 	package_categories: PackageCategory[];
 }
 
-export type LaunchMode = 
-	| { type: 'steam', content?: undefined }
-	| { type: 'direct', content: { instances: number } };
+export type LaunchMode =
+	| { type: 'steam'; content?: undefined }
+	| { type: 'direct'; content: { instances: number } };
 
 export interface AvailableUpdate {
 	name: string;
@@ -218,8 +224,9 @@ export interface ImportData {
 		enabled: boolean;
 		packageUuid: string;
 		versionUuid: string;
-	}[]
-};
+	}[];
+	includes: Map<string, string>;
+}
 
 export interface R2ImportData {
 	r2modman?: {
@@ -234,7 +241,7 @@ export interface R2ImportData {
 	};
 }
 
-export interface MarkdownResponse { 
+export interface MarkdownResponse {
 	markdown?: string;
 	detail?: string;
 }

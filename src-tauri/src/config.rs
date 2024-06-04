@@ -53,11 +53,11 @@ impl LoadFileResultExt for LoadFileResult {
     }
 
     fn path_relative(&self) -> PathBuf {
-        path_relative(self.name())
+        file_path_relative(self.name())
     }
 
     fn path_from(&self, root: &Path) -> PathBuf {
-        path_from(self.name(), root)
+        file_path_from(self.name(), root)
     }
 }
 
@@ -82,12 +82,8 @@ impl File {
         }
     }
 
-    pub fn path_relative(&self) -> PathBuf {
-        path_relative(&self.name)
-    }
-
     pub fn path_from(&self, root: &Path) -> PathBuf {
-        path_from(&self.name, root)
+        file_path_from(&self.name, root)
     }
 
     pub fn save(&self, root: &Path) -> io::Result<()> {
@@ -105,14 +101,14 @@ pub struct FileMetadata {
     plugin_guid: String,
 }
 
-pub fn path_relative(name: &str) -> PathBuf {
+pub fn file_path_relative(name: &str) -> PathBuf {
     let mut path = ["BepInEx", "config", name].iter().collect();
     util::io::add_extension(&mut path, "cfg");
     path
 }
 
-pub fn path_from(name: &str, root: &Path) -> PathBuf {
-    root.join(path_relative(name))
+pub fn file_path_from(name: &str, root: &Path) -> PathBuf {
+    root.join(file_path_relative(name))
 }
 
 #[typeshare]

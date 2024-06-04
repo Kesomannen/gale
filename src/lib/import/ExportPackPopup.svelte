@@ -30,7 +30,7 @@
 		icon;
 
 	function reset() {
-		name = get(currentProfile).name;
+		name = get(currentProfile).name.replace(" ", "");
 		description = '';
 		versionNumber = '1.0.0';
 		websiteUrl = '';

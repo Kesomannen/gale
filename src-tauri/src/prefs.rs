@@ -171,11 +171,10 @@ impl Prefs {
     
         ensure!(new_path.exists(), "{} does not exist", new_path.display());
         ensure!(new_path.is_dir(), "{} is not a directory", new_path.display());
-        ensure!(new_path.read_dir()?.count() == 0, "{} needs to be empty", new_path.display());
         
         if let Some(old_path) = old_path {
             if old_path.exists() {
-                util::io::copy_dir(old_path, &new_path)?;
+                util::io::copy_dir(old_path, &new_path, false)?;
                 if let Some(excludes) = excludes {
                     for exclude in excludes {
                         fs::remove_file(new_path.join(exclude)).ok();

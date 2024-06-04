@@ -1,8 +1,5 @@
 use std::{
-    fs,
-    io::{Cursor, Read, Seek},
-    path::PathBuf,
-    sync::Mutex,
+    collections::HashMap, fs, io::{Cursor, Read, Seek}, path::{Path, PathBuf}, sync::Mutex
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
@@ -18,7 +15,7 @@ use crate::{
 
 use super::{
     downloader,
-    exporter::{R2Manifest, R2Mod, PROFILE_DATA_PREFIX},
+    exporter::{self, R2Manifest, R2Mod, PROFILE_DATA_PREFIX},
     ModManager,
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
@@ -47,7 +44,7 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 pub struct ImportData {
     pub name: String,
     pub mods: Vec<ProfileMod>,
-    pub path: PathBuf,
+    pub includes: HashMap<PathBuf, PathBuf>,
 }
 
 fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData> {
@@ -72,10 +69,12 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     let manifest: R2Manifest =
         serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
 
+    let includes = exporter::find_includes(&temp_path).collect();
+
     Ok(ImportData {
         mods: resolve_r2mods(manifest.mods.into_iter(), &thunderstore)?,
         name: manifest.profile_name.to_owned(),
-        path: temp_path,
+        includes,
     })
 }
 
@@ -89,9 +88,8 @@ fn resolve_r2mods<'a>(
 }
 
 async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
-    let manager = app.state::<Mutex<ModManager>>();
-
     {
+        let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
 
         let game = manager.active_game_mut();
@@ -101,6 +99,9 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         }
 
         let profile = game.create_profile(data.name)?;
+
+        import_config(&profile.path, &data.includes)
+            .context("failed to import config")?;
     };
 
     let mod_refs = data
@@ -113,15 +114,15 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         .await
         .context("error while importing mods")?;
 
-    let manager = manager.lock().unwrap();
+    Ok(())
+}
 
-    let mut config_dir = profile.path.clone();
-    config_dir.push("BepInEx");
-    config_dir.push("config");
-    fs::create_dir_all(&config_dir)?;
-
-    util::io::copy_contents(&data.path, &config_dir, true)
-        .context("error while importing config")?;
+fn import_config(path: &Path, map: &HashMap<PathBuf, PathBuf>) -> Result<()> {
+    for (source, target) in map {
+        let target = path.join(target);
+        fs::create_dir_all(target.parent().unwrap())?;
+        fs::copy(source, &target)?;
+    }
 
     Ok(())
 }
