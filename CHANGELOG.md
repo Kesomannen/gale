@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.4 (2024-06-04)
+
+### Fixed
+
+- Config files being imported outside of the BepInEx directory
+
 ## 0.5.3 (2024-06-04)
 
 ### Added

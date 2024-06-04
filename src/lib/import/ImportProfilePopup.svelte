@@ -51,7 +51,7 @@
 
 	async function importData() {
 		if (!data) return;
-
+		
 		data.name = name;
 
 		if (mode === 'overwrite') {

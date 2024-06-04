@@ -119,7 +119,11 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
 
 fn import_config(path: &Path, map: &HashMap<PathBuf, PathBuf>) -> Result<()> {
     for (source, target) in map {
-        let target = path.join(target);
+        let target = match target.starts_with("config") {
+            true => path.join("BepInEx").join(target),
+            false => path.join(target),
+        };
+
         fs::create_dir_all(target.parent().unwrap())?;
         fs::copy(source, &target)?;
     }
