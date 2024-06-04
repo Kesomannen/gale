@@ -137,7 +137,6 @@
 	bind:activeMod
 	on:reorder={({ detail: { uuid, delta, name } }) => onReorder(uuid, delta, name)}
 	{sortOptions}
-	reorderable={$profileQuery.sortBy === SortBy.Custom}
 	queryArgs={profileQuery}
 >
 	<div slot="details">

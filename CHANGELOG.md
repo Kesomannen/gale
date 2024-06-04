@@ -9,12 +9,14 @@
 
 ### Changed
 
-- The window now remembers its size and position between sessions
-- Config editor now shows cleaner file names
+- Remember window size and position between sessions
+- Show cleaner file names in mod config editor
 - Several user interface alterations
 
 ### Fixed
 
+- Profile dropdown in the import profile dialog allowing invalid options
+- Import profile dialog selecting the wrong option initially
 - Config files outside of the `config` directory not being exported/imported
 - Update banner sometimes not showing until the app is restarted
 - Config files not being linked until the config editor page is visited
@@ -32,7 +34,7 @@
 ### Changed
 
 - Update banner can now be dismissed
-- Search queries, filters and sorting options are now saved between page navigations
+- Save search queries, filters and sorting options are between page navigations
 - Various UI improvements
 
 ### Fixed

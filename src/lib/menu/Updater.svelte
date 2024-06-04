@@ -77,15 +77,15 @@
 
 {#if updateAvailable}
 	<Button.Root
-		class="flex items-center py-1 px-3 rounded-md font-semibold text-slate-100 
+		class="flex items-center py-1 px-2 rounded-md font-semibold text-slate-100 
             my-auto ml-auto mr-1.5 bg-blue-600 enabled:hover:bg-blue-500"
     disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
 		{#if loading}
-			<Icon icon="mdi:loading" class="animate-spin mr-1.5" />
+			<Icon icon="mdi:loading" class="animate-spin mr-1" />
 		{:else}
-			<Icon icon="mdi:arrow-up-circle" class="text-xl mr-1.5" />
+			<Icon icon="mdi:arrow-up-circle" class="mr-1" />
 		{/if}
 		<span class="text-sm">{loading ? "Downloading update..." : "Update available"}</span>
 	</Button.Root>

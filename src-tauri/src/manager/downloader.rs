@@ -97,9 +97,12 @@ fn try_cache_install(
 
 const DOWNLOAD_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
+type ProgressHandler = Box<dyn Fn(&InstallProgress, &AppHandle)  + 'static + Send>;
+
 pub struct InstallOptions {
     can_cancel: bool,
     send_progress: bool,
+    on_progress: Option<ProgressHandler>,
 }
 
 impl Default for InstallOptions {
@@ -107,6 +110,7 @@ impl Default for InstallOptions {
         Self {
             can_cancel: true,
             send_progress: true,
+            on_progress: None,
         }
     }
 }
@@ -121,24 +125,32 @@ impl InstallOptions {
         self.send_progress = send_progress;
         self
     }
+
+    pub fn on_progress<F>(mut self, on_progress: F) -> Self
+    where
+        F: Fn(&InstallProgress, &AppHandle)  + 'static + Send,
+    {
+        self.on_progress = Some(Box::new(on_progress));
+        self
+    }
 }
 
 #[typeshare]
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct InstallProgress<'a> {
-    total_progress: f32,
-    installed_mods: usize,
-    total_mods: usize,
-    current_name: &'a str,
-    can_cancel: bool,
-    task: InstallTask,
+pub struct InstallProgress<'a> {
+    pub total_progress: f32,
+    pub installed_mods: usize,
+    pub total_mods: usize,
+    pub current_name: &'a str,
+    pub can_cancel: bool,
+    pub task: InstallTask,
 }
 
 #[typeshare]
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "payload")]
-enum InstallTask {
+pub enum InstallTask {
     Done,
     Error,
     Downloading { total: u64, downloaded: u64 },
@@ -231,25 +243,24 @@ impl<'a> Installer<'a> {
     }
 
     fn update(&self, task: InstallTask) {
-        if !self.options.send_progress {
-            return;
-        }
-
         let total_progress = self.completed_bytes as f32 / self.total_bytes as f32;
 
-        self.app
-            .emit_all(
-                "install_progress",
-                InstallProgress {
-                    task,
-                    total_progress,
-                    installed_mods: self.index,
-                    total_mods: self.to_install.len(),
-                    can_cancel: self.options.can_cancel,
-                    current_name: &self.current_name,
-                },
-            )
-            .ok();
+        let progress = InstallProgress {
+            task,
+            total_progress,
+            installed_mods: self.index,
+            total_mods: self.to_install.len(),
+            can_cancel: self.options.can_cancel,
+            current_name: &self.current_name,
+        };
+
+        if let Some(callback) = &self.options.on_progress {
+            callback(&progress, self.app);
+        }
+
+        if self.options.send_progress {
+            self.app.emit_all("install_progress", &progress).ok();
+        }
     }
 
     fn prepare_install(&mut self, mod_ref: &ModRef, enabled: bool) -> Result<InstallMethod> {

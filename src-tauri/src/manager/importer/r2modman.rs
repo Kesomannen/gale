@@ -210,13 +210,23 @@ async fn import_profile(path: PathBuf, app: &AppHandle) -> Result<bool> {
         None => return Ok(false),
     };
 
-    info!("importing profile '{}'", data.name);
-    emit_update(&format!("Importing profile '{}'...", data.name), app);
+    let name = data.name.clone();
+
+    info!("importing profile '{}'", name);
+    emit_update(&format!("Importing profile '{}'... 0%", name), app);
+
     super::import_data(
         data,
         InstallOptions::default()
             .can_cancel(false)
-            .send_progress(false),
+            .send_progress(false)
+            .on_progress(move |progress, app| {
+                let percentage = (progress.total_progress * 100.0).round();
+                emit_update(
+                    &format!("Importing profile '{}'... {}%", name, percentage),
+                    app,
+                );
+            }),
         app,
     )
     .await?;
@@ -263,7 +273,7 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
     }
 
     let mods = super::resolve_r2mods(mods.into_iter(), &thunderstore)?;
-    let includes = exporter::find_includes(&path.join("BepInEx")).collect();
+    let includes = exporter::find_includes(&path).collect();
 
     Ok(Some(ImportData {
         mods,
@@ -283,7 +293,7 @@ async fn wait_for_mods(app: &AppHandle) {
             }
         }
 
-        emit_update("Waiting for mod fetching...", app);
+        emit_update("Fetching mods from Thunderstore...", app);
 
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
@@ -336,11 +346,16 @@ fn find_paths() -> ManagerData<PathBuf> {
         // r2modman uses the config dir instead of the data dir on linux.
         true => tauri::api::path::config_dir(),
         false => tauri::api::path::data_dir(),
-    }.unwrap();
+    }
+    .unwrap();
 
     return ManagerData {
         r2modman: check_dir(parent_dir.join("r2modmanPlus-local")),
-        thunderstore: check_dir(parent_dir.join("Thunderstore Mod Manager").join("DataFolder")),
+        thunderstore: check_dir(
+            parent_dir
+                .join("Thunderstore Mod Manager")
+                .join("DataFolder"),
+        ),
     };
 
     fn check_dir(path: PathBuf) -> Option<PathBuf> {

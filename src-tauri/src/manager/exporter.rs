@@ -229,7 +229,7 @@ fn write_includes(profile: &Profile, zip: &mut util::io::Zip) -> Result<()> {
 }
 
 const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
-const EXCLUDE_FILES: [&str; 2] = ["profile.json", "manifest.json"];
+const EXCLUDE_FILES: [&str; 4] = ["profile.json", "manifest.json", "mods.yml", "doorstop_config.ini"];
 
 pub fn find_includes(root: &Path) -> impl Iterator<Item = (PathBuf, PathBuf)> + '_ {
     WalkDir::new(root)
