@@ -3,11 +3,7 @@ use std::{collections::HashSet, fs};
 use anyhow::Context;
 
 use crate::{
-    command_util::{Result, StateMutex},
-    fs_util,
-    manager::ModManager,
-    prefs::Prefs,
-    thunderstore::{ModRef, Thunderstore},
+    manager::ModManager, prefs::Prefs, thunderstore::{ModRef, Thunderstore}, util::{self, cmd::{Result, StateMutex}}
 };
 
 use super::{InstallOptions, InstallState};
@@ -71,7 +67,7 @@ pub fn clear_download_cache(
                 continue;
             }
 
-            let package = fs_util::file_name(&entry.path());
+            let package = util::io::file_name(&entry.path());
 
             if thunderstore.find_package(&package).is_err() {
                 // package from a game other than the loaded one, skip
@@ -83,7 +79,7 @@ pub fn clear_download_cache(
                 .filter_map(|e| e.ok());
 
             for entry in versions {
-                let version = fs_util::file_name(&entry.path());
+                let version = util::io::file_name(&entry.path());
 
                 if installed_mods.contains(&(&package, version)) {
                     // package is installed, skip

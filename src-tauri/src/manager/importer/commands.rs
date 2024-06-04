@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{command_util::Result, manager::downloader::InstallOptions};
+use crate::{util::cmd::Result, manager::downloader::InstallOptions};
 
 use anyhow::anyhow;
 use tauri::AppHandle;

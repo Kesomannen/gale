@@ -11,19 +11,27 @@
 
 	import { expoOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
-	import { onMount } from 'svelte';
-	import { listen } from '@tauri-apps/api/event';
+	import { onDestroy, onMount } from 'svelte';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 
 	let status: string | undefined;
+	let unlisten: UnlistenFn | undefined;
 
-	onMount(() => {
-		listen<string | undefined>('status_update', (evt) => {
+	onMount(async () => {
+		unlisten = await listen<string | undefined>('status_update', (evt) => {
 			status = evt.payload;
-		})
+		});
 	});
+
+	onDestroy(() => {
+		if (unlisten) {
+			unlisten();
+		}
+	});
+
 </script>
 
 <main

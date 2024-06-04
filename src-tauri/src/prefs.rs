@@ -4,7 +4,7 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
-use crate::{fs_util, manager::launcher::LaunchMode, util::IoResultExt, zoom_window};
+use crate::{manager::launcher::LaunchMode, util::{self, error::IoResultExt}};
 
 pub mod commands;
 
@@ -102,7 +102,8 @@ impl Prefs {
                     _ => 1.0,
                 };
 
-                zoom_window(&app.get_window("main").unwrap(), zoom_factor as f64).ok();
+                let window = app.get_window("main").unwrap();
+                util::window::zoom(&window, zoom_factor as f64).ok();
             }
             None => {
                 map.insert("zoom_factor".to_owned(), PrefValue::Float(1.0));
@@ -174,13 +175,13 @@ impl Prefs {
         
         if let Some(old_path) = old_path {
             if old_path.exists() {
-                fs_util::copy_dir(old_path, &new_path)?;
+                util::io::copy_dir(old_path, &new_path)?;
                 if let Some(excludes) = excludes {
                     for exclude in excludes {
                         fs::remove_file(new_path.join(exclude)).ok();
                     }
                     
-                    for entry in fs_util::read_dir(old_path)? {
+                    for entry in util::io::read_dir(old_path)? {
                         if !excludes.iter().any(|exclude| entry.file_name() == *exclude) {
                             if entry.file_type()?.is_dir() {
                                 fs::remove_dir_all(entry.path())?;

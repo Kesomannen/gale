@@ -259,7 +259,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let mut is_first = true;
     loop {
         if let Err(err) = load_mods(&app, game, is_first).await {
-            util::print_err("error while loading mods from Thunderstore", &err, &app);
+            util::error::log("error while loading mods from Thunderstore", &err, &app);
         } else {
             is_first = false;
         }
@@ -324,8 +324,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                         }
                     }
                     Err(err) => {
-                        debug!("{}", json);
-                        util::print_err("failed to load mod", &anyhow!(err), app)
+                        util::error::log("failed to load mod", &anyhow!(err), app)
                     }
                 }
 

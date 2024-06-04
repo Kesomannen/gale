@@ -9,11 +9,10 @@ use anyhow::{anyhow, ensure, Context, Result};
 use tauri::{AppHandle, Manager};
 
 use crate::{
-    fs_util,
     manager::{commands::save, downloader::InstallOptions, LocalMod, ProfileMod},
     prefs::Prefs,
     thunderstore::{models::PackageManifest, ModRef, Thunderstore},
-    util::IoResultExt,
+    util::{self, error::IoResultExt},
     NetworkClient,
 };
 
@@ -47,8 +46,8 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
     pub name: String,
-    pub config_path: PathBuf,
     pub mods: Vec<ProfileMod>,
+    pub path: PathBuf,
 }
 
 fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData> {
@@ -75,8 +74,8 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
 
     Ok(ImportData {
         mods: resolve_r2mods(manifest.mods.into_iter(), &thunderstore)?,
-        config_path: temp_path.join("config"),
         name: manifest.profile_name.to_owned(),
+        path: temp_path,
     })
 }
 
@@ -107,7 +106,7 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         config_dir.push("config");
         fs::create_dir_all(&config_dir)?;
 
-        fs_util::copy_contents(&data.config_path, &config_dir, true)
+        util::io::copy_contents(&data.path, &config_dir, true)
             .context("error while importing config")?;
     };
 
@@ -175,7 +174,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
         },
         None => LocalMod {
             uuid,
-            name: fs_util::file_name(&path),
+            name: util::io::file_name(&path),
             ..Default::default()
         },
     };

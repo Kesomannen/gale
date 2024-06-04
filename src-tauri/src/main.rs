@@ -14,14 +14,12 @@ extern crate webkit2gtk;
 #[macro_use]
 extern crate objc;
 
-mod command_util;
 mod games;
 mod manager;
 mod prefs;
 mod thunderstore;
 mod config;
 mod log;
-mod fs_util;
 mod util;
 
 #[derive(Debug)]
@@ -38,26 +36,6 @@ impl NetworkClient {
     }
 }
 
-fn zoom_window(window: &tauri::Window, scale_factor: f64) -> tauri::Result<()> {
-    window.with_webview(move |webview| {
-        #[cfg(target_os = "linux")]
-        {
-            use webkit2gtk::traits::WebViewExt;
-            webview.inner().set_zoom_level(scale_factor);
-        }
-
-        #[cfg(windows)]
-        unsafe {
-            webview.controller().SetZoomFactor(scale_factor).unwrap();
-        }
-
-        #[cfg(target_os = "macos")]
-        unsafe {
-            let () = msg_send![webview.inner(), setPageZoom: scale_factor];
-        }
-    })
-}
-
 fn main() {
     if !cfg!(target_os = "linux") {
         // doesn't work on linux for some reason :/
@@ -65,6 +43,7 @@ fn main() {
     }
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![        
             log::open_gale_log,
             

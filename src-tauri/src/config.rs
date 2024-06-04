@@ -13,7 +13,7 @@ use thiserror::Error;
 use typeshare::typeshare;
 use walkdir::WalkDir;
 
-use crate::{fs_util, manager::Profile, thunderstore::Thunderstore};
+use crate::{manager::Profile, thunderstore::Thunderstore, util};
 
 use log::debug;
 use tauri::AppHandle;
@@ -107,7 +107,7 @@ pub struct FileMetadata {
 
 pub fn path_relative(name: &str) -> PathBuf {
     let mut path = ["BepInEx", "config", name].iter().collect();
-    fs_util::add_extension(&mut path, "cfg");
+    util::io::add_extension(&mut path, "cfg");
     path
 }
 
@@ -228,10 +228,6 @@ impl Profile {
         if let Some(thunderstore) = thunderstore {
             self.link_config(thunderstore);
         }
-    }
-
-    pub fn ok_config(&self) -> impl Iterator<Item = &File> {
-        self.config.iter().filter_map(|res| res.as_ref().ok())
     }
 
     fn link_config(&mut self, thunderstore: &Thunderstore) {

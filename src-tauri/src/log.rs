@@ -7,7 +7,7 @@ use std::{
     fs::{self, File},
     path::PathBuf,
 };
-use crate::command_util;
+use crate::util;
 
 fn log_path(app: &AppHandle) -> PathBuf {
     app.path_resolver().app_log_dir().unwrap().join("log.log")
@@ -37,7 +37,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn open_gale_log(app: AppHandle) -> command_util::Result<()> {
+pub fn open_gale_log(app: AppHandle) -> util::cmd::Result<()> {
     let path = log_path(&app);
     if !path.exists() {
         return Err(anyhow!("no log file found").into());

@@ -5,6 +5,7 @@ use std::{
 };
 
 use zip::{write::FileOptions, ZipWriter};
+use serde::de::DeserializeOwned;
 
 pub fn flatten_if_exists(path: &Path) -> Result<bool, io::Error> {
     if !path.try_exists()? {
@@ -57,7 +58,15 @@ pub fn read_dir(path: &Path) -> io::Result<impl Iterator<Item = DirEntry>> {
     fs::read_dir(path).map(|entries| entries.filter_map(Result::ok))
 }
 
-pub fn add_extension<P: AsRef<Path>>(path: &mut PathBuf, extension: P) {
+pub fn read_json<T: DeserializeOwned>(path: &Path) -> anyhow::Result<T> {
+    let file = fs::File::open(path)?;
+    let reader = io::BufReader::new(file);
+    let result = serde_json::from_reader(reader)?;
+
+    Ok(result)
+}
+
+pub fn add_extension(path: &mut PathBuf, extension: impl AsRef<Path>) {
     match path.extension() {
         Some(ext) => {
             let mut ext = ext.to_os_string();
@@ -87,13 +96,6 @@ impl Zip {
 
     pub fn write_str(&mut self, path: impl AsRef<Path>, data: &str) -> io::Result<()> {
         self.write(path, data.as_bytes())
-    }
-
-    pub fn add_dir(&mut self, path: impl AsRef<Path>) -> io::Result<()> {
-        #[allow(deprecated)]
-        self.writer
-            .add_directory_from_path(path.as_ref(), self.options)?;
-        Ok(())
     }
 }
 

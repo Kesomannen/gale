@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 
-use crate::{command_util::{Result, StateMutex}, zoom_window};
+use crate::util::{self, cmd::{Result, StateMutex}};
 
 use super::{PrefValue, Prefs};
 use log::debug;
@@ -23,7 +23,7 @@ pub fn set_pref(key: &str, value: PrefValue, prefs: StateMutex<Prefs>, window: t
         "data_dir" => prefs.move_dir(key, value, Some(&["prefs.json"]))?,
         "zoom_factor" => match value {
             PrefValue::Float(factor) => {
-                zoom_window(&window, factor as f64).map_err(|e| anyhow!(e))?;
+                util::window::zoom(&window, factor as f64).map_err(|e| anyhow!(e))?;
                 prefs.set(key, value)?
             },
             _ => return Err(anyhow!("value is not a float").into())

@@ -1,5 +1,5 @@
 use crate::{
-    command_util::{Result, StateMutex},
+    util::cmd::{Result, StateMutex},
     manager::ModManager,
     prefs::Prefs,
 };

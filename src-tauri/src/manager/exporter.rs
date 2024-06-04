@@ -4,7 +4,7 @@ use image::{imageops::FilterType, io::Reader as ImageReader, ImageFormat};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
-    io::Cursor,
+    io::{self, Cursor},
     path::{Path, PathBuf},
 };
 use typeshare::typeshare;
@@ -13,16 +13,13 @@ use uuid::Uuid;
 use super::{ModManager, Profile, ProfileMod, ProfileModKind, Result};
 
 use crate::{
-    command_util::StateMutex,
-    config, fs_util,
-    prefs::Prefs,
-    thunderstore::{
+    prefs::Prefs, thunderstore::{
         models::{LegacyProfileCreateResponse, PackageManifest},
         ModRef, Thunderstore,
-    },
-    util::IoResultExt,
+    }, util::{self, cmd::StateMutex, error::IoResultExt}
 };
 use chrono::Utc;
+use walkdir::WalkDir;
 
 pub mod commands;
 
@@ -101,12 +98,13 @@ impl From<&semver::Version> for ExportVersion {
     }
 }
 
+pub const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
 pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
 fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore) -> Result<()> {
     dir.push(&profile.name);
     dir.set_extension("r2z");
-    let mut zip = fs_util::zip(dir).fs_context("creating zip archive", dir)?;
+    let mut zip = util::io::zip(dir).fs_context("creating zip archive", dir)?;
 
     let mods = profile
         .remote_mods()
@@ -119,10 +117,8 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
         mods,
     };
 
-    let yaml = serde_yaml::to_string(&manifest).context("failed to serialize profile manifest")?;
-
-    zip.write_str("export.r2x", &yaml)
-        .context("failed to write profile manifest")?;
+    let writer = zip.writer("export.r2x")?;
+    serde_yaml::to_writer(writer, &manifest).context("failed to write profile manifest")?;
 
     write_config(profile, &mut zip)?;
 
@@ -206,7 +202,7 @@ fn export_pack(
         author: None,
     };
 
-    let mut zip = fs_util::zip(path)?;
+    let mut zip = util::io::zip(path)?;
 
     zip.write_str("manifest.json", &serde_json::to_string_pretty(&manifest)?)?;
 
@@ -225,17 +221,40 @@ fn export_pack(
     Ok(())
 }
 
-fn write_config(profile: &Profile, zip: &mut fs_util::Zip) -> Result<()> {
-    zip.add_dir("config")?;
+fn write_config(profile: &Profile, zip: &mut util::io::Zip) -> Result<()> {
+    let include_paths = WalkDir::new(&profile.path)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .map(|entry| entry.into_path())
+        .filter(|path| {
+            path.file_name().unwrap() != "manifest.json"
+                && match path.extension() {
+                    Some(ext) => INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext),
+                    None => false,
+                }
+        });
 
-    for file in profile.ok_config() {
-        let path = file.path_relative();
-        let path = path.strip_prefix("BepInEx").unwrap();
+    for path in include_paths {
+        let mut relative = path.strip_prefix(&profile.path).unwrap();
+        if relative.as_os_str() == "profile.json" {
+            // skip Gale's profile data
+            continue;
+        }
 
-        let writer = zip.writer(path)?;
-        config::ser::to_writer(file, writer)
-            .with_context(|| format!("failed to write config file {}", path.display()))?;
+        relative = strip(relative, "BepInEx");
+
+        let writer = zip.writer(relative)?;
+        let mut reader = fs::File::open(&path)?;
+        io::copy(&mut reader, writer)?;
     }
 
-    Ok(())
+    return Ok(());
+
+    fn strip<'a>(path: &'a Path, prefix: &str) -> &'a Path {
+        match path.strip_prefix(prefix) {
+            Ok(stripped) => stripped,
+            Err(_) => path,
+        }
+    }
 }

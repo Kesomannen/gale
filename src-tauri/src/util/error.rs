@@ -1,9 +1,8 @@
-use std::{fs, io, path::Path};
-
 use anyhow::Context;
 use log::error;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::Serialize;
 use tauri::{AppHandle, Manager};
+use std::path::Path;
 
 #[derive(Serialize, Clone)]
 struct JsError<'a> {
@@ -11,7 +10,7 @@ struct JsError<'a> {
     message: String,
 }
 
-pub fn print_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
+pub fn log(name: &str, error: &anyhow::Error, handle: &AppHandle) {
     error!("{}: {:#}", name, error);
     let _ = handle.emit_all(
         "error",
@@ -33,12 +32,4 @@ where
     fn fs_context(self, op: &str, path: &Path) -> anyhow::Result<T> {
         self.with_context(|| format!("error while {} (at {})", op, path.display()))
     }
-}
-
-pub fn read_json<T: DeserializeOwned>(path: &Path) -> anyhow::Result<T> {
-    let file = fs::File::open(path)?;
-    let reader = io::BufReader::new(file);
-    let result = serde_json::from_reader(reader)?;
-
-    Ok(result)
 }

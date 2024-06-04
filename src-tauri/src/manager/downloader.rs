@@ -15,11 +15,9 @@ use thiserror::Error;
 use typeshare::typeshare;
 
 use crate::{
-    command_util::StateMutex,
-    fs_util,
     prefs::Prefs,
     thunderstore::{BorrowedMod, Thunderstore},
-    util::{print_err, IoResultExt},
+    util::{self, cmd::StateMutex, error::IoResultExt},
     NetworkClient,
 };
 
@@ -431,7 +429,7 @@ impl<'a> Installer<'a> {
 pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
     for dir in ["BepInExPack", "BepInEx", "plugins"].iter() {
         path.push(dir);
-        fs_util::flatten_if_exists(&*path)?;
+        util::io::flatten_if_exists(&*path)?;
         path.pop();
     }
 
@@ -524,7 +522,7 @@ fn install_from_disk_default(src: &Path, dest: &Path, name: &str) -> Result<()> 
             if entry_name == "config" {
                 let target_path = target_path.join("config");
                 fs::create_dir_all(&target_path)?;
-                fs_util::copy_contents(&entry_path, &target_path, false)
+                util::io::copy_contents(&entry_path, &target_path, false)
                     .fs_context("copying config", &entry_path)?;
             } else {
                 let target_path = match entry_name.to_string_lossy().as_ref() {
@@ -534,7 +532,7 @@ fn install_from_disk_default(src: &Path, dest: &Path, name: &str) -> Result<()> 
                 };
 
                 fs::create_dir_all(target_path.parent().unwrap())?;
-                fs_util::copy_dir(&entry_path, &target_path)
+                util::io::copy_dir(&entry_path, &target_path)
                     .fs_context("copying directory", &entry_path)?;
             }
         } else {
@@ -552,13 +550,13 @@ fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
     // Some BepInEx packs come with a subfolder where the actual BepInEx files are
     for entry in fs::read_dir(src)? {
         let entry_path = entry?.path();
-        let entry_name = fs_util::file_name(&entry_path);
+        let entry_name = util::io::file_name(&entry_path);
 
         if entry_path.is_dir() && entry_name.contains("BepInEx") {
             // ... and some have even more subfolders ...
             // do this first, since otherwise entry_path will be removed already
-            fs_util::flatten_if_exists(&entry_path.join("BepInEx"))?;
-            fs_util::flatten_if_exists(&entry_path)?;
+            util::io::flatten_if_exists(&entry_path.join("BepInEx"))?;
+            util::io::flatten_if_exists(&entry_path)?;
         }
     }
 
@@ -570,7 +568,7 @@ fn install_from_disk_bepinex(src: &Path, dest: &Path) -> Result<()> {
             let target_path = target_path.join(entry_name);
             fs::create_dir_all(&target_path)?;
 
-            fs_util::copy_contents(&entry_path, &target_path, false)
+            util::io::copy_contents(&entry_path, &target_path, false)
                 .fs_context("copying directory", &entry_path)?;
         } else if ["winhttp.dll", ".doorstop_version"]
             .into_iter()
@@ -602,7 +600,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
             match resolve_deep_link(url, &thunderstore) {
                 Ok(mod_ref) => mod_ref,
                 Err(e) => {
-                    print_err("Failed to resolve deep link", &e, &app);
+                    util::error::log("Failed to resolve deep link", &e, &app);
                     return;
                 }
             }
@@ -613,7 +611,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
             install_with_deps(&mod_ref, InstallOptions::default(), &handle)
                 .await
                 .unwrap_or_else(|e| {
-                    print_err("Failed to install mod from deep link", &e, &handle);
+                    util::error::log("Failed to install mod from deep link", &e, &handle);
                 });
         });
     }

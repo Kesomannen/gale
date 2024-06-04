@@ -37,6 +37,7 @@
 		"@tauri-apps/api": "^1.5.3",
 		"bits-ui": "0.19.6",
 		"svelte-markdown": "^0.4.1",
+		"tauri-plugin-window-state-api": "github:tauri-apps/tauri-plugin-window-state#v1",
 		"uuid": "^9.0.1"
 	}
 }

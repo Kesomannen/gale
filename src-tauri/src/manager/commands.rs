@@ -6,7 +6,7 @@ use typeshare::typeshare;
 use uuid::Uuid;
 
 use crate::{
-    command_util::{Result, StateMutex},
+    util::cmd::{Result, StateMutex},
     games::{self, Game, GAMES},
     prefs::Prefs,
     thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore},

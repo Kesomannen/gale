@@ -25,16 +25,16 @@ pub struct PackageListing {
 }
 
 impl PackageListing {
-    pub fn get_version(&self, uuid: &Uuid) -> Option<&PackageVersion> {
-        self.versions.iter().find(|v| v.uuid4 == *uuid)
-    }
-
     pub fn latest(&self) -> &PackageVersion {
         &self.versions[0]
     }
 
     pub fn is_modpack(&self) -> bool {
         self.categories.contains("Modpacks")
+    }
+
+    pub fn get_version(&self, uuid: &Uuid) -> Option<&PackageVersion> {
+        self.versions.iter().find(|v| v.uuid4 == *uuid)
     }
 
     pub fn get_version_with_num(&self, version: &semver::Version) -> Option<&PackageVersion> {

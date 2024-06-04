@@ -13,7 +13,7 @@ use uuid::Uuid;
 use walkdir::WalkDir;
 
 use crate::{
-    config, fs_util,
+    config,
     games::{self, Game},
     prefs::Prefs,
     thunderstore::{
@@ -22,7 +22,7 @@ use crate::{
         query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
     },
-    util::{self, IoResultExt},
+    util::{self, error::IoResultExt},
 };
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
@@ -379,7 +379,7 @@ impl Profile {
         path.push("profile.json");
 
         let manifest: ProfileManifest =
-            util::read_json(&path).context("failed to read profile manifest")?;
+            util::io::read_json(&path).context("failed to read profile manifest")?;
 
         path.pop();
 
@@ -504,7 +504,7 @@ impl Profile {
                     }
                 } else {
                     let mut new = path.to_path_buf();
-                    fs_util::add_extension(&mut new, "old");
+                    util::io::add_extension(&mut new, "old");
                     fs::rename(path, &new)?;
                 }
             }
@@ -696,7 +696,7 @@ impl ManagerGame {
     fn load(
         mut path: PathBuf,
     ) -> Result<Option<(&'static Game, Self)>> {
-        let file_name = fs_util::file_name(&path);
+        let file_name = util::io::file_name(&path);
         let game = match games::from_id(&file_name) {
             Some(game) => game,
             None => return Ok(None),
@@ -705,7 +705,7 @@ impl ManagerGame {
         path.push("game.json");
 
         let data: ManagerGameSaveData =
-            util::read_json(&path).context("failed to read game save data")?;
+            util::io::read_json(&path).context("failed to read game save data")?;
 
         path.pop();
 
@@ -745,7 +745,7 @@ impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
         let save_path = prefs.get_path_or_err("data_dir")?.join("manager.json");
         let save_data = match save_path.try_exists()? {
-            true => util::read_json(&save_path).context("failed to read manager save data")?,
+            true => util::io::read_json(&save_path).context("failed to read manager save data")?,
             false => ManagerSaveData {
                 active_game: DEFAULT_GAME_ID.to_owned(),
             },

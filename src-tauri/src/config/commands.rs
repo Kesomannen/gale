@@ -4,10 +4,9 @@ use anyhow::Context;
 
 use super::{File, LoadFileResultExt};
 use crate::{
-    command_util::{Result, StateMutex},
     manager::ModManager,
     thunderstore::Thunderstore,
-    util::IoResultExt,
+    util::{error::IoResultExt, cmd::{Result, StateMutex}},
 };
 use serde::Serialize;
 

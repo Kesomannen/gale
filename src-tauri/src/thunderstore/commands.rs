@@ -1,4 +1,4 @@
-use crate::command_util::{Result, StateMutex};
+use crate::util::cmd::{Result, StateMutex};
 
 use super::{
     models::FrontendMod,

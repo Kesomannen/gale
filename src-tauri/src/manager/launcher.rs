@@ -9,7 +9,7 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use super::ModManager;
 use crate::{
     prefs::{PrefValue, Prefs},
-    util::IoResultExt,
+    util::error::IoResultExt,
 };
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;

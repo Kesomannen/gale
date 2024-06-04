@@ -9,11 +9,13 @@
 
 ### Changed
 
+- The window now remembers its size and position between sessions
 - Config editor now shows cleaner file names
 - Several user interface alterations
 
 ### Fixed
 
+- Config files outside of the `config` directory not being exported
 - Update banner sometimes not showing until the app is restarted
 - Config files not being linked until the config editor page is visited
 - Improve config file linking

@@ -12,7 +12,6 @@ use std::{
 
 use super::ImportData;
 use crate::{
-    fs_util,
     manager::{
         downloader::{self, InstallOptions},
         exporter::R2Mod,
@@ -20,7 +19,7 @@ use crate::{
     },
     prefs::Prefs,
     thunderstore::Thunderstore,
-    util::{self, IoResultExt},
+    util::{self, error::IoResultExt},
 };
 use serde::Serialize;
 
@@ -145,7 +144,7 @@ pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     find_paths().and_then(|path| {
         let profiles = find_profiles(path.clone(), false, app)
             .ok()?
-            .map(|path| fs_util::file_name(&path))
+            .map(|path| util::io::file_name(&path))
             .collect();
         Some(ProfileImportData { path, profiles })
     })
@@ -164,7 +163,7 @@ pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<
         let name = profile_dir.file_name().unwrap();
 
         if let Err(err) = import_profile(profile_dir.clone(), app).await {
-            util::print_err(
+            util::error::log(
                 "Error while importing from r2modman",
                 &err.context(format!("Failed to import profile {:?}", name)),
                 app,
@@ -191,7 +190,7 @@ fn find_profiles(
 
     if transfer_cache {
         if let Err(e) = import_cache(path.clone(), app) {
-            util::print_err("failed to transfer r2modman cache", &e, app);
+            util::error::log("failed to transfer r2modman cache", &e, app);
         };
     }
 
@@ -199,14 +198,14 @@ fn find_profiles(
 
     ensure!(path.exists(), "no profiles found");
 
-    Ok(fs_util::read_dir(&path)
+    Ok(util::io::read_dir(&path)
         .fs_context("reading profiles directory", &path)?
         .filter(|entry| entry.file_type().unwrap().is_dir())
         .map(|entry| entry.path()))
 }
 
 async fn import_profile(path: PathBuf, app: &AppHandle) -> Result<bool> {
-    let data = match read_data(path, app)? {
+    let data = match prepare_import(path, app)? {
         Some(data) => data,
         None => return Ok(false),
     };
@@ -225,14 +224,14 @@ async fn import_profile(path: PathBuf, app: &AppHandle) -> Result<bool> {
     Ok(true)
 }
 
-fn read_data(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
+fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
     let manager = app.state::<Mutex<ModManager>>();
     let thunderstore = app.state::<Mutex<Thunderstore>>();
 
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let name = fs_util::file_name(&path);
+    let name = util::io::file_name(&path);
 
     if !path.exists() {
         info!("no mods.yml in {}, skipping", path.display());
@@ -268,7 +267,7 @@ fn read_data(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
     Ok(Some(ImportData {
         mods,
         name,
-        config_path: path.join("BepInEx").join("config"),
+        path: path.join("BepInEx"),
     }))
 }
 
@@ -304,13 +303,13 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 
     let cache_dir = prefs.get_path_or_err("cache_dir")?;
 
-    for package in fs_util::read_dir(&path)
+    for package in util::io::read_dir(&path)
         .fs_context("reading cache directory", &path)?
         .filter(|entry| entry.file_type().unwrap().is_dir())
     {
         fs::create_dir_all(cache_dir.join(package.file_name()))?;
 
-        for version in fs_util::read_dir(&package.path())
+        for version in util::io::read_dir(&package.path())
             .fs_context("reading cache directory", &path)?
             .filter(|entry| entry.file_type().unwrap().is_dir())
         {
@@ -323,7 +322,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             }
 
             debug!("transferring cached mod: {}-{}", package_name, version_name);
-            fs_util::copy_dir(&version.path(), &new_path)?;
+            util::io::copy_dir(&version.path(), &new_path)?;
             downloader::normalize_mod_structure(&mut new_path)?;
         }
     }
