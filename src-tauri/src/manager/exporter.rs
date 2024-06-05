@@ -101,7 +101,7 @@ pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore) -> Result<()> {
     dir.push(&profile.name);
     dir.set_extension("r2z");
-    let mut zip = util::io::zip(dir).fs_context("creating zip archive", dir)?;
+    let mut zip = util::zip::builder(dir).fs_context("creating zip archive", dir)?;
 
     let mods = profile
         .remote_mods()
@@ -199,7 +199,7 @@ fn export_pack(
         author: None,
     };
 
-    let mut zip = util::io::zip(path)?;
+    let mut zip = util::zip::builder(path)?;
 
     zip.write_str("manifest.json", &serde_json::to_string_pretty(&manifest)?)?;
 
@@ -218,7 +218,7 @@ fn export_pack(
     Ok(())
 }
 
-fn write_includes(profile: &Profile, zip: &mut util::io::Zip) -> Result<()> {
+fn write_includes(profile: &Profile, zip: &mut util::zip::ZipBuilder) -> Result<()> {
     for (source, destination) in find_includes(&profile.path) {
         let writer = zip.writer(destination)?;
         let mut reader = fs::File::open(&source)?;

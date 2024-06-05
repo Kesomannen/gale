@@ -14,7 +14,7 @@
 		type ModActionResponse,
 		type ProfileQuery,
 		type AvailableUpdate,
-		SortBy,
+		SortBy
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -23,6 +23,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
 	import { fly } from 'svelte/transition';
+	import Popup from '$lib/components/Popup.svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -44,6 +45,8 @@
 	let enableDependencies: DependantsPopup;
 
 	let updateAllOpen = false;
+	let dependantsOpen = false;
+	let dependants: string[] | undefined;
 
 	$: {
 		$currentProfile;
@@ -130,6 +133,18 @@
 		mods[newIndex] = mods[oldIndex];
 		mods[oldIndex] = temp;
 	}
+
+	async function openDependants() {
+		if (!activeMod) return;
+
+		dependants = undefined;
+		dependantsOpen = true;
+
+		dependants = await invokeCommand<string[]>('get_dependants', {
+			uuid: activeMod.uuid
+		});
+		dependants.sort();
+	}
 </script>
 
 <ModList
@@ -138,6 +153,7 @@
 	on:reorder={({ detail: { uuid, delta, name } }) => onReorder(uuid, delta, name)}
 	{sortOptions}
 	queryArgs={profileQuery}
+	reorderable={$profileQuery.sortBy === SortBy.Custom}
 >
 	<div slot="details">
 		{#if activeMod && isOutdated(activeMod)}
@@ -188,12 +204,18 @@
 			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>
 
+		{#if activeMod?.type === 'remote'}
+			<ModDetailsDropdownItem icon="mdi:source-branch" label="Dependants" onClick={openDependants} />
+		{/if}
+
 		<ModDetailsDropdownItem label="Uninstall" icon="mdi:delete" onClick={uninstall} />
 	</svelte:fragment>
 
 	<div slot="banner">
 		{#if updates.length > $updateBannerThreshold}
-			<div class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-2 pl-4 pr-2 py-1.5 rounded-lg gap-1">
+			<div
+				class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-2 pl-4 pr-2 py-1.5 rounded-lg gap-1"
+			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl" />
 				There {updates.length === 1 ? 'is' : 'are'} <strong>{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.
@@ -206,9 +228,9 @@
 					Update all?
 				</Button.Root>
 
-				<Button.Root 
+				<Button.Root
 					class="ml-auto rounded-md text-xl hover:bg-blue-500 p-1"
-					on:click={() => $updateBannerThreshold = updates.length}
+					on:click={() => ($updateBannerThreshold = updates.length)}
 				>
 					<Icon icon="mdi:close" />
 				</Button.Root>
@@ -261,6 +283,32 @@
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>
+
+<Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
+	<div class="text-slate-300 text-center mt-4">
+		{#if dependants}
+			{#if dependants.length === 0}
+				No dependants found
+			{:else}
+				<table class="mt-2 w-full text-left">
+					<tr class="text-slate-100 text-left">
+						<th>Author</th>
+						<th>Name</th>
+					</tr>
+					{#each dependants as dep}
+						<tr class="text-slate-200 even:bg-gray-700">
+							{#each dep.split('-') as segment}
+								<td class="pl-1 pr-12">{segment}</td>
+							{/each}
+						</tr>
+					{/each}
+				</table>
+			{/if}
+		{:else}
+			Loading...
+		{/if}
+	</div>
+</Popup>
 
 <DependantsPopup
 	bind:this={removeDependants}

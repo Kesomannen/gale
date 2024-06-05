@@ -61,7 +61,7 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     }
     fs::create_dir_all(&temp_path)?;
 
-    zip_extract::extract(source, &temp_path, true)?;
+    util::zip::extract(source, &temp_path)?;
 
     let manifest = fs::read_to_string(temp_path.join("export.r2x"))
         .context("failed to read profile manifest")?;
@@ -182,7 +182,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
         },
         None => LocalMod {
             uuid,
-            name: util::io::file_name(&path),
+            name: util::fs::file_name(&path),
             ..Default::default()
         },
     };

@@ -53,29 +53,3 @@ pub fn get_missing_deps(
         .map(String::from)
         .collect())
 }
-
-#[tauri::command]
-pub fn get_dependants(full_name: &str, thunderstore: StateMutex<Thunderstore>) -> Result<Vec<String>> {
-    let thunderstore = thunderstore.lock().unwrap();
-
-    Ok(
-        thunderstore.packages.values().filter_map(|package| {
-            if package.is_modpack() {
-                return None;
-            }
-
-            match package.latest().dependencies.iter().any(|dep| {
-                let dep_name = match super::parse_mod_ident(dep, '-') {
-                    Ok((full_name, _)) => full_name,
-                    Err(_) => return false,
-                };
-
-                full_name == dep_name
-            }) {
-                true => Some(package.full_name.clone()),
-                false => None,
-            }
-        })
-        .collect()
-    )
-}

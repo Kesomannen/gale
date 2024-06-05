@@ -1,10 +1,9 @@
 use std::{
-    fs::{self, DirEntry, File},
-    io::{self, Write},
+    fs::{self, DirEntry},
+    io::{self},
     path::{Path, PathBuf},
 };
 
-use zip::{write::FileOptions, ZipWriter};
 use serde::de::DeserializeOwned;
 
 pub fn flatten_if_exists(path: &Path) -> Result<bool, io::Error> {
@@ -76,35 +75,6 @@ pub fn add_extension(path: &mut PathBuf, extension: impl AsRef<Path>) {
         }
         None => path.set_extension(extension.as_ref()),
     };
-}
-
-pub struct Zip {
-    writer: ZipWriter<File>,
-    options: FileOptions,
-}
-
-impl Zip {
-    pub fn writer(&mut self, path: impl AsRef<Path>) -> io::Result<&mut ZipWriter<File>> {
-        #[allow(deprecated)]
-        self.writer.start_file_from_path(path.as_ref(), self.options)?;
-        Ok(&mut self.writer)
-    }
-
-    pub fn write(&mut self, path: impl AsRef<Path>, data: &[u8]) -> io::Result<()> {
-        self.writer(path)?.write_all(data)
-    }
-
-    pub fn write_str(&mut self, path: impl AsRef<Path>, data: &str) -> io::Result<()> {
-        self.write(path, data.as_bytes())
-    }
-}
-
-pub fn zip(path: &Path) -> Result<Zip, io::Error> {
-    let writer = ZipWriter::new(File::create(path)?);
-
-    let options = FileOptions::default().compression_method(zip::CompressionMethod::Stored);
-
-    Ok(Zip { writer, options })
 }
 
 pub fn file_name(path: &Path) -> String {

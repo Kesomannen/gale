@@ -144,7 +144,7 @@ pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     find_paths().and_then(|path| {
         let profiles = find_profiles(path.clone(), false, app)
             .ok()?
-            .map(|path| util::io::file_name(&path))
+            .map(|path| util::fs::file_name(&path))
             .collect();
         Some(ProfileImportData { path, profiles })
     })
@@ -198,7 +198,7 @@ fn find_profiles(
 
     ensure!(path.exists(), "no profiles found");
 
-    Ok(util::io::read_dir(&path)
+    Ok(util::fs::read_dir(&path)
         .fs_context("reading profiles directory", &path)?
         .filter(|entry| entry.file_type().unwrap().is_dir())
         .map(|entry| entry.path()))
@@ -241,7 +241,7 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let name = util::io::file_name(&path);
+    let name = util::fs::file_name(&path);
 
     if !path.exists() {
         info!("no mods.yml in {}, skipping", path.display());
@@ -314,18 +314,18 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 
     let cache_dir = prefs.get_path_or_err("cache_dir")?;
 
-    for package in util::io::read_dir(&path)
+    for package in util::fs::read_dir(&path)
         .fs_context("reading cache directory", &path)?
         .filter(|entry| entry.file_type().unwrap().is_dir())
     {
         fs::create_dir_all(cache_dir.join(package.file_name()))?;
 
-        for version in util::io::read_dir(&package.path())
+        for version in util::fs::read_dir(&package.path())
             .fs_context("reading cache directory", &path)?
             .filter(|entry| entry.file_type().unwrap().is_dir())
         {
-            let package_name = util::io::file_name(&package.path());
-            let version_name = util::io::file_name(&version.path());
+            let package_name = util::fs::file_name(&package.path());
+            let version_name = util::fs::file_name(&version.path());
 
             let mut new_path = cache_dir.join(&package_name).join(&version_name);
             if new_path.exists() {
@@ -333,7 +333,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             }
 
             debug!("transferring cached mod: {}-{}", package_name, version_name);
-            util::io::copy_dir(&version.path(), &new_path, true)?;
+            util::fs::copy_dir(&version.path(), &new_path, true)?;
             downloader::normalize_mod_structure(&mut new_path)?;
         }
     }

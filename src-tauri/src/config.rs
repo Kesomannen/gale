@@ -103,7 +103,7 @@ pub struct FileMetadata {
 
 pub fn file_path_relative(name: &str) -> PathBuf {
     let mut path = ["BepInEx", "config", name].iter().collect();
-    util::io::add_extension(&mut path, "cfg");
+    util::fs::add_extension(&mut path, "cfg");
     path
 }
 

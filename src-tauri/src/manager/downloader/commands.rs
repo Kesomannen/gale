@@ -67,7 +67,7 @@ pub fn clear_download_cache(
                 continue;
             }
 
-            let package = util::io::file_name(&entry.path());
+            let package = util::fs::file_name(&entry.path());
 
             if thunderstore.find_package(&package).is_err() {
                 // package from a game other than the loaded one, skip
@@ -79,7 +79,7 @@ pub fn clear_download_cache(
                 .filter_map(|e| e.ok());
 
             for entry in versions {
-                let version = util::io::file_name(&entry.path());
+                let version = util::fs::file_name(&entry.path());
 
                 if installed_mods.contains(&(&package, version)) {
                     // package is installed, skip

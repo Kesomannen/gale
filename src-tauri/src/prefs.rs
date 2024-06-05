@@ -174,13 +174,13 @@ impl Prefs {
         
         if let Some(old_path) = old_path {
             if old_path.exists() {
-                util::io::copy_dir(old_path, &new_path, false)?;
+                util::fs::copy_dir(old_path, &new_path, false)?;
                 if let Some(excludes) = excludes {
                     for exclude in excludes {
                         fs::remove_file(new_path.join(exclude)).ok();
                     }
                     
-                    for entry in util::io::read_dir(old_path)? {
+                    for entry in util::fs::read_dir(old_path)? {
                         if !excludes.iter().any(|exclude| entry.file_name() == *exclude) {
                             if entry.file_type()?.is_dir() {
                                 fs::remove_dir_all(entry.path())?;

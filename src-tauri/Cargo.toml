@@ -26,7 +26,6 @@ indexmap = { version = "2.2", features = ["serde"] }
 open = "5.1"
 itertools = "0.13"
 zip = "0.6"
-zip-extract = "0.1"
 futures-util = { version = "0.3", features = ["io"] }
 uuid = { version = "1.7", features = ["serde"] }
 reqwest =  { version = "0.12", features = ["json", "stream"] }

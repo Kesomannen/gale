@@ -27,8 +27,6 @@
 	let changelogOpen = false;
 	let changelog: ModInfoPopup;
 
-	let dependats: string[] | undefined;
-
 	function openCommunityUrl(tail?: string) {
 		if (!tail) return;
 
@@ -40,16 +38,6 @@
 
 	function openIfDefined(url?: string) {
 		if (url) open(url);
-	}
-
-	async function openDependants() {
-		dependats = undefined;
-		dependantsOpen = true;
-
-		dependats = await invokeCommand<string[]>('get_dependants', {
-			fullName: `${mod.author}-${mod.name}`
-		});
-		dependats.sort();
 	}
 
 	let readmePromise: Promise<string | undefined>;
@@ -98,12 +86,6 @@
 					onClick={() => openIfDefined(mod.donateUrl)}
 				/>
 			{/if}
-
-			<ModDetailsDropdownItem
-				icon="mdi:source-branch"
-				label="Dependants"
-				onClick={openDependants}
-			/>
 
 			<ModDetailsDropdownItem icon="mdi:close" label="Close" onClick={onClose} />
 		</DropdownMenu.Content>
@@ -256,32 +238,6 @@
 			{/each}
 		</table>
 	{/if}
-</Popup>
-
-<Popup title="Dependants of {mod.name}" bind:open={dependantsOpen}>
-	<div class="text-slate-300 text-center mt-4">
-		{#if dependats}
-			{#if dependats.length === 0}
-				No dependants found
-			{:else}
-				<table class="mt-2 w-full text-left">
-					<tr class="text-slate-100 text-left">
-						<th>Author</th>
-						<th>Name</th>
-					</tr>
-					{#each dependats as dep}
-						<tr class="text-slate-200 even:bg-gray-700">
-							{#each dep.split('-') as segment}
-								<td class="pl-1 pr-12">{segment}</td>
-							{/each}
-						</tr>
-					{/each}
-				</table>
-			{/if}
-		{:else}
-			Loading...
-		{/if}
-	</div>
 </Popup>
 
 <ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} path="readme" />

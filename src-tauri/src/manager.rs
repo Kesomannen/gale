@@ -358,28 +358,27 @@ impl Profile {
     }
 
     fn dependants<'a>(
-        &self,
+        &'a self,
         target_mod: BorrowedMod<'a>,
         thunderstore: &'a Thunderstore,
-    ) -> Result<Vec<BorrowedMod<'a>>> {
+    ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
         self.remote_mods()
             .filter(|(other, _)| other.package_uuid != target_mod.package.uuid4)
             .map(|(other, _)| other.borrow(thunderstore))
-            .filter_map_ok(|other| {
+            .filter_map_ok(move |other| {
                 let deps = thunderstore.dependencies(other.version).0;
                 match deps.iter().any(|dep| dep.package == target_mod.package) {
                     true => Some(other),
                     false => None,
                 }
             })
-            .collect()
     }
 
     fn load(mut path: PathBuf) -> Result<Self> {
         path.push("profile.json");
 
         let manifest: ProfileManifest =
-            util::io::read_json(&path).context("failed to read profile manifest")?;
+            util::fs::read_json(&path).context("failed to read profile manifest")?;
 
         path.pop();
 
@@ -504,7 +503,7 @@ impl Profile {
                     }
                 } else {
                     let mut new = path.to_path_buf();
-                    util::io::add_extension(&mut new, "old");
+                    util::fs::add_extension(&mut new, "old");
                     fs::rename(path, &new)?;
                 }
             }
@@ -524,15 +523,14 @@ impl Profile {
     ) -> Result<Option<Vec<Dependant>>> {
         let ignored_category = "Modpacks".to_string();
         let dependants = self
-            .dependants(borrowed_mod, thunderstore)?
-            .into_iter()
+            .dependants(borrowed_mod, thunderstore)
             // filter out modpacks and disabled mods
-            .filter(|m| {
+            .filter_ok(|m| {
                 !m.package.categories.contains(&ignored_category)
                     && self.get_mod(&m.package.uuid4).unwrap().enabled
             })
-            .map(Dependant::from)
-            .collect::<Vec<_>>();
+            .map_ok(Dependant::from)
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(match dependants.is_empty() {
             true => None,
@@ -696,7 +694,7 @@ impl ManagerGame {
     fn load(
         mut path: PathBuf,
     ) -> Result<Option<(&'static Game, Self)>> {
-        let file_name = util::io::file_name(&path);
+        let file_name = util::fs::file_name(&path);
         let game = match games::from_id(&file_name) {
             Some(game) => game,
             None => return Ok(None),
@@ -705,7 +703,7 @@ impl ManagerGame {
         path.push("game.json");
 
         let data: ManagerGameSaveData =
-            util::io::read_json(&path).context("failed to read game save data")?;
+            util::fs::read_json(&path).context("failed to read game save data")?;
 
         path.pop();
 
@@ -745,7 +743,7 @@ impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
         let save_path = prefs.get_path_or_err("data_dir")?.join("manager.json");
         let save_data = match save_path.try_exists()? {
-            true => util::io::read_json(&save_path).context("failed to read manager save data")?,
+            true => util::fs::read_json(&save_path).context("failed to read manager save data")?,
             false => ManagerSaveData {
                 active_game: DEFAULT_GAME_ID.to_owned(),
             },

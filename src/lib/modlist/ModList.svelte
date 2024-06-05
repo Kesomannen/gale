@@ -158,7 +158,7 @@
 
 		<div class="flex gap-1.5 mb-1.5 pr-3">
 			<Dropdown
-				items={categories.filter((category) => !excludeCategories.includes(category)).toSorted()}
+				items={$categories.filter((category) => !excludeCategories.includes(category)).toSorted()}
 				multiple={true}
 				bind:selected={includeCategories}
 			>
@@ -199,7 +199,7 @@
 			</Dropdown>
 
 			<Dropdown
-				items={categories.filter((category) => !includeCategories.includes(category)).toSorted()}
+				items={$categories.filter((category) => !includeCategories.includes(category)).toSorted()}
 				multiple={true}
 				bind:selected={excludeCategories}
 			>

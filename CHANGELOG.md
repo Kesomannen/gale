@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Show only dependants from the active profile
+
+### Fixed
+
+- Failing to extract mods in rare cases
+
 ## 0.5.4 (2024-06-04)
 
 ### Fixed

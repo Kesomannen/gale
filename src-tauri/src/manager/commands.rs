@@ -6,10 +6,14 @@ use typeshare::typeshare;
 use uuid::Uuid;
 
 use crate::{
-    util::cmd::{Result, StateMutex},
     games::{self, Game, GAMES},
     prefs::Prefs,
-    thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore},
+    thunderstore::{
+        models::FrontendProfileMod,
+        query::QueryModsArgs,
+        Thunderstore,
+    },
+    util::cmd::{Result, StateMutex},
 };
 
 use super::{ModActionResponse, ModManager, Profile};
@@ -135,7 +139,9 @@ pub fn set_active_profile(
     let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager.active_game_mut().set_active_profile(index, Some(&thunderstore))?;
+    manager
+        .active_game_mut()
+        .set_active_profile(index, Some(&thunderstore))?;
     save(&manager, &prefs)?;
     Ok(())
 }
@@ -251,9 +257,7 @@ pub fn reorder_mod(
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager
-        .active_profile_mut()
-        .reorder_mod(&uuid, delta)?;
+    manager.active_profile_mut().reorder_mod(&uuid, delta)?;
 
     save(&manager, &prefs)?;
 
@@ -367,6 +371,32 @@ pub fn force_toggle_mods(
     save(&manager, &prefs)?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_dependants(
+    uuid: Uuid,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+) -> Result<Vec<String>> {
+    let manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+
+    let profile = manager.active_profile();
+    let target = profile
+        .get_mod(&uuid)?
+        .as_remote()
+        .ok_or_else(|| anyhow!("cannot find dependants of local mod"))?
+        .0
+        .borrow(&thunderstore)?;
+
+    let dependants = manager
+        .active_profile()
+        .dependants(target, &thunderstore)
+        .map_ok(|borrowed| borrowed.package.full_name.to_owned())
+        .collect::<anyhow::Result<Vec<_>>>()?;
+
+    Ok(dependants)
 }
 
 #[tauri::command]

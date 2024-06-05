@@ -50,7 +50,6 @@ fn main() {
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::get_missing_deps,
-            thunderstore::commands::get_dependants,
 
             prefs::commands::get_pref,
             prefs::commands::set_pref,
@@ -63,6 +62,7 @@ fn main() {
             manager::commands::set_active_profile,
             manager::commands::is_mod_installed,
             manager::commands::query_profile,
+            manager::commands::get_dependants,
             manager::commands::create_profile,
             manager::commands::delete_profile,
             manager::commands::remove_mod,

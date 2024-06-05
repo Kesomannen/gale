@@ -4,7 +4,7 @@ import { SortBy, SortOrder, type FiltersResponse, type Game, type GameInfo, type
 import { fetch } from '@tauri-apps/api/http';
 
 export let games: Game[] = [];
-export let categories: string[] = [];
+export let categories = writable<string[]>([]);
 export const currentGame = writable<Game | undefined>(undefined);
 
 export let activeProfileIndex: number = 0;
@@ -69,7 +69,7 @@ export async function refreshCategories() {
 	if (!gameId) return;
 
 	let response = await fetch<FiltersResponse>(`https://thunderstore.io/api/cyberstorm/community/${gameId}/filters/`);
-	categories = response.data.package_categories.map(c => c.name);
+	categories.set(response.data.package_categories.map(c => c.name));
 }
 
 export async function refreshProfiles() {

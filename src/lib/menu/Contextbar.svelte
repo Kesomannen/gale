@@ -120,7 +120,7 @@
 					/>
 
 					<div
-						class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs font-bold mr-1"
+						class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs mr-1"
 					>
 						{profile.modCount}
 					</div>
