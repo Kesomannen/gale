@@ -13,6 +13,7 @@
 	import VirtualList from '@sveltejs/svelte-virtual-list';
 	import { categories } from '$lib/stores';
 	import type { Writable } from 'svelte/store';
+	import { tick } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 
 	export let sortOptions: SortBy[];
@@ -38,7 +39,10 @@
 		reorder: {
 			uuid: string;
 			delta: number;
-			name: string;
+		};
+		finishReorder: {
+			uuid: string;
+			totalDelta: number;
 		};
 	}>();
 
@@ -69,18 +73,19 @@
 	}
 
 	let dragElement: HTMLElement | null;
+	let totalDelta = 0;
 
 	function onDragStart(evt: DragEvent) {
 		if (!reorderable) return;
+		if (!evt.dataTransfer) return;
 
-		if (evt.dataTransfer) {
-			dragElement = evt.currentTarget as HTMLElement;
-			evt.dataTransfer.effectAllowed = 'move';
-			evt.dataTransfer.setData('text/html', dragElement.outerHTML);
-		}
+		totalDelta = 0;
+		dragElement = evt.currentTarget as HTMLElement;
+		evt.dataTransfer.effectAllowed = 'move';
+		evt.dataTransfer.setData('text/html', dragElement.outerHTML);
 	}
 
-	function onDragOver(evt: DragEvent) {
+	async function onDragOver(evt: DragEvent) {
 		if (!reorderable || !dragElement) return;
 
 		let target = evt.currentTarget as HTMLElement;
@@ -89,19 +94,25 @@
 
 		if (draggingUuid === targetUuid) return;
 
-		let name = dragElement.dataset.name!;
-
 		if (isBefore(dragElement, target)) {
-			dispatch('reorder', { uuid: draggingUuid!, delta: -1, name });
+			dispatch('reorder', { uuid: draggingUuid!, delta: -1 });
+			totalDelta--;
 		} else {
-			dispatch('reorder', { uuid: draggingUuid!, delta: 1, name });
+			dispatch('reorder', { uuid: draggingUuid!, delta: 1 });
+			totalDelta++;
 		}
+
+		dragElement = target;
 	}
 
 	function onDragEnd(evt: DragEvent) {
 		if (!reorderable || !dragElement) return;
 
+		let uuid = dragElement.dataset.uuid!;
+
+		dispatch('finishReorder', { uuid, totalDelta });
 		dragElement = null;
+		totalDelta = 0;
 	}
 </script>
 

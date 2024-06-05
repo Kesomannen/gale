@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 
 pub fn flatten_if_exists(path: &Path) -> Result<bool, io::Error> {
     if !path.try_exists()? {
@@ -63,6 +63,25 @@ pub fn read_json<T: DeserializeOwned>(path: &Path) -> anyhow::Result<T> {
     let result = serde_json::from_reader(reader)?;
 
     Ok(result)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Style {
+    Pretty,
+    Compact,
+}
+
+pub fn write_json<T: Serialize>(path: &Path, value: &T, style: Style) -> anyhow::Result<()> {
+    let file = fs::File::create(path)?;
+    let writer = io::BufWriter::new(file);
+
+    if style == Style::Pretty {
+        serde_json::to_writer_pretty(writer, value)?;
+    } else {
+        serde_json::to_writer(writer, value)?;
+    }
+
+    Ok(())
 }
 
 pub fn add_extension(path: &mut PathBuf, extension: impl AsRef<Path>) {

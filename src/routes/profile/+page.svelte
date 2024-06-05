@@ -14,7 +14,10 @@
 		type ModActionResponse,
 		type ProfileQuery,
 		type AvailableUpdate,
-		SortBy
+		SortBy,
+
+		SortOrder
+
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -30,10 +33,11 @@
 		SortBy.InstallDate,
 		SortBy.LastUpdated,
 		SortBy.Newest,
-		SortBy.Rating,
-		SortBy.Downloads,
+		SortBy.DiskSpace,
 		SortBy.Name,
-		SortBy.Author
+		SortBy.Author,
+		SortBy.Rating,
+		SortBy.Downloads
 	];
 
 	let mods: Mod[] = [];
@@ -61,6 +65,14 @@
 		$currentProfile;
 		resetBannerThreshold();
 	}
+
+	$: reorderable = $profileQuery.sortBy === SortBy.Custom 
+		&& $profileQuery.searchTerm === ''
+		&& $profileQuery.excludeCategories.length === 0
+		&& $profileQuery.includeCategories.length === 0
+		&& $profileQuery.includeDeprecated
+		&& $profileQuery.includeNsfw
+		&& $profileQuery.includeDisabled;
 
 	function resetBannerThreshold() {
 		if (isFirst) {
@@ -118,7 +130,7 @@
 		refresh();
 	}
 
-	async function onReorder(uuid: string, delta: number, name: string) {
+	async function onReorder(uuid: string, delta: number) {
 		let oldIndex = mods.findIndex((mod) => mod.uuid === uuid);
 
 		if (oldIndex === -1) {
@@ -132,6 +144,16 @@
 		let temp = mods[newIndex];
 		mods[newIndex] = mods[oldIndex];
 		mods[oldIndex] = temp;
+	}
+
+	async function finishReorder(uuid: string, delta: number) {
+		if ($profileQuery.sortOrder === SortOrder.Descending) {
+			// list is reversed
+			delta *= -1;
+		}
+
+		await invokeCommand('reorder_mod', { uuid, delta });
+		refresh();
 	}
 
 	async function openDependants() {
@@ -148,12 +170,13 @@
 </script>
 
 <ModList
+	{sortOptions}
+	{reorderable}
 	bind:mods
 	bind:activeMod
-	on:reorder={({ detail: { uuid, delta, name } }) => onReorder(uuid, delta, name)}
-	{sortOptions}
+	on:reorder={({ detail: { uuid, delta } }) => onReorder(uuid, delta)}
+	on:finishReorder={({ detail: { uuid, totalDelta } }) => finishReorder(uuid, totalDelta)}
 	queryArgs={profileQuery}
-	reorderable={$profileQuery.sortBy === SortBy.Custom}
 >
 	<div slot="details">
 		{#if activeMod && isOutdated(activeMod)}

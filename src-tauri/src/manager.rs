@@ -22,7 +22,7 @@ use crate::{
         query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
     },
-    util::{self, error::IoResultExt},
+    util::{self, error::IoResultExt, fs::Style},
 };
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
@@ -598,7 +598,8 @@ impl Profile {
             .context("mod not found in profile")?;
 
         let target = (index as i32 + delta).clamp(0, self.mods.len() as i32 - 1) as usize;
-        self.mods.swap(index, target);
+        let profile_mod = self.mods.remove(index);
+        self.mods.insert(target, profile_mod);
 
         Ok(())
     }
@@ -691,9 +692,7 @@ impl ManagerGame {
         })
     }
 
-    fn load(
-        mut path: PathBuf,
-    ) -> Result<Option<(&'static Game, Self)>> {
+    fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
         let file_name = util::fs::file_name(&path);
         let game = match games::from_id(&file_name) {
             Some(game) => game,
@@ -832,28 +831,31 @@ impl ModManager {
     fn save(&self, prefs: &Prefs) -> Result<()> {
         let mut path = prefs.get_path_or_err("data_dir")?.clone();
 
-        let data = ManagerSaveData {
-            active_game: self.active_game.id.to_owned(),
-        };
-
-        let json = serde_json::to_string_pretty(&data)?;
-
         path.push("manager.json");
-        fs::write(&path, json)?;
+
+        util::fs::write_json(
+            &path,
+            &ManagerSaveData {
+                active_game: self.active_game.id.to_owned(),
+            },
+            Style::Pretty,
+        )?;
+
         path.pop();
 
         for (game_id, manager_game) in &self.games {
             path.push(game_id);
-
-            let data = ManagerGameSaveData {
-                favorite: manager_game.favorite,
-                active_profile_index: manager_game.active_profile_index,
-            };
-
-            let json = serde_json::to_string_pretty(&data)?;
-
             path.push("game.json");
-            fs::write(&path, json)?;
+
+            util::fs::write_json(
+                &path,
+                &ManagerGameSaveData {
+                    favorite: manager_game.favorite,
+                    active_profile_index: manager_game.active_profile_index,
+                },
+                Style::Pretty,
+            )?;
+
             path.pop();
 
             path.push("profiles");
@@ -861,8 +863,7 @@ impl ModManager {
                 path.push(&profile.name);
                 path.push("profile.json");
 
-                let content = serde_json::to_string_pretty(&profile.manifest())?;
-                fs::write(&path, content)?;
+                util::fs::write_json(&path, &profile.manifest(), Style::Pretty)?;
 
                 path.pop();
                 path.pop();

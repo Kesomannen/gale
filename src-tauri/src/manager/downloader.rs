@@ -22,6 +22,7 @@ use crate::{
 };
 
 use super::{commands::save, ModManager, ModRef, Profile, ProfileMod};
+use itertools::Itertools;
 
 pub mod commands;
 pub mod updater;
@@ -45,13 +46,12 @@ fn missing_deps<'a>(
     borrowed_mod: BorrowedMod<'a>,
     profile: &'a Profile,
     thunderstore: &'a Thunderstore,
-) -> Result<impl Iterator<Item = BorrowedMod<'a>>> {
-    Ok(thunderstore
+) -> impl Iterator<Item = BorrowedMod<'a>> {
+    thunderstore
         .dependencies(borrowed_mod.version)
         .0
         .into_iter()
-        .chain(iter::once(borrowed_mod))
-        .filter(|dep| !profile.has_mod(&dep.package.uuid4)))
+        .filter(|dep| !profile.has_mod(&dep.package.uuid4))
 }
 
 fn total_download_size(
@@ -60,7 +60,8 @@ fn total_download_size(
     prefs: &Prefs,
     thunderstore: &Thunderstore,
 ) -> Result<u64> {
-    Ok(missing_deps(borrowed_mod, profile, thunderstore)?
+    Ok(missing_deps(borrowed_mod, profile, thunderstore)
+        .chain(iter::once(borrowed_mod))
         .filter(|borrowed_mod| match cache_path(borrowed_mod, prefs) {
             Ok(cache_path) => !cache_path.exists(),
             Err(_) => true,
@@ -97,7 +98,7 @@ fn try_cache_install(
 
 const DOWNLOAD_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
-type ProgressHandler = Box<dyn Fn(&InstallProgress, &AppHandle)  + 'static + Send>;
+type ProgressHandler = Box<dyn Fn(&InstallProgress, &AppHandle) + 'static + Send>;
 
 pub struct InstallOptions {
     can_cancel: bool,
@@ -128,7 +129,7 @@ impl InstallOptions {
 
     pub fn on_progress<F>(mut self, on_progress: F) -> Self
     where
-        F: Fn(&InstallProgress, &AppHandle)  + 'static + Send,
+        F: Fn(&InstallProgress, &AppHandle) + 'static + Send,
     {
         self.on_progress = Some(Box::new(on_progress));
         self
@@ -350,8 +351,7 @@ impl<'a> Installer<'a> {
         self.check_cancelled()?;
         self.update(InstallTask::Extracting);
 
-        util::zip::extract(Cursor::new(data), &path)
-            .fs_context("extracting mod", &path)?;
+        util::zip::extract(Cursor::new(data), &path).fs_context("extracting mod", &path)?;
 
         normalize_mod_structure(&mut path)?;
 
@@ -479,7 +479,7 @@ where
 }
 
 pub async fn install_with_deps(
-    mod_ref: &ModRef,
+    mod_refs: &[(ModRef, bool)],
     options: InstallOptions,
     app: &tauri::AppHandle,
 ) -> Result<()> {
@@ -487,20 +487,32 @@ pub async fn install_with_deps(
         let manager = app.state::<Mutex<ModManager>>();
         let manager = manager.lock().unwrap();
 
-        if manager.active_profile().has_mod(&mod_ref.package_uuid) {
+        let profile = manager.active_profile();
+        if mod_refs.len() == 1 && profile.has_mod(&mod_refs[0].0.package_uuid) {
             bail!("mod already installed");
         }
     }
 
     install_mods(
         move |manager, thunderstore| {
-            let borrowed_mod = mod_ref.borrow(thunderstore)?;
+            let deps = mod_refs
+                .iter()
+                .map(|(mod_ref, enabled)| {
+                    let borrowed_mod = mod_ref.borrow(thunderstore)?;
 
-            Ok(
-                missing_deps(borrowed_mod, manager.active_profile(), thunderstore)?
-                    .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
-                    .collect(),
-            )
+                    Ok(
+                        missing_deps(borrowed_mod, manager.active_profile(), thunderstore)
+                            .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
+                            .chain(iter::once((mod_ref.clone(), *enabled))),
+                    )
+                })
+                .flatten_ok()
+                .collect::<Result<Vec<_>>>()?;
+
+            Ok(deps
+                .into_iter()
+                .unique_by(|(mod_ref, _)| mod_ref.package_uuid)
+                .collect())
         },
         options,
         app,
@@ -619,7 +631,7 @@ pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
 
         let handle = app.clone();
         tauri::async_runtime::spawn(async move {
-            install_with_deps(&mod_ref, InstallOptions::default(), &handle)
+            install_with_deps(&[(mod_ref, true)], InstallOptions::default(), &handle)
                 .await
                 .unwrap_or_else(|e| {
                     util::error::log("Failed to install mod from deep link", &e, &handle);

@@ -119,7 +119,8 @@ export enum SortBy {
 	Downloads = 'downloads',
 	Rating = 'rating',
 	InstallDate = 'installDate',
-	Custom = 'custom'
+	Custom = 'custom',
+	DiskSpace = 'diskSpace'
 }
 
 export enum SortOrder {

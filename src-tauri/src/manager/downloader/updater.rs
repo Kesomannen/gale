@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use super::{install_mod_refs, InstallOptions};
+use super::{install_mod_refs, install_with_deps, InstallOptions};
 use crate::{
     manager::{ModManager, Profile, Result},
     thunderstore::{BorrowedMod, ModRef, Thunderstore},
@@ -15,7 +15,7 @@ pub mod commands;
 pub struct AvailableUpdate<'a> {
     pub mod_ref: &'a ModRef,
     pub enabled: bool,
-    pub current: &'a semver::Version,
+    pub current_num: &'a semver::Version,
     pub latest: BorrowedMod<'a>,
 }
 
@@ -46,7 +46,7 @@ impl Profile {
         Ok(Some(AvailableUpdate {
             mod_ref: installed.0,
             enabled: installed.1,
-            current: installed_vers,
+            current_num: installed_vers,
             latest: BorrowedMod {
                 package: latest,
                 version: latest_version,
@@ -108,5 +108,5 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
         to_update
     };
 
-    install_mod_refs(&to_update, InstallOptions::default().can_cancel(false), app).await
+    install_with_deps(&to_update, InstallOptions::default().can_cancel(false), app).await
 }

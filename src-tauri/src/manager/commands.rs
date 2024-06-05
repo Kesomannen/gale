@@ -182,7 +182,7 @@ pub fn query_profile(
             Ok::<_, anyhow::Error>(FrontendAvailableUpdate {
                 name: borrow.package.name.clone(),
                 uuid: borrow.package.uuid4,
-                old: update.current.clone(),
+                old: update.current_num.clone(),
                 new: update.latest.version.version_number.clone(),
             })
         })

@@ -2,12 +2,19 @@
 
 ## Unreleased
 
+### Added
+
+- Mod reordering (AKA custom sorting)
+- Disk space sorting option
+
 ### Changed
 
 - Show only dependants from the active profile
 
 ### Fixed
 
+- Disabled mods being enabled after updating
+- Mod dependencies not being installed when updating
 - Failing to extract mods in rare cases
 
 ## 0.5.4 (2024-06-04)

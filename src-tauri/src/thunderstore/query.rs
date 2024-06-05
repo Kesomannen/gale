@@ -38,6 +38,7 @@ pub enum SortBy {
     Rating,
     InstallDate,
     Custom,
+    DiskSpace,
 }
 
 #[typeshare]
@@ -61,22 +62,6 @@ pub struct QueryModsArgs {
     pub include_disabled: bool,
     pub sort_by: SortBy,
     pub sort_order: SortOrder,
-}
-
-impl Default for QueryModsArgs {
-    fn default() -> Self {
-        Self {
-            max_count: 20,
-            search_term: None,
-            include_categories: HashSet::new(),
-            exclude_categories: HashSet::new(),
-            include_nsfw: false,
-            include_deprecated: false,
-            include_disabled: false,
-            sort_by: SortBy::LastUpdated,
-            sort_order: SortOrder::Descending,
-        }
-    }
 }
 
 const TIME_BETWEEN_QUERIES: Duration = Duration::from_millis(250);
@@ -150,7 +135,9 @@ impl Queryable for BorrowedMod<'_> {
             SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
             SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
             SortBy::Rating => a.rating_score.cmp(&b.rating_score),
-            _ => Ordering::Equal,
+            SortBy::DiskSpace => self.version.file_size.cmp(&other.version.file_size),
+            SortBy::InstallDate => Ordering::Equal,
+            SortBy::Custom => Ordering::Equal,
         }
     }
 }
