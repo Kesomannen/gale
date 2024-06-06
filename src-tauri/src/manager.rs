@@ -667,7 +667,7 @@ impl ManagerGame {
     fn set_active_profile(
         &mut self,
         index: usize,
-        thunderstore: Option<&Thunderstore>,
+        _thunderstore: Option<&Thunderstore>,
     ) -> Result<()> {
         ensure!(
             index < self.profiles.len(),
@@ -676,7 +676,7 @@ impl ManagerGame {
         );
 
         self.active_profile_index = index;
-        self.active_profile_mut().refresh_config(thunderstore);
+        //self.active_profile_mut().refresh_config(thunderstore);
 
         Ok(())
     }

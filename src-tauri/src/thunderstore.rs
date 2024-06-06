@@ -15,7 +15,12 @@ use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
 
-use crate::{games::Game, manager::ModManager, util, NetworkClient};
+use crate::{
+    games::Game,
+    manager::ModManager,
+    util::{self, fs::Style},
+    NetworkClient,
+};
 
 use self::models::{PackageListing, PackageVersion};
 
@@ -250,7 +255,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
                 for package in mods {
                     thunderstore.packages.insert(package.uuid4, package);
                 }
-            },
+            }
             Ok(None) => (),
             Err(err) => warn!("failed to read cache: {}", err),
         }
@@ -314,7 +319,8 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                 None => &mut state.packages,
             };
 
-            while let Some(index) = buffer.find("}]},") { // 😏
+            while let Some(index) = buffer.find("}]},") {
+                // 😏
                 let (json, _) = buffer.split_at(index + 3);
 
                 match serde_json::from_str::<PackageListing>(json) {
@@ -323,9 +329,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                             map.insert(package.uuid4, package);
                         }
                     }
-                    Err(err) => {
-                        util::error::log("failed to load mod", &anyhow!(err), app)
-                    }
+                    Err(err) => util::error::log("failed to load mod", &anyhow!(err), app),
                 }
 
                 buffer.replace_range(..index + 4, "");
@@ -360,8 +364,8 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
 
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
-    
-    manager.cache_mods(&state)?;
+
+    manager.cache_mods(&state).ok();
 
     Ok(())
 }
@@ -393,12 +397,10 @@ pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
     if packages.is_empty() {
         return Ok(());
     }
-    
+
     let start = Instant::now();
 
-    let file = fs::File::create(path).context("failed to create cache file")?;
-    let writer = io::BufWriter::new(file);
-    serde_json::to_writer(writer, packages).context("failed to serialize cache")?;
+    util::fs::write_json(path, packages, Style::Compact).context("failed to write mod cache")?;
 
     debug!(
         "wrote {} mods to cache in {:?}",

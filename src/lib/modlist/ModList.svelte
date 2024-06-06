@@ -13,7 +13,6 @@
 	import VirtualList from '@sveltejs/svelte-virtual-list';
 	import { categories } from '$lib/stores';
 	import type { Writable } from 'svelte/store';
-	import { tick } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 
 	export let sortOptions: SortBy[];
@@ -73,6 +72,7 @@
 	}
 
 	let dragElement: HTMLElement | null;
+	let listViewport: HTMLDivElement;
 	let totalDelta = 0;
 
 	function onDragStart(evt: DragEvent) {
@@ -85,7 +85,7 @@
 		evt.dataTransfer.setData('text/html', dragElement.outerHTML);
 	}
 
-	async function onDragOver(evt: DragEvent) {
+	function onDragOver(evt: DragEvent) {
 		if (!reorderable || !dragElement) return;
 
 		let target = evt.currentTarget as HTMLElement;
@@ -289,6 +289,7 @@
 				let:item
 				bind:start={listStart}
 				bind:end={listEnd}
+				bind:this={listViewport}
 			>
 				<ModListItem
 					on:click={() => onModClicked(item)}

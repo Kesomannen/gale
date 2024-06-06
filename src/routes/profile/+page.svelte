@@ -15,9 +15,7 @@
 		type ProfileQuery,
 		type AvailableUpdate,
 		SortBy,
-
 		SortOrder
-
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -66,13 +64,14 @@
 		resetBannerThreshold();
 	}
 
-	$: reorderable = $profileQuery.sortBy === SortBy.Custom 
-		&& $profileQuery.searchTerm === ''
-		&& $profileQuery.excludeCategories.length === 0
-		&& $profileQuery.includeCategories.length === 0
-		&& $profileQuery.includeDeprecated
-		&& $profileQuery.includeNsfw
-		&& $profileQuery.includeDisabled;
+	$: reorderable =
+		$profileQuery.sortBy === SortBy.Custom &&
+		$profileQuery.searchTerm === '' &&
+		$profileQuery.excludeCategories.length === 0 &&
+		$profileQuery.includeCategories.length === 0 &&
+		$profileQuery.includeDeprecated &&
+		$profileQuery.includeNsfw &&
+		$profileQuery.includeDisabled;
 
 	function resetBannerThreshold() {
 		if (isFirst) {
@@ -228,7 +227,11 @@
 		/>
 
 		{#if activeMod?.type === 'remote'}
-			<ModDetailsDropdownItem icon="mdi:source-branch" label="Dependants" onClick={openDependants} />
+			<ModDetailsDropdownItem
+				icon="mdi:source-branch"
+				label="Dependants"
+				onClick={openDependants}
+			/>
 		{/if}
 
 		<ModDetailsDropdownItem label="Uninstall" icon="mdi:delete" onClick={uninstall} />
@@ -262,20 +265,29 @@
 	</div>
 
 	<div slot="item" let:mod>
-		<Switch.Root
-			checked={mod.enabled ?? true}
-			onCheckedChange={(checked) => toggleMod(checked, mod)}
-			on:click={(evt) => evt.stopPropagation()}
-			class="flex px-1 py-1 rounded-full w-12 h-6 ml-2 group mt-3
+		<div class="flex items-center mt-2.5 ml-1">
+			{#if reorderable}
+				<Icon 
+					icon="material-symbols:drag-indicator" 
+					class="text-slate-400 text-2xl cursor-move mr-3"
+				/>
+			{/if}
+
+			<Switch.Root
+				checked={mod.enabled ?? true}
+				onCheckedChange={(checked) => toggleMod(checked, mod)}
+				on:click={(evt) => evt.stopPropagation()}
+				class="flex px-1 py-1 rounded-full w-12 h-6 group
 						bg-slate-600 hover:bg-slate-500
 						data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
-		>
-			<Switch.Thumb
-				class="pointer-events-none h-full w-4 rounded-full transition-transform ease-out duration-75
+			>
+				<Switch.Thumb
+					class="pointer-events-none h-full w-4 rounded-full transition-transform ease-out duration-75
 							bg-slate-300 hover:bg-slate-200
 							data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
-			/>
-		</Switch.Root>
+				/>
+			</Switch.Root>
+		</div>
 	</div>
 </ModList>
 

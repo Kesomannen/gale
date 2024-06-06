@@ -71,7 +71,7 @@ pub enum Style {
     Compact,
 }
 
-pub fn write_json<T: Serialize>(path: &Path, value: &T, style: Style) -> anyhow::Result<()> {
+pub fn write_json<T: Serialize + ?Sized>(path: &Path, value: &T, style: Style) -> anyhow::Result<()> {
     let file = fs::File::create(path)?;
     let writer = io::BufWriter::new(file);
 
