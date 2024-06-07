@@ -4,6 +4,7 @@
 
 ### Added
 
+- Indicicator for already installed mods in the mod list
 - Mod reordering (AKA custom sorting)
 - Disk space sorting option
 
@@ -13,6 +14,7 @@
 
 ### Fixed
 
+- Config sorting
 - Disabled mods being enabled after updating
 - Mod dependencies not being installed when updating
 - Failing to extract mods in rare cases

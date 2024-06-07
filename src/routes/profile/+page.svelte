@@ -267,7 +267,7 @@
 	<div slot="item" let:mod>
 		<div class="flex items-center mt-2.5 ml-1">
 			{#if reorderable}
-				<Icon 
+				<Icon
 					icon="material-symbols:drag-indicator" 
 					class="text-slate-400 text-2xl cursor-move mr-3"
 				/>
@@ -277,7 +277,7 @@
 				checked={mod.enabled ?? true}
 				onCheckedChange={(checked) => toggleMod(checked, mod)}
 				on:click={(evt) => evt.stopPropagation()}
-				class="flex px-1 py-1 rounded-full w-12 h-6 group
+				class="flex px-1 py-1 mr-1 rounded-full w-12 h-6 group
 						bg-slate-600 hover:bg-slate-500
 						data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
 			>

@@ -1,6 +1,6 @@
 {
 	"name": "gale",
-	"version": "0.5.4",
+	"version": "0.5.5",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -16,6 +16,7 @@
 		"@iconify/svelte": "^3.1.6",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/adapter-static": "^3.0.1",
+		"@sveltejs/enhanced-img": "^0.2.1",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/uuid": "^9.0.8",

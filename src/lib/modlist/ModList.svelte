@@ -21,6 +21,7 @@
 	export let activeMod: Mod | undefined;
 	export let queryArgs: Writable<QueryModsArgs>;
 	export let reorderable = false;
+	export let showInstalledIcon = false;
 
 	let listStart = 0;
 	let listEnd = 0;
@@ -72,7 +73,6 @@
 	}
 
 	let dragElement: HTMLElement | null;
-	let listViewport: HTMLDivElement;
 	let totalDelta = 0;
 
 	function onDragStart(evt: DragEvent) {
@@ -113,6 +113,19 @@
 		dispatch('finishReorder', { uuid, totalDelta });
 		dragElement = null;
 		totalDelta = 0;
+	}
+
+	const dragScrollSpeed = 10;
+	const dragScrollArea = 100;
+
+	function onDrag(evt: DragEvent) {
+		/*
+		if (window.innerHeight - evt.clientY < dragScrollArea) {
+			viewport.scrollBy(0, dragScrollSpeed);
+		} else if (evt.clientY < dragScrollArea) {
+			viewport.scrollBy(0, -dragScrollSpeed);
+		}
+		*/
 	}
 </script>
 
@@ -286,21 +299,23 @@
 			<VirtualList
 				itemHeight={48 + 16}
 				items={mods}
-				let:item
+				let:item={mod}
 				bind:start={listStart}
 				bind:end={listEnd}
-				bind:this={listViewport}
 			>
 				<ModListItem
-					on:click={() => onModClicked(item)}
+					on:click={() => onModClicked(mod)}
 					on:dragstart={onDragStart}
 					on:dragover={onDragOver}
 					on:dragend={onDragEnd}
+					on:drag={onDrag}
+					let:isInstalled
 					draggable={reorderable}
-					isSelected={activeMod?.uuid == item.uuid}
-					mod={item}
+					isSelected={activeMod?.uuid == mod.uuid}
+					{showInstalledIcon}
+					{mod}
 				>
-					<slot name="item" mod={item} />
+					<slot name="item" {mod} {isInstalled} />
 				</ModListItem>
 			</VirtualList>
 		{/if}

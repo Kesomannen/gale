@@ -39,15 +39,28 @@
 		refresh();
 	}
 
-	$: shownFiles = searchTerm?.length ?? 0 > 1 ? files?.filter(matchesSearch) ?? [] : files;
+	$: shownFiles = sortAndFilterFiles(searchTerm, files ?? []);
 
-	function matchesSearch(file: LoadFileResult) {
-		let lowerSearch = searchTerm.toLowerCase();
+	function sortAndFilterFiles(searchTerm: string, files: LoadFileResult[]) {
+		if (searchTerm.length > 0) {
+			files = files.filter((file) => {
+				let lowerSearch = searchTerm.toLowerCase();
 
-		return (
-			configFileName(file).toLowerCase().includes(lowerSearch) ||
-			configDisplayName(file).toLowerCase().includes(lowerSearch)
-		);
+				return (
+					configFileName(file).toLowerCase().includes(lowerSearch) ||
+					configDisplayName(file).toLowerCase().includes(lowerSearch)
+				);
+			});
+		}
+
+		files.sort((a, b) => {
+			let aName = configDisplayName(a);
+			let bName = configDisplayName(b);
+
+			return aName.localeCompare(bName);
+		});
+
+		return files;
 	}
 
 	function configValueToString(config: ConfigValue) {

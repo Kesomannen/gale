@@ -12,7 +12,7 @@
 	import { fly } from 'svelte/transition';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import { modQuery } from '$lib/stores';
+	import { modQuery, currentGame } from '$lib/stores';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
@@ -63,6 +63,7 @@
 
 	$: {
 		$modQuery;
+    $currentGame;
 		refresh();
 	}
 
@@ -78,10 +79,11 @@
 		}
 
 		await invokeCommand('install_mod', { modRef });
+		modQuery.update((q) => q);
 	}
 </script>
 
-<ModList bind:activeMod bind:mods queryArgs={modQuery} {sortOptions}>
+<ModList bind:activeMod bind:mods queryArgs={modQuery} showInstalledIcon={true} {sortOptions}>
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg
@@ -138,21 +140,22 @@
 		</DropdownMenu.Root>
 	</div>
 
-	<div slot="item" let:mod>
-		<Button.Root
-			class="bg-green-600 hover:bg-green-500 p-2.5 ml-2 mt-0.5 mr-0.5 
-							rounded-lg text-white text-2xl align-middle hidden group-hover:inline"
-			on:click={() => {
-				let modRef = {
-					packageUuid: mod.uuid,
-					versionUuid: mod.versions[0].uuid
-				};
+	<div slot="item" let:mod let:isInstalled>
+		{#if !isInstalled}
+			<Button.Root
+				class="p-2.5 ml-2 mt-0.5 mr-0.5 rounded-lg text-white text-2xl align-middle hidden group-hover:inline bg-green-600 hover:bg-green-500"
+				on:click={() => {
+					let modRef = {
+						packageUuid: mod.uuid,
+						versionUuid: mod.versions[0].uuid
+					};
 
-				install(modRef);
-			}}
-		>
-			<Icon icon="mdi:download" />
-		</Button.Root>
+					install(modRef);
+				}}
+			>
+				<Icon icon="mdi:download" />
+			</Button.Root>
+		{/if}
 	</div>
 </ModList>
 

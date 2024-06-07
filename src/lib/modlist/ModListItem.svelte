@@ -2,13 +2,23 @@
 	import type { Mod } from '../models';
 	import Icon from '@iconify/svelte';
 	import { isOutdated } from '$lib/util';
+	import { invokeCommand } from '$lib/invoke';
 
 	const FALLBACK_ICON =
 		'https://sm.ign.com/t/ign_es/cover/l/lethal-com/lethal-company_817h.300.jpg';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
+	export let showInstalledIcon: boolean;
 	export let draggable = false;
+
+	let isInstalled = false;
+
+	$: refreshInstalled(mod);
+
+	async function refreshInstalled(mod: Mod) {
+		isInstalled = await invokeCommand('is_mod_installed', { uuid: mod.uuid });
+	}
 </script>
 
 <button
@@ -19,6 +29,7 @@
 	on:click
 	on:dragstart
 	on:dragover
+	on:drag
 	on:dragend
 	{draggable}
 >
@@ -36,6 +47,9 @@
 		>
 			{mod.version ?? ''}
 		</span>
+		{#if isInstalled && showInstalledIcon}
+			<Icon class="text-green-500 inline mb-1" icon="mdi:check" />
+		{/if}
 		{#if mod.isDeprecated}
 			<Icon class="text-red-500 inline mb-1" icon="mdi:error" />
 		{/if}
@@ -51,6 +65,6 @@
 
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<div class="contents" on:click={(evt) => evt.stopPropagation()} role="none">
-		<slot />
+		<slot {isInstalled} />
 	</div>
 </button>
