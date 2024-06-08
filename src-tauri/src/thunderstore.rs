@@ -81,7 +81,7 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ModRef {
     pub package_uuid: Uuid,

@@ -6,20 +6,19 @@ use anyhow::{anyhow, ensure, Context, Result};
 use tauri::{AppHandle, Manager};
 
 use crate::{
-    manager::{commands::save, downloader::InstallOptions, LocalMod, ProfileMod},
+    manager::{commands::save, downloader::InstallOptions, installer, LocalMod, ProfileMod},
     prefs::Prefs,
-    thunderstore::{models::PackageManifest, ModRef, Thunderstore},
+    thunderstore::{models::PackageManifest, Thunderstore},
     util::{self, error::IoResultExt},
     NetworkClient,
 };
 
 use super::{
-    downloader,
+    downloader::{self, ModInstall},
     exporter::{self, R2Manifest, R2Mod, PROFILE_DATA_PREFIX},
     ModManager,
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
-use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -43,7 +42,7 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
     pub name: String,
-    pub mods: Vec<ProfileMod>,
+    pub mods: Vec<ModInstall>,
     pub includes: HashMap<PathBuf, PathBuf>,
 }
 
@@ -81,8 +80,8 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
 fn resolve_r2mods<'a>(
     mods: impl Iterator<Item = R2Mod<'a>>,
     thunderstore: &Thunderstore,
-) -> Result<Vec<ProfileMod>> {
-    mods.map(|r2_mod| r2_mod.into_profile_mod(thunderstore))
+) -> Result<Vec<ModInstall>> {
+    mods.map(|r2| r2.into_install(thunderstore))
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve mod references")
 }
@@ -104,13 +103,7 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
             .context("failed to import config")?;
     };
 
-    let mod_refs = data
-        .mods
-        .into_iter()
-        .filter_map(|profile_mod| profile_mod.into_remote())
-        .collect_vec();
-
-    downloader::install_mod_refs(&mod_refs, options, app)
+    downloader::install_mods(data.mods, options, app)
         .await
         .context("error while importing mods")?;
 
@@ -188,7 +181,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     };
 
     if let Some(ref deps) = local_mod.dependencies {
-        downloader::install_mods(
+        downloader::install_with_mods(
             |manager, thunderstore| {
                 let profile = manager.active_profile();
 
@@ -197,7 +190,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
                     .0
                     .into_iter()
                     .filter(|dep| !profile.has_mod(&dep.package.uuid4))
-                    .map(|borrowed_mod| (ModRef::from(borrowed_mod), true))
+                    .map(|borrowed| borrowed.into())
                     .collect::<Vec<_>>())
             },
             InstallOptions::default().can_cancel(false),
@@ -222,7 +215,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             .context("failed to remove existing mod")?;
     }
 
-    downloader::install_from_disk(&path, &profile.path, &local_mod.name)
+    installer::from_disk(&path, &profile.path, &local_mod.name)
         .context("failed to install local mod")?;
 
     let mut mod_path = profile.path.clone();
@@ -230,7 +223,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     mod_path.push("plugins");
     mod_path.push(&local_mod.name);
 
-    downloader::normalize_mod_structure(&mut mod_path)?;
+    installer::normalize_mod_structure(&mut mod_path)?;
 
     mod_path.push("icon.png");
     if mod_path.exists() {

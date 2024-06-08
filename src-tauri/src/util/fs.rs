@@ -1,5 +1,5 @@
 use std::{
-    fs::{self, DirEntry},
+    fs::{self},
     io::{self},
     path::{Path, PathBuf},
 };
@@ -33,7 +33,9 @@ pub fn copy_dir(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io::Erro
 }
 
 pub fn copy_contents(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io::Error> {
-    for entry in read_dir(src)? {
+    for entry in src.read_dir()? {
+        let entry = entry?;
+
         let entry_path = entry.path();
         let file_name = entry_path.file_name().unwrap();
         let new_path = dest.join(file_name);
@@ -51,10 +53,6 @@ pub fn copy_contents(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io:
     }
 
     Ok(())
-}
-
-pub fn read_dir(path: &Path) -> io::Result<impl Iterator<Item = DirEntry>> {
-    fs::read_dir(path).map(|entries| entries.filter_map(Result::ok))
 }
 
 pub fn read_json<T: DeserializeOwned>(path: &Path) -> anyhow::Result<T> {

@@ -4,17 +4,19 @@
 
 ### Added
 
-- Indicicator for already installed mods in the mod list
 - Mod reordering (AKA custom sorting)
 - Disk space sorting option
 
 ### Changed
 
+- Made mod updates cancellable
 - Show only dependants from the active profile
 
 ### Fixed
 
-- Config sorting
+- Mod details menu not refreshing after installing or updating a mod
+- No mods being loaded if BepInEx hadn't been installed through another mod manager before
+- Config sorting by raw file name instead of display name
 - Disabled mods being enabled after updating
 - Mod dependencies not being installed when updating
 - Failing to extract mods in rare cases

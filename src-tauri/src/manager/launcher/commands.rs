@@ -12,6 +12,6 @@ pub fn launch_game(
     let manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager.launch_game(&prefs)?;
+    manager.active_game().launch(&prefs)?;
     Ok(())
 }

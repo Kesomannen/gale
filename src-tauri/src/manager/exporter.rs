@@ -3,20 +3,23 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use image::{imageops::FilterType, io::Reader as ImageReader, ImageFormat};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs, io::{self, Cursor}, path::{Path, PathBuf}
+    fs,
+    io::{self, Cursor},
+    path::{Path, PathBuf},
 };
 use typeshare::typeshare;
 use uuid::Uuid;
 
-use super::{ModManager, Profile, ProfileMod, ProfileModKind, Result};
+use super::{downloader::ModInstall, ModManager, Profile, Result};
 
 use crate::{
-    prefs::Prefs, thunderstore::{
+    prefs::Prefs,
+    thunderstore::{
         models::{LegacyProfileCreateResponse, PackageManifest},
         ModRef, Thunderstore,
-    }, util::{self, cmd::StateMutex, error::IoResultExt}
+    },
+    util::{self, cmd::StateMutex, error::IoResultExt},
 };
-use chrono::Utc;
 use walkdir::WalkDir;
 
 pub mod commands;
@@ -38,7 +41,7 @@ pub struct R2Mod<'a> {
 }
 
 impl<'a> R2Mod<'a> {
-    pub fn into_profile_mod(self, thunderstore: &Thunderstore) -> Result<ProfileMod> {
+    pub fn into_install(self, thunderstore: &Thunderstore) -> Result<ModInstall> {
         let package = thunderstore.find_package(self.name)?;
         let semver = semver::Version::from(self.version);
         let version = package.get_version_with_num(&semver).with_context(|| {
@@ -48,14 +51,12 @@ impl<'a> R2Mod<'a> {
             )
         })?;
 
-        Ok(ProfileMod {
-            enabled: self.enabled,
-            install_time: Utc::now(),
-            kind: ProfileModKind::Remote(ModRef {
-                package_uuid: package.uuid4,
-                version_uuid: version.uuid4,
-            }),
-        })
+        let mod_ref = ModRef {
+            package_uuid: package.uuid4,
+            version_uuid: version.uuid4,
+        };
+
+        Ok(ModInstall::new(mod_ref).with_state(self.enabled))
     }
 
     fn from_mod_ref(
@@ -228,10 +229,15 @@ fn write_includes(profile: &Profile, zip: &mut util::zip::ZipBuilder) -> Result<
     Ok(())
 }
 
-const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
-const EXCLUDE_FILES: [&str; 4] = ["profile.json", "manifest.json", "mods.yml", "doorstop_config.ini"];
-
 pub fn find_includes(root: &Path) -> impl Iterator<Item = (PathBuf, PathBuf)> + '_ {
+    const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
+    const EXCLUDE_FILES: [&str; 4] = [
+        "profile.json",
+        "manifest.json",
+        "mods.yml",
+        "doorstop_config.ini",
+    ];
+
     WalkDir::new(root)
         .into_iter()
         .filter_map(|entry| entry.ok())

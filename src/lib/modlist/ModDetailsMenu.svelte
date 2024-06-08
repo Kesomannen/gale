@@ -13,13 +13,11 @@
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
-	import { invokeCommand } from '$lib/invoke';
 
 	export let mod: Mod;
 	export let onClose: () => void;
 
 	let dependenciesOpen = false;
-	let dependantsOpen = false;
 
 	let readmeOpen = false;
 	let readme: ModInfoPopup;
@@ -241,4 +239,4 @@
 </Popup>
 
 <ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} path="readme" />
-<ModInfoPopup bind:this={changelog} bind:open={changelogOpen} {mod} path="changelog" />
+<ModInfoPopup bind:this={changelog} bind:open={changelogOpen} {mod} useLatest={true} path="changelog" />

@@ -63,7 +63,7 @@
 
 	$: {
 		$modQuery;
-    $currentGame;
+    	$currentGame;
 		refresh();
 	}
 
@@ -80,6 +80,7 @@
 
 		await invokeCommand('install_mod', { modRef });
 		modQuery.update((q) => q);
+		activeMod = activeMod;
 	}
 </script>
 

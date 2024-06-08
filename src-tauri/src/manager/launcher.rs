@@ -6,15 +6,16 @@ use std::{
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 
-use super::ModManager;
+use super::ManagerGame;
 use crate::{
+    games::Game,
     prefs::{PrefValue, Prefs},
     util::error::IoResultExt,
 };
+use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
 use typeshare::typeshare;
-use log::info;
 
 pub mod commands;
 
@@ -29,27 +30,30 @@ pub enum LaunchMode {
     },
 }
 
-impl ModManager {
-    pub fn launch_game(&self, prefs: &Prefs) -> Result<()> {
+impl ManagerGame {
+    pub fn launch(&self, prefs: &Prefs) -> Result<()> {
         let preference = match prefs.get_or_err("launch_mode")? {
             PrefValue::LaunchMode(mode) => mode,
             _ => bail!("launch mode not set"),
         };
 
+        let game_dir = self.game.path(prefs)?;
+        self.link_files(&game_dir).context("failed to link files")?;
+
         match preference {
-            LaunchMode::Steam => self.launch_game_steam(prefs),
-            LaunchMode::Direct { instances } => self.launch_game_direct(prefs, *instances),
+            LaunchMode::Steam => self.launch_steam(prefs),
+            LaunchMode::Direct { instances } => self.launch_direct(prefs, *instances),
         }
     }
 
-    fn launch_game_steam(&self, prefs: &Prefs) -> Result<()> {
+    fn launch_steam(&self, prefs: &Prefs) -> Result<()> {
         let steam_path = prefs.get_path_or_err("steam_exe_path")?;
         let steam_path = resolve_path(steam_path, "steam executable")?;
 
         let mut command = Command::new(steam_path);
         command
             .arg("-applaunch")
-            .arg(self.active_game.steam_id.to_string());
+            .arg(self.game.steam_id.to_string());
 
         add_bepinex_args(&mut command, &self.active_profile().path)?;
 
@@ -60,9 +64,10 @@ impl ModManager {
         Ok(())
     }
 
-    fn launch_game_direct(&self, prefs: &Prefs, instances: u32) -> Result<()> {
+    fn launch_direct(&self, prefs: &Prefs, instances: u32) -> Result<()> {
         let exe_path = self
-            .game_path(prefs)?
+            .game
+            .path(prefs)?
             .read_dir()?
             .filter_map(|entry| entry.ok())
             .find(|entry| {
@@ -100,29 +105,55 @@ impl ModManager {
         Ok(())
     }
 
-    pub fn game_path(&self, prefs: &Prefs) -> Result<PathBuf> {
-        let mut game_path = prefs
+    fn link_files(&self, target: &Path) -> Result<()> {
+        const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
+
+        let files = self
+            .active_profile()
+            .path
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| match entry.file_type() {
+                Ok(file_type) => file_type.is_file(),
+                Err(_) => false,
+            })
+            .filter(|name| {
+                let name = name.file_name();
+                EXCLUDES.iter().all(|exclude| name != *exclude)
+            });
+
+        for file in files {
+            fs::copy(file.path(), target.join(file.file_name()))?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Game {
+    pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
+        let mut path = prefs
             .get_path_or_err("steam_exe_path")?
             .parent()
             .unwrap()
             .to_path_buf();
 
-        game_path.push("steamapps");
-        game_path.push("common");
-        game_path.push(&self.active_game.display_name);
+        path.push("steamapps");
+        path.push("common");
+        path.push(&self.steam_name);
 
         ensure!(
-            game_path.exists(),
-            "game path not found (at {}). Is the game installed on Steam?",
-            game_path.display()
+            path.exists(),
+            "game path not found (at {}), is the game installed on Steam?",
+            path.display()
         );
 
-        Ok(game_path)
+        Ok(path)
     }
 }
 
-fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()> {
-    let mut preloader_path = root_path.to_path_buf();
+fn add_bepinex_args(command: &mut Command, path: &Path) -> Result<()> {
+    let mut preloader_path = path.to_path_buf();
     preloader_path.push("BepInEx");
     preloader_path.push("core");
     preloader_path.push("BepInEx.Preloader.dll");
@@ -131,7 +162,7 @@ fn add_bepinex_args(command: &mut Command, root_path: &Path) -> Result<()> {
         .map_err(|_| anyhow!("failed to resolve BepInEx preloader path, is BepInEx installed?"))?;
 
     let (enable_name, target_name) =
-        match doorstop_version(root_path).context("failed to determine doorstop version")? {
+        match doorstop_version(path).context("failed to determine doorstop version")? {
             3 => ("--dorstop-enable", "--doorstop-target"),
             4 => ("--doorstop-enabled", "--doorstop-target-assembly"),
             vers => bail!("unsupported doorstop version: {}", vers),

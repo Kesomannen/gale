@@ -297,7 +297,7 @@
 			<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
 		{:else}
 			<VirtualList
-				itemHeight={48 + 16}
+				itemHeight={66}
 				items={mods}
 				let:item={mod}
 				bind:start={listStart}

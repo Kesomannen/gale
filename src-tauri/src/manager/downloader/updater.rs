@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use super::{install_mod_refs, install_with_deps, InstallOptions};
+use super::{install_with_deps, InstallOptions, ModInstall};
 use crate::{
     manager::{ModManager, Profile, Result},
     thunderstore::{BorrowedMod, ModRef, Thunderstore},
@@ -15,8 +15,17 @@ pub mod commands;
 pub struct AvailableUpdate<'a> {
     pub mod_ref: &'a ModRef,
     pub enabled: bool,
+    pub index: usize,
     pub current_num: &'a semver::Version,
     pub latest: BorrowedMod<'a>,
+}
+
+impl From<AvailableUpdate<'_>> for ModInstall {
+    fn from(value: AvailableUpdate<'_>) -> Self {
+        ModInstall::new(value.latest.reference())
+            .with_state(value.enabled)
+            .at(value.index)
+    }
 }
 
 impl Profile {
@@ -25,12 +34,14 @@ impl Profile {
         uuid: &Uuid,
         thunderstore: &'a Thunderstore,
     ) -> Result<Option<AvailableUpdate<'a>>> {
-        let installed = match self.get_mod(uuid)?.as_remote() {
+        let index = self.index_of(uuid)?;
+
+        let (mod_ref, enabled) = match self.mods[index].as_remote() {
             Some(x) => x,
             None => return Ok(None),
         };
 
-        let installed_vers = &installed.0.borrow(thunderstore)?.version.version_number;
+        let installed_vers = &mod_ref.borrow(thunderstore)?.version.version_number;
 
         let latest = thunderstore.get_package(uuid)?;
 
@@ -44,8 +55,9 @@ impl Profile {
         }
 
         Ok(Some(AvailableUpdate {
-            mod_ref: installed.0,
-            enabled: installed.1,
+            index,
+            mod_ref,
+            enabled,
             current_num: installed_vers,
             latest: BorrowedMod {
                 package: latest,
@@ -66,22 +78,29 @@ impl Profile {
 }
 
 pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<()> {
-    let enabled = {
+    let install = {
         let manager = app.state::<Mutex<ModManager>>();
         let thunderstore = app.state::<Mutex<Thunderstore>>();
-                
+
         let mut manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
         let profile = manager.active_profile_mut();
-        let enabled = profile.get_mod(&mod_ref.package_uuid)?.enabled;
-
+        let index = profile.index_of(&mod_ref.package_uuid)?;
+        
         profile.force_remove_mod(&mod_ref.package_uuid, &thunderstore)?;
 
-        enabled
+        ModInstall::new(mod_ref)
+            .with_state(profile.mods[index].enabled)
+            .at(index)
     };
 
-    install_mod_refs(&[(mod_ref, enabled)], InstallOptions::default().can_cancel(false), app).await
+    super::install_mod(
+        install,
+        InstallOptions::default().can_cancel(false),
+        app,
+    )
+    .await
 }
 
 pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
@@ -94,19 +113,25 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
 
         let profile = manager.active_profile_mut();
 
-        let to_update = uuids
+        uuids
             .iter()
             .filter_map(|uuid| profile.update_available(uuid, &thunderstore).transpose())
-            .map_ok(|update| (update.latest.reference(), update.enabled))
-            .collect::<Result<Vec<_>>>()?;
-
-        for (mod_ref, _) in &to_update {
-            // remove old versions
-            profile.force_remove_mod(&mod_ref.package_uuid, &thunderstore)?;
-        }
-
-        to_update
+            .map_ok(|update| update.into())
+            .collect::<Result<Vec<ModInstall>>>()?
     };
 
-    install_with_deps(&to_update, InstallOptions::default().can_cancel(false), app).await
+    dbg!(&to_update);
+
+    install_with_deps(
+        to_update,
+        InstallOptions::default().before_install(
+            |install, manager, thunderstore| {
+                let profile = manager.active_profile_mut();
+                profile.force_remove_mod(install.uuid(), thunderstore).ok();
+            },
+        ),
+        true,
+        app,
+    )
+    .await
 }

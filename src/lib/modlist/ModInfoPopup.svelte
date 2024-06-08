@@ -3,11 +3,12 @@
 	import Popup from "$lib/components/Popup.svelte";
 	import type { MarkdownResponse, Mod } from "$lib/models";
 	import Icon from "@iconify/svelte";
-  import { Response, fetch } from "@tauri-apps/api/http";
+ 	import { Response, fetch } from "@tauri-apps/api/http";
 
-  export let open = false;
-  export let mod: Mod;
-  export let path: string;
+	export let open = false;
+	export let useLatest = false;
+	export let mod: Mod;
+	export let path: string;
 
 	let promise: Promise<Response<MarkdownResponse>> | null = null;
 	let currentMod: Mod | null = null;
@@ -16,7 +17,9 @@
 		if (currentMod === mod) return;
 		currentMod = mod;
 
-		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/${path}/`;
+		let version = useLatest ? mod.versions[0].name : mod.version;
+
+		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${version}/${path}/`;
 		promise = fetch<MarkdownResponse>(url)
 	}
 </script>

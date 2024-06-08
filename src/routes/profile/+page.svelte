@@ -82,11 +82,10 @@
 		$updateBannerThreshold = 0;
 	}
 
-	function refresh() {
-		invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery }).then((result) => {
-			mods = result.mods;
-			updates = result.updates;
-		});
+	async function refresh() {
+		let result = await invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery });
+    mods = result.mods;
+    updates = result.updates;
 	}
 
 	async function toggleMod(enable: boolean, mod: Mod) {
@@ -122,13 +121,6 @@
 		removeDependants.openFor(activeMod, response.content);
 	}
 
-	async function changeVersion(uuid: string) {
-		if (!activeMod) return;
-
-		await invokeCommand('update_mod', { uuid: activeMod.uuid, version: { specific: uuid } });
-		refresh();
-	}
-
 	async function onReorder(uuid: string, delta: number) {
 		let oldIndex = mods.findIndex((mod) => mod.uuid === uuid);
 
@@ -152,7 +144,7 @@
 		}
 
 		await invokeCommand('reorder_mod', { uuid, delta });
-		refresh();
+		await refresh();
 	}
 
 	async function openDependants() {
@@ -166,6 +158,15 @@
 		});
 		dependants.sort();
 	}
+  
+  async function updateActiveMod(version: 'latest' | { specific: string }) {
+    if (!activeMod) return;
+
+    await invokeCommand('update_mod', { uuid: activeMod.uuid, version });
+    await refresh();
+
+    activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid);
+  }
 </script>
 
 <ModList
@@ -182,9 +183,7 @@
 			<Button.Root
 				class="flex items-center justify-center w-full gap-2 py-2 rounded-lg mt-2
 						bg-blue-600 hover:bg-blue-500 font-medium text-lg"
-				on:click={() => {
-					invokeCommand('update_mod', { uuid: activeMod?.uuid, version: 'latest' }).then(refresh);
-				}}
+				on:click={() => updateActiveMod('latest')}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl align-middle" />
 				Update to {activeMod?.versions[0].name}
@@ -212,7 +211,7 @@
 					<DropdownMenu.Item
 						class="flex flex-shrink-0 items-center pl-3 pr-12 py-1 truncate text-slate-300 hover:text-slate-100 
 									text-left rounded-md hover:bg-gray-600 cursor-default"
-						on:click={() => changeVersion(version.uuid)}
+						on:click={() => updateActiveMod({ specific: version.uuid })}
 					>
 						{version.name}
 					</DropdownMenu.Item>
@@ -268,7 +267,7 @@
 		<div class="flex items-center mt-2.5 ml-1">
 			{#if reorderable}
 				<Icon
-					icon="material-symbols:drag-indicator" 
+					icon="material-symbols:drag-indicator"
 					class="text-slate-400 text-2xl cursor-move mr-3"
 				/>
 			{/if}

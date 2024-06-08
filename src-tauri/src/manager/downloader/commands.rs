@@ -3,15 +3,27 @@ use std::{collections::HashSet, fs};
 use anyhow::Context;
 
 use crate::{
-    manager::ModManager, prefs::Prefs, thunderstore::{ModRef, Thunderstore}, util::{self, cmd::{Result, StateMutex}}
+    manager::ModManager,
+    prefs::Prefs,
+    thunderstore::{ModRef, Thunderstore},
+    util::{
+        self,
+        cmd::{Result, StateMutex},
+    },
 };
 
-use super::{InstallOptions, InstallState};
+use super::{InstallOptions, InstallState, ModInstall};
 use itertools::Itertools;
 
 #[tauri::command]
 pub async fn install_mod(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
-    super::install_with_deps(&[(mod_ref, true)], InstallOptions::default(), &app).await?;
+    super::install_with_deps(
+        vec![ModInstall::new(mod_ref)],
+        InstallOptions::default(),
+        false,
+        &app,
+    )
+    .await?;
 
     Ok(())
 }

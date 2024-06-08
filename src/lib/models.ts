@@ -220,13 +220,15 @@ export interface ProfileQuery {
 
 export interface ImportData {
 	name: string;
-	temp_path: string;
-	mods: {
-		enabled: boolean;
-		packageUuid: string;
-		versionUuid: string;
-	}[];
 	includes: Map<string, string>;
+	mods: {
+		modRef: {
+			packageUuid: string;
+			versionUuid: string;
+		}
+    	enabled: boolean;
+    	index?: number;
+	}[];
 }
 
 export interface R2ImportData {

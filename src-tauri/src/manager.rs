@@ -32,6 +32,7 @@ pub mod commands;
 pub mod downloader;
 pub mod exporter;
 pub mod importer;
+pub mod installer;
 pub mod launcher;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
@@ -61,6 +62,7 @@ struct ManagerSaveData {
 }
 
 pub struct ManagerGame {
+    pub game: &'static Game,
     pub profiles: Vec<Profile>,
     pub path: PathBuf,
     pub favorite: bool,
@@ -124,10 +126,6 @@ impl ProfileMod {
         self.kind.uuid()
     }
 
-    fn into_remote(self) -> Option<(ModRef, bool)> {
-        self.kind.into_remote().map(|remote| (remote, self.enabled))
-    }
-
     fn as_remote(&self) -> Option<(&ModRef, bool)> {
         self.kind.as_remote().map(|remote| (remote, self.enabled))
     }
@@ -175,13 +173,6 @@ impl ProfileModKind {
         match self {
             ProfileModKind::Local(local_mod) => &local_mod.uuid,
             ProfileModKind::Remote(mod_ref) => &mod_ref.package_uuid,
-        }
-    }
-
-    pub fn into_remote(self) -> Option<ModRef> {
-        match self {
-            ProfileModKind::Remote(mod_ref) => Some(mod_ref),
-            _ => None,
         }
     }
 
@@ -292,6 +283,13 @@ impl Profile {
     fn is_valid_name(name: &str) -> bool {
         name.chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ')
+    }
+
+    fn index_of(&self, uuid: &Uuid) -> Result<usize> {
+        self.mods
+            .iter()
+            .position(|p| p.uuid() == uuid)
+            .context("mod not found in profile")
     }
 
     fn get_mod<'a>(&'a self, uuid: &Uuid) -> Result<&'a ProfileMod> {
@@ -443,11 +441,7 @@ impl Profile {
     }
 
     fn force_remove_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
-        let index = self
-            .mods
-            .iter()
-            .position(|m| m.uuid() == uuid)
-            .context("mod not found in profile")?;
+        let index = self.index_of(uuid)?;
 
         self.scan_mod(&self.mods[index].kind, thunderstore, |dir| {
             fs::remove_dir_all(dir).fs_context("removing mod directory", dir)
@@ -727,6 +721,7 @@ impl ManagerGame {
         Ok(Some((
             game,
             Self {
+                game,
                 profiles,
                 path,
                 favorite: data.favorite,
@@ -797,6 +792,7 @@ impl ModManager {
         }
 
         let mut manager_game = ManagerGame {
+            game,
             profiles: Vec::new(),
             path: prefs.get_path_or_err("data_dir")?.join(&game.id),
             favorite: false,

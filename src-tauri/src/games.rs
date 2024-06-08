@@ -1,14 +1,28 @@
 use heck::ToKebabCase;
 use serde::Serialize;
+use std::hash::{self, Hash};
 
-#[derive(Serialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Serialize, Debug, Clone, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Game {
     pub id: String,
     pub display_name: String,
+    pub steam_name: String,
     pub aliases: Vec<String>,
     pub url: String,
     pub steam_id: u32,
+}
+
+impl PartialEq for Game {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Hash for Game {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }
 
 fn default_package_url(id: &str) -> String {
@@ -22,6 +36,7 @@ impl Game {
         Self {
             url: default_package_url(&id),
             display_name: display_name.to_owned(),
+            steam_name: display_name.to_owned(),
             aliases: Vec::new(),
             steam_id,
             id,

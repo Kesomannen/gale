@@ -180,7 +180,9 @@ impl Prefs {
                         fs::remove_file(new_path.join(exclude)).ok();
                     }
                     
-                    for entry in util::fs::read_dir(old_path)? {
+                    for entry in old_path.read_dir()? {
+                        let entry = entry?;
+                        
                         if !excludes.iter().any(|exclude| entry.file_name() == *exclude) {
                             if entry.file_type()?.is_dir() {
                                 fs::remove_dir_all(entry.path())?;

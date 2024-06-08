@@ -32,7 +32,7 @@
 					progress.installedMods = progress.totalMods;
 					setTimeout(() => {
 						open = false;
-					}, 500);
+					}, 250);
 					break;
 				
 				case 'error':
@@ -51,9 +51,9 @@
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
 	bind:open
-	confirmClose={progress.installedMods === 0 ? undefined : {
+	confirmClose={{
 		title: 'Abort installation',
-		message: 'This will remove all the installed mods so far. Are you sure?'
+		message: 'Are you sure you want to abort the installation?'
 	}}
 	onClose={() => {
 		invokeCommand('cancel_install')

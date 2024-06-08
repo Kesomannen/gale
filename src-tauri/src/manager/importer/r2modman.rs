@@ -13,9 +13,9 @@ use std::{
 use super::ImportData;
 use crate::{
     manager::{
-        downloader::{self, InstallOptions},
+        downloader::InstallOptions,
         exporter::{self, R2Mod},
-        ModManager,
+        installer, ModManager,
     },
     prefs::Prefs,
     thunderstore::Thunderstore,
@@ -198,8 +198,10 @@ fn find_profiles(
 
     ensure!(path.exists(), "no profiles found");
 
-    Ok(util::fs::read_dir(&path)
+    Ok(path
+        .read_dir()
         .fs_context("reading profiles directory", &path)?
+        .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().unwrap().is_dir())
         .map(|entry| entry.path()))
 }
@@ -314,16 +316,22 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 
     let cache_dir = prefs.get_path_or_err("cache_dir")?;
 
-    for package in util::fs::read_dir(&path)
-        .fs_context("reading cache directory", &path)?
-        .filter(|entry| entry.file_type().unwrap().is_dir())
-    {
+    for package in path.read_dir()? {
+        let package = package?;
+
+        if !package.file_type()?.is_dir() {
+            continue;
+        }
+
         fs::create_dir_all(cache_dir.join(package.file_name()))?;
 
-        for version in util::fs::read_dir(&package.path())
-            .fs_context("reading cache directory", &path)?
-            .filter(|entry| entry.file_type().unwrap().is_dir())
-        {
+        for version in package.path().read_dir()? {
+            let version = version?;
+
+            if !version.file_type()?.is_dir() {
+                continue;
+            }
+
             let package_name = util::fs::file_name(&package.path());
             let version_name = util::fs::file_name(&version.path());
 
@@ -334,7 +342,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 
             debug!("transferring cached mod: {}-{}", package_name, version_name);
             util::fs::copy_dir(&version.path(), &new_path, true)?;
-            downloader::normalize_mod_structure(&mut new_path)?;
+            installer::normalize_mod_structure(&mut new_path)?;
         }
     }
 
