@@ -223,7 +223,7 @@ where
     I: Iterator<Item = T>,
 {
     query_mods(args, mods)
-        .map(|queryable| queryable.into())
+        .map_into()
         .collect()
 }
 

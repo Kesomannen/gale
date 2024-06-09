@@ -10,6 +10,7 @@
 
 ### Changed
 
+- Show latest changelog instead of the mod's version's
 - Moved settings to a separate page instead of a dialog
 - Made mod updates cancellable
 - Show only dependants from the active profile
