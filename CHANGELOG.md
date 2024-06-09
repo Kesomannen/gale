@@ -4,19 +4,22 @@
 
 ### Added
 
+- Toggle for mod download cache
 - Mod reordering (AKA custom sorting)
 - Disk space sorting option
 
 ### Changed
 
+- Moved settings to a separate page instead of a dialog
 - Made mod updates cancellable
 - Show only dependants from the active profile
+- Miscellaneous UI changes
 
 ### Fixed
 
 - Mod details menu not refreshing after installing or updating a mod
 - No mods being loaded if BepInEx hadn't been installed through another mod manager before
-- Config sorting by raw file name instead of display name
+- Config files being sorted by raw file name instead of display name
 - Disabled mods being enabled after updating
 - Mod dependencies not being installed when updating
 - Failing to extract mods in rare cases

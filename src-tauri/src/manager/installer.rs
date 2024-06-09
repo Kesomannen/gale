@@ -2,12 +2,14 @@ use anyhow::{Context, Result};
 
 use super::{downloader::ModInstall, ModManager, ProfileMod};
 use crate::{
-    prefs::Prefs, thunderstore::{BorrowedMod, Thunderstore}, util::{self, error::IoResultExt}
+    prefs::{PrefValue, Prefs},
+    thunderstore::{BorrowedMod, Thunderstore},
+    util::{self, error::IoResultExt},
 };
 use std::{
-    fs,
-    path::{Path, PathBuf},
+    collections::HashSet, fs, path::{Path, PathBuf}
 };
+use itertools::Itertools;
 
 pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
     let mut path = prefs.get_path_or_err("cache_dir")?.clone();
@@ -17,11 +19,83 @@ pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
     Ok(path)
 }
 
+pub fn clear_cache(prefs: &Prefs) -> Result<()> {
+    let cache_dir = prefs.get_path_or_err("cache_dir")?;
+
+    if !cache_dir.exists() {
+        return Ok(());
+    }
+
+    fs::remove_dir_all(cache_dir).context("failed to delete cache")?;
+    fs::create_dir_all(cache_dir).context("failed to recreate cache directory")?;
+
+    Ok(())
+}
+
+pub fn soft_clear_cache(
+    manager: &ModManager,
+    thunderstore: &Thunderstore,
+    prefs: &Prefs,
+) -> Result<()> {
+    let cache_dir = prefs.get_path_or_err("cache_dir")?;
+
+    let installed_mods = manager
+        .active_game()
+        .installed_mods(thunderstore)
+        .map_ok(|borrowed| {
+            (
+                &borrowed.package.full_name,
+                borrowed.version.version_number.to_string(),
+            )
+        })
+        .collect::<Result<HashSet<_>>>()
+        .context("failed to resolve installed mods")?;
+
+    let packages = fs::read_dir(cache_dir)
+        .context("failed to read cache directory")?
+        .filter_map(|e| e.ok());
+
+    for entry in packages {
+        let path = entry.path();
+
+        if !path.is_dir() {
+            continue;
+        }
+
+        let package_name = util::fs::file_name(&path);
+
+        if thunderstore.find_package(&package_name).is_err() {
+            // package from a game other than the loaded one, skip
+            continue;
+        }
+
+        let versions = fs::read_dir(&path)
+            .with_context(|| format!("failed to read cache for {}", &package_name))?
+            .filter_map(|e| e.ok());
+
+        for entry in versions {
+            let path = entry.path();
+            let version = util::fs::file_name(&path);
+
+            if installed_mods.contains(&(&package_name, version)) {
+                // package is installed, skip
+                continue;
+            }
+
+            fs::remove_dir_all(path)
+                .with_context(|| format!("failed to delete cache for {}", &package_name))?;
+        }
+    }
+
+    Ok(())
+}
+
 pub fn try_cache_install(
     install: &ModInstall,
     path: &Path,
     manager: &mut ModManager,
     thunderstore: &Thunderstore,
+    prefs: &Prefs,
 ) -> Result<bool> {
     let borrowed = install.mod_ref.borrow(thunderstore)?;
     let profile = manager.active_profile_mut();
@@ -30,7 +104,7 @@ pub fn try_cache_install(
         true => {
             let name = &borrowed.package.full_name;
             from_disk(path, &profile.path, name)?;
-            
+
             let profile_mod = ProfileMod::remote_now(install.mod_ref.clone());
             match install.index {
                 Some(index) if index < profile.mods.len() => {
@@ -43,6 +117,16 @@ pub fn try_cache_install(
 
             if !install.enabled {
                 profile.force_toggle_mod(&borrowed.package.uuid4, thunderstore)?;
+            }
+
+            let cache_enabled = match prefs.get("enable_mod_cache") {
+                Some(PrefValue::Bool(bool)) => *bool,
+                _ => false,
+            };
+
+            if !cache_enabled {
+                fs::remove_dir_all(path).ok();
+                fs::remove_dir(path.parent().unwrap()).ok();
             }
 
             Ok(true)

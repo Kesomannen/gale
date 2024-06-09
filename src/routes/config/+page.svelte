@@ -194,8 +194,8 @@
 
 				{#each selectedSection.entries as entry (entry.content)}
 					{#if entry.type === 'untagged'}
-						<div class="flex items-center text-slate-300 pl-2 h-7 my-0.5">
-							<div class="text-slate-300 pr-2 cursor-auto w-[50%] text-left truncate flex-shrink-0">
+						<div class="flex items-center text-slate-300 pl-2 h-7 my-1">
+							<div class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0">
 								{sentenceCase(entry.content.name)}
 							</div>
 							<UntaggedConfig
@@ -209,7 +209,7 @@
 						<div class="flex items-center text-slate-300 pl-2 h-7 my-1">
 							<Tooltip
 								side="top"
-								class="w-[50%] text-slate-300 mr-auto pr-2 cursor-auto text-left truncate flex-shrink-0"
+								class="w-[45%] min-w-52 text-slate-300 mr-auto pr-2 cursor-auto text-left truncate flex-shrink-0"
 							>
 								{sentenceCase(entry.content.name)}
 								<svelte:fragment slot="tooltip">

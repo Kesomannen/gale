@@ -102,8 +102,6 @@
 				<MenubarItem onClick={() => setAllModsState(false)}
 					>Disable all mods</MenubarItem
 				>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
-				<MenubarItem onClick={() => (preferencesOpen = true)}>Settings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -151,7 +149,7 @@
 	</Button.Root>
 </div>
 
-<PreferencesPopup bind:open={preferencesOpen} />
+<!--<PreferencesPopup bind:open={preferencesOpen} />-->
 <ExportPackPopup bind:isOpen={exportPackOpen} />
 <ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />

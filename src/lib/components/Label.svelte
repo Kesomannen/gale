@@ -4,7 +4,7 @@
   export let text: string;
 </script>
 
-<Tooltip class="text-slate-300 min-w-52 truncate cursor-default text-left">
+<Tooltip class="text-slate-300 w-[35%] min-w-52 truncate cursor-default text-left">
   {text}
   <svelte:fragment slot="tooltip">
     <slot />

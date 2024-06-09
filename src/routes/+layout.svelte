@@ -50,7 +50,9 @@
 			<NavbarLink to="/" icon="mdi:home" tooltip="Home page" />
 			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
-			<NavbarLink to="/config" icon="mdi:settings" tooltip="Edit mod config" />
+			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
+			<div class="flex-grow" />
+			<NavbarLink to="/settings" icon="mdi:settings" tooltip="Gale settings" />
 		</div>
 
 		<slot />

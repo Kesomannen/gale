@@ -4,7 +4,10 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
-use crate::{manager::launcher::LaunchMode, util::{self, error::IoResultExt}};
+use crate::{
+    manager::{installer, launcher::LaunchMode},
+    util::{self, error::IoResultExt},
+};
 
 pub mod commands;
 
@@ -22,12 +25,20 @@ pub enum PrefValue {
     Float(f32),
     Path(PathBuf),
     LaunchMode(LaunchMode),
+    Bool(bool),
 }
 
 impl PrefValue {
     pub fn as_path(&self) -> Option<&PathBuf> {
         match self {
             PrefValue::Path(path) => Some(path),
+            _ => None,
+        }
+    }
+
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            PrefValue::Bool(b) => Some(*b),
             _ => None,
         }
     }
@@ -95,6 +106,9 @@ impl Prefs {
         map.entry("launch_mode".to_owned())
             .or_insert(PrefValue::LaunchMode(LaunchMode::Steam));
 
+        map.entry("enable_mod_cache".to_owned())
+            .or_insert(PrefValue::Bool(true));
+
         match map.get("zoom_factor") {
             Some(value) => {
                 let zoom_factor = match value {
@@ -110,7 +124,11 @@ impl Prefs {
             }
         }
 
-        let prefs = Self { path, is_first_run, map };
+        let prefs = Self {
+            path,
+            is_first_run,
+            map,
+        };
 
         prefs.save()?;
 
@@ -150,39 +168,70 @@ impl Prefs {
         self.map.get(key)
     }
 
-    pub fn set(&mut self, key: impl Into<String>, value: PrefValue) -> Result<()> {
+    fn set(&mut self, key: &str, value: PrefValue, window: Option<&tauri::Window>) -> Result<()> {
+        match key {
+            "cache_dir" | "temp_dir" => self.move_dir(key, &value, None)?,
+            "data_dir" => self.move_dir(key, &value, Some(&["prefs.json"]))?,
+            "zoom_factor" => match value {
+                PrefValue::Float(factor) => {
+                    if let Some(window) = window {
+                        util::window::zoom(window, factor as f64).map_err(|e| anyhow!(e))?;
+                    }
+                }
+                _ => bail!("value is not a float"),
+            },
+            "enable_mod_cache" => match value {
+                PrefValue::Bool(false) => installer::clear_cache(self)?,
+                PrefValue::Bool(true) => (),
+                _ => bail!("value is not a bool"),
+            },
+            _ => (),
+        };
+
+        self.set_raw(key, value)
+    }
+
+    fn set_raw(&mut self, key: impl Into<String>, value: PrefValue) -> Result<()> {
         self.map.insert(key.into(), value);
         self.save()?;
         Ok(())
     }
 
-    fn move_dir(&mut self, key: &str, value: PrefValue, excludes: Option<&[&str]>) -> Result<()> {
+    fn move_dir(&mut self, key: &str, value: &PrefValue, excludes: Option<&[&str]>) -> Result<()> {
         let new_path = match value {
             PrefValue::Path(path) => path,
-            _ => bail!("value is not a path")
+            _ => bail!("value is not a path"),
         };
-    
+
         let old_path = match self.get(key) {
             Some(PrefValue::Path(path)) => Some(path),
             _ => None,
         };
-    
-        ensure!(old_path != Some(&new_path), "{} is already set to {}", key, new_path.display());
-    
+
+        ensure!(
+            old_path != Some(new_path),
+            "{} is already set to {}",
+            key,
+            new_path.display()
+        );
         ensure!(new_path.exists(), "{} does not exist", new_path.display());
-        ensure!(new_path.is_dir(), "{} is not a directory", new_path.display());
-        
-        if let Some(old_path) = old_path {
-            if old_path.exists() {
-                util::fs::copy_dir(old_path, &new_path, false)?;
+        ensure!(
+            new_path.is_dir(),
+            "{} is not a directory",
+            new_path.display()
+        );
+
+        match old_path {
+            Some(old_path) if old_path.exists() => {
+                util::fs::copy_dir(old_path, new_path, false)?;
                 if let Some(excludes) = excludes {
                     for exclude in excludes {
                         fs::remove_file(new_path.join(exclude)).ok();
                     }
-                    
+
                     for entry in old_path.read_dir()? {
                         let entry = entry?;
-                        
+
                         if !excludes.iter().any(|exclude| entry.file_name() == *exclude) {
                             if entry.file_type()?.is_dir() {
                                 fs::remove_dir_all(entry.path())?;
@@ -194,15 +243,12 @@ impl Prefs {
                 } else {
                     fs::remove_dir_all(old_path)?;
                 }
-            } else {
-                fs::create_dir_all(&new_path)?;
             }
-        } else {
-            fs::create_dir_all(&new_path)?;
+            _ => {
+                fs::create_dir_all(new_path)?;
+            }
         }
-    
-        self.set(key, PrefValue::Path(new_path))?;
-    
+
         Ok(())
     }
 }

@@ -67,7 +67,7 @@ export type LoadFileResult =
 			};
 	  };
 
-export type PrefValue = string | LaunchMode | number;
+export type PrefValue = string | LaunchMode | number | boolean;
 
 export interface ProfileInfo {
 	name: string;

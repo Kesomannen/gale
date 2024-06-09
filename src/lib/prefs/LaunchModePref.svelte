@@ -15,9 +15,9 @@
 		instances = value.content?.instances ?? 1;
 	});
 
-	function set(newValue: 'steam' | 'direct') {
+	function set(newValue: string) {
 		if (!value) return;
-		value.type = newValue;
+		value.type = newValue as 'steam' | 'direct';
 
 		if (value.type == 'direct') {
 			value.content = { instances };

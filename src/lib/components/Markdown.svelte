@@ -70,7 +70,7 @@
   }
 
   .markdown :global(code) {
-    @apply bg-gray-900 text-slate-300 rounded-md
+    @apply bg-gray-900 text-slate-300 rounded-sm px-1;
   }
 
   .markdown :global(img) {

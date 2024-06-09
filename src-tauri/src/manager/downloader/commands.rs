@@ -1,19 +1,11 @@
-use std::{collections::HashSet, fs};
-
-use anyhow::Context;
-
 use crate::{
-    manager::ModManager,
+    manager::{installer, ModManager},
     prefs::Prefs,
     thunderstore::{ModRef, Thunderstore},
-    util::{
-        self,
-        cmd::{Result, StateMutex},
-    },
+    util::cmd::{Result, StateMutex},
 };
 
 use super::{InstallOptions, InstallState, ModInstall};
-use itertools::Itertools;
 
 #[tauri::command]
 pub async fn install_mod(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
@@ -53,58 +45,9 @@ pub fn clear_download_cache(
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
-        let installed_mods = manager
-            .active_game()
-            .installed_mods(&thunderstore)
-            .map_ok(|borrowed| {
-                (
-                    &borrowed.package.full_name,
-                    borrowed.version.version_number.to_string(),
-                )
-            })
-            .collect::<anyhow::Result<HashSet<_>>>()
-            .context("failed to resolve installed mods")?;
-
-        let packages = fs::read_dir(cache_dir)
-            .context("failed to read cache directory")?
-            .filter_map(|e| e.ok());
-
-        for entry in packages {
-            let is_dir = match entry.file_type() {
-                Ok(ty) => ty.is_dir(),
-                Err(_) => false,
-            };
-
-            if !is_dir {
-                continue;
-            }
-
-            let package = util::fs::file_name(&entry.path());
-
-            if thunderstore.find_package(&package).is_err() {
-                // package from a game other than the loaded one, skip
-                continue;
-            }
-
-            let versions = fs::read_dir(entry.path())
-                .with_context(|| format!("failed to read cache for {}", &package))?
-                .filter_map(|e| e.ok());
-
-            for entry in versions {
-                let version = util::fs::file_name(&entry.path());
-
-                if installed_mods.contains(&(&package, version)) {
-                    // package is installed, skip
-                    continue;
-                }
-
-                fs::remove_dir_all(entry.path())
-                    .with_context(|| format!("failed to delete cache for {}", &package))?;
-            }
-        }
+        installer::soft_clear_cache(&manager, &thunderstore, &prefs)?;
     } else {
-        fs::remove_dir_all(cache_dir).context("failed to delete cache")?;
-        fs::create_dir_all(cache_dir).context("failed to recreate cache directory")?;
+        installer::clear_cache(&prefs)?;
     }
 
     Ok(())

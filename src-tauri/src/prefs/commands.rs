@@ -1,6 +1,4 @@
-use anyhow::anyhow;
-
-use crate::util::{self, cmd::{Result, StateMutex}};
+use crate::util::cmd::{Result, StateMutex};
 
 use super::{PrefValue, Prefs};
 use log::debug;
@@ -18,20 +16,7 @@ pub fn set_pref(key: &str, value: PrefValue, prefs: StateMutex<Prefs>, window: t
 
     debug!("setting pref {} to {:?}", key, value);
 
-    match key {
-        "cache_dir" | "temp_dir" => prefs.move_dir(key, value, None)?,
-        "data_dir" => prefs.move_dir(key, value, Some(&["prefs.json"]))?,
-        "zoom_factor" => match value {
-            PrefValue::Float(factor) => {
-                util::window::zoom(&window, factor as f64).map_err(|e| anyhow!(e))?;
-                prefs.set(key, value)?
-            },
-            _ => return Err(anyhow!("value is not a float").into())
-        },
-        _ => prefs.set(key, value)?
-    };
-
-    prefs.save()?;
+    prefs.set(key, value, Some(&window))?;
 
     Ok(())
 }
