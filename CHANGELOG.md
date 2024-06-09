@@ -4,7 +4,7 @@
 
 ### Added
 
-- Toggle for mod download cache
+- Option to disable mod download cache
 - Mod reordering (AKA custom sorting)
 - Disk space sorting option
 
