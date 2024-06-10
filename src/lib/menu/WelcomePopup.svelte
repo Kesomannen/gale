@@ -1,19 +1,14 @@
 <script lang="ts">
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import TabsMenu from '$lib/components/TabsMenu.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
 
-	import LaunchModePref from '$lib/prefs/LaunchModePref.svelte';
 	import ZoomLevelPref from '$lib/prefs/ZoomFactorPref.svelte';
-	import PathSetting from '$lib/prefs/PathPref.svelte';
+	import PathPref from '$lib/prefs/PathPref.svelte';
 
-	import { refreshProfiles } from '$lib/stores';
 	import type { R2ImportData } from '$lib/models';
 
 	import { invokeCommand } from '$lib/invoke';
-	import { listen } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 
@@ -100,9 +95,7 @@
 				<BigButton color="green" on:click={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
-			<p>
-				Lastly, make sure your settings are correct.
-			</p>
+			<p>Lastly, make sure your settings are correct.</p>
 
 			<p class="mt-1">
 				You can always edit these later by going to <b>Edit > Settings</b>.
@@ -111,31 +104,38 @@
 			<div class="flex flex-col mt-3 gap-1">
 				<ZoomLevelPref />
 
-				<PathSetting label="Steam executable" key="steam_exe_path" type="file">
+				<PathPref label="Steam executable" key="steam_exe_path" type="file">
 					Path to the Steam executable.
-				</PathSetting>
+				</PathPref>
 
-				<PathSetting label="Download cache directory" key="cache_dir" type="dir">
-					Directory where cached mods are stored. 
-					<br/>
+				<PathPref label="Steam library" key="steam_game_dir" type="dir">
+					Path to the Steam game library. This should contain the 'steamapps' directory.
+				</PathPref>
+
+				<PathPref label="Download cache directory" key="cache_dir" type="dir">
+					Directory where cached mods are stored.
+					<br />
 					Changing this will move the existing cache.
-				</PathSetting>
-		
-				<PathSetting label="Data directory" key="data_dir" type="dir">
-					Directory where the profiles, logs and other app data is stored. 
-					<br/>
+				</PathPref>
+
+				<PathPref label="Data directory" key="data_dir" type="dir">
+					Directory where the profiles, logs and other app data is stored.
+					<br />
 					Changing this will move the existing data.
-				</PathSetting>
-		
-				<PathSetting label="Temp directory" key="temp_dir" type="dir">
+				</PathPref>
+
+				<PathPref label="Temp directory" key="temp_dir" type="dir">
 					Directory where temporary files are stored, for example import and export files.
-				</PathSetting>
+				</PathPref>
 			</div>
 
 			<div class="flex mt-3 justify-between">
 				<BigButton
 					color="gray"
-					on:click={() => (stage = importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}>Back</BigButton
+					on:click={() =>
+						(stage =
+							importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}
+					>Back</BigButton
 				>
 				<BigButton color="green" on:click={() => (stage = 'end')}>Next</BigButton>
 			</div>

@@ -17,9 +17,14 @@
 	}
 
 	function refresh() {
+		let lowerSearch = searchTerm.toLowerCase();
+
 		let newGames =
 			searchTerm.length > 0
-				? games.filter((game) => game.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
+				? games.filter((game) => {
+					return game.displayName.toLowerCase().includes(lowerSearch)
+						|| game.aliases.some((alias) => alias.toLowerCase().includes(lowerSearch));
+				})
 				: games;
 
 		newGames.sort((a, b) => {

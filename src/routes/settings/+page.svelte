@@ -16,6 +16,10 @@
 		Path to the Steam executable.
 	</PathPref>
 
+	<PathPref label="Steam library" key="steam_game_dir" type="dir">
+		Path to the Steam game library. This should contain the 'steamapps' directory.
+	</PathPref>
+
 	<PathPref label="Data directory" key="data_dir" type="dir">
 		Directory where profiles, logs and other app data is stored.
 		<br />

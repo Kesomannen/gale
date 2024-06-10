@@ -4,7 +4,6 @@
 
 	import MenubarTrigger from '$lib/menu/MenubarTrigger.svelte';
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
-	import PreferencesPopup from '$lib/prefs/PrefsPopup.svelte';
 
 	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -18,7 +17,6 @@
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 	import { currentProfile } from '$lib/stores';
 
-	let preferencesOpen = false;
 	let importR2Open = false;
 	let exportPackOpen = false;
 	let exportCodePopup: ExportCodePopup;
@@ -149,7 +147,6 @@
 	</Button.Root>
 </div>
 
-<!--<PreferencesPopup bind:open={preferencesOpen} />-->
 <ExportPackPopup bind:isOpen={exportPackOpen} />
 <ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />

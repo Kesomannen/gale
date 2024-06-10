@@ -188,6 +188,7 @@ export interface ModpackArgs {
 export interface Game {
 	id: string;
 	displayName: string;
+	aliases: string[];
 	steamId: number;
 	favorite: boolean;
 }

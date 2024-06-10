@@ -71,15 +71,35 @@ impl Prefs {
             .unwrap_or_default();
 
         if map.get("steam_exe_path").is_none() {
-            let steam_path = PathBuf::from(match env::consts::OS {
+            let path = PathBuf::from(match env::consts::OS {
                 "windows" => r"C:\Program Files (x86)\Steam\steam.exe",
                 "macos" => "/Applications/Steam.app/Contents/MacOS/Steam",
                 "linux" => "/usr/bin/steam",
                 _ => "",
             });
 
-            if steam_path.exists() {
-                map.insert("steam_exe_path".to_owned(), PrefValue::Path(steam_path));
+            if path.exists() {
+                map.insert("steam_exe_path".to_owned(), PrefValue::Path(path));
+            }
+        }
+
+        if map.get("steam_game_dir").is_none() {
+            let path = match env::consts::OS {
+                "windows" => match map.get("steam_exe_path") {
+                    Some(PrefValue::Path(exe_path)) => {
+                        exe_path.parent().map(|parent| parent.to_path_buf())
+                    }
+                    _ => Some(r"C:\Program Files (x86)\Steam".into()),
+                },
+                "macos" => Some("~/Library/Application Support/Steam/steamapps/common".into()),
+                "linux" => tauri::api::path::data_dir().map(|data_dir| data_dir.join("Steam")),
+                _ => None,
+            };
+
+            if let Some(path) = path {
+                if path.exists() {
+                    map.insert("steam_game_dir".to_owned(), PrefValue::Path(path));
+                }
             }
         }
 

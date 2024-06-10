@@ -54,6 +54,11 @@ impl Game {
         self
     }
 
+    fn with_steam_name(mut self, name: &str) -> Self {
+        self.steam_name = name.to_owned();
+        self
+    }
+
     fn aka(mut self, alias: &str) -> Self {
         self.aliases.push(alias.to_owned());
         self

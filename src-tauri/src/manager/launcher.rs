@@ -76,7 +76,7 @@ impl ManagerGame {
                 file_name.ends_with(".exe") && !file_name.contains("UnityCrashHandler")
             })
             .map(|entry| entry.path())
-            .ok_or_else(|| anyhow!("game .exe not found"))?;
+            .ok_or_else(|| anyhow!("game executable not found"))?;
 
         let exe_path = resolve_path(&exe_path, "game executable")?;
 
@@ -133,9 +133,10 @@ impl ManagerGame {
 impl Game {
     pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
         let mut path = prefs
-            .get_path_or_err("steam_exe_path")?
-            .parent()
-            .unwrap()
+            .get("steam_game_dir")
+            .ok_or(anyhow!("steam game directory not set"))?
+            .as_path()
+            .expect("steam_game_dir should be a path")
             .to_path_buf();
 
         path.push("steamapps");
