@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.6 (2024-06-10)
+
+### Added
+
+- Setting for the steam library path
+
+### Fixed
+
+- Improve game search accuracy
+- Correct default steam library path on Linux
+
 ## 0.5.5 (2024-06-09)
 
 ### Added

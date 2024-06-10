@@ -62,11 +62,7 @@ impl Prefs {
         let is_first_run = !path.exists();
         let mut map = path
             .exists()
-            .then(|| -> Result<HashMap<String, PrefValue>> {
-                let json = fs::read_to_string(&path)?;
-                let map = serde_json::from_str(&json)?;
-                Ok(map)
-            })
+            .then(|| util::fs::read_json::<HashMap<String, PrefValue>>(&path))
             .transpose()?
             .unwrap_or_default();
 
