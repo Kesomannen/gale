@@ -132,16 +132,23 @@ impl ManagerGame {
 
 impl Game {
     pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
-        let mut path = prefs
-            .get("steam_game_dir")
-            .ok_or(anyhow!("steam game directory not set"))?
-            .as_path()
-            .expect("steam_game_dir should be a path")
-            .to_path_buf();
+        let path = match prefs.get(&format!("{}_game_dir", self.id)) {
+            Some(PrefValue::Path(path)) => path.to_path_buf(),
+            _ => {
+                let mut path = prefs
+                    .get("steam_game_dir")
+                    .context("steam game directory not set")?
+                    .as_path()
+                    .context("steam_game_dir should be a path")?
+                    .to_path_buf();
+    
+                path.push("steamapps");
+                path.push("common");
+                path.push(&self.steam_name);
 
-        path.push("steamapps");
-        path.push("common");
-        path.push(&self.steam_name);
+                path
+            }
+        };
 
         ensure!(
             path.exists(),

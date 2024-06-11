@@ -2,7 +2,6 @@
 	import { open } from '@tauri-apps/api/dialog';
 
 	import { invokeCommand } from '$lib/invoke';
-	import { onMount } from 'svelte';
 	import PathField from '$lib/components/PathField.svelte';
 	import type { PrefValue } from '$lib/models';
 
@@ -10,19 +9,9 @@
 	export let key: string;
 	export let type: 'dir' | 'file';
 
-	export let setValue = (value: string | null) => {
-		invokeCommand('set_pref', { key, value });
-	};
+	let value: string | null;
 
-	export let getValue = async () => {
-		return await invokeCommand<PrefValue | null>('get_pref', { key }) as string;
-	};
-
-	let value: string | null = null;
-
-	onMount(async () => {
-		value = await getValue();
-	});
+	$: getValue(key);
 
 	function browse() {
 		open({
@@ -35,6 +24,14 @@
 			value = result as string;
 			setValue(value);
 		});
+	}
+
+	function setValue(value: string | null) {
+		invokeCommand('set_pref', { key, value });
+	};
+
+	async function getValue(key: string) {
+		value = await invokeCommand<PrefValue | null>('get_pref', { key }) as string;
 	}
 </script>
 

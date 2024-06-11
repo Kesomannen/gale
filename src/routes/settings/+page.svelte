@@ -4,9 +4,10 @@
 	import ZoomLevelPref from '$lib/prefs/ZoomFactorPref.svelte';
 	import TogglePref from '$lib/prefs/TogglePref.svelte';
 	import { Separator } from 'bits-ui';
+	import { currentGame } from '$lib/stores';
 </script>
 
-<div class="flex flex-col gap-1 p-6 w-full">
+<div class="flex flex-col gap-1 p-6 w-full overflow-y-auto">
 	<LaunchModePref />
 	<ZoomLevelPref />
 
@@ -17,8 +18,19 @@
 	</PathPref>
 
 	<PathPref label="Steam library" key="steam_game_dir" type="dir">
-		Path to the Steam game library. This should contain the 'steamapps' directory.
+		Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
 	</PathPref>
+
+	<PathPref
+		label="Override game directory"
+		key="{$currentGame?.id}_game_dir"
+		type="dir"
+	>
+		Path to the {$currentGame?.displayName} game directory.
+		Leave empty to use the default Steam library.
+	</PathPref>
+
+	<Separator.Root class="my-2" />
 
 	<PathPref label="Data directory" key="data_dir" type="dir">
 		Directory where profiles, logs and other app data is stored.

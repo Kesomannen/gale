@@ -141,9 +141,9 @@ impl Prefs {
         }
 
         let prefs = Self {
+            map,
             path,
             is_first_run,
-            map,
         };
 
         prefs.save()?;
