@@ -11,7 +11,7 @@ pub fn get_pref(key: &str, prefs: StateMutex<Prefs>) -> Result<Option<PrefValue>
 }
 
 #[tauri::command]
-pub fn set_pref(key: &str, value: PrefValue, prefs: StateMutex<Prefs>, window: tauri::Window) -> Result<()> {
+pub fn set_pref(key: &str, value: Option<PrefValue>, prefs: StateMutex<Prefs>, window: tauri::Window) -> Result<()> {
     let mut prefs = prefs.lock().unwrap();
 
     debug!("setting pref {} to {:?}", key, value);

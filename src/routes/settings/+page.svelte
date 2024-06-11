@@ -25,6 +25,7 @@
 		label="Override game directory"
 		key="{$currentGame?.id}_game_dir"
 		type="dir"
+		canClear={true}
 	>
 		Path to the {$currentGame?.displayName} game directory.
 		Leave empty to use the default Steam library.

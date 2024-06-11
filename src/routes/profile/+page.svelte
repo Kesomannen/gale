@@ -56,14 +56,6 @@
 		refresh();
 	}
 
-	// really ugly hack because reactive statements run once immediately no matter what :/
-	let isFirst = true;
-
-	$: {
-		$currentProfile;
-		resetBannerThreshold();
-	}
-
 	$: reorderable =
 		$profileQuery.sortBy === SortBy.Custom &&
 		$profileQuery.searchTerm === '' &&
@@ -72,6 +64,14 @@
 		$profileQuery.includeDeprecated &&
 		$profileQuery.includeNsfw &&
 		$profileQuery.includeDisabled;
+
+	// really ugly hack because reactive statements run once immediately no matter what :/
+	let isFirst = true;
+
+	$: {
+		$currentProfile;
+		resetBannerThreshold();
+	}
 
 	function resetBannerThreshold() {
 		if (isFirst) {

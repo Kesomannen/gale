@@ -184,27 +184,36 @@ impl Prefs {
         self.map.get(key)
     }
 
-    fn set(&mut self, key: &str, value: PrefValue, window: Option<&tauri::Window>) -> Result<()> {
-        match key {
-            "cache_dir" | "temp_dir" => self.move_dir(key, &value, None)?,
-            "data_dir" => self.move_dir(key, &value, Some(&["prefs.json"]))?,
-            "zoom_factor" => match value {
-                PrefValue::Float(factor) => {
-                    if let Some(window) = window {
-                        util::window::zoom(window, factor as f64).map_err(|e| anyhow!(e))?;
-                    }
-                }
-                _ => bail!("value is not a float"),
-            },
-            "enable_mod_cache" => match value {
-                PrefValue::Bool(false) => installer::clear_cache(self)?,
-                PrefValue::Bool(true) => (),
-                _ => bail!("value is not a bool"),
-            },
-            _ => (),
-        };
-
-        self.set_raw(key, value)
+    fn set(&mut self, key: &str, value: Option<PrefValue>, window: Option<&tauri::Window>) -> Result<()> {
+        match value {
+            Some(value) => {
+                match key {
+                    "cache_dir" | "temp_dir" => self.move_dir(key, &value, None)?,
+                    "data_dir" => self.move_dir(key, &value, Some(&["prefs.json"]))?,
+                    "zoom_factor" => match value {
+                        PrefValue::Float(factor) => {
+                            if let Some(window) = window {
+                                util::window::zoom(window, factor as f64).map_err(|e| anyhow!(e))?;
+                            }
+                        }
+                        _ => bail!("value is not a float"),
+                    },
+                    "enable_mod_cache" => match value {
+                        PrefValue::Bool(false) => installer::clear_cache(self)?,
+                        PrefValue::Bool(true) => (),
+                        _ => bail!("value is not a bool"),
+                    },
+                    _ => (),
+                };
+        
+                self.set_raw(key, value)
+            }
+            None => {
+                self.map.remove(key);
+                self.save()?;
+                Ok(())
+            }
+        }
     }
 
     fn set_raw(&mut self, key: impl Into<String>, value: PrefValue) -> Result<()> {
