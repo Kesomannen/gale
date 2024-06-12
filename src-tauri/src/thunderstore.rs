@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     fs,
-    io::{self},
+    io,
     path::{Path, PathBuf},
     str::{self, Split},
     sync::Mutex,
@@ -18,7 +18,7 @@ use uuid::Uuid;
 use crate::{
     games::Game,
     manager::ModManager,
-    util::{self, fs::Style},
+    util::{self, fs::JsonStyle},
     NetworkClient,
 };
 
@@ -28,7 +28,7 @@ pub mod commands;
 pub mod models;
 pub mod query;
 
-pub fn setup(app: &AppHandle) -> Result<()> {
+pub fn setup(app: &AppHandle) {
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
@@ -37,9 +37,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 
     app.manage(Mutex::new(thunderstore));
 
-    query::setup(app).context("failed to initialize query")?;
-
-    Ok(())
+    query::setup(app);
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -400,7 +398,7 @@ pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
 
     let start = Instant::now();
 
-    util::fs::write_json(path, packages, Style::Compact).context("failed to write mod cache")?;
+    util::fs::write_json(path, packages, JsonStyle::Compact).context("failed to write mod cache")?;
 
     debug!(
         "wrote {} mods to cache in {:?}",

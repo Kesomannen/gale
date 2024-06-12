@@ -173,8 +173,6 @@ After a while, this it will output both an executable and an installable package
 
 Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
 
-Logo font based on [Poppins](https://fonts.google.com/specimen/Poppins)
-
 ## License
 
 [GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/#)

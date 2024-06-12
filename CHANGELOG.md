@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Setting to override a game's install path
+
+### Fixed
+
+- Improve error handling during startup, instead of crashing immediately
+- Some mod files being skipped when importing a profile with config
+- Config editor clearing search query when deleting a file
+
 ## 0.5.6 (2024-06-10)
 
 ### Added

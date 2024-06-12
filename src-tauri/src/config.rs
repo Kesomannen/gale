@@ -16,7 +16,6 @@ use walkdir::WalkDir;
 use crate::{manager::Profile, thunderstore::Thunderstore, util};
 
 use log::debug;
-use tauri::AppHandle;
 
 pub mod commands;
 pub mod de;
@@ -24,10 +23,6 @@ pub mod ser;
 
 #[cfg(test)]
 mod tests;
-
-pub fn setup(_app: &AppHandle) -> Result<()> {
-    Ok(())
-}
 
 #[derive(Error, Debug)]
 #[error("failed to load config file: {error}")]

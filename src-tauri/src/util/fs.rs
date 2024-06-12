@@ -6,33 +6,24 @@ use std::{
 
 use serde::{de::DeserializeOwned, Serialize};
 
-pub fn flatten_if_exists(path: &Path) -> Result<bool, io::Error> {
-    if !path.try_exists()? {
+pub fn flatten(path: &Path, overwrite: bool) -> Result<bool, io::Error> {
+    if !path.exists() {
         return Ok(false);
     }
 
     let parent = path.parent().unwrap();
-
-    for entry in fs::read_dir(path)? {
-        let entry_path = entry?.path();
-        let file_name = entry_path.file_name().unwrap();
-        let new_path = parent.join(file_name);
-
-        fs::rename(entry_path, new_path)?;
-    }
-
-    fs::remove_dir(path)?;
+    copy_contents(path, parent, overwrite)?;
+    fs::remove_dir_all(path)?;
 
     Ok(true)
 }
 
-pub fn copy_dir(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io::Error> {
+pub fn copy_dir(src: &Path, dest: &Path, overwrite: bool) -> io::Result<()> {
     fs::create_dir_all(dest)?;
-    copy_contents(src, dest, overwrite)?;
-    Ok(())
+    copy_contents(src, dest, overwrite)
 }
 
-pub fn copy_contents(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io::Error> {
+pub fn copy_contents(src: &Path, dest: &Path, overwrite: bool) -> io::Result<()> {
     for entry in src.read_dir()? {
         let entry = entry?;
 
@@ -40,14 +31,17 @@ pub fn copy_contents(src: &Path, dest: &Path, overwrite: bool) -> Result<(), io:
         let file_name = entry_path.file_name().unwrap();
         let new_path = dest.join(file_name);
 
-        if new_path.exists() && !overwrite {
-            continue;
-        }
-
         if entry_path.is_dir() {
-            fs::create_dir(&new_path)?;
+            if !new_path.exists() {
+                fs::create_dir(&new_path)?;
+            }
+
             copy_contents(&entry_path, &new_path, overwrite)?;
         } else {
+            if new_path.exists() && !overwrite {
+                continue;
+            }
+
             fs::copy(&entry_path, &new_path)?;
         }
     }
@@ -64,16 +58,16 @@ pub fn read_json<T: DeserializeOwned>(path: &Path) -> anyhow::Result<T> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Style {
+pub enum JsonStyle {
     Pretty,
     Compact,
 }
 
-pub fn write_json<T: Serialize + ?Sized>(path: &Path, value: &T, style: Style) -> anyhow::Result<()> {
+pub fn write_json<T: Serialize + ?Sized>(path: &Path, value: &T, style: JsonStyle) -> anyhow::Result<()> {
     let file = fs::File::create(path)?;
     let writer = io::BufWriter::new(file);
 
-    if style == Style::Pretty {
+    if style == JsonStyle::Pretty {
         serde_json::to_writer_pretty(writer, value)?;
     } else {
         serde_json::to_writer(writer, value)?;
@@ -94,6 +88,6 @@ pub fn add_extension(path: &mut PathBuf, extension: impl AsRef<Path>) {
     };
 }
 
-pub fn file_name(path: &Path) -> String {
+pub fn file_name_lossy(path: &Path) -> String {
     path.file_name().unwrap().to_string_lossy().to_string()
 }

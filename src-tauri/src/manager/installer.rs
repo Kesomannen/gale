@@ -62,7 +62,7 @@ pub fn soft_clear_cache(
             continue;
         }
 
-        let package_name = util::fs::file_name(&path);
+        let package_name = util::fs::file_name_lossy(&path);
 
         if thunderstore.find_package(&package_name).is_err() {
             // package from a game other than the loaded one, skip
@@ -75,7 +75,7 @@ pub fn soft_clear_cache(
 
         for entry in versions {
             let path = entry.path();
-            let version = util::fs::file_name(&path);
+            let version = util::fs::file_name_lossy(&path);
 
             if installed_mods.contains(&(&package_name, version)) {
                 // package is installed, skip
@@ -138,7 +138,7 @@ pub fn try_cache_install(
 pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
     for dir in ["BepInExPack", "BepInEx", "plugins"].iter() {
         path.push(dir);
-        util::fs::flatten_if_exists(&*path)?;
+        util::fs::flatten(&*path, true)?;
         path.pop();
     }
 
@@ -180,7 +180,7 @@ fn default(src: &Path, dest: &Path, name: &str) -> Result<()> {
                 };
 
                 fs::create_dir_all(target_path.parent().unwrap())?;
-                util::fs::copy_dir(&entry_path, &target_path, false)
+                util::fs::copy_dir(&entry_path, &target_path, true)
                     .fs_context("copying directory", &entry_path)?;
             }
         } else {
@@ -198,13 +198,13 @@ fn bepinex(src: &Path, dest: &Path) -> Result<()> {
     // Some BepInEx packs come with a subfolder where the actual BepInEx files are
     for entry in fs::read_dir(src)? {
         let entry_path = entry?.path();
-        let entry_name = util::fs::file_name(&entry_path);
+        let entry_name = util::fs::file_name_lossy(&entry_path);
 
         if entry_path.is_dir() && entry_name.contains("BepInEx") {
             // ... and some have even more subfolders ...
             // do this first, since otherwise entry_path will be removed already
-            util::fs::flatten_if_exists(&entry_path.join("BepInEx"))?;
-            util::fs::flatten_if_exists(&entry_path)?;
+            util::fs::flatten(&entry_path.join("BepInEx"), true)?;
+            util::fs::flatten(&entry_path, true)?;
         }
     }
 
@@ -218,7 +218,7 @@ fn bepinex(src: &Path, dest: &Path) -> Result<()> {
             let target_path = target_path.join(entry_name);
             fs::create_dir_all(&target_path)?;
 
-            util::fs::copy_contents(&entry_path, &target_path, false)
+            util::fs::copy_contents(&entry_path, &target_path, true)
                 .fs_context("copying directory", &entry_path)?;
         } else if !EXCLUDES.iter().any(|exclude| entry_name == *exclude) {
             fs::copy(&entry_path, dest.join(entry_name)).fs_context("copying file", &entry_path)?;

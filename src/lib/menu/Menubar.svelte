@@ -132,6 +132,9 @@
 				<MenubarItem onClick={() => open('https://github.com/Kesomannen/ModManager/issues/')}
 					>Report a bug</MenubarItem
 				>
+				<MenubarItem onClick={() => open('https://discord.com/channels/1168655651455639582/1246088342458863618')}
+					>Open discord thread</MenubarItem
+				>
 			</Menubar.Content>
 		</Menubar.Menu>
 	</Menubar.Root>

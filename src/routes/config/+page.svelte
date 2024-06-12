@@ -26,7 +26,7 @@
 
 	let files: LoadFileResult[] | undefined;
 
-	let searchTerm: string;
+	let searchTerm = '';
 
 	let selectedFile: LoadFileResult | undefined;
 	let selectedSection: ConfigSection | undefined;
@@ -111,7 +111,6 @@
 	}
 
 	async function refresh() {
-		searchTerm = '';
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
 
 		let file = $page.url.searchParams.get('file');

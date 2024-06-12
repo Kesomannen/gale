@@ -22,6 +22,7 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use log::debug;
 
 pub mod commands;
 pub mod r2modman;
@@ -87,7 +88,7 @@ fn resolve_r2mods<'a>(
 }
 
 async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
-    {
+    let path = {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
 
@@ -99,13 +100,15 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
 
         let profile = game.create_profile(data.name)?;
 
-        import_config(&profile.path, &data.includes)
-            .context("failed to import config")?;
+        profile.path.clone()
     };
 
     downloader::install_mods(data.mods, options, app)
         .await
         .context("error while importing mods")?;
+
+    import_config(&path, &data.includes)
+        .context("failed to import config")?;
 
     Ok(())
 }
@@ -119,6 +122,8 @@ fn import_config(path: &Path, map: &HashMap<PathBuf, PathBuf>) -> Result<()> {
 
         fs::create_dir_all(target.parent().unwrap())?;
         fs::copy(source, &target)?;
+
+        debug!("copied {} to {}", source.display(), target.display());
     }
 
     Ok(())
@@ -175,7 +180,7 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
         },
         None => LocalMod {
             uuid,
-            name: util::fs::file_name(&path),
+            name: util::fs::file_name_lossy(&path),
             ..Default::default()
         },
     };

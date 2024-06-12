@@ -144,7 +144,7 @@ pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     find_paths().and_then(|path| {
         let profiles = find_profiles(path.clone(), false, app)
             .ok()?
-            .map(|path| util::fs::file_name(&path))
+            .map(|path| util::fs::file_name_lossy(&path))
             .collect();
         Some(ProfileImportData { path, profiles })
     })
@@ -243,7 +243,7 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let name = util::fs::file_name(&path);
+    let name = util::fs::file_name_lossy(&path);
 
     if !path.exists() {
         info!("no mods.yml in {}, skipping", path.display());
@@ -332,8 +332,8 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
                 continue;
             }
 
-            let package_name = util::fs::file_name(&package.path());
-            let version_name = util::fs::file_name(&version.path());
+            let package_name = util::fs::file_name_lossy(&package.path());
+            let version_name = util::fs::file_name_lossy(&version.path());
 
             let mut new_path = cache_dir.join(&package_name).join(&version_name);
             if new_path.exists() {

@@ -13,12 +13,10 @@ use super::{
 
 use crate::manager::LocalMod;
 
-pub fn setup(app: &AppHandle) -> Result<()> {
+pub fn setup(app: &AppHandle) {
     app.manage(Mutex::new(QueryState::default()));
 
     tauri::async_runtime::spawn(query_loop(app.clone()));
-
-    Ok(())
 }
 
 #[derive(Default)]

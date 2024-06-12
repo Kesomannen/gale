@@ -22,7 +22,7 @@ use crate::{
         query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
     },
-    util::{self, error::IoResultExt, fs::Style},
+    util::{self, error::IoResultExt, fs::JsonStyle},
 };
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
@@ -267,7 +267,6 @@ enum QueryableProfileModKind<'a> {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileManifest {
-    name: String,
     mods: Vec<ProfileMod>,
 }
 
@@ -320,7 +319,6 @@ impl Profile {
 
     fn manifest(&self) -> ProfileManifest {
         ProfileManifest {
-            name: self.name.clone(),
             mods: self.mods.clone(),
         }
     }
@@ -381,7 +379,7 @@ impl Profile {
         path.pop();
 
         let profile = Profile {
-            name: manifest.name.to_owned(),
+            name: util::fs::file_name_lossy(&path),
             mods: manifest.mods,
             linked_config: HashMap::new(),
             config: Vec::new(),
@@ -687,7 +685,7 @@ impl ManagerGame {
     }
 
     fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
-        let file_name = util::fs::file_name(&path);
+        let file_name = util::fs::file_name_lossy(&path);
         let game = match games::from_id(&file_name) {
             Some(game) => game,
             None => return Ok(None),
@@ -834,7 +832,7 @@ impl ModManager {
             &ManagerSaveData {
                 active_game: self.active_game.id.to_owned(),
             },
-            Style::Pretty,
+            JsonStyle::Pretty,
         )?;
 
         path.pop();
@@ -849,7 +847,7 @@ impl ModManager {
                     favorite: manager_game.favorite,
                     active_profile_index: manager_game.active_profile_index,
                 },
-                Style::Pretty,
+                JsonStyle::Pretty,
             )?;
 
             path.pop();
@@ -859,7 +857,7 @@ impl ModManager {
                 path.push(&profile.name);
                 path.push("profile.json");
 
-                util::fs::write_json(&path, &profile.manifest(), Style::Pretty)?;
+                util::fs::write_json(&path, &profile.manifest(), JsonStyle::Pretty)?;
 
                 path.pop();
                 path.pop();
