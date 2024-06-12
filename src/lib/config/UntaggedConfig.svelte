@@ -6,7 +6,7 @@
 	export let file: ConfigFile;
 	export let section: ConfigSection;
 	export let name: string;
-  export let value: string;
+  	export let value: string;
 
 	$: setUntaggedConfig(file, section, name, value);
 </script>

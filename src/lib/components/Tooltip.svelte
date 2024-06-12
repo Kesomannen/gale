@@ -2,12 +2,12 @@
 	import { Tooltip } from "bits-ui";
 	import { fly } from "svelte/transition";
 
-  export let text: string = ""
-  export let side: "top" | "right" | "bottom" | "left" = "top";
+	export let text: string = ""
+	export let side: "top" | "right" | "bottom" | "left" = "top";
 	export let sideOffset: number = 0;
-  export let openDelay: number = 150;
+	export let openDelay: number = 150;
 
-  let triggerClass: string = "";
+	let triggerClass: string = "";
 
   export { triggerClass as class };
 </script>

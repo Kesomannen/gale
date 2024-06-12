@@ -6,7 +6,7 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
 	export let entryId: ConfigEntryId;
-  export let isOther: boolean = false;
+  	export let isOther: boolean = false;
 
 	let content = entryId.entry.value.content as string;
 
