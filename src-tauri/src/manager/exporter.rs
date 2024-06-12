@@ -1,28 +1,24 @@
 use anyhow::Context;
 use base64::{prelude::BASE64_STANDARD, Engine};
-use image::{imageops::FilterType, io::Reader as ImageReader, ImageFormat};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
-    io::{self, Cursor},
+    io::{self},
     path::{Path, PathBuf},
 };
-use typeshare::typeshare;
 use uuid::Uuid;
 
 use super::{downloader::ModInstall, ModManager, Profile, Result};
 
 use crate::{
     prefs::Prefs,
-    thunderstore::{
-        models::{LegacyProfileCreateResponse, PackageManifest},
-        ModRef, Thunderstore,
-    },
+    thunderstore::{models::LegacyProfileCreateResponse, ModRef, Thunderstore},
     util::{self, cmd::StateMutex, error::IoResultExt},
 };
 use walkdir::WalkDir;
 
 pub mod commands;
+pub mod modpack;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -118,7 +114,7 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
     let writer = zip.writer("export.r2x")?;
     serde_yaml::to_writer(writer, &manifest).context("failed to write profile manifest")?;
 
-    write_includes(profile, &mut zip)?;
+    write_includes(find_includes(&profile.path), &mut zip)?;
 
     Ok(())
 }
@@ -163,64 +159,12 @@ async fn export_code(
     Ok(response.key)
 }
 
-#[typeshare]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct ModpackArgs {
-    pub name: String,
-    pub description: String,
-    pub version_number: semver::Version,
-    pub icon: PathBuf,
-    pub website_url: Option<String>,
-}
-
-fn export_pack(
-    profile: &Profile,
-    path: &Path,
-    args: ModpackArgs,
-    thunderstore: &Thunderstore,
-) -> Result<()> {
-    let dep_strings = profile
-        .remote_mods()
-        .filter(|(_, enabled)| *enabled) // filter out disabled mods
-        .map(|(mod_ref, _)| {
-            let borrowed_mod = mod_ref.borrow(thunderstore)?;
-            Ok(borrowed_mod.version.full_name.clone())
-        })
-        .collect::<Result<Vec<_>>>()
-        .context("failed to resolve modpack dependencies")?;
-
-    let manifest = PackageManifest {
-        name: args.name,
-        description: args.description,
-        version_number: args.version_number,
-        website_url: args.website_url.unwrap_or_default(),
-        dependencies: dep_strings,
-        installers: None,
-        author: None,
-    };
-
-    let mut zip = util::zip::builder(path)?;
-
-    zip.write_str("manifest.json", &serde_json::to_string_pretty(&manifest)?)?;
-
-    let readme = format!("# {}\n\n{}", manifest.name, manifest.description);
-    zip.write_str("README.md", &readme)?;
-
-    let img = ImageReader::open(&args.icon)?.decode()?;
-    let img = img.resize_exact(256, 256, FilterType::Lanczos3);
-
-    let mut bytes = Vec::new();
-    img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
-    zip.write("icon.png", &bytes)?;
-
-    write_includes(profile, &mut zip)?;
-
-    Ok(())
-}
-
-fn write_includes(profile: &Profile, zip: &mut util::zip::ZipBuilder) -> Result<()> {
-    for (source, destination) in find_includes(&profile.path) {
+fn write_includes<P, I>(includes: I, zip: &mut util::zip::ZipBuilder) -> Result<()>
+where
+    P: AsRef<Path>,
+    I: IntoIterator<Item = (P, P)>,
+{
+    for (source, destination) in includes {
         let writer = zip.writer(destination)?;
         let mut reader = fs::File::open(&source)?;
         io::copy(&mut reader, writer)?;

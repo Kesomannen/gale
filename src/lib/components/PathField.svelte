@@ -3,16 +3,20 @@
 	import { Button } from 'bits-ui';
 	import Label from './Label.svelte';
 
-	export let label: string;
+	export let label: string = '';
 	export let onClick: () => void;
 	export let value: string | null;
 	export let icon: string = 'mdi:folder';
+
+	$: hasValue = value && value.length > 0;
 </script>
 
 <div class="flex items-center">
-	<Label text={label}>
-		<slot />
-	</Label>
+	{#if label}
+		<Label text={label}>
+			<slot />
+		</Label>
+	{/if}
 
 	<Button.Root
 		class="flex flex-grow px-3 py-1 items-center text-right rounded-lg group bg-gray-900 truncate
@@ -24,10 +28,10 @@
 		</div>
 
 		<div
-			class="font-light text-slate-300 group-hover:text-slate-200 truncate"
+			class="text-slate-300 group-hover:text-slate-200 truncate"
 			style="direction: rtl;"
 		>
-			{value ?? 'Not set'}
+			{hasValue ? value : 'Not set'}
 		</div>
 
 		<slot name="field" />

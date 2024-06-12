@@ -27,6 +27,7 @@ use crate::{
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use tauri::{AppHandle, Manager};
+use exporter::modpack::ModpackArgs;
 
 pub mod commands;
 pub mod downloader;
@@ -268,6 +269,8 @@ enum QueryableProfileModKind<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct ProfileManifest {
     mods: Vec<ProfileMod>,
+    #[serde(default)]
+    modpack: Option<ModpackArgs>,
 }
 
 pub struct Profile {
@@ -276,6 +279,7 @@ pub struct Profile {
     pub mods: Vec<ProfileMod>,
     pub config: Vec<config::LoadFileResult>,
     pub linked_config: HashMap<Uuid, String>,
+    pub modpack: Option<ModpackArgs>,
 }
 
 impl Profile {
@@ -319,6 +323,7 @@ impl Profile {
 
     fn manifest(&self) -> ProfileManifest {
         ProfileManifest {
+            modpack: self.modpack.clone(),
             mods: self.mods.clone(),
         }
     }
@@ -379,6 +384,7 @@ impl Profile {
         path.pop();
 
         let profile = Profile {
+            modpack: manifest.modpack,
             name: util::fs::file_name_lossy(&path),
             mods: manifest.mods,
             linked_config: HashMap::new(),
@@ -621,6 +627,7 @@ impl ManagerGame {
             mods: Vec::new(),
             config: Vec::new(),
             linked_config: HashMap::new(),
+            modpack: None,
         };
         self.profiles.push(profile);
 

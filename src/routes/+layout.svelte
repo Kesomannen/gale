@@ -51,6 +51,7 @@
 			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
+			<NavbarLink to="/modpack" tooltip="Export modpack" icon="mdi:package" />
 			<div class="flex-grow" />
 			<NavbarLink to="/settings" icon="mdi:settings" tooltip="Gale settings" />
 		</div>
@@ -59,7 +60,7 @@
 	</div>
 
 	{#if status}
-		<div 
+		<div
 			class="w-full flex items-center px-3 py-1 text-sm border-t border-gray-700 text-slate-400"
 			transition:slide={{ duration: 200, easing: expoOut }}
 		>

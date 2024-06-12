@@ -23,7 +23,7 @@
 			title: 'Select ' + sentenceCase(key),
 			directory: type === 'dir'
 		}).then(async (result) => {
-      if (result === null) return;
+      		if (result === null) return;
 
 			setValue(result as string);
 		});

@@ -9,7 +9,7 @@
 	export let onSubmit: () => void = () => {};
 </script>
 
-<div class="flex items-center cursor-auto flex-grow text-{size}">
+<div class="flex items-center cursor-auto text-{size}">
 	{#if label}
 		<Label text={label}>
 			<slot />

@@ -180,9 +180,19 @@ export interface InstallProgress {
 export interface ModpackArgs {
 	name: string;
 	description: string;
+	author: string;
+	categories: string[];
+	nsfw: boolean;
+	readme: string;
 	versionNumber: string;
-	icon: string;
-	websiteUrl?: string;
+	iconPath: string;
+	websiteUrl: string;
+	includeDisabled: boolean;
+	includeFiles: {
+		source: string;
+		target: string;
+		enabled: boolean;
+	}[];
 }
 
 export interface Game {

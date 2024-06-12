@@ -5,7 +5,6 @@
 	import MenubarTrigger from '$lib/menu/MenubarTrigger.svelte';
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
 
-	import ExportPackPopup from '$lib/import/ExportPackPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 
 	import { open } from '@tauri-apps/api/shell';
@@ -120,7 +119,6 @@
 			>
 				<MenubarItem onClick={() => exportCodePopup.open()}>...profile as code</MenubarItem>
 				<MenubarItem onClick={exportFile}>...profile as file</MenubarItem>
-				<MenubarItem onClick={() => (exportPackOpen = true)}>...profile as modpack</MenubarItem>
 				<MenubarItem onClick={copyDependencyStrings}>...copy dependency strings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
@@ -150,7 +148,6 @@
 	</Button.Root>
 </div>
 
-<ExportPackPopup bind:isOpen={exportPackOpen} />
 <ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />
 <ImportR2Popup bind:open={importR2Open} />

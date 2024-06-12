@@ -1,4 +1,4 @@
-use std::{collections::HashSet, hash::Hash};
+use std::{collections::{HashMap, HashSet}, hash::Hash};
 
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
@@ -90,21 +90,20 @@ impl Hash for PackageVersion {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all(serialize = "camelCase"))]
 pub struct LegacyProfileCreateResponse {
     pub key: Uuid,
 }
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PackageManifest {
-    pub name: String,
+pub struct PackageManifest<'a> {
+    pub name: &'a str,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub author: Option<String>,
-    pub description: String,
+    pub author: Option<&'a str>,
+    pub description: &'a str,
     pub version_number: semver::Version,
-    pub dependencies: Vec<String>,
-    pub website_url: String,
+    pub dependencies: Vec<&'a str>,
+    pub website_url: &'a str,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<PackageInstaller>>,
 }
@@ -113,6 +112,71 @@ pub struct PackageManifest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PackageInstaller {
     pub identifier: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct UserMediaInitiateUploadParams {
+    pub filename: String,
+    pub file_size_bytes: u64,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct UserMediaInitiateUploadResponse {
+    pub user_media: UserMedia,
+    pub upload_urls: Vec<UploadPartUrl>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct UserMedia {
+    pub uuid: Option<Uuid>,
+    pub filename: String,
+    pub size: u64,
+    pub datetime_created: DateTime<Utc>,
+    pub expiry: DateTime<Utc>,
+    pub status: UserMediaStatus,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all="snake_case")]
+pub enum UserMediaStatus {
+    Initial,
+    UploadInitiated,
+    UploadCreated,
+    UploadError,
+    UploadComplete,
+    UploadAborted,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct UploadPartUrl {
+    pub part_number: u32,
+    pub url: String,
+    pub offset: u64,
+    pub length: u64,
+}
+
+#[derive(Serialize, Debug)]
+pub struct UserMediaFinishUploadParams {
+    pub parts: Vec<CompletedPart>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CompletedPart {
+    #[serde(rename = "ETag")]
+    pub tag: String,
+    #[serde(rename = "PartNumber")]
+    pub part_number: u32,
+}
+
+#[derive(Serialize, Debug)]
+pub struct PackageSubmissionMetadata {
+    pub author_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub categories: Option<Vec<String>>,
+    pub communities: Vec<String>,
+    pub has_nsfw_content: bool,
+    pub upload_uuid: String,
+    pub community_categories: HashMap<String, Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Default)]
