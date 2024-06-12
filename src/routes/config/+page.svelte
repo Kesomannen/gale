@@ -137,7 +137,7 @@
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
-				<Icon icon="mdi:loading" class="animate-spin mr-2" />
+				<Icon icon="mdi:loading" class="animate-spin mr-4" />
 				Loading config...
 			</div>
 		{:else if files.length === 0}

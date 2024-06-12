@@ -8,11 +8,10 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import type { ModpackArgs } from '$lib/models';
-	import { currentProfile, categories } from '$lib/stores';
+	import { currentProfile } from '$lib/stores';
 	import { dialog } from '@tauri-apps/api';
 	import { onDestroy } from 'svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
-	import { Button, Select } from 'bits-ui';
+  import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 
 	let name: string;
@@ -31,6 +30,7 @@
 		enabled: boolean;
 	}[];
 
+	let fetchingArgs = false;
 	let loading = false;
 
 	$: {
@@ -39,6 +39,8 @@
 	}
 
 	async function refresh() {
+		fetchingArgs = true;
+
 		let args = await invokeCommand<ModpackArgs>('get_pack_args');
 
 		name = args.name;
@@ -52,6 +54,8 @@
 		websiteUrl = args.websiteUrl;
 		includeDisabled = args.includeDisabled;
 		includeFiles = args.includeFiles;
+
+		fetchingArgs = false;
 	}
 
 	async function browseIcon() {
@@ -109,7 +113,17 @@
 	});
 </script>
 
-<div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto">
+<div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
+  {#if fetchingArgs}
+    <div 
+      class="flex items-center justify-center absolute inset-0 text-slate-200 bg-black/40 text-lg"
+      transition:fade={{ duration: 50 }}
+    >
+      <Icon icon="mdi:loading" class="animate-spin mr-4" />
+      Loading...
+    </div>
+  {/if}
+
 	<FormField
 		label="Name"
 		description="The modpack's name, as shown on Thunderstore. Cannot contain spaces."
@@ -122,62 +136,62 @@
 		<InputField bind:value={description} placeholder="Enter description..." />
 	</FormField>
 
-  <!--
-	<FormField
-		label="Categories"
-		description="The modpack's name, as shown on Thunderstore. Cannot contain spaces."
-	>
-		{#if selectedCategories}
-			<Dropdown
-				avoidCollisions={false}
-				items={$categories}
-				bind:selected={selectedCategories}
-				multiple={true}
-			>
-				<Select.Trigger
-					let:open
-					slot="trigger"
-					class="flex items-center w-full bg-gray-900 rounded-lg pl-1 pr-3 py-1 overflow-hidden
-                border border-gray-500 border-opacity-0 hover:border-opacity-100"
-				>
-					{#if selectedCategories.length === 0}
-						<span class="text-slate-400 truncate pl-2">Select categories...</span>
-					{:else}
-						<div class="flex flex-wrap gap-1">
-							{#each selectedCategories as category}
-								<div class="bg-gray-800 text-slate-200 rounded-md pl-3 pr-1 py-1 text-sm">
-									<span class="truncate overflow-hidden">{category}</span>
+	<!--
+    <FormField
+      label="Categories"
+      description="The modpack's name, as shown on Thunderstore. Cannot contain spaces."
+    >
+      {#if selectedCategories}
+        <Dropdown
+          avoidCollisions={false}
+          items={$categories}
+          bind:selected={selectedCategories}
+          multiple={true}
+        >
+          <Select.Trigger
+            let:open
+            slot="trigger"
+            class="flex items-center w-full bg-gray-900 rounded-lg pl-1 pr-3 py-1 overflow-hidden
+                  border border-gray-500 border-opacity-0 hover:border-opacity-100"
+          >
+            {#if selectedCategories.length === 0}
+              <span class="text-slate-400 truncate pl-2">Select categories...</span>
+            {:else}
+              <div class="flex flex-wrap gap-1">
+                {#each selectedCategories as category}
+                  <div class="bg-gray-800 text-slate-200 rounded-md pl-3 pr-1 py-1 text-sm">
+                    <span class="truncate overflow-hidden">{category}</span>
 
-									<Button.Root
-										class="px-1.5 ml-1 rounded-md hover:bg-gray-700"
-										on:click={(evt) => {
-											evt.stopPropagation();
-											selectedCategories = selectedCategories.filter((c) => c !== category);
-										}}
-									>
-										x
-									</Button.Root>
-								</div>
-							{/each}
-						</div>
-					{/if}
-					<Icon
-						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
-              transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
-						icon="mdi:chevron-down"
-					/>
-				</Select.Trigger>
-			</Dropdown>
-		{/if}
-	</FormField>
-  -->
+                    <Button.Root
+                      class="px-1.5 ml-1 rounded-md hover:bg-gray-700"
+                      on:click={(evt) => {
+                        evt.stopPropagation();
+                        selectedCategories = selectedCategories.filter((c) => c !== category);
+                      }}
+                    >
+                      x
+                    </Button.Root>
+                  </div>
+                {/each}
+              </div>
+            {/if}
+            <Icon
+              class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
+                transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+              icon="mdi:chevron-down"
+            />
+          </Select.Trigger>
+        </Dropdown>
+      {/if}
+    </FormField>
+    -->
 
 	<FormField
 		label="Version"
 		description="
-      A version number in the format of X.Y.Z.
-      Should preferably follow semantic versioning.
-    "
+        A version number in the format of X.Y.Z.
+        Should preferably follow semantic versioning.
+      "
 		required={true}
 	>
 		<InputField bind:value={versionNumber} placeholder="Enter name..." />
@@ -190,9 +204,9 @@
 	<FormField
 		label="Icon"
 		description="
-      Path to the modpack's icon. This is automatically resized to 256x256 pixels, so
-      it's recommended to be a square image to avoid stretching or squishing.
-    "
+        Path to the modpack's icon. This is automatically resized to 256x256 pixels, so
+        it's recommended to be a square image to avoid stretching or squishing.
+      "
 		required={true}
 	>
 		<PathField icon="mdi:file-image" onClick={browseIcon} value={iconPath} />
@@ -205,8 +219,8 @@
 	>
 		<textarea
 			class="w-full h-32 px-3 py-2 rounded-lg bg-gray-900 placeholder-slate-400 text-slate-300
-          border-slate-500 border-opacity-0 border
-          hover:text-slate-200 hover:border-opacity-100"
+            border-slate-500 border-opacity-0 border
+            hover:text-slate-200 hover:border-opacity-100"
 			placeholder="Enter readme..."
 			bind:value={readme}
 		/>

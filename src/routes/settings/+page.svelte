@@ -7,7 +7,7 @@
 	import { currentGame } from '$lib/stores';
 </script>
 
-<div class="flex flex-col gap-1 p-6 w-full overflow-y-auto">
+<div class="flex flex-col gap-1 py-4 px-6 w-full overflow-y-auto">
 	<LaunchModePref />
 	<ZoomLevelPref />
 

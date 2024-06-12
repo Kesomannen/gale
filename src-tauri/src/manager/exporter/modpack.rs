@@ -28,11 +28,12 @@ use crate::{
     },
     util,
 };
+use reqwest::StatusCode;
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
         profile.modpack = Some(ModpackArgs {
-            name: profile.name.clone(),
+            name: profile.name.replace([' ', '-'], ""),
             description: String::new(),
             readme: format!("# {}\n\n", profile.name),
             version_number: semver::Version::new(0, 1, 0),
@@ -284,13 +285,17 @@ async fn submit_package(
         community_categories: HashMap::from([(game_id.to_owned(), args.categories.clone())]),
     };
 
-    dbg!(&metadata);
-
     base_request("submission/submit", client)
         .json(&metadata)
         .send()
         .await?
-        .error_for_status()?
+        .error_for_status()
+        .map_err(|err| match err.status() {
+            Some(status) if status == StatusCode::BAD_REQUEST => {
+                anyhow!("version {} already exists", args.version_number)
+            }
+            _ => err.into(),
+        })?
         .text()
         .await?;
 
