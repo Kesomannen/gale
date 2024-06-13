@@ -36,7 +36,7 @@
 		Once set, you <b>will not</b> be able to view the token again.
 	</p>
 
-	<InputField placeholder="Enter API token..." onSubmit={submit} bind:value={token} />
+	<InputField placeholder="Enter API token..." on:submit={submit} bind:value={token} />
 
 	<details>
 		<summary class="text-sm text-slate-400 mt-1 cursor-pointer"

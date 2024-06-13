@@ -24,6 +24,4 @@ target = ""
 
 [publish]
 communities = ["lethal-company"]
-
-[publish.categories]
-lethal-company= ["tools"]
+categories = ["tools"]
