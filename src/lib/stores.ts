@@ -34,7 +34,7 @@ currentGame.subscribe(() => {
 	modQuery.set(defaultModQuery());
 });
 
-export let profileQuery = writable({
+export let profileQuery = writable<QueryModsArgs>({
 	maxCount: 20,
 	searchTerm: '',
 	includeCategories: [],
