@@ -315,7 +315,7 @@ async fn submit_package(
         .await?
         .map_auth_err_with(|status| match status {
             StatusCode::BAD_REQUEST => {
-                Some(anyhow!("version {} already exists", args.version_number))
+                Some(anyhow!("version {} already exists, or the author name is incorrect", args.version_number))
             }
             _ => None,
         })?;
