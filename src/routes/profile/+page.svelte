@@ -83,9 +83,10 @@
 	}
 
 	async function refresh() {
+		console.log('Refreshing profile');
 		let result = await invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery });
-    mods = result.mods;
-    updates = result.updates;
+    	mods = result.mods;
+    	updates = result.updates;
 	}
 
 	async function toggleMod(enable: boolean, mod: Mod) {

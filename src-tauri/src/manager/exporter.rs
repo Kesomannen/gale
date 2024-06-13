@@ -220,16 +220,16 @@ fn export_pack(
 }
 
 fn write_includes(profile: &Profile, zip: &mut util::zip::ZipBuilder) -> Result<()> {
-    for (source, destination) in find_includes(&profile.path) {
-        let writer = zip.writer(destination)?;
-        let mut reader = fs::File::open(&source)?;
+    for file in find_includes(&profile.path) {
+        let writer = zip.writer(&file)?;
+        let mut reader = fs::File::open(profile.path.join(&file))?;
         io::copy(&mut reader, writer)?;
     }
 
     Ok(())
 }
 
-pub fn find_includes(root: &Path) -> impl Iterator<Item = (PathBuf, PathBuf)> + '_ {
+pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
     const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
     const EXCLUDE_FILES: [&str; 4] = [
         "profile.json",
@@ -251,8 +251,5 @@ pub fn find_includes(root: &Path) -> impl Iterator<Item = (PathBuf, PathBuf)> + 
             Some(ext) => INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext),
             None => false,
         })
-        .map(move |path| {
-            let relative = path.strip_prefix(root).unwrap().to_path_buf();
-            (path, relative)
-        })
+        .map(move |path| path.strip_prefix(root).unwrap().to_path_buf())
 }

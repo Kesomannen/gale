@@ -1,5 +1,8 @@
 use std::{
-    collections::HashMap, fs, io::{Cursor, Read, Seek}, path::{Path, PathBuf}, sync::Mutex
+    fs,
+    io::{Cursor, Read, Seek},
+    path::{Path, PathBuf},
+    sync::Mutex,
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
@@ -19,10 +22,10 @@ use super::{
     ModManager,
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
+use log::debug;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use log::debug;
 
 pub mod commands;
 pub mod r2modman;
@@ -44,7 +47,8 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 pub struct ImportData {
     pub name: String,
     pub mods: Vec<ModInstall>,
-    pub includes: HashMap<PathBuf, PathBuf>,
+    pub path: PathBuf,
+    pub includes: Vec<PathBuf>,
 }
 
 fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData> {
@@ -74,6 +78,7 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     Ok(ImportData {
         mods: resolve_r2mods(manifest.mods.into_iter(), &thunderstore)?,
         name: manifest.profile_name.to_owned(),
+        path: temp_path,
         includes,
     })
 }
@@ -107,21 +112,23 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         .await
         .context("error while importing mods")?;
 
-    import_config(&path, &data.includes)
+    import_config(&path, &data.path, data.includes.into_iter())
         .context("failed to import config")?;
 
     Ok(())
 }
 
-fn import_config(path: &Path, map: &HashMap<PathBuf, PathBuf>) -> Result<()> {
-    for (source, target) in map {
-        let target = match target.starts_with("config") {
-            true => path.join("BepInEx").join(target),
-            false => path.join(target),
+fn import_config(target: &Path, source: &Path, files: impl Iterator<Item = PathBuf>) -> Result<()> {
+    for file in files {
+        let source = source.join(&file);
+
+        let target = match file.starts_with("config") {
+            true => target.join("BepInEx").join(file),
+            false => target.join(file),
         };
 
         fs::create_dir_all(target.parent().unwrap())?;
-        fs::copy(source, &target)?;
+        fs::copy(&source, &target)?;
 
         debug!("copied {} to {}", source.display(), target.display());
     }

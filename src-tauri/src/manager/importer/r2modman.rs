@@ -280,6 +280,7 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
     Ok(Some(ImportData {
         mods,
         name,
+        path,
         includes,
     }))
 }
