@@ -11,4 +11,6 @@
 	$: setUntaggedConfig(file, section, name, value);
 </script>
 
-<InputField bind:value size='sm' />
+<div class="flex-grow">
+	<InputField bind:value size='sm' />
+</div>

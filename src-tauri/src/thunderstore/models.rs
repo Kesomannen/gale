@@ -171,8 +171,7 @@ pub struct CompletedPart {
 #[derive(Serialize, Debug)]
 pub struct PackageSubmissionMetadata {
     pub author_name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub categories: Option<Vec<String>>,
+    pub categories: Vec<String>,
     pub communities: Vec<String>,
     pub has_nsfw_content: bool,
     pub upload_uuid: String,

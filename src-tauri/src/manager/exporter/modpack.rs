@@ -20,8 +20,8 @@ use crate::{
     manager::Profile,
     thunderstore::{
         models::{
-            CompletedPart, PackageManifest, PackageSubmissionMetadata,
-            UploadPartUrl, UserMediaFinishUploadParams, UserMediaInitiateUploadParams,
+            CompletedPart, PackageManifest, PackageSubmissionMetadata, UploadPartUrl,
+            UserMediaFinishUploadParams, UserMediaInitiateUploadParams,
             UserMediaInitiateUploadResponse,
         },
         Thunderstore,
@@ -29,6 +29,7 @@ use crate::{
     util,
 };
 use reqwest::StatusCode;
+use log::{debug, error, info};
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -90,6 +91,8 @@ pub fn export(
     args: &ModpackArgs,
     thunderstore: &Thunderstore,
 ) -> Result<()> {
+    info!("exporting modpack to {}", path.display());
+
     let dep_strings = profile
         .remote_mods()
         .filter(|(_, enabled)| args.include_disabled || *enabled) // filter out disabled mods
@@ -141,21 +144,26 @@ fn write_icon(path: &Path, zip: &mut util::zip::ZipBuilder) -> anyhow::Result<()
     Ok(())
 }
 
-fn base_request(url: impl Display, client: &reqwest::Client) -> reqwest::RequestBuilder {
-    let url = format!("https://thunderstore.io/api/experimental/{}/", url);
+fn base_request(
+    tail: impl Display,
+    token: impl Display,
+    client: &reqwest::Client,
+) -> reqwest::RequestBuilder {
+    let url = format!("https://thunderstore.io/api/experimental/{}/", tail);
 
-    client.post(url).bearer_auth(API_KEY)
+    client.post(url).bearer_auth(token)
 }
 
-const API_KEY: &str = "";
-
-pub async fn upload(
+pub async fn publish(
     path: PathBuf,
     game_id: &str,
     args: ModpackArgs,
+    token: String,
     client: reqwest::Client,
 ) -> Result<()> {
-    let response = initiate_upload(&path, &client)
+    info!("publishing modpack");
+
+    let response = initiate_upload(&path, &token, &client)
         .await
         .context("failed to initiate upload")?;
 
@@ -176,16 +184,17 @@ pub async fn upload(
     {
         Ok(parts) => parts,
         Err(err) => {
-            tauri::async_runtime::spawn(abort_upload(uuid, client));
+            error!("failed to upload file: {:#}", err);
+            tauri::async_runtime::spawn(async move { abort_upload(&uuid, &token, client).await });
             return Err(err.context("failed to upload file"));
         }
     };
 
-    finish_upload(parts, &uuid, &client)
+    finish_upload(parts, &uuid, &token, &client)
         .await
         .context("failed to finalize upload")?;
 
-    submit_package(uuid, game_id, args, &client)
+    submit_package(uuid, game_id, args, &token, &client)
         .await
         .context("failed to submit package")?;
 
@@ -194,21 +203,26 @@ pub async fn upload(
 
 async fn initiate_upload(
     path: &Path,
+    token: &str,
     client: &reqwest::Client,
 ) -> Result<UserMediaInitiateUploadResponse> {
     let name = util::fs::file_name_lossy(path);
     let size = path.metadata()?.len();
 
-    let response = base_request("usermedia/initiate-upload", client)
+    debug!("initiating modpack upload for {}, size: {} bytes", name, size);
+
+    let response = base_request("usermedia/initiate-upload", token, client)
         .json(&UserMediaInitiateUploadParams {
             filename: name,
             file_size_bytes: size,
         })
         .send()
         .await?
-        .error_for_status()?
+        .map_auth_err()?
         .json::<UserMediaInitiateUploadResponse>()
         .await?;
+
+    debug!("recieved {} upload urls", response.upload_urls.len());
 
     Ok(response)
 }
@@ -240,18 +254,22 @@ async fn upload_chunk(
         .context("ETag is not valid utf-8")?
         .to_owned();
 
+    debug!("uploaded part {} with tag {}", part.part_number, tag);
+
     Ok(CompletedPart {
         tag,
         part_number: part.part_number,
     })
 }
 
-async fn abort_upload(uuid: Uuid, client: reqwest::Client) -> Result<()> {
-    base_request(format!("usermedia/{}/abort-upload", uuid), &client)
+async fn abort_upload(uuid: &Uuid, token: &str, client: reqwest::Client) -> Result<()> {
+    info!("aborting upload");
+
+    base_request(format!("usermedia/{}/abort-upload", uuid), token, &client)
         .json(&uuid)
         .send()
         .await?
-        .error_for_status()?;
+        .map_auth_err()?;
 
     Ok(())
 }
@@ -259,13 +277,16 @@ async fn abort_upload(uuid: Uuid, client: reqwest::Client) -> Result<()> {
 async fn finish_upload(
     parts: Vec<CompletedPart>,
     uuid: &Uuid,
+    token: &str,
     client: &reqwest::Client,
 ) -> Result<()> {
-    base_request(format!("usermedia/{}/finish-upload", uuid), client)
+    debug!("finishing upload");
+
+    base_request(format!("usermedia/{}/finish-upload", uuid), token, client)
         .json(&UserMediaFinishUploadParams { parts })
         .send()
         .await?
-        .error_for_status()?;
+        .map_auth_err()?;
 
     Ok(())
 }
@@ -274,30 +295,60 @@ async fn submit_package(
     uuid: Uuid,
     game_id: &str,
     args: ModpackArgs,
+    token: &str,
     client: &reqwest::Client,
 ) -> Result<()> {
     let metadata = PackageSubmissionMetadata {
-        author_name: args.author.to_owned(),
+        author_name: args.author,
         has_nsfw_content: args.nsfw,
         upload_uuid: uuid.to_string(),
-        categories: Some(Vec::new()),
+        categories: args.categories,
         communities: vec![game_id.to_owned()],
-        community_categories: HashMap::from([(game_id.to_owned(), args.categories.clone())]),
+        community_categories: HashMap::new(),
     };
 
-    base_request("submission/submit", client)
+    debug!("submitting package: {}", serde_json::to_string_pretty(&metadata)?);
+
+    base_request("submission/submit", token, client)
         .json(&metadata)
         .send()
         .await?
-        .error_for_status()
-        .map_err(|err| match err.status() {
-            Some(status) if status == StatusCode::BAD_REQUEST => {
-                anyhow!("version {} already exists", args.version_number)
+        .map_auth_err_with(|status| match status {
+            StatusCode::BAD_REQUEST => {
+                Some(anyhow!("version {} already exists", args.version_number))
             }
-            _ => err.into(),
-        })?
-        .text()
-        .await?;
+            _ => None,
+        })?;
 
     Ok(())
+}
+
+trait ReqwestResponseExt {
+    fn map_auth_err_with<F>(self, f: F) -> anyhow::Result<reqwest::Response>
+    where
+        F: FnOnce(StatusCode) -> Option<anyhow::Error>;
+
+    fn map_auth_err(self) -> anyhow::Result<reqwest::Response>;
+}
+
+impl ReqwestResponseExt for reqwest::Response {
+    fn map_auth_err_with<F>(self, f: F) -> anyhow::Result<reqwest::Response>
+    where
+        F: FnOnce(StatusCode) -> Option<anyhow::Error>,
+    {
+        self.error_for_status().map_err(|err| match err.status() {
+            Some(status) => match status {
+                StatusCode::UNAUTHORIZED => anyhow!("thunderstore API token is invalid"),
+                _ => match f(status) {
+                    Some(err) => err,
+                    None => anyhow!(err),
+                },
+            },
+            None => anyhow!(err),
+        })
+    }
+
+    fn map_auth_err(self) -> anyhow::Result<reqwest::Response> {
+        self.map_auth_err_with(|_| None)
+    }
 }

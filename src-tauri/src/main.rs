@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use dotenv::dotenv;
 use ::log::error;
 use anyhow::Context;
 use tauri::{
@@ -51,6 +52,8 @@ fn setup(app: AppHandle) -> anyhow::Result<()> {
 }
 
 fn main() {
+    dotenv().ok();
+
     if !cfg!(target_os = "linux") {
         // doesn't work on linux for some reason :/
         tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
@@ -60,9 +63,13 @@ fn main() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
             log::open_gale_log,
+            log::log_err,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::get_missing_deps,
+            thunderstore::commands::set_thunderstore_token,
+            thunderstore::commands::has_thunderstore_token,
+            thunderstore::commands::clear_thunderstore_token,
             prefs::commands::get_pref,
             prefs::commands::set_pref,
             prefs::commands::is_first_run,

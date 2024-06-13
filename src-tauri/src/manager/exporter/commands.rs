@@ -2,13 +2,14 @@ use super::modpack::{self, ModpackArgs};
 use crate::{
     manager::{commands::save, ModManager},
     prefs::Prefs,
-    thunderstore::Thunderstore,
+    thunderstore::{self, Thunderstore},
     util::cmd::{Result, StateMutex},
     NetworkClient,
 };
 use std::{fs, path::PathBuf};
 use tauri::State;
 use uuid::Uuid;
+use anyhow::{anyhow, Context};
 
 #[tauri::command]
 pub async fn export_code(
@@ -91,10 +92,14 @@ pub async fn upload_pack(
     prefs: StateMutex<'_, Prefs>,
     client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
-    let (path, game_id, args) = {
+    let (path, game_id, args, token) = {
         let mut manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
         let prefs = prefs.lock().unwrap();
+
+        let token = thunderstore::token::get()
+            .context("failed to get thunderstore API token")?
+            .ok_or(anyhow!("no thunderstore API token found"))?;
 
         let profile = manager.active_profile_mut();
 
@@ -109,11 +114,11 @@ pub async fn upload_pack(
 
         modpack::export(profile, &path, &args, &thunderstore)?;
 
-        (path, &manager.active_game.id, args)
+        (path, &manager.active_game.id, args, token)
     };
 
     let client = client.0.clone();
-    modpack::upload(path, game_id, args, client).await?;
+    modpack::publish(path, game_id, args, token, client).await?;
 
     Ok(())
 }

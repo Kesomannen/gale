@@ -11,8 +11,9 @@
 	import { currentProfile } from '$lib/stores';
 	import { dialog } from '@tauri-apps/api';
 	import { onDestroy } from 'svelte';
-  import { fade } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
+	import ApiKeyPopup, { apiKeyPopupOpen } from '$lib/prefs/ApiKeyPopup.svelte';
 
 	let name: string;
 	let author: string;
@@ -84,6 +85,27 @@
 	}
 
 	async function uploadToThunderstore() {
+		let hasToken = await invokeCommand('has_thunderstore_token');
+
+		if (!hasToken) {
+			$apiKeyPopupOpen = true;
+
+			await new Promise<void>((resolve) => {
+				const interval = setInterval(() => {
+					if (!$apiKeyPopupOpen) {
+						clearInterval(interval);
+						resolve();
+					}
+				}, 100);
+
+				return () => clearInterval(interval);
+			});
+
+			hasToken = await invokeCommand('has_thunderstore_token');
+
+			if (!hasToken) return;
+		}
+
 		loading = true;
 		try {
 			await invokeCommand('upload_pack', { args: args() });
@@ -114,15 +136,15 @@
 </script>
 
 <div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
-  {#if fetchingArgs}
-    <div 
-      class="flex items-center justify-center absolute inset-0 text-slate-200 bg-black/40 text-lg"
-      transition:fade={{ duration: 50 }}
-    >
-      <Icon icon="mdi:loading" class="animate-spin mr-4" />
-      Loading...
-    </div>
-  {/if}
+	{#if fetchingArgs}
+		<div
+			class="flex items-center justify-center fixed inset-0 text-slate-200 bg-black/40 text-lg"
+			transition:fade={{ duration: 50 }}
+		>
+			<Icon icon="mdi:loading" class="animate-spin mr-4" />
+			Loading...
+		</div>
+	{/if}
 
 	<FormField
 		label="Name"
@@ -132,7 +154,15 @@
 		<InputField bind:value={name} placeholder="Enter name..." />
 	</FormField>
 
-	<FormField label="Description" description="A short description for the modpack." required={true}>
+	<FormField
+		label="Author"
+		description="The modpack's author, as shown on Thunderstore."
+		required={true}
+	>
+		<InputField bind:value={author} placeholder="Enter author..." />
+	</FormField>
+
+	<FormField label="Description" description="A short description of the modpack." required={true}>
 		<InputField bind:value={description} placeholder="Enter description..." />
 	</FormField>
 
@@ -189,7 +219,7 @@
 	<FormField
 		label="Version"
 		description="
-        A version number in the format of X.Y.Z.
+        The modpack's version number, in the format of X.Y.Z.
         Should preferably follow semantic versioning.
       "
 		required={true}
@@ -218,9 +248,8 @@
 		required={true}
 	>
 		<textarea
-			class="w-full h-32 px-3 py-2 rounded-lg bg-gray-900 placeholder-slate-400 text-slate-300
-            border-slate-500 border-opacity-0 border
-            hover:text-slate-200 hover:border-opacity-100"
+			class="w-full h-32 px-3 py-2 rounded-lg bg-gray-900 placeholder-slate-400 text-slate-200
+            border-slate-500 border-opacity-0 border hover:border-opacity-100"
 			placeholder="Enter readme..."
 			bind:value={readme}
 		/>
@@ -270,7 +299,9 @@
 	<div class="flex justify-end gap-2 mt-3">
 		<BigButton color="gray" disabled={loading} on:click={exportToFile}>Export to file</BigButton>
 		<BigButton color="green" disabled={loading} on:click={uploadToThunderstore}
-			>Upload to Thunderstore</BigButton
+			>Publish to Thunderstore</BigButton
 		>
 	</div>
 </div>
+
+<ApiKeyPopup />

@@ -5,6 +5,8 @@
 	import TogglePref from '$lib/prefs/TogglePref.svelte';
 	import { Separator } from 'bits-ui';
 	import { currentGame } from '$lib/stores';
+	import ApiKeyPref from '$lib/prefs/ApiKeyPref.svelte';
+	import ApiKeyPopup from '$lib/prefs/ApiKeyPopup.svelte';
 </script>
 
 <div class="flex flex-col gap-1 py-4 px-6 w-full overflow-y-auto">
@@ -59,4 +61,10 @@
 		<br />
 		<b>Warning:</b> Disabling this will delete the existing cache.
 	</TogglePref>
+
+	<Separator.Root class="my-2" />
+
+	<ApiKeyPref />
 </div>
+
+<ApiKeyPopup />

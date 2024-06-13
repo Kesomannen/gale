@@ -24,9 +24,10 @@ use crate::{
 
 use self::models::{PackageListing, PackageVersion};
 
-pub mod commands;
 pub mod models;
 pub mod query;
+pub mod token;
+pub mod commands;
 
 pub fn setup(app: &AppHandle) {
     let manager = app.state::<Mutex<ModManager>>();

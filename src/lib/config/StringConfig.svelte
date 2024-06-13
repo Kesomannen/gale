@@ -20,5 +20,7 @@
 	});
 </script>
 
-<InputField bind:value={content} size='sm' />
+<div class="flex-grow">
+	<InputField bind:value={content} size='sm' />
+</div>
 <ResetConfigButton {entryId} {onReset} />

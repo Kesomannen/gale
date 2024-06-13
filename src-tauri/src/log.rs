@@ -45,3 +45,8 @@ pub fn open_gale_log(app: AppHandle) -> util::cmd::Result<()> {
     open::that(&path).context("failed to open log file")?;
     Ok(())
 }
+
+#[tauri::command]
+pub fn log_err(msg: String) {
+    log::error!("{}", msg);
+}
