@@ -7,7 +7,10 @@ use std::{
 };
 
 use anyhow::{ensure, Context, Result};
+use chrono::{DateTime, Utc};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -24,9 +27,6 @@ use crate::{
     },
     util::{self, error::IoResultExt, fs::JsonStyle},
 };
-use chrono::{DateTime, Utc};
-use itertools::Itertools;
-use tauri::{AppHandle, Manager};
 
 pub mod commands;
 pub mod downloader;
@@ -417,6 +417,23 @@ pub enum ModActionResponse {
 }
 
 impl Profile {
+    fn rename(&mut self, name: String) -> Result<()> {
+        ensure!(
+            Self::is_valid_name(&name),
+            "invalid profile name '{}'",
+            name
+        );
+
+        let new_path = self.path.parent().unwrap().join(&name);
+
+        fs::rename(&self.path, &new_path).fs_context("renaming profile directory", &self.path)?;
+
+        self.name = name;
+        self.path = new_path;
+
+        Ok(())
+    }
+
     fn remove_mod(
         &mut self,
         uuid: &Uuid,
@@ -635,10 +652,7 @@ impl ManagerGame {
             "cannot delete last profile"
         );
 
-        let profile = self
-            .profiles
-            .get(index)
-            .with_context(|| format!("profile index {} is out of bounds", index))?;
+        let profile = self.get_profile(index)?;
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
@@ -646,6 +660,28 @@ impl ManagerGame {
         self.active_profile_index = 0;
 
         Ok(())
+    }
+
+    fn duplicate_profile(&mut self, duplicate_name: String, index: usize) -> Result<()> {
+        self.create_profile(duplicate_name)?;
+        let profile = self.get_profile(index)?;
+        let new_profile = self.active_profile();
+        
+        util::fs::copy_dir(&profile.path, &new_profile.path, true)?;
+
+        let mods = profile.mods.clone();
+
+        let new_profile = self.active_profile_mut();
+
+        new_profile.mods = mods;
+        
+        Ok(())
+    }
+
+    fn get_profile(&self, index: usize) -> Result<&Profile> {
+        self.profiles
+            .get(index)
+            .with_context(|| format!("profile index {} is out of bounds", index))
     }
 
     fn active_profile(&self) -> &Profile {

@@ -82,6 +82,8 @@ fn main() {
             manager::commands::get_dependants,
             manager::commands::create_profile,
             manager::commands::delete_profile,
+            manager::commands::rename_profile,
+            manager::commands::duplicate_profile,
             manager::commands::remove_mod,
             manager::commands::force_remove_mods,
             manager::commands::toggle_mod,

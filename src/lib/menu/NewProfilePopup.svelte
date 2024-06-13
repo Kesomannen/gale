@@ -5,6 +5,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import InputField from '$lib/components/InputField.svelte';
+	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 
 	export let open = false;
 
@@ -20,15 +21,14 @@
 	}
 </script>
 
-<Popup title="New profile" bind:open>
-	<div class="h-1" />
+<ConfirmPopup title="Create new profile" bind:open>
 	<InputField
 		bind:value={name}
 		placeholder="Enter profile name..."
 		size="lg"
 		onSubmit={createProfile}
 	/>
-	<div class="flex w-full justify-end mt-1">
+	<svelte:fragment slot="buttons">
 		<BigButton disabled={name.length === 0} on:click={createProfile}>Create</BigButton>
-	</div>
-</Popup>
+	</svelte:fragment>
+</ConfirmPopup>

@@ -4,7 +4,12 @@
 
 ### Added
 
+- Option to rename and duplicate the active profile from menubar
 - Setting to override a game's install path
+
+### Changed
+
+- Various UI changes
 
 ### Fixed
 

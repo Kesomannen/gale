@@ -232,6 +232,37 @@ pub fn delete_profile(
 }
 
 #[tauri::command]
+pub fn rename_profile(
+    name: String,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    manager.active_profile_mut().rename(name)?;
+    save(&manager, &prefs)?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn duplicate_profile(
+    name: String,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let game = manager.active_game_mut();
+    game.duplicate_profile(name, game.active_profile_index)?;
+    save(&manager, &prefs)?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub fn remove_mod(
     uuid: Uuid,
     manager: StateMutex<ModManager>,

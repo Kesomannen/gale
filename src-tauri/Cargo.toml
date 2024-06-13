@@ -1,6 +1,6 @@
 [package]
 name = "gale"
-version = "0.5.6"
+version = "0.5.7"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"

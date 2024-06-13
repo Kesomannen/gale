@@ -15,10 +15,12 @@
 	import { clipboard, dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
-	import { currentProfile } from '$lib/stores';
+	import { currentProfile, refreshProfiles } from '$lib/stores';
+	import NewProfilePopup from './NewProfilePopup.svelte';
 
 	let importR2Open = false;
-	let exportPackOpen = false;
+	let newProfileOpen = false;
+  let exportPackOpen = false;
 	let exportCodePopup: ExportCodePopup;
 
 	let importProfileOpen = false;
@@ -75,31 +77,40 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => invokeCommand('open_profile_dir')}
+				<MenubarItem on:click={() => invokeCommand('open_profile_dir')}
 					>Open profile directory</MenubarItem
 				>
-				<MenubarItem onClick={() => invokeCommand('open_bepinex_log')}>Open game logs</MenubarItem>
-				<MenubarItem onClick={() => invokeCommand('open_gale_log')}>Open gale logs</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')}>Open game logs</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('open_gale_log')}>Open gale logs</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
-				<MenubarItem onClick={() => invokeCommand('clear_download_cache', { soft: true })}
+				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: true })}
 					>Clear unused mod cache</MenubarItem
 				>
-				<MenubarItem onClick={() => invokeCommand('clear_download_cache', { soft: false })}
+				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: false })}
 					>Clear all cached mods</MenubarItem
 				>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Edit</MenubarTrigger>
+			<MenubarTrigger>Profile</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => setAllModsState(true)}
-					>Enable all mods</MenubarItem
+				<MenubarItem on:click={() => (newProfileOpen = true)}>Create new profile</MenubarItem>
+				<MenubarItem
+					on:click={() =>
+						invokeCommand('rename_profile', { name: 'Renamed profile' }).then(refreshProfiles)}
+					>Rename active profile</MenubarItem
 				>
-				<MenubarItem onClick={() => setAllModsState(false)}
-					>Disable all mods</MenubarItem
+				<MenubarItem
+					on:click={() =>
+						invokeCommand('duplicate_profile', { name: 'Duplicated profile' }).then(
+							refreshProfiles
+						)}>Duplicate active profile</MenubarItem
 				>
+				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<MenubarItem on:click={() => setAllModsState(true)}>Enable all mods</MenubarItem>
+				<MenubarItem on:click={() => setAllModsState(false)}>Disable all mods</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -107,10 +118,10 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
-				<MenubarItem onClick={importFile}>...profile from file</MenubarItem>
-				<MenubarItem onClick={importLocal}>...local mod</MenubarItem>
-				<MenubarItem onClick={() => (importR2Open = true)}>...profiles from r2modman</MenubarItem>
+				<MenubarItem on:click={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
+				<MenubarItem on:click={importFile}>...profile from file</MenubarItem>
+				<MenubarItem on:click={importLocal}>...local mod</MenubarItem>
+				<MenubarItem on:click={() => (importR2Open = true)}>...profiles from r2modman</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -118,10 +129,10 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => exportCodePopup.open()}>...profile as code</MenubarItem>
-				<MenubarItem onClick={exportFile}>...profile as file</MenubarItem>
-				<MenubarItem onClick={() => (exportPackOpen = true)}>...profile as modpack</MenubarItem>
-				<MenubarItem onClick={copyDependencyStrings}>...copy dependency strings</MenubarItem>
+				<MenubarItem on:click={() => exportCodePopup.open()}>...profile as code</MenubarItem>
+				<MenubarItem on:click={exportFile}>...profile as file</MenubarItem>
+				<MenubarItem on:click={() => (exportPackOpen = true)}>...profile as modpack</MenubarItem>
+				<MenubarItem on:click={copyDependencyStrings}>...copy dependency strings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -129,10 +140,12 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem onClick={() => open('https://github.com/Kesomannen/ModManager/issues/')}
+				<MenubarItem on:click={() => open('https://github.com/Kesomannen/ModManager/issues/')}
 					>Report a bug</MenubarItem
 				>
-				<MenubarItem onClick={() => open('https://discord.com/channels/1168655651455639582/1246088342458863618')}
+				<MenubarItem
+					on:click={() =>
+						open('https://discord.com/channels/1168655651455639582/1246088342458863618')}
 					>Open discord thread</MenubarItem
 				>
 			</Menubar.Content>
@@ -151,6 +164,7 @@
 </div>
 
 <ExportPackPopup bind:isOpen={exportPackOpen} />
+<NewProfilePopup bind:open={newProfileOpen} />
 <ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />
 <ImportR2Popup bind:open={importR2Open} />

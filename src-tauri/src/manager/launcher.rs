@@ -137,7 +137,7 @@ impl Game {
             _ => {
                 let mut path = prefs
                     .get("steam_game_dir")
-                    .context("steam game directory not set")?
+                    .context("steam library directory not set")?
                     .as_path()
                     .context("steam_game_dir should be a path")?
                     .to_path_buf();
@@ -152,7 +152,7 @@ impl Game {
 
         ensure!(
             path.exists(),
-            "game path not found (at {}), is the game installed on Steam?",
+            "game path not found (at {}), you might need to configure it in the settings",
             path.display()
         );
 
