@@ -148,7 +148,9 @@
 
 	<FormField
 		label="Name"
-		description="The modpack's name, as shown on Thunderstore. Cannot contain spaces."
+		description="The name of the modpack, as shown on Thunderstore. 
+			           Make sure this stays consistent between updates.
+			           Cannot contain spaces or hyphens."
 		required={true}
 	>
 		<InputField bind:value={name} placeholder="Enter name..." />
@@ -156,7 +158,7 @@
 
 	<FormField
 		label="Author"
-		description="The modpack's author, as shown on Thunderstore."
+		description="The author of the modpack, which should be the name of your Thunderstore team."
 		required={true}
 	>
 		<InputField bind:value={author} placeholder="Enter author..." />
@@ -218,13 +220,11 @@
 
 	<FormField
 		label="Version"
-		description="
-        The modpack's version number, in the format of X.Y.Z.
-        Should preferably follow semantic versioning.
-      "
+		description="The version number of the modpack, in the format of X.Y.Z.
+			           You cannot publish with the same version number twice."
 		required={true}
 	>
-		<InputField bind:value={versionNumber} placeholder="Enter name..." />
+		<InputField bind:value={versionNumber} placeholder="Enter version number..." />
 	</FormField>
 
 	<FormField label="Website" description="A link to a website of your choosing. Optional.">
@@ -233,10 +233,8 @@
 
 	<FormField
 		label="Icon"
-		description="
-        Path to the modpack's icon. This is automatically resized to 256x256 pixels, so
-        it's recommended to be a square image to avoid stretching or squishing.
-      "
+		description="Path to the modpack's icon. This is automatically resized to 256x256 pixels, so
+                 it's recommended to be a square image to avoid stretching or squishing."
 		required={true}
 	>
 		<PathField icon="mdi:file-image" onClick={browseIcon} value={iconPath} />
@@ -244,7 +242,8 @@
 
 	<FormField
 		label="Readme"
-		description="A longer description of the modpack, which supports markdown formatting (similarly to Discord messages)."
+		description="A longer description of the modpack, which supports markdown formatting 
+                 (similarly to Discord messages)."
 		required={true}
 	>
 		<textarea
