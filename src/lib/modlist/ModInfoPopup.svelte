@@ -3,6 +3,7 @@
 	import Popup from "$lib/components/Popup.svelte";
 	import type { MarkdownResponse, Mod } from "$lib/models";
 	import Icon from "@iconify/svelte";
+	import { clipboard } from "@tauri-apps/api";
  	import { Response, fetch } from "@tauri-apps/api/http";
 
 	export let open = false;

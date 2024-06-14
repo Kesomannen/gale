@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { Button, Menubar } from 'bits-ui';
+	import { Button, Dialog, Menubar } from 'bits-ui';
 
 	import MenubarTrigger from '$lib/menu/MenubarTrigger.svelte';
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
@@ -21,6 +21,7 @@
 	import InputField from '$lib/components/InputField.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import { capitalize } from '$lib/util';
+	import Popup from '$lib/components/Popup.svelte';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -33,6 +34,7 @@
 	let profileOperation: 'rename' | 'duplicate' = 'rename';
 	let profileOperationName = '';
 	let profileOperationOpen = false;
+	let profileOperationInProgress = false;
 
 	async function importLocal() {
 		let path = await dialog.open({
@@ -83,13 +85,24 @@
 	}
 
 	async function doProfileOperation() {
-		if (profileOperation == 'rename') {
-			await invokeCommand('rename_profile', { name: profileOperationName });
-		} else if (profileOperation == 'duplicate') {
-			await invokeCommand('duplicate_profile', { name: profileOperationName });
+		if (profileOperationInProgress) return;
+
+		profileOperationInProgress = true;
+
+		try {
+			if (profileOperation == 'rename') {
+				await invokeCommand('rename_profile', { name: profileOperationName });
+			} else if (profileOperation == 'duplicate') {
+				await invokeCommand('duplicate_profile', { name: profileOperationName });
+			}
+		} catch (e) {
+			profileOperationInProgress = false;
+			throw e;
 		}
 
-		refreshProfiles();
+		await refreshProfiles();
+		profileOperationInProgress = false;
+		profileOperationOpen = false;
 	}
 </script>
 
@@ -182,8 +195,12 @@
 	</Button.Root>
 </div>
 
-<ConfirmPopup title="{capitalize(profileOperation)} profile" bind:open={profileOperationOpen}>
-	<p class="mb-1">
+<Popup
+	title="{capitalize(profileOperation)} profile"
+	canClose={!profileOperationInProgress}
+	bind:open={profileOperationOpen}
+>
+	<p class="mb-1 text-slate-300">
 		{profileOperation == 'duplicate'
 			? 'Enter a name for the duplicated profile:'
 			: 'Enter a new name for the profile:'}
@@ -194,12 +211,30 @@
 		size="lg"
 		onSubmit={doProfileOperation}
 	/>
-	<svelte:fragment slot="buttons">
-		<BigButton disabled={profileOperationName.length === 0} on:click={doProfileOperation}
-			>{profileOperation == 'duplicate' ? 'Duplicate' : 'Rename'}</BigButton
+	{#if profileOperation == 'duplicate'}
+		<p class="mt-3 text-slate-400 text-sm">
+			This process might take up to a minute depending on the size of the profile, please be
+			patient.
+		</p>
+	{/if}
+	<div class="flex ml-auto justify-end gap-2 mt-2">
+		{#if !profileOperationInProgress}
+			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
+		{/if}
+		<BigButton
+			color="green"
+			fontWeight="medium"
+			disabled={profileOperationInProgress}
+			on:click={doProfileOperation}
 		>
-	</svelte:fragment>
-</ConfirmPopup>
+			{#if profileOperationInProgress}
+				<Icon icon="mdi:loading" class="animate-spin text-lg my-1" />
+			{:else}
+				{capitalize(profileOperation)}
+			{/if}
+		</BigButton>
+	</div>
+</Popup>
 
 <ExportPackPopup bind:isOpen={exportPackOpen} />
 <NewProfilePopup bind:open={newProfileOpen} />

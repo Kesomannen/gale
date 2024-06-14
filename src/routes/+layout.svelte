@@ -3,7 +3,7 @@
 
 	import Menubar from '$lib/menu/Menubar.svelte';
 	import Contextbar from '$lib/menu/Contextbar.svelte';
-	
+
 	import { errors, removeError } from '$lib/invoke';
 
 	import { Button } from 'bits-ui';
@@ -13,6 +13,7 @@
 	import { fade, fly, slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+	import { clipboard } from '@tauri-apps/api';
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
@@ -31,12 +32,11 @@
 			unlisten();
 		}
 	});
-
 </script>
 
 <main
 	class="h-screen overflow-hidden flex flex-col rounded-lg border border-gray-600 bg-gray-800 relative"
-	on:contextmenu={e => {
+	on:contextmenu={(e) => {
 		if (window.location.hostname === 'tauri.localhost') {
 			e.preventDefault();
 		}
@@ -46,7 +46,9 @@
 	<Contextbar />
 
 	<div class="flex flex-grow overflow-hidden relative">
-		<div class="flex flex-col gap-1 items-center p-2 w-14 bg-gray-900 border-r border-gray-600 flex-shrink-0">
+		<div
+			class="flex flex-col gap-1 items-center p-2 w-14 bg-gray-900 border-r border-gray-600 flex-shrink-0"
+		>
 			<NavbarLink to="/" icon="mdi:home" tooltip="Home page" />
 			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
@@ -59,7 +61,7 @@
 	</div>
 
 	{#if status}
-		<div 
+		<div
 			class="w-full flex items-center px-3 py-1 text-sm border-t border-gray-700 text-slate-400"
 			transition:slide={{ duration: 200, easing: expoOut }}
 		>
@@ -68,19 +70,30 @@
 		</div>
 	{/if}
 
-	<div class="bottom-0 right-0 w-full max-w-[50rem] p-2 gap-1 absolute flex flex-col-reverse z-10">
+	<div
+		class="flex flex-col-reverse justify-end max-w-[50rem] xl:max-w-[90rem]
+          bottom-0 right-0 gap-1 absolute z-10 p-2"
+	>
 		{#each $errors as error, i}
 			<div
-				class="bg-red-600 p-1.5 rounded-md flex items-start" 
-				transition:fade={{ duration: 200 }}
+				class="flex items-start bg-red-600 rounded-md p-1.5 xl:text-lg xl:p-2"
+				in:slide={{ duration: 150, easing: expoOut }}
+				out:fade={{ duration: 100 }}
 			>
-				<div class="flex-grow px-2 mt-auto">
+				<div class="flex-grow px-2 mt-auto mr-3">
 					<span class="text-red-200">{error.name} -</span>
-					<span class="text-red-100 font-medium ml-1">{error.message}</span>
+					<span class="text-white font-medium ml-1">{error.message}</span>
 				</div>
 
-				<Button.Root class="p-1 hover:bg-red-500 rounded-sm" on:click={() => removeError(i)}>
-					<Icon icon="mdi:close" class="text-white text-lg" />
+				<Button.Root
+					class="p-1 hover:bg-red-500 rounded-sm"
+					on:click={() => clipboard.writeText('`' + error.name + ' - ' + error.message + '`')}
+				>
+					<Icon icon="mdi:clipboard-text" class="text-slate-100 text-lg" />
+				</Button.Root>
+
+				<Button.Root class="p-1 hover:bg-red-500 rounded-md" on:click={() => removeError(i)}>
+					<Icon icon="mdi:close" class="text-slate-100 text-lg" />
 				</Button.Root>
 			</div>
 		{/each}
