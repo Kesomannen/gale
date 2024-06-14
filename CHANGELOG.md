@@ -4,7 +4,7 @@
 
 ### Added
 
-- Option to rename and duplicate the active profile from menubar
+- Ability to rename and duplicate the active profile from the menubar
 - Setting to override a game's install path
 
 ### Changed

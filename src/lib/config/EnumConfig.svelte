@@ -30,6 +30,5 @@
 	class="flex-grow overflow-hidden"
 	bind:selected
 	onSelectedChangeSingle={onSelectChange}
-	size='sm'
 />
 <ResetConfigButton {entryId} {onReset} />

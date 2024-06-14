@@ -15,7 +15,7 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	export let open: boolean;
-	export let data: ImportData | undefined;
+	export let data: ImportData | null;
 
 	let key: string;
 	let name: string;
@@ -63,7 +63,7 @@
 		}
 
 		invokeCommand('import_data', { data }).then(refreshProfiles);
-		data = undefined;
+		data = null;
 		open = false;
 	}
 
@@ -72,7 +72,7 @@
 	}
 </script>
 
-<Popup title="Import profile" bind:open onClose={() => (data = undefined)}>
+<Popup title="Import profile" bind:open onClose={() => (data = null)}>
 	{#if data}
 		<TabsMenu
 			bind:value={mode}

@@ -20,7 +20,7 @@
 	type="number"
   step={type === 'int32' ? 1 : 'any'}
   bind:value={content.value}
-	class="flex-grow px-3 py-1 rounded-lg bg-gray-900 text-sm
+	class="flex-grow px-3 py-1 rounded-lg bg-gray-900
 	 text-slate-300 hover:text-slate-100 border border-gray-500 border-opacity-0 hover:border-opacity-100"
 />
 

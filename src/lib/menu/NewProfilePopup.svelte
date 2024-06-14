@@ -22,6 +22,7 @@
 </script>
 
 <ConfirmPopup title="Create new profile" bind:open>
+	<p class="mb-1">Enter a name for the new profile:</p>
 	<InputField
 		bind:value={name}
 		placeholder="Enter profile name..."

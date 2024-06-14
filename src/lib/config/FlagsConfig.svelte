@@ -28,6 +28,5 @@
 	bind:selected
 	{onSelectedChange}
 	multiple={true}
-	size='sm'
 />
 <ResetConfigButton {entryId} {onReset} />

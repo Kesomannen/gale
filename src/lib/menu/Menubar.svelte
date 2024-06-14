@@ -17,14 +17,22 @@
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 	import { currentProfile, refreshProfiles } from '$lib/stores';
 	import NewProfilePopup from './NewProfilePopup.svelte';
+	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
+	import InputField from '$lib/components/InputField.svelte';
+	import BigButton from '$lib/components/BigButton.svelte';
+	import { capitalize } from '$lib/util';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
-  let exportPackOpen = false;
+	let exportPackOpen = false;
 	let exportCodePopup: ExportCodePopup;
 
 	let importProfileOpen = false;
-	let importProfileData: ImportData | undefined = undefined;
+	let importProfileData: ImportData | null = null;
+
+	let profileOperation: 'rename' | 'duplicate' = 'rename';
+	let profileOperationName = '';
+	let profileOperationOpen = false;
 
 	async function importLocal() {
 		let path = await dialog.open({
@@ -67,6 +75,22 @@
 		let text = await invokeCommand<string>('export_dep_string');
 		await clipboard.writeText(text);
 	}
+
+	function openProfileOperation(operation: 'rename' | 'duplicate') {
+		profileOperation = operation;
+		profileOperationName = $currentProfile.name;
+		profileOperationOpen = true;
+	}
+
+	async function doProfileOperation() {
+		if (profileOperation == 'rename') {
+			await invokeCommand('rename_profile', { name: profileOperationName });
+		} else if (profileOperation == 'duplicate') {
+			await invokeCommand('duplicate_profile', { name: profileOperationName });
+		}
+
+		refreshProfiles();
+	}
 </script>
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
@@ -97,16 +121,11 @@
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem on:click={() => (newProfileOpen = true)}>Create new profile</MenubarItem>
-				<MenubarItem
-					on:click={() =>
-						invokeCommand('rename_profile', { name: 'Renamed profile' }).then(refreshProfiles)}
+				<MenubarItem on:click={() => openProfileOperation('rename')}
 					>Rename active profile</MenubarItem
 				>
-				<MenubarItem
-					on:click={() =>
-						invokeCommand('duplicate_profile', { name: 'Duplicated profile' }).then(
-							refreshProfiles
-						)}>Duplicate active profile</MenubarItem
+				<MenubarItem on:click={() => openProfileOperation('duplicate')}
+					>Duplicate active profile</MenubarItem
 				>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem on:click={() => setAllModsState(true)}>Enable all mods</MenubarItem>
@@ -162,6 +181,25 @@
 		<Icon icon="mdi:close" class="text-gray-500 group-hover:text-white" />
 	</Button.Root>
 </div>
+
+<ConfirmPopup title="{capitalize(profileOperation)} profile" bind:open={profileOperationOpen}>
+	<p class="mb-1">
+		{profileOperation == 'duplicate'
+			? 'Enter a name for the duplicated profile:'
+			: 'Enter a new name for the profile:'}
+	</p>
+	<InputField
+		bind:value={profileOperationName}
+		placeholder="Enter name..."
+		size="lg"
+		onSubmit={doProfileOperation}
+	/>
+	<svelte:fragment slot="buttons">
+		<BigButton disabled={profileOperationName.length === 0} on:click={doProfileOperation}
+			>{profileOperation == 'duplicate' ? 'Duplicate' : 'Rename'}</BigButton
+		>
+	</svelte:fragment>
+</ConfirmPopup>
 
 <ExportPackPopup bind:isOpen={exportPackOpen} />
 <NewProfilePopup bind:open={newProfileOpen} />

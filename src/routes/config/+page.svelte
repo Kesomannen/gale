@@ -173,7 +173,7 @@
 
 	<div class="flex-grow p-4 overflow-y-auto">
 		{#if selectedFile}
-			<div class="text-slate-200 text-lg font-semibold truncate flex-shrink-0">
+			<div class="text-slate-200 text-xl font-semibold truncate flex-shrink-0">
 				{selectedFile.content.name}
 				{#if selectedSection}
 					<span class="text-slate-400">/</span>
@@ -183,7 +183,7 @@
 
 			{#if selectedSection && selectedFile.type === 'ok'}
 				{#if selectedFile.content.metadata}
-					<div class="text-slate-400 text-sm">
+					<div class="text-slate-400">
 						Created by {selectedFile.content.metadata.pluginName}
 						{selectedFile.content.metadata.pluginVersion}
 					</div>
@@ -193,8 +193,10 @@
 
 				{#each selectedSection.entries as entry (entry.content)}
 					{#if entry.type === 'untagged'}
-						<div class="flex items-center text-slate-300 pl-2 h-7 my-1">
-							<div class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0">
+						<div class="flex items-center text-slate-300 pl-2 my-1">
+							<div
+								class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0 text-lg"
+							>
 								{sentenceCase(entry.content.name)}
 							</div>
 							<UntaggedConfig
@@ -205,21 +207,21 @@
 							/>
 						</div>
 					{:else}
-						<div class="flex items-center text-slate-300 pl-2 h-7 my-1">
+						<div class="flex items-center text-slate-300 pl-2 my-1">
 							<Tooltip
 								side="top"
-								class="w-[45%] min-w-52 text-slate-300 mr-auto pr-2 cursor-auto text-left truncate flex-shrink-0"
+								class="w-[45%] min-w-52 text-slate-300 font-medium mr-auto pr-2 cursor-auto text-left truncate flex-shrink-0"
 							>
 								{sentenceCase(entry.content.name)}
 								<svelte:fragment slot="tooltip">
-									<div>
-										<span class="font-semibold text-slate-200 text-md">{entry.content.name}</span>
-										<span class="text-slate-400"> ({typeName(entry.content)})</span>
-									</div>
+                  <div>
+                    <span class="text-slate-200 text-lg">{entry.content.name}</span>
+                    <span class="text-slate-400 ml-1 text-lg"> ({typeName(entry.content)})</span>
+                  </div>
 
-									<Render html={entry.content.description.replace(/\n/g, '<br/>')} />
-
-									<div class="h-1" />
+                  <div class="mb-1">
+                    <Render html={entry.content.description.replace(/\n/g, '<br/>')} />
+                  </div>
 
 									{#if entry.content.defaultValue}
 										<p>

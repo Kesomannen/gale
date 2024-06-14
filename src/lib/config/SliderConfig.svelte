@@ -41,7 +41,7 @@
 <input
 	type="text"
 	bind:value={content.value}
-	class="py-1 w-14 ml-2 rounded-md bg-gray-900 text-sm text-center
+	class="py-1 w-14 ml-2 rounded-md bg-gray-900 text-center
 		text-slate-400 hover:text-slate-100 border border-gray-500 border-opacity-0 hover:border-opacity-100"
 />
 <ResetConfigButton {entryId} {onReset} />

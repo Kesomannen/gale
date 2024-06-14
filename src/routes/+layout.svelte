@@ -10,7 +10,7 @@
 	import Icon from '@iconify/svelte';
 
 	import { expoOut } from 'svelte/easing';
-	import { slide } from 'svelte/transition';
+	import { fade, fly, slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
@@ -71,14 +71,16 @@
 	<div class="bottom-0 right-0 w-full max-w-[50rem] p-2 gap-1 absolute flex flex-col-reverse z-10">
 		{#each $errors as error, i}
 			<div
-				class="bg-red-600 pl-4 pr-8 py-2 rounded-md relative" 
-				transition:slide={{ duration: 200, easing: expoOut }}
+				class="bg-red-600 p-1.5 rounded-md flex items-start" 
+				transition:fade={{ duration: 200 }}
 			>
-				<span class="text-red-200">{error.name} -</span>
-				<span class="text-red-100 font-medium ml-1">{error.message}</span>
+				<div class="flex-grow px-2 mt-auto">
+					<span class="text-red-200">{error.name} -</span>
+					<span class="text-red-100 font-medium ml-1">{error.message}</span>
+				</div>
 
-				<Button.Root class="absolute right-1 top-0.5 p-2 hover:bg-red-500 rounded-md" on:click={() => removeError(i)}>
-					<Icon icon="mdi:close" class="text-red-100 text-lg" />
+				<Button.Root class="p-1 hover:bg-red-500 rounded-sm" on:click={() => removeError(i)}>
+					<Icon icon="mdi:close" class="text-white text-lg" />
 				</Button.Root>
 			</div>
 		{/each}

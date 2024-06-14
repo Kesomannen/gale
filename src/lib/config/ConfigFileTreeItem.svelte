@@ -69,7 +69,7 @@
 		>
 			{#each file.content.sections as section}
 				<Button.Root
-					class="text-sm pl-9 pr-2 py-0.5 text-left truncate
+					class="pl-9 pr-2 py-0.5 text-left truncate text-sm
                     {selectedSection === section
 						? 'text-slate-200 bg-slate-600 font-semibold'
 						: 'text-slate-300 hover:bg-slate-600'}"

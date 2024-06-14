@@ -17,7 +17,7 @@
 		</slot>
 	</Dialog.Description>
 
-	<Dialog.Close class="flex w-full justify-end mt-3 mr-0.5 gap-2">
+	<Dialog.Close class="flex ml-auto justify-end mt-3 mr-0.5 gap-2">
 		<BigButton color="gray" on:click={onCancel}>Cancel</BigButton>
 		<slot name="buttons" />
 	</Dialog.Close>
