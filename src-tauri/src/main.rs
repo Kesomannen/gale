@@ -59,7 +59,7 @@ fn main() {
     let mut builder = tauri::Builder::default();
     
     if cfg!(debug_assertions) {
-        builder = builder.plugin(devtools::init());
+        //builder = builder.plugin(devtools::init());
     }
 
     builder

@@ -92,7 +92,7 @@
 			case 'string':
 				return 'String';
 			case 'boolean':
-				return 'Bool';
+				return 'Boolean';
 			default:
 				return config.typeName;
 		}
@@ -210,13 +210,13 @@
 						<div class="flex items-center text-slate-300 pl-2 my-1">
 							<Tooltip
 								side="top"
-								class="w-[45%] min-w-52 text-slate-300 font-medium mr-auto pr-2 cursor-auto text-left truncate flex-shrink-0"
+								class="w-[45%] min-w-52 text-slate-300 pr-2 cursor-auto text-left truncate flex-shrink-0"
 							>
 								{sentenceCase(entry.content.name)}
 								<svelte:fragment slot="tooltip">
                   <div>
-                    <span class="text-slate-200 text-lg">{entry.content.name}</span>
-                    <span class="text-slate-400 ml-1 text-lg"> ({typeName(entry.content)})</span>
+                    <span class="text-slate-200 text-lg font-semibold">{entry.content.name}</span>
+                    <span class="text-slate-400 ml-1"> ({typeName(entry.content)})</span>
                   </div>
 
                   <div class="mb-1">
@@ -225,14 +225,14 @@
 
 									{#if entry.content.defaultValue}
 										<p>
-											<span class="font-bold">Default: </span>
+											<span class="font-semibold">Default: </span>
 											{configValueToString(entry.content.defaultValue)}
 										</p>
 									{/if}
 
 									{#if (entry.content.value.type === 'int32' || entry.content.value.type === 'double' || entry.content.value.type === 'single') && entry.content.value.content.range}
 										<p>
-											<span class="font-bold">Range: </span>
+											<span class="font-semibold">Range: </span>
 											{entry.content.value.content.range.start} - {entry.content.value.content.range
 												.end}
 										</p>
