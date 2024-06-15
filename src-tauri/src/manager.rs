@@ -821,7 +821,7 @@ impl ModManager {
     }
 
     fn ensure_game(&mut self, game: &'static Game, prefs: &Prefs) -> Result<()> {
-        if self.games.get(&game.id).is_some() {
+        if self.games.contains_key(&game.id) {
             return Ok(());
         }
 

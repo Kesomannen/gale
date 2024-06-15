@@ -113,7 +113,7 @@ fn main() {
             log::setup(&handle).ok();
 
             if let Err(err) = setup(handle) {
-                error!("Could not start app! {:#}", err);
+                error!("Failed to launch Gale! {:#}", err);
 
                 MessageDialogBuilder::new("Error while launching Gale!", format!("{:#}", err))
                     .kind(MessageDialogKind::Error)

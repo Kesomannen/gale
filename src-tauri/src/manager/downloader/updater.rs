@@ -120,8 +120,6 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
             .collect::<Result<Vec<ModInstall>>>()?
     };
 
-    dbg!(&to_update);
-
     install_with_deps(
         to_update,
         InstallOptions::default().before_install(

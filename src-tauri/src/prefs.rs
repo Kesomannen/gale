@@ -66,7 +66,7 @@ impl Prefs {
             .transpose()?
             .unwrap_or_default();
 
-        if map.get("steam_exe_path").is_none() {
+        if !map.contains_key("steam_exe_path") {
             let path = PathBuf::from(match env::consts::OS {
                 "windows" => r"C:\Program Files (x86)\Steam\steam.exe",
                 "macos" => "/Applications/Steam.app/Contents/MacOS/Steam",
@@ -79,7 +79,7 @@ impl Prefs {
             }
         }
 
-        if map.get("steam_game_dir").is_none() {
+        if !map.contains_key("steam_game_dir") {
             let path = match env::consts::OS {
                 "windows" => match map.get("steam_exe_path") {
                     Some(PrefValue::Path(exe_path)) => {

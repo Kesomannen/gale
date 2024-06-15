@@ -44,18 +44,18 @@ impl Game {
     }
 
     fn url(mut self, url: &str) -> Self {
-        self.url = url.to_owned();
+        url.clone_into(&mut self.url);
         self
     }
 
     fn id(mut self, id: &str) -> Self {
-        self.id = id.to_owned();
+        id.clone_into(&mut self.id);
         self.url = default_package_url(id);
         self
     }
 
     fn on_steam(mut self, name: &str) -> Self {
-        self.steam_name = name.to_owned();
+        name.clone_into(&mut self.steam_name);
         self
     }
 

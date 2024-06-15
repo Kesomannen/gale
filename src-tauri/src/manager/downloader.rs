@@ -281,7 +281,7 @@ impl<'a> Installer<'a> {
         let borrowed = data.mod_ref.borrow(&thunderstore)?;
         let path = installer::cache_path(borrowed, &prefs)?;
 
-        self.current_name = borrowed.package.name.clone();
+        self.current_name.clone_from(&borrowed.package.name);
         self.update(InstallTask::Installing);
 
         if path.exists() {
