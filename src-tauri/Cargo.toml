@@ -1,13 +1,13 @@
 [package]
 name = "gale"
-version = "0.6.0"
+version = "0.5.8"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"
 repository = "https://github.com/Kesomannen/gale"
 default-run = "gale"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.79"
 
 [build-dependencies]
 tauri-build = { version = "1.5.1", features = [] }
@@ -41,8 +41,6 @@ log = "0.4"
 simplelog = "0.12"
 chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-deep-link = "=0.1.2"
-tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
-dotenv = "0.15"
 keyring = "2.3"
 
 [target.'cfg(target_os="macos")'.dependencies]
@@ -58,5 +56,5 @@ custom-protocol = [ "tauri/custom-protocol" ]
 panic = "abort" # Strip expensive panic clean-up logic
 codegen-units = 1 # Compile crates one after another so the compiler can optimize better
 lto = true # Enables link to optimizations
-opt-level = "s" # Optimize for binary size
+opt-level = 3 # Optimize for binary size
 strip = true # Remove debug symbols

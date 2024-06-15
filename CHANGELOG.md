@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Optimize game icons to reduce binary size
+- Settings and mod lists loading slowly
+- The window opening extremely small
+
 ## 0.5.7 (2024-06-14)
 
 ### Added

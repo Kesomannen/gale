@@ -11,12 +11,9 @@
 	let shownGames = games;
 	let searchTerm = '';
 
-	$: {
-		searchTerm;
-		refresh();
-	}
+	$: refresh(searchTerm);
 
-	function refresh() {
+	function refresh(searchTerm: string) {
 		let lowerSearch = searchTerm.toLowerCase();
 
 		let newGames =
@@ -52,7 +49,7 @@
 				}}
 			>
 				<img
-					src="games/{game.id}.png"
+					src="games/{game.id}.webp"
 					alt={game.displayName}
 					class="w-8 h-8 rounded group-hover:shadow-xl mr-2"
 				/>
@@ -68,7 +65,7 @@
 					on:click={(evt) => {
 						evt.stopPropagation();
 						game.favorite = !game.favorite;
-						refresh();
+						refresh(searchTerm);
 						invokeCommand('favorite_game', { id: game.id });
 					}}
 				>

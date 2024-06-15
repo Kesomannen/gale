@@ -56,14 +56,7 @@ fn main() {
         tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
     }
 
-    let mut builder = tauri::Builder::default();
-    
-    if cfg!(debug_assertions) {
-        //builder = builder.plugin(devtools::init());
-    }
-
-    builder
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+    tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             log::open_gale_log,
             thunderstore::commands::query_thunderstore,

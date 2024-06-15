@@ -15,8 +15,6 @@ use walkdir::WalkDir;
 
 use crate::{manager::Profile, thunderstore::Thunderstore, util};
 
-use log::debug;
-
 pub mod commands;
 pub mod de;
 pub mod ser;
@@ -233,7 +231,6 @@ impl Profile {
             let file = self.config.iter().find(|file| matches(file, name));
 
             if let Some(file) = file {
-                debug!("linked {} to config file", name);
                 self.linked_config
                     .insert(*profile_mod.uuid(), file.name().to_owned());
             }
@@ -329,15 +326,12 @@ fn load_config_file(entry: walkdir::DirEntry, root: &Path, vec: &mut Vec<LoadFil
             if let Ok(metadata) = entry.metadata() {
                 if let Ok(modified) = metadata.modified() {
                     if modified <= curr_file.read_time {
-                        debug!("skipping config file {}", name);
                         return; // file is not modified
                     }
                 }
             }
         }
     }
-
-    debug!("reading config file {}", name);
 
     let data = fs::read_to_string(entry.path())
         .context("failed to read file")
