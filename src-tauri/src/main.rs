@@ -51,10 +51,8 @@ fn setup(app: AppHandle) -> anyhow::Result<()> {
 }
 
 fn main() {
-    if !cfg!(target_os = "linux") {
-        // doesn't work on linux for some reason :/
-        tauri_plugin_deep_link::prepare("com.kesomannen.modmanager");
-    }
+    // Identifier must match identifier found in tauri.conf.json
+    tauri_plugin_deep_link::prepare("com.kesomannen.gale");
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
