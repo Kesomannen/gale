@@ -30,9 +30,7 @@ pub mod updater;
 pub fn setup(app: &AppHandle) -> Result<()> {
     app.manage(Mutex::new(InstallState::default()));
 
-    if !cfg!(target_os = "linux") {
-        tauri_plugin_deep_link::register("ror2mm", deep_link_handler(app.clone()))?;
-    }
+    tauri_plugin_deep_link::register("ror2mm", deep_link_handler(app.clone()))?;
 
     Ok(())
 }
