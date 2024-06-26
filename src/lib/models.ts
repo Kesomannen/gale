@@ -189,8 +189,7 @@ export interface ModpackArgs {
 	websiteUrl: string;
 	includeDisabled: boolean;
 	includeFiles: {
-		source: string;
-		target: string;
+		path: string;
 		enabled: boolean;
 	}[];
 }

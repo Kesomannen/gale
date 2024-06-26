@@ -50,11 +50,10 @@ pub fn refresh_args(profile: &mut Profile) {
 
     let includes = &mut profile.modpack.as_mut().unwrap().include_files;
 
-    for (source, target) in super::find_includes(&profile.path) {
-        if !includes.iter().any(|file| file.source == source) {
+    for path in super::find_includes(&profile.path) {
+        if !includes.iter().any(|file| file.path == path) {
             includes.push(FileInclude {
-                source,
-                target,
+                path,
                 enabled: true,
             });
         }
@@ -80,8 +79,7 @@ pub struct ModpackArgs {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FileInclude {
-    source: PathBuf,
-    target: PathBuf,
+    path: PathBuf,
     enabled: bool,
 }
 
@@ -126,7 +124,8 @@ pub fn export(
         args.include_files
             .iter()
             .filter(|file| file.enabled)
-            .map(|file| (&file.source, &file.target)),
+            .map(|file| &file.path),
+        profile.path.clone(),
         &mut zip,
     )?;
 

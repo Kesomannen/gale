@@ -114,7 +114,7 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
     let writer = zip.writer("export.r2x")?;
     serde_yaml::to_writer(writer, &manifest).context("failed to write profile manifest")?;
 
-    write_includes(find_includes(&profile.path), &mut zip)?;
+    write_includes(find_includes(&profile.path), profile.path.clone(), &mut zip)?;
 
     Ok(())
 }
@@ -159,14 +159,18 @@ async fn export_code(
     Ok(response.key)
 }
 
-fn write_includes<P, I>(includes: I, zip: &mut util::zip::ZipBuilder) -> Result<()>
+fn write_includes<P, I>(files: I, mut source: PathBuf, zip: &mut util::zip::ZipBuilder) -> Result<()>
 where
+    I: Iterator<Item = P>,
     P: AsRef<Path>,
-    I: IntoIterator<Item = (P, P)>,
 {
-    for (source, destination) in includes {
-        let writer = zip.writer(destination)?;
+    for file in files {
+        let writer = zip.writer(&file)?;
+
+        source.push(&file);
         let mut reader = fs::File::open(&source)?;
+        source.pop();
+
         io::copy(&mut reader, writer)?;
     }
 

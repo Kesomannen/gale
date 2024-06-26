@@ -31,8 +31,7 @@
 	let websiteUrl: string;
 	let includeDisabled: boolean;
 	let includeFiles: {
-		source: string;
-		target: string;
+		path: string;
 		enabled: boolean;
 	}[];
 
@@ -278,9 +277,9 @@
 			{#if includeFiles}
 				<summary class="text-sm text-slate-300 cursor-pointer">Show list</summary>
 				<div class="border border-gray-900 text-slate-300 mt-1">
-					{#each includeFiles as { source, enabled }, i}
+					{#each includeFiles as { path, enabled }, i}
 						<div class="flex items-center justify-between odd:bg-gray-900 px-2 py-1">
-							{source}
+							{path}
 
 							<Checkbox
 								value={enabled}
