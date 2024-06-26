@@ -354,7 +354,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
     state.finished_loading = true;
 
     debug!(
-        "Loaded {} mods in {:?}",
+        "loaded {} mods in {:?}",
         state.packages.len(),
         start_time.elapsed()
     );

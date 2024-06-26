@@ -21,7 +21,7 @@ extern crate objc;
 
 mod config;
 mod games;
-mod log;
+mod logger;
 mod manager;
 mod prefs;
 mod thunderstore;
@@ -62,8 +62,8 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            log::open_gale_log,
-            log::log_err,
+            logger::open_gale_log,
+            logger::log_err,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::get_missing_deps,
@@ -121,7 +121,7 @@ fn main() {
         ])
         .setup(|app| {
             let handle = app.handle();
-            log::setup(&handle).ok();
+            logger::setup(&handle).ok();
 
             if let Err(err) = setup(handle) {
                 error!("Could not start app! {:#}", err);

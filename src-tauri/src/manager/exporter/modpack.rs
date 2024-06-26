@@ -28,8 +28,8 @@ use crate::{
     },
     util,
 };
-use reqwest::StatusCode;
 use log::{debug, error, info};
+use reqwest::StatusCode;
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -209,7 +209,10 @@ async fn initiate_upload(
     let name = util::fs::file_name_lossy(path);
     let size = path.metadata()?.len();
 
-    debug!("initiating modpack upload for {}, size: {} bytes", name, size);
+    debug!(
+        "initiating modpack upload for {}, size: {} bytes",
+        name, size
+    );
 
     let response = base_request("usermedia/initiate-upload", token, client)
         .json(&UserMediaInitiateUploadParams {
@@ -302,21 +305,24 @@ async fn submit_package(
         author_name: args.author,
         has_nsfw_content: args.nsfw,
         upload_uuid: uuid.to_string(),
-        categories: args.categories,
+        categories: Vec::new(),
         communities: vec![game_id.to_owned()],
-        community_categories: HashMap::new(),
+        community_categories: HashMap::from([(game_id.to_owned(), args.categories)]),
     };
 
-    debug!("submitting package: {}", serde_json::to_string_pretty(&metadata)?);
+    debug!(
+        "submitting package: {}",
+        serde_json::to_string_pretty(&metadata)?
+    );
 
     base_request("submission/submit", token, client)
         .json(&metadata)
         .send()
         .await?
         .map_auth_err_with(|status| match status {
-            StatusCode::BAD_REQUEST => {
-                Some(anyhow!("version {} already exists, or the author name is incorrect", args.version_number))
-            }
+            StatusCode::BAD_REQUEST => Some(anyhow!(
+                "package metadata is invalid, please check your input"
+            )),
             _ => None,
         })?;
 

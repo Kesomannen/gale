@@ -7,7 +7,7 @@ license = "GPL-3.0"
 repository = "https://github.com/Kesomannen/gale"
 default-run = "gale"
 edition = "2021"
-rust-version = "1.60"
+rust-version = "1.79"
 
 [build-dependencies]
 tauri-build = { version = "1.5.1", features = [] }

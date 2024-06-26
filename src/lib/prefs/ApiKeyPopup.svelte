@@ -44,7 +44,7 @@
 		>
 		<ol class="mt-1 ml-1 flex flex-col gap-1">
 			<li>
-				1. Login to the <Link href="https://thunderstore.io/">thunderstore website</Link>.
+				1. Login to <Link href="https://thunderstore.io/">thunderstore.io</Link>.
 			</li>
 
 			<li>

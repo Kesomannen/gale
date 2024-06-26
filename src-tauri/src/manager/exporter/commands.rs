@@ -3,13 +3,16 @@ use crate::{
     manager::{commands::save, ModManager},
     prefs::Prefs,
     thunderstore::{self, Thunderstore},
-    util::cmd::{Result, StateMutex},
+    util::{
+        cmd::{Result, StateMutex},
+        error::IoResultExt,
+    },
     NetworkClient,
 };
+use anyhow::{anyhow, Context};
 use std::{fs, path::PathBuf};
 use tauri::State;
 use uuid::Uuid;
-use anyhow::{anyhow, Context};
 
 #[tauri::command]
 pub async fn export_code(
@@ -103,10 +106,15 @@ pub async fn upload_pack(
 
         let profile = manager.active_profile_mut();
 
-        let path = prefs
-            .get_path_or_err("temp_dir")?
-            .join(&args.name)
-            .with_extension("zip");
+        let mut path = prefs.get_path_or_err("temp_dir")?.to_path_buf();
+        path.push("modpacks");
+
+        if !path.exists() {
+            fs::create_dir_all(&path).fs_context("creating temp dir", &path)?;
+        }
+
+        path.push(&args.name);
+        path.set_extension("zip");
 
         if path.exists() {
             fs::remove_file(&path).ok();

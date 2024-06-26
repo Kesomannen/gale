@@ -58,7 +58,7 @@
 			{verb}
 			{mod?.name} only
 		</BigButton>
-		<BigButton on:click={executeAll} color={isPositive ? 'blue' : 'red'} fontWeight="semibold">
+		<BigButton on:click={executeAll} color={isPositive ? 'green' : 'red'} fontWeight="semibold">
 			{verb} all
 		</BigButton>
 	</svelte:fragment>
