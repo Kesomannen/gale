@@ -5,6 +5,7 @@
 	import { Button } from 'bits-ui';
 	import { open as openLink } from '@tauri-apps/api/shell';
 	import { invokeCommand } from '$lib/invoke';
+	import Link from './Link.svelte';
 
 	export let onSelect: () => void;
 
@@ -19,9 +20,11 @@
 		let newGames =
 			searchTerm.length > 0
 				? games.filter((game) => {
-					return game.displayName.toLowerCase().includes(lowerSearch)
-						|| game.aliases.some((alias) => alias.toLowerCase().includes(lowerSearch));
-				})
+						return (
+							game.displayName.toLowerCase().includes(lowerSearch) ||
+							game.aliases.some((alias) => alias.toLowerCase().includes(lowerSearch))
+						);
+					})
 				: games;
 
 		newGames.sort((a, b) => {
@@ -81,23 +84,13 @@
 		<div class="text-slate-400 text-sm max-w-[35rem]">
 			Your game missing? If the game is new there's a chance Thunderstore have yet to add it. If you
 			can find it on
-			<button
-				class="hover:underline hover:text-green-500 text-green-600"
-				on:click={() => openLink('https://thunderstore.io')}
-				>thunderstore.io
-			</button>
+			<Link href="https://thunderstore.io">thunderstore.io</Link>
 			but not here, please message us on
-			<button
-				class="hover:underline hover:text-green-500 text-green-600"
-				on:click={() => openLink('https://discord.gg/lcmod')}
-				>Discord
-			</button>
+			<Link href="https://discord.com/channels/1168655651455639582/1246088342458863618"
+				>Discord</Link
+			>
 			or open an issue on
-			<button
-				class="hover:underline hover:text-green-500 text-green-600"
-				on:click={() => openLink('https://github.com/Kesomannen/ModManager/issues/')}
-				>our Github
-			</button>.
+			<Link href="https://github.com/Kesomannen/ModManager/issues/">our Github</Link>
 		</div>
 	{/if}
 </div>

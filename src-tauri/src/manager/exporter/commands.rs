@@ -1,12 +1,16 @@
-use super::ModpackArgs;
+use super::modpack::{self, ModpackArgs};
 use crate::{
-    util::cmd::{Result, StateMutex},
-    manager::ModManager,
+    manager::{commands::save, ModManager},
     prefs::Prefs,
-    thunderstore::Thunderstore,
+    thunderstore::{self, Thunderstore},
+    util::{
+        cmd::{Result, StateMutex},
+        error::IoResultExt,
+    },
     NetworkClient,
 };
-use std::path::PathBuf;
+use anyhow::{anyhow, Context};
+use std::{fs, path::PathBuf};
 use tauri::State;
 use uuid::Uuid;
 
@@ -32,25 +36,98 @@ pub fn export_file(
     let thunderstore = thunderstore.lock().unwrap();
 
     super::export_file(manager.active_profile(), &mut dir, &thunderstore)?;
-    let _ = open::that(dir.parent().unwrap());
+    open::that(dir.parent().unwrap()).ok();
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_pack_args(manager: StateMutex<'_, ModManager>) -> Result<Option<ModpackArgs>> {
+    let mut manager = manager.lock().unwrap();
+    let profile = manager.active_profile_mut();
+
+    modpack::refresh_args(profile);
+
+    Ok(profile.modpack.clone())
+}
+
+#[tauri::command]
+pub fn set_pack_args(
+    args: ModpackArgs,
+    manager: StateMutex<'_, ModManager>,
+    prefs: StateMutex<'_, Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    manager.active_profile_mut().modpack = Some(args);
+
+    save(&manager, &prefs)?;
 
     Ok(())
 }
 
 #[tauri::command]
 pub fn export_pack(
-    path: PathBuf,
+    dir: PathBuf,
     args: ModpackArgs,
-    manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
+    manager: StateMutex<'_, ModManager>,
+    thunderstore: StateMutex<'_, Thunderstore>,
 ) -> Result<()> {
-    let manager = manager.lock().unwrap();
+    let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let zip_path = path.join(&args.name).with_extension("zip");
-    super::export_pack(manager.active_profile(), &zip_path, args, &thunderstore)?;
+    let profile = manager.active_profile_mut();
 
-    let _ = open::that(&zip_path);
+    let path = dir.join(&args.name).with_extension("zip");
+    modpack::export(profile, &path, &args, &thunderstore)?;
+
+    open::that(&path).ok();
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn upload_pack(
+    args: ModpackArgs,
+    manager: StateMutex<'_, ModManager>,
+    thunderstore: StateMutex<'_, Thunderstore>,
+    prefs: StateMutex<'_, Prefs>,
+    client: tauri::State<'_, NetworkClient>,
+) -> Result<()> {
+    let (path, game_id, args, token) = {
+        let mut manager = manager.lock().unwrap();
+        let thunderstore = thunderstore.lock().unwrap();
+        let prefs = prefs.lock().unwrap();
+
+        let token = thunderstore::token::get()
+            .context("failed to get thunderstore API token")?
+            .ok_or(anyhow!("no thunderstore API token found"))?;
+
+        let profile = manager.active_profile_mut();
+
+        let mut path = prefs.get_path_or_err("temp_dir")?.to_path_buf();
+        path.push("modpacks");
+
+        if !path.exists() {
+            fs::create_dir_all(&path).fs_context("creating temp dir", &path)?;
+        }
+
+        path.push(&args.name);
+        path.set_extension("zip");
+
+        if path.exists() {
+            fs::remove_file(&path).ok();
+        }
+
+        modpack::export(profile, &path, &args, &thunderstore)?;
+
+        (path, &manager.active_game.id, args, token)
+    };
+
+    let client = client.0.clone();
+    modpack::publish(path, game_id, args, token, client).await?;
+
     Ok(())
 }
 

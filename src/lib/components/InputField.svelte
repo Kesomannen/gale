@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
 	import Label from './Label.svelte';
 
 	export let label: string | undefined = undefined;
@@ -6,10 +7,12 @@
 	export let value: string = '';
 	export let size: 'sm' | 'md' | 'lg' = 'md';
 
-	export let onSubmit: () => void = () => {};
+	const dispatch = createEventDispatcher<{
+		submit: string;
+	}>();
 </script>
 
-<div class="flex items-center cursor-auto flex-grow text-{size}">
+<div class="flex items-center cursor-auto text-{size}">
 	{#if label}
 		<Label text={label}>
 			<slot />
@@ -22,7 +25,7 @@
 		{placeholder}
 		on:keydown={(e) => {
 			if (e.key === 'Enter') {
-				onSubmit();
+				dispatch('submit', value);
 			}
 		}}
 		class="ml-auto flex-grow px-3 py-1 rounded-lg bg-gray-900 placeholder-slate-400

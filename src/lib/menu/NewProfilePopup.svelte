@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Popup from '../components/Popup.svelte';
-	import { Button, Dialog } from 'bits-ui';
 	import { refreshProfiles } from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
 	import BigButton from '$lib/components/BigButton.svelte';
@@ -27,7 +26,7 @@
 		bind:value={name}
 		placeholder="Enter profile name..."
 		size="lg"
-		onSubmit={createProfile}
+		on:submit={createProfile}
 	/>
 	<svelte:fragment slot="buttons">
 		<BigButton disabled={name.length === 0} on:click={createProfile}>Create</BigButton>

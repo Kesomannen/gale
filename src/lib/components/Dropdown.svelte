@@ -12,6 +12,7 @@
 	export let multiple = false;
 	export let avoidCollisions = true;
 	export let size: 'sm' | 'md' | 'lg' = 'md';
+	export let placeholder: string = '';
 	export let onSelectedChange = (items: T[]) => {};
 	export let onSelectedChangeSingle = (item: T) => {};
 	export let getLabel = (item: T) => item as string;
@@ -21,7 +22,9 @@
 	export { className as class };
 
 	$: stringValue = Array.isArray(selected)
-		? selected.map((item) => getLabel(item)).join(', ')
+		? selected.length > 0
+			? selected.map((item) => getLabel(item)).join(', ')
+			: placeholder
 		: getLabel(selected);
 </script>
 

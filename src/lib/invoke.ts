@@ -40,8 +40,11 @@ export function pushError(error: InvokeError, throwErr: boolean = true) {
 		});
 	}, errorDuration);
 
+	let msg = `${error.name}: ${error.message}`;
+	invoke('log_err', { msg })
+
 	if (throwErr) {
-		throw new Error(`${error.name}: ${error.message}`);
+		throw new Error(msg);
 	}
 }
 

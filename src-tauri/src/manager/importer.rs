@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs,
     io::{Cursor, Read, Seek},
     path::{Path, PathBuf},
@@ -171,18 +172,38 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
 async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     ensure!(path.is_dir(), "mod path is not a directory");
 
-    let manifest = read_local_manifest(&mut path)?;
+    path.push("manifest.json");
+
+    let json = match path.exists() {
+        true => Some(fs::read_to_string(&*path).fs_context("reading manifest", &path)?),
+        false => None,
+    };
+
+    let manifest = match &json {
+        Some(json) => Some(
+            serde_json::from_str::<PackageManifest>(json).context("failed to parse manifest")?,
+        ),
+        None => None,
+    };
+
+    path.pop();
 
     let uuid = Uuid::new_v4();
 
     let mut local_mod = match manifest {
         Some(manifest) => LocalMod {
             uuid,
-            name: manifest.name,
-            author: manifest.author,
-            description: Some(manifest.description),
+            name: manifest.name.to_owned(),
+            author: manifest.author.map(|a| a.to_owned()),
+            description: Some(manifest.description.to_owned()),
             version: Some(manifest.version_number),
-            dependencies: Some(manifest.dependencies),
+            dependencies: Some(
+                manifest
+                    .dependencies
+                    .into_iter()
+                    .map(|s| s.to_owned())
+                    .collect(),
+            ),
             ..Default::default()
         },
         None => LocalMod {
@@ -247,23 +268,4 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     save(&manager, &prefs)?;
 
     Ok(())
-}
-
-fn read_local_manifest(path: &mut PathBuf) -> Result<Option<PackageManifest>> {
-    path.push("manifest.json");
-
-    let manifest = match path.exists() {
-        true => {
-            let json = fs::read_to_string(&*path).fs_context("reading manifest", &*path)?;
-
-            let manifest: PackageManifest =
-                serde_json::from_str(&json).context("failed to parse manifest")?;
-
-            Some(manifest)
-        }
-        false => None,
-    };
-    path.pop();
-
-    Ok(manifest)
 }

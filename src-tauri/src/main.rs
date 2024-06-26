@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use dotenv::dotenv;
 use ::log::error;
 use anyhow::Context;
 use tauri::{
@@ -20,7 +21,7 @@ extern crate objc;
 
 mod config;
 mod games;
-mod log;
+mod logger;
 mod manager;
 mod prefs;
 mod thunderstore;
@@ -56,10 +57,14 @@ fn main() {
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            log::open_gale_log,
+            logger::open_gale_log,
+            logger::log_err,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::get_missing_deps,
+            thunderstore::commands::set_thunderstore_token,
+            thunderstore::commands::has_thunderstore_token,
+            thunderstore::commands::clear_thunderstore_token,
             prefs::commands::get_pref,
             prefs::commands::set_pref,
             prefs::commands::is_first_run,
@@ -100,6 +105,9 @@ fn main() {
             manager::exporter::commands::export_code,
             manager::exporter::commands::export_file,
             manager::exporter::commands::export_pack,
+            manager::exporter::commands::upload_pack,
+            manager::exporter::commands::get_pack_args,
+            manager::exporter::commands::set_pack_args,
             manager::exporter::commands::export_dep_string,
             config::commands::get_config_files,
             config::commands::set_tagged_config_entry,
@@ -110,7 +118,7 @@ fn main() {
         ])
         .setup(|app| {
             let handle = app.handle();
-            log::setup(&handle).ok();
+            logger::setup(&handle).ok();
 
             if let Err(err) = setup(handle) {
                 error!("Failed to launch Gale! {:#}", err);
