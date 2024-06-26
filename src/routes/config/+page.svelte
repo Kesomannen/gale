@@ -44,7 +44,7 @@
 	function sortAndFilterFiles(searchTerm: string, files: LoadFileResult[]) {
 		if (searchTerm.length > 0) {
 			files = files.filter((file) => {
-				let lowerSearch = searchTerm.toLowerCase();
+				let lowerSearch = searchTerm.toLowerCase().trim();
 
 				return (
 					configFileName(file).toLowerCase().includes(lowerSearch) ||
@@ -214,14 +214,14 @@
 							>
 								{sentenceCase(entry.content.name)}
 								<svelte:fragment slot="tooltip">
-                  <div>
-                    <span class="text-slate-200 text-lg font-semibold">{entry.content.name}</span>
-                    <span class="text-slate-400 ml-1"> ({typeName(entry.content)})</span>
-                  </div>
+									<div>
+										<span class="text-slate-200 text-lg font-semibold">{entry.content.name}</span>
+										<span class="text-slate-400 ml-1"> ({typeName(entry.content)})</span>
+									</div>
 
-                  <div class="mb-1">
-                    <Render html={entry.content.description.replace(/\n/g, '<br/>')} />
-                  </div>
+									<div class="mb-1">
+										<Render html={entry.content.description.replace(/\n/g, '<br/>')} />
+									</div>
 
 									{#if entry.content.defaultValue}
 										<p>

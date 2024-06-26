@@ -39,7 +39,7 @@
 	async function submitKey() {
 		loading = true;
 		try {
-			data = await invokeCommand<ImportData>('import_code', { key });
+			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
 			name = data.name;
 			mode = isAvailable(name) ? 'new' : 'overwrite';
 		} catch (e) {

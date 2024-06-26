@@ -233,7 +233,7 @@ where
     let search_term = args
         .search_term
         .as_ref()
-        .map(|s| s.to_lowercase().replace(' ', "_"));
+        .map(|s| s.to_lowercase().trim().replace(' ', "_"));
 
     let mut result = mods
         .filter(|queryable| {

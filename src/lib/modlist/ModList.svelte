@@ -32,6 +32,7 @@
 	let excludeCategories = $queryArgs.excludeCategories;
 	let includeNsfw = $queryArgs.includeNsfw;
 	let includeDeprecated = $queryArgs.includeDeprecated;
+	let includeDisabled = $queryArgs.includeDisabled;
 	let sortBy = $queryArgs.sortBy;
 	let sortOrder = $queryArgs.sortOrder;
 
@@ -54,7 +55,7 @@
 			excludeCategories,
 			includeNsfw,
 			includeDeprecated,
-			includeDisabled: true,
+			includeDisabled,
 			sortBy,
 			sortOrder
 		};
@@ -71,6 +72,16 @@
 			activeMod = undefined;
 		}
 	}
+
+  function getSelectedIncludes() {
+    let selected = [];
+
+    if (includeDeprecated) selected.push('Deprecated');
+    if (includeNsfw) selected.push('NSFW');
+    if (includeDisabled) selected.push('Disabled');
+
+    return selected;
+  }
 
 	let dragElement: HTMLElement | null;
 	let totalDelta = 0;
@@ -272,12 +283,13 @@
 			</Dropdown>
 
 			<Dropdown
-				items={['Deprecated', 'NSFW']}
-				selected={[includeDeprecated ? 'Deprecated' : '', includeNsfw ? 'NSFW' : '']}
+				items={['Deprecated', 'NSFW', 'Disabled']}
+				selected={getSelectedIncludes()}
 				multiple={true}
 				onSelectedChange={(items) => {
 					includeDeprecated = items.includes('Deprecated');
 					includeNsfw = items.includes('NSFW');
+          includeDisabled = items.includes('Disabled');
 				}}
 			>
 				<Select.Trigger

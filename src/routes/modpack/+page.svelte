@@ -276,9 +276,12 @@
 		<details>
 			{#if includeFiles}
 				<summary class="text-sm text-slate-300 cursor-pointer">Show list</summary>
-				<div class="border border-gray-900 text-slate-300 mt-1">
+				<div class="mt-1 overflow-hidden rounded-md">
 					{#each includeFiles as { path, enabled }, i}
-						<div class="flex items-center justify-between odd:bg-gray-900 px-2 py-1">
+						<div
+							class="flex items-center justify-between px-4 py-1.5 text-slate-300
+                    odd:bg-gray-900 hover:bg-gray-700"
+						>
 							{path}
 
 							<Checkbox
@@ -306,18 +309,24 @@
 
 	<div class="flex justify-end gap-2 mt-3">
 		<BigButton color="gray" on:click={exportToFile}>Export to file</BigButton>
-		<BigButton color="green" on:click={uploadToThunderstore}>Publish to Thunderstore</BigButton>
+		<BigButton color="green" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
 	</div>
 </div>
 
 <ApiKeyPopup />
 
-<Popup bind:open={donePopupOpen} title="Modpack upload complete!">
+<Popup bind:open={donePopupOpen} title="Modpack upload complete">
 	<Dialog.Description class="text-slate-300">
 		{name}
-		{versionNumber} has successfully been published to Thunderstore!
+		{versionNumber} has successfully been published on Thunderstore!
 		<Link href="https://thunderstore.io/c/{$currentGame?.id}/p/{author}/{name}"
-			>Click here to view its website page</Link
-		>.<br /> The changes may take up to an hour to appear in Gale and other mod managers.
+			>Click here to view its page on the website</Link
+		>.
 	</Dialog.Description>
+
+	<div class="mt-2 text-slate-400 text-sm">
+		The changes may take up to an hour to appear in Gale and other mod managers.
+		<br />
+		To publish a new update, increment the version number and publish the modpack again.
+	</div>
 </Popup>

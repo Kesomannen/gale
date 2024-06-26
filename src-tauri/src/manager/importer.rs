@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     fs,
     io::{Cursor, Read, Seek},
     path::{Path, PathBuf},

@@ -6,7 +6,7 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -432,6 +432,12 @@ impl Profile {
 
         let new_path = self.path.parent().unwrap().join(&name);
 
+        ensure!(
+            !new_path.exists(),
+            "profile with name '{}' already exists",
+            name
+        );
+
         fs::rename(&self.path, &new_path).fs_context("renaming profile directory", &self.path)?;
 
         self.name = name;
@@ -451,7 +457,7 @@ impl Profile {
             if let Some((mod_ref, _)) = profile_mod.as_remote() {
                 let borrowed = mod_ref.borrow(thunderstore)?;
 
-                if let Some(dependants) = self.check_dependants(borrowed, thunderstore)? {
+                if let Some(dependants) = self.check_dependants(borrowed, thunderstore) {
                     return Ok(ModActionResponse::HasDependants(dependants));
                 }
             }
@@ -484,7 +490,7 @@ impl Profile {
             let borrowed = mod_ref.borrow(thunderstore)?;
 
             if profile_mod.enabled {
-                if let Some(dependants) = self.check_dependants(borrowed, thunderstore)? {
+                if let Some(dependants) = self.check_dependants(borrowed, thunderstore) {
                     return Ok(ModActionResponse::HasDependants(dependants));
                 }
             } else if let Some(deps) = self.check_deps(borrowed, thunderstore)? {
@@ -535,22 +541,23 @@ impl Profile {
         &self,
         borrowed_mod: BorrowedMod,
         thunderstore: &Thunderstore,
-    ) -> Result<Option<Vec<Dependant>>> {
+    ) -> Option<Vec<Dependant>> {
         let ignored_category = "Modpacks".to_string();
         let dependants = self
             .dependants(borrowed_mod, thunderstore)
+            .filter_map(Result::ok) // ignore any missing deps
             // filter out modpacks and disabled mods
-            .filter_ok(|m| {
+            .filter(|m| {
                 !m.package.categories.contains(&ignored_category)
                     && self.get_mod(&m.package.uuid4).unwrap().enabled
             })
-            .map_ok(Dependant::from)
-            .collect::<Result<Vec<_>>>()?;
+            .map_into()
+            .collect::<Vec<_>>();
 
-        Ok(match dependants.is_empty() {
+        match dependants.is_empty() {
             true => None,
             false => Some(dependants),
-        })
+        }
     }
 
     fn check_deps(
@@ -673,7 +680,7 @@ impl ManagerGame {
         self.create_profile(duplicate_name)?;
         let profile = self.get_profile(index)?;
         let new_profile = self.active_profile();
-        
+
         util::fs::copy_dir(&profile.path, &new_profile.path, true)?;
 
         let mods = profile.mods.clone();
@@ -681,7 +688,7 @@ impl ManagerGame {
         let new_profile = self.active_profile_mut();
 
         new_profile.mods = mods;
-        
+
         Ok(())
     }
 

@@ -125,7 +125,7 @@ pub fn export(
             .iter()
             .filter(|file| file.enabled)
             .map(|file| &file.path),
-        profile.path.clone(),
+        &profile.path,
         &mut zip,
     )?;
 
@@ -309,10 +309,7 @@ async fn submit_package(
         community_categories: HashMap::from([(game_id.to_owned(), args.categories)]),
     };
 
-    debug!(
-        "submitting package: {}",
-        serde_json::to_string_pretty(&metadata)?
-    );
+    debug!("submitting package");
 
     base_request("submission/submit", token, client)
         .json(&metadata)

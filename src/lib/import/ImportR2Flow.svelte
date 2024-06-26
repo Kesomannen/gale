@@ -15,9 +15,9 @@
 	};
 
 	export let importFrom: 'r2modman' | 'thunderstore' = 'r2modman';
-  
-  $: profiles = importData[importFrom]?.profiles ?? [];
-  $: include = importData[importFrom]?.include ?? [];
+
+	$: profiles = importData[importFrom]?.profiles ?? [];
+	$: include = importData[importFrom]?.include ?? [];
 
 	export let loading = false;
 	let loadingText = '';
@@ -59,7 +59,9 @@
 {#if importData.r2modman || importData.thunderstore}
 	<h3 class="text-lg text-slate-200 font-semibold mt-3">Choose profiles to import</h3>
 {:else}
-	<div class="text-lg font-semibold text-red-400 w-full text-center mt-3">No installations found</div>
+	<div class="text-lg font-semibold text-red-400 w-full text-center mt-3">
+		No installations found
+	</div>
 {/if}
 
 {#if importData.r2modman && importData.thunderstore}
@@ -73,16 +75,16 @@
 {/if}
 
 {#if importData.thunderstore || importData.r2modman}
-  <div class="flex flex-col max-h-60 overflow-y-auto text-slate-300">
-    {#each profiles as profile, index}
-      <div class="flex items-center justify-between py-1 px-1">
-        {profile}
+	<div class="mt-1 overflow-y-auto max-h-60 rounded-md">
+		{#each profiles as profile, i}
+			<div
+				class="flex items-center justify-between px-4 py-1.5 text-slate-300
+					odd:bg-gray-900 hover:bg-gray-700"
+			>
+				{profile}
 
-        <Checkbox
-          value={include[index]}
-          onValueChanged={(value) => (include[index] = value)}
-        />
-      </div>
-    {/each}
-  </div>
+				<Checkbox value={include[i]} onValueChanged={(value) => (include[i] = value)} />
+			</div>
+		{/each}
+	</div>
 {/if}
