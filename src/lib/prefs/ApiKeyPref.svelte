@@ -36,7 +36,7 @@
 		</div>
 
 		<div class="text-slate-300 group-hover:text-slate-200 truncate">
-			{hasToken ? 'Click to override key' : 'Not set'}
+			{hasToken ? 'Click to override token' : 'Not set'}
 		</div>
 
 		<slot name="field" />

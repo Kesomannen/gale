@@ -73,15 +73,15 @@
 		}
 	}
 
-  function getSelectedIncludes() {
-    let selected = [];
+	function getSelectedIncludes() {
+		let selected = [];
 
-    if (includeDeprecated) selected.push('Deprecated');
-    if (includeNsfw) selected.push('NSFW');
-    if (includeDisabled) selected.push('Disabled');
+		if (includeDeprecated) selected.push('Deprecated');
+		if (includeNsfw) selected.push('NSFW');
+		if (includeDisabled) selected.push('Disabled');
 
-    return selected;
-  }
+		return selected;
+	}
 
 	let dragElement: HTMLElement | null;
 	let totalDelta = 0;
@@ -289,7 +289,7 @@
 				onSelectedChange={(items) => {
 					includeDeprecated = items.includes('Deprecated');
 					includeNsfw = items.includes('NSFW');
-          includeDisabled = items.includes('Disabled');
+					includeDisabled = items.includes('Disabled');
 				}}
 			>
 				<Select.Trigger
