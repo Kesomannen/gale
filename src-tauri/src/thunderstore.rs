@@ -1,7 +1,5 @@
 use std::{
     collections::HashSet,
-    fs,
-    io,
     path::{Path, PathBuf},
     str::{self, Split},
     sync::Mutex,
@@ -271,9 +269,10 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     }
 }
 
-const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
-
 async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
+    const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(500);
+
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
 
@@ -286,26 +285,23 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
         true => None,
         false => Some(IndexMap::new()),
     };
-    let mut i = 0;
 
     let start_time = Instant::now();
+    let mut last_update = Instant::now();
 
     while let Some(chunk) = response.chunk().await? {
         byte_buffer.extend_from_slice(&chunk);
-        let chunk = str::from_utf8(&byte_buffer);
-
-        if chunk.is_err() {
-            continue;
-        }
-
-        let chunk = chunk.unwrap();
-        match is_first_chunk {
-            true => {
-                is_first_chunk = false;
-                buffer.extend(chunk.chars().skip(1)); // remove leading [
-            }
-            false => buffer.push_str(chunk),
+        let chunk = match str::from_utf8(&byte_buffer) {
+            Ok(chunk) => chunk,
+            Err(_) => continue,
         };
+
+        if is_first_chunk {
+            is_first_chunk = false;
+            buffer.extend(chunk.chars().skip(1)); // remove leading [
+        } else {
+            buffer.push_str(chunk);
+        }
 
         byte_buffer.clear();
 
@@ -318,7 +314,6 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
             };
 
             while let Some(index) = buffer.find("}]},") {
-                // 😏
                 let (json, _) = buffer.split_at(index + 3);
 
                 match serde_json::from_str::<PackageListing>(json) {
@@ -333,16 +328,16 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                 buffer.replace_range(..index + 4, "");
             }
 
-            if i % 200 == 0 && start_time.elapsed().as_secs() > 1 {
+            if last_update.elapsed() > UPDATE_INTERVAL {
                 app.emit_all(
                     "status_update",
                     Some(format!("Fetching mods from Thunderstore... {}", map.len())),
                 )
                 .ok();
+
+                last_update = Instant::now();
             }
         }
-
-        i += 1;
     }
 
     let mut state = state.lock().unwrap();
@@ -353,17 +348,12 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
     state.finished_loading = true;
 
     debug!(
-        "Loaded {} mods in {:?}",
+        "loaded {} mods in {:?}",
         state.packages.len(),
         start_time.elapsed()
     );
 
-    let _ = app.emit_all("status_update", None::<String>);
-
-    let manager = app.state::<Mutex<ModManager>>();
-    let manager = manager.lock().unwrap();
-
-    manager.cache_mods(&state).ok();
+    app.emit_all("status_update", None::<String>).ok();
 
     Ok(())
 }
@@ -376,11 +366,8 @@ fn read_cache(path: &Path) -> Result<Option<Vec<PackageListing>>> {
         return Ok(None);
     }
 
-    let file = fs::File::open(path).context("failed to open cache file")?;
-    let reader = io::BufReader::new(file);
-
     let result: Vec<PackageListing> =
-        serde_json::from_reader(reader).context("failed to deserialize cache")?;
+        util::fs::read_json(path).context("failed to deserialize cache")?;
 
     debug!(
         "Read {} mods from cache in {:?}",
@@ -398,7 +385,8 @@ pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
 
     let start = Instant::now();
 
-    util::fs::write_json(path, packages, JsonStyle::Compact).context("failed to write mod cache")?;
+    util::fs::write_json(path, packages, JsonStyle::Compact)
+        .context("failed to write mod cache")?;
 
     debug!(
         "wrote {} mods to cache in {:?}",

@@ -56,7 +56,7 @@
 	>
 		{#if $currentGame}
 			<img
-				src="games/{$currentGame.id}.png"
+				src="games/{$currentGame.id}.webp"
 				class="max-w-8 max-h-8 rounded mr-2"
 				alt={$currentGame.displayName}
 			/>

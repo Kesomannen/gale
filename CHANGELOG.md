@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.5.8 (2024-06-26)
 
 ### Fixed
 
+- Frequent crashing while mods are being fetched from thunderstore
 - Optimize game icons to reduce binary size
-- Settings and mod lists loading slowly
+- Mods and settings loading slowly
 - The window opening extremely small
 
 ## 0.5.7 (2024-06-14)
