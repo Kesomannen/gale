@@ -112,7 +112,9 @@
 		</div>
 	{:else}
 		<div class="flex gap-2 mt-1">
-			<InputField bind:value={key} size="lg"placeholder="Enter import code..." />
+			<div class="flex-grow">
+				<InputField bind:value={key} size="lg" placeholder="Enter import code..." />
+			</div>
 
 			<BigButton on:click={submitKey} disabled={loading}>
 				{#if loading}

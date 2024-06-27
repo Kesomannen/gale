@@ -6,10 +6,10 @@
 	import { dialog } from '@tauri-apps/api';
 
 	export let open: boolean;
-	export let title: string | undefined = undefined;
-	export let confirmClose: { title: string; message: string } | undefined = undefined;
+	export let title: string | null = null;
+	export let confirmClose: { title: string; message: string } | null = null;
 	export let canClose: boolean = true;
-	export let maxWidth: string | undefined = undefined;
+	export let maxWidth: string | null = null;
 	export let onClose: () => void = () => {};
 
 	async function close(evt: UIEvent) {
@@ -33,8 +33,8 @@
 
 <Dialog.Root
 	bind:open
-	closeOnEscape={canClose && confirmClose === undefined}
-	closeOnOutsideClick={canClose && confirmClose === undefined}
+	closeOnEscape={canClose && confirmClose === null}
+	closeOnOutsideClick={canClose && confirmClose === null}
 	onOutsideClick={close}
 >
 	<Dialog.Portal>

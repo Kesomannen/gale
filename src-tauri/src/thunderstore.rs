@@ -277,7 +277,8 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
 
-    let mut response = client.get(&game.url).send().await?.error_for_status()?;
+    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.id);
+    let mut response = client.get(url).send().await?.error_for_status()?;
 
     let mut is_first_chunk = true;
     let mut buffer = String::new();

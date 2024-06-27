@@ -9,7 +9,6 @@ pub struct Game {
     pub display_name: String,
     pub steam_name: String,
     pub aliases: Vec<String>,
-    pub url: String,
     pub steam_id: u32,
 }
 
@@ -25,16 +24,11 @@ impl Hash for Game {
     }
 }
 
-fn default_package_url(id: &str) -> String {
-    format!("https://thunderstore.io/c/{}/api/v1/package/", id)
-}
-
 impl Game {
     fn new(display_name: &str, steam_id: u32) -> Self {
         let id = display_name.to_kebab_case();
 
         Self {
-            url: default_package_url(&id),
             display_name: display_name.to_owned(),
             steam_name: display_name.to_owned(),
             aliases: Vec::new(),
@@ -43,14 +37,8 @@ impl Game {
         }
     }
 
-    fn url(mut self, url: &str) -> Self {
-        url.clone_into(&mut self.url);
-        self
-    }
-
     fn id(mut self, id: &str) -> Self {
         id.clone_into(&mut self.id);
-        self.url = default_package_url(id);
         self
     }
 
@@ -68,8 +56,7 @@ impl Game {
 lazy_static! {
     pub static ref GAMES: [Game; 88] = [
         Game::new("Risk of Rain 2", 632360)
-            .id("ror2")
-            .url("https://thunderstore.io/api/v1/package/")
+            .id("riskofrain2")
             .aka("ror2"),
         Game::new("Dyson Sphere Program", 1366540).aka("dsp"),
         Game::new("Valheim", 892970),
