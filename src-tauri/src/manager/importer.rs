@@ -7,6 +7,10 @@ use std::{
 
 use anyhow::{anyhow, ensure, Context, Result};
 use tauri::{AppHandle, Manager};
+use base64::{prelude::BASE64_STANDARD, Engine};
+use reqwest::StatusCode;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{
     manager::{commands::save, downloader::InstallOptions, installer, LocalMod, ProfileMod},
@@ -21,11 +25,6 @@ use super::{
     exporter::{self, R2Manifest, R2Mod, PROFILE_DATA_PREFIX},
     ModManager,
 };
-use base64::{prelude::BASE64_STANDARD, Engine};
-use log::debug;
-use reqwest::StatusCode;
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 pub mod commands;
 pub mod r2modman;
@@ -58,8 +57,7 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    // extract archive to temp path
-    let temp_path = prefs.get_path_or_err("temp_dir")?.join("imports");
+    let temp_path = prefs.temp_dir.join("import");
     if temp_path.exists() {
         fs::remove_dir_all(&temp_path)?;
     }
@@ -127,10 +125,12 @@ fn import_config(target: &Path, source: &Path, files: impl Iterator<Item = PathB
             false => target.join(file),
         };
 
-        fs::create_dir_all(target.parent().unwrap())?;
-        fs::copy(&source, &target)?;
+        let parent = target.parent().unwrap();
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
 
-        debug!("copied {} to {}", source.display(), target.display());
+        fs::copy(&source, &target)?;
     }
 
     Ok(())

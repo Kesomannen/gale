@@ -9,10 +9,12 @@
 ### Changed
 
 - **Breaking change!** Corrected the community identifier for Risk of Rain 2. If you use Gale for RoR2, please go to Gale's data folder and rename the `ror2` directory to `riskofrain2`!
+- Persist mod search options between sessions
 - UI changes
 
 ### Fixed
 
+- Filters not updating specifically for Risk of Rain 2
 - Trim whitespace around import codes and search queries
 - Allow enabling mods with missing dependencies
 

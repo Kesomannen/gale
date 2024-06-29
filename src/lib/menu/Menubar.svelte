@@ -14,7 +14,7 @@
 	import { clipboard, dialog } from '@tauri-apps/api';
 	import type { ImportData } from '$lib/models';
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
-	import { currentProfile, refreshProfiles } from '$lib/stores';
+	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import NewProfilePopup from './NewProfilePopup.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import InputField from '$lib/components/InputField.svelte';
@@ -69,7 +69,7 @@
 
 	async function setAllModsState(enable: boolean) {
 		await invokeCommand('set_all_mods_state', { enable });
-		currentProfile.update((p) => p);
+		activeProfile.update((p) => p);
 	}
 
 	async function copyDependencyStrings() {
@@ -79,7 +79,7 @@
 
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
 		profileOperation = operation;
-		profileOperationName = $currentProfile.name;
+		profileOperationName = $activeProfile?.name ?? "Unknown";
 		profileOperationOpen = true;
 	}
 

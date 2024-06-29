@@ -120,13 +120,13 @@ pub struct UserMediaInitiateUploadParams {
     pub file_size_bytes: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct UserMediaInitiateUploadResponse {
     pub user_media: UserMedia,
     pub upload_urls: Vec<UploadPartUrl>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct UserMedia {
     pub uuid: Option<Uuid>,
     pub filename: String,

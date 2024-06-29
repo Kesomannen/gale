@@ -9,7 +9,7 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use super::ManagerGame;
 use crate::{
     games::Game,
-    prefs::{PrefValue, Prefs},
+    prefs::Prefs,
     util::error::IoResultExt,
 };
 use log::info;
@@ -32,22 +32,17 @@ pub enum LaunchMode {
 
 impl ManagerGame {
     pub fn launch(&self, prefs: &Prefs) -> Result<()> {
-        let preference = match prefs.get_or_err("launch_mode")? {
-            PrefValue::LaunchMode(mode) => mode,
-            _ => bail!("launch mode not set"),
-        };
-
         let game_dir = self.game.path(prefs)?;
         self.link_files(&game_dir).context("failed to link files")?;
 
-        match preference {
+        match &prefs.launch_mode {
             LaunchMode::Steam => self.launch_steam(prefs),
             LaunchMode::Direct { instances } => self.launch_direct(prefs, *instances),
         }
     }
 
     fn launch_steam(&self, prefs: &Prefs) -> Result<()> {
-        let steam_path = prefs.get_path_or_err("steam_exe_path")?;
+        let steam_path = prefs.steam_exe_path.as_ref().context("steam exe path not set")?;
         let steam_path = resolve_path(steam_path, "steam executable")?;
 
         let mut command = Command::new(steam_path);
@@ -132,14 +127,13 @@ impl ManagerGame {
 
 impl Game {
     pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
-        let path = match prefs.get(&format!("{}_game_dir", self.id)) {
-            Some(PrefValue::Path(path)) => path.to_path_buf(),
-            _ => {
+        let path = match prefs.game_dir_overrides.get(&self.id) {
+            Some(path) => path.to_path_buf(),
+            None => {
                 let mut path = prefs
-                    .get("steam_game_dir")
+                    .steam_library_dir
+                    .as_ref()
                     .context("steam library directory not set")?
-                    .as_path()
-                    .context("steam_game_dir should be a path")?
                     .to_path_buf();
     
                 path.push("steamapps");
@@ -152,7 +146,7 @@ impl Game {
 
         ensure!(
             path.exists(),
-            "game path not found (at {}), you might need to configure it in the settings",
+            "game path not found (at {}), please check your settings",
             path.display()
         );
 

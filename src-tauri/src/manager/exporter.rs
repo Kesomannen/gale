@@ -95,10 +95,12 @@ impl From<&semver::Version> for ExportVersion {
 
 pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
-fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore) -> Result<()> {
-    dir.push(&profile.name);
-    dir.set_extension("r2z");
-    let mut zip = util::zip::builder(dir).fs_context("creating zip archive", dir)?;
+fn export_file(profile: &Profile, dir: PathBuf, thunderstore: &Thunderstore) -> Result<PathBuf> {
+    let mut path = dir;
+
+    path.push(&profile.name);
+    path.set_extension("r2z");
+    let mut zip = util::zip::builder(&path).fs_context("creating zip archive", &path)?;
 
     let mods = profile
         .remote_mods()
@@ -116,7 +118,7 @@ fn export_file(profile: &Profile, dir: &mut PathBuf, thunderstore: &Thunderstore
 
     write_includes(find_includes(&profile.path), &profile.path, &mut zip)?;
 
-    Ok(())
+    Ok(path)
 }
 
 async fn export_code(
@@ -133,9 +135,9 @@ async fn export_code(
         let profile = manager.active_profile_mut();
         profile.refresh_config(Some(&thunderstore));
 
-        let mut path = prefs.get_path_or_err("temp_dir")?.join("exports");
-        fs::create_dir_all(&path)?;
-        export_file(profile, &mut path, &thunderstore)?;
+        let dir = prefs.temp_dir.join("exports");
+        fs::create_dir_all(&dir)?;
+        let path = export_file(profile, dir, &thunderstore)?;
 
         let data = fs::read(path).unwrap();
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
@@ -175,6 +177,8 @@ where
 }
 
 pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
+    // Include any files in the BepInEx/config directory,
+    // and any other files with the following extensions:
     const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
     const EXCLUDE_FILES: [&str; 4] = [
         "profile.json",
@@ -183,18 +187,21 @@ pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
         "doorstop_config.ini",
     ];
 
+    let config_dir = ["BepInEx", "config"].iter().collect::<PathBuf>();
+
     WalkDir::new(root)
         .into_iter()
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
-        .map(|entry| entry.into_path())
+        .map(move |entry| entry.into_path().strip_prefix(root).unwrap().to_path_buf())
         .filter(|path| {
             let name = path.file_name().unwrap();
             !EXCLUDE_FILES.iter().any(|exc| name == *exc)
         })
-        .filter(|path| match path.extension() {
-            Some(ext) => INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext),
-            None => false,
+        .filter(move |path| {
+            path.starts_with(&config_dir)
+                || path
+                    .extension()
+                    .is_some_and(|ext| INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext))
         })
-        .map(move |path| path.strip_prefix(root).unwrap().to_path_buf())
 }

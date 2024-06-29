@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import { currentProfile, refreshProfiles } from '$lib/stores';
+	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { clipboard } from '@tauri-apps/api';
 	import { Dialog } from 'bits-ui';
@@ -27,7 +27,7 @@
 	<Dialog.Description class="flex flex-center text-slate-400 mb-2">
 		{#await codePromise}
 			<Icon icon="mdi:loading" class="animate-spin text-lg mr-2" />
-			Exporting {$currentProfile.name} as code...
+			Exporting {$activeProfile?.name} as code...
 		{:then}
 			Export complete! The code has been copied to your clipboard.
 		{/await}

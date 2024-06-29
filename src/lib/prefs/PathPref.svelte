@@ -3,39 +3,28 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import PathField from '$lib/components/PathField.svelte';
-	import type { PrefValue } from '$lib/models';
 	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 	import { sentenceCase } from '$lib/util';
 
 	export let label: string;
-	export let key: string;
 	export let type: 'dir' | 'file';
 	export let canClear: boolean = false;
-
-	let value: string | null;
-
-	$: getValue(key);
+	
+	export let value: string | null;
+	export let set: (value: string | null) => void;
 
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			title: 'Select ' + sentenceCase(key),
+			title: 'Select ' + sentenceCase(label),
 			directory: type === 'dir'
 		}).then(async (result) => {
       		if (result === null) return;
 
-			setValue(result as string);
+			value = result as string;
+			set(result as string);
 		});
-	}
-
-	async function setValue(v: string | null) {
-		value = v;
-		await invokeCommand('set_pref', { key, value });
-	}
-
-	async function getValue(key: string) {
-		value = (await invokeCommand<PrefValue | null>('get_pref', { key })) as string;
 	}
 </script>
 
@@ -49,7 +38,8 @@
 		 		hover:bg-gray-800 hover:text-slate-400"
 				on:click={(evt) => {
 					evt.stopPropagation();
-					setValue(null);
+					value = null;
+					set(null);
 				}}
 			>
 				<Icon icon="mdi:close" />

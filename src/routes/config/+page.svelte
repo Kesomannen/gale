@@ -16,7 +16,7 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { currentProfile } from '$lib/stores';
+	import { activeProfile } from '$lib/stores';
 	import { Render } from '@jill64/svelte-sanitize';
 	import StringConfig from '$lib/config/StringConfig.svelte';
 	import EnumConfig from '$lib/config/EnumConfig.svelte';
@@ -32,7 +32,7 @@
 	let selectedSection: ConfigSection | undefined;
 
 	$: {
-		$currentProfile;
+		$activeProfile;
 		files = undefined;
 		selectedFile = undefined;
 		selectedSection = undefined;

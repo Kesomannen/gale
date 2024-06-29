@@ -11,7 +11,7 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import type { ModpackArgs, PackageCategory } from '$lib/models';
-	import { currentProfile, currentGame, categories } from '$lib/stores';
+	import { activeProfile, activeGame, categories } from '$lib/stores';
 	import { dialog } from '@tauri-apps/api';
 	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
@@ -39,7 +39,7 @@
 	let loading: string | null = null;
 
 	$: {
-		$currentProfile;
+		$activeProfile;
 		refresh();
 	}
 
@@ -279,8 +279,8 @@
 				<div class="mt-1 overflow-hidden rounded-md">
 					{#each includeFiles as { path, enabled }, i}
 						<div
-							class="flex items-center justify-between px-4 py-1.5 text-slate-300
-                    odd:bg-gray-900 hover:bg-gray-700"
+							class="flex items-center justify-between py-1.5 px-3 text-slate-300
+                    			 odd:bg-gray-900 hover:bg-gray-700"
 						>
 							{path}
 
@@ -319,7 +319,7 @@
 	<Dialog.Description class="text-slate-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!
-		<Link href="https://thunderstore.io/c/{$currentGame?.id}/p/{author}/{name}"
+		<Link href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}"
 			>Click here to view its page on the website</Link
 		>.
 	</Dialog.Description>

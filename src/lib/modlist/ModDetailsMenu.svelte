@@ -8,7 +8,7 @@
 
 	import { open } from '@tauri-apps/api/shell';
 	import { fetch } from '@tauri-apps/api/http';
-	import { currentGame } from '$lib/stores';
+	import { activeGame } from '$lib/stores';
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
@@ -28,7 +28,7 @@
 	function openCommunityUrl(tail?: string) {
 		if (!tail) return;
 
-		let game = get(currentGame);
+		let game = get(activeGame);
 		if (!game) return;
 
 		open(`https://thunderstore.io/c/${game.id}/p/${tail}/`);
@@ -38,13 +38,13 @@
 		if (url) open(url);
 	}
 
-	let readmePromise: Promise<string | undefined>;
+	let readmePromise: Promise<string | null>;
 
 	$: {
 		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
 		readmePromise = fetch<MarkdownResponse>(url).then((res) => {
 			if (!res.data.markdown) {
-				return undefined;
+				return null;
 			} else {
 				return res.data.markdown
 					.split('\n')

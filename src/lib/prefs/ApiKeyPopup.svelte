@@ -33,7 +33,7 @@
 	</p>
 
 	<p class="mt-1 mb-2">
-		Once set, you <b>will not</b> be able to view the token again.
+		Once set, you will <b>not</b> be able to view the token again.
 	</p>
 
 	<InputField placeholder="Enter API token..." on:submit={submit} bind:value={token} />
@@ -67,12 +67,12 @@
 				6. Once you submit, the API token will be displayed. Make sure you copy and paste it here,
 				since you won't be able to see it once you navigate away from the page.
 			</li>
-
-			<b
-				>Do not share the token with anyone else, as it gives power to update, publish or delete
-				packages in your name!</b
-			>
 		</ol>
+
+		<b
+			>Do not share the token with anyone else, as it gives power to update, publish or delete
+			packages in your name!</b
+		>
 	</details>
 
 	<svelte:fragment slot="buttons">

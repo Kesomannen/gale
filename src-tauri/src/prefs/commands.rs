@@ -1,23 +1,19 @@
 use crate::util::cmd::{Result, StateMutex};
 
-use super::{PrefValue, Prefs};
+use super::Prefs;
 use log::debug;
+use tauri::AppHandle;
 
 #[tauri::command]
-pub fn get_pref(key: &str, prefs: StateMutex<Prefs>) -> Result<Option<PrefValue>> {
-    let prefs = prefs.lock().unwrap();
-    let result = prefs.get(key);
-    Ok(result.cloned())
+pub fn get_prefs(prefs: StateMutex<Prefs>) -> Prefs {
+    prefs.lock().unwrap().clone()
 }
 
 #[tauri::command]
-pub fn set_pref(key: &str, value: Option<PrefValue>, prefs: StateMutex<Prefs>, window: tauri::Window) -> Result<()> {
+pub fn set_prefs(value: Prefs, prefs: StateMutex<Prefs>, app: AppHandle) -> Result<()> {
     let mut prefs = prefs.lock().unwrap();
-
-    debug!("setting pref {} to {:?}", key, value);
-
-    prefs.set(key, value, Some(&window))?;
-
+    prefs.set(value, &app)?;
+    debug!("updated prefs: {:?}", prefs);
     Ok(())
 }
 

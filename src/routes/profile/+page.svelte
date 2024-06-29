@@ -19,7 +19,7 @@
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
-	import { currentProfile, profileQuery } from '$lib/stores';
+	import { activeProfile, profileQuery } from '$lib/stores';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
@@ -51,7 +51,7 @@
 	let dependants: string[] | undefined;
 
 	$: {
-		$currentProfile;
+		$activeProfile;
 		$profileQuery;
 		refresh();
 	}
@@ -69,7 +69,7 @@
 	let isFirst = true;
 
 	$: {
-		$currentProfile;
+		$activeProfile;
 		resetBannerThreshold();
 	}
 

@@ -28,15 +28,15 @@ pub async fn export_code(
 
 #[tauri::command]
 pub fn export_file(
-    mut dir: PathBuf,
+    dir: PathBuf,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
 ) -> Result<()> {
     let manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    super::export_file(manager.active_profile(), &mut dir, &thunderstore)?;
-    open::that(dir.parent().unwrap()).ok();
+    let path = super::export_file(manager.active_profile(), dir, &thunderstore)?;
+    open::that(path.parent().unwrap()).ok();
 
     Ok(())
 }
@@ -106,7 +106,7 @@ pub async fn upload_pack(
 
         let profile = manager.active_profile_mut();
 
-        let mut path = prefs.get_path_or_err("temp_dir")?.to_path_buf();
+        let mut path = prefs.temp_dir.to_path_buf();
         path.push("modpacks");
 
         if !path.exists() {

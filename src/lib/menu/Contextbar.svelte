@@ -6,8 +6,8 @@
 
 	import {
 		activeProfileIndex,
-		currentGame,
-		currentProfile,
+		activeGame,
+		activeProfile,
 		profiles,
 		refreshProfiles,
 		setActiveProfile
@@ -54,14 +54,14 @@
 		on:click={() => (gamesOpen = !gamesOpen)}
 		class="flex flex-shrink-0 items-center justify-between font-semibold pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-slate-300 group-hover:text-slate-200 cursor-default"
 	>
-		{#if $currentGame}
+		{#if $activeGame}
 			<img
-				src="games/{$currentGame.id}.webp"
+				src="games/{$activeGame.id}.webp"
 				class="max-w-8 max-h-8 rounded mr-2"
-				alt={$currentGame.displayName}
+				alt={$activeGame.displayName}
 			/>
 
-			{$currentGame.displayName}
+			{$activeGame.displayName}
 		{:else}
 			Loading...
 		{/if}
@@ -78,13 +78,13 @@
 						text-slate-300 group-hover:text-slate-200 hover:bg-gray-800 cursor-default"
 		>
 			<span class="flex-shrink truncate font-semibold mr-auto">
-				{$currentProfile.name}
+				{$activeProfile?.name}
 			</span>
 
 			<div
 				class="rounded bg-gray-800 group-hover:bg-gray-700 px-2 py-0.5 text-sm ml-6 mr-2 font-medium"
 			>
-				{$currentProfile.modCount}
+				{$activeProfile?.modCount}
 			</div>
 
 			<Icon
@@ -151,7 +151,7 @@
 	<Updater />
 </div>
 
-<Popup title="Launching {$currentGame?.displayName}..." bind:open={launchGamePopupOpen}>
+<Popup title="Launching {$activeGame?.displayName}..." bind:open={launchGamePopupOpen}>
 	<Dialog.Description class="text-slate-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
 	</Dialog.Description>

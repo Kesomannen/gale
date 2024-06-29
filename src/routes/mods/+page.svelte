@@ -12,7 +12,7 @@
 	import { fly } from 'svelte/transition';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import { modQuery, currentGame } from '$lib/stores';
+	import { modQuery, activeGame } from '$lib/stores';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
@@ -63,7 +63,7 @@
 
 	$: {
 		$modQuery;
-    	$currentGame;
+    	$activeGame;
 		refresh();
 	}
 

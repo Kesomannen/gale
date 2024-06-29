@@ -43,6 +43,7 @@ chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-deep-link = "=0.1.2"
 tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 keyring = "2.3"
+dirs-next = "2.0.0"
 
 [target.'cfg(target_os="macos")'.dependencies]
 objc = "0.2"

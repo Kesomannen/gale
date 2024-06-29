@@ -63,7 +63,11 @@ pub enum JsonStyle {
     Compact,
 }
 
-pub fn write_json<T: Serialize + ?Sized>(path: &Path, value: &T, style: JsonStyle) -> anyhow::Result<()> {
+pub fn write_json<T: Serialize + ?Sized>(
+    path: impl AsRef<Path>,
+    value: &T,
+    style: JsonStyle,
+) -> anyhow::Result<()> {
     let file = fs::File::create(path)?;
     let writer = io::BufWriter::new(file);
 
@@ -90,4 +94,17 @@ pub fn add_extension(path: &mut PathBuf, extension: impl AsRef<Path>) {
 
 pub fn file_name_lossy(path: &Path) -> String {
     path.file_name().unwrap().to_string_lossy().to_string()
+}
+
+pub trait PathExt {
+    fn exists_or_none(self) -> Option<PathBuf>;
+}
+
+impl PathExt for PathBuf {
+    fn exists_or_none(self) -> Option<PathBuf> {
+        match self.exists() {
+            true => Some(self),
+            false => None,
+        }
+    }
 }

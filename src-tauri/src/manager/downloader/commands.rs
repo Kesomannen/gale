@@ -35,9 +35,8 @@ pub fn clear_download_cache(
     thunderstore: StateMutex<Thunderstore>,
 ) -> Result<()> {
     let prefs = prefs.lock().unwrap();
-    let cache_dir = prefs.get_path_or_err("cache_dir")?;
 
-    if !cache_dir.exists() {
+    if !prefs.cache_dir.exists() {
         return Ok(());
     }
 

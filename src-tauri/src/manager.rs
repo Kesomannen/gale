@@ -6,7 +6,7 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -783,7 +783,7 @@ const DEFAULT_GAME_ID: &str = "lethal-company";
 
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
-        let save_path = prefs.get_path_or_err("data_dir")?.join("manager.json");
+        let save_path = prefs.data_dir.join("manager.json");
         let save_data = match save_path.try_exists()? {
             true => util::fs::read_json(&save_path).context("failed to read manager save data")?,
             false => ManagerSaveData {
@@ -793,7 +793,7 @@ impl ModManager {
 
         let mut games = HashMap::new();
 
-        for entry in prefs.get_path_or_err("data_dir")?.read_dir()? {
+        for entry in prefs.data_dir.read_dir()? {
             let path = entry?.path();
 
             if path.is_dir() {
@@ -842,7 +842,7 @@ impl ModManager {
         let mut manager_game = ManagerGame {
             game,
             profiles: Vec::new(),
-            path: prefs.get_path_or_err("data_dir")?.join(&game.id),
+            path: prefs.data_dir.join(&game.id),
             favorite: false,
             active_profile_index: 0,
         };
@@ -873,7 +873,7 @@ impl ModManager {
     }
 
     fn save(&self, prefs: &Prefs) -> Result<()> {
-        let mut path = prefs.get_path_or_err("data_dir")?.clone();
+        let mut path = prefs.data_dir.get().to_path_buf();
 
         path.push("manager.json");
 

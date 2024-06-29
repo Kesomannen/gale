@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 
 use super::{downloader::ModInstall, ModManager, ProfileMod};
 use crate::{
-    prefs::{PrefValue, Prefs},
+    prefs::Prefs,
     thunderstore::{BorrowedMod, Thunderstore},
     util::{self, error::IoResultExt},
 };
@@ -12,7 +12,7 @@ use std::{
 use itertools::Itertools;
 
 pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
-    let mut path = prefs.get_path_or_err("cache_dir")?.clone();
+    let mut path = prefs.cache_dir.get().to_path_buf();
     path.push(&borrowed_mod.package.full_name);
     path.push(&borrowed_mod.version.version_number.to_string());
 
@@ -20,7 +20,7 @@ pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
 }
 
 pub fn clear_cache(prefs: &Prefs) -> Result<()> {
-    let cache_dir = prefs.get_path_or_err("cache_dir")?;
+    let cache_dir = prefs.cache_dir.get();
 
     if !cache_dir.exists() {
         return Ok(());
@@ -37,8 +37,6 @@ pub fn soft_clear_cache(
     thunderstore: &Thunderstore,
     prefs: &Prefs,
 ) -> Result<()> {
-    let cache_dir = prefs.get_path_or_err("cache_dir")?;
-
     let installed_mods = manager
         .active_game()
         .installed_mods(thunderstore)
@@ -51,7 +49,7 @@ pub fn soft_clear_cache(
         .collect::<Result<HashSet<_>>>()
         .context("failed to resolve installed mods")?;
 
-    let packages = fs::read_dir(cache_dir)
+    let packages = fs::read_dir(&*prefs.cache_dir)
         .context("failed to read cache directory")?
         .filter_map(|e| e.ok());
 
@@ -119,12 +117,7 @@ pub fn try_cache_install(
                 profile.force_toggle_mod(&borrowed.package.uuid4, thunderstore)?;
             }
 
-            let cache_enabled = match prefs.get("enable_mod_cache") {
-                Some(PrefValue::Bool(bool)) => *bool,
-                _ => false,
-            };
-
-            if !cache_enabled {
+            if !prefs.mod_cache_enabled() {
                 fs::remove_dir_all(path).ok();
                 fs::remove_dir(path.parent().unwrap()).ok();
             }

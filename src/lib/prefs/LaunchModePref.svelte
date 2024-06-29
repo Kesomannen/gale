@@ -1,31 +1,25 @@
 <script lang="ts">
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
-	import { invokeCommand } from '$lib/invoke';
-	import type { LaunchMode, PrefValue } from '$lib/models';
-	import { onMount } from 'svelte';
+	import type { LaunchMode } from '$lib/models';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { sentenceCase } from '$lib/util';
 
-	let value: LaunchMode | undefined;
-	let instances = 1;
+	export let value: LaunchMode;
+	export let set: (value: LaunchMode) => void;
 
-	onMount(async () => {
-		value = (await invokeCommand<PrefValue>('get_pref', { key: 'launch_mode' })) as LaunchMode;
-		instances = value.content?.instances ?? 1;
-	});
+	let instances = value.content?.instances ?? 1;
 
-	function set(newValue: string) {
-		if (!value) return;
-		value.type = newValue as 'steam' | 'direct';
+	function onSelectedChangeSingle(newValue: string) {
+		let type = newValue as 'steam' | 'direct';
 
-		if (value.type == 'direct') {
-			value.content = { instances };
+		if (type == 'steam') {
+			value = { type };
 		} else {
-			value.content = undefined;
+			value = { type, content: { instances } };
 		}
 
-		invokeCommand('set_pref', { key: 'launch_mode', value });
+		set(value);
 	}
 </script>
 
@@ -47,7 +41,7 @@
 		items={['steam', 'direct']}
 		getLabel={sentenceCase}
 		selected={value?.type ?? 'steam'}
-		onSelectedChangeSingle={set}
+		{onSelectedChangeSingle}
 	/>
 
 	<Tooltip text="Number of instances to launch. Only available in direct mode." side="top">
@@ -56,7 +50,10 @@
 			step="int32"
 			disabled={value?.type !== 'direct'}
 			bind:value={instances}
-			on:input={() => set('direct')}
+			on:input={() => {
+				value.content = { instances };
+				set(value);
+			}}
 			class="px-3 py-1 rounded-lg bg-gray-900 ml-1
 					text-slate-300 hover:text-slate-100 disabled:text-slate-400 border border-gray-500 border-opacity-0 
 					enabled:hover:border-opacity-100"

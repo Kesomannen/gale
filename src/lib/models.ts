@@ -67,8 +67,6 @@ export type LoadFileResult =
 			};
 	  };
 
-export type PrefValue = string | LaunchMode | number | boolean;
-
 export interface ProfileInfo {
 	name: string;
 	modCount: number;
@@ -257,4 +255,16 @@ export interface R2ImportData {
 export interface MarkdownResponse {
 	markdown?: string;
 	detail?: string;
+}
+
+export interface Prefs {
+	steamExePath?: string;
+	steamLibraryDir?: string;
+	gameDirOverrides: Record<string, string>;
+	dataDir: string;
+	cacheDir: string;
+	tempDir: string;
+	launchMode: LaunchMode;
+	enableModCache: boolean;
+	zoomFactor: number;
 }

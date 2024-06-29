@@ -7,6 +7,8 @@ use tokio::{
     io::{AsyncReadExt, AsyncSeekExt},
 };
 use uuid::Uuid;
+use log::{debug, info};
+use reqwest::StatusCode;
 
 use std::{
     collections::HashMap,
@@ -28,8 +30,6 @@ use crate::{
     },
     util,
 };
-use log::{debug, error, info};
-use reqwest::StatusCode;
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -115,8 +115,7 @@ pub fn export(
 
     zip.write_str("README.md", &args.readme)?;
 
-    let manifest_writer = zip.writer("manifest.json")?;
-    serde_json::to_writer_pretty(manifest_writer, &manifest)?;
+    serde_json::to_writer_pretty(zip.writer("manifest.json")?, &manifest)?;
 
     write_icon(&args.icon_path, &mut zip).context("failed to write icon")?;
 
@@ -183,7 +182,6 @@ pub async fn publish(
     {
         Ok(parts) => parts,
         Err(err) => {
-            error!("failed to upload file: {:#}", err);
             tauri::async_runtime::spawn(async move { abort_upload(&uuid, &token, client).await });
             return Err(err.context("failed to upload file"));
         }

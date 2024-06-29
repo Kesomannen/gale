@@ -315,8 +315,6 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     let prefs = app.state::<Mutex<Prefs>>();
     let prefs = prefs.lock().unwrap();
 
-    let cache_dir = prefs.get_path_or_err("cache_dir")?;
-
     for package in path.read_dir()? {
         let package = package?;
 
@@ -324,7 +322,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             continue;
         }
 
-        fs::create_dir_all(cache_dir.join(package.file_name()))?;
+        fs::create_dir_all(prefs.cache_dir.join(package.file_name()))?;
 
         for version in package.path().read_dir()? {
             let version = version?;
@@ -336,7 +334,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             let package_name = util::fs::file_name_lossy(&package.path());
             let version_name = util::fs::file_name_lossy(&version.path());
 
-            let mut new_path = cache_dir.join(&package_name).join(&version_name);
+            let mut new_path = prefs.cache_dir.join(&package_name).join(&version_name);
             if new_path.exists() {
                 continue;
             }
