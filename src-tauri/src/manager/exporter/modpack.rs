@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use futures_util::future::try_join_all;
 use image::{imageops::FilterType, ImageFormat};
 use serde::{Deserialize, Serialize};
@@ -30,6 +30,7 @@ use crate::{
     },
     util,
 };
+use tauri::Url;
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -89,6 +90,9 @@ pub fn export(
     args: &ModpackArgs,
     thunderstore: &Thunderstore,
 ) -> Result<()> {
+    ensure!(!args.name.is_empty(), "name cannot be empty");
+    ensure!(!args.description.is_empty(), "description cannot be empty");
+
     info!("exporting modpack to {}", path.display());
 
     let dep_strings = profile
@@ -116,7 +120,9 @@ pub fn export(
 
     let mut zip = util::zip::builder(path)?;
 
-    zip.write_str("README.md", &args.readme)?;
+    if !args.readme.is_empty() {
+        zip.write_str("README.md", &args.readme)?;
+    }
 
     serde_json::to_writer_pretty(zip.writer("manifest.json")?, &manifest)?;
 
@@ -162,6 +168,14 @@ pub async fn publish(
     token: String,
     client: reqwest::Client,
 ) -> Result<()> {
+    ensure!(args.description.len() <= 250, "description is too long");
+    ensure!(!args.readme.is_empty(), "readme cannot be empty");
+    ensure!(!args.author.is_empty(), "author cannot be empty");
+    
+    if !args.website_url.is_empty() {
+        Url::parse(&args.website_url).context("invalid website URL")?;
+    }
+
     info!("publishing modpack");
 
     let response = initiate_upload(&path, &token, &client)

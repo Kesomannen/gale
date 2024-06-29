@@ -46,7 +46,7 @@
 		refresh();
 	}
 
-  // make sure 'Modpacks' category is always selected
+  	// make sure 'Modpacks' category is always selected
 	$: if (
 		selectedCategories &&
 		!selectedCategories.some((category) => category?.name === 'Modpacks')
@@ -287,8 +287,8 @@
 		<textarea
 			class="w-full h-32 px-3 py-2 rounded-lg bg-gray-900 placeholder-slate-400
            text-slate-300 hover:text-slate-200
-			     valid:focus:border-green-400 invalid:border-red-500 focus:outline-none
-			       border border-slate-500 border-opacity-0 hover:border-opacity-100"
+			     valid:focus:ring-green-400 invalid:ring-red-500 focus:ring-2 focus:outline-none
+			       border border-slate-500 border-opacity-0 hover:border-opacity-100 focus:border-opacity-0"
 			placeholder="Enter readme..."
 			required={true}
 			bind:value={readme}
