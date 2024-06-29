@@ -37,7 +37,7 @@ pub fn refresh_args(profile: &mut Profile) {
             name: profile.name.replace([' ', '-'], ""),
             description: String::new(),
             readme: format!("# {}\n\n", profile.name),
-            version_number: semver::Version::new(0, 1, 0),
+            version_number: "1.0.0".to_owned(),
             icon_path: PathBuf::new(),
             website_url: String::new(),
             include_disabled: false,
@@ -69,7 +69,7 @@ pub struct ModpackArgs {
     pub categories: Vec<String>,
     pub nsfw: bool,
     pub readme: String,
-    pub version_number: semver::Version,
+    pub version_number: String,
     pub icon_path: PathBuf,
     pub website_url: String,
     pub include_disabled: bool,
@@ -101,14 +101,17 @@ pub fn export(
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve modpack dependencies")?;
 
+    let version_number = semver::Version::parse(&args.version_number)
+        .context("invalid version number")?;
+
     let manifest = PackageManifest {
         name: &args.name,
         description: &args.description,
-        version_number: args.version_number.clone(),
         website_url: &args.website_url,
         dependencies: dep_strings.iter().map(String::as_str).collect(),
         installers: None,
         author: None,
+        version_number,
     };
 
     let mut zip = util::zip::builder(path)?;

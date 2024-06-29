@@ -20,6 +20,9 @@
 	import { Button, Dialog, Select } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
 
+	const URL_PATTERN =
+		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
+
 	let name: string;
 	let author: string;
 	let selectedCategories: PackageCategory[];
@@ -41,6 +44,17 @@
 	$: {
 		$activeProfile;
 		refresh();
+	}
+
+  // make sure 'Modpacks' category is always selected
+	$: if (
+		selectedCategories &&
+		!selectedCategories.some((category) => category?.name === 'Modpacks')
+	) {
+		selectedCategories = [
+			$categories.find((category) => category.name === 'Modpacks')!,
+			...selectedCategories
+		];
 	}
 
 	async function refresh() {
@@ -145,7 +159,7 @@
 	});
 </script>
 
-<div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
+<form class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
 	{#if loading}
 		<div
 			class="flex items-center justify-center fixed inset-0 text-slate-200 bg-black/40 text-lg"
@@ -159,11 +173,16 @@
 	<FormField
 		label="Name"
 		description="The name of the modpack, as shown on Thunderstore. 
-			           Make sure this stays consistent between updates.
-			           Cannot contain spaces or hyphens."
+			        Make sure this stays consistent between updates.
+			        Cannot contain spaces or hyphens."
 		required={true}
 	>
-		<InputField bind:value={name} placeholder="Enter name..." />
+		<InputField
+			bind:value={name}
+			placeholder="Enter name..."
+			required={true}
+			pattern="^[a-zA-Z0-9_]+$"
+		/>
 	</FormField>
 
 	<FormField
@@ -171,16 +190,21 @@
 		description="The author of the modpack, which should be the name of your Thunderstore team."
 		required={true}
 	>
-		<InputField bind:value={author} placeholder="Enter author..." />
+		<InputField bind:value={author} placeholder="Enter author..." required={true} />
 	</FormField>
 
 	<FormField label="Description" description="A short description of the modpack." required={true}>
-		<InputField bind:value={description} placeholder="Enter description..." />
+		<InputField
+			bind:value={description}
+			placeholder="Enter description..."
+			required={true}
+			maxlength={250}
+		/>
 	</FormField>
 
 	<FormField
 		label="Categories"
-		description="The categories that the modpack belongs to. You can select multiple options, but 'Modpacks' should always be included."
+		description="The categories that the modpack belongs to. 'Modpacks' is always included."
 	>
 		{#if selectedCategories}
 			<Dropdown
@@ -233,11 +257,16 @@
 			           You cannot publish with the same version number twice."
 		required={true}
 	>
-		<InputField bind:value={versionNumber} placeholder="Enter version number..." />
+		<InputField
+			bind:value={versionNumber}
+			placeholder="Enter version number..."
+			required={true}
+			pattern="^\d+\.\d+\.\d+$"
+		/>
 	</FormField>
 
 	<FormField label="Website" description="The URL of a website of your choosing. Optional.">
-		<InputField bind:value={websiteUrl} placeholder="Enter website URL..." />
+		<InputField bind:value={websiteUrl} placeholder="Enter website URL..." pattern={URL_PATTERN} />
 	</FormField>
 
 	<FormField
@@ -256,9 +285,12 @@
 		required={true}
 	>
 		<textarea
-			class="w-full h-32 px-3 py-2 rounded-lg bg-gray-900 placeholder-slate-400 text-slate-200
-            border-slate-500 border-opacity-0 border hover:border-opacity-100"
+			class="w-full h-32 px-3 py-2 rounded-lg bg-gray-900 placeholder-slate-400
+           text-slate-300 hover:text-slate-200
+			     valid:focus:border-green-400 invalid:border-red-500 focus:outline-none
+			       border border-slate-500 border-opacity-0 hover:border-opacity-100"
 			placeholder="Enter readme..."
+			required={true}
 			bind:value={readme}
 		/>
 
@@ -279,7 +311,7 @@
 				<div class="mt-1 overflow-hidden rounded-md">
 					{#each includeFiles as { path, enabled }, i}
 						<div
-							class="flex items-center justify-between py-1.5 px-3 text-slate-300
+							class="flex items-center justify-between py-1.5 gap-2 px-3 text-slate-300
                     			 odd:bg-gray-900 hover:bg-gray-700"
 						>
 							{path}
@@ -311,7 +343,7 @@
 		<BigButton color="gray" on:click={exportToFile}>Export to file</BigButton>
 		<BigButton color="green" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
 	</div>
-</div>
+</form>
 
 <ApiKeyPopup />
 

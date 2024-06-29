@@ -4,7 +4,7 @@
 	export let required = false;
 </script>
 
-<div class="my-1">
+<div class="my-1 invalid:mx-5">
 	<div class="pl-0.5 mb-[-3px]">
 		<span class="text-lg text-slate-100 font-medium">{label}</span>
 		{#if required}
