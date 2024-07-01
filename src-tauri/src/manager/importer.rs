@@ -5,18 +5,18 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{anyhow, ensure, Context, Result};
-use tauri::{AppHandle, Manager};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use base64::{prelude::BASE64_STANDARD, Engine};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
 use crate::{
     manager::{commands::save, downloader::InstallOptions, installer, LocalMod, ProfileMod},
     prefs::Prefs,
     thunderstore::{models::PackageManifest, Thunderstore},
-    util::{self, error::IoResultExt},
+    util::{self, error::IoResultExt, fs::PathExt},
     NetworkClient,
 };
 
@@ -90,7 +90,7 @@ fn resolve_r2mods<'a>(
         .context("failed to resolve mod references")
 }
 
-async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
+async fn import_data(mut data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
     let path = {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
@@ -105,6 +105,8 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
 
         profile.path.clone()
     };
+
+    data.mods.reverse(); // r2modman's "Custom" sort order is reversed
 
     downloader::install_mods(data.mods, options, app)
         .await
@@ -168,51 +170,10 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     }
 }
 
-async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
-    ensure!(path.is_dir(), "mod path is not a directory");
+async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
+    let (mut local_mod, kind) = read_local_mod(&path)?;
 
-    path.push("manifest.json");
-
-    let json = match path.exists() {
-        true => Some(fs::read_to_string(&*path).fs_context("reading manifest", &path)?),
-        false => None,
-    };
-
-    let manifest = match &json {
-        Some(json) => Some(
-            serde_json::from_str::<PackageManifest>(json).context("failed to parse manifest")?,
-        ),
-        None => None,
-    };
-
-    path.pop();
-
-    let uuid = Uuid::new_v4();
-
-    let mut local_mod = match manifest {
-        Some(manifest) => LocalMod {
-            uuid,
-            name: manifest.name.to_owned(),
-            author: manifest.author.map(|a| a.to_owned()),
-            description: Some(manifest.description.to_owned()),
-            version: Some(manifest.version_number),
-            dependencies: Some(
-                manifest
-                    .dependencies
-                    .into_iter()
-                    .map(|s| s.to_owned())
-                    .collect(),
-            ),
-            ..Default::default()
-        },
-        None => LocalMod {
-            uuid,
-            name: util::fs::file_name_lossy(&path),
-            ..Default::default()
-        },
-    };
-
-    if let Some(ref deps) = local_mod.dependencies {
+    if let Some(deps) = &local_mod.dependencies {
         downloader::install_with_mods(
             |manager, thunderstore| {
                 let profile = manager.active_profile();
@@ -241,25 +202,35 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
 
     let profile = manager.active_profile_mut();
 
-    if profile.local_mods().any(|(m, _)| m.name == local_mod.name) {
+    let existing = profile
+        .local_mods()
+        .find(|(LocalMod { name, .. }, _)| *name == local_mod.name);
+    let existing = existing.map(|(LocalMod { uuid, .. }, _)| *uuid);
+
+    if let Some(uuid) = existing {
         profile
             .force_remove_mod(&uuid, &thunderstore)
             .context("failed to remove existing mod")?;
     }
 
-    installer::from_disk(&path, &profile.path, &local_mod.name)
-        .context("failed to install local mod")?;
+    let mut plugin_path = profile.path.clone();
+    plugin_path.push("BepInEx");
+    plugin_path.push("plugins");
+    plugin_path.push(&local_mod.name);
 
-    let mut mod_path = profile.path.clone();
-    mod_path.push("BepInEx");
-    mod_path.push("plugins");
-    mod_path.push(&local_mod.name);
+    match kind {
+        LocalModKind::Package => {
+            installer::install_from_disk(&path, &profile.path, &local_mod.name)
+                .context("failed to install local mod")?;
 
-    installer::normalize_mod_structure(&mut mod_path)?;
+            local_mod.icon = plugin_path.join("icon.png").exists_or_none();
+        }
+        LocalModKind::Dll => {
+            let file_name = path.file_name().unwrap();
 
-    mod_path.push("icon.png");
-    if mod_path.exists() {
-        local_mod.icon = Some(mod_path);
+            fs::create_dir_all(&plugin_path)?;
+            fs::copy(&path, plugin_path.join(file_name))?;
+        }
     }
 
     profile.mods.push(ProfileMod::local_now(local_mod));
@@ -267,4 +238,49 @@ async fn import_local_mod(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     save(&manager, &prefs)?;
 
     Ok(())
+}
+
+#[derive(PartialEq, Eq)]
+enum LocalModKind {
+    Package,
+    Dll,
+}
+
+fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
+    let kind = match path.is_dir() {
+        true => LocalModKind::Package,
+        false => match path.extension() {
+            Some(ext) if ext == "dll" => LocalModKind::Dll,
+            _ => bail!("unsupported file type"),
+        },
+    };
+
+    let manifest = match kind {
+        LocalModKind::Package => path.join("manifest.json").exists_or_none().map(|path| {
+            util::fs::read_json::<PackageManifest>(&path).context("failed to read mod manifest")
+        }),
+        LocalModKind::Dll => None,
+    }
+    .transpose()?;
+
+    let uuid = Uuid::new_v4();
+
+    let local_mod = match manifest {
+        Some(manifest) => LocalMod {
+            uuid,
+            name: manifest.name,
+            author: manifest.author,
+            description: Some(manifest.description),
+            version: Some(manifest.version_number),
+            dependencies: Some(manifest.dependencies),
+            ..Default::default()
+        },
+        None => LocalMod {
+            uuid,
+            name: util::fs::file_name_lossy(path.with_extension("")),
+            ..Default::default()
+        },
+    };
+
+    Ok((local_mod, kind))
 }

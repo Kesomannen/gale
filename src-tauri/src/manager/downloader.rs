@@ -347,16 +347,14 @@ impl<'a> Installer<'a> {
         let prefs = self.prefs.lock().unwrap();
 
         let borrowed = install.mod_ref.borrow(&thunderstore)?;
-        let mut path = installer::cache_path(borrowed, &prefs)?;
+        let cache_path = installer::cache_path(borrowed, &prefs)?;
 
-        fs::create_dir_all(&path).fs_context("create mod cache dir", &path)?;
+        fs::create_dir_all(&cache_path).fs_context("create mod cache dir", &cache_path)?;
 
         self.check_cancelled()?;
         self.update(InstallTask::Extracting);
 
-        util::zip::extract(Cursor::new(data), &path).fs_context("extracting mod", &path)?;
-
-        installer::normalize_mod_structure(&mut path)?;
+        util::zip::extract(Cursor::new(data), &cache_path).fs_context("extracting mod", &cache_path)?;
 
         self.check_cancelled()?;
         self.update(InstallTask::Installing);
@@ -365,7 +363,7 @@ impl<'a> Installer<'a> {
             callback(install, &mut manager, &thunderstore);
         }
 
-        installer::try_cache_install(install, &path, &mut manager, &thunderstore, &prefs)
+        installer::try_cache_install(install, &cache_path, &mut manager, &thunderstore, &prefs)
             .context("failed to install after download")?;
 
         manager

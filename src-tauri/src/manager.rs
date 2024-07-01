@@ -14,6 +14,7 @@ use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 use uuid::Uuid;
 use walkdir::WalkDir;
+use exporter::modpack::ModpackArgs;
 
 use crate::{
     config,
@@ -27,7 +28,6 @@ use crate::{
     },
     util::{self, error::IoResultExt, fs::JsonStyle},
 };
-use exporter::modpack::ModpackArgs;
 
 pub mod commands;
 pub mod downloader;

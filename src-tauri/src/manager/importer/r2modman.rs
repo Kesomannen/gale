@@ -15,7 +15,7 @@ use crate::{
     manager::{
         downloader::InstallOptions,
         exporter::{self, R2Mod},
-        installer, ModManager,
+        ModManager,
     },
     prefs::Prefs,
     thunderstore::Thunderstore,
@@ -144,7 +144,7 @@ pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     find_paths().and_then(|path| {
         let profiles = find_profiles(path.clone(), false, app)
             .ok()?
-            .map(|path| util::fs::file_name_lossy(&path))
+            .map(util::fs::file_name_lossy)
             .collect();
         Some(ProfileImportData { path, profiles })
     })
@@ -334,14 +334,13 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             let package_name = util::fs::file_name_lossy(&package.path());
             let version_name = util::fs::file_name_lossy(&version.path());
 
-            let mut new_path = prefs.cache_dir.join(&package_name).join(&version_name);
+            let new_path = prefs.cache_dir.join(&package_name).join(&version_name);
             if new_path.exists() {
                 continue;
             }
 
             debug!("transferring cached mod: {}-{}", package_name, version_name);
             util::fs::copy_dir(&version.path(), &new_path, true)?;
-            installer::normalize_mod_structure(&mut new_path)?;
         }
     }
 

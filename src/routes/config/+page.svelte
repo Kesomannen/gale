@@ -195,7 +195,7 @@
 					{#if entry.type === 'untagged'}
 						<div class="flex items-center text-slate-300 pl-2 my-1">
 							<div
-								class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0 text-lg"
+								class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0"
 							>
 								{sentenceCase(entry.content.name)}
 							</div>

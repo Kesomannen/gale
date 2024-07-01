@@ -21,6 +21,6 @@
 </script>
 
 <div class="flex-grow">
-	<InputField bind:value={content} size='sm' />
+	<InputField bind:value={content} size='md' />
 </div>
 <ResetConfigButton {entryId} {onReset} />

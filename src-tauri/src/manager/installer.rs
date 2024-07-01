@@ -101,7 +101,7 @@ pub fn try_cache_install(
     match path.exists() {
         true => {
             let name = &borrowed.package.full_name;
-            from_disk(path, &profile.path, name)?;
+            install_from_disk(path, &profile.path, name)?;
 
             let profile_mod = ProfileMod::remote_now(install.mod_ref.clone());
             match install.index {
@@ -119,6 +119,8 @@ pub fn try_cache_install(
 
             if !prefs.mod_cache_enabled() {
                 fs::remove_dir_all(path).ok();
+
+                // remove the parent if it's empty
                 fs::remove_dir(path.parent().unwrap()).ok();
             }
 
@@ -128,64 +130,58 @@ pub fn try_cache_install(
     }
 }
 
-pub fn normalize_mod_structure(path: &mut PathBuf) -> Result<()> {
-    for dir in ["BepInExPack", "BepInEx", "plugins"].iter() {
-        path.push(dir);
-        util::fs::flatten(&*path, true)?;
-        path.pop();
-    }
-
-    Ok(())
-}
-
-pub fn from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
+pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
     let name = match full_name.split_once('-') {
         Some((_, name)) => name,
         None => full_name,
     };
 
     match name.starts_with("BepInExPack") {
-        true => bepinex(src, dest),
-        false => default(src, dest, full_name),
+        true => install_bepinex(src, dest),
+        false => install_default(src, dest, full_name),
     }
 }
 
-fn default(src: &Path, dest: &Path, name: &str) -> Result<()> {
-    let target_path = dest.join("BepInEx");
-    let target_plugins_path = target_path.join("plugins").join(name);
-    fs::create_dir_all(&target_plugins_path).context("failed to create plugins directory")?;
+fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
+    let dest = dest.join("BepInEx");
+    let plugin_dir = dest.join("plugins").join(mod_name);
+    fs::create_dir_all(&plugin_dir)?;
 
-    for entry in fs::read_dir(src)? {
-        let entry_path = entry?.path();
-        let entry_name = entry_path.file_name().unwrap();
+    for entry in src.read_dir()? {
+        let entry = entry?;
+        let path = entry.path();
+        let file_name = path.file_name().unwrap();
 
-        if entry_path.is_dir() {
-            if entry_name == "config" {
-                let target_path = target_path.join("config");
-                fs::create_dir_all(&target_path)?;
-                util::fs::copy_contents(&entry_path, &target_path, true)
-                    .fs_context("copying config", &entry_path)?;
-            } else {
-                let target_path = match entry_name.to_string_lossy().as_ref() {
-                    "patchers" | "core" | "monomod" => target_path.join(entry_name).join(name),
-                    "plugins" => target_plugins_path.clone(),
-                    _ => target_plugins_path.join(entry_name),
-                };
-
-                fs::create_dir_all(target_path.parent().unwrap())?;
-                util::fs::copy_dir(&entry_path, &target_path, true)
-                    .fs_context("copying directory", &entry_path)?;
+        if path.is_dir() {
+            if file_name == "BepInEx" {
+                install_default(&path, &dest, mod_name)?;
+                continue;
             }
+
+            let target = match file_name.to_string_lossy().as_ref() {
+                // Copy to BepInEx/{plugins | patchers | core | monomod}/{mod_name}
+                "patchers" | "core" | "monomod" => dest.join(file_name).join(mod_name),
+                "plugins" => plugin_dir.clone(),
+                // Copy directly without a subfolder
+                "config" => dest.join("config"),
+                // Copy others to the mod's plugin directory
+                _ => plugin_dir.join(file_name),
+            };
+
+            fs::create_dir_all(target.parent().unwrap())?;
+
+            util::fs::copy_dir(&path, &target, true)
+                .fs_context("copying directory", &path)?;
         } else {
-            fs::copy(&entry_path, &target_plugins_path.join(entry_name))
-                .fs_context("copying file", &entry_path)?;
+            fs::copy(&path, &plugin_dir.join(file_name))
+                .fs_context("copying file", &path)?;
         }
     }
 
     Ok(())
 }
 
-fn bepinex(src: &Path, dest: &Path) -> Result<()> {
+fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
     let target_path = dest.join("BepInEx");
 
     // Some BepInEx packs come with a subfolder where the actual BepInEx files are

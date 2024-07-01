@@ -109,10 +109,10 @@ pub fn export(
         .context("invalid version number")?;
 
     let manifest = PackageManifest {
-        name: &args.name,
-        description: &args.description,
-        website_url: &args.website_url,
-        dependencies: dep_strings.iter().map(String::as_str).collect(),
+        name: args.name.clone(),
+        description: args.description.clone(),
+        website_url: args.website_url.clone(),
+        dependencies: dep_strings.clone(),
         installers: None,
         author: None,
         version_number,

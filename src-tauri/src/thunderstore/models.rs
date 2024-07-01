@@ -96,14 +96,14 @@ pub struct LegacyProfileCreateResponse {
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PackageManifest<'a> {
-    pub name: &'a str,
+pub struct PackageManifest {
+    pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub author: Option<&'a str>,
-    pub description: &'a str,
+    pub author: Option<String>,
+    pub description: String,
     pub version_number: semver::Version,
-    pub dependencies: Vec<&'a str>,
-    pub website_url: &'a str,
+    pub dependencies: Vec<String>,
+    pub website_url: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<PackageInstaller>>,
 }
