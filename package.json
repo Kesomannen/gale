@@ -1,6 +1,6 @@
 {
 	"name": "gale",
-	"version": "0.5.7",
+	"version": "0.6.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",

@@ -56,6 +56,10 @@ impl DirPref {
     }
 
     pub fn set(&mut self, value: PathBuf) -> Result<()> {
+        if self.value == value {
+            return Ok(());
+        }
+
         ensure!(value.is_dir(), "value is not a directory");
         ensure!(
             !value.starts_with(&self.value),
@@ -73,6 +77,25 @@ impl DirPref {
                 bail!("new directory is not empty");
             }
         }
+
+        for entry in self.value.read_dir()? {
+            let entry = entry?;
+            let file_name = entry.file_name();
+
+            if self
+                .keep_files
+                .iter()
+                .any(|file| file_name == *file)
+            {
+                continue;
+            }
+
+            let new_path = value.join(file_name);
+            fs::rename(entry.path(), &new_path)?;
+        }
+
+        // remove only if empty
+        fs::remove_dir(&self.value).ok();
 
         self.value = value;
 
@@ -108,7 +131,7 @@ pub struct Prefs {
     #[serde(alias = "steam_game_dir")]
     pub steam_library_dir: Option<PathBuf>,
     #[serde(alias = "game_dir_overrides")]
-    pub game_dir_overrides: HashMap<String, PathBuf>,
+    pub game_dir_overrides: HashMap<String, Option<PathBuf>>,
 
     #[serde(alias = "data_dir")]
     pub data_dir: DirPref,
@@ -209,6 +232,14 @@ impl Prefs {
     }
 
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
+        self.steam_exe_path = value.steam_exe_path;
+        self.steam_library_dir = value.steam_library_dir;
+        self.game_dir_overrides = value.game_dir_overrides;
+
+        self.data_dir.set(value.data_dir.value)?;
+        self.cache_dir.set(value.cache_dir.value)?;
+        self.temp_dir.set(value.temp_dir.value)?;
+
         if self.zoom_factor != value.zoom_factor {
             let window = app.get_window("main").unwrap();
             if let Err(err) = window.zoom(value.zoom_factor as f64) {
@@ -219,14 +250,17 @@ impl Prefs {
                 );
             }
         }
+        self.zoom_factor = value.zoom_factor;
 
         if self.enable_mod_cache && !value.enable_mod_cache {
             fs::remove_dir_all(&*self.cache_dir)?;
             fs::create_dir_all(&*self.cache_dir)?;
         }
+        self.enable_mod_cache = value.enable_mod_cache;
 
-        value.save()?;
-        *self = value;
+        self.launch_mode = value.launch_mode;
+
+        self.save()?;
         Ok(())
     }
 

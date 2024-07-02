@@ -21,30 +21,6 @@ export let activeProfileIndex: number = 0;
 export let profiles: ProfileInfo[] = [];
 export let activeProfile = writable<ProfileInfo | null>(null);
 
-refreshGames();
-
-function loadQuery(key: string, getDefault: () => QueryModsArgs) {
-	let json = localStorage.getItem(key);
-	console.log('Loaded query:', json);
-	if (json) {
-		try {
-			return JSON.parse(json);
-		} catch (e) {
-			console.error('Failed to parse stored query:', e);
-		}
-	}
-
-	return getDefault();
-}
-
-function createQueryStore(key: string, getDefault: () => QueryModsArgs) {
-	let store = writable<QueryModsArgs>(loadQuery(key, getDefault));
-	store.subscribe((value) => {
-		localStorage.setItem(key, JSON.stringify(value));
-	});
-	return store;
-}
-
 const defaultModQuery = () => ({
 	maxCount: 20,
 	searchTerm: '',
@@ -72,22 +48,52 @@ const defaultProfileQuery = () => ({
 export let modQuery = createQueryStore('modQuery', defaultModQuery);
 export let profileQuery = createQueryStore('profileQuery', defaultProfileQuery);
 
+await refreshGames();
+
+let isFirst = true;
 activeGame.subscribe(() => {
+	// ignore when the game is fetched on startup
+	if (isFirst) {
+		isFirst = false;
+		return;
+	}
+
 	modQuery.set(defaultModQuery());
 	profileQuery.set(defaultProfileQuery());
 });
 
+function loadQuery(key: string, getDefault: () => QueryModsArgs) {
+	let json = localStorage.getItem(key);
+	if (json) {
+		try {
+			return JSON.parse(json);
+		} catch (e) {
+			console.error('Failed to parse stored query:', e);
+		}
+	}
+	
+	return getDefault();
+}
+
+function createQueryStore(key: string, getDefault: () => QueryModsArgs) {
+	let store = writable<QueryModsArgs>(loadQuery(key, getDefault));
+	store.subscribe((value) => {
+		localStorage.setItem(key, JSON.stringify(value));
+	});
+	return store;
+}
+
 export async function refreshGames() {
 	const info: GameInfo = await invokeCommand('get_game_info');
 	games = info.all;
-
+	
 	for (let game of games) {
 		game.favorite = info.favorites.includes(game.id);
 	}
 
 	activeGame.set(info.active);
-	refreshProfiles();
 	refreshCategories();
+	refreshProfiles();
 }
 
 export async function setActiveGame(game: Game) {

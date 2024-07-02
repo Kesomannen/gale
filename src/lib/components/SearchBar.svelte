@@ -10,7 +10,8 @@
 <input
 	type="text"
 	class="py-1.5 px-10 w-full rounded-lg bg-gray-{brightness} truncate text-slate-300 placeholder-slate-400
-          border border-gray-500 border-opacity-0 hover:border-opacity-100"
+          border border-gray-500 border-opacity-0 hover:border-opacity-100
+		  valid:focus:ring-green-400 invalid:ring-red-500 focus:ring-2 focus:outline-none"
 	bind:value
 	{placeholder}
 />

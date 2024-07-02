@@ -128,8 +128,8 @@ impl ManagerGame {
 impl Game {
     pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
         let path = match prefs.game_dir_overrides.get(&self.id) {
-            Some(path) => path.to_path_buf(),
-            None => {
+            Some(Some(path)) => path.to_path_buf(),
+            _ => {
                 let mut path = prefs
                     .steam_library_dir
                     .as_ref()

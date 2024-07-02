@@ -13,7 +13,6 @@ pub fn get_prefs(prefs: StateMutex<Prefs>) -> Prefs {
 pub fn set_prefs(value: Prefs, prefs: StateMutex<Prefs>, app: AppHandle) -> Result<()> {
     let mut prefs = prefs.lock().unwrap();
     prefs.set(value, &app)?;
-    debug!("updated prefs: {:?}", prefs);
     Ok(())
 }
 

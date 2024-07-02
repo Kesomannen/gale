@@ -25,6 +25,7 @@
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
+	import { onMount } from 'svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -159,14 +160,14 @@
 		dependants.sort();
 	}
   
-  async function updateActiveMod(version: 'latest' | { specific: string }) {
-    if (!activeMod) return;
+	async function updateActiveMod(version: 'latest' | { specific: string }) {
+		if (!activeMod) return;
 
-    await invokeCommand('update_mod', { uuid: activeMod.uuid, version });
-    await refresh();
+		await invokeCommand('update_mod', { uuid: activeMod.uuid, version });
+		await refresh();
 
-    activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid);
-  }
+		activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid);
+	}
 </script>
 
 <ModList

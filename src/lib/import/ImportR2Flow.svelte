@@ -8,6 +8,7 @@
 	import Icon from '@iconify/svelte';
 	import { listen } from '@tauri-apps/api/event';
 	import { fade } from 'svelte/transition';
+	import Checklist from '$lib/components/Checklist.svelte';
 
 	export let importData: R2ImportData = {
 		r2modman: undefined,
@@ -56,9 +57,7 @@
 	</div>
 {/if}
 
-{#if importData.r2modman || importData.thunderstore}
-	<h3 class="text-lg text-slate-200 font-semibold mt-3">Choose profiles to import</h3>
-{:else}
+{#if !importData.r2modman && !importData.thunderstore}
 	<div class="text-lg font-semibold text-red-400 w-full text-center mt-3">
 		No installations found
 	</div>
@@ -75,16 +74,12 @@
 {/if}
 
 {#if importData.thunderstore || importData.r2modman}
-	<div class="mt-1 overflow-y-auto max-h-60 rounded-md">
-		{#each profiles as profile, i}
-			<div
-				class="flex items-center justify-between px-4 py-1.5 text-slate-300
-					odd:bg-gray-900 hover:bg-gray-700"
-			>
-				{profile}
-
-				<Checkbox value={include[i]} onValueChanged={(value) => (include[i] = value)} />
-			</div>
-		{/each}
-	</div>
+	<Checklist 
+		class="mt-1 overflow-auto max-h-60" 
+		items={profiles}
+		title="Include all"
+		getLabel={(item) => item}
+		get={(index) => include[index]}
+		set={(index, value) => include[index] = value}
+	/>
 {/if}

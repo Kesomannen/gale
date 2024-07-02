@@ -60,7 +60,7 @@
 			sortOrder
 		};
 	}
-
+	
 	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
 		maxCount += 20;
 	}

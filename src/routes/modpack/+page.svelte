@@ -19,6 +19,7 @@
 
 	import { Button, Dialog, Select } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
+	import Checklist from '$lib/components/Checklist.svelte';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -308,21 +309,14 @@
 		<details>
 			{#if includeFiles}
 				<summary class="text-sm text-slate-300 cursor-pointer">Show list</summary>
-				<div class="mt-1 overflow-hidden rounded-md">
-					{#each includeFiles as { path, enabled }, i}
-						<div
-							class="flex items-center justify-between py-1.5 gap-2 px-3 text-slate-300
-                    			 odd:bg-gray-900 hover:bg-gray-700"
-						>
-							{path}
-
-							<Checkbox
-								value={enabled}
-								onValueChanged={(newValue) => (includeFiles[i].enabled = newValue)}
-							/>
-						</div>
-					{/each}
-				</div>
+				<Checklist
+					class="mt-1"
+					title="Include all"
+					items={includeFiles}
+					getLabel={(item) => item.path}
+					get={(i) => includeFiles[i].enabled}
+					set={(i, value) => (includeFiles[i].enabled = value)}
+				/>
 			{/if}
 		</details>
 	</FormField>
