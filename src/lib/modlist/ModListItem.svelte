@@ -2,9 +2,7 @@
 	import type { Mod } from '../models';
 	import Icon from '@iconify/svelte';
 	import { isOutdated } from '$lib/util';
-
-	const FALLBACK_ICON =
-		'https://sm.ign.com/t/ign_es/cover/l/lethal-com/lethal-company_817h.300.jpg';
+	import { activeGame } from '$lib/stores';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
@@ -24,7 +22,7 @@
 	on:dragend
 	{draggable}
 >
-	<img src={mod.icon ?? FALLBACK_ICON} alt={mod.name} class="w-12 h-12 rounded-md" />
+	<img src={mod.icon ?? `games/${$activeGame?.id}.webp`} alt={mod.name} class="w-12 h-12 rounded-md" />
 	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
 		<span
 			class="font-medium {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"
