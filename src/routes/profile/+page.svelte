@@ -85,8 +85,8 @@
 
 	async function refresh() {
 		let result = await invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery });
-    	mods = result.mods;
-    	updates = result.updates;
+		mods = result.mods;
+		updates = result.updates;
 	}
 
 	async function toggleMod(enable: boolean, mod: Mod) {
@@ -159,7 +159,7 @@
 		});
 		dependants.sort();
 	}
-  
+
 	async function updateActiveMod(version: 'latest' | { specific: string }) {
 		if (!activeMod) return;
 
@@ -193,32 +193,34 @@
 	</div>
 
 	<svelte:fragment slot="dropdown">
-		<DropdownMenu.Sub>
-			<DropdownMenu.SubTrigger
-				class="flex items-center pl-3 pr-1 py-1 truncate text-slate-300 hover:text-slate-100 
+		{#if activeMod && activeMod?.versions.length > 1}
+			<DropdownMenu.Sub>
+				<DropdownMenu.SubTrigger
+					class="flex items-center pl-3 pr-1 py-1 truncate text-slate-300 hover:text-slate-100 
 							text-left rounded-md hover:bg-gray-600 cursor-default"
-			>
-				<Icon class="text-lg mr-1.5" icon="mdi:edit" />
-				Change version
-				<Icon class="text-xl ml-4" icon="mdi:chevron-right" />
-			</DropdownMenu.SubTrigger>
-			<DropdownMenu.SubContent
-				class="flex flex-col max-h-96 overflow-y-auto bg-gray-700 gap-0.5 mr-2
+				>
+					<Icon class="text-lg mr-1.5" icon="mdi:edit" />
+					Change version
+					<Icon class="text-xl ml-4" icon="mdi:chevron-right" />
+				</DropdownMenu.SubTrigger>
+				<DropdownMenu.SubContent
+					class="flex flex-col max-h-96 overflow-y-auto bg-gray-700 gap-0.5 mr-2
 							shadow-xl p-1 rounded-lg border border-gray-500"
-				transition={fly}
-				transitionConfig={{ duration: 50 }}
-			>
-				{#each activeMod?.versions ?? [] as version}
-					<DropdownMenu.Item
-						class="flex flex-shrink-0 items-center pl-3 pr-12 py-1 truncate text-slate-300 hover:text-slate-100 
+					transition={fly}
+					transitionConfig={{ duration: 50 }}
+				>
+					{#each activeMod?.versions ?? [] as version}
+						<DropdownMenu.Item
+							class="flex flex-shrink-0 items-center pl-3 pr-12 py-1 truncate text-slate-300 hover:text-slate-100 
 									text-left rounded-md hover:bg-gray-600 cursor-default"
-						on:click={() => updateActiveMod({ specific: version.uuid })}
-					>
-						{version.name}
-					</DropdownMenu.Item>
-				{/each}
-			</DropdownMenu.SubContent>
-		</DropdownMenu.Sub>
+							on:click={() => updateActiveMod({ specific: version.uuid })}
+						>
+							{version.name}
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.SubContent>
+			</DropdownMenu.Sub>
+		{/if}
 
 		<ModDetailsDropdownItem
 			label="Open directory"

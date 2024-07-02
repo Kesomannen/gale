@@ -35,10 +35,20 @@
 	let profileOperationOpen = false;
 	let profileOperationInProgress = false;
 
-	async function importLocal() {
+	async function importLocalPackage() {
 		let path = await dialog.open({
 			directory: true,
-			title: 'Select the root of the mod to import'
+			title: 'Select the directory containing the mod package'
+		});
+
+		if (!path) return;
+		invokeCommand('import_local_mod', { path });
+	}
+
+	async function importLocalDLL() {
+		let path = await dialog.open({
+			title: 'Select the DLL to import',
+			filters: [{ name: 'DLL file', extensions: ['dll'] }]
 		});
 
 		if (!path) return;
@@ -151,7 +161,8 @@
 			>
 				<MenubarItem on:click={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
 				<MenubarItem on:click={importFile}>...profile from file</MenubarItem>
-				<MenubarItem on:click={importLocal}>...local mod</MenubarItem>
+				<MenubarItem on:click={importLocalPackage}>...local mod from package</MenubarItem>
+				<MenubarItem on:click={importLocalDLL}>...local mod from DLL</MenubarItem>
 				<MenubarItem on:click={() => (importR2Open = true)}>...profiles from r2modman</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>

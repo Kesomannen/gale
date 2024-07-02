@@ -48,7 +48,6 @@ const defaultProfileQuery = () => ({
 export let modQuery = createQueryStore('modQuery', defaultModQuery);
 export let profileQuery = createQueryStore('profileQuery', defaultProfileQuery);
 
-await refreshGames();
 
 let isFirst = true;
 activeGame.subscribe(() => {
@@ -57,10 +56,12 @@ activeGame.subscribe(() => {
 		isFirst = false;
 		return;
 	}
-
+	
 	modQuery.set(defaultModQuery());
 	profileQuery.set(defaultProfileQuery());
 });
+
+refreshGames();
 
 function loadQuery(key: string, getDefault: () => QueryModsArgs) {
 	let json = localStorage.getItem(key);

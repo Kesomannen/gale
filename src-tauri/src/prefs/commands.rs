@@ -1,7 +1,6 @@
 use crate::util::cmd::{Result, StateMutex};
 
 use super::Prefs;
-use log::debug;
 use tauri::AppHandle;
 
 #[tauri::command]
