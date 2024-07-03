@@ -12,5 +12,5 @@
 </script>
 
 <div class="flex-grow">
-	<InputField bind:value size='sm' />
+	<InputField bind:value />
 </div>
