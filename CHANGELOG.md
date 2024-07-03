@@ -2,6 +2,14 @@
 
 ## 0.6.1 (2024-07-03)
 
+### Added
+
+- Preview of contents before importing a profile
+
+### Changed
+
+- Display a list of mod cards instead of table when viewing Dependants/Dependencies
+
 ### Fixed
 
 - BepInEx/* directories in remote mods being installed at the wrong location
