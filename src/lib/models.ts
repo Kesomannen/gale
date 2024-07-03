@@ -229,6 +229,7 @@ export interface ProfileQuery {
 export interface ImportData {
 	name: string;
 	includes: Map<string, string>;
+	modNames?: string[];
 	mods: {
 		modRef: {
 			packageUuid: string;

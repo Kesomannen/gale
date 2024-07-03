@@ -25,7 +25,7 @@
 	<img src={mod.icon ?? `games/${$activeGame?.id}.webp`} alt={mod.name} class="w-12 h-12 rounded-md" />
 	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
 		<span
-			class="font-medium {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"
+			class="font-semibold {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"
 		>
 			{mod.name}
 		</span>

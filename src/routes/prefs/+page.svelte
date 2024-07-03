@@ -18,8 +18,6 @@
 		prefs = await invokeCommand('get_prefs');
 	});
 
-	$: console.log('prefs changed');
-
 	function set<T>(update: (value: T, prefs: Prefs) => void) {
 		return (value: T) => {
 			update(value, prefs!);

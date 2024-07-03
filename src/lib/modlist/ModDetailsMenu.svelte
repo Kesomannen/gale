@@ -13,6 +13,8 @@
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
+	import ModCard from '$lib/modlist/ModCard.svelte';
+	import ModCardList from './ModCardList.svelte';
 
 	export let mod: Mod;
 	export let onClose: () => void;
@@ -221,22 +223,15 @@
 
 <Popup title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
-		<table class="mt-2 w-full">
-			<tr class="text-slate-100 text-left">
-				<th>Author</th>
-				<th>Name</th>
-				<th>Preferred Version</th>
-			</tr>
-			{#each mod.dependencies as dep}
-				<tr class="text-slate-200 even:bg-gray-700">
-					{#each dep.split('-') as segment}
-						<td class="pl-1 pr-12">{segment}</td>
-					{/each}
-				</tr>
-			{/each}
-		</table>
+		<ModCardList names={mod.dependencies} class="mt-4" />
 	{/if}
 </Popup>
 
 <ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} path="readme" />
-<ModInfoPopup bind:this={changelog} bind:open={changelogOpen} {mod} useLatest={true} path="changelog" />
+<ModInfoPopup
+	bind:this={changelog}
+	bind:open={changelogOpen}
+	{mod}
+	useLatest={true}
+	path="changelog"
+/>

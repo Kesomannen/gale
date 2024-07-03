@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 (2024-07-03)
+
+### Fixed
+
+- BepInEx/* directories in remote mods being installed at the wrong location
+- Settings on the welcome page not working properly
+
 ## 0.6.0 (2024-07-02)
 
 ### Added

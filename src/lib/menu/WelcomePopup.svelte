@@ -6,11 +6,12 @@
 	import ZoomLevelPref from '$lib/prefs/ZoomFactorPref.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
 
-	import type { R2ImportData } from '$lib/models';
+	import type { Prefs, R2ImportData } from '$lib/models';
 
 	import { invokeCommand } from '$lib/invoke';
 	import { onMount } from 'svelte';
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
+	import Icon from '@iconify/svelte';
 
 	export let open = false;
 
@@ -24,7 +25,8 @@
 
 	let importFlow: ImportR2Flow;
 
-	$: title = stage === 'importProfiles' ? 'Import profiles' : 'Welcome to Gale!';
+	let prefs: Prefs | null = null;
+
 	$: importText =
 		importData.r2modman && importData.thunderstore
 			? 'r2modman or Thunderstore Mod Manager'
@@ -35,6 +37,7 @@
 	onMount(async () => {
 		if (await invokeCommand<boolean>('is_first_run')) {
 			open = true;
+			prefs = await invokeCommand('get_prefs');
 		}
 	});
 
@@ -65,16 +68,23 @@
 		await importFlow.doImport();
 		stage = 'settings';
 	}
+
+	function set<T>(update: (value: T, prefs: Prefs) => void) {
+		return (value: T) => {
+			update(value, prefs!);
+			invokeCommand('set_prefs', { value: prefs });
+		};
+	}
 </script>
 
-<Popup {title} canClose={stage === 'end'} bind:open maxWidth="[55%]">
+<Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open maxWidth="[55%]">
 	<div class="text-slate-300">
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
 			<GameSelection onSelect={onSelectGame} />
 		{:else if stage === 'importProfiles' && importData}
 			<p>
-				You can automatically transfer profiles from {importText} to Gale.
+				You can choose automatically transfer profiles from {importText} to Gale.
 			</p>
 
 			<p class="mt-1">
@@ -98,35 +108,48 @@
 			<p>Lastly, make sure your settings are correct.</p>
 
 			<p class="mt-1">
-				You can always edit these later by going to <b>Edit > Settings</b>.
+				You can always edit these later by going to <Icon icon="mdi:settings" class="inline mb-1" />
+				<b>Settings</b>.
 			</p>
 
 			<div class="flex flex-col mt-3 gap-1">
-				<ZoomLevelPref />
+				{#if prefs !== null}
+					<PathPref
+						label="Steam executable"
+						type="file"
+						value={prefs.steamExePath ?? null}
+						set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
+					>
+						Path to the Steam executable.
+					</PathPref>
 
-				<PathPref label="Steam executable" key="steam_exe_path" type="file">
-					Path to the Steam executable.
-				</PathPref>
+					<PathPref
+						label="Steam library"
+						type="dir"
+						value={prefs.steamLibraryDir ?? null}
+						set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
+					>
+						Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
+					</PathPref>
 
-				<PathPref label="Steam library" key="steam_game_dir" type="dir">
-					Path to the Steam game library. This should contain the 'steamapps' directory.
-				</PathPref>
+					<PathPref
+						label="Gale data directory"
+						type="dir"
+						value={prefs.dataDir}
+						set={set((value, prefs) => (prefs.dataDir = value))}
+					>
+						Directory where profiles and other app data is stored.
+					</PathPref>
 
-				<PathPref label="Download cache directory" key="cache_dir" type="dir">
-					Directory where cached mods are stored.
-					<br />
-					Changing this will move the existing cache.
-				</PathPref>
-
-				<PathPref label="Data directory" key="data_dir" type="dir">
-					Directory where the profiles, logs and other app data is stored.
-					<br />
-					Changing this will move the existing data.
-				</PathPref>
-
-				<PathPref label="Temp directory" key="temp_dir" type="dir">
-					Directory where temporary files are stored, for example import and export files.
-				</PathPref>
+					<PathPref
+						label="Gale cache directory"
+						type="dir"
+						value={prefs.cacheDir}
+						set={set((value, prefs) => (prefs.cacheDir = value))}
+					>
+						Directory where cached mods are stored. This can take up a considerable amount of space.
+					</PathPref>
+				{/if}
 			</div>
 
 			<div class="flex mt-3 justify-between">

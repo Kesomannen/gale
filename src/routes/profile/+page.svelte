@@ -26,6 +26,7 @@
 	import { fly } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
 	import { onMount } from 'svelte';
+	import ModCardList from '$lib/modlist/ModCardList.svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -49,7 +50,7 @@
 
 	let updateAllOpen = false;
 	let dependantsOpen = false;
-	let dependants: string[] | undefined;
+	let dependants: string[] | null;
 
 	$: {
 		$activeProfile;
@@ -151,13 +152,12 @@
 	async function openDependants() {
 		if (!activeMod) return;
 
-		dependants = undefined;
+		dependants = null;
 		dependantsOpen = true;
 
 		dependants = await invokeCommand<string[]>('get_dependants', {
 			uuid: activeMod.uuid
 		});
-		dependants.sort();
 	}
 
 	async function updateActiveMod(version: 'latest' | { specific: string }) {
@@ -231,7 +231,7 @@
 		{#if activeMod?.type === 'remote'}
 			<ModDetailsDropdownItem
 				icon="mdi:source-branch"
-				label="Dependants"
+				label="Show dependants"
 				onClick={openDependants}
 			/>
 		{/if}
@@ -327,19 +327,7 @@
 			{#if dependants.length === 0}
 				No dependants found
 			{:else}
-				<table class="mt-2 w-full text-left">
-					<tr class="text-slate-100 text-left">
-						<th>Author</th>
-						<th>Name</th>
-					</tr>
-					{#each dependants as dep}
-						<tr class="text-slate-200 even:bg-gray-700">
-							{#each dep.split('-') as segment}
-								<td class="pl-1 pr-12">{segment}</td>
-							{/each}
-						</tr>
-					{/each}
-				</table>
+				<ModCardList names={dependants} />
 			{/if}
 		{:else}
 			Loading...

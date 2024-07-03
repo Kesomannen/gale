@@ -424,7 +424,7 @@ pub fn get_dependants(
     let dependants = manager
         .active_profile()
         .dependants(target, &thunderstore)
-        .map_ok(|borrowed| borrowed.package.full_name.to_owned())
+        .map_ok(|borrowed| borrowed.version.full_name.to_owned())
         .collect::<anyhow::Result<Vec<_>>>()?;
 
     Ok(dependants)

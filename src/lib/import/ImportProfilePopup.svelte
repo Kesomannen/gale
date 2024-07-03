@@ -13,6 +13,7 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
+	import ModCardList from '$lib/modlist/ModCardList.svelte';
 
 	export let open: boolean;
 	export let data: ImportData | null;
@@ -84,7 +85,8 @@
 			<Tabs.Content value="new">
 				<InputField label="Profile name" bind:value={name} />
 				{#if !nameAvailable}
-					<div class="flex items-center gap-1 text-red-400 text-md font-bold pl-52 mt-1">
+					<div class="flex items-center gap-1 text-red-400 text-md font-bold mt-1">
+						<div class="w-[30%] min-w-52" />
 						<Icon icon="mdi:error" class="text-lg" />
 						Profile '{name}' already exists
 					</div>
@@ -105,9 +107,16 @@
 			</Tabs.Content>
 		</TabsMenu>
 
-		<div class="flex w-full justify-end items-center mt-1 gap-2 text-slate-400">
-			{data.mods.length} mods will be installed
+		{#if data.modNames}
+			<h3 class="text-white text-lg font-semibold mt-2">{data.mods.length} mods to install</h3>
+			<ModCardList names={data.modNames} class="max-h-[55lvh] mt-2" />
+		{/if}
 
+		<div class="flex w-full justify-end items-center mt-2 gap-2 text-slate-400">
+			<BigButton color="gray" on:click={() => {
+				open = false;
+				data = null;
+			}}>Cancel</BigButton>
 			<BigButton disabled={!nameAvailable || loading} on:click={importData}>Import</BigButton>
 		</div>
 	{:else}

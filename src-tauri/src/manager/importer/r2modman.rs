@@ -12,11 +12,7 @@ use std::{
 
 use super::ImportData;
 use crate::{
-    manager::{
-        downloader::InstallOptions,
-        exporter::{self, R2Mod},
-        ModManager,
-    },
+    manager::{downloader::InstallOptions, exporter::R2Mod, ModManager},
     prefs::Prefs,
     thunderstore::Thunderstore,
     util::{self, error::IoResultExt},
@@ -274,15 +270,7 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
             .context("failed to delete existing profile")?;
     }
 
-    let mods = super::resolve_r2mods(mods.into_iter(), &thunderstore)?;
-    let includes = exporter::find_includes(&path).collect();
-
-    Ok(Some(ImportData {
-        mods,
-        name,
-        path,
-        includes,
-    }))
+    ImportData::from_r2(name, mods, path, &thunderstore).map(Some)
 }
 
 async fn wait_for_mods(app: &AppHandle) {

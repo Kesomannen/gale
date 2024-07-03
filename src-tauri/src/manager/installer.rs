@@ -143,8 +143,8 @@ pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()>
 }
 
 fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
-    let dest = dest.join("BepInEx");
-    let plugin_dir = dest.join("plugins").join(mod_name);
+    let bepinex = dest.join("BepInEx");
+    let plugin_dir = bepinex.join("plugins").join(mod_name);
     fs::create_dir_all(&plugin_dir)?;
 
     for entry in src.read_dir()? {
@@ -154,16 +154,16 @@ fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
 
         if path.is_dir() {
             if file_name == "BepInEx" {
-                install_default(&path, &dest, mod_name)?;
+                install_default(&path, dest, mod_name)?;
                 continue;
             }
 
             let target = match file_name.to_string_lossy().as_ref() {
                 // Copy to BepInEx/{plugins | patchers | core | monomod}/{mod_name}
-                "patchers" | "core" | "monomod" => dest.join(file_name).join(mod_name),
+                "patchers" | "core" | "monomod" => bepinex.join(file_name).join(mod_name),
                 "plugins" => plugin_dir.clone(),
                 // Copy directly without a subfolder
-                "config" => dest.join("config"),
+                "config" => bepinex.join("config"),
                 // Copy others to the mod's plugin directory
                 _ => plugin_dir.join(file_name),
             };

@@ -45,9 +45,35 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
     pub name: String,
+    pub mod_names: Option<Vec<String>>,
     pub mods: Vec<ModInstall>,
     pub path: PathBuf,
     pub includes: Vec<PathBuf>,
+}
+
+impl ImportData {
+    pub fn from_r2(
+        name: String,
+        mods: Vec<R2Mod<'_>>,
+        path: PathBuf,
+        thunderstore: &Thunderstore,
+    ) -> Result<Self> {
+        let includes = exporter::find_includes(&path).collect();
+        let mod_names = mods.iter().map(|r2| r2.full_name()).collect();
+        let mods = mods
+            .into_iter()
+            .map(|r2| r2.into_install(thunderstore))
+            .collect::<Result<Vec<_>>>()
+            .context("failed to resolve mod references")?;
+
+        Ok(Self {
+            name,
+            mods,
+            path,
+            includes,
+            mod_names: Some(mod_names),
+        })
+    }
 }
 
 fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData> {
@@ -71,23 +97,12 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     let manifest: R2Manifest =
         serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
 
-    let includes = exporter::find_includes(&temp_path).collect();
-
-    Ok(ImportData {
-        mods: resolve_r2mods(manifest.mods.into_iter(), &thunderstore)?,
-        name: manifest.profile_name.to_owned(),
-        path: temp_path,
-        includes,
-    })
-}
-
-fn resolve_r2mods<'a>(
-    mods: impl Iterator<Item = R2Mod<'a>>,
-    thunderstore: &Thunderstore,
-) -> Result<Vec<ModInstall>> {
-    mods.map(|r2| r2.into_install(thunderstore))
-        .collect::<Result<Vec<_>>>()
-        .context("failed to resolve mod references")
+    ImportData::from_r2(
+        manifest.profile_name.to_owned(),
+        manifest.mods,
+        temp_path,
+        &thunderstore,
+    )
 }
 
 async fn import_data(mut data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {

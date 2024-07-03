@@ -55,6 +55,13 @@ impl<'a> R2Mod<'a> {
         Ok(ModInstall::new(mod_ref).with_state(self.enabled))
     }
 
+    pub fn full_name(&self) -> String {
+        format!(
+            "{}-{}.{}.{}",
+            self.name, self.version.major, self.version.minor, self.version.patch
+        )
+    }
+
     fn from_mod_ref(
         mod_ref: &ModRef,
         enabled: bool,
