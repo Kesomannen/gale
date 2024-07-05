@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Welcome dialog opening every time the app is launched until a setting is changed
+
 ## 0.6.1 (2024-07-03)
 
 ### Added

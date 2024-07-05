@@ -217,11 +217,11 @@ impl Prefs {
                 let window = app.get_window("main").unwrap();
                 window.zoom(prefs.zoom_factor as f64).ok();
 
-                prefs.save()?;
-
                 prefs
             }
         };
+
+        prefs.save()?;
 
         Ok(prefs)
     }
