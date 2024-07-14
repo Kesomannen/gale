@@ -173,7 +173,7 @@
 
 	<div class="flex-grow p-4 overflow-y-auto">
 		{#if selectedFile}
-			<div class="text-slate-200 text-xl font-semibold truncate flex-shrink-0">
+			<div class="text-slate-200 text-xl font-bold truncate flex-shrink-0">
 				{selectedFile.content.name}
 				{#if selectedSection}
 					<span class="text-slate-400">/</span>
@@ -183,7 +183,7 @@
 
 			{#if selectedSection && selectedFile.type === 'ok'}
 				{#if selectedFile.content.metadata}
-					<div class="text-slate-400">
+					<div class="text-slate-400 font-medium">
 						Created by {selectedFile.content.metadata.pluginName}
 						{selectedFile.content.metadata.pluginVersion}
 					</div>
@@ -215,7 +215,7 @@
 								{sentenceCase(entry.content.name)}
 								<svelte:fragment slot="tooltip">
 									<div>
-										<span class="text-slate-200 text-lg font-semibold">{entry.content.name}</span>
+										<span class="text-slate-200 text-lg font-bold">{entry.content.name}</span>
 										<span class="text-slate-400 ml-1"> ({typeName(entry.content)})</span>
 									</div>
 
@@ -250,7 +250,7 @@
 							{:else if entry.content.value.type == 'other'}
 								<StringConfig entryId={entryId(entry.content)} isOther={true} />
 							{:else if isNum(entry.content.value)}
-								{#if entry.content.value.content.range && entry.content.value.content.range.end - entry.content.value.content.range.start <= 200}
+								{#if entry.content.value.content.range}
 									<SliderConfig entryId={entryId(entry.content)} />
 								{:else}
 									<NumberInputConfig entryId={entryId(entry.content)} />

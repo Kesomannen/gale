@@ -7,8 +7,8 @@
 	export let items: T[];
 
 	export let getLabel: (item: T, index: number) => string;
-	export let get: (index: number) => boolean;
-	export let set: (index: number, value: boolean) => void;
+	export let get: (item: T, index: number) => boolean;
+	export let set: (item: T, index: number, value: boolean) => void;
 
 	export { className as class };
 </script>
@@ -18,19 +18,19 @@
 		class="flex items-center gap-3 px-3 py-2 text-slate-300 bg-gray-950 font-bold"
 	>
 		<Checkbox
-			value={items.every((_, i) => get(i))}
-			onValueChanged={(newValue) => items.forEach((_, i) => set(i, newValue))}
+			value={items.every((item, i) => get(item, i))}
+			onValueChanged={(newValue) => items.forEach((item, i) => set(item, i, newValue))}
 		/>
 		{title}
 	</div>
 
-	{#each items as value, i}
+	{#each items as item, i}
 		<div
 			class="flex items-center gap-3 px-3 py-1.5 text-slate-300 odd:bg-gray-900"
 		>
-			<Checkbox value={get(i)} onValueChanged={(newValue) => set(i, newValue)} />
+			<Checkbox value={get(item, i)} onValueChanged={(newValue) => set(item, i, newValue)} />
 
-			{getLabel(value, i)}
+			{getLabel(item, i)}
 		</div>
 	{/each}
 </div>

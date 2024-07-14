@@ -22,9 +22,19 @@ pub mod modpack;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct R2Manifest<'a> {
+pub struct LegacyProfileManifest<'a> {
     pub profile_name: &'a str,
     pub mods: Vec<R2Mod<'a>>,
+    #[serde(default)]
+    pub source: ImportSource,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum ImportSource {
+    Gale,
+    #[default]
+    R2
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -115,8 +125,9 @@ fn export_file(profile: &Profile, dir: PathBuf, thunderstore: &Thunderstore) -> 
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve profile mods")?;
 
-    let manifest = R2Manifest {
+    let manifest = LegacyProfileManifest {
         profile_name: &profile.name,
+        source: ImportSource::Gale,
         mods,
     };
 

@@ -63,12 +63,19 @@
 
 	$: {
 		$modQuery;
-    	$activeGame;
+		$activeGame;
 		refresh();
 	}
 
 	async function refresh() {
 		mods = await invokeCommand<Mod[]>('query_thunderstore', { args: $modQuery });
+	}
+
+	async function installLatest(mod: Mod) {
+		await install({
+			packageUuid: mod.uuid,
+			versionUuid: mod.versions[0].uuid
+		});
 	}
 
 	async function install(modRef?: { packageUuid: string; versionUuid: string }) {
@@ -79,12 +86,19 @@
 		}
 
 		await invokeCommand('install_mod', { modRef });
-		modQuery.update((q) => q);
+		modQuery.update((query) => query);
 		activeMod = activeMod;
 	}
 </script>
 
-<ModList bind:activeMod bind:mods queryArgs={modQuery} showInstalledIcon={true} {sortOptions}>
+<ModList
+	bind:activeMod
+	bind:mods
+	queryArgs={modQuery}
+	showInstalledIcon={true}
+	{sortOptions}
+	on:onModCtrlClicked={({ detail: { mod } }) => installLatest(mod)}
+>
 	<div slot="details" class="flex mt-2 text-lg text-white">
 		<Button.Root
 			class="flex items-center justify-center flex-grow gap-2 py-2 rounded-l-lg
@@ -145,14 +159,7 @@
 		{#if !isInstalled}
 			<Button.Root
 				class="p-2.5 ml-2 mt-0.5 mr-0.5 rounded-lg text-white text-2xl align-middle hidden group-hover:inline bg-green-600 hover:bg-green-500"
-				on:click={() => {
-					let modRef = {
-						packageUuid: mod.uuid,
-						versionUuid: mod.versions[0].uuid
-					};
-
-					install(modRef);
-				}}
+				on:click={() => installLatest(mod)}
 			>
 				<Icon icon="mdi:download" />
 			</Button.Root>

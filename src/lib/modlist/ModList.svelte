@@ -45,6 +45,9 @@
 			uuid: string;
 			totalDelta: number;
 		};
+		onModCtrlClicked: { 
+			mod: Mod;
+		};
 	}>();
 
 	$: {
@@ -65,7 +68,12 @@
 		maxCount += 20;
 	}
 
-	function onModClicked(mod: Mod) {
+	function onModClicked(mod: Mod, evt: MouseEvent) {
+		if (evt.ctrlKey) {
+			dispatch('onModCtrlClicked', { mod });
+			return;
+		}
+
 		if (activeMod === undefined || activeMod.uuid !== mod.uuid) {
 			activeMod = mod;
 		} else {
@@ -322,7 +330,7 @@
 				bind:end={listEnd}
 			>
 				<ModListItem
-					on:click={() => onModClicked(mod)}
+					on:click={(evt) => onModClicked(mod, evt)}
 					on:dragstart={onDragStart}
 					on:dragover={onDragOver}
 					on:dragend={onDragEnd}

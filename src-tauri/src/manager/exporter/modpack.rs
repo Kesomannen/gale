@@ -36,32 +36,23 @@ pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
         profile.modpack = Some(ModpackArgs {
             name: profile.name.replace([' ', '-'], ""),
-            description: String::new(),
             readme: format!("# {}\n\n", profile.name),
             version_number: "1.0.0".to_owned(),
-            icon_path: PathBuf::new(),
-            website_url: String::new(),
-            include_disabled: false,
-            include_files: Vec::new(),
-            author: String::new(),
             categories: vec!["modpacks".to_owned()],
-            nsfw: false,
+            ..Default::default()
         });
     }
 
     let includes = &mut profile.modpack.as_mut().unwrap().include_files;
 
+    includes.retain(|file, _| profile.path.join(file).exists());
+
     for path in super::find_includes(&profile.path) {
-        if !includes.iter().any(|file| file.path == path) {
-            includes.push(FileInclude {
-                path,
-                enabled: true,
-            });
-        }
+        includes.entry(path).or_insert(true);
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ModpackArgs {
     pub name: String,
@@ -74,14 +65,8 @@ pub struct ModpackArgs {
     pub icon_path: PathBuf,
     pub website_url: String,
     pub include_disabled: bool,
-    pub include_files: Vec<FileInclude>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct FileInclude {
-    path: PathBuf,
-    enabled: bool,
+    #[serde(default, rename="includeFileMap")]
+    pub include_files: HashMap<PathBuf, bool>,
 }
 
 pub fn export(
@@ -131,8 +116,8 @@ pub fn export(
     super::write_includes(
         args.include_files
             .iter()
-            .filter(|file| file.enabled)
-            .map(|file| &file.path),
+            .filter(|(_, enabled)| **enabled)
+            .map(|(file, _)| file),
         &profile.path,
         &mut zip,
     )?;

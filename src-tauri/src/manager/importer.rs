@@ -22,7 +22,7 @@ use crate::{
 
 use super::{
     downloader::{self, ModInstall},
-    exporter::{self, R2Manifest, R2Mod, PROFILE_DATA_PREFIX},
+    exporter::{self, LegacyProfileManifest, ImportSource, R2Mod, PROFILE_DATA_PREFIX},
     ModManager,
 };
 
@@ -49,13 +49,15 @@ pub struct ImportData {
     pub mods: Vec<ModInstall>,
     pub path: PathBuf,
     pub includes: Vec<PathBuf>,
+    pub source: ImportSource,
 }
 
 impl ImportData {
-    pub fn from_r2(
+    pub fn from_r2_mods(
         name: String,
         mods: Vec<R2Mod<'_>>,
         path: PathBuf,
+        source: ImportSource,
         thunderstore: &Thunderstore,
     ) -> Result<Self> {
         let includes = exporter::find_includes(&path).collect();
@@ -72,6 +74,7 @@ impl ImportData {
             path,
             includes,
             mod_names: Some(mod_names),
+            source,
         })
     }
 }
@@ -94,13 +97,14 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     let manifest = fs::read_to_string(temp_path.join("export.r2x"))
         .context("failed to read profile manifest")?;
 
-    let manifest: R2Manifest =
+    let manifest: LegacyProfileManifest =
         serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
 
-    ImportData::from_r2(
+    ImportData::from_r2_mods(
         manifest.profile_name.to_owned(),
         manifest.mods,
         temp_path,
+        manifest.source,
         &thunderstore,
     )
 }
@@ -121,7 +125,9 @@ async fn import_data(mut data: ImportData, options: InstallOptions, app: &AppHan
         profile.path.clone()
     };
 
-    data.mods.reverse(); // r2modman's "Custom" sort order is reversed
+    if data.source == ImportSource::R2 {
+        data.mods.reverse(); // r2modman's "Custom" sort order is reversed
+    }
 
     downloader::install_mods(data.mods, options, app)
         .await

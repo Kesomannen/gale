@@ -4,7 +4,7 @@ use super::{downloader::ModInstall, ModManager, ProfileMod};
 use crate::{
     prefs::Prefs,
     thunderstore::{BorrowedMod, Thunderstore},
-    util::{self, error::IoResultExt},
+    util::{self, error::IoResultExt, fs::Overwrite},
 };
 use std::{
     collections::HashSet, fs, path::{Path, PathBuf}
@@ -170,7 +170,7 @@ fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
 
             fs::create_dir_all(target.parent().unwrap())?;
 
-            util::fs::copy_dir(&path, &target, true)
+            util::fs::copy_dir(&path, &target, Overwrite::Yes)
                 .fs_context("copying directory", &path)?;
         } else {
             fs::copy(&path, &plugin_dir.join(file_name))
@@ -192,8 +192,8 @@ fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
         if entry_path.is_dir() && entry_name.contains("BepInEx") {
             // ... and some have even more subfolders ...
             // do this first, since otherwise entry_path will be removed already
-            util::fs::flatten(&entry_path.join("BepInEx"), true)?;
-            util::fs::flatten(&entry_path, true)?;
+            util::fs::flatten(&entry_path.join("BepInEx"), Overwrite::Yes)?;
+            util::fs::flatten(&entry_path, Overwrite::Yes)?;
         }
     }
 
@@ -207,7 +207,7 @@ fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
             let target_path = target_path.join(entry_name);
             fs::create_dir_all(&target_path)?;
 
-            util::fs::copy_contents(&entry_path, &target_path, true)
+            util::fs::copy_contents(&entry_path, &target_path, Overwrite::Yes)
                 .fs_context("copying directory", &entry_path)?;
         } else if !EXCLUDES.iter().any(|exclude| entry_name == *exclude) {
             fs::copy(&entry_path, dest.join(entry_name)).fs_context("copying file", &entry_path)?;

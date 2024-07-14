@@ -34,20 +34,19 @@
 	let iconPath: string;
 	let websiteUrl: string;
 	let includeDisabled: boolean;
-	let includeFiles: {
-		path: string;
-		enabled: boolean;
-	}[];
+	let includeFiles = new Map<string, boolean>();
 
 	let donePopupOpen = false;
 	let loading: string | null = null;
+
+	let includedFileCount = 0;
 
 	$: {
 		$activeProfile;
 		refresh();
 	}
 
-  	// make sure 'Modpacks' category is always selected
+	// make sure 'Modpacks' category is always selected
 	$: if (
 		selectedCategories &&
 		!selectedCategories.some((category) => category?.name === 'Modpacks')
@@ -56,6 +55,18 @@
 			$categories.find((category) => category.name === 'Modpacks')!,
 			...selectedCategories
 		];
+	}
+
+	$: includedFileCount = countIncludedFiles(includeFiles);
+
+	function countIncludedFiles(includeFiles?: Map<string, boolean>) {
+		if (!includeFiles) return 0;
+
+		let count = 0;
+		for (let enabled of includeFiles.values()) {
+			if (enabled) count++;
+		}
+		return count;
 	}
 
 	async function refresh() {
@@ -75,7 +86,7 @@
 		iconPath = args.iconPath;
 		websiteUrl = args.websiteUrl;
 		includeDisabled = args.includeDisabled;
-		includeFiles = args.includeFiles;
+		includeFiles = new Map(Object.entries(args.includeFileMap));
 
 		loading = null;
 	}
@@ -140,6 +151,7 @@
 	}
 
 	function args(): ModpackArgs {
+		console.log(includeFiles);
 		return {
 			name,
 			description,
@@ -150,7 +162,7 @@
 			iconPath,
 			websiteUrl,
 			includeDisabled,
-			includeFiles,
+			includeFileMap: includeFiles,
 			categories: selectedCategories.map((c) => c.slug)
 		};
 	}
@@ -302,8 +314,7 @@
 	</FormField>
 
 	<FormField
-		label="Include files ({includeFiles?.filter(({ enabled }) => enabled)
-			.length}/{includeFiles?.length})"
+		label="Include files ({includedFileCount}/{includeFiles?.size})"
 		description="Choose which config files to include in the modpack."
 	>
 		<details>
@@ -312,10 +323,13 @@
 				<Checklist
 					class="mt-1"
 					title="Include all"
-					items={includeFiles}
-					getLabel={(item) => item.path}
-					get={(i) => includeFiles[i].enabled}
-					set={(i, value) => (includeFiles[i].enabled = value)}
+					items={Array.from(includeFiles.keys()).sort()}
+					getLabel={(item) => item}
+					get={(item) => includeFiles.get(item) ?? false}
+					set={(item, _, value) => { 
+						includeFiles.set(item, value);
+						includeFiles = includeFiles;
+					}}
 				/>
 			{/if}
 		</details>

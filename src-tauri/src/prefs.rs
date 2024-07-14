@@ -15,7 +15,7 @@ use crate::{
     manager::launcher::LaunchMode,
     util::{
         self,
-        fs::{JsonStyle, PathExt},
+        fs::{JsonStyle, Overwrite, PathExt},
         window::WindowExt,
     },
 };
@@ -90,8 +90,17 @@ impl DirPref {
                 continue;
             }
 
+            let old_path = entry.path();
             let new_path = value.join(file_name);
-            fs::rename(entry.path(), &new_path)?;
+            
+            // can't do fs::rename because it doesn't work across drives
+            if entry.file_type()?.is_dir() {
+                util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes)?;
+                fs::remove_dir_all(old_path)?;
+            } else {
+                fs::copy(&old_path, &new_path)?;
+                fs::remove_file(old_path)?;
+            }
         }
 
         // remove only if empty
@@ -206,7 +215,7 @@ impl Prefs {
             false => {
                 let mut prefs: Prefs = util::fs::read_json(&path).map_err(|err| {
                     anyhow!(
-                        "Failed to read settings: {}. The file might be corrupted, at {}.",
+                        "Failed to read settings: {} (at {})",
                         err,
                         path.display()
                     )

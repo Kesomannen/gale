@@ -1,6 +1,7 @@
 use anyhow::{anyhow, ensure, Context, Result};
 use log::{debug, info};
 use tauri::{AppHandle, Manager};
+use serde::Serialize;
 
 use std::{
     collections::HashMap,
@@ -12,12 +13,11 @@ use std::{
 
 use super::ImportData;
 use crate::{
-    manager::{downloader::InstallOptions, exporter::R2Mod, ModManager},
+    manager::{downloader::InstallOptions, exporter::{ImportSource, R2Mod}, ModManager},
     prefs::Prefs,
     thunderstore::Thunderstore,
-    util::{self, error::IoResultExt},
+    util::{self, error::IoResultExt, fs::Overwrite},
 };
-use serde::Serialize;
 
 lazy_static! {
     static ref ID_TO_R2_DIR: HashMap<&'static str, &'static str> = HashMap::from([
@@ -270,7 +270,7 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
             .context("failed to delete existing profile")?;
     }
 
-    ImportData::from_r2(name, mods, path, &thunderstore).map(Some)
+    ImportData::from_r2_mods(name, mods, path, ImportSource::R2, &thunderstore).map(Some)
 }
 
 async fn wait_for_mods(app: &AppHandle) {
@@ -328,7 +328,7 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
             }
 
             debug!("transferring cached mod: {}-{}", package_name, version_name);
-            util::fs::copy_dir(&version.path(), &new_path, true)?;
+            util::fs::copy_dir(&version.path(), &new_path, Overwrite::Yes)?;
         }
     }
 

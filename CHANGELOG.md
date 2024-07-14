@@ -2,9 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- Ctrl+click shortcut to install a mod
+
+### Changed
+
+- Reworked config entry sliders, which should fix all issues with freezing or crashing
+
 ### Fixed
 
 - Welcome dialog opening every time the app is launched until a setting is changed
+- Disabling mods with missing dependencies
+- Deleted config files not being removed from the modpack export list
+- Moving temp, data or cache directory to a different drive
+- Mods being imported in the reverse order when importing a Gale-generated profile code
 
 ## 0.6.1 (2024-07-03)
 

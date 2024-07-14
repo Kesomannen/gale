@@ -1,3 +1,14 @@
+<script context="module" lang="ts">
+	export let updateAvailable = false;
+	export let updateManifest: UpdateManifest | undefined;
+
+	export async function refreshUpdate() {
+		let result = await checkUpdate();
+		updateAvailable = result.shouldUpdate;
+		updateManifest = result.manifest;
+	}
+</script>
+
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
@@ -16,13 +27,6 @@
 	} from '@tauri-apps/api/updater';
 	import { Button, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
-
-	let updateAvailable = false;
-	let manifest: UpdateManifest | undefined = {
-		body: '',
-		date: '',
-		version: '0.5.1'
-	};
 
 	let currentVersion = '1.0.0';
 
@@ -44,10 +48,7 @@
 			}
 		}).then((unlistenFn) => (unlisten = unlistenFn));
 
-		checkUpdate().then((result) => {
-			updateAvailable = result.shouldUpdate;
-			manifest = result.manifest;
-		});
+		refreshUpdate();
 
 		getVersion().then((version) => {
 			currentVersion = version;
@@ -61,9 +62,9 @@
 	});
 
 	async function update() {
-    loading = true;
+    	loading = true;
 		await installUpdate();
-    loading = false;
+    	loading = false;
 
 		let platformName = await platform();
 		if (platformName !== 'win32') {
@@ -79,7 +80,7 @@
 	<Button.Root
 		class="flex items-center py-1 px-2 rounded-md font-semibold text-slate-100 
             my-auto ml-auto mr-1.5 bg-blue-600 enabled:hover:bg-blue-500"
-    disabled={loading}
+    	disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
 		{#if loading}
@@ -94,8 +95,8 @@
 <ConfirmPopup title="App update available" bind:open={popupOpen}>
 	<Dialog.Description class="text-slate-300">
 		<p>
-			{#if manifest}
-				Version {manifest.version} of Gale is available - you have {currentVersion}.
+			{#if updateManifest}
+				Version {updateManifest.version} of Gale is available - you have {currentVersion}.
 			{:else}
 				There is an update available for Gale.
 			{/if}

@@ -1,3 +1,7 @@
+<script context="module" lang="ts">
+
+</script>
+
 <script lang="ts">
 	import { confirm } from '@tauri-apps/api/dialog';
 

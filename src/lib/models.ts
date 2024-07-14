@@ -186,10 +186,7 @@ export interface ModpackArgs {
 	iconPath: string;
 	websiteUrl: string;
 	includeDisabled: boolean;
-	includeFiles: {
-		path: string;
-		enabled: boolean;
-	}[];
+	includeFileMap: Map<string, boolean>;
 }
 
 export interface Game {
@@ -230,6 +227,7 @@ export interface ImportData {
 	name: string;
 	includes: Map<string, string>;
 	modNames?: string[];
+	source: 'r2' | 'gale';
 	mods: {
 		modRef: {
 			packageUuid: string;

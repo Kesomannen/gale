@@ -129,11 +129,11 @@ pub struct UserMediaInitiateUploadResponse {
 #[derive(Deserialize)]
 pub struct UserMedia {
     pub uuid: Option<Uuid>,
-    pub filename: String,
-    pub size: u64,
-    pub datetime_created: DateTime<Utc>,
-    pub expiry: DateTime<Utc>,
-    pub status: UserMediaStatus,
+    //pub filename: String,
+    //pub size: u64,
+    //pub datetime_created: DateTime<Utc>,
+    //pub expiry: DateTime<Utc>,
+    //pub status: UserMediaStatus,
 }
 
 #[derive(Deserialize, Debug)]

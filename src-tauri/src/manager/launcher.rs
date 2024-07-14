@@ -4,13 +4,13 @@ use std::{
     process::Command,
 };
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 
 use super::ManagerGame;
 use crate::{
     games::Game,
     prefs::Prefs,
-    util::error::IoResultExt,
+    util::{error::IoResultExt, fs::PathExt},
 };
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -42,8 +42,8 @@ impl ManagerGame {
     }
 
     fn launch_steam(&self, prefs: &Prefs) -> Result<()> {
-        let steam_path = prefs.steam_exe_path.as_ref().context("steam exe path not set")?;
-        let steam_path = resolve_path(steam_path, "steam executable")?;
+        let steam_path = prefs.steam_exe_path.as_ref().context("steam executable path not set")?;
+        ensure!(steam_path.exists(), "steam executable not found at {}", steam_path.display());
 
         let mut command = Command::new(steam_path);
         command
@@ -71,9 +71,8 @@ impl ManagerGame {
                 file_name.ends_with(".exe") && !file_name.contains("UnityCrashHandler")
             })
             .map(|entry| entry.path())
-            .ok_or_else(|| anyhow!("game executable not found"))?;
-
-        let exe_path = resolve_path(&exe_path, "game executable")?;
+            .and_then(|path| path.exists_or_none())
+            .context("game executable not found")?;
 
         let mut command = Command::new(exe_path);
 
@@ -160,27 +159,22 @@ fn add_bepinex_args(command: &mut Command, path: &Path) -> Result<()> {
     preloader_path.push("core");
     preloader_path.push("BepInEx.Preloader.dll");
 
-    let preloader_path = resolve_path(&preloader_path, "preloader")
-        .map_err(|_| anyhow!("failed to resolve BepInEx preloader path, is BepInEx installed?"))?;
+    if !preloader_path.exists() {
+        bail!("BepInEx preloader not found at {}", preloader_path.display());
+    }
 
-    let (enable_name, target_name) =
+    let (enable_label, target_label) =
         match doorstop_version(path).context("failed to determine doorstop version")? {
             3 => ("--dorstop-enable", "--doorstop-target"),
             4 => ("--doorstop-enabled", "--doorstop-target-assembly"),
             vers => bail!("unsupported doorstop version: {}", vers),
         };
 
-    command.args([enable_name, "true", target_name, preloader_path]);
+    command
+        .args([enable_label, "true", target_label])
+        .arg(preloader_path);
 
     Ok(())
-}
-
-fn resolve_path<'a>(path: &'a Path, name: &'static str) -> Result<&'a str> {
-    let str = path.to_str();
-    if !path.try_exists()? || str.is_none() {
-        bail!("{} path could not be resolved", name);
-    }
-    Ok(str.unwrap())
 }
 
 fn doorstop_version(root_path: &Path) -> Result<u32> {

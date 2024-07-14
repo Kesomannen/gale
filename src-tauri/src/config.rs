@@ -160,7 +160,7 @@ impl TaggedEntry {
         self.value = self
             .default_value
             .clone()
-            .ok_or_else(|| anyhow!("no default value"))?;
+            .context("no default value")?;
         Ok(())
     }
 }
@@ -186,7 +186,7 @@ pub enum Value {
 }
 
 impl Value {
-    fn options(&self) -> Option<&Vec<String>> {
+    fn options(&self) -> Option<&[String]> {
         match self {
             Self::Enum { options, .. } => Some(options),
             Self::Flags { options, .. } => Some(options),

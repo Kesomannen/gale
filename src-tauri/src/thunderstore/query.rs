@@ -92,11 +92,19 @@ pub trait Queryable {
     fn full_name(&self) -> &str;
     fn matches(&self, args: &QueryModsArgs) -> bool;
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering;
+
+    fn description(&self) -> Option<&str> {
+        None
+    }
 }
 
 impl Queryable for BorrowedMod<'_> {
     fn full_name(&self) -> &str {
         &self.package.full_name
+    }
+
+    fn description(&self) -> Option<&str> {
+        Some(&self.version.description)
     }
 
     fn matches(&self, args: &QueryModsArgs) -> bool {
@@ -182,6 +190,10 @@ impl Queryable for LocalMod {
         &self.name
     }
 
+    fn description(&self) -> Option<&str> {
+        self.description.as_deref()
+    }
+
     fn matches(&self, _args: &QueryModsArgs) -> bool {
         true
     }
@@ -220,9 +232,7 @@ where
     T: Queryable + Into<FrontendMod>,
     I: Iterator<Item = T>,
 {
-    query_mods(args, mods)
-        .map_into()
-        .collect()
+    query_mods(args, mods).map_into().collect()
 }
 
 pub fn query_mods<'a, T, I>(args: &QueryModsArgs, mods: I) -> impl Iterator<Item = T> + 'a
@@ -238,7 +248,12 @@ where
     let mut result = mods
         .filter(|queryable| {
             if let Some(search_term) = &search_term {
-                if !queryable.full_name().to_lowercase().contains(search_term) {
+                let name_match = queryable.full_name().to_lowercase().contains(search_term);
+                let description_match = queryable
+                    .description()
+                    .is_some_and(|description| description.to_lowercase().contains(search_term));
+
+                if !name_match && !description_match {
                     return false;
                 }
             }

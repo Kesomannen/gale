@@ -8,13 +8,13 @@ use std::{
 
 use anyhow::{ensure, Context, Result};
 use chrono::{DateTime, Utc};
+use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
 use uuid::Uuid;
 use walkdir::WalkDir;
-use exporter::modpack::ModpackArgs;
 
 use crate::{
     config,
@@ -26,7 +26,7 @@ use crate::{
         query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
     },
-    util::{self, error::IoResultExt, fs::JsonStyle},
+    util::{self, error::IoResultExt, fs::{JsonStyle, Overwrite}},
 };
 
 pub mod commands;
@@ -493,7 +493,7 @@ impl Profile {
                 if let Some(dependants) = self.check_dependants(borrowed, thunderstore) {
                     return Ok(ModActionResponse::HasDependants(dependants));
                 }
-            } else if let Some(deps) = self.check_deps(borrowed, thunderstore)? {
+            } else if let Some(deps) = self.check_deps(borrowed, thunderstore) {
                 return Ok(ModActionResponse::HasDependencies(deps));
             }
         }
@@ -542,14 +542,13 @@ impl Profile {
         borrowed_mod: BorrowedMod,
         thunderstore: &Thunderstore,
     ) -> Option<Vec<Dependant>> {
-        let ignored_category = "Modpacks".to_string();
         let dependants = self
             .dependants(borrowed_mod, thunderstore)
             .filter_map(Result::ok) // ignore any missing deps
-            // filter out modpacks and disabled mods
-            .filter(|m| {
-                !m.package.categories.contains(&ignored_category)
-                    && self.get_mod(&m.package.uuid4).unwrap().enabled
+            .filter(|borrowed| {
+                log::debug!("{}", borrowed.package.name);
+                !borrowed.package.is_modpack()
+                    && self.get_mod(&borrowed.package.uuid4).unwrap().enabled
             })
             .map_into()
             .collect::<Vec<_>>();
@@ -564,25 +563,22 @@ impl Profile {
         &self,
         borrowed_mod: BorrowedMod,
         thunderstore: &Thunderstore,
-    ) -> Result<Option<Vec<Dependant>>> {
+    ) -> Option<Vec<Dependant>> {
         let disabled_deps = thunderstore
             .dependencies(borrowed_mod.version)
             .0
             .into_iter()
-            .filter_map(|dep| match self.get_mod(&dep.package.uuid4) {
-                Ok(profile_mod) => match profile_mod.enabled {
-                    true => None,
-                    false => Some(Ok(dep)),
-                },
-                Err(e) => Some(Err(e)),
+            .filter(|dep| {
+                self.get_mod(&dep.package.uuid4)
+                    .is_ok_and(|profile_mod| !profile_mod.enabled)
             })
-            .map_ok(Dependant::from)
-            .collect::<Result<Vec<_>>>()?;
+            .map_into()
+            .collect::<Vec<_>>();
 
-        Ok(match disabled_deps.is_empty() {
+        match disabled_deps.is_empty() {
             true => None,
             false => Some(disabled_deps),
-        })
+        }
     }
 
     fn scan_mod<'a, F>(
@@ -681,7 +677,7 @@ impl ManagerGame {
         let profile = self.get_profile(index)?;
         let new_profile = self.active_profile();
 
-        util::fs::copy_dir(&profile.path, &new_profile.path, true)?;
+        util::fs::copy_dir(&profile.path, &new_profile.path, Overwrite::Yes)?;
 
         let mods = profile.mods.clone();
 

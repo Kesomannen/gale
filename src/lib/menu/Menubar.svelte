@@ -21,6 +21,7 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import { capitalize } from '$lib/util';
 	import Popup from '$lib/components/Popup.svelte';
+	import { refreshUpdate } from './Updater.svelte';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -181,6 +182,7 @@
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
+				<MenubarItem on:click={refreshUpdate}>Check for app updates</MenubarItem>
 				<MenubarItem on:click={() => open('https://github.com/Kesomannen/ModManager/issues/')}
 					>Report a bug</MenubarItem
 				>

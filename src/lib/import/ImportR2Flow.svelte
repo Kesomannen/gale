@@ -75,11 +75,11 @@
 
 {#if importData.thunderstore || importData.r2modman}
 	<Checklist 
-		class="mt-1 overflow-auto max-h-60" 
+		class="mt-1 overflow-y-auto max-h-60" 
 		items={profiles}
 		title="Include all"
-		getLabel={(item) => item}
-		get={(index) => include[index]}
-		set={(index, value) => include[index] = value}
+		getLabel={(item, _) => item}
+		get={(_, index) => include[index]}
+		set={(_, index, value) => include[index] = value}
 	/>
 {/if}
