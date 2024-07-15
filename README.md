@@ -158,17 +158,21 @@ After a while, this it will output both an executable and an installable package
 
 ## Screenshots
 
-*Browse mods*
+*Mod list*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot2.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot3.png)
 
 *Profile*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot1.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot2.png)
 
 *Config editor*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot3.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot1.png)
+
+*Modpack export*
+
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot1.png)
 
 ## Credits
 

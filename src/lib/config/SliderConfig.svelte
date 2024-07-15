@@ -39,8 +39,6 @@
 		let x = clientX - rect.left;
 		let newValue = range.start + (range.end - range.start) * (x / rect.width);
 
-		console.log(newValue);
-
 		if (type === 'double' || type == 'single') {
 			newValue = Math.round(newValue / DECIMAL_STEP) * DECIMAL_STEP;
 		} else if (type === 'int32') {
