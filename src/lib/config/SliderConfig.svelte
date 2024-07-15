@@ -119,6 +119,11 @@
 
 		if (!isNaN(newValue)) {
 			newValue = clamp(newValue, range.start, range.end);
+
+			if (type === 'int32') {
+				newValue = Math.round(newValue);
+			}
+
 			content.value = newValue;
 			submitValue();
 		}

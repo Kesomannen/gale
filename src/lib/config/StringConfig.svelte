@@ -29,12 +29,14 @@
 <div class="flex-grow relative">
 	<InputField bind:value={content} class="flex-grow" />
 
+	<!--
 	<Button.Root
 		class="absolute right-1 top-1 p-1 text-slate-400 text-lg rounded-lg hover:bg-gray-800 bg-gray-900"
 		on:click={() => (dialogOpen = true)}
 	>
 		<Icon icon="mdi:arrow-expand" />
 	</Button.Root>
+	-->
 </div>
 <ResetConfigButton {entryId} {onReset} />
 

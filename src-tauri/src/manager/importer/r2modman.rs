@@ -1,7 +1,7 @@
 use anyhow::{anyhow, ensure, Context, Result};
 use log::{debug, info};
-use tauri::{AppHandle, Manager};
 use serde::Serialize;
+use tauri::{AppHandle, Manager};
 
 use std::{
     collections::HashMap,
@@ -13,10 +13,18 @@ use std::{
 
 use super::ImportData;
 use crate::{
-    manager::{downloader::InstallOptions, exporter::{ImportSource, R2Mod}, ModManager},
+    manager::{
+        downloader::InstallOptions,
+        exporter::{ImportSource, R2Mod},
+        ModManager,
+    },
     prefs::Prefs,
     thunderstore::Thunderstore,
-    util::{self, error::IoResultExt, fs::Overwrite},
+    util::{
+        self,
+        error::IoResultExt,
+        fs::{Overwrite, PathExt},
+    },
 };
 
 lazy_static! {
@@ -343,20 +351,12 @@ fn find_paths() -> ManagerData<PathBuf> {
     }
     .unwrap();
 
-    return ManagerData {
-        r2modman: check_dir(parent_dir.join("r2modmanPlus-local")),
-        thunderstore: check_dir(
-            parent_dir
-                .join("Thunderstore Mod Manager")
-                .join("DataFolder"),
-        ),
-    };
-
-    fn check_dir(path: PathBuf) -> Option<PathBuf> {
-        match path.exists() {
-            true => Some(path),
-            false => None,
-        }
+    ManagerData {
+        r2modman: parent_dir.join("r2modmanPlus-local").exists_or_none(),
+        thunderstore: parent_dir
+            .join("Thunderstore Mod Manager")
+            .join("DataFolder")
+            .exists_or_none(),
     }
 }
 
