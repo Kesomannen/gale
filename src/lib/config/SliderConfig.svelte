@@ -127,7 +127,7 @@
 	}}
 	class="px-3 py-1 ml-3 flex-shrink min-w-0 w-1/6 rounded-lg bg-gray-900 placeholder-slate-400
 		 text-slate-300 hover:text-slate-200
-		 focus:ring-green-400 focus:ring-2 invalid:ring-2 focus:outline-none
+		 focus:ring-green-400 focus:ring-2 focus:outline-none
 		   border border-slate-500 border-opacity-0 hover:border-opacity-100 focus:border-opacity-0"
 />
 <ResetConfigButton {entryId} {onReset} />

@@ -9,6 +9,7 @@
 ### Changed
 
 - Reworked config entry sliders, which should fix all issues with freezing or crashing
+- Search mods by their description as well as name
 
 ### Fixed
 

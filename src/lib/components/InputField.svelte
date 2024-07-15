@@ -6,12 +6,18 @@
 	export let value: string = '';
 	export let size: 'sm' | 'md' | 'lg' = 'md';
 
+	let className = '';
+
+	export {
+		className as class,
+	}
+
 	const dispatch = createEventDispatcher<{
 		submit: string;
 	}>();
 </script>
 
-<div class="flex items-center cursor-auto text-{size}">
+<div class="flex items-center cursor-auto text-{size} {className}">
 	{#if label}
 		<Label text={label}>
 			<slot />

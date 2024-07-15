@@ -240,18 +240,23 @@ where
     T: Queryable + 'a,
     I: Iterator<Item = T> + 'a,
 {
-    let search_term = args
-        .search_term
-        .as_ref()
-        .map(|s| s.to_lowercase().trim().replace(' ', "_"));
+    let search_terms = args.search_term.as_ref().map(|str| {
+        let full = str.to_lowercase().trim().to_owned();
+        let package = full.replace(' ', "_");
+        (full, package)
+    });
 
     let mut result = mods
         .filter(|queryable| {
-            if let Some(search_term) = &search_term {
-                let name_match = queryable.full_name().to_lowercase().contains(search_term);
+            if let Some((full_search, package_search)) = &search_terms {
+                let name_match = queryable
+                    .full_name()
+                    .to_lowercase()
+                    .contains(package_search);
+
                 let description_match = queryable
                     .description()
-                    .is_some_and(|description| description.to_lowercase().contains(search_term));
+                    .is_some_and(|description| description.to_lowercase().contains(full_search));
 
                 if !name_match && !description_match {
                     return false;

@@ -20,6 +20,7 @@
 	import { Button, Dialog, Select } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
 	import Checklist from '$lib/components/Checklist.svelte';
+	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -151,7 +152,6 @@
 	}
 
 	function args(): ModpackArgs {
-		console.log(includeFiles);
 		return {
 			name,
 			description,
@@ -297,15 +297,7 @@
                  (similarly to Discord messages)."
 		required={true}
 	>
-		<textarea
-			class="w-full h-32 px-3 py-2 rounded-lg bg-gray-900 placeholder-slate-400
-           text-slate-300 hover:text-slate-200
-			     valid:focus:ring-green-400 invalid:ring-red-500 focus:ring-2 focus:outline-none
-			       border border-slate-500 border-opacity-0 hover:border-opacity-100 focus:border-opacity-0"
-			placeholder="Enter readme..."
-			required={true}
-			bind:value={readme}
-		/>
+		<ResizableInputField bind:value={readme} placeholder="Enter readme..." />
 
 		<details class="mt-1">
 			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
