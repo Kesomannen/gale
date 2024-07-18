@@ -26,7 +26,11 @@ use crate::{
         query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
     },
-    util::{self, error::IoResultExt, fs::{JsonStyle, Overwrite}},
+    util::{
+        self,
+        error::IoResultExt,
+        fs::{JsonStyle, Overwrite},
+    },
 };
 
 pub mod commands;

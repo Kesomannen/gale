@@ -3,7 +3,7 @@ use std::{cmp::Ordering, collections::HashSet, sync::Mutex, time::Duration};
 use anyhow::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use typeshare::typeshare;
 
 use super::{
@@ -76,7 +76,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
                 let thunderstore = thunderstore.lock().unwrap();
 
                 let mods = query_frontend_mods(args, thunderstore.latest());
-                app.emit_all("mod_query_result", &mods)?;
+                app.emit("mod_query_result", &mods)?;
 
                 if thunderstore.finished_loading {
                     state.current_query = None;

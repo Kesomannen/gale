@@ -1,7 +1,7 @@
 use anyhow::Context;
 use log::error;
 use serde::Serialize;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter};
 use std::path::Path;
 
 #[derive(Serialize, Clone)]
@@ -12,7 +12,7 @@ struct JsError<'a> {
 
 pub fn log(name: &str, error: &anyhow::Error, handle: &AppHandle) {
     error!("{}: {:#}", name, error);
-    let _ = handle.emit_all(
+    let _ = handle.emit(
         "error",
         JsError {
             name,

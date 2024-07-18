@@ -1,7 +1,7 @@
 use anyhow::{anyhow, ensure, Context, Result};
 use log::{debug, info};
 use serde::Serialize;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use std::{
     collections::HashMap,
@@ -145,7 +145,7 @@ pub struct ProfileImportData {
 }
 
 pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
-    find_paths().and_then(|path| {
+    find_paths(app).and_then(|path| {
         let profiles = find_profiles(path.clone(), false, app)
             .ok()?
             .map(util::fs::file_name_lossy)
@@ -343,11 +343,11 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn find_paths() -> ManagerData<PathBuf> {
+fn find_paths(app: &AppHandle) -> ManagerData<PathBuf> {
     let parent_dir = match cfg!(target_os = "linux") {
         // r2modman uses the config dir instead of the data dir on linux.
-        true => tauri::api::path::config_dir(),
-        false => tauri::api::path::data_dir(),
+        true => app.path().config_dir(),
+        false => app.path().data_dir(),
     }
     .unwrap();
 
@@ -361,5 +361,5 @@ fn find_paths() -> ManagerData<PathBuf> {
 }
 
 fn emit_update(message: &str, app: &AppHandle) {
-    app.emit_all("transfer_update", message).ok();
+    app.emit("transfer_update", message).ok();
 }

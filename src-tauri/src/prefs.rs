@@ -223,7 +223,7 @@ impl Prefs {
 
                 prefs.data_dir.keep_files.extend(&["prefs.json", "logs"]);
 
-                let window = app.get_window("main").unwrap();
+                let window = app.get_webview_window("main").unwrap();
                 window.zoom(prefs.zoom_factor as f64).ok();
 
                 prefs
@@ -250,7 +250,7 @@ impl Prefs {
         self.temp_dir.set(value.temp_dir.value)?;
 
         if self.zoom_factor != value.zoom_factor {
-            let window = app.get_window("main").unwrap();
+            let window = app.get_webview_window("main").unwrap();
             if let Err(err) = window.zoom(value.zoom_factor as f64) {
                 util::error::log(
                     "Error while updating settings",

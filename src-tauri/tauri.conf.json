@@ -1,104 +1,79 @@
 {
-	"build": {
-		"beforeBuildCommand": "npm run build",
-		"beforeDevCommand": "npm run dev",
-		"devPath": "http://localhost:5173",
-		"distDir": "../build"
-	},
-	"package": {
-		"productName": "Gale",
-		"version": "0.6.2"
-	},
-	"tauri": {
-		"allowlist": {
-			"all": false,
-			"dialog": {
-				"all": true
-			},
-			"window": {
-				"all": true
-			},
-			"shell": {
-				"all": false,
-				"open": true
-			},
-			"clipboard": {
-				"all": true
-			},
-			"app": {
-				"all": true
-			},
-			"fs": {
-				"all": false,
-				"readFile": true,
-				"scope": ["$APPDATA/*"]
-			},
-			"http": {
-				"all": false,
-				"request": true,
-				"scope": [
-					"https://thunderstore.io/api/*",
-					"https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md"
-				]
-			}
-		},
-		"bundle": {
-			"active": true,
-			"category": "Game",
-			"copyright": "",
-			"deb": {
-				"depends": []
-			},
-			"externalBin": [],
-			"icon": [
-				"icons/32x32.png",
-				"icons/128x128.png",
-				"icons/128x128@2x.png",
-				"icons/icon.icns",
-				"icons/icon.ico"
-			],
-			"identifier": "com.kesomannen.gale",
-			"longDescription": "",
-			"macOS": {
-				"entitlements": null,
-				"exceptionDomain": "",
-				"frameworks": [],
-				"providerShortName": null,
-				"signingIdentity": null
-			},
-			"resources": [],
-			"shortDescription": "",
-			"targets": "all",
-			"windows": {
-				"certificateThumbprint": null,
-				"digestAlgorithm": "sha256",
-				"timestampUrl": ""
-			}
-		},
-		"security": {
-			"csp": null
-		},
-		"windows": [
-			{
-				"decorations": false,
-				"fullscreen": false,
-				"transparent": true,
-				"resizable": true,
-				"title": "Gale",
-				"width": 1000,
-				"height": 800,
-				"minWidth": 800,
-				"minHeight": 600,
-				"fileDropEnabled": false
-			}
-		],
-		"updater": {
-			"active": true,
-			"dialog": false,
-			"endpoints": [
-				"https://gist.githubusercontent.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d/raw/"
-			],
-			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRkNCMzE4NDIyOTQ1QjQKUldTMFJTbENHTFA4UE9Fd1RocjRDRm9uVmdiUlUxdmw1ZEwvaXRJZW45VFVSeXozUkYxaUFmZEsK"
-		}
-	}
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "frontendDist": "../build",
+    "devUrl": "http://localhost:5173"
+  },
+  "bundle": {
+    "active": true,
+    "category": "Game",
+    "copyright": "",
+    "targets": "all",
+    "externalBin": [],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    },
+    "longDescription": "",
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "resources": [],
+    "shortDescription": "",
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    },
+    "createUpdaterArtifacts": "v1Compatible"
+  },
+  "productName": "Gale",
+  "version": "0.6.2",
+  "identifier": "com.kesomannen.gale",
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://gist.githubusercontent.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d/raw/"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRkNCMzE4NDIyOTQ1QjQKUldTMFJTbENHTFA4UE9Fd1RocjRDRm9uVmdiUlUxdmw1ZEwvaXRJZW45VFVSeXozUkYxaUFmZEsK"
+    },
+    "deep-link": {
+      "mobile": [],
+      "desktop": {
+        "schemes": ["ror2mm"]
+      }
+    }
+  },
+  "app": {
+    "windows": [
+      {
+        "decorations": false,
+        "fullscreen": false,
+        "transparent": true,
+        "resizable": true,
+        "title": "Gale",
+        "width": 1000,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  }
 }

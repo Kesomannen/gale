@@ -9,7 +9,7 @@ use std::{
 use anyhow::{anyhow, bail, Context, Result};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Event, Manager};
 use thiserror::Error;
 use typeshare::typeshare;
 
@@ -27,10 +27,8 @@ use uuid::Uuid;
 pub mod commands;
 pub mod updater;
 
-pub fn setup(app: &AppHandle) -> Result<()> {
-    app.manage(Mutex::new(InstallState::default()));
-
-    tauri_plugin_deep_link::register("ror2mm", deep_link_handler(app.clone()))?;
+pub fn setup(handle: &AppHandle) -> Result<()> {
+    handle.manage(Mutex::new(InstallState::default()));
 
     Ok(())
 }
@@ -269,7 +267,7 @@ impl<'a> Installer<'a> {
         }
 
         if self.options.send_progress {
-            self.app.emit_all("install_progress", &progress).ok();
+            self.app.emit("install_progress", &progress).ok();
         }
     }
 
@@ -527,7 +525,7 @@ pub async fn install_with_deps(
     .await
 }
 
-fn resolve_deep_link(url: String, thunderstore: &Thunderstore) -> Result<ModRef> {
+fn resolve_deep_link(url: &str, thunderstore: &Thunderstore) -> Result<ModRef> {
     let id = url
         .strip_prefix("ror2mm://v1/install/thunderstore.io/")
         .ok_or_else(|| anyhow!("Invalid deep link url: '{}'", url))?;
@@ -537,33 +535,32 @@ fn resolve_deep_link(url: String, thunderstore: &Thunderstore) -> Result<ModRef>
     Ok(borrowed_mod.into())
 }
 
-pub fn deep_link_handler(app: AppHandle) -> impl FnMut(String) {
-    move |url| {
-        let mod_ref = {
-            let thunderstore = app.state::<Mutex<Thunderstore>>();
-            let thunderstore = thunderstore.lock().unwrap();
+pub fn deep_link_handler(handle: &AppHandle, event: Event) {
+    let url = event.payload();
 
-            match resolve_deep_link(url, &thunderstore) {
-                Ok(mod_ref) => mod_ref,
-                Err(e) => {
-                    util::error::log("Failed to resolve deep link", &e, &app);
-                    return;
-                }
+    let mod_ref = {
+        let thunderstore = handle.state::<Mutex<Thunderstore>>();
+        let thunderstore = thunderstore.lock().unwrap();
+        match resolve_deep_link(url, &thunderstore) {
+            Ok(mod_ref) => mod_ref,
+            Err(e) => {
+                util::error::log("Failed to resolve deep link", &e, &handle);
+                return;
             }
-        };
+        }
+    };
 
-        let handle = app.clone();
-        tauri::async_runtime::spawn(async move {
-            install_with_deps(
-                vec![ModInstall::new(mod_ref)],
-                InstallOptions::default(),
-                false,
-                &handle,
-            )
-            .await
-            .unwrap_or_else(|e| {
-                util::error::log("Failed to install mod from deep link", &e, &handle);
-            });
+    let handle = handle.clone();
+    tauri::async_runtime::spawn(async move {
+        install_with_deps(
+            vec![ModInstall::new(mod_ref)],
+            InstallOptions::default(),
+            false,
+            &handle,
+        )
+        .await
+        .unwrap_or_else(|e| {
+            util::error::log("Failed to install mod from deep link", &e, &handle);
         });
-    }
+    });
 }
