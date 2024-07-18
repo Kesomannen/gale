@@ -1,11 +1,15 @@
 <script context="module" lang="ts">
+	import { check, type Update } from '@tauri-apps/plugin-updater';
+
 	export let updateAvailable = false;
-	export let updateManifest: UpdateManifest | undefined;
+	export let currentUpdate: Update | undefined;
 
 	export async function refreshUpdate() {
-		let result = await checkUpdate();
-		updateAvailable = result.shouldUpdate;
-		updateManifest = result.manifest;
+		let update = await check();
+		if (update?.available) {
+			updateAvailable = true;
+			currentUpdate = update;
+		}
 	}
 </script>
 
@@ -14,17 +18,11 @@
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { pushError } from '$lib/invoke';
 	import Icon from '@iconify/svelte';
-	import { dialog } from '@tauri-apps/api';
+	import { message } from '@tauri-apps/plugin-dialog';
 	import { getVersion } from '@tauri-apps/api/app';
 	import type { UnlistenFn } from '@tauri-apps/api/event';
-	import { platform } from '@tauri-apps/api/os';
-	import { relaunch } from '@tauri-apps/api/process';
-	import {
-		checkUpdate,
-		installUpdate,
-		onUpdaterEvent,
-		type UpdateManifest,
-	} from '@tauri-apps/api/updater';
+	import { platform } from '@tauri-apps/plugin-os';
+	import { relaunch } from '@tauri-apps/plugin-process';
 	import { Button, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
 
@@ -34,41 +32,39 @@
 	let loading = false;
 
 	onMount(() => {
-		let unlisten: UnlistenFn | undefined;
-
-		onUpdaterEvent(({ error, status }) => {
-			if (error) {
-				pushError(
-					{
-						name: 'Failed to update Gale',
-						message: error
-					},
-					true
-				);
-			}
-		}).then((unlistenFn) => (unlisten = unlistenFn));
-
 		refreshUpdate();
 
 		getVersion().then((version) => {
 			currentVersion = version;
 		});
-
-		return () => {
-			if (unlisten) {
-				unlisten();
-			}
-		};
 	});
 
+	async function installUpdate() {
+		if (!currentUpdate) return;
+
+		try {
+			await currentUpdate.downloadAndInstall();
+		} catch (e) {
+			pushError(
+				{
+					name: 'Failed to update Gale',
+					message: e
+				},
+				true
+			);
+		}
+
+		currentUpdate = undefined;
+	}
+
 	async function update() {
-    	loading = true;
+		loading = true;
 		await installUpdate();
-    	loading = false;
+		loading = false;
 
 		let platformName = await platform();
 		if (platformName !== 'win32') {
-			await dialog.message('Gale will now restart in order to apply the update.', {
+			await message('Gale will now restart in order to apply the update.', {
 				title: 'Update installed'
 			});
 			await relaunch();
@@ -95,8 +91,8 @@
 <ConfirmPopup title="App update available" bind:open={popupOpen}>
 	<Dialog.Description class="text-slate-300">
 		<p>
-			{#if updateManifest}
-				Version {updateManifest.version} of Gale is available - you have {currentVersion}.
+			{#if currentUpdate}
+				Version {currentUpdate.version} of Gale is available - you have {currentVersion}.
 			{:else}
 				There is an update available for Gale.
 			{/if}

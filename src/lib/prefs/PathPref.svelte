@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { open } from '@tauri-apps/api/dialog';
+	import { open } from '@tauri-apps/plugin-dialog';
 
 	import { invokeCommand } from '$lib/invoke';
 	import PathField from '$lib/components/PathField.svelte';

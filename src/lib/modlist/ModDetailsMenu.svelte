@@ -6,8 +6,8 @@
 	import { slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
 
-	import { open } from '@tauri-apps/api/shell';
-	import { fetch } from '@tauri-apps/api/http';
+	import { open } from '@tauri-apps/plugin-shell';
+	import { fetch } from '@tauri-apps/plugin-http';
 	import { activeGame } from '$lib/stores';
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
@@ -42,18 +42,31 @@
 
 	let readmePromise: Promise<string | null>;
 
+	async function extractReadme(response: Response) {
+		let json = await response.json();
+
+		let md_res = undefined;
+		try {
+			md_res = json as MarkdownResponse;
+		} catch (_e) {
+			return null;
+		}
+
+		if (!md_res.markdown) return null;
+
+		return md_res.markdown
+			.split('\n')
+			.filter((line) => !line.startsWith('# '))
+			.join('\n');
+	}
+
 	$: {
 		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
-		readmePromise = fetch<MarkdownResponse>(url).then((res) => {
-			if (!res.data.markdown) {
+		readmePromise = fetch(url).then(
+			extractReadme,
+			(_err) => {
 				return null;
-			} else {
-				return res.data.markdown
-					.split('\n')
-					.filter((line) => !line.startsWith('# '))
-					.join('\n');
-			}
-		});
+			});
 	}
 </script>
 

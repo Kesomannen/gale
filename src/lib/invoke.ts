@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import { writable, type Writable } from 'svelte/store';
 import { listen } from '@tauri-apps/api/event';
 

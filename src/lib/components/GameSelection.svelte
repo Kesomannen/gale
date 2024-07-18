@@ -3,7 +3,7 @@
 	import { games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
-	import { open as openLink } from '@tauri-apps/api/shell';
+	import { open as openLink } from '@tauri-apps/plugin-shell';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from './Link.svelte';
 

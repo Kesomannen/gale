@@ -7,11 +7,12 @@
 
 	import { invokeCommand } from '$lib/invoke';
 
-	import { open } from '@tauri-apps/api/shell';
-	import { appWindow } from '@tauri-apps/api/window';
+	import { open as shellOpen } from '@tauri-apps/plugin-shell';
+	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import ImportProfilePopup from '$lib/import/ImportProfilePopup.svelte';
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
-	import { clipboard, dialog } from '@tauri-apps/api';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import type { ImportData } from '$lib/models';
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
@@ -36,8 +37,10 @@
 	let profileOperationOpen = false;
 	let profileOperationInProgress = false;
 
+	const appWindow = getCurrentWindow();
+
 	async function importLocalPackage() {
-		let path = await dialog.open({
+		let path = await open({
 			directory: true,
 			title: 'Select the directory containing the mod package'
 		});
@@ -47,7 +50,7 @@
 	}
 
 	async function importLocalDLL() {
-		let path = await dialog.open({
+		let path = await open({
 			title: 'Select the DLL to import',
 			filters: [{ name: 'DLL file', extensions: ['dll'] }]
 		});
@@ -57,7 +60,7 @@
 	}
 
 	async function importFile() {
-		let path = await dialog.open({
+		let path = await open({
 			title: 'Select the file to import',
 			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
 		});
@@ -69,7 +72,7 @@
 	}
 
 	async function exportFile() {
-		let dir = await dialog.open({
+		let dir = await open({
 			directory: true,
 			title: 'Select the directory to export the profile to'
 		});
@@ -85,7 +88,7 @@
 
 	async function copyDependencyStrings() {
 		let text = await invokeCommand<string>('export_dep_string');
-		await clipboard.writeText(text);
+		await writeText(text);
 	}
 
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
@@ -183,12 +186,12 @@
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem on:click={refreshUpdate}>Check for app updates</MenubarItem>
-				<MenubarItem on:click={() => open('https://github.com/Kesomannen/ModManager/issues/')}
+				<MenubarItem on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
 					>Report a bug</MenubarItem
 				>
 				<MenubarItem
 					on:click={() =>
-						open('https://discord.com/channels/1168655651455639582/1246088342458863618')}
+						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618')}
 					>Open discord thread</MenubarItem
 				>
 			</Menubar.Content>

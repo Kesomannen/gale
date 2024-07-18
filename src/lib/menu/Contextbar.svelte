@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-	import { confirm } from '@tauri-apps/api/dialog';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 
 	import Popup from '$lib/components/Popup.svelte';
 	import NewProfilePopup from '$lib/menu/NewProfilePopup.svelte';
