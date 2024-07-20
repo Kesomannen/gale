@@ -25,6 +25,7 @@ mod manager;
 mod prefs;
 mod thunderstore;
 mod util;
+mod cli;
 
 #[derive(Debug)]
 pub struct NetworkClient(reqwest::Client);
@@ -107,6 +108,7 @@ fn main() {
             manager::exporter::commands::upload_pack,
             manager::exporter::commands::get_pack_args,
             manager::exporter::commands::set_pack_args,
+            manager::exporter::commands::generate_changelog,
             manager::exporter::commands::export_dep_string,
             config::commands::get_config_files,
             config::commands::set_tagged_config_entry,
@@ -127,6 +129,10 @@ fn main() {
                     .show();
 
                 return Err(err.into());
+            }
+
+            if let Err(err) = cli::run(app) {
+                error!("Failed to run CLI! {:#}", err);
             }
 
             Ok(())

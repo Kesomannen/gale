@@ -1,14 +1,15 @@
 use anyhow::{anyhow, ensure, Context, Result};
 use futures_util::future::try_join_all;
 use image::{imageops::FilterType, ImageFormat};
+use log::{debug, info};
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use tauri::Url;
 use tokio::{
     fs,
     io::{AsyncReadExt, AsyncSeekExt},
 };
 use uuid::Uuid;
-use log::{debug, info};
-use reqwest::StatusCode;
 
 use std::{
     collections::HashMap,
@@ -26,17 +27,19 @@ use crate::{
             UserMediaFinishUploadParams, UserMediaInitiateUploadParams,
             UserMediaInitiateUploadResponse,
         },
-        Thunderstore,
+        ModRef, Thunderstore,
     },
     util,
 };
-use tauri::Url;
+
+pub mod changelog;
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
         profile.modpack = Some(ModpackArgs {
             name: profile.name.replace([' ', '-'], ""),
             readme: format!("# {}\n\n", profile.name),
+            changelog: "# Changelog\n\n## 1.0.0\n\n- Initial release".to_owned(),
             version_number: "1.0.0".to_owned(),
             categories: vec!["modpacks".to_owned()],
             ..Default::default()
@@ -45,6 +48,7 @@ pub fn refresh_args(profile: &mut Profile) {
 
     let includes = &mut profile.modpack.as_mut().unwrap().include_files;
 
+    // remove deleted files
     includes.retain(|file, _| profile.path.join(file).exists());
 
     for path in super::find_includes(&profile.path) {
@@ -61,68 +65,76 @@ pub struct ModpackArgs {
     pub categories: Vec<String>,
     pub nsfw: bool,
     pub readme: String,
+    #[serde(default)]
+    pub changelog: String,
     pub version_number: String,
     pub icon_path: PathBuf,
     pub website_url: String,
     pub include_disabled: bool,
-    #[serde(default, rename="includeFileMap")]
+    #[serde(default, rename = "includeFileMap")]
     pub include_files: HashMap<PathBuf, bool>,
 }
 
-pub fn export(
-    profile: &Profile,
-    path: &Path,
-    args: &ModpackArgs,
-    thunderstore: &Thunderstore,
-) -> Result<()> {
-    ensure!(!args.name.is_empty(), "name cannot be empty");
-    ensure!(!args.description.is_empty(), "description cannot be empty");
-
-    info!("exporting modpack to {}", path.display());
-
-    let dep_strings = profile
-        .remote_mods()
-        .filter(|(_, enabled)| args.include_disabled || *enabled) // filter out disabled mods
-        .map(|(mod_ref, _)| {
-            let borrowed = mod_ref.borrow(thunderstore)?;
-            Ok(borrowed.version.full_name.clone())
-        })
-        .collect::<Result<Vec<_>>>()
-        .context("failed to resolve modpack dependencies")?;
-
-    let version_number = semver::Version::parse(&args.version_number)
-        .context("invalid version number")?;
-
-    let manifest = PackageManifest {
-        name: args.name.clone(),
-        description: args.description.clone(),
-        website_url: args.website_url.clone(),
-        dependencies: dep_strings.clone(),
-        installers: None,
-        author: None,
-        version_number,
-    };
-
-    let mut zip = util::zip::builder(path)?;
-
-    if !args.readme.is_empty() {
-        zip.write_str("README.md", &args.readme)?;
+impl Profile {
+    fn mods_to_pack<'a>(&'a self, args: &'a ModpackArgs) -> impl Iterator<Item = &'a ModRef> + 'a {
+        self.remote_mods()
+            .filter(move |(_, enabled)| args.include_disabled || *enabled)
+            .map(|(mod_ref, _)| mod_ref)
     }
 
-    serde_json::to_writer_pretty(zip.writer("manifest.json")?, &manifest)?;
+    pub fn export_pack(&self, args: &ModpackArgs, path: &Path, thunderstore: &Thunderstore) -> Result<()> {
+        ensure!(!args.name.is_empty(), "name cannot be empty");
+        ensure!(!args.description.is_empty(), "description cannot be empty");
 
-    write_icon(&args.icon_path, &mut zip).context("failed to write icon")?;
+        info!("exporting modpack to {}", path.display());
 
-    super::write_includes(
-        args.include_files
-            .iter()
-            .filter(|(_, enabled)| **enabled)
-            .map(|(file, _)| file),
-        &profile.path,
-        &mut zip,
-    )?;
+        let deps = self
+            .mods_to_pack(args)
+            .map(|mod_ref| {
+                let borrowed = mod_ref.borrow(thunderstore)?;
+                Ok(borrowed.version.full_name.clone())
+            })
+            .collect::<Result<Vec<_>>>()
+            .context("failed to resolve modpack dependencies")?;
 
-    Ok(())
+        let version_number =
+            semver::Version::parse(&args.version_number).context("invalid version number")?;
+
+        let manifest = PackageManifest {
+            name: args.name.clone(),
+            description: args.description.clone(),
+            website_url: args.website_url.clone(),
+            dependencies: deps,
+            installers: None,
+            author: None,
+            version_number,
+        };
+
+        let mut zip = util::zip::builder(path)?;
+
+        if !args.readme.is_empty() {
+            zip.write_str("README.md", &args.readme)?;
+        }
+
+        if !args.changelog.is_empty() {
+            zip.write_str("CHANGELOG.md", &args.changelog)?;
+        }
+
+        serde_json::to_writer_pretty(zip.writer("manifest.json")?, &manifest)?;
+
+        write_icon(&args.icon_path, &mut zip).context("failed to write icon")?;
+
+        super::write_includes(
+            args.include_files
+                .iter()
+                .filter(|(_, enabled)| **enabled)
+                .map(|(file, _)| file),
+            &self.path,
+            &mut zip,
+        )?;
+
+        Ok(())
+    }
 }
 
 fn write_icon(path: &Path, zip: &mut util::zip::ZipBuilder) -> anyhow::Result<()> {
@@ -156,7 +168,7 @@ pub async fn publish(
     ensure!(args.description.len() <= 250, "description is too long");
     ensure!(!args.readme.is_empty(), "readme cannot be empty");
     ensure!(!args.author.is_empty(), "author cannot be empty");
-    
+
     if !args.website_url.is_empty() {
         Url::parse(&args.website_url).context("invalid website URL")?;
     }

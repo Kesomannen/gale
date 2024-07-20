@@ -100,7 +100,7 @@
 		bind:this={fill}
 	>
 		<div
-			class="rounded-full h-3 w-3 group-hover:bg-gray-300 right-[-0.5rem] absolute"
+			class="rounded-full h-3 w-3 right-[-0.5rem] absolute"
 			class:bg-gray-400={!isDragging}
 			class:bg-gray-300={isDragging}
 			bind:this={handle}

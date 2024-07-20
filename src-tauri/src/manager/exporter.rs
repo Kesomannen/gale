@@ -34,7 +34,7 @@ pub struct LegacyProfileManifest<'a> {
 pub enum ImportSource {
     Gale,
     #[default]
-    R2
+    R2,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -198,11 +198,12 @@ pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
     // Include any files in the BepInEx/config directory,
     // and any other files with the following extensions:
     const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
-    const EXCLUDE_FILES: [&str; 4] = [
+    const EXCLUDE_FILES: [&str; 5] = [
         "profile.json",
         "manifest.json",
         "mods.yml",
         "doorstop_config.ini",
+        "snapshots",
     ];
 
     let config_dir = ["BepInEx", "config"].iter().collect::<PathBuf>();
@@ -212,10 +213,7 @@ pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
         .map(move |entry| entry.into_path().strip_prefix(root).unwrap().to_path_buf())
-        .filter(|path| {
-            let name = path.file_name().unwrap();
-            !EXCLUDE_FILES.iter().any(|exc| name == *exc)
-        })
+        .filter(|path| !EXCLUDE_FILES.iter().any(|exc| path.starts_with(exc)))
         .filter(move |path| {
             path.starts_with(&config_dir)
                 || path

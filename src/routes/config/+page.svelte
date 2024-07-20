@@ -13,16 +13,17 @@
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
+	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
+	import EnumConfig from '$lib/config/EnumConfig.svelte';
+	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
+	import UntaggedConfig from '$lib/config/UntaggedConfig.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { activeProfile } from '$lib/stores';
 	import { Render } from '@jill64/svelte-sanitize';
-	import StringConfig from '$lib/config/StringConfig.svelte';
-	import EnumConfig from '$lib/config/EnumConfig.svelte';
-	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
-	import UntaggedConfig from '$lib/config/UntaggedConfig.svelte';
 	import { page } from '$app/stores';
+	import StringConfig from '$lib/config/StringConfig.svelte';
 
 	let files: LoadFileResult[] | undefined;
 
@@ -194,9 +195,7 @@
 				{#each selectedSection.entries as entry (entry.content)}
 					{#if entry.type === 'untagged'}
 						<div class="flex items-center text-slate-300 pl-2 my-1">
-							<div
-								class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0"
-							>
+							<div class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0">
 								{sentenceCase(entry.content.name)}
 							</div>
 							<UntaggedConfig
@@ -271,3 +270,5 @@
 		{/if}
 	</div>
 </div>
+
+<ExpandedEntryPopup />

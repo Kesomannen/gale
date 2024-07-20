@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Simple CLI for choosing game, profile and launching
+- Resizable text input and list editor for long config entries
+- Changelog field and automatic 
+
+### Changed
+
+- Various UI tweaks
+
 ## 0.6.2 (2024-07-15)
 
 ### Added

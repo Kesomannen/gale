@@ -5,16 +5,13 @@
 
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Icon from '@iconify/svelte';
-	import Popup from '$lib/components/Popup.svelte';
 	import InputField from '$lib/components/InputField.svelte';
-	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
+	import { expandedEntry } from './ExpandedEntryPopup.svelte';
 
 	export let entryId: ConfigEntryId;
 	export let isOther: boolean = false;
 
 	let content = entryId.entry.value.content as string;
-
-	let dialogOpen = false;
 
 	function onReset(value: ConfigValue) {
 		content = value.content as string;
@@ -29,21 +26,13 @@
 <div class="flex-grow relative">
 	<InputField bind:value={content} class="flex-grow" />
 
-	<!--
-	<Button.Root
-		class="absolute right-1 top-1 p-1 text-slate-400 text-lg rounded-lg hover:bg-gray-800 bg-gray-900"
-		on:click={() => (dialogOpen = true)}
-	>
-		<Icon icon="mdi:arrow-expand" />
-	</Button.Root>
-	-->
+	{#if content.length > 100 || content.includes(',') || content.includes('\n')}
+		<Button.Root
+			class="absolute right-1 top-1 p-1 text-slate-400 text-lg rounded-lg hover:bg-gray-800 bg-gray-900"
+			on:click={() => ($expandedEntry = entryId)}
+		>
+			<Icon icon="mdi:arrow-expand" />
+		</Button.Root>
+	{/if}
 </div>
 <ResetConfigButton {entryId} {onReset} />
-
-<!--
-{#if dialogOpen}
-	<Popup bind:open={dialogOpen} title="Edit {entryId.entry.name}">
-		<ResizableInputField bind:value={content} placeholder="Enter text..." />
-	</Popup>
-{/if}
--->

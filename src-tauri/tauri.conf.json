@@ -31,7 +31,9 @@
 			"fs": {
 				"all": false,
 				"readFile": true,
-				"scope": ["$APPDATA/*"]
+				"scope": [
+					"$APPDATA/*"
+				]
 			},
 			"http": {
 				"all": false,
@@ -41,6 +43,25 @@
 					"https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md"
 				]
 			}
+		},
+		"cli": {
+			"description": "",
+			"args": [
+				{
+					"name": "game",
+					"short": "g",
+					"takesValue": true
+				},
+				{
+					"name": "profile",
+					"short": "p",
+					"takesValue": true
+				},
+				{
+					"name": "launch",
+					"short": "l"
+				}
+			]
 		},
 		"bundle": {
 			"active": true,

@@ -1,22 +1,27 @@
 <script lang="ts">
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
+	import InputField from '$lib/components/InputField.svelte';
+
 	import type { LaunchMode } from '$lib/models';
-	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { sentenceCase } from '$lib/util';
 
 	export let value: LaunchMode;
 	export let set: (value: LaunchMode) => void;
 
 	let instances = value.content?.instances ?? 1;
+	let intervalSecs = value.content?.intervalSecs ?? 10;
 
 	function onSelectedChangeSingle(newValue: string) {
-		let type = newValue as 'steam' | 'direct';
+		value.type = newValue as 'steam' | 'direct';
+		submit();
+	}
 
-		if (type == 'steam') {
-			value = { type };
+	function submit() {
+		if (value.type === 'direct') {
+			value.content = { instances, intervalSecs };
 		} else {
-			value = { type, content: { instances } };
+			value.content = undefined;
 		}
 
 		set(value);
@@ -43,20 +48,36 @@
 		selected={value?.type ?? 'steam'}
 		{onSelectedChangeSingle}
 	/>
+</div>
 
-	<Tooltip text="Number of instances to launch. Only available in direct mode." side="top">
-		<input
-			type="number"
-			step="int32"
-			disabled={value?.type !== 'direct'}
-			bind:value={instances}
-			on:input={() => {
-				value.content = { instances };
-				set(value);
-			}}
-			class="px-3 py-1 rounded-lg bg-gray-900 ml-1
-					text-slate-300 hover:text-slate-100 disabled:text-slate-400 border border-gray-500 border-opacity-0 
-					enabled:hover:border-opacity-100"
-		/>
-	</Tooltip>
+<div class="flex items-center">
+	<Label text="Number of instances">
+		How many instances of the game to launch at once.
+		Only available in direct mode.
+	</Label>
+
+	<InputField
+		disabled={value.type !== 'direct'}
+		value={instances.toString()}
+		on:change={({ detail }) => {
+			instances = parseInt(detail);
+			submit();
+		}}
+	/>
+</div>
+
+<div class="flex items-center">
+	<Label text="Interval between launches">
+		How many seconds to wait between launching each instance.
+		Only applicable in direct mode with multiple instances.
+	</Label>
+
+	<InputField
+		disabled={value.type !== 'direct' || instances <= 1}
+		value={intervalSecs.toString()}
+		on:change={({ detail }) => {
+			intervalSecs = parseInt(detail);
+			submit();
+		}}
+	/>
 </div>

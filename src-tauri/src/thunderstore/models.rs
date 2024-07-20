@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
+use crate::games::Game;
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
@@ -43,6 +44,18 @@ impl PackageListing {
 
     pub fn total_downloads(&self) -> u32 {
         self.versions.iter().map(|v| v.downloads).sum()
+    }
+
+    pub fn author(&self) -> &str {
+        self.full_name.split_once('-').unwrap().0
+    }
+
+    pub fn author_url(&self, game: &'static Game) -> String {
+        format!("https://thunderstore.io/c/{}/p/{}/", game.id, self.author())
+    }
+
+    pub fn url(&self, game: &'static Game) -> String {
+        format!("https://thunderstore.io/c/{}/p/{}/{}/", game.id, self.author(), self.name)
     }
 }
 

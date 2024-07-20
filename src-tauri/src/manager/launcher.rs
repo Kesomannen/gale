@@ -5,17 +5,18 @@ use std::{
 };
 
 use anyhow::{bail, ensure, Context, Result};
+use log::warn;
+use serde::{Deserialize, Serialize};
+use tauri::async_runtime;
+use tokio::time::Duration;
+use typeshare::typeshare;
 
 use super::ManagerGame;
 use crate::{
     games::Game,
-    prefs::Prefs,
+    prefs::{GamePrefs, Prefs},
     util::{error::IoResultExt, fs::PathExt},
 };
-use log::info;
-use serde::{Deserialize, Serialize};
-use tauri::async_runtime;
-use typeshare::typeshare;
 
 pub mod commands;
 
@@ -25,25 +26,46 @@ pub mod commands;
 pub enum LaunchMode {
     #[default]
     Steam,
+    #[serde(rename_all = "camelCase")]
     Direct {
         instances: u32,
+        interval_secs: f32,
     },
 }
 
 impl ManagerGame {
     pub fn launch(&self, prefs: &Prefs) -> Result<()> {
         let game_dir = self.game.path(prefs)?;
-        self.link_files(&game_dir).context("failed to link files")?;
+        if let Err(err) = self.link_files(&game_dir) {
+            warn!("failed to link files: {:#}", err);
+        }
 
-        match &prefs.launch_mode {
+        let launch_mode = prefs
+            .game_prefs
+            .get(&self.game.id)
+            .map(|prefs| prefs.launch_mode.clone())
+            .unwrap_or_default();
+
+        match launch_mode {
             LaunchMode::Steam => self.launch_steam(prefs),
-            LaunchMode::Direct { instances } => self.launch_direct(prefs, *instances),
+            LaunchMode::Direct {
+                instances,
+                interval_secs,
+            } => self.launch_direct(prefs, instances, Duration::from_secs_f32(interval_secs)),
         }
     }
 
     fn launch_steam(&self, prefs: &Prefs) -> Result<()> {
-        let steam_path = prefs.steam_exe_path.as_ref().context("steam executable path not set")?;
-        ensure!(steam_path.exists(), "steam executable not found at {}", steam_path.display());
+        let steam_path = prefs
+            .steam_exe_path
+            .as_ref()
+            .context("steam executable path not set")?;
+
+        ensure!(
+            steam_path.exists(),
+            "steam executable not found at {}",
+            steam_path.display()
+        );
 
         let mut command = Command::new(steam_path);
         command
@@ -52,14 +74,12 @@ impl ManagerGame {
 
         add_bepinex_args(&mut command, &self.active_profile().path)?;
 
-        info!("launching from steam with command: {:?}", command);
-
         command.spawn()?;
 
         Ok(())
     }
 
-    fn launch_direct(&self, prefs: &Prefs, instances: u32) -> Result<()> {
+    fn launch_direct(&self, prefs: &Prefs, instances: u32, interval: Duration) -> Result<()> {
         let exe_path = self
             .game
             .path(prefs)?
@@ -78,8 +98,6 @@ impl ManagerGame {
 
         add_bepinex_args(&mut command, &self.active_profile().path)?;
 
-        info!("launching locally with command: {:?}", command);
-
         match instances {
             0 => bail!("instances must be greater than 0"),
             1 => {
@@ -90,7 +108,7 @@ impl ManagerGame {
                     // wait a bit between launches
                     for _ in 0..instances {
                         command.spawn().ok();
-                        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+                        tokio::time::sleep(interval).await;
                     }
                 });
             }
@@ -126,15 +144,18 @@ impl ManagerGame {
 
 impl Game {
     pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
-        let path = match prefs.game_dir_overrides.get(&self.id) {
-            Some(Some(path)) => path.to_path_buf(),
+        let path = match prefs.game_prefs.get(&self.id) {
+            Some(GamePrefs {
+                dir_override: Some(path),
+                ..
+            }) => path.to_path_buf(),
             _ => {
                 let mut path = prefs
                     .steam_library_dir
                     .as_ref()
                     .context("steam library directory not set")?
                     .to_path_buf();
-    
+
                 path.push("steamapps");
                 path.push("common");
                 path.push(&self.steam_name);
@@ -160,7 +181,10 @@ fn add_bepinex_args(command: &mut Command, path: &Path) -> Result<()> {
     preloader_path.push("BepInEx.Preloader.dll");
 
     if !preloader_path.exists() {
-        bail!("BepInEx preloader not found at {}", preloader_path.display());
+        bail!(
+            "BepInEx preloader not found at {}",
+            preloader_path.display()
+        );
     }
 
     let (enable_label, target_label) =

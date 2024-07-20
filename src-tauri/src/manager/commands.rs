@@ -82,14 +82,7 @@ pub fn set_active_game(
 
     let game = games::from_id(id).context("invalid game id")?;
 
-    manager.ensure_game(game, &prefs)?;
-
-    if manager.active_game.id != game.id {
-        manager.active_game = game;
-        thunderstore.switch_game(game, app);
-
-        save(&manager, &prefs)?;
-    }
+    manager.set_active_game(game, &mut thunderstore, &prefs, app)?;
 
     Ok(())
 }

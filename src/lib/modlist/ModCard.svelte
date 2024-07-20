@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { activeGame } from '$lib/stores';
+
 	export let fullName: string;
 
 	$: split = fullName.split('-');
@@ -14,14 +16,22 @@
 		class="w-12 h-12 rounded-md"
 	/>
 	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
-		<span class="font-semibold text-white">
+		<a
+			class="font-semibold text-white hover:underline"
+			href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
+			target="_blank"
+		>
 			{name}
-		</span>
+		</a>
 		<span class="px-1 text-slate-400">
 			{version}
 		</span>
-		<div class="truncate text-slate-400">
+		<a
+			class="truncate text-slate-400 hover:underline block"
+			href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/"
+			target="_blank"
+		>
 			{author}
-		</div>
+		</a>
 	</div>
 </div>

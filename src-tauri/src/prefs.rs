@@ -9,7 +9,6 @@ use std::{
 use anyhow::{anyhow, bail, ensure, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use typeshare::typeshare;
 
 use crate::{
     manager::launcher::LaunchMode,
@@ -126,7 +125,6 @@ impl From<PathBuf> for DirPref {
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Prefs {
@@ -139,9 +137,7 @@ pub struct Prefs {
     pub steam_exe_path: Option<PathBuf>,
     #[serde(alias = "steam_game_dir")]
     pub steam_library_dir: Option<PathBuf>,
-    #[serde(alias = "game_dir_overrides")]
-    pub game_dir_overrides: HashMap<String, Option<PathBuf>>,
-
+        
     #[serde(alias = "data_dir")]
     pub data_dir: DirPref,
     #[serde(alias = "cache_dir")]
@@ -149,12 +145,19 @@ pub struct Prefs {
     #[serde(alias = "temp_dir")]
     pub temp_dir: DirPref,
 
-    #[serde(alias = "launch_mode")]
-    pub launch_mode: LaunchMode,
     #[serde(alias = "enable_mod_cache")]
     enable_mod_cache: bool,
     #[serde(alias = "zoom_factor")]
     zoom_factor: f32,
+
+    pub game_prefs: HashMap<String, GamePrefs>,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[serde(default, rename_all = "camelCase")]
+pub struct GamePrefs {
+    pub dir_override: Option<PathBuf>,
+    pub launch_mode: LaunchMode,
 }
 
 impl Default for Prefs {
@@ -182,7 +185,6 @@ impl Default for Prefs {
 
             steam_exe_path,
             steam_library_dir,
-            game_dir_overrides: HashMap::new(),
 
             data_dir: DirPref::new(util::path::app_data_dir())
                 .keep("prefs.json")
@@ -190,9 +192,10 @@ impl Default for Prefs {
             cache_dir: util::path::app_cache_dir().join("cache").into(),
             temp_dir: util::path::app_cache_dir().join("temp").into(),
 
-            launch_mode: LaunchMode::Steam,
             enable_mod_cache: true,
             zoom_factor: 1.0,
+
+            game_prefs: HashMap::new(),
         }
     }
 }
@@ -243,7 +246,7 @@ impl Prefs {
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
         self.steam_exe_path = value.steam_exe_path;
         self.steam_library_dir = value.steam_library_dir;
-        self.game_dir_overrides = value.game_dir_overrides;
+        self.game_prefs = value.game_prefs;
 
         self.data_dir.set(value.data_dir.value)?;
         self.cache_dir.set(value.cache_dir.value)?;
@@ -266,8 +269,6 @@ impl Prefs {
             fs::create_dir_all(&*self.cache_dir)?;
         }
         self.enable_mod_cache = value.enable_mod_cache;
-
-        self.launch_mode = value.launch_mode;
 
         self.save()?;
         Ok(())

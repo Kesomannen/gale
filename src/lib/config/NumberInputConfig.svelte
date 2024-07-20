@@ -21,7 +21,7 @@
 	step={type === 'int32' ? 1 : 'any'}
 	bind:value={content.value}
 	class="px-3 py-1 flex-grow rounded-lg bg-gray-900 placeholder-slate-400
-		 text-slate-300 hover:text-slate-200
+		 text-slate-300
 		 focus:ring-green-400 focus:ring-2 focus:outline-none
 		   border border-slate-500 border-opacity-0 hover:border-opacity-100 focus:border-opacity-0"
 />

@@ -20,7 +20,7 @@ pub fn set(token: &str) -> Result<()> {
 }
 
 pub fn clear() -> Result<()> {
-    match ENTRY.delete_password() {
+    match ENTRY.delete_credential() {
         Ok(()) => Ok(()),
         Err(keyring::Error::NoEntry) => Ok(()),
         Err(err) => Err(err.into()),

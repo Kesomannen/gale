@@ -2,7 +2,7 @@
 
 <h1> Gale Mod Manager </h1>
 
-A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
+A lightweight mod manager for Thunderstore, built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
 <h2> Table of Contents </h2>
 
@@ -12,8 +12,8 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
   - [MacOS](#macos)
   - [Linux](#linux)
 - [Building from source](#building-from-source)
-  - [On Windows](#on-windows)
-  - [On Linux](#on-linux)
+  - [Windows](#on-windows)
+  - [Linux](#on-linux)
 - [Screenshots](#screenshots)
 - [Credits](#credits)
 - [License](#license)
@@ -31,6 +31,7 @@ A lightweight and fast mod manager for Thunderstore, built with [SvelteKit](http
 - Automatically transfer profiles from other mod managers
 - Automatic app updates
 - Local mod imports
+- CLI (see the [wiki page](https://github.com/Kesomannen/gale/wiki/CLI/))
 
 **Coming soon**
 

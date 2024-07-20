@@ -11,7 +11,7 @@
 	$: hasValue = value && value.length > 0;
 </script>
 
-<div class="flex items-center">
+<div class="flex items-center relative">
 	{#if label}
 		<Label text={label}>
 			<slot />
@@ -24,11 +24,11 @@
 		on:click={onClick}
 	>
 		<div class="mr-2 rounded">
-			<Icon {icon} class="align-middle text-slate-300 group-hover:text-slate-200" />
+			<Icon {icon} class="align-middle text-slate-300" />
 		</div>
 
 		<div
-			class="text-slate-300 group-hover:text-slate-200 truncate"
+			class="text-slate-300 truncate"
 			style="direction: rtl;"
 		>
 			{hasValue ? value : 'Not set'}

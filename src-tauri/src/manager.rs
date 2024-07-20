@@ -26,7 +26,11 @@ use crate::{
         query::{self, QueryModsArgs, Queryable, SortBy},
         BorrowedMod, ModRef, Thunderstore,
     },
-    util::{self, error::IoResultExt, fs::{JsonStyle, Overwrite}},
+    util::{
+        self,
+        error::IoResultExt,
+        fs::{JsonStyle, Overwrite},
+    },
 };
 
 pub mod commands;
@@ -702,7 +706,7 @@ impl ManagerGame {
         &mut self.profiles[self.active_profile_index]
     }
 
-    fn set_active_profile(
+    pub fn set_active_profile(
         &mut self,
         index: usize,
         _thunderstore: Option<&Thunderstore>,
@@ -828,6 +832,23 @@ impl ModManager {
 
     pub fn active_profile_mut(&mut self) -> &mut Profile {
         self.active_game_mut().active_profile_mut()
+    }
+
+    pub fn set_active_game(
+        &mut self,
+        game: &'static Game,
+        thunderstore: &mut Thunderstore,
+        prefs: &Prefs,
+        app: AppHandle,
+    ) -> Result<()> {
+        self.ensure_game(game, prefs)?;
+
+        if self.active_game.id != game.id {
+            self.active_game = game;
+            thunderstore.switch_game(game, app);
+        }
+
+        Ok(())
     }
 
     fn ensure_game(&mut self, game: &'static Game, prefs: &Prefs) -> Result<()> {

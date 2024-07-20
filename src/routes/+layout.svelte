@@ -53,7 +53,7 @@
 			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
-			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export profile as modpack" />
+			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
 			<div class="flex-grow" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</div>

@@ -1,4 +1,4 @@
-use super::modpack::{self, ModpackArgs};
+use super::modpack::{self, changelog, ModpackArgs};
 use crate::{
     manager::{commands::save, ModManager},
     prefs::Prefs,
@@ -80,7 +80,10 @@ pub fn export_pack(
     let profile = manager.active_profile_mut();
 
     let path = dir.join(&args.name).with_extension("zip");
-    modpack::export(profile, &path, &args, &thunderstore)?;
+    profile.export_pack(&args, &path, &thunderstore)?;
+    if let Err(err) = profile.take_snapshot(&args) {
+        log::warn!("failed to take profile snapshot: {}", err);
+    }
 
     open::that(&path).ok();
 
@@ -96,7 +99,7 @@ pub async fn upload_pack(
     client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
     let (path, game_id, args, token) = {
-        let mut manager = manager.lock().unwrap();
+        let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
         let prefs = prefs.lock().unwrap();
 
@@ -104,7 +107,7 @@ pub async fn upload_pack(
             .context("failed to get thunderstore API token")?
             .ok_or(anyhow!("no thunderstore API token found"))?;
 
-        let profile = manager.active_profile_mut();
+        let profile = manager.active_profile();
 
         let mut path = prefs.temp_dir.to_path_buf();
         path.push("modpacks");
@@ -120,7 +123,10 @@ pub async fn upload_pack(
             fs::remove_file(&path).ok();
         }
 
-        modpack::export(profile, &path, &args, &thunderstore)?;
+        profile.export_pack(&args, &path, &thunderstore)?;
+        if let Err(err) = profile.take_snapshot(&args) {
+            log::warn!("failed to take profile snapshot: {}", err);
+        }
 
         (path, &manager.active_game.id, args, token)
     };
@@ -148,4 +154,23 @@ pub fn export_dep_string(
         })
         .collect::<Result<Vec<_>>>()
         .map(|deps| deps.join("\n"))
+}
+
+#[tauri::command]
+pub fn generate_changelog(
+    mut args: ModpackArgs,
+    manager: StateMutex<ModManager>,
+    thunderstore: StateMutex<Thunderstore>,
+) -> Result<String> {
+    let manager = manager.lock().unwrap();
+    let thunderstore = thunderstore.lock().unwrap();
+
+    changelog::generate(
+        &mut args,
+        manager.active_profile(),
+        manager.active_game().game,
+        &thunderstore,
+    )?;
+
+    Ok(args.changelog)
 }

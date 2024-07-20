@@ -31,6 +31,7 @@
 	let nsfw: boolean;
 	let description: string;
 	let readme: string;
+	let changelog: string;
 	let versionNumber: string;
 	let iconPath: string;
 	let websiteUrl: string;
@@ -82,6 +83,7 @@
 		selectedCategories = args.categories.map(
 			(selected) => $categories.find((category) => category.slug === selected)!
 		);
+		changelog = args.changelog;
 		readme = args.readme;
 		versionNumber = args.versionNumber;
 		iconPath = args.iconPath;
@@ -101,6 +103,10 @@
 
 		if (!path) return;
 		iconPath = path as string;
+	}
+
+	async function generateChangelog() {
+		changelog = await invokeCommand('generate_changelog', { args: args() });
 	}
 
 	async function exportToFile() {
@@ -158,6 +164,7 @@
 			author,
 			nsfw,
 			readme,
+			changelog,
 			versionNumber,
 			iconPath,
 			websiteUrl,
@@ -172,7 +179,7 @@
 	});
 </script>
 
-<form class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
+<div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
 	{#if loading}
 		<div
 			class="flex items-center justify-center fixed inset-0 text-slate-200 bg-black/40 text-lg"
@@ -195,6 +202,7 @@
 			placeholder="Enter name..."
 			required={true}
 			pattern="^[a-zA-Z0-9_]+$"
+			class="w-full"
 		/>
 	</FormField>
 
@@ -203,7 +211,7 @@
 		description="The author of the modpack, which should be the name of your Thunderstore team."
 		required={true}
 	>
-		<InputField bind:value={author} placeholder="Enter author..." required={true} />
+		<InputField bind:value={author} placeholder="Enter author..." required={true} class="w-full" />
 	</FormField>
 
 	<FormField label="Description" description="A short description of the modpack." required={true}>
@@ -212,6 +220,7 @@
 			placeholder="Enter description..."
 			required={true}
 			maxlength={250}
+			class="w-full"
 		/>
 	</FormField>
 
@@ -275,11 +284,17 @@
 			placeholder="Enter version number..."
 			required={true}
 			pattern="^\d+\.\d+\.\d+$"
+			class="w-full"
 		/>
 	</FormField>
 
 	<FormField label="Website" description="The URL of a website of your choosing. Optional.">
-		<InputField bind:value={websiteUrl} placeholder="Enter website URL..." pattern={URL_PATTERN} />
+		<InputField
+			bind:value={websiteUrl}
+			placeholder="Enter website URL..."
+			pattern={URL_PATTERN}
+			class="w-full"
+		/>
 	</FormField>
 
 	<FormField
@@ -306,6 +321,20 @@
 	</FormField>
 
 	<FormField
+		label="Changelog"
+		description="A list of changes in the modpack. Also supports mardown formatting."
+	>
+		<ResizableInputField bind:value={changelog} placeholder="Enter changelog..." />
+
+		<details class="mt-1">
+			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
+			<Markdown class="px-4 mt-1 bg-gray-900 rounded-lg" source={changelog} />
+		</details>
+
+		<BigButton color="gray" on:click={generateChangelog}>Generate changelog</BigButton>
+	</FormField>
+
+	<FormField
 		label="Include files ({includedFileCount}/{includeFiles?.size})"
 		description="Choose which config files to include in the modpack."
 	>
@@ -318,7 +347,7 @@
 					items={Array.from(includeFiles.keys()).sort()}
 					getLabel={(item) => item}
 					get={(item) => includeFiles.get(item) ?? false}
-					set={(item, _, value) => { 
+					set={(item, _, value) => {
 						includeFiles.set(item, value);
 						includeFiles = includeFiles;
 					}}
@@ -343,7 +372,7 @@
 		<BigButton color="gray" on:click={exportToFile}>Export to file</BigButton>
 		<BigButton color="green" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
 	</div>
-</form>
+</div>
 
 <ApiKeyPopup />
 

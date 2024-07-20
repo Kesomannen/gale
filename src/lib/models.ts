@@ -182,6 +182,7 @@ export interface ModpackArgs {
 	categories: string[];
 	nsfw: boolean;
 	readme: string;
+	changelog: string;
 	versionNumber: string;
 	iconPath: string;
 	websiteUrl: string;
@@ -209,7 +210,7 @@ export interface FiltersResponse {
 
 export type LaunchMode =
 	| { type: 'steam'; content?: undefined }
-	| { type: 'direct'; content: { instances: number } };
+	| { type: 'direct'; content: { instances: number, intervalSecs: number } };
 
 export interface AvailableUpdate {
 	name: string;
@@ -259,11 +260,15 @@ export interface MarkdownResponse {
 export interface Prefs {
 	steamExePath?: string;
 	steamLibraryDir?: string;
-	gameDirOverrides: Record<string, string>;
 	dataDir: string;
 	cacheDir: string;
 	tempDir: string;
-	launchMode: LaunchMode;
 	enableModCache: boolean;
 	zoomFactor: number;
+	gamePrefs: Map<string, GamePrefs>;
+}
+
+export interface GamePrefs {
+	dirOverride?: string,
+	launchMode: LaunchMode;
 }

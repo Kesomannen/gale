@@ -25,7 +25,7 @@
 	}
 </script>
 
-<div class="flex items-center my-0.5">
+<div class="flex items-center my-1">
 	<Label text={label}>
 		<slot />
 	</Label>

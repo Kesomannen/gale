@@ -34,8 +34,8 @@
 	<svelte:fragment slot="field">
 		{#if canClear}
 			<Button.Root
-				class="absolute right-1 rounded-md text-xl text-slate-500 p-1
-		 		hover:bg-gray-800 hover:text-slate-400"
+				class="absolute right-1 rounded-md text-xl text-slate-400 p-1
+		 		hover:bg-gray-800 hover:text-slate-300"
 				on:click={(evt) => {
 					evt.stopPropagation();
 					value = null;
