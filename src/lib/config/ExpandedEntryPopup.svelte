@@ -9,47 +9,49 @@
 	import TabsMenu from '$lib/components/TabsMenu.svelte';
 	import { setTaggedConfig } from '$lib/config';
 	import type { ConfigEntryId } from '$lib/models';
+	import { getListSeparator } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button, Tabs } from 'bits-ui';
 	import { writable } from 'svelte/store';
 
 	let mode: 'text' | 'list' = 'text';
 	let newElement = '';
+	let separator = ',';
 
-  $: open = $expandedEntry !== null;
-  $: if (open) reset();
+	$: open = $expandedEntry !== null;
+	$: if (open) reset();
 
-  $: content = $expandedEntry?.entry.value.content as string ?? '';
-	$: items = content.split(',');
+	$: content = ($expandedEntry?.entry.value.content as string) ?? '';
+	$: items = content.split(separator);
 
 	function updateListContent() {
-		content = items.join(',');
-    submitValue();
+		content = items.join(separator);
+		submitValue();
 	}
 
-  function submitValue() {
-    if ($expandedEntry === null) return;
+	function submitValue() {
+		if ($expandedEntry === null) return;
 
-    setTaggedConfig($expandedEntry, {
-      type: 'string',
-      content
-    });
+		setTaggedConfig($expandedEntry, {
+			type: 'string',
+			content
+		});
 
-    $expandedEntry.entry.value.content = content;
-  }
+		$expandedEntry.entry.value.content = content;
+	}
 
-  function reset() {
-    mode = 'text';
-    newElement = '';
-    content = $expandedEntry?.entry.value.content as string;
-  }
+	function reset() {
+		if ($expandedEntry === null) return;
+
+		mode = 'text';
+		newElement = '';
+
+		content = $expandedEntry.entry.value.content as string;
+		separator = getListSeparator($expandedEntry.entry);
+	}
 </script>
 
-<Popup
-	title="Edit {$expandedEntry?.entry.name}"
-	onClose={() => ($expandedEntry = null)}
-	{open}
->
+<Popup title="Edit {$expandedEntry?.entry.name}" onClose={() => ($expandedEntry = null)} {open}>
 	{#if $expandedEntry !== null && $expandedEntry.entry.value.type === 'string'}
 		<TabsMenu
 			bind:value={mode}

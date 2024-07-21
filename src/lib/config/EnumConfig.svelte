@@ -11,6 +11,7 @@
 
 	function onReset(newValue: ConfigValue) {
 		content = newValue.content as { index: number; options: string[] };
+		selected = content.options[content.index];
 	}
 
 	function onSelectChange(value: string) {

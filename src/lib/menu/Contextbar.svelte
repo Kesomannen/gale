@@ -46,7 +46,7 @@
 	<Button.Root
 		class="flex items-center flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 cursor-default"
 		on:click={() => {
-			invokeCommand('launch_game');
+			invokeCommand('launch_game', { vanilla: false });
 			launchGamePopupOpen = true;
 		}}
 	>

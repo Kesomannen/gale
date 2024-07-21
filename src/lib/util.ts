@@ -1,4 +1,4 @@
-import type { LoadFileResult, Mod } from './models';
+import type { ConfigEntry, LoadFileResult, Mod, TaggedConfigEntry } from './models';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -94,4 +94,17 @@ export function capitalize(str: string): string {
 
 export function isBefore(el1: HTMLElement, el2: HTMLElement) {
 	return el1.compareDocumentPosition(el2) === Node.DOCUMENT_POSITION_PRECEDING;
+}
+
+export function getListSeparator(entry: TaggedConfigEntry) {
+	const keyword = 'ListSeparator=';
+
+	let description = entry.description;	
+	let separatorIndex = description.indexOf(keyword);
+
+	if (separatorIndex !== -1) {
+		return description[separatorIndex + keyword.length];
+	}
+	
+	return ',';
 }

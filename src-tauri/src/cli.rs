@@ -52,7 +52,7 @@ pub fn run(app: &App) -> Result<()> {
                 ..
             }) = matches.args.get("launch")
             {
-                manager.active_game().launch(&prefs)
+                manager.active_game().launch(false, &prefs)
                     .context("failed to launch game")?;
 
                 std::process::exit(0);

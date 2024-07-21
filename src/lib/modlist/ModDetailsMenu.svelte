@@ -13,7 +13,6 @@
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
-	import ModCard from '$lib/modlist/ModCard.svelte';
 	import ModCardList from './ModCardList.svelte';
 
 	export let mod: Mod;
@@ -48,10 +47,8 @@
 			if (!res.data.markdown) {
 				return null;
 			} else {
-				return res.data.markdown
-					.split('\n')
-					.filter((line) => !line.startsWith('# '))
-					.join('\n');
+				// remove the first # title
+				return res.data.markdown.replace(/^# .*\n/, '');
 			}
 		});
 	}
@@ -113,13 +110,6 @@
 	{/if}
 
 	<div class="flex gap-1 flex-wrap">
-		{#if mod.enabled === false}
-			<div class="flex items-center rounded-lg bg-yellow-400 text-slate-800 px-3 py-1 my-1">
-				<Icon class="text-xl mr-1" icon="mdi:eye-off" />
-				Disabled
-			</div>
-		{/if}
-
 		{#if mod.isDeprecated}
 			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
 				<Icon class="text-xl mr-1" icon="mdi:error" />

@@ -27,14 +27,11 @@ pub enum LaunchMode {
     #[default]
     Steam,
     #[serde(rename_all = "camelCase")]
-    Direct {
-        instances: u32,
-        interval_secs: f32,
-    },
+    Direct { instances: u32, interval_secs: f32 },
 }
 
 impl ManagerGame {
-    pub fn launch(&self, prefs: &Prefs) -> Result<()> {
+    pub fn launch(&self, vanilla: bool, prefs: &Prefs) -> Result<()> {
         let game_dir = self.game.path(prefs)?;
         if let Err(err) = self.link_files(&game_dir) {
             warn!("failed to link files: {:#}", err);
@@ -47,15 +44,20 @@ impl ManagerGame {
             .unwrap_or_default();
 
         match launch_mode {
-            LaunchMode::Steam => self.launch_steam(prefs),
+            LaunchMode::Steam => self.launch_steam(vanilla, prefs),
             LaunchMode::Direct {
                 instances,
                 interval_secs,
-            } => self.launch_direct(prefs, instances, Duration::from_secs_f32(interval_secs)),
+            } => self.launch_direct(
+                vanilla,
+                instances,
+                Duration::from_secs_f32(interval_secs),
+                prefs,
+            ),
         }
     }
 
-    fn launch_steam(&self, prefs: &Prefs) -> Result<()> {
+    fn launch_steam(&self, vanilla: bool, prefs: &Prefs) -> Result<()> {
         let steam_path = prefs
             .steam_exe_path
             .as_ref()
@@ -72,14 +74,20 @@ impl ManagerGame {
             .arg("-applaunch")
             .arg(self.game.steam_id.to_string());
 
-        add_bepinex_args(&mut command, &self.active_profile().path)?;
+        add_bepinex_args(&mut command, vanilla, &self.active_profile().path)?;
 
         command.spawn()?;
 
         Ok(())
     }
 
-    fn launch_direct(&self, prefs: &Prefs, instances: u32, interval: Duration) -> Result<()> {
+    fn launch_direct(
+        &self,
+        vanilla: bool,
+        instances: u32,
+        interval: Duration,
+        prefs: &Prefs,
+    ) -> Result<()> {
         let exe_path = self
             .game
             .path(prefs)?
@@ -96,7 +104,7 @@ impl ManagerGame {
 
         let mut command = Command::new(exe_path);
 
-        add_bepinex_args(&mut command, &self.active_profile().path)?;
+        add_bepinex_args(&mut command, vanilla, &self.active_profile().path)?;
 
         match instances {
             0 => bail!("instances must be greater than 0"),
@@ -174,25 +182,27 @@ impl Game {
     }
 }
 
-fn add_bepinex_args(command: &mut Command, path: &Path) -> Result<()> {
-    let mut preloader_path = path.to_path_buf();
-    preloader_path.push("BepInEx");
-    preloader_path.push("core");
-    preloader_path.push("BepInEx.Preloader.dll");
-
-    if !preloader_path.exists() {
-        bail!(
-            "BepInEx preloader not found at {}",
-            preloader_path.display()
-        );
-    }
-
+fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result<()> {
     let (enable_label, target_label) =
         match doorstop_version(path).context("failed to determine doorstop version")? {
             3 => ("--dorstop-enable", "--doorstop-target"),
             4 => ("--doorstop-enabled", "--doorstop-target-assembly"),
             vers => bail!("unsupported doorstop version: {}", vers),
         };
+
+    if vanilla {
+        command.args([enable_label, "false"]);
+        return Ok(());
+    }
+
+    let mut preloader_path = path.to_path_buf();
+    preloader_path.push("BepInEx");
+    preloader_path.push("core");
+    preloader_path.push("BepInEx.Preloader.dll");
+
+    if !preloader_path.exists() {
+        bail!("BepInEx preloader not found. Is BepInEx installed?",);
+    }
 
     command
         .args([enable_label, "true", target_label])

@@ -6,7 +6,8 @@
 
 - Simple CLI for choosing game, profile and launching
 - Resizable text input and list editor for long config entries
-- Changelog field and automatic 
+- Changelog field and automatic
+- Vanilla launch option
 
 ### Changed
 
