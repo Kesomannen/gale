@@ -95,7 +95,7 @@
 					{/each}
 
 					<InputField
-						class="flex-grow pr-9 mt-1"
+						class="pr-9 mt-1 w-full"
 						placeholder="Enter new value..."
 						bind:value={newElement}
 						on:change={() => {

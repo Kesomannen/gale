@@ -26,7 +26,7 @@
 </script>
 
 <div class="flex-grow relative">
-	<InputField bind:value={content} />
+	<InputField bind:value={content} class="w-full" />
 
 	{#if content.length > 100 || content.includes('\n') || content.includes(listSeparator)}
 		<Button.Root

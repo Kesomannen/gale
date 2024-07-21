@@ -174,7 +174,7 @@
 			>
 				<MenubarItem on:click={() => exportCodePopup.open()}>...profile as code</MenubarItem>
 				<MenubarItem on:click={exportFile}>...profile as file</MenubarItem>
-				<MenubarItem on:click={copyDependencyStrings}>...copy dependency strings</MenubarItem>
+				<MenubarItem on:click={copyDependencyStrings}>Copy dependency strings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -220,6 +220,7 @@
 		bind:value={profileOperationName}
 		placeholder="Enter name..."
 		size="lg"
+		class="w-full"
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}

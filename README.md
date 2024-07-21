@@ -173,7 +173,7 @@ After a while, this it will output both an executable and an installable package
 
 *Modpack export*
 
-![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot1.png)
+![screenshot](https://raw.githubusercontent.com/Kesomannen/gale/master/images/screenshot4.png)
 
 ## Credits
 

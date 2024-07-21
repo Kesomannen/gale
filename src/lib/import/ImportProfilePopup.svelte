@@ -83,7 +83,12 @@
 			]}
 		>
 			<Tabs.Content value="new">
-				<InputField label="Profile name" bind:value={name} />
+				<div class="flex items-center">
+					<Label text="Profile name" />
+
+					<InputField bind:value={name} class="w-full" />
+				</div>
+
 				{#if !nameAvailable}
 					<div class="flex items-center gap-1 text-red-400 text-md font-bold mt-1">
 						<div class="w-[30%] min-w-52" />
@@ -122,7 +127,7 @@
 	{:else}
 		<div class="flex gap-2 mt-1">
 			<div class="flex-grow">
-				<InputField bind:value={key} size="lg" placeholder="Enter import code..." />
+				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
 			</div>
 
 			<BigButton on:click={submitKey} disabled={loading}>
