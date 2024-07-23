@@ -3,10 +3,11 @@ use anyhow::{anyhow, Context, Result};
 use crate::{games, manager::ModManager, prefs::Prefs, thunderstore::Thunderstore};
 use serde_json::Value;
 use std::sync::Mutex;
-use tauri::{api::cli::ArgData, App, Manager};
+use tauri::{App, Manager};
+use tauri_plugin_cli::CliExt;
 
 pub fn run(app: &App) -> Result<()> {
-    match app.get_cli_matches() {
+    match app.cli().matches() {
         Ok(matches) => {
             if matches.args.is_empty() {
                 return Ok(());
@@ -20,42 +21,40 @@ pub fn run(app: &App) -> Result<()> {
             let mut thunderstore = thunderstore.lock().unwrap();
             let prefs = prefs.lock().unwrap();
 
-            if let Some(ArgData {
-                value: Value::String(game),
-                ..
-            }) = matches.args.get("game")
-            {
-                let game = games::from_id(game).context("unknown game id")?;
-                manager
-                    .set_active_game(game, &mut thunderstore, &prefs, app.handle())
-                    .context("failed to set game")?;
+            if let Some(arg) = matches.args.get("game") {
+                if let Value::String(game) = &arg.value {
+                    let game = games::from_id(game).context("unknown game id")?;
+
+                    manager
+                        .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())
+                        .context("failed to set game")?;
+                }
             }
 
-            if let Some(ArgData {
-                value: Value::String(profile),
-                ..
-            }) = matches.args.get("profile")
-            {
-                let game = manager.active_game_mut();
-                let index = game
-                    .profiles
-                    .iter()
-                    .position(|p| p.name == *profile)
-                    .context("unknown profile")?;
+            if let Some(arg) = matches.args.get("profile") {
+                if let Value::String(profile) = &arg.value {
+                    let game = manager.active_game_mut();
 
-                game.set_active_profile(index, Some(&thunderstore))
-                    .context("failed to set profile")?;
+                    let index = game
+                        .profiles
+                        .iter()
+                        .position(|p| p.name == *profile)
+                        .context("unknown profile")?;
+
+                    game.set_active_profile(index, Some(&thunderstore))
+                        .context("failed to set profile")?;
+                }
             }
 
-            if let Some(ArgData {
-                value: Value::Bool(true),
-                ..
-            }) = matches.args.get("launch")
-            {
-                manager.active_game().launch(false, &prefs)
-                    .context("failed to launch game")?;
+            if let Some(arg) =  matches.args.get("launch") {
+                if let Value::Bool(true) = &arg.value {
+                    manager
+                        .active_game()
+                        .launch(true, &prefs)
+                        .context("failed to launch game")?;
 
-                std::process::exit(0);
+                    std::process::exit(0);
+                }
             }
 
             Ok(())

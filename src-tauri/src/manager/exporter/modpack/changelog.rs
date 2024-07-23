@@ -36,7 +36,7 @@ pub fn generate(
         Some(index) => {
             let offset = index + version_header.len();
 
-            // find the next header
+            // find the next version header
             let next_index = args.changelog[offset..]
                 .find("\n## ")
                 .map(|next_index| next_index + offset)

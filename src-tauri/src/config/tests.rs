@@ -43,7 +43,8 @@ impl Entry {
             type_name: type_name.to_owned(),
             default_value,
             value,
-        }.into()
+        }
+        .into()
     }
 }
 
@@ -174,11 +175,11 @@ fn test_file() -> File {
                 ],
             ),
         ],
-        Some(FileMetadata { 
+        Some(FileMetadata {
             plugin_name: "Plugin".to_owned(),
             plugin_version: "v1.0.0".to_owned(),
             plugin_guid: "Author.PluginGuid".to_owned(),
-        })
+        }),
     )
 }
 

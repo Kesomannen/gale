@@ -387,7 +387,11 @@ impl Profile {
 
         let manifest: ProfileManifest = util::fs::read_json(&path).context(format!(
             "failed to read profile manifest for '{}'",
-            path.parent().unwrap().file_name().unwrap().to_string_lossy()
+            path.parent()
+                .unwrap()
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
         ))?;
 
         path.pop();

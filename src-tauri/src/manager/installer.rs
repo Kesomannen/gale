@@ -6,10 +6,12 @@ use crate::{
     thunderstore::{BorrowedMod, Thunderstore},
     util::{self, error::IoResultExt, fs::Overwrite},
 };
-use std::{
-    collections::HashSet, fs, path::{Path, PathBuf}
-};
 use itertools::Itertools;
+use std::{
+    collections::HashSet,
+    fs,
+    path::{Path, PathBuf},
+};
 
 pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
     let mut path = prefs.cache_dir.get().to_path_buf();
@@ -173,8 +175,7 @@ fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
             util::fs::copy_dir(&path, &target, Overwrite::Yes)
                 .fs_context("copying directory", &path)?;
         } else {
-            fs::copy(&path, &plugin_dir.join(file_name))
-                .fs_context("copying file", &path)?;
+            fs::copy(&path, &plugin_dir.join(file_name)).fs_context("copying file", &path)?;
         }
     }
 

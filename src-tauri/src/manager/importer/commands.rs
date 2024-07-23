@@ -1,11 +1,14 @@
 use std::path::PathBuf;
 
-use crate::{util::cmd::Result, manager::downloader::InstallOptions};
+use crate::{manager::downloader::InstallOptions, util::cmd::Result};
 
+use super::{
+    r2modman::{self, ManagerData, ProfileImportData},
+    ImportData,
+};
 use anyhow::anyhow;
 use tauri::AppHandle;
 use uuid::Uuid;
-use super::{r2modman::{self, ManagerData, ProfileImportData}, ImportData};
 
 #[tauri::command]
 pub async fn import_data(data: ImportData, app: AppHandle) -> Result<()> {
@@ -37,7 +40,7 @@ pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn get_r2modman_info(app: AppHandle) -> Result<ManagerData<ProfileImportData>> {    
+pub fn get_r2modman_info(app: AppHandle) -> Result<ManagerData<ProfileImportData>> {
     Ok(r2modman::gather_info(&app))
 }
 

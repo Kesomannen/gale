@@ -10,7 +10,7 @@ use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use tauri::{async_runtime::JoinHandle, AppHandle, Manager, Emitter};
+use tauri::{async_runtime::JoinHandle, AppHandle, Emitter, Manager};
 use uuid::Uuid;
 
 use crate::{
@@ -22,10 +22,10 @@ use crate::{
 
 use self::models::{PackageListing, PackageVersion};
 
+pub mod commands;
 pub mod models;
 pub mod query;
 pub mod token;
-pub mod commands;
 
 pub fn setup(app: &AppHandle) {
     let manager = app.state::<Mutex<ModManager>>();

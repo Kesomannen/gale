@@ -22,7 +22,7 @@ use crate::{
 
 use super::{
     downloader::{self, ModInstall},
-    exporter::{self, LegacyProfileManifest, ImportSource, R2Mod, PROFILE_DATA_PREFIX},
+    exporter::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
     ModManager,
 };
 

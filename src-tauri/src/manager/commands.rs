@@ -8,11 +8,7 @@ use uuid::Uuid;
 use crate::{
     games::{self, Game, GAMES},
     prefs::Prefs,
-    thunderstore::{
-        models::FrontendProfileMod,
-        query::QueryModsArgs,
-        Thunderstore,
-    },
+    thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore},
     util::cmd::{Result, StateMutex},
 };
 

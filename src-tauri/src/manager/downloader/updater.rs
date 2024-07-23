@@ -87,7 +87,7 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
 
         let profile = manager.active_profile_mut();
         let index = profile.index_of(&mod_ref.package_uuid)?;
-        
+
         profile.force_remove_mod(&mod_ref.package_uuid, &thunderstore)?;
 
         ModInstall::new(mod_ref)
@@ -95,12 +95,7 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
             .at(index)
     };
 
-    super::install_mod(
-        install,
-        InstallOptions::default().can_cancel(false),
-        app,
-    )
-    .await
+    super::install_mod(install, InstallOptions::default().can_cancel(false), app).await
 }
 
 pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
@@ -122,12 +117,10 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
 
     install_with_deps(
         to_update,
-        InstallOptions::default().before_install(
-            |install, manager, thunderstore| {
-                let profile = manager.active_profile_mut();
-                profile.force_remove_mod(install.uuid(), thunderstore).ok();
-            },
-        ),
+        InstallOptions::default().before_install(|install, manager, thunderstore| {
+            let profile = manager.active_profile_mut();
+            profile.force_remove_mod(install.uuid(), thunderstore).ok();
+        }),
         true,
         app,
     )

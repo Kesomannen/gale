@@ -69,8 +69,7 @@ fn total_download_size(
 const DOWNLOAD_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
 type ProgressHandler = Box<dyn Fn(&InstallProgress, &AppHandle) + 'static + Send>;
-type EventHandler =
-    Box<dyn Fn(&ModInstall, &mut ModManager, &Thunderstore) + 'static + Send>;
+type EventHandler = Box<dyn Fn(&ModInstall, &mut ModManager, &Thunderstore) + 'static + Send>;
 
 pub struct InstallOptions {
     can_cancel: bool,
@@ -352,7 +351,8 @@ impl<'a> Installer<'a> {
         self.check_cancelled()?;
         self.update(InstallTask::Extracting);
 
-        util::zip::extract(Cursor::new(data), &cache_path).fs_context("extracting mod", &cache_path)?;
+        util::zip::extract(Cursor::new(data), &cache_path)
+            .fs_context("extracting mod", &cache_path)?;
 
         self.check_cancelled()?;
         self.update(InstallTask::Installing);

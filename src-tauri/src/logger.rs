@@ -1,13 +1,13 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 use log::LevelFilter;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 use tauri::{AppHandle, Manager};
 
+use crate::util;
 use std::{
     fs::{self, File},
     path::PathBuf,
 };
-use crate::util;
 
 fn log_path(app: &AppHandle) -> PathBuf {
     app.path().app_log_dir().unwrap().join("log.log")

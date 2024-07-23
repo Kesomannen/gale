@@ -1,4 +1,4 @@
-use crate::{util::cmd::Result, manager::ModManager, thunderstore::ModRef};
+use crate::{manager::ModManager, thunderstore::ModRef, util::cmd::Result};
 use itertools::Itertools;
 use serde::Deserialize;
 use std::sync::Mutex;

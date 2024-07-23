@@ -1,7 +1,7 @@
 use crate::{
-    util::cmd::{Result, StateMutex},
     manager::ModManager,
     prefs::Prefs,
+    util::cmd::{Result, StateMutex},
 };
 
 #[tauri::command]

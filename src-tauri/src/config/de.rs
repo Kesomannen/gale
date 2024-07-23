@@ -49,7 +49,10 @@ pub fn from_str(text: &str) -> Result<(Vec<Section>, Option<FileMetadata>)> {
 
     match parser.parse() {
         Ok(_) => Ok((parser.sections, parser.metadata)),
-        Err(err) => Err(err.context(format!("failed to parse config file (at line {})", parser.line))),
+        Err(err) => Err(err.context(format!(
+            "failed to parse config file (at line {})",
+            parser.line
+        ))),
     }
 }
 

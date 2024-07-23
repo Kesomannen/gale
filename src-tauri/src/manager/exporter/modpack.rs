@@ -82,7 +82,12 @@ impl Profile {
             .map(|(mod_ref, _)| mod_ref)
     }
 
-    pub fn export_pack(&self, args: &ModpackArgs, path: &Path, thunderstore: &Thunderstore) -> Result<()> {
+    pub fn export_pack(
+        &self,
+        args: &ModpackArgs,
+        path: &Path,
+        thunderstore: &Thunderstore,
+    ) -> Result<()> {
         ensure!(!args.name.is_empty(), "name cannot be empty");
         ensure!(!args.description.is_empty(), "description cannot be empty");
 

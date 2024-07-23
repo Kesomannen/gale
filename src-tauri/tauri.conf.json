@@ -53,8 +53,29 @@
     "deep-link": {
       "mobile": [],
       "desktop": {
-        "schemes": ["ror2mm"]
+        "schemes": [
+          "ror2mm"
+        ]
       }
+    },
+    "cli": {
+      "description": "",
+      "args": [
+        {
+          "name": "game",
+          "short": "g",
+          "takesValue": true
+        },
+        {
+          "name": "profile",
+          "short": "p",
+          "takesValue": true
+        },
+        {
+          "name": "launch",
+          "short": "l"
+        }
+      ]
     }
   },
   "app": {

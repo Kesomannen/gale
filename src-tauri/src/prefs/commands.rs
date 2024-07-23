@@ -22,7 +22,7 @@ pub fn is_first_run(prefs: StateMutex<Prefs>) -> Result<bool> {
         true => {
             prefs.is_first_run = false;
             Ok(true)
-        },
-        false => Ok(false)
+        }
+        false => Ok(false),
     }
 }

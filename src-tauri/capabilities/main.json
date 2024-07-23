@@ -1,7 +1,9 @@
 {
   "identifier": "main-capability",
   "description": "Capability for the main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "path:default",
     "event:default",
@@ -25,8 +27,16 @@
     "shell:default",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://thunderstore.io/api/*" }, { "url": "https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md" }],
+      "allow": [
+        {
+          "url": "https://thunderstore.io/api/*"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md"
+        }
+      ],
       "deny": []
-    }
+    },
+    "cli:default"
   ]
 }

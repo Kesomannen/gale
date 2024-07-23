@@ -81,17 +81,13 @@ impl DirPref {
             let entry = entry?;
             let file_name = entry.file_name();
 
-            if self
-                .keep_files
-                .iter()
-                .any(|file| file_name == *file)
-            {
+            if self.keep_files.iter().any(|file| file_name == *file) {
                 continue;
             }
 
             let old_path = entry.path();
             let new_path = value.join(file_name);
-            
+
             // can't do fs::rename because it doesn't work across drives
             if entry.file_type()?.is_dir() {
                 util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes)?;
@@ -137,7 +133,7 @@ pub struct Prefs {
     pub steam_exe_path: Option<PathBuf>,
     #[serde(alias = "steam_game_dir")]
     pub steam_library_dir: Option<PathBuf>,
-        
+
     #[serde(alias = "data_dir")]
     pub data_dir: DirPref,
     #[serde(alias = "cache_dir")]
@@ -217,11 +213,7 @@ impl Prefs {
             },
             false => {
                 let mut prefs: Prefs = util::fs::read_json(&path).map_err(|err| {
-                    anyhow!(
-                        "Failed to read settings: {} (at {})",
-                        err,
-                        path.display()
-                    )
+                    anyhow!("Failed to read settings: {} (at {})", err, path.display())
                 })?;
 
                 prefs.data_dir.keep_files.extend(&["prefs.json", "logs"]);

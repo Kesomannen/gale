@@ -1,10 +1,13 @@
-use std::{collections::{HashMap, HashSet}, hash::Hash};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+};
 
+use crate::games::Game;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use crate::games::Game;
 
 #[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
@@ -55,7 +58,12 @@ impl PackageListing {
     }
 
     pub fn url(&self, game: &'static Game) -> String {
-        format!("https://thunderstore.io/c/{}/p/{}/{}/", game.id, self.author(), self.name)
+        format!(
+            "https://thunderstore.io/c/{}/p/{}/{}/",
+            game.id,
+            self.author(),
+            self.name
+        )
     }
 }
 
@@ -150,7 +158,7 @@ pub struct UserMedia {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all="snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum UserMediaStatus {
     Initial,
     UploadInitiated,

@@ -1,8 +1,8 @@
 use anyhow::Context;
 use log::error;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
 use std::path::Path;
+use tauri::{AppHandle, Emitter};
 
 #[derive(Serialize, Clone)]
 struct JsError<'a> {

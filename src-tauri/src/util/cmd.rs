@@ -1,5 +1,8 @@
-use std::{fmt::{self, Display}, sync::Mutex};
 use serde::Serialize;
+use std::{
+    fmt::{self, Display},
+    sync::Mutex,
+};
 
 #[derive(Debug)]
 pub struct CommandError(pub anyhow::Error);

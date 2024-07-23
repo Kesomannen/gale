@@ -33,6 +33,7 @@
 		"@jill64/svelte-sanitize": "^1.2.12",
 		"@sveltejs/svelte-virtual-list": "^3.0.1",
 		"@tauri-apps/api": "^2.0.0-beta.15",
+		"@tauri-apps/plugin-cli": "^2.0.0-beta.7",
 		"@tauri-apps/plugin-clipboard-manager": "^2.1.0-beta.5",
 		"@tauri-apps/plugin-deep-link": "^2.0.0-beta.9",
 		"@tauri-apps/plugin-dialog": "^2.0.0-beta.7",

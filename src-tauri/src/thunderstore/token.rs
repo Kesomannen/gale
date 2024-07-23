@@ -1,5 +1,5 @@
-use keyring::Entry;
 use anyhow::Result;
+use keyring::Entry;
 
 lazy_static! {
     static ref ENTRY: keyring::Entry =

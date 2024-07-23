@@ -157,10 +157,7 @@ pub struct TaggedEntry {
 
 impl TaggedEntry {
     fn reset(&mut self) -> Result<()> {
-        self.value = self
-            .default_value
-            .clone()
-            .context("no default value")?;
+        self.value = self.default_value.clone().context("no default value")?;
         Ok(())
     }
 }

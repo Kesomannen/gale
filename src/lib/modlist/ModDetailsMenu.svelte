@@ -13,7 +13,6 @@
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
-	import ModCard from '$lib/modlist/ModCard.svelte';
 	import ModCardList from './ModCardList.svelte';
 
 	export let mod: Mod;
@@ -43,18 +42,11 @@
 	let readmePromise: Promise<string | null>;
 
 	async function extractReadme(response: Response) {
-		let json = await response.json();
+		let res = (await response.json()) as MarkdownResponse;
 
-		let md_res = undefined;
-		try {
-			md_res = json as MarkdownResponse;
-		} catch (_e) {
-			return null;
-		}
+		if (!res.markdown) return null;
 
-		if (!md_res.markdown) return null;
-
-		return md_res.markdown
+		return res.markdown
 			.split('\n')
 			.filter((line) => !line.startsWith('# '))
 			.join('\n');
@@ -62,11 +54,7 @@
 
 	$: {
 		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
-		readmePromise = fetch(url).then(
-			extractReadme,
-			(_err) => {
-				return null;
-			});
+		readmePromise = fetch(url).then(extractReadme);
 	}
 </script>
 

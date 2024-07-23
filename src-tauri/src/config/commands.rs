@@ -6,7 +6,10 @@ use super::{File, LoadFileResultExt};
 use crate::{
     manager::ModManager,
     thunderstore::Thunderstore,
-    util::{error::IoResultExt, cmd::{Result, StateMutex}},
+    util::{
+        cmd::{Result, StateMutex},
+        error::IoResultExt,
+    },
 };
 use serde::Serialize;
 
