@@ -95,14 +95,14 @@
 	}
 
 	async function browseIcon() {
-		let path = await open({
+		let response = await open({
 			defaultPath: iconPath.length > 0 ? iconPath : undefined,
 			title: 'Select modpack icon',
 			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif'] }]
 		});
 
-		if (!path) return;
-		iconPath = path as string;
+		if (!response) return;
+		iconPath = response.path;
 	}
 
 	async function generateChangelog() {
@@ -322,16 +322,16 @@
 
 	<FormField
 		label="Changelog"
-		description="A list of changes in the modpack. Also supports mardown formatting."
+		description="A list of changes in the modpack, also supports markdown formatting. Leave empty to omit."
 	>
 		<ResizableInputField bind:value={changelog} placeholder="Enter changelog..." />
+		
+		<BigButton color="gray" on:click={generateChangelog}>Generate for {versionNumber}</BigButton>
 
 		<details class="mt-1">
 			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
 			<Markdown class="px-4 mt-1 bg-gray-900 rounded-lg" source={changelog} />
 		</details>
-
-		<BigButton color="gray" on:click={generateChangelog}>Generate changelog</BigButton>
 	</FormField>
 
 	<FormField

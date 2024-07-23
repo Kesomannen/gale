@@ -1,7 +1,5 @@
 use std::{
-    fs::{self},
-    io::{self},
-    path::{Path, PathBuf},
+    ffi::OsStr, fs::{self}, io::{self}, path::{Path, PathBuf}
 };
 
 use serde::{de::DeserializeOwned, Serialize};
@@ -86,18 +84,6 @@ pub fn write_json<T: Serialize + ?Sized>(
     Ok(())
 }
 
-pub fn add_extension(path: &mut PathBuf, extension: impl AsRef<Path>) {
-    match path.extension() {
-        Some(ext) => {
-            let mut ext = ext.to_os_string();
-            ext.push(".");
-            ext.push(extension.as_ref());
-            path.set_extension(ext)
-        }
-        None => path.set_extension(extension.as_ref()),
-    };
-}
-
 pub fn file_name_lossy(path: impl AsRef<Path>) -> String {
     path.as_ref()
         .file_name()
@@ -108,6 +94,7 @@ pub fn file_name_lossy(path: impl AsRef<Path>) -> String {
 
 pub trait PathExt {
     fn exists_or_none(self) -> Option<PathBuf>;
+    fn add_extension(&mut self, extension: impl AsRef<OsStr>);
 }
 
 impl PathExt for PathBuf {
@@ -116,5 +103,17 @@ impl PathExt for PathBuf {
             true => Some(self),
             false => None,
         }
+    }
+
+    fn add_extension(&mut self, extension: impl AsRef<OsStr>) {
+        match self.extension() {
+            Some(ext) => {
+                let mut ext = ext.to_os_string();
+                ext.push(".");
+                ext.push(extension.as_ref());
+                self.set_extension(ext)
+            }
+            None => self.set_extension(extension.as_ref()),
+        };
     }
 }

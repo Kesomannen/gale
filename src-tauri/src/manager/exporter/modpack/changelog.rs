@@ -9,7 +9,7 @@ use crate::{
     games::Game,
     manager::Profile,
     thunderstore::{models::PackageListing, BorrowedMod, ModRef, Thunderstore},
-    util::{self, fs::JsonStyle},
+    util::{self, fs::{JsonStyle, PathExt}},
 };
 
 pub fn generate(
@@ -84,7 +84,7 @@ impl Profile {
         fs::create_dir_all(&path)?;
 
         path.push(&args.version_number);
-        util::fs::add_extension(&mut path, "json");
+        path.add_extension("json");
 
         util::fs::write_json(
             path,

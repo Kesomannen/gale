@@ -174,7 +174,7 @@ impl Game {
 
         ensure!(
             path.exists(),
-            "game path not found (at {}), please check your settings",
+            "game directory not found, please check your settings (expected at {})",
             path.display()
         );
 
@@ -195,20 +195,35 @@ fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result
         return Ok(());
     }
 
-    let mut preloader_path = path.to_path_buf();
-    preloader_path.push("BepInEx");
-    preloader_path.push("core");
-    preloader_path.push("BepInEx.Preloader.dll");
+    let mut core_dir = path.to_path_buf();
+    core_dir.push("BepInEx");
+    core_dir.push("core");
 
-    if !preloader_path.exists() {
-        bail!("BepInEx preloader not found. Is BepInEx installed?",);
+    const PRELOADER_NAMES: [&str; 4] = [
+        "BepInEx.Unity.Mono.Preloader.dll",
+        "BepInEx.Unity.IL2CPP.dll",
+        "BepInEx.Preloader.dll",
+        "BepInEx.IL2CPP.dll",
+    ];
+
+    let preloader_path = core_dir
+        .read_dir()?
+        .filter_map(|entry| entry.ok())
+        .find(|entry| {
+            let file_name = entry.file_name();
+            PRELOADER_NAMES.iter().any(|name| file_name == *name)
+        })
+        .map(|entry| entry.path());
+
+    if let Some(preloader_path) = preloader_path {
+        command
+            .args([enable_label, "true", target_label])
+            .arg(preloader_path);
+
+        Ok(())
+    } else {
+        bail!("BepInEx preloader not found. Is BepInEx installed?",)
     }
-
-    command
-        .args([enable_label, "true", target_label])
-        .arg(preloader_path);
-
-    Ok(())
 }
 
 fn doorstop_version(root_path: &Path) -> Result<u32> {

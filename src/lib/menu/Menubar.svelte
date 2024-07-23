@@ -153,6 +153,7 @@
 				<MenubarItem on:click={() => openProfileOperation('duplicate')}
 					>Duplicate active profile</MenubarItem
 				>
+				<MenubarItem on:click={copyDependencyStrings}>Copy dependency strings</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem on:click={() => setAllModsState(true)}>Enable all mods</MenubarItem>
 				<MenubarItem on:click={() => setAllModsState(false)}>Disable all mods</MenubarItem>
@@ -177,7 +178,6 @@
 			>
 				<MenubarItem on:click={() => exportCodePopup.open()}>...profile as code</MenubarItem>
 				<MenubarItem on:click={exportFile}>...profile as file</MenubarItem>
-				<MenubarItem on:click={copyDependencyStrings}>Copy dependency strings</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>

@@ -13,7 +13,7 @@ use thiserror::Error;
 use typeshare::typeshare;
 use walkdir::WalkDir;
 
-use crate::{manager::Profile, thunderstore::Thunderstore, util};
+use crate::{manager::Profile, thunderstore::Thunderstore, util::fs::PathExt};
 
 pub mod commands;
 pub mod de;
@@ -90,8 +90,8 @@ pub struct FileMetadata {
 }
 
 pub fn file_path_relative(name: &str) -> PathBuf {
-    let mut path = ["BepInEx", "config", name].iter().collect();
-    util::fs::add_extension(&mut path, "cfg");
+    let mut path = ["BepInEx", "config", name].into_iter().collect::<PathBuf>();
+    path.add_extension("cfg");
     path
 }
 

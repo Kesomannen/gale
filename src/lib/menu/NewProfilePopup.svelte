@@ -23,10 +23,11 @@
 <ConfirmPopup title="Create new profile" bind:open>
 	<p class="mb-1">Enter a name for the new profile:</p>
 	<InputField
-		bind:value={name}
 		placeholder="Enter profile name..."
 		size="lg"
+		class="w-full"
 		on:submit={createProfile}
+		bind:value={name}
 	/>
 	<svelte:fragment slot="buttons">
 		<BigButton disabled={name.length === 0} on:click={createProfile}>Create</BigButton>

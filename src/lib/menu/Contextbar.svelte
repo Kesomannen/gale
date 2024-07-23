@@ -99,7 +99,7 @@
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 min-w-40"
+			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 min-w-40 max-h-[80lvh] overflow-y-auto"
 			inTransition={fly}
 			inTransitionConfig={{ duration: 50 }}
 		>

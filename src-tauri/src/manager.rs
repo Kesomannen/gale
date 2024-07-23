@@ -29,7 +29,7 @@ use crate::{
     util::{
         self,
         error::IoResultExt,
-        fs::{JsonStyle, Overwrite},
+        fs::{JsonStyle, Overwrite, PathExt},
     },
 };
 
@@ -288,11 +288,11 @@ pub struct Profile {
 
 impl Profile {
     fn is_valid_name(name: &str) -> bool {
+        const FORBIDDEN: &[char] = &['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
+
         !name.is_empty()
             && !name.chars().all(char::is_whitespace)
-            && name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ')
+            && name.chars().all(|c| !FORBIDDEN.contains(&c))
     }
 
     fn index_of(&self, uuid: &Uuid) -> Result<usize> {
@@ -537,7 +537,7 @@ impl Profile {
                     }
                 } else {
                     let mut new = path.to_path_buf();
-                    util::fs::add_extension(&mut new, "old");
+                    new.add_extension("old");
                     fs::rename(path, &new)?;
                 }
             }
@@ -559,7 +559,6 @@ impl Profile {
             .dependants(borrowed_mod, thunderstore)
             .filter_map(Result::ok) // ignore any missing deps
             .filter(|borrowed| {
-                log::debug!("{}", borrowed.package.name);
                 !borrowed.package.is_modpack()
                     && self.get_mod(&borrowed.package.uuid4).unwrap().enabled
             })

@@ -114,13 +114,6 @@
 	{/if}
 
 	<div class="flex gap-1 flex-wrap">
-		{#if mod.enabled === false}
-			<div class="flex items-center rounded-lg bg-yellow-400 text-slate-800 px-3 py-1 my-1">
-				<Icon class="text-xl mr-1" icon="mdi:eye-off" />
-				Disabled
-			</div>
-		{/if}
-
 		{#if mod.isDeprecated}
 			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
 				<Icon class="text-xl mr-1" icon="mdi:error" />
@@ -165,7 +158,11 @@
 		{mod.description ?? ''}
 	</p>
 
-	{#await readmePromise then readme}
+	{#await readmePromise}
+		<div class="items-center justify-center w-full h-full hidden xl:flex">
+			<Icon class="text-5xl text-slate-300 animate-spin" icon="mdi:loading" />
+		</div>
+	{:then readme}
 		{#if readme}
 			<Markdown source={readme} class="hidden xl:block" />
 		{:else}

@@ -4,14 +4,21 @@
 
 ### Added
 
-- Simple CLI for choosing game, profile and launching
+- Simple CLI for choosing game, profile and launching through the command line
 - Resizable text input and list editor for long config entries
-- Changelog field and automatic
+- Changelog field and automatic changelog generation in modpack exporter
 - Vanilla launch option
 
 ### Changed
 
 - Various UI tweaks
+
+### Fixed
+
+- Restricted profile names further, which should fix "failed to read profile manifest" error on startup
+- "BepInEx preloader not found" error when launching IL2CPP games
+- Window size and position not persisting between sessions
+- Having many profiles causing the profile dropdown to go off-screen
 
 ## 0.6.2 (2024-07-15)
 

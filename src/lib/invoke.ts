@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { writable, type Writable } from 'svelte/store';
 import { listen } from '@tauri-apps/api/event';
+import { sentenceCase } from './util';
 
 const errorDuration = 10000;
 const maxErrors = 10;
@@ -16,7 +17,7 @@ export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 		return await invoke<T>(cmd, args);
 	} catch (error: any) {
 		let errStr = error as string;
-		let name = `Failed to execute '${cmd}'`
+		let name = `Failed to ${sentenceCase(cmd).toLowerCase()}`;
 		let message = errStr[0].toUpperCase() + errStr.slice(1) + '.';
 		
 		pushError({ name, message }, false);

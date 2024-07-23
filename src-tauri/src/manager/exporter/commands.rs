@@ -69,7 +69,7 @@ pub fn set_pack_args(
 
 #[tauri::command]
 pub fn export_pack(
-    dir: PathBuf,
+    mut dir: PathBuf,
     args: ModpackArgs,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
@@ -79,13 +79,15 @@ pub fn export_pack(
 
     let profile = manager.active_profile_mut();
 
-    let path = dir.join(&args.name).with_extension("zip");
-    profile.export_pack(&args, &path, &thunderstore)?;
+    dir.push(format!("{}-{}", args.name, args.version_number));
+    dir.set_extension("zip");
+
+    profile.export_pack(&args, &dir, &thunderstore)?;
     if let Err(err) = profile.take_snapshot(&args) {
         log::warn!("failed to take profile snapshot: {}", err);
     }
 
-    open::that(&path).ok();
+    open::that(dir).ok();
 
     Ok(())
 }
@@ -116,7 +118,7 @@ pub async fn upload_pack(
             fs::create_dir_all(&path).fs_context("creating temp dir", &path)?;
         }
 
-        path.push(&args.name);
+        path.push(format!("{}-{}", args.name, args.version_number));
         path.set_extension("zip");
 
         if path.exists() {
