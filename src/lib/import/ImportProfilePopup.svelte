@@ -7,7 +7,8 @@
 	import { invokeCommand } from '$lib/invoke';
 	import type { ImportData } from '$lib/models';
 	import Icon from '@iconify/svelte';
-	import { clipboard, dialog } from '@tauri-apps/api';
+	import { readText } from '@tauri-apps/plugin-clipboard-manager';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 	import InputField from '$lib/components/InputField.svelte';
 	import { profiles, refreshProfiles } from '$lib/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
@@ -34,7 +35,7 @@
 	$: nameAvailable = mode === 'overwrite' || isAvailable(name);
 
 	async function getKeyFromClipboard() {
-		key = (await clipboard.readText()) ?? '';
+		key = (await readText()) ?? '';
 	}
 
 	async function submitKey() {
@@ -56,7 +57,7 @@
 		data.name = name;
 
 		if (mode === 'overwrite') {
-			let confirmed = await dialog.confirm(`Are you sure you want to override '${data.name}'?`, {
+			let confirmed = await confirm(`Are you sure you want to override '${data.name}'?`, {
 				title: 'Overwrite profile'
 			});
 

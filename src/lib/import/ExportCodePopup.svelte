@@ -3,7 +3,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import Icon from '@iconify/svelte';
-	import { clipboard } from '@tauri-apps/api';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { Dialog } from 'bits-ui';
 
 	let isOpen = false;
@@ -16,7 +16,7 @@
 
 		try {
 			let code = await codePromise;
-			await clipboard.writeText(code);
+			await writeText(code);
 		} catch (e) {
 			isOpen = false;
 		}

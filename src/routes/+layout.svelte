@@ -13,7 +13,7 @@
 	import { fade, fly, slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { clipboard } from '@tauri-apps/api';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
@@ -89,7 +89,7 @@
 
 				<Button.Root
 					class="p-1 hover:bg-red-500 rounded-sm"
-					on:click={() => clipboard.writeText('`' + error.name + ' - ' + error.message + '`')}
+					on:click={() => writeText('`' + error.name + ' - ' + error.message + '`')}
 				>
 					<Icon icon="mdi:clipboard-text" class="text-slate-100 text-lg" />
 				</Button.Root>

@@ -12,7 +12,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import type { ModpackArgs, PackageCategory } from '$lib/models';
 	import { activeProfile, activeGame, categories } from '$lib/stores';
-	import { dialog } from '@tauri-apps/api';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
@@ -95,7 +95,7 @@
 	}
 
 	async function browseIcon() {
-		let path = await dialog.open({
+		let path = await open({
 			defaultPath: iconPath.length > 0 ? iconPath : undefined,
 			title: 'Select modpack icon',
 			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif'] }]
@@ -110,7 +110,7 @@
 	}
 
 	async function exportToFile() {
-		let dir = await dialog.open({
+		let dir = await open({
 			title: 'Choose directory to save modpack',
 			defaultPath: `${name}.zip`,
 			directory: true

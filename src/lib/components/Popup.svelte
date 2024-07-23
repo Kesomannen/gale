@@ -3,7 +3,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { quartIn, quartOut } from 'svelte/easing';
 	import Icon from '@iconify/svelte';
-	import { dialog } from '@tauri-apps/api';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 
 	export let open: boolean;
 	export let title: string | null = null;
@@ -20,7 +20,7 @@
 
 		if (confirmClose) {
 			evt.preventDefault();
-			let result = await dialog.confirm(confirmClose.message, { title: confirmClose.title });
+			let result = await confirm(confirmClose.message, { title: confirmClose.title });
 			if (!result) {
 				return;
 			}

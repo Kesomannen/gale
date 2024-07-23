@@ -6,13 +6,14 @@
 	import { slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
 
-	import { open } from '@tauri-apps/api/shell';
-	import { fetch } from '@tauri-apps/api/http';
+	import { open } from '@tauri-apps/plugin-shell';
+	import { fetch } from '@tauri-apps/plugin-http';
 	import { activeGame } from '$lib/stores';
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
+	import ModCard from '$lib/modlist/ModCard.svelte';
 	import ModCardList from './ModCardList.svelte';
 
 	export let mod: Mod;
@@ -41,16 +42,31 @@
 
 	let readmePromise: Promise<string | null>;
 
+	async function extractReadme(response: Response) {
+		let json = await response.json();
+
+		let md_res = undefined;
+		try {
+			md_res = json as MarkdownResponse;
+		} catch (_e) {
+			return null;
+		}
+
+		if (!md_res.markdown) return null;
+
+		return md_res.markdown
+			.split('\n')
+			.filter((line) => !line.startsWith('# '))
+			.join('\n');
+	}
+
 	$: {
 		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
-		readmePromise = fetch<MarkdownResponse>(url).then((res) => {
-			if (!res.data.markdown) {
+		readmePromise = fetch(url).then(
+			extractReadme,
+			(_err) => {
 				return null;
-			} else {
-				// remove the first # title
-				return res.data.markdown.replace(/^# .*\n/, '');
-			}
-		});
+			});
 	}
 </script>
 
@@ -110,6 +126,13 @@
 	{/if}
 
 	<div class="flex gap-1 flex-wrap">
+		{#if mod.enabled === false}
+			<div class="flex items-center rounded-lg bg-yellow-400 text-slate-800 px-3 py-1 my-1">
+				<Icon class="text-xl mr-1" icon="mdi:eye-off" />
+				Disabled
+			</div>
+		{/if}
+
 		{#if mod.isDeprecated}
 			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
 				<Icon class="text-xl mr-1" icon="mdi:error" />

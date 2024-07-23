@@ -10,7 +10,7 @@ use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
-use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
+use tauri::{async_runtime::JoinHandle, AppHandle, Manager, Emitter};
 use uuid::Uuid;
 
 use crate::{
@@ -331,7 +331,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
             }
 
             if last_update.elapsed() > UPDATE_INTERVAL {
-                app.emit_all(
+                app.emit(
                     "status_update",
                     Some(format!("Fetching mods from Thunderstore... {}", map.len())),
                 )
@@ -355,7 +355,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
         start_time.elapsed()
     );
 
-    app.emit_all("status_update", None::<String>).ok();
+    app.emit("status_update", None::<String>).ok();
 
     Ok(())
 }

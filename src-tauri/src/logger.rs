@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, anyhow};
 use log::LevelFilter;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use std::{
     fs::{self, File},
@@ -10,7 +10,7 @@ use std::{
 use crate::util;
 
 fn log_path(app: &AppHandle) -> PathBuf {
-    app.path_resolver().app_log_dir().unwrap().join("log.log")
+    app.path().app_log_dir().unwrap().join("log.log")
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {

@@ -2,8 +2,6 @@
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
-
-	import ZoomLevelPref from '$lib/prefs/ZoomFactorPref.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
 
 	import type { Prefs, R2ImportData } from '$lib/models';

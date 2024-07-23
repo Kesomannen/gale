@@ -2,7 +2,7 @@
 	import Checkbox from "$lib/components/Checkbox.svelte";
 	import Label from "$lib/components/Label.svelte";
 	import { invokeCommand } from "$lib/invoke";
-	import { dialog } from "@tauri-apps/api";
+	import { confirm } from "@tauri-apps/plugin-dialog";
 	import { onMount } from "svelte";
 
     export let label: string;
@@ -13,7 +13,7 @@
 
 	async function onValueChanged(newValue: boolean) {
         if (!newValue && disableMessage) {
-            let confirmed = await dialog.confirm(disableMessage);
+            let confirmed = await confirm(disableMessage);
             if (!confirmed) {
                 value = true;
                 return;

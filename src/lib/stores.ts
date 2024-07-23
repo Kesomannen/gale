@@ -11,7 +11,7 @@ import {
 	type ProfilesInfo,
 	type QueryModsArgs
 } from './models';
-import { fetch } from '@tauri-apps/api/http';
+import { fetch } from '@tauri-apps/plugin-http';
 
 export let games: Game[] = [];
 export let categories = writable<PackageCategory[]>([]);
@@ -106,10 +106,21 @@ export async function refreshCategories() {
 	let gameId = get(activeGame)?.id;
 	if (!gameId) return;
 
-	let response = await fetch<FiltersResponse>(
-		`https://thunderstore.io/api/cyberstorm/community/${gameId}/filters/`
-	);
-	categories.set(response.data.package_categories);
+	try {
+		let response = await fetch(
+			`https://thunderstore.io/api/cyberstorm/community/${gameId}/filters/`
+		);
+
+		if (!response.ok) {
+			console.error('Failed to fetch categories:', response);
+			return;
+		}
+
+		let data = await response.json() as FiltersResponse;
+		categories.set(data.package_categories);
+	} catch (e) {
+		console.error('Failed to fetch categories:', e);
+	}
 }
 
 export async function refreshProfiles() {
