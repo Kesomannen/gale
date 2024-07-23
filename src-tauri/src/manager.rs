@@ -288,8 +288,11 @@ pub struct Profile {
 
 impl Profile {
     fn is_valid_name(name: &str) -> bool {
-        name.chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ')
+        !name.is_empty()
+            && !name.chars().all(char::is_whitespace)
+            && name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == ' ')
     }
 
     fn index_of(&self, uuid: &Uuid) -> Result<usize> {
@@ -382,8 +385,10 @@ impl Profile {
     fn load(mut path: PathBuf) -> Result<Self> {
         path.push("profile.json");
 
-        let manifest: ProfileManifest =
-            util::fs::read_json(&path).context("failed to read profile manifest")?;
+        let manifest: ProfileManifest = util::fs::read_json(&path).context(format!(
+            "failed to read profile manifest for '{}'",
+            path.parent().unwrap().file_name().unwrap().to_string_lossy()
+        ))?;
 
         path.pop();
 
@@ -755,7 +760,7 @@ impl ManagerGame {
             let path = entry?.path();
 
             if path.is_dir() {
-                let profile = Profile::load(path.clone())?;
+                let profile = Profile::load(path)?;
                 profiles.push(profile);
             }
         }
