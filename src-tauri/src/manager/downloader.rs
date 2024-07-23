@@ -535,16 +535,17 @@ fn resolve_deep_link(url: &str, thunderstore: &Thunderstore) -> Result<ModRef> {
     Ok(borrowed_mod.into())
 }
 
-pub fn deep_link_handler(handle: &AppHandle, event: Event) {
+pub fn handle_deep_link(handle: &AppHandle, event: Event) {
     let url = event.payload();
 
     let mod_ref = {
         let thunderstore = handle.state::<Mutex<Thunderstore>>();
         let thunderstore = thunderstore.lock().unwrap();
+
         match resolve_deep_link(url, &thunderstore) {
             Ok(mod_ref) => mod_ref,
             Err(e) => {
-                util::error::log("Failed to resolve deep link", &e, &handle);
+                util::error::log("failed to resolve deep link", &e, handle);
                 return;
             }
         }
@@ -560,7 +561,7 @@ pub fn deep_link_handler(handle: &AppHandle, event: Event) {
         )
         .await
         .unwrap_or_else(|e| {
-            util::error::log("Failed to install mod from deep link", &e, &handle);
+            util::error::log("failed to install mod from deep link", &e, &handle);
         });
     });
 }

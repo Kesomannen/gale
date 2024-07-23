@@ -1,4 +1,3 @@
-use crate::manager::downloader::deep_link_handler;
 use ::log::error;
 use anyhow::Context;
 use tauri::{AppHandle, Listener, Manager};
@@ -116,6 +115,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_window_state::Builder::new().build())
         .setup(|app| {
             let handle = app.handle().clone();
             logger::setup(&handle).ok();
@@ -131,7 +131,7 @@ pub fn run() {
             }
 
             app.listen("deep-link://new-url", move |event| {
-                deep_link_handler(&handle, event);
+                manager::downloader::handle_deep_link(&handle, event);
             });
 
             Ok(())

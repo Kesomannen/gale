@@ -50,7 +50,7 @@ log = "0.4"
 simplelog = "0.12"
 chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-deep-link = "2.0.0-beta.9"
-tauri-plugin-window-state = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
+tauri-plugin-window-state = "2.0.0-beta.11"
 tauri-plugin-dialog = "2.0.0-beta.11"
 tauri-plugin-shell = "2.0.0-beta.9"
 tauri-plugin-os = "2.0.0-beta.8"

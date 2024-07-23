@@ -145,7 +145,7 @@ pub struct ProfileImportData {
 }
 
 pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
-    find_paths(app).and_then(|path| {
+    find_paths().and_then(|path| {
         let profiles = find_profiles(path.clone(), false, app)
             .ok()?
             .map(util::fs::file_name_lossy)
@@ -343,11 +343,11 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn find_paths(app: &AppHandle) -> ManagerData<PathBuf> {
+fn find_paths() -> ManagerData<PathBuf> {
     let parent_dir = match cfg!(target_os = "linux") {
         // r2modman uses the config dir instead of the data dir on linux.
-        true => app.path().config_dir(),
-        false => app.path().data_dir(),
+        true => dirs_next::config_dir(),
+        false => dirs_next::data_dir(),
     }
     .unwrap();
 

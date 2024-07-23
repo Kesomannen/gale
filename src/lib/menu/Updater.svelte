@@ -20,7 +20,6 @@
 	import Icon from '@iconify/svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
 	import { getVersion } from '@tauri-apps/api/app';
-	import type { UnlistenFn } from '@tauri-apps/api/event';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { relaunch } from '@tauri-apps/plugin-process';
 	import { Button, Dialog } from 'bits-ui';
@@ -45,10 +44,19 @@
 		try {
 			await currentUpdate.downloadAndInstall();
 		} catch (e) {
+			let message: string;
+			if (typeof e === 'string') {
+				message = e;
+			} else if (e instanceof Error) {
+				message = e.message;
+			} else {
+				message = 'Unknown error';
+			}
+
 			pushError(
 				{
 					name: 'Failed to update Gale',
-					message: e
+					message
 				},
 				true
 			);
@@ -63,7 +71,7 @@
 		loading = false;
 
 		let platformName = await platform();
-		if (platformName !== 'win32') {
+		if (platformName !== 'windows') { // on other platforms installUpdate() relaunches the app itself
 			await message('Gale will now restart in order to apply the update.', {
 				title: 'Update installed'
 			});
