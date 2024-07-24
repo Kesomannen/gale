@@ -105,8 +105,8 @@
 		iconPath = response.path;
 	}
 
-	async function generateChangelog() {
-		changelog = await invokeCommand('generate_changelog', { args: args() });
+	async function generateChangelog(all: boolean) {
+		changelog = await invokeCommand('generate_changelog', { args: args(), all });
 	}
 
 	async function exportToFile() {
@@ -326,7 +326,8 @@
 	>
 		<ResizableInputField bind:value={changelog} placeholder="Enter changelog..." />
 		
-		<BigButton color="gray" on:click={generateChangelog}>Generate for {versionNumber}</BigButton>
+		<BigButton color="gray" on:click={() => generateChangelog(false)}>Generate for {versionNumber}</BigButton>
+		<BigButton color="gray" on:click={() => generateChangelog(true)}>Generate all</BigButton>
 
 		<details class="mt-1">
 			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>

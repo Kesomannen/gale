@@ -5,7 +5,7 @@ use crate::{
     thunderstore::{self, Thunderstore},
     util::{
         cmd::{Result, StateMutex},
-        error::IoResultExt,
+        error::IoResultExt, fs::PathExt,
     },
     NetworkClient,
 };
@@ -80,7 +80,7 @@ pub fn export_pack(
     let profile = manager.active_profile_mut();
 
     dir.push(format!("{}-{}", args.name, args.version_number));
-    dir.set_extension("zip");
+    dir.add_extension("zip");
 
     profile.export_pack(&args, &dir, &thunderstore)?;
     if let Err(err) = profile.take_snapshot(&args) {
@@ -119,7 +119,7 @@ pub async fn upload_pack(
         }
 
         path.push(format!("{}-{}", args.name, args.version_number));
-        path.set_extension("zip");
+        path.add_extension("zip");
 
         if path.exists() {
             fs::remove_file(&path).ok();
@@ -161,18 +161,30 @@ pub fn export_dep_string(
 #[tauri::command]
 pub fn generate_changelog(
     mut args: ModpackArgs,
+    all: bool,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
 ) -> Result<String> {
     let manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    changelog::generate(
-        &mut args,
-        manager.active_profile(),
-        manager.active_game().game,
-        &thunderstore,
-    )?;
+    if all {
+        let changelog = changelog::generate_all(
+            &args,
+            manager.active_profile(),
+            manager.active_game().game,
+            &thunderstore,
+        )?;
 
-    Ok(args.changelog)
+        Ok(changelog)
+    } else {
+        changelog::generate_latest(
+            &mut args,
+            manager.active_profile(),
+            manager.active_game().game,
+            &thunderstore,
+        )?;
+
+        Ok(args.changelog)
+    }
 }

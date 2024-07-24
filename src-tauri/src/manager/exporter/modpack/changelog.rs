@@ -1,4 +1,4 @@
-use std::fs;
+use std::fs::{self, DirEntry};
 
 use anyhow::{bail, Context, Result};
 use itertools::Itertools;
@@ -9,10 +9,82 @@ use crate::{
     games::Game,
     manager::Profile,
     thunderstore::{models::PackageListing, BorrowedMod, ModRef, Thunderstore},
-    util::{self, fs::{JsonStyle, PathExt}},
+    util::{
+        self,
+        fs::{JsonStyle, PathExt},
+    },
 };
 
-pub fn generate(
+pub fn generate_all(
+    args: &ModpackArgs,
+    profile: &Profile,
+    game: &'static Game,
+    thunderstore: &Thunderstore,
+) -> Result<String> {
+    let current_version: semver::Version = args
+        .version_number
+        .parse()
+        .context("invalid version number")?;
+
+    let mut snapshots = profile
+        .find_snapshots()?
+        .filter(|(_, version)| *version < current_version)
+        .map(|(entry, version)| {
+            let mods = util::fs::read_json::<Vec<ModRef>>(entry.path())
+                .with_context(|| format!("failed to read snapshot for version {}", version))?;
+
+            let mods = borrow_mods(mods, thunderstore);
+
+            Ok((mods, version))
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    let mut changelog = "# Changelog".to_string();
+
+    if snapshots.is_empty() {
+        push_diff(&mut changelog, &args.version_number, "\n\n- Initial release");
+
+        return Ok(changelog);
+    }
+
+    snapshots.sort_by(|(_, a), (_, b)| a.cmp(b).reverse());
+
+    // list is now sorted in descending order
+    // (current version: 1.2.0) [1.1.0, 1.0.0, 0.2.0, 0.1.0]
+
+    // first generate diff to current version
+    let current_mods = borrow_mods(profile.mods_to_pack(args).cloned(), thunderstore);
+    let diff = generate_diff(&snapshots[0].0, &current_mods, game);
+
+    push_diff(&mut changelog, &args.version_number, &diff);
+
+    // then for all other versions (except the first one)
+    for i in 0..snapshots.len().saturating_sub(1) {
+        let (new_mods, new_version) = &snapshots[i];
+        let (old_mods, _) = &snapshots[i + 1];
+
+        let diff = generate_diff(old_mods, new_mods, game);
+        push_diff(&mut changelog, &new_version.to_string(), &diff);
+    }
+
+    push_diff(
+        &mut changelog,
+        &snapshots.last().unwrap().1.to_string(),
+        "\n\n- Initial release",
+    );
+
+    return Ok(changelog);
+
+    fn push_diff(changelog: &mut String, version_number: &str, diff: &str) {
+        if !diff.is_empty() {
+            changelog.push_str("\n\n## ");
+            changelog.push_str(version_number);
+            changelog.push_str(diff);
+        }
+    }
+}
+
+pub fn generate_latest(
     args: &mut ModpackArgs,
     profile: &Profile,
     game: &'static Game,
@@ -23,20 +95,28 @@ pub fn generate(
         .parse()
         .context("invalid version number")?;
 
-    let snapshot = match profile.read_snapshot(version)? {
+    let latest_snapshot = profile
+        .find_snapshots()?
+        .filter(|(_, v)| *v < version)
+        .max_by(|(_, a), (_, b)| a.cmp(b))
+        .map(|(entry, _)| util::fs::read_json::<Vec<ModRef>>(entry.path()))
+        .transpose()?;
+
+    let latest_snapshot = match latest_snapshot {
         Some(snapshot) => snapshot,
         None => bail!("no previous version found to compare against"),
     };
 
-    let old = borrow_mods(snapshot, thunderstore);
-    let current = borrow_mods(profile.mods_to_pack(args).cloned(), thunderstore);
+    let old_mods = borrow_mods(latest_snapshot, thunderstore);
+    let current_mods = borrow_mods(profile.mods_to_pack(args).cloned(), thunderstore);
 
-    let version_header = format!("## {}\n\n", args.version_number);
+    let version_header = format!("## {}", args.version_number);
     let index = match args.changelog.find(&version_header) {
         Some(index) => {
+            // if there's an existing diff, replace it
             let offset = index + version_header.len();
 
-            // find the next version header
+            // find the next version header to see where the old diff ends
             let next_index = args.changelog[offset..]
                 .find("\n## ")
                 .map(|next_index| next_index + offset)
@@ -57,11 +137,13 @@ pub fn generate(
         }
     };
 
-    let diff = generate_diff(old, current, game);
+    let mut diff = generate_diff(&old_mods, &current_mods, game);
 
     if diff.is_empty() {
         return Ok(());
     }
+
+    diff.push('\n');
 
     args.changelog.insert_str(index, &diff);
     args.changelog.insert_str(index, &version_header);
@@ -93,15 +175,12 @@ impl Profile {
         )
     }
 
-    fn read_snapshot(&self, below_version: semver::Version) -> Result<Option<Vec<ModRef>>> {
+    fn find_snapshots(&self) -> Result<impl Iterator<Item = (DirEntry, semver::Version)>> {
         let path = self.path.join("snapshots");
 
-        if !path.exists() {
-            return Ok(None);
-        }
-
         // find the latest snapshot that is below the given version
-        path.read_dir()?
+        Ok(path
+            .read_dir()?
             .filter_map(|entry| entry.ok())
             .filter_map(|entry| {
                 match entry
@@ -110,7 +189,6 @@ impl Profile {
                     .trim_end_matches(".json")
                     .parse::<semver::Version>()
                 {
-                    Ok(version) if version >= below_version => None,
                     Ok(version) => Some((entry, version)),
                     _ => {
                         warn!(
@@ -120,23 +198,16 @@ impl Profile {
                         None
                     }
                 }
-            })
-            .max_by(|(_, a), (_, b)| a.cmp(b))
-            .map(|(entry, _)| util::fs::read_json(&entry.path()))
-            .transpose()
+            }))
     }
 }
 
-fn generate_diff(
-    old: Vec<BorrowedMod<'_>>,
-    new: Vec<BorrowedMod<'_>>,
-    game: &'static Game,
-) -> String {
+fn generate_diff(old: &[BorrowedMod<'_>], new: &[BorrowedMod<'_>], game: &'static Game) -> String {
     let mut added = Vec::new();
     let mut removed = Vec::new();
     let mut updated = Vec::new();
 
-    for new in &new {
+    for new in new {
         if let Some(old) = old.iter().find(|old| old.package == new.package) {
             if old.version != new.version {
                 updated.push((old, new));
@@ -146,7 +217,7 @@ fn generate_diff(
         }
     }
 
-    for old in &old {
+    for old in old {
         if !new.iter().any(|new| new.package == old.package) {
             removed.push(old);
         }
@@ -209,13 +280,11 @@ fn write_changelog_section<T, F>(
     F: FnMut(&T) -> String,
 {
     if let Some(item) = items.next() {
-        changelog.push_str(&format!("### {}\n\n", title));
-        changelog.push_str(&format!("- {}\n", text(&item)));
+        changelog.push_str(&format!("\n\n### {}", title));
+        changelog.push_str(&format!("\n\n- {}", text(&item)));
 
         for item in items {
-            changelog.push_str(&format!("- {}\n", text(&item)));
+            changelog.push_str(&format!("\n- {}", text(&item)));
         }
-
-        changelog.push('\n');
     }
 }

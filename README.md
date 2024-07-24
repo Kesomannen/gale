@@ -177,7 +177,9 @@ After a while, this it will output both an executable and an installable package
 
 ## Credits
 
-Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
+Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
+
+Thanks to Ebkr for helping to navigate the thunderstore API and BepInEx, and of course making the original mod manager!
 
 ## License
 

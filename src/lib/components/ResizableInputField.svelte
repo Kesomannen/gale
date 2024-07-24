@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let value: string;
+	export let value: string;
 </script>
 
 <textarea
@@ -7,6 +7,6 @@
     valid:focus:ring-green-400 invalid:ring-red-500 focus:ring-2 focus:outline-none
     border border-slate-500 border-opacity-0 hover:border-opacity-100 focus:border-opacity-0"
 	bind:value
-    {...$$restProps}
-    on:change
+	{...$$restProps}
+	on:change
 />

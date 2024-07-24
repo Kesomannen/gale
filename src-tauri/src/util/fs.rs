@@ -53,7 +53,7 @@ pub fn copy_contents(src: &Path, dest: &Path, overwrite: Overwrite) -> io::Resul
     Ok(())
 }
 
-pub fn read_json<T: DeserializeOwned>(path: &Path) -> anyhow::Result<T> {
+pub fn read_json<T: DeserializeOwned>(path: impl AsRef<Path>) -> anyhow::Result<T> {
     let file = fs::File::open(path)?;
     let reader = io::BufReader::new(file);
     let result = serde_json::from_reader(reader)?;

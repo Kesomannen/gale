@@ -35,7 +35,7 @@
 </script>
 
 <main
-	class="h-screen overflow-hidden flex flex-col rounded-lg border border-gray-600 bg-gray-800 relative"
+	class="h-screen overflow-hidden flex flex-col rounded-xl border border-gray-600 bg-gray-800 relative"
 	on:contextmenu={(e) => {
 		if (window.location.hostname === 'tauri.localhost') {
 			e.preventDefault();
