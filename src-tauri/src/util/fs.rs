@@ -1,5 +1,8 @@
 use std::{
-    ffi::OsStr, fs::{self}, io::{self}, path::{Path, PathBuf}
+    ffi::OsStr,
+    fs::{self},
+    io::{self, BufReader},
+    path::{Path, PathBuf},
 };
 
 use serde::{de::DeserializeOwned, Serialize};
@@ -59,6 +62,14 @@ pub fn read_json<T: DeserializeOwned>(path: impl AsRef<Path>) -> anyhow::Result<
     let result = serde_json::from_reader(reader)?;
 
     Ok(result)
+}
+
+pub fn open_zip(path: impl AsRef<Path>) -> anyhow::Result<zip::ZipArchive<BufReader<fs::File>>> {
+    let file = fs::File::open(path)?;
+    let reader = io::BufReader::new(file);
+    let archive = zip::ZipArchive::new(reader)?;
+
+    Ok(archive)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

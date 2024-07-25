@@ -144,6 +144,21 @@ pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()>
     }
 }
 
+pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
+    let target_dir = util::path::app_cache_dir().join(format!("extract_{full_name}"));
+    let zipfile = fs::File::open(src)?;
+
+    // temporarily extract the zip so the built in install from disk method can be used
+    util::zip::extract(zipfile, &target_dir)?;
+
+    install_from_disk(&target_dir, dest, full_name)?;
+
+    // clean up the leftovers
+    fs::remove_dir_all(target_dir)?;
+
+    Ok(())
+}
+
 fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
     let bepinex = dest.join("BepInEx");
     let plugin_dir = bepinex.join("plugins").join(mod_name);
