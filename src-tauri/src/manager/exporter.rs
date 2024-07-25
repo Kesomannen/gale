@@ -121,7 +121,7 @@ fn export_file(profile: &Profile, dir: PathBuf, thunderstore: &Thunderstore) -> 
 
     let mods = profile
         .remote_mods()
-        .map(|(mod_ref, enabled)| R2Mod::from_mod_ref(mod_ref, enabled, thunderstore))
+        .map(|(mod_ref, _, enabled)| R2Mod::from_mod_ref(mod_ref, enabled, thunderstore))
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve profile mods")?;
 
@@ -151,7 +151,7 @@ async fn export_code(
         let prefs = prefs.lock().unwrap();
 
         let profile = manager.active_profile_mut();
-        profile.refresh_config(Some(&thunderstore));
+        profile.refresh_config();
 
         let dir = prefs.temp_dir.join("exports");
         fs::create_dir_all(&dir)?;

@@ -105,7 +105,7 @@ pub fn try_cache_install(
             let name = &borrowed.package.full_name;
             install_from_disk(path, &profile.path, name)?;
 
-            let profile_mod = ProfileMod::remote_now(install.mod_ref.clone());
+            let profile_mod = ProfileMod::remote_now(install.mod_ref.clone(), name.clone());
             match install.index {
                 Some(index) if index < profile.mods.len() => {
                     profile.mods.insert(index, profile_mod);
@@ -116,7 +116,7 @@ pub fn try_cache_install(
             };
 
             if !install.enabled {
-                profile.force_toggle_mod(&borrowed.package.uuid4, thunderstore)?;
+                profile.force_toggle_mod(&borrowed.package.uuid4)?;
             }
 
             if !prefs.mod_cache_enabled() {
@@ -134,7 +134,7 @@ pub fn try_cache_install(
 
 pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
     let name = match full_name.split_once('-') {
-        Some((_, name)) => name,
+        Some((_author, name)) => name,
         None => full_name,
     };
 

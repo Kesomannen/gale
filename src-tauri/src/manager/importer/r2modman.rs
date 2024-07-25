@@ -13,18 +13,15 @@ use std::{
 
 use super::ImportData;
 use crate::{
-    manager::{
+    logger, manager::{
         downloader::InstallOptions,
         exporter::{ImportSource, R2Mod},
         ModManager,
-    },
-    prefs::Prefs,
-    thunderstore::Thunderstore,
-    util::{
+    }, prefs::Prefs, thunderstore::Thunderstore, util::{
         self,
         error::IoResultExt,
         fs::{Overwrite, PathExt},
-    },
+    }
 };
 
 lazy_static! {
@@ -167,9 +164,9 @@ pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<
         let name = profile_dir.file_name().unwrap();
 
         if let Err(err) = import_profile(profile_dir.clone(), app).await {
-            util::error::log(
-                "Error while importing from r2modman",
-                &err.context(format!("Failed to import profile {:?}", name)),
+            logger::log_js_err(
+                "error while importing from r2modman",
+                &err.context(format!("Failed to import profile '{}'", name.to_string_lossy())),
                 app,
             );
         };
@@ -194,7 +191,7 @@ fn find_profiles(
 
     if transfer_cache {
         if let Err(e) = import_cache(path.clone(), app) {
-            util::error::log("failed to transfer r2modman cache", &e, app);
+            logger::log_js_err("failed to transfer r2modman cache", &e, app);
         };
     }
 

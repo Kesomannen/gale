@@ -5,11 +5,13 @@ use crate::{
     thunderstore::{self, Thunderstore},
     util::{
         cmd::{Result, StateMutex},
-        error::IoResultExt, fs::PathExt,
+        error::IoResultExt,
+        fs::PathExt,
     },
     NetworkClient,
 };
 use anyhow::{anyhow, Context};
+use itertools::Itertools;
 use std::{fs, path::PathBuf};
 use tauri::State;
 use uuid::Uuid;
@@ -140,22 +142,16 @@ pub async fn upload_pack(
 }
 
 #[tauri::command]
-pub fn export_dep_string(
-    manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
-) -> Result<String> {
+pub fn export_dep_string(manager: StateMutex<ModManager>) -> Result<String> {
     let manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
 
-    manager
+    let result = manager
         .active_profile()
         .remote_mods()
-        .map(|(mod_ref, _)| {
-            let borrowed = mod_ref.borrow(&thunderstore)?;
-            Ok(borrowed.version.full_name.clone())
-        })
-        .collect::<Result<Vec<_>>>()
-        .map(|deps| deps.join("\n"))
+        .map(|(_, full_name, _)| full_name)
+        .join("\n");
+
+    Ok(result)
 }
 
 #[tauri::command]

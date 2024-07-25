@@ -1,26 +1,5 @@
 use anyhow::Context;
-use log::error;
-use serde::Serialize;
 use std::path::Path;
-use tauri::{AppHandle, Emitter};
-
-#[derive(Serialize, Clone)]
-struct JsError<'a> {
-    name: &'a str,
-    message: String,
-}
-
-pub fn log(name: &str, error: &anyhow::Error, handle: &AppHandle) {
-    error!("{}: {:#}", name, error);
-    let _ = handle.emit(
-        "error",
-        JsError {
-            name,
-            message: format!("{:#}", error),
-        },
-    );
-}
-
 pub trait IoResultExt<T> {
     fn fs_context(self, op: &str, path: &Path) -> anyhow::Result<T>;
 }

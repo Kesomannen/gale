@@ -1,13 +1,31 @@
 use anyhow::{anyhow, Context, Result};
 use log::LevelFilter;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::util;
 use std::{
     fs::{self, File},
     path::PathBuf,
 };
+use serde::Serialize;
+
+#[derive(Serialize, Clone)]
+struct JsError<'a> {
+    name: &'a str,
+    message: String,
+}
+
+pub fn log_js_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
+    log::error!("{}: {:#}", name, error);
+    handle.emit(
+        "error",
+        JsError {
+            name,
+            message: format!("{:#}", error),
+        },
+    ).ok();
+}
 
 fn log_path(app: &AppHandle) -> PathBuf {
     app.path().app_log_dir().unwrap().join("log.log")

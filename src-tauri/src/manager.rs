@@ -32,6 +32,7 @@ use crate::{
         fs::{JsonStyle, Overwrite, PathExt},
     },
 };
+use log::warn;
 
 pub mod commands;
 pub mod downloader;
@@ -123,16 +124,18 @@ impl ProfileMod {
         Self::now(ProfileModKind::Local(Box::new(data)))
     }
 
-    fn remote_now(mod_ref: ModRef) -> Self {
-        Self::now(ProfileModKind::Remote(mod_ref))
+    fn remote_now(mod_ref: ModRef, full_name: String) -> Self {
+        Self::now(ProfileModKind::Remote { mod_ref, full_name })
     }
 
     pub fn uuid(&self) -> &Uuid {
         self.kind.uuid()
     }
 
-    fn as_remote(&self) -> Option<(&ModRef, bool)> {
-        self.kind.as_remote().map(|remote| (remote, self.enabled))
+    fn as_remote(&self) -> Option<(&ModRef, &str, bool)> {
+        self.kind
+            .as_remote()
+            .map(|remote| (remote.0, remote.1, self.enabled))
     }
 
     fn as_local(&self) -> Option<(&LocalMod, bool)> {
@@ -146,7 +149,7 @@ impl ProfileMod {
     ) -> Result<QueryableProfileMod<'a>> {
         let kind = match &self.kind {
             ProfileModKind::Local(local) => QueryableProfileModKind::Local(local),
-            ProfileModKind::Remote(mod_ref) => {
+            ProfileModKind::Remote { mod_ref, .. } => {
                 let borrow = mod_ref.borrow(thunderstore)?;
                 QueryableProfileModKind::Remote(borrow)
             }
@@ -166,7 +169,13 @@ impl ProfileMod {
 #[serde(rename_all = "camelCase", untagged)]
 pub enum ProfileModKind {
     Local(Box<LocalMod>),
-    Remote(ModRef),
+    #[serde(rename_all = "camelCase")]
+    Remote {
+        #[serde(default)] // for backwards compatibility
+        full_name: String,
+        #[serde(flatten)]
+        mod_ref: ModRef,
+    },
 }
 
 fn default_true() -> bool {
@@ -177,13 +186,13 @@ impl ProfileModKind {
     pub fn uuid(&self) -> &Uuid {
         match self {
             ProfileModKind::Local(local_mod) => &local_mod.uuid,
-            ProfileModKind::Remote(mod_ref) => &mod_ref.package_uuid,
+            ProfileModKind::Remote { mod_ref, .. } => &mod_ref.package_uuid,
         }
     }
 
-    pub fn as_remote(&self) -> Option<&ModRef> {
+    pub fn as_remote(&self) -> Option<(&ModRef, &str)> {
         match self {
-            ProfileModKind::Remote(mod_ref) => Some(mod_ref),
+            ProfileModKind::Remote { mod_ref, full_name } => Some((mod_ref, full_name)),
             _ => None,
         }
     }
@@ -195,23 +204,17 @@ impl ProfileModKind {
         }
     }
 
-    pub fn full_name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
+    pub fn full_name(&self) -> &str {
         match self {
-            ProfileModKind::Local(local) => Ok(&local.name),
-            ProfileModKind::Remote(mod_ref) => {
-                let package = thunderstore.get_package(&mod_ref.package_uuid)?;
-                Ok(&package.full_name)
-            }
+            ProfileModKind::Local(local) => &local.name,
+            ProfileModKind::Remote { full_name, .. } => full_name,
         }
     }
 
-    pub fn name<'a>(&'a self, thunderstore: &'a Thunderstore) -> Result<&'a str> {
+    pub fn name(&self) -> &str {
         match self {
-            ProfileModKind::Local(local) => Ok(&local.name),
-            ProfileModKind::Remote(mod_ref) => {
-                let package = thunderstore.get_package(&mod_ref.package_uuid)?;
-                Ok(&package.name)
-            }
+            ProfileModKind::Local(local) => &local.name,
+            ProfileModKind::Remote { full_name, .. } => full_name.split_once('-').unwrap().1,
         }
     }
 }
@@ -320,7 +323,7 @@ impl Profile {
         self.get_mod(uuid).is_ok()
     }
 
-    fn remote_mods(&self) -> impl Iterator<Item = (&ModRef, bool)> {
+    fn remote_mods(&self) -> impl Iterator<Item = (&ModRef, &str, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_remote)
     }
 
@@ -339,15 +342,25 @@ impl Profile {
         &self,
         args: &QueryModsArgs,
         thunderstore: &Thunderstore,
-    ) -> Result<Vec<FrontendProfileMod>> {
+    ) -> (Vec<FrontendProfileMod>, Vec<String>) {
+        let mut unknown = Vec::new();
+
         let queryables = self
             .mods
             .iter()
             .enumerate()
-            .map(|(i, p)| p.queryable(i, thunderstore))
-            .collect::<Result<Vec<_>>>()?;
+            .filter_map(
+                |(index, profile_mod)| match profile_mod.queryable(index, thunderstore) {
+                    Ok(queryable) => Some(queryable),
+                    Err(_) => {
+                        warn!("unknown mod in profile: {}", profile_mod.uuid());
+                        unknown.push(profile_mod.kind.full_name().to_owned());
+                        None
+                    }
+                },
+            );
 
-        Ok(query::query_mods(args, queryables.into_iter())
+        let found = query::query_mods(args, queryables)
             .map(|queryable| {
                 let (data, uuid) = match queryable.kind {
                     QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
@@ -362,7 +375,9 @@ impl Profile {
                     config_file: self.linked_config.get(&uuid).cloned(),
                 }
             })
-            .collect())
+            .collect();
+
+        (found, unknown)
     }
 
     fn dependants<'a>(
@@ -371,8 +386,8 @@ impl Profile {
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
         self.remote_mods()
-            .filter(|(other, _)| other.package_uuid != target_mod.package.uuid4)
-            .map(|(other, _)| other.borrow(thunderstore))
+            .filter(|(other, _, _)| other.package_uuid != target_mod.package.uuid4)
+            .map(|(other, _, _)| other.borrow(thunderstore))
             .filter_map_ok(move |other| {
                 let deps = thunderstore.dependencies(other.version).0;
                 match deps.iter().any(|dep| dep.package == target_mod.package) {
@@ -385,14 +400,16 @@ impl Profile {
     fn load(mut path: PathBuf) -> Result<Self> {
         path.push("profile.json");
 
-        let manifest: ProfileManifest = util::fs::read_json(&path).context(format!(
-            "failed to read profile manifest for '{}'",
-            path.parent()
-                .unwrap()
-                .file_name()
-                .unwrap()
-                .to_string_lossy()
-        ))?;
+        let manifest: ProfileManifest = util::fs::read_json(&path).with_context(|| {
+            format!(
+                "failed to read profile manifest for '{}'",
+                path.parent()
+                    .unwrap()
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+            )
+        })?;
 
         path.pop();
 
@@ -467,23 +484,23 @@ impl Profile {
         let profile_mod = self.get_mod(uuid)?;
 
         if profile_mod.enabled {
-            if let Some((mod_ref, _)) = profile_mod.as_remote() {
-                let borrowed = mod_ref.borrow(thunderstore)?;
-
-                if let Some(dependants) = self.check_dependants(borrowed, thunderstore) {
-                    return Ok(ModActionResponse::HasDependants(dependants));
+            if let Some((mod_ref, _, _)) = profile_mod.as_remote() {
+                if let Ok(borrow) = mod_ref.borrow(thunderstore) {
+                    if let Some(dependants) = self.check_dependants(borrow, thunderstore) {
+                        return Ok(ModActionResponse::HasDependants(dependants));
+                    }
                 }
             }
         }
 
-        self.force_remove_mod(uuid, thunderstore)?;
+        self.force_remove_mod(uuid)?;
         Ok(ModActionResponse::Done)
     }
 
-    fn force_remove_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
+    fn force_remove_mod(&mut self, uuid: &Uuid) -> Result<()> {
         let index = self.index_of(uuid)?;
 
-        self.scan_mod(&self.mods[index].kind, thunderstore, |dir| {
+        self.scan_mod(&self.mods[index].kind, |dir| {
             fs::remove_dir_all(dir).fs_context("removing mod directory", dir)
         })?;
 
@@ -499,28 +516,28 @@ impl Profile {
     ) -> Result<ModActionResponse> {
         let profile_mod = self.get_mod(uuid)?;
 
-        if let Some((mod_ref, _)) = profile_mod.as_remote() {
-            let borrowed = mod_ref.borrow(thunderstore)?;
-
-            if profile_mod.enabled {
-                if let Some(dependants) = self.check_dependants(borrowed, thunderstore) {
-                    return Ok(ModActionResponse::HasDependants(dependants));
+        if let Some((mod_ref, _, _)) = profile_mod.as_remote() {
+            if let Ok(borrowed) = mod_ref.borrow(thunderstore) {
+                if profile_mod.enabled {
+                    if let Some(dependants) = self.check_dependants(borrowed, thunderstore) {
+                        return Ok(ModActionResponse::HasDependants(dependants));
+                    }
+                } else if let Some(deps) = self.check_deps(borrowed, thunderstore) {
+                    return Ok(ModActionResponse::HasDependencies(deps));
                 }
-            } else if let Some(deps) = self.check_deps(borrowed, thunderstore) {
-                return Ok(ModActionResponse::HasDependencies(deps));
             }
         }
 
-        self.force_toggle_mod(uuid, thunderstore)?;
+        self.force_toggle_mod(uuid)?;
         Ok(ModActionResponse::Done)
     }
 
-    fn force_toggle_mod(&mut self, uuid: &Uuid, thunderstore: &Thunderstore) -> Result<()> {
+    fn force_toggle_mod(&mut self, uuid: &Uuid) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
         let state = profile_mod.enabled;
         let new_state = !state;
 
-        self.scan_mod(&profile_mod.kind, thunderstore, |dir| {
+        self.scan_mod(&profile_mod.kind, |dir| {
             let files = WalkDir::new(dir)
                 .into_iter()
                 .filter_map(|e| e.ok())
@@ -593,21 +610,15 @@ impl Profile {
         }
     }
 
-    fn scan_mod<'a, F>(
-        &'a self,
-        profile_mod: &'a ProfileModKind,
-        thunderstore: &'a Thunderstore,
-        scan_dir: F,
-    ) -> Result<()>
+    fn scan_mod<'a, F>(&'a self, profile_mod: &'a ProfileModKind, scan_dir: F) -> Result<()>
     where
         F: Fn(&Path) -> Result<()>,
     {
-        let name = profile_mod.full_name(thunderstore)?;
         let mut path = self.path.join("BepInEx");
 
         for dir in ["core", "patchers", "plugins"].into_iter() {
             path.push(dir);
-            path.push(name);
+            path.push(profile_mod.full_name());
 
             if path.exists() {
                 scan_dir(&path)?;
@@ -738,7 +749,7 @@ impl ManagerGame {
         self.profiles.iter().flat_map(|profile| {
             profile
                 .remote_mods()
-                .map(|(mod_ref, _)| mod_ref.borrow(thunderstore))
+                .map(|(mod_ref, _, _)| mod_ref.borrow(thunderstore))
         })
     }
 
@@ -886,7 +897,7 @@ impl ModManager {
             .flat_map(|profile| {
                 profile
                     .remote_mods()
-                    .map(|(mod_ref, _)| mod_ref.borrow(thunderstore))
+                    .map(|(mod_ref, _, _)| mod_ref.borrow(thunderstore))
             })
             .filter_map(Result::ok)
             .map(|borrowed| borrowed.package)
@@ -943,5 +954,25 @@ impl ModManager {
         }
 
         Ok(())
+    }
+
+    // ProfileModKind::Remote didn't use to have a full_name field
+    // so for backwards compatibility we need to add it to all remote mods
+    //
+    // REMOVE IN THE FUTURE!
+    pub fn fill_profile_mod_names(&mut self, thunderstore: &Thunderstore) {
+        for game in self.games.values_mut() {
+            for profile in &mut game.profiles {
+                for profile_mod in &mut profile.mods {
+                    if let ProfileModKind::Remote { mod_ref, full_name } = &mut profile_mod.kind {
+                        if full_name.is_empty() {
+                            if let Ok(borrowed) = mod_ref.borrow(thunderstore) {
+                                full_name.clone_from(&borrowed.package.full_name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

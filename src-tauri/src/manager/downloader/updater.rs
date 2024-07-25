@@ -29,14 +29,14 @@ impl From<AvailableUpdate<'_>> for ModInstall {
 }
 
 impl Profile {
-    pub fn update_available<'a>(
+    pub fn check_update<'a>(
         &'a self,
         uuid: &Uuid,
         thunderstore: &'a Thunderstore,
     ) -> Result<Option<AvailableUpdate<'a>>> {
         let index = self.index_of(uuid)?;
 
-        let (mod_ref, enabled) = match self.mods[index].as_remote() {
+        let (mod_ref, _, enabled) = match self.mods[index].as_remote() {
             Some(x) => x,
             None => return Ok(None),
         };
@@ -65,33 +65,21 @@ impl Profile {
             },
         }))
     }
-
-    pub fn available_updates<'a>(
-        &'a self,
-        thunderstore: &'a Thunderstore,
-    ) -> impl Iterator<Item = Result<AvailableUpdate<'a>>> + 'a {
-        self.remote_mods().filter_map(move |(m, _)| {
-            self.update_available(&m.package_uuid, thunderstore)
-                .transpose()
-        })
-    }
 }
 
 pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<()> {
     let install = {
         let manager = app.state::<Mutex<ModManager>>();
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-
         let mut manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
 
         let profile = manager.active_profile_mut();
         let index = profile.index_of(&mod_ref.package_uuid)?;
+        let enabled = profile.mods[index].enabled;
 
-        profile.force_remove_mod(&mod_ref.package_uuid, &thunderstore)?;
+        profile.force_remove_mod(&mod_ref.package_uuid)?;
 
         ModInstall::new(mod_ref)
-            .with_state(profile.mods[index].enabled)
+            .with_state(enabled)
             .at(index)
     };
 
@@ -110,16 +98,18 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
 
         uuids
             .iter()
-            .filter_map(|uuid| profile.update_available(uuid, &thunderstore).transpose())
+            .filter_map(|uuid| profile.check_update(uuid, &thunderstore).transpose())
             .map_ok(|update| update.into())
             .collect::<Result<Vec<ModInstall>>>()?
     };
 
     install_with_deps(
         to_update,
-        InstallOptions::default().before_install(|install, manager, thunderstore| {
-            let profile = manager.active_profile_mut();
-            profile.force_remove_mod(install.uuid(), thunderstore).ok();
+        InstallOptions::default().before_install(|install, manager, _| {
+            manager
+                .active_profile_mut()
+                .force_remove_mod(install.uuid())
+                .ok();
         }),
         true,
         app,

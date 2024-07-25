@@ -14,10 +14,7 @@ use tauri::{async_runtime::JoinHandle, AppHandle, Emitter, Manager};
 use uuid::Uuid;
 
 use crate::{
-    games::Game,
-    manager::ModManager,
-    util::{self, fs::JsonStyle},
-    NetworkClient,
+    games::Game, logger, manager::ModManager, util::{self, fs::JsonStyle}, NetworkClient
 };
 
 use self::models::{PackageListing, PackageVersion};
@@ -240,13 +237,14 @@ impl Thunderstore {
 const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
 
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
+    let manager = app.state::<Mutex<ModManager>>();
+    let thunderstore = app.state::<Mutex<Thunderstore>>();
+        
     {
-        let manager = app.state::<Mutex<ModManager>>();
         let manager = manager.lock().unwrap();
 
         match read_cache(&cache_path(&manager)) {
             Ok(Some(mods)) => {
-                let thunderstore = app.state::<Mutex<Thunderstore>>();
                 let mut thunderstore = thunderstore.lock().unwrap();
 
                 for package in mods {
@@ -261,9 +259,15 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let mut is_first = true;
     loop {
         if let Err(err) = load_mods(&app, game, is_first).await {
-            util::error::log("error while loading mods from Thunderstore", &err, &app);
+            logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
         } else {
             is_first = false;
+
+            // REMOVE IN THE FUTURE!
+            let mut manager = manager.lock().unwrap();
+            let thunderstore = thunderstore.lock().unwrap();
+
+            manager.fill_profile_mod_names(&thunderstore);
         }
 
         tokio::time::sleep(TIME_BETWEEN_LOADS).await;
@@ -324,7 +328,7 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
                             map.insert(package.uuid4, package);
                         }
                     }
-                    Err(err) => util::error::log("failed to load mod", &anyhow!(err), app),
+                    Err(err) => logger::log_js_err("failed to fetch mod", &anyhow!(err), app),
                 }
 
                 buffer.replace_range(..index + 4, "");

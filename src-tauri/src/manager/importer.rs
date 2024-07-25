@@ -214,11 +214,9 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     }
 
     let manager = app.state::<Mutex<ModManager>>();
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
     let prefs = app.state::<Mutex<Prefs>>();
 
     let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
     let profile = manager.active_profile_mut();
@@ -226,11 +224,12 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     let existing = profile
         .local_mods()
         .find(|(LocalMod { name, .. }, _)| *name == local_mod.name);
+
     let existing = existing.map(|(LocalMod { uuid, .. }, _)| *uuid);
 
     if let Some(uuid) = existing {
         profile
-            .force_remove_mod(&uuid, &thunderstore)
+            .force_remove_mod(&uuid)
             .context("failed to remove existing mod")?;
     }
 

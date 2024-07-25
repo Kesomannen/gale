@@ -221,6 +221,7 @@ export interface AvailableUpdate {
 
 export interface ProfileQuery {
 	mods: Mod[];
+	unknownMods: string[];
 	updates: AvailableUpdate[];
 }
 

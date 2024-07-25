@@ -1,9 +1,9 @@
 use crate::{manager::ModManager, thunderstore::ModRef, util::cmd::Result};
-use itertools::Itertools;
 use serde::Deserialize;
 use std::sync::Mutex;
 use tauri::Manager;
 use uuid::Uuid;
+use itertools::Itertools;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,7 +42,7 @@ pub async fn update_all(app: tauri::AppHandle) -> Result<()> {
         manager
             .active_profile()
             .remote_mods()
-            .map(|(m, _)| m.package_uuid)
+            .map(|(mod_ref, _, _)| mod_ref.package_uuid)
             .collect_vec()
     };
 

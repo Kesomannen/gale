@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 use crate::{
+    logger,
     manager::launcher::LaunchMode,
     util::{
         self,
@@ -213,7 +214,7 @@ impl Prefs {
             },
             false => {
                 let mut prefs: Prefs = util::fs::read_json(&path).map_err(|err| {
-                    anyhow!("Failed to read settings: {} (at {})", err, path.display())
+                    anyhow!("failed to read settings: {} (at {}). The file might be corrupted or too old to run with your version of Gale.", err, path.display())
                 })?;
 
                 prefs.data_dir.keep_files.extend(&["prefs.json", "logs"]);
@@ -247,7 +248,7 @@ impl Prefs {
         if self.zoom_factor != value.zoom_factor {
             let window = app.get_webview_window("main").unwrap();
             if let Err(err) = window.zoom(value.zoom_factor as f64) {
-                util::error::log(
+                logger::log_js_err(
                     "Error while updating settings",
                     &anyhow!("failed to set zoom level: {}", err),
                     app,

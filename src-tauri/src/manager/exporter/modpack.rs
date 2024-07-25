@@ -78,8 +78,8 @@ pub struct ModpackArgs {
 impl Profile {
     fn mods_to_pack<'a>(&'a self, args: &'a ModpackArgs) -> impl Iterator<Item = &'a ModRef> + 'a {
         self.remote_mods()
-            .filter(move |(_, enabled)| args.include_disabled || *enabled)
-            .map(|(mod_ref, _)| mod_ref)
+            .filter(move |(_, _, enabled)| args.include_disabled || *enabled)
+            .map(|(mod_ref, _, _)| mod_ref)
     }
 
     pub fn export_pack(

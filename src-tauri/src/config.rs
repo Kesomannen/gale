@@ -13,7 +13,7 @@ use thiserror::Error;
 use typeshare::typeshare;
 use walkdir::WalkDir;
 
-use crate::{manager::Profile, thunderstore::Thunderstore, util::fs::PathExt};
+use crate::{manager::Profile, util::fs::PathExt};
 
 pub mod commands;
 pub mod de;
@@ -204,22 +204,14 @@ where
 }
 
 impl Profile {
-    pub fn refresh_config(&mut self, thunderstore: Option<&Thunderstore>) {
+    pub fn refresh_config(&mut self) {
         load_config(self.path.clone(), &mut self.config);
-        if let Some(thunderstore) = thunderstore {
-            self.link_config(thunderstore);
-        }
+        self.link_config();
     }
 
-    fn link_config(&mut self, thunderstore: &Thunderstore) {
+    fn link_config(&mut self) {
         for profile_mod in &self.mods {
-            let name = match profile_mod.kind.name(thunderstore) {
-                Ok(name) => name,
-                Err(_) => {
-                    continue;
-                }
-            };
-
+            let name = profile_mod.kind.name();
             let file = self.config.iter().find(|file| matches(file, name));
 
             if let Some(file) = file {

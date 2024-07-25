@@ -14,10 +14,7 @@ use thiserror::Error;
 use typeshare::typeshare;
 
 use crate::{
-    prefs::Prefs,
-    thunderstore::{BorrowedMod, Thunderstore},
-    util::{self, cmd::StateMutex, error::IoResultExt},
-    NetworkClient,
+    logger, prefs::Prefs, thunderstore::{BorrowedMod, Thunderstore}, util::{self, cmd::StateMutex, error::IoResultExt}, NetworkClient
 };
 
 use super::{commands::save, installer, ModManager, ModRef, Profile};
@@ -397,13 +394,12 @@ impl<'a> Installer<'a> {
                     self.update(InstallTask::Error);
 
                     let mut manager = self.manager.lock().unwrap();
-                    let thunderstore = self.thunderstore.lock().unwrap();
 
                     let profile = manager.active_profile_mut();
 
                     for install in to_install.iter().take(i) {
                         profile
-                            .force_remove_mod(install.uuid(), &thunderstore)
+                            .force_remove_mod(install.uuid())
                             .context("failed to clean up after cancellation")?;
                     }
 
@@ -545,7 +541,7 @@ pub fn handle_deep_link(handle: &AppHandle, event: Event) {
         match resolve_deep_link(url, &thunderstore) {
             Ok(mod_ref) => mod_ref,
             Err(e) => {
-                util::error::log("failed to resolve deep link", &e, handle);
+                logger::log_js_err("failed to resolve deep link", &e, handle);
                 return;
             }
         }
@@ -561,7 +557,7 @@ pub fn handle_deep_link(handle: &AppHandle, event: Event) {
         )
         .await
         .unwrap_or_else(|e| {
-            util::error::log("failed to install mod from deep link", &e, &handle);
+            logger::log_js_err("failed to install mod from deep link", &e, &handle);
         });
     });
 }

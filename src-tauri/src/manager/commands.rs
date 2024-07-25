@@ -135,7 +135,6 @@ pub fn set_active_profile(
     Ok(())
 }
 
-#[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FrontendAvailableUpdate {
@@ -145,12 +144,12 @@ pub struct FrontendAvailableUpdate {
     pub new: semver::Version,
 }
 
-#[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileQuery {
     pub updates: Vec<FrontendAvailableUpdate>,
     pub mods: Vec<FrontendProfileMod>,
+    pub unknown_mods: Vec<String>,
 }
 
 #[tauri::command]
@@ -163,9 +162,13 @@ pub fn query_profile(
     let thunderstore = thunderstore.lock().unwrap();
 
     let profile = manager.active_profile();
-    let mods = profile.query_mods(&args, &thunderstore)?;
-    let updates = profile
-        .available_updates(&thunderstore)
+    let (mods, unknown_mods) = profile.query_mods(&args, &thunderstore);
+    let updates = mods
+        .iter()
+        .filter_map(|profile_mod| {
+            profile.check_update(&profile_mod.data.uuid, &thunderstore)
+                .transpose()
+        })
         .map_ok(|update| {
             let borrow = update.mod_ref.borrow(&thunderstore)?;
             Ok::<_, anyhow::Error>(FrontendAvailableUpdate {
@@ -178,7 +181,7 @@ pub fn query_profile(
         .flatten_ok()
         .collect::<anyhow::Result<Vec<_>>>()?;
 
-    Ok(ProfileQuery { updates, mods })
+    Ok(ProfileQuery { updates, mods, unknown_mods })
 }
 
 #[tauri::command]
@@ -327,16 +330,14 @@ where
 pub fn force_remove_mods(
     uuids: Vec<Uuid>,
     manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
 ) -> Result<()> {
     let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
     let profile = manager.active_profile_mut();
     for package_uuid in &uuids {
-        profile.force_remove_mod(package_uuid, &thunderstore)?;
+        profile.force_remove_mod(package_uuid)?;
     }
 
     save(&manager, &prefs)?;
@@ -348,11 +349,9 @@ pub fn force_remove_mods(
 pub fn set_all_mods_state(
     enable: bool,
     manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
 ) -> Result<()> {
     let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
     let profile = manager.active_profile_mut();
@@ -364,7 +363,7 @@ pub fn set_all_mods_state(
         .collect_vec();
 
     for uuid in uuids {
-        profile.force_toggle_mod(&uuid, &thunderstore)?;
+        profile.force_toggle_mod(&uuid)?;
     }
 
     save(&manager, &prefs)?;
@@ -376,16 +375,14 @@ pub fn set_all_mods_state(
 pub fn force_toggle_mods(
     uuids: Vec<Uuid>,
     manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
 ) -> Result<()> {
     let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
     let profile = manager.active_profile_mut();
     for package_uuid in &uuids {
-        profile.force_toggle_mod(package_uuid, &thunderstore)?;
+        profile.force_toggle_mod(package_uuid)?;
     }
 
     save(&manager, &prefs)?;
@@ -433,13 +430,11 @@ pub fn open_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
 pub fn open_plugin_dir(
     uuid: Uuid,
     manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
 ) -> Result<()> {
     let manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
 
     let profile = manager.active_profile();
-    let full_name = profile.get_mod(&uuid)?.kind.full_name(&thunderstore)?;
+    let full_name = profile.get_mod(&uuid)?.kind.full_name();
 
     let path = profile.path.join("BepInEx").join("plugins").join(full_name);
 

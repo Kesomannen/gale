@@ -41,6 +41,7 @@
 	];
 
 	let mods: Mod[] = [];
+	let unknownMods: string[] = [];
 	let updates: AvailableUpdate[] = [];
 	let activeMod: Mod | undefined;
 
@@ -87,6 +88,7 @@
 	async function refresh() {
 		let result = await invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery });
 		mods = result.mods;
+		unknownMods = result.unknownMods;
 		updates = result.updates;
 	}
 
@@ -240,9 +242,34 @@
 	</svelte:fragment>
 
 	<div slot="banner">
+		{#if unknownMods.length > 0}
+			<div
+				class="flex items-center text-red-100 bg-red-600 mr-3 mb-2 pl-4 pr-2 py-1 rounded-lg gap-1"
+			>
+				<Icon icon="mdi:warning" class="text-xl" />
+				There {unknownMods.length === 1 ? 'is' : 'are'} <strong>{unknownMods.length}</strong>
+				{unknownMods.length === 1 ? ' unknown mod' : ' unknown mods'} in your profile.
+				<Button.Root
+					class="hover:underline hover:text-red-100 text-slate-100 font-semibold"
+					on:click={() => {
+						
+					}}
+				>
+					Remove all?
+				</Button.Root>
+
+				<Button.Root
+					class="ml-auto rounded-md text-xl hover:bg-blue-500 p-1"
+					on:click={() => ($updateBannerThreshold = updates.length)}
+				>
+					<Icon icon="mdi:close" />
+				</Button.Root>
+			</div>
+		{/if}
+
 		{#if updates.length > $updateBannerThreshold}
 			<div
-				class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-2 pl-4 pr-2 py-1.5 rounded-lg gap-1"
+				class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-2 pl-4 pr-2 py-1 rounded-lg gap-1"
 			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl" />
 				There {updates.length === 1 ? 'is' : 'are'} <strong>{updates.length}</strong>
