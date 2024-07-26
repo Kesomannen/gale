@@ -342,7 +342,7 @@ impl Profile {
         &self,
         args: &QueryModsArgs,
         thunderstore: &Thunderstore,
-    ) -> (Vec<FrontendProfileMod>, Vec<String>) {
+    ) -> (Vec<FrontendProfileMod>, Vec<Dependant>) {
         let mut unknown = Vec::new();
 
         let queryables = self
@@ -354,7 +354,7 @@ impl Profile {
                     Ok(queryable) => Some(queryable),
                     Err(_) => {
                         warn!("unknown mod in profile: {}", profile_mod.uuid());
-                        unknown.push(profile_mod.kind.full_name().to_owned());
+                        unknown.push(Dependant::from(&profile_mod.kind));
                         None
                     }
                 },
@@ -439,6 +439,15 @@ impl From<BorrowedMod<'_>> for Dependant {
         Self {
             name: value.package.name.clone(),
             uuid: value.package.uuid4,
+        }
+    }
+}
+
+impl From<&ProfileModKind> for Dependant {
+    fn from(value: &ProfileModKind) -> Self {
+        Self {
+            name: value.name().to_owned(),
+            uuid: *value.uuid(),
         }
     }
 }

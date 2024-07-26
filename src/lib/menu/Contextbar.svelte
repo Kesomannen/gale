@@ -1,5 +1,4 @@
 <script context="module" lang="ts">
-
 </script>
 
 <script lang="ts">
@@ -40,19 +39,22 @@
 			}
 		});
 	}
+
+	function launchGame(vanilla: boolean) {
+		invokeCommand('launch_game', { vanilla });
+		launchGamePopupOpen = true;
+	}
 </script>
 
 <div class="h-12 flex flex-row flex-shrink-0 bg-gray-900 border-b border-t border-gray-600">
-	<Button.Root
-		class="flex items-center flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 cursor-default"
-		on:click={() => {
-			invokeCommand('launch_game', { vanilla: false });
-			launchGamePopupOpen = true;
-		}}
+	<div
+		class="flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800"
 	>
-		<Icon icon="mdi:play-circle" class="text-xl mr-2" />
-		<div class="font-semibold">Launch game</div>
-	</Button.Root>
+		<Button.Root class="flex items-center h-full font-semibold cursor-default" on:click={() => launchGame(false)}>
+			<Icon icon="mdi:play-circle" class="text-xl mr-2" />
+			Launch modded
+		</Button.Root>
+	</div>
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
@@ -123,9 +125,7 @@
 						class="text-green-500 text-lg mx-2 {i !== activeProfileIndex && 'invisible'}"
 					/>
 
-					<div
-						class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs mr-1"
-					>
+					<div class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs mr-1">
 						{profile.modCount}
 					</div>
 

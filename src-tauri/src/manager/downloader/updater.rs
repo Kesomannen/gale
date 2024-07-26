@@ -78,12 +78,16 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
 
         profile.force_remove_mod(&mod_ref.package_uuid)?;
 
-        ModInstall::new(mod_ref)
-            .with_state(enabled)
-            .at(index)
+        ModInstall::new(mod_ref).with_state(enabled).at(index)
     };
 
-    super::install_mod(install, InstallOptions::default().can_cancel(false), app).await
+    super::install_with_deps(
+        vec![install],
+        InstallOptions::default().can_cancel(false),
+        false,
+        app,
+    )
+    .await
 }
 
 pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {

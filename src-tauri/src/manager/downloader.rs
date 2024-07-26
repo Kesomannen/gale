@@ -449,14 +449,6 @@ pub async fn install_mods(
     installer.install_all(mods).await
 }
 
-pub async fn install_mod(
-    install: ModInstall,
-    options: InstallOptions,
-    app: &AppHandle,
-) -> Result<()> {
-    install_mods(vec![install], options, app).await
-}
-
 pub async fn install_with_mods<F>(
     mods: F,
     options: InstallOptions,

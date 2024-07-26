@@ -35,7 +35,7 @@
 </script>
 
 <main
-	class="h-screen overflow-hidden flex flex-col rounded-xl border border-gray-600 bg-gray-800 relative"
+	class="h-screen overflow-hidden flex flex-col rounded-lg border border-gray-600 bg-gray-800 relative"
 	on:contextmenu={(e) => {
 		if (window.location.hostname === 'tauri.localhost') {
 			e.preventDefault();
@@ -54,7 +54,6 @@
 			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
-			<NavbarLink to="/test" icon="mdi:package-variant" tooltip="Export modpack" />
 			<div class="flex-grow" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</div>

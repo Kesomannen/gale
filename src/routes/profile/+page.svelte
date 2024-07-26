@@ -15,7 +15,8 @@
 		type ProfileQuery,
 		type AvailableUpdate,
 		SortBy,
-		SortOrder
+		SortOrder,
+		type Dependant
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -41,7 +42,7 @@
 	];
 
 	let mods: Mod[] = [];
-	let unknownMods: string[] = [];
+	let unknownMods: Dependant[] = [];
 	let updates: AvailableUpdate[] = [];
 	let activeMod: Mod | undefined;
 
@@ -109,12 +110,8 @@
 		}
 	}
 
-	async function uninstall() {
-		if (!activeMod) return;
-
-		let response = await invokeCommand<ModActionResponse>('remove_mod', {
-			uuid: activeMod.uuid
-		});
+	async function uninstall(mod: Dependant) {
+		let response = await invokeCommand<ModActionResponse>('remove_mod', { uuid: mod.uuid });
 
 		if (response.type == 'done') {
 			refresh();
@@ -122,7 +119,7 @@
 			return;
 		}
 
-		removeDependants.openFor(activeMod, response.content);
+		removeDependants.openFor(mod, response.content);
 	}
 
 	async function onReorder(uuid: string, delta: number) {
@@ -238,44 +235,43 @@
 			/>
 		{/if}
 
-		<ModDetailsDropdownItem label="Uninstall" icon="mdi:delete" onClick={uninstall} />
+		<ModDetailsDropdownItem
+			label="Uninstall"
+			icon="mdi:delete"
+			onClick={() =>
+				uninstall({
+					uuid: activeMod?.uuid ?? '',
+					name: activeMod?.name ?? ''
+				})}
+		/>
 	</svelte:fragment>
 
 	<div slot="banner">
 		{#if unknownMods.length > 0}
-			<div
-				class="flex items-center text-red-100 bg-red-600 mr-3 mb-2 pl-4 pr-2 py-1 rounded-lg gap-1"
-			>
-				<Icon icon="mdi:warning" class="text-xl" />
-				There {unknownMods.length === 1 ? 'is' : 'are'} <strong>{unknownMods.length}</strong>
-				{unknownMods.length === 1 ? ' unknown mod' : ' unknown mods'} in your profile.
+			<div class="flex items-center text-red-100 bg-red-600 mr-3 mb-1 pl-3 pr-2 py-1.5 rounded-lg">
+				<Icon icon="mdi:alert-circle" class="text-xl mr-2" />
+				Could not find <strong class="mx-1">{unknownMods.length}</strong>
+				{unknownMods.length === 1 ? 'mod' : 'mods'}: {unknownMods
+					.map((mod) => mod.name)
+					.join(', ')}.
 				<Button.Root
-					class="hover:underline hover:text-red-100 text-slate-100 font-semibold"
+					class="hover:underline hover:text-red-100 text-white font-semibold ml-1"
 					on:click={() => {
-						
+						unknownMods.forEach(uninstall);
 					}}
 				>
-					Remove all?
-				</Button.Root>
-
-				<Button.Root
-					class="ml-auto rounded-md text-xl hover:bg-blue-500 p-1"
-					on:click={() => ($updateBannerThreshold = updates.length)}
-				>
-					<Icon icon="mdi:close" />
+					Uninstall them?
 				</Button.Root>
 			</div>
 		{/if}
 
 		{#if updates.length > $updateBannerThreshold}
-			<div
-				class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-2 pl-4 pr-2 py-1 rounded-lg gap-1"
-			>
-				<Icon icon="mdi:arrow-up-circle" class="text-xl" />
-				There {updates.length === 1 ? 'is' : 'are'} <strong>{updates.length}</strong>
+			<div class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-1 pl-3 pr-2 py-1 rounded-lg">
+				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-2" />
+				There {updates.length === 1 ? 'is' : 'are'} <strong class="mx-1">{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.
 				<Button.Root
-					class="hover:underline hover:text-blue-100 text-slate-100 font-semibold"
+					class="hover:underline hover:text-blue-100 text-white font-semibold ml-1"
 					on:click={() => {
 						updateAllOpen = true;
 					}}

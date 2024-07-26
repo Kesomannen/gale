@@ -12,7 +12,7 @@ use crate::{
     util::cmd::{Result, StateMutex},
 };
 
-use super::{ModActionResponse, ModManager, Profile};
+use super::{Dependant, ModActionResponse, ModManager, Profile};
 use itertools::Itertools;
 
 #[typeshare]
@@ -149,7 +149,7 @@ pub struct FrontendAvailableUpdate {
 pub struct ProfileQuery {
     pub updates: Vec<FrontendAvailableUpdate>,
     pub mods: Vec<FrontendProfileMod>,
-    pub unknown_mods: Vec<String>,
+    pub unknown_mods: Vec<Dependant>,
 }
 
 #[tauri::command]

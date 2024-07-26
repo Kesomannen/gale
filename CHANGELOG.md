@@ -19,6 +19,8 @@
 - "BepInEx preloader not found" error when launching IL2CPP games
 - Window size and position not persisting between sessions
 - Having many profiles causing the profile dropdown to go off-screen
+- Crash when changing the version of certain mods
+- Dependencies not being installed when changing the version of a mod
 
 ## 0.6.2 (2024-07-15)
 

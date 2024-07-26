@@ -12,11 +12,11 @@
 	export let onExecute: () => void;
 	export let onCancel: () => void;
 
-	let mod: Mod | undefined;
+	let mod: Dependant;
 	let open: boolean;
 	let dependants: Dependant[];
 
-	export function openFor(_mod: Mod, _dependants: Dependant[]) {
+	export function openFor(_mod: Dependant, _dependants: Dependant[]) {
 		mod = _mod;
 		dependants = _dependants;
 		open = true;
