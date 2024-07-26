@@ -156,6 +156,7 @@ fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
 
         if path.is_dir() {
             if file_name == "BepInEx" {
+                // handle things like {mod_name}/BepInEx/plugins/{mod_name}.dll
                 install_default(&path, dest, mod_name)?;
                 continue;
             }

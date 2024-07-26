@@ -25,6 +25,7 @@
     "updater:default",
     "dialog:default",
     "shell:default",
+    "cli:default",
     {
       "identifier": "http:default",
       "allow": [
@@ -36,7 +37,6 @@
         }
       ],
       "deny": []
-    },
-    "cli:default"
+    }
   ]
 }

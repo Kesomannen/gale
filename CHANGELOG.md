@@ -7,7 +7,8 @@
 - Simple CLI for choosing game, profile and launching through the command line
 - Resizable text input and list editor for long config entries
 - Changelog field and automatic changelog generation in modpack exporter
-- Vanilla launch option
+- More game icons (#58)
+- Local mod import from zip (#57)
 
 ### Changed
 

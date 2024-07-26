@@ -45,18 +45,18 @@
 			title: 'Select the directory containing the mod package'
 		});
 
-		if (!path) return;
+		if (path === null) return;
 		invokeCommand('import_local_mod', { path });
 	}
 
 	async function importLocalDLL() {
-		let path = await open({
-			title: 'Select the DLL to import',
-			filters: [{ name: 'DLL file', extensions: ['dll'] }]
+		let response = await open({
+			title: 'Select the mod file to import',
+			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
 		});
 
-		if (!path) return;
-		invokeCommand('import_local_mod', { path });
+		if (response === null) return;
+		invokeCommand('import_local_mod', { path: response.path });
 	}
 
 	async function importFile() {

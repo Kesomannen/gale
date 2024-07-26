@@ -45,7 +45,7 @@ pub fn extract(src: impl Read + Seek, target: &Path) -> io::Result<()> {
 
     let mut archive = ZipArchive::new(src)?;
 
-    debug!("Extracting to {}", target.display());
+    debug!("extracting to {}", target.display());
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
         let relative = file.mangled_name();
