@@ -14,7 +14,11 @@ use thiserror::Error;
 use typeshare::typeshare;
 
 use crate::{
-    logger, prefs::Prefs, thunderstore::{BorrowedMod, Thunderstore}, util::{self, cmd::StateMutex, error::IoResultExt}, NetworkClient
+    logger,
+    prefs::Prefs,
+    thunderstore::{BorrowedMod, Thunderstore},
+    util::{self, cmd::StateMutex, error::IoResultExt},
+    NetworkClient,
 };
 
 use super::{commands::save, installer, ModManager, ModRef, Profile};

@@ -19,6 +19,7 @@ use crate::{
         window::WindowExt,
     },
 };
+use tauri_plugin_fs::FsExt;
 
 pub mod commands;
 
@@ -30,7 +31,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq)]
 #[serde(transparent)]
 pub struct DirPref {
     value: PathBuf,
@@ -55,9 +56,9 @@ impl DirPref {
         &self.value
     }
 
-    pub fn set(&mut self, value: PathBuf) -> Result<()> {
+    pub fn set(&mut self, value: PathBuf) -> Result<bool> {
         if self.value == value {
-            return Ok(());
+            return Ok(false);
         }
 
         ensure!(value.is_dir(), "value is not a directory");
@@ -104,15 +105,27 @@ impl DirPref {
 
         self.value = value;
 
-        Ok(())
+        Ok(true)
+    }
+}
+
+impl AsRef<Path> for DirPref {
+    fn as_ref(&self) -> &Path {
+        self.get()
     }
 }
 
 impl Deref for DirPref {
-    type Target = PathBuf;
+    type Target = Path;
 
     fn deref(&self) -> &Self::Target {
-        &self.value
+        self.get()
+    }
+}
+
+impl PartialEq for DirPref {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
     }
 }
 
@@ -226,6 +239,8 @@ impl Prefs {
             }
         };
 
+        app.fs_scope().allow_directory(prefs.data_dir.get(), true);
+        app.asset_protocol_scope().allow_directory(prefs.data_dir.get(), true).ok();
         prefs.save()?;
 
         Ok(prefs)
@@ -240,6 +255,13 @@ impl Prefs {
         self.steam_exe_path = value.steam_exe_path;
         self.steam_library_dir = value.steam_library_dir;
         self.game_prefs = value.game_prefs;
+
+        if self.data_dir != value.data_dir {
+            let scope = app.fs_scope();
+
+            scope.forbid_directory(&self.data_dir, true);
+            scope.allow_directory(&value.data_dir, true);
+        }
 
         self.data_dir.set(value.data_dir.value)?;
         self.cache_dir.set(value.cache_dir.value)?;
@@ -258,8 +280,8 @@ impl Prefs {
         self.zoom_factor = value.zoom_factor;
 
         if self.enable_mod_cache && !value.enable_mod_cache {
-            fs::remove_dir_all(&*self.cache_dir)?;
-            fs::create_dir_all(&*self.cache_dir)?;
+            fs::remove_dir_all(&self.cache_dir)?;
+            fs::create_dir_all(&self.cache_dir)?;
         }
         self.enable_mod_cache = value.enable_mod_cache;
 

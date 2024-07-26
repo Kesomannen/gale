@@ -42,7 +42,11 @@ pub fn generate_all(
     let mut changelog = "# Changelog".to_string();
 
     if snapshots.is_empty() {
-        push_diff(&mut changelog, &args.version_number, "\n\n- Initial release");
+        push_diff(
+            &mut changelog,
+            &args.version_number,
+            "\n\n- Initial release",
+        );
 
         return Ok(changelog);
     }

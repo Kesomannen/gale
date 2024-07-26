@@ -94,7 +94,13 @@
       }
     ],
     "security": {
-      "csp": null
+      "assetProtocol": {
+        "enable": true,
+        "scope": {
+          "allow": []
+        }
+      },
+      "csp": "default-src 'self'; img-src 'self' asset: https://asset.localhost; media-src 'self' asset: https://asset.localhost; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
     }
   }
 }

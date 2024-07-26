@@ -14,7 +14,11 @@ use tauri::{async_runtime::JoinHandle, AppHandle, Emitter, Manager};
 use uuid::Uuid;
 
 use crate::{
-    games::Game, logger, manager::ModManager, util::{self, fs::JsonStyle}, NetworkClient
+    games::Game,
+    logger,
+    manager::ModManager,
+    util::{self, fs::JsonStyle},
+    NetworkClient,
 };
 
 use self::models::{PackageListing, PackageVersion};
@@ -239,7 +243,7 @@ const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let manager = app.state::<Mutex<ModManager>>();
     let thunderstore = app.state::<Mutex<Thunderstore>>();
-        
+
     {
         let manager = manager.lock().unwrap();
 

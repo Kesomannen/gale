@@ -13,15 +13,19 @@ use std::{
 
 use super::ImportData;
 use crate::{
-    logger, manager::{
+    logger,
+    manager::{
         downloader::InstallOptions,
         exporter::{ImportSource, R2Mod},
         ModManager,
-    }, prefs::Prefs, thunderstore::Thunderstore, util::{
+    },
+    prefs::Prefs,
+    thunderstore::Thunderstore,
+    util::{
         self,
         error::IoResultExt,
         fs::{Overwrite, PathExt},
-    }
+    },
 };
 
 lazy_static! {
@@ -166,7 +170,10 @@ pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<
         if let Err(err) = import_profile(profile_dir.clone(), app).await {
             logger::log_js_err(
                 "error while importing from r2modman",
-                &err.context(format!("Failed to import profile '{}'", name.to_string_lossy())),
+                &err.context(format!(
+                    "Failed to import profile '{}'",
+                    name.to_string_lossy()
+                )),
                 app,
             );
         };

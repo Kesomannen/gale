@@ -26,6 +26,7 @@
     "dialog:default",
     "shell:default",
     "cli:default",
+    "fs:default",
     {
       "identifier": "http:default",
       "allow": [

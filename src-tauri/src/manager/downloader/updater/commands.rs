@@ -1,9 +1,9 @@
 use crate::{manager::ModManager, thunderstore::ModRef, util::cmd::Result};
+use itertools::Itertools;
 use serde::Deserialize;
 use std::sync::Mutex;
 use tauri::Manager;
 use uuid::Uuid;
-use itertools::Itertools;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

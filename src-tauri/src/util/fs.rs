@@ -1,5 +1,8 @@
 use std::{
-    ffi::OsStr, fs::{self}, io::{self}, path::{Path, PathBuf}
+    ffi::OsStr,
+    fs::{self},
+    io::{self},
+    path::{Path, PathBuf},
 };
 
 use serde::{de::DeserializeOwned, Serialize};

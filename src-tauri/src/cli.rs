@@ -46,7 +46,7 @@ pub fn run(app: &App) -> Result<()> {
                 }
             }
 
-            if let Some(arg) =  matches.args.get("launch") {
+            if let Some(arg) = matches.args.get("launch") {
                 if let Value::Bool(true) = &arg.value {
                     manager
                         .active_game()

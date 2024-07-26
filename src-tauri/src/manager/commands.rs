@@ -166,7 +166,8 @@ pub fn query_profile(
     let updates = mods
         .iter()
         .filter_map(|profile_mod| {
-            profile.check_update(&profile_mod.data.uuid, &thunderstore)
+            profile
+                .check_update(&profile_mod.data.uuid, &thunderstore)
                 .transpose()
         })
         .map_ok(|update| {
@@ -181,7 +182,11 @@ pub fn query_profile(
         .flatten_ok()
         .collect::<anyhow::Result<Vec<_>>>()?;
 
-    Ok(ProfileQuery { updates, mods, unknown_mods })
+    Ok(ProfileQuery {
+        updates,
+        mods,
+        unknown_mods,
+    })
 }
 
 #[tauri::command]
@@ -427,10 +432,7 @@ pub fn open_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn open_plugin_dir(
-    uuid: Uuid,
-    manager: StateMutex<ModManager>,
-) -> Result<()> {
+pub fn open_plugin_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let profile = manager.active_profile();

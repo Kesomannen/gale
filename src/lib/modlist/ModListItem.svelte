@@ -3,11 +3,24 @@
 	import Icon from '@iconify/svelte';
 	import { isOutdated } from '$lib/util';
 	import { activeGame } from '$lib/stores';
+	import { readFile } from '@tauri-apps/plugin-fs';
+	import { convertFileSrc } from '@tauri-apps/api/core';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
 	export let showInstalledIcon: boolean;
 	export let draggable = false;
+
+	let img: HTMLImageElement;
+	let iconSrc: string;
+
+	$: {
+		if (mod.type === 'remote') {
+			iconSrc = mod.icon!;
+		} else {
+			iconSrc = mod.icon ? convertFileSrc(mod.icon) : 'games/' + $activeGame?.id + '.webp';
+		}
+	}
 </script>
 
 <button
@@ -22,7 +35,7 @@
 	on:dragend
 	{draggable}
 >
-	<img src={mod.icon ?? `games/${$activeGame?.id}.webp`} alt={mod.name} class="w-12 h-12 rounded-md" />
+	<img bind:this={img} src={iconSrc} alt={mod.name} class="w-12 h-12 rounded-md" />
 	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
 		<span
 			class="font-semibold {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"

@@ -4,11 +4,11 @@ use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, W
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::util;
+use serde::Serialize;
 use std::{
     fs::{self, File},
     path::PathBuf,
 };
-use serde::Serialize;
 
 #[derive(Serialize, Clone)]
 struct JsError<'a> {
@@ -18,13 +18,15 @@ struct JsError<'a> {
 
 pub fn log_js_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
     log::error!("{}: {:#}", name, error);
-    handle.emit(
-        "error",
-        JsError {
-            name,
-            message: format!("{:#}", error),
-        },
-    ).ok();
+    handle
+        .emit(
+            "error",
+            JsError {
+                name,
+                message: format!("{:#}", error),
+            },
+        )
+        .ok();
 }
 
 fn log_path(app: &AppHandle) -> PathBuf {

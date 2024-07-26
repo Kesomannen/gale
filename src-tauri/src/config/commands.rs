@@ -20,9 +20,7 @@ pub enum FrontendLoadFileResult {
 }
 
 #[tauri::command]
-pub fn get_config_files(
-    manager: StateMutex<ModManager>,
-) -> Result<Vec<FrontendLoadFileResult>> {
+pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<FrontendLoadFileResult>> {
     let mut manager = manager.lock().unwrap();
     let profile = manager.active_profile_mut();
 
