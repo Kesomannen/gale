@@ -50,7 +50,7 @@
 	}
 
 	async function importModFile() {
-		let path = await open({
+		let response = await open({
 			title: 'Select the mod file to import',
 			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
 		});
