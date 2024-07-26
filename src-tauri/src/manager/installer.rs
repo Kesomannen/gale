@@ -144,11 +144,14 @@ pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()>
     }
 }
 
-pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
-    let target_dir = util::path::app_cache_dir().join(format!("extract_{full_name}"));
+pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs) -> Result<()> {
+    let mut target_dir = prefs.temp_dir.get().join("extract");
+    fs::create_dir_all(&target_dir)?;
+    target_dir.push(full_name);
+
     let zipfile = fs::File::open(src)?;
 
-    // temporarily extract the zip so the built in install from disk method can be used
+    // temporarily extract the zip so the same install from disk method can be used
     util::zip::extract(zipfile, &target_dir)?;
 
     install_from_disk(&target_dir, dest, full_name)?;
