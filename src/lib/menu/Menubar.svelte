@@ -39,7 +39,7 @@
 
 	const appWindow = getCurrentWindow();
 
-	async function importLocalPackage() {
+	async function importModDir() {
 		let path = await open({
 			directory: true,
 			title: 'Select the directory containing the mod package'
@@ -49,8 +49,8 @@
 		invokeCommand('import_local_mod', { path });
 	}
 
-	async function importLocalDLL() {
-		let response = await open({
+	async function importModFile() {
+		let path = await open({
 			title: 'Select the mod file to import',
 			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
 		});
@@ -166,8 +166,8 @@
 			>
 				<MenubarItem on:click={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
 				<MenubarItem on:click={importFile}>...profile from file</MenubarItem>
-				<MenubarItem on:click={importLocalPackage}>...local mod from package</MenubarItem>
-				<MenubarItem on:click={importLocalDLL}>...local mod from DLL</MenubarItem>
+				<MenubarItem on:click={importModFile}>...local mod from file</MenubarItem>
+				<MenubarItem on:click={importModDir}>...local mod from directory</MenubarItem>
 				<MenubarItem on:click={() => (importR2Open = true)}>...profiles from r2modman</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>

@@ -245,6 +245,12 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
             local_mod.icon = plugin_path.join("icon.png").exists_or_none();
         }
+        LocalModKind::Zip => {
+            installer::install_from_zip(&path, &profile.path, &local_mod.name, &prefs)
+                .context("failed to install local mod")?;
+
+            local_mod.icon = plugin_path.join("icon.png").exists_or_none();
+        }
         LocalModKind::Dll => {
             let file_name = path.file_name().unwrap();
 
@@ -263,6 +269,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 #[derive(PartialEq, Eq)]
 enum LocalModKind {
     Package,
+    Zip,
     Dll,
 }
 
@@ -271,6 +278,7 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
         true => LocalModKind::Package,
         false => match path.extension() {
             Some(ext) if ext == "dll" => LocalModKind::Dll,
+            Some(ext) if ext == "zip" => LocalModKind::Zip,
             _ => bail!("unsupported file type"),
         },
     };
@@ -279,6 +287,19 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
         LocalModKind::Package => path.join("manifest.json").exists_or_none().map(|path| {
             util::fs::read_json::<PackageManifest>(&path).context("failed to read mod manifest")
         }),
+        LocalModKind::Zip => Some(
+            util::fs::open_zip(path)
+                .context("failed to read zip package")
+                .and_then(|mut archive| {
+                    let manifest = archive
+                        .by_name("manifest.json")
+                        .context("failed to find mod manifest")?;
+                    let manifest = serde_json::from_reader::<_, PackageManifest>(manifest)
+                        .context("failed to read mod manifest")?;
+
+                    Ok(manifest)
+                }),
+        ),
         LocalModKind::Dll => None,
     }
     .transpose()?;
