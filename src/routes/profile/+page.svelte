@@ -248,10 +248,9 @@
 
 	<div slot="banner">
 		{#if unknownMods.length > 0}
-			<div class="flex items-center text-red-100 bg-red-600 mr-3 mb-1 pl-3 pr-2 py-1.5 rounded-lg">
+			<div class="flex items-center text-red-100 bg-red-600 mr-3 mb-1 pl-3 pr-1 py-1.5 rounded-lg">
 				<Icon icon="mdi:alert-circle" class="text-xl mr-2" />
-				Could not find <strong class="mx-1">{unknownMods.length}</strong>
-				{unknownMods.length === 1 ? 'mod' : 'mods'}: {unknownMods
+				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
 					.map((mod) => mod.name)
 					.join(', ')}.
 				<Button.Root
@@ -266,7 +265,7 @@
 		{/if}
 
 		{#if updates.length > $updateBannerThreshold}
-			<div class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-1 pl-3 pr-2 py-1 rounded-lg">
+			<div class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-1 pl-3 pr-1 py-1 rounded-lg">
 				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-2" />
 				There {updates.length === 1 ? 'is' : 'are'} <strong class="mx-1">{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.

@@ -163,11 +163,12 @@ pub fn query_profile(
 
     let profile = manager.active_profile();
     let (mods, unknown_mods) = profile.query_mods(&args, &thunderstore);
-    let updates = mods
+    let updates = profile
+        .mods
         .iter()
         .filter_map(|profile_mod| {
             profile
-                .check_update(&profile_mod.data.uuid, &thunderstore)
+                .check_update(profile_mod.uuid(), &thunderstore)
                 .transpose()
         })
         .map_ok(|update| {
@@ -180,7 +181,11 @@ pub fn query_profile(
             })
         })
         .flatten_ok()
-        .collect::<anyhow::Result<Vec<_>>>()?;
+        .collect::<anyhow::Result<Vec<_>>>()
+        .unwrap_or_else(|err| {
+            log::warn!("failed to check for updates: {:#}", err);
+            Vec::new()
+        });
 
     Ok(ProfileQuery {
         updates,
@@ -415,8 +420,8 @@ pub fn get_dependants(
     let dependants = manager
         .active_profile()
         .dependants(target, &thunderstore)
-        .map_ok(|borrowed| borrowed.version.full_name.to_owned())
-        .collect::<anyhow::Result<Vec<_>>>()?;
+        .map(|borrowed| borrowed.version.full_name.to_owned())
+        .collect();
 
     Ok(dependants)
 }
@@ -436,15 +441,14 @@ pub fn open_plugin_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()
     let manager = manager.lock().unwrap();
 
     let profile = manager.active_profile();
-    let full_name = profile.get_mod(&uuid)?.kind.full_name();
 
-    let path = profile.path.join("BepInEx").join("plugins").join(full_name);
+    profile.scan_mod(&profile.get_mod(&uuid)?.kind, |dir| {
+        if dir.exists() {
+            open::that(dir).context("failed to open directory")?;
+        }
 
-    if !path.exists() {
-        return Err(anyhow!("plugin directory not found").into());
-    }
-
-    open::that(path).context("failed to open directory")?;
+        Ok(())
+    })?;
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use std::fs::{self, DirEntry};
+use std::{fs::{self, DirEntry}, iter};
 
 use anyhow::{bail, Context, Result};
 use itertools::Itertools;
@@ -179,11 +179,14 @@ impl Profile {
         )
     }
 
-    fn find_snapshots(&self) -> Result<impl Iterator<Item = (DirEntry, semver::Version)>> {
+    fn find_snapshots(&self) -> Result<Box<dyn Iterator<Item = (DirEntry, semver::Version)>>> {
         let path = self.path.join("snapshots");
 
-        // find the latest snapshot that is below the given version
-        Ok(path
+        if !path.exists() {
+            return Ok(Box::new(iter::empty()));
+        }
+
+        let iter = path
             .read_dir()?
             .filter_map(|entry| entry.ok())
             .filter_map(|entry| {
@@ -202,7 +205,9 @@ impl Profile {
                         None
                     }
                 }
-            }))
+            });
+
+        Ok(Box::new(iter))
     }
 }
 

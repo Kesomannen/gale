@@ -52,7 +52,7 @@
 	>
 		<Button.Root class="flex items-center h-full font-semibold cursor-default" on:click={() => launchGame(false)}>
 			<Icon icon="mdi:play-circle" class="text-xl mr-2" />
-			Launch modded
+			Launch game
 		</Button.Root>
 	</div>
 

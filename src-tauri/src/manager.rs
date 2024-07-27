@@ -384,11 +384,11 @@ impl Profile {
         &'a self,
         target_mod: BorrowedMod<'a>,
         thunderstore: &'a Thunderstore,
-    ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
+    ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
         self.remote_mods()
             .filter(|(other, _, _)| other.package_uuid != target_mod.package.uuid4)
-            .map(|(other, _, _)| other.borrow(thunderstore))
-            .filter_map_ok(move |other| {
+            .filter_map(|(other, _, _)| other.borrow(thunderstore).ok())
+            .filter_map(move |other| {
                 let deps = thunderstore.dependencies(other.version).0;
                 match deps.iter().any(|dep| dep.package == target_mod.package) {
                     true => Some(other),
@@ -583,7 +583,6 @@ impl Profile {
     ) -> Option<Vec<Dependant>> {
         let dependants = self
             .dependants(borrowed_mod, thunderstore)
-            .filter_map(Result::ok) // ignore any missing deps
             .filter(|borrowed| {
                 !borrowed.package.is_modpack()
                     && self.get_mod(&borrowed.package.uuid4).unwrap().enabled

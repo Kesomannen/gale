@@ -9,11 +9,6 @@ default-run = "gale"
 edition = "2021"
 rust-version = "1.79"
 
-[lib]
-name = "gale_lib"
-path = "src/lib.rs"
-crate-type = ["staticlib", "cdylib", "rlib"]
-
 [[bin]]
 name = "gale"
 path = "src/main.rs"

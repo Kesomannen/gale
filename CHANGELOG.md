@@ -4,7 +4,7 @@
 
 ### Added
 
-- Simple CLI for choosing game, profile and launching through the command line
+- Simple CLI for choosing game, profile and launching games through the command line
 - Resizable text input and list editor for long config entries
 - Changelog field and automatic changelog generation in modpack exporter
 - More game icons ([#58](https://github.com/Kesomannen/gale/pull/58))
@@ -23,6 +23,7 @@
 - Crash when changing the version of certain mods
 - Dependencies not being installed when changing the version of a mod
 - Local mod icons not being displayed (finally)
+- "Failed to execute 'query_mods_in_profile'" error when viewing a profile with deleted mods
 
 ## 0.6.2 (2024-07-15)
 
