@@ -79,6 +79,7 @@ pub fn set_active_game(
     let game = games::from_id(id).context("invalid game id")?;
 
     manager.set_active_game(game, &mut thunderstore, &prefs, app)?;
+    save(&manager, &prefs)?;
 
     Ok(())
 }
@@ -132,6 +133,7 @@ pub fn set_active_profile(
         .active_game_mut()
         .set_active_profile(index, Some(&thunderstore))?;
     save(&manager, &prefs)?;
+
     Ok(())
 }
 

@@ -1,13 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 (2024-07-27)
 
 ### Added
 
 - Simple CLI for choosing game, profile and launching games through the command line
 - Resizable text input and list editor for long config entries
 - Changelog field and automatic changelog generation in modpack exporter
-- More game icons ([#58](https://github.com/Kesomannen/gale/pull/58))
+- More game icons ([#58](https://github.com/Kesomannen/gale/pull/58) and [#61](https://github.com/Kesomannen/gale/pull/61))
 - Local mod import from zip ([#57](https://github.com/Kesomannen/gale/pull/57))
 
 ### Changed
@@ -24,6 +24,7 @@
 - Dependencies not being installed when changing the version of a mod
 - Local mod icons not being displayed (finally)
 - "Failed to execute 'query_mods_in_profile'" error when viewing a profile with deleted mods
+- "Visiting" a new game and immediately switching back causing a "Failed to read game save data" on the next launch
 
 ## 0.6.2 (2024-07-15)
 
@@ -56,7 +57,7 @@
 
 ### Fixed
 
-- BepInEx/* directories in remote mods being installed at the wrong location
+- BepInEx/\* directories in remote mods being installed at the wrong location
 - Settings on the welcome page not working properly
 
 ## 0.6.0 (2024-07-02)
@@ -77,7 +78,7 @@
 - Filters not updating specifically for Risk of Rain 2
 - Trim whitespace around import codes and search queries
 - Allow enabling mods with missing dependencies
-- BepInEx/* directories in local mods being installed at the wrong location
+- BepInEx/\* directories in local mods being installed at the wrong location
 
 ## 0.5.8 (2024-06-26)
 
@@ -286,7 +287,7 @@
 
 ### Fixed
 
-- Auto updater not working (*not retroactive; you still need to manually update to this version*)
+- Auto updater not working (_not retroactive; you still need to manually update to this version_)
 - Improve performance for dependency trees
 - Improve performance of config parsing
 - Parsing config entries without a value
@@ -323,7 +324,7 @@
 
 ## 0.2.0 (2024-05-08)
 
-### Added 
+### Added
 
 - Proper logo & icons
 
@@ -332,7 +333,7 @@
 - Gale itself is now hidden in the mod list
 - Config entries are no longer required to be in the acceptable range
 
-### Fixed 
+### Fixed
 
 - Crash when opening on Linux (hopefully) (thanks testaccount666 on discord)
 - Screenshots in the Thunderstore README
