@@ -240,7 +240,6 @@ impl Prefs {
         };
 
         app.fs_scope().allow_directory(prefs.data_dir.get(), true);
-        app.asset_protocol_scope().allow_directory(prefs.data_dir.get(), true).ok();
         prefs.save()?;
 
         Ok(prefs)

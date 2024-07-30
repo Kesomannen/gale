@@ -2,23 +2,36 @@
 	import type { Mod } from '../models';
 	import Icon from '@iconify/svelte';
 	import { isOutdated } from '$lib/util';
-	import { activeGame } from '$lib/stores';
 	import { readFile } from '@tauri-apps/plugin-fs';
-	import { convertFileSrc } from '@tauri-apps/api/core';
+	import { activeGame } from '$lib/stores';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
 	export let showInstalledIcon: boolean;
 	export let draggable = false;
 
-	let img: HTMLImageElement;
-	let iconSrc: string;
+	let imgSrc: string;
 
 	$: {
 		if (mod.type === 'remote') {
-			iconSrc = mod.icon!;
+			imgSrc = mod.icon!;
 		} else {
-			iconSrc = mod.icon ? convertFileSrc(mod.icon) : 'games/' + $activeGame?.id + '.webp';
+			if (mod.icon) {
+				imgSrc = '';
+				loadLoadIcon(mod.icon);
+			} else {
+				imgSrc = `games/${$activeGame?.id}.webp`;
+			}
+		}
+	}
+
+	async function loadLoadIcon(path: string) {
+		try {
+			let data = await readFile(path);
+			let blob = new Blob([data], { type: 'image/png' });
+			imgSrc = URL.createObjectURL(blob);
+		} catch (e) {
+			console.error(e);
 		}
 	}
 </script>
@@ -35,7 +48,7 @@
 	on:dragend
 	{draggable}
 >
-	<img bind:this={img} src={iconSrc} alt={mod.name} class="w-12 h-12 rounded-md" />
+	<img src={imgSrc} alt={mod.name} class="w-12 h-12 rounded-md" />
 	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
 		<span
 			class="font-semibold {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"

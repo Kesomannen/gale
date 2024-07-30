@@ -14,12 +14,12 @@ name = "gale"
 path = "src/main.rs"
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-beta", features = [] }
+tauri-build = { version = "2.0.0-beta.19", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "2.0.0-beta", features = ["unstable", "protocol-asset"] }
+tauri = { version = "2.0.0-beta", features = ["unstable"] }
 tokio = { version = "1", features = ["full"] }
 
 anyhow = "1.0"
@@ -32,7 +32,7 @@ itertools = "0.13"
 zip = "0.6"
 futures-util = { version = "0.3", features = ["io"] }
 uuid = { version = "1.7", features = ["serde"] }
-reqwest =  { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
 walkdir = "2"
 typeshare = "1.0"
 image = "0.25"
@@ -67,9 +67,9 @@ webkit2gtk = "2.0.1"
 tauri-plugin-cli = "2.0.0-beta.8"
 
 [features]
-custom-protocol = [ "tauri/custom-protocol" ]
+custom-protocol = ["tauri/custom-protocol"]
 
 [profile.release]
-panic = "abort" # Strip expensive panic clean-up logic
+panic = "abort"   # Strip expensive panic clean-up logic
 codegen-units = 1 # Compile crates one after another so the compiler can optimize better
-strip = true # Remove debug symbols
+strip = true      # Remove debug symbols

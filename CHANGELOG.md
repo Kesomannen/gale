@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.7.0 (2024-07-27)
+## Unreleased
 
 ### Added
 
