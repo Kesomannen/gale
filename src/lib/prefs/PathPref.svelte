@@ -10,7 +10,7 @@
 	export let label: string;
 	export let type: 'dir' | 'file';
 	export let canClear: boolean = false;
-	
+
 	export let value: string | null;
 	export let set: (value: string | null) => void;
 
@@ -20,10 +20,8 @@
 			title: 'Select ' + sentenceCase(label),
 			directory: type === 'dir'
 		}).then(async (result) => {
-      		if (result === null) return;
-
-			value = result as string;
-			set(result as string);
+			if (result === null) return;
+			set(result.path);
 		});
 	}
 </script>

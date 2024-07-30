@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 (2024-07-30)
+
+### Fixed
+
+- "Invalid type: map ..." errors when importing profile from file and editing path settings
+
 ## 0.7.0 (2024-07-30)
 
 ### Added

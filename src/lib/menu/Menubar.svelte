@@ -60,13 +60,13 @@
 	}
 
 	async function importFile() {
-		let path = await open({
+		let response = await open({
 			title: 'Select the file to import',
 			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
 		});
 
-		if (!path) return;
-		let data = await invokeCommand<ImportData>('import_file', { path });
+		if (!response) return;
+		let data = await invokeCommand<ImportData>('import_file', { path: response.path });
 		importProfileData = data;
 		importProfileOpen = true;
 	}
@@ -93,7 +93,7 @@
 
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
 		profileOperation = operation;
-		profileOperationName = $activeProfile?.name ?? "Unknown";
+		profileOperationName = $activeProfile?.name ?? 'Unknown';
 		profileOperationOpen = true;
 	}
 
