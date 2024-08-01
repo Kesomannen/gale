@@ -28,13 +28,12 @@
 	});
 
 	function set<T>(update: (value: T, prefs: Prefs) => void) {
-		return (value: T) => {
+		return async (value: T) => {
 			if (prefs === null) return;
 
 			update(value, prefs);
 			prefs.gamePrefs.set(gameId, gamePrefs!);
-      console.log(prefs);
-			invokeCommand('set_prefs', { value: prefs });
+			await invokeCommand('set_prefs', { value: prefs });
 		};
 	}
 </script>

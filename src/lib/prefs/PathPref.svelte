@@ -12,7 +12,7 @@
 	export let canClear: boolean = false;
 
 	export let value: string | null;
-	export let set: (value: string | null) => void;
+	export let set: (value: string | null) => Promise<void>;
 
 	function browse() {
 		open({
@@ -21,7 +21,9 @@
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;
-			set(result.path);
+			let path = type === 'dir' ? (result as unknown as string) : result.path;
+			await set(path);
+			value = path;
 		});
 	}
 </script>

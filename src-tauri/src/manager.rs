@@ -10,6 +10,7 @@ use anyhow::{ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
+use log::warn;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
@@ -32,7 +33,6 @@ use crate::{
         fs::{JsonStyle, Overwrite, PathExt},
     },
 };
-use log::warn;
 
 pub mod commands;
 pub mod downloader;
@@ -214,7 +214,10 @@ impl ProfileModKind {
     pub fn name(&self) -> &str {
         match self {
             ProfileModKind::Local(local) => &local.name,
-            ProfileModKind::Remote { full_name, .. } => full_name.split_once('-').unwrap().1,
+            ProfileModKind::Remote { full_name, .. } => match full_name.split_once('-') {
+                Some((_, name)) => name,
+                None => full_name,
+            },
         }
     }
 }
@@ -799,8 +802,8 @@ impl ManagerGame {
                 game,
                 profiles,
                 path,
-                favorite: data.favorite,
                 active_profile_index,
+                favorite: data.favorite,
             },
         )))
     }

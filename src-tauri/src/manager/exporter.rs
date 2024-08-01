@@ -213,7 +213,11 @@ pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().is_file())
         .map(move |entry| entry.into_path().strip_prefix(root).unwrap().to_path_buf())
-        .filter(|path| !EXCLUDE_FILES.iter().any(|exc| path.starts_with(exc)))
+        .filter(|path| {
+            !EXCLUDE_FILES
+                .iter()
+                .any(|exc| path.starts_with(exc) || path.ends_with(exc))
+        })
         .filter(move |path| {
             path.starts_with(&config_dir)
                 || path

@@ -7,24 +7,24 @@
 	import { sentenceCase } from '$lib/util';
 
 	export let value: LaunchMode;
-	export let set: (value: LaunchMode) => void;
+	export let set: (value: LaunchMode) => Promise<void>;
 
 	let instances = value.content?.instances ?? 1;
 	let intervalSecs = value.content?.intervalSecs ?? 10;
 
-	function onSelectedChangeSingle(newValue: string) {
+	async function onSelectedChangeSingle(newValue: string) {
 		value.type = newValue as 'steam' | 'direct';
-		submit();
+		await submit();
 	}
 
-	function submit() {
+	async function submit() {
 		if (value.type === 'direct') {
 			value.content = { instances, intervalSecs };
 		} else {
 			value.content = undefined;
 		}
 
-		set(value);
+		await set(value);
 	}
 </script>
 
@@ -52,8 +52,7 @@
 
 <div class="flex items-center">
 	<Label text="Number of instances">
-		How many instances of the game to launch at once.
-		Only available in direct mode.
+		How many instances of the game to launch at once. Only available in direct mode.
 	</Label>
 
 	<InputField
@@ -68,8 +67,8 @@
 
 <div class="flex items-center">
 	<Label text="Interval between launches">
-		How many seconds to wait between launching each instance.
-		Only applicable in direct mode with multiple instances.
+		How many seconds to wait between launching each instance. Only applicable in direct mode with
+		multiple instances.
 	</Label>
 
 	<InputField

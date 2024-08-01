@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.2 (2024-08-01)
+
+### Changed
+
+- Switched UI font to a non-rounded version
+
+### Fixed
+
+- Crash when entering the config editor
+- Path settings not saving correctly
+- Decrease latency when moving data, temp or cache directories on the same volume
+- Auto updater not showing up (_not retroactive; you still need to manually update to this version_)
+- Additional files like mod manifests being included in file, code and modpack exports
+
 ## 0.7.1 (2024-07-30)
 
 ### Fixed

@@ -6,9 +6,11 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, ensure, Result};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
+use tauri_plugin_fs::FsExt;
 
 use crate::{
     logger,
@@ -19,7 +21,6 @@ use crate::{
         window::WindowExt,
     },
 };
-use tauri_plugin_fs::FsExt;
 
 pub mod commands;
 
@@ -56,54 +57,86 @@ impl DirPref {
         &self.value
     }
 
-    pub fn set(&mut self, value: PathBuf) -> Result<bool> {
-        if self.value == value {
+    pub fn set(&mut self, new_value: PathBuf) -> Result<bool> {
+        if self.value == new_value {
             return Ok(false);
         }
 
-        ensure!(value.is_dir(), "value is not a directory");
+        ensure!(new_value.is_dir(), "new value is not a directory");
         ensure!(
-            !value.starts_with(&self.value),
+            !new_value.starts_with(&self.value),
             "value cannot be a subdirectory of the current directory"
         );
+        ensure!(
+            new_value.read_dir()?.next().is_none(),
+            "new directory is not empty"
+        );
 
-        for entry in value.read_dir()? {
-            let entry = entry?;
+        debug!(
+            "attempting to rename directory: {} -> {}",
+            self.value.display(),
+            new_value.display()
+        );
 
-            if !self
-                .keep_files
-                .iter()
-                .any(|file| entry.file_name() == *file)
-            {
-                bail!("new directory is not empty");
+        // on windows fs::rename requires the target directory to not exist
+        #[cfg(windows)]
+        fs::remove_dir(&new_value)?;
+
+        match fs::rename(&self.value, &new_value) {
+            Ok(_) => {
+                debug!("renaming succeeded");
+
+                if !self.keep_files.is_empty() {
+                    // move files back to the original directory
+                    fs::create_dir_all(&self.value)?;
+
+                    for file in &self.keep_files {
+                        let moved_path = new_value.join(file);
+                        let original_path = self.value.join(file);
+
+                        if !moved_path.exists() {
+                            continue;
+                        }
+
+                        if moved_path.is_dir() {
+                            util::fs::copy_dir(&moved_path, &original_path, Overwrite::Yes)?;
+                        } else {
+                            fs::copy(&moved_path, &original_path)?;
+                        }
+                    }
+                }
             }
-        }
+            Err(err) => {
+                debug!("renaming failed, falling back to copying: {}", err);
 
-        for entry in self.value.read_dir()? {
-            let entry = entry?;
-            let file_name = entry.file_name();
+                fs::create_dir_all(&new_value)?;
 
-            if self.keep_files.iter().any(|file| file_name == *file) {
-                continue;
-            }
+                for entry in self.value.read_dir()? {
+                    let entry = entry?;
+                    let file_name = entry.file_name();
 
-            let old_path = entry.path();
-            let new_path = value.join(file_name);
+                    if self.keep_files.iter().any(|file| file_name == *file) {
+                        continue;
+                    }
 
-            // can't do fs::rename because it doesn't work across drives
-            if entry.file_type()?.is_dir() {
-                util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes)?;
-                fs::remove_dir_all(old_path)?;
-            } else {
-                fs::copy(&old_path, &new_path)?;
-                fs::remove_file(old_path)?;
+                    let old_path = entry.path();
+                    let new_path = new_value.join(file_name);
+
+                    if entry.file_type()?.is_dir() {
+                        util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes)?;
+                        fs::remove_dir_all(old_path)?;
+                    } else {
+                        fs::copy(&old_path, &new_path)?;
+                        fs::remove_file(old_path)?;
+                    }
+                }
             }
         }
 
         // remove only if empty
         fs::remove_dir(&self.value).ok();
 
-        self.value = value;
+        self.value = new_value;
 
         Ok(true)
     }
@@ -221,13 +254,18 @@ impl Prefs {
 
         let is_first_run = !path.exists();
         let prefs = match is_first_run {
-            true => Prefs {
-                is_first_run,
-                ..Default::default()
-            },
+            true => {
+                let prefs = Prefs {
+                    is_first_run,
+                    ..Default::default()
+                };
+
+                prefs.save()?;
+                prefs
+            }
             false => {
                 let mut prefs: Prefs = util::fs::read_json(&path).map_err(|err| {
-                    anyhow!("failed to read settings: {} (at {}). The file might be corrupted or too old to run with your version of Gale.", err, path.display())
+                    anyhow!("failed to read settings: {} (at {})\n\nThe file might be corrupted or too old to run with your version of Gale.", err, path.display())
                 })?;
 
                 prefs.data_dir.keep_files.extend(&["prefs.json", "logs"]);
@@ -240,7 +278,6 @@ impl Prefs {
         };
 
         app.fs_scope().allow_directory(prefs.data_dir.get(), true);
-        prefs.save()?;
 
         Ok(prefs)
     }
