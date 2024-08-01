@@ -11,13 +11,13 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            args: '--ci --verbose --target aarch64-apple-darwin'
+            args: '--target aarch64-apple-darwin'
           - platform: 'macos-latest'
-            args: '--ci --verbose --target x86_64-apple-darwin'
+            args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04'
-            args: '--ci --verbose'
+            args: ''
           - platform: 'windows-latest'
-            args: '--ci --verbose --bundles msi'
+            args: '--bundles msi'
 
     runs-on: ${{ matrix.platform }}
     steps:

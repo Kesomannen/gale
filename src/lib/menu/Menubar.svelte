@@ -190,9 +190,14 @@
 					>Report a bug</MenubarItem
 				>
 				<MenubarItem
-					on:click={() =>
-						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618')}
-					>Open discord thread</MenubarItem
+					on:click={() => {
+						shellOpen('https://discord.gg/lcmod');
+					}}>Join LC modding server</MenubarItem
+				>
+				<MenubarItem
+					on:click={() => {
+						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618');
+					}}>Open discord thread</MenubarItem
 				>
 			</Menubar.Content>
 		</Menubar.Menu>

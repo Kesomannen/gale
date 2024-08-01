@@ -185,7 +185,7 @@ impl Game {
 fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result<()> {
     let (enable_label, target_label) =
         match doorstop_version(path).context("failed to determine doorstop version")? {
-            3 => ("--dorstop-enable", "--doorstop-target"),
+            3 => ("--doorstop-enable", "--doorstop-target"),
             4 => ("--doorstop-enabled", "--doorstop-target-assembly"),
             vers => bail!("unsupported doorstop version: {}", vers),
         };

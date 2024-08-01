@@ -1,6 +1,7 @@
 use ::log::error;
 use anyhow::Context;
 use tauri::{AppHandle, Listener, Manager};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
 
 #[macro_use]
@@ -122,7 +123,7 @@ pub fn run() {
         .plugin(tauri_plugin_cli::init())
         .setup(|app| {
             let handle = app.handle().clone();
-            logger::setup(&handle).ok();
+            logger::setup().ok();
 
             if let Err(err) = setup(&handle) {
                 error!("failed to launch Gale! {:#}", err);
@@ -138,9 +139,18 @@ pub fn run() {
                 error!("failed to run CLI! {:#}", err);
             }
 
-            app.listen("deep-link://new-url", move |event| {
-                manager::downloader::handle_deep_link(&handle, event);
-            });
+            #[cfg(not(target_os = "macos"))] // deep link is unsupported on macOS
+            match app.deep_link().register("ror2mm") {
+                Ok(_) => {
+                    app.listen("deep-link://new-url", move |event| {
+                        log::debug!("received deep link event: {:?}", event);
+                        manager::downloader::handle_deep_link(&handle, event);
+                    });
+                }
+                Err(err) => {
+                    error!("failed to register deep link! {:#}", err);
+                }
+            }
 
             Ok(())
         })

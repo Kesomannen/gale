@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use log::LevelFilter;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
 use crate::util;
 use serde::Serialize;
@@ -29,12 +29,12 @@ pub fn log_js_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
         .ok();
 }
 
-fn log_path(app: &AppHandle) -> PathBuf {
-    app.path().app_log_dir().unwrap().join("log.log")
+fn log_path() -> PathBuf {
+    util::path::app_data_dir().join("latest.log")
 }
 
-pub fn setup(app: &AppHandle) -> Result<()> {
-    let path = log_path(app);
+pub fn setup() -> Result<()> {
+    let path = log_path();
     fs::create_dir_all(path.parent().unwrap()).context("failed to create log directory")?;
     let log_file = File::create(path).context("failed to create log file")?;
 
@@ -57,12 +57,12 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn open_gale_log(app: AppHandle) -> util::cmd::Result<()> {
-    let path = log_path(&app);
+pub fn open_gale_log() -> util::cmd::Result<()> {
+    let path = log_path();
     if !path.exists() {
         return Err(anyhow!("no log file found").into());
     }
-    open::that(&path).context("failed to open log file")?;
+    open::that_detached(&path).context("failed to open log file")?;
     Ok(())
 }
 
