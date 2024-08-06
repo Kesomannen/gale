@@ -139,6 +139,8 @@
 				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: false })}
 					>Clear all cached mods</MenubarItem
 				>
+				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')}>Fetch mods</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>

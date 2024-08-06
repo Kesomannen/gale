@@ -1,5 +1,6 @@
 use anyhow::Result;
 use keyring::Entry;
+use log::info;
 
 lazy_static! {
     static ref ENTRY: keyring::Entry =
@@ -15,11 +16,13 @@ pub fn get() -> Result<Option<String>> {
 }
 
 pub fn set(token: &str) -> Result<()> {
+    info!("setting thunderstore token");
     ENTRY.set_password(token)?;
     Ok(())
 }
 
 pub fn clear() -> Result<()> {
+    info!("deleting thunderstore token");
     match ENTRY.delete_credential() {
         Ok(()) => Ok(()),
         Err(keyring::Error::NoEntry) => Ok(()),

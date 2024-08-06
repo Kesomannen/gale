@@ -291,7 +291,7 @@ async fn wait_for_mods(app: &AppHandle) {
     loop {
         {
             let thunderstore = thunderstore.lock().unwrap();
-            if thunderstore.finished_loading {
+            if thunderstore.packages_fetched {
                 return;
             }
         }

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Option to disable automatic thunderstore fetching
+
 ### Fixed
 
 - Open gale log button not working

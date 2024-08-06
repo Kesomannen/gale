@@ -1,10 +1,16 @@
-use crate::util::cmd::{Result, StateMutex};
+use crate::{
+    logger,
+    manager::ModManager,
+    util::cmd::{Result, StateMutex},
+};
 
 use super::{
     models::FrontendMod,
     query::{self, QueryModsArgs, QueryState},
     ModRef, Thunderstore,
 };
+use anyhow::anyhow;
+use tauri::AppHandle;
 
 #[tauri::command]
 pub fn query_thunderstore(
@@ -18,7 +24,7 @@ pub fn query_thunderstore(
 
     let result = query::query_frontend_mods(&args, thunderstore.latest());
 
-    if !thunderstore.finished_loading {
+    if !thunderstore.packages_fetched {
         let mut state = state.lock().unwrap();
         state.current_query = Some(args);
     }
@@ -36,6 +42,30 @@ pub fn query_thunderstore(
 pub fn stop_querying_thunderstore(state: StateMutex<QueryState>) {
     let mut state = state.lock().unwrap();
     state.current_query = None;
+}
+
+#[tauri::command]
+pub fn trigger_mod_fetching(
+    app: AppHandle,
+    state: StateMutex<Thunderstore>,
+    manager: StateMutex<ModManager>,
+) -> Result<()> {
+    let state = state.lock().unwrap();
+
+    if state.is_fetching {
+        return Err(anyhow!("already fetching mods").into());
+    }
+
+    let write_directly = !state.packages_fetched;
+    let game = manager.lock().unwrap().active_game;
+
+    tauri::async_runtime::spawn(async move {
+        if let Err(err) = super::fetch_mods(&app, game, write_directly).await {
+            logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
+        }
+    });
+
+    Ok(())
 }
 
 #[tauri::command]

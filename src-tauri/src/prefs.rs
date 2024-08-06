@@ -190,6 +190,8 @@ pub struct Prefs {
 
     #[serde(alias = "enable_mod_cache")]
     enable_mod_cache: bool,
+    fetch_mods_automatically: bool,
+
     #[serde(alias = "zoom_factor")]
     zoom_factor: f32,
 
@@ -236,6 +238,8 @@ impl Default for Prefs {
             temp_dir: util::path::app_cache_dir().join("temp").into(),
 
             enable_mod_cache: true,
+            fetch_mods_automatically: true,
+
             zoom_factor: 1.0,
 
             game_prefs: HashMap::new(),
@@ -320,6 +324,7 @@ impl Prefs {
             fs::create_dir_all(&self.cache_dir)?;
         }
         self.enable_mod_cache = value.enable_mod_cache;
+        self.fetch_mods_automatically = value.fetch_mods_automatically;
 
         self.save()?;
         Ok(())
@@ -327,5 +332,9 @@ impl Prefs {
 
     pub fn mod_cache_enabled(&self) -> bool {
         self.enable_mod_cache
+    }
+
+    pub fn fetch_mods_automatically(&self) -> bool {
+        self.fetch_mods_automatically
     }
 }

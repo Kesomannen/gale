@@ -5,28 +5,21 @@
     "main"
   ],
   "permissions": [
-    "path:default",
-    "event:default",
-    "window:default",
-    "window:allow-close",
-    "window:allow-toggle-maximize",
-    "window:allow-minimize",
-    "window:allow-start-dragging",
+    "core:default",
+    "core:window:allow-close",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-start-dragging",
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-read-text",
-    "app:default",
-    "resources:default",
-    "menu:default",
-    "tray:default",
     "deep-link:default",
-    "http:allow-fetch",
-    "http:default",
-    "updater:allow-check",
     "updater:default",
+    "updater:allow-check",
     "dialog:default",
     "shell:default",
-    "cli:default",
     "fs:default",
+    "http:default",
+    "http:allow-fetch",
     {
       "identifier": "http:default",
       "allow": [
@@ -34,7 +27,7 @@
           "url": "https://thunderstore.io/api/*"
         },
         {
-          "url": "https://raw.githubusercontent.com/Kesomannen/gale/master/CHANGELOG.md"
+          "url": "https://raw.githubusercontent.com/Kesomannen/gale/master/*"
         }
       ],
       "deny": []

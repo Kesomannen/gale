@@ -210,7 +210,7 @@ export interface FiltersResponse {
 
 export type LaunchMode =
 	| { type: 'steam'; content?: undefined }
-	| { type: 'direct'; content: { instances: number, intervalSecs: number } };
+	| { type: 'direct'; content: { instances: number; intervalSecs: number } };
 
 export interface AvailableUpdate {
 	name: string;
@@ -234,9 +234,9 @@ export interface ImportData {
 		modRef: {
 			packageUuid: string;
 			versionUuid: string;
-		}
-    	enabled: boolean;
-    	index?: number;
+		};
+		enabled: boolean;
+		index?: number;
 	}[];
 }
 
@@ -265,11 +265,12 @@ export interface Prefs {
 	cacheDir: string;
 	tempDir: string;
 	enableModCache: boolean;
+	fetchModsAutomatically: boolean;
 	zoomFactor: number;
 	gamePrefs: Map<string, GamePrefs>;
 }
 
 export interface GamePrefs {
-	dirOverride?: string,
+	dirOverride?: string;
 	launchMode: LaunchMode;
 }

@@ -1,7 +1,6 @@
 use ::log::error;
 use anyhow::Context;
 use tauri::{AppHandle, Listener, Manager};
-use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
 
 #[macro_use]
@@ -14,7 +13,6 @@ extern crate webkit2gtk;
 #[macro_use]
 extern crate objc;
 
-mod cli;
 mod config;
 mod games;
 mod logger;
@@ -58,6 +56,7 @@ pub fn run() {
             thunderstore::commands::set_thunderstore_token,
             thunderstore::commands::has_thunderstore_token,
             thunderstore::commands::clear_thunderstore_token,
+            thunderstore::commands::trigger_mod_fetching,
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
             prefs::commands::is_first_run,
@@ -120,7 +119,6 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_cli::init())
         .setup(|app| {
             let handle = app.handle().clone();
             logger::setup().ok();
@@ -135,22 +133,16 @@ pub fn run() {
                 return Err(err.into());
             }
 
+            /*
             if let Err(err) = cli::run(app) {
                 error!("failed to run CLI! {:#}", err);
             }
+            */
 
-            #[cfg(not(target_os = "macos"))] // deep link is unsupported on macOS
-            match app.deep_link().register("ror2mm") {
-                Ok(_) => {
-                    app.listen("deep-link://new-url", move |event| {
-                        log::debug!("received deep link event: {:?}", event);
-                        manager::downloader::handle_deep_link(&handle, event);
-                    });
-                }
-                Err(err) => {
-                    error!("failed to register deep link! {:#}", err);
-                }
-            }
+            app.listen("deep-link://new-url", move |event| {
+                log::debug!("received deep link event: {:?}", event);
+                manager::downloader::handle_deep_link(&handle, event);
+            });
 
             Ok(())
         })

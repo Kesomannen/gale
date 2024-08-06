@@ -143,7 +143,7 @@ impl Profile {
 }
 
 fn write_icon(path: &Path, zip: &mut util::zip::ZipBuilder) -> anyhow::Result<()> {
-    let img = image::io::Reader::open(path)?.decode()?;
+    let img = image::ImageReader::open(path)?.decode()?;
     let img = img.resize_exact(256, 256, FilterType::Lanczos3);
 
     let mut bytes = Vec::new();

@@ -78,7 +78,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
                 let mods = query_frontend_mods(args, thunderstore.latest());
                 app.emit("mod_query_result", &mods)?;
 
-                if thunderstore.finished_loading {
+                if thunderstore.packages_fetched {
                     state.current_query = None;
                 }
             }

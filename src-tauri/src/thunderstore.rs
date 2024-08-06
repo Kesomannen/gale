@@ -17,6 +17,7 @@ use crate::{
     games::Game,
     logger,
     manager::ModManager,
+    prefs::Prefs,
     util::{self, fs::JsonStyle},
     NetworkClient,
 };
@@ -120,7 +121,8 @@ pub fn parse_mod_ident(identifier: &str, delimeter: char) -> Result<(String, &st
 #[derive(Default)]
 pub struct Thunderstore {
     pub load_mods_handle: Option<JoinHandle<()>>,
-    pub finished_loading: bool,
+    pub packages_fetched: bool,
+    pub is_fetching: bool,
     // IndexMap is not used for ordering here, but for fast iteration,
     // since we iterate over all mods when querying and resolving dependencies
     pub packages: IndexMap<Uuid, PackageListing>,
@@ -132,7 +134,7 @@ impl Thunderstore {
             handle.abort();
         }
 
-        self.finished_loading = false;
+        self.packages_fetched = false;
         self.packages = IndexMap::new();
 
         let load_mods_handle = tauri::async_runtime::spawn(load_mods_loop(app, game));
@@ -243,6 +245,7 @@ const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let manager = app.state::<Mutex<ModManager>>();
     let thunderstore = app.state::<Mutex<Thunderstore>>();
+    let prefs = app.state::<Mutex<Prefs>>();
 
     {
         let manager = manager.lock().unwrap();
@@ -262,28 +265,37 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
 
     let mut is_first = true;
     loop {
-        if let Err(err) = load_mods(&app, game, is_first).await {
-            logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
-        } else {
-            is_first = false;
+        let fetch_automatically = prefs.lock().unwrap().fetch_mods_automatically();
+        // this could happen if the user manually triggers a fetch, 
+        // or the fetch is still ongoing from the last loop
+        let is_fetching = thunderstore.lock().unwrap().is_fetching; 
 
-            // REMOVE IN THE FUTURE!
-            let mut manager = manager.lock().unwrap();
-            let thunderstore = thunderstore.lock().unwrap();
+        if fetch_automatically && !is_fetching {
+            if let Err(err) = fetch_mods(&app, game, is_first).await {
+                logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
+            } else {
+                is_first = false;
 
-            manager.fill_profile_mod_names(&thunderstore);
+                // REMOVE IN THE FUTURE!
+                let mut manager = manager.lock().unwrap();
+                let thunderstore = thunderstore.lock().unwrap();
+
+                manager.fill_profile_mod_names(&thunderstore);
+            }
         }
 
         tokio::time::sleep(TIME_BETWEEN_LOADS).await;
     }
 }
 
-async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
+async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
     const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
     const UPDATE_INTERVAL: Duration = Duration::from_millis(500);
 
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
+
+    state.lock().unwrap().is_fetching = true;
 
     let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.id);
     let mut response = client.get(url).send().await?.error_for_status()?;
@@ -355,7 +367,8 @@ async fn load_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -
         state.packages = package_buffer;
     }
 
-    state.finished_loading = true;
+    state.packages_fetched = true;
+    state.is_fetching = false;
 
     debug!(
         "loaded {} mods in {:?}",
