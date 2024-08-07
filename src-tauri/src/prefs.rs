@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    env, fs,
+    fs,
     ops::Deref,
     path::{Path, PathBuf},
     sync::Mutex,
@@ -205,25 +205,61 @@ pub struct GamePrefs {
     pub launch_mode: LaunchMode,
 }
 
+#[cfg(windows)]
+fn read_steam_registry() -> Result<PathBuf> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
+
+    let path: String = key.get_value("InstallPath")?;
+    Ok(PathBuf::from(path))
+}
+
+fn default_steam_exe_path() -> PathBuf {
+    #[cfg(windows)]
+    {
+        match read_steam_registry() {
+            Ok(path) => path.join("Steam.exe"),
+            _ => r"C:\Program Files (x86)\Steam\Steam.exe".into(),
+        }
+    }
+
+    #[cfg(macos)]
+    {
+        "/Applications/Steam.app/Contents/MacOS/Steam".into()
+    }
+
+    #[cfg(linux)]
+    {
+        "/usr/bin/steam".into()
+    }
+}
+
+fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
+    #[cfg(windows)]
+    {
+        exe_path.and_then(|exe| exe.parent().map(|parent| parent.to_path_buf()))
+    }
+
+    #[cfg(macos)]
+    {
+        Some("~/Library/Application Support/Steam".into())
+    }
+
+    #[cfg(linux)]
+    {
+        dirs_next::data_dir().map(|data_dir| data_dir.join("Steam"))
+    }
+}
+
 impl Default for Prefs {
     fn default() -> Self {
-        let steam_exe_path = PathBuf::from(match env::consts::OS {
-            "windows" => r"C:\Program Files (x86)\Steam\steam.exe",
-            "macos" => "/Applications/Steam.app/Contents/MacOS/Steam",
-            "linux" => "/usr/bin/steam",
-            _ => "",
-        })
-        .exists_or_none();
+        let steam_exe_path = default_steam_exe_path().exists_or_none();
 
-        let steam_library_dir = match env::consts::OS {
-            "windows" => steam_exe_path
-                .as_ref()
-                .and_then(|exe| exe.parent().map(|parent| parent.to_path_buf())),
-            "macos" => Some("~/Library/Application Support/Steam/steamapps/common".into()),
-            "linux" => dirs_next::data_dir().map(|data_dir| data_dir.join("Steam")),
-            _ => None,
-        }
-        .and_then(|path| path.exists_or_none());
+        let steam_library_dir = default_steam_library_dir(steam_exe_path.as_deref())
+            .and_then(|path| path.exists_or_none());
 
         Self {
             is_first_run: false,

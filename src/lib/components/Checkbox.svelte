@@ -4,6 +4,10 @@
 
 	export let value: boolean = false;
 	export let onValueChanged: (newValue: boolean) => void = () => {};
+
+	let className = '';
+
+	export { className as class };
 </script>
 
 <Checkbox.Root
@@ -14,7 +18,7 @@
 	}}
 >
 	<Checkbox.Indicator
-		class="rounded-md w-6 h-6 p-1 
+		class="rounded-md w-6 h-6 p-1 {className}
           bg-{value ? 'green-700' : 'gray-800'}
           hover:bg-{value ? 'green-600' : 'gray-700'}
           {!value && 'border border-gray-500'}"

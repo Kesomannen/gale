@@ -2,6 +2,7 @@
 	import { activeGame } from '$lib/stores';
 
 	export let fullName: string;
+	export let showVersion = true;
 
 	$: split = fullName.split('-');
 	$: author = split[0];
@@ -23,9 +24,11 @@
 		>
 			{name}
 		</a>
-		<span class="px-1 text-slate-400">
-			{version}
-		</span>
+		{#if showVersion}
+			<span class="px-1 text-slate-400">
+				{version}
+			</span>
+		{/if}
 		<a
 			class="truncate text-slate-400 hover:underline block"
 			href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/"

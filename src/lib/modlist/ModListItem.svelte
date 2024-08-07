@@ -7,7 +7,6 @@
 
 	export let mod: Mod;
 	export let isSelected: boolean;
-	export let showInstalledIcon: boolean;
 	export let draggable = false;
 
 	let imgSrc: string;
@@ -62,8 +61,8 @@
 		>
 			{mod.version ?? ''}
 		</span>
-		{#if false && showInstalledIcon}
-			<Icon class="text-green-500 inline mb-1" icon="mdi:check" />
+		{#if mod.isPinned}
+			<Icon class="text-slate-400 inline mb-1" icon="mdi:pin" />
 		{/if}
 		{#if mod.isDeprecated}
 			<Icon class="text-red-500 inline mb-1" icon="mdi:error" />

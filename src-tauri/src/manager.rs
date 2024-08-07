@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
     sync::Mutex,
@@ -264,8 +264,8 @@ impl<'a> Queryable for QueryableProfileMod<'a> {
         match (&self.kind, &other.kind) {
             (Kind::Remote(a), Kind::Remote(b)) => a.cmp(b, args),
             (Kind::Local(a), Kind::Local(b)) => a.cmp(b, args),
-            (Kind::Local(_), _) => Ordering::Greater,
-            (_, Kind::Local(_)) => Ordering::Less,
+            (Kind::Local(_), _) => Ordering::Less,
+            (_, Kind::Local(_)) => Ordering::Greater,
         }
     }
 }
@@ -281,12 +281,15 @@ pub struct ProfileManifest {
     mods: Vec<ProfileMod>,
     #[serde(default)]
     modpack: Option<ModpackArgs>,
+    #[serde(default)]
+    ignored_updates: HashSet<Uuid>,
 }
 
 pub struct Profile {
     pub name: String,
     pub path: PathBuf,
     pub mods: Vec<ProfileMod>,
+    pub ignored_updates: HashSet<Uuid>,
     pub config: Vec<config::LoadFileResult>,
     pub linked_config: HashMap<Uuid, String>,
     pub modpack: Option<ModpackArgs>,
@@ -338,6 +341,7 @@ impl Profile {
         ProfileManifest {
             modpack: self.modpack.clone(),
             mods: self.mods.clone(),
+            ignored_updates: self.ignored_updates.clone(),
         }
     }
 
@@ -422,6 +426,7 @@ impl Profile {
             mods: manifest.mods,
             linked_config: HashMap::new(),
             config: Vec::new(),
+            ignored_updates: manifest.ignored_updates,
             path,
         };
 
@@ -681,6 +686,7 @@ impl ManagerGame {
             mods: Vec::new(),
             config: Vec::new(),
             linked_config: HashMap::new(),
+            ignored_updates: HashSet::new(),
             modpack: None,
         };
         self.profiles.push(profile);

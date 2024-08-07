@@ -140,8 +140,10 @@ pub fn set_active_profile(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FrontendAvailableUpdate {
-    pub name: String,
-    pub uuid: Uuid,
+    pub full_name: String,
+    pub ignore: bool,
+    pub package_uuid: Uuid,
+    pub version_uuid: Uuid,
     pub old: semver::Version,
     pub new: semver::Version,
 }
@@ -170,16 +172,19 @@ pub fn query_profile(
         .iter()
         .filter_map(|profile_mod| {
             profile
-                .check_update(profile_mod.uuid(), &thunderstore)
+                .check_update(profile_mod.uuid(), false, &thunderstore)
                 .transpose()
         })
         .map_ok(|update| {
-            let borrow = update.mod_ref.borrow(&thunderstore)?;
+            let ignore = profile.ignored_updates.contains(&update.latest.uuid4);
+
             Ok::<_, anyhow::Error>(FrontendAvailableUpdate {
-                name: borrow.package.name.clone(),
-                uuid: borrow.package.uuid4,
-                old: update.current_num.clone(),
-                new: update.latest.version.version_number.clone(),
+                full_name: update.latest.full_name.clone(),
+                package_uuid: update.package.uuid4,
+                version_uuid: update.latest.uuid4,
+                old: update.current.version_number.clone(),
+                new: update.latest.version_number.clone(),
+                ignore,
             })
         })
         .flatten_ok()

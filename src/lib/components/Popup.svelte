@@ -53,7 +53,7 @@
 		>
 			<div
 				class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden max-h-[90%] pointer-events-auto
-							min-w-[40rem] w-fit max-w-{maxWidth ?? "[85%]"} relative"
+							min-w-[40rem] xl:min-w-[55rem] w-fit max-w-{maxWidth ?? '[85%]'} relative"
 			>
 				{#if canClose}
 					<Button.Root

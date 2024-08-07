@@ -134,17 +134,24 @@ impl Queryable for BorrowedMod<'_> {
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
         let (a, b) = (self.package, other.package);
 
-        match args.sort_by {
-            SortBy::Newest => a.date_created.cmp(&b.date_created),
-            SortBy::Name => b.name.cmp(&a.name),
-            SortBy::Author => b.full_name.cmp(&a.full_name),
-            SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
-            SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
-            SortBy::Rating => a.rating_score.cmp(&b.rating_score),
-            SortBy::DiskSpace => self.version.file_size.cmp(&other.version.file_size),
-            SortBy::InstallDate => Ordering::Equal,
-            SortBy::Custom => Ordering::Equal,
-        }
+        b.is_pinned.cmp(&a.is_pinned).then_with(|| {
+            let order = match args.sort_by {
+                SortBy::Newest => a.date_created.cmp(&b.date_created),
+                SortBy::Name => b.name.cmp(&a.name),
+                SortBy::Author => b.full_name.cmp(&a.full_name),
+                SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
+                SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
+                SortBy::Rating => a.rating_score.cmp(&b.rating_score),
+                SortBy::DiskSpace => self.version.file_size.cmp(&other.version.file_size),
+                SortBy::InstallDate => Ordering::Equal,
+                SortBy::Custom => Ordering::Equal,
+            };
+
+            match args.sort_order {
+                SortOrder::Ascending => order,
+                SortOrder::Descending => order.reverse(),
+            }
+        })
     }
 }
 
@@ -199,7 +206,7 @@ impl Queryable for LocalMod {
     }
 
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
-        match args.sort_by {
+        let order = match args.sort_by {
             SortBy::Name => other.name.cmp(&self.name),
             SortBy::Author => match (&other.author, &self.author) {
                 (Some(a), Some(b)) => a.cmp(b),
@@ -208,6 +215,11 @@ impl Queryable for LocalMod {
                 (None, None) => Ordering::Equal,
             },
             _ => Ordering::Equal,
+        };
+
+        match args.sort_order {
+            SortOrder::Ascending => order,
+            SortOrder::Descending => order.reverse(),
         }
     }
 }
@@ -243,6 +255,7 @@ where
     let search_terms = args.search_term.as_ref().map(|str| {
         let full = str.to_lowercase().trim().to_owned();
         let package = full.replace(' ', "_");
+        // search for packages with underscores and descriptions with spaces
         (full, package)
     });
 
@@ -267,10 +280,7 @@ where
         })
         .collect_vec();
 
-    result.sort_by(|a, b| match args.sort_order {
-        SortOrder::Ascending => a.cmp(b, args),
-        SortOrder::Descending => b.cmp(a, args),
-    });
+    result.sort_by(|a, b| a.cmp(b, args));
 
     result.into_iter().take(args.max_count)
 }

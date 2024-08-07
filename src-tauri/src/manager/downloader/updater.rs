@@ -1,28 +1,36 @@
+use itertools::Itertools;
+use std::sync::Mutex;
+use tauri::Manager;
 use uuid::Uuid;
 
 use super::{install_with_deps, InstallOptions, ModInstall};
 use crate::{
     manager::{ModManager, Profile, Result},
-    thunderstore::{BorrowedMod, ModRef, Thunderstore},
+    thunderstore::{
+        models::{PackageListing, PackageVersion},
+        ModRef, Thunderstore,
+    },
 };
-use anyhow::Context;
-use itertools::Itertools;
-use std::sync::Mutex;
-use tauri::Manager;
+use log::info;
 
 pub mod commands;
 
 pub struct AvailableUpdate<'a> {
-    pub mod_ref: &'a ModRef,
     pub enabled: bool,
     pub index: usize,
-    pub current_num: &'a semver::Version,
-    pub latest: BorrowedMod<'a>,
+    pub package: &'a PackageListing,
+    pub current: &'a PackageVersion,
+    pub latest: &'a PackageVersion,
 }
 
 impl From<AvailableUpdate<'_>> for ModInstall {
     fn from(value: AvailableUpdate<'_>) -> Self {
-        ModInstall::new(value.latest.reference())
+        let latest_mod_ref = ModRef {
+            package_uuid: value.package.uuid4,
+            version_uuid: value.latest.uuid4,
+        };
+
+        ModInstall::new(latest_mod_ref)
             .with_state(value.enabled)
             .at(value.index)
     }
@@ -32,37 +40,38 @@ impl Profile {
     pub fn check_update<'a>(
         &'a self,
         uuid: &Uuid,
+        respect_ignored: bool,
         thunderstore: &'a Thunderstore,
     ) -> Result<Option<AvailableUpdate<'a>>> {
         let index = self.index_of(uuid)?;
 
         let (mod_ref, _, enabled) = match self.mods[index].as_remote() {
             Some(x) => x,
-            None => return Ok(None),
+            None => return Ok(None), // local mods can't be updated
         };
 
-        let installed_vers = &mod_ref.borrow(thunderstore)?.version.version_number;
+        let current = mod_ref.borrow(thunderstore)?.version;
+        let package = thunderstore.get_package(uuid)?;
 
-        let latest = thunderstore.get_package(uuid)?;
-
-        let latest_version = latest
+        let latest = package
             .versions
             .first()
-            .context("package should have at least one version")?;
+            .expect("package should have at least one version");
 
-        if installed_vers >= &latest_version.version_number {
+        if current.version_number >= latest.version_number {
+            return Ok(None);
+        }
+
+        if respect_ignored && self.ignored_updates.contains(uuid) {
             return Ok(None);
         }
 
         Ok(Some(AvailableUpdate {
             index,
-            mod_ref,
             enabled,
-            current_num: installed_vers,
-            latest: BorrowedMod {
-                package: latest,
-                version: latest_version,
-            },
+            package,
+            current,
+            latest,
         }))
     }
 }
@@ -90,7 +99,13 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
     .await
 }
 
-pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
+pub async fn update_mods(
+    uuids: &[Uuid],
+    respect_ignored: bool,
+    app: &tauri::AppHandle,
+) -> Result<()> {
+    info!("updating {} mods", uuids.len());
+
     let to_update = {
         let manager = app.state::<Mutex<ModManager>>();
         let thunderstore = app.state::<Mutex<Thunderstore>>();
@@ -102,7 +117,11 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
 
         uuids
             .iter()
-            .filter_map(|uuid| profile.check_update(uuid, &thunderstore).transpose())
+            .filter_map(|uuid| {
+                profile
+                    .check_update(uuid, respect_ignored, &thunderstore)
+                    .transpose()
+            })
             .map_ok(|update| update.into())
             .collect::<Result<Vec<ModInstall>>>()?
     };
@@ -110,6 +129,7 @@ pub async fn update_mods(uuids: &[Uuid], app: &tauri::AppHandle) -> Result<()> {
     install_with_deps(
         to_update,
         InstallOptions::default().before_install(|install, manager, _| {
+            // remove the old version
             manager
                 .active_profile_mut()
                 .force_remove_mod(install.uuid())

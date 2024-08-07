@@ -28,6 +28,9 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import { onMount } from 'svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
+	import ModCard from '$lib/modlist/ModCard.svelte';
+	import Checklist from '$lib/components/Checklist.svelte';
+	import Tooltip from '$lib/components/Tooltip.svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -43,7 +46,7 @@
 
 	let mods: Mod[] = [];
 	let unknownMods: Dependant[] = [];
-	let updates: AvailableUpdate[] = [];
+	let allUpdates: AvailableUpdate[] = [];
 	let activeMod: Mod | undefined;
 
 	let removeDependants: DependantsPopup;
@@ -53,6 +56,10 @@
 	let updateAllOpen = false;
 	let dependantsOpen = false;
 	let dependants: string[] | null;
+
+	let includeUpdates: Map<AvailableUpdate, boolean> = new Map();
+
+	$: updates = allUpdates.filter((update) => !update.ignore);
 
 	$: {
 		$activeProfile;
@@ -90,7 +97,7 @@
 		let result = await invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery });
 		mods = result.mods;
 		unknownMods = result.unknownMods;
-		updates = result.updates;
+		allUpdates = result.updates;
 	}
 
 	async function toggleMod(enable: boolean, mod: Mod) {
@@ -162,7 +169,17 @@
 	async function updateActiveMod(version: 'latest' | { specific: string }) {
 		if (!activeMod) return;
 
-		await invokeCommand('update_mod', { uuid: activeMod.uuid, version });
+		if (version === 'latest') {
+			await invokeCommand('update_mods', { uuids: [activeMod.uuid], respectIgnored: false });
+		} else {
+			await invokeCommand('change_mod_version', {
+				modRef: {
+					packageUuid: activeMod.uuid,
+					versionUuid: version.specific
+				}
+			});
+		}
+
 		await refresh();
 
 		activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid);
@@ -265,12 +282,15 @@
 		{/if}
 
 		{#if updates.length > $updateBannerThreshold}
-			<div class="flex items-center text-blue-100 bg-blue-600 mr-3 mb-1 pl-3 pr-1 py-1 rounded-lg">
+			<div
+				class="flex items-center text-green-100 bg-green-700 mr-3 mb-1 pl-3 pr-1 py-1 rounded-lg"
+			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-2" />
-				There {updates.length === 1 ? 'is' : 'are'} <strong class="mx-1">{updates.length}</strong>
+				There {updates.length === 1 ? 'is' : 'are'}
+				<strong class="mx-1">{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.
 				<Button.Root
-					class="hover:underline hover:text-blue-100 text-white font-semibold ml-1"
+					class="hover:underline hover:text-green-200 text-white font-semibold ml-1"
 					on:click={() => {
 						updateAllOpen = true;
 					}}
@@ -279,7 +299,7 @@
 				</Button.Root>
 
 				<Button.Root
-					class="ml-auto rounded-md text-xl hover:bg-blue-500 p-1"
+					class="ml-auto rounded-md text-xl hover:bg-green-600 p-1"
 					on:click={() => ($updateBannerThreshold = updates.length)}
 				>
 					<Icon icon="mdi:close" />
@@ -316,29 +336,54 @@
 </ModList>
 
 <ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
-	The following mods will be updated:
+	Select which mods to update:
 
-	<ul class="mt-2">
-		{#each updates as update}
-			<li>
-				-
-				<span class="text-slate-300">{update.name}</span>
-				<span class="text-slate-400 text-light">{update.old} > </span>
-				<span class="text-blue-200 font-medium">{update.new}</span>
-			</li>
-		{/each}
-	</ul>
+	<Checklist
+		title="Update all"
+		set={(update, _, value) => {
+			includeUpdates.set(update, value);
+			includeUpdates = includeUpdates; // force reactivity
+		}}
+		get={(update, _) => includeUpdates.get(update) ?? true}
+		items={updates}
+		let:item
+		class="mt-1 overflow-y-auto"
+	>
+		<ModCard fullName={item.fullName} showVersion={false} />
+
+		<span class="text-slate-400 text-light ml-auto">{item.old}</span>
+		<Icon icon="mdi:arrow-right" class="text-slate-400 text-lg mx-1.5" />
+		<span class="text-green-400 font-semibold text-lg">{item.new}</span>
+
+		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
+			<Button.Root
+				class="ml-2 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-gray-700 rounded"
+				on:click={() => {
+					item.ignore = true;
+					allUpdates = allUpdates; // force reactivity
+
+					includeUpdates.delete(item);
+					includeUpdates = includeUpdates; // force reactivity
+					invokeCommand('ignore_update', { versionUuid: item.versionUuid });
+				}}><Icon icon="mdi:notifications-off" /></Button.Root
+			>
+		</Tooltip>
+	</Checklist>
 
 	<svelte:fragment slot="buttons">
 		<BigButton
-			color="blue"
+			color="green"
 			fontWeight="semibold"
 			on:click={() => {
-				invokeCommand('update_all').then(refresh);
+				let uuids = updates
+					.filter((update) => includeUpdates.get(update) ?? true)
+					.map((update) => update.packageUuid);
+
+				invokeCommand('update_mods', { uuids, respectIgnored: true }).then(refresh);
 				updateAllOpen = false;
 			}}
 		>
-			Update all
+			Update mods
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

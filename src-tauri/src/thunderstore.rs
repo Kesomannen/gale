@@ -266,9 +266,9 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let mut is_first = true;
     loop {
         let fetch_automatically = prefs.lock().unwrap().fetch_mods_automatically();
-        // this could happen if the user manually triggers a fetch, 
+        // this could happen if the user manually triggers a fetch,
         // or the fetch is still ongoing from the last loop
-        let is_fetching = thunderstore.lock().unwrap().is_fetching; 
+        let is_fetching = thunderstore.lock().unwrap().is_fetching;
 
         if fetch_automatically && !is_fetching {
             if let Err(err) = fetch_mods(&app, game, is_first).await {

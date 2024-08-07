@@ -1521,6 +1521,7 @@ dependencies = [
  "uuid",
  "walkdir",
  "webkit2gtk",
+ "winreg",
  "zip 0.6.6",
 ]
 

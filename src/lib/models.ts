@@ -213,8 +213,10 @@ export type LaunchMode =
 	| { type: 'direct'; content: { instances: number; intervalSecs: number } };
 
 export interface AvailableUpdate {
-	name: string;
-	uuid: string;
+	fullName: string;
+	ignore: boolean;
+	packageUuid: string;
+	versionUuid: string;
 	old: string;
 	new: string;
 }

@@ -1,52 +1,44 @@
-use crate::{manager::ModManager, thunderstore::ModRef, util::cmd::Result};
-use itertools::Itertools;
-use serde::Deserialize;
-use std::sync::Mutex;
-use tauri::Manager;
+use crate::{
+    manager::{commands::save, ModManager},
+    prefs::Prefs,
+    thunderstore::ModRef,
+    util::cmd::{Result, StateMutex},
+};
 use uuid::Uuid;
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum UpdateVersion {
-    Latest,
-    Specific(Uuid),
-}
-
 #[tauri::command]
-pub async fn update_mod(uuid: Uuid, version: UpdateVersion, app: tauri::AppHandle) -> Result<()> {
-    match version {
-        UpdateVersion::Latest => {
-            super::update_mods(&[uuid], &app).await?;
-        }
-        UpdateVersion::Specific(version_uuid) => {
-            super::change_version(
-                ModRef {
-                    package_uuid: uuid,
-                    version_uuid,
-                },
-                &app,
-            )
-            .await?;
-        }
-    }
+pub async fn change_mod_version(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
+    super::change_version(mod_ref, &app).await?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn update_all(app: tauri::AppHandle) -> Result<()> {
-    let uuids = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let manager = manager.lock().unwrap();
+pub async fn update_mods(
+    uuids: Vec<Uuid>,
+    respect_ignored: bool,
+    app: tauri::AppHandle,
+) -> Result<()> {
+    super::update_mods(&uuids, respect_ignored, &app).await?;
 
-        manager
-            .active_profile()
-            .remote_mods()
-            .map(|(mod_ref, _, _)| mod_ref.package_uuid)
-            .collect_vec()
-    };
+    Ok(())
+}
 
-    super::update_mods(&uuids, &app).await?;
+#[tauri::command]
+pub fn ignore_update(
+    version_uuid: Uuid,
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
+) -> Result<()> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    manager
+        .active_profile_mut()
+        .ignored_updates
+        .insert(version_uuid);
+
+    save(&manager, &prefs)?;
 
     Ok(())
 }

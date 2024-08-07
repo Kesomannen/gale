@@ -5,6 +5,13 @@
 ### Added
 
 - Option to disable automatic thunderstore fetching
+- Option to ignore updates for the "Update all" banner
+
+### Changed
+
+- Detect steam installation path on Windows from registry
+- Sort pinned mods to the top of the mod list
+- UI tweaks
 
 ### Fixed
 
