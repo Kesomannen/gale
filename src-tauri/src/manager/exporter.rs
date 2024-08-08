@@ -27,6 +27,8 @@ pub struct LegacyProfileManifest<'a> {
     pub mods: Vec<R2Mod<'a>>,
     #[serde(default)]
     pub source: ImportSource,
+    #[serde(default)]
+    pub ignored_updates: Vec<Uuid>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -127,6 +129,7 @@ fn export_file(profile: &Profile, dir: PathBuf, thunderstore: &Thunderstore) -> 
 
     let manifest = LegacyProfileManifest {
         profile_name: &profile.name,
+        ignored_updates: profile.ignored_updates.iter().cloned().collect(),
         source: ImportSource::Gale,
         mods,
     };

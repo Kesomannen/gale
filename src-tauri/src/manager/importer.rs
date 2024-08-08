@@ -49,6 +49,7 @@ pub struct ImportData {
     pub mods: Vec<ModInstall>,
     pub path: PathBuf,
     pub includes: Vec<PathBuf>,
+    pub ignored_updates: Vec<Uuid>,
     pub source: ImportSource,
 }
 
@@ -57,6 +58,7 @@ impl ImportData {
         name: String,
         mods: Vec<R2Mod<'_>>,
         path: PathBuf,
+        ignored_updates: Vec<Uuid>,
         source: ImportSource,
         thunderstore: &Thunderstore,
     ) -> Result<Self> {
@@ -74,6 +76,7 @@ impl ImportData {
             path,
             includes,
             mod_names: Some(mod_names),
+            ignored_updates,
             source,
         })
     }
@@ -104,6 +107,7 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
         manifest.profile_name.to_owned(),
         manifest.mods,
         temp_path,
+        manifest.ignored_updates,
         manifest.source,
         &thunderstore,
     )
@@ -121,6 +125,8 @@ async fn import_data(mut data: ImportData, options: InstallOptions, app: &AppHan
         }
 
         let profile = game.create_profile(data.name)?;
+
+        profile.ignored_updates.extend(data.ignored_updates);
 
         profile.path.clone()
     };

@@ -663,7 +663,7 @@ impl Profile {
 }
 
 impl ManagerGame {
-    fn create_profile(&mut self, name: String) -> Result<&Profile> {
+    fn create_profile(&mut self, name: String) -> Result<&mut Profile> {
         ensure!(
             Profile::is_valid_name(&name),
             "profile name '{}' is invalid",
@@ -693,7 +693,7 @@ impl ManagerGame {
 
         let index = self.profiles.len() - 1;
         self.active_profile_index = index;
-        Ok(&self.profiles[index])
+        Ok(&mut self.profiles[index])
     }
 
     fn delete_profile(&mut self, index: usize, allow_delete_last: bool) -> Result<()> {

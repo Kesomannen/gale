@@ -282,7 +282,15 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
             .context("failed to delete existing profile")?;
     }
 
-    ImportData::from_r2_mods(name, mods, path, ImportSource::R2, &thunderstore).map(Some)
+    ImportData::from_r2_mods(
+        name,
+        mods,
+        path,
+        Vec::new(),
+        ImportSource::R2,
+        &thunderstore,
+    )
+    .map(Some)
 }
 
 async fn wait_for_mods(app: &AppHandle) {
