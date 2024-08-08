@@ -56,7 +56,11 @@ heck = "0.5"
 log = "0.4"
 simplelog = "0.12"
 chrono = { version = "0.4", features = ["serde"] }
-keyring = "3"
+keyring = { version = "3", features = [
+    "apple-native",
+    "windows-native",
+    "linux-native",
+] }
 dirs-next = "2"
 winreg = "0.52"
 

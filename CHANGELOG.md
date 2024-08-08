@@ -16,6 +16,7 @@
 ### Fixed
 
 - Open gale log button not working
+- Thunderstore API token not persisting between sessions
 
 ## 0.7.2 (2024-08-01)
 

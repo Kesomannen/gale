@@ -122,6 +122,7 @@
 		try {
 			await invokeCommand('export_pack', { args: args(), dir });
 		} finally {
+			saveArgs();
 			loading = null;
 		}
 	}
@@ -153,8 +154,13 @@
 			await invokeCommand('upload_pack', { args: args() });
 			donePopupOpen = true;
 		} finally {
+			saveArgs();
 			loading = null;
 		}
+	}
+
+	function saveArgs() {
+		invokeCommand('set_pack_args', { args: args() });
 	}
 
 	function args(): ModpackArgs {
@@ -175,7 +181,7 @@
 	}
 
 	onDestroy(() => {
-		invokeCommand('set_pack_args', { args: args() });
+		saveArgs();
 	});
 </script>
 
@@ -325,8 +331,10 @@
 		description="A list of changes in the modpack, also supports markdown formatting. Leave empty to omit."
 	>
 		<ResizableInputField bind:value={changelog} placeholder="Enter changelog..." />
-		
-		<BigButton color="gray" on:click={() => generateChangelog(false)}>Generate for {versionNumber}</BigButton>
+
+		<BigButton color="gray" on:click={() => generateChangelog(false)}
+			>Generate for {versionNumber}</BigButton
+		>
 		<BigButton color="gray" on:click={() => generateChangelog(true)}>Generate all</BigButton>
 
 		<details class="mt-1">

@@ -68,7 +68,7 @@
 			<Icon class="text-red-500 inline mb-1" icon="mdi:error" />
 		{/if}
 		{#if isOutdated(mod)}
-			<Icon class=" text-blue-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
+			<Icon class=" text-green-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
 		{/if}
 		<div
 			class="truncate {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-300/80'}"

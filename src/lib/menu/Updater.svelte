@@ -74,7 +74,7 @@
 {#if $currentUpdate != null}
 	<Button.Root
 		class="flex items-center py-1 px-2 rounded-md font-semibold text-slate-100 
-            my-auto ml-auto mr-1.5 bg-blue-600 enabled:hover:bg-blue-500"
+            my-auto ml-auto mr-1.5 bg-green-600 enabled:hover:bg-green-500"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
@@ -103,6 +103,6 @@
 	</Dialog.Description>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="blue" fontWeight="semibold" on:click={update}>Install</BigButton>
+		<BigButton color="green" fontWeight="semibold" on:click={update}>Install</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

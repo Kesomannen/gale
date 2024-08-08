@@ -199,7 +199,7 @@
 		{#if activeMod && isOutdated(activeMod)}
 			<Button.Root
 				class="flex items-center justify-center w-full gap-2 py-2 rounded-lg mt-2
-						bg-blue-600 hover:bg-blue-500 font-medium text-lg"
+						bg-green-600 hover:bg-green-500 font-medium text-lg"
 				on:click={() => updateActiveMod('latest')}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl align-middle" />
