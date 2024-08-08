@@ -130,7 +130,8 @@ pub fn run() {
                 app.dialog()
                     .message(format!("{:#}", err))
                     .title("Error while launching Gale!")
-                    .show(|_| {});
+                    .blocking_show();
+
                 return Err(err.into());
             }
 

@@ -17,6 +17,8 @@
 
 - Open gale log button not working
 - Thunderstore API token not persisting between sessions
+- Modpack export arguments sometimes not being saved
+- App closing immediately when a startup error occurs instead of showing an error dialog
 
 ## 0.7.2 (2024-08-01)
 
