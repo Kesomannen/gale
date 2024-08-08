@@ -218,7 +218,7 @@ fn read_steam_registry() -> Result<PathBuf> {
 }
 
 fn default_steam_exe_path() -> PathBuf {
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     {
         match read_steam_registry() {
             Ok(path) => path.join("Steam.exe"),
@@ -226,29 +226,29 @@ fn default_steam_exe_path() -> PathBuf {
         }
     }
 
-    #[cfg(macos)]
+    #[cfg(target_os = "macos")]
     {
         "/Applications/Steam.app/Contents/MacOS/Steam".into()
     }
 
-    #[cfg(linux)]
+    #[cfg(target_os = "linux")]
     {
         "/usr/bin/steam".into()
     }
 }
 
 fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     {
-        exe_path.and_then(|exe| exe.parent().map(|parent| parent.to_path_buf()))
+        exe_path.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
     }
 
-    #[cfg(macos)]
+    #[cfg(target_os = "macos")]
     {
         Some("~/Library/Application Support/Steam".into())
     }
 
-    #[cfg(linux)]
+    #[cfg(target_os = "linux")]
     {
         dirs_next::data_dir().map(|data_dir| data_dir.join("Steam"))
     }
