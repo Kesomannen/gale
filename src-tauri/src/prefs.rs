@@ -205,7 +205,7 @@ pub struct GamePrefs {
     pub launch_mode: LaunchMode,
 }
 
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 fn read_steam_registry() -> Result<PathBuf> {
     use winreg::enums::*;
     use winreg::RegKey;

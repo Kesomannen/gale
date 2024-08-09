@@ -113,7 +113,7 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     )
 }
 
-async fn import_data(mut data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
+async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
     let path = {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
@@ -130,10 +130,6 @@ async fn import_data(mut data: ImportData, options: InstallOptions, app: &AppHan
 
         profile.path.clone()
     };
-
-    if data.source == ImportSource::R2 {
-        data.mods.reverse(); // r2modman's "Custom" sort order is reversed
-    }
 
     downloader::install_mods(data.mods, options, app)
         .await

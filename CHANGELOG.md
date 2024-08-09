@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.4 (2024-08-09)
+
+### Fixed
+
+- Custom sort order not responding to Descending/Ascending
+- Mod reordering moving mods in the wrong direction
+- Expanded config entries not being editable in text mode
+
 ## 0.7.3 (2024-08-08)
 
 ### Added

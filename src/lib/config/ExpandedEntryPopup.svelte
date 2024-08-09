@@ -67,7 +67,13 @@
 			]}
 		>
 			<Tabs.Content value="text" class="pt-1">
-				<ResizableInputField bind:value={content} />
+				<ResizableInputField
+					value={content}
+					on:change={(e) => {
+						content = e.target.value;
+						submitValue();
+					}}
+				/>
 			</Tabs.Content>
 
 			<Tabs.Content value="list" class="pt-1">

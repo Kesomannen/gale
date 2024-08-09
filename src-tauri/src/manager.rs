@@ -24,7 +24,7 @@ use crate::{
     thunderstore::{
         self,
         models::FrontendProfileMod,
-        query::{self, QueryModsArgs, Queryable, SortBy},
+        query::{self, QueryModsArgs, Queryable, SortBy, SortOrder},
         BorrowedMod, ModRef, Thunderstore,
     },
     util::{
@@ -255,11 +255,18 @@ impl<'a> Queryable for QueryableProfileMod<'a> {
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
         use QueryableProfileModKind as Kind;
 
-        match args.sort_by {
-            SortBy::InstallDate => return self.install_time.cmp(&other.install_time),
-            SortBy::Custom => return self.index.cmp(&other.index),
-            _ => (),
+        let overridden = match args.sort_by {
+            SortBy::InstallDate => Some(self.install_time.cmp(&other.install_time)),
+            SortBy::Custom => Some(self.index.cmp(&other.index)),
+            _ => None,
         };
+
+        if let Some(order) = overridden {
+            return match args.sort_order {
+                SortOrder::Ascending => order,
+                SortOrder::Descending => order.reverse(),
+            };
+        }
 
         match (&self.kind, &other.kind) {
             (Kind::Remote(a), Kind::Remote(b)) => a.cmp(b, args),
