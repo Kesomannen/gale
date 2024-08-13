@@ -4,12 +4,14 @@
 	import { isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
+	import { invokeCommand } from '$lib/invoke';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
 	export let draggable = false;
 
 	let imgSrc: string;
+	let isInstalled: boolean = false;
 
 	$: {
 		if (mod.type === 'remote') {
@@ -22,6 +24,12 @@
 				imgSrc = `games/${$activeGame?.id}.webp`;
 			}
 		}
+	}
+
+	$: {
+		invokeCommand<boolean>('is_mod_installed', { uuid: mod.uuid }).then(
+			(result) => (isInstalled = result)
+		);
 	}
 
 	async function loadLoadIcon(path: string) {
@@ -70,6 +78,9 @@
 		{#if isOutdated(mod)}
 			<Icon class=" text-green-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
 		{/if}
+		{#if isInstalled}
+			<Icon class="text-green-500 inline mb-1.5" icon="mdi:check-circle" />
+		{/if}
 		<div
 			class="truncate {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-300/80'}"
 		>
@@ -79,6 +90,6 @@
 
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<div class="contents" on:click={(evt) => evt.stopPropagation()} role="none">
-		<slot isInstalled={false} />
+		<slot {isInstalled} />
 	</div>
 </button>
