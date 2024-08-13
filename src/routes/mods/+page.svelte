@@ -98,7 +98,6 @@
 
 		if (response.type == 'done') {
 			refresh();
-			activeMod = undefined;
 			return;
 		}
 
@@ -219,7 +218,6 @@
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();
-		activeMod = undefined;
 	}}
 	onCancel={refresh}
 />
