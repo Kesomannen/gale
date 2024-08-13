@@ -95,7 +95,6 @@
 	bind:activeMod
 	bind:mods
 	queryArgs={modQuery}
-	showInstalledIcon={true}
 	{sortOptions}
 	on:onModCtrlClicked={({ detail: { mod } }) => installLatest(mod)}
 >

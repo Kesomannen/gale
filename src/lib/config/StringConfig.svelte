@@ -23,12 +23,14 @@
 		type: isOther ? 'other' : 'string',
 		content: content
 	});
+
+	$: showExpand = content.length > 100 || content.includes('\n') || content.includes(listSeparator);
 </script>
 
 <div class="flex-grow relative">
-	<InputField bind:value={content} class="w-full" />
+	<InputField bind:value={content} class="w-full {showExpand && 'pr-8'}" />
 
-	{#if content.length > 100 || content.includes('\n') || content.includes(listSeparator)}
+	{#if showExpand}
 		<Button.Root
 			class="absolute right-1 top-1 p-1 text-slate-400 text-lg rounded-lg hover:bg-gray-800 bg-gray-900"
 			on:click={() => ($expandedEntry = entryId)}
