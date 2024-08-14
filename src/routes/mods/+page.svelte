@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
-	import { SortBy, type Dependant, type Mod, type ModActionResponse } from '$lib/models';
+	import { SortBy, type Mod } from '$lib/models';
 	import { shortenFileSize } from '$lib/util';
 
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -13,11 +13,8 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { modQuery, activeGame } from '$lib/stores';
-	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
-
-	let removeDependants: DependantsPopup;
 
 	let mods: Mod[] = [];
 	let activeMod: Mod | undefined;
@@ -91,17 +88,6 @@
 		await invokeCommand('install_mod', { modRef });
 		modQuery.update((query) => query);
 		activeMod = activeMod;
-	}
-
-	async function uninstall(mod: Dependant) {
-		let response = await invokeCommand<ModActionResponse>('remove_mod', { uuid: mod.uuid });
-
-		if (response.type == 'done') {
-			refresh();
-			return;
-		}
-
-		removeDependants.openFor(mod, response.content);
 	}
 </script>
 
@@ -177,13 +163,6 @@
 			>
 				<Icon icon="mdi:download" />
 			</Button.Root>
-		{:else}
-			<Button.Root
-				class="p-2.5 ml-2 mt-0.5 mr-0.5 rounded-lg text-white text-2xl align-middle hidden group-hover:inline bg-red-600 hover:bg-red-500"
-				on:click={() => uninstall(mod)}
-			>
-				<Icon icon="mdi:trash" />
-			</Button.Root>
 		{/if}
 	</div>
 </ModList>
@@ -209,15 +188,3 @@
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>
-
-<DependantsPopup
-	bind:this={removeDependants}
-	title="Confirm removal"
-	verb="Remove"
-	description="The following mods depend on %s and will likely not work if it is removed!"
-	commandName="remove_mod"
-	onExecute={() => {
-		refresh();
-	}}
-	onCancel={refresh}
-/>

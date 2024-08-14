@@ -310,6 +310,13 @@
 
 	<div slot="item" let:mod>
 		<div class="flex items-center mt-2.5 ml-1">
+			<Button.Root
+				class="mx-2 text-gray-500 hover:text-red-600 text-2xl align-middle group-hover:inline hidden"
+				on:click={() => uninstall(mod)}
+			>
+				<Icon icon="mdi:trash" />
+			</Button.Root>
+
 			{#if reorderable}
 				<Icon
 					icon="material-symbols:drag-indicator"
