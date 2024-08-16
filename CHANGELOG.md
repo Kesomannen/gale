@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- BepInEx being installed incorrectly on certain games
+- Sorting and filtering options not persisting between sessions
 - Expand config entry button covering the end of the text input
 
 ## 0.7.4 (2024-08-09)

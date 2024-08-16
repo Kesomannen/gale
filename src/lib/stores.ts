@@ -48,15 +48,18 @@ const defaultProfileQuery = () => ({
 export let modQuery = createQueryStore('modQuery', defaultModQuery);
 export let profileQuery = createQueryStore('profileQuery', defaultProfileQuery);
 
-
 let isFirst = true;
-activeGame.subscribe(() => {
+activeGame.subscribe((value) => {
+	if (value === null) {
+		return;
+	}
+
 	// ignore when the game is fetched on startup
 	if (isFirst) {
 		isFirst = false;
 		return;
 	}
-	
+
 	modQuery.set(defaultModQuery());
 	profileQuery.set(defaultProfileQuery());
 });
@@ -72,7 +75,7 @@ function loadQuery(key: string, getDefault: () => QueryModsArgs) {
 			console.error('Failed to parse stored query:', e);
 		}
 	}
-	
+
 	return getDefault();
 }
 
@@ -87,7 +90,7 @@ function createQueryStore(key: string, getDefault: () => QueryModsArgs) {
 export async function refreshGames() {
 	const info: GameInfo = await invokeCommand('get_game_info');
 	games = info.all;
-	
+
 	for (let game of games) {
 		game.favorite = info.favorites.includes(game.id);
 	}
@@ -116,7 +119,7 @@ export async function refreshCategories() {
 			return;
 		}
 
-		let data = await response.json() as FiltersResponse;
+		let data = (await response.json()) as FiltersResponse;
 		categories.set(data.package_categories);
 	} catch (e) {
 		console.error('Failed to fetch categories:', e);

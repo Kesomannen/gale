@@ -13,6 +13,29 @@ use std::{
     path::{Path, PathBuf},
 };
 
+fn is_bepinex(full_name: &str) -> bool {
+    match full_name {
+        "bbepis-BepInExPack"
+        | "xiaoxiao921-BepInExPack"
+        | "xiaoye97-BepInEx"
+        | "denikson-BepInExPack_Valheim"
+        | "1F31A-BepInEx_Valheim_Full"
+        | "bbepisTaleSpire-BepInExPack"
+        | "Zinal001-BepInExPack_MECHANICA"
+        | "bbepis-BepInEx_Rogue_Tower"
+        | "Subnautica_Modding-BepInExPack_Subnautica"
+        | "Subnautica_Modding-BepInExPack_Subnautica_Experimental"
+        | "Subnautica_Modding-BepInExPack_BelowZero"
+        | "PCVR_Modders-BepInExPack_GHVR"
+        | "BepInExPackMTD-BepInExPack_20MTD"
+        | "Modding_Council-BepInExPack_of_Legend"
+        | "SunkenlandModding-BepInExPack_Sunkenland"
+        | "BepInEx_Wormtown-BepInExPack" => true,
+        full_name if full_name.starts_with("BepInEx-BepInExPack") => true,
+        _ => false,
+    }
+}
+
 pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
     let mut path = prefs.cache_dir.get().to_path_buf();
     path.push(&borrowed_mod.package.full_name);
@@ -133,12 +156,7 @@ pub fn try_cache_install(
 }
 
 pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
-    let name = match full_name.split_once('-') {
-        Some((_author, name)) => name,
-        None => full_name,
-    };
-
-    match name.starts_with("BepInExPack") {
+    match is_bepinex(full_name) {
         true => install_bepinex(src, dest),
         false => install_default(src, dest, full_name),
     }
@@ -217,7 +235,7 @@ fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
         }
     }
 
-    const EXCLUDES: [&str; 3] = ["icon.png", "manifest.json", "README.md"];
+    const EXCLUDES: [&str; 4] = ["icon.png", "manifest.json", "README.md", "changelog.txt"];
 
     for entry in fs::read_dir(src)? {
         let entry_path = entry?.path();
