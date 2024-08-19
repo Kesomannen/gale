@@ -120,6 +120,9 @@
 </script>
 
 <div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
+	<!-- Fix for top border not being draggable -->
+	<div data-tauri-drag-region class="fixed top-0 left-0 w-full h-[1px] z-50" />
+
 	<Menubar.Root class="py-1 flex items-center">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
