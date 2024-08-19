@@ -14,9 +14,10 @@ use tauri_plugin_fs::FsExt;
 
 use crate::{
     logger,
-    manager::launcher::LaunchMode,
+    manager::{launcher::LaunchMode, ModManager},
     util::{
         self,
+        cmd::StateMutex,
         fs::{JsonStyle, Overwrite, PathExt},
         window::WindowExt,
     },
@@ -337,6 +338,14 @@ impl Prefs {
 
             scope.forbid_directory(&self.data_dir, true);
             scope.allow_directory(&value.data_dir, true);
+
+            // move profile paths
+            let manager = app.state::<StateMutex<ModManager>>();
+            let mut manager = manager.lock().unwrap();
+
+            for profile in &mut manager.active_game_mut().profiles {
+                profile.path = value.data_dir.join(&profile.name);
+            }
         }
 
         self.data_dir.set(value.data_dir.value)?;

@@ -1,14 +1,9 @@
-use std::fs;
-
 use anyhow::Context;
 
 use super::{File, LoadFileResultExt};
 use crate::{
     manager::ModManager,
-    util::{
-        cmd::{Result, StateMutex},
-        error::IoResultExt,
-    },
+    util::cmd::{Result, StateMutex},
 };
 use serde::Serialize;
 
@@ -123,7 +118,7 @@ pub fn delete_config_file(file: &str, manager: StateMutex<ModManager>) -> Result
 
     let file = profile.config.remove(index);
     let path = file.path_from(&profile.path);
-    fs::remove_file(&path).fs_context("deleting config file", &path)?;
+    trash::delete(&path).context("failed to move file to trashcan")?;
 
     Ok(())
 }

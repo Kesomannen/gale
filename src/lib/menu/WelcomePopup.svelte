@@ -68,9 +68,11 @@
 	}
 
 	function set<T>(update: (value: T, prefs: Prefs) => void) {
-		return (value: T) => {
-			update(value, prefs!);
-			invokeCommand('set_prefs', { value: prefs });
+		return async (value: T) => {
+			if (prefs === null) return;
+
+			update(value, prefs);
+			await invokeCommand('set_prefs', { value: prefs });
 		};
 	}
 </script>

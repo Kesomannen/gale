@@ -2,11 +2,16 @@
 
 ## Unreleased
 
+### Changed
+
+- Move deleted config files to the trash instead of permanently deleting them
+
 ### Fixed
 
 - BepInEx being installed incorrectly on certain games
 - Sorting and filtering options not persisting between sessions
 - Expand config entry button covering the end of the text input
+- Hopefully fixed issues related to moving the data, temp or cache directories
 
 ## 0.7.4 (2024-08-09)
 
