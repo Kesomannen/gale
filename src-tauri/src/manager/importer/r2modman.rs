@@ -1,5 +1,5 @@
 use anyhow::{anyhow, ensure, Context, Result};
-use log::{debug, info};
+use log::{debug, info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -165,17 +165,40 @@ pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<
             continue;
         }
 
-        let name = profile_dir.file_name().unwrap();
+        let name = profile_dir.file_name().unwrap().to_string_lossy();
 
-        if let Err(err) = import_profile(profile_dir.clone(), app).await {
+        let data = match prepare_import(profile_dir.clone(), app) {
+            Ok(Some(data)) => data,
+            Ok(None) => {
+                continue;
+            }
+            Err(err) => {
+                logger::log_js_err(
+                    "Error while importing from r2modman",
+                    &err.context(format!("Failed to prepare import of profile '{}'", name)),
+                    app,
+                );
+                continue;
+            }
+        };
+
+        if let Err(err) = import_profile(data, app).await {
             logger::log_js_err(
-                "error while importing from r2modman",
-                &err.context(format!(
-                    "Failed to import profile '{}'",
-                    name.to_string_lossy()
-                )),
+                "Error while importing from r2modman",
+                &err.context(format!("Failed to import profile '{}'", name)),
                 app,
             );
+
+            let manager = app.state::<Mutex<ModManager>>();
+            let mut manager = manager.lock().unwrap();
+
+            let game = manager.active_game_mut();
+
+            if let Some(index) = game.profile_index(&name) {
+                game.delete_profile(index, true).unwrap_or_else(|_| {
+                    warn!("failed to delete possibly corrupted profile '{}'", name)
+                });
+            }
         };
     }
 
@@ -214,16 +237,11 @@ fn find_profiles(
         .map(|entry| entry.path()))
 }
 
-async fn import_profile(path: PathBuf, app: &AppHandle) -> Result<bool> {
-    let data = match prepare_import(path, app)? {
-        Some(data) => data,
-        None => return Ok(false),
-    };
+async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
+    info!("importing profile '{}'", data.name);
+    emit_update(&format!("Importing profile '{}'... 0%", data.name), app);
 
     let name = data.name.clone();
-
-    info!("importing profile '{}'", name);
-    emit_update(&format!("Importing profile '{}'... 0%", name), app);
 
     super::import_data(
         data,
@@ -239,41 +257,35 @@ async fn import_profile(path: PathBuf, app: &AppHandle) -> Result<bool> {
             }),
         app,
     )
-    .await?;
-
-    Ok(true)
+    .await
 }
 
-fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
+fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
     let manager = app.state::<Mutex<ModManager>>();
     let thunderstore = app.state::<Mutex<Thunderstore>>();
 
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let name = util::fs::file_name_lossy(&path);
+    let name = util::fs::file_name_lossy(&profile_dir);
 
-    if !path.exists() {
-        info!("no mods.yml in {}, skipping", path.display());
+    profile_dir.push("mods.yml");
+
+    if !profile_dir.exists() {
+        info!("no mods.yml in {}, skipping", profile_dir.display());
         return Ok(None);
     }
-
-    path.push("mods.yml");
-    let yaml = fs::read_to_string(&path).fs_context("reading mods.yml", &path)?;
+    let yaml = fs::read_to_string(&profile_dir).fs_context("reading mods.yml", &profile_dir)?;
     let mods = serde_yaml::from_str::<Vec<R2Mod>>(&yaml).context("failed to parse mods.yml")?;
-    path.pop();
+
+    profile_dir.pop();
 
     if mods.is_empty() {
         info!("profile '{}' is empty, skipping", name);
         return Ok(None);
     }
 
-    if let Some(index) = manager
-        .active_game()
-        .profiles
-        .iter()
-        .position(|p| p.name == name)
-    {
+    if let Some(index) = manager.active_game().profile_index(&name) {
         info!("deleting existing profile '{}'", name);
 
         manager
@@ -285,7 +297,7 @@ fn prepare_import(mut path: PathBuf, app: &AppHandle) -> Result<Option<ImportDat
     ImportData::from_r2_mods(
         name,
         mods,
-        path,
+        profile_dir,
         Vec::new(),
         ImportSource::R2,
         &thunderstore,

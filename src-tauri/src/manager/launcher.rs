@@ -4,7 +4,7 @@ use std::{
     process::Command,
 };
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use log::warn;
 use serde::{Deserialize, Serialize};
 use tauri::async_runtime;
@@ -207,7 +207,8 @@ fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result
     ];
 
     let preloader_path = core_dir
-        .read_dir()?
+        .read_dir()
+        .map_err(|_| anyhow!("failed to read BepInEx core directory. Is BepInEx installed?"))?
         .filter_map(|entry| entry.ok())
         .find(|entry| {
             let file_name = entry.file_name();

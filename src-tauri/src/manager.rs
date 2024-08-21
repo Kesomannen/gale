@@ -709,7 +709,7 @@ impl ManagerGame {
             "cannot delete last profile"
         );
 
-        let profile = self.get_profile(index)?;
+        let profile = self.profile(index)?;
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
@@ -721,7 +721,7 @@ impl ManagerGame {
 
     fn duplicate_profile(&mut self, duplicate_name: String, index: usize) -> Result<()> {
         self.create_profile(duplicate_name)?;
-        let profile = self.get_profile(index)?;
+        let profile = self.profile(index)?;
         let new_profile = self.active_profile();
 
         util::fs::copy_dir(&profile.path, &new_profile.path, Overwrite::Yes)?;
@@ -735,7 +735,13 @@ impl ManagerGame {
         Ok(())
     }
 
-    fn get_profile(&self, index: usize) -> Result<&Profile> {
+    fn profile_index(&self, name: &str) -> Option<usize> {
+        self.profiles
+            .iter()
+            .position(|profile| profile.name == name)
+    }
+
+    fn profile(&self, index: usize) -> Result<&Profile> {
         self.profiles
             .get(index)
             .with_context(|| format!("profile index {} is out of bounds", index))

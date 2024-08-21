@@ -17,7 +17,6 @@ struct JsError<'a> {
 }
 
 pub fn log_js_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
-    log::error!("{}: {:#}", name, error);
     handle
         .emit(
             "error",

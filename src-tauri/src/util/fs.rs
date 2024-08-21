@@ -98,7 +98,7 @@ pub fn write_json<T: Serialize + ?Sized>(
 pub fn file_name_lossy(path: impl AsRef<Path>) -> String {
     path.as_ref()
         .file_name()
-        .unwrap()
+        .expect("file should have name")
         .to_string_lossy()
         .to_string()
 }

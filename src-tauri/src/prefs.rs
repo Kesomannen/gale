@@ -17,7 +17,6 @@ use crate::{
     manager::{launcher::LaunchMode, ModManager},
     util::{
         self,
-        cmd::StateMutex,
         fs::{JsonStyle, Overwrite, PathExt},
         window::WindowExt,
     },
@@ -340,11 +339,20 @@ impl Prefs {
             scope.allow_directory(&value.data_dir, true);
 
             // move profile paths
-            let manager = app.state::<StateMutex<ModManager>>();
+            let manager = app.state::<Mutex<ModManager>>();
             let mut manager = manager.lock().unwrap();
 
-            for profile in &mut manager.active_game_mut().profiles {
-                profile.path = value.data_dir.join(&profile.name);
+            let mut path = value.data_dir.to_path_buf();
+            for (id, game) in &mut manager.games {
+                path.push(id);
+                path.push("profiles");
+
+                for profile in &mut game.profiles {
+                    profile.path = path.join(&profile.name);
+                }
+
+                path.pop();
+                path.pop();
             }
         }
 
