@@ -14,7 +14,7 @@ use uuid::Uuid;
 use std::{
     collections::HashMap,
     fmt::Display,
-    io::SeekFrom,
+    io::{Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -85,13 +85,11 @@ impl Profile {
     pub fn export_pack(
         &self,
         args: &ModpackArgs,
-        path: &Path,
+        writer: impl Write + Seek,
         thunderstore: &Thunderstore,
     ) -> Result<()> {
         ensure!(!args.name.is_empty(), "name cannot be empty");
         ensure!(!args.description.is_empty(), "description cannot be empty");
-
-        info!("exporting modpack to {}", path.display());
 
         let deps = self
             .mods_to_pack(args)
@@ -115,7 +113,7 @@ impl Profile {
             version_number,
         };
 
-        let mut zip = util::zip::builder(path)?;
+        let mut zip = util::zip::builder(writer)?;
 
         if !args.readme.is_empty() {
             zip.write_str("README.md", &args.readme)?;
@@ -142,7 +140,10 @@ impl Profile {
     }
 }
 
-fn write_icon(path: &Path, zip: &mut util::zip::ZipBuilder) -> anyhow::Result<()> {
+fn write_icon<W>(path: &Path, zip: &mut util::zip::ZipBuilder<W>) -> anyhow::Result<()>
+where
+    W: Write + Seek,
+{
     let img = image::ImageReader::open(path)?.decode()?;
     let img = img.resize_exact(256, 256, FilterType::Lanczos3);
 

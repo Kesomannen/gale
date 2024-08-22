@@ -8,13 +8,20 @@ use zip::{write::FileOptions, ZipArchive, ZipWriter};
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-pub struct ZipBuilder {
-    writer: ZipWriter<File>,
+
+pub struct ZipBuilder<W>
+where
+    W: Write + Seek,
+{
+    writer: ZipWriter<W>,
     options: FileOptions,
 }
 
-impl ZipBuilder {
-    pub fn writer(&mut self, path: impl AsRef<Path>) -> io::Result<&mut ZipWriter<File>> {
+impl<W> ZipBuilder<W>
+where
+    W: Write + Seek,
+{
+    pub fn writer(&mut self, path: impl AsRef<Path>) -> io::Result<&mut ZipWriter<W>> {
         #[allow(deprecated)]
         self.writer
             .start_file_from_path(path.as_ref(), self.options)?;
@@ -30,8 +37,11 @@ impl ZipBuilder {
     }
 }
 
-pub fn builder(path: &Path) -> Result<ZipBuilder, io::Error> {
-    let writer = ZipWriter::new(File::create(path)?);
+pub fn builder<W>(writer: W) -> Result<ZipBuilder<W>, io::Error>
+where
+    W: Write + Seek,
+{
+    let writer = ZipWriter::new(writer);
 
     let options = FileOptions::default().compression_method(zip::CompressionMethod::Stored);
 

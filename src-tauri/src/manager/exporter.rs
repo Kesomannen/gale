@@ -3,7 +3,7 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
-    io::{self},
+    io::{self, Cursor, Seek, Write},
     path::{Path, PathBuf},
 };
 use uuid::Uuid;
@@ -12,11 +12,9 @@ use super::{downloader::ModInstall, ModManager, Profile, Result};
 
 use crate::{
     thunderstore::{models::LegacyProfileCreateResponse, ModRef, Thunderstore},
-    util::{self, cmd::StateMutex, error::IoResultExt},
+    util::{self, cmd::StateMutex},
 };
-use tempfile::tempdir;
 use walkdir::WalkDir;
-use log::info;
 
 pub mod commands;
 pub mod modpack;
@@ -115,15 +113,12 @@ impl From<&semver::Version> for ExportVersion {
 
 pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
-fn export_file(profile: &Profile, dir: PathBuf, thunderstore: &Thunderstore) -> Result<PathBuf> {
-    let mut path = dir;
-
-    path.push(&profile.name);
-    path.set_extension("r2z");
-
-    info!("exporting profile file to {}", path.display());
-
-    let mut zip = util::zip::builder(&path).fs_context("creating zip archive", &path)?;
+fn export_zip(
+    profile: &Profile,
+    writer: impl Write + Seek,
+    thunderstore: &Thunderstore,
+) -> Result<()> {
+    let mut zip = util::zip::builder(writer).context("failed to create zip archive")?;
 
     let mods = profile
         .remote_mods()
@@ -143,7 +138,7 @@ fn export_file(profile: &Profile, dir: PathBuf, thunderstore: &Thunderstore) -> 
 
     write_includes(find_includes(&profile.path), &profile.path, &mut zip)?;
 
-    Ok(path)
+    Ok(())
 }
 
 async fn export_code(
@@ -158,13 +153,11 @@ async fn export_code(
         let profile = manager.active_profile_mut();
         profile.refresh_config();
 
-        let temp_dir = tempdir()?;
-        let dir = temp_dir.path().to_path_buf();
-        let path = export_file(profile, dir, &thunderstore)?;
+        let mut data = Cursor::new(Vec::new());
+        export_zip(profile, &mut data, &thunderstore)?;
 
-        let data = fs::read(path).expect("failed to read export file");
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
-        base64.push_str(&BASE64_STANDARD.encode(data));
+        base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
         base64
     };
@@ -184,10 +177,15 @@ async fn export_code(
     Ok(response.key)
 }
 
-fn write_includes<P, I>(files: I, source: &Path, zip: &mut util::zip::ZipBuilder) -> Result<()>
+fn write_includes<P, I, W>(
+    files: I,
+    source: &Path,
+    zip: &mut util::zip::ZipBuilder<W>,
+) -> Result<()>
 where
     P: AsRef<Path>,
     I: Iterator<Item = P>,
+    W: Write + Seek,
 {
     for file in files {
         let writer = zip.writer(&file)?;
