@@ -25,6 +25,7 @@ use super::{
     exporter::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
     ModManager,
 };
+use tempfile::tempdir;
 
 pub mod commands;
 pub mod r2modman;
@@ -48,6 +49,7 @@ pub struct ImportData {
     pub mod_names: Option<Vec<String>>,
     pub mods: Vec<ModInstall>,
     pub path: PathBuf,
+    pub delete_after_import: bool,
     pub includes: Vec<PathBuf>,
     pub ignored_updates: Vec<Uuid>,
     pub source: ImportSource,
@@ -58,6 +60,7 @@ impl ImportData {
         name: String,
         mods: Vec<R2Mod<'_>>,
         path: PathBuf,
+        delete_after_import: bool,
         ignored_updates: Vec<Uuid>,
         source: ImportSource,
         thunderstore: &Thunderstore,
@@ -74,6 +77,7 @@ impl ImportData {
             name,
             mods,
             path,
+            delete_after_import,
             includes,
             mod_names: Some(mod_names),
             ignored_updates,
@@ -84,20 +88,12 @@ impl ImportData {
 
 fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData> {
     let thunderstore = app.state::<Mutex<Thunderstore>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
     let thunderstore = thunderstore.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
 
-    let temp_path = prefs.temp_dir.join("import");
-    if temp_path.exists() {
-        fs::remove_dir_all(&temp_path)?;
-    }
-    fs::create_dir_all(&temp_path)?;
+    let temp_dir = tempdir().context("failed to create temporary directory")?;
+    util::zip::extract(source, temp_dir.path())?;
 
-    util::zip::extract(source, &temp_path)?;
-
-    let manifest = fs::read_to_string(temp_path.join("export.r2x"))
+    let manifest = fs::read_to_string(temp_dir.path().join("export.r2x"))
         .context("failed to read profile manifest")?;
 
     let manifest: LegacyProfileManifest =
@@ -106,7 +102,8 @@ fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData>
     ImportData::from_r2_mods(
         manifest.profile_name.to_owned(),
         manifest.mods,
-        temp_path,
+        temp_dir.into_path(),
+        true,
         manifest.ignored_updates,
         manifest.source,
         &thunderstore,
@@ -137,6 +134,10 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
 
     import_config(&path, &data.path, data.includes.into_iter())
         .context("failed to import config")?;
+
+    if data.delete_after_import {
+        fs::remove_dir_all(&data.path).ok();
+    }
 
     Ok(())
 }
@@ -248,7 +249,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
             local_mod.icon = plugin_path.join("icon.png").exists_or_none();
         }
         LocalModKind::Zip => {
-            installer::install_from_zip(&path, &profile.path, &local_mod.name, &prefs)
+            installer::install_from_zip(&path, &profile.path, &local_mod.name)
                 .context("failed to install local mod")?;
 
             local_mod.icon = plugin_path.join("icon.png").exists_or_none();

@@ -5,14 +5,13 @@ use crate::{
     thunderstore::{self, Thunderstore},
     util::{
         cmd::{Result, StateMutex},
-        error::IoResultExt,
         fs::PathExt,
     },
     NetworkClient,
 };
 use anyhow::{anyhow, Context};
 use itertools::Itertools;
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 use tauri::State;
 use uuid::Uuid;
 
@@ -21,9 +20,8 @@ pub async fn export_code(
     client: State<'_, NetworkClient>,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
-    prefs: StateMutex<'_, Prefs>,
 ) -> Result<Uuid> {
-    let key = super::export_code(&client.0, manager, thunderstore, prefs).await?;
+    let key = super::export_code(&client.0, manager, thunderstore).await?;
 
     Ok(key)
 }
@@ -99,13 +97,15 @@ pub async fn upload_pack(
     args: ModpackArgs,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
-    prefs: StateMutex<'_, Prefs>,
     client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
-    let (path, game_id, args, token) = {
+    let temp_dir = tempfile::Builder::new()
+        .tempfile()
+        .context("failed to create temporary directory")?;
+
+    let (game_id, args, token) = {
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
-        let prefs = prefs.lock().unwrap();
 
         let token = thunderstore::token::get()
             .context("failed to get thunderstore API token")?
@@ -113,30 +113,16 @@ pub async fn upload_pack(
 
         let profile = manager.active_profile();
 
-        let mut path = prefs.temp_dir.to_path_buf();
-        path.push("modpacks");
-
-        if !path.exists() {
-            fs::create_dir_all(&path).fs_context("creating temp dir", &path)?;
-        }
-
-        path.push(format!("{}-{}", args.name, args.version_number));
-        path.add_extension("zip");
-
-        if path.exists() {
-            fs::remove_file(&path).ok();
-        }
-
-        profile.export_pack(&args, &path, &thunderstore)?;
+        profile.export_pack(&args, temp_dir.path(), &thunderstore)?;
         if let Err(err) = profile.take_snapshot(&args) {
             log::warn!("failed to take profile snapshot: {}", err);
         }
 
-        (path, &manager.active_game.id, args, token)
+        (&manager.active_game.id, args, token)
     };
 
     let client = client.0.clone();
-    modpack::publish(path, game_id, args, token, client).await?;
+    modpack::publish(temp_dir.path().to_path_buf(), game_id, args, token, client).await?;
 
     Ok(())
 }

@@ -185,8 +185,6 @@ pub struct Prefs {
     pub data_dir: DirPref,
     #[serde(alias = "cache_dir")]
     pub cache_dir: DirPref,
-    #[serde(alias = "temp_dir")]
-    pub temp_dir: DirPref,
 
     #[serde(alias = "enable_mod_cache")]
     enable_mod_cache: bool,
@@ -271,7 +269,6 @@ impl Default for Prefs {
                 .keep("prefs.json")
                 .keep("logs"),
             cache_dir: util::path::app_cache_dir().join("cache").into(),
-            temp_dir: util::path::app_cache_dir().join("temp").into(),
 
             enable_mod_cache: true,
             fetch_mods_automatically: true,
@@ -358,7 +355,6 @@ impl Prefs {
 
         self.data_dir.set(value.data_dir.value)?;
         self.cache_dir.set(value.cache_dir.value)?;
-        self.temp_dir.set(value.temp_dir.value)?;
 
         if self.zoom_factor != value.zoom_factor {
             let window = app.get_webview_window("main").unwrap();

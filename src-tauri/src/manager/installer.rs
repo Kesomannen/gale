@@ -12,6 +12,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
+use tempfile::tempdir;
 
 fn is_bepinex(full_name: &str) -> bool {
     match full_name {
@@ -162,20 +163,13 @@ pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()>
     }
 }
 
-pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs) -> Result<()> {
-    let mut target_dir = prefs.temp_dir.get().join("extract");
-    fs::create_dir_all(&target_dir)?;
-    target_dir.push(full_name);
+pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
+    // temporarily extract the zip so the same install from disk method can be used
+    let temp_dir = tempdir().context("failed to create temporary directory")?;
 
     let zipfile = fs::File::open(src)?;
-
-    // temporarily extract the zip so the same install from disk method can be used
-    util::zip::extract(zipfile, &target_dir)?;
-
-    install_from_disk(&target_dir, dest, full_name)?;
-
-    // clean up the leftovers
-    fs::remove_dir_all(target_dir)?;
+    util::zip::extract(zipfile, temp_dir.path())?;
+    install_from_disk(temp_dir.path(), dest, full_name)?;
 
     Ok(())
 }
@@ -191,20 +185,18 @@ fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
         let file_name = path.file_name().unwrap();
 
         if path.is_dir() {
-            if file_name == "BepInEx" {
-                // handle things like {mod_name}/BepInEx/plugins/{mod_name}.dll
-                install_default(&path, dest, mod_name)?;
-                continue;
-            }
-
-            let target = match file_name.to_string_lossy().as_ref() {
+            let target = match file_name.to_str() {
                 // Copy to BepInEx/{plugins | patchers | core | monomod}/{mod_name}
-                "patchers" | "core" | "monomod" => bepinex.join(file_name).join(mod_name),
-                "plugins" => plugin_dir.clone(),
+                Some("plugins" | "patchers" | "core" | "monomod") => {
+                    bepinex.join(file_name).join(mod_name)
+                }
                 // Copy directly without a subfolder
-                "config" => bepinex.join("config"),
-                // Copy others to the mod's plugin directory
-                _ => plugin_dir.join(file_name),
+                Some("config") => bepinex.join("config"),
+                // Flatten all other directories
+                _ => {
+                    install_default(&path, dest, mod_name)?;
+                    continue;
+                }
             };
 
             fs::create_dir_all(target.parent().unwrap())?;

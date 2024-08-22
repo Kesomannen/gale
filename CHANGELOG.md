@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Removed
+
+- Temp directory setting in favor of using the system's temp directory with automatic cleanup
+
+### Fixed
+
+- Parity with r2modman's mod structure format, which should solve gale-specific mod issues
+- Failed r2modman profile imports creating corrupted profiles
+- Crash when changing the data directory setting
+
 ## 0.7.5 (2024-08-20)
 
 ### Changed

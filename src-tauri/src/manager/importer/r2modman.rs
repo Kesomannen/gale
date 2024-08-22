@@ -298,6 +298,7 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
         name,
         mods,
         profile_dir,
+        false,
         Vec::new(),
         ImportSource::R2,
         &thunderstore,

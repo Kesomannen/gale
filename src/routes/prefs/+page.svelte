@@ -107,16 +107,6 @@
 			<br />
 			Changing this will move the existing data.
 		</PathPref>
-
-		<PathPref
-			label="Temp directory"
-			type="dir"
-			value={prefs.tempDir}
-			set={set((value, prefs) => (prefs.tempDir = value))}
-		>
-			Directory where temporary files are stored, for example import and export files.
-		</PathPref>
-
 		<PathPref
 			label="Download cache directory"
 			type="dir"

@@ -11,11 +11,12 @@ use uuid::Uuid;
 use super::{downloader::ModInstall, ModManager, Profile, Result};
 
 use crate::{
-    prefs::Prefs,
     thunderstore::{models::LegacyProfileCreateResponse, ModRef, Thunderstore},
     util::{self, cmd::StateMutex, error::IoResultExt},
 };
+use tempfile::tempdir;
 use walkdir::WalkDir;
+use log::info;
 
 pub mod commands;
 pub mod modpack;
@@ -119,6 +120,9 @@ fn export_file(profile: &Profile, dir: PathBuf, thunderstore: &Thunderstore) -> 
 
     path.push(&profile.name);
     path.set_extension("r2z");
+
+    info!("exporting profile file to {}", path.display());
+
     let mut zip = util::zip::builder(&path).fs_context("creating zip archive", &path)?;
 
     let mods = profile
@@ -146,21 +150,19 @@ async fn export_code(
     client: &reqwest::Client,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
-    prefs: StateMutex<'_, Prefs>,
 ) -> Result<Uuid> {
     let base64 = {
         let mut manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
-        let prefs = prefs.lock().unwrap();
 
         let profile = manager.active_profile_mut();
         profile.refresh_config();
 
-        let dir = prefs.temp_dir.join("exports");
-        fs::create_dir_all(&dir)?;
+        let temp_dir = tempdir()?;
+        let dir = temp_dir.path().to_path_buf();
         let path = export_file(profile, dir, &thunderstore)?;
 
-        let data = fs::read(path).unwrap();
+        let data = fs::read(path).expect("failed to read export file");
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data));
 
