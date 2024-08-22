@@ -11,6 +11,7 @@
 - Parity with r2modman's mod structure format, which should solve gale-specific mod issues
 - Failed r2modman profile imports creating corrupted profiles
 - Crash when changing the data directory setting
+- Improve profile and export modpack performance by doing more work in-memory
 
 ## 0.7.5 (2024-08-20)
 
