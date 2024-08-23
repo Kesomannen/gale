@@ -20,11 +20,7 @@ export type ConfigValue =
 	| { type: 'double'; content: ConfigNum }
 	| { type: 'other'; content: string };
 
-export type ConfigEntry =
-	| { type: 'tagged'; content: TaggedConfigEntry }
-	| { type: 'untagged'; content: { name: string; value: string } };
-
-export interface TaggedConfigEntry {
+export interface ConfigEntry {
 	name: string;
 	description: string;
 	typeName: string;
@@ -34,7 +30,7 @@ export interface TaggedConfigEntry {
 
 export interface ConfigSection {
 	name: string;
-	entries: ConfigEntry[];
+	entries: ({ type: 'orphaned' } | ({ type: 'normal' } & ConfigEntry))[];
 }
 
 export interface ConfigFile {
@@ -58,13 +54,11 @@ export interface ConfigRange {
 }
 
 export type LoadFileResult =
-	| { type: 'ok'; content: ConfigFile }
+	| ({ type: 'ok' } & ConfigFile)
 	| {
 			type: 'err';
-			content: {
-				name: string;
-				error: string;
-			};
+			name: string;
+			error: string;
 	  };
 
 export interface ProfileInfo {
@@ -141,7 +135,7 @@ export interface QueryModsArgs {
 export interface ConfigEntryId {
 	file: LoadFileResult;
 	section: ConfigSection;
-	entry: TaggedConfigEntry;
+	entry: ConfigEntry;
 }
 
 export interface Dependant {

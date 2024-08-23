@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Hide orphaned config entries in the config editor
+
+### Fixed
+
+- Various issues with config file names with non-Utf8 characters
+- Greatly improved config read performance by reading multiple files in parallel
+
 ## 0.7.6 (2024-08-22)
 
 ### Removed

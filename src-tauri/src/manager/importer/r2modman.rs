@@ -149,7 +149,7 @@ pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     find_paths().and_then(|path| {
         let profiles = find_profiles(path.clone(), false, app)
             .ok()?
-            .map(util::fs::file_name_lossy)
+            .map(util::fs::file_name_owned)
             .collect();
         Some(ProfileImportData { path, profiles })
     })
@@ -267,12 +267,12 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let name = util::fs::file_name_lossy(&profile_dir);
+    let name = util::fs::file_name_owned(&profile_dir);
 
     profile_dir.push("mods.yml");
 
     if !profile_dir.exists() {
-        info!("no mods.yml in {}, skipping", profile_dir.display());
+        info!("no mods.yml in '{}', skipping", name);
         return Ok(None);
     }
     let yaml = fs::read_to_string(&profile_dir).fs_context("reading mods.yml", &profile_dir)?;
@@ -352,15 +352,14 @@ fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
                 continue;
             }
 
-            let package_name = util::fs::file_name_lossy(&package.path());
-            let version_name = util::fs::file_name_lossy(&version.path());
+            let package_name = version.file_name();
+            let version_name = version.file_name();
 
             let new_path = prefs.cache_dir.join(&package_name).join(&version_name);
             if new_path.exists() {
                 continue;
             }
 
-            debug!("transferring cached mod: {}-{}", package_name, version_name);
             util::fs::copy_dir(&version.path(), &new_path, Overwrite::Yes)?;
         }
     }

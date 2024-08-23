@@ -3,13 +3,13 @@
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type {
-		TaggedConfigEntry,
+		ConfigEntry,
 		ConfigEntryId,
 		ConfigSection,
 		ConfigValue,
 		LoadFileResult
 	} from '$lib/models';
-	import { capitalize, configDisplayName, configFileName, sentenceCase } from '$lib/util';
+	import { capitalize, sentenceCase } from '$lib/util';
 	import BoolConfig from '$lib/config/BoolConfig.svelte';
 	import SliderConfig from '$lib/config/SliderConfig.svelte';
 	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
@@ -17,13 +17,13 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import EnumConfig from '$lib/config/EnumConfig.svelte';
 	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
-	import UntaggedConfig from '$lib/config/UntaggedConfig.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { activeProfile } from '$lib/stores';
 	import { Render } from '@jill64/svelte-sanitize';
 	import { page } from '$app/stores';
 	import StringConfig from '$lib/config/StringConfig.svelte';
+	import { configDisplayName } from '$lib/config';
 
 	let files: LoadFileResult[] | undefined;
 
@@ -48,7 +48,7 @@
 				let lowerSearch = searchTerm.toLowerCase().trim();
 
 				return (
-					configFileName(file).toLowerCase().includes(lowerSearch) ||
+					file.name.toLowerCase().includes(lowerSearch) ||
 					configDisplayName(file).toLowerCase().includes(lowerSearch)
 				);
 			});
@@ -83,7 +83,7 @@
 		}
 	}
 
-	function typeName(config: TaggedConfigEntry) {
+	function typeName(config: ConfigEntry) {
 		switch (config.value.type) {
 			case 'int32':
 				return 'Integer';
@@ -103,7 +103,7 @@
 		return config.type === 'int32' || config.type === 'double' || config.type === 'single';
 	}
 
-	function entryId(entry: TaggedConfigEntry): ConfigEntryId {
+	function entryId(entry: ConfigEntry): ConfigEntryId {
 		return {
 			file: selectedFile!,
 			section: selectedSection!,
@@ -114,18 +114,20 @@
 	async function refresh() {
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
 
-		let file = $page.url.searchParams.get('file');
-		if (file) {
-			selectedFile = files.find((f) => configFileName(f) === file);
-			if (!selectedFile) {
+		console.log(files);
+
+		let searchParam = $page.url.searchParams.get('file');
+		if (searchParam) {
+			selectedFile = files.find((file) => file.name === searchParam);
+			if (selectedFile === undefined) {
 				return;
 			}
 
 			if (selectedFile.type === 'ok') {
-				selectedSection = selectedFile.content.sections[0];
+				selectedSection = selectedFile.sections[0];
 			}
 
-			searchTerm = selectedFile.content.name;
+			searchTerm = selectedFile.name;
 		}
 
 		$page.url.searchParams.delete('file');
@@ -157,10 +159,7 @@
 						selectedSection = undefined;
 					}}
 					onSectionClicked={(file, section) => {
-						selectedFile = {
-							type: 'ok',
-							content: file
-						};
+						selectedFile = { type: 'ok', ...file };
 						selectedSection = section;
 					}}
 					onDeleted={() => {
@@ -173,86 +172,73 @@
 	</div>
 
 	<div class="flex-grow p-4 overflow-y-auto">
-		{#if selectedFile}
+		{#if selectedFile !== undefined}
 			<div class="text-slate-200 text-xl font-bold truncate flex-shrink-0">
-				{selectedFile.content.name}
+				{selectedFile.name}
 				{#if selectedSection}
 					<span class="text-slate-400">/</span>
 					{selectedSection.name}
 				{/if}
 			</div>
 
-			{#if selectedSection && selectedFile.type === 'ok'}
-				{#if selectedFile.content.metadata}
+			{#if selectedSection !== undefined && selectedFile.type === 'ok'}
+				{#if selectedFile.metadata}
 					<div class="text-slate-400 font-medium">
-						Created by {selectedFile.content.metadata.pluginName}
-						{selectedFile.content.metadata.pluginVersion}
+						Created by {selectedFile.metadata.pluginName}
+						{selectedFile.metadata.pluginVersion}
 					</div>
 				{/if}
 
 				<div class="h-1 flex-shrink-0" />
 
-				{#each selectedSection.entries as entry (entry.content)}
-					{#if entry.type === 'untagged'}
-						<div class="flex items-center text-slate-300 pl-2 my-1">
-							<div class="text-slate-300 pr-2 cursor-auto w-[45%] text-left truncate flex-shrink-0">
-								{sentenceCase(entry.content.name)}
-							</div>
-							<UntaggedConfig
-								file={selectedFile.content}
-								section={selectedSection}
-								name={entry.content.name}
-								value={entry.content.value}
-							/>
-						</div>
-					{:else}
+				{#each selectedSection.entries as entry}
+					{#if entry.type === 'normal'}
 						<div class="flex items-center text-slate-300 pl-2 my-1">
 							<Tooltip
 								side="top"
 								class="w-[45%] min-w-52 text-slate-300 pr-2 cursor-auto text-left truncate flex-shrink-0"
 							>
-								{sentenceCase(entry.content.name)}
+								{sentenceCase(entry.name)}
 								<svelte:fragment slot="tooltip">
 									<div>
-										<span class="text-slate-200 text-lg font-bold">{entry.content.name}</span>
-										<span class="text-slate-400 ml-1"> ({typeName(entry.content)})</span>
+										<span class="text-slate-200 text-lg font-bold">{entry.name}</span>
+										<span class="text-slate-400 ml-1"> ({typeName(entry)})</span>
 									</div>
 
 									<div class="mb-1">
-										<Render html={entry.content.description.replace(/\n/g, '<br/>')} />
+										<Render html={entry.description.replace(/\n/g, '<br/>')} />
 									</div>
 
-									{#if entry.content.defaultValue}
+									{#if entry.defaultValue}
 										<p>
 											<span class="font-semibold">Default: </span>
-											{configValueToString(entry.content.defaultValue)}
+											{configValueToString(entry.defaultValue)}
 										</p>
 									{/if}
 
-									{#if (entry.content.value.type === 'int32' || entry.content.value.type === 'double' || entry.content.value.type === 'single') && entry.content.value.content.range}
+									{#if (entry.value.type === 'int32' || entry.value.type === 'double' || entry.value.type === 'single') && entry.value.content.range !== undefined}
 										<p>
 											<span class="font-semibold">Range: </span>
-											{entry.content.value.content.range.start} - {entry.content.value.content.range
-												.end}
+											{entry.value.content.range.start} - {entry.value.content.range.end}
 										</p>
 									{/if}
 								</svelte:fragment>
 							</Tooltip>
-							{#if entry.content.value.type === 'string'}
-								<StringConfig entryId={entryId(entry.content)} />
-							{:else if entry.content.value.type === 'enum'}
-								<EnumConfig entryId={entryId(entry.content)} />
-							{:else if entry.content.value.type === 'flags'}
-								<FlagsConfig entryId={entryId(entry.content)} />
-							{:else if entry.content.value.type === 'boolean'}
-								<BoolConfig entryId={entryId(entry.content)} />
-							{:else if entry.content.value.type == 'other'}
-								<StringConfig entryId={entryId(entry.content)} isOther={true} />
-							{:else if isNum(entry.content.value)}
-								{#if entry.content.value.content.range}
-									<SliderConfig entryId={entryId(entry.content)} />
+							{#if entry.value.type === 'string'}
+								<StringConfig entryId={entryId(entry)} />
+							{:else if entry.value.type === 'enum'}
+								<EnumConfig entryId={entryId(entry)} />
+							{:else if entry.value.type === 'flags'}
+								<FlagsConfig entryId={entryId(entry)} />
+							{:else if entry.value.type === 'boolean'}
+								<BoolConfig entryId={entryId(entry)} />
+							{:else if entry.value.type == 'other'}
+								<StringConfig entryId={entryId(entry)} isOther={true} />
+							{:else if isNum(entry.value)}
+								{#if entry.value.content.range}
+									<SliderConfig entryId={entryId(entry)} />
 								{:else}
-									<NumberInputConfig entryId={entryId(entry.content)} />
+									<NumberInputConfig entryId={entryId(entry)} />
 								{/if}
 							{/if}
 						</div>
@@ -260,7 +246,7 @@
 				{/each}
 			{:else if selectedFile.type === 'err'}
 				<code class="text-red-400 bg-gray-900 px-2 py-1 rounded-md flex">
-					{capitalize(selectedFile.content.error)}
+					{capitalize(selectedFile.error)}
 				</code>
 			{/if}
 		{:else}

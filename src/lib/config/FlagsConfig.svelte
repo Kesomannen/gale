@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setTaggedConfig } from '$lib/config';
+	import { setConfigEntry } from '$lib/config';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
@@ -16,7 +16,7 @@
 
 	function onSelectedChange(newValues: string[]) {
 		content.indicies = newValues.map((value) => content.options.indexOf(value));
-		setTaggedConfig(entryId, {
+		setConfigEntry(entryId, {
 			type: 'flags',
 			content
 		});

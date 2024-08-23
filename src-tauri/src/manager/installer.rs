@@ -86,7 +86,7 @@ pub fn soft_clear_cache(
             continue;
         }
 
-        let package_name = util::fs::file_name_lossy(&path);
+        let package_name = util::fs::file_name_owned(&path);
 
         if thunderstore.find_package(&package_name).is_err() {
             // package from a game other than the loaded one, skip
@@ -99,7 +99,7 @@ pub fn soft_clear_cache(
 
         for entry in versions {
             let path = entry.path();
-            let version = util::fs::file_name_lossy(&path);
+            let version = util::fs::file_name_owned(&path);
 
             if installed_mods.contains(&(&package_name, version)) {
                 // package is installed, skip
@@ -215,9 +215,12 @@ fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
     let target_path = dest.join("BepInEx");
 
     // Some BepInEx packs come with a subfolder where the actual BepInEx files are
-    for entry in fs::read_dir(src)? {
-        let entry_path = entry?.path();
-        let entry_name = util::fs::file_name_lossy(&entry_path);
+    for entry in src.read_dir()? {
+        let entry = entry?;
+        let entry_path = entry.path();
+
+        let entry_name = entry.file_name();
+        let entry_name = entry_name.to_string_lossy();
 
         if entry_path.is_dir() && entry_name.contains("BepInEx") {
             // ... and some have even more subfolders ...

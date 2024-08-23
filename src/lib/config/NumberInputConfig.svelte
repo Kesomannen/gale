@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setTaggedConfig } from '$lib/config';
+	import { setConfigEntry } from '$lib/config';
 	import type { ConfigEntryId, ConfigNum, ConfigValue } from '$lib/models';
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
@@ -13,7 +13,7 @@
 		content = value.content as ConfigNum;
 	}
 
-	$: setTaggedConfig(entryId, { type, content });
+	$: setConfigEntry(entryId, { type, content });
 </script>
 
 <input

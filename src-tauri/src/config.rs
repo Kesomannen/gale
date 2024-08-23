@@ -1,19 +1,20 @@
 use std::{
     fmt::Display,
-    fs, io,
+    fs,
+    io::{self, BufReader, BufWriter},
     ops::Range,
     path::{Path, PathBuf},
     str::FromStr,
-    time::SystemTime,
+    time::{Instant, SystemTime},
 };
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use typeshare::typeshare;
 use walkdir::WalkDir;
 
 use crate::{manager::Profile, util::fs::PathExt};
+use log::trace;
 
 pub mod commands;
 pub mod de;
@@ -23,37 +24,36 @@ pub mod ser;
 mod tests;
 
 #[derive(Error, Debug)]
-#[error("failed to load config file: {error}")]
+#[error("failed to load config file: {}", error)]
 pub struct LoadFileError {
-    name: String,
+    relative_path: PathBuf,
     error: anyhow::Error,
 }
 
 pub type LoadFileResult = std::result::Result<File, LoadFileError>;
 
 pub trait LoadFileResultExt {
-    fn name(&self) -> &str;
-    fn path_from(&self, root: &Path) -> PathBuf;
+    fn relative_path(&self) -> &Path;
+
+    fn path(&self, profile_dir: &Path) -> PathBuf {
+        profile_dir.join(file_path(self.relative_path()))
+    }
 }
 
 impl LoadFileResultExt for LoadFileResult {
-    fn name(&self) -> &str {
+    fn relative_path(&self) -> &Path {
         match self {
-            Ok(file) => &file.name,
-            Err(err) => &err.name,
+            Ok(file) => &file.relative_path,
+            Err(err) => &err.relative_path,
         }
-    }
-
-    fn path_from(&self, root: &Path) -> PathBuf {
-        file_path_from(self.name(), root)
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
-    name: String,
+    // relative to the BepInEx/config directory
+    relative_path: PathBuf,
     #[serde(skip)]
     read_time: SystemTime,
     metadata: Option<FileMetadata>,
@@ -61,26 +61,30 @@ pub struct File {
 }
 
 impl File {
-    pub fn new(name: String, sections: Vec<Section>, metadata: Option<FileMetadata>) -> Self {
+    pub fn new(
+        relative_path: PathBuf,
+        sections: Vec<Section>,
+        metadata: Option<FileMetadata>,
+    ) -> Self {
         Self {
-            name,
+            relative_path,
             read_time: SystemTime::now(),
             metadata,
             sections,
         }
     }
 
-    pub fn path_from(&self, root: &Path) -> PathBuf {
-        file_path_from(&self.name, root)
+    pub fn path(&self, profile_dir: &Path) -> PathBuf {
+        profile_dir.join(file_path(&self.relative_path))
     }
 
     pub fn save(&self, root: &Path) -> io::Result<()> {
-        let mut file = fs::File::create(self.path_from(root))?;
-        ser::to_writer(self, &mut file)
+        let file = fs::File::create(self.path(root))?;
+        let writer = BufWriter::new(file);
+        ser::to_writer(self, writer)
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct FileMetadata {
@@ -89,65 +93,51 @@ pub struct FileMetadata {
     plugin_guid: String,
 }
 
-pub fn file_path_relative(name: &str) -> PathBuf {
-    let mut path = ["BepInEx", "config", name].into_iter().collect::<PathBuf>();
-    path.add_extension("cfg");
+pub fn file_path(relative: &Path) -> PathBuf {
+    let mut path = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
+    path.push(relative);
     path
 }
 
-pub fn file_path_from(name: &str, root: &Path) -> PathBuf {
-    root.join(file_path_relative(name))
-}
-
-#[typeshare]
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Section {
     name: String,
-    entries: Vec<Entry>,
+    entries: Vec<EntryKind>,
 }
 
-#[typeshare]
 #[derive(Serialize, Clone, PartialEq, Debug)]
-#[serde(rename_all = "camelCase", tag = "type", content = "content")]
-pub enum Entry {
-    Tagged(TaggedEntry),
-    Untagged { name: String, value: String },
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum EntryKind {
+    Normal(Entry),
+    Orphaned { name: String, value: String },
 }
 
-impl Entry {
+impl EntryKind {
     pub fn name(&self) -> &str {
         match self {
-            Self::Tagged(e) => &e.name,
-            Self::Untagged { name, .. } => name,
+            Self::Normal(e) => &e.name,
+            Self::Orphaned { name, .. } => name,
         }
     }
 
-    fn as_tagged_mut(&mut self) -> Result<&mut TaggedEntry> {
+    fn as_normal_mut(&mut self) -> Result<&mut Entry> {
         match self {
-            Self::Tagged(e) => Ok(e),
-            Self::Untagged { .. } => Err(anyhow!("entry is not tagged")),
-        }
-    }
-
-    fn as_untagged_mut(&mut self) -> Result<&mut String> {
-        match self {
-            Self::Tagged(_) => Err(anyhow!("entry is not untagged")),
-            Self::Untagged { value, .. } => Ok(value),
+            Self::Normal(e) => Ok(e),
+            Self::Orphaned { .. } => Err(anyhow!("entry is not tagged")),
         }
     }
 }
 
-impl From<TaggedEntry> for Entry {
-    fn from(e: TaggedEntry) -> Self {
-        Self::Tagged(e)
+impl From<Entry> for EntryKind {
+    fn from(e: Entry) -> Self {
+        Self::Normal(e)
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct TaggedEntry {
+pub struct Entry {
     name: String,
     description: String,
     type_name: String,
@@ -155,14 +145,16 @@ pub struct TaggedEntry {
     value: Value,
 }
 
-impl TaggedEntry {
+impl Entry {
     fn reset(&mut self) -> Result<()> {
-        self.value = self.default_value.clone().context("no default value")?;
+        self.value = self
+            .default_value
+            .clone()
+            .ok_or(anyhow!("no default value"))?;
         Ok(())
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(tag = "type", content = "content", rename_all = "camelCase")]
 pub enum Value {
@@ -192,7 +184,6 @@ impl Value {
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Num<T>
@@ -216,12 +207,12 @@ impl Profile {
 
             if let Some(file) = file {
                 self.linked_config
-                    .insert(*profile_mod.uuid(), file.name().to_owned());
+                    .insert(*profile_mod.uuid(), file.relative_path().to_path_buf());
             }
         }
 
         fn matches(file: &LoadFileResult, mod_name: &str) -> bool {
-            if file.name() == mod_name {
+            if file.relative_path().as_os_str() == mod_name {
                 return true;
             }
 
@@ -241,23 +232,41 @@ impl Profile {
         }
     }
 
-    fn find_config_file<'a>(&'a self, name: &str) -> Result<&'a LoadFileResult> {
+    fn find_config_file<'a>(&'a self, relative_path: &Path) -> Result<&'a LoadFileResult> {
         self.config
             .iter()
-            .find(|f| f.name() == name)
-            .ok_or_else(|| anyhow!("config file {} not found in profile {}", name, self.name))
+            .find(|f| f.relative_path() == relative_path)
+            .ok_or_else(|| {
+                anyhow!(
+                    "config file at {} not found in profile {}",
+                    relative_path.display(),
+                    self.name
+                )
+            })
     }
 
-    fn modify_config<F, R>(&mut self, file: &str, section: &str, entry: &str, f: F) -> Result<R>
+    fn modify_config<F, R>(
+        &mut self,
+        relative_path: &Path,
+        section: &str,
+        entry: &str,
+        f: F,
+    ) -> Result<R>
     where
-        F: FnOnce(&mut Entry) -> Result<R>,
+        F: FnOnce(&mut EntryKind) -> Result<R>,
     {
         let file = self
             .config
             .iter_mut()
             .filter_map(|f| f.as_mut().ok())
-            .find(|f| f.name == file)
-            .ok_or_else(|| anyhow!("config file {} not found in profile {}", file, self.name))?;
+            .find(|f| f.relative_path == relative_path)
+            .ok_or_else(|| {
+                anyhow!(
+                    "config file {} not found in profile {}",
+                    relative_path.display(),
+                    self.name
+                )
+            })?;
 
         let section = file
             .sections
@@ -289,41 +298,69 @@ pub fn load_config(mut root: PathBuf, vec: &mut Vec<LoadFileResult>) {
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "cfg"));
 
+    trace!("loading config files from {}", root.display());
+
+    let start = Instant::now();
+
     for entry in files {
         load_config_file(entry, &root, vec);
     }
+
+    trace!("loaded config files in {:?}", start.elapsed());
 }
 
 fn load_config_file(entry: walkdir::DirEntry, root: &Path, vec: &mut Vec<LoadFileResult>) {
-    let name = entry
+    let relative_path = entry
         .path()
         .strip_prefix(root)
-        .unwrap()
-        .with_extension("")
-        .to_string_lossy()
-        .to_string();
+        .expect("file path should be a child of root")
+        .to_path_buf();
 
-    let curr_index = vec.iter().position(|f| f.name() == name);
+    trace!("loading config file {:?}", relative_path.display());
+
+    let curr_index = vec
+        .iter()
+        .position(|file| file.relative_path() == relative_path);
 
     if let Some(curr_index) = curr_index {
         if let Ok(curr_file) = &vec[curr_index] {
             if let Ok(metadata) = entry.metadata() {
                 if let Ok(modified) = metadata.modified() {
                     if modified <= curr_file.read_time {
-                        return; // file is not modified
+                        trace!(
+                            "file {} is not modified since last read",
+                            relative_path.display()
+                        );
+                        return; // file is not modified since we last read it
                     }
                 }
             }
         }
     }
 
-    let data = fs::read_to_string(entry.path())
-        .context("failed to read file")
-        .and_then(|text| de::from_str(&text));
+    let start = Instant::now();
+
+    let data = fs::File::open(entry.path())
+        .map(BufReader::new)
+        .context("failed to open file")
+        .and_then(|reader| {
+            trace!("opening file took {:?}", start.elapsed());
+
+            let start = Instant::now();
+
+            let data = de::from_reader(reader);
+
+            trace!("reading file took {:?}", start.elapsed());
+
+            data
+        });
 
     let res = match data {
-        Ok((sections, metadata)) => Ok(File::new(name, sections, metadata)),
-        Err(error) => Err(LoadFileError { name, error }),
+        Ok((sections, metadata)) => Ok(File::new(relative_path, sections, metadata)),
+        Err(error) => Err(LoadFileError {
+            relative_path,
+            error,
+        }),
     };
 
     if let Some(curr_index) = curr_index {

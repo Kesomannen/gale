@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setTaggedConfig } from '$lib/config';
+	import { setConfigEntry } from '$lib/config';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
@@ -14,7 +14,7 @@
 
 	function onValueChanged(newValue: boolean) {
 		content = newValue;
-		setTaggedConfig(entryId, { type: 'boolean', content });
+		setConfigEntry(entryId, { type: 'boolean', content });
 	}
 </script>
 

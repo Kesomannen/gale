@@ -7,15 +7,15 @@
 	export let entryId: ConfigEntryId;
 	export let onReset: (value: ConfigValue) => void;
 
-	function onClick() {
-		invokeCommand<ConfigValue>('reset_config_entry', {
-			file: entryId.file.content.name,
+	async function onClick() {
+		let result = await invokeCommand<ConfigValue>('reset_config_entry', {
+			file: entryId.file.name,
 			section: entryId.section.name,
 			entry: entryId.entry.name
-		}).then((result) => { 
-			entryId.entry.value = result;
-			onReset(result);
 		});
+
+		entryId.entry.value = result;
+		onReset(result);
 	}
 </script>
 

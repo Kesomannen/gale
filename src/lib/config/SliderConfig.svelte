@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setTaggedConfig } from '$lib/config';
+	import { setConfigEntry } from '$lib/config';
 	import type { ConfigValue, ConfigNum, ConfigEntryId, ConfigRange } from '$lib/models';
 	import { onMount } from 'svelte';
 	import ResetConfigButton from './ResetConfigButton.svelte';
@@ -25,7 +25,7 @@
 	}
 
 	function submitValue() {
-		setTaggedConfig(entryId, { type, content });
+		setConfigEntry(entryId, { type, content });
 	}
 
 	const DECIMAL_STEP = 0.1;

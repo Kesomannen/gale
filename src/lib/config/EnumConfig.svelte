@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import ResetConfigButton from './ResetConfigButton.svelte';
-	import { setTaggedConfig } from '$lib/config';
+	import { setConfigEntry } from '$lib/config';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	export let entryId: ConfigEntryId;
@@ -16,7 +16,7 @@
 
 	function onSelectChange(value: string) {
 		let index = content.options.indexOf(value);
-		setTaggedConfig(entryId, {
+		setConfigEntry(entryId, {
 			type: 'enum',
 			content: {
 				index,

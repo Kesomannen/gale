@@ -1,4 +1,4 @@
-import type { ConfigEntry, LoadFileResult, Mod, TaggedConfigEntry } from './models';
+import type { Mod, ConfigEntry } from './models';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -61,25 +61,6 @@ export function titleCase(str: string): string {
 	return str.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-export function configFileName(configFile: LoadFileResult) {
-	if (configFile.type == 'ok') {
-		return configFile.content.name;
-	}
-
-	return configFile.content.name;
-}
-
-export function configDisplayName(configFile: LoadFileResult) {
-	let name: string;
-	if (configFile.type == 'ok') {
-		name = configFile.content.metadata?.pluginName ?? configFile.content.name;
-	} else {
-		name = configFile.content.name;
-	}
-
-	return name.replace(/[-_ ]/g, '');
-}
-
 export function isOutdated(mod: Mod): boolean {
 	if (mod.versions.length === 0) {
 		return false;
@@ -96,15 +77,20 @@ export function isBefore(el1: HTMLElement, el2: HTMLElement) {
 	return el1.compareDocumentPosition(el2) === Node.DOCUMENT_POSITION_PRECEDING;
 }
 
-export function getListSeparator(entry: TaggedConfigEntry) {
+export interface ListSeparator {
+	type: 'default' | 'custom';
+	char: string;
+}
+
+export function getListSeparator(entry: ConfigEntry): ListSeparator {
 	const keyword = 'ListSeparator=';
 
-	let description = entry.description;	
+	let description = entry.description;
 	let separatorIndex = description.indexOf(keyword);
 
 	if (separatorIndex !== -1) {
-		return description[separatorIndex + keyword.length];
+		return { type: 'custom', char: description[separatorIndex + keyword.length] };
 	}
-	
-	return ',';
+
+	return { type: 'default', char: ',' };
 }

@@ -298,7 +298,7 @@ pub struct Profile {
     pub mods: Vec<ProfileMod>,
     pub ignored_updates: HashSet<Uuid>,
     pub config: Vec<config::LoadFileResult>,
-    pub linked_config: HashMap<Uuid, String>,
+    pub linked_config: HashMap<Uuid, PathBuf>,
     pub modpack: Option<ModpackArgs>,
 }
 
@@ -402,12 +402,9 @@ impl Profile {
         self.remote_mods()
             .filter(|(other, _, _)| other.package_uuid != target_mod.package.uuid4)
             .filter_map(|(other, _, _)| other.borrow(thunderstore).ok())
-            .filter_map(move |other| {
+            .filter(move |other| {
                 let deps = thunderstore.dependencies(other.version).0;
-                match deps.iter().any(|dep| dep.package == target_mod.package) {
-                    true => Some(other),
-                    false => None,
-                }
+                deps.iter().any(|dep| dep.package == target_mod.package)
             })
     }
 
@@ -429,7 +426,7 @@ impl Profile {
 
         let profile = Profile {
             modpack: manifest.modpack,
-            name: util::fs::file_name_lossy(&path),
+            name: util::fs::file_name_owned(&path),
             mods: manifest.mods,
             linked_config: HashMap::new(),
             config: Vec::new(),
@@ -784,7 +781,7 @@ impl ManagerGame {
     }
 
     fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
-        let file_name = util::fs::file_name_lossy(&path);
+        let file_name = util::fs::file_name_owned(&path);
         let game = match games::from_id(&file_name) {
             Some(game) => game,
             None => return Ok(None),

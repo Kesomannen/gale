@@ -38,7 +38,7 @@ pub fn setup() -> Result<()> {
     let log_file = File::create(path).context("failed to create log file")?;
 
     let term_filter = match cfg!(debug_assertions) {
-        true => LevelFilter::Debug,
+        true => LevelFilter::Trace,
         false => LevelFilter::Info,
     };
 

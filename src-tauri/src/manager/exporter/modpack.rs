@@ -223,7 +223,7 @@ async fn initiate_upload(
     token: &str,
     client: &reqwest::Client,
 ) -> Result<UserMediaInitiateUploadResponse> {
-    let name = util::fs::file_name_lossy(path);
+    let name = util::fs::file_name_owned(path);
     let size = path.metadata()?.len();
 
     debug!(

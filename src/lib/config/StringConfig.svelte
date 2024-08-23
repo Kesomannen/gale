@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setTaggedConfig } from '$lib/config';
+	import { setConfigEntry } from '$lib/config';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import { Button } from 'bits-ui';
 
@@ -15,22 +15,29 @@
 	let content = entryId.entry.value.content as string;
 	let listSeparator = getListSeparator(entryId.entry);
 
-	function onReset(value: ConfigValue) {
+	async function onReset(value: ConfigValue) {
 		content = value.content as string;
+		await submit();
 	}
 
-	$: setTaggedConfig(entryId, {
-		type: isOther ? 'other' : 'string',
-		content: content
-	});
+	async function submit() {
+		await setConfigEntry(entryId, {
+			type: isOther ? 'other' : 'string',
+			content
+		});
+	}
 
-	$: showExpand = content.length > 100 || content.includes('\n') || content.includes(listSeparator);
+	$: showExpandButton =
+		content.length > 100 ||
+		listSeparator.type === 'custom' ||
+		content.includes('\n') ||
+		content.includes(listSeparator.char);
 </script>
 
 <div class="flex-grow relative">
-	<InputField bind:value={content} class="w-full {showExpand && 'pr-8'}" />
+	<InputField bind:value={content} on:change={submit} class="w-full {showExpandButton && 'pr-8'}" />
 
-	{#if showExpand}
+	{#if showExpandButton}
 		<Button.Root
 			class="absolute right-1 top-1 p-1 text-slate-400 text-lg rounded-lg hover:bg-gray-800 bg-gray-900"
 			on:click={() => ($expandedEntry = entryId)}

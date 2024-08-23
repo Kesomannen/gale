@@ -1,7 +1,7 @@
 use super::*;
 
 impl Section {
-    fn new(name: &str, entries: Vec<Entry>) -> Self {
+    fn new(name: &str, entries: Vec<EntryKind>) -> Self {
         Self {
             name: name.to_owned(),
             entries,
@@ -9,15 +9,15 @@ impl Section {
     }
 }
 
-impl Entry {
-    fn untagged(name: &str, value: &str) -> Self {
-        Self::Untagged {
+impl EntryKind {
+    fn orphaned(name: &str, value: &str) -> Self {
+        Self::Orphaned {
             name: name.to_owned(),
             value: value.to_owned(),
         }
     }
 
-    fn tagged(name: &str, description: &str, default_value: Option<Value>, value: Value) -> Self {
+    fn normal(name: &str, description: &str, default_value: Option<Value>, value: Value) -> Self {
         let type_name = match &value {
             Value::Boolean(_) => "Boolean",
             Value::String(_) => "String",
@@ -27,17 +27,17 @@ impl Entry {
             _ => panic!("cannot determine type name"),
         };
 
-        Self::tagged_typed(name, description, type_name, default_value, value)
+        Self::normal_typed(name, description, type_name, default_value, value)
     }
 
-    fn tagged_typed(
+    fn normal_typed(
         name: &str,
         description: &str,
         type_name: &str,
         default_value: Option<Value>,
         value: Value,
     ) -> Self {
-        TaggedEntry {
+        Entry {
             name: name.to_owned(),
             description: description.to_owned(),
             type_name: type_name.to_owned(),
@@ -90,18 +90,18 @@ UntaggedEntry = Hi!
 
 fn test_file() -> File {
     File::new(
-        "test".to_owned(),
+        "test".into(),
         vec![
             Section::new(
                 "Section1",
                 vec![
-                    Entry::tagged(
+                    EntryKind::normal(
                         "Entry1",
                         "This is entry 1",
                         Some(Value::String("Default".to_owned())),
                         Value::String("Value1".to_owned()),
                     ),
-                    Entry::tagged_typed(
+                    EntryKind::normal_typed(
                         "LogLevels",
                         "This is entry 2",
                         "LogLevel",
@@ -124,7 +124,7 @@ fn test_file() -> File {
                             ],
                         },
                     ),
-                    Entry::tagged_typed(
+                    EntryKind::normal_typed(
                         "Entry3",
                         "This is entry 3",
                         "Difficulty",
@@ -150,7 +150,7 @@ fn test_file() -> File {
             Section::new(
                 "Section2",
                 vec![
-                    Entry::tagged(
+                    EntryKind::normal(
                         "Entry4",
                         "This is entry 4",
                         None,
@@ -159,7 +159,7 @@ fn test_file() -> File {
                             range: Some(0..10),
                         }),
                     ),
-                    Entry::tagged(
+                    EntryKind::normal(
                         "Entry5",
                         "This is entry 5",
                         Some(Value::Double(Num {
@@ -171,7 +171,7 @@ fn test_file() -> File {
                             range: None,
                         }),
                     ),
-                    Entry::untagged("UntaggedEntry", "Hi!"),
+                    EntryKind::orphaned("UntaggedEntry", "Hi!"),
                 ],
             ),
         ],
@@ -190,8 +190,8 @@ fn test_to_string() {
 
 #[test]
 fn test_from_string() {
-    let (sections, metadata) = de::from_str(TEST_STR).unwrap();
-    let mut left = File::new("test".to_owned(), sections, metadata);
+    let (sections, metadata) = de::from_reader(TEST_STR.as_bytes()).unwrap();
+    let mut left = File::new("test".into(), sections, metadata);
     let right = test_file();
 
     left.read_time = right.read_time;

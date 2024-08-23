@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
+    path::PathBuf,
 };
 
 use crate::games::Game;
@@ -242,7 +243,7 @@ pub struct FrontendVersion {
 #[serde(rename_all = "camelCase")]
 pub struct FrontendProfileMod {
     pub enabled: bool,
-    pub config_file: Option<String>,
+    pub config_file: Option<PathBuf>,
     #[serde(flatten)]
     pub data: FrontendMod,
 }

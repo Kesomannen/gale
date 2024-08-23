@@ -1,33 +1,31 @@
 import { invokeCommand } from './invoke';
-import type { ConfigEntryId, ConfigFile, ConfigSection, ConfigValue } from './models';
+import type { ConfigEntryId, ConfigValue, LoadFileResult } from './models';
 
-export function setTaggedConfig(id: ConfigEntryId, value: ConfigValue) {
+export async function setConfigEntry(id: ConfigEntryId, value: ConfigValue) {
 	if (
 		(value.type === 'int32' || value.type === 'double' || value.type === 'single') &&
 		value.content.value === null
 	)
 		return;
 
-	invokeCommand('set_tagged_config_entry', {
-		file: id.file.content.name,
+	await invokeCommand('set_config_entry', {
+		file: id.file.name,
 		section: id.section.name,
 		entry: id.entry.name,
 		value
-	}).then(() => (id.entry.value = value));
+	});
+
+	id.entry.value = value;
 }
 
-export function setUntaggedConfig(
-	file: ConfigFile,
-	section: ConfigSection,
-	name: string,
-	value: string
-) {
-	if (!value) return;
+export function configDisplayName(configFile: LoadFileResult) {
+	let name: string;
+	if (configFile.type == 'ok') {
+		name = configFile.metadata?.pluginName ?? configFile.name;
+	} else {
+		name = configFile.name;
+	}
 
-	invokeCommand('set_untagged_config_entry', {
-		file: file.name,
-		section: section.name,
-		entry: name,
-		value
-	});
+	// remove underscores, hyphens, and spaces
+	return name.replace(/[-_ ]/g, '');
 }

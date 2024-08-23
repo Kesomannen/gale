@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use serde::Serialize;
 
-use super::{de::FLAGS_MESSAGE, Entry, File, FileMetadata, Num, Section, TaggedEntry, Value};
+use super::{de::FLAGS_MESSAGE, Entry, EntryKind, File, FileMetadata, Num, Section, Value};
 use std::io;
 
 struct Serializer<W: io::Write> {
@@ -54,7 +54,7 @@ impl<W: io::Write> Serializer<W> {
         self.new_line()?;
 
         for entry in section.entries.iter() {
-            self.write_entry(entry)?;
+            self.write_entry_kind(entry)?;
             self.new_line()?;
         }
 
@@ -91,14 +91,14 @@ impl<W: io::Write> Serializer<W> {
         }
     }
 
-    fn write_entry(&mut self, entry: &Entry) -> io::Result<()> {
+    fn write_entry_kind(&mut self, entry: &EntryKind) -> io::Result<()> {
         match entry {
-            Entry::Tagged(tagged) => self.write_tagged_entry(tagged),
-            Entry::Untagged { name, value } => self.write_untagged_entry(name, value),
+            EntryKind::Normal(entry) => self.write_entry(entry),
+            EntryKind::Orphaned { name, value } => self.write_orphaned_entry(name, value),
         }
     }
 
-    fn write_tagged_entry(&mut self, entry: &TaggedEntry) -> io::Result<()> {
+    fn write_entry(&mut self, entry: &Entry) -> io::Result<()> {
         for line in entry.description.lines() {
             self.write(b"## ")?;
             self.write_str(line)?;
@@ -151,7 +151,7 @@ impl<W: io::Write> Serializer<W> {
         Ok(())
     }
 
-    fn write_untagged_entry(&mut self, name: &str, value: &str) -> io::Result<()> {
+    fn write_orphaned_entry(&mut self, name: &str, value: &str) -> io::Result<()> {
         self.write_str(name)?;
         self.write(b" = ")?;
         self.write_str(value)?;

@@ -7,32 +7,32 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
 	import TabsMenu from '$lib/components/TabsMenu.svelte';
-	import { setTaggedConfig } from '$lib/config';
+	import { setConfigEntry } from '$lib/config';
 	import type { ConfigEntryId } from '$lib/models';
-	import { getListSeparator } from '$lib/util';
+	import { getListSeparator, type ListSeparator } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button, Tabs } from 'bits-ui';
 	import { writable } from 'svelte/store';
 
 	let mode: 'text' | 'list' = 'text';
 	let newElement = '';
-	let separator = ',';
+	let separator: ListSeparator = { type: 'default', char: ',' };
 
 	$: open = $expandedEntry !== null;
 	$: if (open) reset();
 
 	$: content = ($expandedEntry?.entry.value.content as string) ?? '';
-	$: items = content.split(separator);
+	$: items = content.split(separator.char);
 
-	function updateListContent() {
-		content = items.join(separator);
-		submitValue();
+	async function updateListContent() {
+		content = items.join(separator.char);
+		await submitValue();
 	}
 
-	function submitValue() {
+	async function submitValue() {
 		if ($expandedEntry === null) return;
 
-		setTaggedConfig($expandedEntry, {
+		await setConfigEntry($expandedEntry, {
 			type: 'string',
 			content
 		});
@@ -70,7 +70,7 @@
 				<ResizableInputField
 					value={content}
 					on:change={(e) => {
-						content = e.target.value;
+						content = e.target?.value;
 						submitValue();
 					}}
 				/>

@@ -321,7 +321,7 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
         },
         None => LocalMod {
             uuid,
-            name: util::fs::file_name_lossy(path.with_extension("")),
+            name: util::fs::file_name_owned(path.with_extension("")),
             ..Default::default()
         },
     };
