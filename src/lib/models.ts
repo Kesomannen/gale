@@ -34,7 +34,8 @@ export interface ConfigSection {
 }
 
 export interface ConfigFile {
-	name: string;
+	displayName: string;
+	relativePath: string;
 	metadata?: {
 		pluginName: string;
 		pluginVersion: string;
@@ -55,9 +56,11 @@ export interface ConfigRange {
 
 export type LoadFileResult =
 	| ({ type: 'ok' } & ConfigFile)
+	| { type: 'unsupported'; relativePath: string; displayName: null }
 	| {
 			type: 'err';
-			name: string;
+			displayName: string;
+			relativePath: string;
 			error: string;
 	  };
 

@@ -1,20 +1,22 @@
 use std::{
+    borrow::Cow,
+    collections::HashMap,
     fmt::Display,
     fs,
     io::{self, BufReader, BufWriter},
     ops::Range,
     path::{Path, PathBuf},
     str::FromStr,
-    time::{Instant, SystemTime},
+    time::SystemTime,
 };
 
 use anyhow::{anyhow, Context, Result};
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use walkdir::WalkDir;
 
-use crate::{manager::Profile, util::fs::PathExt};
-use log::trace;
+use crate::manager::Profile;
 
 pub mod commands;
 pub mod de;
@@ -26,6 +28,7 @@ mod tests;
 #[derive(Error, Debug)]
 #[error("failed to load config file: {}", error)]
 pub struct LoadFileError {
+    display_name: String,
     relative_path: PathBuf,
     error: anyhow::Error,
 }
@@ -34,6 +37,7 @@ pub type LoadFileResult = std::result::Result<File, LoadFileError>;
 
 pub trait LoadFileResultExt {
     fn relative_path(&self) -> &Path;
+    fn display_name(&self) -> &str;
 
     fn path(&self, profile_dir: &Path) -> PathBuf {
         profile_dir.join(file_path(self.relative_path()))
@@ -47,11 +51,19 @@ impl LoadFileResultExt for LoadFileResult {
             Err(err) => &err.relative_path,
         }
     }
+
+    fn display_name(&self) -> &str {
+        match self {
+            Ok(file) => &file.display_name,
+            Err(err) => &err.display_name,
+        }
+    }
 }
 
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
+    display_name: String,
     // relative to the BepInEx/config directory
     relative_path: PathBuf,
     #[serde(skip)]
@@ -62,11 +74,13 @@ pub struct File {
 
 impl File {
     pub fn new(
+        display_name: String,
         relative_path: PathBuf,
         sections: Vec<Section>,
         metadata: Option<FileMetadata>,
     ) -> Self {
         Self {
+            display_name,
             relative_path,
             read_time: SystemTime::now(),
             metadata,
@@ -195,9 +209,10 @@ where
 }
 
 impl Profile {
-    pub fn refresh_config(&mut self) {
-        load_config(self.path.clone(), &mut self.config);
+    pub fn refresh_config(&mut self) -> Vec<PathBuf> {
+        let other_files = load_config(self.path.clone(), &mut self.config);
         self.link_config();
+        other_files
     }
 
     fn link_config(&mut self) {
@@ -230,19 +245,6 @@ impl Profile {
                 || mod_name == meta.plugin_guid
                 || mod_name.replace('_', "") == meta.plugin_name.replace(' ', "")
         }
-    }
-
-    fn find_config_file<'a>(&'a self, relative_path: &Path) -> Result<&'a LoadFileResult> {
-        self.config
-            .iter()
-            .find(|f| f.relative_path() == relative_path)
-            .ok_or_else(|| {
-                anyhow!(
-                    "config file at {} not found in profile {}",
-                    relative_path.display(),
-                    self.name
-                )
-            })
     }
 
     fn modify_config<F, R>(
@@ -289,83 +291,173 @@ impl Profile {
     }
 }
 
-pub fn load_config(mut root: PathBuf, vec: &mut Vec<LoadFileResult>) {
-    root.push("BepInEx");
-    root.push("config");
-
-    let files = WalkDir::new(&root)
-        .into_iter()
-        .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "cfg"));
-
-    trace!("loading config files from {}", root.display());
-
-    let start = Instant::now();
-
-    for entry in files {
-        load_config_file(entry, &root, vec);
+// returns a list of non-cfg files that were found
+pub fn load_config(mut profile_dir: PathBuf, vec: &mut Vec<LoadFileResult>) -> Vec<PathBuf> {
+    enum File {
+        Cfg {
+            res: LoadFileResult,
+            index: Option<usize>,
+        },
+        Other(PathBuf),
     }
 
-    trace!("loaded config files in {:?}", start.elapsed());
+    const OTHER_EXTENSIONS: &[&str] = &["json", "toml", "yaml", "yml", "xml", "ini"];
+
+    profile_dir.push("BepInEx");
+    profile_dir.push("config");
+
+    let files = WalkDir::new(&profile_dir)
+        .into_iter()
+        .par_bridge()
+        .filter_map(|entry| entry.ok())
+        .filter_map(|entry| {
+            let extension = entry.path().extension()?;
+
+            if extension == "cfg" {
+                load_config_file(entry, &profile_dir, vec)
+                    .map(|(res, index)| File::Cfg { res, index })
+            } else if OTHER_EXTENSIONS.iter().any(|ext| extension == *ext) {
+                let relative_path = entry
+                    .path()
+                    .strip_prefix(&profile_dir)
+                    .expect("file path should be a child of root")
+                    .to_path_buf();
+
+                Some(File::Other(relative_path))
+            } else {
+                None
+            }
+        })
+        .collect_vec_list()
+        .into_iter()
+        .flatten();
+
+    let mut other_files = Vec::new();
+
+    for file in files {
+        match file {
+            File::Cfg { res, index } => match index {
+                Some(index) => vec[index] = res,
+                None => vec.push(res),
+            },
+            File::Other(path) => other_files.push(path),
+        }
+    }
+
+    resolve_duplicate_names(vec);
+
+    other_files
 }
 
-fn load_config_file(entry: walkdir::DirEntry, root: &Path, vec: &mut Vec<LoadFileResult>) {
+fn resolve_duplicate_names(vec: &mut Vec<LoadFileResult>) {
+    let mut name_changes = HashMap::new();
+
+    for (i, file_a) in vec.iter().enumerate() {
+        for (j, file_b) in vec[i + 1..].iter().enumerate() {
+            let name_a = file_a.display_name();
+            let name_b = file_b.display_name();
+
+            if name_a != name_b {
+                continue;
+            }
+
+            // find the difference in the file names and append it to the display name
+            // to differentiate between the two files
+
+            let path_a = file_stem(file_a);
+            let path_b = file_stem(file_b);
+            let max_len = path_a.len().min(path_b.len());
+
+            let mut common = 0;
+            while common < max_len {
+                if path_a.chars().nth(common) != path_b.chars().nth(common) {
+                    break;
+                }
+
+                common += 1;
+            }
+
+            let mut new_name_a = name_a.to_owned();
+            new_name_a.push_str(&path_a[common..]);
+            name_changes.insert(i, new_name_a);
+
+            let mut new_name_b = name_b.to_owned();
+            new_name_b.push_str(&path_b[common..]);
+            name_changes.insert(j + i + 1, new_name_b);
+        }
+    }
+
+    for (index, new_name) in name_changes {
+        match &mut vec[index] {
+            Ok(file) => file.display_name = new_name,
+            Err(err) => err.display_name = new_name,
+        }
+    }
+
+    fn file_stem(file: &LoadFileResult) -> Cow<str> {
+        file.relative_path()
+            .file_stem()
+            .expect("file should have name")
+            .to_string_lossy()
+    }
+}
+
+fn load_config_file(
+    entry: walkdir::DirEntry,
+    root: &Path,
+    existing: &[LoadFileResult],
+) -> Option<(LoadFileResult, Option<usize>)> {
     let relative_path = entry
         .path()
         .strip_prefix(root)
         .expect("file path should be a child of root")
         .to_path_buf();
 
-    trace!("loading config file {:?}", relative_path.display());
-
-    let curr_index = vec
+    let curr_index = existing
         .iter()
         .position(|file| file.relative_path() == relative_path);
 
     if let Some(curr_index) = curr_index {
-        if let Ok(curr_file) = &vec[curr_index] {
+        if let Ok(curr_file) = &existing[curr_index] {
             if let Ok(metadata) = entry.metadata() {
                 if let Ok(modified) = metadata.modified() {
                     if modified <= curr_file.read_time {
-                        trace!(
-                            "file {} is not modified since last read",
-                            relative_path.display()
-                        );
-                        return; // file is not modified since we last read it
+                        return None; // file is not modified since we last read it
                     }
                 }
             }
         }
     }
 
-    let start = Instant::now();
-
     let data = fs::File::open(entry.path())
         .map(BufReader::new)
         .context("failed to open file")
-        .and_then(|reader| {
-            trace!("opening file took {:?}", start.elapsed());
+        .and_then(de::from_reader);
 
-            let start = Instant::now();
+    let display_name = match &data {
+        Ok((_, Some(metadata))) => format_name(&metadata.plugin_name),
+        _ => {
+            let name = relative_path
+                .file_stem()
+                .expect("file should have name")
+                .to_string_lossy();
 
-            let data = de::from_reader(reader);
-
-            trace!("reading file took {:?}", start.elapsed());
-
-            data
-        });
+            format_name(&name)
+        }
+    };
 
     let res = match data {
-        Ok((sections, metadata)) => Ok(File::new(relative_path, sections, metadata)),
+        Ok((sections, metadata)) => Ok(File::new(display_name, relative_path, sections, metadata)),
         Err(error) => Err(LoadFileError {
+            display_name,
             relative_path,
             error,
         }),
     };
 
-    if let Some(curr_index) = curr_index {
-        vec[curr_index] = res; // replace the old file
-    } else {
-        vec.push(res);
+    return Some((res, curr_index));
+
+    fn format_name(name: &str) -> String {
+        name.replace(&['_', '-', ' '], "")
     }
 }

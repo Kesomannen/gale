@@ -6,13 +6,23 @@ use crate::{
     util::cmd::{Result, StateMutex},
 };
 use serde::Serialize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum FrontendLoadFileResult {
     Ok(File),
-    Err { name: String, error: String },
+    Err {
+        #[serde(rename = "displayName")]
+        display_name: String,
+        #[serde(rename = "relativePath")]
+        relative_path: PathBuf,
+        error: String,
+    },
+    Unsupported {
+        #[serde(rename = "relativePath")]
+        relative_path: PathBuf,
+    },
 }
 
 #[tauri::command]
@@ -20,7 +30,7 @@ pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<FrontendL
     let mut manager = manager.lock().unwrap();
     let profile = manager.active_profile_mut();
 
-    profile.refresh_config();
+    let other_files = profile.refresh_config();
 
     Ok(profile
         .config
@@ -28,10 +38,16 @@ pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<FrontendL
         .map(|res| match res {
             Ok(file) => FrontendLoadFileResult::Ok(file.clone()),
             Err(err) => FrontendLoadFileResult::Err {
-                name: err.relative_path.to_string_lossy().into_owned(),
+                display_name: err.display_name.clone(),
+                relative_path: err.relative_path.clone(),
                 error: format!("{:#}", err.error),
             },
         })
+        .chain(
+            other_files
+                .into_iter()
+                .map(|relative_path| FrontendLoadFileResult::Unsupported { relative_path }),
+        )
         .collect())
 }
 
@@ -81,8 +97,8 @@ pub fn open_config_file(file: &Path, manager: StateMutex<ModManager>) -> Result<
     let manager = manager.lock().unwrap();
 
     let profile = manager.active_profile();
-    let path = profile.find_config_file(file)?.path(&profile.path);
-    open::that(&path).with_context(|| format!("failed to open config file {}", path.display()))?;
+    let path = profile.path.join(super::file_path(file));
+    open::that(&path).with_context(|| format!("failed to open config file at {}", path.display()))?;
 
     Ok(())
 }

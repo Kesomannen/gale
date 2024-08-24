@@ -23,7 +23,9 @@
 	import { Render } from '@jill64/svelte-sanitize';
 	import { page } from '$app/stores';
 	import StringConfig from '$lib/config/StringConfig.svelte';
-	import { configDisplayName } from '$lib/config';
+	import BigButton from '$lib/components/BigButton.svelte';
+	import { readFile } from '@tauri-apps/plugin-fs';
+	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	let files: LoadFileResult[] | undefined;
 
@@ -48,17 +50,14 @@
 				let lowerSearch = searchTerm.toLowerCase().trim();
 
 				return (
-					file.name.toLowerCase().includes(lowerSearch) ||
-					configDisplayName(file).toLowerCase().includes(lowerSearch)
+					file.relativePath.toLowerCase().includes(lowerSearch) ||
+					file.displayName?.toLowerCase().includes(lowerSearch)
 				);
 			});
 		}
 
 		files.sort((a, b) => {
-			let aName = configDisplayName(a);
-			let bName = configDisplayName(b);
-
-			return aName.localeCompare(bName);
+			return (a.displayName ?? a.relativePath).localeCompare(b.displayName ?? b.relativePath);
 		});
 
 		return files;
@@ -113,12 +112,11 @@
 
 	async function refresh() {
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
-
 		console.log(files);
 
 		let searchParam = $page.url.searchParams.get('file');
 		if (searchParam) {
-			selectedFile = files.find((file) => file.name === searchParam);
+			selectedFile = files.find((file) => file.relativePath === searchParam);
 			if (selectedFile === undefined) {
 				return;
 			}
@@ -127,7 +125,7 @@
 				selectedSection = selectedFile.sections[0];
 			}
 
-			searchTerm = selectedFile.name;
+			searchTerm = selectedFile.relativePath;
 		}
 
 		$page.url.searchParams.delete('file');
@@ -136,7 +134,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="flex flex-col py-3 min-w-72 w-[20%] bg-gray-700 border-r border-gray-600 overflow-y-auto overflow-x-hidden"
+		class="overflow-y-auto min-w-80 w-[25%] bg-gray-700 overflow-hidden border-r border-gray-600"
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
@@ -146,15 +144,15 @@
 		{:else if files.length === 0}
 			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">No config files found</div>
 		{:else}
-			<div class="relative mx-3 mb-2">
+			<div class="relative mx-2 my-2">
 				<SearchBar bind:value={searchTerm} placeholder="Search for files..." brightness={800} />
 			</div>
 
-			{#each shownFiles ?? [] as file}
+			{#each shownFiles ?? [] as file, i}
 				<ConfigFileTreeItem
 					{file}
 					{selectedSection}
-					onErrorFileClicked={(file) => {
+					onFileClicked={(file) => {
 						selectedFile = file;
 						selectedSection = undefined;
 					}}
@@ -173,15 +171,15 @@
 
 	<div class="flex-grow p-4 overflow-y-auto">
 		{#if selectedFile !== undefined}
-			<div class="text-slate-200 text-xl font-bold truncate flex-shrink-0">
-				{selectedFile.name}
+			<div class="text-slate-200 text-2xl font-bold truncate flex-shrink-0">
+				{selectedFile.relativePath}
 				{#if selectedSection}
-					<span class="text-slate-400">/</span>
+					<span class="text-slate-400 font-light">/</span>
 					{selectedSection.name}
 				{/if}
 			</div>
 
-			{#if selectedSection !== undefined && selectedFile.type === 'ok'}
+			{#if selectedFile.type === 'ok'}
 				{#if selectedFile.metadata}
 					<div class="text-slate-400 font-medium">
 						Created by {selectedFile.metadata.pluginName}
@@ -189,65 +187,85 @@
 					</div>
 				{/if}
 
-				<div class="h-1 flex-shrink-0" />
+				{#if selectedSection !== undefined}
+					{#each selectedSection.entries as entry (entry)}
+						{#if entry.type === 'normal'}
+							<div class="flex items-center text-slate-300 pl-2 my-1">
+								<Tooltip
+									side="top"
+									class="w-[45%] min-w-52 text-slate-300 pr-2 cursor-auto text-left truncate flex-shrink-0"
+								>
+									{sentenceCase(entry.name)}
+									<svelte:fragment slot="tooltip">
+										<div>
+											<span class="text-slate-200 text-lg font-bold">{entry.name}</span>
+											<span class="text-slate-400 ml-1"> ({typeName(entry)})</span>
+										</div>
 
-				{#each selectedSection.entries as entry}
-					{#if entry.type === 'normal'}
-						<div class="flex items-center text-slate-300 pl-2 my-1">
-							<Tooltip
-								side="top"
-								class="w-[45%] min-w-52 text-slate-300 pr-2 cursor-auto text-left truncate flex-shrink-0"
-							>
-								{sentenceCase(entry.name)}
-								<svelte:fragment slot="tooltip">
-									<div>
-										<span class="text-slate-200 text-lg font-bold">{entry.name}</span>
-										<span class="text-slate-400 ml-1"> ({typeName(entry)})</span>
-									</div>
+										<div class="mb-1">
+											<Render html={entry.description.replace(/\n/g, '<br/>')} />
+										</div>
 
-									<div class="mb-1">
-										<Render html={entry.description.replace(/\n/g, '<br/>')} />
-									</div>
+										{#if entry.defaultValue}
+											<p>
+												<span class="font-semibold">Default: </span>
+												{configValueToString(entry.defaultValue)}
+											</p>
+										{/if}
 
-									{#if entry.defaultValue}
-										<p>
-											<span class="font-semibold">Default: </span>
-											{configValueToString(entry.defaultValue)}
-										</p>
+										{#if (entry.value.type === 'int32' || entry.value.type === 'double' || entry.value.type === 'single') && entry.value.content.range}
+											<p>
+												<span class="font-semibold">Range: </span>
+												{entry.value.content.range.start} - {entry.value.content.range.end}
+											</p>
+										{/if}
+									</svelte:fragment>
+								</Tooltip>
+								{#if entry.value.type === 'string'}
+									<StringConfig entryId={entryId(entry)} />
+								{:else if entry.value.type === 'enum'}
+									<EnumConfig entryId={entryId(entry)} />
+								{:else if entry.value.type === 'flags'}
+									<FlagsConfig entryId={entryId(entry)} />
+								{:else if entry.value.type === 'boolean'}
+									<BoolConfig entryId={entryId(entry)} />
+								{:else if entry.value.type == 'other'}
+									<StringConfig entryId={entryId(entry)} isOther={true} />
+								{:else if isNum(entry.value)}
+									{#if entry.value.content.range}
+										<SliderConfig entryId={entryId(entry)} />
+									{:else}
+										<NumberInputConfig entryId={entryId(entry)} />
 									{/if}
-
-									{#if (entry.value.type === 'int32' || entry.value.type === 'double' || entry.value.type === 'single') && entry.value.content.range !== undefined}
-										<p>
-											<span class="font-semibold">Range: </span>
-											{entry.value.content.range.start} - {entry.value.content.range.end}
-										</p>
-									{/if}
-								</svelte:fragment>
-							</Tooltip>
-							{#if entry.value.type === 'string'}
-								<StringConfig entryId={entryId(entry)} />
-							{:else if entry.value.type === 'enum'}
-								<EnumConfig entryId={entryId(entry)} />
-							{:else if entry.value.type === 'flags'}
-								<FlagsConfig entryId={entryId(entry)} />
-							{:else if entry.value.type === 'boolean'}
-								<BoolConfig entryId={entryId(entry)} />
-							{:else if entry.value.type == 'other'}
-								<StringConfig entryId={entryId(entry)} isOther={true} />
-							{:else if isNum(entry.value)}
-								{#if entry.value.content.range}
-									<SliderConfig entryId={entryId(entry)} />
-								{:else}
-									<NumberInputConfig entryId={entryId(entry)} />
 								{/if}
-							{/if}
-						</div>
-					{/if}
-				{/each}
+							</div>
+						{/if}
+					{/each}
+				{/if}
+			{:else if selectedFile.type === 'unsupported'}
+				<div class="text-slate-400 mb-1">
+					This file is in an unsupported format. Please open it in an external program to make
+					changes.
+				</div>
+				<BigButton
+					color="gray"
+					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
+				>
+					<Icon icon="mdi:open-in-new" class="mr-2" />
+					Open in external program
+				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<code class="text-red-400 bg-gray-900 px-2 py-1 rounded-md flex">
+				<div class="text-slate-400 mb-1">An error occured while reading this config file:</div>
+				<code class="flex text-red-500 bg-gray-900 px-2 py-1 mb-1 rounded">
 					{capitalize(selectedFile.error)}
 				</code>
+				<BigButton
+					color="gray"
+					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
+				>
+					<Icon icon="mdi:open-in-new" class="mr-2" />
+					Open in external program
+				</BigButton>
 			{/if}
 		{:else}
 			<div class="flex items-center justify-center text-lg text-slate-400 w-full h-full">

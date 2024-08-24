@@ -1497,6 +1497,7 @@ dependencies = [
  "log",
  "objc",
  "open",
+ "rayon",
  "reqwest",
  "semver",
  "serde",

@@ -9,7 +9,7 @@
 
 	async function onClick() {
 		let result = await invokeCommand<ConfigValue>('reset_config_entry', {
-			file: entryId.file.name,
+			file: entryId.file.relativePath,
 			section: entryId.section.name,
 			entry: entryId.entry.name
 		});

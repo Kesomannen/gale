@@ -5,11 +5,14 @@
 ### Changed
 
 - Hide orphaned config entries in the config editor
+- List other common config file formats in the config editor
 
 ### Fixed
 
-- Various issues with config file names with non-Utf8 characters
-- Greatly improved config read performance by reading multiple files in parallel
+- Various issues related to config file names with non-UTF8 characters
+- Multiple config files from the same mod being displayed with the same name
+- Decrease config time by reading files in parallel
+- Various UI issues
 
 ## 0.7.6 (2024-08-22)
 

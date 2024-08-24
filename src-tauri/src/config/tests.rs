@@ -84,12 +84,13 @@ Entry4 = 5
 # Default value: 2
 Entry5 = 3.13
 
-UntaggedEntry = Hi!
+OrphanedEntry = Hi!
 
 "###;
 
 fn test_file() -> File {
     File::new(
+        "Test".to_owned(),
         "test".into(),
         vec![
             Section::new(
@@ -171,7 +172,7 @@ fn test_file() -> File {
                             range: None,
                         }),
                     ),
-                    EntryKind::orphaned("UntaggedEntry", "Hi!"),
+                    EntryKind::orphaned("OrphanedEntry", "Hi!"),
                 ],
             ),
         ],
@@ -191,7 +192,7 @@ fn test_to_string() {
 #[test]
 fn test_from_string() {
     let (sections, metadata) = de::from_reader(TEST_STR.as_bytes()).unwrap();
-    let mut left = File::new("test".into(), sections, metadata);
+    let mut left = File::new("Test".to_owned(), "test".into(), sections, metadata);
     let right = test_file();
 
     left.read_time = right.read_time;
