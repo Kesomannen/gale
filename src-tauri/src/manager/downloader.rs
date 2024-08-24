@@ -9,7 +9,7 @@ use std::{
 use anyhow::{anyhow, bail, Context, Result};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Event, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use thiserror::Error;
 use typeshare::typeshare;
 
@@ -527,17 +527,15 @@ fn resolve_deep_link(url: &str, thunderstore: &Thunderstore) -> Result<ModRef> {
     Ok(borrowed_mod.into())
 }
 
-pub fn handle_deep_link(handle: &AppHandle, event: Event) {
-    let url = event.payload();
-
+pub fn handle_deep_link(handle: &AppHandle, url: &str) {
     let mod_ref = {
         let thunderstore = handle.state::<Mutex<Thunderstore>>();
         let thunderstore = thunderstore.lock().unwrap();
 
         match resolve_deep_link(url, &thunderstore) {
             Ok(mod_ref) => mod_ref,
-            Err(e) => {
-                logger::log_js_err("failed to resolve deep link", &e, handle);
+            Err(err) => {
+                logger::log_js_err("Failed to resolve deep link", &err, handle);
                 return;
             }
         }
@@ -552,8 +550,8 @@ pub fn handle_deep_link(handle: &AppHandle, event: Event) {
             &handle,
         )
         .await
-        .unwrap_or_else(|e| {
-            logger::log_js_err("failed to install mod from deep link", &e, &handle);
+        .unwrap_or_else(|err| {
+            logger::log_js_err("Failed to install mod from deep link", &err, &handle);
         });
     });
 }

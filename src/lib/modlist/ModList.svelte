@@ -45,7 +45,7 @@
 			uuid: string;
 			totalDelta: number;
 		};
-		onModCtrlClicked: { 
+		onModCtrlClicked: {
 			mod: Mod;
 		};
 	}>();
@@ -63,7 +63,7 @@
 			sortOrder
 		};
 	}
-	
+
 	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
 		maxCount += 20;
 	}
@@ -338,7 +338,6 @@
 					let:isInstalled
 					draggable={reorderable}
 					isSelected={activeMod?.uuid == mod.uuid}
-					{showInstalledIcon}
 					{mod}
 				>
 					<slot name="item" {mod} {isInstalled} />

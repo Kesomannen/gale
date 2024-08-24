@@ -18,7 +18,7 @@ impl WindowExt for tauri::WebviewWindow {
 
             #[cfg(target_os = "macos")]
             unsafe {
-                let () = msg_send![webview.inner(), setPageZoom: scale_factor];
+                msg_send![webview.inner(), setPageZoom: scale_factor].ok()
             }
         })
     }

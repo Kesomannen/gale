@@ -37,8 +37,7 @@
       "deb": {
         "depends": []
       }
-    },
-    "createUpdaterArtifacts": "v1Compatible"
+    }
   },
   "productName": "Gale",
   "version": "0.7.6",
@@ -57,6 +56,25 @@
         ]
       },
       "mobile": []
+    },
+    "cli": {
+      "description": "",
+      "args": [
+        {
+          "name": "game",
+          "short": "g",
+          "takesValue": true
+        },
+        {
+          "name": "profile",
+          "short": "p",
+          "takesValue": true
+        },
+        {
+          "name": "launch",
+          "short": "l"
+        }
+      ]
     }
   },
   "app": {

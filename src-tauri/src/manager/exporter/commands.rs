@@ -1,6 +1,6 @@
 use super::modpack::{self, changelog, ModpackArgs};
 use crate::{
-    manager::{commands::save, ModManager},
+    manager::{commands::save, ModManager, ProfileModKind},
     prefs::Prefs,
     thunderstore::{self, Thunderstore},
     util::{
@@ -13,7 +13,8 @@ use anyhow::{anyhow, Context};
 use itertools::Itertools;
 use log::warn;
 use std::{fs, path::PathBuf};
-use tauri::State;
+use tauri::{AppHandle, State};
+use tauri_plugin_clipboard_manager::ClipboardExt;
 use uuid::Uuid;
 
 #[tauri::command]
@@ -139,16 +140,67 @@ pub async fn upload_pack(
 }
 
 #[tauri::command]
-pub fn export_dep_string(manager: StateMutex<ModManager>) -> Result<String> {
+pub fn copy_dependency_strings(app: AppHandle, manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
-    let result = manager
+    let content = manager
         .active_profile()
-        .remote_mods()
-        .map(|(_, full_name, _)| full_name)
+        .mods
+        .iter()
+        .map(|profile_mod| profile_mod.kind.full_name())
         .join("\n");
 
-    Ok(result)
+    app.clipboard()
+        .write_text(content)
+        .context("failed to write to clipboard")?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn copy_debug_info(app: AppHandle, manager: StateMutex<ModManager>) -> Result<()> {
+    let manager = manager.lock().unwrap();
+    let profile = manager.active_profile();
+
+    let log = profile
+        .bepinex_log_path()
+        .and_then(|path| fs::read_to_string(path).map_err(|err| anyhow!(err)));
+
+    let content = format!(
+        "OS: {}\nGale version: {}\n\nMods ({}):\n{}\n\nLatest log:\n{}",
+        std::env::consts::OS,
+        env!("CARGO_PKG_VERSION"),
+        profile.mods.len(),
+        profile
+            .mods
+            .iter()
+            .map(|profile_mod| match &profile_mod.kind {
+                ProfileModKind::Remote { full_name, .. } => {
+                    let (name, author) = full_name
+                        .split_once('-')
+                        .expect("mod should have a name and author");
+                    format!("{} by {}", author, name)
+                }
+                ProfileModKind::Local(data) => {
+                    format!(
+                        "{} by {} [LOCAL]",
+                        data.name,
+                        data.author.as_deref().unwrap_or("unknown"),
+                    )
+                }
+            })
+            .join("\n"),
+        match log {
+            Ok(log) => log,
+            Err(err) => format!("failed to read log: {}", err),
+        }
+    );
+
+    app.clipboard()
+        .write_text(content)
+        .context("failed to write to clipboard")?;
+
+    Ok(())
 }
 
 #[tauri::command]

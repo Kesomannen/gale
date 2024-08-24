@@ -6,7 +6,7 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
@@ -406,6 +406,16 @@ impl Profile {
                 let deps = thunderstore.dependencies(other.version).0;
                 deps.iter().any(|dep| dep.package == target_mod.package)
             })
+    }
+
+    fn bepinex_log_path(&self) -> Result<PathBuf> {
+        let path = self.path.join("BepInEx").join("LogOutput.log");
+
+        if !path.exists() {
+            bail!("no log file found");
+        }
+
+        Ok(path)
     }
 
     fn load(mut path: PathBuf) -> Result<Self> {

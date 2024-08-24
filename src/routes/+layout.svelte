@@ -35,7 +35,7 @@
 </script>
 
 <main
-	class="h-screen overflow-hidden flex flex-col rounded-lg border border-gray-600 bg-gray-800 relative"
+	class="overflow-hidden flex flex-col bg-gray-800 relative"
 	on:contextmenu={(e) => {
 		if (window.location.hostname === 'tauri.localhost') {
 			e.preventDefault();
@@ -103,3 +103,13 @@
 
 <InstallProgressPopup />
 <WelcomePopup />
+
+<style lang="postcss">
+	main {
+		height: calc(100vh - 1px);
+	}
+
+	:global(div) {
+		scrollbar-color: theme(colors.gray.600) theme(colors.gray.800);
+	}
+</style>

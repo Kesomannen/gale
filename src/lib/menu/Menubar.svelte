@@ -86,11 +86,6 @@
 		activeProfile.update((p) => p);
 	}
 
-	async function copyDependencyStrings() {
-		let text = await invokeCommand<string>('export_dep_string');
-		await writeText(text);
-	}
-
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
 		profileOperation = operation;
 		profileOperationName = $activeProfile?.name ?? 'Unknown';
@@ -158,7 +153,10 @@
 				<MenubarItem on:click={() => openProfileOperation('duplicate')}
 					>Duplicate active profile</MenubarItem
 				>
-				<MenubarItem on:click={copyDependencyStrings}>Copy dependency strings</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('copy_dependency_strings')}
+					>Copy dependency strings</MenubarItem
+				>
+				<MenubarItem on:click={() => invokeCommand('copy_debug_info')}>Copy debug info</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem on:click={() => setAllModsState(true)}>Enable all mods</MenubarItem>
 				<MenubarItem on:click={() => setAllModsState(false)}>Disable all mods</MenubarItem>

@@ -98,7 +98,8 @@ pub fn open_config_file(file: &Path, manager: StateMutex<ModManager>) -> Result<
 
     let profile = manager.active_profile();
     let path = profile.path.join(super::file_path(file));
-    open::that(&path).with_context(|| format!("failed to open config file at {}", path.display()))?;
+    open::that(&path)
+        .with_context(|| format!("failed to open config file at {}", path.display()))?;
 
     Ok(())
 }

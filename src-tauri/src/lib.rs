@@ -1,6 +1,7 @@
 use ::log::error;
 use anyhow::Context;
-use tauri::{AppHandle, Listener, Manager};
+use tauri::{AppHandle, Manager};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
 
 #[macro_use]
@@ -13,6 +14,7 @@ extern crate webkit2gtk;
 #[macro_use]
 extern crate objc;
 
+mod cli;
 mod config;
 mod games;
 mod logger;
@@ -102,7 +104,8 @@ pub fn run() {
             manager::exporter::commands::get_pack_args,
             manager::exporter::commands::set_pack_args,
             manager::exporter::commands::generate_changelog,
-            manager::exporter::commands::export_dep_string,
+            manager::exporter::commands::copy_dependency_strings,
+            manager::exporter::commands::copy_debug_info,
             config::commands::get_config_files,
             config::commands::set_config_entry,
             config::commands::reset_config_entry,
@@ -119,6 +122,17 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            app.get_window("main")
+                .expect("app should have main window")
+                .set_focus()
+                .ok();
+
+            if args.len() > 1 {
+                manager::downloader::handle_deep_link(&app, &args[1]);
+            }
+        }))
+        .plugin(tauri_plugin_cli::init())
         .setup(|app| {
             let handle = app.handle().clone();
             logger::setup().ok();
@@ -134,15 +148,12 @@ pub fn run() {
                 return Err(err.into());
             }
 
-            /*
-            if let Err(err) = cli::run(app) {
-                error!("failed to run CLI! {:#}", err);
-            }
-            */
+            app.deep_link().register("ror2mm").unwrap_or_else(|err| {
+                error!("failed to register deep link: {:#}", err);
+            });
 
-            app.listen("deep-link://new-url", move |event| {
-                log::debug!("received deep link event: {:?}", event);
-                manager::downloader::handle_deep_link(&handle, event);
+            cli::run(app).unwrap_or_else(|err| {
+                error!("failed to run CLI: {:#}", err);
             });
 
             Ok(())

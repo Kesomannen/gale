@@ -50,7 +50,10 @@
 	<div
 		class="flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800"
 	>
-		<Button.Root class="flex items-center h-full font-semibold cursor-default" on:click={() => launchGame(false)}>
+		<Button.Root
+			class="flex items-center h-full font-semibold cursor-default"
+			on:click={() => launchGame(false)}
+		>
 			<Icon icon="mdi:play-circle" class="text-xl mr-2" />
 			Launch game
 		</Button.Root>

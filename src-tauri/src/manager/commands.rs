@@ -1,6 +1,4 @@
-use std::path::PathBuf;
-
-use anyhow::{anyhow, bail, Context};
+use anyhow::{anyhow, Context};
 use serde::Serialize;
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -460,25 +458,11 @@ pub fn open_plugin_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()
     Ok(())
 }
 
-fn bepinex_log_path(manager: &ModManager) -> anyhow::Result<PathBuf> {
-    let path = manager
-        .active_profile()
-        .path
-        .join("BepInEx")
-        .join("LogOutput.log");
-
-    if !path.exists() {
-        bail!("no log file found");
-    }
-
-    Ok(path)
-}
-
 #[tauri::command]
 pub fn open_bepinex_log(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
-    let path = bepinex_log_path(&manager)?;
+    let path = manager.active_profile().bepinex_log_path()?;
     open::that(path).context("failed to open log file")?;
 
     Ok(())

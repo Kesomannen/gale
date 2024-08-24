@@ -1,4 +1,7 @@
-use std::{fs::{self, DirEntry}, iter};
+use std::{
+    fs::{self, DirEntry},
+    iter,
+};
 
 use anyhow::{bail, Context, Result};
 use itertools::Itertools;
