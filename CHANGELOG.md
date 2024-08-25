@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.7.7 (2024-08-25)
+
+### Added
+
+- Profile > Copy debug info button for easier troubleshooting
 
 ### Changed
 
