@@ -65,9 +65,8 @@ keyring = { version = "3", features = [
 ] }
 dirs-next = "2"
 trash = "5"
-tempfile = "3.12.0"
-rayon = "1.10.0"
-window-vibrancy = "0.5.1"
+tempfile = "3"
+rayon = "1"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

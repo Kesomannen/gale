@@ -13,7 +13,7 @@
 - FINALLY fixed the "Install with Mod Manager" button on Thunderstore
 - Various issues related to config file names with non-UTF8 characters
 - Multiple config files from the same mod being displayed with the same name
-- Decrease config time by reading files in parallel
+- Decrease config load time by reading files in parallel
 - Various UI issues
 
 ## 0.7.6 (2024-08-22)

@@ -1696,7 +1696,6 @@ dependencies = [
  "uuid",
  "walkdir",
  "webkit2gtk",
- "window-vibrancy",
  "winreg",
  "zip 0.6.6",
 ]

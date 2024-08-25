@@ -35,7 +35,7 @@
 </script>
 
 <main
-	class="overflow-hidden flex flex-col bg-gray-800 relative"
+	class="overflow-hidden flex flex-col bg-gray-800 relative rounded-lg border border-gray-600"
 	on:contextmenu={(e) => {
 		if (window.location.hostname === 'tauri.localhost') {
 			e.preventDefault();
@@ -110,6 +110,6 @@
 	}
 
 	:global(div) {
-		scrollbar-color: theme(colors.gray.600) theme(colors.gray.800);
+		scrollbar-color: theme(colors.gray.500) theme(colors.gray.800);
 	}
 </style>

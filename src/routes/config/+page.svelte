@@ -134,7 +134,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="overflow-y-auto min-w-80 w-[25%] bg-gray-700 overflow-hidden border-r border-gray-600"
+		class="file-list overflow-y-auto min-w-80 w-[25%] bg-gray-700 overflow-hidden border-r border-gray-600"
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
@@ -276,3 +276,9 @@
 </div>
 
 <ExpandedEntryPopup />
+
+<style lang="postcss">
+	.file-list {
+		scrollbar-color: theme(colors.gray.400) theme(colors.gray.700);
+	}
+</style>

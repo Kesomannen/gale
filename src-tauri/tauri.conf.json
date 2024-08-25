@@ -1,4 +1,7 @@
 {
+  "productName": "Gale",
+  "version": "0.7.6",
+  "identifier": "com.kesomannen.gale",
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
@@ -39,9 +42,6 @@
       }
     }
   },
-  "productName": "Gale",
-  "version": "0.7.6",
-  "identifier": "com.kesomannen.gale",
   "plugins": {
     "updater": {
       "endpoints": [
