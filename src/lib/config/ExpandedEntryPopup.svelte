@@ -13,6 +13,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button, Tabs } from 'bits-ui';
 	import { writable } from 'svelte/store';
+	import { t, T } from '../../i18n';
 
 	let mode: 'text' | 'list' = 'text';
 	let newElement = '';
@@ -57,11 +58,11 @@
 			bind:value={mode}
 			options={[
 				{
-					label: 'Edit as text',
+					label: t["Edit as text"],
 					value: 'text'
 				},
 				{
-					label: 'Edit as list',
+					label: t["Edit as list"],
 					value: 'list'
 				}
 			]}
@@ -102,7 +103,7 @@
 
 					<InputField
 						class="pr-9 mt-1 w-full"
-						placeholder="Enter new value..."
+						placeholder= {t["Enter new value"]}
 						bind:value={newElement}
 						on:change={() => {
 							if (newElement.length === 0) return;

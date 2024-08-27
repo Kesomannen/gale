@@ -36,7 +36,6 @@
     "Unknown": "Unknown",
     "Dependants action only": "%verb% %name% only",
     "Dependants action all": "%verb% all",
-
     "Import mod directory description": "Select the directory containing the mod package",
     "Import mod file description": "Select the mod file to import",
     "Import file description": "Select the file to import",
@@ -77,13 +76,20 @@
     "duplicate": "Duplicate",
     "rename profile": "Rename profile",
     "duplicate profile": "Duplicate profile",
-
-
-
-
-    
-    
-    
-    
-    "Home page": "Home page"
+    "Not set": "Not set",
+    "Edit as text": "Edit as text",
+    "Edit as list": "Edit as list",
+    "Enter new value": "Enter new value...",
+    "Home page": "Home page",
+    "Launching": "Launching %Game% ...",
+    "Dll or zip": "Dll or zip",
+    "Profile file": "Profile file",
+    "Enter profile name": "Enter profile name...",
+    "Enter a name for the new profile": "Enter a name for the new profile",
+    "Create": "Create",
+    "Update installed": "Update installed",
+    "Install": "Install",
+    "Would you like to install it": "Would you like to install it",
+    "Downloading update": "Downloading update...",
+    "Update available": "Update available"
 }

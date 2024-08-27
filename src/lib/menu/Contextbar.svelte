@@ -159,7 +159,7 @@
 	<Updater />
 </div>
 
-<Popup title="Launching {$activeGame?.displayName}..." bind:open={launchGamePopupOpen}>
+<Popup title={T(t["Launching"], {"Game" : $activeGame?.displayName})} bind:open={launchGamePopupOpen}>
 	<Dialog.Description class="text-slate-400">
 		{t['Launch game description']}
 	</Dialog.Description>

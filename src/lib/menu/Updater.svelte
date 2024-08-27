@@ -21,6 +21,7 @@
 	import { relaunch } from '@tauri-apps/plugin-process';
 	import { Button, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
+	import { t } from '../../i18n';
 
 	let popupOpen = false;
 	let loading = false;
@@ -64,7 +65,7 @@
 		if (platform() !== 'windows') {
 			// on other platforms installUpdate() relaunches the app itself
 			await message('Gale will now restart in order to apply the update.', {
-				title: 'Update installed'
+				title: t['Update installed']
 			});
 			await relaunch();
 		}
@@ -83,7 +84,7 @@
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" class="mr-1" />
 		{/if}
-		<span class="text-sm">{loading ? 'Downloading update...' : 'Update available'}</span>
+		<span class="text-sm">{loading ? t['Downloading update'] : t['Update available']}</span>
 	</Button.Root>
 {/if}
 
@@ -99,10 +100,10 @@
 			The update will be downloaded and installed in the background, and then the app will restart
 			to apply the changes.
 		</p>
-		<p class="mt-1">Would you like to install it?</p>
+		<p class="mt-1">{t["Would you like to install it"]}?</p>
 	</Dialog.Description>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="green" fontWeight="semibold" on:click={update}>Install</BigButton>
+		<BigButton color="green" fontWeight="semibold" on:click={update}>{t["Install"]}</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

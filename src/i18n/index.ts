@@ -17,6 +17,6 @@ export const t = translations[appLanguage]
  * @param replacements {"placeholder": "P14C3H01D3R"}
  * @returns Translate string with P14C3H01D3R
  */
-export function T(translate: string, replacements: { [key: string]: string | undefined }): string {
+export function T(translate: string, replacements : { [key: string]: string | undefined }): string {
     return translate.replace(/%(\w+)%/g, (_, key) => replacements[key] || `%${key}%`);
 }
