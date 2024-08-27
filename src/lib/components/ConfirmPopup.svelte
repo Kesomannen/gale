@@ -2,6 +2,7 @@
 	import { Dialog } from 'bits-ui';
 	import Popup from './Popup.svelte';
 	import BigButton from './BigButton.svelte';
+	import { t } from '$i18n';
 
 	export let title = '';
 	export let description = '';
@@ -18,7 +19,7 @@
 	</Dialog.Description>
 
 	<Dialog.Close class="flex ml-auto justify-end mt-3 gap-2">
-		<BigButton color="gray" on:click={onCancel}>Cancel</BigButton>
+		<BigButton color="gray" on:click={onCancel}>{t["Cancel"]}</BigButton>
 		<slot name="buttons" />
 	</Dialog.Close>
 </Popup>

@@ -23,6 +23,7 @@
 	import { capitalize } from '$lib/util';
 	import Popup from '$lib/components/Popup.svelte';
 	import { refreshUpdate } from './Updater.svelte';
+	import { t } from '$i18n';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -42,7 +43,7 @@
 	async function importModDir() {
 		let path = await open({
 			directory: true,
-			title: 'Select the directory containing the mod package'
+			title: t['Import mod directory description']
 		});
 
 		if (path === null) return;
@@ -51,7 +52,7 @@
 
 	async function importModFile() {
 		let response = await open({
-			title: 'Select the mod file to import',
+			title: t["Import mod file description"],
 			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
 		});
 
@@ -61,7 +62,7 @@
 
 	async function importFile() {
 		let response = await open({
-			title: 'Select the file to import',
+			title: t['Import file description'],
 			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
 		});
 
@@ -74,7 +75,7 @@
 	async function exportFile() {
 		let dir = await open({
 			directory: true,
-			title: 'Select the directory to export the profile to'
+			title: t['Export file description']
 		});
 
 		if (!dir) return;
@@ -121,86 +122,86 @@
 	<Menubar.Root class="py-1 flex items-center">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
-			<MenubarTrigger>File</MenubarTrigger>
+			<MenubarTrigger>{t["File"]}</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
 				<MenubarItem on:click={() => invokeCommand('open_profile_dir')}
-					>Open profile directory</MenubarItem
+					>{t['Open profile directory']}</MenubarItem
 				>
-				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')}>Open game logs</MenubarItem>
-				<MenubarItem on:click={() => invokeCommand('open_gale_log')}>Open gale logs</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')}>{t['Open game logs']}</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('open_gale_log')}>{t['Open gale logs']}</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: true })}
-					>Clear unused mod cache</MenubarItem
+					>{t['Clear unused mod cache']}</MenubarItem
 				>
 				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: false })}
-					>Clear all cached mods</MenubarItem
+					>{t['Clear all cached mods']}</MenubarItem
 				>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
-				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')}>Fetch mods</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')}>{t['Fetch mods']}</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Profile</MenubarTrigger>
+			<MenubarTrigger>{t["Profile"]}</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem on:click={() => (newProfileOpen = true)}>Create new profile</MenubarItem>
+				<MenubarItem on:click={() => (newProfileOpen = true)}>{t['Create new profile']}</MenubarItem>
 				<MenubarItem on:click={() => openProfileOperation('rename')}
-					>Rename active profile</MenubarItem
+					>{t['Rename active profile']}</MenubarItem
 				>
 				<MenubarItem on:click={() => openProfileOperation('duplicate')}
-					>Duplicate active profile</MenubarItem
+					>{t['Duplicate active profile']}</MenubarItem
 				>
 				<MenubarItem on:click={() => invokeCommand('copy_dependency_strings')}
-					>Copy dependency strings</MenubarItem
+					>{t['Copy dependency strings']}</MenubarItem
 				>
-				<MenubarItem on:click={() => invokeCommand('copy_debug_info')}>Copy debug info</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('copy_debug_info')}>{t['Copy debug info']}</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
-				<MenubarItem on:click={() => setAllModsState(true)}>Enable all mods</MenubarItem>
-				<MenubarItem on:click={() => setAllModsState(false)}>Disable all mods</MenubarItem>
+				<MenubarItem on:click={() => setAllModsState(true)}>{t['Enable all mods']}</MenubarItem>
+				<MenubarItem on:click={() => setAllModsState(false)}>{t['Disable all mods']}</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Import</MenubarTrigger>
+			<MenubarTrigger>{t["Import"]}</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem on:click={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
-				<MenubarItem on:click={importFile}>...profile from file</MenubarItem>
-				<MenubarItem on:click={importModFile}>...local mod from file</MenubarItem>
-				<MenubarItem on:click={importModDir}>...local mod from directory</MenubarItem>
-				<MenubarItem on:click={() => (importR2Open = true)}>...profiles from r2modman</MenubarItem>
+				<MenubarItem on:click={() => (importProfileOpen = true)}>{t['Import profile from code']}</MenubarItem>
+				<MenubarItem on:click={importFile}>{t['Import profile from file']}</MenubarItem>
+				<MenubarItem on:click={importModFile}>{t['Import local mod from file']}</MenubarItem>
+				<MenubarItem on:click={importModDir}>{t['Import local mod from directory']}</MenubarItem>
+				<MenubarItem on:click={() => (importR2Open = true)}>{t['Import profiles from r2modman']}</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Export</MenubarTrigger>
+			<MenubarTrigger>{t["Export"]}</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem on:click={() => exportCodePopup.open()}>...profile as code</MenubarItem>
-				<MenubarItem on:click={exportFile}>...profile as file</MenubarItem>
+				<MenubarItem on:click={() => exportCodePopup.open()}>{t['Export profile as code']}</MenubarItem>
+				<MenubarItem on:click={exportFile}>{t['Export profile as file']}</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Help</MenubarTrigger>
+			<MenubarTrigger>{t["Help"]}</MenubarTrigger>
 			<Menubar.Content
 				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
 			>
-				<MenubarItem on:click={refreshUpdate}>Check for app updates</MenubarItem>
+				<MenubarItem on:click={refreshUpdate}>{t['Check for app updates']}</MenubarItem>
 				<MenubarItem on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
-					>Report a bug</MenubarItem
+					>{t['Report a bug']}</MenubarItem
 				>
 				<MenubarItem
 					on:click={() => {
 						shellOpen('https://discord.gg/lcmod');
-					}}>Join LC modding server</MenubarItem
+					}}>{t['Join LC modding server']}</MenubarItem
 				>
 				<MenubarItem
 					on:click={() => {
 						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618');
-					}}>Open discord thread</MenubarItem
+					}}>{t['Open discord thread']}</MenubarItem
 				>
 			</Menubar.Content>
 		</Menubar.Menu>
@@ -218,31 +219,30 @@
 </div>
 
 <Popup
-	title="{capitalize(profileOperation)} profile"
+	title="{t[`${profileOperation} profile`]}"
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
 	<p class="mb-1 text-slate-300">
 		{profileOperation == 'duplicate'
-			? 'Enter a name for the duplicated profile:'
-			: 'Enter a new name for the profile:'}
+			? t['Duplicate active profile description']
+			: t['Rename active profile description']}
 	</p>
 	<InputField
 		bind:value={profileOperationName}
-		placeholder="Enter name..."
+		placeholder="{t['Enter name']}"
 		size="lg"
 		class="w-full"
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}
 		<p class="mt-3 text-slate-400 text-sm">
-			This process might take up to a minute depending on the size of the profile, please be
-			patient.
+			{t['Duplicate active profile processing']}
 		</p>
 	{/if}
 	<div class="flex ml-auto justify-end gap-2 mt-2">
 		{#if !profileOperationInProgress}
-			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
+			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>{t["Cancel"]}</BigButton>
 		{/if}
 		<BigButton
 			color="green"
@@ -253,7 +253,7 @@
 			{#if profileOperationInProgress}
 				<Icon icon="mdi:loading" class="animate-spin text-lg my-1" />
 			{:else}
-				{capitalize(profileOperation)}
+				{t[profileOperation]}
 			{/if}
 		</BigButton>
 	</div>

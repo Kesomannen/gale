@@ -5,6 +5,7 @@
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { Dialog } from 'bits-ui';
+	import { t, T } from '$i18n';
 
 	let isOpen = false;
 
@@ -23,13 +24,13 @@
 	}
 </script>
 
-<Popup title="Export as code" bind:open={isOpen}>
+<Popup title="{t['Export as code']}" bind:open={isOpen}>
 	<Dialog.Description class="flex flex-center text-slate-400 mb-2">
 		{#await codePromise}
 			<Icon icon="mdi:loading" class="animate-spin text-lg mr-2" />
-			Exporting {$activeProfile?.name} as code...
+			{T(t['Exporting as code'], { "activeProfileName": $activeProfile?.name })}
 		{:then}
-			Export complete! The code has been copied to your clipboard.
+			{t['Export as code complete']}
 		{/await}
 	</Dialog.Description>
 
