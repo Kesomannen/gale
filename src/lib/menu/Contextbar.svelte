@@ -22,6 +22,7 @@
 	import { fly } from 'svelte/transition';
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Updater from './Updater.svelte';
+	import { t, T } from '$i18n';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -30,8 +31,8 @@
 	let profilesOpen = false;
 
 	function deleteProfile(index: number) {
-		confirm(`Are you sure you want to delete ${profiles[index].name}?`, {
-			title: 'Delete profile'
+		confirm(T(t['Delete profile description'], {"name": profiles[index].name}), {
+			title: t['Delete profile']
 		}).then(async (result) => {
 			if (result) {
 				await invokeCommand('delete_profile', { index });
@@ -55,7 +56,7 @@
 			on:click={() => launchGame(false)}
 		>
 			<Icon icon="mdi:play-circle" class="text-xl mr-2" />
-			Launch game
+			{t['Launch game']}
 		</Button.Root>
 	</div>
 
@@ -72,7 +73,7 @@
 
 			{$activeGame.displayName}
 		{:else}
-			Loading...
+			{t["Loading"]}
 		{/if}
 
 		<Icon
@@ -150,7 +151,7 @@
 				on:click={() => (newProfilePopupOpen = true)}
 			>
 				<Icon icon="mdi:plus" class="text-xl mr-1" />
-				New profile
+				{t['New profile']}
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
@@ -160,11 +161,11 @@
 
 <Popup title="Launching {$activeGame?.displayName}..." bind:open={launchGamePopupOpen}>
 	<Dialog.Description class="text-slate-400">
-		If the game is taking a while to start, it's probably because Steam is starting up.
+		{t['Launch game description']}
 	</Dialog.Description>
 </Popup>
 
-<Popup title="Select game to mod" bind:open={gamesOpen}>
+<Popup title="{t['Select game to mod']}" bind:open={gamesOpen}>
 	<GameSelection onSelect={() => (gamesOpen = false)} />
 </Popup>
 

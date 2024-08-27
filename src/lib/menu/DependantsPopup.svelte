@@ -3,6 +3,7 @@
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { Dependant, Mod } from '$lib/models';
+	import { T, t } from '$i18n';
 
 	export let title: string;
 	export let verb: string;
@@ -45,7 +46,7 @@
 	{onCancel}
 	bind:open
 >
-	{description.replaceAll('%s', mod?.name ?? "Unknown")}
+	{description.replaceAll('%s', mod?.name ?? t["Unknown"])}
 
 	<ul class="mt-1">
 		{#each dependants as dependant}
@@ -55,11 +56,10 @@
 	
 	<svelte:fragment slot="buttons">
 		<BigButton on:click={executeOne} color="red" outline={true}>
-			{verb}
-			{mod?.name} only
+			{T(t['Dependants action only'], {"verb": verb, "name": mod?.name})}
 		</BigButton>
 		<BigButton on:click={executeAll} color={isPositive ? 'green' : 'red'} fontWeight="semibold">
-			{verb} all
+			{T(t['Dependants action all'], {"verb": verb})}
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>
