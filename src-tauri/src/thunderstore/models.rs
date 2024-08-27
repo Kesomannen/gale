@@ -50,20 +50,14 @@ impl PackageListing {
         self.versions.iter().map(|v| v.downloads).sum()
     }
 
-    pub fn author(&self) -> &str {
-        self.full_name.split_once('-').unwrap().0
-    }
-
-    pub fn author_url(&self, game: &'static Game) -> String {
-        format!("https://thunderstore.io/c/{}/p/{}/", game.id, self.author())
+    pub fn owner_url(&self, game: &'static Game) -> String {
+        format!("https://thunderstore.io/c/{}/p/{}/", game.id, self.owner)
     }
 
     pub fn url(&self, game: &'static Game) -> String {
         format!(
             "https://thunderstore.io/c/{}/p/{}/{}/",
-            game.id,
-            self.author(),
-            self.name
+            game.id, self.owner, self.name
         )
     }
 }

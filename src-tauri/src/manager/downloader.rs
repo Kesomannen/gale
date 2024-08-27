@@ -1,6 +1,6 @@
 use std::{
     fs,
-    io::Cursor,
+    io::{self},
     iter,
     sync::Mutex,
     time::{Duration, Instant},
@@ -17,7 +17,7 @@ use crate::{
     logger,
     prefs::Prefs,
     thunderstore::{BorrowedMod, Thunderstore},
-    util::{self, cmd::StateMutex, error::IoResultExt},
+    util::{cmd::StateMutex, error::IoResultExt},
     NetworkClient,
 };
 
@@ -352,8 +352,12 @@ impl<'a> Installer<'a> {
         self.check_cancelled()?;
         self.update(InstallTask::Extracting);
 
-        util::zip::extract(Cursor::new(data), &cache_path)
-            .fs_context("extracting mod", &cache_path)?;
+        installer::extract(
+            io::Cursor::new(data),
+            &borrowed.package.full_name,
+            cache_path.clone(),
+        )
+        .context("failed to extract mod")?;
 
         self.check_cancelled()?;
         self.update(InstallTask::Installing);

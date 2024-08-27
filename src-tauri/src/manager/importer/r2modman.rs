@@ -1,5 +1,5 @@
 use anyhow::{anyhow, ensure, Context, Result};
-use log::{debug, info, warn};
+use log::{info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -19,13 +19,8 @@ use crate::{
         exporter::{ImportSource, R2Mod},
         ModManager,
     },
-    prefs::Prefs,
     thunderstore::Thunderstore,
-    util::{
-        self,
-        error::IoResultExt,
-        fs::{Overwrite, PathExt},
-    },
+    util::{self, error::IoResultExt, fs::PathExt},
 };
 
 lazy_static! {
@@ -147,7 +142,7 @@ pub struct ProfileImportData {
 
 pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     find_paths().and_then(|path| {
-        let profiles = find_profiles(path.clone(), false, app)
+        let profiles = find_profiles(path.clone(), app)
             .ok()?
             .map(util::fs::file_name_owned)
             .collect();
@@ -160,7 +155,7 @@ pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<
 
     info!("importing profiles from {}", path.display());
 
-    for (i, profile_dir) in find_profiles(path, true, app)?.enumerate() {
+    for (i, profile_dir) in find_profiles(path, app)?.enumerate() {
         if !include[i] {
             continue;
         }
@@ -205,11 +200,7 @@ pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<
     Ok(())
 }
 
-fn find_profiles(
-    mut path: PathBuf,
-    transfer_cache: bool,
-    app: &AppHandle,
-) -> Result<impl Iterator<Item = PathBuf>> {
+fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
@@ -218,13 +209,6 @@ fn find_profiles(
         .ok_or_else(|| anyhow!("current game unsupported"))?;
 
     path.push(dir_name);
-
-    if transfer_cache {
-        if let Err(e) = import_cache(path.clone(), app) {
-            logger::log_js_err("failed to transfer r2modman cache", &e, app);
-        };
-    }
-
     path.push("profiles");
 
     ensure!(path.exists(), "no profiles found");
@@ -321,50 +305,6 @@ async fn wait_for_mods(app: &AppHandle) {
 
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
-}
-
-fn import_cache(mut path: PathBuf, app: &AppHandle) -> Result<()> {
-    path.push("cache");
-
-    if !path.exists() {
-        debug!("no cache directory found at {}", path.display());
-        return Ok(());
-    }
-
-    emit_update("Transferring cached mods...", app);
-
-    let prefs = app.state::<Mutex<Prefs>>();
-    let prefs = prefs.lock().unwrap();
-
-    for package in path.read_dir()? {
-        let package = package?;
-
-        if !package.file_type()?.is_dir() {
-            continue;
-        }
-
-        fs::create_dir_all(prefs.cache_dir.join(package.file_name()))?;
-
-        for version in package.path().read_dir()? {
-            let version = version?;
-
-            if !version.file_type()?.is_dir() {
-                continue;
-            }
-
-            let package_name = version.file_name();
-            let version_name = version.file_name();
-
-            let new_path = prefs.cache_dir.join(&package_name).join(&version_name);
-            if new_path.exists() {
-                continue;
-            }
-
-            util::fs::copy_dir(&version.path(), &new_path, Overwrite::Yes)?;
-        }
-    }
-
-    Ok(())
 }
 
 fn find_paths() -> ManagerData<PathBuf> {

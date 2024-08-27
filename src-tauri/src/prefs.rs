@@ -183,10 +183,7 @@ pub struct Prefs {
 
     #[serde(alias = "data_dir")]
     pub data_dir: DirPref,
-    #[serde(alias = "cache_dir")]
-    pub cache_dir: DirPref,
 
-    #[serde(alias = "enable_mod_cache")]
     enable_mod_cache: bool,
     fetch_mods_automatically: bool,
 
@@ -265,10 +262,9 @@ impl Default for Prefs {
             steam_exe_path,
             steam_library_dir,
 
-            data_dir: DirPref::new(util::path::app_data_dir())
+            data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep("prefs.json")
                 .keep("logs"),
-            cache_dir: util::path::app_cache_dir().join("cache").into(),
 
             enable_mod_cache: true,
             fetch_mods_automatically: true,
@@ -282,7 +278,7 @@ impl Default for Prefs {
 
 impl Prefs {
     fn path() -> PathBuf {
-        util::path::app_config_dir().join("prefs.json")
+        util::path::default_app_config_dir().join("prefs.json")
     }
 
     pub fn create(app: &AppHandle) -> Result<Self> {
@@ -354,7 +350,6 @@ impl Prefs {
         }
 
         self.data_dir.set(value.data_dir.value)?;
-        self.cache_dir.set(value.cache_dir.value)?;
 
         if self.zoom_factor != value.zoom_factor {
             let window = app.get_webview_window("main").unwrap();
@@ -368,11 +363,6 @@ impl Prefs {
         }
         self.zoom_factor = value.zoom_factor;
 
-        if self.enable_mod_cache && !value.enable_mod_cache {
-            fs::remove_dir_all(&self.cache_dir)?;
-            fs::create_dir_all(&self.cache_dir)?;
-        }
-        self.enable_mod_cache = value.enable_mod_cache;
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 
         self.save()?;
@@ -381,6 +371,10 @@ impl Prefs {
 
     pub fn mod_cache_enabled(&self) -> bool {
         self.enable_mod_cache
+    }
+
+    pub fn cache_dir(&self) -> PathBuf {
+        self.data_dir.get().join("cache")
     }
 
     pub fn fetch_mods_automatically(&self) -> bool {

@@ -134,7 +134,7 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="file-list overflow-y-auto min-w-80 w-[25%] bg-gray-700 overflow-hidden border-r border-gray-600"
+		class="file-list overflow-y-auto min-w-72 w-[20%] bg-gray-700 overflow-hidden border-r border-gray-600"
 	>
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
@@ -148,7 +148,7 @@
 				<SearchBar bind:value={searchTerm} placeholder="Search for files..." brightness={800} />
 			</div>
 
-			{#each shownFiles ?? [] as file, i}
+			{#each shownFiles ?? [] as file (file.relativePath)}
 				<ConfigFileTreeItem
 					{file}
 					{selectedSection}

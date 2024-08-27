@@ -4,15 +4,21 @@ use super::{downloader::ModInstall, ModManager, ProfileMod};
 use crate::{
     prefs::Prefs,
     thunderstore::{BorrowedMod, Thunderstore},
-    util::{self, error::IoResultExt, fs::Overwrite},
+    util::{self},
 };
 use itertools::Itertools;
+use log::{trace, warn};
 use std::{
     collections::HashSet,
+    ffi::OsStr,
     fs,
+    io::{self, Read, Seek},
     path::{Path, PathBuf},
+    time::Instant,
 };
 use tempfile::tempdir;
+use walkdir::WalkDir;
+use zip::ZipArchive;
 
 fn is_bepinex(full_name: &str) -> bool {
     match full_name {
@@ -38,21 +44,23 @@ fn is_bepinex(full_name: &str) -> bool {
 }
 
 pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
-    let mut path = prefs.cache_dir.get().to_path_buf();
-    path.push(&borrowed_mod.package.full_name);
-    path.push(&borrowed_mod.version.version_number.to_string());
+    let mut path = prefs.cache_dir();
+
+    path.push(&borrowed_mod.package.owner);
+    path.push(&borrowed_mod.package.name);
+    path.push(borrowed_mod.version.version_number.to_string());
 
     Ok(path)
 }
 
 pub fn clear_cache(prefs: &Prefs) -> Result<()> {
-    let cache_dir = prefs.cache_dir.get();
+    let cache_dir = prefs.cache_dir();
 
     if !cache_dir.exists() {
         return Ok(());
     }
 
-    fs::remove_dir_all(cache_dir).context("failed to delete cache")?;
+    fs::remove_dir_all(&cache_dir).context("failed to delete cache")?;
     fs::create_dir_all(cache_dir).context("failed to recreate cache directory")?;
 
     Ok(())
@@ -75,9 +83,9 @@ pub fn soft_clear_cache(
         .collect::<Result<HashSet<_>>>()
         .context("failed to resolve installed mods")?;
 
-    let packages = fs::read_dir(&*prefs.cache_dir)
+    let packages = fs::read_dir(prefs.cache_dir())
         .context("failed to read cache directory")?
-        .filter_map(|e| e.ok());
+        .filter_map(|err| err.ok());
 
     for entry in packages {
         let path = entry.path();
@@ -95,7 +103,7 @@ pub fn soft_clear_cache(
 
         let versions = fs::read_dir(&path)
             .with_context(|| format!("failed to read cache for {}", &package_name))?
-            .filter_map(|e| e.ok());
+            .filter_map(|entry| entry.ok());
 
         for entry in versions {
             let path = entry.path();
@@ -127,7 +135,7 @@ pub fn try_cache_install(
     match path.exists() {
         true => {
             let name = &borrowed.package.full_name;
-            install_from_disk(path, &profile.path, name)?;
+            super::installer::install_default(path, &profile.path)?;
 
             let profile_mod = ProfileMod::remote_now(install.mod_ref.clone(), name.clone());
             match install.index {
@@ -156,61 +164,159 @@ pub fn try_cache_install(
     }
 }
 
-pub fn install_from_disk(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
-    match is_bepinex(full_name) {
-        true => install_bepinex(src, dest),
-        false => install_default(src, dest, full_name),
-    }
-}
-
 pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
-    // temporarily extract the zip so the same install from disk method can be used
+    // temporarily extract the zip so the same install method can be used
     let temp_dir = tempdir().context("failed to create temporary directory")?;
 
-    let zipfile = fs::File::open(src)?;
-    util::zip::extract(zipfile, temp_dir.path())?;
-    install_from_disk(temp_dir.path(), dest, full_name)?;
+    let file = fs::File::open(src).context("failed to open file")?;
+    extract(file, full_name, temp_dir.path().to_path_buf())?;
+    install_default(&temp_dir.path(), dest)?;
 
     Ok(())
 }
 
-fn install_default(src: &Path, dest: &Path, mod_name: &str) -> Result<()> {
-    let bepinex = dest.join("BepInEx");
-    let plugin_dir = bepinex.join("plugins").join(mod_name);
-    fs::create_dir_all(&plugin_dir)?;
+pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Result<()> {
+    use std::path::Component;
 
-    for entry in src.read_dir()? {
-        let entry = entry?;
-        let path = entry.path();
-        let file_name = path.file_name().unwrap();
+    let start = Instant::now();
 
-        if path.is_dir() {
-            let target = match file_name.to_str() {
-                // Copy to BepInEx/{plugins | patchers | core | monomod}/{mod_name}
-                Some("plugins" | "patchers" | "core" | "monomod") => {
-                    bepinex.join(file_name).join(mod_name)
-                }
-                // Copy directly without a subfolder
-                Some("config") => bepinex.join("config"),
-                // Flatten all other directories
-                _ => {
-                    install_default(&path, dest, mod_name)?;
-                    continue;
-                }
-            };
+    path.push("BepInEx");
 
-            fs::create_dir_all(target.parent().unwrap())?;
+    fs::create_dir_all(&path)?;
 
-            util::fs::copy_dir(&path, &target, Overwrite::Yes)
-                .fs_context("copying directory", &path)?;
+    let is_bepinex = is_bepinex(full_name);
+    let mut archive = ZipArchive::new(src)?;
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+
+        if file.is_dir() {
+            continue; // we create the necessary dirs when copying files instead
+        }
+
+        let file_path = match file.enclosed_name() {
+            Some(path) => path,
+            None => {
+                warn!("zip file {} escapes the archive, skipping", file.name());
+                continue;
+            }
+        };
+
+        let mut prev: Option<&OsStr> = None;
+        let mut components = file_path.components();
+
+        let (subdir, is_top_level) = loop {
+            let current = components.next();
+
+            match current {
+                Some(Component::Normal(name)) => match name.to_str() {
+                    Some("plugins") => break ("plugins", false),
+                    Some("config") => break ("config", false),
+                    Some("patchers") => break ("patchers", false),
+                    Some("monomod") => break ("monomod", false),
+                    Some("core") => break ("core", false),
+                    _ => prev = Some(name),
+                },
+                Some(_) => prev = None,
+                None => break ("plugins", true),
+            }
+        };
+
+        let mut target: PathBuf;
+
+        if is_bepinex {
+            if is_top_level {
+                let file_name = match prev {
+                    Some(name) => name,
+                    None => {
+                        warn!("zip file {} has no name, skipping", file_path.display());
+                        continue;
+                    }
+                };
+
+                // extract outside of the BepInEx directory
+                target = path.parent().unwrap().join(file_name);
+            } else {
+                target = path.join(subdir);
+                target = components.fold(target, |mut acc, comp| {
+                    acc.push(comp);
+                    acc
+                });
+            }
         } else {
-            fs::copy(&path, &plugin_dir.join(file_name)).fs_context("copying file", &path)?;
+            target = path.join(subdir);
+            if subdir != "config" {
+                target.push(full_name);
+            }
+
+            if is_top_level {
+                let file_name = match prev {
+                    Some(name) => name,
+                    None => {
+                        warn!("zip file {} has no name, skipping", file_path.display());
+                        continue;
+                    }
+                };
+
+                target.push(file_name)
+            } else {
+                target = components.fold(target, |mut acc, comp| {
+                    acc.push(comp);
+                    acc
+                });
+            }
+        }
+
+        trace!("extracting {} to {}", file_path.display(), target.display());
+
+        fs::create_dir_all(target.parent().unwrap())?;
+        let mut target_file = fs::File::create(&target)?;
+        io::copy(&mut file, &mut target_file)?;
+    }
+
+    trace!("extracted in {:?}", start.elapsed());
+    Ok(())
+}
+
+// install from a well structured mod directory
+// for example:
+// - BepInEx (src)
+//   - KeepItDown
+//     - plugins
+//       - Kesomannen-KeepItDown
+//         - KeepItDown.dll
+//         - manifest.json
+//         - ...
+//     - config
+//       - KeepItDown.cfg
+fn install_default(src: &Path, dest: &Path) -> Result<()> {
+    let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
+
+    for entry in entries {
+        let relative = entry
+            .path()
+            .strip_prefix(src)
+            .expect("walkdir should only return full paths inside of the root");
+
+        let target = dest.join(relative);
+
+        if target.exists() {
+            continue;
+        }
+
+        if entry.file_type().is_dir() {
+            fs::create_dir(target)
+                .with_context(|| format!("failed to create directory {}", relative.display()))?;
+        } else {
+            fs::hard_link(entry.path(), target)
+                .with_context(|| format!("failed to link file {}", relative.display()))?;
         }
     }
 
     Ok(())
 }
 
+/*
 fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
     let target_path = dest.join("BepInEx");
 
@@ -249,3 +355,4 @@ fn install_bepinex(src: &Path, dest: &Path) -> Result<()> {
 
     Ok(())
 }
+*/
