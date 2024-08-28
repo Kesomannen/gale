@@ -154,10 +154,10 @@
 				<MenubarItem on:click={() => openProfileOperation('duplicate')}
 					>{t['Duplicate active profile']}</MenubarItem
 				>
-				<MenubarItem on:click={() => invokeCommand('copy_dependency_strings')}
-					>{t['Copy dependency strings']}</MenubarItem
-				>
+				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<MenubarItem on:click={() => invokeCommand('copy_dependency_strings')}>{t['Copy dependency strings']}</MenubarItem>
 				<MenubarItem on:click={() => invokeCommand('copy_debug_info')}>{t['Copy debug info']}</MenubarItem>
+				<MenubarItem on:click={() => invokeCommand('copy_launch_args')}>Copy launch arguments</MenubarItem>
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem on:click={() => setAllModsState(true)}>{t['Enable all mods']}</MenubarItem>
 				<MenubarItem on:click={() => setAllModsState(false)}>{t['Disable all mods']}</MenubarItem>

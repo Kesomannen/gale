@@ -36,10 +36,6 @@ pub fn clear_download_cache(
 ) -> Result<()> {
     let prefs = prefs.lock().unwrap();
 
-    if !prefs.cache_dir.exists() {
-        return Ok(());
-    }
-
     if soft {
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();

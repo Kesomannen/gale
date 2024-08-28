@@ -29,7 +29,7 @@ pub fn log_js_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
 }
 
 fn log_path() -> PathBuf {
-    util::path::app_data_dir().join("latest.log")
+    util::path::default_app_data_dir().join("latest.log")
 }
 
 pub fn setup() -> Result<()> {

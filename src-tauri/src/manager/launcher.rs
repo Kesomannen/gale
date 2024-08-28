@@ -183,19 +183,25 @@ impl Game {
 }
 
 fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result<()> {
-    let (enable_label, target_label) =
-        match doorstop_version(path).context("failed to determine doorstop version")? {
-            3 => ("--doorstop-enable", "--doorstop-target"),
-            4 => ("--doorstop-enabled", "--doorstop-target-assembly"),
-            vers => bail!("unsupported doorstop version: {}", vers),
-        };
+    let (enable_prefix, target_prefix) = get_doorstop_args(path)?;
 
     if vanilla {
-        command.args([enable_label, "false"]);
+        command.args([enable_prefix, "false"]);
         return Ok(());
     }
 
+    let preloader_path = find_preloader(path)?;
+
+    command
+        .args([enable_prefix, "true", target_prefix])
+        .arg(preloader_path);
+
+    Ok(())
+}
+
+fn find_preloader(path: &Path) -> Result<PathBuf> {
     let mut core_dir = path.to_path_buf();
+
     core_dir.push("BepInEx");
     core_dir.push("core");
 
@@ -206,7 +212,7 @@ fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result
         "BepInEx.IL2CPP.dll",
     ];
 
-    let preloader_path = core_dir
+    let result = core_dir
         .read_dir()
         .map_err(|_| anyhow!("failed to read BepInEx core directory. Is BepInEx installed?"))?
         .filter_map(|entry| entry.ok())
@@ -214,29 +220,30 @@ fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result
             let file_name = entry.file_name();
             PRELOADER_NAMES.iter().any(|name| file_name == *name)
         })
-        .map(|entry| entry.path());
+        .ok_or(anyhow!(
+            "BepInEx preloader not found. Is BepInEx installed?"
+        ))?
+        .path();
 
-    if let Some(preloader_path) = preloader_path {
-        command
-            .args([enable_label, "true", target_label])
-            .arg(preloader_path);
-
-        Ok(())
-    } else {
-        bail!("BepInEx preloader not found. Is BepInEx installed?",)
-    }
+    Ok(result)
 }
 
-fn doorstop_version(root_path: &Path) -> Result<u32> {
-    let path = root_path.join(".doorstop_version");
+fn get_doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
+    let path = profile_dir.join(".doorstop_version");
 
-    match path.exists() {
+    let version = match path.exists() {
         true => fs::read_to_string(&path)
             .fs_context("reading version file", &path)?
             .split('.') // read only the major version number
             .next()
             .and_then(|str| str.parse().ok())
-            .context("invalid version format"),
-        false => Ok(3),
+            .context("invalid version format")?,
+        false => 3,
+    };
+
+    match version {
+        3 => Ok(("--doorstop-enable", "--doorstop-target")),
+        4 => Ok(("--doorstop-enabled", "--doorstop-target-assembly")),
+        vers => bail!("unsupported doorstop version: {}", vers),
     }
 }

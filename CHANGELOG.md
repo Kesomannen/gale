@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Profile > Copy launch arguments
+
+### Removed
+
+- Cache directory setting - mods are now cached within the data directory instead
+
+### Changed
+
+- Use hard links instead of copying files when installing mods, which reduces disk usage and install times significantly
+
 ## 0.7.7 (2024-08-25)
 
 ### Added
