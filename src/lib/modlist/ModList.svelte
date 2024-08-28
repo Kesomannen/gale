@@ -45,7 +45,7 @@
 			uuid: string;
 			totalDelta: number;
 		};
-		onModCtrlClicked: { 
+		onModCtrlClicked: {
 			mod: Mod;
 		};
 	}>();
@@ -63,7 +63,7 @@
 			sortOrder
 		};
 	}
-	
+
 	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
 		maxCount += 20;
 	}
@@ -335,13 +335,13 @@
 					on:dragover={onDragOver}
 					on:dragend={onDragEnd}
 					on:drag={onDrag}
-					let:isInstalled
+					isInstalled={mod.isInstalled}
 					draggable={reorderable}
 					isSelected={activeMod?.uuid == mod.uuid}
 					{showInstalledIcon}
 					{mod}
 				>
-					<slot name="item" {mod} {isInstalled} />
+					<slot name="item" {mod} />
 				</ModListItem>
 			</VirtualList>
 		{/if}

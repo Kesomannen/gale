@@ -225,6 +225,7 @@ pub struct FrontendMod {
     pub is_deprecated: bool,
     pub contains_nsfw: bool,
     pub uuid: Uuid,
+    pub is_installed: bool,
     pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,
     #[serde(rename = "type")]

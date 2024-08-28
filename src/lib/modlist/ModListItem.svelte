@@ -8,10 +8,11 @@
 
 	export let mod: Mod;
 	export let isSelected: boolean;
+	export let isInstalled: boolean;
+	export let showInstalledIcon: boolean;
 	export let draggable = false;
 
 	let imgSrc: string;
-	let isInstalled: boolean = false;
 
 	$: {
 		if (mod.type === 'remote') {
@@ -24,12 +25,6 @@
 				imgSrc = `games/${$activeGame?.id}.webp`;
 			}
 		}
-	}
-
-	$: {
-		invokeCommand<boolean>('is_mod_installed', { uuid: mod.uuid }).then(
-			(result) => (isInstalled = result)
-		);
 	}
 
 	async function loadLoadIcon(path: string) {
@@ -78,7 +73,7 @@
 		{#if isOutdated(mod)}
 			<Icon class=" text-green-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
 		{/if}
-		{#if isInstalled}
+		{#if isInstalled && showInstalledIcon}
 			<Icon class="text-green-500 inline mb-1.5" icon="mdi:check-circle" />
 		{/if}
 		<div

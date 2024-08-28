@@ -24,7 +24,7 @@ use crate::{
     thunderstore::{
         self,
         models::FrontendProfileMod,
-        query::{self, QueryModsArgs, Queryable, SortBy, SortOrder},
+        query::{self, IntoFrontendMod, QueryModsArgs, Queryable, SortBy, SortOrder},
         BorrowedMod, ModRef, Thunderstore,
     },
     util::{
@@ -332,7 +332,7 @@ impl Profile {
             .context("mod not found in profile")
     }
 
-    fn has_mod(&self, uuid: &Uuid) -> bool {
+    pub fn has_mod(&self, uuid: &Uuid) -> bool {
         self.get_mod(uuid).is_ok()
     }
 
@@ -379,7 +379,7 @@ impl Profile {
                 let (data, uuid) = match queryable.kind {
                     QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
                     QueryableProfileModKind::Remote(remote) => {
-                        (remote.into(), remote.package.uuid4)
+                        (remote.into_frontend(self), remote.package.uuid4)
                     }
                 };
 
