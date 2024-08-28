@@ -244,7 +244,7 @@ const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
 
 async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let manager = app.state::<Mutex<ModManager>>();
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
+    let state = app.state::<Mutex<Thunderstore>>();
     let prefs = app.state::<Mutex<Prefs>>();
 
     {
@@ -252,7 +252,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
 
         match read_cache(&cache_path(&manager)) {
             Ok(Some(mods)) => {
-                let mut thunderstore = thunderstore.lock().unwrap();
+                let mut thunderstore = state.lock().unwrap();
 
                 for package in mods {
                     thunderstore.packages.insert(package.uuid4, package);
@@ -266,21 +266,43 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     let mut is_first = true;
     loop {
         let fetch_automatically = prefs.lock().unwrap().fetch_mods_automatically();
-        // this could happen if the user manually triggers a fetch,
-        // or the fetch is still ongoing from the last loop
-        let is_fetching = thunderstore.lock().unwrap().is_fetching;
 
-        if fetch_automatically && !is_fetching {
-            if let Err(err) = fetch_mods(&app, game, is_first).await {
-                logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
-            } else {
-                is_first = false;
+        if fetch_automatically {
+            let is_fetching = {
+                let mut thunderstore = state.lock().unwrap();
+                let is_fetching = thunderstore.is_fetching;
 
-                // REMOVE IN THE FUTURE!
-                let mut manager = manager.lock().unwrap();
-                let thunderstore = thunderstore.lock().unwrap();
+                if !is_fetching {
+                    thunderstore.is_fetching = true;
+                }
 
-                manager.fill_profile_mod_names(&thunderstore);
+                is_fetching
+            };
+
+            // we need to check this in case the user manually triggers a fetch,
+            // or the fetch is still ongoing from the last loop
+            if !is_fetching {
+                let res = fetch_mods(&app, game, is_first).await;
+
+                let mut thunderstore = state.lock().unwrap();
+                thunderstore.is_fetching = false;
+
+                match res {
+                    Ok(_) => {
+                        is_first = false;
+
+                        // REMOVE IN THE FUTURE!
+                        let mut manager = manager.lock().unwrap();
+                        manager.fill_profile_mod_names(&thunderstore);
+                    }
+                    Err(err) => {
+                        logger::log_js_err(
+                            "error while fetching mods from Thunderstore",
+                            &err,
+                            &app,
+                        );
+                    }
+                }
             }
         }
 

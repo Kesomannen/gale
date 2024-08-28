@@ -1,4 +1,5 @@
 use std::{
+    fmt::Display,
     fs::{self, DirEntry},
     iter,
 };
@@ -271,16 +272,16 @@ fn generate_diff(old: &[BorrowedMod<'_>], new: &[BorrowedMod<'_>], game: &'stati
     changelog
 }
 
-fn markdown_link(url: &str, text: &str) -> String {
+fn markdown_link(url: impl Display, text: impl Display) -> String {
     format!("[{}]({})", text, url)
 }
 
 fn package_link(package: &PackageListing, game: &'static Game) -> String {
-    markdown_link(&package.url(game), &package.name)
+    markdown_link(package.url(game), &package.name)
 }
 
 fn author_link(package: &PackageListing, game: &'static Game) -> String {
-    markdown_link(&package.author_url(game), package.author())
+    markdown_link(package.owner_url(game), &package.owner)
 }
 
 fn write_changelog_section<T, F>(

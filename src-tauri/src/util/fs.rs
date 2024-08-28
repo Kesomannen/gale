@@ -13,18 +13,6 @@ pub enum Overwrite {
     No,
 }
 
-pub fn flatten(path: &Path, overwrite: Overwrite) -> Result<bool, io::Error> {
-    if !path.exists() {
-        return Ok(false);
-    }
-
-    let parent = path.parent().unwrap();
-    copy_contents(path, parent, overwrite)?;
-    fs::remove_dir_all(path)?;
-
-    Ok(true)
-}
-
 pub fn copy_dir(src: &Path, dest: &Path, overwrite: Overwrite) -> io::Result<()> {
     fs::create_dir_all(dest)?;
     copy_contents(src, dest, overwrite)
