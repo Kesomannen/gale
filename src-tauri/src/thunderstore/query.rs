@@ -7,7 +7,7 @@ use tauri::{AppHandle, Emitter, Manager};
 use typeshare::typeshare;
 
 use super::{
-    models::{FrontendMod, FrontendModKind, FrontendVersion},
+    models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
     BorrowedMod, Thunderstore,
 };
 
@@ -156,11 +156,6 @@ impl Queryable for BorrowedMod<'_> {
             }
         })
     }
-}
-
-// TODO: This looks ugly right now
-pub trait IntoFrontendMod {
-    fn into_frontend(self, profile: &Profile) -> FrontendMod;
 }
 
 impl IntoFrontendMod for BorrowedMod<'_> {

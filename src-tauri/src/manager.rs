@@ -23,8 +23,8 @@ use crate::{
     prefs::Prefs,
     thunderstore::{
         self,
-        models::FrontendProfileMod,
-        query::{self, IntoFrontendMod, QueryModsArgs, Queryable, SortBy, SortOrder},
+        models::{FrontendProfileMod, IntoFrontendMod},
+        query::{self, QueryModsArgs, Queryable, SortBy, SortOrder},
         BorrowedMod, ModRef, Thunderstore,
     },
     util::{

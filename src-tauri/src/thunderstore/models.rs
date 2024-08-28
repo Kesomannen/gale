@@ -3,7 +3,7 @@ use std::{
     hash::Hash,
 };
 
-use crate::games::Game;
+use crate::{games::Game, manager::Profile};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
@@ -246,4 +246,8 @@ pub struct FrontendProfileMod {
     pub config_file: Option<String>,
     #[serde(flatten)]
     pub data: FrontendMod,
+}
+
+pub trait IntoFrontendMod {
+    fn into_frontend(self, profile: &Profile) -> FrontendMod;
 }
