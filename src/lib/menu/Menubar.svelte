@@ -53,7 +53,7 @@
 	async function importModFile() {
 		let response = await open({
 			title: t["Import mod file description"],
-			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
+			filters: [{ name: t["Dll or zip"], extensions: ['dll', 'zip'] }]
 		});
 
 		if (response === null) return;
@@ -63,7 +63,7 @@
 	async function importFile() {
 		let response = await open({
 			title: t['Import file description'],
-			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
+			filters: [{ name: t["Profile file"], extensions: ['r2z'] }]
 		});
 
 		if (!response) return;
