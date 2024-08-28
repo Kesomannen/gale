@@ -14,6 +14,7 @@
 	import { categories } from '$lib/stores';
 	import type { Writable } from 'svelte/store';
 	import { createEventDispatcher } from 'svelte';
+	import { t } from '$i18n';
 
 	export let sortOptions: SortBy[];
 
@@ -152,7 +153,7 @@
 	<div class="flex flex-col flex-grow w-[60%] pt-3 pl-3 overflow-hidden">
 		<div class="flex gap-1.5 mb-1.5 pr-3">
 			<div class="flex-grow relative">
-				<SearchBar bind:value={searchTerm} placeholder="Search for mods..." />
+				<SearchBar bind:value={searchTerm} placeholder="{t["Search for mods"]}" />
 			</div>
 
 			<Dropdown
@@ -320,7 +321,7 @@
 		<slot name="banner" />
 
 		{#if mods.length === 0}
-			<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
+			<div class="text-slate-300 text-lg text-center mt-4">{t["No mods found"]}</div>
 		{:else}
 			<VirtualList
 				itemHeight={66}

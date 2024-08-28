@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { T, t } from "$i18n";
 	import Markdown from "$lib/components/Markdown.svelte";
 	import Popup from "$lib/components/Popup.svelte";
 	import type { MarkdownResponse, Mod } from "$lib/models";
@@ -32,12 +33,12 @@
       {#if value?.markdown}
         <Markdown source={value.markdown} />
       {:else}
-        <p class="text-red-300">No {path} found</p>
+        <p class="text-red-300">{T(t["No path found"], {"path": path})}</p>
       {/if}
 		{:else}
-			<p class="text-red-300">Failed to load {path}: error code {value?.status}</p>
+			<p class="text-red-300">{T(t["Failed to load path"], {"path": path, "status": value?.status})}</p>
 		{/if}
 	{:catch error}
-		<p class="text-red-300">Failed to load {path}: {error}</p>
+		<p class="text-red-300">{T(t["Failed to load path error"], {"path": path, "error": error})}</p>
 	{/await}
 </Popup>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '$i18n';
 	import Label from '$lib/components/Label.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import { apiKeyPopupOpen } from './ApiKeyPopup.svelte';
@@ -18,9 +19,8 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Thunderstore API token">
-		Thunderstore API token to use for modpack publishing. Once this is set, you will <b>not</b> be able
-		to view the token again.
+	<Label text="{t["Thunderstore token"]}">
+		{@html t["Thunderstore token description"]}
 	</Label>
 
 	<Button.Root
@@ -36,7 +36,7 @@
 		</div>
 
 		<div class="text-slate-300 group-hover:text-slate-200 truncate">
-			{hasToken ? 'Click to override token' : 'Not set'}
+			{hasToken ? t['Click to override token'] : t['Not set']}
 		</div>
 
 		<slot name="field" />

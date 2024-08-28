@@ -1,4 +1,6 @@
 <script lang="ts" generics="T">
+	import { t } from '$i18n';
+
 	import { expoOut, quadOut, quartOut } from 'svelte/easing';
 
 	import { Select } from 'bits-ui';

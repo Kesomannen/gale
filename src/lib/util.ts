@@ -1,4 +1,5 @@
 import type { Mod, ConfigEntry } from './models';
+import { t } from '$i18n';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -36,25 +37,25 @@ export function timeSince(date: Date): string {
 	var interval = Math.floor(seconds / 31536000);
 
 	if (interval > 1) {
-		return interval + ' years';
+		return interval + ` ${t["years"]}`;
 	}
 	interval = Math.floor(seconds / 2592000);
 	if (interval > 1) {
-		return interval + ' months';
+		return interval + ` ${t["months"]}`;
 	}
 	interval = Math.floor(seconds / 86400);
 	if (interval > 1) {
-		return interval + ' days';
+		return interval + ` ${t["days"]}`;
 	}
 	interval = Math.floor(seconds / 3600);
 	if (interval > 1) {
-		return interval + ' hours';
+		return interval + ` ${t["hours"]}`;
 	}
 	interval = Math.floor(seconds / 60);
 	if (interval > 1) {
-		return interval + ' minutes';
+		return interval + ` ${t["minutes"]}`;
 	}
-	return Math.floor(seconds) + ' seconds';
+	return Math.floor(seconds) + ` ${t["seconds"]}`;
 }
 
 export function titleCase(str: string): string {

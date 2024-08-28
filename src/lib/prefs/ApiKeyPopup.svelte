@@ -12,6 +12,8 @@
 
 	import { writable } from 'svelte/store';
 
+	import { t } from '$i18n';
+
 	let token: string;
 
 	async function submit() {
@@ -26,56 +28,55 @@
 	}
 </script>
 
-<ConfirmPopup title="Set thunderstore API token" bind:open={$apiKeyPopupOpen}>
+<ConfirmPopup title="{t["Set thunderstore token"]}" bind:open={$apiKeyPopupOpen}>
 	<p>
-		Enter your Thunderstore API token below, or leave blank to clear the current one. This token is
-		used to publish modpacks to Thunderstore, and will be stored securely on your computer.
+		{t["Set thunderstore token description 1"]}
 	</p>
 
 	<p class="mt-1 mb-2">
-		Once set, you will <b>not</b> be able to view the token again.
+		{@html t["Set thunderstore token description 2"]}
 	</p>
 
-	<InputField placeholder="Enter API token..." class="w-full" on:submit={submit} bind:value={token} />
+	<InputField placeholder="{t["Enter API token"]}" class="w-full" on:submit={submit} bind:value={token} />
 
 	<details>
 		<summary class="text-sm text-slate-400 mt-1 cursor-pointer"
-			>Unsure how to get your API token?</summary
+			>{t["Unsure thunderstore token"]}</summary
 		>
 		<ol class="mt-1 ml-1 flex flex-col gap-1">
 			<li>
-				1. Login to <Link href="https://thunderstore.io/">thunderstore.io</Link>.
+				{t["Unsure thunderstore token description 1"]}
+				<Link href="https://thunderstore.io/">thunderstore.io</Link>
+				{t["Unsure thunderstore token description 2"]}
 			</li>
 
 			<li>
-				2. Go to <Link href="https://thunderstore.io/settings/teams/">Teams</Link>.
+				{t["Unsure thunderstore token description 3"]}
+				<Link href="https://thunderstore.io/settings/teams/">Teams</Link>
+				{t["Unsure thunderstore token description 4"]}
 			</li>
 
 			<li>
-				3. If you don't have one already, create a new team. The name should be your own username.
+				{t["Unsure thunderstore token description 5"]}
 			</li>
 
 			<li>
-				4. Select a team and go to <code>Service Accounts</code> on the left sidebar.
+				{@html t["Unsure thunderstore token description 6"]}
 			</li>
 
 			<li>
-				5. Click <code>Add service account</code> and choose an appropriate nickname, for example "gale".
+				{@html t["Unsure thunderstore token description 7"]}
 			</li>
 
 			<li>
-				6. Once you submit, the API token will be displayed. Make sure you copy and paste it here,
-				since you won't be able to see it once you navigate away from the page.
+				{t["Unsure thunderstore token description 8"]}
 			</li>
 		</ol>
 
-		<b
-			>Do not share the token with anyone else, as it gives power to update, publish or delete
-			packages in your name!</b
-		>
+		<b>{t["Unsure thunderstore token description 9"]}</b>
 	</details>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="green" fontWeight="medium" on:click={submit}>Submit</BigButton>
+		<BigButton color="green" fontWeight="medium" on:click={submit}>{t["Submit"]}</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

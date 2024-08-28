@@ -5,6 +5,7 @@
 
 	import type { LaunchMode } from '$lib/models';
 	import { sentenceCase } from '$lib/util';
+	import { t } from '$i18n';
 
 	export let value: LaunchMode;
 	export let set: (value: LaunchMode) => Promise<void>;
@@ -29,15 +30,13 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Launch mode">
-		<p>Determines how the game is launched.</p>
+	<Label text="{t['Launch mode']}">
+		<p>{t['Launch mode description']}</p>
 		<p class="my-1.5">
-			<b>Steam:</b> Launches through Steam, which slower than directly. However, some games require Steam
-			to be running, including Lethal Company.
+			{@html t['Launch mode description steam']}
 		</p>
 		<p>
-			<b>Direct:</b> Launches the game directly from the executable. Also allows you to launch multiple
-			instances at once.
+			{@html t['Launch mode description direct']}
 		</p>
 	</Label>
 
@@ -51,8 +50,8 @@
 </div>
 
 <div class="flex items-center">
-	<Label text="Number of instances">
-		How many instances of the game to launch at once. Only available in direct mode.
+	<Label text="{t["Number of instances"]}">
+		{t["Number of instances description"]}
 	</Label>
 
 	<InputField
@@ -66,9 +65,8 @@
 </div>
 
 <div class="flex items-center">
-	<Label text="Interval between launches">
-		How many seconds to wait between launching each instance. Only applicable in direct mode with
-		multiple instances.
+	<Label text="{t["Interval between launches"]}">
+		{t["Interval between launches description"]}
 	</Label>
 
 	<InputField
