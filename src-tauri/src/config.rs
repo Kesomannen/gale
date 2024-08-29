@@ -349,7 +349,7 @@ pub fn load_config(mut profile_dir: PathBuf, vec: &mut Vec<LoadFileResult>) -> V
     other_files
 }
 
-fn resolve_duplicate_names(vec: &mut Vec<LoadFileResult>) {
+fn resolve_duplicate_names(vec: &mut [LoadFileResult]) {
     let mut name_changes = HashMap::new();
 
     for (i, file_a) in vec.iter().enumerate() {
@@ -458,6 +458,6 @@ fn load_config_file(
     return Some((res, curr_index));
 
     fn format_name(name: &str) -> String {
-        name.replace(&['_', '-', ' '], "")
+        name.replace(['_', '-', ' '], "")
     }
 }

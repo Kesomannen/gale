@@ -130,7 +130,7 @@ pub fn run() {
                 .ok();
 
             if args.len() > 1 {
-                manager::downloader::handle_deep_link(&app, &args[1]);
+                manager::downloader::handle_deep_link(app, &args[1]);
             }
         }))
         .plugin(tauri_plugin_cli::init())

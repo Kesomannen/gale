@@ -418,8 +418,12 @@ impl Profile {
         Ok(path)
     }
 
-    fn load(mut path: PathBuf) -> Result<Self> {
+    fn load(mut path: PathBuf) -> Result<Option<Self>> {
         path.push("profile.json");
+
+        if !path.exists() {
+            return Ok(None);
+        }
 
         let manifest: ProfileManifest = util::fs::read_json(&path).with_context(|| {
             format!(
@@ -444,7 +448,7 @@ impl Profile {
             path,
         };
 
-        Ok(profile)
+        Ok(Some(profile))
     }
 }
 
@@ -811,8 +815,9 @@ impl ManagerGame {
             let path = entry?.path();
 
             if path.is_dir() {
-                let profile = Profile::load(path)?;
-                profiles.push(profile);
+                if let Some(profile) = Profile::load(path)? {
+                    profiles.push(profile);
+                }
             }
         }
 
@@ -860,7 +865,7 @@ impl ModManager {
         }
 
         let active_game = games::from_id(&save_data.active_game)
-            .unwrap_or_else(|| games::from_id(DEFAULT_GAME_ID).unwrap());
+            .unwrap_or_else(|| games::from_id(DEFAULT_GAME_ID).expect("default game should be valid"));
 
         let mut manager = Self { games, active_game };
 

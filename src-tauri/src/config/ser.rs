@@ -69,7 +69,7 @@ impl<W: io::Write> Serializer<W> {
             self.write(b"# Acceptable value range: From ")?;
             self.write_str(&range.start.to_string())?;
             self.write(b" to ")?;
-            self.write_into(&range.end.to_string())?;
+            self.write_str(&range.end.to_string())?;
             self.new_line()?;
         }
 

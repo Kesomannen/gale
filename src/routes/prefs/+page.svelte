@@ -95,27 +95,15 @@
 			Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
 		</PathPref>
 
-		<Separator.Root class="h-2" />
-
 		<PathPref
 			label="Data directory"
 			type="dir"
 			value={prefs.dataDir}
 			set={set((value, prefs) => (prefs.dataDir = value))}
 		>
-			Directory where profiles and other app data is stored.
+			Directory where mods and profiles are stored.
 			<br />
 			Changing this will move the existing data.
-		</PathPref>
-		<PathPref
-			label="Download cache directory"
-			type="dir"
-			value={prefs.cacheDir}
-			set={set((value, prefs) => (prefs.cacheDir = value))}
-		>
-			Directory where cached mods are stored.
-			<br />
-			Changing this will move the existing cache.
 		</PathPref>
 
 		<div class="text-2xl mt-6 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">

@@ -138,16 +138,7 @@
 						value={prefs.dataDir}
 						set={set((value, prefs) => (prefs.dataDir = value))}
 					>
-						Directory where profiles and other app data is stored.
-					</PathPref>
-
-					<PathPref
-						label="Gale cache directory"
-						type="dir"
-						value={prefs.cacheDir}
-						set={set((value, prefs) => (prefs.cacheDir = value))}
-					>
-						Directory where cached mods are stored. This can take up a considerable amount of space.
+						Directory where mods and profiles are stored.
 					</PathPref>
 				{/if}
 			</div>

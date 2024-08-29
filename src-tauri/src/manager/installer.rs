@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 use super::{downloader::ModInstall, ModManager, ProfileMod};
 use crate::{
@@ -7,14 +7,9 @@ use crate::{
     util::{self},
 };
 use itertools::Itertools;
-use log::{trace, warn};
+use log::trace;
 use std::{
-    collections::HashSet,
-    ffi::OsStr,
-    fs,
-    io::{self, Read, Seek},
-    path::{Path, PathBuf},
-    time::Instant,
+    collections::HashSet, ffi::OsStr, fs, io::{self, Read, Seek}, path::{Path, PathBuf}, time::Instant
 };
 use tempfile::tempdir;
 use walkdir::WalkDir;
@@ -170,7 +165,7 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str) -> Result<()> 
 
     let file = fs::File::open(src).context("failed to open file")?;
     extract(file, full_name, temp_dir.path().to_path_buf())?;
-    install_default(&temp_dir.path(), dest)?;
+    install_default(temp_dir.path(), dest)?;
 
     Ok(())
 }
@@ -194,13 +189,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
             continue; // we create the necessary dirs when copying files instead
         }
 
-        let file_path = match file.enclosed_name() {
-            Some(path) => path,
-            None => {
-                warn!("zip file {} escapes the archive, skipping", file.name());
-                continue;
-            }
-        };
+        let file_path = file.enclosed_name().ok_or(anyhow!("malformed zip file"))?;
 
         let mut prev: Option<&OsStr> = None;
         let mut components = file_path.components();
@@ -226,15 +215,8 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
 
         if is_bepinex {
             if is_top_level {
-                let file_name = match prev {
-                    Some(name) => name,
-                    None => {
-                        warn!("zip file {} has no name, skipping", file_path.display());
-                        continue;
-                    }
-                };
-
                 // extract outside of the BepInEx directory
+                let file_name = prev.ok_or(anyhow!("malformed zip file"))?;
                 target = path.parent().unwrap().join(file_name);
             } else {
                 target = path.join(subdir);
@@ -250,15 +232,8 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
             }
 
             if is_top_level {
-                let file_name = match prev {
-                    Some(name) => name,
-                    None => {
-                        warn!("zip file {} has no name, skipping", file_path.display());
-                        continue;
-                    }
-                };
-
-                target.push(file_name)
+                let file_name = prev.ok_or(anyhow!("malformed zip file"))?;
+                target.push(file_name);
             } else {
                 target = components.fold(target, |mut acc, comp| {
                     acc.push(comp);

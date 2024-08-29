@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{anyhow, ensure, Result};
-use log::debug;
+use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
@@ -183,6 +183,8 @@ pub struct Prefs {
 
     #[serde(alias = "data_dir")]
     pub data_dir: DirPref,
+    #[serde(alias = "cache_dir")]
+    cache_dir_old: Option<DirPref>,
 
     enable_mod_cache: bool,
     fetch_mods_automatically: bool,
@@ -265,6 +267,7 @@ impl Default for Prefs {
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep("prefs.json")
                 .keep("logs"),
+            cache_dir_old: None,
 
             enable_mod_cache: true,
             fetch_mods_automatically: true,
@@ -305,6 +308,8 @@ impl Prefs {
 
                 let window = app.get_webview_window("main").unwrap();
                 window.zoom(prefs.zoom_factor as f64).ok();
+
+                remove_old_cache(&mut prefs, app);
 
                 prefs
             }
@@ -379,5 +384,26 @@ impl Prefs {
 
     pub fn fetch_mods_automatically(&self) -> bool {
         self.fetch_mods_automatically
+    }
+}
+
+fn remove_old_cache(prefs: &mut Prefs, app: &AppHandle) {
+    if let Some(cache_dir) = &prefs.cache_dir_old {
+        if cache_dir.exists() {
+            let handle = app.to_owned();
+            let cache_dir = cache_dir.to_owned();
+            tauri::async_runtime::spawn_blocking(move || {
+                fs::remove_dir_all(cache_dir).unwrap_or_else(|err| {
+                    warn!("failed to remove old cache directory: {:#}", err)
+                });
+
+                let prefs = handle.state::<Mutex<Prefs>>();
+                let mut prefs = prefs.lock().unwrap();
+
+                prefs.cache_dir_old = None;
+            });
+        } else {
+            prefs.cache_dir_old = None;
+        }
     }
 }
