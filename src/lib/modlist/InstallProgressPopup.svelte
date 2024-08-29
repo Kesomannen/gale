@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { get } from 'svelte/store';
 	import { T, t } from '$i18n';
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -49,12 +50,12 @@
 </script>
 
 <Popup
-	title="{t['Installing mods']} ({progress.installedMods}/{progress.totalMods})"
+	title="{get(t)['Installing mods']} ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
 	bind:open
 	confirmClose={{
-		title: t["Abort installation"],
-		message: t["Abort installation description"]
+		title: get(t)["Abort installation"],
+		message: get(t)["Abort installation description"]
 	}}
 	onClose={() => {
 		invokeCommand('cancel_install')
@@ -62,13 +63,13 @@
 >
 	<Dialog.Description class="text-slate-400">
 		{#if progress.task.kind == 'done'}
-			{t["Done ex"]}
+			{get(t)["Done ex"]}
 		{:else if progress.task.kind == 'downloading'}
-			{T(t["Install progress downloading"], {"name": progress.currentName})} ({shortenFileSize(progress.task.payload.downloaded)}/{shortenFileSize(progress.task.payload.total)})
+			{T(get(t)["Install progress downloading"], {"name": progress.currentName})} ({shortenFileSize(progress.task.payload.downloaded)}/{shortenFileSize(progress.task.payload.total)})
 		{:else if progress.task.kind == 'extracting'}
-			{T(t["Install progress extracting"], {"name": progress.currentName})}
+			{T(get(t)["Install progress extracting"], {"name": progress.currentName})}
 		{:else if progress.task.kind == 'installing'}
-			{T(t["Install progress installing"], {"name": progress.currentName})}
+			{T(get(t)["Install progress installing"], {"name": progress.currentName})}
 		{/if}
 	</Dialog.Description>
 

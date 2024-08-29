@@ -6,6 +6,8 @@
 	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 	import { sentenceCase } from '$lib/util';
+
+	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 
 	export let label: string;
@@ -18,7 +20,7 @@
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			title: t['Select'] + ' ' + label,
+			title: get(t)['Select'] + ' ' + label,
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;

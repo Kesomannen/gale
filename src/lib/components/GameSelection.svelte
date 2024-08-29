@@ -6,6 +6,7 @@
 	import { open as openLink } from '@tauri-apps/plugin-shell';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from './Link.svelte';
+	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 
 	export let onSelect: () => void;
@@ -39,7 +40,7 @@
 </script>
 
 <div class="relative flex-grow mt-1">
-	<SearchBar bind:value={searchTerm} placeholder="{t['Search for games']}" />
+	<SearchBar bind:value={searchTerm} placeholder="{get(t)['Search for games']}" />
 </div>
 
 <div class="flex flex-col mt-2 h-96 overflow-y-auto">
@@ -81,17 +82,17 @@
 			</Button.Root>
 		{/each}
 	{:else}
-		<div class="text-slate-300 text-center mt-4">{t['No games found']}</div>
+		<div class="text-slate-300 text-center mt-4">{get(t)['No games found']}</div>
 		<div class="text-slate-400 text-sm max-w-[35rem]">
-			{t['No games found description 1']}
+			{get(t)['No games found description 1']}
 			<Link href="https://thunderstore.io">thunderstore.io</Link>
-			{t['No games found description 2']}
+			{get(t)['No games found description 2']}
 			<Link href="https://discord.com/channels/1168655651455639582/1246088342458863618"
 				>Discord</Link
 			>
-			{t['No games found description 3']}
+			{get(t)['No games found description 3']}
 			<Link href="https://github.com/Kesomannen/ModManager/issues/">Github</Link>
-			{t['No games found description 4']}
+			{get(t)['No games found description 4']}
 		</div>
 	{/if}
 </div>

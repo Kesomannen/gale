@@ -76,7 +76,7 @@
 			{#if mod.websiteUrl && mod.websiteUrl.length > 0}
 				<ModDetailsDropdownItem
 					icon="mdi:open-in-new"
-					label="{t['Open website']}"
+					label="{get(t)['Open website']}"
 					onClick={() => openIfDefined(mod.websiteUrl)}
 				/>
 			{/if}
@@ -84,12 +84,12 @@
 			{#if mod.donateUrl}
 				<ModDetailsDropdownItem
 					icon="mdi:heart"
-					label="{t["Donate"]}"
+					label="{get(t)["Donate"]}"
 					onClick={() => openIfDefined(mod.donateUrl)}
 				/>
 			{/if}
 
-			<ModDetailsDropdownItem icon="mdi:close" label="{t["Close"]}" onClick={onClose} />
+			<ModDetailsDropdownItem icon="mdi:close" label="{get(t)["Close"]}" onClick={onClose} />
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
@@ -107,7 +107,7 @@
 
 	{#if mod.author}
 		<span class="text-slate-300 text-xl xl:text-2xl">
-			{t["By"]}
+			{get(t)["By"]}
 			<Button.Root class="hover:underline" on:click={() => openCommunityUrl(mod.author)}>
 				{mod.author}
 			</Button.Root>
@@ -118,14 +118,14 @@
 		{#if mod.isDeprecated}
 			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
 				<Icon class="text-xl mr-1" icon="mdi:error" />
-				{t["Deprecated"]}
+				{get(t)["Deprecated"]}
 			</div>
 		{/if}
 
 		{#if mod.containsNsfw}
 			<div class="flex items-center rounded-lg bg-red-600 text-white px-3 py-1 my-1">
 				<Icon class="text-xl mr-1" icon="material-symbols:explicit" />
-				{t["Contains NSFW"]}
+				{get(t)["Contains NSFW"]}
 			</div>
 		{/if}
 	</div>
@@ -151,7 +151,7 @@
 
 	{#if mod.lastUpdated}
 		<div class="text-slate-400 text-lg">
-			{T(t["Last updated"], {"time": timeSince(new Date(mod.lastUpdated))})}
+			{T(get(t)["Last updated"], {"time": timeSince(new Date(mod.lastUpdated))})}
 		</div>
 	{/if}
 
@@ -180,7 +180,7 @@
 			class="flex items-center gap-2 text-green-400 hover:text-green-300 text-lg hover:underline my-2"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
-			<a href={'/config?file=' + mod.configFile}>{t["Edit config"]}</a>
+			<a href={'/config?file=' + mod.configFile}>{get(t)["Edit config"]}</a>
 		</div>
 	{/if}
 
@@ -191,7 +191,7 @@
 			on:click={() => (changelogOpen = true)}
 		>
 			<Icon icon="mdi:file-document" class="text-lg mr-2" />
-			{t["Changelog"]}
+			{get(t)["Changelog"]}
 		</Button.Root>
 
 		<Button.Root
@@ -200,7 +200,7 @@
 			on:click={() => (readmeOpen = true)}
 		>
 			<Icon icon="mdi:info" class="text-lg mr-2" />
-			{t["Details"]}
+			{get(t)["Details"]}
 		</Button.Root>
 	{/if}
 
@@ -210,7 +210,7 @@
 			on:click={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="text-lg mr-2" />
-			{t["Dependencies"]}
+			{get(t)["Dependencies"]}
 			<div class="bg-slate-500 group-hover:bg-slate-400 px-3 py-0.5 text-sm rounded-md ml-auto">
 				{mod.dependencies.length}
 			</div>
@@ -220,7 +220,7 @@
 	<slot />
 </div>
 
-<Popup title="{T(t["Dependencies of"], {"name": mod.name})}" bind:open={dependenciesOpen}>
+<Popup title="{T(get(t)["Dependencies of"], {"name": mod.name})}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
 		<ModCardList names={mod.dependencies} class="mt-4" />
 	{/if}

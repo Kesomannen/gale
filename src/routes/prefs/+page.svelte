@@ -11,6 +11,8 @@
 	import type { Prefs, GamePrefs } from '$lib/models';
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
+
+	import { get } from 'svelte/store';
 	import { T, t } from '$i18n';
 
 	let prefs: Prefs | null = null;
@@ -42,7 +44,7 @@
 <div class="flex flex-col gap-1 py-4 px-6 w-full overflow-y-auto">
 	{#if prefs !== null && gamePrefs !== null}
 		<div class="text-2xl mt-2 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
-			{t["Global settings"]}
+			{get(t)["Global settings"]}
 		</div>
 
 		<ZoomLevelPref
@@ -53,77 +55,77 @@
 		<ApiKeyPref />
 
 		<TogglePref
-			label="{t["Use download cache"]}"
+			label="{get(t)["Use download cache"]}"
 			disableMessage="This will delete all cached mods. Are you sure?"
 			value={prefs.enableModCache}
 			set={set((value, prefs) => (prefs.enableModCache = value))}
 		>
-			{@html t["Use download cache description"]}
+			{@html get(t)["Use download cache description"]}
 		</TogglePref>
 
 		<TogglePref
-			label="{t["Fetch mods automatically"]}"
+			label="{get(t)["Fetch mods automatically"]}"
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}
 		>
-			{@html t["Fetch mods automatically description"]}
+			{@html get(t)["Fetch mods automatically description"]}
 		</TogglePref>
 
 		<Separator.Root class="h-2" />
 
 		<PathPref
-			label="{t["Steam executable"]}"
+			label="{get(t)["Steam executable"]}"
 			type="file"
 			value={prefs.steamExePath ?? null}
 			set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
 		>
-			{t["Steam executable description"]}
+			{get(t)["Steam executable description"]}
 		</PathPref>
 
 		<PathPref
-			label="{t["Steam library"]}"
+			label="{get(t)["Steam library"]}"
 			type="dir"
 			value={prefs.steamLibraryDir ?? null}
 			set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
 		>
-			{@html t["Steam library description"]}
+			{@html get(t)["Steam library description"]}
 		</PathPref>
 
 		<Separator.Root class="h-2" />
 
 		<PathPref
-			label="{t["Gale data directory short"]}"
+			label="{get(t)["Gale data directory short"]}"
 			type="dir"
 			value={prefs.dataDir}
 			set={set((value, prefs) => (prefs.dataDir = value))}
 		>
-			{t["Gale data directory description"]}
+			{get(t)["Gale data directory description"]}
 			<br />
-			{t["Dir Change will move"]}
+			{get(t)["Dir Change will move"]}
 		</PathPref>
 		<PathPref
-			label="{t["Gale cache directory short"]}"
+			label="{get(t)["Gale cache directory short"]}"
 			type="dir"
 			value={prefs.cacheDir}
 			set={set((value, prefs) => (prefs.cacheDir = value))}
 		>
-			{t["Gale cache directory description"]}
+			{get(t)["Gale cache directory description"]}
 			<br />
-			{t["Dir Change will move"]}
+			{get(t)["Dir Change will move"]}
 		</PathPref>
 
 		<div class="text-2xl mt-6 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
-			{$activeGame?.displayName} {t["settings"]}
+			{$activeGame?.displayName} {get(t)["settings"]}
 		</div>
 
 		<PathPref
-			label="{t["Override game directory"]}"
+			label="{get(t)["Override game directory"]}"
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride ?? null}
 			set={set((value) => (gamePrefs.dirOverride = value ?? undefined))}
 		>
-			{T(t["Override game directory description"], {"name": $activeGame?.displayName})}
+			{T(get(t)["Override game directory description"], {"name": $activeGame?.displayName})}
 		</PathPref>
 
 		<LaunchModePref

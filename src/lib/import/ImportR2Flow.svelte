@@ -9,6 +9,8 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { fade } from 'svelte/transition';
 	import Checklist from '$lib/components/Checklist.svelte';
+
+	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 
 	export let importData: R2ImportData = {
@@ -60,7 +62,7 @@
 
 {#if !importData.r2modman && !importData.thunderstore}
 	<div class="text-lg font-semibold text-red-400 w-full text-center mt-3">
-		{ t['No installations found'] }
+		{ get(t)['No installations found'] }
 	</div>
 {/if}
 
@@ -78,7 +80,7 @@
 	<Checklist 
 		class="mt-1 overflow-y-auto max-h-60" 
 		items={profiles}
-		title="{t['Include all']}"
+		title="{get(t)['Include all']}"
 		getLabel={(item, _) => item}
 		get={(_, index) => include[index]}
 		set={(_, index, value) => include[index] = value}
