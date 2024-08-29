@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
@@ -8,7 +9,7 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="{t["Zoom factor"]}">{t["Zoom factor description"]}</Label>
+	<Label text="{get(t)["Zoom factor"]}">{get(t)["Zoom factor description"]}</Label>
 
 	<Dropdown
 		class="flex-grow"

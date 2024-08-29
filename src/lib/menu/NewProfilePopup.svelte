@@ -5,6 +5,7 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
+	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 
 	export let open = false;
@@ -21,16 +22,16 @@
 	}
 </script>
 
-<ConfirmPopup title="{t['Create new profile']}" bind:open>
-	<p class="mb-1">{t['Create new profile description']}</p>
+<ConfirmPopup title="{get(t)['Create new profile']}" bind:open>
+	<p class="mb-1">{get(t)['Create new profile description']}</p>
 	<InputField
-		placeholder="{t['Enter profile name']}"
+		placeholder="{get(t)['Enter profile name']}"
 		size="lg"
 		class="w-full"
 		on:submit={createProfile}
 		bind:value={name}
 	/>
 	<svelte:fragment slot="buttons">
-		<BigButton disabled={name.length === 0} on:click={createProfile}>{t["Create"]}</BigButton>
+		<BigButton disabled={name.length === 0} on:click={createProfile}>{get(t)["Create"]}</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

@@ -22,6 +22,9 @@
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
 
+	import { get } from 'svelte/store';
+	import { t, T } from '$i18n';
+
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
 
@@ -72,7 +75,7 @@
 	}
 
 	async function refresh() {
-		loading = 'Loading...';
+		loading = get(t)['Loading'];
 
 		let args = await invokeCommand<ModpackArgs>('get_pack_args');
 
@@ -97,7 +100,7 @@
 	async function browseIcon() {
 		let response = await open({
 			defaultPath: iconPath.length > 0 ? iconPath : undefined,
-			title: 'Select modpack icon',
+			title: get(t)['Select modpack icon'],
 			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif'] }]
 		});
 
@@ -111,14 +114,14 @@
 
 	async function exportToFile() {
 		let dir = await open({
-			title: 'Choose directory to save modpack',
+			title: get(t)['Choose directory save modpack'],
 			defaultPath: `${name}.zip`,
 			directory: true
 		});
 
 		if (!dir) return;
 
-		loading = 'Exporting modpack to file...';
+		loading = get(t)['Exporting modpack to file'];
 		try {
 			await invokeCommand('export_pack', { args: args(), dir });
 		} finally {
@@ -149,7 +152,7 @@
 			if (!hasToken) return;
 		}
 
-		loading = 'Uploading modpack to Thunderstore...';
+		loading = get(t)['Uploading modpack to Thunderstore'];
 		try {
 			await invokeCommand('upload_pack', { args: args() });
 			donePopupOpen = true;
@@ -197,15 +200,13 @@
 	{/if}
 
 	<FormField
-		label="Name"
-		description="The name of the modpack, as shown on Thunderstore. 
-			        Make sure this stays consistent between updates.
-			        Cannot contain spaces or hyphens."
+		label="{get(t)["Name"]}"
+		description="{get(t)["Modepack name description"]}"
 		required={true}
 	>
 		<InputField
 			bind:value={name}
-			placeholder="Enter name..."
+			placeholder="{get(t)["Enter name"]}"
 			required={true}
 			pattern="^[a-zA-Z0-9_]+$"
 			class="w-full"
@@ -213,17 +214,17 @@
 	</FormField>
 
 	<FormField
-		label="Author"
-		description="The author of the modpack, which should be the name of your Thunderstore team."
+		label="{get(t)["Author"]}"
+		description="{get(t)["Modepack author description"]}"
 		required={true}
 	>
-		<InputField bind:value={author} placeholder="Enter author..." required={true} class="w-full" />
+		<InputField bind:value={author} placeholder="{get(t)["Enter author"]}" required={true} class="w-full" />
 	</FormField>
 
-	<FormField label="Description" description="A short description of the modpack." required={true}>
+	<FormField label="{get(t)["Description"]}" description="{get(t)["Modepack description description"]}" required={true}>
 		<InputField
 			bind:value={description}
-			placeholder="Enter description..."
+			placeholder="{get(t)["Enter description"]}"
 			required={true}
 			maxlength={250}
 			class="w-full"
@@ -231,8 +232,8 @@
 	</FormField>
 
 	<FormField
-		label="Categories"
-		description="The categories that the modpack belongs to. 'Modpacks' is always included."
+		label="{get(t)["Categories"]}"
+		description="{get(t)["Modepack categories description"]}"
 	>
 		{#if selectedCategories}
 			<Dropdown
@@ -249,7 +250,7 @@
                   border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					{#if selectedCategories.length === 0}
-						<span class="text-slate-400 truncate pl-2">Select categories...</span>
+						<span class="text-slate-400 truncate pl-2">{get(t)["Select categories"]}</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
@@ -280,79 +281,76 @@
 	</FormField>
 
 	<FormField
-		label="Version"
-		description="The version number of the modpack, in the format of X.Y.Z.
-			           You cannot publish with the same version number twice."
+		label="{get(t)["Version"]}"
+		description="{get(t)["Modepack version description"]}"
 		required={true}
 	>
 		<InputField
 			bind:value={versionNumber}
-			placeholder="Enter version number..."
+			placeholder="{get(t)["Enter version number"]}"
 			required={true}
 			pattern="^\d+\.\d+\.\d+$"
 			class="w-full"
 		/>
 	</FormField>
 
-	<FormField label="Website" description="The URL of a website of your choosing. Optional.">
+	<FormField label="{get(t)["Website"]}" description="{get(t)["Modepack websiter description"]}">
 		<InputField
 			bind:value={websiteUrl}
-			placeholder="Enter website URL..."
+			placeholder="{get(t)["Enter website URL"]}"
 			pattern={URL_PATTERN}
 			class="w-full"
 		/>
 	</FormField>
 
 	<FormField
-		label="Icon"
-		description="Path to the icon of the modpack. This is automatically resized to 256x256 pixels, so
-                 it's recommended to be a square image to avoid stretching or squishing."
+		label="{get(t)["Icon"]}"
+		description="{get(t)["Modepack icon description"]}"
 		required={true}
 	>
 		<PathField icon="mdi:file-image" onClick={browseIcon} value={iconPath} />
 	</FormField>
 
 	<FormField
-		label="Readme"
-		description="A longer description of the modpack, which supports markdown formatting 
-                 (similarly to Discord messages)."
+		label="{get(t)["Readme"]}"
+		description="{get(t)["Modepack readme description"]}"
 		required={true}
 	>
-		<ResizableInputField bind:value={readme} placeholder="Enter readme..." />
+		<ResizableInputField bind:value={readme} placeholder="{get(t)["Enter readme"]}" />
 
 		<details class="mt-1">
-			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
+			<summary class="text-sm text-slate-300 cursor-pointer">{get(t)["Preview"]}</summary>
 			<Markdown class="px-4 mt-1 bg-gray-900 rounded-lg" source={readme} />
 		</details>
 	</FormField>
 
 	<FormField
-		label="Changelog"
-		description="A list of changes in the modpack, also supports markdown formatting. Leave empty to omit."
+		label="{get(t)["Changelog"]}"
+		description="{get(t)["Modepack changelog description"]}"
 	>
-		<ResizableInputField bind:value={changelog} placeholder="Enter changelog..." />
+		<ResizableInputField bind:value={changelog} placeholder="{get(t)["Enter changelog"]}" />
 
 		<BigButton color="gray" on:click={() => generateChangelog(false)}
-			>Generate for {versionNumber}</BigButton
+			>{T(get(t)["Generate for version number"], {"versionNumber": versionNumber})}</BigButton
 		>
-		<BigButton color="gray" on:click={() => generateChangelog(true)}>Generate all</BigButton>
+		<BigButton color="gray" on:click={() => generateChangelog(true)}>{get(t)["Generate all"]}</BigButton>
 
 		<details class="mt-1">
-			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
+			<summary class="text-sm text-slate-300 cursor-pointer">{get(t)["Preview"]}</summary>
 			<Markdown class="px-4 mt-1 bg-gray-900 rounded-lg" source={changelog} />
 		</details>
 	</FormField>
 
 	<FormField
-		label="Include files ({includedFileCount}/{includeFiles?.size})"
-		description="Choose which config files to include in the modpack."
+		label="{get(t)["Include files"]} ({includedFileCount}/{includeFiles?.size})"
+		description="{get(t)["Modepack include description"]}"
 	>
 		<details>
 			{#if includeFiles}
-				<summary class="text-sm text-slate-300 cursor-pointer">Show list</summary>
+				<summary class="text-sm text-slate-300 cursor-pointer">{get(t)["Show list"]}</summary>
 				<Checklist
 					class="mt-1"
-					title="Include all"
+					title="{get(t)["Include all"]}"
 					items={Array.from(includeFiles.keys()).sort()}
 					getLabel={(item) => item}
 					get={(item) => includeFiles.get(item) ?? false}
@@ -366,37 +364,39 @@
 	</FormField>
 
 	<div class="flex items-center text-lg font-medium text-slate-200 mt-1">
-		<span class="max-w-96 flex-grow">Contains NSFW content</span>
+		<span class="max-w-96 flex-grow">{get(t)["Contains NSFW content"]}</span>
 
 		<Checkbox bind:value={nsfw} />
 	</div>
 
 	<div class="flex items-center text-lg font-medium text-slate-200">
-		<span class="max-w-96 flex-grow">Include disabled mods</span>
+		<span class="max-w-96 flex-grow">{get(t)["Include disabled mods"]}</span>
 
 		<Checkbox bind:value={includeDisabled} />
 	</div>
 
 	<div class="flex justify-end gap-2 mt-3">
-		<BigButton color="gray" on:click={exportToFile}>Export to file</BigButton>
-		<BigButton color="green" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
+		<BigButton color="gray" on:click={exportToFile}>{get(t)["Export to file"]}</BigButton>
+		<BigButton color="green" on:click={uploadToThunderstore}>{get(t)["Publish on Thunderstore"]}</BigButton>
 	</div>
 </div>
 
 <ApiKeyPopup />
 
-<Popup bind:open={donePopupOpen} title="Modpack upload complete">
+<Popup bind:open={donePopupOpen} title="{get(t)["Modpack upload complete"]}">
 	<Dialog.Description class="text-slate-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!
-		<Link href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}"
-			>Click here to view its page on the website</Link
-		>.
+		{get(t)["Modpack upload complete description 1"]}
+		<Link href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}">
+			{get(t)["Modpack upload complete description 2"]}
+		</Link>
+		{get(t)["Modpack upload complete description 3"]}
 	</Dialog.Description>
 
 	<div class="mt-2 text-slate-400 text-sm">
-		The changes may take up to an hour to appear in Gale and other mod managers.
+		{get(t)["Modpack upload complete description 4"]}
 		<br />
-		To publish a new update, increment the version number and publish the modpack again.
+		{get(t)["Modpack upload complete description 5"]}
 	</div>
 </Popup>

@@ -12,6 +12,9 @@
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 
+	import { get } from 'svelte/store';
+	import { T, t } from '$i18n';
+
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
 
@@ -41,7 +44,7 @@
 <div class="flex flex-col gap-1 py-4 px-6 w-full overflow-y-auto">
 	{#if prefs !== null && gamePrefs !== null}
 		<div class="text-2xl mt-2 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
-			Global settings
+			{get(t)["Global settings"]}
 		</div>
 
 		<ZoomLevelPref
@@ -52,84 +55,77 @@
 		<ApiKeyPref />
 
 		<TogglePref
-			label="Use download cache"
+			label="{get(t)["Use download cache"]}"
 			disableMessage="This will delete all cached mods. Are you sure?"
 			value={prefs.enableModCache}
 			set={set((value, prefs) => (prefs.enableModCache = value))}
 		>
-			Whether to cache downloaded mods. This speeds up install times and lowers bandwidth usage, but
-			can take a considerable amount of disk space.
-			<br />
-			<b>Warning:</b> Disabling this will delete the existing cache.
+			{@html get(t)["Use download cache description"]}
 		</TogglePref>
 
 		<TogglePref
-			label="Fetch mods automatically"
+			label="{get(t)["Fetch mods automatically"]}"
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}
 		>
-			Whether to automatically start fetching mods when a game is selected and every 15 minutes
-			thereafter. This will ensure the mod list is up-to-date, but can be disabled to save
-			bandwidth.
-			<br />
-			To manually trigger a fetch, go to <b>File > Fetch mods</b>.
+			{@html get(t)["Fetch mods automatically description"]}
 		</TogglePref>
 
 		<Separator.Root class="h-2" />
 
 		<PathPref
-			label="Steam executable"
+			label="{get(t)["Steam executable"]}"
 			type="file"
 			value={prefs.steamExePath ?? null}
 			set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
 		>
-			Path to the Steam executable.
+			{get(t)["Steam executable description"]}
 		</PathPref>
 
 		<PathPref
-			label="Steam library"
+			label="{get(t)["Steam library"]}"
 			type="dir"
 			value={prefs.steamLibraryDir ?? null}
 			set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
 		>
-			Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
+			{@html get(t)["Steam library description"]}
 		</PathPref>
 
 		<Separator.Root class="h-2" />
 
 		<PathPref
-			label="Data directory"
+			label="{get(t)["Gale data directory short"]}"
 			type="dir"
 			value={prefs.dataDir}
 			set={set((value, prefs) => (prefs.dataDir = value))}
 		>
-			Directory where profiles and other app data is stored.
+			{get(t)["Gale data directory description"]}
 			<br />
-			Changing this will move the existing data.
+			{get(t)["Dir Change will move"]}
 		</PathPref>
 		<PathPref
-			label="Download cache directory"
+			label="{get(t)["Gale cache directory short"]}"
 			type="dir"
 			value={prefs.cacheDir}
 			set={set((value, prefs) => (prefs.cacheDir = value))}
 		>
-			Directory where cached mods are stored.
+			{get(t)["Gale cache directory description"]}
 			<br />
-			Changing this will move the existing cache.
+			{get(t)["Dir Change will move"]}
 		</PathPref>
 
 		<div class="text-2xl mt-6 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
-			{$activeGame?.displayName} settings
+			{$activeGame?.displayName} {get(t)["settings"]}
 		</div>
 
 		<PathPref
-			label="Override game directory"
+			label="{get(t)["Override game directory"]}"
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride ?? null}
 			set={set((value) => (gamePrefs.dirOverride = value ?? undefined))}
 		>
-			Path to the {$activeGame?.displayName} game directory. Leave empty to use the default Steam library.
+			{T(get(t)["Override game directory description"], {"name": $activeGame?.displayName})}
 		</PathPref>
 
 		<LaunchModePref

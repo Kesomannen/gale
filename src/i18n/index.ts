@@ -1,3 +1,5 @@
+import { writable } from 'svelte/store';
+
 import en from './en.json';
 import zhCN from './zhCN.json';
 
@@ -7,9 +9,15 @@ const translations = {
 };
 
 type Language = 'en' | 'zhCN';
-const appLanguage = (navigator.language.replace('-', '') as Language) || 'en';
 
-export const t = translations[appLanguage]
+const initialLanguage = (navigator.language.replace('-', '') as Language) || 'en';
+export const language = writable<Language>(initialLanguage);
+
+export const t = writable(translations[initialLanguage]);
+
+language.subscribe((lang) => {
+    t.set(translations[lang]);
+});
 
 /**
  * Translate string with %placeholder%

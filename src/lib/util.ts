@@ -1,4 +1,5 @@
 import type { Mod, ConfigEntry } from './models';
+import { get } from 'svelte/store';
 import { t } from '$i18n';
 
 export function shortenFileSize(size: number): string {
@@ -37,25 +38,25 @@ export function timeSince(date: Date): string {
 	var interval = Math.floor(seconds / 31536000);
 
 	if (interval > 1) {
-		return interval + ` ${t["years"]}`;
+		return interval + ` ${get(t)["years"]}`;
 	}
 	interval = Math.floor(seconds / 2592000);
 	if (interval > 1) {
-		return interval + ` ${t["months"]}`;
+		return interval + ` ${get(t)["months"]}`;
 	}
 	interval = Math.floor(seconds / 86400);
 	if (interval > 1) {
-		return interval + ` ${t["days"]}`;
+		return interval + ` ${get(t)["days"]}`;
 	}
 	interval = Math.floor(seconds / 3600);
 	if (interval > 1) {
-		return interval + ` ${t["hours"]}`;
+		return interval + ` ${get(t)["hours"]}`;
 	}
 	interval = Math.floor(seconds / 60);
 	if (interval > 1) {
-		return interval + ` ${t["minutes"]}`;
+		return interval + ` ${get(t)["minutes"]}`;
 	}
-	return Math.floor(seconds) + ` ${t["seconds"]}`;
+	return Math.floor(seconds) + ` ${get(t)["seconds"]}`;
 }
 
 export function titleCase(str: string): string {
