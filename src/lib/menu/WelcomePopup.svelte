@@ -110,7 +110,8 @@
 
 			<p class="mt-1">
 				{t['Welcome to Gale description 6']} <Icon icon="mdi:settings" class="inline mb-1" />
-				<b>{t['Settings']}</b>.
+				<b>{t['Settings']}</b>
+				{t['Welcome to Gale description 7']}
 			</p>
 
 			<div class="flex flex-col mt-3 gap-1">
@@ -164,16 +165,16 @@
 				<BigButton color="green" on:click={() => (stage = 'end')}>{t["Next"]}</BigButton>
 			</div>
 		{:else if stage === 'end'}
-			<p>{t['Welcome to Gale description 7']}</p>
+			<p>{t['Welcome to Gale description 8']}</p>
 
 			<p class="mt-1">
-				{t['Welcome to Gale description 8']} 
+				{t['Welcome to Gale description 9']} 
 				<a
 					href="https://discord.gg/lcmod"
 					target="_blank"
 					class="text-green-400 hover:underline">Lethal Company Modding Discord server</a
 				>
-				{t['Welcome to Gale description 9']}
+				{t['Welcome to Gale description 10']}
 			</p>
 		{/if}
 	</div>

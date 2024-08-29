@@ -31,6 +31,7 @@
 	import ModCard from '$lib/modlist/ModCard.svelte';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
+	import { t, T } from '$i18n';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -203,7 +204,7 @@
 				on:click={() => updateActiveMod('latest')}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl align-middle" />
-				Update to {activeMod?.versions[0].name}
+				{T(t["Update to version"], {"version": activeMod?.versions[0].name})}
 			</Button.Root>
 		{/if}
 	</div>
@@ -216,7 +217,7 @@
 							text-left rounded-md hover:bg-gray-600 cursor-default"
 				>
 					<Icon class="text-lg mr-1.5" icon="mdi:edit" />
-					Change version
+					{t["Change version"]}
 					<Icon class="text-xl ml-4" icon="mdi:chevron-right" />
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent
@@ -239,7 +240,7 @@
 		{/if}
 
 		<ModDetailsDropdownItem
-			label="Open directory"
+			label="{t["Open directory"]}"
 			icon="mdi:folder"
 			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>
@@ -247,13 +248,13 @@
 		{#if activeMod?.type === 'remote'}
 			<ModDetailsDropdownItem
 				icon="mdi:source-branch"
-				label="Show dependants"
+				label="{t["Show dependants"]}"
 				onClick={openDependants}
 			/>
 		{/if}
 
 		<ModDetailsDropdownItem
-			label="Uninstall"
+			label="{t["Uninstall"]}"
 			icon="mdi:delete"
 			onClick={() =>
 				uninstall({
@@ -267,7 +268,8 @@
 		{#if unknownMods.length > 0}
 			<div class="flex items-center text-red-100 bg-red-600 mr-3 mb-1 pl-3 pr-1 py-1.5 rounded-lg">
 				<Icon icon="mdi:alert-circle" class="text-xl mr-2" />
-				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
+				{unknownMods.length === 1 ? t["Following mod not found"] : t["Following mods not found"]} 
+				{unknownMods
 					.map((mod) => mod.name)
 					.join(', ')}.
 				<Button.Root
@@ -276,7 +278,7 @@
 						unknownMods.forEach(uninstall);
 					}}
 				>
-					Uninstall them?
+					{t["Uninstall them"]}
 				</Button.Root>
 			</div>
 		{/if}
@@ -286,16 +288,16 @@
 				class="flex items-center text-green-100 bg-green-700 mr-3 mb-1 pl-3 pr-1 py-1 rounded-lg"
 			>
 				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-2" />
-				There {updates.length === 1 ? 'is' : 'are'}
-				<strong class="mx-1">{updates.length}</strong>
-				{updates.length === 1 ? ' update' : ' updates'} available.
+				{@html updates.length === 1 
+				? T(t["A mod update available"], {"length": updates.length.toString()})
+				: T(t["Many mod update available"], {"length": updates.length.toString()})}
 				<Button.Root
 					class="hover:underline hover:text-green-200 text-white font-semibold ml-1"
 					on:click={() => {
 						updateAllOpen = true;
 					}}
 				>
-					Update all?
+					{t["Update all question"]}
 				</Button.Root>
 
 				<Button.Root
@@ -335,11 +337,11 @@
 	</div>
 </ModList>
 
-<ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
-	Select which mods to update:
+<ConfirmPopup title="{t["Confirm update"]}" bind:open={updateAllOpen}>
+	{t["Confirm update description"]}
 
 	<Checklist
-		title="Update all"
+		title="{t["Update all"]}"
 		set={(update, _, value) => {
 			includeUpdates.set(update, value);
 			includeUpdates = includeUpdates; // force reactivity
@@ -355,7 +357,7 @@
 		<Icon icon="mdi:arrow-right" class="text-slate-400 text-lg mx-1.5" />
 		<span class="text-green-400 font-semibold text-lg">{item.new}</span>
 
-		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
+		<Tooltip text="{t["Ignore in update all"]}" side="left" sideOffset={-2}>
 			<Button.Root
 				class="ml-2 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-gray-700 rounded"
 				on:click={() => {
@@ -383,30 +385,30 @@
 				updateAllOpen = false;
 			}}
 		>
-			Update mods
+			{t["Update mods"]}
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>
 
-<Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
+<Popup title="{T(t["Dependants of"], {"name": activeMod?.name})}" bind:open={dependantsOpen}>
 	<div class="text-slate-300 text-center mt-4">
 		{#if dependants}
 			{#if dependants.length === 0}
-				No dependants found
+				{t["No dependants found"]}
 			{:else}
 				<ModCardList names={dependants} />
 			{/if}
 		{:else}
-			Loading...
+			{t["Loading"]}
 		{/if}
 	</div>
 </Popup>
 
 <DependantsPopup
 	bind:this={removeDependants}
-	title="Confirm removal"
-	verb="Remove"
-	description="The following mods depend on %s and will likely not work if it is removed!"
+	title="{t["Confirm removal"]}"
+	verb="{t["Remove"]}"
+	description="{t["Confirm removal description"]}"
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();
@@ -417,9 +419,9 @@
 
 <DependantsPopup
 	bind:this={disableDependants}
-	title="Confirm disabling"
-	verb="Disable"
-	description="The following mods depend on %s and will likely not work if it is disabled!"
+	title="{t["Confirm disabling"]}"
+	verb="{t["Disable"]}"
+	description="{t["Confirm disabling description"]}"
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}
@@ -427,9 +429,9 @@
 
 <DependantsPopup
 	bind:this={enableDependencies}
-	title="Confirm enabling"
-	verb="Enable"
-	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled!"
+	title="{t["Confirm enabling"]}"
+	verb="{t["Enable"]}"
+	description="{t["Confirm enabling description"]}"
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}

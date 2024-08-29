@@ -172,7 +172,7 @@
 						class="text-slate-400 text-lg"
 						icon={sortOrder === SortOrder.Descending ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
 					/>
-					<span class="flex-shrink truncate">{text}</span>
+					<span class="flex-shrink truncate">{t[`Dropdown item ${text}`] || text}</span>
 					<Icon
 						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
 										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
@@ -190,7 +190,7 @@
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					<Icon class="text-slate-400 text-lg" icon="mdi:sort" />
-					<span class="flex-shr truncate">{text}</span>
+					<span class="flex-shr truncate">{t[`Dropdown item ${text}`] || text}</span>
 					<Icon
 						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
 										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
@@ -217,7 +217,7 @@
 				>
 					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter" />
 					{#if includeCategories.length === 0}
-						<span class="text-slate-300 truncate">Include categories</span>
+						<span class="text-slate-300 truncate">{t["Include categories"]}</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each includeCategories as category}
@@ -261,7 +261,7 @@
 				>
 					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter-remove" />
 					{#if excludeCategories.length === 0}
-						<span class="text-slate-300 truncate">Exclude categories</span>
+						<span class="text-slate-300 truncate">{t["Exclude categories"]}</span>
 					{:else}
 						<div class="flex flex-wrap gap-1 mr-2">
 							{#each excludeCategories as category}
@@ -304,11 +304,11 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex items-center bg-gray-900 text-slate-300 rounded-lg pl-3 pr-2 py-1
+					class="flex items-center bg-gray-900 text-slate-300 text-nowrap rounded-lg pl-3 pr-2 py-1
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					<Icon class="text-slate-400 text-lg flex-shrink-0 mr-2" icon="mdi:filter-variant" />
-					Include
+						{t["Include"]}
 					<Icon
 						class="text-slate-400 text-xl transition-all ml-6 flex-shrink-0 duration-100 ease-out
 										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"

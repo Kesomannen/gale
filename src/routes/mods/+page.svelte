@@ -13,6 +13,7 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { modQuery, activeGame } from '$lib/stores';
+	import { T, t } from '$i18n';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
@@ -107,10 +108,10 @@
 			disabled={isActiveModInstalled}
 		>
 			{#if isActiveModInstalled}
-				Mod already installed
+				{t["Mod already installed"]}
 			{:else}
 				<Icon icon="mdi:download" class="text-xl align-middle" />
-				Install
+				{t["Install"]}
 				{#if activeDownloadSize !== undefined && activeDownloadSize > 0}
 					({shortenFileSize(activeDownloadSize)})
 				{/if}
@@ -166,8 +167,8 @@
 	</div>
 </ModList>
 
-<ConfirmPopup title="Missing dependencies" bind:open={missingDepsOpen}>
-	Some of {activeMod?.name}'s dependencies could not be found:
+<ConfirmPopup title="{t["Missing dependencies"]}" bind:open={missingDepsOpen}>
+	{T(t["Missing dependencies description"], {"name": activeMod?.name})}
 
 	<ul class="mt-1">
 		{#each missingDeps as dep}
@@ -183,7 +184,7 @@
 				invokeCommand('install_mod', { modRef: activeModRef });
 			}}
 		>
-			Install anyway
+			{t["Install anyway"]}
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

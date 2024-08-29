@@ -52,12 +52,12 @@
 			class="flex flex-col gap-1 items-center p-2 w-14 bg-gray-900 border-r border-gray-600 flex-shrink-0"
 		>
 			<NavbarLink to="/" icon="mdi:home" tooltip="{t["Home page"]}" />
-			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
-			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
-			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
-			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
+			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="{t["Manage profile"]}" />
+			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="{t["Browse mods"]}" />
+			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="{t["Edit mod config"]}" />
+			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="{t["Export modpack"]}" />
 			<div class="flex-grow" />
-			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
+			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="{t["Edit manager settings"]}" />
 		</div>
 
 		<slot />

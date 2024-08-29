@@ -81,7 +81,7 @@
 					class="flex items-center px-3 py-1 text-slate-400 text-left rounded-md text-{size}
                 hover:bg-gray-700 hover:text-slate-200 cursor-default"
 				>
-					{getLabel(item)}
+					{t[`Dropdown item ${getLabel(item)}`] || getLabel(item)}
 
 					<Select.ItemIndicator class="ml-auto">
 						<Icon icon="mdi:check" class="text-green-400 text-lg" />
