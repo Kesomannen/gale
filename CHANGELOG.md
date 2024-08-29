@@ -14,6 +14,11 @@
 
 - Use hard links instead of copying files when installing mods, which reduces disk usage and install times significantly
 
+### Fixed
+
+- Multiple .old extensions sometimes being added when a mod is disabled
+- Missing or corrupted profile manifests causing a crash on startup
+
 ## 0.7.7 (2024-08-25)
 
 ### Added

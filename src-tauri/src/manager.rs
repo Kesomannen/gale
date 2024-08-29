@@ -575,17 +575,15 @@ impl Profile {
         self.scan_mod(&profile_mod.kind, |dir| {
             let files = WalkDir::new(dir)
                 .into_iter()
-                .filter_map(|e| e.ok())
-                .filter(|e| e.file_type().is_file());
+                .filter_map(Result::ok)
+                .filter(|entry| entry.file_type().is_file());
 
             for file in files {
                 let path = file.path();
                 if new_state {
-                    // remove ".old" extension
-                    if let Some(ext) = path.extension() {
-                        if ext == "old" {
-                            fs::rename(path, path.with_extension(""))?;
-                        }
+                    // remove any ".old" extensions
+                    while let Some("old") = path.extension().and_then(|ext| ext.to_str()) {
+                        fs::rename(path, path.with_extension(""))?;
                     }
                 } else {
                     let mut new = path.to_path_buf();
@@ -597,7 +595,9 @@ impl Profile {
             Ok(())
         })?;
 
-        self.get_mod_mut(uuid).unwrap().enabled = new_state;
+        self.get_mod_mut(uuid)
+            .expect("profile mod should already be validated through get_mod")
+            .enabled = new_state;
 
         Ok(())
     }
@@ -864,8 +864,9 @@ impl ModManager {
             }
         }
 
-        let active_game = games::from_id(&save_data.active_game)
-            .unwrap_or_else(|| games::from_id(DEFAULT_GAME_ID).expect("default game should be valid"));
+        let active_game = games::from_id(&save_data.active_game).unwrap_or_else(|| {
+            games::from_id(DEFAULT_GAME_ID).expect("default game should be valid")
+        });
 
         let mut manager = Self { games, active_game };
 

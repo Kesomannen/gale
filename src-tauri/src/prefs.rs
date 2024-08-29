@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{anyhow, ensure, Result};
-use log::{debug, warn};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
@@ -393,14 +393,15 @@ fn remove_old_cache(prefs: &mut Prefs, app: &AppHandle) {
             let handle = app.to_owned();
             let cache_dir = cache_dir.to_owned();
             tauri::async_runtime::spawn_blocking(move || {
-                fs::remove_dir_all(cache_dir).unwrap_or_else(|err| {
-                    warn!("failed to remove old cache directory: {:#}", err)
-                });
+                fs::remove_dir_all(cache_dir)
+                    .unwrap_or_else(|err| warn!("failed to remove old cache directory: {:#}", err));
 
                 let prefs = handle.state::<Mutex<Prefs>>();
                 let mut prefs = prefs.lock().unwrap();
 
                 prefs.cache_dir_old = None;
+
+                info!("removed old cache directory");
             });
         } else {
             prefs.cache_dir_old = None;

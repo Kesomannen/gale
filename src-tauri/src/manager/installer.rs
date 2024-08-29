@@ -9,7 +9,12 @@ use crate::{
 use itertools::Itertools;
 use log::trace;
 use std::{
-    collections::HashSet, ffi::OsStr, fs, io::{self, Read, Seek}, path::{Path, PathBuf}, time::Instant
+    collections::HashSet,
+    ffi::OsStr,
+    fs,
+    io::{self, Read, Seek},
+    path::{Path, PathBuf},
+    time::Instant,
 };
 use tempfile::tempdir;
 use walkdir::WalkDir;
@@ -41,8 +46,7 @@ fn is_bepinex(full_name: &str) -> bool {
 pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
     let mut path = prefs.cache_dir();
 
-    path.push(&borrowed_mod.package.owner);
-    path.push(&borrowed_mod.package.name);
+    path.push(&borrowed_mod.package.full_name);
     path.push(borrowed_mod.version.version_number.to_string());
 
     Ok(path)
@@ -78,7 +82,9 @@ pub fn soft_clear_cache(
         .collect::<Result<HashSet<_>>>()
         .context("failed to resolve installed mods")?;
 
-    let packages = fs::read_dir(prefs.cache_dir())
+    let packages = prefs
+        .cache_dir()
+        .read_dir()
         .context("failed to read cache directory")?
         .filter_map(|err| err.ok());
 
@@ -118,22 +124,22 @@ pub fn soft_clear_cache(
 }
 
 pub fn try_cache_install(
-    install: &ModInstall,
+    to_install: &ModInstall,
     path: &Path,
     manager: &mut ModManager,
     thunderstore: &Thunderstore,
     prefs: &Prefs,
 ) -> Result<bool> {
-    let borrowed = install.mod_ref.borrow(thunderstore)?;
+    let borrowed = to_install.mod_ref.borrow(thunderstore)?;
     let profile = manager.active_profile_mut();
 
     match path.exists() {
         true => {
             let name = &borrowed.package.full_name;
-            super::installer::install_default(path, &profile.path)?;
+            install(path, &profile.path)?;
 
-            let profile_mod = ProfileMod::remote_now(install.mod_ref.clone(), name.clone());
-            match install.index {
+            let profile_mod = ProfileMod::remote_now(to_install.mod_ref.clone(), name.clone());
+            match to_install.index {
                 Some(index) if index < profile.mods.len() => {
                     profile.mods.insert(index, profile_mod);
                 }
@@ -142,7 +148,7 @@ pub fn try_cache_install(
                 }
             };
 
-            if !install.enabled {
+            if !to_install.enabled {
                 profile.force_toggle_mod(&borrowed.package.uuid4)?;
             }
 
@@ -164,8 +170,9 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str) -> Result<()> 
     let temp_dir = tempdir().context("failed to create temporary directory")?;
 
     let file = fs::File::open(src).context("failed to open file")?;
-    extract(file, full_name, temp_dir.path().to_path_buf())?;
-    install_default(temp_dir.path(), dest)?;
+    let reader = io::BufReader::new(file);
+    extract(reader, full_name, temp_dir.path().to_owned())?;
+    install(temp_dir.path(), dest)?;
 
     Ok(())
 }
@@ -264,7 +271,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
 //         - ...
 //     - config
 //       - KeepItDown.cfg
-fn install_default(src: &Path, dest: &Path) -> Result<()> {
+fn install(src: &Path, dest: &Path) -> Result<()> {
     let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
 
     for entry in entries {

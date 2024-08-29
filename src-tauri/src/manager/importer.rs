@@ -242,14 +242,6 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     plugin_path.push(&local_mod.name);
 
     match kind {
-        LocalModKind::Package => {
-            /*
-            installer::install_from_disk(&path, &profile.path, &local_mod.name)
-                .context("failed to install local mod")?;
-
-            local_mod.icon = plugin_path.join("icon.png").exists_or_none();
-            */
-        }
         LocalModKind::Zip => {
             installer::install_from_zip(&path, &profile.path, &local_mod.name)
                 .context("failed to install local mod")?;
@@ -273,41 +265,23 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
 #[derive(PartialEq, Eq)]
 enum LocalModKind {
-    Package,
     Zip,
     Dll,
 }
 
 fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
-    let kind = match path.is_dir() {
-        true => LocalModKind::Package,
-        false => match path.extension() {
-            Some(ext) if ext == "dll" => LocalModKind::Dll,
-            Some(ext) if ext == "zip" => LocalModKind::Zip,
-            _ => bail!("unsupported file type"),
-        },
+    ensure!(path.is_file(), "path is not a file");
+
+    let kind = match path.extension().and_then(|ext| ext.to_str()) {
+        Some("dll") => LocalModKind::Dll,
+        Some("zip") => LocalModKind::Zip,
+        _ => bail!("unsupported file type"),
     };
 
     let manifest = match kind {
-        LocalModKind::Package => path.join("manifest.json").exists_or_none().map(|path| {
-            util::fs::read_json::<PackageManifest>(&path).context("failed to read mod manifest")
-        }),
-        LocalModKind::Zip => Some(
-            util::fs::open_zip(path)
-                .context("failed to read zip package")
-                .and_then(|mut archive| {
-                    let manifest = archive
-                        .by_name("manifest.json")
-                        .context("failed to find mod manifest")?;
-                    let manifest = serde_json::from_reader::<_, PackageManifest>(manifest)
-                        .context("failed to read mod manifest")?;
-
-                    Ok(manifest)
-                }),
-        ),
+        LocalModKind::Zip => read_zip_manifest(path)?,
         LocalModKind::Dll => None,
-    }
-    .transpose()?;
+    };
 
     let uuid = Uuid::new_v4();
 
@@ -328,5 +302,18 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
         },
     };
 
-    Ok((local_mod, kind))
+    return Ok((local_mod, kind));
+
+    fn read_zip_manifest(path: &Path) -> Result<Option<PackageManifest>> {
+        let mut zip = util::fs::open_zip(path).context("failed to read zip archive")?;
+
+        let manifest = zip.by_name("manifest.json");
+
+        match manifest {
+            Ok(file) => serde_json::from_reader::<_, PackageManifest>(file)
+                .context("failed to read manifest")
+                .map(Some),
+            Err(_) => Ok(None),
+        }
+    }
 }
