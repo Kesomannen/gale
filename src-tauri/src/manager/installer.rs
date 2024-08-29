@@ -249,8 +249,6 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
             }
         }
 
-        trace!("extracting {} to {}", file_path.display(), target.display());
-
         fs::create_dir_all(target.parent().unwrap())?;
         let mut target_file = fs::File::create(&target)?;
         io::copy(&mut file, &mut target_file)?;

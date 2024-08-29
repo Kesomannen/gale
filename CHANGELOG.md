@@ -13,6 +13,7 @@
 ### Changed
 
 - Use hard links instead of copying files when installing mods, which reduces disk usage and install times significantly
+- New cache format for mods (existing cache will be deleted on first launch)
 
 ### Fixed
 

@@ -582,13 +582,16 @@ impl Profile {
                 let path = file.path();
                 if new_state {
                     // remove any ".old" extensions
-                    while let Some("old") = path.extension().and_then(|ext| ext.to_str()) {
-                        fs::rename(path, path.with_extension(""))?;
+                    let mut new = path.to_owned();
+                    while let Some("old") = new.extension().and_then(|ext| ext.to_str()) {
+                        new.set_extension("");
                     }
+
+                    fs::rename(path, &new).fs_context("removing .old extension", path)?;
                 } else {
                     let mut new = path.to_path_buf();
                     new.add_extension("old");
-                    fs::rename(path, &new)?;
+                    fs::rename(path, &new).fs_context("adding .old extension", path)?;
                 }
             }
 
