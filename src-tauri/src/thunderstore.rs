@@ -1,5 +1,5 @@
 use std::{
-    collections::HashSet,
+    collections::{HashSet, VecDeque},
     path::{Path, PathBuf},
     str::{self, Split},
     sync::Mutex,
@@ -197,13 +197,15 @@ impl Thunderstore {
     ) -> (HashSet<BorrowedMod<'a>>, Vec<&'a str>) {
         let mut result = HashSet::new();
         let mut errors = Vec::new();
-        let mut stack = dependency_strings.map(String::as_str).collect::<Vec<_>>();
-        let mut visited = stack
+        let mut queue = dependency_strings
+            .map(String::as_str)
+            .collect::<VecDeque<_>>();
+        let mut visited = queue
             .iter()
-            .map(|s| parse_author_name(s))
+            .map(|str| parse_author_name(str))
             .collect::<HashSet<_>>();
 
-        while let Some(id) = stack.pop() {
+        while let Some(id) = queue.pop_front() {
             match self.find_mod(id, '-') {
                 Ok(dependency) => {
                     for dep in &dependency.version.dependencies {
@@ -213,7 +215,7 @@ impl Thunderstore {
                             continue;
                         }
 
-                        stack.push(dep.as_str());
+                        queue.push_back(dep.as_str());
                     }
 
                     result.insert(dependency);
@@ -227,8 +229,8 @@ impl Thunderstore {
         return (result, errors);
 
         fn parse_author_name(s: &str) -> (&str, &str) {
-            let mut split = s.split('-');
-            (split.next().unwrap(), split.next().unwrap())
+            s.split_once('-')
+                .expect("thunderstore packages should always have an author and name")
         }
     }
 
