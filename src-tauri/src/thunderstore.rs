@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use indexmap::IndexMap;
-use log::{debug, trace, warn};
+use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Emitter, Manager};
 use uuid::Uuid;

@@ -5,6 +5,7 @@
 ### Added
 
 - Profile > Copy launch arguments
+- Indicator for installed mods in the mod list (thanks @DaXcess)
 
 ### Removed
 
@@ -14,6 +15,7 @@
 
 - Use hard links instead of copying files when installing mods, which reduces disk usage and install times significantly
 - New cache format for mods (existing cache will be deleted on first launch)
+- Use a broad-first search for dependencies instead of depth-first
 
 ### Fixed
 
