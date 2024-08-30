@@ -164,7 +164,7 @@
 		</div>
 	{:then readme}
 		{#if readme}
-			<Markdown source={readme} class="hidden xl:block" />
+			<Markdown source={readme} class="readme hidden xl:block" />
 		{:else}
 			<p class="text-slate-300 text-xl flex-shrink overflow-hidden mt-3 hidden xl:block">
 				{mod.description ?? ''}
@@ -233,3 +233,9 @@
 	useLatest={true}
 	path="changelog"
 />
+
+<style lang="postcss">
+	:global(.readme) {
+		scrollbar-color: theme(colors.gray.400) theme(colors.gray.700);
+	}
+</style>
