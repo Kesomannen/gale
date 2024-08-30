@@ -16,7 +16,6 @@ use std::{
     path::{Path, PathBuf},
     time::Instant,
 };
-use tempfile::tempdir;
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
@@ -165,14 +164,21 @@ pub fn try_cache_install(
     }
 }
 
-pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str) -> Result<()> {
+pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs) -> Result<()> {
     // temporarily extract the zip so the same install method can be used
-    let temp_dir = tempdir().context("failed to create temporary directory")?;
+
+    // dont use tempdir since we need the files on the same drive as the destination
+    // for hard linking to work
+
+    let path = prefs.data_dir.join("temp").join("extract");
+    fs::create_dir_all(&path).context("failed to create temporary directory")?;
 
     let file = fs::File::open(src).context("failed to open file")?;
     let reader = io::BufReader::new(file);
-    extract(reader, full_name, temp_dir.path().to_owned())?;
-    install(temp_dir.path(), dest)?;
+    extract(reader, full_name, path.clone())?;
+    install(&path, dest)?;
+
+    fs::remove_dir_all(path).context("failed to remove temporary directory")?;
 
     Ok(())
 }
