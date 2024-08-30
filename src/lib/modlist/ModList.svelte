@@ -335,12 +335,12 @@
 					on:dragover={onDragOver}
 					on:dragend={onDragEnd}
 					on:drag={onDrag}
-					let:isInstalled
+					isInstalled={mod.isInstalled}
 					draggable={reorderable}
 					isSelected={activeMod?.uuid == mod.uuid}
 					{mod}
 				>
-					<slot name="item" {mod} {isInstalled} />
+					<slot name="item" {mod} />
 				</ModListItem>
 			</VirtualList>
 		{/if}

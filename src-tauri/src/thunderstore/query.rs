@@ -7,11 +7,11 @@ use tauri::{AppHandle, Emitter, Manager};
 use typeshare::typeshare;
 
 use super::{
-    models::{FrontendMod, FrontendModKind, FrontendVersion},
+    models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
     BorrowedMod, Thunderstore,
 };
 
-use crate::manager::LocalMod;
+use crate::manager::{LocalMod, ModManager, Profile};
 
 pub fn setup(app: &AppHandle) {
     app.manage(Mutex::new(QueryState::default()));
@@ -67,6 +67,7 @@ const TIME_BETWEEN_QUERIES: Duration = Duration::from_millis(250);
 pub async fn query_loop(app: AppHandle) -> Result<()> {
     let thunderstore = app.state::<Mutex<Thunderstore>>();
     let query_state = app.state::<Mutex<QueryState>>();
+    let manager = app.state::<Mutex<ModManager>>();
 
     loop {
         {
@@ -74,8 +75,10 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
 
             if let Some(args) = &state.current_query {
                 let thunderstore = thunderstore.lock().unwrap();
+                let manager = manager.lock().unwrap();
 
-                let mods = query_frontend_mods(args, thunderstore.latest());
+                let mods =
+                    query_frontend_mods(args, thunderstore.latest(), manager.active_profile());
                 app.emit("mod_query_result", &mods)?;
 
                 if thunderstore.packages_fetched {
@@ -155,10 +158,10 @@ impl Queryable for BorrowedMod<'_> {
     }
 }
 
-impl From<BorrowedMod<'_>> for FrontendMod {
-    fn from(value: BorrowedMod<'_>) -> Self {
-        let pkg = value.package;
-        let vers = pkg.get_version(&value.version.uuid4).unwrap();
+impl IntoFrontendMod for BorrowedMod<'_> {
+    fn into_frontend(self, profile: &Profile) -> FrontendMod {
+        let pkg = self.package;
+        let vers = pkg.get_version(&self.version.uuid4).unwrap();
         FrontendMod {
             name: pkg.name.clone(),
             description: Some(vers.description.clone()),
@@ -178,6 +181,7 @@ impl From<BorrowedMod<'_>> for FrontendMod {
             is_deprecated: pkg.is_deprecated,
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid4,
+            is_installed: profile.has_mod(&pkg.uuid4),
             last_updated: Some(pkg.versions[0].date_created.to_string()),
             versions: pkg
                 .versions
@@ -239,12 +243,18 @@ impl From<LocalMod> for FrontendMod {
     }
 }
 
-pub fn query_frontend_mods<T, I>(args: &QueryModsArgs, mods: I) -> Vec<FrontendMod>
+pub fn query_frontend_mods<T, I>(
+    args: &QueryModsArgs,
+    mods: I,
+    profile: &Profile,
+) -> Vec<FrontendMod>
 where
-    T: Queryable + Into<FrontendMod>,
+    T: Queryable + IntoFrontendMod,
     I: Iterator<Item = T>,
 {
-    query_mods(args, mods).map_into().collect()
+    query_mods(args, mods)
+        .map(|m| m.into_frontend(profile))
+        .collect()
 }
 
 pub fn query_mods<'a, T, I>(args: &QueryModsArgs, mods: I) -> impl Iterator<Item = T> + 'a

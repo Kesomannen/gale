@@ -4,9 +4,12 @@
 	import { isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
+	import { invokeCommand } from '$lib/invoke';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
+	export let isInstalled: boolean;
+	export let showInstalledIcon: boolean;
 	export let draggable = false;
 
 	let imgSrc: string;
@@ -68,7 +71,10 @@
 			<Icon class="text-red-500 inline mb-1" icon="mdi:error" />
 		{/if}
 		{#if isOutdated(mod)}
-			<Icon class=" text-green-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
+			<Icon class="text-green-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
+		{/if}
+		{#if isInstalled && showInstalledIcon}
+			<Icon class="text-green-500 inline mb-1.5" icon="mdi:check-circle" />
 		{/if}
 		<div
 			class="truncate {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-300/80'}"
@@ -79,6 +85,6 @@
 
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<div class="contents" on:click={(evt) => evt.stopPropagation()} role="none">
-		<slot isInstalled={false} />
+		<slot {isInstalled} />
 	</div>
 </button>

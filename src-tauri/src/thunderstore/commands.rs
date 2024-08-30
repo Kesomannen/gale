@@ -17,10 +17,12 @@ pub fn query_thunderstore(
     args: QueryModsArgs,
     thunderstore: StateMutex<Thunderstore>,
     state: StateMutex<QueryState>,
+    manager: StateMutex<ModManager>,
 ) -> Vec<FrontendMod> {
     let thunderstore = thunderstore.lock().unwrap();
+    let manager = manager.lock().unwrap();
 
-    let result = query::query_frontend_mods(&args, thunderstore.latest());
+    let result = query::query_frontend_mods(&args, thunderstore.latest(), manager.active_profile());
 
     if !thunderstore.packages_fetched {
         let mut state = state.lock().unwrap();
