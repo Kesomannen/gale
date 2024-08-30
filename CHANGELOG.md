@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.2 (2024-08-30)
+
+### Changed
+
+- Install the root mod before dependencies, which should fix issues with modpack config files sometimes being skipped
+
 ## 0.8.1 (2024-08-30)
 
 ### Removed
