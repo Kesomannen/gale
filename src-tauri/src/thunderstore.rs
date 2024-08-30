@@ -1,14 +1,14 @@
 use std::{
     collections::{HashSet, VecDeque},
     path::{Path, PathBuf},
-    str::{self, Split},
+    str::{self},
     sync::Mutex,
     time::{Duration, Instant},
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use indexmap::IndexMap;
-use log::{debug, warn};
+use log::{debug, trace, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Emitter, Manager};
 use uuid::Uuid;
@@ -102,22 +102,6 @@ impl ModRef {
     }
 }
 
-pub fn parse_mod_ident(identifier: &str, delimeter: char) -> Result<(String, &str)> {
-    let (author, name, version) = parts(identifier.split(delimeter))
-        .with_context(|| format!("invalid dependency string format {}", identifier))?;
-
-    let full_name = format!("{}-{}", author, name);
-    return Ok((full_name, version));
-
-    fn parts(mut s: Split<'_, char>) -> Option<(&str, &str, &str)> {
-        let author = s.next()?;
-        let name = s.next()?;
-        let version = s.next()?;
-
-        Some((author, name, version))
-    }
-}
-
 #[derive(Default)]
 pub struct Thunderstore {
     pub load_mods_handle: Option<JoinHandle<()>>,
@@ -178,10 +162,18 @@ impl Thunderstore {
     }
 
     pub fn find_mod<'a>(&'a self, identifier: &str, delimeter: char) -> Result<BorrowedMod<'a>> {
-        let (full_name, version) = parse_mod_ident(identifier, delimeter)?;
+        let mut indicies = identifier.match_indices(delimeter).map(|(i, _)| i);
+
+        if indicies.clone().count() != 2 {
+            bail!("invalid dependency string format: {}", identifier);
+        }
+
+        let name_end = indicies.nth(1).unwrap();
+        let full_name = &identifier[..name_end];
+        let version = &identifier[name_end + delimeter.len_utf8()..];
 
         let version = semver::Version::parse(version)
-            .with_context(|| format!("invalid version format {}", version))?;
+            .with_context(|| format!("invalid version format: {}", version))?;
 
         let package = self.find_package(&full_name)?;
         let version = package
@@ -194,50 +186,47 @@ impl Thunderstore {
     pub fn resolve_deps<'a>(
         &'a self,
         dependency_strings: impl Iterator<Item = &'a String>,
-    ) -> (HashSet<BorrowedMod<'a>>, Vec<&'a str>) {
-        let mut result = HashSet::new();
-        let mut errors = Vec::new();
+    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a str>) {
+        let mut result = Vec::new();
+        let mut not_found = Vec::new();
         let mut queue = dependency_strings
             .map(String::as_str)
             .collect::<VecDeque<_>>();
         let mut visited = queue
             .iter()
-            .map(|str| parse_author_name(str))
+            .map(|str| exclude_version(str))
             .collect::<HashSet<_>>();
 
-        while let Some(id) = queue.pop_front() {
-            match self.find_mod(id, '-') {
-                Ok(dependency) => {
-                    for dep in &dependency.version.dependencies {
-                        let (author, name) = parse_author_name(dep);
+        while let Some(current) = queue.pop_front() {
+            if let Ok(current) = self.find_mod(current, '-') {
+                for dependency in &current.version.dependencies {
+                    let (author, name) = exclude_version(dependency);
 
-                        if !visited.insert((author, name)) {
-                            continue;
-                        }
-
-                        queue.push_back(dep.as_str());
+                    if !visited.insert((author, name)) {
+                        continue;
                     }
 
-                    result.insert(dependency);
+                    queue.push_back(dependency.as_str());
                 }
-                Err(_) => {
-                    errors.push(id);
-                }
+
+                result.push(current);
+            } else {
+                not_found.push(current);
             }
         }
 
-        return (result, errors);
+        return (result, not_found);
 
-        fn parse_author_name(s: &str) -> (&str, &str) {
-            s.split_once('-')
-                .expect("thunderstore packages should always have an author and name")
+        fn exclude_version(dependency: &str) -> (&str, &str) {
+            let mut split = dependency.split('-');
+            (split.next().unwrap(), split.next().unwrap())
         }
     }
 
     pub fn dependencies<'a>(
         &'a self,
         version: &'a PackageVersion,
-    ) -> (HashSet<BorrowedMod<'a>>, Vec<&'a str>) {
+    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a str>) {
         self.resolve_deps(version.dependencies.iter())
     }
 }
