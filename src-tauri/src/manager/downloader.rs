@@ -288,7 +288,7 @@ impl<'a> Installer<'a> {
             }
         }
 
-        if installer::try_cache_install(data, &path, &mut manager, &thunderstore, &prefs)? {
+        if installer::try_cache_install(data, &path, &mut manager, &thunderstore)? {
             self.completed_bytes += borrowed.version.file_size;
             save(&manager, &prefs)?;
             return Ok(InstallMethod::Cached);
@@ -366,7 +366,7 @@ impl<'a> Installer<'a> {
             callback(install, &mut manager, &thunderstore);
         }
 
-        installer::try_cache_install(install, &cache_path, &mut manager, &thunderstore, &prefs)
+        installer::try_cache_install(install, &cache_path, &mut manager, &thunderstore)
             .context("failed to install after download")?;
 
         manager

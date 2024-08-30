@@ -1,22 +1,26 @@
 <script lang="ts">
-	import SvelteMarkdown from 'svelte-markdown';
-	import { marked } from 'marked';
+	import type { Plugin } from 'svelte-exmarkdown';
+	import Markdown, { denylist } from 'svelte-exmarkdown';
+	import { gfmPlugin } from 'svelte-exmarkdown/gfm';
 	import MarkdownLink from './MarkdownLink.svelte';
+	import rehypeRaw from 'rehype-raw';
 
 	export let source: string;
 
 	let className = '';
 
+	const plugins: Plugin[] = [
+		gfmPlugin(),
+		denylist(['script', 'iframe', 'object', 'embed', 'base', 'meta', 'link', 'style', 'title']),
+		{ rehypePlugin: [rehypeRaw] },
+		{ renderer: { a: MarkdownLink } }
+	];
+
 	export { className as class };
 </script>
 
 <div class="markdown overflow-x-hidden {className}">
-	<SvelteMarkdown
-		{source}
-		renderers={{
-			link: MarkdownLink
-		}}
-	/>
+	<Markdown md={source} {plugins} />
 </div>
 
 <style global lang="postcss">
@@ -99,5 +103,9 @@
 
 	.markdown :global(td) {
 		@apply px-2 py-1 text-left;
+	}
+
+	.markdown :global(summary) {
+		@apply cursor-pointer;
 	}
 </style>

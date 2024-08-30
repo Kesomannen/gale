@@ -262,7 +262,6 @@ export interface Prefs {
 	steamLibraryDir?: string;
 	dataDir: string;
 	cacheDir: string;
-	enableModCache: boolean;
 	fetchModsAutomatically: boolean;
 	zoomFactor: number;
 	gamePrefs: Map<string, GamePrefs>;

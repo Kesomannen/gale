@@ -27,7 +27,7 @@
 
 	let name: string;
 	let author: string;
-	let selectedCategories: PackageCategory[];
+	let selectedCategories: PackageCategory[] = [];
 	let nsfw: boolean;
 	let description: string;
 	let readme: string;
@@ -103,10 +103,12 @@
 
 		if (!response) return;
 		iconPath = response.path;
+		saveArgs();
 	}
 
 	async function generateChangelog(all: boolean) {
 		changelog = await invokeCommand('generate_changelog', { args: args(), all });
+		saveArgs();
 	}
 
 	async function exportToFile() {
@@ -122,7 +124,6 @@
 		try {
 			await invokeCommand('export_pack', { args: args(), dir });
 		} finally {
-			saveArgs();
 			loading = null;
 		}
 	}
@@ -154,13 +155,15 @@
 			await invokeCommand('upload_pack', { args: args() });
 			donePopupOpen = true;
 		} finally {
-			saveArgs();
 			loading = null;
 		}
 	}
 
 	function saveArgs() {
-		invokeCommand('set_pack_args', { args: args() });
+		// wait a tick to ensure the variables are updated
+		setTimeout(() => {
+			invokeCommand('set_pack_args', { args: args() });
+		});
 	}
 
 	function args(): ModpackArgs {
@@ -176,13 +179,9 @@
 			websiteUrl,
 			includeDisabled,
 			includeFileMap: includeFiles,
-			categories: selectedCategories.map((c) => c.slug)
+			categories: selectedCategories.map(({ slug }) => slug)
 		};
 	}
-
-	onDestroy(() => {
-		saveArgs();
-	});
 </script>
 
 <div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
@@ -204,6 +203,7 @@
 		required={true}
 	>
 		<InputField
+			on:change={saveArgs}
 			bind:value={name}
 			placeholder="Enter name..."
 			required={true}
@@ -217,11 +217,18 @@
 		description="The author of the modpack, which should be the name of your Thunderstore team."
 		required={true}
 	>
-		<InputField bind:value={author} placeholder="Enter author..." required={true} class="w-full" />
+		<InputField
+			on:change={saveArgs}
+			bind:value={author}
+			placeholder="Enter author..."
+			required={true}
+			class="w-full"
+		/>
 	</FormField>
 
 	<FormField label="Description" description="A short description of the modpack." required={true}>
 		<InputField
+			on:change={saveArgs}
 			bind:value={description}
 			placeholder="Enter description..."
 			required={true}
@@ -239,6 +246,7 @@
 				avoidCollisions={false}
 				items={$categories}
 				bind:selected={selectedCategories}
+				onSelectedChange={saveArgs}
 				multiple={true}
 				getLabel={(category) => category.name}
 			>
@@ -286,6 +294,7 @@
 		required={true}
 	>
 		<InputField
+			on:change={saveArgs}
 			bind:value={versionNumber}
 			placeholder="Enter version number..."
 			required={true}
@@ -296,6 +305,7 @@
 
 	<FormField label="Website" description="The URL of a website of your choosing. Optional.">
 		<InputField
+			on:change={saveArgs}
 			bind:value={websiteUrl}
 			placeholder="Enter website URL..."
 			pattern={URL_PATTERN}
@@ -318,11 +328,16 @@
                  (similarly to Discord messages)."
 		required={true}
 	>
-		<ResizableInputField bind:value={readme} placeholder="Enter readme..." />
+		<ResizableInputField
+			on:change={saveArgs}
+			bind:value={readme}
+			placeholder="Enter readme..."
+			mono={true}
+		/>
 
 		<details class="mt-1">
 			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
-			<Markdown class="px-4 mt-1 bg-gray-900 rounded-lg" source={readme} />
+			<Markdown class="px-4 mt-1 rounded-lg bg-gray-900" source={readme} />
 		</details>
 	</FormField>
 
@@ -330,7 +345,12 @@
 		label="Changelog"
 		description="A list of changes in the modpack, also supports markdown formatting. Leave empty to omit."
 	>
-		<ResizableInputField bind:value={changelog} placeholder="Enter changelog..." />
+		<ResizableInputField
+			on:change={saveArgs}
+			bind:value={changelog}
+			placeholder="Enter changelog..."
+			mono={true}
+		/>
 
 		<BigButton color="gray" on:click={() => generateChangelog(false)}
 			>Generate for {versionNumber}</BigButton
@@ -368,13 +388,13 @@
 	<div class="flex items-center text-lg font-medium text-slate-200 mt-1">
 		<span class="max-w-96 flex-grow">Contains NSFW content</span>
 
-		<Checkbox bind:value={nsfw} />
+		<Checkbox onValueChanged={saveArgs} bind:value={nsfw} />
 	</div>
 
 	<div class="flex items-center text-lg font-medium text-slate-200">
 		<span class="max-w-96 flex-grow">Include disabled mods</span>
 
-		<Checkbox bind:value={includeDisabled} />
+		<Checkbox onValueChanged={saveArgs} bind:value={includeDisabled} />
 	</div>
 
 	<div class="flex justify-end gap-2 mt-3">

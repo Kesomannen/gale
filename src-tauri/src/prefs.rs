@@ -183,10 +183,9 @@ pub struct Prefs {
 
     #[serde(alias = "data_dir")]
     pub data_dir: DirPref,
-    #[serde(alias = "cache_dir")]
+    #[serde(alias = "cache_dir", alias = "cacheDir")]
     cache_dir_old: Option<DirPref>,
 
-    enable_mod_cache: bool,
     fetch_mods_automatically: bool,
 
     #[serde(alias = "zoom_factor")]
@@ -269,7 +268,6 @@ impl Default for Prefs {
                 .keep("logs"),
             cache_dir_old: None,
 
-            enable_mod_cache: true,
             fetch_mods_automatically: true,
 
             zoom_factor: 1.0,
@@ -372,10 +370,6 @@ impl Prefs {
 
         self.save()?;
         Ok(())
-    }
-
-    pub fn mod_cache_enabled(&self) -> bool {
-        self.enable_mod_cache
     }
 
     pub fn cache_dir(&self) -> PathBuf {

@@ -338,6 +338,7 @@
 					isInstalled={mod.isInstalled}
 					draggable={reorderable}
 					isSelected={activeMod?.uuid == mod.uuid}
+					{showInstalledIcon}
 					{mod}
 				>
 					<slot name="item" {mod} />

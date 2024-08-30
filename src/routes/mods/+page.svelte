@@ -154,8 +154,8 @@
 		</DropdownMenu.Root>
 	</div>
 
-	<div slot="item" let:mod let:isInstalled>
-		{#if !isInstalled}
+	<div slot="item" let:mod>
+		{#if !mod.isInstalled}
 			<Button.Root
 				class="p-2.5 ml-2 mt-0.5 mr-0.5 rounded-lg text-white text-2xl align-middle hidden group-hover:inline bg-green-600 hover:bg-green-500"
 				on:click={() => installLatest(mod)}

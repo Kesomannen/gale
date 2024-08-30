@@ -52,18 +52,6 @@
 		<ApiKeyPref />
 
 		<TogglePref
-			label="Use download cache"
-			disableMessage="This will delete all cached mods. Are you sure?"
-			value={prefs.enableModCache}
-			set={set((value, prefs) => (prefs.enableModCache = value))}
-		>
-			Whether to cache downloaded mods. This speeds up install times and lowers bandwidth usage, but
-			can take a considerable amount of disk space.
-			<br />
-			<b>Warning:</b> Disabling this will delete the existing cache.
-		</TogglePref>
-
-		<TogglePref
 			label="Fetch mods automatically"
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}

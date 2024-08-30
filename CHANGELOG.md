@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.1 (2024-08-30)
+
+### Removed
+
+- Settings toggle to disable mod download cache, as it now doesn't provide any benefit
+
+### Fixed
+
+- Old mod cache files from pre-0.8 not being deleted on startup. **Note: if you've already updated to 0.8.0, you need to manually delete them.**
+- Modpack arguments not being saved when app is closed or profile is changed while the page is open
+- `<details>` elements in markdown rendering incorrectly
+
 ## 0.8.0 (2024-08-30)
 
 ### Added

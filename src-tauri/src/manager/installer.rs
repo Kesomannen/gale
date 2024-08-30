@@ -127,7 +127,6 @@ pub fn try_cache_install(
     path: &Path,
     manager: &mut ModManager,
     thunderstore: &Thunderstore,
-    prefs: &Prefs,
 ) -> Result<bool> {
     let borrowed = to_install.mod_ref.borrow(thunderstore)?;
     let profile = manager.active_profile_mut();
@@ -149,13 +148,6 @@ pub fn try_cache_install(
 
             if !to_install.enabled {
                 profile.force_toggle_mod(&borrowed.package.uuid4)?;
-            }
-
-            if !prefs.mod_cache_enabled() {
-                fs::remove_dir_all(path).ok();
-
-                // remove the parent if it's empty
-                fs::remove_dir(path.parent().unwrap()).ok();
             }
 
             Ok(true)
@@ -266,8 +258,8 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
 
 // install from a well structured mod directory
 // for example:
-// - BepInEx (src)
-//   - KeepItDown
+// - Kesomannen-KeepItDown (src)
+//   - BepInEx
 //     - plugins
 //       - Kesomannen-KeepItDown
 //         - KeepItDown.dll
