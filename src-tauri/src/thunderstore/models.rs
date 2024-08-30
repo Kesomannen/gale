@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::games::Game;
+use crate::{games::Game, manager::Profile};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
@@ -220,6 +220,7 @@ pub struct FrontendMod {
     pub is_deprecated: bool,
     pub contains_nsfw: bool,
     pub uuid: Uuid,
+    pub is_installed: bool,
     pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,
     #[serde(rename = "type")]
@@ -240,4 +241,8 @@ pub struct FrontendProfileMod {
     pub config_file: Option<PathBuf>,
     #[serde(flatten)]
     pub data: FrontendMod,
+}
+
+pub trait IntoFrontendMod {
+    fn into_frontend(self, profile: &Profile) -> FrontendMod;
 }
