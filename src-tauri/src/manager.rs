@@ -91,6 +91,8 @@ pub struct LocalMod {
     pub author: Option<String>,
     pub description: Option<String>,
     pub version: Option<semver::Version>,
+    #[serde(default)]
+    pub file_size: u64,
     pub dependencies: Option<Vec<String>>,
     pub uuid: Uuid,
 }

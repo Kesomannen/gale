@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { MarkdownResponse, Mod } from '../models';
-	import { shortenNum, timeSince } from '../util';
+	import { shortenFileSize, shortenNum, timeSince } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import { slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
@@ -139,12 +139,14 @@
 		</div>
 	{/if}
 
-	{#if mod.rating || mod.downloads}
+	{#if mod.rating !== undefined || mod.downloads != undefined}
 		<div class="my-1 flex items-center gap-2 text-lg">
 			<Icon class="text-yellow-400" icon="mdi:star" />
 			<span class="text-yellow-400 mr-4">{shortenNum(mod.rating ?? 0)}</span>
 			<Icon class="text-green-400" icon="mdi:download" />
-			<span class="text-green-400">{shortenNum(mod.downloads ?? 0)}</span>
+			<span class="text-green-400 mr-4">{shortenNum(mod.downloads ?? 0)}</span>
+			<Icon class="text-slate-400" icon="mdi:weight" />
+			<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
 		</div>
 	{/if}
 
@@ -154,19 +156,19 @@
 		</div>
 	{/if}
 
-	<p class="text-slate-300 text-xl flex-shrink overflow-hidden mt-3 xl:hidden">
+	<p class="text-slate-300 text-xl flex-shrink overflow-hidden mt-3 lg:hidden">
 		{mod.description ?? ''}
 	</p>
 
 	{#await readmePromise}
-		<div class="items-center justify-center w-full h-full hidden xl:flex">
+		<div class="items-center justify-center w-full h-full hidden lg:flex">
 			<Icon class="text-5xl text-slate-300 animate-spin" icon="mdi:loading" />
 		</div>
 	{:then readme}
 		{#if readme}
-			<Markdown source={readme} class="readme hidden xl:block" />
+			<Markdown source={readme} class="readme hidden lg:block" />
 		{:else}
-			<p class="text-slate-300 text-xl flex-shrink overflow-hidden mt-3 hidden xl:block">
+			<p class="text-slate-300 text-xl flex-shrink overflow-hidden mt-3 hidden lg:block">
 				{mod.description ?? ''}
 			</p>
 		{/if}

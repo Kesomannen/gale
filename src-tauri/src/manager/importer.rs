@@ -284,10 +284,12 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
     };
 
     let uuid = Uuid::new_v4();
+    let file_size = path.metadata()?.len();
 
     let local_mod = match manifest {
         Some(manifest) => LocalMod {
             uuid,
+            file_size,
             name: manifest.name,
             author: manifest.author,
             description: Some(manifest.description),
@@ -297,6 +299,7 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
         },
         None => LocalMod {
             uuid,
+            file_size,
             name: util::fs::file_name_owned(path.with_extension("")),
             ..Default::default()
         },

@@ -88,6 +88,7 @@ export interface Mod {
 	author?: string;
 	rating?: number;
 	downloads?: number;
+	fileSize: number;
 	websiteUrl?: string;
 	donateUrl?: string;
 	icon?: string;

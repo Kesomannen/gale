@@ -212,6 +212,7 @@ pub struct FrontendMod {
     pub author: Option<String>,
     pub rating: Option<u32>,
     pub downloads: Option<u32>,
+    pub file_size: u64,
     pub website_url: Option<String>,
     pub donate_url: Option<String>,
     pub icon: Option<String>,

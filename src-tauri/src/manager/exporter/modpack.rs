@@ -1,4 +1,4 @@
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use futures_util::future::try_join_all;
 use image::{imageops::FilterType, ImageFormat};
 use log::{debug, info, trace};
@@ -27,6 +27,7 @@ use crate::{
     util::zip::ZipWriterExt,
 };
 use bytes::Bytes;
+use itertools::Itertools;
 use zip::ZipWriter;
 
 pub mod changelog;
@@ -96,8 +97,6 @@ impl Profile {
             })
             .collect::<Result<Vec<_>>>()
             .context("failed to resolve modpack dependencies")?;
-
-        trace!("resolved dependencies: {:?}", deps);
 
         let version_number =
             semver::Version::parse(&args.version_number).context("invalid version number")?;
@@ -326,18 +325,48 @@ async fn submit_package(
 
     debug!("submitting package");
 
-    base_request("submission/submit", token, client)
+    let response = base_request("submission/submit", token, client)
         .json(&metadata)
         .send()
-        .await?
-        .map_auth_err_with(|status| match status {
-            StatusCode::BAD_REQUEST => Some(anyhow!(
-                "package metadata is invalid, please check your input"
-            )),
-            _ => None,
-        })?;
+        .await?;
 
-    Ok(())
+    let status = response.status();
+
+    if response.status().is_success() {
+        return Ok(());
+    }
+
+    if status == StatusCode::BAD_REQUEST {
+        if let Ok(Some(err)) = handle_bad_request(response).await {
+            bail!("{}", err)
+        }
+    }
+
+    bail!("unexpected error: {}", status);
+
+    async fn handle_bad_request(response: reqwest::Response) -> Result<Option<String>> {
+        #[derive(Deserialize)]
+        struct Error {
+            file: Vec<String>,
+        }
+
+        let err = response.json::<Error>().await?;
+
+        if err.file.is_empty() {
+            return Ok(None);
+        }
+
+        Ok(Some(
+            err.file
+                .into_iter()
+                .map(|err| match err.split_once(':') {
+                    Some((_field, msg)) => msg.trim().to_owned(),
+                    None => err,
+                })
+                .collect_vec()
+                .join(", "),
+        ))
+    }
 }
 
 trait ReqwestResponseExt {

@@ -170,6 +170,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             author: Some(pkg.owner.clone()),
             rating: Some(pkg.rating_score),
             downloads: Some(pkg.total_downloads()),
+            file_size: vers.file_size,
             website_url: match vers.website_url.is_empty() {
                 true => None,
                 false => Some(vers.website_url.clone()),
@@ -234,6 +235,7 @@ impl From<LocalMod> for FrontendMod {
             name: value.name,
             description: value.description,
             version: value.version,
+            file_size: value.file_size,
             uuid: value.uuid,
             dependencies: value.dependencies,
             icon: value.icon.and_then(|path| Some(path.to_str()?.to_owned())),

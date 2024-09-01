@@ -1,12 +1,17 @@
 # Changelog
 
-## 0.8.3 (2024-09-01)
+## Unreleased
+
+### Added
+
+- File size to mod details
 
 ### Fixed
 
 - Install with mod manager button on Thunderstore not working
 - Mod list installed indicator being hidden
 - Delete button not working for non-cfg config files
+- Improve error messages for failed modpack uploads
 
 ## 0.8.2 (2024-08-30)
 
