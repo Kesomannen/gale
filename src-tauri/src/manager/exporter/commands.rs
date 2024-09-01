@@ -11,8 +11,12 @@ use crate::{
 };
 use anyhow::{anyhow, Context};
 use itertools::Itertools;
-use log::warn;
-use std::{fs, path::PathBuf};
+use log::{debug, warn};
+use std::{
+    fs,
+    io::{BufWriter, Cursor},
+    path::PathBuf,
+};
 use tauri::{AppHandle, State};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use uuid::Uuid;
@@ -44,7 +48,8 @@ pub fn export_file(
     path.set_extension("r2z");
 
     let file = fs::File::create(&path).map_err(|err| anyhow!(err))?;
-    super::export_zip(manager.active_profile(), file, &thunderstore)?;
+    let writer = BufWriter::new(file);
+    super::export_zip(manager.active_profile(), writer, &thunderstore)?;
 
     open::that(path).ok();
 
@@ -93,8 +98,15 @@ pub fn export_pack(
     path.push(format!("{}-{}", args.name, args.version_number));
     path.add_extension("zip");
 
-    let file = fs::File::create(&path).map_err(|err| anyhow!(err))?;
+    debug!("exporting pack to {:?}", path);
+
+    let file = fs::File::create(&path)
+        .map(BufWriter::new)
+        .context("failed to create file")?;
     profile.export_pack(&args, file, &thunderstore)?;
+
+    debug!("taking snapshot of profile");
+
     if let Err(err) = profile.take_snapshot(&args) {
         warn!("failed to take profile snapshot: {}", err);
     }
@@ -111,11 +123,7 @@ pub async fn upload_pack(
     thunderstore: StateMutex<'_, Thunderstore>,
     client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
-    let mut temp_file = tempfile::Builder::new()
-        .tempfile()
-        .context("failed to create temporary directory")?;
-
-    let (game_id, args, token) = {
+    let (data, game_id, args, token) = {
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
@@ -125,16 +133,17 @@ pub async fn upload_pack(
 
         let profile = manager.active_profile();
 
-        profile.export_pack(&args, &mut temp_file, &thunderstore)?;
+        let mut data = Cursor::new(Vec::new());
+        profile.export_pack(&args, &mut data, &thunderstore)?;
         if let Err(err) = profile.take_snapshot(&args) {
             warn!("failed to take profile snapshot: {}", err);
         }
 
-        (&manager.active_game.id, args, token)
+        (data, &manager.active_game.id, args, token)
     };
 
     let client = client.0.clone();
-    modpack::publish(temp_file.path().to_path_buf(), game_id, args, token, client).await?;
+    modpack::publish(data.into_inner().into(), game_id, args, token, client).await?;
 
     Ok(())
 }

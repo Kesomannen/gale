@@ -109,18 +109,27 @@ pub fn delete_config_file(file: &Path, manager: StateMutex<ModManager>) -> Resul
     let mut manager = manager.lock().unwrap();
 
     let profile = manager.active_profile_mut();
-    let index = match profile
-        .config
-        .iter()
-        .position(|f| f.relative_path() == file)
-    {
-        Some(index) => index,
-        None => return Ok(()), // just ignore if the file doesn't exist
-    };
 
-    let file = profile.config.remove(index);
-    let path = file.path(&profile.path);
-    trash::delete(path).context("failed to move file to trashcan")?;
+    let is_cfg = file
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext == "cfg");
+
+    if is_cfg {
+        let index = match profile
+            .config
+            .iter()
+            .position(|f| f.relative_path() == file)
+        {
+            Some(index) => index,
+            None => return Ok(()), // ignore if the file is not in the list
+        };
+
+        profile.config.remove(index).ok();
+    }
+
+    let path = profile.path.join(super::file_path(file));
+    trash::delete(path).context("failed to move file to recycle bin")?;
 
     Ok(())
 }

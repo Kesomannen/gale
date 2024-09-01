@@ -1,22 +1,17 @@
 use anyhow::{anyhow, ensure, Context, Result};
 use futures_util::future::try_join_all;
 use image::{imageops::FilterType, ImageFormat};
-use log::{debug, info};
+use log::{debug, info, trace};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::Url;
-use tokio::{
-    fs,
-    io::{AsyncReadExt, AsyncSeekExt},
-};
 use uuid::Uuid;
 
 use std::{
     collections::HashMap,
     fmt::Display,
-    io::{Seek, SeekFrom, Write},
+    io::{Cursor, Seek, Write},
     path::{Path, PathBuf},
-    sync::Arc,
 };
 
 use crate::{
@@ -29,8 +24,10 @@ use crate::{
         },
         ModRef, Thunderstore,
     },
-    util,
+    util::zip::ZipWriterExt,
 };
+use bytes::Bytes;
+use zip::ZipWriter;
 
 pub mod changelog;
 
@@ -100,6 +97,8 @@ impl Profile {
             .collect::<Result<Vec<_>>>()
             .context("failed to resolve modpack dependencies")?;
 
+        trace!("resolved dependencies: {:?}", deps);
+
         let version_number =
             semver::Version::parse(&args.version_number).context("invalid version number")?;
 
@@ -113,17 +112,21 @@ impl Profile {
             version_number,
         };
 
-        let mut zip = util::zip::builder(writer)?;
+        let mut zip = ZipWriter::new(writer);
 
         if !args.readme.is_empty() {
+            trace!("writing readme");
             zip.write_str("README.md", &args.readme)?;
         }
 
         if !args.changelog.is_empty() {
+            trace!("writing changelog");
             zip.write_str("CHANGELOG.md", &args.changelog)?;
         }
 
-        serde_json::to_writer_pretty(zip.writer("manifest.json")?, &manifest)?;
+        trace!("writing manifest");
+        zip.start_file("manifest.json", Default::default())?;
+        serde_json::to_writer_pretty(&mut zip, &manifest)?;
 
         write_icon(&args.icon_path, &mut zip).context("failed to write icon")?;
 
@@ -140,7 +143,7 @@ impl Profile {
     }
 }
 
-fn write_icon<W>(path: &Path, zip: &mut util::zip::ZipBuilder<W>) -> anyhow::Result<()>
+fn write_icon<W>(path: &Path, zip: &mut ZipWriter<W>) -> Result<()>
 where
     W: Write + Seek,
 {
@@ -148,8 +151,9 @@ where
     let img = img.resize_exact(256, 256, FilterType::Lanczos3);
 
     let mut bytes = Vec::new();
-    img.write_to(&mut std::io::Cursor::new(&mut bytes), ImageFormat::Png)?;
-    zip.write("icon.png", &bytes)?;
+    img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
+    zip.start_file("icon.png", Default::default())?;
+    zip.write_all(&bytes)?;
 
     Ok(())
 }
@@ -165,7 +169,7 @@ fn base_request(
 }
 
 pub async fn publish(
-    path: PathBuf,
+    data: Bytes,
     game_id: &str,
     args: ModpackArgs,
     token: String,
@@ -181,18 +185,16 @@ pub async fn publish(
 
     info!("publishing modpack");
 
-    let response = initiate_upload(&path, &token, &client)
+    let response = initiate_upload(args.name.clone(), data.len() as u64, &token, &client)
         .await
         .context("failed to initiate upload")?;
 
     let uuid = response.user_media.uuid.context("no uuid in response")?;
 
-    let path = Arc::new(path);
-
     let tasks = response.upload_urls.into_iter().map(|part| {
-        let path = path.clone();
+        let data = data.clone();
         let client = client.clone();
-        tauri::async_runtime::spawn(upload_chunk(part, path, client))
+        tauri::async_runtime::spawn(upload_chunk(part, data, client))
     });
 
     let parts = match try_join_all(tasks)
@@ -219,13 +221,11 @@ pub async fn publish(
 }
 
 async fn initiate_upload(
-    path: &Path,
+    name: String,
+    size: u64,
     token: &str,
     client: &reqwest::Client,
 ) -> Result<UserMediaInitiateUploadResponse> {
-    let name = util::fs::file_name_owned(path);
-    let size = path.metadata()?.len();
-
     debug!(
         "initiating modpack upload for {}, size: {} bytes",
         name, size
@@ -249,19 +249,16 @@ async fn initiate_upload(
 
 async fn upload_chunk(
     part: UploadPartUrl,
-    path: Arc<PathBuf>,
+    data: Bytes,
     client: reqwest::Client,
 ) -> Result<CompletedPart> {
-    let mut file = fs::File::open(&*path).await?;
-
-    file.seek(SeekFrom::Start(part.offset)).await?;
-
-    let mut buffer = Vec::with_capacity(part.length as usize);
-    file.take(part.length).read_to_end(&mut buffer).await?;
+    let start = part.offset as usize;
+    let end = start + part.length as usize;
+    let chunk = data.slice(start..end);
 
     let response = client
         .put(&part.url)
-        .body(buffer)
+        .body(chunk)
         .send()
         .await?
         .error_for_status()?;

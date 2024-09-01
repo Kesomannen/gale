@@ -91,8 +91,36 @@ pub fn file_name_owned(path: impl AsRef<Path>) -> String {
         .into_owned()
 }
 
-pub trait PathExt {
-    fn exists_or_none(self) -> Option<PathBuf>;
+pub fn is_enclosed(path: impl AsRef<Path>) -> bool {
+    use std::path::Component;
+
+    if path
+        .as_ref()
+        .as_os_str()
+        .to_str()
+        .is_some_and(|str| str.contains('\0'))
+    {
+        return false;
+    }
+
+    let mut depth = 0usize;
+    for component in path.as_ref().components() {
+        match component {
+            Component::Prefix(_) | Component::RootDir => return false,
+            Component::ParentDir => match depth.checked_sub(1) {
+                Some(new_depth) => depth = new_depth,
+                None => return false,
+            },
+            Component::Normal(_) => depth += 1,
+            Component::CurDir => (),
+        }
+    }
+
+    true
+}
+
+pub trait PathExt: Sized {
+    fn exists_or_none(self) -> Option<Self>;
     fn add_extension(&mut self, extension: impl AsRef<OsStr>);
 }
 

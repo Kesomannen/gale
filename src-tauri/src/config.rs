@@ -38,10 +38,6 @@ pub type LoadFileResult = std::result::Result<File, LoadFileError>;
 pub trait LoadFileResultExt {
     fn relative_path(&self) -> &Path;
     fn display_name(&self) -> &str;
-
-    fn path(&self, profile_dir: &Path) -> PathBuf {
-        profile_dir.join(file_path(self.relative_path()))
-    }
 }
 
 impl LoadFileResultExt for LoadFileResult {

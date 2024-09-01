@@ -7,7 +7,7 @@ use crate::{
     util::{self},
 };
 use itertools::Itertools;
-use log::trace;
+use log::{trace, warn};
 use std::{
     collections::HashSet,
     ffi::OsStr,
@@ -194,10 +194,18 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
             continue; // we create the necessary dirs when copying files instead
         }
 
-        let file_path = file.enclosed_name().ok_or(anyhow!("malformed zip file"))?;
+        let path = match cfg!(unix) {
+            true => PathBuf::from(file.name().replace('\\', "/")),
+            false => PathBuf::from(file.name()),
+        };
+
+        if !util::fs::is_enclosed(&path) {
+            warn!("file {} escapes the archive root, skipping", path.display());
+            continue;
+        }
 
         let mut prev: Option<&OsStr> = None;
-        let mut components = file_path.components();
+        let mut components = path.components();
 
         let (subdir, is_top_level) = loop {
             let current = components.next();

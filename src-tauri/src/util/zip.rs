@@ -4,79 +4,46 @@ use std::{
     io::{self, Read, Seek, Write},
     path::Path,
 };
-use zip::{write::FileOptions, ZipArchive, ZipWriter};
+use zip::ZipArchive;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
-pub struct ZipBuilder<W>
-where
-    W: Write + Seek,
-{
-    writer: ZipWriter<W>,
-    options: FileOptions,
+pub trait ZipWriterExt {
+    fn write_str<S: Into<String>>(&mut self, name: S, data: &str) -> io::Result<()>;
 }
 
-impl<W> ZipBuilder<W>
-where
-    W: Write + Seek,
-{
-    pub fn writer(&mut self, path: impl AsRef<Path>) -> io::Result<&mut ZipWriter<W>> {
-        #[allow(deprecated)]
-        self.writer
-            .start_file_from_path(path.as_ref(), self.options)?;
-        Ok(&mut self.writer)
+impl<W: Write + Seek> ZipWriterExt for zip::ZipWriter<W> {
+    fn write_str<S: Into<String>>(&mut self, name: S, data: &str) -> io::Result<()> {
+        self.start_file(name, Default::default())?;
+        self.write_all(data.as_bytes())?;
+        Ok(())
     }
-
-    pub fn write(&mut self, path: impl AsRef<Path>, data: &[u8]) -> io::Result<()> {
-        self.writer(path)?.write_all(data)
-    }
-
-    pub fn write_str(&mut self, path: impl AsRef<Path>, data: &str) -> io::Result<()> {
-        self.write(path, data.as_bytes())
-    }
-}
-
-pub fn builder<W>(writer: W) -> Result<ZipBuilder<W>, io::Error>
-where
-    W: Write + Seek,
-{
-    let writer = ZipWriter::new(writer);
-
-    let options = FileOptions::default().compression_method(zip::CompressionMethod::Stored);
-
-    Ok(ZipBuilder { writer, options })
 }
 
 pub fn extract(src: impl Read + Seek, target: &Path) -> io::Result<()> {
-    if !target.exists() {
-        fs::create_dir_all(target)?;
-    }
+    fs::create_dir_all(target)?;
 
     let mut archive = ZipArchive::new(src)?;
 
     debug!("extracting to {}", target.display());
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
-        let relative = file.mangled_name();
 
-        if relative.as_os_str().is_empty() {
-            continue;
+        if file.is_dir() {
+            continue; // we create the necessary dirs when copying files instead
         }
+
+        let relative = match file.enclosed_name() {
+            Some(path) => path,
+            None => continue,
+        };
 
         let output_path = target.join(relative);
 
-        if file.name().ends_with(['/', '\\']) {
-            fs::create_dir_all(&output_path)?;
-        } else {
-            if let Some(parent) = output_path.parent() {
-                if !parent.exists() {
-                    fs::create_dir_all(parent)?;
-                }
-            }
-            let mut out = File::create(&output_path)?;
-            io::copy(&mut file, &mut out)?;
-        }
+        fs::create_dir_all(output_path.parent().unwrap())?;
+        let mut out = File::create(&output_path)?;
+        io::copy(&mut file, &mut out)?;
 
         #[cfg(unix)]
         set_unix_mode(&file, &output_path)?;

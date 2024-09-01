@@ -1654,6 +1654,7 @@ version = "0.8.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
+ "bytes",
  "chrono",
  "dirs-next",
  "futures-util",

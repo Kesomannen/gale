@@ -12,9 +12,10 @@ use super::{downloader::ModInstall, ModManager, Profile, Result};
 
 use crate::{
     thunderstore::{models::LegacyProfileCreateResponse, ModRef, Thunderstore},
-    util::{self, cmd::StateMutex},
+    util::cmd::StateMutex,
 };
 use walkdir::WalkDir;
+use zip::ZipWriter;
 
 pub mod commands;
 pub mod modpack;
@@ -118,7 +119,7 @@ fn export_zip(
     writer: impl Write + Seek,
     thunderstore: &Thunderstore,
 ) -> Result<()> {
-    let mut zip = util::zip::builder(writer).context("failed to create zip archive")?;
+    let mut zip = ZipWriter::new(writer);
 
     let mods = profile
         .remote_mods()
@@ -133,8 +134,8 @@ fn export_zip(
         mods,
     };
 
-    let writer = zip.writer("export.r2x")?;
-    serde_yaml::to_writer(writer, &manifest).context("failed to write profile manifest")?;
+    zip.start_file("export.r2x", Default::default())?;
+    serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
     write_includes(find_includes(&profile.path), &profile.path, &mut zip)?;
 
@@ -177,21 +178,17 @@ async fn export_code(
     Ok(response.key)
 }
 
-fn write_includes<P, I, W>(
-    files: I,
-    source: &Path,
-    zip: &mut util::zip::ZipBuilder<W>,
-) -> Result<()>
+fn write_includes<P, I, W>(files: I, source: &Path, zip: &mut ZipWriter<W>) -> Result<()>
 where
     P: AsRef<Path>,
     I: Iterator<Item = P>,
     W: Write + Seek,
 {
     for file in files {
-        let writer = zip.writer(&file)?;
+        zip.start_file(file.as_ref().to_string_lossy(), Default::default())?;
         let mut reader = fs::File::open(source.join(file))?;
 
-        io::copy(&mut reader, writer)?;
+        io::copy(&mut reader, zip)?;
     }
 
     Ok(())
