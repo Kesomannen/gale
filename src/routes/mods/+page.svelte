@@ -96,6 +96,7 @@
 	bind:mods
 	queryArgs={modQuery}
 	{sortOptions}
+	showInstalledIcon
 	on:onModCtrlClicked={({ detail: { mod } }) => installLatest(mod)}
 >
 	<div slot="details" class="flex mt-2 text-lg text-white">
