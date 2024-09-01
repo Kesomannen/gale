@@ -22,6 +22,7 @@ use crate::{
 };
 
 use super::{commands::save, installer, ModManager, ModRef, Profile};
+use core::str;
 use itertools::Itertools;
 use uuid::Uuid;
 
@@ -520,13 +521,16 @@ pub async fn install_with_deps(
 }
 
 fn resolve_deep_link(url: &str, thunderstore: &Thunderstore) -> Result<ModRef> {
-    let id = url
+    let (owner, name, version) = url
         .strip_prefix("ror2mm://v1/install/thunderstore.io/")
-        .ok_or_else(|| anyhow!("Invalid deep link url: '{}'", url))?;
+        .and_then(|path| {
+            let mut split = path.split('/');
 
-    let borrowed_mod = thunderstore.find_mod(id, '/')?;
+            Some((split.next()?, split.next()?, split.next()?))
+        })
+        .ok_or(anyhow!("invalid deep link url"))?;
 
-    Ok(borrowed_mod.into())
+    thunderstore.find_mod(owner, name, version).map(Into::into)
 }
 
 pub fn handle_deep_link(handle: &AppHandle, url: &str) {

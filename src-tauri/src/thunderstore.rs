@@ -161,24 +161,44 @@ impl Thunderstore {
         Ok((package, version).into())
     }
 
-    pub fn find_mod<'a>(&'a self, identifier: &str, delimeter: char) -> Result<BorrowedMod<'a>> {
-        let mut indicies = identifier.match_indices(delimeter).map(|(i, _)| i);
+    pub fn find_dep<'a>(&'a self, dep_stirng: &str) -> Result<BorrowedMod<'a>> {
+        let mut indicies = dep_stirng.match_indices('-').map(|(i, _)| i);
 
         if indicies.clone().count() != 2 {
-            bail!("invalid dependency string format: {}", identifier);
+            bail!("invalid dependency string format: {}", dep_stirng);
         }
 
-        let name_end = indicies.nth(1).unwrap();
-        let full_name = &identifier[..name_end];
-        let version = &identifier[name_end + delimeter.len_utf8()..];
+        let owner_end = indicies.next().unwrap();
+        let name_end = indicies.next().unwrap();
+
+        let owner = &dep_stirng[..owner_end];
+        let name = &dep_stirng[owner_end + 1..name_end];
+        let version = &dep_stirng[name_end + 1..];
+
+        self.find_mod(owner, name, version)
+    }
+
+    pub fn find_mod<'a>(
+        &'a self,
+        owner: &str,
+        name: &str,
+        version: &str,
+    ) -> Result<BorrowedMod<'a>> {
+        let package = self
+            .packages
+            .values()
+            .find(|package| package.owner == owner && package.name == name)
+            .with_context(|| format!("package {}-{} not found", owner, name))?;
 
         let version = semver::Version::parse(version)
             .with_context(|| format!("invalid version format: {}", version))?;
 
-        let package = self.find_package(&full_name)?;
-        let version = package
-            .get_version_with_num(&version)
-            .with_context(|| format!("version {} not found in package {}", version, full_name))?;
+        let version = package.get_version_with_num(&version).with_context(|| {
+            format!(
+                "version {} not found in package {}-{}",
+                version, owner, name
+            )
+        })?;
 
         Ok((package, version).into())
     }
@@ -198,7 +218,7 @@ impl Thunderstore {
             .collect::<HashSet<_>>();
 
         while let Some(current) = queue.pop_front() {
-            if let Ok(current) = self.find_mod(current, '-') {
+            if let Ok(current) = self.find_dep(current) {
                 for dependency in &current.version.dependencies {
                     let (author, name) = exclude_version(dependency);
 
