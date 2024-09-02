@@ -276,6 +276,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
 //     - config
 //       - KeepItDown.cfg
 fn install(src: &Path, dest: &Path) -> Result<()> {
+    let config_dir = ["BepInEx", "config"].iter().collect::<PathBuf>();
     let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
 
     for entry in entries {
@@ -287,12 +288,17 @@ fn install(src: &Path, dest: &Path) -> Result<()> {
         let target = dest.join(relative);
 
         if target.exists() {
+            // maybe we should overwrite instead?
             continue;
         }
 
         if entry.file_type().is_dir() {
             fs::create_dir(target)
                 .with_context(|| format!("failed to create directory {}", relative.display()))?;
+        } else if relative.starts_with(&config_dir) {
+            // copy config files so they can be edited without affecting the original
+            fs::copy(entry.path(), target)
+                .with_context(|| format!("failed to copy file {}", relative.display()))?;
         } else {
             fs::hard_link(entry.path(), target)
                 .with_context(|| format!("failed to link file {}", relative.display()))?;
