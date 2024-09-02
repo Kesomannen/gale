@@ -279,7 +279,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
 //     - config
 //       - KeepItDown.cfg
 fn install(src: &Path, dest: &Path) -> Result<()> {
-    let config_dir = ["BepInEx", "config"].iter().collect::<PathBuf>();
+    let config_dir = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
     let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
 
     for entry in entries {

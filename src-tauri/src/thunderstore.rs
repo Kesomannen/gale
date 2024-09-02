@@ -323,7 +323,8 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
 
 async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
     const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
-    const UPDATE_INTERVAL: Duration = Duration::from_millis(500);
+    const INSERT_INTERVAL: usize = 500;
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
 
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
@@ -336,13 +337,10 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
     let mut is_first_chunk = true;
     let mut buffer = String::new();
     let mut byte_buffer = Vec::new();
-    let mut package_buffer = match write_directly {
-        true => None,
-        false => Some(IndexMap::new()),
-    };
+    let mut package_buffer = IndexMap::new();
 
     let start_time = Instant::now();
-    let mut last_update = Instant::now();
+    let last_update = Instant::now();
 
     while let Some(chunk) = response.chunk().await? {
         byte_buffer.extend_from_slice(&chunk);
@@ -360,43 +358,38 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
 
         byte_buffer.clear();
 
-        {
-            let mut state = state.lock().unwrap();
+        while let Some(index) = buffer.find("}]},") {
+            let (json, _) = buffer.split_at(index + 3);
 
-            let map = match package_buffer {
-                Some(ref mut map) => map,
-                None => &mut state.packages,
-            };
-
-            while let Some(index) = buffer.find("}]},") {
-                let (json, _) = buffer.split_at(index + 3);
-
-                match serde_json::from_str::<PackageListing>(json) {
-                    Ok(package) => {
-                        if !IGNORED_NAMES.contains(&package.name.as_str()) {
-                            map.insert(package.uuid4, package);
-                        }
+            match serde_json::from_str::<PackageListing>(json) {
+                Ok(package) => {
+                    if !IGNORED_NAMES.contains(&package.name.as_str()) {
+                        package_buffer.insert(package.uuid4, package);
                     }
-                    Err(err) => logger::log_js_err("failed to fetch mod", &anyhow!(err), app),
                 }
-
-                buffer.replace_range(..index + 4, "");
+                Err(err) => logger::log_js_err("failed to fetch mod", &anyhow!(err), app),
             }
 
-            if last_update.elapsed() > UPDATE_INTERVAL {
-                app.emit(
-                    "status_update",
-                    Some(format!("Fetching mods from Thunderstore... {}", map.len())),
-                )
-                .ok();
-
-                last_update = Instant::now();
-            }
+            buffer.replace_range(..index + 4, "");
         }
+
+        match write_directly {
+            true if package_buffer.len() >= INSERT_INTERVAL => {
+                let mut state = state.lock().unwrap();
+                state.packages.extend(package_buffer.drain(..));
+                emit_update(state.packages.len(), app);
+            }
+            false if last_update.elapsed() >= UPDATE_INTERVAL => {
+                emit_update(package_buffer.len(), app);
+            }
+            _ => {}
+        };
     }
 
     let mut state = state.lock().unwrap();
-    if let Some(package_buffer) = package_buffer {
+    if write_directly {
+        state.packages.extend(package_buffer.into_iter());
+    } else {
         state.packages = package_buffer;
     }
 
@@ -411,7 +404,15 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
 
     app.emit("status_update", None::<String>).ok();
 
-    Ok(())
+    return Ok(());
+
+    fn emit_update(mods: usize, app: &AppHandle) {
+        app.emit(
+            "status_update",
+            Some(format!("Fetching mods from Thunderstore... {}", mods)),
+        )
+        .ok();
+    }
 }
 
 fn read_cache(path: &Path) -> Result<Option<Vec<PackageListing>>> {

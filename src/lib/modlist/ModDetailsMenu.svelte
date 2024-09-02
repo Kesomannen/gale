@@ -95,7 +95,8 @@
 	<div class="mr-6 flex items-center justify-between">
 		<Button.Root
 			class="text-slate-100 font-bold text-3xl xl:text-4xl hover:underline truncate"
-			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}>{mod.name}</Button.Root
+			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}
+			>{mod.name.replace('_', ' ')}</Button.Root
 		>
 		{#if mod.version}
 			<span class="text-slate-300 font-light text-lg xl:text-xl pl-2 align-middle"
