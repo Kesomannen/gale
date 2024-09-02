@@ -194,18 +194,21 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
             continue; // we create the necessary dirs when copying files instead
         }
 
-        let path = match cfg!(unix) {
+        let relative = match cfg!(unix) {
             true => PathBuf::from(file.name().replace('\\', "/")),
             false => PathBuf::from(file.name()),
         };
 
-        if !util::fs::is_enclosed(&path) {
-            warn!("file {} escapes the archive root, skipping", path.display());
+        if !util::fs::is_enclosed(&relative) {
+            warn!(
+                "file {} escapes the archive root, skipping",
+                relative.display()
+            );
             continue;
         }
 
         let mut prev: Option<&OsStr> = None;
-        let mut components = path.components();
+        let mut components = relative.components();
 
         let (subdir, is_top_level) = loop {
             let current = components.next();
