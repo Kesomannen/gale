@@ -4,7 +4,7 @@
 
 ### Added
 
-- File size to mod details
+- File size to mod details menu
 
 ### Fixed
 
@@ -12,6 +12,7 @@
 - Mod list installed indicator being hidden
 - Delete button not working for non-cfg config files
 - Improve error messages for failed modpack uploads
+- Zip archives with backslashes instead of frontslashes extracting incorrectly on Unix platforms
 
 ## 0.8.2 (2024-08-30)
 
