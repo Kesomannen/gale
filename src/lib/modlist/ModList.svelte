@@ -173,7 +173,7 @@
 						class="text-slate-400 text-lg"
 						icon={sortOrder === SortOrder.Descending ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
 					/>
-					<span class="flex-shrink truncate">{t(`Dropdown item ${text}`) || text}</span>
+					<span class="flex-shrink truncate">{t(text)}</span>
 					<Icon
 						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
 										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
@@ -191,7 +191,7 @@
 								border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					<Icon class="text-slate-400 text-lg" icon="mdi:sort" />
-					<span class="flex-shr truncate">{t(`Dropdown item ${text}`) || text}</span>
+					<span class="flex-shr truncate">{t(text)}</span>
 					<Icon
 						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
 										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
