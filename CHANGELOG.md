@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.4 (2024-09-03)
+
+### Fixed
+
+- Opening a config file freezing the app
+
 ## 0.8.3 (2024-09-03)
 
 ### Added
