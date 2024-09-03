@@ -154,7 +154,7 @@
 
 	{#if mod.lastUpdated}
 		<div class="text-slate-400 text-lg">
-			{T("Last updated", {"time": timeSince(new Date(mod.lastUpdated))})}
+			{T("Last updated description", {"time": timeSince(new Date(mod.lastUpdated))})}
 		</div>
 	{/if}
 
