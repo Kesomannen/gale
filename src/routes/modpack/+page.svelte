@@ -247,7 +247,7 @@
 				bind:selected={selectedCategories}
 				onSelectedChange={saveArgs}
 				multiple={true}
-				getLabel={(category) => category.name}
+				getLabel={(category) => category?.name || "Unknown"}
 			>
 				<Select.Trigger
 					let:open
@@ -261,7 +261,7 @@
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
 								<div class="bg-gray-800 text-slate-200 rounded-md pl-3 pr-1 py-1 text-sm">
-									<span class="truncate overflow-hidden">{category.name}</span>
+									<span class="truncate overflow-hidden">{category?.name || "Unknown"}</span>
 
 									<Button.Root
 										class="px-1.5 ml-1 rounded-md hover:bg-gray-700"
