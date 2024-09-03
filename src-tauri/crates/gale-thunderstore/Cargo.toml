@@ -1,0 +1,28 @@
+[package]
+name = "gale-thunderstore"
+links = "gale-thunderstore"
+version = "2.0.0-alpha.1"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2.0.0-rc", features = ["unstable"] }
+
+gale-core = { path = "../gale-core" }
+
+serde = { version = "1", features = ["derive"] }
+
+sqlx = { version = "0.8", features = [
+    "runtime-tokio",
+    "sqlite",
+    "uuid",
+    "chrono",
+] }
+thunderstore = "0.2"
+log = "0.4"
+anyhow = "1"
+futures-util = "0.3.30"
+uuid = { version = "1", features = ["serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-rc", features = ["build"] }

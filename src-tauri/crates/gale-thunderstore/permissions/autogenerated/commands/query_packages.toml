@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-query-packages"
+description = "Enables the query_packages command without any pre-configured scope."
+commands.allow = ["query_packages"]
+
+[[permission]]
+identifier = "deny-query-packages"
+description = "Denies the query_packages command without any pre-configured scope."
+commands.deny = ["query_packages"]

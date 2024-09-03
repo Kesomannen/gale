@@ -186,7 +186,7 @@
 </script>
 
 <div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
-	{#if loading}
+	{#if loading && false}
 		<div
 			class="flex items-center justify-center fixed inset-0 text-slate-200 bg-black/40 text-lg"
 			transition:fade={{ duration: 50 }}

@@ -1,0 +1,12 @@
+[package]
+name = "gale-core"
+version = "2.0.0-alpha.1"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2.0.0-rc", features = ["unstable"] }
+
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+anyhow = "1"
+thunderstore = "0.2"
+log = "0.4"

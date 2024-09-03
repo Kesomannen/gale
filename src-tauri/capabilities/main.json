@@ -37,6 +37,7 @@
       ],
       "deny": []
     },
-    "cli:default"
+    "cli:default",
+    "gale-thunderstore:allow-query-packages"
   ]
 }

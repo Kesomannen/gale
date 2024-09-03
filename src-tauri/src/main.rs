@@ -1,6 +1,8 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
 fn main() {
-    gale::run();
+    tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(gale_core::init())
+        .plugin(gale_thunderstore::init())
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

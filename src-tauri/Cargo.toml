@@ -1,6 +1,8 @@
+[workspace]
+
 [package]
 name = "gale"
-version = "0.7.7"
+version = "2.0.0-alpha.1"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"
@@ -9,15 +11,15 @@ default-run = "gale"
 edition = "2021"
 rust-version = "1.79"
 
-[[bin]]
-name = "gale"
-path = "src/main.rs"
-
 [build-dependencies]
-tauri-build = { version = "2.0.0-beta.19", features = [] }
+tauri-build = { version = "2.0.0-rc", features = [] }
 
 [dependencies]
 tauri = { version = "2.0.0-rc", features = ["unstable"] }
+
+gale-core = { path = "./crates/gale-core" }
+gale-thunderstore = { path = "./crates/gale-thunderstore" }
+
 tauri-plugin-deep-link = "2.0.0-rc"
 tauri-plugin-window-state = "2.0.0-rc"
 tauri-plugin-dialog = "2.0.0-rc"
@@ -30,57 +32,9 @@ tauri-plugin-http = "2.0.0-rc"
 tauri-plugin-fs = "2.0.0-rc"
 tauri-plugin-single-instance = "2.0.0-rc"
 tauri-plugin-cli = "2.0.0-rc"
+tauri-plugin-log = "2.0.0-rc"
 
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
-tokio = { version = "1", features = ["full"] }
-
-anyhow = "1.0"
-thiserror = "1.0"
-justerror = "1.0"
-
-futures-util = { version = "0.3", features = ["io"] }
-indexmap = { version = "2.2", features = ["serde"] }
-open = "5.1"
-itertools = "0.13"
-zip = "0.6"
-uuid = { version = "1", features = ["serde"] }
-reqwest = { version = "0.12", features = ["json", "stream"] }
-walkdir = "2"
-typeshare = "1"
-image = "0.25"
-semver = { version = "1", features = ["serde"] }
-serde_yaml = "0.9"
-base64 = "0.22"
-lazy_static = "1"
-heck = "0.5"
 log = "0.4"
-simplelog = "0.12"
-chrono = { version = "0.4", features = ["serde"] }
-keyring = { version = "3", features = [
-    "apple-native",
-    "windows-native",
-    "linux-native",
-] }
-dirs-next = "2"
-trash = "5"
-tempfile = "3"
-rayon = "1"
-
-[target.'cfg(target_os="windows")'.dependencies]
-winreg = "0.52"
-
-[target.'cfg(target_os="macos")'.dependencies]
-objc = "0.2"
-
-[target.'cfg(target_os="linux")'.dependencies]
-webkit2gtk = "2.0.1"
-
-[features]
-custom-protocol = ["tauri/custom-protocol"]
-
-[profile.release]
-panic = "abort"   # Strip expensive panic clean-up logic
-codegen-units = 1 # Compile crates one after another so the compiler can optimize better
-strip = true      # Remove debug symbols
