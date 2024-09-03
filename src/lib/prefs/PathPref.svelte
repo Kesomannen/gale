@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { open } from '@tauri-apps/plugin-dialog';
 
-	import { invokeCommand } from '$lib/invoke';
 	import PathField from '$lib/components/PathField.svelte';
 	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
-	import { sentenceCase } from '$lib/util';
 
-	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 
 	export let label: string;
@@ -20,7 +17,7 @@
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			title: get(t)['Select'] + ' ' + label,
+			title: t('Select') + ' ' + label,
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;

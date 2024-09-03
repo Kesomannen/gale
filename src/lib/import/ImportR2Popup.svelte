@@ -4,9 +4,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import ImportR2Flow from './ImportR2Flow.svelte';
 	import type { R2ImportData } from '$lib/models';
-	import { onMount } from 'svelte';
 
-	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 
 	export let open: boolean;
@@ -40,21 +38,21 @@
 	}
 </script>
 
-<Popup bind:open title="{get(t)['Import from R2']}" canClose={!loading} maxWidth="[55%]">
+<Popup bind:open title="{t('Import from R2')}" canClose={!loading} maxWidth="[55%]">
 	<div class="text-slate-300">
-		<p>{@html get(t)['Import from R2 description 1']}</p>
+		<p>{@html t('Import from R2 description 1')}</p>
 
-		<p class="mt-2">{@html get(t)['Import from R2 description 2']}</p>
+		<p class="mt-2">{@html t('Import from R2 description 2')}</p>
 
-		<p class="mt-2">{@html get(t)['Import from R2 description 3']}</p>
+		<p class="mt-2">{@html t('Import from R2 description 3')}</p>
 	</div>
 
 	<ImportR2Flow bind:this={importFlow} bind:importData bind:importFrom bind:loading />
 
 	<div class="flex gap-2 justify-end w-full mr-0.5 mt-3">
 		{#if importData?.r2modman || importData?.thunderstore}
-			<BigButton color="gray" on:click={() => (open = false)}>{get(t)["Cancel"]}</BigButton>
-			<BigButton color="green" on:click={doImport}>{get(t)["Import"]}</BigButton>
+			<BigButton color="gray" on:click={() => (open = false)}>{t("Cancel")}</BigButton>
+			<BigButton color="green" on:click={doImport}>{t("Import")}</BigButton>
 		{/if}
 	</div>
 </Popup>

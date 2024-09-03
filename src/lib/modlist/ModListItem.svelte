@@ -4,7 +4,7 @@
 	import { isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
-	import { invokeCommand } from '$lib/invoke';
+	
 
 	export let mod: Mod;
 	export let isSelected: boolean;

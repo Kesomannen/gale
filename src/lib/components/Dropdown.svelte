@@ -54,13 +54,13 @@
 	{multiple}
 	bind:open
 >
-	<slot name="trigger" text={get(t)[`Dropdown item ${stringValue}`] || stringValue} {open}>
+	<slot name="trigger" text={t(`Dropdown item ${stringValue}`) || stringValue} {open}>
 		<Select.Trigger
 			class="flex items-center overflow-hidden bg-gray-900 rounded-lg pl-3 pr-2 py-1
             border border-gray-500 border-opacity-0 hover:border-opacity-100 {className}"
 		>
 			<div class="text-slate-300 text-left flex-grow flex-shrink truncate text-{size}">
-				{get(t)[`Dropdown item ${stringValue}`] || stringValue}
+				{t(`Dropdown item ${stringValue}`) || stringValue}
 			</div>
 			<Icon
 				class="text-slate-400 text-xl transition-all flex-shrink-0 duration-100 ease-out
@@ -82,7 +82,7 @@
 					class="flex items-center px-3 py-1 text-slate-400 text-left rounded-md text-{size}
                 hover:bg-gray-700 hover:text-slate-200 cursor-default"
 				>
-					{get(t)[`Dropdown item ${getLabel(item)}`] || getLabel(item)}
+					{t(`Dropdown item ${getLabel(item)}`) || getLabel(item)}
 
 					<Select.ItemIndicator class="ml-auto">
 						<Icon icon="mdi:check" class="text-green-400 text-lg" />

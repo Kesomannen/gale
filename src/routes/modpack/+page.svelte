@@ -13,7 +13,6 @@
 	import type { ModpackArgs, PackageCategory } from '$lib/models';
 	import { activeProfile, activeGame, categories } from '$lib/stores';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 
@@ -22,7 +21,6 @@
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
 
-	import { get } from 'svelte/store';
 	import { t, T } from '$i18n';
 
 	const URL_PATTERN =
@@ -75,7 +73,7 @@
 	}
 
 	async function refresh() {
-		loading = get(t)['Loading'];
+		loading = t('Loading');
 
 		let args = await invokeCommand<ModpackArgs>('get_pack_args');
 
@@ -100,7 +98,7 @@
 	async function browseIcon() {
 		let response = await open({
 			defaultPath: iconPath.length > 0 ? iconPath : undefined,
-			title: get(t)['Select modpack icon'],
+			title: t('Select modpack icon'),
 			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif'] }]
 		});
 
@@ -116,14 +114,14 @@
 
 	async function exportToFile() {
 		let dir = await open({
-			title: get(t)['Choose directory save modpack'],
+			title: t('Choose directory save modpack'),
 			defaultPath: `${name}.zip`,
 			directory: true
 		});
 
 		if (!dir) return;
 
-		loading = get(t)['Exporting modpack to file'];
+		loading = t('Exporting modpack to file');
 		try {
 			await invokeCommand('export_pack', { args: args(), dir });
 		} finally {
@@ -153,7 +151,7 @@
 			if (!hasToken) return;
 		}
 
-		loading = get(t)['Uploading modpack to Thunderstore'];
+		loading = t('Uploading modpack to Thunderstore');
 		try {
 			await invokeCommand('upload_pack', { args: args() });
 			donePopupOpen = true;
@@ -199,14 +197,14 @@
 	{/if}
 
 	<FormField
-		label="{get(t)["Name"]}"
-		description="{get(t)["Modepack name description"]}"
+		label="{t("Name")}"
+		description="{t("Modepack name description")}"
 		required={true}
 	>
 		<InputField
 			on:change={saveArgs}
 			bind:value={name}
-			placeholder="{get(t)["Enter name"]}"
+			placeholder="{t("Enter name")}"
 			required={true}
 			pattern="^[a-zA-Z0-9_]+$"
 			class="w-full"
@@ -214,24 +212,24 @@
 	</FormField>
 
 	<FormField
-		label="{get(t)["Author"]}"
-		description="{get(t)["Modepack author description"]}"
+		label="{t("Author")}"
+		description="{t("Modepack author description")}"
 		required={true}
 	>
 		<InputField
 			on:change={saveArgs}
 			bind:value={author}
-			placeholder="Enter author..."
+			placeholder={t("Enter author")}
 			required={true}
 			class="w-full"
 		/>
 	</FormField>
 
-	<FormField label="{get(t)["Description"]}" description="{get(t)["Modepack description description"]}" required={true}>
+	<FormField label="{t("Description")}" description="{t("Modepack description description")}" required={true}>
 		<InputField
 			on:change={saveArgs}
 			bind:value={description}
-			placeholder="{get(t)["Enter description"]}"
+			placeholder="{t("Enter description")}"
 			required={true}
 			maxlength={250}
 			class="w-full"
@@ -239,8 +237,8 @@
 	</FormField>
 
 	<FormField
-		label="{get(t)["Categories"]}"
-		description="{get(t)["Modepack categories description"]}"
+		label="{t("Categories")}"
+		description="{t("Modepack categories description")}"
 	>
 		{#if selectedCategories}
 			<Dropdown
@@ -258,7 +256,7 @@
                   border border-gray-500 border-opacity-0 hover:border-opacity-100"
 				>
 					{#if selectedCategories.length === 0}
-						<span class="text-slate-400 truncate pl-2">{get(t)["Select categories"]}</span>
+						<span class="text-slate-400 truncate pl-2">{t("Select categories")}</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
@@ -289,41 +287,41 @@
 	</FormField>
 
 	<FormField
-		label="{get(t)["Version"]}"
-		description="{get(t)["Modepack version description"]}"
+		label="{t("Version")}"
+		description="{t("Modepack version description")}"
 		required={true}
 	>
 		<InputField
 			on:change={saveArgs}
 			bind:value={versionNumber}
-			placeholder="{get(t)["Enter version number"]}"
+			placeholder="{t("Enter version number")}"
 			required={true}
 			pattern="^\d+\.\d+\.\d+$"
 			class="w-full"
 		/>
 	</FormField>
 
-	<FormField label="{get(t)["Website"]}" description="{get(t)["Modepack websiter description"]}">
+	<FormField label="{t("Website")}" description="{t("Modepack websiter description")}">
 		<InputField
 			on:change={saveArgs}
 			bind:value={websiteUrl}
-			placeholder="{get(t)["Enter website URL"]}"
+			placeholder="{t("Enter website URL")}"
 			pattern={URL_PATTERN}
 			class="w-full"
 		/>
 	</FormField>
 
 	<FormField
-		label="{get(t)["Icon"]}"
-		description="{get(t)["Modepack icon description"]}"
+		label="{t("Icon")}"
+		description="{t("Modepack icon description")}"
 		required={true}
 	>
 		<PathField icon="mdi:file-image" onClick={browseIcon} value={iconPath} />
 	</FormField>
 
 	<FormField
-		label="{get(t)["Readme"]}"
-		description="{get(t)["Modepack readme description"]}"
+		label="{t("Readme")}"
+		description="{t("Modepack readme description")}"
 		required={true}
 	>
 		<ResizableInputField
@@ -340,8 +338,8 @@
 	</FormField>
 
 	<FormField
-		label="{get(t)["Changelog"]}"
-		description="{get(t)["Modepack changelog description"]}"
+		label="{t("Changelog")}"
+		description="{t("Modepack changelog description")}"
 	>
 		<ResizableInputField
 			on:change={saveArgs}
@@ -351,26 +349,26 @@
 		/>
 
 		<BigButton color="gray" on:click={() => generateChangelog(false)}
-			>{T(get(t)["Generate for version number"], {"versionNumber": versionNumber})}</BigButton
+			>{T("Generate for version number", {"versionNumber": versionNumber})}</BigButton
 		>
-		<BigButton color="gray" on:click={() => generateChangelog(true)}>{get(t)["Generate all"]}</BigButton>
+		<BigButton color="gray" on:click={() => generateChangelog(true)}>{t("Generate all")}</BigButton>
 
 		<details class="mt-1">
-			<summary class="text-sm text-slate-300 cursor-pointer">{get(t)["Preview"]}</summary>
+			<summary class="text-sm text-slate-300 cursor-pointer">{t("Preview")}</summary>
 			<Markdown class="px-4 mt-1 bg-gray-900 rounded-lg" source={changelog} />
 		</details>
 	</FormField>
 
 	<FormField
-		label="{get(t)["Include files"]} ({includedFileCount}/{includeFiles?.size})"
-		description="{get(t)["Modepack include description"]}"
+		label= "{t("Include files")} ({includedFileCount}/{includeFiles?.size})"
+		description={t("Modepack include description")}
 	>
 		<details>
 			{#if includeFiles}
-				<summary class="text-sm text-slate-300 cursor-pointer">{get(t)["Show list"]}</summary>
+				<summary class="text-sm text-slate-300 cursor-pointer">{t("Show list")}</summary>
 				<Checklist
 					class="mt-1"
-					title="{get(t)["Include all"]}"
+					title={t("Include all")}
 					items={Array.from(includeFiles.keys()).sort()}
 					getLabel={(item) => item}
 					get={(item) => includeFiles.get(item) ?? false}
@@ -384,39 +382,39 @@
 	</FormField>
 
 	<div class="flex items-center text-lg font-medium text-slate-200 mt-1">
-		<span class="max-w-96 flex-grow">{get(t)["Contains NSFW content"]}</span>
+		<span class="max-w-96 flex-grow">{t("Contains NSFW content")}</span>
 
 		<Checkbox onValueChanged={saveArgs} bind:value={nsfw} />
 	</div>
 
 	<div class="flex items-center text-lg font-medium text-slate-200">
-		<span class="max-w-96 flex-grow">{get(t)["Include disabled mods"]}</span>
+		<span class="max-w-96 flex-grow">{t("Include disabled mods")}</span>
 
 		<Checkbox onValueChanged={saveArgs} bind:value={includeDisabled} />
 	</div>
 
 	<div class="flex justify-end gap-2 mt-3">
-		<BigButton color="gray" on:click={exportToFile}>{get(t)["Export to file"]}</BigButton>
-		<BigButton color="green" on:click={uploadToThunderstore}>{get(t)["Publish on Thunderstore"]}</BigButton>
+		<BigButton color="gray" on:click={exportToFile}>{t("Export to file")}</BigButton>
+		<BigButton color="green" on:click={uploadToThunderstore}>{t("Publish on Thunderstore")}</BigButton>
 	</div>
 </div>
 
 <ApiKeyPopup />
 
-<Popup bind:open={donePopupOpen} title="{get(t)["Modpack upload complete"]}">
+<Popup bind:open={donePopupOpen} title="{t("Modpack upload complete")}">
 	<Dialog.Description class="text-slate-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!
-		{get(t)["Modpack upload complete description 1"]}
+		{t("Modpack upload complete description 1")}
 		<Link href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}">
-			{get(t)["Modpack upload complete description 2"]}
+			{t("Modpack upload complete description 2")}
 		</Link>
-		{get(t)["Modpack upload complete description 3"]}
+		{t("Modpack upload complete description 3")}
 	</Dialog.Description>
 
 	<div class="mt-2 text-slate-400 text-sm">
-		{get(t)["Modpack upload complete description 4"]}
+		{t("Modpack upload complete description 4")}
 		<br />
-		{get(t)["Modpack upload complete description 5"]}
+		{t("Modpack upload complete description 5")}
 	</div>
 </Popup>

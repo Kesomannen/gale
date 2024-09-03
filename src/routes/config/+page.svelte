@@ -24,10 +24,7 @@
 	import { page } from '$app/stores';
 	import StringConfig from '$lib/config/StringConfig.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
-	import { readFile } from '@tauri-apps/plugin-fs';
-	import Dropdown from '$lib/components/Dropdown.svelte';
-
-	import { get } from 'svelte/store';
+	
 	import { T, t } from '$i18n';
 
 	let files: LoadFileResult[] | undefined;
@@ -88,14 +85,14 @@
 	function typeName(config: ConfigEntry) {
 		switch (config.value.type) {
 			case 'int32':
-				return get(t)['Integer'];
+				return t('Integer');
 			case 'double':
 			case 'single':
-				return get(t)['Decimal'];
+				return t('Decimal');
 			case 'string':
-				return get(t)['String'];
+				return t('String');
 			case 'boolean':
-				return get(t)['Boolean'];
+				return t('Boolean');
 			default:
 				return config.typeName;
 		}
@@ -142,13 +139,13 @@
 		{#if files === undefined}
 			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
 				<Icon icon="mdi:loading" class="animate-spin mr-4" />
-				{get(t)["Loading config"]}
+				{t("Loading config")}
 			</div>
 		{:else if files.length === 0}
-			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">{get(t)['No config files']}</div>
+			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">{t('No config files')}</div>
 		{:else}
 			<div class="relative mx-2 my-2">
-				<SearchBar bind:value={searchTerm} placeholder="{get(t)["Search for files"]}" brightness={800} />
+				<SearchBar bind:value={searchTerm} placeholder="{t("Search for files")}" brightness={800} />
 			</div>
 
 			{#each shownFiles ?? [] as file (file.relativePath)}
@@ -185,7 +182,7 @@
 			{#if selectedFile.type === 'ok'}
 				{#if selectedFile.metadata}
 					<div class="text-slate-400 font-medium">
-						{T(get(t)["Config created by"], {
+						{T("Config created by", {
 							"pluginName": selectedFile.metadata.pluginName,
 							"pluginVersion": selectedFile.metadata.pluginVersion
 						})}
@@ -213,14 +210,14 @@
 
 										{#if entry.defaultValue}
 											<p>
-												<span class="font-semibold">{get(t)["Default"]}: </span>
+												<span class="font-semibold">{t("Default")}: </span>
 												{configValueToString(entry.defaultValue)}
 											</p>
 										{/if}
 
 										{#if (entry.value.type === 'int32' || entry.value.type === 'double' || entry.value.type === 'single') && entry.value.content.range}
 											<p>
-												<span class="font-semibold">{get(t)["Range"]}: </span>
+												<span class="font-semibold">{t("Range")}: </span>
 												{entry.value.content.range.start} - {entry.value.content.range.end}
 											</p>
 										{/if}
@@ -249,17 +246,17 @@
 				{/if}
 			{:else if selectedFile.type === 'unsupported'}
 				<div class="text-slate-400 mb-1">
-					{get(t)["Config unsupported format"]}
+					{t("Config unsupported format")}
 				</div>
 				<BigButton
 					color="gray"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
 					<Icon icon="mdi:open-in-new" class="mr-2" />
-					{get(t)["Open in external program"]}
+					{t("Open in external program")}
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<div class="text-slate-400 mb-1">{get(t)["Error reading config file"]}</div>
+				<div class="text-slate-400 mb-1">{t("Error reading config file")}</div>
 				<code class="flex text-red-500 bg-gray-900 px-2 py-1 mb-1 rounded">
 					{capitalize(selectedFile.error)}
 				</code>
@@ -268,12 +265,12 @@
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
 					<Icon icon="mdi:open-in-new" class="mr-2" />
-					{get(t)["Open in external program"]}
+					{t("Open in external program")}
 				</BigButton>
 			{/if}
 		{:else}
 			<div class="flex items-center justify-center text-lg text-slate-400 w-full h-full">
-				{get(t)["Select config file editing"]}
+				{t("Select config file editing")}
 			</div>
 		{/if}
 	</div>

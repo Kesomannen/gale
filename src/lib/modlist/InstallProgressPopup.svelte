@@ -50,12 +50,12 @@
 </script>
 
 <Popup
-	title="{get(t)['Installing mods']} ({progress.installedMods}/{progress.totalMods})"
+	title="{t('Installing mods')} ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
 	bind:open
 	confirmClose={{
-		title: get(t)["Abort installation"],
-		message: get(t)["Abort installation description"]
+		title: t("Abort installation"),
+		message: t("Abort installation description")
 	}}
 	onClose={() => {
 		invokeCommand('cancel_install')
@@ -63,13 +63,13 @@
 >
 	<Dialog.Description class="text-slate-400">
 		{#if progress.task.kind == 'done'}
-			{get(t)["Done ex"]}
+			{t("Done ex")}
 		{:else if progress.task.kind == 'downloading'}
-			{T(get(t)["Install progress downloading"], {"name": progress.currentName})} ({shortenFileSize(progress.task.payload.downloaded)}/{shortenFileSize(progress.task.payload.total)})
+			{T("Install progress downloading", {"name": progress.currentName})} ({shortenFileSize(progress.task.payload.downloaded)}/{shortenFileSize(progress.task.payload.total)})
 		{:else if progress.task.kind == 'extracting'}
-			{T(get(t)["Install progress extracting"], {"name": progress.currentName})}
+			{T("Install progress extracting", {"name": progress.currentName})}
 		{:else if progress.task.kind == 'installing'}
-			{T(get(t)["Install progress installing"], {"name": progress.currentName})}
+			{T("Install progress installing", {"name": progress.currentName})}
 		{/if}
 	</Dialog.Description>
 

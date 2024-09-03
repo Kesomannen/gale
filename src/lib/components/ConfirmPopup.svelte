@@ -20,7 +20,7 @@
 	</Dialog.Description>
 
 	<Dialog.Close class="flex ml-auto justify-end mt-3 gap-2">
-		<BigButton color="gray" on:click={onCancel}>{get(t)["Cancel"]}</BigButton>
+		<BigButton color="gray" on:click={onCancel}>{t("Cancel")}</BigButton>
 		<slot name="buttons" />
 	</Dialog.Close>
 </Popup>

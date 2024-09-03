@@ -20,8 +20,8 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="{get(t)["Thunderstore token"]}">
-		{@html get(t)["Thunderstore token description"]}
+	<Label text="{t("Thunderstore token")}">
+		{@html t("Thunderstore token description")}
 	</Label>
 
 	<Button.Root
@@ -37,7 +37,7 @@
 		</div>
 
 		<div class="text-slate-300 group-hover:text-slate-200 truncate">
-			{hasToken ? get(t)['Click to override token'] : get(t)['Not set']}
+			{hasToken ? t('Click to override token') : t('Not set')}
 		</div>
 
 		<slot name="field" />

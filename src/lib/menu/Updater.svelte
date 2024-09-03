@@ -22,7 +22,6 @@
 	import { Button, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
 
-	import { get } from 'svelte/store';
 	import { t, T } from '$i18n';
 
 	let popupOpen = false;
@@ -66,8 +65,8 @@
 
 		if (platform() !== 'windows') {
 			// on other platforms installUpdate() relaunches the app itself
-			await message(get(t)['Update installed description'], {
-				title: get(t)['Update installed']
+			await message(t('Update installed description'), {
+				title: t('Update installed')
 			});
 			await relaunch();
 		}
@@ -86,25 +85,25 @@
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" class="mr-1" />
 		{/if}
-		<span class="text-sm">{loading ? get(t)['Downloading update'] : get(t)['Update available']}</span>
+		<span class="text-sm">{loading ? t('Downloading update') : t('Update available')}</span>
 	</Button.Root>
 {/if}
 
-<ConfirmPopup title="{get(t)["App update available"]}" bind:open={popupOpen}>
+<ConfirmPopup title="{t("App update available")}" bind:open={popupOpen}>
 	<Dialog.Description class="text-slate-300">
 		<p>
 			{#if currentUpdate}
-				{T(get(t)["App update available description 1"], {"newVersion": $currentUpdate?.version, "currentVersion": $currentUpdate?.currentVersion})}
+				{T("App update available description 1", {"newVersion": $currentUpdate?.version, "currentVersion": $currentUpdate?.currentVersion})}
 			{:else}
-				{get(t)["App update available description 2"]}
+				{t("App update available description 2")}
 			{/if}
 
-			{get(t)["App update available description 3"]}
+			{t("App update available description 3")}
 		</p>
-		<p class="mt-1">{get(t)["App update available description 4"]}</p>
+		<p class="mt-1">{t("App update available description 4")}</p>
 	</Dialog.Description>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="green" fontWeight="semibold" on:click={update}>{get(t)["Install"]}</BigButton>
+		<BigButton color="green" fontWeight="semibold" on:click={update}>{t("Install")}</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

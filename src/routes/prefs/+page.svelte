@@ -11,9 +11,8 @@
 	import type { Prefs, GamePrefs } from '$lib/models';
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
-
-	import { get } from 'svelte/store';
 	import { T, t } from '$i18n';
+	import LanguagePref from '$lib/prefs/LanguagePref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -44,7 +43,7 @@
 <div class="flex flex-col gap-1 py-4 px-6 w-full overflow-y-auto">
 	{#if prefs !== null && gamePrefs !== null}
 		<div class="text-2xl mt-2 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
-			{get(t)["Global settings"]}
+			{t("Global settings")}
 		</div>
 
 		<ZoomLevelPref
@@ -53,58 +52,59 @@
 		/>
 
 		<ApiKeyPref />
+		<LanguagePref value= {prefs.language} set={set((value, prefs) => (prefs.language = value))}/>
 
 		<TogglePref
 			label="Fetch mods automatically"
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}
 		>
-			{@html get(t)["Fetch mods automatically description"]}
+			{@html t("Fetch mods automatically description")}
 		</TogglePref>
 
 		<Separator.Root class="h-2" />
 
 		<PathPref
-			label="{get(t)["Steam executable"]}"
+			label="{t("Steam executable")}"
 			type="file"
 			value={prefs.steamExePath ?? null}
 			set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
 		>
-			{get(t)["Steam executable description"]}
+			{t("Steam executable description")}
 		</PathPref>
 
 		<PathPref
-			label="{get(t)["Steam library"]}"
+			label="{t("Steam library")}"
 			type="dir"
 			value={prefs.steamLibraryDir ?? null}
 			set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
 		>
-			{@html get(t)["Steam library description"]}
+			{@html t("Steam library description")}
 		</PathPref>
 
 		<PathPref
-			label="{get(t)["Gale data directory short"]}"
+			label="{t("Gale data directory short")}"
 			type="dir"
 			value={prefs.dataDir}
 			set={set((value, prefs) => (prefs.dataDir = value))}
 		>
-			Directory where mods and profiles are stored.
+			{t("Gale data directory description")}
 			<br />
-			{get(t)["Dir Change will move"]}
+			{t("Dir Change will move")}
 		</PathPref>
 
 		<div class="text-2xl mt-6 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
-			{$activeGame?.displayName} {get(t)["settings"]}
+			{$activeGame?.displayName} {t("settings")}
 		</div>
 
 		<PathPref
-			label="{get(t)["Override game directory"]}"
+			label="{t("Override game directory")}"
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride ?? null}
 			set={set((value) => (gamePrefs.dirOverride = value ?? undefined))}
 		>
-			{T(get(t)["Override game directory description"], {"name": $activeGame?.displayName})}
+			{T("Override game directory description", {"name": $activeGame?.displayName})}
 		</PathPref>
 
 		<LaunchModePref

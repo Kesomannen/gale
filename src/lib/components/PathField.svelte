@@ -2,7 +2,6 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
 	import Label from './Label.svelte';
-	import { get } from 'svelte/store';
 	import { t } from '$i18n';
 
 	export let label: string = '';
@@ -33,7 +32,7 @@
 			class="text-slate-300 truncate"
 			style="direction: rtl;"
 		>
-			{hasValue ? value : get(t)['Not set']}
+			{hasValue ? value : t('Not set')}
 		</div>
 
 		<slot name="field" />
