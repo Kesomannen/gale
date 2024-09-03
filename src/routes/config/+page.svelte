@@ -142,7 +142,7 @@
 				Loading config...
 			</div>
 		{:else if files.length === 0}
-			<div class="text-center mt-auto mb-auto text-slate-300 text-lg">No config files found</div>
+			<div class="flex items-center justify-center h-full text-slate-300 text-lg">No config files found</div>
 		{:else}
 			<div class="relative mx-2 my-2">
 				<SearchBar bind:value={searchTerm} placeholder="Search for files..." brightness={800} />
@@ -221,7 +221,7 @@
 										{/if}
 									</svelte:fragment>
 								</Tooltip>
-								{#if entry.value.type === 'string'}
+								{#if entry.value.type === 'string'}	
 									<StringConfig entryId={entryId(entry)} />
 								{:else if entry.value.type === 'enum'}
 									<EnumConfig entryId={entryId(entry)} />
@@ -232,7 +232,7 @@
 								{:else if entry.value.type == 'other'}
 									<StringConfig entryId={entryId(entry)} isOther={true} />
 								{:else if isNum(entry.value)}
-									{#if entry.value.content.range}
+									{#if entry.value.content.range !== undefined}
 										<SliderConfig entryId={entryId(entry)} />
 									{:else}
 										<NumberInputConfig entryId={entryId(entry)} />
