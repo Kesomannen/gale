@@ -6,6 +6,9 @@
 	import type { R2ImportData } from '$lib/models';
 	import { onMount } from 'svelte';
 
+	import { get } from 'svelte/store';
+	import { t } from '$i18n';
+
 	export let open: boolean;
 
 	let loading = false;
@@ -37,28 +40,21 @@
 	}
 </script>
 
-<Popup bind:open title="Import profiles from other manager" canClose={!loading} maxWidth="[55%]">
+<Popup bind:open title="{get(t)['Import from R2']}" canClose={!loading} maxWidth="[55%]">
 	<div class="text-slate-300">
-		<p>
-			This will import cached mods and profiles <b>for the current game</b> from r2modman or Thunderstore
-			Mod Manager.
-		</p>
+		<p>{@html get(t)['Import from R2 description 1']}</p>
 
-		<p class="mt-2">
-			The process may take a couple of minutes, depending on how many mods and profiles there are to
-			import.
-			<b>Profiles with the same name will be overwritten!</b>
-		</p>
+		<p class="mt-2">{@html get(t)['Import from R2 description 2']}</p>
 
-		<p class="mt-2">Please do not close Gale while the import is in progress.</p>
+		<p class="mt-2">{@html get(t)['Import from R2 description 3']}</p>
 	</div>
 
 	<ImportR2Flow bind:this={importFlow} bind:importData bind:importFrom bind:loading />
 
 	<div class="flex gap-2 justify-end w-full mr-0.5 mt-3">
 		{#if importData?.r2modman || importData?.thunderstore}
-			<BigButton color="gray" on:click={() => (open = false)}>Cancel</BigButton>
-			<BigButton color="green" on:click={doImport}>Import</BigButton>
+			<BigButton color="gray" on:click={() => (open = false)}>{get(t)["Cancel"]}</BigButton>
+			<BigButton color="green" on:click={doImport}>{get(t)["Import"]}</BigButton>
 		{/if}
 	</div>
 </Popup>

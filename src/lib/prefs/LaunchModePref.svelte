@@ -6,6 +6,9 @@
 	import type { LaunchMode } from '$lib/models';
 	import { sentenceCase } from '$lib/util';
 
+	import { get } from 'svelte/store';
+	import { t } from '$i18n';
+
 	export let value: LaunchMode;
 	export let set: (value: LaunchMode) => Promise<void>;
 
@@ -29,15 +32,13 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Launch mode">
-		<p>Determines how the game is launched.</p>
+	<Label text="{get(t)['Launch mode']}">
+		<p>{get(t)['Launch mode description']}</p>
 		<p class="my-1.5">
-			<b>Steam:</b> Launches through Steam, which slower than directly. However, some games require Steam
-			to be running, including Lethal Company.
+			{@html get(t)['Launch mode description steam']}
 		</p>
 		<p>
-			<b>Direct:</b> Launches the game directly from the executable. Also allows you to launch multiple
-			instances at once.
+			{@html get(t)['Launch mode description direct']}
 		</p>
 	</Label>
 
@@ -51,8 +52,8 @@
 </div>
 
 <div class="flex items-center">
-	<Label text="Number of instances">
-		How many instances of the game to launch at once. Only available in direct mode.
+	<Label text="{get(t)["Number of instances"]}">
+		{get(t)["Number of instances description"]}
 	</Label>
 
 	<InputField
@@ -66,9 +67,8 @@
 </div>
 
 <div class="flex items-center">
-	<Label text="Interval between launches">
-		How many seconds to wait between launching each instance. Only applicable in direct mode with
-		multiple instances.
+	<Label text="{get(t)["Interval between launches"]}">
+		{get(t)["Interval between launches description"]}
 	</Label>
 
 	<InputField

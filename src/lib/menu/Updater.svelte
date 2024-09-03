@@ -22,6 +22,9 @@
 	import { Button, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
 
+	import { get } from 'svelte/store';
+	import { t, T } from '$i18n';
+
 	let popupOpen = false;
 	let loading = false;
 
@@ -63,8 +66,8 @@
 
 		if (platform() !== 'windows') {
 			// on other platforms installUpdate() relaunches the app itself
-			await message('Gale will now restart in order to apply the update.', {
-				title: 'Update installed'
+			await message(get(t)['Update installed description'], {
+				title: get(t)['Update installed']
 			});
 			await relaunch();
 		}
@@ -83,26 +86,25 @@
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" class="mr-1" />
 		{/if}
-		<span class="text-sm">{loading ? 'Downloading update...' : 'Update available'}</span>
+		<span class="text-sm">{loading ? get(t)['Downloading update'] : get(t)['Update available']}</span>
 	</Button.Root>
 {/if}
 
-<ConfirmPopup title="App update available" bind:open={popupOpen}>
+<ConfirmPopup title="{get(t)["App update available"]}" bind:open={popupOpen}>
 	<Dialog.Description class="text-slate-300">
 		<p>
 			{#if currentUpdate}
-				Version {$currentUpdate?.version} of Gale is available - you have {$currentUpdate?.currentVersion}.
+				{T(get(t)["App update available description 1"], {"newVersion": $currentUpdate?.version, "currentVersion": $currentUpdate?.currentVersion})}
 			{:else}
-				There is an update available for Gale.
+				{get(t)["App update available description 2"]}
 			{/if}
 
-			The update will be downloaded and installed in the background, and then the app will restart
-			to apply the changes.
+			{get(t)["App update available description 3"]}
 		</p>
-		<p class="mt-1">Would you like to install it?</p>
+		<p class="mt-1">{get(t)["App update available description 4"]}</p>
 	</Dialog.Description>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="green" fontWeight="semibold" on:click={update}>Install</BigButton>
+		<BigButton color="green" fontWeight="semibold" on:click={update}>{get(t)["Install"]}</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

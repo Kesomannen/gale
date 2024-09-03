@@ -11,6 +11,9 @@
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 	import Icon from '@iconify/svelte';
 
+	import { get } from 'svelte/store';
+	import { T, t } from '$i18n';
+
 	export let open = false;
 
 	let stage: 'gameSelect' | 'importProfiles' | 'settings' | 'end' = 'gameSelect';
@@ -27,7 +30,7 @@
 
 	$: importText =
 		importData.r2modman && importData.thunderstore
-			? 'r2modman or Thunderstore Mod Manager'
+			? `r2modman ${get(t)["or"]} Thunderstore Mod Manager`
 			: importData.r2modman
 				? 'r2modman'
 				: 'Thunderstore Mod Manager';
@@ -77,63 +80,63 @@
 	}
 </script>
 
-<Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open maxWidth="[55%]">
+<Popup title="{get(t)['Welcome to Gale']}" canClose={stage === 'end'} bind:open maxWidth="[55%]">
 	<div class="text-slate-300">
 		{#if stage === 'gameSelect'}
-			To get started, select a game to mod:
+			{get(t)['Welcome to Gale description 1']}
 			<GameSelection onSelect={onSelectGame} />
 		{:else if stage === 'importProfiles' && importData}
 			<p>
-				You can choose automatically transfer profiles from {importText} to Gale.
+				{T(get(t)['Welcome to Gale description 2'], {"importText": importText})}
 			</p>
 
 			<p class="mt-1">
-				The process may take a couple of minutes, depending on how many mods and profiles there are
-				to import. It will also transfer configs and cached mods.
+				{get(t)['Welcome to Gale description 3']}
 			</p>
 
 			<p class="mt-1">
-				You can always import profiles later by going to <b>Import > ...from r2modman</b>.
+				{@html get(t)['Welcome to Gale description 4']}
 			</p>
 
 			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
 
 			<div class="flex mt-2 gap-1.5">
-				<BigButton color="gray" on:click={() => (stage = 'gameSelect')}>Back</BigButton>
+				<BigButton color="gray" on:click={() => (stage = 'gameSelect')}>{get(t)["Back"]}</BigButton>
 				<div class="flex-grow" />
-				<BigButton color="gray" on:click={() => (stage = 'settings')}>Skip</BigButton>
+				<BigButton color="gray" on:click={() => (stage = 'settings')}>{get(t)["Skip"]}</BigButton>
 				<BigButton color="green" on:click={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
-			<p>Lastly, make sure your settings are correct.</p>
+			<p>{get(t)['Welcome to Gale description 5']}</p>
 
 			<p class="mt-1">
-				You can always edit these later by going to <Icon icon="mdi:settings" class="inline mb-1" />
-				<b>Settings</b>.
+				{get(t)['Welcome to Gale description 6']} <Icon icon="mdi:settings" class="inline mb-1" />
+				<b>{get(t)['Settings']}</b>
+				{get(t)['Welcome to Gale description 7']}
 			</p>
 
 			<div class="flex flex-col mt-3 gap-1">
 				{#if prefs !== null}
 					<PathPref
-						label="Steam executable"
+						label="{get(t)["Steam executable"]}"
 						type="file"
 						value={prefs.steamExePath ?? null}
 						set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
 					>
-						Path to the Steam executable.
+						{get(t)["Steam executable description"]}
 					</PathPref>
 
 					<PathPref
-						label="Steam library"
+						label="{get(t)["Steam library"]}"
 						type="dir"
 						value={prefs.steamLibraryDir ?? null}
 						set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
 					>
-						Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
+						{get(t)["Steam library description"]}
 					</PathPref>
 
 					<PathPref
-						label="Gale data directory"
+						label="{get(t)["Gale data directory"]}"
 						type="dir"
 						value={prefs.dataDir}
 						set={set((value, prefs) => (prefs.dataDir = value))}
@@ -149,19 +152,21 @@
 					on:click={() =>
 						(stage =
 							importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}
-					>Back</BigButton
+					>{get(t)["Back"]}</BigButton
 				>
-				<BigButton color="green" on:click={() => (stage = 'end')}>Next</BigButton>
+				<BigButton color="green" on:click={() => (stage = 'end')}>{get(t)["Next"]}</BigButton>
 			</div>
 		{:else if stage === 'end'}
-			<p>That's it, you're all set up to start modding!</p>
+			<p>{get(t)['Welcome to Gale description 8']}</p>
 
 			<p class="mt-1">
-				If you have any questions or need help, feel free to ask in the <a
+				{get(t)['Welcome to Gale description 9']} 
+				<a
 					href="https://discord.gg/lcmod"
 					target="_blank"
 					class="text-green-400 hover:underline">Lethal Company Modding Discord server</a
-				>.
+				>
+				{get(t)['Welcome to Gale description 10']}
 			</p>
 		{/if}
 	</div>

@@ -7,6 +7,9 @@
 	import Icon from '@iconify/svelte';
 	import { sentenceCase } from '$lib/util';
 
+	import { get } from 'svelte/store';
+	import { t } from '$i18n';
+
 	export let label: string;
 	export let type: 'dir' | 'file';
 	export let canClear: boolean = false;
@@ -17,7 +20,7 @@
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			title: 'Select ' + sentenceCase(label),
+			title: get(t)['Select'] + ' ' + label,
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;
