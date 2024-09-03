@@ -232,7 +232,7 @@
 								{:else if entry.value.type == 'other'}
 									<StringConfig entryId={entryId(entry)} isOther={true} />
 								{:else if isNum(entry.value)}
-									{#if entry.value.content.range !== undefined}
+									{#if entry.value.content.range}
 										<SliderConfig entryId={entryId(entry)} />
 									{:else}
 										<NumberInputConfig entryId={entryId(entry)} />
