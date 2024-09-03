@@ -369,6 +369,7 @@ impl Prefs {
             }
         }
         self.zoom_factor = value.zoom_factor;
+        self.language = value.language;
 
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 

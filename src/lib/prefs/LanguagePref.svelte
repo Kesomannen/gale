@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { t, getLangName, type Language, language } from '$i18n';
+	import languages from '$i18n/Languages';
+	import { t, getLangName, type Language, setLang} from '$i18n';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
 		
 	export let value: Language | string;
     export let set: (newValue: string) => void;
 
-	let items = Object.keys(language) as Language[];
+	const LanguageKeys = Object.keys(languages) as Language[];
 
 </script>
 
@@ -15,9 +16,11 @@
 
 	<Dropdown
 		class="flex-grow"
-		items= { items }
+		items= { LanguageKeys }
 		selected= { value }
 		onSelectedChangeSingle={async (newValue) => {
+			value = newValue;
+			setLang(newValue);
             set(newValue);
 		}}
 		getLabel={(name) => getLangName(name)}

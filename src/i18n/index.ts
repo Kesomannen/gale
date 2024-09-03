@@ -3,6 +3,8 @@ import { get, writable } from 'svelte/store';
 import en from './en.json';
 import zhCN from './zhCN.json';
 import Languages from './Languages';
+import { invokeCommand } from '$lib/invoke';
+import type { Prefs } from '$lib/models';
 
 const translations = {
     en,
@@ -11,9 +13,9 @@ const translations = {
 
 export type Language = 'en' | 'zhCN';
 
-const initialLanguage = (navigator.language.replace('-', '') as Language) || 'en';
-export const language = writable<Language>(initialLanguage);
-export const currentTranslations = writable(translations[initialLanguage]);
+
+export const language = writable<Language>(await getLangFormPrefs());
+export const currentTranslations = writable(translations[get(language)]);
 
 
 export function getLangName(lang: Language | string) 
@@ -21,13 +23,25 @@ export function getLangName(lang: Language | string)
     return Languages[lang as Language];
 }
 
-export function setLang(lang: Language) {
-    language.set(lang);
+export function setLang(lang: Language | string) {
+    language.set(lang as Language);
 }
 
 language.subscribe((lang) => {
     currentTranslations.set(translations[lang]);
 });
+
+export async function getLangFormPrefs() : Promise<Language>
+{
+    return (await invokeCommand<Prefs>('get_prefs')).language as Language || 'en';
+}
+
+
+export function setLangFormNavigator()
+{
+    var navigatorLang = navigator.language.replace('-', '');
+    setLang(navigatorLang);
+}
 
 export function t(key: string) : string
 {
