@@ -33,14 +33,22 @@ language.subscribe((lang) => {
 
 export async function getLangFormPrefs() : Promise<Language>
 {
-    return (await invokeCommand<Prefs>('get_prefs')).language as Language || 'en';
+    var is_first_run =  await invokeCommand<boolean>('is_first_run');
+    var Prefs = await invokeCommand<Prefs>('get_prefs');
+    if (is_first_run) {
+        var lang = getLangFormNavigator();
+        Prefs.language = lang;
+        await invokeCommand<Prefs>('set_prefs', { value: Prefs });
+        return lang;
+    }
+
+    return Prefs.language as Language || 'en';
 }
 
 
-export function setLangFormNavigator()
+export function getLangFormNavigator() : Language
 {
-    var navigatorLang = navigator.language.replace('-', '');
-    setLang(navigatorLang);
+    return navigator.language.replace('-', '') as Language;
 }
 
 export function t(key: string) : string

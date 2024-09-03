@@ -52,7 +52,7 @@
 		/>
 
 		<ApiKeyPref />
-		<LanguagePref value= {prefs.language} set={set((value, prefs) => (prefs.language = value))}/>
+		<LanguagePref set={set((value, prefs) => (prefs.language = value))}/>
 
 		<TogglePref
 			label="Fetch mods automatically"

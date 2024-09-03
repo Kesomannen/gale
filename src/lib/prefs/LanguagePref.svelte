@@ -1,10 +1,11 @@
 <script lang="ts">
 	import languages from '$i18n/Languages';
-	import { t, getLangName, type Language, setLang} from '$i18n';
+	import { t, getLangName, type Language, setLang, language} from '$i18n';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
+	import { get } from 'svelte/store';
 		
-	export let value: Language | string;
+	let value: Language | string = get(language);
     export let set: (newValue: string) => void;
 
 	const LanguageKeys = Object.keys(languages) as Language[];
