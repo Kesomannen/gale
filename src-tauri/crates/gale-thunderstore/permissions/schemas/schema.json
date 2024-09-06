@@ -295,6 +295,20 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "allow-query-package -> Enables the query_package command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-query-package"
+          ]
+        },
+        {
+          "description": "deny-query-package -> Denies the query_package command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-query-package"
+          ]
+        },
+        {
           "description": "allow-query-packages -> Enables the query_packages command without any pre-configured scope.",
           "type": "string",
           "enum": [

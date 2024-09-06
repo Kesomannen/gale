@@ -52,12 +52,12 @@
 	</div>
 	<div class="flex flex-col overflow-y-auto gap-2">
 		{#each packages as pkg}
-			<div class="text-left p-4 rounded-lg border border-gray-500 bg-gray-700">
+			<div class="text-left p-4 rounded-lg bg-gray-700 border border-gray-500">
 				<div class="flex gap-3">
 					<img
 						src="https://gcdn.thunderstore.io/live/repository/icons/{pkg.owner}-{pkg.name}-{pkg.major}.{pkg.minor}.{pkg.patch}.png"
 						alt={pkg.name}
-						class="w-14 h-14 rounded-md"
+						class="size-16 rounded"
 					/>
 					<div>
 						<span class="text-white font-bold text-xl">{pkg.name}</span>
@@ -75,26 +75,27 @@
 						<Icon icon="akar-icons:download" class="inline" />
 						<span>{shortenNum(pkg.downloads)}</span>
 					</div>
-					<button
+					<a
+            href="/test/{pkg.id}"
 						class="inline-flex items-center gap-2 ml-auto bg-gray-600 text-gray-300 font-semibold py-1.5 px-4 rounded-lg
                     hover:bg-gray-500 hover:-translate-y-0.5 transition-all hover:shadow-sm"
 					>
 						<Icon icon="akar-icons:info" />
 						More Info
-					</button>
+        </a>
 					<div class="inline-flex gap-0.5">
 						<button
 							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg
-                    hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+                    			hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
 						>
 							<Icon icon="akar-icons:download" />
 							Install
 						</button>
 						<button
 							class="inline-flex items-center bg-green-700 text-white font-semibold w-6 rounded-r-lg
-                  hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+                  				hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
 						>
-							<Icon icon="akar-icons:plus" class="mx-auto" />
+							<Icon icon="material-symbols:arrow-drop-down" class="mx-auto" />
 						</button>
 					</div>
 				</div>

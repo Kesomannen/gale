@@ -1,5 +1,6 @@
+use futures_util::FutureExt;
 use gale_core::prelude::*;
-use log::debug;
+use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 use std::time::Instant;
@@ -67,11 +68,67 @@ pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Pac
     .fetch_all(&state.db)
     .await?;
 
-    debug!(
-        "query_packages returned {} results in {:?}",
+    trace!(
+        "found {} results in {:?}",
         results.len(),
         start.elapsed()
     );
 
     Ok(results)
+}
+
+#[derive(Serialize, Debug)]
+pub struct PackageInfo {
+    name: String,
+    owner: String,
+    versions: Vec<VersionInfo>,
+}
+
+#[derive(Serialize, Debug)]
+pub struct VersionInfo {
+    major: i64,
+    minor: i64,
+    patch: i64,
+}
+
+pub async fn query_package(id: Uuid, state: &AppState) -> Result<PackageInfo> {
+    let mut package = sqlx::query!(
+        "SELECT
+            name,
+            owner
+        FROM 
+            packages
+        WHERE id = ?",
+        id
+    )
+    .map(|row| PackageInfo {
+        name: row.name,
+        owner: row.owner,
+        versions: Vec::new(),
+    })
+    .fetch_one(&state.db)
+    .await?;
+
+    package.versions = sqlx::query_as!(
+        VersionInfo,
+        "SELECT
+            major,
+            minor,
+            patch
+        FROM
+            versions
+        WHERE
+            package_id = ?
+        ORDER BY
+            major DESC,
+            minor DESC,
+            patch DESC",
+        id
+    )
+    .fetch_all(&state.db)
+    .await?;
+
+    trace!("found package {:#?}", package);
+
+    Ok(package)
 }

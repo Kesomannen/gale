@@ -11,6 +11,32 @@
 <tr>
 <td>
 
+`gale-thunderstore:allow-query-package`
+
+</td>
+<td>
+
+Enables the query_package command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-thunderstore:deny-query-package`
+
+</td>
+<td>
+
+Denies the query_package command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `gale-thunderstore:allow-query-packages`
 
 </td>

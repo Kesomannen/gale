@@ -1,7 +1,9 @@
 CREATE TABLE communities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    slug TEXT NOT NULL
+    slug TEXT NOT NULL,
+    override_path TEXT,
+    is_favorite BOOLEAN NOT NULL DEFAULT 0
 );
 
 INSERT INTO communities (name, slug)
@@ -12,16 +14,15 @@ VALUES
 CREATE TABLE packages (
     id UUID PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
+    owner TEXT NOT NULL,
     description TEXT NOT NULL,
     date_created DATETIME NOT NULL,
-    date_updated DATETIME NOT NULL,
-    donation_link TEXT,
     has_nsfw_content BOOLEAN NOT NULL,
     is_deprecated BOOLEAN NOT NULL,
     is_pinned BOOLEAN NOT NULL,
-    owner TEXT NOT NULL,
     rating_score INTEGER NOT NULL,
     downloads INTEGER NOT NULL,
+    donation_link TEXT,
     latest_version_id UUID NOT NULL,
     community_id INTEGER NOT NULL REFERENCES communities(id)
 );
@@ -58,12 +59,9 @@ CREATE TABLE versions (
     id UUID PRIMARY KEY NOT NULL,
     package_id UUID NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
     date_created DATETIME NOT NULL,
-    description TEXT NOT NULL,
     downloads INTEGER NOT NULL,
     file_size INTEGER NOT NULL,
-    full_name TEXT NOT NULL,
     is_active BOOLEAN NOT NULL,
-    name TEXT NOT NULL,
     website_url TEXT,
     major INTEGER NOT NULL,
     minor INTEGER NOT NULL,
@@ -82,4 +80,14 @@ CREATE TABLE profile_mods (
     profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     mod_id UUID NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
     enabled BOOLEAN NOT NULL
+);
+
+CREATE TABLE settings (
+    zoom_level FLOAT NOT NULL DEFAULT 1.0,
+    steam_executable_path TEXT,
+    steam_library_path TEXT
+);
+
+CREATE TABLE misc (
+    selected_profile_id INTEGER REFERENCES profiles(id)
 );

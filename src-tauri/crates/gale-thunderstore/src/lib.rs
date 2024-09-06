@@ -24,6 +24,6 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
 
             Ok(())
         })
-        .invoke_handler(generate_handler![commands::query_packages])
+        .invoke_handler(generate_handler![commands::query_packages, commands::query_package])
         .build()
 }

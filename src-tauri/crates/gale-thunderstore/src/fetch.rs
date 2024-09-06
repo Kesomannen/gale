@@ -59,7 +59,6 @@ async fn insert_package(
             name,
             description,
             date_created,
-            date_updated,
             donation_link,
             has_nsfw_content,
             is_deprecated,
@@ -70,14 +69,13 @@ async fn insert_package(
             latest_version_id,
             community_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ",
     )
     .bind(&package.uuid4.as_bytes()[..])
     .bind(&package.name)
     .bind(&package.latest().description)
     .bind(package.date_created.to_string())
-    .bind(package.date_updated.to_string())
     .bind(package.donation_link.as_ref().map(|url| url.as_str()))
     .bind(package.has_nsfw_content)
     .bind(package.is_deprecated)
@@ -110,29 +108,23 @@ async fn insert_version(
             id,
             package_id,
             date_created,
-            description,
             downloads,
             file_size,
-            full_name,
             is_active,
-            name,
             website_url,
             major,
             minor,
             patch
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ",
     )
     .bind(&version.uuid4.as_bytes()[..])
     .bind(&package.uuid4.as_bytes()[..])
     .bind(version.date_created.to_string())
-    .bind(&version.description)
     .bind(version.downloads)
-    .bind(0)
-    .bind(&version.full_name)
+    .bind(version.file_size as i64)
     .bind(version.is_active)
-    .bind(&version.name)
     .bind(if version.website_url.is_empty() {
         None
     } else {
