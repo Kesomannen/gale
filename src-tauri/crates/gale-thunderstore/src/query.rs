@@ -1,4 +1,3 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
 use gale_core::prelude::*;
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -23,7 +22,11 @@ pub struct Package {
     is_pinned: bool,
     is_deprecated: bool,
     rating_score: i64,
+    downloads: i64,
     has_nsfw_content: bool,
+    major: i64,
+    minor: i64,
+    patch: i64,
 }
 
 pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Package>> {
@@ -38,11 +41,17 @@ pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Pac
             p.is_pinned,
             p.is_deprecated,
             p.rating_score,
-            p.has_nsfw_content
+            p.downloads,
+            p.has_nsfw_content,
+            v.major,
+            v.minor,
+            v.patch
         FROM
             packages p
             JOIN packages_fts fts ON
                 fts.package_id = p.id
+            JOIN versions v ON
+                v.id = p.latest_version_id
         WHERE
             p.community_id = ? AND
             fts.packages_fts MATCH ?

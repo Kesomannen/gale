@@ -20,7 +20,9 @@ CREATE TABLE packages (
     is_deprecated BOOLEAN NOT NULL,
     is_pinned BOOLEAN NOT NULL,
     owner TEXT NOT NULL,
-    rating_score INT NOT NULL,
+    rating_score INTEGER NOT NULL,
+    downloads INTEGER NOT NULL,
+    latest_version_id UUID NOT NULL,
     community_id INTEGER NOT NULL REFERENCES communities(id)
 );
 
@@ -57,27 +59,27 @@ CREATE TABLE versions (
     package_id UUID NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
     date_created DATETIME NOT NULL,
     description TEXT NOT NULL,
-    downloads INT NOT NULL,
-    file_size INT NOT NULL,
+    downloads INTEGER NOT NULL,
+    file_size INTEGER NOT NULL,
     full_name TEXT NOT NULL,
     is_active BOOLEAN NOT NULL,
     name TEXT NOT NULL,
     website_url TEXT,
-    major INT NOT NULL,
-    minor INT NOT NULL,
-    patch INT NOT NULL
+    major INTEGER NOT NULL,
+    minor INTEGER NOT NULL,
+    patch INTEGER NOT NULL
 );
 
 CREATE TABLE profiles (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     path TEXT NOT NULL,
-    game_id UUID NOT NULL REFERENCES packages(id) ON DELETE CASCADE
+    game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE
 );
 
 CREATE TABLE profile_mods (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     mod_id UUID NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
-    enabled BOOLEAN NOT NULL,
-    PRIMARY KEY (profile_id, mod_id)
+    enabled BOOLEAN NOT NULL
 );

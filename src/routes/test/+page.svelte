@@ -1,6 +1,7 @@
 <script lang="ts">
 	import InputField from '$lib/components/InputField.svelte';
 	import { invokeCommand } from '$lib/invoke';
+	import { shortenNum } from '$lib/util';
 	import Icon from '@iconify/svelte';
 
 	type Package = {
@@ -14,69 +15,90 @@
 		downloads: number;
 		hasNsfwContent: boolean;
 		dateUpdated: Date;
+		major: number;
+		minor: number;
+		patch: number;
 	};
 
 	let searchTerm = 'bepinex';
-	let promise: Promise<Package[]> | null = null;
+	let loading = false;
+	let packages: Package[] = [];
 
-	$: if (searchTerm.length > 0) {
-		promise = invokeCommand<Package[]>('plugin:gale-thunderstore|query_packages', {
+	$: queryPackages(searchTerm);
+
+	async function queryPackages(searchTerm: string) {
+		if (searchTerm.length === 0) {
+			loading = false;
+			packages = [];
+			return;
+		}
+
+		loading = true;
+		packages = await invokeCommand<Package[]>('plugin:gale-thunderstore|query_packages', {
 			args: {
 				searchTerm,
 				maxResults: 10,
 				communityId: 1
 			}
 		});
-	} else {
-		promise = null;
+
+		loading = false;
 	}
 </script>
 
-<div class="p-4 overflow-y-auto w-full">
-	<InputField bind:value={searchTerm} />
-	{#if promise !== null}
-		{#await promise}
-			<h1 class="text-white">Loading...</h1>
-		{:then packages}
-			<div class="flex flex-col gap-2 pt-4 overflow-y-auto w-full">
-				{#if packages.length === 0}
-					<h1 class="text-white">No results found</h1>
-				{:else}
-					{#each packages as pkg}
+<div class="w-full max-w-screen-md mx-auto overflow-y-auto px-4">
+	<div class="flex items-center pt-4 pb-2">
+		<InputField bind:value={searchTerm} placeholder="Search Thunderstore" class="flex-grow" />
+	</div>
+	<div class="flex flex-col overflow-y-auto gap-2">
+		{#each packages as pkg}
+			<div class="text-left p-4 rounded-lg border border-gray-500 bg-gray-700">
+				<div class="flex gap-3">
+					<img
+						src="https://gcdn.thunderstore.io/live/repository/icons/{pkg.owner}-{pkg.name}-{pkg.major}.{pkg.minor}.{pkg.patch}.png"
+						alt={pkg.name}
+						class="w-14 h-14 rounded-md"
+					/>
+					<div>
+						<span class="text-white font-bold text-xl">{pkg.name}</span>
+						<span class="text-slate-300 ml-1">by {pkg.owner}</span>
+						<br />
+						<span class="text-slate-300">{pkg.description}</span>
+					</div>
+				</div>
+				<div class="flex gap-2 mt-2 items-center">
+					<div class="flex items-center gap-2 text-yellow-400">
+						<Icon icon="akar-icons:star" class="inline" />
+						<span>{shortenNum(pkg.ratingScore)}</span>
+					</div>
+					<div class="flex items-center gap-2 ml-4 text-green-400">
+						<Icon icon="akar-icons:download" class="inline" />
+						<span>{shortenNum(pkg.downloads)}</span>
+					</div>
+					<button
+						class="inline-flex items-center gap-2 ml-auto bg-gray-600 text-gray-300 font-semibold py-1.5 px-4 rounded-lg
+                    hover:bg-gray-500 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+					>
+						<Icon icon="akar-icons:info" />
+						More Info
+					</button>
+					<div class="inline-flex gap-0.5">
 						<button
-							class="text-left p-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-colors"
+							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg
+                    hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
 						>
-							<div class="flex gap-3">
-								<img
-									src="https://gcdn.thunderstore.io/live/repository/icons/{pkg.owner}-{pkg.name}-1.0.0.png"
-									alt={pkg.name}
-									class="w-14 h-14 rounded-md"
-								/>
-								<div>
-									<span class="text-white font-bold text-xl">{pkg.name}</span>
-									<span class="text-slate-300 ml-1">by {pkg.owner}</span>
-									<br />
-									<span class="text-slate-300">{pkg.description}</span>
-								</div>
-							</div>
-							<div class="flex gap-4 pl-1 items-center">
-								<div class="flex items-center gap-1 text-yellow-400">
-									<Icon icon="mdi:star" class="inline" />
-									<span>{pkg.ratingScore}</span>
-								</div>
-								<button
-									class="inline-flex gap-2 ml-auto transition-colors bg-green-600 hover:bg-green-500 text-white font-semibold py-1.5 px-4 rounded-lg"
-								>
-									<Icon icon="akar-icons:download" class="w-6 h-6" />
-									Install
-								</button>
-							</div>
+							<Icon icon="akar-icons:download" />
+							Install
 						</button>
-					{/each}
-				{/if}
+						<button
+							class="inline-flex items-center bg-green-700 text-white font-semibold w-6 rounded-r-lg
+                  hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+						>
+							<Icon icon="akar-icons:plus" class="mx-auto" />
+						</button>
+					</div>
+				</div>
 			</div>
-		{:catch error}
-			<p>{error.message}</p>
-		{/await}
-	{/if}
+		{/each}
+	</div>
 </div>

@@ -18,7 +18,7 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
                 fetch::fetch_packages(&state, 1)
                     .await
                     .unwrap_or_else(|err| {
-                        log::error!("failed to fetch packages: {err}");
+                        log::error!("failed to fetch packages: {err:#}");
                     })
             });
 
