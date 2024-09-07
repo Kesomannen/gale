@@ -28,9 +28,10 @@ export function setLang(lang: Language | string) {
     language.set(lang as Language);
 }
 
-language.subscribe((lang) => {
+/* language.subscribe((lang) => {
     currentTranslations.set(translations[lang]);
 });
+*/
 
 export async function getLangFormPrefs() : Promise<Language>
 {
