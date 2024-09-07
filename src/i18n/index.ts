@@ -14,6 +14,7 @@ const translations = {
 export type Language = 'en' | 'zhCN';
 
 
+export let InitLang : Language;
 export const language = writable<Language>(await getLangFormPrefs());
 export const currentTranslations = writable(translations[get(language)]);
 
@@ -35,14 +36,20 @@ export async function getLangFormPrefs() : Promise<Language>
 {
     var is_first_run =  await invokeCommand<boolean>('is_first_run');
     var Prefs = await invokeCommand<Prefs>('get_prefs');
+    var returunLang : Language;
     if (is_first_run) {
         var lang = getLangFormNavigator();
         Prefs.language = lang;
         await invokeCommand<Prefs>('set_prefs', { value: Prefs });
-        return lang;
+        returunLang = lang;
+    }
+    else
+    {
+        returunLang = Prefs.language as Language || 'en';
     }
 
-    return Prefs.language as Language || 'en';
+    InitLang = returunLang;
+    return returunLang;
 }
 
 

@@ -25,6 +25,8 @@
     "fs:default",
     "http:default",
     "http:allow-fetch",
+    "process:default",
+    "process:allow-restart",
     {
       "identifier": "http:default",
       "allow": [

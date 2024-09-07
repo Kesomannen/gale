@@ -55,7 +55,7 @@
 		<LanguagePref set={set((value, prefs) => (prefs.language = value))}/>
 
 		<TogglePref
-			label="Fetch mods automatically"
+			label={t("Fetch mods automatically")}
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}
 		>
@@ -86,7 +86,7 @@
 			label="{t("Gale data directory short")}"
 			type="dir"
 			value={prefs.dataDir}
-			set={set((value, prefs) => (prefs.dataDir = value))}
+			set={set((value, prefs) => (prefs.dataDir = value ?? prefs.dataDir))}
 		>
 			{t("Gale data directory description")}
 			<br />

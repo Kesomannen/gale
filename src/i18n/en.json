@@ -277,6 +277,8 @@
     "Select": "Select",
     "Language": "Language",
     "Language description": "Changes the language of the mod manager.",
+    "Immediate reboot": "Immediate reboot",
+    "Immediate reboot description" : "Reboot immediately to apply the language change",
     "Descending": "Descending",
     "Ascending": "Ascending",
     "Custom": "Custom",

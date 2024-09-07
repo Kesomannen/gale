@@ -1,14 +1,21 @@
 <script lang="ts">
 	import languages from '$i18n/Languages';
-	import { t, getLangName, type Language, setLang, language} from '$i18n';
+	import { t, getLangName, type Language, setLang, language, InitLang} from '$i18n';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import { get } from 'svelte/store';
-		
+	import BigButton from '$lib/components/BigButton.svelte';
+	import { relaunch } from '@tauri-apps/plugin-process';
+	
 	let value: Language | string = get(language);
     export let set: (newValue: string) => void;
 
 	const LanguageKeys = Object.keys(languages) as Language[];
+
+	function reboot()
+	{
+		relaunch();
+	}
 
 </script>
 
@@ -27,3 +34,11 @@
 		getLabel={(name) => getLangName(name)}
 	/>
 </div>
+
+{#if value != InitLang}
+<div class="flex justify-end">
+		<BigButton on:click={reboot}>
+			<Label text={t("Immediate reboot")}>{t("Immediate reboot description")}</Label>
+		</BigButton>
+</div>
+{/if}

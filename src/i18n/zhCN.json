@@ -277,6 +277,8 @@
     "Select": "选择",
     "Language": "语言",
     "Language description": "修改软件的语言。",
+    "Immediate reboot": "立刻重启",
+    "Immediate reboot description": "立刻重启以应用语言变更",
     "Descending": "降序",
     "Ascending": "升序",
     "Custom": "自定义",

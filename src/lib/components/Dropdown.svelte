@@ -7,7 +7,6 @@
 	import { Select } from 'bits-ui';
 	import { fly, slide } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
-	import { sentenceCase } from '$lib/util';
 
 	export let items: T[];
 	export let selected: T | T[] = [];
