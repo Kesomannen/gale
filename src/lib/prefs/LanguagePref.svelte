@@ -12,9 +12,9 @@
 
 	const LanguageKeys = Object.keys(languages) as Language[];
 
-	function reboot()
+	async function reboot()
 	{
-		relaunch();
+		await relaunch();
 	}
 
 </script>
