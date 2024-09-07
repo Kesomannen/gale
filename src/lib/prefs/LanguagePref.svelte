@@ -6,6 +6,7 @@
 	import { get } from 'svelte/store';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import { relaunch } from '@tauri-apps/plugin-process';
+	import Tooltip from '$lib/components/Tooltip.svelte';
 	
 	let value: Language | string = get(language);
     export let set: (newValue: string) => void;
@@ -38,7 +39,7 @@
 {#if value != InitLang}
 <div class="flex justify-end">
 		<BigButton on:click={reboot}>
-			<Label text={t("Immediate reboot")}>{t("Immediate reboot description")}</Label>
+			<Tooltip text={t("Immediate reboot description")}>{t("Immediate reboot")}</Tooltip>
 		</BigButton>
 </div>
 {/if}
