@@ -1,0 +1,20 @@
+[package]
+name = "gale-install"
+version = "2.0.0-alpha.1"
+edition = "2021"
+
+[dependencies]
+tauri = { version = "2.0.0-rc", features = ["unstable"] }
+
+gale-core = { path = "../gale-core" }
+gale-thunderstore = { path = "../gale-thunderstore" }
+
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = { version = "1", features = ["raw_value"] }
+
+log = "0.4"
+anyhow = "1"
+futures-util = "0.3"
+zip = "2"
+walkdir = "2"

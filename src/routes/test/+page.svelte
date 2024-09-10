@@ -76,13 +76,13 @@
 						<span>{shortenNum(pkg.downloads)}</span>
 					</div>
 					<a
-            href="/test/{pkg.id}"
+						href="/test/{pkg.id}"
 						class="inline-flex items-center gap-2 ml-auto bg-gray-600 text-gray-300 font-semibold py-1.5 px-4 rounded-lg
-                    hover:bg-gray-500 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+                    		hover:bg-gray-500 hover:-translate-y-0.5 transition-all hover:shadow-sm"
 					>
 						<Icon icon="akar-icons:info" />
 						More Info
-        </a>
+					</a>
 					<div class="inline-flex gap-0.5">
 						<button
 							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg

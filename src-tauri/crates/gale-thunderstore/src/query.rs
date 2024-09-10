@@ -1,6 +1,7 @@
-use futures_util::FutureExt;
+use crate::api::{self, ResultExt, VersionId};
+use anyhow::Context;
 use gale_core::prelude::*;
-use log::{debug, trace};
+use log::trace;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 use std::time::Instant;
@@ -68,53 +69,58 @@ pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Pac
     .fetch_all(&state.db)
     .await?;
 
-    trace!(
-        "found {} results in {:?}",
-        results.len(),
-        start.elapsed()
-    );
+    trace!("found {} results in {:?}", results.len(), start.elapsed());
 
     Ok(results)
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct PackageInfo {
     name: String,
     owner: String,
+    website_url: Option<String>,
+    donation_url: Option<String>,
+    readme: Option<String>,
+    changelog: Option<String>,
     versions: Vec<VersionInfo>,
 }
 
 #[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct VersionInfo {
     major: i64,
     minor: i64,
     patch: i64,
+    downloads: i64,
+    file_size: i64,
 }
 
-pub async fn query_package(id: Uuid, state: &AppState) -> Result<PackageInfo> {
-    let mut package = sqlx::query!(
+pub async fn query_package(uuid: Uuid, state: &AppState) -> Result<PackageInfo> {
+    let record = sqlx::query!(
         "SELECT
             name,
-            owner
+            owner,
+            donation_link
         FROM 
             packages
-        WHERE id = ?",
-        id
+        WHERE 
+            id = ?",
+        uuid
     )
-    .map(|row| PackageInfo {
-        name: row.name,
-        owner: row.owner,
-        versions: Vec::new(),
-    })
     .fetch_one(&state.db)
     .await?;
 
-    package.versions = sqlx::query_as!(
+    let (name, owner, donation_link) = (record.name, record.owner, record.donation_link);
+
+    let versions = sqlx::query_as!(
         VersionInfo,
         "SELECT
             major,
             minor,
-            patch
+            patch,
+            downloads,
+            file_size
         FROM
             versions
         WHERE
@@ -123,12 +129,36 @@ pub async fn query_package(id: Uuid, state: &AppState) -> Result<PackageInfo> {
             major DESC,
             minor DESC,
             patch DESC",
-        id
+        uuid
     )
     .fetch_all(&state.db)
     .await?;
 
-    trace!("found package {:#?}", package);
+    let latest = versions
+        .first()
+        .expect("package should have at least one version");
+
+    let id: VersionId = (&owner, &name, latest.major, latest.minor, latest.patch).into();
+
+    let readme = api::get_readme(&state.reqwest, &id)
+        .await
+        .not_found_ok()
+        .context("failed to fetch readme")?;
+
+    let changelog = api::get_changelog(&state.reqwest, &id)
+        .await
+        .not_found_ok()
+        .context("failed to fetch changelog")?;
+
+    let package = PackageInfo {
+        name,
+        owner,
+        website_url: None,
+        donation_url: donation_link,
+        readme,
+        changelog,
+        versions,
+    };
 
     Ok(package)
 }

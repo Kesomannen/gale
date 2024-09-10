@@ -1,4 +1,4 @@
-use crate::Result;
+use crate::error::Result;
 use anyhow::Context;
 use log::debug;
 use sqlx::{
@@ -6,11 +6,32 @@ use sqlx::{
     ConnectOptions,
 };
 use std::{env::current_exe, str::FromStr};
-use tauri::AppHandle;
+use tauri::{AppHandle, Wry};
+
+pub trait ManagerExt {
+    fn app_state(&self) -> &AppState;
+
+    fn db(&self) -> &SqlitePool {
+        &self.app_state().db
+    }
+
+    fn reqwest(&self) -> &reqwest::Client {
+        &self.app_state().reqwest
+    }
+}
+
+impl<M> ManagerExt for M
+where
+    M: tauri::Manager<Wry>,
+{
+    fn app_state(&self) -> &AppState {
+        self.state::<AppState>().inner()
+    }
+}
 
 pub struct AppState {
     pub db: SqlitePool,
-    pub thunderstore: thunderstore::Client,
+    pub reqwest: reqwest::Client,
 }
 
 impl AppState {
@@ -39,12 +60,21 @@ impl AppState {
             .journal_mode(SqliteJournalMode::Wal)
             .disable_statement_logging()
             .create_if_missing(true);
-        let db = SqlitePool::connect_with(options).await?;
 
-        sqlx::migrate!("../../../migrations").run(&db).await?;
+        let db = SqlitePool::connect_with(options)
+            .await
+            .context("failed to connect to database")?;
 
-        let thunderstore = thunderstore::Client::new();
+        sqlx::migrate!("../../../migrations")
+            .run(&db)
+            .await
+            .context("failed to run database migrations")?;
 
-        Ok(AppState { db, thunderstore })
+        let reqwest = reqwest::Client::builder()
+            .user_agent("gale")
+            .build()
+            .context("failed to create reqwest client")?;
+
+        Ok(AppState { db, reqwest })
     }
 }

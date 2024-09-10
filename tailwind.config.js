@@ -4,7 +4,8 @@ export default {
 	theme: {
 		extend: {
 			fontFamily: {
-				sans: ['Nunito Sans', 'sans-serif']
+				sans: ['Nunito Sans', 'sans-serif'],
+				mono: ['Fira Code', 'monospace']
 			}
 		}
 	},

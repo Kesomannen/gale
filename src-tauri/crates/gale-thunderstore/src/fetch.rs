@@ -1,10 +1,11 @@
+use crate::api::{self, PackageV1, PackageVersionV1, VersionId};
 use anyhow::Context;
 use futures_util::{pin_mut, TryStreamExt};
 use gale_core::prelude::*;
 use log::debug;
 use sqlx::prelude::*;
 use std::time::Instant;
-use thunderstore::models::{PackageV1, PackageVersionV1};
+use uuid::Uuid;
 
 pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
     let start = Instant::now();
@@ -16,7 +17,7 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
         .get(0);
 
     debug!("fetching packages from {slug}");
-    let stream = state.thunderstore.stream_packages_v1(slug).await?;
+    let stream = api::stream_packages(&state.reqwest, slug).await?;
     pin_mut!(stream);
 
     let mut transaction = state.db.begin().await?;
@@ -33,8 +34,9 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
             .await
             .context("failed to insert package")?;
 
-        for version in &package.versions {
-            insert_version(version, &package, &mut transaction)
+        let uuid = package.uuid4;
+        for version in package.versions {
+            insert_version(version, uuid, &mut transaction)
                 .await
                 .context("failed to insert version")?;
         }
@@ -75,7 +77,7 @@ async fn insert_package(
     .bind(&package.uuid4.as_bytes()[..])
     .bind(&package.name)
     .bind(&package.latest().description)
-    .bind(package.date_created.to_string())
+    .bind(&package.date_created)
     .bind(package.donation_link.as_ref().map(|url| url.as_str()))
     .bind(package.has_nsfw_content)
     .bind(package.is_deprecated)
@@ -98,8 +100,8 @@ async fn insert_package(
 }
 
 async fn insert_version(
-    version: &PackageVersionV1,
-    package: &PackageV1,
+    version: PackageVersionV1,
+    package_uuid: Uuid,
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
     sqlx::query(
@@ -120,8 +122,8 @@ async fn insert_version(
     ",
     )
     .bind(&version.uuid4.as_bytes()[..])
-    .bind(&package.uuid4.as_bytes()[..])
-    .bind(version.date_created.to_string())
+    .bind(&package_uuid.as_bytes()[..])
+    .bind(&version.date_created)
     .bind(version.downloads)
     .bind(version.file_size as i64)
     .bind(version.is_active)
@@ -133,6 +135,44 @@ async fn insert_version(
     .bind(version.version_number.major as u32)
     .bind(version.version_number.minor as u32)
     .bind(version.version_number.patch as u32)
+    .execute(&mut **transaction)
+    .await?;
+
+    for dependency in version.dependencies {
+        insert_dependency(version.uuid4, dependency, transaction)
+            .await
+            .context("failed to insert dependency")?;
+    }
+
+    Ok(())
+}
+
+async fn insert_dependency(
+    version_uuid: Uuid,
+    dependency: VersionId,
+    transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+) -> Result<()> {
+    let (major, minor, path) = dependency.version_split();
+
+    sqlx::query(
+        "INSERT OR REPLACE INTO dependencies
+        (
+            dependent_id,
+            owner,
+            name,
+            major,
+            minor,
+            patch
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    ",
+    )
+    .bind(&version_uuid.as_bytes()[..])
+    .bind(dependency.owner())
+    .bind(dependency.name())
+    .bind(major)
+    .bind(minor)
+    .bind(path)
     .execute(&mut **transaction)
     .await?;
 

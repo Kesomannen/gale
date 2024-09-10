@@ -56,7 +56,7 @@ BEGIN
 END;
 
 CREATE TABLE versions (
-    id UUID PRIMARY KEY NOT NULL,
+    id UUID NOT NULL PRIMARY KEY,
     package_id UUID NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
     date_created DATETIME NOT NULL,
     downloads INTEGER NOT NULL,
@@ -68,24 +68,36 @@ CREATE TABLE versions (
     patch INTEGER NOT NULL
 );
 
+CREATE TABLE dependencies (
+    dependent_id UUID NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
+    owner TEXT NOT NULL,
+    name TEXT NOT NULL,
+    major INTEGER NOT NULL,
+    minor INTEGER NOT NULL,
+    patch INTEGER NOT NULL,
+    PRIMARY KEY (dependent_id, owner, name)
+);
+
 CREATE TABLE profiles (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     path TEXT NOT NULL,
-    game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE
+    community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE
 );
 
 CREATE TABLE profile_mods (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-    mod_id UUID NOT NULL REFERENCES versions(id) ON DELETE CASCADE,
-    enabled BOOLEAN NOT NULL
+    enabled BOOLEAN NOT NULL,
+    order_index INTEGER NOT NULL,
+    source BLOB NOT NULL
 );
 
 CREATE TABLE settings (
     zoom_level FLOAT NOT NULL DEFAULT 1.0,
     steam_executable_path TEXT,
-    steam_library_path TEXT
+    steam_library_path TEXT,
+    cache_path TEXT NOT NULL
 );
 
 CREATE TABLE misc (

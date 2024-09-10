@@ -39,6 +39,10 @@
     },
     "cli:default",
     "gale-thunderstore:allow-query-packages",
-    "gale-thunderstore:allow-query-package"
+    "gale-thunderstore:allow-query-package",
+    "gale-profile:allow-create",
+    "gale-profile:allow-delete",
+    "gale-profile:allow-rename",
+    "gale-profile:allow-query"
   ]
 }

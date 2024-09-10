@@ -1,1 +1,5 @@
-pub use crate::{state::AppState, Result, Error};
+pub use crate::{
+    error::{CmdError, CmdResult, Error, Result},
+    state::{AppState, ManagerExt},
+    ResultExt,
+};
