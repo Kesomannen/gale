@@ -24,8 +24,8 @@
 </div>
 
 <style global lang="postcss">
-	.markdown :global(*) {
-		@apply text-slate-200;
+	.markdown {
+		@apply text-slate-100;
 	}
 
 	.markdown :global(h1),
@@ -34,15 +34,15 @@
 	}
 
 	.markdown :global(h1) {
-		@apply text-white font-bold text-2xl;
+		@apply text-white font-bold text-3xl;
 	}
 
 	.markdown :global(h2) {
-		@apply text-slate-100 font-semibold text-xl;
+		@apply text-slate-100 font-semibold text-2xl;
 	}
 
 	.markdown :global(h3) {
-		@apply font-semibold text-lg pb-1 pt-2;
+		@apply font-semibold text-xl pb-1 pt-2;
 	}
 
 	.markdown :global(h4) {
@@ -58,7 +58,7 @@
 	}
 
 	.markdown :global(p) {
-		@apply my-2;
+		@apply my-3;
 	}
 
 	.markdown :global(li) {
@@ -74,11 +74,11 @@
 	}
 
 	.markdown :global(pre) {
-		@apply bg-gray-900 text-slate-300 py-1 px-3 rounded-md overflow-x-auto;
+		@apply bg-gray-900 text-slate-300 p-2 my-2 overflow-x-auto;
 	}
 
 	.markdown :global(code) {
-		@apply bg-gray-900 text-slate-300 rounded-sm px-1;
+		@apply bg-gray-900;
 	}
 
 	.markdown :global(img) {
@@ -86,11 +86,11 @@
 	}
 
 	.markdown :global(table) {
-		@apply border border-gray-900 border-collapse overflow-x-auto max-w-full;
+		@apply border-2 border-gray-950 border-collapse overflow-x-auto max-w-full;
 	}
 
 	.markdown :global(th) {
-		@apply bg-gray-900 text-slate-300 font-semibold px-2 py-1 text-left;
+		@apply bg-gray-950 font-semibold px-3 py-1 text-left;
 	}
 
 	.markdown :global(tr) {
@@ -105,7 +105,11 @@
 		@apply px-2 py-1 text-left;
 	}
 
-	.markdown :global(summary) {
-		@apply cursor-pointer;
+	.markdown :global(hr) {
+		@apply border-gray-500 my-4;
+	}
+
+	.markdown :global(blockquote) {
+		@apply border-l-4 border-gray-600 pl-3 my-3 text-slate-400;
 	}
 </style>

@@ -404,9 +404,9 @@
 
 <DependantsPopup
 	bind:this={removeDependants}
-	title="Confirm removal"
-	verb="Remove"
-	description="The following mods depend on %s and will likely not work if it is removed!"
+	title="Confirm uninstallation"
+	verb="Uninstall"
+	description="The following mods depend on %s and will likely not work if it is uninstalled!"
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();

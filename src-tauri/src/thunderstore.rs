@@ -323,7 +323,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
 
 async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
     const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
-    const INSERT_INTERVAL: usize = 500;
+    const INSERT_INTERVAL: usize = 1000;
     const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
 
     let state = app.state::<Mutex<Thunderstore>>();
@@ -338,9 +338,10 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
     let mut buffer = String::new();
     let mut byte_buffer = Vec::new();
     let mut package_buffer = IndexMap::new();
+    let mut total_packages = 0;
 
     let start_time = Instant::now();
-    let last_update = Instant::now();
+    let mut last_update = Instant::now();
 
     while let Some(chunk) = response.chunk().await? {
         byte_buffer.extend_from_slice(&chunk);
@@ -365,6 +366,7 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
                 Ok(package) => {
                     if !IGNORED_NAMES.contains(&package.name.as_str()) {
                         package_buffer.insert(package.uuid4, package);
+                        total_packages += 1;
                     }
                 }
                 Err(err) => logger::log_js_err("failed to fetch mod", &anyhow!(err), app),
@@ -373,23 +375,24 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
             buffer.replace_range(..index + 4, "");
         }
 
-        match write_directly {
-            true if package_buffer.len() >= INSERT_INTERVAL => {
-                let mut state = state.lock().unwrap();
-                state.packages.extend(package_buffer.drain(..));
-                emit_update(state.packages.len(), app);
-            }
-            false if last_update.elapsed() >= UPDATE_INTERVAL => {
-                emit_update(package_buffer.len(), app);
-            }
-            _ => {}
-        };
+        // do this in bigger chunks to not have to lock the state too often
+        if write_directly && package_buffer.len() >= INSERT_INTERVAL {
+            let mut state = state.lock().unwrap();
+            state.packages.extend(package_buffer.drain(..));
+        }
+
+        if last_update.elapsed() >= UPDATE_INTERVAL {
+            emit_update(total_packages, app);
+            last_update = Instant::now();
+        }
     }
 
     let mut state = state.lock().unwrap();
     if write_directly {
+        // add any remaining packages
         state.packages.extend(package_buffer.into_iter());
     } else {
+        // remove all packages and replace them with the new ones
         state.packages = package_buffer;
     }
 

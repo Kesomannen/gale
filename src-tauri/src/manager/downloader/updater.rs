@@ -11,6 +11,7 @@ use crate::{
         ModRef, Thunderstore,
     },
 };
+use chrono::{DateTime, Utc};
 use log::info;
 
 pub mod commands;
@@ -18,6 +19,7 @@ pub mod commands;
 pub struct AvailableUpdate<'a> {
     pub enabled: bool,
     pub index: usize,
+    pub install_time: DateTime<Utc>,
     pub package: &'a PackageListing,
     pub current: &'a PackageVersion,
     pub latest: &'a PackageVersion,
@@ -32,7 +34,8 @@ impl From<AvailableUpdate<'_>> for ModInstall {
 
         ModInstall::new(latest_mod_ref)
             .with_state(value.enabled)
-            .at(value.index)
+            .with_index(value.index)
+            .with_time(value.install_time)
     }
 }
 
@@ -45,8 +48,9 @@ impl Profile {
     ) -> Result<Option<AvailableUpdate<'a>>> {
         let index = self.index_of(uuid)?;
 
-        let (mod_ref, _, enabled) = match self.mods[index].as_remote() {
-            Some(x) => x,
+        let profile_mod = &self.mods[index];
+        let mod_ref = match profile_mod.as_remote() {
+            Some(x) => x.0,
             None => return Ok(None), // local mods can't be updated
         };
 
@@ -68,10 +72,11 @@ impl Profile {
 
         Ok(Some(AvailableUpdate {
             index,
-            enabled,
             package,
             current,
             latest,
+            enabled: profile_mod.enabled,
+            install_time: profile_mod.install_time,
         }))
     }
 }
@@ -87,7 +92,9 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
 
         profile.force_remove_mod(&mod_ref.package_uuid)?;
 
-        ModInstall::new(mod_ref).with_state(enabled).at(index)
+        ModInstall::new(mod_ref)
+            .with_state(enabled)
+            .with_index(index)
     };
 
     super::install_with_deps(

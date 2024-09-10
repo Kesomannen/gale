@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- "Uninstall disabled mods" button to Profile menu
+
+### Changed
+
+- New monospace font for markdown code blocks
+
+### Fixed
+
+- Local mods not showing in the mod list until the page is refreshed
+- The "Install date" sorting mode being affected by mod updates
+
 ## 0.8.4 (2024-09-03)
 
 ### Fixed

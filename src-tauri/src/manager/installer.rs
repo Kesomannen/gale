@@ -6,6 +6,7 @@ use crate::{
     thunderstore::{BorrowedMod, Thunderstore},
     util::{self},
 };
+use chrono::Utc;
 use itertools::Itertools;
 use log::{trace, warn};
 use std::{
@@ -133,10 +134,19 @@ pub fn try_cache_install(
 
     match path.exists() {
         true => {
-            let name = &borrowed.package.full_name;
+            let full_name = &borrowed.package.full_name;
             install(path, &profile.path)?;
 
-            let profile_mod = ProfileMod::remote_now(to_install.mod_ref.clone(), name.clone());
+            let install_time = to_install.install_time.unwrap_or(Utc::now());
+            let profile_mod = ProfileMod {
+                install_time,
+                enabled: true, // we switch it off later if needed
+                kind: super::ProfileModKind::Remote {
+                    mod_ref: to_install.mod_ref.clone(),
+                    full_name: full_name.clone(),
+                },
+            };
+
             match to_install.index {
                 Some(index) if index < profile.mods.len() => {
                     profile.mods.insert(index, profile_mod);

@@ -35,10 +35,10 @@ pub fn setup(_app: &AppHandle) -> Result<()> {
 }
 
 fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
-    ensure!(path.exists(), "file does not exist");
     ensure!(path.is_file(), "path is not a file");
 
     let file = fs::File::open(&path).fs_context("opening file", &path)?;
+    
     import_file(file, app)
 }
 

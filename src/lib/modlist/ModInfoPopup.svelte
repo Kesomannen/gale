@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Markdown from "$lib/components/Markdown.svelte";
-	import Popup from "$lib/components/Popup.svelte";
-	import type { MarkdownResponse, Mod } from "$lib/models";
-	import Icon from "@iconify/svelte";
- 	import { fetch } from "@tauri-apps/plugin-http";
+	import Markdown from '$lib/components/Markdown.svelte';
+	import Popup from '$lib/components/Popup.svelte';
+	import type { MarkdownResponse, Mod } from '$lib/models';
+	import Icon from '@iconify/svelte';
+	import { fetch } from '@tauri-apps/plugin-http';
 
 	export let open = false;
 	export let useLatest = false;
@@ -12,7 +12,7 @@
 
 	let promise: Promise<MarkdownResponse> | null = null;
 	let currentMod: Mod | null = null;
-	
+
 	export async function fetchMarkdown() {
 		if (currentMod === mod) return;
 		currentMod = mod;
@@ -28,14 +28,14 @@
 	{#await promise}
 		<Icon class="text-slate-300 text-4xl animate-spin" icon="mdi:loading" />
 	{:then value}
-		{#if value}
-      {#if value?.markdown}
-        <Markdown source={value.markdown} />
-      {:else}
-        <p class="text-red-300">No {path} found</p>
-      {/if}
+		{#if value !== null}
+			{#if value.markdown !== undefined}
+				<Markdown source={value.markdown} />
+			{:else}
+				<p class="text-red-300">No {path} found</p>
+			{/if}
 		{:else}
-			<p class="text-red-300">Failed to load {path}: error code {value?.status}</p>
+			<p class="text-red-300">Failed to load {path}</p>
 		{/if}
 	{:catch error}
 		<p class="text-red-300">Failed to load {path}: {error}</p>
