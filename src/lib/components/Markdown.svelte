@@ -4,6 +4,11 @@
 	import { gfmPlugin } from 'svelte-exmarkdown/gfm';
 	import MarkdownLink from './MarkdownLink.svelte';
 	import rehypeRaw from 'rehype-raw';
+	import 'highlight.js/styles/atom-one-dark.css';
+	import csharp from 'highlight.js/lib/languages/csharp';
+	import json from 'highlight.js/lib/languages/json';
+	import xml from 'highlight.js/lib/languages/xml';
+	import rehypeHighlight from 'rehype-highlight';
 
 	export let source: string;
 
@@ -13,6 +18,7 @@
 		gfmPlugin(),
 		denylist(['script', 'iframe', 'object', 'embed', 'base', 'meta', 'link', 'style', 'title']),
 		{ rehypePlugin: [rehypeRaw] },
+		{ rehypePlugin: [rehypeHighlight, { languages: { csharp, json, xml }, ignoreMissing: true }] },
 		{ renderer: { a: MarkdownLink } }
 	];
 
@@ -25,12 +31,12 @@
 
 <style global lang="postcss">
 	.markdown {
-		@apply text-slate-100;
+		@apply text-gray-100;
 	}
 
 	.markdown :global(h1),
 	.markdown :global(h2) {
-		@apply pt-4 pb-1 mb-3 border-b border-slate-500;
+		@apply pt-4 pb-1 mb-3 border-b border-gray-500;
 	}
 
 	.markdown :global(h1) {
@@ -38,7 +44,7 @@
 	}
 
 	.markdown :global(h2) {
-		@apply text-slate-100 font-semibold text-2xl;
+		@apply text-gray-100 font-semibold text-2xl;
 	}
 
 	.markdown :global(h3) {
@@ -74,7 +80,11 @@
 	}
 
 	.markdown :global(pre) {
-		@apply bg-gray-900 text-slate-300 p-2 my-2 overflow-x-auto;
+		@apply bg-gray-900 p-4 text-gray-300 my-2 overflow-x-auto;
+	}
+
+	.markdown :global(pre .hljs) {
+		@apply p-0;
 	}
 
 	.markdown :global(code) {
@@ -110,6 +120,10 @@
 	}
 
 	.markdown :global(blockquote) {
-		@apply border-l-4 border-gray-600 pl-3 my-3 text-slate-400;
+		@apply border-l-4 border-gray-600 pl-3 my-3 text-gray-400;
+	}
+
+	.markdown :global(summary) {
+		@apply cursor-pointer;
 	}
 </style>

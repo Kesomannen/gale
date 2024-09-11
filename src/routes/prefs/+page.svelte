@@ -56,9 +56,8 @@
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}
 		>
-			Whether to automatically start fetching mods when a game is selected and every 15 minutes
-			thereafter. This will ensure the mod list is up-to-date, but can be disabled to save
-			bandwidth.
+			Whether to automatically fetch mods every 15 minutes. This will ensure the mod list is
+			up-to-date, but can be disabled to save bandwidth.
 			<br />
 			To manually trigger a fetch, go to <b>File > Fetch mods</b>.
 		</TogglePref>

@@ -17,7 +17,7 @@
 	$: type = file.type;
 	$: isSelected = selectedSection && file.type === 'ok' && file.sections.includes(selectedSection);
 
-	$: textColor = type === 'ok' ? 'slate-200' : type === 'err' ? 'red-500' : 'slate-400';
+	$: textColor = type === 'ok' ? 'slate-200' : type === 'err' ? 'red-400' : 'slate-400';
 	$: icon = type === 'ok' ? 'mdi:chevron-down' : type === 'err' ? 'mdi:error' : 'mdi:help';
 
 	$: shownSections =

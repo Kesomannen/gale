@@ -5,10 +5,14 @@
 ### Added
 
 - "Uninstall disabled mods" button to Profile menu
+- Code highlighting to markdown code blocks
 
 ### Changed
 
 - New monospace font for markdown code blocks
+- Enable gzip for API requests, which can significantly speed up mod fetching
+- The mod index is now always fetched on startup, even if the automatic fetch setting is disabled
+- Minor UI changes
 
 ### Fixed
 
