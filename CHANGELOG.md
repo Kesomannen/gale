@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.5 (2024-09-11)
 
 ### Added
 
