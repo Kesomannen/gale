@@ -178,7 +178,7 @@
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem on:click={() => setAllModsState(true)}>{t('Enable all mods')}</MenubarItem>
 				<MenubarItem on:click={() => setAllModsState(false)}>{t('Disable all mods')}</MenubarItem>
-				<MenubarItem on:click={uninstallDisabledMods}>Uninstall disabled mods</MenubarItem>
+				<MenubarItem on:click={uninstallDisabledMods}>{t('Uninstall disabled mods')}</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
