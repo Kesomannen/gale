@@ -18,7 +18,9 @@
 		gfmPlugin(),
 		denylist(['script', 'iframe', 'object', 'embed', 'base', 'meta', 'link', 'style', 'title']),
 		{ rehypePlugin: [rehypeRaw] },
-		{ rehypePlugin: [rehypeHighlight, { languages: { csharp, json, xml }, ignoreMissing: true }] },
+		{
+			rehypePlugin: [rehypeHighlight, { languages: { csharp, json, xml }, ignoreMissing: true }]
+		},
 		{ renderer: { a: MarkdownLink } }
 	];
 
