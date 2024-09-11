@@ -22,6 +22,7 @@ use crate::{
 };
 
 use super::{commands::save, installer, ModManager, ModRef, Profile};
+use chrono::{DateTime, Utc};
 use core::str;
 use itertools::Itertools;
 use uuid::Uuid;
@@ -124,6 +125,7 @@ pub struct ModInstall {
     pub mod_ref: ModRef,
     pub enabled: bool,
     pub index: Option<usize>,
+    pub install_time: Option<DateTime<Utc>>,
 }
 
 impl ModInstall {
@@ -132,6 +134,7 @@ impl ModInstall {
             mod_ref,
             enabled: true,
             index: None,
+            install_time: None,
         }
     }
 
@@ -140,8 +143,13 @@ impl ModInstall {
         self
     }
 
-    pub fn at(mut self, index: usize) -> Self {
+    pub fn with_index(mut self, index: usize) -> Self {
         self.index = Some(index);
+        self
+    }
+
+    pub fn with_time(mut self, date: DateTime<Utc>) -> Self {
+        self.install_time = Some(date);
         self
     }
 

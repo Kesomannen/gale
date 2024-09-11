@@ -148,7 +148,7 @@
 			{/each}
 
 			<DropdownMenu.Item
-				class="flex items-center justify-center py-1 cursor-default rounded-md font-semibold text-white bg-green-600/60 hover:bg-green-600"
+				class="flex items-center justify-center py-1 cursor-default rounded text-white bg-green-700 hover:bg-green-600"
 				on:click={() => (newProfilePopupOpen = true)}
 			>
 				<Icon icon="mdi:plus" class="text-xl mr-1" />

@@ -387,6 +387,31 @@ pub fn set_all_mods_state(
 }
 
 #[tauri::command]
+pub fn remove_disabled_mods(
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
+) -> Result<usize> {
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let profile = manager.active_profile_mut();
+    let uuids = profile
+        .mods
+        .iter()
+        .filter(|profile_mod| !profile_mod.enabled)
+        .map(|profile_mod| *profile_mod.uuid())
+        .collect_vec();
+
+    for uuid in &uuids {
+        profile.force_remove_mod(uuid)?;
+    }
+
+    save(&manager, &prefs)?;
+
+    Ok(uuids.len())
+}
+
+#[tauri::command]
 pub fn force_toggle_mods(
     uuids: Vec<Uuid>,
     manager: StateMutex<ModManager>,

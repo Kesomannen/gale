@@ -405,9 +405,9 @@
 
 <DependantsPopup
 	bind:this={removeDependants}
-	title="{t("Confirm removal")}"
-	verb="{t("Remove")}"
-	description="{t("Confirm removal description")}"
+	title="{t("Confirm uninstallation")}"
+	verb="{t("Uninstall")}"
+	description="{t("Confirm uninstallation description")}"
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();

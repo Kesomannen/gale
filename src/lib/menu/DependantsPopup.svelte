@@ -26,7 +26,7 @@
 
 	async function executeAll() {
 		if (!mod) return;
-		await execute(dependants.map((d) => d.uuid).concat(mod.uuid));
+		await execute(dependants.map(({ uuid }) => uuid).concat(mod.uuid));
 	}
 
 	async function executeOne() {
@@ -42,11 +42,7 @@
 	}
 </script>
 
-<ConfirmPopup
-	{title}
-	{onCancel}
-	bind:open
->
+<ConfirmPopup {title} {onCancel} bind:open>
 	{description.replaceAll('%s', mod?.name ?? t("Unknown"))}
 
 	<ul class="mt-1">
@@ -54,7 +50,7 @@
 			<li>- {dependant.name}</li>
 		{/each}
 	</ul>
-	
+
 	<svelte:fragment slot="buttons">
 		<BigButton on:click={executeOne} color="red" outline={true}>
 			{T('Dependants action only', {"verb": verb, "name": mod?.name})}

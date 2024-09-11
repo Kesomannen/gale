@@ -11,13 +11,11 @@
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import ImportProfilePopup from '$lib/import/ImportProfilePopup.svelte';
 	import ExportCodePopup from '$lib/import/ExportCodePopup.svelte';
-	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-	import { open } from '@tauri-apps/plugin-dialog';
+	import { confirm, open } from '@tauri-apps/plugin-dialog';
 	import type { ImportData } from '$lib/models';
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import NewProfilePopup from './NewProfilePopup.svelte';
-	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import { capitalize } from '$lib/util';
@@ -29,7 +27,6 @@
 
 	let importR2Open = false;
 	let newProfileOpen = false;
-	let exportPackOpen = false;
 	let exportCodePopup: ExportCodePopup;
 
 	let importProfileOpen = false;
@@ -50,6 +47,13 @@
 
 		if (response === null) return;
 		invokeCommand('import_local_mod', { path: response.path });
+
+		activeProfile.update((profile) => {
+			if (profile === null) return null;
+
+			profile.modCount++;
+			return profile;
+		});
 	}
 
 	async function importFile() {
@@ -76,7 +80,7 @@
 
 	async function setAllModsState(enable: boolean) {
 		await invokeCommand('set_all_mods_state', { enable });
-		activeProfile.update((p) => p);
+		activeProfile.update((profile) => profile);
 	}
 
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
@@ -104,6 +108,19 @@
 		await refreshProfiles();
 		profileOperationInProgress = false;
 		profileOperationOpen = false;
+	}
+
+	async function uninstallDisabledMods() {
+		let confirmed = await confirm('Are you sure you want to uninstall all disabled mods?');
+		if (!confirmed) return;
+
+		let removed = await invokeCommand<number>('remove_disabled_mods');
+		activeProfile.update((profile) => {
+			if (profile === null) return null;
+
+			profile.modCount -= removed;
+			return profile;
+		});
 	}
 </script>
 
@@ -161,6 +178,7 @@
 				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
 				<MenubarItem on:click={() => setAllModsState(true)}>{t('Enable all mods')}</MenubarItem>
 				<MenubarItem on:click={() => setAllModsState(false)}>{t('Disable all mods')}</MenubarItem>
+				<MenubarItem on:click={uninstallDisabledMods}>Uninstall disabled mods</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>

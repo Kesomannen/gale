@@ -126,10 +126,6 @@ impl ProfileMod {
         Self::now(ProfileModKind::Local(Box::new(data)))
     }
 
-    fn remote_now(mod_ref: ModRef, full_name: String) -> Self {
-        Self::now(ProfileModKind::Remote { mod_ref, full_name })
-    }
-
     pub fn uuid(&self) -> &Uuid {
         self.kind.uuid()
     }
@@ -170,7 +166,7 @@ impl ProfileMod {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum ProfileModKind {
-    Local(Box<LocalMod>),
+    Local(Box<LocalMod>), // box to decrease size of enum
     #[serde(rename_all = "camelCase")]
     Remote {
         #[serde(default)] // for backwards compatibility
@@ -649,7 +645,7 @@ impl Profile {
         }
     }
 
-    fn scan_mod<'a, F>(&'a self, profile_mod: &'a ProfileModKind, scan_dir: F) -> Result<()>
+    fn scan_mod<F>(&self, profile_mod: &ProfileModKind, scan_dir: F) -> Result<()>
     where
         F: Fn(&Path) -> Result<()>,
     {
