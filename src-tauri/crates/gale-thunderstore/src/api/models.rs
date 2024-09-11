@@ -213,7 +213,7 @@ pub struct RenderMarkdownResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MarkdownResponse {
-    pub markdown: String,
+    pub markdown: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

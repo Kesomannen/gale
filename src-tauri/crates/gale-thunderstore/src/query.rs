@@ -1,9 +1,11 @@
-use crate::api::{self, ResultExt, VersionId};
+use crate::api::{self, VersionId};
 use anyhow::Context;
+use chrono::NaiveDateTime;
+use futures_util::join;
 use gale_core::prelude::*;
 use log::trace;
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
+use sqlx::{prelude::FromRow, types::Uuid};
 use std::time::Instant;
 
 #[derive(Deserialize)]
@@ -50,19 +52,21 @@ pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Pac
             v.patch
         FROM
             packages p
-            JOIN packages_fts fts ON
-                fts.package_id = p.id
             JOIN versions v ON
                 v.id = p.latest_version_id
         WHERE
             p.community_id = ? AND
-            fts.packages_fts MATCH ?
+            (
+                p.name LIKE CONCAT('%', ?, '%') OR
+                p.description LIKE CONCAT('%', ?, '%')
+            )
         ORDER BY
             p.is_pinned DESC,
-            bm25(packages_fts, 0, 10, 2, 5) ASC
+            p.rating_score DESC
         LIMIT ?
     "#,
         args.community_id,
+        args.search_term,
         args.search_term,
         args.max_results
     )
@@ -79,48 +83,75 @@ pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Pac
 pub struct PackageInfo {
     name: String,
     owner: String,
+    downloads: i64,
+    rating_score: i64,
     website_url: Option<String>,
     donation_url: Option<String>,
     readme: Option<String>,
     changelog: Option<String>,
     versions: Vec<VersionInfo>,
+    dependencies: Vec<DependencyInfo>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct VersionInfo {
+    id: Uuid,
     major: i64,
     minor: i64,
     patch: i64,
     downloads: i64,
     file_size: i64,
+    date_created: NaiveDateTime,
+    #[serde(skip)]
+    website_url: Option<String>,
 }
 
-pub async fn query_package(uuid: Uuid, state: &AppState) -> Result<PackageInfo> {
+#[derive(Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct DependencyInfo {
+    name: String,
+    owner: String,
+    major: i64,
+    minor: i64,
+    patch: i64,
+}
+
+pub async fn query_package(package_uuid: Uuid, state: &AppState) -> Result<PackageInfo> {
     let record = sqlx::query!(
         "SELECT
             name,
             owner,
-            donation_link
+            donation_link,
+            downloads,
+            rating_score
         FROM 
             packages
         WHERE 
             id = ?",
-        uuid
+        package_uuid
     )
     .fetch_one(&state.db)
     .await?;
 
-    let (name, owner, donation_link) = (record.name, record.owner, record.donation_link);
+    let (name, owner, downloads, rating_score, donation_url) = (
+        record.name,
+        record.owner,
+        record.downloads,
+        record.rating_score,
+        record.donation_link,
+    );
 
-    let versions = sqlx::query_as!(
-        VersionInfo,
+    let versions = sqlx::query_as::<_, VersionInfo>(
         "SELECT
+            id,
             major,
             minor,
             patch,
             downloads,
-            file_size
+            file_size,
+            date_created,
+            website_url
         FROM
             versions
         WHERE
@@ -129,8 +160,8 @@ pub async fn query_package(uuid: Uuid, state: &AppState) -> Result<PackageInfo> 
             major DESC,
             minor DESC,
             patch DESC",
-        uuid
     )
+    .bind(package_uuid)
     .fetch_all(&state.db)
     .await?;
 
@@ -138,26 +169,44 @@ pub async fn query_package(uuid: Uuid, state: &AppState) -> Result<PackageInfo> 
         .first()
         .expect("package should have at least one version");
 
+    let dependencies = sqlx::query_as!(
+        DependencyInfo,
+        "SELECT
+            name,
+            owner,
+            major,
+            minor,
+            patch
+        FROM
+            dependencies
+        WHERE
+            dependent_id = ?",
+        latest.id
+    )
+    .fetch_all(&state.db)
+    .await?;
+
     let id: VersionId = (&owner, &name, latest.major, latest.minor, latest.patch).into();
 
-    let readme = api::get_readme(&state.reqwest, &id)
-        .await
-        .not_found_ok()
-        .context("failed to fetch readme")?;
+    let (readme, changelog) = join!(
+        api::get_readme(&state.reqwest, &id),
+        api::get_changelog(&state.reqwest, &id)
+    );
 
-    let changelog = api::get_changelog(&state.reqwest, &id)
-        .await
-        .not_found_ok()
-        .context("failed to fetch changelog")?;
+    let readme = readme.context("failed to fetch readme")?;
+    let changelog = changelog.context("failed to fetch changelog")?;
 
     let package = PackageInfo {
         name,
         owner,
-        website_url: None,
-        donation_url: donation_link,
+        donation_url,
+        website_url: latest.website_url.clone(),
         readme,
         changelog,
         versions,
+        dependencies,
+        downloads,
+        rating_score,
     };
 
     Ok(package)

@@ -55,7 +55,7 @@ impl VersionId {
     }
 
     pub fn path(&self) -> impl Display + '_ {
-        VersionIdPath::new(self)
+        VersionIdPath(self)
     }
 
     pub fn into_string(self) -> String {
@@ -111,7 +111,7 @@ impl Display for VersionId {
 
 impl Debug for VersionId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "VersionId({})", self.repr)
+        write!(f, "VersionId({:?})", self.repr)
     }
 }
 
@@ -149,15 +149,14 @@ impl FromStr for VersionId {
     }
 }
 
-impl From<(&str, &str, &str)> for VersionId {
-    fn from((namespace, name, version): (&str, &str, &str)) -> Self {
-        Self::new(namespace, name, version)
-    }
-}
-
-impl From<(&str, &str, &semver::Version)> for VersionId {
-    fn from((namespace, name, version): (&str, &str, &semver::Version)) -> Self {
-        Self::new(namespace, name, &version.to_string())
+impl<T, U, V> From<(T, U, V)> for VersionId
+where
+    T: AsRef<str>,
+    U: AsRef<str>,
+    V: AsRef<str>,
+{
+    fn from((namespace, name, version): (T, U, V)) -> Self {
+        Self::new(namespace.as_ref(), name.as_ref(), version.as_ref())
     }
 }
 
@@ -175,24 +174,16 @@ where
     }
 }
 
-struct VersionIdPath<'a> {
-    id: &'a VersionId,
-}
-
-impl<'a> VersionIdPath<'a> {
-    pub fn new(id: &'a VersionId) -> Self {
-        Self { id }
-    }
-}
+struct VersionIdPath<'a>(&'a VersionId);
 
 impl<'a> Display for VersionIdPath<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}/{}/{}",
-            self.id.owner(),
-            self.id.name(),
-            self.id.version()
+            self.0.owner(),
+            self.0.name(),
+            self.0.version()
         )
     }
 }
@@ -220,7 +211,7 @@ impl PackageId {
     }
 
     pub fn path(&self) -> impl Display + '_ {
-        PackageIdPath::new(self)
+        PackageIdPath(self)
     }
 
     pub fn into_string(self) -> String {
@@ -276,7 +267,7 @@ impl Display for PackageId {
 
 impl Debug for PackageId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PackageId({})", self.repr)
+        write!(f, "PackageId({:?})", self.repr)
     }
 }
 
@@ -316,32 +307,16 @@ impl From<VersionId> for PackageId {
 
         let mut repr = id.into_string();
         repr.truncate(version_start - 1);
+        repr.shrink_to_fit();
 
         Self { repr, name_start }
     }
 }
 
-struct PackageIdPath<'a> {
-    id: &'a PackageId,
-}
-
-impl<'a> PackageIdPath<'a> {
-    pub fn new(id: &'a PackageId) -> Self {
-        Self { id }
-    }
-}
+struct PackageIdPath<'a>(&'a PackageId);
 
 impl<'a> Display for PackageIdPath<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}/{}", self.id.namespace(), self.id.name(),)
-    }
-}
-
-impl From<&VersionId> for PackageId {
-    fn from(id: &VersionId) -> Self {
-        Self {
-            repr: id.repr[..id.version_start].to_string(),
-            name_start: id.name_start,
-        }
+        write!(f, "{}/{}", self.0.namespace(), self.0.name(),)
     }
 }

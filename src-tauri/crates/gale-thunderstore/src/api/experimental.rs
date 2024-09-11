@@ -5,7 +5,7 @@ fn url(tail: impl Display) -> String {
     format!("{}/api/experimental/{}", THUNDERSTORE_URL, tail)
 }
 
-pub async fn get_changelog(client: &reqwest::Client, id: &VersionId) -> Result<String> {
+pub async fn get_changelog(client: &reqwest::Client, id: &VersionId) -> Result<Option<String>> {
     let url = url(format!("package/{}/changelog", id.path()));
 
     let response = client
@@ -19,7 +19,7 @@ pub async fn get_changelog(client: &reqwest::Client, id: &VersionId) -> Result<S
     Ok(response.markdown)
 }
 
-pub async fn get_readme(client: &reqwest::Client, id: &VersionId) -> Result<String> {
+pub async fn get_readme(client: &reqwest::Client, id: &VersionId) -> Result<Option<String>> {
     let url = url(format!("package/{}/readme", id.path()));
 
     let response = client
