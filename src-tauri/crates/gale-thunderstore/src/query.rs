@@ -52,21 +52,19 @@ pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Pac
             v.patch
         FROM
             packages p
+            JOIN packages_fts fts ON
+                fts.package_id = p.id
             JOIN versions v ON
                 v.id = p.latest_version_id
         WHERE
             p.community_id = ? AND
-            (
-                p.name LIKE CONCAT('%', ?, '%') OR
-                p.description LIKE CONCAT('%', ?, '%')
-            )
+            fts.packages_fts MATCH ?
         ORDER BY
             p.is_pinned DESC,
             p.rating_score DESC
         LIMIT ?
     "#,
         args.community_id,
-        args.search_term,
         args.search_term,
         args.max_results
     )

@@ -1,6 +1,8 @@
+use crate::scan_mod;
 use anyhow::{anyhow, ensure};
 use gale_core::prelude::*;
-use std::path::Path;
+use std::{ffi::OsString, path::Path};
+use walkdir::WalkDir;
 
 pub async fn create(name: &str, path: &Path, community_id: i64, state: &AppState) -> Result<i64> {
     ensure!(!path.exists(), "profile path already exists");
@@ -44,6 +46,58 @@ pub async fn rename(id: i64, name: &str, state: &AppState) -> Result<()> {
     sqlx::query!("UPDATE profiles SET name = ? WHERE id = ?", name, id)
         .execute(&state.db)
         .await?;
+
+    Ok(())
+}
+
+pub async fn uninstall(profile_mod_id: i64, state: &AppState) -> Result<()> {
+    for path in scan_mod(profile_mod_id, state).await? {
+        std::fs::remove_dir_all(path)?;
+    }
+
+    Ok(())
+}
+
+pub async fn toggle(profile_mod_id: i64, state: &AppState) -> Result<()> {
+    let old_state = sqlx::query!(
+        "SELECT enabled FROM profile_mods WHERE id = ?",
+        profile_mod_id
+    )
+    .fetch_one(&state.db)
+    .await?
+    .enabled;
+
+    let new_state = !old_state;
+
+    for path in scan_mod(profile_mod_id, state).await? {
+        let files = WalkDir::new(path)
+            .into_iter()
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.file_type().is_file());
+
+        for file in files {
+            let path = file.path();
+            if new_state {
+                if let Some(ext) = path.extension() {
+                    if ext == "old" {
+                        std::fs::rename(path, path.with_extension(""))?;
+                    }
+                }
+            } else {
+                let mut new = path.to_path_buf();
+                new.add_extension("old");
+                std::fs::rename(path, &new)?;
+            }
+        }
+    }
+
+    sqlx::query!(
+        "UPDATE profile_mods SET enabled = ? WHERE id = ?",
+        new_state,
+        profile_mod_id
+    )
+    .execute(&state.db)
+    .await?;
 
     Ok(())
 }

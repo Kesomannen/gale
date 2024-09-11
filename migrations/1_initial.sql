@@ -28,7 +28,7 @@ CREATE TABLE packages (
 );
 
 CREATE VIRTUAL TABLE packages_fts
-USING fts5(package_id, name, description, owner);
+USING fts5(package_id, name, description, owner, tokenize = "trigram");
 
 CREATE TRIGGER IF NOT EXISTS insert_package_fts 
     AFTER INSERT ON packages

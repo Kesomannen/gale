@@ -323,6 +323,48 @@
           ]
         },
         {
+          "description": "allow-force-toggle -> Enables the force_toggle command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-force-toggle"
+          ]
+        },
+        {
+          "description": "deny-force-toggle -> Denies the force_toggle command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-force-toggle"
+          ]
+        },
+        {
+          "description": "allow-force-uninstall -> Enables the force_uninstall command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-force-uninstall"
+          ]
+        },
+        {
+          "description": "deny-force-uninstall -> Denies the force_uninstall command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-force-uninstall"
+          ]
+        },
+        {
+          "description": "allow-install-from-thunderstore -> Enables the install_from_thunderstore command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-install-from-thunderstore"
+          ]
+        },
+        {
+          "description": "deny-install-from-thunderstore -> Denies the install_from_thunderstore command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-install-from-thunderstore"
+          ]
+        },
+        {
           "description": "allow-query -> Enables the query command without any pre-configured scope.",
           "type": "string",
           "enum": [

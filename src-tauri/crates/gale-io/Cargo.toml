@@ -1,6 +1,6 @@
 [package]
-name = "gale-profile"
-links = "gale-profile"
+name = "gale-io"
+links = "gale-io"
 version = "2.0.0-alpha.1"
 edition = "2021"
 
@@ -10,6 +10,7 @@ tauri = { version = "2.0.0-rc", features = ["unstable"] }
 gale-core = { path = "../gale-core" }
 gale-thunderstore = { path = "../gale-thunderstore" }
 gale-install = { path = "../gale-install" }
+gale-profile = { path = "../gale-profile" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

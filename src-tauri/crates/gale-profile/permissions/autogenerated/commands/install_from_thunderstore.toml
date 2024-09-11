@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-install-from-thunderstore"
+description = "Enables the install_from_thunderstore command without any pre-configured scope."
+commands.allow = ["install_from_thunderstore"]
+
+[[permission]]
+identifier = "deny-install-from-thunderstore"
+description = "Denies the install_from_thunderstore command without any pre-configured scope."
+commands.deny = ["install_from_thunderstore"]

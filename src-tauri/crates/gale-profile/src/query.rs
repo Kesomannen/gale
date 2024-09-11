@@ -34,7 +34,7 @@ pub enum ProfileModKind {
 
 pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
     let (name, path, community_id, community_slug) = sqlx::query!(
-        "SELECT 
+        "SELECT
             p.name,
             p.path,
             c.id,
@@ -86,7 +86,7 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
                     href,
                 )
             }
-            ProfileModSource::Local { id } => todo!(),
+            ProfileModSource::Local { id: _ } => todo!(),
         };
 
         mods.push(ProfileModInfo {

@@ -22,7 +22,7 @@ pub async fn download(
     client: &reqwest::Client,
     id: &VersionId,
 ) -> Result<impl Stream<Item = Result<bytes::Bytes>>> {
-    let url = format!("{}/package/download/{}", THUNDERSTORE_URL, id.path());
+    let url = format!("{}/package/download/{}/", THUNDERSTORE_URL, id.path());
 
     Ok(client
         .get(&url)

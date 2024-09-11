@@ -6,8 +6,9 @@ use tauri::{
 };
 
 pub mod error;
-pub mod prelude;
+pub mod event;
 pub mod state;
+pub mod util;
 
 pub trait ResultExt<T, E> {
     fn map_into<U, V>(self) -> Result<U, V>
@@ -38,4 +39,14 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
         })
         .invoke_handler(generate_handler![])
         .build()
+}
+
+pub mod prelude {
+    pub use crate::{
+        error::{CmdError, CmdResult, Error, Result},
+        event::LoadingBar,
+        state::{AppState, ManagerExt},
+        util::PathExt,
+        ResultExt,
+    };
 }

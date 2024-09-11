@@ -1886,8 +1886,10 @@ dependencies = [
  "log",
  "reqwest",
  "serde",
+ "serde_json",
  "sqlx",
  "tauri",
+ "uuid",
 ]
 
 [[package]]
@@ -1908,12 +1910,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "gale-profile"
+name = "gale-io"
 version = "2.0.0-alpha.1"
 dependencies = [
  "anyhow",
  "futures-util",
  "gale-core",
+ "gale-install",
+ "gale-profile",
  "gale-thunderstore",
  "log",
  "serde",
@@ -1921,6 +1925,27 @@ dependencies = [
  "sqlx",
  "tauri",
  "tauri-plugin",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
+name = "gale-profile"
+version = "2.0.0-alpha.1"
+dependencies = [
+ "anyhow",
+ "futures-util",
+ "gale-core",
+ "gale-install",
+ "gale-thunderstore",
+ "log",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tauri",
+ "tauri-plugin",
+ "uuid",
+ "walkdir",
 ]
 
 [[package]]

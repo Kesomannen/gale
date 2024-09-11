@@ -38,7 +38,7 @@
 			args: {
 				searchTerm,
 				maxResults: 10,
-				communityId: 1
+				communityId: 2
 			}
 		});
 

@@ -6,7 +6,11 @@ use gale_thunderstore::api::VersionId;
 use sqlx::types::Uuid;
 use std::{io::Cursor, path::Path};
 
-pub async fn install(version_uuid: Uuid, profile_path: &Path, state: &AppState) -> Result<()> {
+pub async fn install(
+    version_uuid: Uuid,
+    profile_path: &Path,
+    state: &AppState,
+) -> Result<VersionId> {
     let version = sqlx::query!(
         "SELECT
             v.major,
@@ -52,7 +56,7 @@ pub async fn install(version_uuid: Uuid, profile_path: &Path, state: &AppState) 
 
     common::install(&cache_path, profile_path).context("failed to install package")?;
 
-    Ok(())
+    Ok(id)
 }
 
 async fn download(id: &VersionId, state: &AppState) -> Result<Vec<u8>> {

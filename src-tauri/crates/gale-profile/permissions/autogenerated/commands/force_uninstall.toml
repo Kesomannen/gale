@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-force-uninstall"
+description = "Enables the force_uninstall command without any pre-configured scope."
+commands.allow = ["force_uninstall"]
+
+[[permission]]
+identifier = "deny-force-uninstall"
+description = "Denies the force_uninstall command without any pre-configured scope."
+commands.deny = ["force_uninstall"]

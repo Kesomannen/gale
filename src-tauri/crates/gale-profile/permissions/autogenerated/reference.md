@@ -63,6 +63,84 @@ Denies the delete command without any pre-configured scope.
 <tr>
 <td>
 
+`gale-profile:allow-force-toggle`
+
+</td>
+<td>
+
+Enables the force_toggle command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-force-toggle`
+
+</td>
+<td>
+
+Denies the force_toggle command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:allow-force-uninstall`
+
+</td>
+<td>
+
+Enables the force_uninstall command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-force-uninstall`
+
+</td>
+<td>
+
+Denies the force_uninstall command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:allow-install-from-thunderstore`
+
+</td>
+<td>
+
+Enables the install_from_thunderstore command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-install-from-thunderstore`
+
+</td>
+<td>
+
+Denies the install_from_thunderstore command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `gale-profile:allow-query`
 
 </td>
