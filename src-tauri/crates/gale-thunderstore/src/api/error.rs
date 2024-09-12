@@ -29,18 +29,3 @@ impl ResponseExt for reqwest::Response {
         }
     }
 }
-
-pub trait ResultExt<T> {
-    /// Maps `NotFound` errors to `Ok(None)`
-    fn not_found_ok(self) -> Result<Option<T>>;
-}
-
-impl<T> ResultExt<T> for Result<T> {
-    fn not_found_ok(self) -> Result<Option<T>> {
-        match self {
-            Ok(value) => Ok(Some(value)),
-            Err(Error::NotFound) => Ok(None),
-            Err(err) => Err(err),
-        }
-    }
-}

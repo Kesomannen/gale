@@ -1,10 +1,15 @@
 use crate::scan_mod;
 use anyhow::{anyhow, ensure};
 use gale_core::prelude::*;
-use std::{ffi::OsString, path::Path};
+use std::path::Path;
 use walkdir::WalkDir;
 
-pub async fn create(name: &str, path: &Path, community_id: i64, state: &AppState) -> Result<i64> {
+pub async fn create_profile(
+    name: &str,
+    path: &Path,
+    community_id: i64,
+    state: &AppState,
+) -> Result<i64> {
     ensure!(!path.exists(), "profile path already exists");
 
     let path_str = path
@@ -26,7 +31,7 @@ pub async fn create(name: &str, path: &Path, community_id: i64, state: &AppState
     Ok(id)
 }
 
-pub async fn delete(id: i64, state: &AppState) -> Result<()> {
+pub async fn delete_profile(id: i64, state: &AppState) -> Result<()> {
     let path = sqlx::query!("SELECT path FROM profiles WHERE id = ?", id)
         .fetch_optional(&state.db)
         .await?
@@ -42,7 +47,7 @@ pub async fn delete(id: i64, state: &AppState) -> Result<()> {
     Ok(())
 }
 
-pub async fn rename(id: i64, name: &str, state: &AppState) -> Result<()> {
+pub async fn rename_profile(id: i64, name: &str, state: &AppState) -> Result<()> {
     sqlx::query!("UPDATE profiles SET name = ? WHERE id = ?", name, id)
         .execute(&state.db)
         .await?;
@@ -50,26 +55,23 @@ pub async fn rename(id: i64, name: &str, state: &AppState) -> Result<()> {
     Ok(())
 }
 
-pub async fn uninstall(profile_mod_id: i64, state: &AppState) -> Result<()> {
-    for path in scan_mod(profile_mod_id, state).await? {
+pub async fn uninstall_mod(id: i64, state: &AppState) -> Result<()> {
+    for path in scan_mod(id, state).await? {
         std::fs::remove_dir_all(path)?;
     }
 
     Ok(())
 }
 
-pub async fn toggle(profile_mod_id: i64, state: &AppState) -> Result<()> {
-    let old_state = sqlx::query!(
-        "SELECT enabled FROM profile_mods WHERE id = ?",
-        profile_mod_id
-    )
-    .fetch_one(&state.db)
-    .await?
-    .enabled;
+pub async fn toggle_mod(id: i64, state: &AppState) -> Result<()> {
+    let old_state = sqlx::query!("SELECT enabled FROM profile_mods WHERE id = ?", id)
+        .fetch_one(&state.db)
+        .await?
+        .enabled;
 
     let new_state = !old_state;
 
-    for path in scan_mod(profile_mod_id, state).await? {
+    for path in scan_mod(id, state).await? {
         let files = WalkDir::new(path)
             .into_iter()
             .filter_map(|entry| entry.ok())
@@ -94,7 +96,7 @@ pub async fn toggle(profile_mod_id: i64, state: &AppState) -> Result<()> {
     sqlx::query!(
         "UPDATE profile_mods SET enabled = ? WHERE id = ?",
         new_state,
-        profile_mod_id
+        id
     )
     .execute(&state.db)
     .await?;

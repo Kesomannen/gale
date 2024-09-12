@@ -18,7 +18,7 @@ pub async fn create(
 ) -> CmdResult<i64> {
     let _ = LoadingBar::indeterminate("Creating profile", &app);
 
-    let id = crate::actions::create(&name, &path, community_id, &state).await?;
+    let id = crate::actions::create_profile(&name, &path, community_id, &state).await?;
 
     Ok(id)
 }
@@ -27,7 +27,7 @@ pub async fn create(
 pub async fn delete(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
     let _ = LoadingBar::indeterminate("Deleting profile", &app);
 
-    crate::actions::delete(id, &state).await?;
+    crate::actions::delete_profile(id, &state).await?;
 
     Ok(())
 }
@@ -41,7 +41,7 @@ pub async fn rename(
 ) -> CmdResult<()> {
     let _ = LoadingBar::indeterminate("Renaming profile", &app);
 
-    crate::actions::rename(id, &name, &state).await?;
+    crate::actions::rename_profile(id, &name, &state).await?;
 
     emit_update(id, &state, &app).await?;
 
@@ -49,23 +49,15 @@ pub async fn rename(
 }
 
 #[tauri::command]
-pub async fn force_uninstall(
-    profile_mod_id: i64,
-    state: State<'_, AppState>,
-    app: AppHandle,
-) -> CmdResult<()> {
-    crate::actions::uninstall(profile_mod_id, &state).await?;
+pub async fn force_uninstall(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
+    crate::actions::uninstall_mod(profile_mod_id, &state).await?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn force_toggle(
-    profile_mod_id: i64,
-    state: State<'_, AppState>,
-    app: AppHandle,
-) -> CmdResult<()> {
-    crate::actions::toggle(profile_mod_id, &state).await?;
+pub async fn force_toggle(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
+    crate::actions::toggle_mod(profile_mod_id, &state).await?;
 
     Ok(())
 }

@@ -8,7 +8,7 @@ mod models;
 pub use models::*;
 
 mod error;
-pub use error::{Error, Result, ResultExt};
+pub use error::{Error, Result};
 
 mod experimental;
 pub use experimental::*;
