@@ -333,7 +333,8 @@
 
 		<details class="mt-1">
 			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
-			<Markdown class="px-4 mt-1 rounded-lg bg-gray-900" source={readme} />
+			<Markdown class="px-4 mt-1" source={readme} />
+			<div class="h-[2px] bg-gray-500 mt-4" />
 		</details>
 	</FormField>
 
@@ -355,7 +356,8 @@
 
 		<details class="mt-1">
 			<summary class="text-sm text-slate-300 cursor-pointer">{t("Preview")}</summary>
-			<Markdown class="px-4 mt-1 bg-gray-900 rounded-lg" source={changelog} />
+			<Markdown class="px-4 mt-1" source={changelog} />
+			<div class="h-[2px] bg-gray-500 mt-4" />
 		</details>
 	</FormField>
 

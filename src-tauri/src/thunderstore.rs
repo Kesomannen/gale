@@ -278,41 +278,39 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     loop {
         let fetch_automatically = prefs.lock().unwrap().fetch_mods_automatically();
 
-        if fetch_automatically {
-            let is_fetching = {
-                let mut thunderstore = state.lock().unwrap();
-                let is_fetching = thunderstore.is_fetching;
+        if !fetch_automatically && !is_first {
+            break;
+        };
 
-                if !is_fetching {
-                    thunderstore.is_fetching = true;
-                }
+        let is_fetching = {
+            let mut thunderstore = state.lock().unwrap();
+            let is_fetching = thunderstore.is_fetching;
 
-                is_fetching
-            };
-
-            // we need to check this in case the user manually triggers a fetch,
-            // or the fetch is still ongoing from the last loop
             if !is_fetching {
-                let res = fetch_mods(&app, game, is_first).await;
+                thunderstore.is_fetching = true;
+            }
 
-                let mut thunderstore = state.lock().unwrap();
-                thunderstore.is_fetching = false;
+            is_fetching
+        };
 
-                match res {
-                    Ok(_) => {
-                        is_first = false;
+        // we need to check this in case the user manually triggers a fetch,
+        // or the fetch is still ongoing from the last loop
+        if !is_fetching {
+            let res = fetch_mods(&app, game, is_first).await;
 
-                        // REMOVE IN THE FUTURE!
-                        let mut manager = manager.lock().unwrap();
-                        manager.fill_profile_mod_names(&thunderstore);
-                    }
-                    Err(err) => {
-                        logger::log_js_err(
-                            "error while fetching mods from Thunderstore",
-                            &err,
-                            &app,
-                        );
-                    }
+            let mut thunderstore = state.lock().unwrap();
+            thunderstore.is_fetching = false;
+
+            match res {
+                Ok(_) => {
+                    is_first = false;
+
+                    // REMOVE IN THE FUTURE!
+                    let mut manager = manager.lock().unwrap();
+                    manager.fill_profile_mod_names(&thunderstore);
+                }
+                Err(err) => {
+                    logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
                 }
             }
         }
@@ -323,7 +321,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
 
 async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
     const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
-    const INSERT_INTERVAL: usize = 1000;
+    const INSERT_INTERVAL: usize = 2000;
     const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
 
     let state = app.state::<Mutex<Thunderstore>>();
