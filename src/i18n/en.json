@@ -247,7 +247,7 @@
     "Use download cache": "Use download cache",
     "Use download cache description": "Whether to cache downloaded mods. This speeds up install times and lowers bandwidth usage, but can take a considerable amount of disk space.<br /><b>Warning:</b> Disabling this will delete the existing cache.",
     "Fetch mods automatically": "Fetch mods automatically",
-    "Fetch mods automatically description": "Whether to automatically start fetching mods when a game is selected and every 15 minutes thereafter. This will ensure the mod list is up-to-date, but can be disabled to save bandwidth.<br />To manually trigger a fetch, go to <b>File > Fetch mods</b>.",
+    "Fetch mods automatically description": "Whether to automatically fetch mods every 15 minutes. This will ensure the mod list is up-to-date, but can be disabled to save bandwidth.<br />To manually trigger a fetch, go to <b>File > Fetch mods</b>.",
     "Update to version": "Update to %version%",
     "Change version": "Change version",
     "Open directory": "Open directory",

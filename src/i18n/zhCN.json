@@ -247,7 +247,7 @@
     "Use download cache": "启用下载缓存",
     "Use download cache description": "是否缓存已下载的模组。这样可以加快安装速度并减少带宽使用，但可能会占用大量磁盘空间。<br /><b>警告：</b>禁用此选项将删除现有缓存。",
     "Fetch mods automatically": "自动获取模组",
-    "Fetch mods automatically description": "是否在选择游戏时自动开始获取模组，并在之后每隔 15 分钟进行一次更新。这将确保模组列表是最新的，但可以禁用此选项以节省带宽。<br />若要手动获取模组，请前去 <b>文件 &gt; 获取模组</b>。",
+    "Fetch mods automatically description": "是否每15分钟自动更新模组列表.禁用它将节省带宽。<br />若要手动获取模组，请前去 <b>文件 &gt; 获取模组</b>。",
     "Update to version": "更新到 %version%",
     "Change version": "变更版本",
     "Open directory": "打开文件夹",
