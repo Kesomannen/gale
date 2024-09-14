@@ -9,6 +9,7 @@
 	export let icon: string = 'mdi:folder';
 
 	$: hasValue = value && value.length > 0;
+	$: valueExcessive = value && value.length > 24;
 </script>
 
 <div class="flex items-center relative">
@@ -29,7 +30,7 @@
 
 		<div
 			class="text-slate-300 truncate"
-			style="direction: rtl;"
+			style="direction: {valueExcessive ? 'rtl' : 'ltr'};"
 		>
 			{hasValue ? value : 'Not set'}
 		</div>
