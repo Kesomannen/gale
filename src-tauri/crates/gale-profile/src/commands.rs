@@ -49,14 +49,14 @@ pub async fn rename(
 }
 
 #[tauri::command]
-pub async fn force_uninstall(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
+pub async fn force_uninstall_mod(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
     crate::actions::uninstall_mod(profile_mod_id, &state).await?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn force_toggle(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
+pub async fn force_toggle_mod(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
     crate::actions::toggle_mod(profile_mod_id, &state).await?;
 
     Ok(())
@@ -68,7 +68,7 @@ pub async fn query(id: i64, state: State<'_, AppState>) -> CmdResult<ProfileInfo
 }
 
 #[tauri::command]
-pub async fn install_from_thunderstore(
+pub async fn queue_thunderstore_install(
     version_uuid: Uuid,
     profile_id: i64,
     app: AppHandle,

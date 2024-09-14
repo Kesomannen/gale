@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-queue-thunderstore-install"
+description = "Enables the queue_thunderstore_install command without any pre-configured scope."
+commands.allow = ["queue_thunderstore_install"]
+
+[[permission]]
+identifier = "deny-queue-thunderstore-install"
+description = "Denies the queue_thunderstore_install command without any pre-configured scope."
+commands.deny = ["queue_thunderstore_install"]

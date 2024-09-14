@@ -33,13 +33,13 @@
 	}>('plugin:gale-thunderstore|query_package', { id });
 
 	let tab: 'readme' | 'changelog' | 'dependencies' | 'versions' = 'readme';
-	
+
 	function iconUrl(owner: string, name: string, version: Version) {
 		return `https://gcdn.thunderstore.io/live/repository/icons/${owner}-${name}-${version.major}.${version.minor}.${version.patch}.png`;
 	}
 </script>
 
-<div class="flex gap-6 w-full max-w-screen-lg mx-auto overflow-hidden px-4 pt-4">
+<div class="flex gap-6 w-full max-w-6xl mx-auto overflow-hidden px-4 pt-4">
 	{#await promise}
 		<div class="text-gray-400 w-full h-full flex items-center justify-center text-xl">
 			<Icon icon="mdi:loading" class="animate-spin mr-4" />
@@ -47,11 +47,7 @@
 		</div>
 	{:then { name, owner, downloads, ratingScore, versions, readme, changelog, websiteUrl, donationUrl, dependencies }}
 		<div class="flex-shrink-0 w-1/4 min-w-56 overflow-hidden">
-			<img
-				src={iconUrl(owner, name, versions[0])}
-				alt={name}
-				class="w-full rounded-lg"
-			/>
+			<img src={iconUrl(owner, name, versions[0])} alt={name} class="w-full rounded-lg" />
 			<h1 class="text-white font-bold text-3xl pt-3 truncate">{name}</h1>
 			<h3 class="text-gray-300 text-xl truncate">by {owner}</h3>
 
@@ -78,7 +74,7 @@
 							href={websiteUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="text-green-400 hover:underline"
+							class="text-green-400 hover:text-green-300 hover:underline"
 						>
 							Website
 						</a>
@@ -92,7 +88,7 @@
 							href={donationUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="text-green-400 hover:underline"
+							class="text-green-400 hover:text-green-300 hover:underline"
 						>
 							Donate
 						</a>
@@ -105,7 +101,7 @@
 						href={`https://thunderstore.io/package/${owner}/${name}/`}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-green-400 hover:underline"
+						class="text-green-400 hover:text-green-300 hover:underline"
 					>
 						Thunderstore
 					</a>
@@ -143,19 +139,19 @@
 				<Tabs.Content value="dependencies" class="overflow-y-auto grid grid-cols-2">
 					{#each dependencies.sort((a, b) => a.name.localeCompare(b.name)) as dependency}
 						<div class="flex items-center gap-2 p-2">
-              <img
-                src={iconUrl(dependency.owner, dependency.name, dependency)}
-                alt={dependency.name}
-                class="size-12 rounded"
-              />
+							<img
+								src={iconUrl(dependency.owner, dependency.name, dependency)}
+								alt={dependency.name}
+								class="size-12 rounded"
+							/>
 
-              <div>
-                <a
-                  class="text-white font-semibold text-lg hover:underline"
-                  href="/test/{dependency.id}/"
-                  >{dependency.name}</a>
-                <div class="text-gray-300">by {dependency.owner}</div>
-              </div>
+							<div>
+								<a
+									class="text-white font-semibold text-lg hover:underline"
+									href="/test/{dependency.id}/">{dependency.name}</a
+								>
+								<div class="text-gray-300">by {dependency.owner}</div>
+							</div>
 						</div>
 					{/each}
 				</Tabs.Content>

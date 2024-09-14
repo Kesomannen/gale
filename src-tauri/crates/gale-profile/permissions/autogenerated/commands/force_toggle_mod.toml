@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-force-toggle-mod"
+description = "Enables the force_toggle_mod command without any pre-configured scope."
+commands.allow = ["force_toggle_mod"]
+
+[[permission]]
+identifier = "deny-force-toggle-mod"
+description = "Denies the force_toggle_mod command without any pre-configured scope."
+commands.deny = ["force_toggle_mod"]

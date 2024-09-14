@@ -44,8 +44,8 @@
     "gale-profile:allow-delete",
     "gale-profile:allow-rename",
     "gale-profile:allow-query",
-    "gale-profile:allow-force-uninstall",
-    "gale-profile:allow-force-toggle",
-    "gale-profile:allow-install_from_thunderstore"
+    "gale-profile:allow-force-uninstall-mod",
+    "gale-profile:allow-force-toggle-mod",
+    "gale-profile:allow-queue-thunderstore-install"
   ]
 }

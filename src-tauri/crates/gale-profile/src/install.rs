@@ -3,6 +3,7 @@ use gale_core::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, path::PathBuf, sync::Mutex};
 use tauri::{AppHandle, Manager};
+use tokio::sync::Notify;
 use uuid::Uuid;
 
 pub struct InstallMetadata {
@@ -38,12 +39,14 @@ pub enum InstallSource {
 }
 
 pub struct InstallQueue {
+    notify: Notify,
     queue: Mutex<VecDeque<(InstallSource, InstallMetadata)>>,
 }
 
 impl InstallQueue {
     pub(crate) fn new() -> Self {
         Self {
+            notify: Notify::new(),
             queue: Mutex::new(VecDeque::new()),
         }
     }
@@ -51,6 +54,7 @@ impl InstallQueue {
     pub fn enqueue(&self, source: InstallSource, metadata: InstallMetadata) -> Result<usize> {
         let mut queue = self.queue.lock().unwrap();
         queue.push_back((source, metadata));
+        self.notify.notify_one();
 
         Ok(queue.len())
     }
@@ -77,6 +81,7 @@ pub(crate) async fn handler(app: AppHandle) {
         let (source, metadata) = match next {
             Some(item) => item,
             None => {
+                queue.notify.notified().await;
                 continue;
             }
         };

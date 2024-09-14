@@ -89,6 +89,32 @@ Denies the force_toggle command without any pre-configured scope.
 <tr>
 <td>
 
+`gale-profile:allow-force-toggle-mod`
+
+</td>
+<td>
+
+Enables the force_toggle_mod command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-force-toggle-mod`
+
+</td>
+<td>
+
+Denies the force_toggle_mod command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `gale-profile:allow-force-uninstall`
 
 </td>
@@ -108,6 +134,32 @@ Enables the force_uninstall command without any pre-configured scope.
 <td>
 
 Denies the force_uninstall command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:allow-force-uninstall-mod`
+
+</td>
+<td>
+
+Enables the force_uninstall_mod command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-force-uninstall-mod`
+
+</td>
+<td>
+
+Denies the force_uninstall_mod command without any pre-configured scope.
 
 </td>
 </tr>
@@ -160,6 +212,32 @@ Enables the query command without any pre-configured scope.
 <td>
 
 Denies the query command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:allow-queue-thunderstore-install`
+
+</td>
+<td>
+
+Enables the queue_thunderstore_install command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-queue-thunderstore-install`
+
+</td>
+<td>
+
+Denies the queue_thunderstore_install command without any pre-configured scope.
 
 </td>
 </tr>

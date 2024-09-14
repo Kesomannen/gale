@@ -32,9 +32,9 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
             commands::delete,
             commands::rename,
             commands::query,
-            commands::force_uninstall,
-            commands::force_toggle,
-            commands::install_from_thunderstore,
+            commands::force_uninstall_mod,
+            commands::force_toggle_mod,
+            commands::queue_thunderstore_install,
         ])
         .build()
 }

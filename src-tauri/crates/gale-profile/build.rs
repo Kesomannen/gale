@@ -3,9 +3,9 @@ const COMMANDS: &[&str] = &[
     "delete",
     "query",
     "rename",
-    "force_uninstall",
-    "force_toggle",
-    "install_from_thunderstore",
+    "force_uninstall_mod",
+    "force_toggle_mod",
+    "queue_thunderstore_install",
 ];
 
 fn main() {
