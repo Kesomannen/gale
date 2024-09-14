@@ -185,7 +185,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid4,
             is_installed: profile.has_mod(&pkg.uuid4),
-            last_updated: Some(pkg.versions[0].date_created.to_string()),
+            last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions
                 .iter()
