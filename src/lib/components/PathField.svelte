@@ -31,6 +31,7 @@
 			class="text-slate-300 truncate"
 			style="direction: rtl;"
 		>
+			&#x200E;
 			{hasValue ? value : 'Not set'}
 		</div>
 
