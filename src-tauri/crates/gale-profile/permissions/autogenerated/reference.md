@@ -167,6 +167,32 @@ Denies the force_uninstall_mod command without any pre-configured scope.
 <tr>
 <td>
 
+`gale-profile:allow-get`
+
+</td>
+<td>
+
+Enables the get command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-get`
+
+</td>
+<td>
+
+Denies the get command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `gale-profile:allow-install-from-thunderstore`
 
 </td>

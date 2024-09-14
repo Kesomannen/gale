@@ -5,6 +5,8 @@ use tauri::{
     Manager,
 };
 
+mod commands;
+pub mod community;
 pub mod error;
 pub mod event;
 pub mod state;
@@ -37,7 +39,7 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
             app.manage(state);
             Ok(())
         })
-        .invoke_handler(generate_handler![])
+        .invoke_handler(generate_handler![commands::get_communities])
         .build()
 }
 

@@ -1,7 +1,7 @@
 const COMMANDS: &[&str] = &[
     "create",
     "delete",
-    "query",
+    "get",
     "rename",
     "force_uninstall_mod",
     "force_toggle_mod",

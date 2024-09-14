@@ -295,157 +295,17 @@
       "type": "string",
       "oneOf": [
         {
-          "description": "allow-create -> Enables the create command without any pre-configured scope.",
+          "description": "allow-get-communities -> Enables the get_communities command without any pre-configured scope.",
           "type": "string",
           "enum": [
-            "allow-create"
+            "allow-get-communities"
           ]
         },
         {
-          "description": "deny-create -> Denies the create command without any pre-configured scope.",
+          "description": "deny-get-communities -> Denies the get_communities command without any pre-configured scope.",
           "type": "string",
           "enum": [
-            "deny-create"
-          ]
-        },
-        {
-          "description": "allow-delete -> Enables the delete command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-delete"
-          ]
-        },
-        {
-          "description": "deny-delete -> Denies the delete command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-delete"
-          ]
-        },
-        {
-          "description": "allow-force-toggle -> Enables the force_toggle command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-force-toggle"
-          ]
-        },
-        {
-          "description": "deny-force-toggle -> Denies the force_toggle command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-force-toggle"
-          ]
-        },
-        {
-          "description": "allow-force-toggle-mod -> Enables the force_toggle_mod command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-force-toggle-mod"
-          ]
-        },
-        {
-          "description": "deny-force-toggle-mod -> Denies the force_toggle_mod command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-force-toggle-mod"
-          ]
-        },
-        {
-          "description": "allow-force-uninstall -> Enables the force_uninstall command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-force-uninstall"
-          ]
-        },
-        {
-          "description": "deny-force-uninstall -> Denies the force_uninstall command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-force-uninstall"
-          ]
-        },
-        {
-          "description": "allow-force-uninstall-mod -> Enables the force_uninstall_mod command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-force-uninstall-mod"
-          ]
-        },
-        {
-          "description": "deny-force-uninstall-mod -> Denies the force_uninstall_mod command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-force-uninstall-mod"
-          ]
-        },
-        {
-          "description": "allow-get -> Enables the get command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-get"
-          ]
-        },
-        {
-          "description": "deny-get -> Denies the get command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-get"
-          ]
-        },
-        {
-          "description": "allow-install-from-thunderstore -> Enables the install_from_thunderstore command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-install-from-thunderstore"
-          ]
-        },
-        {
-          "description": "deny-install-from-thunderstore -> Denies the install_from_thunderstore command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-install-from-thunderstore"
-          ]
-        },
-        {
-          "description": "allow-query -> Enables the query command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-query"
-          ]
-        },
-        {
-          "description": "deny-query -> Denies the query command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-query"
-          ]
-        },
-        {
-          "description": "allow-queue-thunderstore-install -> Enables the queue_thunderstore_install command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-queue-thunderstore-install"
-          ]
-        },
-        {
-          "description": "deny-queue-thunderstore-install -> Denies the queue_thunderstore_install command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-queue-thunderstore-install"
-          ]
-        },
-        {
-          "description": "allow-rename -> Enables the rename command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "allow-rename"
-          ]
-        },
-        {
-          "description": "deny-rename -> Denies the rename command without any pre-configured scope.",
-          "type": "string",
-          "enum": [
-            "deny-rename"
+            "deny-get-communities"
           ]
         }
       ]

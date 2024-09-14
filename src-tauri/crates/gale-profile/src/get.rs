@@ -8,6 +8,7 @@ use sqlx::types::Json;
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileInfo {
+    id: i64,
     name: String,
     path: String,
     community_id: i64,
@@ -27,13 +28,14 @@ pub struct ProfileModInfo {
 }
 
 #[derive(Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub enum ProfileModKind {
     Thunderstore,
     Local,
 }
 
 pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
-    let (name, path, community_id, community_slug) = sqlx::query!(
+    let ( name, path, community_id, community_slug) = sqlx::query!(
         "SELECT
             p.name,
             p.path,
@@ -101,6 +103,7 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
     }
 
     Ok(ProfileInfo {
+        id,
         name,
         path,
         community_id,

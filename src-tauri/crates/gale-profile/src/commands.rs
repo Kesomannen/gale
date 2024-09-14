@@ -1,7 +1,7 @@
 use crate::{
     emit_update,
+    get::ProfileInfo,
     install::{InstallMetadata, InstallSource},
-    query::ProfileInfo,
 };
 use gale_core::prelude::*;
 use std::path::PathBuf;
@@ -18,7 +18,7 @@ pub async fn create(
 ) -> CmdResult<i64> {
     let _ = LoadingBar::indeterminate("Creating profile", &app);
 
-    let id = crate::actions::create_profile(&name, &path, community_id, &state).await?;
+    let id = crate::actions::create(&name, &path, community_id, &state).await?;
 
     Ok(id)
 }
@@ -27,7 +27,7 @@ pub async fn create(
 pub async fn delete(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
     let _ = LoadingBar::indeterminate("Deleting profile", &app);
 
-    crate::actions::delete_profile(id, &state).await?;
+    crate::actions::delete(id, &state).await?;
 
     Ok(())
 }
@@ -41,7 +41,7 @@ pub async fn rename(
 ) -> CmdResult<()> {
     let _ = LoadingBar::indeterminate("Renaming profile", &app);
 
-    crate::actions::rename_profile(id, &name, &state).await?;
+    crate::actions::rename(id, &name, &state).await?;
 
     emit_update(id, &state, &app).await?;
 
@@ -63,8 +63,8 @@ pub async fn force_toggle_mod(profile_mod_id: i64, state: State<'_, AppState>) -
 }
 
 #[tauri::command]
-pub async fn query(id: i64, state: State<'_, AppState>) -> CmdResult<ProfileInfo> {
-    crate::query::single(id, &state).await.map_into()
+pub async fn get(id: i64, state: State<'_, AppState>) -> CmdResult<ProfileInfo> {
+    crate::get::single(id, &state).await.map_into()
 }
 
 #[tauri::command]

@@ -1,40 +1,34 @@
 <script lang="ts">
 	import SearchBar from '$lib/components/SearchBar.svelte';
-	import { games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
-	import { open as openLink } from '@tauri-apps/plugin-shell';
-	import { invokeCommand } from '$lib/invoke';
 	import Link from './Link.svelte';
+	import { communities } from '$lib/state/profile.svelte';
+	import type { CommunityInfo } from '$lib/state/profile.svelte';
 
-	export let onSelect: () => void;
+	let { onselect }: { onselect?: () => void } = $props();
 
-	let shownGames = games;
-	let searchTerm = '';
+	let shownCommunities: CommunityInfo[] = $state([]);
+	let searchTerm = $state('');
 
-	$: refresh(searchTerm);
-
-	function refresh(searchTerm: string) {
+	$effect(() => {
 		let lowerSearch = searchTerm.toLowerCase();
 
-		let newGames =
+		let newCommunities =
 			searchTerm.length > 0
-				? games.filter((game) => {
-						return (
-							game.displayName.toLowerCase().includes(lowerSearch) ||
-							game.aliases.some((alias) => alias.toLowerCase().includes(lowerSearch))
-						);
+				? communities.all.filter((community) => {
+						return community.name.toLowerCase().includes(lowerSearch);
 					})
-				: games;
+				: communities.all;
 
-		newGames.sort((a, b) => {
-			if (a.favorite && !b.favorite) return -1;
-			if (!a.favorite && b.favorite) return 1;
+		newCommunities.sort((a, b) => {
+			if (a.isFavorite && !b.isFavorite) return -1;
+			if (!a.isFavorite && b.isFavorite) return 1;
 			return 0;
 		});
 
-		shownGames = newGames;
-	}
+		shownCommunities = newCommunities;
+	});
 </script>
 
 <div class="relative flex-grow mt-1">
@@ -42,38 +36,31 @@
 </div>
 
 <div class="flex flex-col mt-2 h-96 overflow-y-auto">
-	{#if shownGames.length > 0}
-		{#each shownGames as game}
+	{#if shownCommunities.length > 0}
+		{#each shownCommunities as { id, name, slug, isFavorite }, index}
 			<Button.Root
 				class="flex hover:bg-gray-700 rounded-lg p-1 items-center group mr-2"
 				on:click={() => {
-					setActiveGame(game);
-					onSelect();
+					communities.setActive(id);
+					onselect?.();
 				}}
 			>
-				<img
-					src="games/{game.id}.webp"
-					alt={game.displayName}
-					class="w-8 h-8 rounded group-hover:shadow-xl mr-2"
-				/>
+				<img src="games/{slug}.webp" alt={name} class="size-8 rounded group-hover:shadow-xl mr-2" />
 
 				<span class="flex-grow text-left text-slate-200">
-					{game.displayName}
+					{name}
 				</span>
 
 				<Button.Root
-					class="{game.favorite
+					class="{isFavorite
 						? 'block'
 						: 'hidden group-hover:block'} p-1 mr-1 rounded-md hover:bg-gray-600"
 					on:click={(evt) => {
 						evt.stopPropagation();
-						game.favorite = !game.favorite;
-						refresh(searchTerm);
-						invokeCommand('favorite_game', { id: game.id });
 					}}
 				>
 					<Icon
-						icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
+						icon={isFavorite ? 'mdi:star' : 'mdi:star-outline'}
 						class="text-yellow-400 text-xl"
 					/>
 				</Button.Root>

@@ -1,5 +1,6 @@
 [package]
 name = "gale-core"
+links = "gale-core"
 version = "2.0.0-alpha.1"
 edition = "2021"
 
@@ -14,3 +15,6 @@ anyhow = "1"
 log = "0.4"
 reqwest = "0.12"
 uuid = "1"
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-rc", features = ["build"] }

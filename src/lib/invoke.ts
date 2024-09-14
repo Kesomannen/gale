@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke as tauriInvoke } from '@tauri-apps/api/core';
 import { writable, type Writable } from 'svelte/store';
 import { listen } from '@tauri-apps/api/event';
 import { sentenceCase } from './util';
@@ -6,7 +6,10 @@ import { sentenceCase } from './util';
 const errorDuration = 10000;
 const maxErrors = 10;
 
-interface InvokeError { name: string, message: string }
+interface InvokeError {
+	name: string;
+	message: string;
+}
 
 listen<InvokeError>('error', (evt) => pushError(evt.payload));
 
@@ -14,12 +17,12 @@ export const errors: Writable<InvokeError[]> = writable([]);
 
 export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 	try {
-		return await invoke<T>(cmd, args);
+		return await tauriInvoke<T>(cmd, args);
 	} catch (error: any) {
 		let errStr = error as string;
 		let name = `Failed to ${sentenceCase(cmd).toLowerCase()}`;
 		let message = errStr[0].toUpperCase() + errStr.slice(1) + '.';
-		
+
 		pushError({ name, message }, false);
 		throw error;
 	}
@@ -42,7 +45,7 @@ export function pushError(error: InvokeError, throwErr: boolean = true) {
 	}, errorDuration);
 
 	let msg = `${error.name}: ${error.message}`;
-	invoke('log_err', { msg })
+	tauriInvoke('log_err', { msg });
 
 	if (throwErr) {
 		throw new Error(msg);
@@ -55,3 +58,9 @@ export function removeError(index: number) {
 		return errs;
 	});
 }
+
+async function invoke<T>(plugin: string, command: string, args?: any): Promise<T> {
+	return await tauriInvoke<T>(`plugin:gale-${plugin}|${command}`, args);
+}
+
+export { invoke };
