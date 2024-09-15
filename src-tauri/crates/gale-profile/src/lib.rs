@@ -4,6 +4,7 @@ use install::InstallQueue;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::types::Uuid;
+use sqlx::Row;
 use std::path::PathBuf;
 use tauri::{
     async_runtime, generate_handler,
@@ -15,7 +16,7 @@ mod actions;
 mod commands;
 mod get;
 pub mod install;
-mod launcH;
+mod launch_;
 
 pub fn init() -> TauriPlugin<tauri::Wry> {
     Builder::new("gale-profile")
@@ -25,6 +26,13 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
 
             let handle = app.app_handle().to_owned();
             async_runtime::spawn(install::handler(handle));
+
+            let handle = app.app_handle().to_owned();
+            async_runtime::spawn(async move {
+                if let Err(err) = create_default_profile(handle).await {
+                    log::error!("failed to create default profile: {:#}", err);
+                }
+            });
 
             Ok(())
         })
@@ -36,11 +44,33 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
             commands::force_uninstall_mod,
             commands::force_toggle_mod,
             commands::queue_thunderstore_install,
+            commands::launch
         ])
         .build()
 }
 
+async fn create_default_profile(app: AppHandle) -> Result<()> {
+    let state = app.app_state();
+
+    let profiles: u32 = sqlx::query("SELECT COUNT(*) FROM profiles")
+        .fetch_one(&state.db)
+        .await?
+        .get(0);
+
+    if profiles > 0 {
+        return Ok(());
+    }
+
+    let path = PathBuf::from(r"D:\Gale\v2\profiles\Default");
+    let id = actions::create_profile("Default", &path, 2, &state).await?;
+
+    log::info!("created default profile with id {}", id);
+
+    Ok(())
+}
+
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
 enum ProfileModSource {
     Thunderstore {
         identifier: VersionId,
@@ -69,7 +99,7 @@ fn emit_update_spawn(id: i64, app: AppHandle) {
 async fn scan_mod(profile_mod_id: i64, state: &AppState) -> Result<impl Iterator<Item = PathBuf>> {
     let (source, mut path) = sqlx::query!(
         r#"SELECT 
-            source AS "source: Json<ProfileModSource>",
+            pm.source AS "source: Json<ProfileModSource>",
             p.path
         FROM
             profile_mods pm

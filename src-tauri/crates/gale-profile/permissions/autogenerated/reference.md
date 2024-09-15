@@ -219,6 +219,32 @@ Denies the install_from_thunderstore command without any pre-configured scope.
 <tr>
 <td>
 
+`gale-profile:allow-launch`
+
+</td>
+<td>
+
+Enables the launch command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-launch`
+
+</td>
+<td>
+
+Denies the launch command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `gale-profile:allow-query`
 
 </td>

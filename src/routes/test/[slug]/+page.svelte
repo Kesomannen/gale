@@ -2,10 +2,11 @@
 	import { page } from '$app/stores';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import TabsMenu from '$lib/components/TabsMenu.svelte';
-	import { invokeCommand } from '$lib/invoke';
-	import { shortenFileSize, shortenNum, timeSince } from '$lib/util';
+	import { modIconUrl, shortenFileSize, shortenNum, timeSince, modThunderstoreUrl } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Tabs } from 'bits-ui';
+	import { invoke } from '$lib/invoke';
+	import { profiles } from '$lib/state/profile.svelte';
 
 	let id = $page.params.slug;
 
@@ -15,7 +16,7 @@
 		patch: number;
 	};
 
-	let promise = invokeCommand<{
+	let promise = invoke<{
 		name: string;
 		owner: string;
 		readme: string;
@@ -25,17 +26,28 @@
 		downloads: number;
 		ratingScore: number;
 		versions: (Version & {
+			id: string;
 			fileSize: number;
 			downloads: number;
 			dateCreated: string;
 		})[];
 		dependencies: (Version & { id: String; name: string; owner: string })[];
-	}>('plugin:gale-thunderstore|query_package', { id });
+	}>('thunderstore', 'query_package', { id });
 
-	let tab: 'readme' | 'changelog' | 'dependencies' | 'versions' = 'readme';
+	enum Tab {
+		README = 'readme',
+		CHANGELOG = 'changelog',
+		DEPENDENCIES = 'dependencies',
+		VERSIONS = 'versions'
+	}
 
-	function iconUrl(owner: string, name: string, version: Version) {
-		return `https://gcdn.thunderstore.io/live/repository/icons/${owner}-${name}-${version.major}.${version.minor}.${version.patch}.png`;
+	let tab: Tab = $state(Tab.README);
+
+	async function install(versionUuid: string) {
+		await invoke('profile', 'queue_thunderstore_install', {
+			versionUuid,
+			profileId: profiles.activeId
+		});
 	}
 </script>
 
@@ -47,7 +59,7 @@
 		</div>
 	{:then { name, owner, downloads, ratingScore, versions, readme, changelog, websiteUrl, donationUrl, dependencies }}
 		<div class="flex-shrink-0 w-1/4 min-w-56 overflow-hidden">
-			<img src={iconUrl(owner, name, versions[0])} alt={name} class="w-full rounded-lg" />
+			<img src={modIconUrl(owner, name, versions[0])} alt={name} class="w-full rounded-lg" />
 			<h1 class="text-white font-bold text-3xl pt-3 truncate">{name}</h1>
 			<h3 class="text-gray-300 text-xl truncate">by {owner}</h3>
 
@@ -64,6 +76,10 @@
 					<Icon icon="akar-icons:calendar" class="inline mr-1" />
 					{timeSince(new Date(versions[0].dateCreated))} ago
 				</div>
+				<div class="text-gray-300">
+					<Icon icon="akar-icons:file" class="inline mr-1" />
+					{shortenFileSize(versions[0].fileSize)}
+				</div>
 			</div>
 
 			<div class="pb-6 pt-4 space-y-1">
@@ -73,7 +89,6 @@
 						<a
 							href={websiteUrl}
 							target="_blank"
-							rel="noopener noreferrer"
 							class="text-green-400 hover:text-green-300 hover:underline"
 						>
 							Website
@@ -87,7 +102,6 @@
 						<a
 							href={donationUrl}
 							target="_blank"
-							rel="noopener noreferrer"
 							class="text-green-400 hover:text-green-300 hover:underline"
 						>
 							Donate
@@ -98,9 +112,8 @@
 				<div>
 					<Icon icon="akar-icons:link-out" class="inline mr-1 text-gray-300" />
 					<a
-						href={`https://thunderstore.io/package/${owner}/${name}/`}
+						href={modThunderstoreUrl(owner, name)}
 						target="_blank"
-						rel="noopener noreferrer"
 						class="text-green-400 hover:text-green-300 hover:underline"
 					>
 						Thunderstore
@@ -111,6 +124,7 @@
 			<button
 				class="flex items-center justify-center gap-2 bg-green-700 text-white py-2 w-full rounded-lg
 				hover:bg-green-800 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+				onclick={() => install(versions[0].id)}
 			>
 				<Icon icon="akar-icons:download" />
 				Install latest
@@ -119,16 +133,16 @@
 		<div class="flex-grow overflow-hidden">
 			<TabsMenu
 				options={[
-					{ value: 'readme', label: 'Details', disabled: !readme },
-					{ value: 'changelog', label: 'Changelog', disabled: !changelog },
+					{ value: Tab.README, label: 'Details', disabled: !readme },
+					{ value: Tab.CHANGELOG, label: 'Changelog', disabled: !changelog },
 					{
-						value: 'dependencies',
-						label: `${dependencies.length} dependencies`,
+						value: Tab.DEPENDENCIES,
+						label: `Dependencies (${dependencies.length})`,
 						disabled: dependencies.length === 0
 					},
-					{ value: 'versions', label: 'Versions' }
+					{ value: Tab.VERSIONS, label: 'Versions' }
 				]}
-				bind:value={tab}
+				bind:value={tab as Tab}
 			>
 				<Tabs.Content value="readme" class="overflow-y-auto h-full outline-none">
 					<Markdown source={readme} />
@@ -140,7 +154,7 @@
 					{#each dependencies.sort((a, b) => a.name.localeCompare(b.name)) as dependency}
 						<div class="flex items-center gap-2 p-2">
 							<img
-								src={iconUrl(dependency.owner, dependency.name, dependency)}
+								src={modIconUrl(dependency.owner, dependency.name, dependency)}
 								alt={dependency.name}
 								class="size-12 rounded"
 							/>
@@ -156,25 +170,25 @@
 					{/each}
 				</Tabs.Content>
 				<Tabs.Content value="versions" class="overflow-y-auto h-full">
-					<table class="w-full mt-2">
+					<table class="w-full mt-2 rounded border-2 border-gray-900">
 						<tbody>
-							{#each versions as version}
+							{#each versions as { id: uuid, major, minor, patch, dateCreated, downloads }}
 								<tr class="odd:bg-gray-900">
 									<td class="text-white font-semibold text-lg py-1.5 px-2">
-										{version.major}.{version.minor}.{version.patch}
+										{major}.{minor}.{patch}
 									</td>
 									<td class="text-gray-400">
-										<Icon icon="material-symbols:weight" class="inline mr-1" />
-										{shortenFileSize(version.fileSize)}
+										<Icon icon="akar-icons:clock" class="inline mr-1" />
+										{timeSince(new Date(dateCreated))} ago
 									</td>
 									<td class="text-gray-400">
 										<Icon icon="akar-icons:download" class="inline mr-1" />
-										{shortenNum(version.downloads)}
+										{shortenNum(downloads)}
 									</td>
 									<td>
 										<button
-											class="inline-flex items-center gap-2 text-green-500 font-semibold
-											hover:text-green-400 transition-all hover:underline"
+											class="inline-flex items-center gap-2 text-green-400 font-medium hover:text-green-300 hover:underline"
+											onclick={() => install(uuid)}
 										>
 											<Icon icon="akar-icons:download" />
 											Install

@@ -1,4 +1,5 @@
 import { invoke } from '$lib/invoke';
+import { listen } from '@tauri-apps/api/event';
 
 type ProfileInfo = {
 	id: number;
@@ -12,7 +13,7 @@ type ProfileModInfo = {
 	id: number;
 	index: number;
 	name: string;
-	version: string;
+	version: string | null;
 	enabled: boolean;
 	href: string;
 	kind: ProfileModKind;
@@ -42,6 +43,15 @@ const communities = new Communities();
 class Profiles {
 	active: ProfileInfo | undefined = $state();
 
+	get activeId() {
+		if (this.active !== undefined) {
+			return this.active.id;
+		}
+
+		console.warn('no active profile');
+		return 1;
+	}
+
 	async setActive(id: number) {
 		this.active = await invoke('profile', 'get', { id });
 		setLocalStorageInt('activeProfile', profiles.active?.id ?? 1);
@@ -49,6 +59,12 @@ class Profiles {
 }
 
 const profiles = new Profiles();
+
+listen<ProfileInfo>('profile-update', async ({ payload }) => {
+	if (profiles.active?.id === payload.id) {
+		profiles.active = payload;
+	}
+})
 
 fetchCommunities();
 

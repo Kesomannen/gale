@@ -5,6 +5,7 @@ use gale_core::prelude::*;
 use gale_thunderstore::api::VersionId;
 use sqlx::types::Uuid;
 use std::{io::Cursor, path::Path};
+use tokio::time::Instant;
 
 pub async fn install(
     version_uuid: Uuid,
@@ -45,10 +46,23 @@ pub async fn install(
     cache_path.push(id.full_name());
     cache_path.push(id.version());
 
-    if !cache_path.exists() {
+    if cache_path.exists() {
+        log::debug!("cache hit for {id}, skipping download");
+    } else {
+        log::debug!(
+            "cache miss for {id}, downloading {} bytes",
+            version.file_size
+        );
+
+        let start = Instant::now();
+
         let data = download(&id, state)
             .await
             .context("failed to download package")?;
+
+        log::trace!("downloaded {id} in {:?}", start.elapsed(),);
+
+        log::trace!("extracting {id} to {}", cache_path.display());
 
         common::extract(Cursor::new(data), id.full_name(), cache_path.clone())
             .context("failed to extract package")?;

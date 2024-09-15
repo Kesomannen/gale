@@ -8,6 +8,7 @@
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Updater from './Updater.svelte';
 	import { communities, profiles } from '$lib/state/profile.svelte';
+	import { invoke } from '$lib/invoke';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -15,25 +16,23 @@
 	let gamesOpen = false;
 	let profilesOpen = false;
 
-	function launchGame(vanilla: boolean) {
-		/*
-		invokeCommand('launch_game', { vanilla });
+	function launchGame() {
+		invoke('profile', 'launch', { id: profiles.activeId })
 		launchGamePopupOpen = true;
-		*/
 	}
 </script>
 
 <div class="h-12 flex flex-row flex-shrink-0 bg-gray-900 border-b border-t border-gray-600">
 	<button
 		class="flex items-center flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800 font-bold"
-		on:click={() => launchGame(false)}
+		onclick={launchGame}
 	>
 		<Icon icon="material-symbols:play-circle" class="text-xl mr-2" />
 		Launch game
 	</button>
 
 	<button
-		on:click={() => (gamesOpen = !gamesOpen)}
+		onclick={() => (gamesOpen = !gamesOpen)}
 		class="flex flex-shrink-0 items-center justify-between font-semibold pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-gray-300 group-hover:text-gray-200"
 	>
 		{#if communities.active !== undefined}

@@ -13,6 +13,18 @@ VALUES
     ('Lethal Company', 'lethal-company', 1966720, 'Lethal Company'),
     ('Content Warning', 'content-warning', 2881650, 'Content Warning');
 
+CREATE TABLE categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE
+);
+
+CREATE TABLE package_categories (
+    package_id UUID NOT NULL REFERENCES packages(id) ON DELETE CASCADE,
+    category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    PRIMARY KEY (package_id, category_id)
+);
+
 CREATE TABLE packages (
     id UUID PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
@@ -104,6 +116,5 @@ CREATE TABLE settings (
     cache_path TEXT NOT NULL
 );
 
-CREATE TABLE misc (
-    selected_profile_id INTEGER REFERENCES profiles(id)
-);
+INSERT INTO settings (cache_path)
+VALUES ('D:\Gale\v2\cache');

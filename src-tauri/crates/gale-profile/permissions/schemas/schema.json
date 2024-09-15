@@ -407,6 +407,20 @@
           ]
         },
         {
+          "description": "allow-launch -> Enables the launch command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-launch"
+          ]
+        },
+        {
+          "description": "deny-launch -> Denies the launch command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-launch"
+          ]
+        },
+        {
           "description": "allow-query -> Enables the query command without any pre-configured scope.",
           "type": "string",
           "enum": [

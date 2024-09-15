@@ -55,6 +55,7 @@
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
 			<NavbarLink to="/test" icon="mdi:information" tooltip="About" />
+			<NavbarLink to="/test2" icon="mdi:information" tooltip="About" />
 			<div class="flex-grow" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</div>

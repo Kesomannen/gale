@@ -1,7 +1,8 @@
 <script lang="ts">
 	import InputField from '$lib/components/InputField.svelte';
-	import { invokeCommand } from '$lib/invoke';
-	import { shortenNum } from '$lib/util';
+	import { invoke } from '$lib/invoke';
+	import { profiles } from '$lib/state/profile.svelte';
+	import { modIconUrl, shortenNum } from '$lib/util';
 	import Icon from '@iconify/svelte';
 
 	type Package = {
@@ -18,6 +19,7 @@
 		major: number;
 		minor: number;
 		patch: number;
+		versionUuid: string;
 	};
 
 	let searchTerm = 'bepinex';
@@ -34,7 +36,7 @@
 		}
 
 		loading = true;
-		packages = await invokeCommand<Package[]>('plugin:gale-thunderstore|query_packages', {
+		packages = await invoke<Package[]>('thunderstore', 'query_packages', {
 			args: {
 				searchTerm,
 				maxResults: 10,
@@ -44,9 +46,16 @@
 
 		loading = false;
 	}
+
+	async function installPackage(pkg: Package) {
+		await invoke('profile', 'queue_thunderstore_install', {
+			versionUuid: pkg.versionUuid,
+			profileId: profiles.activeId
+		});
+	}
 </script>
 
-<div class="w-full max-w-screen-md mx-auto overflow-y-auto px-4">
+<div class="w-full max-w-4xl mx-auto overflow-y-auto px-4">
 	<div class="flex items-center pt-4 pb-2">
 		<InputField bind:value={searchTerm} placeholder="Search Thunderstore" class="flex-grow" />
 	</div>
@@ -55,7 +64,7 @@
 			<div class="text-left p-4 rounded-lg bg-gray-700 border border-gray-500">
 				<div class="flex gap-3">
 					<img
-						src="https://gcdn.thunderstore.io/live/repository/icons/{pkg.owner}-{pkg.name}-{pkg.major}.{pkg.minor}.{pkg.patch}.png"
+						src={modIconUrl(pkg.owner, pkg.name, pkg)}
 						alt={pkg.name}
 						class="size-16 rounded"
 					/>
@@ -85,15 +94,14 @@
 					</a>
 					<div class="inline-flex gap-0.5">
 						<button
-							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg
-                    			hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+							onclick={() => installPackage(pkg)}
 						>
 							<Icon icon="akar-icons:download" />
 							Install
 						</button>
 						<button
-							class="inline-flex items-center bg-green-700 text-white font-semibold w-6 rounded-r-lg
-                  				hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+							class="inline-flex items-center bg-green-700 text-white font-semibold w-6 rounded-r-lg hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
 						>
 							<Icon icon="material-symbols:arrow-drop-down" class="mx-auto" />
 						</button>

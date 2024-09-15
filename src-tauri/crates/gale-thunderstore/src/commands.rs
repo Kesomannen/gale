@@ -7,7 +7,7 @@ use uuid::Uuid;
 pub async fn query_packages(
     args: query::QueryArgs,
     state: tauri::State<'_, AppState>,
-) -> CmdResult<Vec<query::Package>> {
+) -> CmdResult<Vec<query::ListedPackageInfo>> {
     query::query_packages(args, &state).await.map_into()
 }
 

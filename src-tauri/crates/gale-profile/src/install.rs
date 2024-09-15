@@ -1,4 +1,5 @@
-use crate::ProfileModSource;
+use crate::{emit_update, ProfileModSource};
+use anyhow::Context;
 use gale_core::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, path::PathBuf, sync::Mutex};
@@ -6,6 +7,7 @@ use tauri::{AppHandle, Manager};
 use tokio::sync::Notify;
 use uuid::Uuid;
 
+#[derive(Debug)]
 pub struct InstallMetadata {
     enabled: bool,
     index: Option<usize>,
@@ -86,7 +88,7 @@ pub(crate) async fn handler(app: AppHandle) {
             }
         };
 
-        if let Err(err) = handle_request(source, &metadata, &state).await {
+        if let Err(err) = handle_request(source, &metadata, &state, &app).await {
             log::error!("failed to install mod: {:#}", err);
         }
     }
@@ -96,15 +98,21 @@ async fn handle_request(
     source: InstallSource,
     metadata: &InstallMetadata,
     state: &AppState,
+    app: &AppHandle,
 ) -> Result<()> {
+    log::debug!("handling install request for {source:?}, {metadata:?}");
+
     let profile_path: PathBuf = sqlx::query!(
         "SELECT path FROM profiles WHERE id = ?",
         metadata.profile_id
     )
-    .fetch_one(&state.db)
+    .fetch_optional(&state.db)
     .await?
+    .context("profile not found")?
     .path
     .into();
+
+    log::debug!("installing at {}", profile_path.display());
 
     let source = match source {
         InstallSource::Thunderstore(version_uuid) => {
@@ -130,9 +138,9 @@ async fn handle_request(
                 WHERE profile_id = ?"#,
                 metadata.profile_id
             )
-            .fetch_one(&state.db)
+            .fetch_optional(&state.db)
             .await?
-            .max
+            .and_then(|row| row.max)
             .unwrap_or(0);
 
             max_index + 1
@@ -150,6 +158,8 @@ async fn handle_request(
     )
     .execute(&state.db)
     .await?;
+
+    emit_update(metadata.profile_id, state, &app).await?;
 
     Ok(())
 }

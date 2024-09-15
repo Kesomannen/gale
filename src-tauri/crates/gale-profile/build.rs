@@ -6,6 +6,7 @@ const COMMANDS: &[&str] = &[
     "force_uninstall_mod",
     "force_toggle_mod",
     "queue_thunderstore_install",
+    "launch",
 ];
 
 fn main() {

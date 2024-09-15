@@ -18,7 +18,7 @@ pub struct QueryArgs {
 
 #[derive(Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Package {
+pub struct ListedPackageInfo {
     id: Uuid,
     name: String,
     owner: String,
@@ -31,12 +31,13 @@ pub struct Package {
     major: i64,
     minor: i64,
     patch: i64,
+    version_uuid: Uuid,
 }
 
-pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Package>> {
+pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<ListedPackageInfo>> {
     let start = Instant::now();
     let results = sqlx::query_as!(
-        Package,
+        ListedPackageInfo,
         r#"SELECT
             p.id AS "id: Uuid",
             p.name,
@@ -49,7 +50,8 @@ pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<Pac
             p.has_nsfw_content,
             v.major,
             v.minor,
-            v.patch
+            v.patch,
+            v.id AS "version_uuid: Uuid"
         FROM
             packages p
             JOIN packages_fts fts ON

@@ -5,35 +5,19 @@ use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize)]
-pub struct LoadingBar<'a, T: Serialize> {
+pub struct LoadingBar<'t, 'a> {
     id: Uuid,
-    title: &'a str,
+    title: &'t str,
     #[serde(skip)]
     app: &'a AppHandle,
-    kind: T,
 }
 
-#[derive(Debug, Serialize)]
-pub struct Indeterminate;
-
-#[derive(Debug, Serialize)]
-pub struct Determinate {
-    progress: f32,
-}
-
-#[derive(Debug, Serialize)]
-pub struct Bounded {
-    progress: f32,
-    total: usize,
-}
-
-impl<'a, T: Serialize> LoadingBar<'a, T> {
-    fn create(app: &'a AppHandle, title: &'a str, kind: T) -> Result<Self> {
+impl<'t, 'a> LoadingBar<'t, 'a> {
+    pub fn create(title: &'t str, app: &'a AppHandle) -> Result<Self> {
         let this = Self {
             id: Uuid::new_v4(),
             title,
             app,
-            kind,
         };
 
         app.emit("loading-bar-create", &this)?;
@@ -65,28 +49,7 @@ impl<'a, T: Serialize> LoadingBar<'a, T> {
     }
 }
 
-impl<'a> LoadingBar<'a, Indeterminate> {
-    pub fn indeterminate(title: &'a str, app: &'a AppHandle) -> Result<Self> {
-        Self::create(app, title, Indeterminate)
-    }
-
-    pub fn update(&self, message: Option<&str>) -> Result<()> {
-        self.emit(message, None)
-    }
-}
-
-impl<'a> LoadingBar<'a, Determinate> {
-    pub fn determinate(title: &'a str, app: &'a AppHandle) -> Result<Self> {
-        Self::create(app, title, Determinate { progress: 0.0 })
-    }
-
-    pub fn update(&mut self, message: Option<&str>, progress: f32) -> Result<()> {
-        self.kind.progress = progress;
-        self.emit(message, Some(progress))
-    }
-}
-
-impl<T: Serialize> Drop for LoadingBar<'_, T> {
+impl<'t, 'a> Drop for LoadingBar<'t, 'a> {
     fn drop(&mut self) {
         if let Err(err) = self._close() {
             log::warn!("failed to close loading bar: {:#}", err);

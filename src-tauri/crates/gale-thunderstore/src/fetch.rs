@@ -4,7 +4,7 @@ use futures_util::{pin_mut, TryStreamExt};
 use gale_core::prelude::*;
 use log::debug;
 use sqlx::prelude::*;
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 use uuid::Uuid;
 
 pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
@@ -17,6 +17,35 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
         .get(0);
 
     debug!("fetching packages from {slug}");
+
+    let categories = api::get_filters(&state.reqwest, &slug)
+        .await?
+        .package_categories
+        .into_iter()
+        .map(|category| {
+            let id: i64 = category.id.parse().expect("category id should be a number");
+            (category.name, id)
+        })
+        .collect::<HashMap<_, _>>();
+
+    for (name, id) in &categories {
+        sqlx::query(
+            "INSERT OR REPLACE INTO categories
+            (
+                id,
+                name,
+                community_id
+            )
+            VALUES (?, ?, ?)
+        ",
+        )
+        .bind(id)
+        .bind(name)
+        .bind(community_id)
+        .execute(&state.db)
+        .await?;
+    }
+
     let stream = api::stream_packages(&state.reqwest, slug).await?;
     pin_mut!(stream);
 
@@ -30,7 +59,7 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
             debug!("fetched {count} packages");
         }
 
-        insert_package(&package, community_id, &mut transaction)
+        insert_package(&package, community_id, &categories, &mut transaction)
             .await
             .context("failed to insert package")?;
 
@@ -52,6 +81,7 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
 async fn insert_package(
     package: &PackageV1,
     community: u32,
+    category_map: &HashMap<String, i64>,
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
     sqlx::query(
@@ -96,6 +126,34 @@ async fn insert_package(
     .execute(&mut **transaction)
     .await?;
 
+    for category in &package.categories {
+        let category_id = match category_map.get(category) {
+            Some(id) => *id,
+            None => {
+                log::warn!(
+                    "package {} has unknown category: {}",
+                    package.full_name,
+                    category
+                );
+                continue;
+            }
+        };
+
+        sqlx::query(
+            "INSERT OR REPLACE INTO package_categories
+            (
+                package_id,
+                category_id
+            )
+            VALUES (?, ?)
+        ",
+        )
+        .bind(&package.uuid4.as_bytes()[..])
+        .bind(category_id)
+        .execute(&mut **transaction)
+        .await?;
+    }
+
     Ok(())
 }
 
@@ -132,9 +190,9 @@ async fn insert_version(
     } else {
         Some(&version.website_url)
     })
-    .bind(version.version_number.major as u32)
-    .bind(version.version_number.minor as u32)
-    .bind(version.version_number.patch as u32)
+    .bind(version.version_number.major as i64)
+    .bind(version.version_number.minor as i64)
+    .bind(version.version_number.patch as i64)
     .execute(&mut **transaction)
     .await?;
 

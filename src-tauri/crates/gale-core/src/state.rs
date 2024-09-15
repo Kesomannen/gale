@@ -49,7 +49,7 @@ impl AppState {
             .join("data.sqlite3");
 
         let url = format!(
-            "sqlite://{}",
+            "sqlite:///{}",
             path.to_str().context("path contains invalid UTF-8")?
         );
 
@@ -71,7 +71,7 @@ impl AppState {
             .context("failed to run database migrations")?;
 
         let reqwest = reqwest::Client::builder()
-            .user_agent("gale")
+            .user_agent(format!("gale/{}", env!("CARGO_PKG_VERSION")))
             .build()
             .context("failed to create reqwest client")?;
 

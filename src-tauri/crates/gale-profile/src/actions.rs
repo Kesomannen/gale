@@ -1,11 +1,16 @@
 use crate::scan_mod;
-use anyhow::{anyhow, ensure};
+use anyhow::anyhow;
 use gale_core::prelude::*;
 use std::path::Path;
 use walkdir::WalkDir;
 
-pub async fn create(name: &str, path: &Path, community_id: i64, state: &AppState) -> Result<i64> {
-    ensure!(!path.exists(), "profile path already exists");
+pub async fn create_profile(
+    name: &str,
+    path: &Path,
+    community_id: i64,
+    state: &AppState,
+) -> Result<i64> {
+    //ensure!(!path.exists(), "profile path already exists");
 
     let path_str = path
         .to_str()
@@ -26,7 +31,7 @@ pub async fn create(name: &str, path: &Path, community_id: i64, state: &AppState
     Ok(id)
 }
 
-pub async fn delete(id: i64, state: &AppState) -> Result<()> {
+pub async fn delete_profile(id: i64, state: &AppState) -> Result<()> {
     let path = sqlx::query!("SELECT path FROM profiles WHERE id = ?", id)
         .fetch_optional(&state.db)
         .await?
@@ -42,7 +47,7 @@ pub async fn delete(id: i64, state: &AppState) -> Result<()> {
     Ok(())
 }
 
-pub async fn rename(id: i64, name: &str, state: &AppState) -> Result<()> {
+pub async fn rename_profile(id: i64, name: &str, state: &AppState) -> Result<()> {
     sqlx::query!("UPDATE profiles SET name = ? WHERE id = ?", name, id)
         .execute(&state.db)
         .await?;

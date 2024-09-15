@@ -1,11 +1,12 @@
 import type { Mod, ConfigEntry } from './models';
+import { communities } from './state/profile.svelte';
 
-export function shortenFileSize(size: number): string {
+function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
 	return (size / Math.pow(1024, i)).toFixed(1) + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
-export function formatTime(seconds: number): string {
+function formatTime(seconds: number): string {
 	var hours = Math.floor(seconds / 3600);
 	var minutes = Math.floor((seconds % 3600) / 60);
 	var secs = Math.floor(seconds % 60);
@@ -13,7 +14,7 @@ export function formatTime(seconds: number): string {
 	return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function shortenNum(value: number): string {
+function shortenNum(value: number): string {
 	var i = value == 0 ? 0 : Math.floor(Math.log(value) / Math.log(1000));
 	if (i === 0) {
 		return value.toString();
@@ -21,7 +22,7 @@ export function shortenNum(value: number): string {
 	return (value / Math.pow(1000, i)).toFixed(1) + ['', 'k', 'M', 'G', 'T'][i];
 }
 
-export function sentenceCase(str: string): string {
+function sentenceCase(str: string): string {
 	const textcase = String(str)
 		.replace(/^[^A-Za-z0-9]*|[^A-Za-z0-9]*$/g, '')
 		.replace(/([a-z])([A-Z])/g, (m, a, b) => `${a}_${b.toLowerCase()}`)
@@ -31,7 +32,7 @@ export function sentenceCase(str: string): string {
 	return textcase.charAt(0).toUpperCase() + textcase.slice(1);
 }
 
-export function timeSince(date: Date): string {
+function timeSince(date: Date): string {
 	var seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
 	var interval = Math.floor(seconds / 31536000);
 
@@ -57,11 +58,11 @@ export function timeSince(date: Date): string {
 	return Math.floor(seconds) + ' seconds';
 }
 
-export function titleCase(str: string): string {
+function titleCase(str: string): string {
 	return str.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-export function isOutdated(mod: Mod): boolean {
+function isOutdated(mod: Mod): boolean {
 	if (mod.versions.length === 0) {
 		return false;
 	}
@@ -69,11 +70,11 @@ export function isOutdated(mod: Mod): boolean {
 	return mod.version !== mod.versions[0].name;
 }
 
-export function capitalize(str: string): string {
+function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export function isBefore(el1: HTMLElement, el2: HTMLElement) {
+function isBefore(el1: HTMLElement, el2: HTMLElement) {
 	return el1.compareDocumentPosition(el2) === Node.DOCUMENT_POSITION_PRECEDING;
 }
 
@@ -82,7 +83,7 @@ export interface ListSeparator {
 	char: string;
 }
 
-export function getListSeparator(entry: ConfigEntry): ListSeparator {
+function getListSeparator(entry: ConfigEntry): ListSeparator {
 	const keyword = 'ListSeparator=';
 
 	let description = entry.description;
@@ -94,3 +95,26 @@ export function getListSeparator(entry: ConfigEntry): ListSeparator {
 
 	return { type: 'default', char: ',' };
 }
+
+function modIconUrl(owner: string, name: string, version: { major: number; minor: number; patch: number }) {
+	return `https://gcdn.thunderstore.io/live/repository/icons/${owner}-${name}-${version.major}.${version.minor}.${version.patch}.png`;
+}
+
+function modThunderstoreUrl(owner: string, name: string) {
+	return `https://thunderstore.io/c/${communities.active?.slug}/p/${owner}/${name}/`;
+}
+
+export { 
+	modIconUrl,
+	modThunderstoreUrl,
+	shortenFileSize,
+	formatTime,
+	shortenNum,
+	sentenceCase,
+	timeSince,
+	titleCase,
+	isOutdated,
+	capitalize,
+	isBefore,
+	getListSeparator
+};

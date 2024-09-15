@@ -25,7 +25,7 @@ futures-util = "0.3"
 uuid = { version = "1", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 semver = "1"
-reqwest = { version = "0.12", features = ["stream"] }
+reqwest = { version = "0.12", features = ["stream", "gzip"] }
 url = "2"
 async-stream = "0.3"
 bytes = "1"

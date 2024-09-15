@@ -16,18 +16,18 @@ pub async fn create(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> CmdResult<i64> {
-    let _ = LoadingBar::indeterminate("Creating profile", &app);
+    let _ = LoadingBar::create("Creating profile", &app);
 
-    let id = crate::actions::create(&name, &path, community_id, &state).await?;
+    let id = crate::actions::create_profile(&name, &path, community_id, &state).await?;
 
     Ok(id)
 }
 
 #[tauri::command]
 pub async fn delete(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
-    let _ = LoadingBar::indeterminate("Deleting profile", &app);
+    let _ = LoadingBar::create("Deleting profile", &app);
 
-    crate::actions::delete(id, &state).await?;
+    crate::actions::delete_profile(id, &state).await?;
 
     Ok(())
 }
@@ -39,9 +39,9 @@ pub async fn rename(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> CmdResult<()> {
-    let _ = LoadingBar::indeterminate("Renaming profile", &app);
+    let _ = LoadingBar::create("Renaming profile", &app);
 
-    crate::actions::rename(id, &name, &state).await?;
+    crate::actions::rename_profile(id, &name, &state).await?;
 
     emit_update(id, &state, &app).await?;
 
@@ -68,7 +68,7 @@ pub async fn get(id: i64, state: State<'_, AppState>) -> CmdResult<ProfileInfo> 
 }
 
 #[tauri::command]
-pub async fn queue_thunderstore_install(
+pub fn queue_thunderstore_install(
     version_uuid: Uuid,
     profile_id: i64,
     app: AppHandle,
@@ -78,6 +78,13 @@ pub async fn queue_thunderstore_install(
         InstallMetadata::new(profile_id),
         &app,
     )?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn launch(id: i64, state: State<'_, AppState>) -> CmdResult<()> {
+    crate::launch_::launch(id, &state).await?;
 
     Ok(())
 }

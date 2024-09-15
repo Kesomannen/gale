@@ -59,7 +59,7 @@ export function removeError(index: number) {
 	});
 }
 
-async function invoke<T>(plugin: string, command: string, args?: any): Promise<T> {
+async function invoke<T = void>(plugin: string, command: string, args?: any): Promise<T> {
 	return await tauriInvoke<T>(`plugin:gale-${plugin}|${command}`, args);
 }
 

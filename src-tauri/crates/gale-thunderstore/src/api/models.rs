@@ -174,7 +174,7 @@ pub struct PackageSubmissionResult {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AvailableCommunity {
     pub community: Community,
-    pub categories: PackageCategory,
+    pub categories: Vec<PackageCategory>,
     pub url: Url,
 }
 
@@ -189,8 +189,23 @@ pub struct Community {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PackageCategory {
+    pub id: String,
     pub name: String,
     pub slug: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Section {
+    pub uuid: Uuid,
+    pub name: String,
+    pub slug: String,
+    pub priority: i32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FiltersResponse {
+    pub sections: Vec<Section>,
+    pub package_categories: Vec<PackageCategory>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
