@@ -43,6 +43,7 @@
 			/>
 
 			<div class="truncate flex-shrink mr-1" style="direction: rtl;">
+				&#x200E;
 				{file.displayName ?? file.relativePath}
 			</div>
 
