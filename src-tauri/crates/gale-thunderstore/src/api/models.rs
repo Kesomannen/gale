@@ -1,13 +1,13 @@
 use super::VersionId;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, hash::Hash};
+use std::hash::Hash;
 use url::Url;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageV1 {
-    pub categories: HashSet<String>,
+    pub categories: Vec<String>,
     pub date_created: DateTime<Utc>,
     pub date_updated: DateTime<Utc>,
     pub donation_link: Option<Url>,
@@ -29,7 +29,9 @@ impl PackageV1 {
     }
 
     pub fn is_modpack(&self) -> bool {
-        self.categories.contains("Modpacks")
+        self.categories
+            .iter()
+            .any(|category| category == "Modpacks")
     }
 
     pub fn get_version(&self, uuid: &Uuid) -> Option<&PackageVersionV1> {
@@ -286,7 +288,7 @@ impl Hash for Package {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct PackageListingExperimental {
     pub has_nsfw_content: bool,
-    pub categories: HashSet<String>,
+    pub categories: Vec<String>,
     pub community: String,
     pub review_status: ReviewStatus,
 }

@@ -15,6 +15,7 @@ mod actions;
 mod commands;
 mod get;
 pub mod install;
+mod launcH;
 
 pub fn init() -> TauriPlugin<tauri::Wry> {
     Builder::new("gale-profile")
@@ -24,17 +25,6 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
 
             let handle = app.app_handle().to_owned();
             async_runtime::spawn(install::handler(handle));
-
-            let handle = app.app_handle().to_owned();
-            async_runtime::spawn(async move {
-                let state = handle.app_state();
-                let path = PathBuf::from(r"D:\Gale\v2\Default");
-
-                match actions::create("Default", &path, 1, state).await {
-                    Ok(id) => log::info!("created default profile with id: {}", id),
-                    Err(err) => log::error!("failed to create default profile: {:#}", err),
-                };
-            });
 
             Ok(())
         })
@@ -62,7 +52,7 @@ enum ProfileModSource {
 }
 
 async fn emit_update(id: i64, state: &AppState, app: &AppHandle) -> Result<()> {
-    let info = get::single(id, state).await?;
+    let info = crate::get::single(id, state).await?;
     app.emit("profile-update", info)?;
     Ok(())
 }

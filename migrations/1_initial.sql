@@ -2,14 +2,16 @@ CREATE TABLE communities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     slug TEXT NOT NULL,
+    steam_id INTEGER NOT NULL,
+    steam_dir_name TEXT NOT NULL,
     override_path TEXT,
     is_favorite BOOLEAN NOT NULL DEFAULT 0
 );
 
-INSERT INTO communities (name, slug)
+INSERT INTO communities (name, slug, steam_id, steam_dir_name)
 VALUES 
-    ('Lethal Company', 'lethal-company'),
-    ('Content Warning', 'content-warning');
+    ('Lethal Company', 'lethal-company', 1966720, 'Lethal Company'),
+    ('Content Warning', 'content-warning', 2881650, 'Content Warning');
 
 CREATE TABLE packages (
     id UUID PRIMARY KEY NOT NULL,
@@ -82,6 +84,8 @@ CREATE TABLE profiles (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     path TEXT NOT NULL,
+    is_favorite BOOLEAN NOT NULL DEFAULT 0,
+    launch_mode BLOB,
     community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE
 );
 
