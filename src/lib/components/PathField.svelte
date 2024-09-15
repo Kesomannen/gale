@@ -19,7 +19,7 @@
 	{/if}
 
 	<Button.Root
-		class="flex flex-grow px-3 py-1 items-center text-right rounded-lg group bg-gray-900 truncate
+		class="flex flex-grow basis-0 px-3 py-1 items-center text-right rounded-lg group bg-gray-900 truncate
             border border-gray-500 border-opacity-0 hover:border-opacity-100"
 		on:click={onClick}
 	>
@@ -31,6 +31,7 @@
 			class="text-slate-300 truncate"
 			style="direction: rtl;"
 		>
+			&#x200E;
 			{hasValue ? value : 'Not set'}
 		</div>
 
