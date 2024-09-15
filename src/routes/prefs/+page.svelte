@@ -59,7 +59,7 @@
 			Whether to automatically fetch mods every 15 minutes. This will ensure the mod list is
 			up-to-date, but can be disabled to save bandwidth.
 			<br />
-			To manually trigger a fetch, go to <b>File > Fetch mods</b>.
+			To manually trigger a fetch, go to <b>File &gt; Fetch mods</b>.
 		</TogglePref>
 
 		<Separator.Root class="h-2" />
