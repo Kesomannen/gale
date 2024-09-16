@@ -1,4 +1,3 @@
-use gale_core::prelude::*;
 use gale_thunderstore::api::PackageId;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -11,7 +10,6 @@ use walkdir::WalkDir;
 mod commands;
 mod export;
 mod import;
-mod modpack;
 mod r2modman;
 
 pub fn init() -> TauriPlugin<tauri::Wry> {

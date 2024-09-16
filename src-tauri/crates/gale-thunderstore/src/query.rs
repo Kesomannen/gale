@@ -8,15 +8,27 @@ use serde::{Deserialize, Serialize};
 use sqlx::{prelude::FromRow, types::Uuid};
 use std::time::Instant;
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum OrderBy {
+    Relevance,
+    LastUpdated,
+    Created,
+    Downloads,
+    Rating,
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryArgs {
     search_term: String,
     max_results: u32,
     community_id: u32,
+    ascending: bool,
+    order_by: OrderBy,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct ListedPackageInfo {
     id: Uuid,
@@ -36,42 +48,64 @@ pub struct ListedPackageInfo {
 
 pub async fn query_packages(args: QueryArgs, state: &AppState) -> Result<Vec<ListedPackageInfo>> {
     let start = Instant::now();
-    let results = sqlx::query_as!(
-        ListedPackageInfo,
-        r#"SELECT
-            p.id AS "id: Uuid",
-            p.name,
-            p.owner,
-            p.description,
-            p.is_pinned,
-            p.is_deprecated,
-            p.rating_score,
-            p.downloads,
-            p.has_nsfw_content,
-            v.major,
-            v.minor,
-            v.patch,
-            v.id AS "version_uuid: Uuid"
-        FROM
-            packages p
-            JOIN packages_fts fts ON
-                fts.package_id = p.id
-            JOIN versions v ON
-                v.id = p.latest_version_id
-        WHERE
-            p.community_id = ? AND
-            fts.packages_fts MATCH ?
-        ORDER BY
-            p.is_pinned DESC,
-            p.rating_score DESC
-        LIMIT ?
-    "#,
-        args.community_id,
-        args.search_term,
-        args.max_results
-    )
-    .fetch_all(&state.db)
-    .await?;
+
+    let mut query = r#"
+SELECT
+    p.id,
+    p.name,
+    p.owner,
+    p.description,
+    p.is_pinned,
+    p.is_deprecated,
+    p.rating_score,
+    p.downloads,
+    p.has_nsfw_content,
+    v.id AS version_uuid,
+    v.major,
+    v.minor,
+    v.patch
+FROM
+    packages p
+    JOIN versions v ON
+        v.id = p.latest_version_id"#
+        .to_owned();
+
+    if args.search_term.len() >= 3 {
+        query.push_str(
+            r#"
+    JOIN packages_fts ON
+        packages_fts.package_id = p.id
+WHERE
+    p.community_id = ? AND
+    packages_fts MATCH ?
+"#,
+        );
+    } else {
+        query.push_str("\nWHERE p.community_id = ?\n");
+    }
+
+    query.push_str(match args.order_by {
+        OrderBy::Relevance if args.search_term.len() >= 3 => {
+            "ORDER BY -bm25(packages_fts, 0, 10.0, 5.0, 5.0)"
+        }
+        OrderBy::Relevance | OrderBy::LastUpdated => "ORDER BY v.date_created",
+        OrderBy::Created => "ORDER BY p.date_created",
+        OrderBy::Downloads => "ORDER BY p.downloads",
+        OrderBy::Rating => "ORDER BY p.rating_score",
+    });
+
+    query.push_str(if args.ascending { " ASC" } else { " DESC" });
+
+    query.push_str("\nLIMIT ?");
+
+    let mut query = sqlx::query_as::<_, ListedPackageInfo>(&query);
+    query = query.bind(args.community_id);
+    if args.search_term.len() >= 3 {
+        query = query.bind(&args.search_term);
+    }
+    query = query.bind(args.max_results);
+
+    let results = query.fetch_all(&state.db).await?;
 
     trace!("found {} results in {:?}", results.len(), start.elapsed());
 

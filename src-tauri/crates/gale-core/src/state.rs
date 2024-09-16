@@ -56,7 +56,7 @@ impl AppState {
         debug!("connecting to database at {url}");
 
         let options = SqliteConnectOptions::from_str(&url)?
-            .synchronous(SqliteSynchronous::Off)
+            .synchronous(SqliteSynchronous::Normal)
             .journal_mode(SqliteJournalMode::Wal)
             .disable_statement_logging()
             .create_if_missing(true);

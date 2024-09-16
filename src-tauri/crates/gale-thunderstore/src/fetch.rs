@@ -49,8 +49,13 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
     let stream = api::stream_packages(&state.reqwest, slug).await?;
     pin_mut!(stream);
 
-    let mut transaction = state.db.begin().await?;
     let mut count = 0;
+    let mut transaction = state.db.begin().await?;
+
+    sqlx::query("DELETE FROM packages WHERE community_id = ?")
+        .bind(community_id)
+        .execute(&mut *transaction)
+        .await?;
 
     while let Some(package) = stream.try_next().await? {
         count += 1;
@@ -196,11 +201,13 @@ async fn insert_version(
     .execute(&mut **transaction)
     .await?;
 
+    /* 
     for dependency in version.dependencies {
         insert_dependency(version.uuid4, dependency, transaction)
             .await
             .context("failed to insert dependency")?;
     }
+    */
 
     Ok(())
 }

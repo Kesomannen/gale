@@ -1,9 +1,11 @@
 <script lang="ts">
 	import InputField from '$lib/components/InputField.svelte';
 	import { invoke } from '$lib/invoke';
-	import { profiles } from '$lib/state/profile.svelte';
-	import { modIconUrl, queueInstall, shortenNum } from '$lib/util';
+	import type { Version } from '$lib/models';
+	import { communities, profiles } from '$lib/state/profile.svelte';
+	import { modIconUrl, queueInstall, queueThunderstoreInstall, shortenNum } from '$lib/util';
 	import Icon from '@iconify/svelte';
+	import { page } from '$app/stores';
 
 	type Package = {
 		id: string;
@@ -16,35 +18,34 @@
 		downloads: number;
 		hasNsfwContent: boolean;
 		dateUpdated: Date;
-		major: number;
-		minor: number;
-		patch: number;
 		versionUuid: string;
-	};
+	} & Version;
 
-	let searchTerm = 'bepinex';
-	let loading = false;
-	let packages: Package[] = [];
+	let searchTerm = $state($page.url.searchParams.get('query') ?? '');
 
-	$: queryPackages(searchTerm);
+	let packages: Package[] = $state([]);
+	
+	let version = 0;
 
-	async function queryPackages(searchTerm: string) {
-		if (searchTerm.length === 0) {
-			loading = false;
-			packages = [];
-			return;
-		}
+	$effect(() => {
+		$page.url.searchParams.set('query', searchTerm);
+		queryPackages(searchTerm, ++version);
+	});
 
-		loading = true;
-		packages = await invoke<Package[]>('thunderstore', 'query_packages', {
+	async function queryPackages(searchTerm: string, thisVersion: number) {
+		let results = await invoke<Package[]>('thunderstore', 'query_packages', {
 			args: {
 				searchTerm,
 				maxResults: 10,
-				communityId: 2
+				communityId: communities.active?.id,
+				orderBy: 'relevance',
+				ascending: false
 			}
 		});
 
-		loading = false;
+		if (thisVersion === version) {
+			packages = results;
+		}
 	}
 </script>
 
@@ -88,7 +89,7 @@
 					<div class="inline-flex gap-0.5">
 						<button
 							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
-							onclick={() => queueInstall({ type: 'thunderstore', versionUuid: pkg.versionUuid })}
+							onclick={() => queueThunderstoreInstall(pkg.name, pkg.name, pkg)}
 						>
 							<Icon icon="akar-icons:download" />
 							Install

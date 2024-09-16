@@ -146,7 +146,7 @@ async fn read_data(src: impl Read + Seek, state: &AppState) -> Result<(String, I
         profile_name,
         mods,
         source: _,
-    } = serde_yaml::from_reader(manifest).context("failed to parse manifest")?;
+    } = serde_yaml_ng::from_reader(manifest).context("failed to parse manifest")?;
 
     let futures = mods
         .into_iter()

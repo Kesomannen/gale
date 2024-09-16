@@ -13,7 +13,7 @@ use zip::{write::SimpleFileOptions, ZipWriter};
 
 pub async fn as_code(profile_id: i64, state: &AppState) -> Result<Uuid> {
     let mut writer = Cursor::new(Vec::new());
-    write_zip(profile_id, &mut writer, state).await?;
+    to_zip(profile_id, &mut writer, state).await?;
 
     let key = gale_thunderstore::api::create_profile(&state.reqwest, writer.into_inner())
         .await
@@ -27,12 +27,12 @@ pub async fn to_file(profile_id: i64, path: impl AsRef<Path>, state: &AppState) 
         .map(BufWriter::new)
         .context("failed to create file")?;
 
-    write_zip(profile_id, file, state).await?;
+    to_zip(profile_id, file, state).await?;
 
     Ok(())
 }
 
-async fn write_zip(profile_id: i64, writer: impl Write + Seek, state: &AppState) -> Result<()> {
+async fn to_zip(profile_id: i64, writer: impl Write + Seek, state: &AppState) -> Result<()> {
     let mut zip = ZipWriter::new(writer);
 
     let profile = sqlx::query!("SELECT name, path FROM profiles WHERE id = ?", profile_id)
@@ -82,7 +82,7 @@ async fn write_zip(profile_id: i64, writer: impl Write + Seek, state: &AppState)
     };
 
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
-    serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
+    serde_yaml_ng::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
     write_config(&PathBuf::from(profile.path), &mut zip)?;
 
