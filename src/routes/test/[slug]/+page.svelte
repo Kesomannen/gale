@@ -2,20 +2,14 @@
 	import { page } from '$app/stores';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import TabsMenu from '$lib/components/TabsMenu.svelte';
-	import { modIconUrl, shortenFileSize, shortenNum, timeSince, modThunderstoreUrl } from '$lib/util';
+	import { modIconUrl, shortenFileSize, shortenNum, timeSince, modThunderstoreUrl, queueInstall, queueThunderstoreInstall } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Tabs } from 'bits-ui';
 	import { invoke } from '$lib/invoke';
-	import { profiles } from '$lib/state/profile.svelte';
+	import type { Version } from '$lib/models';
 
 	let id = $page.params.slug;
-
-	type Version = {
-		major: number;
-		minor: number;
-		patch: number;
-	};
-
+	
 	let promise = invoke<{
 		name: string;
 		owner: string;
@@ -42,13 +36,6 @@
 	}
 
 	let tab: Tab = $state(Tab.README);
-
-	async function install(versionUuid: string) {
-		await invoke('profile', 'queue_thunderstore_install', {
-			versionUuid,
-			profileId: profiles.activeId
-		});
-	}
 </script>
 
 <div class="flex gap-6 w-full max-w-6xl mx-auto overflow-hidden px-4 pt-4">
@@ -83,48 +70,20 @@
 			</div>
 
 			<div class="pb-6 pt-4 space-y-1">
-				{#if websiteUrl}
-					<div>
-						<Icon icon="akar-icons:link" class="inline mr-1 text-gray-300" />
-						<a
-							href={websiteUrl}
-							target="_blank"
-							class="text-green-400 hover:text-green-300 hover:underline"
-						>
-							Website
-						</a>
-					</div>
-				{/if}
-
 				{#if donationUrl}
-					<div>
-						<Icon icon="akar-icons:heart" class="inline mr-1 text-gray-300" />
-						<a
-							href={donationUrl}
-							target="_blank"
-							class="text-green-400 hover:text-green-300 hover:underline"
-						>
-							Donate
-						</a>
-					</div>
+					{@render link('Donate', 'akar-icons:heart', donationUrl)}
 				{/if}
 
-				<div>
-					<Icon icon="akar-icons:link-out" class="inline mr-1 text-gray-300" />
-					<a
-						href={modThunderstoreUrl(owner, name)}
-						target="_blank"
-						class="text-green-400 hover:text-green-300 hover:underline"
-					>
-						Thunderstore
-					</a>
-				</div>
+				{#if websiteUrl}
+					{@render link('Website', 'akar-icons:link', websiteUrl)}
+				{/if}
+
+				{@render link('Thunderstore', 'akar-icons:link-out', modThunderstoreUrl(owner, name))}
 			</div>
 
 			<button
-				class="flex items-center justify-center gap-2 bg-green-700 text-white py-2 w-full rounded-lg
-				hover:bg-green-800 hover:-translate-y-0.5 transition-all hover:shadow-sm"
-				onclick={() => install(versions[0].id)}
+				class="flex items-center justify-center gap-2 bg-green-700 text-white py-2 w-full rounded-lg hover:bg-green-800 hover:-translate-y-0.5 transition-all hover:shadow-sm"
+				onclick={() => queueThunderstoreInstall(owner, name, versions[0])}
 			>
 				<Icon icon="akar-icons:download" />
 				Install latest
@@ -172,23 +131,23 @@
 				<Tabs.Content value="versions" class="overflow-y-auto h-full">
 					<table class="w-full mt-2 rounded border-2 border-gray-900">
 						<tbody>
-							{#each versions as { id: uuid, major, minor, patch, dateCreated, downloads }}
+							{#each versions as version}
 								<tr class="odd:bg-gray-900">
 									<td class="text-white font-semibold text-lg py-1.5 px-2">
-										{major}.{minor}.{patch}
+										{version.major}.{version.minor}.{version.patch}
 									</td>
 									<td class="text-gray-400">
 										<Icon icon="akar-icons:clock" class="inline mr-1" />
-										{timeSince(new Date(dateCreated))} ago
+										{timeSince(new Date(version.dateCreated))} ago
 									</td>
 									<td class="text-gray-400">
 										<Icon icon="akar-icons:download" class="inline mr-1" />
-										{shortenNum(downloads)}
+										{shortenNum(version.downloads)}
 									</td>
 									<td>
 										<button
 											class="inline-flex items-center gap-2 text-green-400 font-medium hover:text-green-300 hover:underline"
-											onclick={() => install(uuid)}
+											onclick={() => queueThunderstoreInstall(owner, name, version)}
 										>
 											<Icon icon="akar-icons:download" />
 											Install
@@ -205,3 +164,16 @@
 		<p>{error.message}</p>
 	{/await}
 </div>
+
+{#snippet link(text: string, icon: string, href: string)}
+	<div>
+		<Icon {icon} class="inline mr-1 text-gray-300" />
+		<a
+			{href}
+			target="_blank"
+			class="text-green-400 hover:text-green-300 hover:underline"
+		>
+			{text}
+		</a>
+	</div>
+{/snippet}

@@ -2,7 +2,7 @@
 	import InputField from '$lib/components/InputField.svelte';
 	import { invoke } from '$lib/invoke';
 	import { profiles } from '$lib/state/profile.svelte';
-	import { modIconUrl, shortenNum } from '$lib/util';
+	import { modIconUrl, queueInstall, shortenNum } from '$lib/util';
 	import Icon from '@iconify/svelte';
 
 	type Package = {
@@ -46,13 +46,6 @@
 
 		loading = false;
 	}
-
-	async function installPackage(pkg: Package) {
-		await invoke('profile', 'queue_thunderstore_install', {
-			versionUuid: pkg.versionUuid,
-			profileId: profiles.activeId
-		});
-	}
 </script>
 
 <div class="w-full max-w-4xl mx-auto overflow-y-auto px-4">
@@ -95,7 +88,7 @@
 					<div class="inline-flex gap-0.5">
 						<button
 							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
-							onclick={() => installPackage(pkg)}
+							onclick={() => queueInstall({ type: 'thunderstore', versionUuid: pkg.versionUuid })}
 						>
 							<Icon icon="akar-icons:download" />
 							Install

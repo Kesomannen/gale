@@ -1862,6 +1862,7 @@ version = "2.0.0-alpha.1"
 dependencies = [
  "gale-core",
  "gale-install",
+ "gale-io",
  "gale-profile",
  "gale-thunderstore",
  "log",
@@ -1897,6 +1898,7 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "uuid",
+ "zip",
 ]
 
 [[package]]
@@ -1904,10 +1906,14 @@ name = "gale-install"
 version = "2.0.0-alpha.1"
 dependencies = [
  "anyhow",
+ "bytes",
+ "chrono",
  "futures-util",
  "gale-core",
  "gale-thunderstore",
  "log",
+ "reqwest",
+ "serde",
  "serde_json",
  "sqlx",
  "tauri",
@@ -1929,11 +1935,14 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
+ "serde_yaml",
  "sqlx",
  "tauri",
  "tauri-plugin",
+ "tempfile",
  "uuid",
  "walkdir",
+ "zip",
 ]
 
 [[package]]
@@ -1962,6 +1971,7 @@ version = "2.0.0-alpha.1"
 dependencies = [
  "anyhow",
  "async-stream",
+ "base64 0.22.1",
  "bytes",
  "chrono",
  "futures-util",
@@ -4759,6 +4769,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_yaml"
+version = "0.9.34+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
+dependencies = [
+ "indexmap 2.3.0",
+ "itoa 1.0.11",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
+]
+
+[[package]]
 name = "serialize-to-javascript"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6356,6 +6379,12 @@ name = "unicode_categories"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39ec24b3121d976906ece63c9daad25b85969647682eee313cb5779fdd69e14e"
+
+[[package]]
+name = "unsafe-libyaml"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "untrusted"

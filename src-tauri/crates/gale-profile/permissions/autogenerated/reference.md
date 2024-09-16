@@ -271,6 +271,32 @@ Denies the query command without any pre-configured scope.
 <tr>
 <td>
 
+`gale-profile:allow-queue-install`
+
+</td>
+<td>
+
+Enables the queue_install command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-profile:deny-queue-install`
+
+</td>
+<td>
+
+Denies the queue_install command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `gale-profile:allow-queue-thunderstore-install`
 
 </td>

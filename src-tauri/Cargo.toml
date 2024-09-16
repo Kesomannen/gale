@@ -22,6 +22,7 @@ gale-core = { path = "./crates/gale-core" }
 gale-thunderstore = { path = "./crates/gale-thunderstore" }
 gale-install = { path = "./crates/gale-install" }
 gale-profile = { path = "./crates/gale-profile" }
+gale-io = { path = "./crates/gale-io" }
 
 tauri-plugin-deep-link = "2.0.0-rc"
 tauri-plugin-window-state = "2.0.0-rc"

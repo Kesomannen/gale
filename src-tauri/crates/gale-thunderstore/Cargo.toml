@@ -29,6 +29,7 @@ reqwest = { version = "0.12", features = ["stream", "gzip"] }
 url = "2"
 async-stream = "0.3"
 bytes = "1"
+base64 = "0.22"
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-rc", features = ["build"] }

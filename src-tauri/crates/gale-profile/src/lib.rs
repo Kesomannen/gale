@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::types::Uuid;
 use sqlx::Row;
+use std::borrow::Cow;
 use std::path::PathBuf;
 use tauri::{
     async_runtime, generate_handler,
@@ -17,6 +18,8 @@ mod commands;
 mod get;
 pub mod install;
 mod launch_;
+
+pub use actions::*;
 
 pub fn init() -> TauriPlugin<tauri::Wry> {
     Builder::new("gale-profile")
@@ -43,7 +46,7 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
             commands::get,
             commands::force_uninstall_mod,
             commands::force_toggle_mod,
-            commands::queue_thunderstore_install,
+            commands::queue_install,
             commands::launch
         ])
         .build()
@@ -62,7 +65,7 @@ async fn create_default_profile(app: AppHandle) -> Result<()> {
     }
 
     let path = PathBuf::from(r"D:\Gale\v2\profiles\Default");
-    let id = actions::create_profile("Default", &path, 2, &state).await?;
+    let id = actions::create("Default", &path, 2, &state).await?;
 
     log::info!("created default profile with id {}", id);
 
@@ -71,14 +74,35 @@ async fn create_default_profile(app: AppHandle) -> Result<()> {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
-enum ProfileModSource {
+pub enum ProfileModSource {
     Thunderstore {
         identifier: VersionId,
         version_uuid: Uuid,
     },
-    Local {
-        id: i64,
+    Github {
+        owner: String,
+        repo: String,
+        tag: String,
     },
+    Local {
+        full_name: String,
+        version: String,
+    },
+}
+
+impl ProfileModSource {
+    /// Unique identifier for the mod, excluding the version.
+    fn full_name(&self) -> Cow<'_, str> {
+        match self {
+            ProfileModSource::Thunderstore { identifier, .. } => {
+                Cow::Borrowed(identifier.full_name())
+            }
+            ProfileModSource::Github { owner, repo, .. } => {
+                Cow::Owned(format!("{}-{}", owner, repo))
+            }
+            ProfileModSource::Local { full_name, .. } => Cow::Borrowed(full_name),
+        }
+    }
 }
 
 async fn emit_update(id: i64, state: &AppState, app: &AppHandle) -> Result<()> {
@@ -112,15 +136,12 @@ async fn scan_mod(profile_mod_id: i64, state: &AppState) -> Result<impl Iterator
     .fetch_one(&state.db)
     .await?;
 
-    let identifier = match source {
-        ProfileModSource::Thunderstore { identifier, .. } => identifier,
-        ProfileModSource::Local { id: _ } => todo!(),
-    };
+    let full_name = source.full_name().into_owned();
 
     path.push("BepInEx");
 
     Ok(["plugins", "patchers", "monomod", "core"]
         .iter()
-        .map(move |dir| path.join(dir).join(identifier.full_name()))
+        .map(move |dir| path.join(dir).join(&full_name))
         .filter(|path| path.exists()))
 }

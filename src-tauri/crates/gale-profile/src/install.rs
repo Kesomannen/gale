@@ -1,8 +1,14 @@
 use crate::{emit_update, ProfileModSource};
 use anyhow::Context;
 use gale_core::prelude::*;
+use gale_thunderstore::api::VersionId;
 use serde::{Deserialize, Serialize};
-use std::{collections::VecDeque, path::PathBuf, sync::Mutex};
+use std::{
+    collections::VecDeque,
+    fmt::{Debug, Display},
+    path::PathBuf,
+    sync::Mutex,
+};
 use tauri::{AppHandle, Manager};
 use tokio::sync::Notify;
 use uuid::Uuid;
@@ -34,10 +40,72 @@ impl InstallMetadata {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", tag = "type")]
 pub enum InstallSource {
-    Thunderstore(Uuid),
-    Local(PathBuf),
+    #[serde(rename_all = "camelCase")]
+    Thunderstore {
+        identifier: VersionId,
+        version_uuid: Uuid,
+    },
+    #[serde(rename_all = "camelCase")]
+    Local {
+        path: PathBuf,
+        full_name: String,
+        version: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    Github {
+        owner: String,
+        repo: String,
+        tag: String,
+    },
+}
+
+impl From<InstallSource> for ProfileModSource {
+    fn from(source: InstallSource) -> Self {
+        match source {
+            InstallSource::Thunderstore {
+                identifier,
+                version_uuid,
+            } => ProfileModSource::Thunderstore {
+                identifier,
+                version_uuid,
+            },
+            InstallSource::Local {
+                full_name, version, ..
+            } => ProfileModSource::Local { full_name, version },
+            InstallSource::Github { owner, repo, tag } => {
+                ProfileModSource::Github { owner, repo, tag }
+            }
+        }
+    }
+}
+
+impl Display for InstallSource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InstallSource::Thunderstore { identifier, .. } => {
+                write!(f, "{} (thunderstore)", identifier)
+            }
+            InstallSource::Local {
+                full_name,
+                version,
+                path,
+            } => {
+                write!(
+                    f,
+                    "{}-{} (local from {})",
+                    full_name,
+                    version,
+                    path.display()
+                )
+            }
+            InstallSource::Github { owner, repo, tag } => {
+                write!(f, "{}-{}-{} (github)", owner, repo, tag)
+            }
+        }
+    }
 }
 
 pub struct InstallQueue {
@@ -53,12 +121,19 @@ impl InstallQueue {
         }
     }
 
-    pub fn enqueue(&self, source: InstallSource, metadata: InstallMetadata) -> Result<usize> {
+    pub fn enqueue(&self, source: InstallSource, metadata: InstallMetadata) -> usize {
+        self.enqueue_many(std::iter::once((source, metadata)))
+    }
+
+    pub fn enqueue_many<I>(&self, items: I) -> usize
+    where
+        I: IntoIterator<Item = (InstallSource, InstallMetadata)>,
+    {
         let mut queue = self.queue.lock().unwrap();
-        queue.push_back((source, metadata));
+        queue.extend(items);
         self.notify.notify_one();
 
-        Ok(queue.len())
+        queue.len()
     }
 
     pub fn with_lock<F, T>(&self, f: F) -> T
@@ -67,10 +142,6 @@ impl InstallQueue {
     {
         f(&mut self.queue.lock().unwrap())
     }
-}
-
-pub fn enqueue(source: InstallSource, metadata: InstallMetadata, app: &AppHandle) -> Result<usize> {
-    app.state::<InstallQueue>().enqueue(source, metadata)
 }
 
 pub(crate) async fn handler(app: AppHandle) {
@@ -100,8 +171,6 @@ async fn handle_request(
     state: &AppState,
     app: &AppHandle,
 ) -> Result<()> {
-    log::debug!("handling install request for {source:?}, {metadata:?}");
-
     let profile_path: PathBuf = sqlx::query!(
         "SELECT path FROM profiles WHERE id = ?",
         metadata.profile_id
@@ -112,21 +181,25 @@ async fn handle_request(
     .path
     .into();
 
-    log::debug!("installing at {}", profile_path.display());
+    log::debug!("installing {} at {}", source, profile_path.display());
 
-    let source = match source {
-        InstallSource::Thunderstore(version_uuid) => {
-            let identifier =
-                gale_install::from_thunderstore(version_uuid, &profile_path, state).await?;
-
-            ProfileModSource::Thunderstore {
-                identifier,
-                version_uuid,
-            }
+    match &source {
+        InstallSource::Thunderstore { version_uuid, .. } => {
+            gale_install::from_thunderstore(*version_uuid, &profile_path, state).await?;
         }
-        InstallSource::Local(_path) => todo!(),
+        InstallSource::Local {
+            path,
+            full_name,
+            version,
+        } => {
+            gale_install::from_local(path, full_name, version, &profile_path, state).await?;
+        }
+        InstallSource::Github { owner, repo, tag } => {
+            gale_install::from_github(owner, repo, tag, &profile_path, state).await?;
+        }
     };
 
+    let source = ProfileModSource::from(source);
     let json = sqlx::types::Json(source);
 
     let index = match metadata.index {

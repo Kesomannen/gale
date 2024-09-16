@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-export-file"
+description = "Enables the export_file command without any pre-configured scope."
+commands.allow = ["export_file"]
+
+[[permission]]
+identifier = "deny-export-file"
+description = "Denies the export_file command without any pre-configured scope."
+commands.deny = ["export_file"]

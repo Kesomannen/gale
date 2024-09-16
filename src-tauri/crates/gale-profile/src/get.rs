@@ -19,11 +19,12 @@ pub struct ProfileInfo {
 #[serde(rename_all = "camelCase")]
 pub struct ProfileModInfo {
     id: i64,
-    index: i64,
+    owner: Option<String>,
     name: String,
     version: String,
+    index: i64,
     enabled: bool,
-    href: String,
+    href: Option<String>,
     kind: ProfileModKind,
 }
 
@@ -32,10 +33,11 @@ pub struct ProfileModInfo {
 pub enum ProfileModKind {
     Thunderstore,
     Local,
+    Github,
 }
 
 pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
-    let ( name, path, community_id, community_slug) = sqlx::query!(
+    let (name, path, community_id, community_slug) = sqlx::query!(
         "SELECT
             p.name,
             p.path,
@@ -68,12 +70,7 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
     let mut mods = Vec::new();
 
     while let Some(record) = stream.try_next().await? {
-        let kind = match record.source.0 {
-            ProfileModSource::Thunderstore { .. } => ProfileModKind::Thunderstore,
-            ProfileModSource::Local { .. } => ProfileModKind::Local,
-        };
-
-        let (name, version, href) = match record.source.0 {
+        let (kind, owner, name, version, href) = match record.source.0 {
             ProfileModSource::Thunderstore { identifier, .. } => {
                 let href = format!(
                     "{}/c/{}/p/{}/",
@@ -83,19 +80,34 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
                 );
 
                 (
+                    ProfileModKind::Thunderstore,
+                    Some(identifier.owner().to_owned()),
                     identifier.name().to_owned(),
                     identifier.version().to_owned(),
-                    href,
+                    Some(href),
                 )
             }
-            ProfileModSource::Local { id: _ } => todo!(),
+            ProfileModSource::Local { full_name, version } => {
+                let (owner, name) = match full_name.split_once('-') {
+                    Some((owner, name)) => (Some(owner.to_owned()), name.to_owned()),
+                    None => (None, full_name),
+                };
+
+                (ProfileModKind::Local, owner, name, version, None)
+            }
+            ProfileModSource::Github { owner, repo, tag } => {
+                let href = format!("https://github.com/{owner}/{repo}/releases/tag/{tag}");
+
+                (ProfileModKind::Github, Some(owner), repo, tag, Some(href))
+            }
         };
 
         mods.push(ProfileModInfo {
             id: record.id,
-            index: record.order_index,
+            owner,
             name,
             version,
+            index: record.order_index,
             enabled: record.enabled,
             href,
             kind,

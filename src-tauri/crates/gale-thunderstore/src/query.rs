@@ -186,7 +186,14 @@ pub async fn query_package(package_uuid: Uuid, state: &AppState) -> Result<Packa
     .fetch_all(&state.db)
     .await?;
 
-    let id: VersionId = (&owner, &name, latest.major, latest.minor, latest.patch).into();
+    let id: VersionId = (
+        &owner,
+        &name,
+        latest.major as u32,
+        latest.minor as u32,
+        latest.patch as u32,
+    )
+        .into();
 
     let (readme, changelog) = join!(
         api::get_readme(&state.reqwest, &id),

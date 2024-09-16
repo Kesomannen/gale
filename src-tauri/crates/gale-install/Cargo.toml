@@ -12,9 +12,13 @@ gale-thunderstore = { path = "../gale-thunderstore" }
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 tokio = { version = "1", features = ["full"] }
 serde_json = { version = "1", features = ["raw_value"] }
+serde = { version = "1", features = ["derive"] }
 
 log = "0.4"
 anyhow = "1"
 futures-util = "0.3"
 zip = "2"
 walkdir = "2"
+bytes = "1"
+reqwest = { version = "0.12", features = ["json", "gzip"] }
+chrono = { version = "0.4", features = ["serde"] }

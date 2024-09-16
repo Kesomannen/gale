@@ -1,5 +1,6 @@
-import type { Mod, ConfigEntry } from './models';
-import { communities } from './state/profile.svelte';
+import { invoke } from './invoke';
+import type { ConfigEntry, InstallSource, Version } from './models';
+import { communities, profiles } from './state/profile.svelte';
 
 function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -62,14 +63,6 @@ function titleCase(str: string): string {
 	return str.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-function isOutdated(mod: Mod): boolean {
-	if (mod.versions.length === 0) {
-		return false;
-	}
-
-	return mod.version !== mod.versions[0].name;
-}
-
 function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -96,12 +89,32 @@ function getListSeparator(entry: ConfigEntry): ListSeparator {
 	return { type: 'default', char: ',' };
 }
 
-function modIconUrl(owner: string, name: string, version: { major: number; minor: number; patch: number }) {
-	return `https://gcdn.thunderstore.io/live/repository/icons/${owner}-${name}-${version.major}.${version.minor}.${version.patch}.png`;
+function modIdentifier(owner: string, name: string, version: Version) {
+	return `${owner}-${name}-${version.major}.${version.minor}.${version.patch}`;
+}
+
+function modIconUrl(owner: string, name: string, version: Version) {
+	return `https://gcdn.thunderstore.io/live/repository/icons/${modIdentifier(owner, name, version)}.png`;
 }
 
 function modThunderstoreUrl(owner: string, name: string) {
 	return `https://thunderstore.io/c/${communities.active?.slug}/p/${owner}/${name}/`;
+}
+
+async function queueInstall(source: InstallSource) {
+	await invoke('profile', 'queue_install', { source, profileId: profiles.activeId })
+}
+
+async function queueThunderstoreInstall(
+	owner: string,
+	name: string,
+	version: { id: string } & Version
+){
+	await queueInstall({
+		type: 'thunderstore',
+		identifier: modIdentifier(owner, name, version),
+		versionUuid: version.id
+	})	
 }
 
 export { 
@@ -113,8 +126,10 @@ export {
 	sentenceCase,
 	timeSince,
 	titleCase,
-	isOutdated,
 	capitalize,
 	isBefore,
-	getListSeparator
+	getListSeparator,
+	queueInstall,
+	queueThunderstoreInstall,
+	modIdentifier
 };

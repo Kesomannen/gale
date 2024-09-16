@@ -64,48 +64,6 @@ export type LoadFileResult =
 			error: string;
 	  };
 
-export interface ProfileInfo {
-	name: string;
-	modCount: number;
-}
-
-export interface ProfilesInfo {
-	profiles: ProfileInfo[];
-	activeIndex: number;
-}
-
-export interface GameInfo {
-	active: Game;
-	all: Game[];
-	favorites: string[];
-}
-
-export interface Mod {
-	name: string;
-	description?: string;
-	categories?: string[];
-	version?: string;
-	author?: string;
-	rating?: number;
-	downloads?: number;
-	websiteUrl?: string;
-	donateUrl?: string;
-	icon?: string;
-	dependencies?: string[];
-	isPinned: boolean;
-	isDeprecated: boolean;
-	containsNsfw: boolean;
-	uuid: string;
-	lastUpdated: string;
-	versions: {
-		name: string;
-		uuid: string;
-	}[];
-	type: 'local' | 'remote';
-	enabled: boolean;
-	configFile?: string;
-}
-
 export enum SortBy {
 	Newest = 'newest',
 	Name = 'name',
@@ -218,12 +176,6 @@ export interface AvailableUpdate {
 	new: string;
 }
 
-export interface ProfileQuery {
-	mods: Mod[];
-	unknownMods: Dependant[];
-	updates: AvailableUpdate[];
-}
-
 export interface ImportData {
 	name: string;
 	includes: Map<string, string>;
@@ -271,4 +223,42 @@ export interface Prefs {
 export interface GamePrefs {
 	dirOverride?: string;
 	launchMode: LaunchMode;
+}
+
+export type ProfileInfo = {
+	id: number;
+	name: string;
+	path: string;
+	communityId: number;
+	mods: ProfileModInfo[];
+};
+
+export type ProfileModInfo = {
+	id: number;
+	index: number;
+	name: string;
+	version: string | null;
+	enabled: boolean;
+	href: string;
+	kind: ProfileModKind;
+};
+
+export type ProfileModKind = 'thunderstore' | 'local' | 'github';
+
+export type CommunityInfo = {
+	id: number;
+	name: string;
+	slug: string;
+	isFavorite: boolean;
+};
+
+export type InstallSource =
+	| { type: 'thunderstore', identifier: string, versionUuid: string }
+	| { type: 'local', path: string, fullName: string, version: string }
+	| { type: 'github', owner: string, repo: string, tag: string };
+
+export type Version = {
+	major: number;
+	minor: number;
+	patch: number;
 }

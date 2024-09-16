@@ -5,7 +5,7 @@ const COMMANDS: &[&str] = &[
     "rename",
     "force_uninstall_mod",
     "force_toggle_mod",
-    "queue_thunderstore_install",
+    "queue_install",
     "launch",
 ];
 

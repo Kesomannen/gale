@@ -1,32 +1,6 @@
 import { invoke } from '$lib/invoke';
+import type { CommunityInfo, ProfileInfo } from '$lib/models';
 import { listen } from '@tauri-apps/api/event';
-
-type ProfileInfo = {
-	id: number;
-	name: string;
-	path: string;
-	communityId: number;
-	mods: ProfileModInfo[];
-};
-
-type ProfileModInfo = {
-	id: number;
-	index: number;
-	name: string;
-	version: string | null;
-	enabled: boolean;
-	href: string;
-	kind: ProfileModKind;
-};
-
-type ProfileModKind = 'thunderstore' | 'local';
-
-type CommunityInfo = {
-	id: number;
-	name: string;
-	slug: string;
-	isFavorite: boolean;
-};
 
 class Communities {
 	all: CommunityInfo[] = $state([]);
@@ -93,5 +67,4 @@ async function fetchCommunities() {
 	communities.active = getCommunity(id);
 }
 
-export type { ProfileInfo, ProfileModInfo, ProfileModKind, CommunityInfo };
 export { communities, profiles };

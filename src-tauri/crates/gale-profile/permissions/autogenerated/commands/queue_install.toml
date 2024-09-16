@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-queue-install"
+description = "Enables the queue_install command without any pre-configured scope."
+commands.allow = ["queue_install"]
+
+[[permission]]
+identifier = "deny-queue-install"
+description = "Denies the queue_install command without any pre-configured scope."
+commands.deny = ["queue_install"]

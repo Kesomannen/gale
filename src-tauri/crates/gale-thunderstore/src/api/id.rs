@@ -16,9 +16,9 @@ pub struct VersionId {
 }
 
 impl VersionId {
-    pub fn new(namespace: &str, name: &str, version: &str) -> Self {
-        let repr = format!("{}-{}-{}", namespace, name, version);
-        let name_start = namespace.len() + 1;
+    pub fn new(owner: &str, name: &str, version: &str) -> Self {
+        let repr = format!("{}-{}-{}", owner, name, version);
+        let name_start = owner.len() + 1;
         let version_start = name_start + name.len() + 1;
         Self {
             repr,
@@ -41,6 +41,10 @@ impl VersionId {
 
     pub fn version(&self) -> &str {
         &self.repr[self.version_start..]
+    }
+
+    pub fn split(&self) -> (&str, &str, &str) {
+        (self.owner(), self.name(), self.version())
     }
 
     pub fn version_split(&self) -> (u32, u32, u32) {
@@ -155,19 +159,19 @@ where
     U: AsRef<str>,
     V: AsRef<str>,
 {
-    fn from((namespace, name, version): (T, U, V)) -> Self {
-        Self::new(namespace.as_ref(), name.as_ref(), version.as_ref())
+    fn from((owner, name, version): (T, U, V)) -> Self {
+        Self::new(owner.as_ref(), name.as_ref(), version.as_ref())
     }
 }
 
-impl<T, U> From<(T, U, i64, i64, i64)> for VersionId
+impl<T, U> From<(T, U, u32, u32, u32)> for VersionId
 where
     T: AsRef<str>,
     U: AsRef<str>,
 {
-    fn from((namespace, name, major, minor, patch): (T, U, i64, i64, i64)) -> Self {
+    fn from((owner, name, major, minor, patch): (T, U, u32, u32, u32)) -> Self {
         Self::new(
-            namespace.as_ref(),
+            owner.as_ref(),
             name.as_ref(),
             &format!("{}.{}.{}", major, minor, patch),
         )
@@ -196,18 +200,22 @@ pub struct PackageId {
 }
 
 impl PackageId {
-    pub fn new(namespace: &str, name: &str) -> Self {
-        let repr = format!("{}-{}", namespace, name);
-        let name_start = namespace.len() + 1;
+    pub fn new(owner: &str, name: &str) -> Self {
+        let repr = format!("{}-{}", owner, name);
+        let name_start = owner.len() + 1;
         Self { repr, name_start }
     }
 
-    pub fn namespace(&self) -> &str {
+    pub fn owner(&self) -> &str {
         &self.repr[..self.name_start - 1]
     }
 
     pub fn name(&self) -> &str {
         &self.repr[self.name_start..]
+    }
+
+    pub fn split(&self) -> (&str, &str) {
+        (self.owner(), self.name())
     }
 
     pub fn path(&self) -> impl Display + '_ {
@@ -295,8 +303,8 @@ impl FromStr for PackageId {
 }
 
 impl From<(&str, &str)> for PackageId {
-    fn from((namespace, name): (&str, &str)) -> Self {
-        Self::new(namespace, name)
+    fn from((owner, name): (&str, &str)) -> Self {
+        Self::new(owner, name)
     }
 }
 
@@ -317,6 +325,6 @@ struct PackageIdPath<'a>(&'a PackageId);
 
 impl<'a> Display for PackageIdPath<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}/{}", self.0.namespace(), self.0.name(),)
+        write!(f, "{}/{}", self.0.owner(), self.0.name(),)
     }
 }

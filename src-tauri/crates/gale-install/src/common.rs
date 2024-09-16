@@ -33,14 +33,32 @@ fn is_bepinex(full_name: &str) -> bool {
     }
 }
 
-pub fn extract(src: impl Read + Seek, package_guid: &str, mut dest: PathBuf) -> Result<()> {
+pub fn cache_dll(
+    mut src: impl Read,
+    full_name: impl AsRef<Path>,
+    file_name: impl AsRef<Path>,
+    mut dest: PathBuf,
+) -> Result<()> {
+    dest.push("BepInEx");
+    dest.push("plugins");
+    dest.push(full_name);
+    std::fs::create_dir_all(&dest)?;
+
+    dest.push(file_name);
+    let mut target_file = std::fs::File::create(&dest)?;
+    std::io::copy(&mut src, &mut target_file)?;
+
+    Ok(())
+}
+
+pub fn extract(src: impl Read + Seek, full_name: &str, mut dest: PathBuf) -> Result<()> {
     let start = Instant::now();
 
     dest.push("BepInEx");
 
     std::fs::create_dir_all(&dest)?;
 
-    let is_bepinex = is_bepinex(package_guid);
+    let is_bepinex = is_bepinex(full_name);
     let mut archive = ZipArchive::new(src)?;
 
     for i in 0..archive.len() {
@@ -55,7 +73,7 @@ pub fn extract(src: impl Read + Seek, package_guid: &str, mut dest: PathBuf) -> 
             false => PathBuf::from(file.name()),
         };
 
-        if !is_enclosed(&file_path) {
+        if !gale_core::util::is_enclosed(&file_path) {
             log::warn!(
                 "file {} escapes the archive root, skipping",
                 file_path.display()
@@ -63,7 +81,7 @@ pub fn extract(src: impl Read + Seek, package_guid: &str, mut dest: PathBuf) -> 
             continue;
         }
 
-        let target_path = map_file(file_path, &dest, package_guid, is_bepinex)?;
+        let target_path = map_file(file_path, &dest, full_name, is_bepinex)?;
 
         std::fs::create_dir_all(target_path.parent().unwrap())?;
         let mut target_file = std::fs::File::create(&target_path)?;
@@ -134,35 +152,8 @@ fn map_file(
     Ok(target)
 }
 
-fn is_enclosed(path: &Path) -> bool {
-    use std::path::Component;
-
-    if path
-        .as_os_str()
-        .to_str()
-        .is_some_and(|str| str.contains('\0'))
-    {
-        return false;
-    }
-
-    let mut depth = 0usize;
-    for component in path.components() {
-        match component {
-            Component::Prefix(_) | Component::RootDir => return false,
-            Component::ParentDir => match depth.checked_sub(1) {
-                Some(new_depth) => depth = new_depth,
-                None => return false,
-            },
-            Component::Normal(_) => depth += 1,
-            Component::CurDir => (),
-        }
-    }
-
-    true
-}
-
 /// Install from a well structured mod directory
-pub fn install(src: &Path, dest: &Path) -> Result<()> {
+pub fn install(src: &Path, profile_path: &Path) -> Result<()> {
     let config_dir = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
     let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
 
@@ -172,7 +163,7 @@ pub fn install(src: &Path, dest: &Path) -> Result<()> {
             .strip_prefix(src)
             .expect("walkdir should only return full paths inside of the root");
 
-        let target = dest.join(relative);
+        let target = profile_path.join(relative);
 
         if target.exists() {
             // maybe we should overwrite instead?
