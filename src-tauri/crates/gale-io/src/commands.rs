@@ -1,4 +1,4 @@
-use crate::import::{ImportData, ImportTarget};
+use crate::{import::{ImportData, ImportTarget}, modpack::ModpackArgs};
 use gale_core::prelude::*;
 use std::path::PathBuf;
 use tauri::{AppHandle, State};
@@ -52,4 +52,18 @@ pub async fn export_code(
     let key = crate::export::as_code(profile_id, &state).await?;
 
     Ok(key)
+}
+
+#[tauri::command]
+pub async fn export_modpack(profile_id: i64, path: PathBuf, args: ModpackArgs, state: State<'_, AppState>) -> CmdResult<()> {
+    crate::modpack::export_to_file(profile_id, &path, &args, &state).await?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn publish_modpack(profile_id: i64, args: ModpackArgs, community_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
+    crate::modpack::export_and_publish(profile_id, args, community_id, &state).await?;
+
+    Ok(())
 }

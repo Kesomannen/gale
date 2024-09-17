@@ -176,21 +176,6 @@ export interface AvailableUpdate {
 	new: string;
 }
 
-export interface ImportData {
-	name: string;
-	includes: Map<string, string>;
-	modNames?: string[];
-	source: 'r2' | 'gale';
-	mods: {
-		modRef: {
-			packageUuid: string;
-			versionUuid: string;
-		};
-		enabled: boolean;
-		index?: number;
-	}[];
-}
-
 export interface R2ImportData {
 	r2modman?: {
 		path: string;
@@ -262,3 +247,18 @@ export type Version = {
 	minor: number;
 	patch: number;
 }
+
+export type ModImport = {
+	source: InstallSource;
+	enabled: boolean;
+}
+
+export type ImportData = {
+	mods: ModImport[];
+	sourcePath: string;
+	deleteAfterImport: boolean;
+}
+
+export type ImportTarget =
+	| { type: 'new', name: string, path: string, communityId: number }
+	| { type: 'overwrite', id: number };

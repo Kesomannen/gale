@@ -323,6 +323,20 @@
           ]
         },
         {
+          "description": "allow-export-modpack -> Enables the export_modpack command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-export-modpack"
+          ]
+        },
+        {
+          "description": "deny-export-modpack -> Denies the export_modpack command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-export-modpack"
+          ]
+        },
+        {
           "description": "allow-import -> Enables the import command without any pre-configured scope.",
           "type": "string",
           "enum": [
@@ -334,6 +348,20 @@
           "type": "string",
           "enum": [
             "deny-import"
+          ]
+        },
+        {
+          "description": "allow-publish-modpack -> Enables the publish_modpack command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-publish-modpack"
+          ]
+        },
+        {
+          "description": "deny-publish-modpack -> Denies the publish_modpack command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-publish-modpack"
           ]
         },
         {

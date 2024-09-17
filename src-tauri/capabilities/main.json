@@ -53,6 +53,8 @@
     "gale-io:allow-read-file",
     "gale-io:allow-import",
     "gale-io:allow-export-file",
-    "gale-io:allow-export-code"
+    "gale-io:allow-export-code",
+    "gale-io:allow-export-modpack",
+    "gale-io:allow-publish-modpack"
   ]
 }

@@ -95,7 +95,6 @@ WHERE
     });
 
     query.push_str(if args.ascending { " ASC" } else { " DESC" });
-
     query.push_str("\nLIMIT ?");
 
     let mut query = sqlx::query_as::<_, ListedPackageInfo>(&query);

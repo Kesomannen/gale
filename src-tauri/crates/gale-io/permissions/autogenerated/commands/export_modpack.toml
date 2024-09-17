@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-export-modpack"
+description = "Enables the export_modpack command without any pre-configured scope."
+commands.allow = ["export_modpack"]
+
+[[permission]]
+identifier = "deny-export-modpack"
+description = "Denies the export_modpack command without any pre-configured scope."
+commands.deny = ["export_modpack"]

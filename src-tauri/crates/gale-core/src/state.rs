@@ -1,11 +1,11 @@
 use crate::error::Result;
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use log::debug;
 use sqlx::{
     sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePool, SqliteSynchronous},
     ConnectOptions,
 };
-use std::{env::current_exe, str::FromStr};
+use std::{env::current_exe, path::PathBuf, str::FromStr};
 use tauri::{AppHandle, Wry};
 
 pub trait ManagerExt {
@@ -76,5 +76,15 @@ impl AppState {
             .context("failed to create reqwest client")?;
 
         Ok(AppState { db, reqwest })
+    }
+
+    pub async fn profile_path(&self, id: i64) -> Result<PathBuf> {
+        let path = sqlx::query!("SELECT path FROM profiles WHERE id = ?", id)
+            .fetch_optional(&self.db)
+            .await?
+            .ok_or_else(|| anyhow!("profile with {} not found", id))?
+            .path;
+
+        Ok(path.into())
     }
 }

@@ -4,6 +4,8 @@ const COMMANDS: &[&str] = &[
     "import",
     "export_file",
     "export_code",
+    "export_modpack",
+    "publish_modpack",
 ];
 
 fn main() {

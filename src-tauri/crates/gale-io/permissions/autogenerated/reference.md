@@ -63,6 +63,32 @@ Denies the export_file command without any pre-configured scope.
 <tr>
 <td>
 
+`gale-io:allow-export-modpack`
+
+</td>
+<td>
+
+Enables the export_modpack command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-io:deny-export-modpack`
+
+</td>
+<td>
+
+Denies the export_modpack command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `gale-io:allow-import`
 
 </td>
@@ -82,6 +108,32 @@ Enables the import command without any pre-configured scope.
 <td>
 
 Denies the import command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-io:allow-publish-modpack`
+
+</td>
+<td>
+
+Enables the publish_modpack command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`gale-io:deny-publish-modpack`
+
+</td>
+<td>
+
+Denies the publish_modpack command without any pre-configured scope.
 
 </td>
 </tr>

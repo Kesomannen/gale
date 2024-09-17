@@ -1,7 +1,7 @@
 use super::VersionId;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::hash::Hash;
+use std::{collections::HashMap, hash::Hash};
 use url::Url;
 use uuid::Uuid;
 
@@ -100,7 +100,7 @@ pub struct PackageManifest {
     pub author: Option<String>,
     pub description: String,
     pub version_number: semver::Version,
-    pub dependencies: Vec<String>,
+    pub dependencies: Vec<VersionId>,
     pub website_url: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<PackageInstaller>>,
@@ -314,4 +314,17 @@ pub enum ReviewStatus {
     Unreviewed,
     Approved,
     Rejected,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PackageMetadata {
+    #[serde(rename = "author_name")]
+    pub author: String,
+    #[serde(rename = "categories")]
+    pub global_categories: Vec<String>,
+    pub communities: Vec<String>,
+    pub has_nsfw_content: bool,
+    #[serde(rename = "community_categories")]
+    pub categories: HashMap<String, Vec<String>>,
+    pub upload_uuid: Option<Uuid>,
 }

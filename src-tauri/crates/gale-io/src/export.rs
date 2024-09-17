@@ -1,4 +1,4 @@
-use crate::{LegacyProfileManifest, LegacyProfileMod, LegacyProfileModKind, ModManager, R2Version};
+use crate::{LegacyProfileManifest, LegacyProfileMod, LegacyProfileModKind, ModManager};
 use anyhow::Context;
 use gale_core::prelude::*;
 use gale_profile::ProfileModSource;
@@ -65,7 +65,7 @@ async fn to_zip(profile_id: i64, writer: impl Write + Seek, state: &AppState) ->
 
                 (id, kind)
             }
-            ProfileModSource::Local { full_name, version } => {
+            ProfileModSource::Local { full_name: _, version: _ } => {
                 todo!()
             }
         };
@@ -84,18 +84,20 @@ async fn to_zip(profile_id: i64, writer: impl Write + Seek, state: &AppState) ->
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
     serde_yaml_ng::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
-    write_config(&PathBuf::from(profile.path), &mut zip)?;
+    let path: PathBuf = profile.path.into();
+    write_config(super::find_config_files(&path), &path, &mut zip)?;
 
     Ok(())
 }
 
-fn write_config<W>(profile_path: &Path, zip: &mut ZipWriter<W>) -> Result<()>
+pub fn write_config<P, I, W>(files: I, profile_path: &Path, zip: &mut ZipWriter<W>) -> Result<()>
 where
+    P: AsRef<Path>,
+    I: IntoIterator<Item = P>,
     W: Write + Seek,
 {
-    for file in super::find_config_files(profile_path) {
-        let path = file.to_string_lossy().replace('\\', "/");
-        zip.start_file(path, SimpleFileOptions::default())?;
+    for file in files {
+        zip.start_file_from_path(&file, SimpleFileOptions::default())?;
 
         let mut reader = std::fs::File::open(profile_path.join(file))?;
         std::io::copy(&mut reader, zip)?;

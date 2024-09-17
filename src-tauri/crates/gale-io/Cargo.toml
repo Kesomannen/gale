@@ -24,6 +24,9 @@ uuid = "1"
 walkdir = "2"
 tempfile = "3"
 zip = "2"
+semver = "1"
+image = "0.25"
+url = "2"
 
 [build-dependencies]
 tauri-plugin = { version = "2.0.0-rc", features = ["build"] }

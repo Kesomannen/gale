@@ -24,13 +24,13 @@ pub struct ModImport {
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum ImportTarget {
     #[serde(rename_all = "camelCase")]
-    NewProfile {
+    New {
         name: String,
         path: PathBuf,
         community_id: i64,
     },
     #[serde(rename_all = "camelCase")]
-    OverwriteProfile { id: i64 },
+    Overwrite { id: i64 },
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -54,7 +54,7 @@ pub async fn import(
     } = data;
 
     let (profile_id, profile_path) = match target {
-        ImportTarget::NewProfile {
+        ImportTarget::New {
             name,
             path,
             community_id,
@@ -65,7 +65,7 @@ pub async fn import(
 
             (id, path)
         }
-        ImportTarget::OverwriteProfile { id } => {
+        ImportTarget::Overwrite { id } => {
             let path: PathBuf = sqlx::query!("SELECT path FROM profiles WHERE id = ?", id)
                 .fetch_optional(&state.db)
                 .await?

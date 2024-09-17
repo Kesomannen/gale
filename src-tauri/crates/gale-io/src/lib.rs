@@ -11,6 +11,7 @@ mod commands;
 mod export;
 mod import;
 mod r2modman;
+mod modpack;
 
 pub fn init() -> TauriPlugin<tauri::Wry> {
     Builder::new("gale-io")
@@ -21,6 +22,8 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
             commands::import,
             commands::export_file,
             commands::export_code,
+            commands::export_modpack,
+            commands::publish_modpack,
         ])
         .build()
 }

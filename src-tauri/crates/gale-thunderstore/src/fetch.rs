@@ -2,7 +2,7 @@ use crate::api::{self, PackageV1, PackageVersionV1, VersionId};
 use anyhow::Context;
 use futures_util::{pin_mut, TryStreamExt};
 use gale_core::prelude::*;
-use log::debug;
+use log::{debug, trace};
 use sqlx::prelude::*;
 use std::{collections::HashMap, time::Instant};
 use uuid::Uuid;
@@ -20,7 +20,23 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
 
     let categories = api::get_filters(&state.reqwest, &slug)
         .await?
-        .package_categories
+        .package_categories;
+
+    for category in &categories {
+        sqlx::query!(
+            "INSERT OR REPLACE INTO
+            categories (id, name, slug, community_id)
+            VALUES (?, ?, ?, ?)",
+            category.id,
+            category.name,
+            category.slug,
+            community_id
+        )
+        .execute(&state.db)
+        .await?;
+    }
+
+    let categories = categories
         .into_iter()
         .map(|category| {
             let id: i64 = category.id.parse().expect("category id should be a number");
@@ -28,40 +44,25 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
         })
         .collect::<HashMap<_, _>>();
 
-    for (name, id) in &categories {
-        sqlx::query(
-            "INSERT OR REPLACE INTO categories
-            (
-                id,
-                name,
-                community_id
-            )
-            VALUES (?, ?, ?)
-        ",
-        )
-        .bind(id)
-        .bind(name)
-        .bind(community_id)
-        .execute(&state.db)
-        .await?;
-    }
-
     let stream = api::stream_packages(&state.reqwest, slug).await?;
     pin_mut!(stream);
 
     let mut count = 0;
     let mut transaction = state.db.begin().await?;
 
-    sqlx::query("DELETE FROM packages WHERE community_id = ?")
-        .bind(community_id)
+    trace!("deleting old packages");
+
+    sqlx::query!("DELETE FROM packages WHERE community_id = ?", community_id)
         .execute(&mut *transaction)
         .await?;
+
+    trace!("inserting new packages");
 
     while let Some(package) = stream.try_next().await? {
         count += 1;
 
         if count % 100 == 0 {
-            debug!("fetched {count} packages");
+            trace!("fetched {count} packages");
         }
 
         insert_package(&package, community_id, &categories, &mut transaction)
@@ -89,7 +90,14 @@ async fn insert_package(
     category_map: &HashMap<String, i64>,
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
-    sqlx::query(
+    let donation_link = package.donation_link.as_ref().map(|url| url.as_str());
+    let total_downloads = package
+        .versions
+        .iter()
+        .map(|version| version.downloads as i64)
+        .sum::<i64>();
+
+    sqlx::query!(
         "INSERT OR REPLACE INTO packages
         (
             id,
@@ -106,28 +114,21 @@ async fn insert_package(
             latest_version_id,
             community_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ",
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        package.uuid4,
+        package.name,
+        package.latest().description,
+        package.date_created,
+        donation_link,
+        package.has_nsfw_content,
+        package.is_deprecated,
+        package.is_pinned,
+        package.owner,
+        package.rating_score,
+        total_downloads,
+        package.latest().uuid4,
+        community
     )
-    .bind(&package.uuid4.as_bytes()[..])
-    .bind(&package.name)
-    .bind(&package.latest().description)
-    .bind(package.date_created)
-    .bind(package.donation_link.as_ref().map(|url| url.as_str()))
-    .bind(package.has_nsfw_content)
-    .bind(package.is_deprecated)
-    .bind(package.is_pinned)
-    .bind(&package.owner)
-    .bind(package.rating_score)
-    .bind(
-        package
-            .versions
-            .iter()
-            .map(|version| version.downloads as i64)
-            .sum::<i64>(),
-    )
-    .bind(&package.latest().uuid4.as_bytes()[..])
-    .bind(community)
     .execute(&mut **transaction)
     .await?;
 
@@ -144,17 +145,11 @@ async fn insert_package(
             }
         };
 
-        sqlx::query(
-            "INSERT OR REPLACE INTO package_categories
-            (
-                package_id,
-                category_id
-            )
-            VALUES (?, ?)
-        ",
+        sqlx::query!(
+            "INSERT OR REPLACE INTO package_categories (package_id, category_id) VALUES (?, ?)",
+            package.uuid4,
+            category_id
         )
-        .bind(&package.uuid4.as_bytes()[..])
-        .bind(category_id)
         .execute(&mut **transaction)
         .await?;
     }
@@ -167,7 +162,16 @@ async fn insert_version(
     package_uuid: Uuid,
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
-    sqlx::query(
+    let file_size = version.file_size as i64;
+    let website_url = match version.website_url.is_empty() {
+        true => None,
+        false => Some(&version.website_url),
+    };
+    let major = version.version_number.major as i64;
+    let minor = version.version_number.minor as i64;
+    let patch = version.version_number.patch as i64;
+
+    sqlx::query!(
         "INSERT OR REPLACE INTO versions
         (
             id,
@@ -181,27 +185,22 @@ async fn insert_version(
             minor,
             patch
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ",
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        version.uuid4,
+        package_uuid,
+        version.date_created,
+        version.downloads,
+        file_size,
+        version.is_active,
+        website_url,
+        major,
+        minor,
+        patch
     )
-    .bind(&version.uuid4.as_bytes()[..])
-    .bind(&package_uuid.as_bytes()[..])
-    .bind(version.date_created)
-    .bind(version.downloads)
-    .bind(version.file_size as i64)
-    .bind(version.is_active)
-    .bind(if version.website_url.is_empty() {
-        None
-    } else {
-        Some(&version.website_url)
-    })
-    .bind(version.version_number.major as i64)
-    .bind(version.version_number.minor as i64)
-    .bind(version.version_number.patch as i64)
     .execute(&mut **transaction)
     .await?;
 
-    /* 
+    /*
     for dependency in version.dependencies {
         insert_dependency(version.uuid4, dependency, transaction)
             .await
@@ -218,8 +217,10 @@ async fn insert_dependency(
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
     let (major, minor, path) = dependency.version_split();
+    let owner = dependency.owner();
+    let name = dependency.name();
 
-    sqlx::query(
+    sqlx::query!(
         "INSERT OR REPLACE INTO dependencies
         (
             dependent_id,
@@ -229,15 +230,14 @@ async fn insert_dependency(
             minor,
             patch
         )
-        VALUES (?, ?, ?, ?, ?, ?)
-    ",
+        VALUES (?, ?, ?, ?, ?, ?)",
+        version_uuid,
+        owner,
+        name,
+        major,
+        minor,
+        path
     )
-    .bind(&version_uuid.as_bytes()[..])
-    .bind(dependency.owner())
-    .bind(dependency.name())
-    .bind(major)
-    .bind(minor)
-    .bind(path)
     .execute(&mut **transaction)
     .await?;
 

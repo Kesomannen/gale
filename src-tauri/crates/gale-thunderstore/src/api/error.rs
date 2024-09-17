@@ -5,6 +5,9 @@ pub enum Error {
     #[error("resource not found")]
     NotFound,
 
+    #[error("thunderstore api token is invalid")]
+    Unauthorized,
+
     #[error(transparent)]
     Reqwest(#[from] reqwest::Error),
 
@@ -27,6 +30,7 @@ impl ResponseExt for reqwest::Response {
             Ok(res) => Ok(res),
             Err(err) => match err.status() {
                 Some(StatusCode::NOT_FOUND) => Err(Error::NotFound),
+                Some(StatusCode::UNAUTHORIZED) => Err(Error::Unauthorized),
                 _ => Err(Error::Reqwest(err)),
             },
         }

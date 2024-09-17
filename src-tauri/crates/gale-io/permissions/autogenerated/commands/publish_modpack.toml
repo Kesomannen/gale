@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-publish-modpack"
+description = "Enables the publish_modpack command without any pre-configured scope."
+commands.allow = ["publish_modpack"]
+
+[[permission]]
+identifier = "deny-publish-modpack"
+description = "Denies the publish_modpack command without any pre-configured scope."
+commands.deny = ["publish_modpack"]

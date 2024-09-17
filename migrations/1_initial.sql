@@ -14,8 +14,9 @@ VALUES
     ('Content Warning', 'content-warning', 2881650, 'Content Warning');
 
 CREATE TABLE categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
+    slug TEXT NOT NULL,
     community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE
 );
 
