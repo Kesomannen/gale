@@ -230,7 +230,7 @@ export type ProfileModInfo = {
 
 export type ProfileModKind = 'thunderstore' | 'local' | 'github';
 
-export type CommunityInfo = {
+export type GameInfo = {
 	id: number;
 	name: string;
 	slug: string;

@@ -111,18 +111,9 @@ async fn emit_update(id: i64, state: &AppState, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn emit_update_spawn(id: i64, app: AppHandle) {
-    tauri::async_runtime::spawn(async move {
-        let state = app.app_state();
-        if let Err(err) = emit_update(id, &state, &app).await {
-            log::error!("failed to emit profile update: {:#}", err);
-        }
-    });
-}
-
 async fn scan_mod(profile_mod_id: i64, state: &AppState) -> Result<impl Iterator<Item = PathBuf>> {
     let (source, mut path) = sqlx::query!(
-        r#"SELECT 
+        r#"SELECT
             pm.source AS "source: Json<ProfileModSource>",
             p.path
         FROM

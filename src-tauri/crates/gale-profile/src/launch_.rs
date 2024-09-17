@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, ensure, Context};
-use gale_core::prelude::*;
+use gale_core::{game::GamePlatform, prelude::*};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use std::{
@@ -24,7 +24,7 @@ pub async fn launch(profile_id: i64, state: &AppState) -> Result<()> {
     let profile = sqlx::query!(
         r#"SELECT
             path,
-            community_id,
+            game_id,
             launch_mode AS "launch_mode: Json<LaunchMode>"
         FROM profiles
         WHERE id = ?"#,
@@ -33,7 +33,7 @@ pub async fn launch(profile_id: i64, state: &AppState) -> Result<()> {
     .fetch_one(&state.db)
     .await?;
 
-    let (game_path, steam_id) = game_info(profile.community_id, state).await?;
+    let (game_path, steam_id) = game_info(profile.game_id, state).await?;
 
     let launch_mode = profile.launch_mode.map(|mode| mode.0).unwrap_or_default();
 
@@ -53,14 +53,25 @@ pub async fn launch(profile_id: i64, state: &AppState) -> Result<()> {
     Ok(())
 }
 
-async fn game_info(community_id: i64, state: &AppState) -> Result<(PathBuf, i64)> {
-    let (path_override, steam_dir_name, steam_id) = sqlx::query!(
-        "SELECT override_path, steam_dir_name, steam_id
-        FROM communities
-        WHERE id = ?",
-        community_id
+async fn game_info(game_id: i64, state: &AppState) -> Result<(PathBuf, i64)> {
+    let (path_override, dir_name, steam_id) = sqlx::query!(
+        r#"SELECT
+            override_path,
+            dir_name,
+            platforms as "platforms: Json<Vec<GamePlatform>>"
+        FROM games
+        WHERE id = ?"#,
+        game_id
     )
-    .map(|record| (record.override_path, record.steam_dir_name, record.steam_id))
+    .map(|record| {
+        (
+            record.override_path,
+            record.dir_name,
+            match record.platforms[0] {
+                GamePlatform::Steam { id } => id,
+            },
+        )
+    })
     .fetch_one(&state.db)
     .await?;
 
@@ -76,7 +87,7 @@ async fn game_info(community_id: i64, state: &AppState) -> Result<(PathBuf, i64)
 
         path.push("steamapps");
         path.push("common");
-        path.push(steam_dir_name);
+        path.push(dir_name);
 
         Ok((path, steam_id))
     }

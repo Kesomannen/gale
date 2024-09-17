@@ -2,7 +2,7 @@
 	import InputField from '$lib/components/InputField.svelte';
 	import { invoke } from '$lib/invoke';
 	import type { Version } from '$lib/models';
-	import { communities, profiles } from '$lib/state/profile.svelte';
+	import { games, profiles } from '$lib/state/profile.svelte';
 	import { modIconUrl, queueInstall, queueThunderstoreInstall, shortenNum } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
@@ -33,11 +33,19 @@
 	});
 
 	async function queryPackages(searchTerm: string, thisVersion: number) {
+		console.log({
+				searchTerm,
+				maxResults: 10,
+				gameId: games.active?.id,
+				orderBy: 'relevance',
+				ascending: false
+			});
+
 		let results = await invoke<Package[]>('thunderstore', 'query_packages', {
 			args: {
 				searchTerm,
 				maxResults: 10,
-				communityId: communities.active?.id,
+				gameId: games.active?.id,
 				orderBy: 'relevance',
 				ascending: false
 			}

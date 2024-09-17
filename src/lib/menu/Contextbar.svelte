@@ -7,7 +7,7 @@
 	import { fly } from 'svelte/transition';
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Updater from './Updater.svelte';
-	import { communities, profiles } from '$lib/state/profile.svelte';
+	import { games, profiles } from '$lib/state/profile.svelte';
 	import { invoke } from '$lib/invoke';
 
 	let launchGamePopupOpen = false;
@@ -35,14 +35,14 @@
 		onclick={() => (gamesOpen = !gamesOpen)}
 		class="flex flex-shrink-0 items-center justify-between font-semibold pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-gray-300 group-hover:text-gray-200"
 	>
-		{#if communities.active !== undefined}
+		{#if games.active !== undefined}
 			<img
-				src="games/{communities.active.slug}.webp"
+				src="games/{games.active.slug}.webp"
 				class="size-8 rounded mr-2"
-				alt={communities.active.name}
+				alt={games.active.name}
 			/>
 
-			{communities.active.name}
+			{games.active.name}
 		{:else}
 			Loading...
 		{/if}
@@ -81,7 +81,7 @@
 	<Updater />
 </div>
 
-<Popup title="Launching {communities.active?.name}..." bind:open={launchGamePopupOpen}>
+<Popup title="Launching {games.active?.name}..." bind:open={launchGamePopupOpen}>
 	<Dialog.Description class="text-gray-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
 	</Dialog.Description>

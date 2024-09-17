@@ -307,6 +307,20 @@
           "enum": [
             "deny-get-communities"
           ]
+        },
+        {
+          "description": "allow-get-games -> Enables the get_games command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "allow-get-games"
+          ]
+        },
+        {
+          "description": "deny-get-games -> Denies the get_games command without any pre-configured scope.",
+          "type": "string",
+          "enum": [
+            "deny-get-games"
+          ]
         }
       ]
     }

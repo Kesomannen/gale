@@ -23,7 +23,7 @@ pub enum OrderBy {
 pub struct QueryArgs {
     search_term: String,
     max_results: u32,
-    community_id: u32,
+    game_id: u32,
     ascending: bool,
     order_by: OrderBy,
 }
@@ -98,7 +98,7 @@ WHERE
     query.push_str("\nLIMIT ?");
 
     let mut query = sqlx::query_as::<_, ListedPackageInfo>(&query);
-    query = query.bind(args.community_id);
+    query = query.bind(args.game_id);
     if args.search_term.len() >= 3 {
         query = query.bind(&args.search_term);
     }

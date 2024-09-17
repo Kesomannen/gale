@@ -1,6 +1,6 @@
 import { invoke } from './invoke';
 import type { ConfigEntry, InstallSource, Version } from './models';
-import { communities, profiles } from './state/profile.svelte';
+import { games, profiles } from './state/profile.svelte';
 
 function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -98,7 +98,7 @@ function modIconUrl(owner: string, name: string, version: Version) {
 }
 
 function modThunderstoreUrl(owner: string, name: string) {
-	return `https://thunderstore.io/c/${communities.active?.slug}/p/${owner}/${name}/`;
+	return `https://thunderstore.io/c/${games.active?.slug}/p/${owner}/${name}/`;
 }
 
 async function queueInstall(source: InstallSource) {

@@ -52,14 +52,14 @@ pub async fn export_to_file(
 pub async fn export_and_publish(
     profile_id: i64,
     args: ModpackArgs,
-    community_id: i64,
+    game_id: i64,
     state: &AppState,
 ) -> Result<()> {
     let mut buff = Cursor::new(Vec::new());
     export_to_writer(profile_id, &mut buff, &args, state).await?;
 
     let token = String::new();
-    publish(buff.into_inner(), args, &token, community_id, state).await?;
+    publish(buff.into_inner(), args, &token, game_id, state).await?;
 
     Ok(())
 }
@@ -163,7 +163,7 @@ async fn publish(
     data: Vec<u8>,
     args: ModpackArgs,
     token: &str,
-    community_id: i64,
+    game_id: i64,
     state: &AppState,
 ) -> Result<()> {
     ensure!(args.description.len() <= 250, "description is too long");
@@ -174,7 +174,7 @@ async fn publish(
         Url::parse(&args.website_url).context("invalid website URL")?;
     }
 
-    let slug = sqlx::query!("SELECT slug FROM communities WHERE id = ?", community_id)
+    let slug = sqlx::query!("SELECT slug FROM games WHERE id = ?", game_id)
         .fetch_optional(&state.db)
         .await?
         .context("community not found")?

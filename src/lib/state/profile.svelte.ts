@@ -1,18 +1,18 @@
 import { invoke } from '$lib/invoke';
-import type { CommunityInfo, ProfileInfo } from '$lib/models';
+import type { GameInfo, ProfileInfo } from '$lib/models';
 import { listen } from '@tauri-apps/api/event';
 
-class Communities {
-	all: CommunityInfo[] = $state([]);
-	active: CommunityInfo | undefined = $state();
+class Games {
+	all: GameInfo[] = $state([]);
+	active: GameInfo | undefined = $state();
 
 	setActive(id: number) {
-		this.active = getCommunity(id);
-		setLocalStorageInt('activeCommunity', communities.active?.id ?? 1);
+		this.active = getGame(id);
+		setLocalStorageInt('activeGame', games.active?.id ?? 1);
 	}
 }
 
-const communities = new Communities();
+const games = new Games();
 
 class Profiles {
 	active: ProfileInfo | undefined = $state();
@@ -40,13 +40,13 @@ listen<ProfileInfo>('profile-update', async ({ payload }) => {
 	}
 })
 
-fetchCommunities();
+fetchGames();
 
 let activeProfileId = getLocalStorageInt('activeProfile', 1);
 profiles.setActive(activeProfileId);
 
-function getCommunity(id: number): CommunityInfo {
-	return communities.all.find((community) => community.id === id)!;
+function getGame(id: number): GameInfo {
+	return games.all.find((community) => community.id === id)!;
 }
 
 function getLocalStorageInt(key: string, def: number): number {
@@ -61,10 +61,10 @@ function setLocalStorageInt(key: string, value: number) {
 	localStorage.setItem(key, value.toString());
 }
 
-async function fetchCommunities() {
-	let id = getLocalStorageInt('activeCommunity', 1);
-	communities.all = await invoke('core', 'get_communities');
-	communities.active = getCommunity(id);
+async function fetchGames() {
+	let id = getLocalStorageInt('activeGame', 1);
+	games.all = await invoke('core', 'get_games');
+	games.active = getGame(id);
 }
 
-export { communities, profiles };
+export { games, profiles };

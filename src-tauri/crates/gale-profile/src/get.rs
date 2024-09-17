@@ -37,15 +37,15 @@ pub enum ProfileModKind {
 }
 
 pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
-    let (name, path, community_id, community_slug) = sqlx::query!(
+    let (name, path, game_id, game_slug) = sqlx::query!(
         "SELECT
             p.name,
             p.path,
-            c.id,
-            c.slug
+            g.id,
+            g.slug
         FROM
             profiles p
-            JOIN communities c ON p.community_id = c.id
+            JOIN games g ON p.game_id = g.id
         WHERE p.id = ?
         ",
         id
@@ -75,7 +75,7 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
                 let href = format!(
                     "{}/c/{}/p/{}/",
                     gale_thunderstore::api::THUNDERSTORE_URL,
-                    community_slug,
+                    game_slug,
                     identifier.path()
                 );
 
@@ -118,7 +118,7 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
         id,
         name,
         path,
-        community_id,
+        community_id: game_id,
         mods,
     })
 }

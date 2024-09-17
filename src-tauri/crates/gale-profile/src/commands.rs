@@ -6,19 +6,18 @@ use crate::{
 use gale_core::prelude::*;
 use std::path::PathBuf;
 use tauri::{AppHandle, State};
-use uuid::Uuid;
 
 #[tauri::command]
 pub async fn create(
     name: String,
     path: PathBuf,
-    community_id: i64,
+    game_id: i64,
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> CmdResult<i64> {
     let _ = LoadingBar::create("Creating profile", &app);
 
-    let id = crate::actions::create(&name, &path, community_id, &state).await?;
+    let id = crate::actions::create(&name, &path, game_id, &state).await?;
 
     Ok(id)
 }

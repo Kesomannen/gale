@@ -1,10 +1,10 @@
 use crate::scan_mod;
-use anyhow::{anyhow, Context};
+use anyhow::anyhow;
 use gale_core::prelude::*;
 use std::path::Path;
 use walkdir::WalkDir;
 
-pub async fn create(name: &str, path: &Path, community_id: i64, state: &AppState) -> Result<i64> {
+pub async fn create(name: &str, path: &Path, game_id: i64, state: &AppState) -> Result<i64> {
     //ensure!(!path.exists(), "profile path already exists");
 
     let path_str = path
@@ -12,10 +12,10 @@ pub async fn create(name: &str, path: &Path, community_id: i64, state: &AppState
         .ok_or(anyhow!("profile path must be valid utf-8"))?;
 
     let id = sqlx::query!(
-        "INSERT INTO profiles (name, path, community_id) VALUES (?, ?, ?) RETURNING id",
+        "INSERT INTO profiles (name, path, game_id) VALUES (?, ?, ?) RETURNING id",
         name,
         path_str,
-        community_id
+        game_id
     )
     .fetch_one(&state.db)
     .await?

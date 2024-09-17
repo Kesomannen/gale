@@ -1,23 +1,36 @@
-CREATE TABLE communities (
+CREATE TABLE games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     slug TEXT NOT NULL,
-    steam_id INTEGER NOT NULL,
-    steam_dir_name TEXT NOT NULL,
+    dir_name TEXT NOT NULL,
+    mod_loader TEXT NOT NULL,
+    platforms TEXT NOT NULL,
     override_path TEXT,
     is_favorite BOOLEAN NOT NULL DEFAULT 0
 );
 
-INSERT INTO communities (name, slug, steam_id, steam_dir_name)
+INSERT INTO games (name, slug, dir_name, mod_loader, platforms)
 VALUES 
-    ('Lethal Company', 'lethal-company', 1966720, 'Lethal Company'),
-    ('Content Warning', 'content-warning', 2881650, 'Content Warning');
+    (
+        'Lethal Company',
+        'lethal-company',
+        'Lethal Company',
+        'BepInEx',
+        '[{"platform":"steam","id":1966720}]'
+    ),
+    (
+        'Content Warning',
+        'content-warning',
+        'Content Warning',
+        'BepInEx',
+        '[{"platform":"steam","id":2881650}]'
+    );
 
 CREATE TABLE categories (
     id INTEGER NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     slug TEXT NOT NULL,
-    community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE
+    community_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE
 );
 
 CREATE TABLE package_categories (
@@ -39,7 +52,7 @@ CREATE TABLE packages (
     downloads INTEGER NOT NULL,
     donation_link TEXT,
     latest_version_id UUID NOT NULL,
-    community_id INTEGER NOT NULL REFERENCES communities(id)
+    game_id INTEGER NOT NULL REFERENCES games(id)
 );
 
 CREATE VIRTUAL TABLE packages_fts
@@ -99,7 +112,7 @@ CREATE TABLE profiles (
     path TEXT NOT NULL,
     is_favorite BOOLEAN NOT NULL DEFAULT 0,
     launch_mode BLOB,
-    community_id INTEGER NOT NULL REFERENCES communities(id) ON DELETE CASCADE
+    game_id INTEGER NOT NULL REFERENCES games(id) ON DELETE CASCADE
 );
 
 CREATE TABLE profile_mods (

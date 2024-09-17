@@ -7,11 +7,11 @@ use sqlx::prelude::*;
 use std::{collections::HashMap, time::Instant};
 use uuid::Uuid;
 
-pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
+pub async fn fetch_packages(state: &AppState, game_id: u32) -> Result<()> {
     let start = Instant::now();
 
-    let slug: String = sqlx::query("SELECT slug FROM communities WHERE id = ?")
-        .bind(community_id)
+    let slug: String = sqlx::query("SELECT slug FROM games WHERE id = ?")
+        .bind(game_id)
         .fetch_one(&state.db)
         .await?
         .get(0);
@@ -30,7 +30,7 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
             category.id,
             category.name,
             category.slug,
-            community_id
+            game_id
         )
         .execute(&state.db)
         .await?;
@@ -50,12 +50,6 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
     let mut count = 0;
     let mut transaction = state.db.begin().await?;
 
-    trace!("deleting old packages");
-
-    sqlx::query!("DELETE FROM packages WHERE community_id = ?", community_id)
-        .execute(&mut *transaction)
-        .await?;
-
     trace!("inserting new packages");
 
     while let Some(package) = stream.try_next().await? {
@@ -65,7 +59,7 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
             trace!("fetched {count} packages");
         }
 
-        insert_package(&package, community_id, &categories, &mut transaction)
+        insert_package(&package, game_id, &categories, &mut transaction)
             .await
             .context("failed to insert package")?;
 
@@ -86,7 +80,7 @@ pub async fn fetch_packages(state: &AppState, community_id: u32) -> Result<()> {
 
 async fn insert_package(
     package: &PackageV1,
-    community: u32,
+    game_id: u32,
     category_map: &HashMap<String, i64>,
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
@@ -112,7 +106,7 @@ async fn insert_package(
             rating_score,
             downloads,
             latest_version_id,
-            community_id
+            game_id
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         package.uuid4,
@@ -127,7 +121,7 @@ async fn insert_package(
         package.rating_score,
         total_downloads,
         package.latest().uuid4,
-        community
+        game_id
     )
     .execute(&mut **transaction)
     .await?;

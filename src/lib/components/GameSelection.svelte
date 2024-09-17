@@ -3,31 +3,31 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
 	import Link from './Link.svelte';
-	import { communities } from '$lib/state/profile.svelte';
-	import type { CommunityInfo } from '$lib/state/profile.svelte';
+	import { games } from '$lib/state/profile.svelte';
+	import type { GameInfo } from '$lib/models';
 
 	let { onselect }: { onselect?: () => void } = $props();
 
-	let shownCommunities: CommunityInfo[] = $state([]);
+	let shownGames: GameInfo[] = $state([]);
 	let searchTerm = $state('');
 
 	$effect(() => {
 		let lowerSearch = searchTerm.toLowerCase();
 
-		let newCommunities =
+		let newGames =
 			searchTerm.length > 0
-				? communities.all.filter((community) => {
+				? games.all.filter((community) => {
 						return community.name.toLowerCase().includes(lowerSearch);
 					})
-				: communities.all;
+				: games.all;
 
-		newCommunities.sort((a, b) => {
+		newGames.sort((a, b) => {
 			if (a.isFavorite && !b.isFavorite) return -1;
 			if (!a.isFavorite && b.isFavorite) return 1;
 			return 0;
 		});
 
-		shownCommunities = newCommunities;
+		shownGames = newGames;
 	});
 </script>
 
@@ -36,12 +36,12 @@
 </div>
 
 <div class="flex flex-col mt-2 h-96 overflow-y-auto">
-	{#if shownCommunities.length > 0}
-		{#each shownCommunities as { id, name, slug, isFavorite }, index}
+	{#if shownGames.length > 0}
+		{#each shownGames as { id, name, slug, isFavorite }, index}
 			<Button.Root
 				class="flex hover:bg-gray-700 rounded-lg p-1 items-center group mr-2"
 				on:click={() => {
-					communities.setActive(id);
+					games.setActive(id);
 					onselect?.();
 				}}
 			>

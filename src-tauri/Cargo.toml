@@ -1,5 +1,4 @@
 [workspace]
-members = ["crates/gale-io"]
 
 [package]
 name = "gale"

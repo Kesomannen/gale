@@ -38,7 +38,7 @@
       "deny": []
     },
     "cli:default",
-    "gale-core:allow-get-communities",
+    "gale-core:allow-get-games",
     "gale-thunderstore:allow-query-packages",
     "gale-thunderstore:allow-query-package",
     "gale-profile:allow-create",
