@@ -76,12 +76,12 @@ FROM
     JOIN packages_fts ON
         packages_fts.package_id = p.id
 WHERE
-    p.community_id = ? AND
+    p.game_id = ? AND
     packages_fts MATCH ?
 "#,
         );
     } else {
-        query.push_str("\nWHERE p.community_id = ?\n");
+        query.push_str("\nWHERE p.game_id = ?\n");
     }
 
     query.push_str(match args.order_by {

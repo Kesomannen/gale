@@ -55,6 +55,10 @@ pub async fn uninstall_mod(id: i64, state: &AppState) -> Result<()> {
         std::fs::remove_dir_all(path)?;
     }
 
+    sqlx::query!("DELETE FROM profile_mods WHERE id = ?", id)
+        .execute(&state.db)
+        .await?;
+
     Ok(())
 }
 

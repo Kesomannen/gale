@@ -1,3 +1,4 @@
+use anyhow::Context;
 use gale_core::prelude::*;
 use gale_thunderstore::api::VersionId;
 use install::InstallQueue;
@@ -135,4 +136,17 @@ async fn scan_mod(profile_mod_id: i64, state: &AppState) -> Result<impl Iterator
         .iter()
         .map(move |dir| path.join(dir).join(&full_name))
         .filter(|path| path.exists()))
+}
+
+async fn get_profile_id(profile_mod: i64, state: &AppState) -> Result<i64> {
+    let id = sqlx::query!(
+        "SELECT profile_id FROM profile_mods WHERE id = ?",
+        profile_mod
+    )
+    .fetch_optional(&state.db)
+    .await?
+    .context("profile mod not found")?
+    .profile_id;
+
+    Ok(id)
 }

@@ -2,28 +2,28 @@ CREATE TABLE games (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     slug TEXT NOT NULL,
-    dir_name TEXT NOT NULL,
+    steam_dir_name TEXT NOT NULL,
+    steam_id INTEGER NOT NULL,
     mod_loader TEXT NOT NULL,
-    platforms TEXT NOT NULL,
     override_path TEXT,
     is_favorite BOOLEAN NOT NULL DEFAULT 0
 );
 
-INSERT INTO games (name, slug, dir_name, mod_loader, platforms)
+INSERT INTO games (name, slug, steam_dir_name, steam_id, mod_loader)
 VALUES 
     (
         'Lethal Company',
         'lethal-company',
         'Lethal Company',
-        'BepInEx',
-        '[{"platform":"steam","id":1966720}]'
+        1966720,
+        'BepInEx'
     ),
     (
         'Content Warning',
         'content-warning',
         'Content Warning',
-        'BepInEx',
-        '[{"platform":"steam","id":2881650}]'
+        2881650,
+        'BepInEx'
     );
 
 CREATE TABLE categories (

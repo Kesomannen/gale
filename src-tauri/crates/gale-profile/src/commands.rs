@@ -1,8 +1,7 @@
 use crate::{
-    emit_update,
-    get::ProfileInfo,
-    install::{InstallMetadata, InstallQueue, InstallSource},
+    emit_update, get::ProfileInfo, get_profile_id, install::{InstallMetadata, InstallQueue, InstallSource}
 };
+use futures_util::try_join;
 use gale_core::prelude::*;
 use std::path::PathBuf;
 use tauri::{AppHandle, State};
@@ -48,15 +47,24 @@ pub async fn rename(
 }
 
 #[tauri::command]
-pub async fn force_uninstall_mod(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
-    crate::actions::uninstall_mod(profile_mod_id, &state).await?;
+pub async fn force_uninstall_mod(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
+    let profile_id = get_profile_id(id, &state).await?;
+
+    crate::actions::uninstall_mod(id, &state).await?;
+
+    emit_update(profile_id, &state, &app).await?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn force_toggle_mod(profile_mod_id: i64, state: State<'_, AppState>) -> CmdResult<()> {
-    crate::actions::toggle_mod(profile_mod_id, &state).await?;
+pub async fn force_toggle_mod(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
+    let (profile_id, ()) = try_join!(
+        get_profile_id(id, &state),
+        crate::actions::toggle_mod(id, &state)
+    )?;
+
+    emit_update(profile_id, &state, &app).await?;
 
     Ok(())
 }

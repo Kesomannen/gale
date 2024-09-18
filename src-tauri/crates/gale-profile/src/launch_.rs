@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, ensure, Context};
-use gale_core::{game::GamePlatform, prelude::*};
+use gale_core::prelude::*;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use std::{
@@ -54,29 +54,20 @@ pub async fn launch(profile_id: i64, state: &AppState) -> Result<()> {
 }
 
 async fn game_info(game_id: i64, state: &AppState) -> Result<(PathBuf, i64)> {
-    let (path_override, dir_name, steam_id) = sqlx::query!(
-        r#"SELECT
+    let game = sqlx::query!(
+        "SELECT
             override_path,
-            dir_name,
-            platforms as "platforms: Json<Vec<GamePlatform>>"
+            steam_dir_name,
+            steam_id
         FROM games
-        WHERE id = ?"#,
+        WHERE id = ?",
         game_id
     )
-    .map(|record| {
-        (
-            record.override_path,
-            record.dir_name,
-            match record.platforms[0] {
-                GamePlatform::Steam { id } => id,
-            },
-        )
-    })
     .fetch_one(&state.db)
     .await?;
 
-    if let Some(path) = path_override {
-        Ok((PathBuf::from(path), steam_id))
+    if let Some(path) = game.override_path {
+        Ok((PathBuf::from(path), game.steam_id))
     } else {
         let mut path: PathBuf = sqlx::query!("SELECT steam_library_path FROM settings")
             .fetch_one(&state.db)
@@ -87,9 +78,15 @@ async fn game_info(game_id: i64, state: &AppState) -> Result<(PathBuf, i64)> {
 
         path.push("steamapps");
         path.push("common");
-        path.push(dir_name);
+        path.push(game.steam_dir_name);
 
-        Ok((path, steam_id))
+        ensure!(
+            path.exists(),
+            "game directory not found (expected at {})",
+            path.display()
+        );
+
+        Ok((path, game.steam_id))
     }
 }
 

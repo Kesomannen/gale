@@ -108,12 +108,14 @@ async function queueInstall(source: InstallSource) {
 async function queueThunderstoreInstall(
 	owner: string,
 	name: string,
-	version: { id: string } & Version
+	version: Version,
+	versionUuid: string,
 ){
+	console.log("queueThunderstoreInstall", owner, name, version, versionUuid)
 	await queueInstall({
 		type: 'thunderstore',
 		identifier: modIdentifier(owner, name, version),
-		versionUuid: version.id
+		versionUuid,
 	})	
 }
 

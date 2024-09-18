@@ -221,11 +221,13 @@ export type ProfileInfo = {
 export type ProfileModInfo = {
 	id: number;
 	index: number;
+	owner: string | null;
 	name: string;
 	version: string | null;
 	enabled: boolean;
 	href: string;
 	kind: ProfileModKind;
+	icon: string | null;
 };
 
 export type ProfileModKind = 'thunderstore' | 'local' | 'github';

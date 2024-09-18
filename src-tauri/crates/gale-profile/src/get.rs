@@ -26,6 +26,7 @@ pub struct ProfileModInfo {
     enabled: bool,
     href: Option<String>,
     kind: ProfileModKind,
+    icon: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -45,7 +46,8 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
             g.slug
         FROM
             profiles p
-            JOIN games g ON p.game_id = g.id
+            JOIN games g 
+                ON p.game_id = g.id
         WHERE p.id = ?
         ",
         id
@@ -70,13 +72,19 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
     let mut mods = Vec::new();
 
     while let Some(record) = stream.try_next().await? {
-        let (kind, owner, name, version, href) = match record.source.0 {
+        let (kind, owner, name, version, href, icon) = match record.source.0 {
             ProfileModSource::Thunderstore { identifier, .. } => {
                 let href = format!(
-                    "{}/c/{}/p/{}/",
+                    "{}/c/{}/p/{}/{}/",
                     gale_thunderstore::api::THUNDERSTORE_URL,
                     game_slug,
-                    identifier.path()
+                    identifier.owner(),
+                    identifier.name()
+                );
+
+                let icon = format!(
+                    "https://gcdn.thunderstore.io/live/repository/icons/{}.png",
+                    identifier
                 );
 
                 (
@@ -85,6 +93,7 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
                     identifier.name().to_owned(),
                     identifier.version().to_owned(),
                     Some(href),
+                    Some(icon)
                 )
             }
             ProfileModSource::Local { full_name, version } => {
@@ -93,12 +102,12 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
                     None => (None, full_name),
                 };
 
-                (ProfileModKind::Local, owner, name, version, None)
+                (ProfileModKind::Local, owner, name, version, None, None)
             }
             ProfileModSource::Github { owner, repo, tag } => {
                 let href = format!("https://github.com/{owner}/{repo}/releases/tag/{tag}");
 
-                (ProfileModKind::Github, Some(owner), repo, tag, Some(href))
+                (ProfileModKind::Github, Some(owner), repo, tag, Some(href), None)
             }
         };
 
@@ -111,6 +120,7 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
             enabled: record.enabled,
             href,
             kind,
+            icon,
         });
     }
 

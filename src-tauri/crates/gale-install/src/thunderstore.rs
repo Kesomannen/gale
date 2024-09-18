@@ -19,8 +19,8 @@ pub async fn install(version_uuid: Uuid, profile_path: &Path, state: &AppState) 
             p.owner
         FROM
             versions v
-        JOIN packages p ON
-            p.id = v.package_id
+            JOIN packages p ON
+                p.id = v.package_id
         WHERE
             v.id = ?
         ",

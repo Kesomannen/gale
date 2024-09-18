@@ -85,11 +85,11 @@ async fn insert_package(
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
     let donation_link = package.donation_link.as_ref().map(|url| url.as_str());
-    let total_downloads = package
+    let total_downloads: u32 = package
         .versions
         .iter()
-        .map(|version| version.downloads as i64)
-        .sum::<i64>();
+        .map(|version| version.downloads)
+        .sum();
 
     sqlx::query!(
         "INSERT OR REPLACE INTO packages
@@ -210,7 +210,7 @@ async fn insert_dependency(
     dependency: VersionId,
     transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
 ) -> Result<()> {
-    let (major, minor, path) = dependency.version_split();
+    let (major, minor, patch) = dependency.version_split();
     let owner = dependency.owner();
     let name = dependency.name();
 
@@ -230,7 +230,7 @@ async fn insert_dependency(
         name,
         major,
         minor,
-        path
+        patch
     )
     .execute(&mut **transaction)
     .await?;

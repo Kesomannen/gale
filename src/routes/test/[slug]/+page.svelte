@@ -83,7 +83,7 @@
 
 			<button
 				class="flex items-center justify-center gap-2 bg-green-700 text-white py-2 w-full rounded-lg hover:bg-green-800 hover:-translate-y-0.5 transition-all hover:shadow-sm"
-				onclick={() => queueThunderstoreInstall(owner, name, versions[0])}
+				onclick={() => queueThunderstoreInstall(owner, name, versions[0], versions[0].id)}
 			>
 				<Icon icon="akar-icons:download" />
 				Install latest
@@ -147,7 +147,7 @@
 									<td>
 										<button
 											class="inline-flex items-center gap-2 text-green-400 font-medium hover:text-green-300 hover:underline"
-											onclick={() => queueThunderstoreInstall(owner, name, version)}
+											onclick={() => queueThunderstoreInstall(owner, name, version, version.id)}
 										>
 											<Icon icon="akar-icons:download" />
 											Install

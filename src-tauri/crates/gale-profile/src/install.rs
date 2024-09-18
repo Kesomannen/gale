@@ -2,6 +2,7 @@ use crate::{emit_update, ProfileModSource};
 use anyhow::Context;
 use gale_core::prelude::*;
 use gale_thunderstore::api::VersionId;
+use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
@@ -159,8 +160,10 @@ pub(crate) async fn handler(app: AppHandle) {
             }
         };
 
+        let name = source.to_string();
+
         if let Err(err) = handle_request(source, &metadata, &state, &app).await {
-            log::error!("failed to install mod: {:#}", err);
+            log::error!("failed to install {}: {:#}", name, err);
         }
     }
 }
@@ -200,8 +203,7 @@ async fn handle_request(
     };
 
     let source = ProfileModSource::from(source);
-    let json = sqlx::types::Json(source);
-
+    
     let index = match metadata.index {
         Some(index) => index as i64,
         None => {
@@ -220,6 +222,9 @@ async fn handle_request(
         }
     };
 
+    trace!("inserting {}", serde_json::to_string(&source)?);
+    let json = sqlx::types::Json(source);
+    
     sqlx::query!(
         "INSERT INTO profile_mods
         (profile_id, enabled, order_index, source)
@@ -232,7 +237,7 @@ async fn handle_request(
     .execute(&state.db)
     .await?;
 
-    emit_update(metadata.profile_id, state, &app).await?;
+    emit_update(metadata.profile_id, state, app).await?;
 
     Ok(())
 }

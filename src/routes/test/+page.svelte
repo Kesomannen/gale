@@ -33,14 +33,6 @@
 	});
 
 	async function queryPackages(searchTerm: string, thisVersion: number) {
-		console.log({
-				searchTerm,
-				maxResults: 10,
-				gameId: games.active?.id,
-				orderBy: 'relevance',
-				ascending: false
-			});
-
 		let results = await invoke<Package[]>('thunderstore', 'query_packages', {
 			args: {
 				searchTerm,
@@ -53,6 +45,8 @@
 
 		if (thisVersion === version) {
 			packages = results;
+		} else {
+			console.warn('discarding outdated results');
 		}
 	}
 </script>
@@ -97,7 +91,7 @@
 					<div class="inline-flex gap-0.5">
 						<button
 							class="inline-flex items-center gap-2 bg-green-700 text-white font-semibold py-1.5 px-4 rounded-l-lg hover:bg-green-600 hover:-translate-y-0.5 transition-all hover:shadow-sm"
-							onclick={() => queueThunderstoreInstall(pkg.name, pkg.name, pkg)}
+							onclick={() => queueThunderstoreInstall(pkg.owner, pkg.name, pkg, pkg.versionUuid)}
 						>
 							<Icon icon="akar-icons:download" />
 							Install
