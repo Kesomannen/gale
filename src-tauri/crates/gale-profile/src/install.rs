@@ -1,8 +1,8 @@
 use crate::{emit_update, ProfileModSource};
 use anyhow::Context;
 use gale_core::prelude::*;
+use gale_install::Progress;
 use gale_thunderstore::api::VersionId;
-use log::trace;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
@@ -149,12 +149,15 @@ pub(crate) async fn handler(app: AppHandle) {
     let state = app.state::<AppState>();
     let queue = app.state::<InstallQueue>();
 
+    let mut loading_bar: Option<LoadingBar<'_, '_>> = None;
+
     loop {
         let next = queue.queue.lock().unwrap().pop_front();
 
         let (source, metadata) = match next {
             Some(item) => item,
             None => {
+                loading_bar = None;
                 queue.notify.notified().await;
                 continue;
             }
@@ -162,7 +165,10 @@ pub(crate) async fn handler(app: AppHandle) {
 
         let name = source.to_string();
 
-        if let Err(err) = handle_request(source, &metadata, &state, &app).await {
+        let loading_bar =
+            loading_bar.get_or_insert_with(|| LoadingBar::new("Installing mods", &app));
+
+        if let Err(err) = handle_request(source, &metadata, &loading_bar, &state, &app).await {
             log::error!("failed to install {}: {:#}", name, err);
         }
     }
@@ -171,6 +177,7 @@ pub(crate) async fn handler(app: AppHandle) {
 async fn handle_request(
     source: InstallSource,
     metadata: &InstallMetadata,
+    loading_bar: &LoadingBar<'_, '_>,
     state: &AppState,
     app: &AppHandle,
 ) -> Result<()> {
@@ -186,9 +193,22 @@ async fn handle_request(
 
     log::debug!("installing {} at {}", source, profile_path.display());
 
+    let progress_handler = |progress: Progress| {
+        let message = match progress {
+            Progress::Install => format!("Installing {}", source),
+            Progress::Extract => format!("Extracting {}", source),
+            Progress::Download { done, total } => {
+                format!("Downloading {} ({}/{})", source, done, total)
+            }
+        };
+
+        loading_bar.emit(Some(&message), None).ok();
+    };
+
     match &source {
         InstallSource::Thunderstore { version_uuid, .. } => {
-            gale_install::from_thunderstore(*version_uuid, &profile_path, state).await?;
+            gale_install::from_thunderstore(*version_uuid, &profile_path, progress_handler, state)
+                .await?;
         }
         InstallSource::Local {
             path,
@@ -203,7 +223,7 @@ async fn handle_request(
     };
 
     let source = ProfileModSource::from(source);
-    
+
     let index = match metadata.index {
         Some(index) => index as i64,
         None => {
@@ -222,9 +242,8 @@ async fn handle_request(
         }
     };
 
-    trace!("inserting {}", serde_json::to_string(&source)?);
     let json = sqlx::types::Json(source);
-    
+
     sqlx::query!(
         "INSERT INTO profile_mods
         (profile_id, enabled, order_index, source)

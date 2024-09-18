@@ -1,4 +1,4 @@
-use crate::cache;
+use crate::{cache, Progress};
 use anyhow::{anyhow, Context};
 use futures_util::StreamExt;
 use gale_core::prelude::*;
@@ -6,7 +6,15 @@ use gale_thunderstore::api::VersionId;
 use sqlx::types::Uuid;
 use std::{io::Cursor, path::Path, time::Instant};
 
-pub async fn install(version_uuid: Uuid, profile_path: &Path, state: &AppState) -> Result<()> {
+pub async fn install<F>(
+    version_uuid: Uuid,
+    profile_path: &Path,
+    mut handler: F,
+    state: &AppState,
+) -> Result<()>
+where
+    F: FnMut(Progress),
+{
     let start = Instant::now();
 
     let version = sqlx::query!(
@@ -44,13 +52,17 @@ pub async fn install(version_uuid: Uuid, profile_path: &Path, state: &AppState) 
         .context("failed to check cache")?;
 
     if !cache_hit {
-        let data = download(&id, state)
+        let data = download(&id, version.file_size as u64, &mut handler, state)
             .await
             .context("failed to download package")?;
+
+        handler(Progress::Extract);
 
         crate::common::extract(Cursor::new(data), id.full_name(), cache_path.clone())
             .context("failed to extract package")?;
     }
+
+    handler(Progress::Install);
 
     crate::common::install(&cache_path, profile_path).context("failed to install package")?;
 
@@ -64,12 +76,24 @@ pub async fn install(version_uuid: Uuid, profile_path: &Path, state: &AppState) 
     Ok(())
 }
 
-async fn download(id: &VersionId, state: &AppState) -> Result<Vec<u8>> {
+async fn download<F>(
+    id: &VersionId,
+    total_size: u64,
+    mut handler: F,
+    state: &AppState,
+) -> Result<Vec<u8>>
+where
+    F: FnMut(Progress),
+{
     let mut stream = gale_thunderstore::api::download(&state.reqwest, id).await?;
 
     let mut vec = Vec::new();
     while let Some(chunk) = stream.next().await {
         vec.extend_from_slice(&chunk?);
+        handler(Progress::Download {
+            done: vec.len() as u64,
+            total: total_size,
+        });
     }
 
     Ok(vec)

@@ -8,3 +8,9 @@ mod common;
 mod github;
 mod local;
 mod thunderstore;
+
+pub enum Progress {
+    Install,
+    Extract,
+    Download { done: u64, total: u64 },
+}

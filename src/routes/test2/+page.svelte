@@ -2,7 +2,6 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import { invoke } from '$lib/invoke';
 	import { profiles } from '$lib/state/profile.svelte';
-	import { modIconUrl, modThunderstoreUrl } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Switch } from 'bits-ui';
 

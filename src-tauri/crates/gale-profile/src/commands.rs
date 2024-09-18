@@ -1,5 +1,8 @@
 use crate::{
-    emit_update, get::ProfileInfo, get_profile_id, install::{InstallMetadata, InstallQueue, InstallSource}
+    emit_update,
+    get::ProfileInfo,
+    get_profile_id,
+    install::{InstallMetadata, InstallQueue, InstallSource},
 };
 use futures_util::try_join;
 use gale_core::prelude::*;
@@ -14,7 +17,7 @@ pub async fn create(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> CmdResult<i64> {
-    let _ = LoadingBar::create("Creating profile", &app);
+    let _ = LoadingBar::new("Creating profile", &app);
 
     let id = crate::actions::create(&name, &path, game_id, &state).await?;
 
@@ -23,7 +26,7 @@ pub async fn create(
 
 #[tauri::command]
 pub async fn delete(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
-    let _ = LoadingBar::create("Deleting profile", &app);
+    let _ = LoadingBar::new("Deleting profile", &app);
 
     crate::actions::delete(id, &state).await?;
 
@@ -37,7 +40,7 @@ pub async fn rename(
     state: State<'_, AppState>,
     app: AppHandle,
 ) -> CmdResult<()> {
-    let _ = LoadingBar::create("Renaming profile", &app);
+    let _ = LoadingBar::new("Renaming profile", &app);
 
     crate::actions::rename(id, &name, &state).await?;
 
@@ -47,7 +50,11 @@ pub async fn rename(
 }
 
 #[tauri::command]
-pub async fn force_uninstall_mod(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
+pub async fn force_uninstall_mod(
+    id: i64,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> CmdResult<()> {
     let profile_id = get_profile_id(id, &state).await?;
 
     crate::actions::uninstall_mod(id, &state).await?;
@@ -58,7 +65,11 @@ pub async fn force_uninstall_mod(id: i64, state: State<'_, AppState>, app: AppHa
 }
 
 #[tauri::command]
-pub async fn force_toggle_mod(id: i64, state: State<'_, AppState>, app: AppHandle) -> CmdResult<()> {
+pub async fn force_toggle_mod(
+    id: i64,
+    state: State<'_, AppState>,
+    app: AppHandle,
+) -> CmdResult<()> {
     let (profile_id, ()) = try_join!(
         get_profile_id(id, &state),
         crate::actions::toggle_mod(id, &state)

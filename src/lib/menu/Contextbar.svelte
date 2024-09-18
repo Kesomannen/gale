@@ -3,12 +3,13 @@
 	import NewProfilePopup from '$lib/menu/NewProfilePopup.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { Button, Dialog, DropdownMenu } from 'bits-ui';
-	import { fly } from 'svelte/transition';
+	import { Dialog, Popover, Progress } from 'bits-ui';
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Updater from './Updater.svelte';
 	import { games, profiles } from '$lib/state/profile.svelte';
 	import { invoke } from '$lib/invoke';
+	import loadingBars from '$lib/state/loading.svelte';
+	import { fly, slide } from 'svelte/transition';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -77,6 +78,33 @@
 				: 'rotate-0'}"
 		/>
 	</button>
+
+	<Popover.Root>
+		<Popover.Trigger class="size-8 my-auto rounded bg-green-600 hover:bg-green-500 text-white">
+			<Icon icon="mdi:loading" class="text-xl animate-spin mx-auto" />
+		</Popover.Trigger>
+		<Popover.Content class="flex flex-col px-4 py-2 border border-gray-600 rounded-lg shadow-lg bg-gray-800 w-96"
+		inTransition={fly}
+		inTransitionConfig={{ duration: 50 }}>
+			{#each loadingBars.all as { id, title, message, progress }}
+				<div>
+					<Progress.Root
+					value={progress ?? 1}
+					max={1}
+					class="relative h-4 mt-2 bg-gray-900 rounded-full overflow-hidden"
+				>
+					<div
+						class="absolute top-0 left-0 h-full bg-green-600 rounded-l-full transition-all"
+						style="width: {(progress ?? 1) * 100}%"
+					></div>
+				</Progress.Root>
+
+				<h3 class="text-white font-medium pt-2">{title}</h3>
+				<h4 class="text-gray-400 text-sm">{message}</h4>
+				</div>
+			{/each}
+		</Popover.Content>
+	</Popover.Root>
 
 	<Updater />
 </div>

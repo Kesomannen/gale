@@ -79,6 +79,6 @@
 		<div
 			class="absolute top-0 left-0 h-full bg-green-600 rounded-full transition-all"
 			style="width: {progress.totalProgress * 100}%"
-		/>
+		></div>
 	</Progress.Root>
 </Popup>

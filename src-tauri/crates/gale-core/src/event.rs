@@ -4,7 +4,7 @@ use serde_json::json;
 use tauri::{AppHandle, Emitter};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct LoadingBar<'t, 'a> {
     id: Uuid,
     title: &'t str,
@@ -13,19 +13,19 @@ pub struct LoadingBar<'t, 'a> {
 }
 
 impl<'t, 'a> LoadingBar<'t, 'a> {
-    pub fn create(title: &'t str, app: &'a AppHandle) -> Result<Self> {
+    pub fn new(title: &'t str, app: &'a AppHandle) -> Self {
         let this = Self {
             id: Uuid::new_v4(),
             title,
             app,
         };
 
-        app.emit("loading-bar-create", &this)?;
+        app.emit("loading-bar-create", &this).ok();
 
-        Ok(this)
+        this
     }
 
-    fn emit(&self, message: Option<&str>, progress: Option<f32>) -> Result<()> {
+    pub fn emit(&self, message: Option<&str>, progress: Option<f32>) -> Result<()> {
         self.app.emit(
             "loading-bar-update",
             json!({
