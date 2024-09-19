@@ -93,7 +93,7 @@
 			</p>
 
 			<p class="mt-1">
-				You can always import profiles later by going to <b>Import > ...from r2modman</b>.
+				You can always import profiles later by going to <b>Import &gt; ...from r2modman</b>.
 			</p>
 
 			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
