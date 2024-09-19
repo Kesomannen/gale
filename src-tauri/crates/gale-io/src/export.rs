@@ -1,8 +1,9 @@
-use crate::{LegacyProfileManifest, LegacyProfileMod, LegacyProfileModKind, ModManager};
+use crate::{
+    LegacyProfileManifest, LegacyProfileMod, LegacyProfileModKind, LegacyVersion, ModManager,
+};
 use anyhow::Context;
 use gale_core::prelude::*;
 use gale_profile::ProfileModSource;
-use gale_thunderstore::api::PackageId;
 use sqlx::types::Json;
 use std::{
     io::{BufWriter, Cursor, Seek, Write},
@@ -49,29 +50,7 @@ async fn to_zip(profile_id: i64, writer: impl Write + Seek, state: &AppState) ->
         "#,
         profile_id
     )
-    .map(|record| {
-        let enabled = record.enabled;
-
-        let (id, kind) = match record.source.0 {
-            ProfileModSource::Thunderstore { identifier, .. } => {
-                let (major, minor, patch) = identifier.version_split();
-                let kind = LegacyProfileModKind::default(major, minor, patch);
-
-                (PackageId::from(identifier), kind)
-            }
-            ProfileModSource::Github { owner, repo, tag } => {
-                let id = PackageId::new(&owner, &repo);
-                let kind = LegacyProfileModKind::github(tag);
-
-                (id, kind)
-            }
-            ProfileModSource::Local { full_name: _, version: _ } => {
-                todo!()
-            }
-        };
-
-        LegacyProfileMod { id, enabled, kind }
-    })
+    .map(|record| LegacyProfileMod::from_source(record.enabled, record.source.0))
     .fetch_all(&state.db)
     .await?;
 
@@ -104,4 +83,40 @@ where
     }
 
     Ok(())
+}
+
+impl LegacyProfileMod {
+    fn from_source(enabled: bool, source: ProfileModSource) -> Self {
+        let (name, kind) = match source {
+            ProfileModSource::Thunderstore { identifier, .. } => {
+                let (major, minor, patch) = identifier.version_split();
+                let kind = LegacyProfileModKind::Default {
+                    version: LegacyVersion {
+                        major,
+                        minor,
+                        patch,
+                    },
+                };
+
+                (identifier.into_string(), kind)
+            }
+            ProfileModSource::Github { owner, repo, tag } => {
+                let kind = LegacyProfileModKind::Github { tag };
+
+                (format!("{}-{}", owner, repo), kind)
+            }
+            ProfileModSource::Local {
+                name: _,
+                version: _,
+            } => {
+                todo!()
+            }
+        };
+
+        Self {
+            name,
+            enabled,
+            kind,
+        }
+    }
 }

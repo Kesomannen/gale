@@ -93,13 +93,13 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
                     identifier.name().to_owned(),
                     identifier.version().to_owned(),
                     Some(href),
-                    Some(icon)
+                    Some(icon),
                 )
             }
-            ProfileModSource::Local { full_name, version } => {
-                let (owner, name) = match full_name.split_once('-') {
+            ProfileModSource::Local { name, version } => {
+                let (owner, name) = match name.split_once('-') {
                     Some((owner, name)) => (Some(owner.to_owned()), name.to_owned()),
-                    None => (None, full_name),
+                    None => (None, name),
                 };
 
                 (ProfileModKind::Local, owner, name, version, None, None)
@@ -107,7 +107,14 @@ pub async fn single(id: i64, state: &AppState) -> Result<ProfileInfo> {
             ProfileModSource::Github { owner, repo, tag } => {
                 let href = format!("https://github.com/{owner}/{repo}/releases/tag/{tag}");
 
-                (ProfileModKind::Github, Some(owner), repo, tag, Some(href), None)
+                (
+                    ProfileModKind::Github,
+                    Some(owner),
+                    repo,
+                    tag,
+                    Some(href),
+                    None,
+                )
             }
         };
 

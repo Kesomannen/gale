@@ -1972,6 +1972,7 @@ dependencies = [
  "sqlx",
  "tauri",
  "tokio",
+ "uuid",
  "walkdir",
  "zip",
 ]

@@ -2,7 +2,8 @@ use crate::{LegacyProfileManifest, LegacyProfileMod, LegacyProfileModKind};
 use anyhow::{anyhow, Context};
 use futures_util::future::try_join_all;
 use gale_core::prelude::*;
-use gale_profile::install::{InstallMetadata, InstallQueue, InstallSource};
+use gale_install::InstallSource;
+use gale_profile::install::{InstallMetadata, InstallQueue};
 use gale_thunderstore::api::{ApiResultExt, VersionId};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
@@ -27,7 +28,7 @@ pub enum ImportTarget {
     New {
         name: String,
         path: PathBuf,
-        community_id: i64,
+        game_id: i64,
     },
     #[serde(rename_all = "camelCase")]
     Overwrite { id: i64 },
@@ -57,7 +58,7 @@ pub async fn import(
         ImportTarget::New {
             name,
             path,
-            community_id,
+            game_id: community_id,
         } => {
             let id = gale_profile::create(&name, &path, community_id, state)
                 .await
@@ -150,7 +151,7 @@ async fn read_data(src: impl Read + Seek, state: &AppState) -> Result<(String, I
 
     let futures = mods
         .into_iter()
-        .map(|r2mod| r2_to_import(r2mod, state))
+        .map(|profile_mod| profile_mod.to_source(state))
         .collect::<Vec<_>>();
 
     let mods = try_join_all(futures).await?;
@@ -164,60 +165,63 @@ async fn read_data(src: impl Read + Seek, state: &AppState) -> Result<(String, I
     Ok((profile_name, result))
 }
 
-async fn r2_to_import(r2mod: LegacyProfileMod, state: &AppState) -> Result<ModImport> {
-    let LegacyProfileMod {
-        id: identifier,
-        kind,
-        enabled,
-    } = r2mod;
+impl LegacyProfileMod {
+    async fn to_source(self, state: &AppState) -> Result<ModImport> {
+        let Self {
+            name,
+            kind,
+            enabled,
+        } = self;
 
-    let (owner, name) = identifier.split();
+        let (owner, name) = name
+            .split_once('-')
+            .ok_or_else(|| anyhow!("invalid package name: {}", name))?;
 
-    let source = match kind {
-        LegacyProfileModKind::Default { version } => {
-            let version_uuid = get_version_uuid(owner, name, &version, state)
-                .await?
-                .ok_or_else(|| anyhow!("package not found: {}", identifier))?;
+        let source = match kind {
+            LegacyProfileModKind::Default { version } => {
+                let version_uuid = get_version_uuid(owner, name, &version, state)
+                    .await?
+                    .ok_or_else(|| anyhow!("package not found: {}-{}", owner, name))?;
 
-            let identifier: VersionId =
-                (owner, name, version.major, version.minor, version.patch).into();
+                let identifier: VersionId =
+                    (owner, name, version.major, version.minor, version.patch).into();
 
-            InstallSource::Thunderstore {
-                identifier,
-                version_uuid,
+                InstallSource::Thunderstore {
+                    identifier,
+                    version_uuid,
+                }
             }
-        }
-        LegacyProfileModKind::Github { tag } => InstallSource::Github {
-            owner: owner.to_string(),
-            repo: name.to_string(),
-            tag,
-        },
-    };
+            LegacyProfileModKind::Github { tag } => InstallSource::Github {
+                owner: owner.to_string(),
+                repo: name.to_string(),
+                tag,
+            },
+        };
 
-    Ok(ModImport { source, enabled })
+        Ok(ModImport { source, enabled })
+    }
 }
 
 async fn get_version_uuid(
     owner: &str,
     name: &str,
-    version: &crate::R2Version,
+    version: &crate::LegacyVersion,
     state: &AppState,
 ) -> Result<Option<Uuid>> {
     let record = sqlx::query!(
         r#"
-                    SELECT
-                        v.id AS "id: Uuid"
-                    FROM
-                        versions v
-                        JOIN packages p
-                            ON v.package_id = p.id
-                    WHERE
-                        p.owner = ? AND
-                        p.name = ? AND
-                        v.major = ? AND
-                        v.minor = ? AND
-                        v.patch = ?
-                    "#,
+SELECT
+    v.id AS "id: Uuid"
+FROM
+    versions v
+    JOIN packages p
+        ON v.package_id = p.id
+WHERE
+    p.owner = ? AND
+    p.name = ? AND
+    v.major = ? AND
+    v.minor = ? AND
+    v.patch = ?"#,
         owner,
         name,
         version.major,

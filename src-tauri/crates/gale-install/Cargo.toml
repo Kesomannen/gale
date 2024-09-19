@@ -22,3 +22,4 @@ walkdir = "2"
 bytes = "1"
 reqwest = { version = "0.12", features = ["json", "gzip"] }
 chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["serde"] }

@@ -86,14 +86,14 @@ pub enum ProfileModSource {
         tag: String,
     },
     Local {
-        full_name: String,
+        name: String,
         version: String,
     },
 }
 
 impl ProfileModSource {
     /// Unique identifier for the mod, excluding the version.
-    fn full_name(&self) -> Cow<'_, str> {
+    fn package_id(&self) -> Cow<'_, str> {
         match self {
             ProfileModSource::Thunderstore { identifier, .. } => {
                 Cow::Borrowed(identifier.full_name())
@@ -101,7 +101,7 @@ impl ProfileModSource {
             ProfileModSource::Github { owner, repo, .. } => {
                 Cow::Owned(format!("{}-{}", owner, repo))
             }
-            ProfileModSource::Local { full_name, .. } => Cow::Borrowed(full_name),
+            ProfileModSource::Local { name, .. } => Cow::Borrowed(name),
         }
     }
 }
@@ -128,7 +128,7 @@ async fn scan_mod(profile_mod_id: i64, state: &AppState) -> Result<impl Iterator
     .fetch_one(&state.db)
     .await?;
 
-    let full_name = source.full_name().into_owned();
+    let full_name = source.package_id().into_owned();
 
     path.push("BepInEx");
 

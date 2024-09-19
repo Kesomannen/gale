@@ -24,14 +24,15 @@ pub const THUNDERSTORE_URL: &str = "https://thunderstore.io";
 pub async fn download(
     client: &reqwest::Client,
     id: &VersionId,
-) -> Result<impl Stream<Item = Result<bytes::Bytes>>> {
+) -> Result<(u64, impl Stream<Item = Result<bytes::Bytes>>)> {
     let url = format!("{}/package/download/{}/", THUNDERSTORE_URL, id.path());
 
-    Ok(client
-        .get(&url)
-        .send()
-        .await?
-        .wrap_err()?
+    let response = client.get(&url).send().await?.wrap_err()?;
+
+    let len = response.content_length().unwrap_or_default();
+    let stream = response
         .bytes_stream()
-        .map(|res| res.map_err(Error::Reqwest)))
+        .map(|res| res.map_err(Error::Reqwest));
+
+    Ok((len, stream))
 }

@@ -2,10 +2,11 @@ use crate::{
     emit_update,
     get::ProfileInfo,
     get_profile_id,
-    install::{InstallMetadata, InstallQueue, InstallSource},
+    install::{InstallMetadata, InstallQueue},
 };
 use futures_util::try_join;
 use gale_core::prelude::*;
+use gale_install::InstallSource;
 use std::path::PathBuf;
 use tauri::{AppHandle, State};
 

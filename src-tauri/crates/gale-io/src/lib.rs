@@ -1,4 +1,3 @@
-use gale_thunderstore::api::PackageId;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use tauri::{
@@ -10,12 +9,11 @@ use walkdir::WalkDir;
 mod commands;
 mod export;
 mod import;
-mod r2modman;
 mod modpack;
+mod r2modman;
 
 pub fn init() -> TauriPlugin<tauri::Wry> {
     Builder::new("gale-io")
-        .setup(|app, _| Ok(()))
         .invoke_handler(generate_handler![
             commands::read_code,
             commands::read_file,
@@ -47,8 +45,7 @@ struct LegacyProfileManifest {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct LegacyProfileMod {
-    #[serde(rename = "name")]
-    id: PackageId,
+    name: String,
     enabled: bool,
     #[serde(flatten)]
     kind: LegacyProfileModKind,
@@ -61,32 +58,16 @@ enum LegacyProfileModKind {
     /// Either from thunderstore or locally
     Default {
         #[serde(rename = "versionNumber")]
-        version: R2Version,
+        version: LegacyVersion,
     },
     Github {
         tag: String,
     },
 }
 
-impl LegacyProfileModKind {
-    pub fn default(major: u32, minor: u32, patch: u32) -> Self {
-        Self::Default {
-            version: R2Version {
-                major,
-                minor,
-                patch,
-            },
-        }
-    }
-
-    pub fn github(tag: String) -> Self {
-        Self::Github { tag }
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct R2Version {
+struct LegacyVersion {
     major: u32,
     minor: u32,
     patch: u32,

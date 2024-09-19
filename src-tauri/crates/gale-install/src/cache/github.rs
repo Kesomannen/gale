@@ -1,64 +1,44 @@
-use crate::cache;
 use anyhow::Context;
 use gale_core::prelude::*;
 use serde::Deserialize;
-use std::{fmt::Display, path::Path, time::Instant};
+use std::{fmt::Display, path::PathBuf};
 
-pub async fn install(
+pub async fn insert(
     owner: &str,
     repo: &str,
     tag: &str,
-    profile_path: &Path,
+    dest: PathBuf,
     state: &AppState,
 ) -> Result<()> {
-    let start = Instant::now();
-
-    let full_name = format!("{}-{}", owner, repo);
-    let id = format!("{}-{}-{}", owner, repo, tag);
-
-    let (cache_path, cache_hit) = cache::check(&id, "github", state)
+    let assets = get_assets(owner, repo, tag, &state.reqwest)
         .await
-        .context("failed to check cache")?;
+        .context("failed to retrieve assets")?;
 
-    if !cache_hit {
-        let assets = get_assets(owner, repo, tag, &state.reqwest)
-            .await
-            .context("failed to retrieve assets")?;
+    let (asset, ty) = guess_asset_to_install(&assets).context("no suitable asset found")?;
 
-        let (asset, ty) = guess_asset_to_install(&assets).context("no suitable asset found")?;
+    let data = state
+        .reqwest
+        .get(&asset.url)
+        .header("Accept", "application/octet-stream")
+        .send()
+        .await?
+        .error_for_status()?
+        .bytes()
+        .await?;
 
-        let data = state
-            .reqwest
-            .get(&asset.url)
-            .header("Accept", "application/octet-stream")
-            .send()
-            .await?
-            .error_for_status()?
-            .bytes()
-            .await?;
+    let reader = std::io::Cursor::new(data);
+    let package_id = format!("{}-{}", owner, repo);
 
-        let reader = std::io::Cursor::new(data);
-
-        match ty {
-            AssetType::Zip => {
-                crate::common::extract(reader, &full_name, cache_path.clone())
-                    .context("failed to extract package")?;
-            }
-            AssetType::Dll => {
-                crate::common::cache_dll(reader, &full_name, &asset.name, cache_path.clone())
-                    .context("failed to cache dll")?;
-            }
+    match ty {
+        AssetType::Zip => {
+            crate::common::extract(reader, &package_id, dest)
+                .context("failed to extract package")?;
+        }
+        AssetType::Dll => {
+            super::insert_local_dll(reader, &package_id, &asset.name, dest)
+                .context("failed to cache dll")?;
         }
     }
-
-    crate::common::install(&cache_path, profile_path).context("failed to install package")?;
-
-    log::info!(
-        "installed {} in {}s (cache {})",
-        id,
-        start.elapsed().as_secs_f32(),
-        if cache_hit { "hit" } else { "miss" }
-    );
 
     Ok(())
 }

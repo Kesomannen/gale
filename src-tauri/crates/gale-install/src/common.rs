@@ -9,8 +9,8 @@ use std::{
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-fn is_bepinex(full_name: &str) -> bool {
-    match full_name {
+fn is_bepinex(package_id: &str) -> bool {
+    match package_id {
         // special cases
         "bbepis-BepInExPack"
         | "xiaoxiao921-BepInExPack"
@@ -33,32 +33,14 @@ fn is_bepinex(full_name: &str) -> bool {
     }
 }
 
-pub fn cache_dll(
-    mut src: impl Read,
-    full_name: impl AsRef<Path>,
-    file_name: impl AsRef<Path>,
-    mut dest: PathBuf,
-) -> Result<()> {
-    dest.push("BepInEx");
-    dest.push("plugins");
-    dest.push(full_name);
-    std::fs::create_dir_all(&dest)?;
-
-    dest.push(file_name);
-    let mut target_file = std::fs::File::create(&dest)?;
-    std::io::copy(&mut src, &mut target_file)?;
-
-    Ok(())
-}
-
-pub fn extract(src: impl Read + Seek, full_name: &str, mut dest: PathBuf) -> Result<()> {
+pub fn extract(src: impl Read + Seek, package_id: &str, mut dest: PathBuf) -> Result<()> {
     let start = Instant::now();
 
     dest.push("BepInEx");
 
     std::fs::create_dir_all(&dest)?;
 
-    let is_bepinex = is_bepinex(full_name);
+    let is_bepinex = is_bepinex(package_id);
     let mut archive = ZipArchive::new(src)?;
 
     for i in 0..archive.len() {
@@ -81,7 +63,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut dest: PathBuf) -> Res
             continue;
         }
 
-        let target_path = map_file(file_path, &dest, full_name, is_bepinex)?;
+        let target_path = map_file(file_path, &dest, package_id, is_bepinex)?;
 
         std::fs::create_dir_all(target_path.parent().unwrap())?;
         let mut target_file = std::fs::File::create(&target_path)?;

@@ -1,18 +1,10 @@
 use crate::{emit_update, ProfileModSource};
 use anyhow::Context;
 use gale_core::prelude::*;
-use gale_install::Progress;
-use gale_thunderstore::api::VersionId;
-use serde::{Deserialize, Serialize};
-use std::{
-    collections::VecDeque,
-    fmt::{Debug, Display},
-    path::PathBuf,
-    sync::Mutex,
-};
+use gale_install::{InstallSource, Progress};
+use std::{collections::VecDeque, fmt::Debug, path::PathBuf, sync::Mutex, time::Instant};
 use tauri::{AppHandle, Manager};
 use tokio::sync::Notify;
-use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct InstallMetadata {
@@ -41,28 +33,6 @@ impl InstallMetadata {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", tag = "type")]
-pub enum InstallSource {
-    #[serde(rename_all = "camelCase")]
-    Thunderstore {
-        identifier: VersionId,
-        version_uuid: Uuid,
-    },
-    #[serde(rename_all = "camelCase")]
-    Local {
-        path: PathBuf,
-        full_name: String,
-        version: String,
-    },
-    #[serde(rename_all = "camelCase")]
-    Github {
-        owner: String,
-        repo: String,
-        tag: String,
-    },
-}
-
 impl From<InstallSource> for ProfileModSource {
     fn from(source: InstallSource) -> Self {
         match source {
@@ -73,37 +43,9 @@ impl From<InstallSource> for ProfileModSource {
                 identifier,
                 version_uuid,
             },
-            InstallSource::Local {
-                full_name, version, ..
-            } => ProfileModSource::Local { full_name, version },
+            InstallSource::Local { name, version, .. } => ProfileModSource::Local { name, version },
             InstallSource::Github { owner, repo, tag } => {
                 ProfileModSource::Github { owner, repo, tag }
-            }
-        }
-    }
-}
-
-impl Display for InstallSource {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            InstallSource::Thunderstore { identifier, .. } => {
-                write!(f, "{} (thunderstore)", identifier)
-            }
-            InstallSource::Local {
-                full_name,
-                version,
-                path,
-            } => {
-                write!(
-                    f,
-                    "{}-{} (local from {})",
-                    full_name,
-                    version,
-                    path.display()
-                )
-            }
-            InstallSource::Github { owner, repo, tag } => {
-                write!(f, "{}-{}-{} (github)", owner, repo, tag)
             }
         }
     }
@@ -149,10 +91,14 @@ pub(crate) async fn handler(app: AppHandle) {
     let state = app.state::<AppState>();
     let queue = app.state::<InstallQueue>();
 
-    let mut loading_bar: Option<LoadingBar<'_, '_>> = None;
+    let mut loading_bar: Option<LoadingBar> = None;
 
     loop {
-        let next = queue.queue.lock().unwrap().pop_front();
+        let (count, next) = {
+            let mut queue = queue.queue.lock().unwrap();
+
+            (queue.len(), queue.pop_front())
+        };
 
         let (source, metadata) = match next {
             Some(item) => item,
@@ -163,21 +109,34 @@ pub(crate) async fn handler(app: AppHandle) {
             }
         };
 
-        let name = source.to_string();
+        let name = source.package_id().into_owned();
 
         let loading_bar =
             loading_bar.get_or_insert_with(|| LoadingBar::new("Installing mods", &app));
 
-        if let Err(err) = handle_request(source, &metadata, &loading_bar, &state, &app).await {
-            log::error!("failed to install {}: {:#}", name, err);
-        }
+        loading_bar
+            .update()
+            .set_progress(1.0 - count as f32)
+            .send()
+            .ok();
+
+        let start = Instant::now();
+
+        match handle_request(source, &metadata, &loading_bar, &state, &app).await {
+            Ok(_) => {
+                log::info!("installed {} in {:?}", name, start.elapsed());
+            }
+            Err(err) => {
+                log::error!("failed to install {}: {:#}", name, err);
+            }
+        };
     }
 }
 
 async fn handle_request(
     source: InstallSource,
     metadata: &InstallMetadata,
-    loading_bar: &LoadingBar<'_, '_>,
+    loading_bar: &LoadingBar<'_>,
     state: &AppState,
     app: &AppHandle,
 ) -> Result<()> {
@@ -191,36 +150,25 @@ async fn handle_request(
     .path
     .into();
 
-    log::debug!("installing {} at {}", source, profile_path.display());
-
-    let progress_handler = |progress: Progress| {
-        let message = match progress {
-            Progress::Install => format!("Installing {}", source),
-            Progress::Extract => format!("Extracting {}", source),
-            Progress::Download { done, total } => {
-                format!("Downloading {} ({}/{})", source, done, total)
+    let name = source.name().into_owned();
+    let on_progress = move |progress: Progress| {
+        let text = match progress {
+            Progress::Download { current, total } => {
+                format!(
+                    "Downloading {} ({}/{})",
+                    name,
+                    format_file_size(current),
+                    format_file_size(total)
+                )
             }
+            Progress::Extract => format!("Extracting {}", name),
+            Progress::Install => format!("Installing {}", name),
         };
 
-        loading_bar.emit(Some(&message), None).ok();
+        loading_bar.update().set_text(text).send().ok();
     };
 
-    match &source {
-        InstallSource::Thunderstore { version_uuid, .. } => {
-            gale_install::from_thunderstore(*version_uuid, &profile_path, progress_handler, state)
-                .await?;
-        }
-        InstallSource::Local {
-            path,
-            full_name,
-            version,
-        } => {
-            gale_install::from_local(path, full_name, version, &profile_path, state).await?;
-        }
-        InstallSource::Github { owner, repo, tag } => {
-            gale_install::from_github(owner, repo, tag, &profile_path, state).await?;
-        }
-    };
+    gale_install::install(&source, &profile_path, on_progress, &state).await?;
 
     let source = ProfileModSource::from(source);
 
@@ -259,4 +207,20 @@ async fn handle_request(
     emit_update(metadata.profile_id, state, app).await?;
 
     Ok(())
+}
+
+fn format_file_size(bytes: u64) -> String {
+    const KB: f64 = 1024.0;
+    const MB: f64 = KB * 1024.0;
+    const GB: f64 = MB * 1024.0;
+
+    if bytes < KB as u64 {
+        format!("{} B", bytes)
+    } else if bytes < MB as u64 {
+        format!("{:.1} KB", bytes as f64 / KB)
+    } else if bytes < GB as u64 {
+        format!("{:.1} MB", bytes as f64 / MB)
+    } else {
+        format!("{:.1} GB", bytes as f64 / GB)
+    }
 }
