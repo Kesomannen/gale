@@ -4,7 +4,10 @@ use futures_util::{pin_mut, TryStreamExt};
 use gale_core::prelude::*;
 use log::{debug, trace};
 use sqlx::prelude::*;
-use std::{collections::HashMap, time::Instant};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 use uuid::Uuid;
 
 pub async fn fetch_packages(state: &AppState, game_id: u32) -> Result<()> {
@@ -48,15 +51,20 @@ pub async fn fetch_packages(state: &AppState, game_id: u32) -> Result<()> {
     pin_mut!(stream);
 
     let mut count = 0;
+    let mut pending = 0;
     let mut transaction = state.db.begin().await?;
+
+    const COMMIT_INTERVAL: Duration = Duration::from_secs(10);
+    let mut last_commit = Instant::now();
 
     trace!("inserting new packages");
 
     while let Some(package) = stream.try_next().await? {
         count += 1;
+        pending += 1;
 
         if count % 100 == 0 {
-            trace!("fetched {count} packages");
+            trace!("fetched {count} packages ({pending} pending insertion)");
         }
 
         insert_package(&package, game_id, &categories, &mut transaction)
@@ -68,6 +76,16 @@ pub async fn fetch_packages(state: &AppState, game_id: u32) -> Result<()> {
             insert_version(version, uuid, &mut transaction)
                 .await
                 .context("failed to insert version")?;
+        }
+
+        if last_commit.elapsed() > COMMIT_INTERVAL {
+            trace!("committing {pending} packages");
+
+            transaction.commit().await?;
+            transaction = state.db.begin().await?;
+
+            last_commit = Instant::now();
+            pending = 0;
         }
     }
 
@@ -92,23 +110,33 @@ async fn insert_package(
         .sum();
 
     sqlx::query!(
-        "INSERT OR REPLACE INTO packages
-        (
-            id,
-            name,
-            description,
-            date_created,
-            donation_link,
-            has_nsfw_content,
-            is_deprecated,
-            is_pinned,
-            owner,
-            rating_score,
-            downloads,
-            latest_version_id,
-            game_id
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        r#"
+INSERT INTO packages
+(
+    id,
+    name,
+    description,
+    date_created,
+    donation_link,
+    has_nsfw_content,
+    is_deprecated,
+    is_pinned,
+    owner,
+    rating_score,
+    downloads,
+    latest_version_id,
+    game_id
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET
+    description = excluded.description,
+    donation_link = excluded.donation_link,
+    has_nsfw_content = excluded.has_nsfw_content,
+    is_deprecated = excluded.is_deprecated,
+    is_pinned = excluded.is_pinned,
+    rating_score = excluded.rating_score,
+    downloads = excluded.downloads,
+    latest_version_id = excluded.latest_version_id"#,
         package.uuid4,
         package.name,
         package.latest().description,
@@ -166,20 +194,24 @@ async fn insert_version(
     let patch = version.version_number.patch as i64;
 
     sqlx::query!(
-        "INSERT OR REPLACE INTO versions
-        (
-            id,
-            package_id,
-            date_created,
-            downloads,
-            file_size,
-            is_active,
-            website_url,
-            major,
-            minor,
-            patch
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        r#"
+INSERT INTO versions
+(
+    id,
+    package_id,
+    date_created,
+    downloads,
+    file_size,
+    is_active,
+    website_url,
+    major,
+    minor,
+    patch
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(id) DO UPDATE SET
+    downloads = excluded.downloads,
+    is_active = excluded.is_active"#,
         version.uuid4,
         package_uuid,
         version.date_created,

@@ -1,31 +1,38 @@
 import { listen } from "@tauri-apps/api/event"
-import { message } from "@tauri-apps/plugin-dialog";
 
 type LoadingBar = {
     id: string,
     title: string,
-    message: string | null,
+    text: string | null,
     progress: number | null,
 }
 
 type LoadingBarUpdate = {
     id: string,
-    message: string,
-    progress: number,
+    text: string | null,
+    progress: number | null,
 };
 
 let loadingBarsInternal: LoadingBar[] = $state([]);
 
-listen<LoadingBar>('loading-bar-create', ({ payload }) => {
-    loadingBarsInternal.push(payload);
+listen<{
+    id: string,
+    title: string,
+}>('loading-bar-create', ({ payload: { id, title } }) => {
+    loadingBarsInternal.push({
+        id,
+        title,
+        text: null,
+        progress: null,
+    });
 });
 
-listen<LoadingBarUpdate>('loading-bar-update', ({ payload }) => {
-    const bar = loadingBarsInternal.find(bar => bar.id === payload.id);
+listen<LoadingBarUpdate>('loading-bar-update', ({ payload: { id, text, progress } }) => {
+    const bar = loadingBarsInternal.find(bar => bar.id === id);
     if (bar === undefined) return;
     
-    bar.message = payload.message;
-    bar.progress = payload.progress;
+    if (text !== null) bar.text = text;
+    if (progress !== null) bar.progress = progress;
 });
 
 listen<string>('loading-bar-close', ({ payload }) => {

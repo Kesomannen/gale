@@ -134,7 +134,7 @@ fn map_file(
     Ok(target)
 }
 
-/// Install from a well structured mod directory
+/// Install from a well structured mod directory.
 pub fn install(src: &Path, profile_path: &Path) -> Result<()> {
     let config_dir = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
     let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());

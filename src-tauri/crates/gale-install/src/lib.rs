@@ -1,11 +1,14 @@
 use gale_core::prelude::*;
 
 use anyhow::Context;
+use bytes::Bytes;
+use futures_util::{Stream, TryStreamExt};
 use gale_thunderstore::api::VersionId;
 use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     path::{Path, PathBuf},
+    time::{Duration, Instant},
 };
 use uuid::Uuid;
 
@@ -41,6 +44,7 @@ pub enum InstallSource {
 }
 
 impl InstallSource {
+    /// Unique identifier for this specific version of the package
     pub fn version_id(&self) -> Cow<'_, str> {
         match self {
             InstallSource::Thunderstore { identifier, .. } => Cow::Borrowed(identifier.as_str()),
@@ -53,6 +57,7 @@ impl InstallSource {
         }
     }
 
+    /// Unique identifier for the package itself
     pub fn package_id(&self) -> Cow<'_, str> {
         match self {
             InstallSource::Thunderstore { identifier, .. } => Cow::Borrowed(identifier.full_name()),
@@ -61,6 +66,7 @@ impl InstallSource {
         }
     }
 
+    /// Display name for the package. Not guaranteed to be unique!
     pub fn name(&self) -> Cow<'_, str> {
         match self {
             InstallSource::Thunderstore { identifier, .. } => Cow::Borrowed(identifier.name()),
@@ -70,15 +76,12 @@ impl InstallSource {
     }
 }
 
-pub async fn install<F>(
+pub async fn install(
     source: &InstallSource,
     profile_path: &Path,
-    mut on_progress: F,
+    mut on_progress: impl FnMut(Progress),
     state: &AppState,
-) -> Result<()>
-where
-    F: FnMut(Progress),
-{
+) -> Result<()> {
     let version_id = source.version_id();
 
     let subdir = match source {
@@ -103,10 +106,18 @@ where
                 .await?;
             }
             InstallSource::Local { path, name, .. } => {
-                cache::insert_local(&path, cache_path.clone(), &name).await?;
+                cache::insert_local(&path, cache_path.clone(), &name, &mut on_progress).await?;
             }
             InstallSource::Github { owner, repo, tag } => {
-                cache::insert_github(&owner, &repo, &tag, cache_path.clone(), &state).await?;
+                cache::insert_github(
+                    &owner,
+                    &repo,
+                    &tag,
+                    cache_path.clone(),
+                    &mut on_progress,
+                    &state,
+                )
+                .await?;
             }
         }
     }
@@ -116,4 +127,44 @@ where
     common::install(&cache_path, profile_path)?;
 
     Ok(())
+}
+
+async fn stream_download_res(
+    response: reqwest::Response,
+    on_progress: impl FnMut(Progress),
+) -> Result<Vec<u8>> {
+    stream_download(
+        response.content_length().unwrap_or_default(),
+        on_progress,
+        response.bytes_stream(),
+    )
+    .await
+}
+
+async fn stream_download<E>(
+    len: u64,
+    mut on_progress: impl FnMut(Progress),
+    mut stream: impl Stream<Item = std::result::Result<Bytes, E>> + Unpin,
+) -> Result<Vec<u8>>
+where
+    E: std::error::Error + Send + Sync + 'static,
+{
+    const UPDATE_INTERVAL: Duration = Duration::from_millis(500);
+
+    let mut last_update = Instant::now();
+    let mut vec = Vec::with_capacity(len as usize);
+
+    while let Some(chunk) = stream.try_next().await? {
+        vec.extend_from_slice(&chunk);
+
+        if last_update.elapsed() >= UPDATE_INTERVAL {
+            last_update = Instant::now();
+            on_progress(Progress::Download {
+                current: vec.len() as u64,
+                total: len,
+            });
+        }
+    }
+
+    Ok(vec)
 }

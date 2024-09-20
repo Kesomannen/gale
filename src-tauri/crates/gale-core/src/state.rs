@@ -58,6 +58,7 @@ impl AppState {
         let options = SqliteConnectOptions::from_str(&url)?
             .synchronous(SqliteSynchronous::Normal)
             .journal_mode(SqliteJournalMode::Wal)
+            .foreign_keys(false)
             .disable_statement_logging()
             .create_if_missing(true);
 

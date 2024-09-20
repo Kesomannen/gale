@@ -1,13 +1,15 @@
+use crate::Progress;
 use anyhow::Context;
 use gale_core::prelude::*;
 use serde::Deserialize;
-use std::{fmt::Display, path::PathBuf};
+use std::{fmt::Display, io::Cursor, path::PathBuf};
 
 pub async fn insert(
     owner: &str,
     repo: &str,
     tag: &str,
     dest: PathBuf,
+    mut on_progress: impl FnMut(Progress),
     state: &AppState,
 ) -> Result<()> {
     let assets = get_assets(owner, repo, tag, &state.reqwest)
@@ -16,17 +18,22 @@ pub async fn insert(
 
     let (asset, ty) = guess_asset_to_install(&assets).context("no suitable asset found")?;
 
-    let data = state
+    let response = state
         .reqwest
         .get(&asset.url)
         .header("Accept", "application/octet-stream")
         .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
+        .await
+        .and_then(|res| res.error_for_status())
+        .context("failed to download package")?;
 
-    let reader = std::io::Cursor::new(data);
+    let data = crate::stream_download_res(response, &mut on_progress)
+        .await
+        .context("error while downloading package")?;
+
+    on_progress(Progress::Extract);
+
+    let reader = Cursor::new(data);
     let package_id = format!("{}-{}", owner, repo);
 
     match ty {
@@ -66,7 +73,6 @@ fn guess_asset_to_install(assets: &[Asset]) -> Option<(&Asset, AssetType)> {
 struct Asset {
     name: String,
     url: String,
-    size: u64,
     download_count: u64,
 }
 

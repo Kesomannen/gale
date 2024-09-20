@@ -1,7 +1,6 @@
 use crate::api::{self, VersionId};
 use anyhow::Context;
 use chrono::NaiveDateTime;
-use futures_util::join;
 use gale_core::prelude::*;
 use log::trace;
 use serde::{Deserialize, Serialize};
@@ -228,7 +227,7 @@ pub async fn query_package(package_uuid: Uuid, state: &AppState) -> Result<Packa
     )
         .into();
 
-    let (readme, changelog) = join!(
+    let (readme, changelog) = tokio::join!(
         api::get_readme(&state.reqwest, &id),
         api::get_changelog(&state.reqwest, &id)
     );

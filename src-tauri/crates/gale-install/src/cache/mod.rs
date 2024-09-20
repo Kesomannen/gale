@@ -1,11 +1,9 @@
 use anyhow::{bail, Context};
-use futures_util::StreamExt;
 use gale_core::prelude::*;
 use gale_thunderstore::api::VersionId;
 use std::{
     io::{BufReader, Cursor, Read},
     path::{Path, PathBuf},
-    time::{Duration, Instant},
 };
 
 mod github;
@@ -43,37 +41,30 @@ pub async fn insert_thunderstore<F>(
 where
     F: FnMut(Progress),
 {
-    const UPDATE_INTERVAL: Duration = Duration::from_millis(500);
-
-    let (total, mut stream) = gale_thunderstore::api::download(&state.reqwest, id)
+    let (len, stream) = gale_thunderstore::api::download(&state.reqwest, id)
         .await
         .context("failed to download package")?;
 
-    let mut last_update = Instant::now();
-
-    let mut vec = Vec::with_capacity(total as usize);
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk.context("error while downloading package")?;
-        vec.extend_from_slice(&chunk);
-
-        if last_update.elapsed() >= UPDATE_INTERVAL {
-            last_update = Instant::now();
-            on_progress(Progress::Download {
-                current: vec.len() as u64,
-                total,
-            });
-        }
-    }
+    let data = super::stream_download(len, &mut on_progress, stream)
+        .await
+        .context("error while downloading package")?;
 
     on_progress(Progress::Extract);
 
-    crate::common::extract(Cursor::new(vec), id.full_name(), dest)
+    crate::common::extract(Cursor::new(data), id.full_name(), dest)
         .context("failed to extract package")?;
 
     Ok(())
 }
 
-pub async fn insert_local(src: &Path, dest: PathBuf, package_id: &str) -> Result<()> {
+pub async fn insert_local(
+    src: &Path,
+    dest: PathBuf,
+    package_id: &str,
+    mut on_progress: impl FnMut(Progress),
+) -> Result<()> {
+    on_progress(Progress::Extract);
+
     let reader = std::fs::File::open(src)
         .map(BufReader::new)
         .context("failed to open package")?;

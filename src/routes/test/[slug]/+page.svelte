@@ -52,40 +52,40 @@
 
 			<div class="pt-4 space-y-1">
 				<div class="text-gray-300">
-					<Icon icon="akar-icons:star" class="inline mr-1" />
+					<Icon icon="material-symbols:star" class="inline mr-1" />
 					{shortenNum(ratingScore)}
 				</div>
 				<div class="text-gray-300">
-					<Icon icon="akar-icons:download" class="inline mr-1" />
+					<Icon icon="material-symbols:download" class="inline mr-1" />
 					{shortenNum(downloads)}
 				</div>
 				<div class="text-gray-300">
-					<Icon icon="akar-icons:calendar" class="inline mr-1" />
+					<Icon icon="material-symbols:calendar-clock" class="inline mr-1" />
 					{timeSince(new Date(versions[0].dateCreated))} ago
 				</div>
 				<div class="text-gray-300">
-					<Icon icon="akar-icons:file" class="inline mr-1" />
+					<Icon icon="material-symbols:weight" class="inline mr-1" />
 					{shortenFileSize(versions[0].fileSize)}
 				</div>
 			</div>
 
 			<div class="pb-6 pt-4 space-y-1">
 				{#if donationUrl}
-					{@render link('Donate', 'akar-icons:heart', donationUrl)}
+					{@render link('Donate', 'mdi:heart', donationUrl)}
 				{/if}
 
 				{#if websiteUrl}
-					{@render link('Website', 'akar-icons:link', websiteUrl)}
+					{@render link('Website', 'material-symbols:link-rounded', websiteUrl)}
 				{/if}
 
-				{@render link('Thunderstore', 'akar-icons:link-out', modThunderstoreUrl(owner, name))}
+				{@render link('Thunderstore', 'material-symbols:open-in-new', modThunderstoreUrl(owner, name))}
 			</div>
 
 			<button
 				class="flex items-center justify-center gap-2 bg-green-700 text-white py-2 w-full rounded-lg hover:bg-green-800 hover:-translate-y-0.5 transition-all hover:shadow-sm"
 				onclick={() => queueThunderstoreInstall(owner, name, versions[0], versions[0].id)}
 			>
-				<Icon icon="akar-icons:download" />
+				<Icon icon="material-symbols:download" />
 				Install latest
 			</button>
 		</div>
@@ -137,11 +137,11 @@
 										{version.major}.{version.minor}.{version.patch}
 									</td>
 									<td class="text-gray-400">
-										<Icon icon="akar-icons:clock" class="inline mr-1" />
+										<Icon icon="material-symbols:calendar-clock" class="inline mr-1" />
 										{timeSince(new Date(version.dateCreated))} ago
 									</td>
 									<td class="text-gray-400">
-										<Icon icon="akar-icons:download" class="inline mr-1" />
+										<Icon icon="material-symbols:download" class="inline mr-1" />
 										{shortenNum(version.downloads)}
 									</td>
 									<td>
@@ -149,7 +149,7 @@
 											class="inline-flex items-center gap-2 text-green-400 font-medium hover:text-green-300 hover:underline"
 											onclick={() => queueThunderstoreInstall(owner, name, version, version.id)}
 										>
-											<Icon icon="akar-icons:download" />
+											<Icon icon="material-symbols:download" />
 											Install
 										</button>
 									</td>
