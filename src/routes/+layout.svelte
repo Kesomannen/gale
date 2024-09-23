@@ -56,6 +56,7 @@
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
 			<NavbarLink to="/test" icon="mdi:information" tooltip="About" />
 			<NavbarLink to="/test2" icon="mdi:information" tooltip="About" />
+			<NavbarLink to="/playground" icon="mdi:information" tooltip="About" />
 			<div class="flex-grow"></div>
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</div>
