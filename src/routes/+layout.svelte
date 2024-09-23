@@ -105,6 +105,13 @@
 <WelcomePopup />
 
 <style lang="postcss">
+	:global(body) {
+		overflow: hidden;
+		position: fixed;
+		width: 100vw;
+		height: 100vh;
+	}
+
 	main {
 		height: calc(100vh - 1px);
 	}
