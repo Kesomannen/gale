@@ -14,12 +14,12 @@
 	<img
 		src="https://gcdn.thunderstore.io/live/repository/icons/{fullName}.png"
 		alt={name}
-		class="w-12 h-12 rounded-md"
+		class="h-12 w-12 rounded-md"
 	/>
-	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
+	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left align-middle">
 		<div class="flex">
 			<a
-				class="font-semibold text-white hover:underline flex-shrink truncate"
+				class="flex-shrink truncate font-semibold text-white hover:underline"
 				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
 				target="_blank"
 			>
@@ -33,7 +33,7 @@
 		</div>
 
 		<a
-			class="truncate text-slate-400 hover:underline block"
+			class="block truncate text-slate-400 hover:underline"
 			href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/"
 			target="_blank"
 		>

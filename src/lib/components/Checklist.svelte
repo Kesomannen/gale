@@ -13,8 +13,8 @@
 	export { className as class };
 </script>
 
-<div class="rounded-lg overflow-hidden border border-gray-900 {className}">
-	<div class="flex items-center px-3 py-2 text-slate-300 bg-gray-950 font-bold">
+<div class="overflow-hidden rounded-lg border border-gray-900 {className}">
+	<div class="flex items-center bg-gray-950 px-3 py-2 font-bold text-slate-300">
 		<Checkbox
 			class="mr-3"
 			value={items.every((item, i) => get(item, i))}

@@ -73,13 +73,13 @@
 
 {#if $currentUpdate != null}
 	<Button.Root
-		class="flex items-center py-1 px-2 rounded-md font-semibold text-slate-100 
-            my-auto ml-auto mr-1.5 bg-green-600 enabled:hover:bg-green-500"
+		class="my-auto ml-auto mr-1.5 flex items-center rounded-md bg-green-600 
+            px-2 py-1 font-semibold text-slate-100 enabled:hover:bg-green-500"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
 		{#if loading}
-			<Icon icon="mdi:loading" class="animate-spin mr-1" />
+			<Icon icon="mdi:loading" class="mr-1 animate-spin" />
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" class="mr-1" />
 		{/if}

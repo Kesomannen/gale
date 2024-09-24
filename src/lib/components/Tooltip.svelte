@@ -17,7 +17,7 @@
 		<slot />
 	</Tooltip.Trigger>
 	<Tooltip.Content
-		class="rounded-lg bg-gray-800 border border-gray-600 text-slate-300 px-4 py-2 shadow-lg max-w-[40rem]"
+		class="max-w-[40rem] rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-slate-300 shadow-lg"
 		transition={fade}
 		transitionConfig={{ duration: 50 }}
 		{sideOffset}

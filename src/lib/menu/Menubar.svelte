@@ -121,37 +121,37 @@
 	}
 </script>
 
-<div data-tauri-drag-region class="h-8 flex bg-gray-800 flex-shrink-0">
+<div data-tauri-drag-region class="flex h-8 flex-shrink-0 bg-gray-800">
 	<!-- Fix for top border not being draggable -->
-	<div data-tauri-drag-region class="fixed top-0 left-0 w-full h-[1px] z-50" />
+	<div data-tauri-drag-region class="fixed left-0 top-0 z-50 h-[1px] w-full" />
 
-	<Menubar.Root class="py-1 flex items-center">
+	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
 			<MenubarTrigger>File</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
+				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
 				<MenubarItem on:click={() => invokeCommand('open_profile_dir')}
 					>Open profile directory</MenubarItem
 				>
 				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')}>Open game logs</MenubarItem>
 				<MenubarItem on:click={() => invokeCommand('open_gale_log')}>Open gale logs</MenubarItem>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
 				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: true })}
 					>Clear unused mod cache</MenubarItem
 				>
 				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: false })}
 					>Clear all cached mods</MenubarItem
 				>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
 				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')}>Fetch mods</MenubarItem>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
 			<MenubarTrigger>Profile</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
+				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
 				<MenubarItem on:click={() => (newProfileOpen = true)}>Create new profile</MenubarItem>
 				<MenubarItem on:click={() => openProfileOperation('rename')}
@@ -160,7 +160,7 @@
 				<MenubarItem on:click={() => openProfileOperation('duplicate')}
 					>Duplicate active profile</MenubarItem
 				>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
 				<MenubarItem on:click={() => invokeCommand('copy_dependency_strings')}
 					>Copy mod list</MenubarItem
 				>
@@ -168,7 +168,7 @@
 				<MenubarItem on:click={() => invokeCommand('copy_launch_args')}
 					>Copy launch arguments</MenubarItem
 				>
-				<Menubar.Separator class="w-full h-[1px] bg-gray-600 my-0.5" />
+				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
 				<MenubarItem on:click={() => setAllModsState(true)}>Enable all mods</MenubarItem>
 				<MenubarItem on:click={() => setAllModsState(false)}>Disable all mods</MenubarItem>
 				<MenubarItem on:click={uninstallDisabledMods}>Uninstall disabled mods</MenubarItem>
@@ -177,7 +177,7 @@
 		<Menubar.Menu>
 			<MenubarTrigger>Import</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
+				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
 				<MenubarItem on:click={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
 				<MenubarItem on:click={importFile}>...profile from file</MenubarItem>
@@ -188,7 +188,7 @@
 		<Menubar.Menu>
 			<MenubarTrigger>Export</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
+				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
 				<MenubarItem on:click={() => exportCodePopup.open()}>...profile as code</MenubarItem>
 				<MenubarItem on:click={exportFile}>...profile as file</MenubarItem>
@@ -197,7 +197,7 @@
 		<Menubar.Menu>
 			<MenubarTrigger>Help</MenubarTrigger>
 			<Menubar.Content
-				class="bg-gray-800 shadow-xl flex-col flex gap-0.5 py-1 mt-0.5 rounded-lg border border-gray-600"
+				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
 				<MenubarItem on:click={refreshUpdate}>Check for app updates</MenubarItem>
 				<MenubarItem on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
@@ -217,13 +217,13 @@
 		</Menubar.Menu>
 	</Menubar.Root>
 
-	<Button.Root class="px-3 py-1.5 hover:bg-gray-700 ml-auto group" on:click={appWindow.minimize}>
+	<Button.Root class="group ml-auto px-3 py-1.5 hover:bg-gray-700" on:click={appWindow.minimize}>
 		<Icon icon="mdi:minimize" class="text-gray-500 group-hover:text-white" />
 	</Button.Root>
-	<Button.Root class="px-3 py-1.5 hover:bg-gray-700 group" on:click={appWindow.toggleMaximize}>
+	<Button.Root class="group px-3 py-1.5 hover:bg-gray-700" on:click={appWindow.toggleMaximize}>
 		<Icon icon="mdi:maximize" class="text-gray-500 group-hover:text-white" />
 	</Button.Root>
-	<Button.Root class="px-3 py-1.5 hover:bg-red-700 group" on:click={appWindow.close}>
+	<Button.Root class="group px-3 py-1.5 hover:bg-red-700" on:click={appWindow.close}>
 		<Icon icon="mdi:close" class="text-gray-500 group-hover:text-white" />
 	</Button.Root>
 </div>
@@ -246,12 +246,12 @@
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}
-		<p class="mt-3 text-slate-400 text-sm">
+		<p class="mt-3 text-sm text-slate-400">
 			This process might take up to a minute depending on the size of the profile, please be
 			patient.
 		</p>
 	{/if}
-	<div class="flex ml-auto justify-end gap-2 mt-2">
+	<div class="ml-auto mt-2 flex justify-end gap-2">
 		{#if !profileOperationInProgress}
 			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
 		{/if}
@@ -262,7 +262,7 @@
 			on:click={doProfileOperation}
 		>
 			{#if profileOperationInProgress}
-				<Icon icon="mdi:loading" class="animate-spin text-lg my-1" />
+				<Icon icon="mdi:loading" class="my-1 animate-spin text-lg" />
 			{:else}
 				{capitalize(profileOperation)}
 			{/if}

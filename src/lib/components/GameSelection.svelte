@@ -37,15 +37,15 @@
 	}
 </script>
 
-<div class="relative flex-grow mt-1">
+<div class="relative mt-1 flex-grow">
 	<SearchBar bind:value={searchTerm} placeholder="Search for games..." />
 </div>
 
-<div class="flex flex-col mt-2 h-96 overflow-y-auto">
+<div class="mt-2 flex h-96 flex-col overflow-y-auto">
 	{#if shownGames.length > 0}
 		{#each shownGames as game}
 			<Button.Root
-				class="flex hover:bg-gray-700 rounded-lg p-1 items-center group mr-2"
+				class="group mr-2 flex items-center rounded-lg p-1 hover:bg-gray-700"
 				on:click={() => {
 					setActiveGame(game);
 					onSelect();
@@ -54,7 +54,7 @@
 				<img
 					src="games/{game.id}.webp"
 					alt={game.displayName}
-					class="w-8 h-8 rounded group-hover:shadow-xl mr-2"
+					class="mr-2 h-8 w-8 rounded group-hover:shadow-xl"
 				/>
 
 				<span class="flex-grow text-left text-slate-200">
@@ -64,7 +64,7 @@
 				<Button.Root
 					class="{game.favorite
 						? 'block'
-						: 'hidden group-hover:block'} p-1 mr-1 rounded-md hover:bg-gray-600"
+						: 'hidden group-hover:block'} mr-1 rounded-md p-1 hover:bg-gray-600"
 					on:click={(evt) => {
 						evt.stopPropagation();
 						game.favorite = !game.favorite;
@@ -74,14 +74,14 @@
 				>
 					<Icon
 						icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
-						class="text-yellow-400 text-xl"
+						class="text-xl text-yellow-400"
 					/>
 				</Button.Root>
 			</Button.Root>
 		{/each}
 	{:else}
-		<div class="text-slate-300 text-center mt-4">No games found</div>
-		<div class="text-slate-400 text-sm max-w-[35rem]">
+		<div class="mt-4 text-center text-slate-300">No games found</div>
+		<div class="max-w-[35rem] text-sm text-slate-400">
 			Your game missing? If the game is new there's a chance Thunderstore have yet to add it. If you
 			can find it on
 			<Link href="https://thunderstore.io">thunderstore.io</Link>

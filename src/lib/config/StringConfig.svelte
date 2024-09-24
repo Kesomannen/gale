@@ -34,12 +34,12 @@
 		content.includes(listSeparator.char);
 </script>
 
-<div class="flex-grow relative">
+<div class="relative flex-grow">
 	<InputField bind:value={content} on:change={submit} class="w-full {showExpandButton && 'pr-8'}" />
 
 	{#if showExpandButton}
 		<Button.Root
-			class="absolute right-1 top-1 p-1 text-slate-400 text-lg rounded-lg hover:bg-gray-800 bg-gray-900"
+			class="absolute right-1 top-1 rounded-lg bg-gray-900 p-1 text-lg text-slate-400 hover:bg-gray-800"
 			on:click={() => ($expandedEntry = entryId)}
 		>
 			<Icon icon="mdi:arrow-expand" />

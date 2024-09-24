@@ -98,7 +98,7 @@
 
 			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
 
-			<div class="flex mt-2 gap-1.5">
+			<div class="mt-2 flex gap-1.5">
 				<BigButton color="gray" on:click={() => (stage = 'gameSelect')}>Back</BigButton>
 				<div class="flex-grow" />
 				<BigButton color="gray" on:click={() => (stage = 'settings')}>Skip</BigButton>
@@ -108,11 +108,11 @@
 			<p>Lastly, make sure your settings are correct.</p>
 
 			<p class="mt-1">
-				You can always edit these later by going to <Icon icon="mdi:settings" class="inline mb-1" />
+				You can always edit these later by going to <Icon icon="mdi:settings" class="mb-1 inline" />
 				<b>Settings</b>.
 			</p>
 
-			<div class="flex flex-col mt-3 gap-1">
+			<div class="mt-3 flex flex-col gap-1">
 				{#if prefs !== null}
 					<PathPref
 						label="Steam executable"
@@ -143,7 +143,7 @@
 				{/if}
 			</div>
 
-			<div class="flex mt-3 justify-between">
+			<div class="mt-3 flex justify-between">
 				<BigButton
 					color="gray"
 					on:click={() =>

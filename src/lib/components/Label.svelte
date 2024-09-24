@@ -1,12 +1,12 @@
 <script lang="ts">
-	import Tooltip from "./Tooltip.svelte";
+	import Tooltip from './Tooltip.svelte';
 
-  export let text: string;
+	export let text: string;
 </script>
 
-<Tooltip class="text-slate-300 w-[30%] min-w-52 truncate cursor-default text-left">
-  {text}
-  <svelte:fragment slot="tooltip">
-    <slot />
-  </svelte:fragment>
+<Tooltip class="w-[30%] min-w-52 cursor-default truncate text-left text-slate-300">
+	{text}
+	<svelte:fragment slot="tooltip">
+		<slot />
+	</svelte:fragment>
 </Tooltip>

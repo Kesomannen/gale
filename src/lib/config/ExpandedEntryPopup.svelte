@@ -77,7 +77,7 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="list" class="pt-1">
-				<div class="flex flex-col text-slate-300 gap-1">
+				<div class="flex flex-col gap-1 text-slate-300">
 					{#each items as element, i}
 						<div class="flex gap-1">
 							<InputField
@@ -89,7 +89,7 @@
 								}}
 							/>
 							<Button.Root
-								class="text-slate-400 text-xl hover:text-slate-300 hover:bg-gray-700 p-1.5 rounded-lg"
+								class="rounded-lg p-1.5 text-xl text-slate-400 hover:bg-gray-700 hover:text-slate-300"
 								on:click={() => {
 									items.splice(i, 1);
 									updateListContent();
@@ -101,7 +101,7 @@
 					{/each}
 
 					<InputField
-						class="pr-9 mt-1 w-full"
+						class="mt-1 w-full pr-9"
 						placeholder="Enter new value..."
 						bind:value={newElement}
 						on:change={() => {

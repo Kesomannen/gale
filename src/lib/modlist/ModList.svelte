@@ -149,9 +149,9 @@
 </script>
 
 <div class="flex flex-grow overflow-hidden">
-	<div class="flex flex-col flex-grow w-[60%] pt-3 pl-3 overflow-hidden">
-		<div class="flex gap-1.5 mb-1.5 pr-3">
-			<div class="flex-grow relative">
+	<div class="flex w-[60%] flex-grow flex-col overflow-hidden pl-3 pt-3">
+		<div class="mb-1.5 flex gap-1.5 pr-3">
+			<div class="relative flex-grow">
 				<SearchBar bind:value={searchTerm} placeholder="Search for mods..." />
 			</div>
 
@@ -164,17 +164,17 @@
 					let:text
 					let:open
 					slot="trigger"
-					class="flex items-center gap-2 w-48 bg-gray-900 rounded-lg px-3 text-slate-300
-								border border-gray-500 border-opacity-0 hover:border-opacity-100"
+					class="flex w-48 items-center gap-2 rounded-lg border border-gray-500 border-opacity-0
+								bg-gray-900 px-3 text-slate-300 hover:border-opacity-100"
 				>
 					<Icon
-						class="text-slate-400 text-lg"
+						class="text-lg text-slate-400"
 						icon={sortOrder === SortOrder.Descending ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
 					/>
 					<span class="flex-shrink truncate">{text}</span>
 					<Icon
-						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
-										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-auto origin-center transform text-xl text-slate-400 transition-all
+										duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -185,21 +185,21 @@
 					let:text
 					let:open
 					slot="trigger"
-					class="flex items-center gap-2 w-48 bg-gray-900 rounded-lg px-3 text-slate-300
-								border border-gray-500 border-opacity-0 hover:border-opacity-100"
+					class="flex w-48 items-center gap-2 rounded-lg border border-gray-500 border-opacity-0
+								bg-gray-900 px-3 text-slate-300 hover:border-opacity-100"
 				>
-					<Icon class="text-slate-400 text-lg" icon="mdi:sort" />
+					<Icon class="text-lg text-slate-400" icon="mdi:sort" />
 					<span class="flex-shr truncate">{text}</span>
 					<Icon
-						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto
-										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-auto origin-center transform text-xl text-slate-400 transition-all
+										duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
 			</Dropdown>
 		</div>
 
-		<div class="flex gap-1.5 mb-1.5 pr-3">
+		<div class="mb-1.5 flex gap-1.5 pr-3">
 			<Dropdown
 				items={$categories
 					.map((category) => category.name)
@@ -211,20 +211,20 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex items-center w-1/2 bg-gray-900 rounded-lg px-3 py-1.5 overflow-hidden
-								border border-gray-500 border-opacity-0 hover:border-opacity-100"
+					class="flex w-1/2 items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0
+								bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
 				>
-					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter" />
+					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter" />
 					{#if includeCategories.length === 0}
-						<span class="text-slate-300 truncate">Include categories</span>
+						<span class="truncate text-slate-300">Include categories</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each includeCategories as category}
-								<div class="bg-blue-600 text-white rounded-full pl-3 pr-0.5 py-0.5 text-sm">
-									<span class="truncate overflow-hidden">{category}</span>
+								<div class="rounded-full bg-blue-600 py-0.5 pl-3 pr-0.5 text-sm text-white">
+									<span class="overflow-hidden truncate">{category}</span>
 
 									<Button.Root
-										class="px-1.5 rounded-full hover:bg-blue-500"
+										class="rounded-full px-1.5 hover:bg-blue-500"
 										on:click={(evt) => {
 											evt.stopPropagation();
 											includeCategories = includeCategories.filter((c) => c !== category);
@@ -237,8 +237,8 @@
 						</div>
 					{/if}
 					<Icon
-						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
-										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
+										duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -255,22 +255,22 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex items-center w-1/2 bg-gray-900 rounded-lg px-3 py-1.5 overflow-hidden
-							border border-gray-500 border-opacity-0 hover:border-opacity-100"
+					class="flex w-1/2 items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0
+							bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
 				>
-					<Icon class="text-slate-400 text-lg mr-2 flex-shrink-0" icon="mdi:filter-remove" />
+					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter-remove" />
 					{#if excludeCategories.length === 0}
-						<span class="text-slate-300 truncate">Exclude categories</span>
+						<span class="truncate text-slate-300">Exclude categories</span>
 					{:else}
-						<div class="flex flex-wrap gap-1 mr-2">
+						<div class="mr-2 flex flex-wrap gap-1">
 							{#each excludeCategories as category}
 								<div
-									class="bg-red-600 text-white rounded-xl pl-3 pr-0.5 py-0.5 text-sm text-left align-middle"
+									class="rounded-xl bg-red-600 py-0.5 pl-3 pr-0.5 text-left align-middle text-sm text-white"
 								>
 									{category}
 
 									<Button.Root
-										class="px-1.5 rounded-full hover:bg-red-500"
+										class="rounded-full px-1.5 hover:bg-red-500"
 										on:click={(evt) => {
 											evt.stopPropagation();
 											excludeCategories = excludeCategories.filter((c) => c !== category);
@@ -283,8 +283,8 @@
 						</div>
 					{/if}
 					<Icon
-						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
-									transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
+									duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -303,14 +303,14 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex items-center bg-gray-900 text-slate-300 rounded-lg pl-3 pr-2 py-1
-								border border-gray-500 border-opacity-0 hover:border-opacity-100"
+					class="flex items-center rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1
+								pl-3 pr-2 text-slate-300 hover:border-opacity-100"
 				>
-					<Icon class="text-slate-400 text-lg flex-shrink-0 mr-2" icon="mdi:filter-variant" />
+					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter-variant" />
 					Include
 					<Icon
-						class="text-slate-400 text-xl transition-all ml-6 flex-shrink-0 duration-100 ease-out
-										transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-6 flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
+										duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -320,7 +320,7 @@
 		<slot name="banner" />
 
 		{#if mods.length === 0}
-			<div class="text-slate-300 text-lg text-center mt-4">No mods found 😥</div>
+			<div class="mt-4 text-center text-lg text-slate-300">No mods found 😥</div>
 		{:else}
 			<VirtualList
 				itemHeight={66}

@@ -37,19 +37,19 @@ pub fn setup() -> Result<()> {
     fs::create_dir_all(path.parent().unwrap()).context("failed to create log directory")?;
     let log_file = File::create(path).context("failed to create log file")?;
 
-    let term_filter = match cfg!(debug_assertions) {
-        true => LevelFilter::Trace,
+    let filter = match cfg!(debug_assertions) {
+        true => LevelFilter::Debug,
         false => LevelFilter::Info,
     };
 
     CombinedLogger::init(vec![
         TermLogger::new(
-            term_filter,
+            filter,
             Config::default(),
             TerminalMode::Mixed,
             ColorChoice::Auto,
         ),
-        WriteLogger::new(LevelFilter::Info, Config::default(), log_file),
+        WriteLogger::new(filter, Config::default(), log_file),
     ])?;
 
     Ok(())

@@ -49,16 +49,16 @@
 
 {#if loading}
 	<div
-		class="inset-0 absolute z-50 flex flex-col gap-4 items-center justify-center bg-black/60"
+		class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60"
 		transition:fade={{ duration: 50 }}
 	>
-		<Icon icon="mdi:loading" class="text-4xl text-slate-300 animate-spin" />
+		<Icon icon="mdi:loading" class="animate-spin text-4xl text-slate-300" />
 		<div class="text-slate-300">{loadingText}</div>
 	</div>
 {/if}
 
 {#if !importData.r2modman && !importData.thunderstore}
-	<div class="text-lg font-semibold text-red-400 w-full text-center mt-3">
+	<div class="mt-3 w-full text-center text-lg font-semibold text-red-400">
 		No installations found
 	</div>
 {/if}
@@ -74,12 +74,12 @@
 {/if}
 
 {#if importData.thunderstore || importData.r2modman}
-	<Checklist 
-		class="mt-1 overflow-y-auto max-h-60" 
+	<Checklist
+		class="mt-1 max-h-60 overflow-y-auto"
 		items={profiles}
 		title="Include all"
 		getLabel={(item, _) => item}
 		get={(_, index) => include[index]}
-		set={(_, index, value) => include[index] = value}
+		set={(_, index, value) => (include[index] = value)}
 	/>
 {/if}

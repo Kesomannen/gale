@@ -39,9 +39,9 @@
 </script>
 
 <button
-	class="flex border border-slate-500 rounded-lg p-2 group w-full {isSelected
+	class="group flex w-full rounded-lg border border-slate-500 p-2 {isSelected
 		? 'bg-slate-700'
-		: 'hover:bg-slate-700 border-opacity-0'}"
+		: 'border-opacity-0 hover:bg-slate-700'}"
 	data-uuid={mod.uuid}
 	on:click
 	on:dragstart
@@ -50,34 +50,34 @@
 	on:dragend
 	{draggable}
 >
-	<img src={imgSrc} alt={mod.name} class="w-12 h-12 rounded-md" />
-	<div class="pl-3 overflow-hidden flex-grow flex-shrink align-middle text-left">
+	<img src={imgSrc} alt={mod.name} class="h-12 w-12 rounded-md" />
+	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left align-middle">
 		<span
-			class="font-semibold {mod.enabled === false ? 'line-through text-slate-300' : 'text-white'}"
+			class="font-semibold {mod.enabled === false ? 'text-slate-300 line-through' : 'text-white'}"
 		>
 			{mod.name}
 		</span>
 		<span
-			class="font-light px-1 {mod.enabled === false
-				? 'line-through text-slate-500'
+			class="px-1 font-light {mod.enabled === false
+				? 'text-slate-500 line-through'
 				: 'text-slate-400'}"
 		>
 			{mod.version ?? ''}
 		</span>
 		{#if mod.isPinned}
-			<Icon class="text-slate-400 inline mb-1" icon="mdi:pin" />
+			<Icon class="mb-1 inline text-slate-400" icon="mdi:pin" />
 		{/if}
 		{#if mod.isDeprecated}
-			<Icon class="text-red-500 inline mb-1" icon="mdi:error" />
+			<Icon class="mb-1 inline text-red-500" icon="mdi:error" />
 		{/if}
 		{#if isOutdated(mod)}
-			<Icon class="text-green-500 inline mb-1.5" icon="mdi:arrow-up-circle" />
+			<Icon class="mb-1.5 inline text-green-500" icon="mdi:arrow-up-circle" />
 		{/if}
 		{#if isInstalled && showInstalledIcon}
-			<Icon class="text-green-500 inline mb-1.5" icon="mdi:check-circle" />
+			<Icon class="mb-1.5 inline text-green-500" icon="mdi:check-circle" />
 		{/if}
 		<div
-			class="truncate {mod.enabled === false ? 'line-through text-slate-500' : 'text-slate-300/80'}"
+			class="truncate {mod.enabled === false ? 'text-slate-500 line-through' : 'text-slate-300/80'}"
 		>
 			{mod.description ?? ''}
 		</div>

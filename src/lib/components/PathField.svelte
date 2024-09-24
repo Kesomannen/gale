@@ -11,7 +11,7 @@
 	$: hasValue = value && value.length > 0;
 </script>
 
-<div class="flex items-center relative">
+<div class="relative flex items-center">
 	{#if label}
 		<Label text={label}>
 			<slot />
@@ -19,18 +19,14 @@
 	{/if}
 
 	<Button.Root
-		class="flex flex-grow basis-0 px-3 py-1 items-center text-right rounded-lg group bg-gray-900 truncate
-            border border-gray-500 border-opacity-0 hover:border-opacity-100"
+		class="group flex flex-grow basis-0 items-center truncate rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1 text-right hover:border-opacity-100"
 		on:click={onClick}
 	>
 		<div class="mr-2 rounded">
 			<Icon {icon} class="align-middle text-slate-300" />
 		</div>
 
-		<div
-			class="text-slate-300 truncate"
-			style="direction: rtl;"
-		>
+		<div class="truncate text-slate-300" style="direction: rtl;">
 			&#x200E;
 			{hasValue ? value : 'Not set'}
 		</div>

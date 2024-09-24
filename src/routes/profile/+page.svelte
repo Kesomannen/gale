@@ -198,11 +198,11 @@
 	<div slot="details">
 		{#if activeMod && isOutdated(activeMod)}
 			<Button.Root
-				class="flex items-center justify-center w-full gap-2 py-2 rounded-lg mt-2
-						bg-green-600 hover:bg-green-500 font-medium text-lg"
+				class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-green-600
+						py-2 text-lg font-medium hover:bg-green-500"
 				on:click={() => updateActiveMod('latest')}
 			>
-				<Icon icon="mdi:arrow-up-circle" class="text-xl align-middle" />
+				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
 				Update to {activeMod?.versions[0].name}
 			</Button.Root>
 		{/if}
@@ -212,23 +212,23 @@
 		{#if activeMod && activeMod?.versions.length > 1}
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger
-					class="flex items-center pl-3 pr-1 py-1 truncate text-slate-300 hover:text-slate-100 
-							text-left rounded-md hover:bg-gray-600 cursor-default"
+					class="flex cursor-default items-center truncate rounded-md py-1 pl-3 pr-1 
+							text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
 				>
-					<Icon class="text-lg mr-1.5" icon="mdi:edit" />
+					<Icon class="mr-1.5 text-lg" icon="mdi:edit" />
 					Change version
-					<Icon class="text-xl ml-4" icon="mdi:chevron-right" />
+					<Icon class="ml-4 text-xl" icon="mdi:chevron-right" />
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent
-					class="flex flex-col max-h-96 overflow-y-auto bg-gray-700 gap-0.5 mr-2
-							shadow-xl p-1 rounded-lg border border-gray-500"
+					class="mr-2 flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg
+							border border-gray-500 bg-gray-700 p-1 shadow-xl"
 					transition={fly}
 					transitionConfig={{ duration: 50 }}
 				>
 					{#each activeMod?.versions ?? [] as version}
 						<DropdownMenu.Item
-							class="flex flex-shrink-0 items-center pl-3 pr-12 py-1 truncate text-slate-300 hover:text-slate-100 
-									text-left rounded-md hover:bg-gray-600 cursor-default"
+							class="flex flex-shrink-0 cursor-default items-center truncate rounded-md py-1 pl-3 pr-12 
+									text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
 							on:click={() => updateActiveMod({ specific: version.uuid })}
 						>
 							{version.name}
@@ -265,13 +265,13 @@
 
 	<div slot="banner">
 		{#if unknownMods.length > 0}
-			<div class="flex items-center text-red-100 bg-red-600 mr-3 mb-1 pl-3 pr-1 py-1.5 rounded-lg">
-				<Icon icon="mdi:alert-circle" class="text-xl mr-2" />
+			<div class="mb-1 mr-3 flex items-center rounded-lg bg-red-600 py-1.5 pl-3 pr-1 text-red-100">
+				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
 				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
 					.map((mod) => mod.name)
 					.join(', ')}.
 				<Button.Root
-					class="hover:underline hover:text-red-100 text-white font-semibold ml-1"
+					class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
 					on:click={() => {
 						unknownMods.forEach(uninstall);
 					}}
@@ -283,14 +283,14 @@
 
 		{#if updates.length > $updateBannerThreshold}
 			<div
-				class="flex items-center text-green-100 bg-green-700 mr-3 mb-1 pl-3 pr-1 py-1 rounded-lg"
+				class="mb-1 mr-3 flex items-center rounded-lg bg-green-700 py-1 pl-3 pr-1 text-green-100"
 			>
-				<Icon icon="mdi:arrow-up-circle" class="text-xl mr-2" />
+				<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
 				There {updates.length === 1 ? 'is' : 'are'}
 				<strong class="mx-1">{updates.length}</strong>
 				{updates.length === 1 ? ' update' : ' updates'} available.
 				<Button.Root
-					class="hover:underline hover:text-green-200 text-white font-semibold ml-1"
+					class="ml-1 font-semibold text-white hover:text-green-200 hover:underline"
 					on:click={() => {
 						updateAllOpen = true;
 					}}
@@ -299,7 +299,7 @@
 				</Button.Root>
 
 				<Button.Root
-					class="ml-auto rounded-md text-xl hover:bg-green-600 p-1"
+					class="ml-auto rounded-md p-1 text-xl hover:bg-green-600"
 					on:click={() => ($updateBannerThreshold = updates.length)}
 				>
 					<Icon icon="mdi:close" />
@@ -309,11 +309,11 @@
 	</div>
 
 	<div slot="item" let:mod>
-		<div class="flex items-center mt-2.5 ml-1">
+		<div class="ml-1 mt-2.5 flex items-center">
 			{#if reorderable}
 				<Icon
 					icon="material-symbols:drag-indicator"
-					class="text-slate-400 text-2xl cursor-move mr-3"
+					class="mr-3 cursor-move text-2xl text-slate-400"
 				/>
 			{/if}
 
@@ -321,13 +321,13 @@
 				checked={mod.enabled ?? true}
 				onCheckedChange={(checked) => toggleMod(checked, mod)}
 				on:click={(evt) => evt.stopPropagation()}
-				class="flex px-1 py-1 mr-1 rounded-full w-12 h-6 group
-						bg-slate-600 hover:bg-slate-500
+				class="group mr-1 flex h-6 w-12 rounded-full bg-slate-600 px-1
+						py-1 hover:bg-slate-500
 						data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
 			>
 				<Switch.Thumb
-					class="pointer-events-none h-full w-4 rounded-full transition-transform ease-out duration-75
-							bg-slate-300 hover:bg-slate-200
+					class="pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75
+							ease-out hover:bg-slate-200
 							data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
 				/>
 			</Switch.Root>
@@ -351,13 +351,13 @@
 	>
 		<ModCard fullName={item.fullName} showVersion={false} />
 
-		<span class="text-slate-400 text-light ml-auto">{item.old}</span>
-		<Icon icon="mdi:arrow-right" class="text-slate-400 text-lg mx-1.5" />
-		<span class="text-green-400 font-semibold text-lg">{item.new}</span>
+		<span class="text-light ml-auto text-slate-400">{item.old}</span>
+		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-slate-400" />
+		<span class="text-lg font-semibold text-green-400">{item.new}</span>
 
 		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
 			<Button.Root
-				class="ml-2 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-gray-700 rounded"
+				class="ml-2 rounded p-1.5 text-slate-400 hover:bg-gray-700 hover:text-slate-200"
 				on:click={() => {
 					item.ignore = true;
 					allUpdates = allUpdates; // force reactivity
@@ -389,7 +389,7 @@
 </ConfirmPopup>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
-	<div class="text-slate-300 text-center mt-4">
+	<div class="mt-4 text-center text-slate-300">
 		{#if dependants}
 			{#if dependants.length === 0}
 				No dependants found

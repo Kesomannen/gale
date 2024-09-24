@@ -26,7 +26,7 @@
 
 <Popup bind:open>
 	{#await promise}
-		<Icon class="text-slate-300 text-4xl animate-spin" icon="mdi:loading" />
+		<Icon class="animate-spin text-4xl text-slate-300" icon="mdi:loading" />
 	{:then value}
 		{#if value !== null}
 			{#if value.markdown !== undefined}

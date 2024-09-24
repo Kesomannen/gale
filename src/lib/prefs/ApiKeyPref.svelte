@@ -13,7 +13,7 @@
 	}
 
 	async function refresh() {
-		hasToken = await invokeCommand('has_thunderstore_token')
+		hasToken = await invokeCommand('has_thunderstore_token');
 	}
 </script>
 
@@ -24,8 +24,8 @@
 	</Label>
 
 	<Button.Root
-		class="flex flex-grow px-3 py-1 items-center text-right rounded-lg group bg-gray-900 truncate
-                border border-gray-500 border-opacity-0 hover:border-opacity-100 relative"
+		class="group relative flex flex-grow items-center truncate rounded-lg border border-gray-500 border-opacity-0
+                bg-gray-900 px-3 py-1 text-right hover:border-opacity-100"
 		on:click={() => ($apiKeyPopupOpen = true)}
 	>
 		<div class="mr-2 rounded">
@@ -35,7 +35,7 @@
 			/>
 		</div>
 
-		<div class="text-slate-300 group-hover:text-slate-200 truncate">
+		<div class="truncate text-slate-300 group-hover:text-slate-200">
 			{hasToken ? 'Click to override token' : 'Not set'}
 		</div>
 

@@ -13,8 +13,8 @@
 <Tooltip side="right" text={tooltip} class="flex">
 	<a
 		href={to}
-		class="text-2xl rounded-lg p-2 relative
-			{active ? 'text-green-500 bg-gray-800' : 'text-slate-500 hover:bg-gray-800 hover:text-slate-400'}
+		class="relative rounded-lg p-2 text-2xl
+			{active ? 'bg-gray-800 text-green-500' : 'text-slate-500 hover:bg-gray-800 hover:text-slate-400'}
 		"
 	>
 		<Icon {icon} />

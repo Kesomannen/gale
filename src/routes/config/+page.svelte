@@ -134,15 +134,17 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="file-list overflow-y-auto min-w-72 w-[20%] bg-gray-700 overflow-hidden border-r border-gray-600"
+		class="file-list w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r border-gray-600 bg-gray-700"
 	>
 		{#if files === undefined}
-			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
-				<Icon icon="mdi:loading" class="animate-spin mr-4" />
+			<div class="flex h-full w-full items-center justify-center text-lg text-slate-300">
+				<Icon icon="mdi:loading" class="mr-4 animate-spin" />
 				Loading config...
 			</div>
 		{:else if files.length === 0}
-			<div class="flex items-center justify-center h-full text-slate-300 text-lg">No config files found</div>
+			<div class="flex h-full items-center justify-center text-lg text-slate-300">
+				No config files found
+			</div>
 		{:else}
 			<div class="relative mx-2 my-2">
 				<SearchBar bind:value={searchTerm} placeholder="Search for files..." brightness={800} />
@@ -169,19 +171,19 @@
 		{/if}
 	</div>
 
-	<div class="flex-grow p-4 overflow-y-auto">
+	<div class="flex-grow overflow-y-auto p-4">
 		{#if selectedFile !== undefined}
-			<div class="text-slate-200 text-2xl font-bold truncate flex-shrink-0">
+			<div class="flex-shrink-0 truncate text-2xl font-bold text-slate-200">
 				{selectedFile.relativePath}
 				{#if selectedSection}
-					<span class="text-slate-400 font-light">/</span>
+					<span class="font-light text-slate-400">/</span>
 					{selectedSection.name}
 				{/if}
 			</div>
 
 			{#if selectedFile.type === 'ok'}
 				{#if selectedFile.metadata}
-					<div class="text-slate-400 font-medium">
+					<div class="font-medium text-slate-400">
 						Created by {selectedFile.metadata.pluginName}
 						{selectedFile.metadata.pluginVersion}
 					</div>
@@ -190,16 +192,16 @@
 				{#if selectedSection !== undefined}
 					{#each selectedSection.entries as entry (entry)}
 						{#if entry.type === 'normal'}
-							<div class="flex items-center text-slate-300 pl-2 my-1">
+							<div class="my-1 flex items-center pl-2 text-slate-300">
 								<Tooltip
 									side="top"
-									class="w-[45%] min-w-52 text-slate-300 pr-2 cursor-auto text-left truncate flex-shrink-0"
+									class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate pr-2 text-left text-slate-300"
 								>
 									{sentenceCase(entry.name)}
 									<svelte:fragment slot="tooltip">
 										<div>
-											<span class="text-slate-200 text-lg font-bold">{entry.name}</span>
-											<span class="text-slate-400 ml-1"> ({typeName(entry)})</span>
+											<span class="text-lg font-bold text-slate-200">{entry.name}</span>
+											<span class="ml-1 text-slate-400"> ({typeName(entry)})</span>
 										</div>
 
 										<div class="mb-1">
@@ -221,7 +223,7 @@
 										{/if}
 									</svelte:fragment>
 								</Tooltip>
-								{#if entry.value.type === 'string'}	
+								{#if entry.value.type === 'string'}
 									<StringConfig entryId={entryId(entry)} />
 								{:else if entry.value.type === 'enum'}
 									<EnumConfig entryId={entryId(entry)} />
@@ -243,7 +245,7 @@
 					{/each}
 				{/if}
 			{:else if selectedFile.type === 'unsupported'}
-				<div class="text-slate-400 mb-1">
+				<div class="mb-1 text-slate-400">
 					This file is in an unsupported format. Please open it in an external program to make
 					changes.
 				</div>
@@ -255,8 +257,8 @@
 					Open in external program
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<div class="text-slate-400 mb-1">An error occured while reading this config file:</div>
-				<code class="flex text-red-500 bg-gray-900 px-2 py-1 mb-1 rounded">
+				<div class="mb-1 text-slate-400">An error occured while reading this config file:</div>
+				<code class="mb-1 flex bg-gray-900 p-3 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
 				<BigButton
@@ -268,7 +270,7 @@
 				</BigButton>
 			{/if}
 		{:else}
-			<div class="flex items-center justify-center text-lg text-slate-400 w-full h-full">
+			<div class="flex h-full w-full items-center justify-center text-lg text-slate-400">
 				Select a config file to start editing
 			</div>
 		{/if}

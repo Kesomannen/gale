@@ -20,13 +20,13 @@
 		}
 
 		version = await getVersion();
-	})
+	});
 </script>
 
-<div class="absolute right-6 bottom-1 text-slate-400">
+<div class="absolute bottom-1 right-6 text-slate-400">
 	Gale v{version}
 </div>
 
-<div class="px-6 py-2 overflow-y-auto text-slate-100 w-full">
+<div class="w-full overflow-y-auto px-6 py-2 text-slate-100">
 	<Markdown source={changelog} />
 </div>

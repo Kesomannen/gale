@@ -31,24 +31,24 @@
 <Collapsible.Root bind:open>
 	{#if type !== 'ok' || shownSections.length > 0}
 		<Collapsible.Trigger
-			class="flex items-center group w-full overflow-hidden px-2 py-0.5
+			class="group flex w-full items-center overflow-hidden px-2 py-0.5
                 text-{textColor}
                 {isSelected ? 'bg-slate-600 font-semibold' : 'hover:bg-slate-600'}"
 			on:click={() => type !== 'ok' && onFileClicked(file)}
 		>
 			<Icon
 				{icon}
-				class="text-lg transition-all mr-1 flex-shrink-0 
+				class="mr-1 flex-shrink-0 text-lg transition-all 
                     {open && type === 'ok' ? 'rotate-180' : 'rotate-0'}"
 			/>
 
-			<div class="truncate flex-shrink mr-1" style="direction: rtl;">
+			<div class="mr-1 flex-shrink truncate" style="direction: rtl;">
 				&#x200E;
 				{file.displayName ?? file.relativePath}
 			</div>
 
 			<Button.Root
-				class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-slate-500 ml-auto"
+				class="ml-auto hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:inline"
 				on:click={(evt) => {
 					evt.stopPropagation();
 					invokeCommand('open_config_file', { file: file.relativePath });
@@ -57,7 +57,7 @@
 				<Icon icon="mdi:open-in-new" />
 			</Button.Root>
 			<Button.Root
-				class="flex-shrink-0 hidden group-hover:inline text-slate-400 p-1 rounded hover:text-slate-200 hover:bg-slate-500"
+				class="hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:inline"
 				on:click={async (evt) => {
 					evt.stopPropagation();
 					await invokeCommand('delete_config_file', { file: file.relativePath });
@@ -70,15 +70,15 @@
 	{/if}
 	{#if file.type === 'ok' && shownSections.length > 0}
 		<Collapsible.Content
-			class="flex flex-col mb-1"
+			class="mb-1 flex flex-col"
 			transition={slide}
 			transitionConfig={{ duration: 100, easing: quadOut }}
 		>
 			{#each shownSections as section}
 				<Button.Root
-					class="pl-9 pr-2 py-0.5 text-left truncate text-sm
+					class="truncate py-0.5 pl-9 pr-2 text-left text-sm
 				{selectedSection === section
-						? 'text-slate-200 bg-slate-600 font-semibold'
+						? 'bg-slate-600 font-semibold text-slate-200'
 						: 'text-slate-300 hover:bg-slate-600'}"
 					on:click={() => onSectionClicked(file, section)}
 				>

@@ -34,7 +34,7 @@
 						open = false;
 					}, 250);
 					break;
-				
+
 				case 'error':
 					open = false;
 					break;
@@ -56,14 +56,16 @@
 		message: 'Are you sure you want to abort the installation?'
 	}}
 	onClose={() => {
-		invokeCommand('cancel_install')
+		invokeCommand('cancel_install');
 	}}
 >
 	<Dialog.Description class="text-slate-400">
 		{#if progress.task.kind == 'done'}
 			Done!
 		{:else if progress.task.kind == 'downloading'}
-			Downloading {progress.currentName} ({shortenFileSize(progress.task.payload.downloaded)}/{shortenFileSize(progress.task.payload.total)})
+			Downloading {progress.currentName} ({shortenFileSize(
+				progress.task.payload.downloaded
+			)}/{shortenFileSize(progress.task.payload.total)})
 		{:else if progress.task.kind == 'extracting'}
 			Extracting {progress.currentName}
 		{:else if progress.task.kind == 'installing'}
@@ -74,10 +76,10 @@
 	<Progress.Root
 		value={progress.totalProgress}
 		max={1}
-		class="relative w-full h-4 mt-2 bg-gray-900 rounded-full overflow-hidden"
+		class="relative mt-2 h-4 w-full overflow-hidden rounded-full bg-gray-900"
 	>
 		<div
-			class="absolute top-0 left-0 h-full bg-green-600 rounded-l-full transition-all"
+			class="absolute left-0 top-0 h-full rounded-l-full bg-green-600 transition-all"
 			style="width: {progress.totalProgress * 100}%"
 		/>
 	</Progress.Root>
