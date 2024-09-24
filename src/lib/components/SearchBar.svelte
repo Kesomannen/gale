@@ -5,11 +5,12 @@
 	export let value: string;
 	export let placeholder: string;
 	export let brightness: number = 900;
+	export let size: 'sm' | 'base' | 'lg' = 'base';
 </script>
 
 <input
 	type="text"
-	class="w-full rounded-lg px-10 py-1.5 bg-gray-{brightness} truncate border border-gray-500 border-opacity-0 text-slate-300 placeholder-slate-400 invalid:ring-red-500 hover:border-opacity-100 focus:outline-none focus:ring-2 valid:focus:ring-green-400"
+	class="w-full rounded-lg px-10 py-1.5 bg-gray-{brightness} truncate border border-gray-500 border-opacity-0 text-slate-300 placeholder-slate-400 invalid:ring-red-500 hover:border-opacity-100 focus:outline-none focus:ring-2 valid:focus:ring-green-400 text-{size}"
 	bind:value
 	{placeholder}
 />

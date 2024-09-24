@@ -1,31 +1,17 @@
 <script lang="ts">
 	import ConfigFileTreeItem from '$lib/config/ConfigFileTreeItem.svelte';
-	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type {
-		ConfigEntry,
-		ConfigEntryId,
-		ConfigSection,
-		ConfigValue,
-		LoadFileResult
-	} from '$lib/models';
-	import { capitalize, sentenceCase } from '$lib/util';
-	import BoolConfig from '$lib/config/BoolConfig.svelte';
-	import SliderConfig from '$lib/config/SliderConfig.svelte';
-	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
+	import type { ConfigSection, LoadFileResult } from '$lib/models';
+	import { capitalize } from '$lib/util';
 	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
-	import EnumConfig from '$lib/config/EnumConfig.svelte';
-	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { activeProfile } from '$lib/stores';
-	import { Render } from '@jill64/svelte-sanitize';
 	import { page } from '$app/stores';
-	import StringConfig from '$lib/config/StringConfig.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
-	import { readFile } from '@tauri-apps/plugin-fs';
-	import Dropdown from '$lib/components/Dropdown.svelte';
+	import ConfigEntryField from '$lib/config/ConfigEntryField.svelte';
+	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 
 	let files: LoadFileResult[] | undefined;
 
@@ -61,53 +47,6 @@
 		});
 
 		return files;
-	}
-
-	function configValueToString(config: ConfigValue) {
-		switch (config.type) {
-			case 'boolean':
-				return config.content ? 'True' : 'False';
-			case 'string':
-				return config.content;
-			case 'double':
-			case 'int32':
-			case 'single':
-				return config.content.value.toString();
-			case 'enum':
-				return config.content.options[config.content.index];
-			case 'flags':
-				return config.content.indicies.map((i) => config.content.options[i]).join(', ');
-			case 'other':
-				return config.content;
-		}
-	}
-
-	function typeName(config: ConfigEntry) {
-		switch (config.value.type) {
-			case 'int32':
-				return 'Integer';
-			case 'double':
-			case 'single':
-				return 'Decimal';
-			case 'string':
-				return 'String';
-			case 'boolean':
-				return 'Boolean';
-			default:
-				return config.typeName;
-		}
-	}
-
-	function isNum(config: ConfigValue) {
-		return config.type === 'int32' || config.type === 'double' || config.type === 'single';
-	}
-
-	function entryId(entry: ConfigEntry): ConfigEntryId {
-		return {
-			file: selectedFile!,
-			section: selectedSection!,
-			entry
-		};
 	}
 
 	async function refresh() {
@@ -182,68 +121,7 @@
 			</div>
 
 			{#if selectedFile.type === 'ok'}
-				{#if selectedFile.metadata}
-					<div class="font-medium text-slate-400">
-						Created by {selectedFile.metadata.pluginName}
-						{selectedFile.metadata.pluginVersion}
-					</div>
-				{/if}
-
-				{#if selectedSection !== undefined}
-					{#each selectedSection.entries as entry (entry)}
-						{#if entry.type === 'normal'}
-							<div class="my-1 flex items-center pl-2 text-slate-300">
-								<Tooltip
-									side="top"
-									class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate pr-2 text-left text-slate-300"
-								>
-									{sentenceCase(entry.name)}
-									<svelte:fragment slot="tooltip">
-										<div>
-											<span class="text-lg font-bold text-slate-200">{entry.name}</span>
-											<span class="ml-1 text-slate-400"> ({typeName(entry)})</span>
-										</div>
-
-										<div class="mb-1">
-											<Render html={entry.description.replace(/\n/g, '<br/>')} />
-										</div>
-
-										{#if entry.defaultValue}
-											<p>
-												<span class="font-semibold">Default: </span>
-												{configValueToString(entry.defaultValue)}
-											</p>
-										{/if}
-
-										{#if (entry.value.type === 'int32' || entry.value.type === 'double' || entry.value.type === 'single') && entry.value.content.range}
-											<p>
-												<span class="font-semibold">Range: </span>
-												{entry.value.content.range.start} - {entry.value.content.range.end}
-											</p>
-										{/if}
-									</svelte:fragment>
-								</Tooltip>
-								{#if entry.value.type === 'string'}
-									<StringConfig entryId={entryId(entry)} />
-								{:else if entry.value.type === 'enum'}
-									<EnumConfig entryId={entryId(entry)} />
-								{:else if entry.value.type === 'flags'}
-									<FlagsConfig entryId={entryId(entry)} />
-								{:else if entry.value.type === 'boolean'}
-									<BoolConfig entryId={entryId(entry)} />
-								{:else if entry.value.type == 'other'}
-									<StringConfig entryId={entryId(entry)} isOther={true} />
-								{:else if isNum(entry.value)}
-									{#if entry.value.content.range}
-										<SliderConfig entryId={entryId(entry)} />
-									{:else}
-										<NumberInputConfig entryId={entryId(entry)} />
-									{/if}
-								{/if}
-							</div>
-						{/if}
-					{/each}
-				{/if}
+				<ConfigFileEditor file={selectedFile} section={selectedSection} />
 			{:else if selectedFile.type === 'unsupported'}
 				<div class="mb-1 text-slate-400">
 					This file is in an unsupported format. Please open it in an external program to make

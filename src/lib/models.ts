@@ -137,7 +137,7 @@ export interface QueryModsArgs {
 }
 
 export interface ConfigEntryId {
-	file: LoadFileResult;
+	file: { relativePath: string };
 	section: ConfigSection;
 	entry: ConfigEntry;
 }

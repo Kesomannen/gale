@@ -1,12 +1,12 @@
 import { invokeCommand } from './invoke';
-import type { ConfigEntryId, ConfigValue, LoadFileResult } from './models';
+import type { ConfigEntryId, ConfigValue } from './models';
+
+export function isNum(value: ConfigValue) {
+	return value.type === 'int32' || value.type === 'double' || value.type === 'single';
+}
 
 export async function setConfigEntry(id: ConfigEntryId, value: ConfigValue) {
-	if (
-		(value.type === 'int32' || value.type === 'double' || value.type === 'single') &&
-		value.content.value === null
-	)
-		return;
+	if (isNum(value) && value.content.value === null) return;
 
 	await invokeCommand('set_config_entry', {
 		file: id.file.relativePath,
