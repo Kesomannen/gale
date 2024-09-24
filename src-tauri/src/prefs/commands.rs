@@ -1,7 +1,12 @@
-use crate::util::cmd::{Result, StateMutex};
+use crate::util::{
+    cmd::{Result, StateMutex},
+    window::WindowExt,
+};
 
 use super::Prefs;
-use tauri::AppHandle;
+use anyhow::anyhow;
+use serde::Deserialize;
+use tauri::{AppHandle, Manager, Window};
 
 #[tauri::command]
 pub fn get_prefs(prefs: StateMutex<Prefs>) -> Prefs {
@@ -25,4 +30,33 @@ pub fn is_first_run(prefs: StateMutex<Prefs>) -> Result<bool> {
         }
         false => Ok(false),
     }
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum Zoom {
+    Set { factor: f32 },
+    Modify { delta: f32 },
+}
+
+#[tauri::command]
+pub fn zoom_window(value: Zoom, prefs: StateMutex<Prefs>, window: Window) -> Result<()> {
+    let mut prefs = prefs.lock().unwrap();
+    prefs.zoom_factor = match value {
+        Zoom::Set { factor } => factor,
+        Zoom::Modify { delta } => prefs.zoom_factor + delta,
+    }
+    .clamp(0.5, 1.5);
+
+    window
+        .webview_windows()
+        .values()
+        .next()
+        .unwrap()
+        .zoom(prefs.zoom_factor as f64)
+        .map_err(|err| anyhow!(err))?;
+
+    prefs.save()?;
+
+    Ok(())
 }

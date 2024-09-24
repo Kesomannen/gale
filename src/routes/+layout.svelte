@@ -35,7 +35,7 @@
 </script>
 
 <main
-	class="relative flex flex-col overflow-hidden border border-gray-600 bg-gray-800"
+	class="relative flex flex-col overflow-hidden bg-gray-800"
 	on:contextmenu={(e) => {
 		if (window.location.hostname === 'tauri.localhost') {
 			e.preventDefault();
@@ -49,12 +49,10 @@
 		<div
 			class="flex w-14 flex-shrink-0 flex-col items-center gap-1 border-r border-gray-600 bg-gray-900 p-2"
 		>
-			<NavbarLink to="/" icon="mdi:home" tooltip="Home page" />
-			<NavbarLink to="/profile" icon="mdi:account-circle" tooltip="Manage profile" />
-			<NavbarLink to="/mods" icon="material-symbols:browse" tooltip="Browse mods" />
+			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
+			<NavbarLink to="/mods" icon="mdi:store-search" tooltip="Browse mods" />
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
-			<div class="flex-grow" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</div>
 
@@ -63,7 +61,7 @@
 
 	{#if status}
 		<div
-			class="flex w-full items-center border-t border-gray-700 px-3 py-1 text-sm text-slate-400"
+			class="flex w-full items-center border-t border-gray-950 px-3 py-1 text-sm text-slate-400"
 			transition:slide={{ duration: 200, easing: expoOut }}
 		>
 			<Icon icon="mdi:loading" class="animate-spin" />

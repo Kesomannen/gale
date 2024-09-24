@@ -167,8 +167,7 @@
 					let:text
 					let:open
 					slot="trigger"
-					class="flex w-48 items-center gap-2 rounded-lg border border-gray-500 border-opacity-0
-								bg-gray-900 px-3 text-slate-300 hover:border-opacity-100"
+					class="flex w-48 items-center gap-2 rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 text-slate-300 hover:border-opacity-100"
 				>
 					<Icon
 						class="text-lg text-slate-400"
@@ -176,8 +175,9 @@
 					/>
 					<span class="flex-shrink truncate">{text}</span>
 					<Icon
-						class="ml-auto origin-center transform text-xl text-slate-400 transition-all
-										duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
+						class="ase-out ml-auto origin-center transform text-xl text-slate-400 transition-all duration-100 {open
+							? 'rotate-180'
+							: 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -194,15 +194,16 @@
 					<Icon class="text-lg text-slate-400" icon="mdi:sort" />
 					<span class="flex-shr truncate">{text}</span>
 					<Icon
-						class="ml-auto origin-center transform text-xl text-slate-400 transition-all
-										duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-auto origin-center transform text-xl text-slate-400 transition-all duration-100 ease-out {open
+							? 'rotate-180'
+							: 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
 			</Dropdown>
 		</div>
 
-		<div class="mb-1.5 flex gap-1.5 pr-3">
+		<div class="mb-1.5 flex items-start gap-1.5 pr-3">
 			<Dropdown
 				items={$categories
 					.map((category) => category.name)
@@ -214,23 +215,24 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex w-1/2 items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0
-								bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
+					class="flex w-1/2 items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
 				>
 					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter" />
 					{#if includeCategories.length === 0}
 						<span class="truncate text-slate-300">Include categories</span>
 					{:else}
-						<div class="flex flex-wrap gap-1">
+						<div class="flex flex-wrap gap-1 overflow-hidden">
 							{#each includeCategories as category}
-								<div class="rounded-full bg-blue-600 py-0.5 pl-3 pr-0.5 text-sm text-white">
+								<div
+									class="overflow-hidden rounded-lg bg-gray-800 py-0.5 pl-2 pr-0.5 text-sm text-slate-200"
+								>
 									<span class="overflow-hidden truncate">{category}</span>
 
 									<Button.Root
-										class="rounded-full px-1.5 hover:bg-blue-500"
+										class="ml-0.5 rounded-lg px-1.5 hover:bg-gray-700"
 										on:click={(evt) => {
 											evt.stopPropagation();
-											includeCategories = includeCategories.filter((c) => c !== category);
+											includeCategories = includeCategories.filter((cat) => cat !== category);
 										}}
 									>
 										x
@@ -268,15 +270,15 @@
 						<div class="mr-2 flex flex-wrap gap-1">
 							{#each excludeCategories as category}
 								<div
-									class="rounded-xl bg-red-600 py-0.5 pl-3 pr-0.5 text-left align-middle text-sm text-white"
+									class="overflow-hidden rounded-lg bg-gray-800 py-0.5 pl-2 pr-0.5 text-sm text-slate-200"
 								>
-									{category}
+									<span class="overflow-hidden truncate">{category}</span>
 
 									<Button.Root
-										class="rounded-full px-1.5 hover:bg-red-500"
+										class="ml-0.5 rounded-lg px-1.5 hover:bg-gray-700"
 										on:click={(evt) => {
 											evt.stopPropagation();
-											excludeCategories = excludeCategories.filter((c) => c !== category);
+											excludeCategories = excludeCategories.filter((cat) => cat !== category);
 										}}
 									>
 										x
@@ -286,8 +288,9 @@
 						</div>
 					{/if}
 					<Icon
-						class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
-									duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all duration-100 ease-out {open
+							? 'rotate-180'
+							: 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -307,7 +310,7 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex items-center rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1
+					class="flex items-center rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1.5
 								pl-3 pr-2 text-slate-300 hover:border-opacity-100"
 				>
 					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter-variant" />

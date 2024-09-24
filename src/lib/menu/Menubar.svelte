@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { Button, Dialog, Menubar } from 'bits-ui';
+	import { Button, Menubar } from 'bits-ui';
 
 	import MenubarTrigger from '$lib/menu/MenubarTrigger.svelte';
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
@@ -21,6 +21,7 @@
 	import { capitalize } from '$lib/util';
 	import Popup from '$lib/components/Popup.svelte';
 	import { refreshUpdate } from './Updater.svelte';
+	import MenubarSeparator from './MenubarSeparator.svelte';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -119,12 +120,27 @@
 			return profile;
 		});
 	}
+
+	async function zoom(value: { delta: number } | { factor: number }) {
+		await invokeCommand('zoom_window', { value });
+	}
+
+	document.addEventListener('keydown', (evt) => {
+		switch (evt.key) {
+			case '+':
+				zoom({ delta: 0.25 });
+				break;
+			case '-':
+				zoom({ delta: -0.25 });
+				break;
+			case '0':
+				zoom({ factor: 1 });
+				break;
+		}
+	});
 </script>
 
 <div data-tauri-drag-region class="flex h-8 flex-shrink-0 bg-gray-800">
-	<!-- Fix for top border not being draggable -->
-	<div data-tauri-drag-region class="fixed left-0 top-0 z-50 h-[1px] w-full" />
-
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
@@ -132,20 +148,23 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={() => invokeCommand('open_profile_dir')}
-					>Open profile directory</MenubarItem
-				>
-				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')}>Open game logs</MenubarItem>
-				<MenubarItem on:click={() => invokeCommand('open_gale_log')}>Open gale logs</MenubarItem>
-				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
-				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: true })}
-					>Clear unused mod cache</MenubarItem
-				>
-				<MenubarItem on:click={() => invokeCommand('clear_download_cache', { soft: false })}
-					>Clear all cached mods</MenubarItem
-				>
-				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
-				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')}>Fetch mods</MenubarItem>
+				<MenubarItem
+					on:click={() => invokeCommand('open_profile_dir')}
+					text="Open profile directory"
+				/>
+				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')} text="Open game logs" />
+				<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open gale logs" />
+				<MenubarSeparator />
+				<MenubarItem
+					on:click={() => invokeCommand('clear_download_cache', { soft: true })}
+					text="Clear unused mod cache"
+				/>
+				<MenubarItem
+					on:click={() => invokeCommand('clear_download_cache', { soft: false })}
+					text="Clear all cached mods"
+				/>
+				<MenubarSeparator />
+				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')} text="Fetch mods" />
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -153,25 +172,26 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={() => (newProfileOpen = true)}>Create new profile</MenubarItem>
-				<MenubarItem on:click={() => openProfileOperation('rename')}
-					>Rename active profile</MenubarItem
-				>
-				<MenubarItem on:click={() => openProfileOperation('duplicate')}
-					>Duplicate active profile</MenubarItem
-				>
-				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
-				<MenubarItem on:click={() => invokeCommand('copy_dependency_strings')}
-					>Copy mod list</MenubarItem
-				>
-				<MenubarItem on:click={() => invokeCommand('copy_debug_info')}>Copy debug info</MenubarItem>
-				<MenubarItem on:click={() => invokeCommand('copy_launch_args')}
-					>Copy launch arguments</MenubarItem
-				>
-				<Menubar.Separator class="my-0.5 h-[1px] w-full bg-gray-600" />
-				<MenubarItem on:click={() => setAllModsState(true)}>Enable all mods</MenubarItem>
-				<MenubarItem on:click={() => setAllModsState(false)}>Disable all mods</MenubarItem>
-				<MenubarItem on:click={uninstallDisabledMods}>Uninstall disabled mods</MenubarItem>
+				<MenubarItem on:click={() => (newProfileOpen = true)} text="Create new profile" />
+				<MenubarItem on:click={() => openProfileOperation('rename')} text="Rename active profile" />
+				<MenubarItem
+					on:click={() => openProfileOperation('duplicate')}
+					text="Duplicate active profile"
+				/>
+				<MenubarSeparator />
+				<MenubarItem
+					on:click={() => invokeCommand('copy_dependency_strings')}
+					text="Copy mod list"
+				/>
+				<MenubarItem on:click={() => invokeCommand('copy_debug_info')} text="Copy debug info" />
+				<MenubarItem
+					on:click={() => invokeCommand('copy_launch_args')}
+					text="Copy launch arguments"
+				/>
+				<MenubarSeparator />
+				<MenubarItem on:click={() => setAllModsState(true)} text="Enable all mods" />
+				<MenubarItem on:click={() => setAllModsState(false)} text="Disable all mods" />
+				<MenubarItem on:click={uninstallDisabledMods} text="Uninstall disabled mods" />
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -179,10 +199,10 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={() => (importProfileOpen = true)}>...profile from code</MenubarItem>
-				<MenubarItem on:click={importFile}>...profile from file</MenubarItem>
-				<MenubarItem on:click={importLocalMod}>...local mod</MenubarItem>
-				<MenubarItem on:click={() => (importR2Open = true)}>...profiles from r2modman</MenubarItem>
+				<MenubarItem on:click={() => (importProfileOpen = true)} text="...profile from code" />
+				<MenubarItem on:click={importFile} text="...profile from file" />
+				<MenubarItem on:click={importLocalMod} text="...local mod" />
+				<MenubarItem on:click={() => (importR2Open = true)} text="...profiles from r2modman" />
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -190,8 +210,34 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={() => exportCodePopup.open()}>...profile as code</MenubarItem>
-				<MenubarItem on:click={exportFile}>...profile as file</MenubarItem>
+				<MenubarItem on:click={() => exportCodePopup.open()} text="...profile as code" />
+				<MenubarItem on:click={exportFile} text="...profile as file" />
+			</Menubar.Content>
+		</Menubar.Menu>
+		<Menubar.Menu>
+			<MenubarTrigger>Window</MenubarTrigger>
+			<Menubar.Content
+				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
+			>
+				<MenubarItem on:click={appWindow.minimize} text="Minimize" />
+				<MenubarItem on:click={appWindow.toggleMaximize} text="Maximize" />
+				<MenubarItem on:click={appWindow.close} text="Close" />
+				<MenubarSeparator />
+				<MenubarItem
+					on:click={() => invokeCommand('zoom_window', { value: { delta: 0.25 } })}
+					text="Zoom in"
+					key="Ctrl +"
+				/>
+				<MenubarItem
+					on:click={() => invokeCommand('zoom_window', { value: { delta: -0.25 } })}
+					text="Zoom out"
+					key="Ctrl -"
+				/>
+				<MenubarItem
+					on:click={() => invokeCommand('zoom_window', { value: { factor: 1 } })}
+					text="Reset zoom"
+					key="Ctrl 0"
+				/>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
@@ -199,20 +245,20 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={refreshUpdate}>Check for app updates</MenubarItem>
-				<MenubarItem on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
-					>Report a bug</MenubarItem
-				>
+				<MenubarItem on:click={refreshUpdate} text="Check for app updates" />
 				<MenubarItem
-					on:click={() => {
-						shellOpen('https://discord.gg/lcmod');
-					}}>Join LC modding server</MenubarItem
-				>
+					on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
+					text="Report a bug"
+				/>
 				<MenubarItem
-					on:click={() => {
-						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618');
-					}}>Open discord thread</MenubarItem
-				>
+					on:click={() => shellOpen('https://discord.gg/lcmod')}
+					text="Join LC modding server"
+				/>
+				<MenubarItem
+					on:click={() =>
+						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618')}
+					text="Open discord thread"
+				/>
 			</Menubar.Content>
 		</Menubar.Menu>
 	</Menubar.Root>

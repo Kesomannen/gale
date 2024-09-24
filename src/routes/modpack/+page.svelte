@@ -253,8 +253,7 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex w-full items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900
-                  py-1 pl-1 pr-3 hover:border-opacity-100"
+					class="flex w-full items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-1 pr-3 hover:border-opacity-100"
 				>
 					{#if selectedCategories.length === 0}
 						<span class="truncate pl-2 text-slate-400">Select categories...</span>
