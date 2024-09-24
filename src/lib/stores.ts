@@ -28,6 +28,7 @@ const defaultModQuery = () => ({
 	excludeCategories: [],
 	includeNsfw: false,
 	includeDeprecated: false,
+	includeEnabled: false,
 	includeDisabled: false,
 	sortBy: SortBy.LastUpdated,
 	sortOrder: SortOrder.Descending
@@ -40,6 +41,7 @@ const defaultProfileQuery = () => ({
 	excludeCategories: [],
 	includeNsfw: true,
 	includeDeprecated: true,
+	includeEnabled: true,
 	includeDisabled: true,
 	sortBy: SortBy.Custom,
 	sortOrder: SortOrder.Descending

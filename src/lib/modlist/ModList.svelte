@@ -31,6 +31,7 @@
 	let includeCategories = $queryArgs.includeCategories;
 	let excludeCategories = $queryArgs.excludeCategories;
 	let includeNsfw = $queryArgs.includeNsfw;
+	let includeEnabled = $queryArgs.includeEnabled;
 	let includeDeprecated = $queryArgs.includeDeprecated;
 	let includeDisabled = $queryArgs.includeDisabled;
 	let sortBy = $queryArgs.sortBy;
@@ -57,6 +58,7 @@
 			includeCategories,
 			excludeCategories,
 			includeNsfw,
+			includeEnabled,
 			includeDeprecated,
 			includeDisabled,
 			sortBy,
@@ -86,6 +88,7 @@
 
 		if (includeDeprecated) selected.push('Deprecated');
 		if (includeNsfw) selected.push('NSFW');
+		if (includeEnabled) selected.push('Enabled');
 		if (includeDisabled) selected.push('Disabled');
 
 		return selected;
@@ -291,10 +294,11 @@
 			</Dropdown>
 
 			<Dropdown
-				items={['Deprecated', 'NSFW', 'Disabled']}
+				items={['Deprecated', 'NSFW', 'Enabled', 'Disabled']}
 				selected={getSelectedIncludes()}
 				multiple={true}
 				onSelectedChange={(items) => {
+					includeEnabled = items.includes('Enabled');
 					includeDeprecated = items.includes('Deprecated');
 					includeNsfw = items.includes('NSFW');
 					includeDisabled = items.includes('Disabled');

@@ -132,6 +132,7 @@ export interface QueryModsArgs {
 	includeNsfw: boolean;
 	includeDeprecated: boolean;
 	includeDisabled: boolean;
+	includeEnabled: boolean;
 	sortBy: SortBy;
 	sortOrder: SortOrder;
 }
