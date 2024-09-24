@@ -29,15 +29,24 @@
 		<Icon class="animate-spin text-4xl text-slate-300" icon="mdi:loading" />
 	{:then value}
 		{#if value !== null}
-			{#if value.markdown !== undefined}
+			{#if value.markdown}
 				<Markdown source={value.markdown} />
 			{:else}
-				<p class="text-red-300">No {path} found</p>
+				<div class="flex items-center justify-center gap-2 text-slate-300">
+					<Icon class="text-lg" icon="mdi:emoticon-sad-outline" />
+					No {path} found
+				</div>
 			{/if}
 		{:else}
-			<p class="text-red-300">Failed to load {path}</p>
+			<div class="flex items-center justify-center gap-2 text-red-400">
+				<Icon class="text-lg" icon="mdi:alert-circle-outline" />
+				Failed to load {path}
+			</div>
 		{/if}
 	{:catch error}
-		<p class="text-red-300">Failed to load {path}: {error}</p>
+		<div class="flex items-center justify-center gap-2 text-red-400">
+			<Icon class="text-lg" icon="mdi:alert-circle-outline" />
+			Failed to load {path}: {error}
+		</div>
 	{/await}
 </Popup>

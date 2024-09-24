@@ -14,6 +14,6 @@
 	<span class="text-slate-400 group-hover:text-slate-300">{text}</span>
 
 	{#if key}
-		<span class="pl-6 font-mono text-sm text-slate-500 group-hover:text-slate-400">{key}</span>
+		<span class="pl-6 font-mono text-sm text-slate-400 group-hover:text-slate-300">{key}</span>
 	{/if}
 </Menubar.Item>

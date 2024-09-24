@@ -5,6 +5,8 @@
 ### Added
 
 - Option to filter out enabled mods
+- Keyboard shortcuts for some of the menu items
+- Window menu
 
 ### Removed
 
@@ -12,7 +14,7 @@
 
 ### Changed
 
-- Minor UI tweaks and fixes
+- UI tweaks and fixes
 
 ### Fixed
 

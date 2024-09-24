@@ -50,7 +50,7 @@ pub fn run(app: &App) -> Result<()> {
                 if let Value::Bool(true) = &arg.value {
                     manager
                         .active_game()
-                        .launch(true, &prefs)
+                        .launch(&prefs)
                         .context("failed to launch game")?;
 
                     std::process::exit(0);

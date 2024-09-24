@@ -198,6 +198,8 @@ pub struct Prefs {
 #[serde(default, rename_all = "camelCase")]
 pub struct GamePrefs {
     pub dir_override: Option<PathBuf>,
+    #[serde(default)]
+    pub custom_args: Option<Vec<String>>,
     pub launch_mode: LaunchMode,
 }
 

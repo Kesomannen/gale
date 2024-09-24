@@ -31,98 +31,59 @@ pub enum LaunchMode {
 }
 
 impl ManagerGame {
-    pub fn launch(&self, vanilla: bool, prefs: &Prefs) -> Result<()> {
+    pub fn launch(&self, prefs: &Prefs) -> Result<()> {
         let game_dir = self.game.path(prefs)?;
         if let Err(err) = self.link_files(&game_dir) {
             warn!("failed to link files: {:#}", err);
         }
 
-        let launch_mode = prefs
-            .game_prefs
-            .get(&self.game.id)
-            .map(|prefs| prefs.launch_mode.clone())
-            .unwrap_or_default();
+        let (launch_mode, command) = self.get_launch_command(prefs)?;
 
-        match launch_mode {
-            LaunchMode::Steam => self.launch_steam(vanilla, prefs),
-            LaunchMode::Direct {
-                instances,
-                interval_secs,
-            } => self.launch_direct(
-                vanilla,
-                instances,
-                Duration::from_secs_f32(interval_secs),
-                prefs,
-            ),
-        }
-    }
-
-    fn launch_steam(&self, vanilla: bool, prefs: &Prefs) -> Result<()> {
-        let steam_path = prefs
-            .steam_exe_path
-            .as_ref()
-            .context("steam executable path not set")?;
-
-        ensure!(
-            steam_path.exists(),
-            "steam executable not found at {}",
-            steam_path.display()
-        );
-
-        let mut command = Command::new(steam_path);
-        command
-            .arg("-applaunch")
-            .arg(self.game.steam_id.to_string());
-
-        add_bepinex_args(&mut command, vanilla, &self.active_profile().path)?;
-
-        command.spawn()?;
+        do_launch(command, launch_mode)?;
 
         Ok(())
     }
 
-    fn launch_direct(
-        &self,
-        vanilla: bool,
-        instances: u32,
-        interval: Duration,
-        prefs: &Prefs,
-    ) -> Result<()> {
-        let exe_path = self
-            .game
-            .path(prefs)?
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .find(|entry| {
-                let file_name = entry.file_name();
-                let file_name = file_name.to_string_lossy();
-                file_name.ends_with(".exe") && !file_name.contains("UnityCrashHandler")
-            })
-            .map(|entry| entry.path())
-            .and_then(|path| path.exists_or_none())
-            .context("game executable not found")?;
+    fn get_launch_command(&self, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
+        let (launch_mode, custom_args) = prefs
+            .game_prefs
+            .get(&self.game.id)
+            .map(|prefs| (prefs.launch_mode.clone(), prefs.custom_args.as_ref()))
+            .unwrap_or_default();
 
-        let mut command = Command::new(exe_path);
+        let mut command = match launch_mode {
+            LaunchMode::Steam => {
+                let steam_path = prefs
+                    .steam_exe_path
+                    .as_ref()
+                    .context("steam executable path not set")?;
 
-        add_bepinex_args(&mut command, vanilla, &self.active_profile().path)?;
+                ensure!(
+                    steam_path.exists(),
+                    "steam executable not found at {}",
+                    steam_path.display()
+                );
 
-        match instances {
-            0 => bail!("instances must be greater than 0"),
-            1 => {
-                command.spawn()?;
+                let mut command = Command::new(steam_path);
+                command
+                    .arg("-applaunch")
+                    .arg(self.game.steam_id.to_string());
+
+                command
             }
-            _ => {
-                async_runtime::spawn(async move {
-                    // wait a bit between launches
-                    for _ in 0..instances {
-                        command.spawn().ok();
-                        tokio::time::sleep(interval).await;
-                    }
-                });
+            LaunchMode::Direct { .. } => {
+                let path = self.game.exe_path(prefs)?;
+                Command::new(path)
             }
         };
 
-        Ok(())
+        let profile_dir = &self.active_profile().path;
+        match custom_args {
+            Some(args) => add_custom_args(&mut command, args, &profile_dir),
+            None => add_bepinex_args(&mut command, &profile_dir),
+        }?;
+
+        Ok((launch_mode, command))
     }
 
     fn link_files(&self, target: &Path) -> Result<()> {
@@ -180,17 +141,52 @@ impl Game {
 
         Ok(path)
     }
+
+    fn exe_path(&self, prefs: &Prefs) -> Result<PathBuf> {
+        self.path(prefs)?
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .find(|entry| {
+                let file_name = entry.file_name();
+                let file_name = file_name.to_string_lossy();
+                file_name.ends_with(".exe") && !file_name.contains("UnityCrashHandler")
+            })
+            .map(|entry| entry.path())
+            .and_then(|path| path.exists_or_none())
+            .context("game executable not found, try repairing the game through Steam")
+    }
 }
 
-fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result<()> {
-    let (enable_prefix, target_prefix) = get_doorstop_args(path)?;
+fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
+    match mode {
+        LaunchMode::Steam => {
+            command.spawn()?;
+        }
+        LaunchMode::Direct {
+            instances,
+            interval_secs,
+        } => match instances {
+            0 => bail!("instances must be greater than 0"),
+            1 => {
+                command.spawn()?;
+            }
+            _ => {
+                async_runtime::spawn(async move {
+                    for _ in 0..instances {
+                        command.spawn().ok();
+                        tokio::time::sleep(Duration::from_secs_f32(interval_secs)).await;
+                    }
+                });
+            }
+        },
+    };
 
-    if vanilla {
-        command.args([enable_prefix, "false"]);
-        return Ok(());
-    }
+    Ok(())
+}
 
-    let preloader_path = find_preloader(path)?;
+fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+    let (enable_prefix, target_prefix) = doorstop_args(profile_dir)?;
+    let preloader_path = preloader_path(profile_dir)?;
 
     command
         .args([enable_prefix, "true", target_prefix])
@@ -199,8 +195,21 @@ fn add_bepinex_args(command: &mut Command, vanilla: bool, path: &Path) -> Result
     Ok(())
 }
 
-fn find_preloader(path: &Path) -> Result<PathBuf> {
-    let mut core_dir = path.to_path_buf();
+fn add_custom_args(command: &mut Command, args: &[String], profile_dir: &Path) -> Result<()> {
+    let preloader = preloader_path(profile_dir)?;
+    let preloader = preloader.to_string_lossy();
+
+    for arg in args {
+        let arg = arg.replace("{{PRELOADER_PATH}}", &preloader);
+
+        command.arg(arg);
+    }
+
+    Ok(())
+}
+
+fn preloader_path(profile_dir: &Path) -> Result<PathBuf> {
+    let mut core_dir = profile_dir.to_path_buf();
 
     core_dir.push("BepInEx");
     core_dir.push("core");
@@ -220,15 +229,13 @@ fn find_preloader(path: &Path) -> Result<PathBuf> {
             let file_name = entry.file_name();
             PRELOADER_NAMES.iter().any(|name| file_name == *name)
         })
-        .ok_or(anyhow!(
-            "BepInEx preloader not found. Is BepInEx installed?"
-        ))?
+        .context("BepInEx preloader not found. Is BepInEx installed?")?
         .path();
 
     Ok(result)
 }
 
-fn get_doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
+fn doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
     let path = profile_dir.join(".doorstop_version");
 
     let version = match path.exists() {

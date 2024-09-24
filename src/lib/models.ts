@@ -271,5 +271,6 @@ export interface Prefs {
 
 export interface GamePrefs {
 	dirOverride?: string;
+	customArgs?: string[];
 	launchMode: LaunchMode;
 }
