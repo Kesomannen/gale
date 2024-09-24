@@ -22,6 +22,8 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import { refreshUpdate } from './Updater.svelte';
 	import MenubarSeparator from './MenubarSeparator.svelte';
+	import hotkeys from 'hotkeys-js';
+	import { onMount } from 'svelte';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -125,18 +127,40 @@
 		await invokeCommand('zoom_window', { value });
 	}
 
-	document.addEventListener('keydown', (evt) => {
-		switch (evt.key) {
-			case '+':
-				zoom({ delta: 0.25 });
-				break;
-			case '-':
-				zoom({ delta: -0.25 });
-				break;
-			case '0':
-				zoom({ factor: 1 });
-				break;
-		}
+	onMount(() => {
+		hotkeys('ctrl|+,ctrl|-,ctrl|0,ctrl|n,ctrl|d,f2', { splitKey: '|' }, (evt, handler) => {
+			console.log(handler.key);
+			switch (handler.key) {
+				case 'ctrl|+':
+					zoom({ delta: 0.25 });
+					break;
+
+				case 'ctrl|-':
+					zoom({ delta: -0.25 });
+					break;
+
+				case 'ctrl|0':
+					zoom({ factor: 1 });
+					break;
+
+				case 'ctrl|n':
+					newProfileOpen = true;
+					break;
+
+				case 'ctrl|d':
+					openProfileOperation('duplicate');
+					break;
+
+				case 'f2':
+					openProfileOperation('rename');
+					break;
+
+				default:
+					return true;
+			}
+
+			return false;
+		});
 	});
 </script>
 
@@ -172,11 +196,20 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={() => (newProfileOpen = true)} text="Create new profile" />
-				<MenubarItem on:click={() => openProfileOperation('rename')} text="Rename active profile" />
+				<MenubarItem
+					on:click={() => (newProfileOpen = true)}
+					text="Create new profile"
+					key="Ctrl N"
+				/>
+				<MenubarItem
+					on:click={() => openProfileOperation('rename')}
+					text="Rename active profile"
+					key="F2"
+				/>
 				<MenubarItem
 					on:click={() => openProfileOperation('duplicate')}
 					text="Duplicate active profile"
+					key="Ctrl D"
 				/>
 				<MenubarSeparator />
 				<MenubarItem

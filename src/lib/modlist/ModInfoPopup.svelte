@@ -24,7 +24,7 @@
 	}
 </script>
 
-<Popup bind:open>
+<Popup large bind:open>
 	{#await promise}
 		<Icon class="animate-spin text-4xl text-slate-300" icon="mdi:loading" />
 	{:then value}

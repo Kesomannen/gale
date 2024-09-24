@@ -9,7 +9,7 @@
 	export let title: string | null = null;
 	export let confirmClose: { title: string; message: string } | null = null;
 	export let canClose: boolean = true;
-	export let maxWidth: string | null = null;
+	export let large: boolean = false;
 	export let onClose: () => void = () => {};
 
 	async function close(evt: UIEvent) {
@@ -52,8 +52,8 @@
 			outTransitionConfig={{ duration: 100, easing: quartIn, start: 0.95 }}
 		>
 			<div
-				class="pointer-events-auto z-50 max-h-[90%] w-fit min-w-[40rem] overflow-y-auto overflow-x-hidden rounded-xl border border-gray-600 bg-gray-800 p-6 shadow-xl xl:min-w-[55rem] max-w-{maxWidth ??
-					'[85%]'} relative"
+				class="dialog pointer-events-auto relative z-50 max-h-[90%] overflow-y-auto overflow-x-hidden rounded-xl border border-gray-600 bg-gray-800 p-6 shadow-xl"
+				class:large
 			>
 				{#if canClose}
 					<Button.Root
@@ -73,3 +73,14 @@
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
+
+<style lang="postcss">
+	.dialog {
+		width: 90%;
+		max-width: 35rem;
+	}
+
+	.dialog.large {
+		max-width: 50rem;
+	}
+</style>
