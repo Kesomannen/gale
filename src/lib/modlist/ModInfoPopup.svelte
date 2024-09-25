@@ -25,20 +25,29 @@
 	}
 </script>
 
-<Popup bind:open>
+<Popup large bind:open>
 	{#await promise}
-		<Icon class="text-slate-300 text-4xl animate-spin" icon="mdi:loading" />
+		<Icon class="animate-spin text-4xl text-slate-300" icon="mdi:loading" />
 	{:then value}
 		{#if value !== null}
-      {#if value.markdown !== undefined}
-        <Markdown source={value.markdown} />
-      {:else}
-        <p class="text-red-300">{T("No path found", {"path": path})}</p>
-      {/if}
+			{#if value.markdown}
+				<Markdown source={value.markdown} />
+			{:else}
+				<div class="flex items-center justify-center gap-2 text-slate-300">
+					<Icon class="text-lg" icon="mdi:emoticon-sad-outline" />
+					{T("No path found", {"path": path})}
+				</div>
+			{/if}
 		{:else}
-			<p class="text-red-300">{T("Failed to load path", {"path": path})}</p>
+			<div class="flex items-center justify-center gap-2 text-red-400">
+				<Icon class="text-lg" icon="mdi:alert-circle-outline" />
+				{T("Failed to load path", {"path": path})}
+			</div>
 		{/if}
 	{:catch error}
-		<p class="text-red-300">{T("Failed to load path error", {"path": path, "error": error})}</p>
+		<div class="flex items-center justify-center gap-2 text-red-400">
+			<Icon class="text-lg" icon="mdi:alert-circle-outline" />
+			{T("Failed to load path error", {"path": path, "error": error})}
+		</div>
 	{/await}
 </Popup>

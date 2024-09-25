@@ -244,6 +244,10 @@ impl<'a> Queryable for QueryableProfileMod<'a> {
             return false;
         }
 
+        if !args.include_enabled && self.enabled {
+            return false;
+        }
+
         match &self.kind {
             Kind::Local(local) => local.matches(args),
             Kind::Remote(remote) => remote.matches(args),

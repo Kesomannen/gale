@@ -185,13 +185,13 @@
 	}
 </script>
 
-<div class="flex flex-col gap-1.5 py-4 px-6 w-full overflow-y-auto relative">
+<div class="relative flex w-full flex-col gap-1.5 overflow-y-auto px-6 py-4">
 	{#if loading}
 		<div
-			class="flex items-center justify-center fixed inset-0 text-slate-200 bg-black/40 text-lg"
+			class="fixed inset-0 flex items-center justify-center bg-black/40 text-lg text-slate-200"
 			transition:fade={{ duration: 50 }}
 		>
-			<Icon icon="mdi:loading" class="animate-spin mr-4" />
+			<Icon icon="mdi:loading" class="mr-4 animate-spin" />
 			{loading}
 		</div>
 	{/if}
@@ -252,19 +252,18 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex items-center w-full bg-gray-900 rounded-lg pl-1 pr-3 py-1 overflow-hidden
-                  border border-gray-500 border-opacity-0 hover:border-opacity-100"
+					class="flex w-full items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-1 pr-3 hover:border-opacity-100"
 				>
 					{#if selectedCategories.length === 0}
-						<span class="text-slate-400 truncate pl-2">{t("Select categories")}</span>
+						<span class="truncate pl-2 text-slate-400">{t("Select categories")}</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
-								<div class="bg-gray-800 text-slate-200 rounded-md pl-3 pr-1 py-1 text-sm">
-									<span class="truncate overflow-hidden">{category?.name || "Unknown"}</span>
+								<div class="rounded-md bg-gray-800 py-1 pl-3 pr-1 text-sm text-slate-200">
+									<span class="overflow-hidden truncate">{category.name}</span>
 
 									<Button.Root
-										class="px-1.5 ml-1 rounded-md hover:bg-gray-700"
+										class="ml-1 rounded-md px-1.5 hover:bg-gray-700"
 										on:click={(evt) => {
 											evt.stopPropagation();
 											selectedCategories = selectedCategories.filter((c) => c !== category);
@@ -277,8 +276,8 @@
 						</div>
 					{/if}
 					<Icon
-						class="text-slate-400 text-xl transition-all duration-100 ease-out ml-auto flex-shrink-0
-                transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+						class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
+                duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
 				</Select.Trigger>
@@ -332,9 +331,9 @@
 		/>
 
 		<details class="mt-1">
-			<summary class="text-sm text-slate-300 cursor-pointer">Preview</summary>
-			<Markdown class="px-4 mt-1" source={readme} />
-			<div class="h-[2px] bg-gray-500 mt-4" />
+			<summary class="cursor-pointer text-sm text-slate-300">Preview</summary>
+			<Markdown class="mt-1 px-4" source={readme} />
+			<div class="mt-4 h-[2px] bg-gray-500" />
 		</details>
 	</FormField>
 
@@ -355,9 +354,9 @@
 		<BigButton color="gray" on:click={() => generateChangelog(true)}>{t("Generate all")}</BigButton>
 
 		<details class="mt-1">
-			<summary class="text-sm text-slate-300 cursor-pointer">{t("Preview")}</summary>
-			<Markdown class="px-4 mt-1" source={changelog} />
-			<div class="h-[2px] bg-gray-500 mt-4" />
+			<summary class="cursor-pointer text-sm text-slate-300">{t("Preview")}</summary>
+			<Markdown class="mt-1 px-4" source={changelog} />
+			<div class="mt-4 h-[2px] bg-gray-500" />
 		</details>
 	</FormField>
 
@@ -367,7 +366,7 @@
 	>
 		<details>
 			{#if includeFiles}
-				<summary class="text-sm text-slate-300 cursor-pointer">{t("Show list")}</summary>
+				<summary class="cursor-pointer text-sm text-slate-300">{t("Show list")}</summary>
 				<Checklist
 					class="mt-1"
 					title={t("Include all")}
@@ -383,7 +382,7 @@
 		</details>
 	</FormField>
 
-	<div class="flex items-center text-lg font-medium text-slate-200 mt-1">
+	<div class="mt-1 flex items-center text-lg font-medium text-slate-200">
 		<span class="max-w-96 flex-grow">{t("Contains NSFW content")}</span>
 
 		<Checkbox onValueChanged={saveArgs} bind:value={nsfw} />
@@ -395,7 +394,7 @@
 		<Checkbox onValueChanged={saveArgs} bind:value={includeDisabled} />
 	</div>
 
-	<div class="flex justify-end gap-2 mt-3">
+	<div class="mt-3 flex justify-end gap-2">
 		<BigButton color="gray" on:click={exportToFile}>{t("Export to file")}</BigButton>
 		<BigButton color="green" on:click={uploadToThunderstore}>{t("Publish on Thunderstore")}</BigButton>
 	</div>
@@ -414,7 +413,7 @@
 		{t("Modpack upload complete description 3")}
 	</Dialog.Description>
 
-	<div class="mt-2 text-slate-400 text-sm">
+	<div class="mt-2 text-sm text-slate-400">
 		{t("Modpack upload complete description 4")}
 		<br />
 		{t("Modpack upload complete description 5")}

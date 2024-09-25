@@ -49,7 +49,7 @@
 
 	<ImportR2Flow bind:this={importFlow} bind:importData bind:importFrom bind:loading />
 
-	<div class="flex gap-2 justify-end w-full mr-0.5 mt-3">
+	<div class="mr-0.5 mt-3 flex w-full justify-end gap-2">
 		{#if importData?.r2modman || importData?.thunderstore}
 			<BigButton color="gray" on:click={() => (open = false)}>{t("Cancel")}</BigButton>
 			<BigButton color="green" on:click={doImport}>{t("Import")}</BigButton>

@@ -38,23 +38,23 @@
 
 	.markdown :global(h1),
 	.markdown :global(h2) {
-		@apply pt-4 pb-1 mb-3 border-b border-gray-500;
+		@apply mb-3 border-b border-gray-500 pb-1 pt-4;
 	}
 
 	.markdown :global(h1) {
-		@apply text-white font-bold text-3xl;
+		@apply text-3xl font-bold text-white;
 	}
 
 	.markdown :global(h2) {
-		@apply text-gray-100 font-semibold text-2xl;
+		@apply text-2xl font-semibold text-gray-100;
 	}
 
 	.markdown :global(h3) {
-		@apply font-semibold text-xl pb-1 pt-2;
+		@apply pb-1 pt-2 text-xl font-semibold;
 	}
 
 	.markdown :global(h4) {
-		@apply font-medium text-lg pb-0.5 pt-1;
+		@apply pb-0.5 pt-1 text-lg font-medium;
 	}
 
 	.markdown :global(a) {
@@ -74,15 +74,15 @@
 	}
 
 	.markdown :global(ul li) {
-		@apply list-disc ml-8 pl-0.5;
+		@apply ml-8 list-disc pl-0.5;
 	}
 
 	.markdown :global(ol li) {
-		@apply list-decimal ml-8 pl-0.5;
+		@apply ml-8 list-decimal pl-0.5;
 	}
 
 	.markdown :global(pre) {
-		@apply bg-gray-900 p-4 text-gray-300 my-2 overflow-x-auto;
+		@apply my-2 overflow-x-auto bg-gray-900 p-4 text-gray-300;
 	}
 
 	.markdown :global(pre .hljs) {
@@ -98,11 +98,11 @@
 	}
 
 	.markdown :global(table) {
-		@apply border-2 border-gray-950 border-collapse overflow-x-auto max-w-full;
+		@apply max-w-full border-collapse overflow-x-auto border-2 border-gray-950;
 	}
 
 	.markdown :global(th) {
-		@apply bg-gray-950 font-semibold px-3 py-1 text-left;
+		@apply bg-gray-950 px-3 py-1 text-left font-semibold;
 	}
 
 	.markdown :global(tr) {
@@ -118,11 +118,11 @@
 	}
 
 	.markdown :global(hr) {
-		@apply border-gray-500 my-4;
+		@apply my-4 border-gray-500;
 	}
 
 	.markdown :global(blockquote) {
-		@apply border-l-4 border-gray-600 pl-3 my-3 text-gray-400;
+		@apply my-3 border-l-4 border-gray-600 pl-3 text-gray-400;
 	}
 
 	.markdown :global(summary) {

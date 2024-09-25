@@ -61,6 +61,7 @@ pub fn run() {
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
             prefs::commands::is_first_run,
+            prefs::commands::zoom_window,
             manager::commands::get_game_info,
             manager::commands::favorite_game,
             manager::commands::set_active_game,

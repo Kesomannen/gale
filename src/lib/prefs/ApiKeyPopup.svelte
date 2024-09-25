@@ -33,17 +33,22 @@
 		{t("Set thunderstore token description 1")}
 	</p>
 
-	<p class="mt-1 mb-2">
+	<p class="mb-2 mt-1">
 		{@html t("Set thunderstore token description 2")}
 	</p>
 
-	<InputField placeholder="{t("Enter API token")}" class="w-full" on:submit={submit} bind:value={token} />
+	<InputField
+		placeholder={t("Enter API token")}
+		class="w-full"
+		on:submit={submit}
+		bind:value={token}
+	/>
 
 	<details>
-		<summary class="text-sm text-slate-400 mt-1 cursor-pointer"
+		<summary class="mt-1 cursor-pointer text-sm text-slate-400"
 			>{t("Unsure thunderstore token")}</summary
 		>
-		<ol class="mt-1 ml-1 flex flex-col gap-1">
+		<ol class="ml-1 mt-1 flex flex-col gap-1">
 			<li>
 				{t("Unsure thunderstore token description 1")}
 				<Link href="https://thunderstore.io/">thunderstore.io</Link>

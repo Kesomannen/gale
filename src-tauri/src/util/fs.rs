@@ -15,10 +15,7 @@ pub enum Overwrite {
 
 pub fn copy_dir(src: &Path, dest: &Path, overwrite: Overwrite) -> io::Result<()> {
     fs::create_dir_all(dest)?;
-    copy_contents(src, dest, overwrite)
-}
 
-pub fn copy_contents(src: &Path, dest: &Path, overwrite: Overwrite) -> io::Result<()> {
     for entry in src.read_dir()? {
         let entry = entry?;
 
@@ -31,7 +28,7 @@ pub fn copy_contents(src: &Path, dest: &Path, overwrite: Overwrite) -> io::Resul
                 fs::create_dir(&new_path)?;
             }
 
-            copy_contents(&entry_path, &new_path, overwrite)?;
+            copy_dir(&entry_path, &new_path, overwrite)?;
         } else {
             if new_path.exists() && overwrite == Overwrite::No {
                 continue;

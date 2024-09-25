@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Option to filter out enabled mods
+- Keyboard shortcuts for some of the menu items
+- Window menu
+
+### Removed
+
+- Home page with changelog. The default when starting the app is now the profile page instead.
+
+### Changed
+
+- UI tweaks and fixes
+
+### Fixed
+
+- Last updated showing NaN on Linux
+- Sometimes being able to scroll the whole window
+
 ## 0.8.5 (2024-09-11)
 
 ### Added

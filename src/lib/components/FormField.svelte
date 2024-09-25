@@ -5,13 +5,13 @@
 </script>
 
 <div class="my-1 invalid:mx-5">
-	<div class="pl-0.5 mb-[-3px]">
-		<span class="text-lg text-slate-100 font-medium">{label}</span>
+	<div class="mb-[-3px] pl-0.5">
+		<span class="text-lg font-medium text-slate-100">{label}</span>
 		{#if required}
 			<span class="text-red-400">*</span>
 		{/if}
 	</div>
-	<p class="text-slate-300 pl-0.5 pb-1">{description}</p>
+	<p class="pb-1 pl-0.5 text-slate-300">{description}</p>
 
 	<slot />
 </div>

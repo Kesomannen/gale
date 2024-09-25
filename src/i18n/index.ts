@@ -11,12 +11,17 @@ const translations = {
     zhCN
 };
 
+interface LanguageMap {
+    [key: string]: string
+}
+
 export type Language = 'en' | 'zhCN';
 
 
 export let InitLang : Language;
 export const language = writable<Language>(await getLangFormPrefs());
 export const currentTranslations = writable(translations[get(language)]);
+export const currentTranslationsMap = writable(translations[get(language)] as LanguageMap);
 
 
 export function getLangName(lang: Language | string) 
@@ -30,6 +35,7 @@ export function setLang(lang: Language | string) {
 
 /* language.subscribe((lang) => {
     currentTranslations.set(translations[lang]);
+    currentTranslationsMap.set(translations[lang] as LanguageMap);
 });
 */
 
@@ -61,12 +67,13 @@ export function getLangFormNavigator() : Language
 
 export function t(key: string) : string
 {
-    return (get(currentTranslations) as { [key: string]: string })[key] || key;
-}
+    var value = get(currentTranslationsMap)[key]
+    if (value) {
+        return value;
+    }
 
-export function getT(key: string, lang: Language) : string
-{
-    return (translations[lang] as { [key: string]: string })[key] || key;
+    console.warn(`Missing translation for key: ${key}`);
+    return key;
 }
 
 /**

@@ -36,7 +36,7 @@
 						open = false;
 					}, 250);
 					break;
-				
+
 				case 'error':
 					open = false;
 					break;
@@ -58,7 +58,7 @@
 		message: t("Abort installation description")
 	}}
 	onClose={() => {
-		invokeCommand('cancel_install')
+		invokeCommand('cancel_install');
 	}}
 >
 	<Dialog.Description class="text-slate-400">
@@ -76,10 +76,10 @@
 	<Progress.Root
 		value={progress.totalProgress}
 		max={1}
-		class="relative w-full h-4 mt-2 bg-gray-900 rounded-full overflow-hidden"
+		class="relative mt-2 h-4 w-full overflow-hidden rounded-full bg-gray-900"
 	>
 		<div
-			class="absolute top-0 left-0 h-full bg-green-600 rounded-l-full transition-all"
+			class="absolute left-0 top-0 h-full rounded-l-full bg-green-600 transition-all"
 			style="width: {progress.totalProgress * 100}%"
 		/>
 	</Progress.Root>

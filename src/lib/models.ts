@@ -132,12 +132,13 @@ export interface QueryModsArgs {
 	includeNsfw: boolean;
 	includeDeprecated: boolean;
 	includeDisabled: boolean;
+	includeEnabled: boolean;
 	sortBy: SortBy;
 	sortOrder: SortOrder;
 }
 
 export interface ConfigEntryId {
-	file: LoadFileResult;
+	file: { relativePath: string };
 	section: ConfigSection;
 	entry: ConfigEntry;
 }
@@ -271,5 +272,6 @@ export interface Prefs {
 
 export interface GamePrefs {
 	dirOverride?: string;
+	customArgs?: string[];
 	launchMode: LaunchMode;
 }

@@ -40,9 +40,9 @@
 	}
 </script>
 
-<div class="flex flex-col gap-1 py-4 px-6 w-full overflow-y-auto">
+<div class="flex w-full flex-col gap-1 overflow-y-auto px-6 py-4">
 	{#if prefs !== null && gamePrefs !== null}
-		<div class="text-2xl mt-2 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
+		<div class="mb-1 mt-2 border-b border-slate-500 pb-1 text-2xl font-bold text-slate-100">
 			{t("Global settings")}
 		</div>
 
@@ -62,7 +62,6 @@
 			{@html t("Fetch mods automatically description")}
 		</TogglePref>
 
-		<Separator.Root class="h-2" />
 
 		<PathPref
 			label="{t("Steam executable")}"
@@ -93,7 +92,7 @@
 			{t("Dir Change will move")}
 		</PathPref>
 
-		<div class="text-2xl mt-6 mb-1 font-bold text-slate-100 border-b border-slate-500 pb-1">
+		<div class="mb-1 mt-6 border-b border-slate-500 pb-1 text-2xl font-bold text-slate-100">
 			{$activeGame?.displayName} {t("settings")}
 		</div>
 

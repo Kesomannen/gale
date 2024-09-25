@@ -54,7 +54,7 @@ impl Game {
 }
 
 lazy_static! {
-    pub static ref GAMES: [Game; 88] = [
+    pub static ref GAMES: [Game; 100] = [
         Game::new("Risk of Rain 2", 632360)
             .id("riskofrain2")
             .aka("ror2"),
@@ -171,6 +171,20 @@ lazy_static! {
         Game::new("Slipstream: Rogue Space", 2765860)
             .id("slipstream-rogue-space")
             .on_steam("Slipstream Rogue Space"),
+        Game::new("Supermarket Together", 2709570),
+        Game::new("Goodbye Volcano High", 1310330),
+        Game::new("Nine Sols", 1809540),
+        Game::new("Back to the Dawn", 1735700).on_steam("MetalHeadGames"),
+        Game::new("Below the Stone", 1170230).on_steam("Below The Stone"),
+        Game::new("Gloomwood", 1150760),
+        Game::new("Among Us", 945360),
+        Game::new("Betrayal Beach", 2643810),
+        Game::new("Archus Chroma", 1447350),
+        Game::new("Deep Rock Galactic: Survivor", 2321470)
+            .id("deep-rock-galactic-survivor")
+            .on_steam("Deep Rock Survivor"),
+        Game::new("Ale & Tale Tavern", 2683150).id("ale-and-tale-tavern"),
+        Game::new("Screw Drivers", 1279510)
     ];
 }
 

@@ -48,27 +48,27 @@
 	}
 </script>
 
-<div class="h-12 flex flex-row flex-shrink-0 bg-gray-900 border-b border-t border-gray-600">
+<div class="flex h-12 flex-shrink-0 flex-row border-b border-t border-gray-600 bg-gray-900">
 	<div
-		class="flex-shrink-0 pl-6 pr-8 border-r border-gray-600 text-green-400 hover:text-green-400 hover:bg-gray-800"
+		class="flex-shrink-0 border-r border-gray-600 pl-6 pr-8 text-green-400 hover:bg-gray-800 hover:text-green-400"
 	>
 		<Button.Root
-			class="flex items-center h-full font-semibold cursor-default"
+			class="flex h-full cursor-default items-center font-semibold"
 			on:click={() => launchGame(false)}
 		>
-			<Icon icon="mdi:play-circle" class="text-xl mr-2" />
+			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
 			{t('Launch game')}
 		</Button.Root>
 	</div>
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="flex flex-shrink-0 items-center justify-between font-semibold pl-2 pr-4 group border-r border-gray-600 hover:bg-gray-800 text-slate-300 group-hover:text-slate-200 cursor-default"
+		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-gray-600 pl-2 pr-4 font-semibold text-slate-300 hover:bg-gray-800 group-hover:text-slate-200"
 	>
 		{#if $activeGame}
 			<img
 				src="games/{$activeGame.id}.webp"
-				class="max-w-8 max-h-8 rounded mr-2"
+				class="mr-2 max-h-8 max-w-8 rounded"
 				alt={$activeGame.displayName}
 			/>
 
@@ -79,40 +79,40 @@
 
 		<Icon
 			icon="mdi:menu"
-			class="text-slate-300 group-hover:text-slate-200 text-xl transition-all flex-shrink-0 ml-6"
+			class="ml-6 flex-shrink-0 text-xl text-slate-300 transition-all group-hover:text-slate-200"
 		/>
 	</Button.Root>
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="flex flex-shrink items-center min-w-40 pl-6 pr-4 group border-r border-gray-600 
-						text-slate-300 group-hover:text-slate-200 hover:bg-gray-800 cursor-default"
+			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-gray-600 pl-6 
+						pr-4 text-slate-300 hover:bg-gray-800 group-hover:text-slate-200"
 		>
-			<span class="flex-shrink truncate font-semibold mr-auto">
+			<span class="mr-auto flex-shrink truncate font-semibold">
 				{$activeProfile?.name}
 			</span>
 
 			<div
-				class="rounded bg-gray-800 group-hover:bg-gray-700 px-2 py-0.5 text-sm ml-6 mr-2 font-medium"
+				class="ml-6 mr-2 rounded bg-gray-800 px-2 py-0.5 text-sm font-medium group-hover:bg-gray-700"
 			>
 				{$activeProfile?.modCount}
 			</div>
 
 			<Icon
 				icon="mdi:expand-more"
-				class="flex-shrink-0 text-xl transition-all transform origin-center {profilesOpen
+				class="flex-shrink-0 origin-center transform text-xl transition-all {profilesOpen
 					? 'rotate-180'
 					: 'rotate-0'}"
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 min-w-40 max-h-[80lvh] overflow-y-auto"
+			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
 			inTransition={fly}
 			inTransitionConfig={{ duration: 50 }}
 		>
 			{#each profiles as profile, i}
 				<DropdownMenu.Item
-					class="flex items-center pl-3 pr-1 py-1 cursor-default hover:bg-gray-700 rounded-md text-left group
+					class="group flex cursor-default items-center rounded-md py-1 pl-3 pr-1 text-left hover:bg-gray-700
 						{i == activeProfileIndex
 						? 'font-medium text-slate-300 hover:text-slate-200'
 						: 'text-slate-400 hover:text-slate-300'}"
@@ -121,21 +121,21 @@
 						profilesOpen = false;
 					}}
 				>
-					<span class="flex-grow mr-3">
+					<span class="mr-3 flex-grow">
 						{profile.name}
 					</span>
 
 					<Icon
 						icon="mdi:check"
-						class="text-green-500 text-lg mx-2 {i !== activeProfileIndex && 'invisible'}"
+						class="mx-2 text-lg text-green-500 {i !== activeProfileIndex && 'invisible'}"
 					/>
 
-					<div class="rounded bg-gray-700 group-hover:bg-gray-600 px-1.5 py-0.5 text-xs mr-1">
+					<div class="mr-1 rounded bg-gray-700 px-1.5 py-0.5 text-xs group-hover:bg-gray-600">
 						{profile.modCount}
 					</div>
 
 					<Button.Root
-						class="text-slate-400 hover:bg-red-600 hover:text-red-200 p-1 rounded"
+						class="rounded p-1 text-slate-400 hover:bg-red-600 hover:text-red-200"
 						on:click={(evt) => {
 							evt.stopPropagation();
 							deleteProfile(i);
@@ -148,10 +148,10 @@
 			{/each}
 
 			<DropdownMenu.Item
-				class="flex items-center justify-center py-1 cursor-default rounded text-white bg-green-700 hover:bg-green-600"
+				class="flex cursor-default items-center justify-center rounded bg-green-700 py-1 text-white hover:bg-green-600"
 				on:click={() => (newProfilePopupOpen = true)}
 			>
-				<Icon icon="mdi:plus" class="text-xl mr-1" />
+				<Icon icon="mdi:plus" class="mr-1 text-xl" />
 				{t('New profile')}
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>

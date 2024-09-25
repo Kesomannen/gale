@@ -24,10 +24,10 @@
 	}
 </script>
 
-<Popup title="{t('Export as code')}" bind:open={isOpen}>
-	<Dialog.Description class="flex flex-center text-slate-400 mb-2">
+<Popup title={t('Export as code')} bind:open={isOpen}>
+	<Dialog.Description class="flex-center mb-2 flex text-slate-400">
 		{#await codePromise}
-			<Icon icon="mdi:loading" class="animate-spin text-lg mr-2" />
+			<Icon icon="mdi:loading" class="mr-2 animate-spin text-lg" />
 			{T('Exporting as code', { "activeProfileName": $activeProfile?.name })}
 		{:then}
 			{t('Export as code complete')}
@@ -35,7 +35,7 @@
 	</Dialog.Description>
 
 	{#await codePromise then code}
-		<code class="text-lg bg-gray-900 text-slate-400 px-3 py-1 rounded-md">
+		<code class="rounded-md bg-gray-900 px-3 py-1 text-lg text-slate-400">
 			{code}
 		</code>
 	{/await}

@@ -4,21 +4,19 @@
 
 	export let value: string;
 	export let placeholder: string;
-  export let brightness: number = 900;
+	export let brightness: number = 900;
+	export let size: 'sm' | 'base' | 'lg' = 'base';
 </script>
 
 <input
 	type="text"
-	class="py-1.5 px-10 w-full rounded-lg bg-gray-{brightness} truncate text-slate-300 placeholder-slate-400
-          border border-gray-500 border-opacity-0 hover:border-opacity-100
-		  valid:focus:ring-green-400 invalid:ring-red-500 focus:ring-2 focus:outline-none"
+	class="w-full rounded-lg px-10 py-1.5 bg-gray-{brightness} truncate border border-gray-500 border-opacity-0 text-slate-300 placeholder-slate-400 invalid:ring-red-500 hover:border-opacity-100 focus:outline-none focus:ring-2 valid:focus:ring-green-400 text-{size}"
 	bind:value
 	{placeholder}
 />
-<Icon class="absolute left-2.5 top-2 text-slate-500 text-2xl" icon="mdi:magnify" />
+<Icon class="absolute left-2.5 top-2 text-2xl text-slate-500" icon="mdi:magnify" />
 <Button.Root
-	class="absolute right-1.5 top-[0.4rem] rounded-md text-xl text-slate-500 p-1
-          hover:bg-gray-800 hover:text-slate-400"
+	class="absolute right-1.5 top-[0.4rem] rounded-md p-1 text-xl text-slate-500 hover:bg-gray-800 hover:text-slate-400"
 	on:click={() => (value = '')}
 >
 	<Icon icon="mdi:close" />

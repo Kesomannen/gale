@@ -55,21 +55,21 @@
 >
 	<slot name="trigger" text={t(stringValue)} {open}>
 		<Select.Trigger
-			class="flex items-center overflow-hidden bg-gray-900 rounded-lg pl-3 pr-2 py-1
-            border border-gray-500 border-opacity-0 hover:border-opacity-100 {className}"
+			class="flex items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-3 pr-2 hover:border-opacity-100 {className}"
 		>
-			<div class="text-slate-300 text-left flex-grow flex-shrink truncate text-{size}">
-				{t(stringValue) }
+			<div class="flex-shrink flex-grow truncate text-left text-slate-300 text-{size}">
+				{t(stringValue)}
 			</div>
 			<Icon
-				class="text-slate-400 text-xl transition-all flex-shrink-0 duration-100 ease-out
-                transform origin-center {open ? 'rotate-180' : 'rotate-0'}"
+				class="flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all duration-100 ease-out {open
+					? 'rotate-180'
+					: 'rotate-0'}"
 				icon="mdi:chevron-down"
 			/>
 		</Select.Trigger>
 	</slot>
 	<Select.Content
-		class="flex flex-col bg-gray-800 gap-0.5 shadow-xl p-1 rounded-lg border border-gray-600 max-h-96 overflow-y-auto"
+		class="flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
 		transition={slide}
 		transitionConfig={{ duration: 75, easing: quadOut }}
 		{avoidCollisions}
@@ -78,12 +78,11 @@
 			<slot name="item" {item}>
 				<Select.Item
 					value={item}
-					class="flex items-center px-3 py-1 text-slate-400 text-left rounded-md text-{size}
-                hover:bg-gray-700 hover:text-slate-200 cursor-default"
+					class="flex items-center rounded-md px-3 py-1 text-left text-slate-400 text-{size} cursor-default hover:bg-gray-700 hover:text-slate-200"
 				>
 					{t(getLabel(item))}
 					<Select.ItemIndicator class="ml-auto">
-						<Icon icon="mdi:check" class="text-green-400 text-lg" />
+						<Icon icon="mdi:check" class="text-lg text-green-400" />
 					</Select.ItemIndicator>
 				</Select.Item>
 			</slot>

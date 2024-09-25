@@ -1,31 +1,19 @@
 <script lang="ts">
 	import ConfigFileTreeItem from '$lib/config/ConfigFileTreeItem.svelte';
-	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type {
-		ConfigEntry,
-		ConfigEntryId,
-		ConfigSection,
-		ConfigValue,
-		LoadFileResult
-	} from '$lib/models';
-	import { capitalize, sentenceCase } from '$lib/util';
-	import BoolConfig from '$lib/config/BoolConfig.svelte';
-	import SliderConfig from '$lib/config/SliderConfig.svelte';
-	import FlagsConfig from '$lib/config/FlagsConfig.svelte';
+	import type { ConfigSection, LoadFileResult } from '$lib/models';
+	import { capitalize } from '$lib/util';
 	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
-	import EnumConfig from '$lib/config/EnumConfig.svelte';
-	import NumberInputConfig from '$lib/config/NumberInputConfig.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { activeProfile } from '$lib/stores';
-	import { Render } from '@jill64/svelte-sanitize';
 	import { page } from '$app/stores';
-	import StringConfig from '$lib/config/StringConfig.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
 	
 	import { T, t } from '$i18n';
+	import ConfigEntryField from '$lib/config/ConfigEntryField.svelte';
+	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 
 	let files: LoadFileResult[] | undefined;
 
@@ -63,53 +51,6 @@
 		return files;
 	}
 
-	function configValueToString(config: ConfigValue) {
-		switch (config.type) {
-			case 'boolean':
-				return config.content ? 'True' : 'False';
-			case 'string':
-				return config.content;
-			case 'double':
-			case 'int32':
-			case 'single':
-				return config.content.value.toString();
-			case 'enum':
-				return config.content.options[config.content.index];
-			case 'flags':
-				return config.content.indicies.map((i) => config.content.options[i]).join(', ');
-			case 'other':
-				return config.content;
-		}
-	}
-
-	function typeName(config: ConfigEntry) {
-		switch (config.value.type) {
-			case 'int32':
-				return t('Integer');
-			case 'double':
-			case 'single':
-				return t('Decimal');
-			case 'string':
-				return t('String');
-			case 'boolean':
-				return t('Boolean');
-			default:
-				return config.typeName;
-		}
-	}
-
-	function isNum(config: ConfigValue) {
-		return config.type === 'int32' || config.type === 'double' || config.type === 'single';
-	}
-
-	function entryId(entry: ConfigEntry): ConfigEntryId {
-		return {
-			file: selectedFile!,
-			section: selectedSection!,
-			entry
-		};
-	}
-
 	async function refresh() {
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
 		console.log(files);
@@ -134,15 +75,17 @@
 
 <div class="flex flex-grow overflow-hidden">
 	<div
-		class="file-list overflow-y-auto min-w-72 w-[20%] bg-gray-700 overflow-hidden border-r border-gray-600"
+		class="file-list w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r border-gray-600 bg-gray-700"
 	>
 		{#if files === undefined}
-			<div class="flex items-center justify-center w-full h-full text-slate-300 text-lg">
-				<Icon icon="mdi:loading" class="animate-spin mr-4" />
+			<div class="flex h-full w-full items-center justify-center text-lg text-slate-300">
+				<Icon icon="mdi:loading" class="mr-4 animate-spin" />
 				{t("Loading config")}
 			</div>
 		{:else if files.length === 0}
-			<div class="flex items-center justify-center h-full text-slate-300 text-lg">{t('No config files')}</div>
+			<div class="flex h-full items-center justify-center text-lg text-slate-300">
+				{t('No config files')}
+			</div>
 		{:else}
 			<div class="relative mx-2 my-2">
 				<SearchBar bind:value={searchTerm} placeholder="{t("Search for files")}" brightness={800} />
@@ -169,83 +112,20 @@
 		{/if}
 	</div>
 
-	<div class="flex-grow p-4 overflow-y-auto">
+	<div class="flex-grow overflow-y-auto p-4">
 		{#if selectedFile !== undefined}
-			<div class="text-slate-200 text-2xl font-bold truncate flex-shrink-0">
+			<div class="flex-shrink-0 truncate text-2xl font-bold text-slate-200">
 				{selectedFile.relativePath}
 				{#if selectedSection}
-					<span class="text-slate-400 font-light">/</span>
+					<span class="font-light text-slate-400">/</span>
 					{selectedSection.name}
 				{/if}
 			</div>
 
 			{#if selectedFile.type === 'ok'}
-				{#if selectedFile.metadata}
-					<div class="text-slate-400 font-medium">
-						{T("Config created by", {
-							"pluginName": selectedFile.metadata.pluginName,
-							"pluginVersion": selectedFile.metadata.pluginVersion
-						})}
-					</div>
-				{/if}
-
-				{#if selectedSection !== undefined}
-					{#each selectedSection.entries as entry (entry)}
-						{#if entry.type === 'normal'}
-							<div class="flex items-center text-slate-300 pl-2 my-1">
-								<Tooltip
-									side="top"
-									class="w-[45%] min-w-52 text-slate-300 pr-2 cursor-auto text-left truncate flex-shrink-0"
-								>
-									{sentenceCase(entry.name)}
-									<svelte:fragment slot="tooltip">
-										<div>
-											<span class="text-slate-200 text-lg font-bold">{entry.name}</span>
-											<span class="text-slate-400 ml-1"> ({typeName(entry)})</span>
-										</div>
-
-										<div class="mb-1">
-											<Render html={entry.description.replace(/\n/g, '<br/>')} />
-										</div>
-
-										{#if entry.defaultValue}
-											<p>
-												<span class="font-semibold">{t("Default")}: </span>
-												{configValueToString(entry.defaultValue)}
-											</p>
-										{/if}
-
-										{#if (entry.value.type === 'int32' || entry.value.type === 'double' || entry.value.type === 'single') && entry.value.content.range}
-											<p>
-												<span class="font-semibold">{t("Range")}: </span>
-												{entry.value.content.range.start} - {entry.value.content.range.end}
-											</p>
-										{/if}
-									</svelte:fragment>
-								</Tooltip>
-								{#if entry.value.type === 'string'}	
-									<StringConfig entryId={entryId(entry)} />
-								{:else if entry.value.type === 'enum'}
-									<EnumConfig entryId={entryId(entry)} />
-								{:else if entry.value.type === 'flags'}
-									<FlagsConfig entryId={entryId(entry)} />
-								{:else if entry.value.type === 'boolean'}
-									<BoolConfig entryId={entryId(entry)} />
-								{:else if entry.value.type == 'other'}
-									<StringConfig entryId={entryId(entry)} isOther={true} />
-								{:else if isNum(entry.value)}
-									{#if entry.value.content.range}
-										<SliderConfig entryId={entryId(entry)} />
-									{:else}
-										<NumberInputConfig entryId={entryId(entry)} />
-									{/if}
-								{/if}
-							</div>
-						{/if}
-					{/each}
-				{/if}
+				<ConfigFileEditor file={selectedFile} section={selectedSection} />
 			{:else if selectedFile.type === 'unsupported'}
-				<div class="text-slate-400 mb-1">
+				<div class="mb-1 text-slate-400">
 					{t("Config unsupported format")}
 				</div>
 				<BigButton
@@ -256,8 +136,8 @@
 					{t("Open in external program")}
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<div class="text-slate-400 mb-1">{t("Error reading config file")}</div>
-				<code class="flex text-red-500 bg-gray-900 px-2 py-1 mb-1 rounded">
+				<div class="mb-1 text-slate-400">{t("Error reading config file")}</div>
+				<code class="mb-1 flex bg-gray-900 p-3 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
 				<BigButton
@@ -269,7 +149,7 @@
 				</BigButton>
 			{/if}
 		{:else}
-			<div class="flex items-center justify-center text-lg text-slate-400 w-full h-full">
+			<div class="flex h-full w-full items-center justify-center text-lg text-slate-400">
 				{t("Select config file editing")}
 			</div>
 		{/if}

@@ -55,7 +55,7 @@
 
 	async function importData() {
 		if (!data) return;
-		
+
 		data.name = name;
 
 		if (mode === 'overwrite') {
@@ -93,7 +93,7 @@
 				</div>
 
 				{#if !nameAvailable}
-					<div class="flex items-center gap-1 text-red-400 text-md font-bold mt-1">
+					<div class="text-md mt-1 flex items-center gap-1 font-bold text-red-400">
 						<div class="w-[30%] min-w-52" />
 						<Icon icon="mdi:error" class="text-lg" />
 						{T('Profile name exists', {"name": name})}
@@ -116,19 +116,22 @@
 		</TabsMenu>
 
 		{#if data.modNames}
-			<h3 class="text-white text-lg font-semibold mt-2">{T('Many mods to install', {"length": data.mods.length.toString()})}</h3>
-			<ModCardList names={data.modNames} class="max-h-[55lvh] mt-2" />
+			<h3 class="mt-2 text-lg font-semibold text-white">{T('Many mods to install', {"length": data.mods.length})}</h3>
+			<ModCardList names={data.modNames} class="mt-2 max-h-[55lvh]" />
 		{/if}
 
-		<div class="flex w-full justify-end items-center mt-2 gap-2 text-slate-400">
-			<BigButton color="gray" on:click={() => {
-				open = false;
-				data = null;
-			}}>{t("Cancel")}</BigButton>
+		<div class="mt-2 flex w-full items-center justify-end gap-2 text-slate-400">
+			<BigButton
+				color="gray"
+				on:click={() => {
+					open = false;
+					data = null;
+				}}>{t("Cancel")}</BigButton
+			>
 			<BigButton disabled={!nameAvailable || loading} on:click={importData}>{t("Import")}</BigButton>
 		</div>
 	{:else}
-		<div class="flex gap-2 mt-1">
+		<div class="mt-1 flex gap-2">
 			<div class="flex-grow">
 				<InputField bind:value={key} class="w-full" size="lg" placeholder="{t('Enter import code')}" />
 			</div>

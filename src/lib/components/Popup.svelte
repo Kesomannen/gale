@@ -9,7 +9,7 @@
 	export let title: string | null = null;
 	export let confirmClose: { title: string; message: string } | null = null;
 	export let canClose: boolean = true;
-	export let maxWidth: string | null = null;
+	export let large: boolean = false;
 	export let onClose: () => void = () => {};
 
 	async function close(evt: UIEvent) {
@@ -40,24 +40,24 @@
 	<Dialog.Portal>
 		<Dialog.Overlay
 			data-tauri-drag-region
-			class="fixed inset-0 z-0 bg-black/60 rounded-lg"
+			class="fixed inset-0 z-0 rounded-lg bg-black/60"
 			transition={fade}
 			transitionConfig={{ duration: 150 }}
 		/>
 		<Dialog.Content
-			class="fixed inset-0 flex items-center justify-center pointer-events-none"
+			class="pointer-events-none fixed inset-0 flex items-center justify-center"
 			inTransition={scale}
 			inTransitionConfig={{ duration: 200, easing: quartOut, start: 0.9 }}
 			outTransition={scale}
 			outTransitionConfig={{ duration: 100, easing: quartIn, start: 0.95 }}
 		>
 			<div
-				class="z-50 bg-gray-800 rounded-xl p-6 shadow-xl border border-gray-600 overflow-y-auto overflow-x-hidden max-h-[90%] pointer-events-auto
-							min-w-[40rem] xl:min-w-[55rem] w-fit max-w-{maxWidth ?? '[85%]'} relative"
+				class="dialog pointer-events-auto relative z-50 max-h-[85%] overflow-y-auto overflow-x-hidden rounded-xl border border-gray-600 bg-gray-800 p-6 shadow-xl"
+				class:large
 			>
 				{#if canClose}
 					<Button.Root
-						class="absolute top-5 right-5 p-0.5 rounded-md text-slate-400 hover:text-red-100 hover:bg-red-600/80 text-3xl"
+						class="absolute right-5 top-5 rounded-md p-0.5 text-3xl text-slate-400 hover:bg-red-600/80 hover:text-red-100"
 						on:click={close}
 					>
 						<Icon icon="mdi:close" />
@@ -65,7 +65,7 @@
 				{/if}
 
 				{#if title}
-					<Dialog.Title class="w-full text-white font-bold text-2xl pr-10">{title}</Dialog.Title>
+					<Dialog.Title class="w-full pr-10 text-2xl font-bold text-white">{title}</Dialog.Title>
 				{/if}
 
 				<slot />
@@ -73,3 +73,14 @@
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
+
+<style lang="postcss">
+	.dialog {
+		width: 85%;
+		max-width: 35rem;
+	}
+
+	.dialog.large {
+		max-width: 60rem;
+	}
+</style>

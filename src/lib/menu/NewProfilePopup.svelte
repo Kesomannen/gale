@@ -20,16 +20,15 @@
 	}
 </script>
 
-<ConfirmPopup title="{t('Create new profile')}" bind:open>
-	<p class="mb-1">{t('Create new profile description')}</p>
+<ConfirmPopup title={t('Create new profile')} bind:open>
 	<InputField
 		placeholder="{t('Enter profile name')}"
 		size="lg"
-		class="w-full"
+		class="mt-1 w-full"
 		on:submit={createProfile}
 		bind:value={name}
 	/>
 	<svelte:fragment slot="buttons">
-		<BigButton disabled={name.length === 0} on:click={createProfile}>{t("Create")}</BigButton>
+		<BigButton on:click={createProfile}>{t("Create")}</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>
