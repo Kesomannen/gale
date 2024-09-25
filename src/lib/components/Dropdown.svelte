@@ -1,6 +1,5 @@
 <script lang="ts" generics="T">
-	import { get } from 'svelte/store';
-	import { t } from '$i18n';
+	import { t, tArray } from '$i18n';
 
 	import { expoOut, quadOut, quartOut } from 'svelte/easing';
 
@@ -18,6 +17,7 @@
 	export let onSelectedChange = (items: T[]) => {};
 	export let onSelectedChangeSingle = (item: T) => {};
 	export let getLabel = (item: T) => item as string;
+	export let EnableTransitions = false;
 
 	let className: string = '';
 
@@ -28,6 +28,8 @@
 			? selected.map((item) => getLabel(item)).join(', ')
 			: placeholder
 		: getLabel(selected);
+
+	let stringValueText = EnableTransitions ? (Array.isArray(selected) ? tArray(stringValue) : t(stringValue)) : stringValue;
 </script>
 
 <Select.Root
@@ -53,12 +55,12 @@
 	{multiple}
 	bind:open
 >
-	<slot name="trigger" text={t(stringValue)} {open}>
+	<slot name="trigger" text={stringValueText} {open}>
 		<Select.Trigger
 			class="flex items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-3 pr-2 hover:border-opacity-100 {className}"
 		>
 			<div class="flex-shrink flex-grow truncate text-left text-slate-300 text-{size}">
-				{t(stringValue)}
+				{stringValueText}
 			</div>
 			<Icon
 				class="flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all duration-100 ease-out {open
@@ -80,7 +82,7 @@
 					value={item}
 					class="flex items-center rounded-md px-3 py-1 text-left text-slate-400 text-{size} cursor-default hover:bg-gray-700 hover:text-slate-200"
 				>
-					{t(getLabel(item))}
+					{EnableTransitions ? t(getLabel(item)) : getLabel(item)}
 					<Select.ItemIndicator class="ml-auto">
 						<Icon icon="mdi:check" class="text-lg text-green-400" />
 					</Select.ItemIndicator>

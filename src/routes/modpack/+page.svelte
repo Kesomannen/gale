@@ -260,7 +260,7 @@
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
 								<div class="rounded-md bg-gray-800 py-1 pl-3 pr-1 text-sm text-slate-200">
-									<span class="overflow-hidden truncate">{category.name}</span>
+									<span class="overflow-hidden truncate">{category?.name || "Unknown"}</span>
 
 									<Button.Root
 										class="ml-1 rounded-md px-1.5 hover:bg-gray-700"

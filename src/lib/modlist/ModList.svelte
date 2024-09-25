@@ -164,6 +164,7 @@
 				items={[SortOrder.Descending, SortOrder.Ascending]}
 				bind:selected={sortOrder}
 				getLabel={sentenceCase}
+				EnableTransitions = { true }
 			>
 				<Select.Trigger
 					let:text
@@ -175,7 +176,7 @@
 						class="text-lg text-slate-400"
 						icon={sortOrder === SortOrder.Descending ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
 					/>
-					<span class="flex-shrink truncate">{t(text)}</span>
+					<span class="flex-shrink truncate">{text}</span>
 					<Icon
 						class="ase-out ml-auto origin-center transform text-xl text-slate-400 transition-all duration-100 {open
 							? 'rotate-180'
@@ -185,7 +186,7 @@
 				</Select.Trigger>
 			</Dropdown>
 
-			<Dropdown items={sortOptions} bind:selected={sortBy} getLabel={sentenceCase}>
+			<Dropdown items={sortOptions} bind:selected={sortBy} getLabel={sentenceCase} EnableTransitions = {true}>
 				<Select.Trigger
 					let:text
 					let:open
@@ -194,7 +195,7 @@
 								bg-gray-900 px-3 text-slate-300 hover:border-opacity-100"
 				>
 					<Icon class="text-lg text-slate-400" icon="mdi:sort" />
-					<span class="flex-shr truncate">{t(text)}</span>
+					<span class="flex-shr truncate">{text}</span>
 					<Icon
 						class="ml-auto origin-center transform text-xl text-slate-400 transition-all duration-100 ease-out {open
 							? 'rotate-180'
@@ -308,6 +309,7 @@
 					includeNsfw = items.includes('NSFW');
 					includeDisabled = items.includes('Disabled');
 				}}
+				EnableTransitions = {true}
 			>
 				<Select.Trigger
 					let:open

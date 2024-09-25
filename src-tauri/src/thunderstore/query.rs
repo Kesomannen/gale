@@ -59,8 +59,8 @@ pub struct QueryModsArgs {
     pub exclude_categories: HashSet<String>,
     pub include_nsfw: bool,
     pub include_deprecated: bool,
-    pub include_disabled: bool,
     pub include_enabled: bool,
+    pub include_disabled: bool,
     pub sort_by: SortBy,
     pub sort_order: SortOrder,
 }

@@ -49,6 +49,14 @@ language.subscribe((lang) => {
 });
 */
 
+export function tArray(keys: string, spilt : string = ',') : string
+{
+    if (!keys) {
+        return '';
+    }
+    return keys.split(spilt).map((key) => t(key)).join(spilt);
+}
+
 export async function getLangFormPrefs() : Promise<Language>
 {
     var is_first_run =  await invokeCommand<boolean>('is_first_run');
@@ -78,12 +86,12 @@ export function getLangFormNavigator() : Language
 export function t(key: string) : string
 {
     var value = get(currentTranslationsMap)[key]
-    if (value) {
-        return value;
+    if (!value) {
+        console.warn(`Missing translation for key: ${key}`);
+        return key;
     }
 
-    console.warn(`Missing translation for key: ${key}`);
-    return key;
+    return value;
 }
 
 /**
