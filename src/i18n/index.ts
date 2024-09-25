@@ -22,6 +22,15 @@ export let InitLang : Language;
 export const language = writable<Language>(await getLangFormPrefs());
 export const currentTranslations = writable(translations[get(language)]);
 export const currentTranslationsMap = writable(translations[get(language)] as LanguageMap);
+export const LanguageKeys = Object.keys(Languages) as Language[];
+
+/*
+let maps = new Map<string, LanguageMap>();
+for (var key in LanguageKeys) {
+    var map = translations[LanguageKeys[key]] as LanguageMap;
+    maps.set(key, map);
+}
+*/
 
 
 export function getLangName(lang: Language | string) 
@@ -33,7 +42,8 @@ export function setLang(lang: Language | string) {
     language.set(lang as Language);
 }
 
-/* language.subscribe((lang) => {
+/* 
+language.subscribe((lang) => {
     currentTranslations.set(translations[lang]);
     currentTranslationsMap.set(translations[lang] as LanguageMap);
 });
@@ -84,6 +94,16 @@ export function t(key: string) : string
  */
 export function T(key: string, replacements: { [key: string]: any } = {}): string {
     return replaceString(t(key), replacements)
+}
+
+export function TB(isEnable: boolean, enableKey: string, disableKey: string, replacements: { [key: string]: any } = {}): string 
+{
+    return replaceString(t(isEnable ? enableKey : disableKey), replacements);
+}
+
+export function TBR(isEnable: boolean, key: string, enableReplacements: { [key: string]: any } = {}, disableReplacements : { [key: string]: any } = {}): string
+{
+    return replaceString(t(key), isEnable ? enableReplacements : disableReplacements);
 }
 
 export function replaceString(str: string, replacements: { [key: string] : any }): string {

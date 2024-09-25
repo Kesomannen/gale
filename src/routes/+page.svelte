@@ -31,6 +31,7 @@
 	import ModCard from '$lib/modlist/ModCard.svelte';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
+	import { t, T, TB } from '$i18n';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -203,7 +204,7 @@
 				on:click={() => updateActiveMod('latest')}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
-				Update to {activeMod?.versions[0].name}
+				{T("Update to version", {"version":activeMod.versions[0].name})}
 			</Button.Root>
 		{/if}
 	</div>
@@ -216,7 +217,7 @@
 							text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
 				>
 					<Icon class="mr-1.5 text-lg" icon="mdi:edit" />
-					Change version
+					{t("Change version")}
 					<Icon class="ml-4 text-xl" icon="mdi:chevron-right" />
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent
@@ -239,7 +240,7 @@
 		{/if}
 
 		<ModDetailsDropdownItem
-			label="Open directory"
+			label={t("Open directory")}
 			icon="mdi:folder"
 			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>
@@ -247,13 +248,13 @@
 		{#if activeMod?.type === 'remote'}
 			<ModDetailsDropdownItem
 				icon="mdi:source-branch"
-				label="Show dependants"
+				label={t("Show dependants")}
 				onClick={openDependants}
 			/>
 		{/if}
 
 		<ModDetailsDropdownItem
-			label="Uninstall"
+			label={t("Uninstall")}
 			icon="mdi:delete"
 			onClick={() =>
 				uninstall({
@@ -267,7 +268,7 @@
 		{#if unknownMods.length > 0}
 			<div class="mb-1 mr-3 flex items-center rounded-lg bg-red-600 py-1.5 pl-3 pr-1 text-red-100">
 				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
-				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
+				{t("Following " + (unknownMods.length === 1 ? 'mod' : 'mods') + " not found")} {unknownMods
 					.map((mod) => mod.name)
 					.join(', ')}.
 				<Button.Root
@@ -276,7 +277,7 @@
 						unknownMods.forEach(uninstall);
 					}}
 				>
-					Uninstall them?
+					{t("Uninstall them")}
 				</Button.Root>
 			</div>
 		{/if}
@@ -286,16 +287,14 @@
 				class="mb-1 mr-3 flex items-center rounded-lg bg-green-700 py-1 pl-3 pr-1 text-green-100"
 			>
 				<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
-				There {updates.length === 1 ? 'is' : 'are'}
-				<strong class="mx-1">{updates.length}</strong>
-				{updates.length === 1 ? ' update' : ' updates'} available.
+				{TB(updates.length === 1, "A mod update available", "Many mod update available", {"length" : updates.length})}
 				<Button.Root
 					class="ml-1 font-semibold text-white hover:text-green-200 hover:underline"
 					on:click={() => {
 						updateAllOpen = true;
 					}}
 				>
-					Update all?
+					{t("Update all")}
 				</Button.Root>
 
 				<Button.Root
@@ -335,11 +334,11 @@
 	</div>
 </ModList>
 
-<ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
-	Select which mods to update:
+<ConfirmPopup title={t("Confirm update")} bind:open={updateAllOpen}>
+	{t("Confirm update description")}
 
 	<Checklist
-		title="Update all"
+		title={t("Update all")}
 		set={(update, _, value) => {
 			includeUpdates.set(update, value);
 			includeUpdates = includeUpdates; // force reactivity
@@ -383,30 +382,30 @@
 				updateAllOpen = false;
 			}}
 		>
-			Update mods
+			{t("Update mods")}
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>
 
-<Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
+<Popup title={T("Dependants of", {"name" : activeMod?.name})} bind:open={dependantsOpen}>
 	<div class="mt-4 text-center text-slate-300">
 		{#if dependants}
 			{#if dependants.length === 0}
-				No dependants found
+				{t("No dependants found")}
 			{:else}
 				<ModCardList names={dependants} />
 			{/if}
 		{:else}
-			Loading...
+			{t("Loading")}
 		{/if}
 	</div>
 </Popup>
 
 <DependantsPopup
 	bind:this={removeDependants}
-	title="Confirm uninstallation"
-	verb="Uninstall"
-	description="The following mods depend on %s and will likely not work if it is uninstalled!"
+	title={t("Confirm uninstallation")}
+	verb={t("Uninstall")}
+	description={t("Confirm uninstallation description")}
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();
@@ -417,9 +416,9 @@
 
 <DependantsPopup
 	bind:this={disableDependants}
-	title="Confirm disabling"
-	verb="Disable"
-	description="The following mods depend on %s and will likely not work if it is disabled!"
+	title={t("Confirm disabling")}
+	verb={t("Disable")}
+	description={t("Confirm disabling description")}
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}
@@ -427,9 +426,9 @@
 
 <DependantsPopup
 	bind:this={enableDependencies}
-	title="Confirm enabling"
-	verb="Enable"
-	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled!"
+	title={t("Confirm enabling")}
+	verb={t("Enable")}
+	description={t("Confirm enabling description")}
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}

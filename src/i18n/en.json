@@ -287,6 +287,7 @@
     "Downloads": "Downloads",
     "Deprecated": "Deprecated",
     "NSFW": "NSFW",
+    "Enabled": "Enabled",
     "Disabled": "Disabled",
     "Direct": "Direct",
     "years": "years",
@@ -294,5 +295,11 @@
     "days": "days",
     "hours": "hours",
     "minutes": "minutes",
-    "seconds": "seconds"
+    "seconds": "seconds",
+    "Window": "Window",
+    "Minimize": "Minimize",
+    "Maximize": "Maximize",
+    "Zoom in": "Zoom in",
+    "Zoom out": "Zoom out",
+    "Reset zoom": "Reset zoom"
 }

@@ -26,7 +26,7 @@
 	import { onMount } from 'svelte';
 
 	import { get } from 'svelte/store';
-	import { t } from '$i18n';
+	import { T, t } from '$i18n';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -251,27 +251,27 @@
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Window</MenubarTrigger>
+			<MenubarTrigger>{t("Window")}</MenubarTrigger>
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={appWindow.minimize} text="Minimize" />
-				<MenubarItem on:click={appWindow.toggleMaximize} text="Maximize" />
-				<MenubarItem on:click={appWindow.close} text="Close" />
+				<MenubarItem on:click={appWindow.minimize} text={t("Minimize")} />
+				<MenubarItem on:click={appWindow.toggleMaximize} text={t("Maximize")} />
+				<MenubarItem on:click={appWindow.close} text={t("Close")} />
 				<MenubarSeparator />
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: 0.25 } })}
-					text="Zoom in"
+					text={t("Zoom in")}
 					key="Ctrl +"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: -0.25 } })}
-					text="Zoom out"
+					text={t("Zoom out")}
 					key="Ctrl -"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { factor: 1 } })}
-					text="Reset zoom"
+					text={t("Reset zoom")}
 					key="Ctrl 0"
 				/>
 			</Menubar.Content>
