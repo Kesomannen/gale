@@ -29,7 +29,11 @@
 			: placeholder
 		: getLabel(selected);
 
-	let stringValueText = EnableTransitions ? (Array.isArray(selected) ? tArray(stringValue) : t(stringValue)) : stringValue;
+	$: stringValueText = EnableTransitions 
+	    ? stringValue.includes(", ")
+		    ? tArray(stringValue, ", ") 
+			: t(stringValue) 
+		: stringValue;
 </script>
 
 <Select.Root
