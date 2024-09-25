@@ -38,7 +38,7 @@
 	}
 </script>
 
-<Popup bind:open title="{t('Import from R2')}" canClose={!loading} maxWidth="[55%]">
+<Popup bind:open title="{t('Import from R2')}" canClose={!loading}>
 	<div class="text-slate-300">
 		<p>{@html t('Import from R2 description 1')}</p>
 

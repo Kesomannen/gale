@@ -79,7 +79,7 @@
 	}
 </script>
 
-<Popup title="{t('Welcome to Gale')}" canClose={stage === 'end'} bind:open maxWidth="[55%]">
+<Popup title="{t('Welcome to Gale')}" canClose={stage === 'end'} bind:open>
 	<div class="text-slate-300">
 		{#if stage === 'gameSelect'}
 			{t('Welcome to Gale description 1')}
