@@ -1,5 +1,3 @@
-import { get, writable } from 'svelte/store';
-
 import en from './en.json';
 import zhCN from './zhCN.json';
 import Languages from './Languages';
@@ -19,35 +17,16 @@ export type Language = 'en' | 'zhCN';
 
 
 export let InitLang : Language;
-export const language = writable<Language>(await getLangFormPrefs());
-export const currentTranslations = writable(translations[get(language)]);
-export const currentTranslationsMap = writable(translations[get(language)] as LanguageMap);
-export const LanguageKeys = Object.keys(Languages) as Language[];
-
-/*
-let maps = new Map<string, LanguageMap>();
-for (var key in LanguageKeys) {
-    var map = translations[LanguageKeys[key]] as LanguageMap;
-    maps.set(key, map);
-}
-*/
+export let language = await getLangFormPrefs();
+export let currentTranslations = translations[language];
+export let currentTranslationsMap = translations[language] as LanguageMap;
+export let LanguageKeys = Object.keys(Languages) as Language[];
 
 
 export function getLangName(lang: Language | string) 
 {
     return Languages[lang as Language];
 }
-
-export function setLang(lang: Language | string) {
-    language.set(lang as Language);
-}
-
-/* 
-language.subscribe((lang) => {
-    currentTranslations.set(translations[lang]);
-    currentTranslationsMap.set(translations[lang] as LanguageMap);
-});
-*/
 
 export function tArray(keys: string, spilt : string = ',') : string
 {
@@ -63,18 +42,24 @@ export async function getLangFormPrefs() : Promise<Language>
     var Prefs = await invokeCommand<Prefs>('get_prefs');
     var returunLang : Language;
     if (is_first_run) {
-        var lang = getLangFormNavigator();
-        Prefs.language = lang;
-        await invokeCommand<Prefs>('set_prefs', { value: Prefs });
-        returunLang = lang;
+        returunLang = getLangFormNavigator();
+        setPrefLang(returunLang, Prefs);
     }
     else
     {
         returunLang = Prefs.language as Language || 'en';
     }
 
-    InitLang = returunLang;
-    return returunLang;
+    return InitLang = returunLang;
+}
+
+async function setPrefLang(lang: Language, prefs: Prefs | null = null, reload : boolean = false) {
+    var savePrefs = prefs ? prefs : await invokeCommand<Prefs>('get_prefs');
+    savePrefs.language = lang;
+    await invokeCommand<Prefs>('set_prefs', { value: savePrefs });
+    if (reload) {
+        location.reload();
+    }
 }
 
 
@@ -85,7 +70,7 @@ export function getLangFormNavigator() : Language
 
 export function t(key: string) : string
 {
-    var value = get(currentTranslationsMap)[key]
+    var value = currentTranslationsMap[key]
     if (!value) {
         console.warn(`Missing translation for key: ${key}`);
         return key;

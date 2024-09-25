@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t, getLangName, type Language, setLang, language, InitLang, LanguageKeys} from '$i18n';
+	import { t, getLangName, type Language, language, InitLang, LanguageKeys} from '$i18n';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import { get } from 'svelte/store';
@@ -7,14 +7,8 @@
 	import { relaunch } from '@tauri-apps/plugin-process';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	
-	let value: Language | string = get(language);
+	let value: Language | string = language;
     export let set: (newValue: string) => void;
-
-	async function reboot()
-	{
-		await relaunch();
-	}
-
 </script>
 
 <div class="flex items-center">
@@ -26,8 +20,8 @@
 		selected= { value }
 		onSelectedChangeSingle={async (newValue) => {
 			value = newValue;
-			setLang(newValue);
             set(newValue);
+			location.reload();
 		}}
 		getLabel={(name) => getLangName(name)}
 	/>
@@ -35,8 +29,8 @@
 
 {#if value != InitLang}
 <div class="flex justify-end">
-		<BigButton on:click={reboot}>
-			<Tooltip text={t("Immediate reboot description")}>{t("Immediate reboot")}</Tooltip>
+		<BigButton on:click={location.reload}>
+			<Tooltip text={t("Immediate reload description")}>{t("Immediate reload")}</Tooltip>
 		</BigButton>
 </div>
 {/if}
