@@ -7,7 +7,6 @@ use std::{
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use log::warn;
 use serde::{Deserialize, Serialize};
-use tauri::async_runtime;
 use tokio::time::Duration;
 use typeshare::typeshare;
 
@@ -37,14 +36,14 @@ impl ManagerGame {
             warn!("failed to link files: {:#}", err);
         }
 
-        let (launch_mode, command) = self.get_launch_command(prefs)?;
+        let (launch_mode, command) = self.launch_command(prefs)?;
 
         do_launch(command, launch_mode)?;
 
         Ok(())
     }
 
-    fn get_launch_command(&self, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
+    fn launch_command(&self, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
         let (launch_mode, custom_args) = prefs
             .game_prefs
             .get(&self.game.id)
@@ -77,11 +76,10 @@ impl ManagerGame {
             }
         };
 
-        let profile_dir = &self.active_profile().path;
-        match custom_args {
-            Some(args) => add_custom_args(&mut command, args, &profile_dir),
-            None => add_bepinex_args(&mut command, &profile_dir),
-        }?;
+        add_bepinex_args(&mut command, &self.active_profile().path)?;
+        if let Some(custom_args) = custom_args {
+            command.args(custom_args);
+        }
 
         Ok((launch_mode, command))
     }
@@ -171,7 +169,7 @@ fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
                 command.spawn()?;
             }
             _ => {
-                async_runtime::spawn(async move {
+                tauri::async_runtime::spawn(async move {
                     for _ in 0..instances {
                         command.spawn().ok();
                         tokio::time::sleep(Duration::from_secs_f32(interval_secs)).await;
@@ -191,19 +189,6 @@ fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     command
         .args([enable_prefix, "true", target_prefix])
         .arg(preloader_path);
-
-    Ok(())
-}
-
-fn add_custom_args(command: &mut Command, args: &[String], profile_dir: &Path) -> Result<()> {
-    let preloader = preloader_path(profile_dir)?;
-    let preloader = preloader.to_string_lossy();
-
-    for arg in args {
-        let arg = arg.replace("{{PRELOADER_PATH}}", &preloader);
-
-        command.arg(arg);
-    }
 
     Ok(())
 }

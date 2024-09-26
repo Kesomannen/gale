@@ -51,7 +51,7 @@ pub fn export_file(
     let writer = BufWriter::new(file);
     super::export_zip(manager.active_profile(), writer, &thunderstore)?;
 
-    open::that(path).ok();
+    open::that(path.parent().unwrap()).ok();
 
     Ok(())
 }

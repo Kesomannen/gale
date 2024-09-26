@@ -336,7 +336,7 @@
 </ModList>
 
 <ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
-	Select which mods to update:
+	Select which mods to update
 
 	<Checklist
 		title="Update all"

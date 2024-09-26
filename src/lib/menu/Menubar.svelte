@@ -24,6 +24,7 @@
 	import MenubarSeparator from './MenubarSeparator.svelte';
 	import hotkeys from 'hotkeys-js';
 	import { onMount } from 'svelte';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -127,6 +128,11 @@
 		await invokeCommand('zoom_window', { value });
 	}
 
+	async function copyLaunchArgs() {
+		let str = await invokeCommand<string>('get_launch_args');
+		writeText(str);
+	}
+
 	onMount(() => {
 		hotkeys('ctrl|+,ctrl|-,ctrl|0,ctrl|n,ctrl|d,f2', { splitKey: '|' }, (evt, handler) => {
 			console.log(handler.key);
@@ -217,10 +223,7 @@
 					text="Copy mod list"
 				/>
 				<MenubarItem on:click={() => invokeCommand('copy_debug_info')} text="Copy debug info" />
-				<MenubarItem
-					on:click={() => invokeCommand('copy_launch_args')}
-					text="Copy launch arguments"
-				/>
+				<MenubarItem on:click={copyLaunchArgs} text="Copy launch arguments" />
 				<MenubarSeparator />
 				<MenubarItem on:click={() => setAllModsState(true)} text="Enable all mods" />
 				<MenubarItem on:click={() => setAllModsState(false)} text="Disable all mods" />
@@ -314,8 +317,8 @@
 >
 	<p class="mb-1 text-slate-300">
 		{profileOperation == 'duplicate'
-			? 'Enter a name for the duplicated profile:'
-			: 'Enter a new name for the profile:'}
+			? 'Enter a name for the duplicated profile'
+			: 'Enter a new name for the profile'}
 	</p>
 	<InputField
 		bind:value={profileOperationName}
@@ -325,7 +328,7 @@
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}
-		<p class="mt-3 text-sm text-slate-400">
+		<p class="mt-2 text-sm text-slate-400">
 			This process might take up to a minute depending on the size of the profile, please be
 			patient.
 		</p>

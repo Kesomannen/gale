@@ -23,7 +23,6 @@
 <ConfirmPopup title="Create new profile" bind:open>
 	<InputField
 		placeholder="Enter profile name..."
-		size="lg"
 		class="mt-1 w-full"
 		on:submit={createProfile}
 		bind:value={name}

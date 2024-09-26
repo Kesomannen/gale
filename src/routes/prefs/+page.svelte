@@ -11,6 +11,7 @@
 	import type { Prefs, GamePrefs } from '$lib/models';
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
+	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -18,7 +19,8 @@
 	$: gameId = $activeGame?.id ?? '';
 	$: gamePrefs = prefs?.gamePrefs.get(gameId) ?? {
 		launchMode: { type: 'steam' },
-		dirOverride: undefined
+		dirOverride: null,
+		customArgs: null
 	};
 
 	onMount(async () => {
@@ -68,7 +70,7 @@
 			label="Steam executable"
 			type="file"
 			value={prefs.steamExePath ?? null}
-			set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
+			set={set((value, prefs) => (prefs.steamExePath = value))}
 		>
 			Path to the Steam executable.
 		</PathPref>
@@ -77,7 +79,7 @@
 			label="Steam library"
 			type="dir"
 			value={prefs.steamLibraryDir ?? null}
-			set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
+			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 		>
 			Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
 		</PathPref>
@@ -102,7 +104,7 @@
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride ?? null}
-			set={set((value) => (gamePrefs.dirOverride = value ?? undefined))}
+			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
 			Path to the {$activeGame?.displayName} game directory. Leave empty to use the default Steam library.
 		</PathPref>
@@ -110,6 +112,11 @@
 		<LaunchModePref
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs.launchMode = value))}
+		/>
+
+		<CustomArgsPref
+			value={gamePrefs.customArgs}
+			set={set((value) => (gamePrefs.customArgs = value))}
 		/>
 	{/if}
 </div>
