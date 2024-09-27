@@ -100,11 +100,11 @@ async fn get_assets(
 }
 
 fn github_request(
-    tail: impl Display,
+    path: impl Display,
     method: reqwest::Method,
     client: &reqwest::Client,
 ) -> reqwest::RequestBuilder {
-    let url = format!("https://api.github.com/{}", tail);
+    let url = format!("https://api.github.com/{}", path);
     client
         .request(method, &url)
         .header("Accept", "application/vnd.github+json")

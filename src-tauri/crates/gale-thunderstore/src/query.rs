@@ -119,6 +119,7 @@ pub struct PackageInfo {
     rating_score: i64,
     website_url: Option<String>,
     donation_url: Option<String>,
+    description: String,
     readme: Option<String>,
     changelog: Option<String>,
     versions: Vec<VersionInfo>,
@@ -154,6 +155,7 @@ pub async fn query_package(package_uuid: Uuid, state: &AppState) -> Result<Packa
         "SELECT
             name,
             owner,
+            description,
             donation_link,
             downloads,
             rating_score
@@ -166,9 +168,10 @@ pub async fn query_package(package_uuid: Uuid, state: &AppState) -> Result<Packa
     .fetch_one(&state.db)
     .await?;
 
-    let (name, owner, downloads, rating_score, donation_url) = (
+    let (name, owner, description, downloads, rating_score, donation_url) = (
         record.name,
         record.owner,
+        record.description,
         record.downloads,
         record.rating_score,
         record.donation_link,
@@ -240,6 +243,7 @@ pub async fn query_package(package_uuid: Uuid, state: &AppState) -> Result<Packa
         owner,
         donation_url,
         website_url: latest.website_url.clone(),
+        description,
         readme,
         changelog,
         versions,

@@ -16,11 +16,9 @@ pub fn init() -> TauriPlugin<tauri::Wry> {
             let handle = app.to_owned();
             tauri::async_runtime::spawn(async move {
                 let state = handle.app_state();
-                /* 
                 fetch::fetch_packages(state, 1).await.unwrap_or_else(|err| {
                     log::error!("failed to fetch packages: {err:#}");
                 });
-                */
             });
 
             Ok(())
