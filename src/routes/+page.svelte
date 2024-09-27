@@ -334,7 +334,7 @@
 	</div>
 </ModList>
 
-<ConfirmPopup title={t("Confirm update")} bind:open={updateAllOpen}>
+<ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
 	{t("Confirm update description")}
 
 	<Checklist

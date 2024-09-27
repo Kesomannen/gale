@@ -6,6 +6,7 @@
 
 - Option to filter out enabled mods
 - Keyboard shortcuts for some of the menu items
+- Per-game setting for custom launch arguments
 - Window menu
 
 ### Removed

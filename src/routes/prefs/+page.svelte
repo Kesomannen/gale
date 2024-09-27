@@ -13,6 +13,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import { T, t } from '$i18n';
 	import LanguagePref from '$lib/prefs/LanguagePref.svelte';
+	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -20,7 +21,8 @@
 	$: gameId = $activeGame?.id ?? '';
 	$: gamePrefs = prefs?.gamePrefs.get(gameId) ?? {
 		launchMode: { type: 'steam' },
-		dirOverride: undefined
+		dirOverride: null,
+		customArgs: null
 	};
 
 	onMount(async () => {
@@ -67,7 +69,7 @@
 			label="{t("Steam executable")}"
 			type="file"
 			value={prefs.steamExePath ?? null}
-			set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
+			set={set((value, prefs) => (prefs.steamExePath = value))}
 		>
 			{t("Steam executable description")}
 		</PathPref>
@@ -76,7 +78,7 @@
 			label="{t("Steam library")}"
 			type="dir"
 			value={prefs.steamLibraryDir ?? null}
-			set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
+			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 		>
 			{@html t("Steam library description")}
 		</PathPref>
@@ -101,7 +103,7 @@
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride ?? null}
-			set={set((value) => (gamePrefs.dirOverride = value ?? undefined))}
+			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
 			{T("Override game directory description", {"name": $activeGame?.displayName})}
 		</PathPref>
@@ -109,6 +111,11 @@
 		<LaunchModePref
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs.launchMode = value))}
+		/>
+
+		<CustomArgsPref
+			value={gamePrefs.customArgs}
+			set={set((value) => (gamePrefs.customArgs = value))}
 		/>
 	{/if}
 </div>

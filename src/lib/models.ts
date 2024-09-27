@@ -260,8 +260,8 @@ export interface MarkdownResponse {
 }
 
 export interface Prefs {
-	steamExePath?: string;
-	steamLibraryDir?: string;
+	steamExePath: string | null;
+	steamLibraryDir: string | null;
 	dataDir: string;
 	cacheDir: string;
 	language: string;
@@ -271,7 +271,7 @@ export interface Prefs {
 }
 
 export interface GamePrefs {
-	dirOverride?: string;
-	customArgs?: string[];
+	dirOverride: string | null;
+	customArgs: string[] | null;
 	launchMode: LaunchMode;
 }

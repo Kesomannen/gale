@@ -53,7 +53,6 @@
 
 	async function refresh() {
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
-		console.log(files);
 
 		let searchParam = $page.url.searchParams.get('file');
 		if (searchParam) {

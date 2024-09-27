@@ -24,6 +24,7 @@
 	import MenubarSeparator from './MenubarSeparator.svelte';
 	import hotkeys from 'hotkeys-js';
 	import { onMount } from 'svelte';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
 	import { get } from 'svelte/store';
 	import { T, t } from '$i18n';
@@ -130,6 +131,11 @@
 		await invokeCommand('zoom_window', { value });
 	}
 
+	async function copyLaunchArgs() {
+		let str = await invokeCommand<string>('get_launch_args');
+		writeText(str);
+	}
+
 	onMount(() => {
 		hotkeys('ctrl|+,ctrl|-,ctrl|0,ctrl|n,ctrl|d,f2', { splitKey: '|' }, (evt, handler) => {
 			console.log(handler.key);
@@ -220,10 +226,7 @@
 					text={t('Copy mod list')}
 				/>
 				<MenubarItem on:click={() => invokeCommand('copy_debug_info')} text={t('Copy debug info')} />
-				<MenubarItem
-					on:click={() => invokeCommand('copy_launch_args')}
-					text={t('Copy launch arguments')}
-				/>
+				<MenubarItem on:click={copyLaunchArgs} text={t('Copy launch arguments')} />
 				<MenubarSeparator />
 				<MenubarItem on:click={() => setAllModsState(true)} text={t('Enable all mods')} />
 				<MenubarItem on:click={() => setAllModsState(false)} text={t('Disable all mods')} />
@@ -328,7 +331,7 @@
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}
-		<p class="mt-3 text-sm text-slate-400">
+		<p class="mt-2 text-sm text-slate-400">
 			{t('Duplicate active profile processing')}
 		</p>
 	{/if}

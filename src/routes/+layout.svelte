@@ -63,7 +63,7 @@
 
 	{#if status}
 		<div
-			class="flex w-full items-center border-t border-gray-950 px-3 py-1 text-sm text-slate-400"
+			class="flex w-full items-center border-t border-gray-600 px-3 py-1 text-sm text-slate-400"
 			transition:slide={{ duration: 200, easing: expoOut }}
 		>
 			<Icon icon="mdi:loading" class="animate-spin" />
