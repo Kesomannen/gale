@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { t, getLangName, type Language, language, InitLang, LanguageKeys} from '$i18n';
+	import { t, getLangName, type Language, currentLanguage, initLang, LanguageKeys} from '$i18n';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import { get } from 'svelte/store';
@@ -7,7 +7,7 @@
 	import { relaunch } from '@tauri-apps/plugin-process';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	
-	let value: Language | string = language;
+	let value: Language | string = currentLanguage;
     export let set: (newValue: string) => void;
 </script>
 
@@ -27,7 +27,7 @@
 	/>
 </div>
 
-{#if value != InitLang}
+{#if value != initLang}
 <div class="flex justify-end">
 		<BigButton on:click={location.reload}>
 			<Tooltip text={t("Immediate reload description")}>{t("Immediate reload")}</Tooltip>

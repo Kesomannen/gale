@@ -15,12 +15,30 @@ interface LanguageMap {
 
 export type Language = 'en' | 'zhCN';
 
+export const DefaultLanguage = 'en' as Language;
+export const LanguageKeys = Object.keys(Languages) as Language[];
+const LanguageMaps = new Map<Language, LanguageMap>();
 
-export let InitLang : Language;
-export let language = await getLangFormPrefs();
-export let currentTranslations = translations[language];
-export let currentTranslationsMap = translations[language] as LanguageMap;
-export let LanguageKeys = Object.keys(Languages) as Language[];
+export let initLang : Language;
+export let currentLanguage = await getLangFormPrefs();
+export let currentTranslationsMap : LanguageMap;
+export let defaultTranslationsMap : LanguageMap;
+
+UpdateMap();
+
+function UpdateMap()
+{
+    LanguageKeys.forEach((key) => {
+        var map = translations[key] as LanguageMap;
+        LanguageMaps.set(key, map);
+        if (key == currentLanguage)
+            currentTranslationsMap = map;
+        
+        if (key == DefaultLanguage)
+            defaultTranslationsMap = map;
+        }
+    )
+}
 
 
 export function getLangName(lang: Language | string) 
@@ -47,10 +65,10 @@ export async function getLangFormPrefs() : Promise<Language>
     }
     else
     {
-        returunLang = Prefs.language as Language || 'en';
+        returunLang = Prefs.language as Language || DefaultLanguage;
     }
 
-    return InitLang = returunLang;
+    return initLang = returunLang;
 }
 
 async function setPrefLang(lang: Language, prefs: Prefs | null = null, reload : boolean = false) {
@@ -65,18 +83,17 @@ async function setPrefLang(lang: Language, prefs: Prefs | null = null, reload : 
 
 export function getLangFormNavigator() : Language
 {
-    return navigator.language.replace('-', '') as Language;
+    return navigator.language.replace('-', '') as Language || DefaultLanguage;
 }
 
 export function t(key: string) : string
 {
-    var value = currentTranslationsMap[key]
-    if (!value) {
-        console.warn(`Missing translation for key: ${key}`);
-        return key;
-    }
+    var value = currentTranslationsMap[key] || defaultTranslationsMap[key];
+    if (value)
+        return value;
 
-    return value;
+    console.warn(`Missing default translation for key: ${key}`);
+    return key;
 }
 
 /**

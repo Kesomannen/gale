@@ -70,8 +70,8 @@
     "Report a bug": "Report a bug",
     "Join LC modding server": "Join LC modding server",
     "Open discord thread": "Open discord thread",
-    "Duplicate active profile description": "Enter a name for the duplicated profile:",
-    "Rename active profile description": "Enter a new name for the profile:",
+    "Duplicate active profile description": "Enter a name for the duplicated profile",
+    "Rename active profile description": "Enter a new name for the profile",
     "Enter name": "Enter name...",
     "Duplicate active profile processing": "This process might take up to a minute depending on the size of the profile, please be patient.",
     "rename": "Rename",
@@ -256,7 +256,7 @@
     "Update all": "Update all",
     "Update all question": "Update all?",
     "Confirm update": "Confirm update",
-    "Confirm update description": "Select which mods to update:",
+    "Confirm update description": "Select which mods to update",
     "Ignore in update all": "Ignore this update in the 'Update all' list.",
     "Update mods": "Update mods",
     "Dependants of": "Dependants of %name%",
@@ -301,5 +301,12 @@
     "Maximize": "Maximize",
     "Zoom in": "Zoom in",
     "Zoom out": "Zoom out",
-    "Reset zoom": "Reset zoom"
+    "Reset zoom": "Reset zoom",
+    "Set Launch Arguments": "Set custom launch arguments",
+    "Set Launch Arguments Description 1": "Allows you to add custom arguments to the launch command. Depending on <b>Launch mode</b>,\nthese are either ran against the game or steam executable.",
+    "Set Launch Arguments Description 2": "Only pass one argument per entry, so instead of",
+    "Set Launch Arguments Description 3": ", pass",
+    "Set Launch Arguments Description 4": "and",
+    "Set Launch Arguments Description 5": "separately.",
+    "Enter new argument": "Enter new argument..."
 }
