@@ -32,7 +32,7 @@
 		used to publish modpacks to Thunderstore, and will be stored securely on your computer.
 	</p>
 
-	<p class="mb-2 mt-1">
+	<p class="mb-3 mt-2">
 		Once set, you will <b>not</b> be able to view the token again.
 	</p>
 
@@ -47,7 +47,7 @@
 		<summary class="mt-1 cursor-pointer text-sm text-slate-400"
 			>Unsure how to get your API token?</summary
 		>
-		<ol class="ml-1 mt-1 flex flex-col gap-1">
+		<ol class="my-1 ml-1 flex flex-col gap-1">
 			<li>
 				1. Login to <Link href="https://thunderstore.io/">thunderstore.io</Link>.
 			</li>

@@ -21,7 +21,11 @@ use crate::{
     NetworkClient,
 };
 
-use super::{commands::save, installer, ModManager, ModRef, Profile};
+use super::{
+    commands::save,
+    installer::{self},
+    ModManager, ModRef, Profile,
+};
 use chrono::{DateTime, Utc};
 use core::str;
 use itertools::Itertools;
@@ -121,9 +125,11 @@ impl InstallOptions {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ModInstall {
     pub mod_ref: ModRef,
     pub enabled: bool,
+    pub overwrite: bool,
     pub index: Option<usize>,
     pub install_time: Option<DateTime<Utc>>,
 }
@@ -133,6 +139,7 @@ impl ModInstall {
         Self {
             mod_ref,
             enabled: true,
+            overwrite: false,
             index: None,
             install_time: None,
         }
@@ -150,6 +157,11 @@ impl ModInstall {
 
     pub fn with_time(mut self, date: DateTime<Utc>) -> Self {
         self.install_time = Some(date);
+        self
+    }
+
+    pub fn with_overwrite(mut self, overwrite: bool) -> Self {
+        self.overwrite = overwrite;
         self
     }
 

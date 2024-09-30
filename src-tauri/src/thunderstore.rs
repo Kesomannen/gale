@@ -66,6 +66,10 @@ impl<'a> BorrowedMod<'a> {
     pub fn reference(self) -> ModRef {
         self.into()
     }
+
+    pub fn split(self) -> (&'a PackageListing, &'a PackageVersion) {
+        (self.package, self.version)
+    }
 }
 
 impl<'a> From<BorrowedMod<'a>> for (&'a PackageListing, &'a PackageVersion) {

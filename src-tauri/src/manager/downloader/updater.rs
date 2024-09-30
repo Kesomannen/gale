@@ -36,6 +36,7 @@ impl From<AvailableUpdate<'_>> for ModInstall {
             .with_state(value.enabled)
             .with_index(value.index)
             .with_time(value.install_time)
+            .with_overwrite(value.package.is_modpack())
     }
 }
 

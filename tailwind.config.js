@@ -16,7 +16,7 @@ export default {
 		'hover:bg-red-600',
 		'bg-blue-700',
 		'hover:bg-blue-600',
-		'border-red-600',
+		'ring-red-600',
 		'font-semibold'
 	],
 	plugins: []

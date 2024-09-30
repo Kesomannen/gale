@@ -9,6 +9,7 @@ use crate::{
 use chrono::Utc;
 use itertools::Itertools;
 use log::{trace, warn};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
     ffi::OsStr,
@@ -135,7 +136,7 @@ pub fn try_cache_install(
     match path.exists() {
         true => {
             let full_name = &borrowed.package.full_name;
-            install(path, &profile.path)?;
+            install(path, &profile.path, to_install.overwrite)?;
 
             let install_time = to_install.install_time.unwrap_or(Utc::now());
             let profile_mod = ProfileMod {
@@ -178,7 +179,7 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs)
     let file = fs::File::open(src).context("failed to open file")?;
     let reader = io::BufReader::new(file);
     extract(reader, full_name, path.clone())?;
-    install(&path, dest)?;
+    install(&path, dest, false)?;
 
     fs::remove_dir_all(path).context("failed to remove temporary directory")?;
 
@@ -288,7 +289,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
 //         - ...
 //     - config
 //       - KeepItDown.cfg
-fn install(src: &Path, dest: &Path) -> Result<()> {
+fn install(src: &Path, dest: &Path, overwrite: bool) -> Result<()> {
     let config_dir = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
     let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
 
@@ -299,22 +300,33 @@ fn install(src: &Path, dest: &Path) -> Result<()> {
             .expect("walkdir should only return full paths inside of the root");
 
         let target = dest.join(relative);
-
-        if target.exists() {
-            // maybe we should overwrite instead?
-            continue;
-        }
-
         if entry.file_type().is_dir() {
+            if target.exists() {
+                continue;
+            }
+
             fs::create_dir(target)
                 .with_context(|| format!("failed to create directory {}", relative.display()))?;
-        } else if relative.starts_with(&config_dir) {
-            // copy config files so they can be edited without affecting the original
-            fs::copy(entry.path(), target)
-                .with_context(|| format!("failed to copy file {}", relative.display()))?;
         } else {
-            fs::hard_link(entry.path(), target)
-                .with_context(|| format!("failed to link file {}", relative.display()))?;
+            if target.exists() {
+                match overwrite {
+                    true => {
+                        fs::remove_file(&target).with_context(|| {
+                            format!("failed to remove existing file {}", relative.display())
+                        })?;
+                    }
+                    false => continue,
+                }
+            }
+
+            if relative.starts_with(&config_dir) {
+                // copy config files so they can be edited without affecting the original
+                fs::copy(entry.path(), target)
+                    .with_context(|| format!("failed to copy file {}", relative.display()))?;
+            } else {
+                fs::hard_link(entry.path(), target)
+                    .with_context(|| format!("failed to link file {}", relative.display()))?;
+            }
         }
     }
 

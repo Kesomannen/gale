@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use serde::Serialize;
 use typeshare::typeshare;
 use uuid::Uuid;
@@ -326,13 +326,13 @@ fn mod_action_command<F>(
     action: F,
 ) -> Result<ModActionResponse>
 where
-    F: FnOnce(&mut Profile, &Uuid, &Thunderstore) -> anyhow::Result<ModActionResponse>,
+    F: FnOnce(&mut Profile, Uuid, &Thunderstore) -> anyhow::Result<ModActionResponse>,
 {
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let response = action(manager.active_profile_mut(), &uuid, &thunderstore)?;
+    let response = action(manager.active_profile_mut(), uuid, &thunderstore)?;
 
     if let ModActionResponse::Done = response {
         save(&manager, &prefs)?;
@@ -439,18 +439,10 @@ pub fn get_dependants(
     let manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
-    let profile = manager.active_profile();
-    let target = profile
-        .get_mod(&uuid)?
-        .as_remote()
-        .ok_or_else(|| anyhow!("cannot find dependants of local mod"))?
-        .0
-        .borrow(&thunderstore)?;
-
     let dependants = manager
         .active_profile()
-        .dependants(target, &thunderstore)
-        .map(|borrowed| borrowed.version.full_name.to_owned())
+        .dependants(uuid, &thunderstore)
+        .map(|profile_mod| profile_mod.kind.full_name().to_owned())
         .collect();
 
     Ok(dependants)

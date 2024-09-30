@@ -51,7 +51,12 @@
 	}
 </script>
 
-<Popup title="Edit {$expandedEntry?.entry.name}" onClose={() => ($expandedEntry = null)} {open}>
+<Popup
+	large
+	title="Edit {$expandedEntry?.entry.name}"
+	onClose={() => ($expandedEntry = null)}
+	{open}
+>
 	{#if $expandedEntry !== null && $expandedEntry.entry.value.type === 'string'}
 		<TabsMenu
 			bind:value={mode}
