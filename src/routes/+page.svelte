@@ -258,7 +258,7 @@
 			onClick={() =>
 				uninstall({
 					uuid: activeMod?.uuid ?? '',
-					name: activeMod?.name ?? ''
+					fullName: activeMod?.name ?? ''
 				})}
 		/>
 	</svelte:fragment>
@@ -268,7 +268,7 @@
 			<div class="mb-1 mr-3 flex items-center rounded-lg bg-red-600 py-1.5 pl-3 pr-1 text-red-100">
 				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
 				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
-					.map((mod) => mod.name)
+					.map((mod) => mod.fullName)
 					.join(', ')}.
 				<Button.Root
 					class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
@@ -406,7 +406,7 @@
 	bind:this={removeDependants}
 	title="Confirm uninstallation"
 	verb="Uninstall"
-	description="The following mods depend on %s and will likely not work if it is uninstalled!"
+	description="The following mods depend on %s and will likely not work if it is uninstalled"
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();
@@ -419,7 +419,7 @@
 	bind:this={disableDependants}
 	title="Confirm disabling"
 	verb="Disable"
-	description="The following mods depend on %s and will likely not work if it is disabled!"
+	description="The following mods depend on %s and will likely not work if it is disabled"
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}
@@ -429,9 +429,9 @@
 	bind:this={enableDependencies}
 	title="Confirm enabling"
 	verb="Enable"
-	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled!"
+	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled"
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}
-	isPositive={true}
+	positive
 />

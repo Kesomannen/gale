@@ -116,7 +116,7 @@
 
 		{#if data.modNames}
 			<h3 class="mt-2 text-lg font-semibold text-white">{data.mods.length} mods to install</h3>
-			<ModCardList names={data.modNames} class="mt-2 max-h-[55lvh]" />
+			<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] flex-shrink flex-grow" />
 		{/if}
 
 		<div class="mt-2 flex w-full items-center justify-end gap-2 text-slate-400">

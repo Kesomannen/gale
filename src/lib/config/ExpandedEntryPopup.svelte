@@ -85,14 +85,6 @@
 				<div class="flex flex-col gap-1 text-slate-300">
 					{#each items as element, i}
 						<div class="flex gap-1">
-							<InputField
-								class="flex-grow"
-								value={element}
-								on:change={({ detail }) => {
-									items[i] = detail;
-									updateListContent();
-								}}
-							/>
 							<Button.Root
 								class="rounded-lg p-1.5 text-xl text-slate-400 hover:bg-gray-700 hover:text-slate-300"
 								on:click={() => {
@@ -102,6 +94,14 @@
 							>
 								<Icon icon="mdi:remove" />
 							</Button.Root>
+							<InputField
+								class="flex-grow"
+								value={element}
+								on:change={({ detail }) => {
+									items[i] = detail;
+									updateListContent();
+								}}
+							/>
 						</div>
 					{/each}
 
