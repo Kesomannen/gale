@@ -46,6 +46,7 @@
 			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
 			name = data.name;
 			mode = isAvailable(name) ? 'new' : 'overwrite';
+			console.log(data);
 		} catch (e) {
 			open = false;
 		} finally {
@@ -76,7 +77,7 @@
 	}
 </script>
 
-<Popup title={t('Import profile')} bind:open onClose={() => (data = null)}>
+<Popup title={t('Import profile')} large={data !== null} bind:open onClose={() => (data = null)}>
 	{#if data}
 		<TabsMenu
 			bind:value={mode}

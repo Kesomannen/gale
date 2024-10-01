@@ -10,7 +10,6 @@ use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
-use log::warn;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
@@ -218,6 +217,21 @@ impl ProfileModKind {
             },
         }
     }
+
+    pub fn dependencies<'a>(&'a self, thunderstore: &'a Thunderstore) -> Vec<BorrowedMod<'a>> {
+        let deps = match self {
+            ProfileModKind::Local(local_mod) => local_mod.dependencies.as_ref(),
+            ProfileModKind::Remote { mod_ref, .. } => mod_ref
+                .borrow(thunderstore)
+                .ok()
+                .map(|borrowed| &borrowed.version.dependencies),
+        };
+
+        match deps {
+            Some(deps) => thunderstore.resolve_deps(deps.iter()).0,
+            None => Vec::new(),
+        }
+    }
 }
 
 struct QueryableProfileMod<'a> {
@@ -369,8 +383,7 @@ impl Profile {
                 |(index, profile_mod)| match profile_mod.queryable(index, thunderstore) {
                     Ok(queryable) => Some(queryable),
                     Err(_) => {
-                        warn!("unknown mod in profile: {}", profile_mod.uuid());
-                        unknown.push(Dependant::from(&profile_mod.kind));
+                        unknown.push(Dependant::from(profile_mod));
                         None
                     }
                 },
@@ -398,15 +411,18 @@ impl Profile {
 
     fn dependants<'a>(
         &'a self,
-        target_mod: BorrowedMod<'a>,
+        uuid: Uuid,
         thunderstore: &'a Thunderstore,
-    ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
-        self.remote_mods()
-            .filter(|(other, _, _)| other.package_uuid != target_mod.package.uuid4)
-            .filter_map(|(other, _, _)| other.borrow(thunderstore).ok())
+    ) -> impl Iterator<Item = &ProfileMod> + 'a {
+        self.mods
+            .iter()
+            .filter(move |other| *other.uuid() != uuid)
             .filter(move |other| {
-                let deps = thunderstore.dependencies(other.version).0;
-                deps.iter().any(|dep| dep.package == target_mod.package)
+                other
+                    .kind
+                    .dependencies(thunderstore)
+                    .iter()
+                    .any(|dep| dep.package.uuid4 == uuid)
             })
     }
 
@@ -458,23 +474,23 @@ impl Profile {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Dependant {
-    pub name: String,
+    pub full_name: String,
     pub uuid: Uuid,
 }
 
 impl From<BorrowedMod<'_>> for Dependant {
     fn from(value: BorrowedMod) -> Self {
         Self {
-            name: value.package.name.clone(),
+            full_name: value.version.full_name.clone(),
             uuid: value.package.uuid4,
         }
     }
 }
 
-impl From<&ProfileModKind> for Dependant {
-    fn from(value: &ProfileModKind) -> Self {
+impl From<&ProfileMod> for Dependant {
+    fn from(value: &ProfileMod) -> Self {
         Self {
-            name: value.name().to_owned(),
+            full_name: value.kind.full_name().to_owned(),
             uuid: *value.uuid(),
         }
     }
@@ -486,7 +502,6 @@ impl From<&ProfileModKind> for Dependant {
 pub enum ModActionResponse {
     Done,
     HasDependants(Vec<Dependant>),
-    HasDependencies(Vec<Dependant>),
 }
 
 impl Profile {
@@ -513,24 +528,14 @@ impl Profile {
         Ok(())
     }
 
-    fn remove_mod(
-        &mut self,
-        uuid: &Uuid,
-        thunderstore: &Thunderstore,
-    ) -> Result<ModActionResponse> {
-        let profile_mod = self.get_mod(uuid)?;
-
-        if profile_mod.enabled {
-            if let Some((mod_ref, _, _)) = profile_mod.as_remote() {
-                if let Ok(borrow) = mod_ref.borrow(thunderstore) {
-                    if let Some(dependants) = self.check_dependants(borrow, thunderstore) {
-                        return Ok(ModActionResponse::HasDependants(dependants));
-                    }
-                }
+    fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ModActionResponse> {
+        if self.get_mod(&uuid)?.enabled {
+            if let Some(dependants) = self.check_dependants(uuid, thunderstore) {
+                return Ok(ModActionResponse::HasDependants(dependants));
             }
         }
 
-        self.force_remove_mod(uuid)?;
+        self.force_remove_mod(&uuid)?;
         Ok(ModActionResponse::Done)
     }
 
@@ -546,27 +551,19 @@ impl Profile {
         Ok(())
     }
 
-    fn toggle_mod(
-        &mut self,
-        uuid: &Uuid,
-        thunderstore: &Thunderstore,
-    ) -> Result<ModActionResponse> {
-        let profile_mod = self.get_mod(uuid)?;
+    fn toggle_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ModActionResponse> {
+        let dependants = match self.get_mod(&uuid)?.enabled {
+            true => self.check_dependants(uuid, thunderstore),
+            false => self.check_deps(uuid, thunderstore),
+        };
 
-        if let Some((mod_ref, _, _)) = profile_mod.as_remote() {
-            if let Ok(borrowed) = mod_ref.borrow(thunderstore) {
-                if profile_mod.enabled {
-                    if let Some(dependants) = self.check_dependants(borrowed, thunderstore) {
-                        return Ok(ModActionResponse::HasDependants(dependants));
-                    }
-                } else if let Some(deps) = self.check_deps(borrowed, thunderstore) {
-                    return Ok(ModActionResponse::HasDependencies(deps));
-                }
+        match dependants {
+            Some(dependants) => Ok(ModActionResponse::HasDependants(dependants)),
+            None => {
+                self.force_toggle_mod(&uuid)?;
+                Ok(ModActionResponse::Done)
             }
         }
-
-        self.force_toggle_mod(uuid)?;
-        Ok(ModActionResponse::Done)
     }
 
     fn force_toggle_mod(&mut self, uuid: &Uuid) -> Result<()> {
@@ -607,16 +604,21 @@ impl Profile {
         Ok(())
     }
 
-    fn check_dependants(
-        &self,
-        borrowed_mod: BorrowedMod,
-        thunderstore: &Thunderstore,
-    ) -> Option<Vec<Dependant>> {
+    fn check_dependants(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
         let dependants = self
-            .dependants(borrowed_mod, thunderstore)
-            .filter(|borrowed| {
-                !borrowed.package.is_modpack()
-                    && self.get_mod(&borrowed.package.uuid4).unwrap().enabled
+            .dependants(uuid, thunderstore)
+            .filter(|profile_mod| {
+                if !profile_mod.enabled {
+                    return false;
+                }
+
+                match &profile_mod.kind {
+                    ProfileModKind::Local(_) => false,
+                    ProfileModKind::Remote { mod_ref, .. } => match mod_ref.borrow(thunderstore) {
+                        Ok(borrowed) => !borrowed.package.is_modpack(),
+                        Err(_) => false,
+                    },
+                }
             })
             .map_into()
             .collect::<Vec<_>>();
@@ -627,14 +629,12 @@ impl Profile {
         }
     }
 
-    fn check_deps(
-        &self,
-        borrowed_mod: BorrowedMod,
-        thunderstore: &Thunderstore,
-    ) -> Option<Vec<Dependant>> {
-        let disabled_deps = thunderstore
-            .dependencies(borrowed_mod.version)
-            .0
+    fn check_deps(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
+        let profile_mod = self.get_mod(&uuid).ok()?;
+
+        let disabled_deps = profile_mod
+            .kind
+            .dependencies(thunderstore)
             .into_iter()
             .filter(|dep| {
                 self.get_mod(&dep.package.uuid4)
@@ -1013,9 +1013,11 @@ impl ModManager {
             for profile in &mut game.profiles {
                 for profile_mod in &mut profile.mods {
                     if let ProfileModKind::Remote { mod_ref, full_name } = &mut profile_mod.kind {
-                        if full_name.is_empty() {
+                        if full_name.is_empty()
+                            || full_name.chars().filter(|c| *c == '-').count() < 3
+                        {
                             if let Ok(borrowed) = mod_ref.borrow(thunderstore) {
-                                full_name.clone_from(&borrowed.package.full_name);
+                                full_name.clone_from(&borrowed.version.full_name);
                             }
                         }
                     }

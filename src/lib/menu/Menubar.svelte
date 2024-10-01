@@ -208,7 +208,7 @@
 				<MenubarItem
 					on:click={() => (newProfileOpen = true)}
 					text={t('Create new profile')}
-					key="Ctrl N"
+					key="Ctrl+N"
 				/>
 				<MenubarItem
 					on:click={() => openProfileOperation('rename')}
@@ -218,7 +218,7 @@
 				<MenubarItem
 					on:click={() => openProfileOperation('duplicate')}
 					text={t('Duplicate active profile')}
-					key="Ctrl D"
+					key="Ctrl+D"
 				/>
 				<MenubarSeparator />
 				<MenubarItem
@@ -265,17 +265,17 @@
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: 0.25 } })}
 					text={t("Zoom in")}
-					key="Ctrl +"
+					key="Ctrl++"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: -0.25 } })}
 					text={t("Zoom out")}
-					key="Ctrl -"
+					key="Ctrl+-"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { factor: 1 } })}
 					text={t("Reset zoom")}
-					key="Ctrl 0"
+					key="Ctrl+0"
 				/>
 			</Menubar.Content>
 		</Menubar.Menu>

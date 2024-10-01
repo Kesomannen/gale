@@ -33,7 +33,7 @@
 		{t("Set thunderstore token description 1")}
 	</p>
 
-	<p class="mb-2 mt-1">
+	<p class="mb-3 mt-2">
 		{@html t("Set thunderstore token description 2")}
 	</p>
 
@@ -48,7 +48,7 @@
 		<summary class="mt-1 cursor-pointer text-sm text-slate-400"
 			>{t("Unsure thunderstore token")}</summary
 		>
-		<ol class="ml-1 mt-1 flex flex-col gap-1">
+		<ol class="my-1 ml-1 flex flex-col gap-1">
 			<li>
 				{t("Unsure thunderstore token description 1")}
 				<Link href="https://thunderstore.io/">thunderstore.io</Link>

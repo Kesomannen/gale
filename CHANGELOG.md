@@ -21,6 +21,7 @@
 
 - Last updated showing NaN on Linux
 - Sometimes being able to scroll the whole window
+- Modpack updates not overriding existing config files
 
 ## 0.8.5 (2024-09-11)
 

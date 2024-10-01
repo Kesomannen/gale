@@ -24,7 +24,7 @@ export interface ConfigEntry {
 	name: string;
 	description: string;
 	typeName: string;
-	defaultValue?: ConfigValue;
+	defaultValue: ConfigValue | null;
 	value: ConfigValue;
 }
 
@@ -36,17 +36,17 @@ export interface ConfigSection {
 export interface ConfigFile {
 	displayName: string;
 	relativePath: string;
-	metadata?: {
+	metadata: {
 		pluginName: string;
 		pluginVersion: string;
 		pluginGuid: string;
-	};
+	} | null;
 	sections: ConfigSection[];
 }
 
 export interface ConfigNum {
 	value: number;
-	range?: ConfigRange;
+	range: ConfigRange | null;
 }
 
 export interface ConfigRange {
@@ -82,17 +82,17 @@ export interface GameInfo {
 
 export interface Mod {
 	name: string;
-	description?: string;
-	categories?: string[];
-	version?: string;
-	author?: string;
-	rating?: number;
-	downloads?: number;
+	description: string | null;
+	categories: string[] | null;
+	version: string | null;
+	author: string | null;
+	rating: number | null;
+	downloads: number | null;
 	fileSize: number;
-	websiteUrl?: string;
-	donateUrl?: string;
-	icon?: string;
-	dependencies?: string[];
+	websiteUrl: string | null;
+	donateUrl: string | null;
+	icon: string | null;
+	dependencies: string[] | null;
 	isPinned: boolean;
 	isDeprecated: boolean;
 	containsNsfw: boolean;
@@ -104,7 +104,7 @@ export interface Mod {
 	}[];
 	type: 'local' | 'remote';
 	enabled: boolean;
-	configFile?: string;
+	configFile: string | null;
 }
 
 export enum SortBy {
@@ -148,15 +148,13 @@ export interface Dependant {
 	uuid: string;
 }
 
-export type ModActionResponse =
-	| { type: 'done'; content?: undefined }
-	| { type: 'hasDependants' | 'hasDependencies'; content: Dependant[] };
+export type ModActionResponse = { type: 'done' } | { type: 'hasDependants'; content: Dependant[] };
 
 export type InstallTask =
-	| { kind: 'done'; payload?: undefined }
-	| { kind: 'error'; payload?: undefined }
-	| { kind: 'installing'; payload?: undefined }
-	| { kind: 'extracting'; payload?: undefined }
+	| { kind: 'done' }
+	| { kind: 'error' }
+	| { kind: 'installing' }
+	| { kind: 'extracting' }
 	| {
 			kind: 'downloading';
 			payload: {
@@ -208,7 +206,7 @@ export interface FiltersResponse {
 }
 
 export type LaunchMode =
-	| { type: 'steam'; content?: undefined }
+	| { type: 'steam' }
 	| { type: 'direct'; content: { instances: number; intervalSecs: number } };
 
 export interface AvailableUpdate {
@@ -229,7 +227,7 @@ export interface ProfileQuery {
 export interface ImportData {
 	name: string;
 	includes: Map<string, string>;
-	modNames?: string[];
+	modNames: string[] | null;
 	source: 'r2' | 'gale';
 	mods: {
 		modRef: {
@@ -237,25 +235,27 @@ export interface ImportData {
 			versionUuid: string;
 		};
 		enabled: boolean;
-		index?: number;
+		index: number | null;
+		overwrite: boolean;
+		installTime: string | null;
 	}[];
 }
 
 export interface R2ImportData {
-	r2modman?: {
+	r2modman: {
 		path: string;
 		profiles: string[];
 		include: boolean[];
-	};
-	thunderstore?: {
+	} | null;
+	thunderstore: {
 		path: string;
 		profiles: string[];
 		include: boolean[];
-	};
+	} | null;
 }
 
 export interface MarkdownResponse {
-	markdown?: string;
+	markdown: string | null;
 	detail?: string;
 }
 
