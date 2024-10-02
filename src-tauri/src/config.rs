@@ -213,7 +213,7 @@ impl Profile {
 
     fn link_config(&mut self) {
         for profile_mod in &self.mods {
-            let name = profile_mod.kind.name();
+            let name = profile_mod.kind.split_name().1;
             let file = self.config.iter().find(|file| matches(file, name));
 
             if let Some(file) = file {

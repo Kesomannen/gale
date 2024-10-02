@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     cmp::Ordering,
     collections::{HashMap, HashSet},
     fs,
@@ -10,6 +11,7 @@ use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
+use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;
@@ -208,13 +210,26 @@ impl ProfileModKind {
         }
     }
 
-    pub fn name(&self) -> &str {
+    pub fn split_name(&self) -> (&str, &str, Cow<'_, str>) {
         match self {
-            ProfileModKind::Local(local) => &local.name,
-            ProfileModKind::Remote { full_name, .. } => match full_name.split_once('-') {
-                Some((_, name)) => name,
-                None => full_name,
-            },
+            ProfileModKind::Local(local_mod) => (
+                local_mod.author.as_deref().unwrap_or_default(),
+                &local_mod.name,
+                local_mod
+                    .version
+                    .as_ref()
+                    .map(|v| Cow::Owned(v.to_string()))
+                    .unwrap_or_default(),
+            ),
+            ProfileModKind::Remote { full_name, .. } => {
+                if let Some((author, name, version)) = thunderstore::parse_full_name(full_name) {
+                    (author, name, Cow::Borrowed(version))
+                } else if let Some((author, name)) = full_name.split_once('-') {
+                    (author, name, Default::default())
+                } else {
+                    ("", full_name, Default::default())
+                }
+            }
         }
     }
 
@@ -654,10 +669,12 @@ impl Profile {
         F: Fn(&Path) -> Result<()>,
     {
         let mut path = self.path.join("BepInEx");
+        let (author, name, _) = profile_mod.split_name();
+        let dir_name = format!("{}-{}", author, name);
 
         for dir in ["core", "patchers", "plugins"].into_iter() {
             path.push(dir);
-            path.push(profile_mod.full_name());
+            path.push(&dir_name);
 
             if path.exists() {
                 scan_dir(&path)?;

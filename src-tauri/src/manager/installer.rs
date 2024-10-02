@@ -9,7 +9,6 @@ use crate::{
 use chrono::Utc;
 use itertools::Itertools;
 use log::{trace, warn};
-use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
     ffi::OsStr,
@@ -135,7 +134,6 @@ pub fn try_cache_install(
 
     match path.exists() {
         true => {
-            let full_name = &borrowed.package.full_name;
             install(path, &profile.path, to_install.overwrite)?;
 
             let install_time = to_install.install_time.unwrap_or(Utc::now());
@@ -144,7 +142,7 @@ pub fn try_cache_install(
                 enabled: true, // we switch it off later if needed
                 kind: super::ProfileModKind::Remote {
                     mod_ref: to_install.mod_ref.clone(),
-                    full_name: full_name.clone(),
+                    full_name: borrowed.version.full_name.clone(),
                 },
             };
 
