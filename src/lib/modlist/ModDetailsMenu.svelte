@@ -27,7 +27,7 @@
 	let changelogOpen = false;
 	let changelog: ModInfoPopup;
 
-	function openCommunityUrl(tail?: string) {
+	function openCommunityUrl(tail: string | null) {
 		if (!tail) return;
 
 		let game = get(activeGame);
@@ -36,7 +36,7 @@
 		open(`https://thunderstore.io/c/${game.id}/p/${tail}/`);
 	}
 
-	function openIfDefined(url?: string) {
+	function openIfNotNull(url: string | null) {
 		if (url) open(url);
 	}
 
@@ -76,16 +76,16 @@
 			{#if mod.websiteUrl && mod.websiteUrl.length > 0}
 				<ModDetailsDropdownItem
 					icon="mdi:open-in-new"
-					label="{t('Open website')}"
-					onClick={() => openIfDefined(mod.websiteUrl)}
+					label={t("Open website")}
+					onClick={() => openIfNotNull(mod.websiteUrl)}
 				/>
 			{/if}
 
 			{#if mod.donateUrl}
 				<ModDetailsDropdownItem
 					icon="mdi:heart"
-					label="{t("Donate")}"
-					onClick={() => openIfDefined(mod.donateUrl)}
+					label={t("Donate")}
+					onClick={() => openIfNotNull(mod.donateUrl)}
 				/>
 			{/if}
 
@@ -223,7 +223,11 @@
 	<slot />
 </div>
 
-<Popup title="{T("Dependencies of", {"name": mod.name})}" bind:open={dependenciesOpen}>
+<Popup
+	large={(mod.dependencies?.length ?? 0) > 10}
+	title={T("Dependencies of", {"name": mod.name})}
+	bind:open={dependenciesOpen}
+>
 	{#if mod.dependencies}
 		<ModCardList names={mod.dependencies} class="mt-4" />
 	{/if}

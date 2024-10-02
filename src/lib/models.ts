@@ -144,7 +144,7 @@ export interface ConfigEntryId {
 }
 
 export interface Dependant {
-	name: string;
+	fullName: string;
 	uuid: string;
 }
 

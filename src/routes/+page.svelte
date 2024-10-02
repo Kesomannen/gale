@@ -259,7 +259,7 @@
 			onClick={() =>
 				uninstall({
 					uuid: activeMod?.uuid ?? '',
-					name: activeMod?.name ?? ''
+					fullName: activeMod?.name ?? ''
 				})}
 		/>
 	</svelte:fragment>
@@ -269,7 +269,7 @@
 			<div class="mb-1 mr-3 flex items-center rounded-lg bg-red-600 py-1.5 pl-3 pr-1 text-red-100">
 				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
 				{t("Following " + (unknownMods.length === 1 ? 'mod' : 'mods') + " not found")} {unknownMods
-					.map((mod) => mod.name)
+					.map((mod) => mod.fullName)
 					.join(', ')}.
 				<Button.Root
 					class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
@@ -432,5 +432,5 @@
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}
-	isPositive={true}
+	positive
 />

@@ -3,6 +3,7 @@
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { Dependant, Mod } from '$lib/models';
+	import ModCardList from '$lib/modlist/ModCardList.svelte';
 
 	import { T, t } from '$i18n';
 
@@ -10,28 +11,33 @@
 	export let verb: string;
 	export let description: string;
 	export let commandName: string;
-	export let isPositive: boolean = false;
+	export let positive: boolean = false;
 	export let onExecute: () => void;
 	export let onCancel: () => void;
 
-	let mod: Dependant;
+	let name: string;
+	let uuid: string;
 	let open: boolean;
 	let dependants: Dependant[];
 
-	export function openFor(_mod: Dependant, _dependants: Dependant[]) {
-		mod = _mod;
+	export function openFor(_mod: Dependant | Mod, _dependants: Dependant[]) {
+		if ('fullName' in _mod) {
+			name = _mod.fullName;
+		} else {
+			name = _mod.name;
+		}
+
+		uuid = _mod.uuid;
 		dependants = _dependants;
 		open = true;
 	}
 
 	async function executeAll() {
-		if (!mod) return;
-		await execute(dependants.map(({ uuid }) => uuid).concat(mod.uuid));
+		await execute(dependants.map(({ uuid }) => uuid).concat(uuid));
 	}
 
 	async function executeOne() {
-		if (!mod) return;
-		await execute([mod.uuid]);
+		await execute([uuid]);
 	}
 
 	async function execute(uuids: string[]) {
@@ -43,19 +49,18 @@
 </script>
 
 <ConfirmPopup {title} {onCancel} bind:open>
-	{description.replaceAll('%s', mod?.name ?? t("Unknown"))}
+	{description.replaceAll('%s', name)}
 
-	<ul class="mt-1">
-		{#each dependants as dependant}
-			<li>- {dependant.name}</li>
-		{/each}
-	</ul>
+	<ModCardList
+		class="my-2 max-h-[50vh] overflow-y-auto"
+		names={dependants.map(({ fullName }) => fullName)}
+	/>
 
 	<svelte:fragment slot="buttons">
-		<BigButton on:click={executeOne} color="red" outline={true}>
+		<BigButton on:click={executeOne} color="gray">
 			{T('Dependants action only', {"verb": verb, "name": mod?.name})}
 		</BigButton>
-		<BigButton on:click={executeAll} color={isPositive ? 'green' : 'red'} fontWeight="semibold">
+		<BigButton on:click={executeAll} color={positive ? 'green' : 'red'} fontWeight="semibold">
 			{T('Dependants action all', {"verb": verb})}
 		</BigButton>
 	</svelte:fragment>

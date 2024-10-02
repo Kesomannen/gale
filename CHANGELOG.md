@@ -1,12 +1,18 @@
 # Changelog
 
-## Unreleased
+## 0.8.7 (2024-10-02)
+
+### Fixed
+
+- Mod list throwing errors before the `Enabled` filter is interacted with
+
+## 0.8.6 (2024-10-02)
 
 ### Added
 
 - Option to filter out enabled mods
 - Keyboard shortcuts for some of the menu items
-- Per-game setting for custom launch arguments
+- Custom launch arguments
 - Window menu
 
 ### Removed

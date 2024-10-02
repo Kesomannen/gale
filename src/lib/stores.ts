@@ -72,7 +72,10 @@ function loadQuery(key: string, getDefault: () => QueryModsArgs) {
 	let json = localStorage.getItem(key);
 	if (json) {
 		try {
-			return JSON.parse(json);
+			let res = JSON.parse(json);
+			// didn't have this field before
+			res.includeEnabled = res.includeEnabled ?? true;
+			return res;
 		} catch (e) {
 			console.error('Failed to parse stored query:', e);
 		}
