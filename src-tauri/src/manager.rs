@@ -11,7 +11,6 @@ use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
-use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use typeshare::typeshare;

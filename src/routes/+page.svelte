@@ -308,7 +308,7 @@
 		{/if}
 	</div>
 
-	<div slot="item" let:mod>
+	<svelte:fragment slot="item" let:mod>
 		<div class="ml-1 mt-2.5 flex items-center">
 			{#if reorderable}
 				<Icon
@@ -332,7 +332,7 @@
 				/>
 			</Switch.Root>
 		</div>
-	</div>
+	</svelte:fragment>
 </ModList>
 
 <ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
