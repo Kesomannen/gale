@@ -1,100 +1,98 @@
 {
-  "productName": "Gale",
-  "version": "0.8.7",
-  "identifier": "com.kesomannen.gale",
-  "build": {
-    "beforeBuildCommand": "npm run build",
-    "beforeDevCommand": "npm run dev",
-    "frontendDist": "../build",
-    "devUrl": "http://localhost:5173"
-  },
-  "bundle": {
-    "active": true,
-    "category": "Game",
-    "copyright": "",
-    "targets": "all",
-    "externalBin": [],
-    "createUpdaterArtifacts": true,
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": ""
-    },
-    "longDescription": "",
-    "macOS": {
-      "entitlements": null,
-      "exceptionDomain": "",
-      "frameworks": [],
-      "providerShortName": null,
-      "signingIdentity": null
-    },
-    "resources": [],
-    "shortDescription": "",
-    "linux": {
-      "deb": {
-        "depends": []
-      }
-    }
-  },
-  "plugins": {
-    "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRkNCMzE4NDIyOTQ1QjQKUldTMFJTbENHTFA4UE9Fd1RocjRDRm9uVmdiUlUxdmw1ZEwvaXRJZW45VFVSeXozUkYxaUFmZEsK",
-      "endpoints": [
-        "https://gist.githubusercontent.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d/raw/"
-      ]
-    },
-    "deep-link": {
-      "desktop": {
-        "schemes": [
-          "ror2mm"
-        ]
-      },
-      "mobile": []
-    },
-    "cli": {
-      "description": "",
-      "args": [
-        {
-          "name": "game",
-          "short": "g",
-          "takesValue": true
-        },
-        {
-          "name": "profile",
-          "short": "p",
-          "takesValue": true
-        },
-        {
-          "name": "launch",
-          "short": "l"
-        }
-      ]
-    }
-  },
-  "app": {
-    "windows": [
-      {
-        "decorations": false,
-        "fullscreen": false,
-        "transparent": true,
-        "resizable": true,
-        "title": "Gale",
-        "width": 1000,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
-        "dragDropEnabled": false
-      }
-    ],
-    "security": {
-      "csp": null
-    }
-  }
+	"productName": "Gale",
+	"version": "0.8.8",
+	"identifier": "com.kesomannen.gale",
+	"build": {
+		"beforeBuildCommand": "npm run build",
+		"beforeDevCommand": "npm run dev",
+		"frontendDist": "../build",
+		"devUrl": "http://localhost:5173"
+	},
+	"bundle": {
+		"active": true,
+		"category": "Game",
+		"copyright": "",
+		"targets": "all",
+		"externalBin": [],
+		"createUpdaterArtifacts": true,
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"windows": {
+			"certificateThumbprint": null,
+			"digestAlgorithm": "sha256",
+			"timestampUrl": ""
+		},
+		"longDescription": "",
+		"macOS": {
+			"entitlements": null,
+			"exceptionDomain": "",
+			"frameworks": [],
+			"providerShortName": null,
+			"signingIdentity": null
+		},
+		"resources": [],
+		"shortDescription": "",
+		"linux": {
+			"deb": {
+				"depends": []
+			}
+		}
+	},
+	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNDRkNCMzE4NDIyOTQ1QjQKUldTMFJTbENHTFA4UE9Fd1RocjRDRm9uVmdiUlUxdmw1ZEwvaXRJZW45VFVSeXozUkYxaUFmZEsK",
+			"endpoints": [
+				"https://gist.githubusercontent.com/Kesomannen/58b4f08009e7b7b5baaea253ebccb94d/raw/"
+			]
+		},
+		"deep-link": {
+			"desktop": {
+				"schemes": ["ror2mm"]
+			},
+			"mobile": []
+		},
+		"cli": {
+			"description": "",
+			"args": [
+				{
+					"name": "game",
+					"short": "g",
+					"takesValue": true
+				},
+				{
+					"name": "profile",
+					"short": "p",
+					"takesValue": true
+				},
+				{
+					"name": "launch",
+					"short": "l"
+				}
+			]
+		}
+	},
+	"app": {
+		"windows": [
+			{
+				"decorations": false,
+				"fullscreen": false,
+				"transparent": true,
+				"resizable": true,
+				"title": "Gale",
+				"width": 1000,
+				"height": 800,
+				"minWidth": 800,
+				"minHeight": 600,
+				"dragDropEnabled": false
+			}
+		],
+		"security": {
+			"csp": null
+		}
+	}
 }
