@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.7 (2024-10-02)
+
+### Fixed
+
+- Mod list throwing errors before the `Enabled` filter is interacted with
+
 ## 0.8.6 (2024-10-02)
 
 ### Added
