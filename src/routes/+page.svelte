@@ -239,20 +239,6 @@
 		{/if}
 
 		<ModDetailsDropdownItem
-			label="Open directory"
-			icon="mdi:folder"
-			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
-		/>
-
-		{#if activeMod?.type === 'remote'}
-			<ModDetailsDropdownItem
-				icon="mdi:source-branch"
-				label="Show dependants"
-				onClick={openDependants}
-			/>
-		{/if}
-
-		<ModDetailsDropdownItem
 			label="Uninstall"
 			icon="mdi:delete"
 			onClick={() =>
@@ -260,6 +246,18 @@
 					uuid: activeMod?.uuid ?? '',
 					fullName: activeMod?.name ?? ''
 				})}
+		/>
+
+		<ModDetailsDropdownItem
+			icon="mdi:source-branch"
+			label="Show dependants"
+			onClick={openDependants}
+		/>
+
+		<ModDetailsDropdownItem
+			label="Open directory"
+			icon="mdi:folder"
+			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>
 	</svelte:fragment>
 

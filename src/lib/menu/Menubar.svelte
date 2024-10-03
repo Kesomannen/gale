@@ -41,30 +41,26 @@
 	const appWindow = getCurrentWindow();
 
 	async function importLocalMod() {
-		let response = await open({
+		let path = await open({
 			title: 'Select the mod file to import',
 			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
 		});
 
-		if (response === null) return;
-		invokeCommand('import_local_mod', { path: response.path });
+		if (path === null) return;
+		invokeCommand('import_local_mod', { path });
 
-		activeProfile.update((profile) => {
-			if (profile === null) return null;
-
-			profile.modCount++;
-			return profile;
-		});
+		activeProfile.update((profile) => profile);
 	}
 
 	async function importFile() {
-		let response = await open({
+		let path = await open({
 			title: 'Select the file to import',
 			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
 		});
 
-		if (!response) return;
-		let data = await invokeCommand<ImportData>('import_file', { path: response.path });
+		if (path === null) return;
+		let data = await invokeCommand<ImportData>('import_file', { path });
+
 		importProfileData = data;
 		importProfileOpen = true;
 	}
@@ -75,7 +71,7 @@
 			title: 'Select the directory to export the profile to'
 		});
 
-		if (!dir) return;
+		if (dir === null) return;
 		invokeCommand('export_file', { dir });
 	}
 

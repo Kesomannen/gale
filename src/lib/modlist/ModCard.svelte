@@ -5,9 +5,11 @@
 	export let showVersion = true;
 
 	$: split = fullName.split('-');
-	$: author = split[0];
-	$: name = split[1];
-	$: version = split[2];
+
+	// kind of hacky, but we assume we either have (1) just a name, (2) name and version, or (3) all three
+	$: author = split.length === 3 ? split[0] : null;
+	$: name = split.length === 3 ? split[1] : split[0];
+	$: version = split.length >= 2 ? (split.length === 3 ? split[2] : split[1]) : null;
 </script>
 
 <div class="flex overflow-hidden">
@@ -24,18 +26,20 @@
 		>
 			{name}
 		</a>
-		{#if showVersion}
+		{#if showVersion && version !== null}
 			<span class="px-1 text-slate-400">
 				{version}
 			</span>
 		{/if}
 
-		<a
-			class="block truncate text-slate-400 hover:underline"
-			href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/"
-			target="_blank"
-		>
-			{author}
-		</a>
+		{#if author !== null}
+			<a
+				class="block truncate text-slate-400 hover:underline"
+				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/"
+				target="_blank"
+			>
+				{author}
+			</a>
+		{/if}
 	</div>
 </div>

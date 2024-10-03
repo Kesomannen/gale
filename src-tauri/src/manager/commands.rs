@@ -442,7 +442,7 @@ pub fn get_dependants(
     let dependants = manager
         .active_profile()
         .dependants(uuid, &thunderstore)
-        .map(|profile_mod| profile_mod.kind.full_name().to_owned())
+        .map(|profile_mod| profile_mod.kind.full_name().into_owned())
         .collect();
 
     Ok(dependants)

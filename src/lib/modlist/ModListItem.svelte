@@ -4,7 +4,8 @@
 	import { isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
-	import { invokeCommand } from '$lib/invoke';
+	import { quintOut } from 'svelte/easing';
+	import { fade, fly } from 'svelte/transition';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
@@ -27,6 +28,13 @@
 		}
 	}
 
+	$: descriptionClasses =
+		mod.enabled === false
+			? 'text-slate-500 line-through'
+			: isSelected
+				? 'text-slate-300'
+				: 'text-slate-400 group-hover:text-slate-300';
+
 	async function loadLoadIcon(path: string) {
 		try {
 			let data = await readFile(path);
@@ -48,11 +56,12 @@
 	on:dragover
 	on:drag
 	on:dragend
+	in:fade={{ duration: 50 }}
 	{draggable}
 >
 	<img src={imgSrc} alt={mod.name} class="size-12 rounded-md" />
 	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
-		<div class="flex items-center overflow-hidden">
+		<div class="flex items-center gap-1 overflow-hidden">
 			<div
 				class="flex-shrink truncate font-semibold {mod.enabled === false
 					? 'text-slate-300 line-through'
@@ -60,11 +69,7 @@
 			>
 				{mod.name}
 			</div>
-			<div
-				class="px-2 {mod.enabled === false
-					? 'text-slate-500 line-through'
-					: 'text-slate-400 hover:text-slate-300'}"
-			>
+			<div class="px-1 {descriptionClasses}">
 				{mod.version ?? ''}
 			</div>
 			{#if mod.isPinned}
@@ -81,11 +86,7 @@
 			{/if}
 		</div>
 
-		<div
-			class="truncate {mod.enabled === false
-				? 'text-slate-500 line-through'
-				: 'text-slate-400 group-hover:text-slate-300'}"
-		>
+		<div class="truncate {descriptionClasses}">
 			{mod.description ?? ''}
 		</div>
 	</div>

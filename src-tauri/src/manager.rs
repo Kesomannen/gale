@@ -97,6 +97,17 @@ pub struct LocalMod {
     pub uuid: Uuid,
 }
 
+impl LocalMod {
+    fn full_name(&self) -> Cow<'_, str> {
+        match (&self.author, &self.version) {
+            (None, None) => Cow::Borrowed(&self.name),
+            (None, Some(vers)) => format!("{}-{}", self.name, vers).into(),
+            (Some(author), None) => format!("{}-{}", author, self.name).into(),
+            (Some(author), Some(vers)) => format!("{}-{}-{}", author, self.name, vers).into(),
+        }
+    }
+}
+
 #[typeshare]
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -166,7 +177,7 @@ impl ProfileMod {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum ProfileModKind {
-    Local(Box<LocalMod>), // box to decrease size of enum
+    Local(Box<LocalMod>), // box to decrease size of enum, since this variant is rare and much larger
     #[serde(rename_all = "camelCase")]
     Remote {
         #[serde(default)] // for backwards compatibility
@@ -202,33 +213,34 @@ impl ProfileModKind {
         }
     }
 
-    pub fn full_name(&self) -> &str {
+    pub fn name(&self) -> &str {
         match self {
             ProfileModKind::Local(local) => &local.name,
-            ProfileModKind::Remote { full_name, .. } => full_name,
+            ProfileModKind::Remote { full_name, .. } => {
+                match thunderstore::parse_full_name(full_name) {
+                    Some((_, name, _)) => name,
+                    None => full_name,
+                }
+            }
         }
     }
 
-    pub fn split_name(&self) -> (&str, &str, Cow<'_, str>) {
+    pub fn dir_name(&self) -> Cow<'_, str> {
         match self {
-            ProfileModKind::Local(local_mod) => (
-                local_mod.author.as_deref().unwrap_or_default(),
-                &local_mod.name,
-                local_mod
-                    .version
-                    .as_ref()
-                    .map(|v| Cow::Owned(v.to_string()))
-                    .unwrap_or_default(),
-            ),
+            ProfileModKind::Local(local) => Cow::Borrowed(&local.name),
             ProfileModKind::Remote { full_name, .. } => {
-                if let Some((author, name, version)) = thunderstore::parse_full_name(full_name) {
-                    (author, name, Cow::Borrowed(version))
-                } else if let Some((author, name)) = full_name.split_once('-') {
-                    (author, name, Default::default())
-                } else {
-                    ("", full_name, Default::default())
+                match thunderstore::parse_full_name(full_name) {
+                    Some((author, name, _)) => format!("{}-{}", author, name).into(),
+                    None => full_name.into(),
                 }
             }
+        }
+    }
+
+    pub fn full_name(&self) -> Cow<'_, str> {
+        match self {
+            ProfileModKind::Local(local) => local.full_name(),
+            ProfileModKind::Remote { full_name, .. } => full_name.into(),
         }
     }
 
@@ -504,7 +516,7 @@ impl From<BorrowedMod<'_>> for Dependant {
 impl From<&ProfileMod> for Dependant {
     fn from(value: &ProfileMod) -> Self {
         Self {
-            full_name: value.kind.full_name().to_owned(),
+            full_name: value.kind.full_name().into_owned(),
             uuid: *value.uuid(),
         }
     }
@@ -627,15 +639,15 @@ impl Profile {
                 }
 
                 match &profile_mod.kind {
-                    ProfileModKind::Local(_) => false,
+                    ProfileModKind::Local(_) => true,
                     ProfileModKind::Remote { mod_ref, .. } => match mod_ref.borrow(thunderstore) {
-                        Ok(borrowed) => !borrowed.package.is_modpack(),
+                        Ok(borrowed) => !borrowed.package.is_modpack(), // ignore modpacks
                         Err(_) => false,
                     },
                 }
             })
             .map_into()
-            .collect::<Vec<_>>();
+            .collect_vec();
 
         match dependants.is_empty() {
             true => None,
@@ -668,12 +680,11 @@ impl Profile {
         F: Fn(&Path) -> Result<()>,
     {
         let mut path = self.path.join("BepInEx");
-        let (author, name, _) = profile_mod.split_name();
-        let dir_name = format!("{}-{}", author, name);
+        let dir_name = profile_mod.dir_name();
 
         for dir in ["core", "patchers", "plugins"].into_iter() {
             path.push(dir);
-            path.push(&dir_name);
+            path.push(&*dir_name);
 
             if path.exists() {
                 scan_dir(&path)?;
