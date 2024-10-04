@@ -1,6 +1,6 @@
 {
 	"productName": "Gale",
-	"version": "0.8.8",
+	"version": "0.8.9",
 	"identifier": "com.kesomannen.gale",
 	"build": {
 		"beforeBuildCommand": "npm run build",
@@ -52,7 +52,9 @@
 		},
 		"deep-link": {
 			"desktop": {
-				"schemes": ["ror2mm"]
+				"schemes": [
+					"ror2mm"
+				]
 			},
 			"mobile": []
 		},

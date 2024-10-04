@@ -1,6 +1,14 @@
 # Changelog
 
-## 0.8.9
+## 0.8.9 (2024-10-04)
+
+### Changed
+
+- Minor UI improvements
+
+### Fixed
+
+- Various issues with importing and managing local mods
 
 ## 0.8.8 (2024-10-02)
 
