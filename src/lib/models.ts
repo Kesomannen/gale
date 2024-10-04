@@ -103,7 +103,7 @@ export interface Mod {
 		uuid: string;
 	}[];
 	type: 'local' | 'remote';
-	enabled: boolean;
+	enabled: boolean | null;
 	configFile: string | null;
 }
 

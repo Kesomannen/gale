@@ -4,7 +4,8 @@
 	import { isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
-	
+	import { quintOut } from 'svelte/easing';
+	import { fade, fly } from 'svelte/transition';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
@@ -27,6 +28,13 @@
 		}
 	}
 
+	$: descriptionClasses =
+		mod.enabled === false
+			? 'text-slate-500 line-through'
+			: isSelected
+				? 'text-slate-300'
+				: 'text-slate-400 group-hover:text-slate-300';
+
 	async function loadLoadIcon(path: string) {
 		try {
 			let data = await readFile(path);
@@ -48,37 +56,37 @@
 	on:dragover
 	on:drag
 	on:dragend
+	in:fade={{ duration: 50 }}
 	{draggable}
 >
-	<img src={imgSrc} alt={mod.name} class="h-12 w-12 rounded-md" />
-	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left align-middle">
-		<span
-			class="font-semibold {mod.enabled === false ? 'text-slate-300 line-through' : 'text-white'}"
-		>
-			{mod.name}
-		</span>
-		<span
-			class="px-1 font-light {mod.enabled === false
-				? 'text-slate-500 line-through'
-				: 'text-slate-400'}"
-		>
-			{mod.version ?? ''}
-		</span>
-		{#if mod.isPinned}
-			<Icon class="mb-1 inline text-slate-400" icon="mdi:pin" />
-		{/if}
-		{#if mod.isDeprecated}
-			<Icon class="mb-1 inline text-red-500" icon="mdi:error" />
-		{/if}
-		{#if isOutdated(mod)}
-			<Icon class="mb-1.5 inline text-green-500" icon="mdi:arrow-up-circle" />
-		{/if}
-		{#if isInstalled && showInstalledIcon}
-			<Icon class="mb-1.5 inline text-green-500" icon="mdi:check-circle" />
-		{/if}
-		<div
-			class="truncate {mod.enabled === false ? 'text-slate-500 line-through' : 'text-slate-300/80'}"
-		>
+	<img src={imgSrc} alt={mod.name} class="size-12 rounded-md" />
+	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
+		<div class="flex items-center gap-1 overflow-hidden">
+			<div
+				class="flex-shrink truncate font-semibold {mod.enabled === false
+					? 'text-slate-300 line-through'
+					: 'text-white'}"
+			>
+				{mod.name}
+			</div>
+			<div class="px-1 {descriptionClasses}">
+				{mod.version ?? ''}
+			</div>
+			{#if mod.isPinned}
+				<Icon class="flex-shrink-0 text-slate-400" icon="mdi:pin" />
+			{/if}
+			{#if mod.isDeprecated}
+				<Icon class="flex-shrink-0 text-red-500" icon="mdi:error" />
+			{/if}
+			{#if isOutdated(mod)}
+				<Icon class="flex-shrink-0 text-green-500" icon="mdi:arrow-up-circle" />
+			{/if}
+			{#if isInstalled && showInstalledIcon}
+				<Icon class="flex-shrink-0 text-green-500" icon="mdi:check-circle" />
+			{/if}
+		</div>
+
+		<div class="truncate {descriptionClasses}">
 			{mod.description ?? ''}
 		</div>
 	</div>

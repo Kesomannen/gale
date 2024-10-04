@@ -1,6 +1,6 @@
 [package]
 name = "gale"
-version = "0.8.7"
+version = "0.8.9"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"
@@ -14,22 +14,22 @@ name = "gale"
 path = "src/main.rs"
 
 [build-dependencies]
-tauri-build = { version = "2.0.0-beta.19", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2.0.0-rc", features = ["unstable"] }
-tauri-plugin-deep-link = "2.0.0-rc"
-tauri-plugin-window-state = "2.0.0-rc"
-tauri-plugin-dialog = "2.0.0-rc"
-tauri-plugin-shell = "2.0.0-rc"
-tauri-plugin-os = "2.0.0-rc"
-tauri-plugin-process = "2.0.0-rc"
-tauri-plugin-updater = "2.0.0-rc"
-tauri-plugin-clipboard-manager = "2.0.0-rc"
-tauri-plugin-http = "2.0.0-rc"
-tauri-plugin-fs = "2.0.0-rc"
-tauri-plugin-single-instance = "2.0.0-rc"
-tauri-plugin-cli = "2.0.0-rc"
+tauri = { version = "2", features = ["unstable"] }
+tauri-plugin-deep-link = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-os = "2"
+tauri-plugin-process = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-http = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-cli = "2"
 
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }

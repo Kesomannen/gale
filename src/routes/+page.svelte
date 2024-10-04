@@ -240,20 +240,6 @@
 		{/if}
 
 		<ModDetailsDropdownItem
-			label={t("Open directory")}
-			icon="mdi:folder"
-			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
-		/>
-
-		{#if activeMod?.type === 'remote'}
-			<ModDetailsDropdownItem
-				icon="mdi:source-branch"
-				label={t("Show dependants")}
-				onClick={openDependants}
-			/>
-		{/if}
-
-		<ModDetailsDropdownItem
 			label={t("Uninstall")}
 			icon="mdi:delete"
 			onClick={() =>
@@ -261,6 +247,18 @@
 					uuid: activeMod?.uuid ?? '',
 					fullName: activeMod?.name ?? ''
 				})}
+		/>
+
+		<ModDetailsDropdownItem
+			icon="mdi:source-branch"
+			label="Show dependants"
+			onClick={openDependants}
+		/>
+
+		<ModDetailsDropdownItem
+			label="Open directory"
+			icon="mdi:folder"
+			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>
 	</svelte:fragment>
 
@@ -307,7 +305,7 @@
 		{/if}
 	</div>
 
-	<div slot="item" let:mod>
+	<svelte:fragment slot="item" let:mod>
 		<div class="ml-1 mt-2.5 flex items-center">
 			{#if reorderable}
 				<Icon
@@ -331,7 +329,7 @@
 				/>
 			</Switch.Root>
 		</div>
-	</div>
+	</svelte:fragment>
 </ModList>
 
 <ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>

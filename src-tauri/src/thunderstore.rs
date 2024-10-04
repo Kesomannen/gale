@@ -462,3 +462,8 @@ pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
 pub fn cache_path(manager: &ModManager) -> PathBuf {
     manager.active_game().path.join("thunderstore_cache.json")
 }
+
+pub fn parse_full_name(full_name: &str) -> Option<(&str, &str, &str)> {
+    let mut split = full_name.split('-');
+    Some((split.next()?, split.next()?, split.next()?))
+}

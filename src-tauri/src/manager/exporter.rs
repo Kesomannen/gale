@@ -185,7 +185,9 @@ where
     W: Write + Seek,
 {
     for file in files {
-        zip.start_file(file.as_ref().to_string_lossy(), Default::default())?;
+        let path = file.as_ref().to_string_lossy().replace('\\', "/");
+        zip.start_file(path, Default::default())?;
+
         let mut reader = fs::File::open(source.join(file))?;
 
         io::copy(&mut reader, zip)?;

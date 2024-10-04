@@ -57,8 +57,8 @@
 	/>
 
 	<svelte:fragment slot="buttons">
-		<BigButton on:click={executeOne} color="gray">
-			{T('Dependants action only', {"verb": verb, "name": mod?.name})}
+		<BigButton on:click={executeOne} color="gray" class="truncate">
+			{T('Dependants action only', {"verb": verb, "name": name})}
 		</BigButton>
 		<BigButton on:click={executeAll} color={positive ? 'green' : 'red'} fontWeight="semibold">
 			{T('Dependants action all', {"verb": verb})}

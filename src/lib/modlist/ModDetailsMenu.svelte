@@ -3,7 +3,7 @@
 	import type { MarkdownResponse, Mod } from '../models';
 	import { shortenFileSize, shortenNum, timeSince } from '../util';
 	import { Button, DropdownMenu } from 'bits-ui';
-	import { slide } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
 
 	import { open } from '@tauri-apps/plugin-shell';
@@ -27,13 +27,13 @@
 	let changelogOpen = false;
 	let changelog: ModInfoPopup;
 
-	function openCommunityUrl(tail: string | null) {
-		if (!tail) return;
+	function openCommunityUrl(path: string | null) {
+		if (path === null) return;
 
 		let game = get(activeGame);
-		if (!game) return;
+		if (game === null) return;
 
-		open(`https://thunderstore.io/c/${game.id}/p/${tail}/`);
+		open(`https://thunderstore.io/c/${game.id}/p/${path}/`);
 	}
 
 	function openIfNotNull(url: string | null) {
@@ -141,16 +141,18 @@
 		</div>
 	{/if}
 
-	{#if mod.rating !== undefined || mod.downloads != undefined}
-		<div class="my-1 flex items-center gap-2 text-lg">
+	<div class="my-1 flex items-center gap-2 text-lg">
+		{#if mod.rating !== null}
 			<Icon class="text-yellow-400" icon="mdi:star" />
-			<span class="mr-4 text-yellow-400">{shortenNum(mod.rating ?? 0)}</span>
+			<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
+		{/if}
+		{#if mod.downloads !== null}
 			<Icon class="text-green-400" icon="mdi:download" />
-			<span class="mr-4 text-green-400">{shortenNum(mod.downloads ?? 0)}</span>
-			<Icon class="text-slate-400" icon="mdi:weight" />
-			<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
-		</div>
-	{/if}
+			<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
+		{/if}
+		<Icon class="text-slate-400" icon="mdi:weight" />
+		<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
+	</div>
 
 	{#if mod.lastUpdated}
 		<div class="text-lg text-slate-400">

@@ -9,7 +9,6 @@ use crate::{
 use chrono::Utc;
 use itertools::Itertools;
 use log::{trace, warn};
-use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
     ffi::OsStr,
@@ -21,8 +20,8 @@ use std::{
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-fn is_bepinex(full_name: &str) -> bool {
-    match full_name {
+fn is_bepinex(dir_name: &str) -> bool {
+    match dir_name {
         "bbepis-BepInExPack"
         | "xiaoxiao921-BepInExPack"
         | "xiaoye97-BepInEx"
@@ -135,7 +134,6 @@ pub fn try_cache_install(
 
     match path.exists() {
         true => {
-            let full_name = &borrowed.package.full_name;
             install(path, &profile.path, to_install.overwrite)?;
 
             let install_time = to_install.install_time.unwrap_or(Utc::now());
@@ -144,7 +142,7 @@ pub fn try_cache_install(
                 enabled: true, // we switch it off later if needed
                 kind: super::ProfileModKind::Remote {
                     mod_ref: to_install.mod_ref.clone(),
-                    full_name: full_name.clone(),
+                    full_name: borrowed.version.full_name.clone(),
                 },
             };
 
@@ -186,7 +184,7 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs)
     Ok(())
 }
 
-pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Result<()> {
+pub fn extract(src: impl Read + Seek, dir_name: &str, mut path: PathBuf) -> Result<()> {
     use std::path::Component;
 
     let start = Instant::now();
@@ -195,7 +193,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
 
     fs::create_dir_all(&path)?;
 
-    let is_bepinex = is_bepinex(full_name);
+    let is_bepinex = is_bepinex(dir_name);
     let mut archive = ZipArchive::new(src)?;
 
     for i in 0..archive.len() {
@@ -255,7 +253,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, mut path: PathBuf) -> Res
         } else {
             target = path.join(subdir);
             if subdir != "config" {
-                target.push(full_name);
+                target.push(dir_name);
             }
 
             if is_top_level {

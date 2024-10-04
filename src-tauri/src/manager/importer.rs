@@ -38,7 +38,7 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
     ensure!(path.is_file(), "path is not a file");
 
     let file = fs::File::open(&path).fs_context("opening file", &path)?;
-    
+
     import_file(file, app)
 }
 
@@ -236,23 +236,23 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
             .context("failed to remove existing mod")?;
     }
 
-    let mut plugin_path = profile.path.clone();
-    plugin_path.push("BepInEx");
-    plugin_path.push("plugins");
-    plugin_path.push(&local_mod.name);
+    let mut plugin_dir = profile.path.clone();
+    plugin_dir.push("BepInEx");
+    plugin_dir.push("plugins");
+    plugin_dir.push(&local_mod.name);
 
     match kind {
         LocalModKind::Zip => {
             installer::install_from_zip(&path, &profile.path, &local_mod.name, &prefs)
                 .context("failed to install local mod")?;
 
-            local_mod.icon = plugin_path.join("icon.png").exists_or_none();
+            local_mod.icon = plugin_dir.join("icon.png").exists_or_none();
         }
         LocalModKind::Dll => {
             let file_name = path.file_name().unwrap();
 
-            fs::create_dir_all(&plugin_path)?;
-            fs::copy(&path, plugin_path.join(file_name))?;
+            fs::create_dir_all(&plugin_dir)?;
+            fs::copy(&path, plugin_dir.join(file_name))?;
         }
     }
 
