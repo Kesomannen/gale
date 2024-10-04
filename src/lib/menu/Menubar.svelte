@@ -16,12 +16,13 @@
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import NewProfilePopup from './NewProfilePopup.svelte';
-	import InputField from '$lib/components/InputField.svelte';
-	import BigButton from '$lib/components/BigButton.svelte';
-	import { capitalize } from '$lib/util';
-	import Popup from '$lib/components/Popup.svelte';
+	import AboutPopup from './AboutPopup.svelte';
 	import { refreshUpdate } from './Updater.svelte';
 	import MenubarSeparator from './MenubarSeparator.svelte';
+	import InputField from '$lib/components/InputField.svelte';
+	import BigButton from '$lib/components/BigButton.svelte';
+	import Popup from '$lib/components/Popup.svelte';
+	import { capitalize } from '$lib/util';
 	import hotkeys from 'hotkeys-js';
 	import { onMount } from 'svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -37,6 +38,8 @@
 	let profileOperationName = '';
 	let profileOperationOpen = false;
 	let profileOperationInProgress = false;
+
+	let aboutOpen = false;
 
 	const appWindow = getCurrentWindow();
 
@@ -291,6 +294,7 @@
 						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618')}
 					text="Open discord thread"
 				/>
+				<MenubarItem on:click={() => (aboutOpen = true)} text="About" />
 			</Menubar.Content>
 		</Menubar.Menu>
 	</Menubar.Root>
@@ -352,3 +356,4 @@
 <ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
 <ExportCodePopup bind:this={exportCodePopup} />
 <ImportR2Popup bind:open={importR2Open} />
+<AboutPopup bind:open={aboutOpen} />
