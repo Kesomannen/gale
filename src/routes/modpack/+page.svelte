@@ -95,14 +95,14 @@
 	}
 
 	async function browseIcon() {
-		let response = await open({
+		let path = await open({
 			defaultPath: iconPath.length > 0 ? iconPath : undefined,
 			title: 'Select modpack icon',
 			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif'] }]
 		});
 
-		if (!response) return;
-		iconPath = response.path;
+		if (path === null) return;
+		iconPath = path;
 		saveArgs();
 	}
 
