@@ -16,6 +16,8 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 
+	import { t, T } from '$i18n';
+
 	export let open: boolean;
 	export let data: ImportData | null;
 
@@ -58,8 +60,8 @@
 		data.name = name;
 
 		if (mode === 'overwrite') {
-			let confirmed = await confirm(`Are you sure you want to override '${data.name}'?`, {
-				title: 'Overwrite profile'
+			let confirmed = await confirm(T('Import profile override description', {"name": data.name}), {
+				title: t('Import profile override')
 			});
 
 			if (!confirmed) return;
@@ -75,18 +77,18 @@
 	}
 </script>
 
-<Popup title="Import profile" large={data !== null} bind:open onClose={() => (data = null)}>
+<Popup title={t('Import profile')} large={data !== null} bind:open onClose={() => (data = null)}>
 	{#if data}
 		<TabsMenu
 			bind:value={mode}
 			options={[
-				{ value: 'new', label: 'Create new' },
-				{ value: 'overwrite', label: 'Overwrite existing' }
+				{ value: 'new', label: t('Create new') },
+				{ value: 'overwrite', label: t('Overwrite existing') }
 			]}
 		>
 			<Tabs.Content value="new">
 				<div class="flex items-center">
-					<Label text="Profile name" />
+					<Label text="{t('Profile name')}" />
 
 					<InputField bind:value={name} class="w-full" />
 				</div>
@@ -95,14 +97,14 @@
 					<div class="text-md mt-1 flex items-center gap-1 font-bold text-red-400">
 						<div class="w-[30%] min-w-52" />
 						<Icon icon="mdi:error" class="text-lg" />
-						Profile '{name}' already exists
+						{T('Profile name exists', {"name": name})}
 					</div>
 				{/if}
 			</Tabs.Content>
 
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
-					<Label text="Choose profile" />
+					<Label text="{t('Choose profile')}" />
 
 					<Dropdown
 						class="flex-grow"
@@ -115,7 +117,7 @@
 		</TabsMenu>
 
 		{#if data.modNames}
-			<h3 class="mt-2 text-lg font-semibold text-white">{data.mods.length} mods to install</h3>
+			<h3 class="mt-2 text-lg font-semibold text-white">{T('Many mods to install', {"length": data.mods.length})}</h3>
 			<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] flex-shrink flex-grow" />
 		{/if}
 
@@ -125,21 +127,21 @@
 				on:click={() => {
 					open = false;
 					data = null;
-				}}>Cancel</BigButton
+				}}>{t("Cancel")}</BigButton
 			>
-			<BigButton disabled={!nameAvailable || loading} on:click={importData}>Import</BigButton>
+			<BigButton disabled={!nameAvailable || loading} on:click={importData}>{t("Import")}</BigButton>
 		</div>
 	{:else}
 		<div class="mt-1 flex gap-2">
 			<div class="flex-grow">
-				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
+				<InputField bind:value={key} class="w-full" size="lg" placeholder="{t('Enter import code')}" />
 			</div>
 
 			<BigButton on:click={submitKey} disabled={loading}>
 				{#if loading}
 					<Icon icon="mdi:loading" class="animate-spin" />
 				{:else}
-					Import
+					{t("Import")}
 				{/if}
 			</BigButton>
 		</div>

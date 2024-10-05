@@ -1,9 +1,7 @@
 <script lang="ts">
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Label from '$lib/components/Label.svelte';
-	import { invokeCommand } from '$lib/invoke';
 	import { confirm } from '@tauri-apps/plugin-dialog';
-	import { onMount } from 'svelte';
 
 	export let label: string;
 	export let disableMessage: string | null = null;

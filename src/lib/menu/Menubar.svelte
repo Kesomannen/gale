@@ -27,6 +27,9 @@
 	import { onMount } from 'svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
+	import { get } from 'svelte/store';
+	import { T, t } from '$i18n';
+
 	let importR2Open = false;
 	let newProfileOpen = false;
 	let exportCodePopup: ExportCodePopup;
@@ -45,7 +48,7 @@
 
 	async function importLocalMod() {
 		let path = await open({
-			title: 'Select the mod file to import',
+			title: t("Import mod file description"),
 			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
 		});
 
@@ -57,7 +60,7 @@
 
 	async function importFile() {
 		let path = await open({
-			title: 'Select the file to import',
+			title: t("Import file description"),
 			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
 		});
 
@@ -71,7 +74,7 @@
 	async function exportFile() {
 		let dir = await open({
 			directory: true,
-			title: 'Select the directory to export the profile to'
+			title: t('Export file description')
 		});
 
 		if (dir === null) return;
@@ -173,126 +176,126 @@
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
-			<MenubarTrigger>File</MenubarTrigger>
+			<MenubarTrigger>{t("File")}</MenubarTrigger>
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
 				<MenubarItem
 					on:click={() => invokeCommand('open_profile_dir')}
-					text="Open profile directory"
+					text={t('Open profile directory')}
 				/>
-				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')} text="Open game logs" />
-				<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open gale logs" />
+				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')} text={t('Open game logs')} />
+				<MenubarItem on:click={() => invokeCommand('open_gale_log')} text={t('Open gale logs')} />
 				<MenubarSeparator />
 				<MenubarItem
 					on:click={() => invokeCommand('clear_download_cache', { soft: true })}
-					text="Clear unused mod cache"
+					text={t('Clear unused mod cache')}
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('clear_download_cache', { soft: false })}
-					text="Clear all cached mods"
+					text={t('Clear all cached mods')}
 				/>
 				<MenubarSeparator />
-				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')} text="Fetch mods" />
+				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')} text={t('Fetch mods')} />
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Profile</MenubarTrigger>
+			<MenubarTrigger>{t("Profile")}</MenubarTrigger>
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
 				<MenubarItem
 					on:click={() => (newProfileOpen = true)}
-					text="Create new profile"
+					text={t('Create new profile')}
 					key="Ctrl+N"
 				/>
 				<MenubarItem
 					on:click={() => openProfileOperation('rename')}
-					text="Rename active profile"
+					text={t('Rename active profile')}
 					key="F2"
 				/>
 				<MenubarItem
 					on:click={() => openProfileOperation('duplicate')}
-					text="Duplicate active profile"
+					text={t('Duplicate active profile')}
 					key="Ctrl+D"
 				/>
 				<MenubarSeparator />
 				<MenubarItem
 					on:click={() => invokeCommand('copy_dependency_strings')}
-					text="Copy mod list"
+					text={t('Copy mod list')}
 				/>
-				<MenubarItem on:click={() => invokeCommand('copy_debug_info')} text="Copy debug info" />
-				<MenubarItem on:click={copyLaunchArgs} text="Copy launch arguments" />
+				<MenubarItem on:click={() => invokeCommand('copy_debug_info')} text={t('Copy debug info')} />
+				<MenubarItem on:click={copyLaunchArgs} text={t('Copy launch arguments')} />
 				<MenubarSeparator />
-				<MenubarItem on:click={() => setAllModsState(true)} text="Enable all mods" />
-				<MenubarItem on:click={() => setAllModsState(false)} text="Disable all mods" />
-				<MenubarItem on:click={uninstallDisabledMods} text="Uninstall disabled mods" />
+				<MenubarItem on:click={() => setAllModsState(true)} text={t('Enable all mods')} />
+				<MenubarItem on:click={() => setAllModsState(false)} text={t('Disable all mods')} />
+				<MenubarItem on:click={uninstallDisabledMods} text={t('Uninstall disabled mods')} />
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Import</MenubarTrigger>
+			<MenubarTrigger>{t("Import")}</MenubarTrigger>
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={() => (importProfileOpen = true)} text="...profile from code" />
-				<MenubarItem on:click={importFile} text="...profile from file" />
-				<MenubarItem on:click={importLocalMod} text="...local mod" />
-				<MenubarItem on:click={() => (importR2Open = true)} text="...profiles from r2modman" />
+				<MenubarItem on:click={() => (importProfileOpen = true)} text={t('Import profile from code')} />
+				<MenubarItem on:click={importFile} text={t('Import profile from file')} />
+				<MenubarItem on:click={importLocalMod} text={t('Import local mod')} />
+				<MenubarItem on:click={() => (importR2Open = true)} text={t('Import profiles from r2modman')} />
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Export</MenubarTrigger>
+			<MenubarTrigger>{t("Export")}</MenubarTrigger>
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={() => exportCodePopup.open()} text="...profile as code" />
-				<MenubarItem on:click={exportFile} text="...profile as file" />
+				<MenubarItem on:click={() => exportCodePopup.open()} text={t('Export profile as code')} />
+				<MenubarItem on:click={exportFile} text={t('Export profile as file')}/>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Window</MenubarTrigger>
+			<MenubarTrigger>{t("Window")}</MenubarTrigger>
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={appWindow.minimize} text="Minimize" />
-				<MenubarItem on:click={appWindow.toggleMaximize} text="Maximize" />
-				<MenubarItem on:click={appWindow.close} text="Close" />
+				<MenubarItem on:click={appWindow.minimize} text={t("Minimize")} />
+				<MenubarItem on:click={appWindow.toggleMaximize} text={t("Maximize")} />
+				<MenubarItem on:click={appWindow.close} text={t("Close")} />
 				<MenubarSeparator />
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: 0.25 } })}
-					text="Zoom in"
+					text={t("Zoom in")}
 					key="Ctrl++"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: -0.25 } })}
-					text="Zoom out"
+					text={t("Zoom out")}
 					key="Ctrl+-"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { factor: 1 } })}
-					text="Reset zoom"
+					text={t("Reset zoom")}
 					key="Ctrl+0"
 				/>
 			</Menubar.Content>
 		</Menubar.Menu>
 		<Menubar.Menu>
-			<MenubarTrigger>Help</MenubarTrigger>
+			<MenubarTrigger>{t("Help")}</MenubarTrigger>
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={refreshUpdate} text="Check for app updates" />
+				<MenubarItem on:click={refreshUpdate} text={t('Check for app updates')} />
 				<MenubarItem
 					on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
-					text="Report a bug"
+					text={t('Report a bug')}
 				/>
 				<MenubarItem
 					on:click={() => shellOpen('https://discord.gg/lcmod')}
-					text="Join LC modding server"
+					text={t('Join LC modding server')}
 				/>
 				<MenubarItem
 					on:click={() =>
 						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618')}
-					text="Open discord thread"
+					text={t('Open discord thread')}
 				/>
 				<MenubarItem on:click={() => (aboutOpen = true)} text="About" />
 			</Menubar.Content>
@@ -311,31 +314,30 @@
 </div>
 
 <Popup
-	title="{capitalize(profileOperation)} profile"
+	title="{t(`${profileOperation} profile`)}"
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
 	<p class="mb-1 text-slate-300">
 		{profileOperation == 'duplicate'
-			? 'Enter a name for the duplicated profile'
-			: 'Enter a new name for the profile'}
+			? t('Duplicate active profile description')
+			: t('Rename active profile description')}
 	</p>
 	<InputField
 		bind:value={profileOperationName}
-		placeholder="Enter name..."
+		placeholder="{t('Enter name')}"
 		size="lg"
 		class="w-full"
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}
 		<p class="mt-2 text-sm text-slate-400">
-			This process might take up to a minute depending on the size of the profile, please be
-			patient.
+			{t('Duplicate active profile processing')}
 		</p>
 	{/if}
 	<div class="ml-auto mt-2 flex justify-end gap-2">
 		{#if !profileOperationInProgress}
-			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
+			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>{t("Cancel")}</BigButton>
 		{/if}
 		<BigButton
 			color="green"
@@ -346,7 +348,7 @@
 			{#if profileOperationInProgress}
 				<Icon icon="mdi:loading" class="my-1 animate-spin text-lg" />
 			{:else}
-				{capitalize(profileOperation)}
+				{t(profileOperation)}
 			{/if}
 		</BigButton>
 	</div>

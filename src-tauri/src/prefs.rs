@@ -186,6 +186,8 @@ pub struct Prefs {
     #[serde(alias = "cache_dir", alias = "cacheDir")]
     cache_dir_old: Option<DirPref>,
 
+    language: String,
+
     fetch_mods_automatically: bool,
 
     #[serde(alias = "zoom_factor")]
@@ -269,6 +271,8 @@ impl Default for Prefs {
                 .keep("prefs.json")
                 .keep("logs"),
             cache_dir_old: None,
+
+            language: "en".to_owned(),
 
             fetch_mods_automatically: true,
 
@@ -367,6 +371,7 @@ impl Prefs {
             }
         }
         self.zoom_factor = value.zoom_factor;
+        self.language = value.language;
 
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 

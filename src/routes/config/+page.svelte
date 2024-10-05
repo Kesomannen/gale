@@ -10,6 +10,8 @@
 	import { activeProfile } from '$lib/stores';
 	import { page } from '$app/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
+	
+	import { T, t } from '$i18n';
 	import ConfigEntryField from '$lib/config/ConfigEntryField.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 
@@ -77,15 +79,15 @@
 		{#if files === undefined}
 			<div class="flex h-full w-full items-center justify-center text-lg text-slate-300">
 				<Icon icon="mdi:loading" class="mr-4 animate-spin" />
-				Loading config...
+				{t("Loading config")}
 			</div>
 		{:else if files.length === 0}
 			<div class="flex h-full items-center justify-center text-lg text-slate-300">
-				No config files found
+				{t('No config files')}
 			</div>
 		{:else}
 			<div class="relative mx-2 my-2">
-				<SearchBar bind:value={searchTerm} placeholder="Search for files..." brightness={800} />
+				<SearchBar bind:value={searchTerm} placeholder="{t("Search for files")}" brightness={800} />
 			</div>
 
 			{#each shownFiles ?? [] as file (file.relativePath)}
@@ -123,18 +125,17 @@
 				<ConfigFileEditor file={selectedFile} section={selectedSection} />
 			{:else if selectedFile.type === 'unsupported'}
 				<div class="mb-1 text-slate-400">
-					This file is in an unsupported format. Please open it in an external program to make
-					changes.
+					{t("Config unsupported format")}
 				</div>
 				<BigButton
 					color="gray"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
 					<Icon icon="mdi:open-in-new" class="mr-2" />
-					Open in external program
+					{t("Open in external program")}
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<div class="mb-1 text-slate-400">An error occured while reading this config file:</div>
+				<div class="mb-1 text-slate-400">{t("Error reading config file")}</div>
 				<code class="mb-1 flex bg-gray-900 p-3 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
@@ -143,12 +144,12 @@
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
 					<Icon icon="mdi:open-in-new" class="mr-2" />
-					Open in external program
+					{t("Open in external program")}
 				</BigButton>
 			{/if}
 		{:else}
 			<div class="flex h-full w-full items-center justify-center text-lg text-slate-400">
-				Select a config file to start editing
+				{t("Select config file editing")}
 			</div>
 		{/if}
 	</div>

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import Popup from '../components/Popup.svelte';
 	import { refreshProfiles } from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
+	import { t } from '$i18n';
 
 	export let open = false;
 
@@ -20,14 +20,14 @@
 	}
 </script>
 
-<ConfirmPopup title="Create new profile" bind:open>
+<ConfirmPopup title={t('Create new profile')} bind:open>
 	<InputField
-		placeholder="Enter profile name..."
+		placeholder={t('Enter profile name')}
 		class="mt-1 w-full"
 		on:submit={createProfile}
 		bind:value={name}
 	/>
 	<svelte:fragment slot="buttons">
-		<BigButton on:click={createProfile}>Create</BigButton>
+		<BigButton on:click={createProfile}>{t("Create")}</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

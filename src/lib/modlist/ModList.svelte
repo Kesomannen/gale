@@ -15,6 +15,8 @@
 	import type { Writable } from 'svelte/store';
 	import { createEventDispatcher } from 'svelte';
 
+	import { t } from '$i18n';
+
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
@@ -155,13 +157,14 @@
 	<div class="flex w-[60%] flex-grow flex-col overflow-hidden pl-3 pt-3">
 		<div class="mb-1.5 flex gap-1.5 pr-3">
 			<div class="relative flex-grow">
-				<SearchBar bind:value={searchTerm} placeholder="Search for mods..." />
+				<SearchBar bind:value={searchTerm} placeholder={t("Search for mods")} />
 			</div>
 
 			<Dropdown
 				items={[SortOrder.Descending, SortOrder.Ascending]}
 				bind:selected={sortOrder}
 				getLabel={sentenceCase}
+				EnableTransitions = { true }
 			>
 				<Select.Trigger
 					let:text
@@ -183,7 +186,7 @@
 				</Select.Trigger>
 			</Dropdown>
 
-			<Dropdown items={sortOptions} bind:selected={sortBy} getLabel={sentenceCase}>
+			<Dropdown items={sortOptions} bind:selected={sortBy} getLabel={sentenceCase} EnableTransitions = {true}>
 				<Select.Trigger
 					let:text
 					let:open
@@ -219,7 +222,7 @@
 				>
 					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter" />
 					{#if includeCategories.length === 0}
-						<span class="truncate text-slate-300">Include categories</span>
+						<span class="truncate text-slate-300">{t("Include categories")}</span>
 					{:else}
 						<div class="flex flex-wrap gap-1 overflow-hidden">
 							{#each includeCategories as category}
@@ -265,7 +268,7 @@
 				>
 					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter-remove" />
 					{#if excludeCategories.length === 0}
-						<span class="truncate text-slate-300">Exclude categories</span>
+						<span class="truncate text-slate-300">{t("Exclude categories")}</span>
 					{:else}
 						<div class="mr-2 flex flex-wrap gap-1">
 							{#each excludeCategories as category}
@@ -306,6 +309,7 @@
 					includeNsfw = items.includes('NSFW');
 					includeDisabled = items.includes('Disabled');
 				}}
+				EnableTransitions = {true}
 			>
 				<Select.Trigger
 					let:open
@@ -314,7 +318,7 @@
 								pl-3 pr-2 text-slate-300 hover:border-opacity-100"
 				>
 					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter-variant" />
-					Include
+					{t("Include")}
 					<Icon
 						class="ml-6 flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
 										duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
@@ -327,7 +331,7 @@
 		<slot name="banner" />
 
 		{#if mods.length === 0}
-			<div class="mt-4 text-center text-lg text-slate-300">No mods found 😥</div>
+			<div class="mt-4 text-center text-lg text-slate-300">{t("No mods found")}</div>
 		{:else}
 			<VirtualList
 				itemHeight={66}

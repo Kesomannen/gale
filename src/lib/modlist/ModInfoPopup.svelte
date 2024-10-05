@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { T } from '$i18n';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import type { MarkdownResponse, Mod } from '$lib/models';
@@ -34,19 +35,19 @@
 			{:else}
 				<div class="flex items-center justify-center gap-2 text-slate-300">
 					<Icon class="text-lg" icon="mdi:emoticon-sad-outline" />
-					No {path} found
+					{T("No path found", {"path": path})}
 				</div>
 			{/if}
 		{:else}
 			<div class="flex items-center justify-center gap-2 text-red-400">
 				<Icon class="text-lg" icon="mdi:alert-circle-outline" />
-				Failed to load {path}
+				{T("Failed to load path", {"path": path})}
 			</div>
 		{/if}
 	{:catch error}
 		<div class="flex items-center justify-center gap-2 text-red-400">
 			<Icon class="text-lg" icon="mdi:alert-circle-outline" />
-			Failed to load {path}: {error}
+			{T("Failed to load path error", {"path": path, "error": error})}
 		</div>
 	{/await}
 </Popup>

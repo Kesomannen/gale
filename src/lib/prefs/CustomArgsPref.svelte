@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { T, t } from '$i18n';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import Label from '$lib/components/Label.svelte';
@@ -12,17 +13,14 @@
 </script>
 
 <div class="mt-1 flex items-center">
-	<Label text="Set custom launch arguments">
+	<Label text={t("Set Launch Arguments")}>
+		<p>{@html t("Set Launch Arguments Description 1")}</p>
 		<p>
-			Allows you to add custom arguments to the launch command. Depending on <b>Launch mode</b>,
-			these are either ran against the game or steam executable.
+			{t("Set Launch Arguments Description 2")} <code>--foo value</code>{t("Set Launch Arguments Description 3")}
+			<code>--foo</code>
+			{t("Set Launch Arguments Description 4")} <code>value</code> {t("Set Launch Arguments Description 5")}
 		</p>
 
-		<p>
-			Only pass one argument per entry, so instead of <code>--foo value</code>, pass
-			<code>--foo</code>
-			and <code>value</code> separately.
-		</p>
 	</Label>
 
 	<Checkbox
@@ -60,7 +58,7 @@
 		{/each}
 
 		<InputField
-			placeholder="Enter new argument..."
+			placeholder={t("Enter new argument")}
 			bind:value={newArg}
 			on:change={() => {
 				if (newArg.length === 0 || value === null) return;

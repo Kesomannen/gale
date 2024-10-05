@@ -131,8 +131,8 @@ export interface QueryModsArgs {
 	excludeCategories: string[];
 	includeNsfw: boolean;
 	includeDeprecated: boolean;
-	includeDisabled: boolean;
 	includeEnabled: boolean;
+	includeDisabled: boolean;
 	sortBy: SortBy;
 	sortOrder: SortOrder;
 }
@@ -264,6 +264,7 @@ export interface Prefs {
 	steamLibraryDir: string | null;
 	dataDir: string;
 	cacheDir: string;
+	language: string;
 	fetchModsAutomatically: boolean;
 	zoomFactor: number;
 	gamePrefs: Map<string, GamePrefs>;

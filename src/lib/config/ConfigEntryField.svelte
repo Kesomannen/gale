@@ -10,6 +10,7 @@
 	import SliderConfig from './SliderConfig.svelte';
 	import NumberInputConfig from './NumberInputConfig.svelte';
 	import { isNum } from '$lib/config';
+	import { t } from '$i18n';
 
 	export let entryId: ConfigEntryId;
 
@@ -72,14 +73,14 @@
 
 			{#if entry.defaultValue}
 				<p>
-					<span class="font-semibold">Default: </span>
+					<span class="font-semibold">{t("Default")}: </span>
 					{valueToString(entry.defaultValue)}
 				</p>
 			{/if}
 
 			{#if (value.type === 'int32' || value.type === 'double' || value.type === 'single') && value.content.range}
 				<p>
-					<span class="font-semibold">Range: </span>
+					<span class="font-semibold">{t("Range")}: </span>
 					{value.content.range.start} - {value.content.range.end}
 				</p>
 			{/if}

@@ -5,6 +5,8 @@
 	import type { Dependant, Mod } from '$lib/models';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 
+	import { T, t } from '$i18n';
+
 	export let title: string;
 	export let verb: string;
 	export let description: string;
@@ -56,11 +58,10 @@
 
 	<svelte:fragment slot="buttons">
 		<BigButton on:click={executeOne} color="gray" class="truncate">
-			{verb}
-			{name} only
+			{T('Dependants action only', {"verb": verb, "name": name})}
 		</BigButton>
 		<BigButton on:click={executeAll} color={positive ? 'green' : 'red'} fontWeight="semibold">
-			{verb} all
+			{T('Dependants action all', {"verb": verb})}
 		</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

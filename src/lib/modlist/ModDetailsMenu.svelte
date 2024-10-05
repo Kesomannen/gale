@@ -14,6 +14,7 @@
 	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import ModCardList from './ModCardList.svelte';
+	import { T, t } from '$i18n';
 
 	export let mod: Mod;
 	export let onClose: () => void;
@@ -75,7 +76,7 @@
 			{#if mod.websiteUrl && mod.websiteUrl.length > 0}
 				<ModDetailsDropdownItem
 					icon="mdi:open-in-new"
-					label="Open website"
+					label={t("Open website")}
 					onClick={() => openIfNotNull(mod.websiteUrl)}
 				/>
 			{/if}
@@ -83,12 +84,12 @@
 			{#if mod.donateUrl}
 				<ModDetailsDropdownItem
 					icon="mdi:heart"
-					label="Donate"
+					label={t("Donate")}
 					onClick={() => openIfNotNull(mod.donateUrl)}
 				/>
 			{/if}
 
-			<ModDetailsDropdownItem icon="mdi:close" label="Close" onClick={onClose} />
+			<ModDetailsDropdownItem icon="mdi:close" label="{t("Close")}" onClick={onClose} />
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
@@ -107,7 +108,7 @@
 
 	{#if mod.author}
 		<span class="text-xl text-slate-300 xl:text-2xl">
-			By
+			{t("By")}
 			<Button.Root class="hover:underline" on:click={() => openCommunityUrl(mod.author)}>
 				{mod.author}
 			</Button.Root>
@@ -118,14 +119,14 @@
 		{#if mod.isDeprecated}
 			<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
 				<Icon class="mr-1 text-xl" icon="mdi:error" />
-				Deprecated
+				{t("Deprecated")}
 			</div>
 		{/if}
 
 		{#if mod.containsNsfw}
 			<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
 				<Icon class="mr-1 text-xl" icon="material-symbols:explicit" />
-				Contains NSFW
+				{t("Contains NSFW")}
 			</div>
 		{/if}
 	</div>
@@ -155,7 +156,7 @@
 
 	{#if mod.lastUpdated}
 		<div class="text-lg text-slate-400">
-			Last updated {timeSince(new Date(mod.lastUpdated))} ago
+			{T("Last updated description", {"time": timeSince(new Date(mod.lastUpdated))})}
 		</div>
 	{/if}
 
@@ -184,7 +185,7 @@
 			class="my-2 flex items-center gap-2 text-lg text-green-400 hover:text-green-300 hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
-			<a href={'/config?file=' + mod.configFile}>Edit config</a>
+			<a href={'/config?file=' + mod.configFile}>{t("Edit config")}</a>
 		</div>
 	{/if}
 
@@ -195,7 +196,7 @@
 			on:click={() => (changelogOpen = true)}
 		>
 			<Icon icon="mdi:file-document" class="mr-2 text-lg" />
-			Changelog
+			{t("Changelog")}
 		</Button.Root>
 
 		<Button.Root
@@ -204,7 +205,7 @@
 			on:click={() => (readmeOpen = true)}
 		>
 			<Icon icon="mdi:info" class="mr-2 text-lg" />
-			Details
+			{t("Details")}
 		</Button.Root>
 	{/if}
 
@@ -214,7 +215,7 @@
 			on:click={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />
-			Dependencies
+			{t("Dependencies")}
 			<div class="ml-auto rounded-md bg-slate-500 px-3 py-0.5 text-sm group-hover:bg-slate-400">
 				{mod.dependencies.length}
 			</div>
@@ -226,7 +227,7 @@
 
 <Popup
 	large={(mod.dependencies?.length ?? 0) > 10}
-	title="Dependencies of {mod.name}"
+	title={T("Dependencies of", {"name": mod.name})}
 	bind:open={dependenciesOpen}
 >
 	{#if mod.dependencies}

@@ -18,6 +18,8 @@
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 
+	import { t } from "$i18n"
+
 	let status: string | undefined;
 	let unlisten: UnlistenFn | undefined;
 
@@ -49,11 +51,11 @@
 		<div
 			class="flex w-14 flex-shrink-0 flex-col items-center gap-1 border-r border-gray-600 bg-gray-900 p-2"
 		>
-			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
-			<NavbarLink to="/mods" icon="mdi:store-search" tooltip="Browse mods" />
-			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
-			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
-			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
+			<NavbarLink to="/" icon="mdi:account-circle" tooltip={t("Manage profile")} />
+			<NavbarLink to="/mods" icon="mdi:store-search" tooltip={t("Browse mods")} />
+			<NavbarLink to="/config" icon="mdi:file-cog" tooltip={t("Edit mod config")} />
+			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip={t("Export modpack")} />
+			<NavbarLink to="/prefs" icon="mdi:settings" tooltip={t("Edit manager settings")} />
 		</div>
 
 		<slot />

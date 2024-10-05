@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { T } from '$i18n';
 	import type { ConfigEntry, ConfigFile, ConfigSection } from '$lib/models';
 	import ConfigEntryField from './ConfigEntryField.svelte';
 
@@ -26,8 +27,11 @@
 
 {#if metadata}
 	<div class="font-medium text-slate-400">
-		Created by {metadata.pluginName}
-		{metadata.pluginVersion}
+		{T("Config created by", 
+		{
+			"pluginName": metadata.pluginName, 
+			"pluginVersion": metadata.pluginVersion
+		})}
 	</div>
 {/if}
 
