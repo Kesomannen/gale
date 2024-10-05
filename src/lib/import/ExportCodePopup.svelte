@@ -29,12 +29,12 @@
 			<Icon icon="mdi:loading" class="mr-2 animate-spin text-lg" />
 			Exporting {$activeProfile?.name} as code...
 		{:then}
-			Export complete! The code has been copied to your clipboard.
+			Export complete! The code has been copied to your clipboard:
 		{/await}
 	</Dialog.Description>
 
 	{#await codePromise then code}
-		<code class="rounded-md bg-gray-900 px-3 py-1 text-lg text-slate-400">
+		<code class="rounded bg-gray-900 px-3 py-1 text-lg text-slate-400">
 			{code}
 		</code>
 	{/await}

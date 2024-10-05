@@ -2,12 +2,16 @@
 	import { check, type Update } from '@tauri-apps/plugin-updater';
 	import { writable } from 'svelte/store';
 
-	export let currentUpdate = writable<Update | null>(null);
+	export let nextUpdate = writable<Update | null>(null);
+	export let isChecking = writable(false);
 
 	export async function refreshUpdate() {
+		isChecking.set(true);
 		let update = await check();
+		isChecking.set(false);
+
 		if (update === null || !update.available) return;
-		currentUpdate.set(update);
+		nextUpdate.set(update);
 	}
 </script>
 
@@ -30,10 +34,10 @@
 	});
 
 	async function installUpdate() {
-		if ($currentUpdate === null) return;
+		if ($nextUpdate === null) return;
 
 		try {
-			await $currentUpdate.downloadAndInstall();
+			await $nextUpdate.downloadAndInstall();
 		} catch (e) {
 			let message: string;
 			if (typeof e === 'string') {
@@ -53,7 +57,7 @@
 			);
 		}
 
-		$currentUpdate = null;
+		$nextUpdate = null;
 	}
 
 	async function update() {
@@ -71,10 +75,10 @@
 	}
 </script>
 
-{#if $currentUpdate != null}
+{#if $nextUpdate != null}
 	<Button.Root
 		class="my-auto ml-auto mr-1.5 flex items-center rounded-md bg-green-600 
-            px-2 py-1 font-semibold text-slate-100 enabled:hover:bg-green-500"
+            px-2.5 py-1 font-semibold text-slate-100 enabled:hover:bg-green-500"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
@@ -90,14 +94,13 @@
 <ConfirmPopup title="App update available" bind:open={popupOpen}>
 	<Dialog.Description class="text-slate-300">
 		<p>
-			{#if currentUpdate}
-				Version {$currentUpdate?.version} of Gale is available - you have {$currentUpdate?.currentVersion}.
+			{#if nextUpdate}
+				Version {$nextUpdate?.version} of Gale is available - you have {$nextUpdate?.currentVersion}.
 			{:else}
 				There is an update available for Gale.
 			{/if}
 
-			The update will be downloaded and installed in the background, and then the app will restart
-			to apply the changes.
+			The update will be downloaded in the background, then the app will restart to apply it.
 		</p>
 		<p class="mt-1">Would you like to install it?</p>
 	</Dialog.Description>

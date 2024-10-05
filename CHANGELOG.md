@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Moved the `Check for updates` button to a new `About Gale` dialog
+
+### Fixed
+
+- Modpack icon selector throwing an error after selecting a file
+
 ## 0.8.9 (2024-10-04)
 
 ### Changed

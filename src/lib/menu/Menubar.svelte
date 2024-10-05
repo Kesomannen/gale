@@ -17,7 +17,6 @@
 	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import NewProfilePopup from './NewProfilePopup.svelte';
 	import AboutPopup from './AboutPopup.svelte';
-	import { refreshUpdate } from './Updater.svelte';
 	import MenubarSeparator from './MenubarSeparator.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
@@ -188,11 +187,6 @@
 					on:click={() => invokeCommand('clear_download_cache', { soft: true })}
 					text="Clear unused mod cache"
 				/>
-				<MenubarItem
-					on:click={() => invokeCommand('clear_download_cache', { soft: false })}
-					text="Clear all cached mods"
-				/>
-				<MenubarSeparator />
 				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')} text="Fetch mods" />
 			</Menubar.Content>
 		</Menubar.Menu>
@@ -280,7 +274,6 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={refreshUpdate} text="Check for app updates" />
 				<MenubarItem
 					on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
 					text="Report a bug"
@@ -294,7 +287,7 @@
 						shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618')}
 					text="Open discord thread"
 				/>
-				<MenubarItem on:click={() => (aboutOpen = true)} text="About" />
+				<MenubarItem on:click={() => (aboutOpen = true)} text="About Gale" />
 			</Menubar.Content>
 		</Menubar.Menu>
 	</Menubar.Root>
