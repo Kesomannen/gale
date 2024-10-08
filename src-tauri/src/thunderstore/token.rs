@@ -22,7 +22,7 @@ pub fn set(token: &str) -> Result<()> {
 }
 
 pub fn clear() -> Result<()> {
-    info!("deleting thunderstore token");
+    info!("clearing thunderstore token");
     match ENTRY.delete_credential() {
         Ok(()) => Ok(()),
         Err(keyring::Error::NoEntry) => Ok(()),

@@ -4,13 +4,13 @@
 	import Menubar from '$lib/menu/Menubar.svelte';
 	import Contextbar from '$lib/menu/Contextbar.svelte';
 
-	import { errors, removeError } from '$lib/invoke';
+	import { errors, removeError, invokeCommand } from '$lib/invoke';
 
 	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 
 	import { expoOut } from 'svelte/easing';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -18,11 +18,11 @@
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 
-	let status: string | undefined;
+	let status: string | null;
 	let unlisten: UnlistenFn | undefined;
 
 	onMount(async () => {
-		unlisten = await listen<string | undefined>('status_update', (evt) => {
+		unlisten = await listen<string | null>('status_update', (evt) => {
 			status = evt.payload;
 		});
 	});
@@ -46,7 +46,7 @@
 	<Contextbar />
 
 	<div class="relative flex flex-grow overflow-hidden">
-		<div
+		<nav
 			class="flex w-14 flex-shrink-0 flex-col items-center gap-1 border-r border-gray-600 bg-gray-900 p-2"
 		>
 			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
@@ -54,12 +54,12 @@
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
-		</div>
+		</nav>
 
 		<slot />
 	</div>
 
-	{#if status}
+	{#if status !== null}
 		<div
 			class="flex w-full items-center border-t border-gray-600 px-3 py-1 text-sm text-slate-400"
 			transition:slide={{ duration: 200, easing: expoOut }}

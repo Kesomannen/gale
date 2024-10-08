@@ -168,7 +168,7 @@
 	});
 </script>
 
-<div data-tauri-drag-region class="flex h-8 flex-shrink-0 bg-gray-800">
+<header data-tauri-drag-region class="flex h-8 flex-shrink-0 bg-gray-800">
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<Menubar.Menu>
@@ -301,7 +301,7 @@
 	<Button.Root class="group px-3 py-1.5 hover:bg-red-700" on:click={appWindow.close}>
 		<Icon icon="mdi:close" class="text-gray-500 group-hover:text-white" />
 	</Button.Root>
-</div>
+</header>
 
 <Popup
 	title="{capitalize(profileOperation)} profile"

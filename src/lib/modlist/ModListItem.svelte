@@ -56,7 +56,6 @@
 	on:dragover
 	on:drag
 	on:dragend
-	in:fade={{ duration: 50 }}
 	{draggable}
 >
 	<img src={imgSrc} alt={mod.name} class="size-12 rounded-md" />

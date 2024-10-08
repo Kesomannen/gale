@@ -145,9 +145,11 @@ impl Game {
             .read_dir()?
             .filter_map(|entry| entry.ok())
             .find(|entry| {
-                let file_name = entry.file_name();
-                let file_name = file_name.to_string_lossy();
-                file_name.ends_with(".exe") && !file_name.contains("UnityCrashHandler")
+                let file_name = PathBuf::from(entry.file_name());
+                let extension = file_name.extension().and_then(|ext| ext.to_str());
+
+                matches!(extension, Some("exe" | "x86_64" | "x86" | "sh"))
+                    && !!file_name.to_string_lossy().contains("UnityCrashHandler")
             })
             .map(|entry| entry.path())
             .and_then(|path| path.exists_or_none())

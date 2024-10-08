@@ -35,7 +35,11 @@
 	bind:open
 	closeOnEscape={canClose && confirmClose === null}
 	closeOnOutsideClick={canClose && confirmClose === null}
-	onOutsideClick={close}
+	onOpenChange={(open) => {
+		if (!open) {
+			onClose();
+		}
+	}}
 >
 	<Dialog.Portal>
 		<Dialog.Overlay
