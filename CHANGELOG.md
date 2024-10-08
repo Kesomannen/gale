@@ -5,10 +5,12 @@
 ### Changed
 
 - Moved the `Check for updates` button to a new `About Gale` dialog
+- Also look for .sh, .x86_64 and .x86 executables when launching games, instead of only .exe files
 
 ### Fixed
 
 - Modpack icon selector throwing an error after selecting a file
+- Cancelling a mod disable dialog causing the target mod to behave as if it was disabled
 
 ## 0.8.9 (2024-10-04)
 
