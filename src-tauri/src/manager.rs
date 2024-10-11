@@ -606,7 +606,7 @@ impl Profile {
             for file in files {
                 let path = file.path();
                 if new_state {
-                    // remove any ".old" extensions
+                    // remove any .old extensions
                     let mut new = path.to_owned();
                     while let Some("old") = new.extension().and_then(|ext| ext.to_str()) {
                         new.set_extension("");
@@ -667,7 +667,7 @@ impl Profile {
                     .is_ok_and(|profile_mod| !profile_mod.enabled)
             })
             .map_into()
-            .collect::<Vec<_>>();
+            .collect_vec();
 
         match disabled_deps.is_empty() {
             true => None,

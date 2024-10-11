@@ -4,7 +4,7 @@
 	import Menubar from '$lib/menu/Menubar.svelte';
 	import Contextbar from '$lib/menu/Contextbar.svelte';
 
-	import { errors, removeError, invokeCommand } from '$lib/invoke';
+	import { errors, removeError } from '$lib/invoke';
 
 	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
@@ -18,7 +18,7 @@
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 
-	let status: string | null;
+	let status: string | null = null;
 	let unlisten: UnlistenFn | undefined;
 
 	onMount(async () => {
