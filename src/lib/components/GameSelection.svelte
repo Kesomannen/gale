@@ -3,7 +3,6 @@
 	import { games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
-	import { open as openLink } from '@tauri-apps/plugin-shell';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from './Link.svelte';
 
@@ -41,7 +40,7 @@
 	<SearchBar bind:value={searchTerm} placeholder="Search for games..." />
 </div>
 
-<div class="mt-2 flex h-96 flex-col overflow-y-auto">
+<div class="mt-2 flex h-80 flex-col overflow-y-auto">
 	{#if shownGames.length > 0}
 		{#each shownGames as game}
 			<Button.Root

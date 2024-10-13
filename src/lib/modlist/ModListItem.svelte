@@ -4,8 +4,6 @@
 	import { isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
-	import { quintOut } from 'svelte/easing';
-	import { fade, fly } from 'svelte/transition';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
@@ -66,7 +64,7 @@
 					? 'text-slate-300 line-through'
 					: 'text-white'}"
 			>
-				{mod.name}
+				{mod.name.replace(/_/g, ' ')}
 			</div>
 			<div class="px-1 {descriptionClasses}">
 				{mod.version ?? ''}

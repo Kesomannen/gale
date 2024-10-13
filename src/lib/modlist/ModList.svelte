@@ -3,6 +3,7 @@
 	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
+	import VirtualList from './VirtualList.svelte';
 
 	import { sentenceCase, isBefore } from '$lib/util';
 	import { SortBy, type Mod, type QueryModsArgs, SortOrder } from '$lib/models';
@@ -10,7 +11,6 @@
 	import Icon from '@iconify/svelte';
 	import { Button, Select } from 'bits-ui';
 
-	import VirtualList from '@sveltejs/svelte-virtual-list';
 	import { categories } from '$lib/stores';
 	import type { Writable } from 'svelte/store';
 	import { createEventDispatcher } from 'svelte';
@@ -25,17 +25,7 @@
 
 	let listStart = 0;
 	let listEnd = 0;
-
-	let maxCount = 20;
-	let searchTerm = $queryArgs.searchTerm;
-	let includeCategories = $queryArgs.includeCategories;
-	let excludeCategories = $queryArgs.excludeCategories;
-	let includeNsfw = $queryArgs.includeNsfw;
-	let includeEnabled = $queryArgs.includeEnabled;
-	let includeDeprecated = $queryArgs.includeDeprecated;
-	let includeDisabled = $queryArgs.includeDisabled;
-	let sortBy = $queryArgs.sortBy;
-	let sortOrder = $queryArgs.sortOrder;
+	let virtualList: VirtualList<Mod>;
 
 	const dispatch = createEventDispatcher<{
 		reorder: {
@@ -51,23 +41,21 @@
 		};
 	}>();
 
-	$: {
-		$queryArgs = {
-			maxCount,
-			searchTerm,
-			includeCategories,
-			excludeCategories,
-			includeNsfw,
-			includeEnabled,
-			includeDeprecated,
-			includeDisabled,
-			sortBy,
-			sortOrder
-		};
+	let increasedCount = false;
+
+	$: if (listEnd > mods.length - 2 && mods.length === $queryArgs.maxCount) {
+		increasedCount = true;
+		$queryArgs.maxCount += 20;
 	}
 
-	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
-		maxCount += 20;
+	$: {
+		// scroll to top when query changes, except for the max count
+		$queryArgs;
+		if (increasedCount) {
+			increasedCount = false;
+		} else {
+			virtualList?.scrollTo(0);
+		}
 	}
 
 	function onModClicked(mod: Mod, evt: MouseEvent) {
@@ -86,10 +74,10 @@
 	function getSelectedIncludes() {
 		let selected = [];
 
-		if (includeDeprecated) selected.push('Deprecated');
-		if (includeNsfw) selected.push('NSFW');
-		if (includeEnabled) selected.push('Enabled');
-		if (includeDisabled) selected.push('Disabled');
+		if ($queryArgs.includeDeprecated) selected.push('Deprecated');
+		if ($queryArgs.includeNsfw) selected.push('NSFW');
+		if ($queryArgs.includeEnabled) selected.push('Enabled');
+		if ($queryArgs.includeDisabled) selected.push('Disabled');
 
 		return selected;
 	}
@@ -136,31 +124,18 @@
 		dragElement = null;
 		totalDelta = 0;
 	}
-
-	const dragScrollSpeed = 10;
-	const dragScrollArea = 100;
-
-	function onDrag(evt: DragEvent) {
-		/*
-		if (window.innerHeight - evt.clientY < dragScrollArea) {
-			viewport.scrollBy(0, dragScrollSpeed);
-		} else if (evt.clientY < dragScrollArea) {
-			viewport.scrollBy(0, -dragScrollSpeed);
-		}
-		*/
-	}
 </script>
 
 <div class="flex flex-grow overflow-hidden">
 	<div class="flex w-[60%] flex-grow flex-col overflow-hidden pl-3 pt-3">
 		<div class="mb-1.5 flex gap-1.5 pr-3">
 			<div class="relative flex-grow">
-				<SearchBar bind:value={searchTerm} placeholder="Search for mods..." />
+				<SearchBar bind:value={$queryArgs.searchTerm} placeholder="Search for mods..." />
 			</div>
 
 			<Dropdown
 				items={[SortOrder.Descending, SortOrder.Ascending]}
-				bind:selected={sortOrder}
+				bind:selected={$queryArgs.sortOrder}
 				getLabel={sentenceCase}
 			>
 				<Select.Trigger
@@ -171,7 +146,9 @@
 				>
 					<Icon
 						class="text-lg text-slate-400"
-						icon={sortOrder === SortOrder.Descending ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
+						icon={$queryArgs.sortOrder === SortOrder.Descending
+							? 'mdi:sort-descending'
+							: 'mdi:sort-ascending'}
 					/>
 					<span class="flex-shrink truncate">{text}</span>
 					<Icon
@@ -183,7 +160,7 @@
 				</Select.Trigger>
 			</Dropdown>
 
-			<Dropdown items={sortOptions} bind:selected={sortBy} getLabel={sentenceCase}>
+			<Dropdown items={sortOptions} bind:selected={$queryArgs.sortBy} getLabel={sentenceCase}>
 				<Select.Trigger
 					let:text
 					let:open
@@ -207,10 +184,10 @@
 			<Dropdown
 				items={$categories
 					.map((category) => category.name)
-					.filter((category) => !excludeCategories.includes(category))
+					.filter((category) => !$queryArgs.excludeCategories.includes(category))
 					.toSorted()}
 				multiple={true}
-				bind:selected={includeCategories}
+				bind:selected={$queryArgs.includeCategories}
 			>
 				<Select.Trigger
 					let:open
@@ -218,11 +195,11 @@
 					class="flex w-1/2 items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
 				>
 					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter" />
-					{#if includeCategories.length === 0}
+					{#if $queryArgs.includeCategories.length === 0}
 						<span class="truncate text-slate-300">Include categories</span>
 					{:else}
 						<div class="flex flex-wrap gap-1 overflow-hidden">
-							{#each includeCategories as category}
+							{#each $queryArgs.includeCategories as category}
 								<div
 									class="overflow-hidden rounded-lg bg-gray-800 py-0.5 pl-2 pr-0.5 text-sm text-slate-200"
 								>
@@ -232,7 +209,9 @@
 										class="ml-0.5 rounded-lg px-1.5 hover:bg-gray-700"
 										on:click={(evt) => {
 											evt.stopPropagation();
-											includeCategories = includeCategories.filter((cat) => cat !== category);
+											$queryArgs.includeCategories = $queryArgs.includeCategories.filter(
+												(cat) => cat !== category
+											);
 										}}
 									>
 										x
@@ -252,10 +231,10 @@
 			<Dropdown
 				items={$categories
 					.map((category) => category.name)
-					.filter((category) => !includeCategories.includes(category))
+					.filter((category) => !$queryArgs.includeCategories.includes(category))
 					.toSorted()}
 				multiple={true}
-				bind:selected={excludeCategories}
+				bind:selected={$queryArgs.excludeCategories}
 			>
 				<Select.Trigger
 					let:open
@@ -264,11 +243,11 @@
 							bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
 				>
 					<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" icon="mdi:filter-remove" />
-					{#if excludeCategories.length === 0}
+					{#if $queryArgs.excludeCategories.length === 0}
 						<span class="truncate text-slate-300">Exclude categories</span>
 					{:else}
 						<div class="mr-2 flex flex-wrap gap-1">
-							{#each excludeCategories as category}
+							{#each $queryArgs.excludeCategories as category}
 								<div
 									class="overflow-hidden rounded-lg bg-gray-800 py-0.5 pl-2 pr-0.5 text-sm text-slate-200"
 								>
@@ -278,7 +257,9 @@
 										class="ml-0.5 rounded-lg px-1.5 hover:bg-gray-700"
 										on:click={(evt) => {
 											evt.stopPropagation();
-											excludeCategories = excludeCategories.filter((cat) => cat !== category);
+											$queryArgs.excludeCategories = $queryArgs.excludeCategories.filter(
+												(cat) => cat !== category
+											);
 										}}
 									>
 										x
@@ -301,10 +282,10 @@
 				selected={getSelectedIncludes()}
 				multiple={true}
 				onSelectedChange={(items) => {
-					includeEnabled = items.includes('Enabled');
-					includeDeprecated = items.includes('Deprecated');
-					includeNsfw = items.includes('NSFW');
-					includeDisabled = items.includes('Disabled');
+					$queryArgs.includeEnabled = items.includes('Enabled');
+					$queryArgs.includeDeprecated = items.includes('Deprecated');
+					$queryArgs.includeNsfw = items.includes('NSFW');
+					$queryArgs.includeDisabled = items.includes('Disabled');
 				}}
 			>
 				<Select.Trigger
@@ -330,6 +311,7 @@
 			<div class="mt-4 text-center text-lg text-slate-300">No mods found 😥</div>
 		{:else}
 			<VirtualList
+				bind:this={virtualList}
 				itemHeight={66}
 				items={mods}
 				let:item={mod}
@@ -341,8 +323,7 @@
 					on:dragstart={onDragStart}
 					on:dragover={onDragOver}
 					on:dragend={onDragEnd}
-					on:drag={onDrag}
-					isInstalled={mod.isInstalled}
+					isInstalled={mod.isInstalled ?? false}
 					draggable={reorderable}
 					isSelected={activeMod?.uuid == mod.uuid}
 					{showInstalledIcon}

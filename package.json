@@ -34,7 +34,6 @@
 	"type": "module",
 	"dependencies": {
 		"@jill64/svelte-sanitize": "^1.2.12",
-		"@sveltejs/svelte-virtual-list": "^3.0.1",
 		"@tauri-apps/api": "^2.0.0",
 		"@tauri-apps/plugin-cli": "^2.0.0",
 		"@tauri-apps/plugin-clipboard-manager": "^2.0.0",

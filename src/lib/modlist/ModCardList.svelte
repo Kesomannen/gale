@@ -19,6 +19,6 @@
 
 <style lang="postcss">
 	.list {
-		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
 	}
 </style>

@@ -11,8 +11,8 @@
 	import Checklist from '$lib/components/Checklist.svelte';
 
 	export let importData: R2ImportData = {
-		r2modman: undefined,
-		thunderstore: undefined
+		r2modman: null,
+		thunderstore: null
 	};
 
 	export let importFrom: 'r2modman' | 'thunderstore' = 'r2modman';
@@ -58,7 +58,10 @@
 {/if}
 
 {#if !importData.r2modman && !importData.thunderstore}
-	<div class="mt-3 w-full text-center text-lg font-semibold text-red-400">
+	<div
+		class="mt-3 flex w-full items-center justify-center gap-2 text-lg font-semibold text-red-400"
+	>
+		<Icon icon="mdi:error" />
 		No installations found
 	</div>
 {/if}

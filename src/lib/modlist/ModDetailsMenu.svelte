@@ -92,26 +92,23 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<div class="mr-6 flex items-center justify-between">
-		<Button.Root
-			class="truncate text-3xl font-bold text-slate-100 hover:underline xl:text-4xl"
-			on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}
-			>{mod.name.replace('_', ' ')}</Button.Root
-		>
-		{#if mod.version}
-			<span class="pl-2 align-middle text-lg font-light text-slate-300 xl:text-xl"
-				>{mod.version}</span
-			>
-		{/if}
-	</div>
+	<Button.Root
+		class="break-words pb-1 pr-4 text-left text-3xl font-bold text-slate-100 hover:underline xl:text-4xl"
+		on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}
+		>{mod.name.replace(/_/g, ' ')}</Button.Root
+	>
 
 	{#if mod.author}
-		<span class="text-xl text-slate-300 xl:text-2xl">
+		<div class="text-xl text-slate-300 xl:text-2xl">
 			By
 			<Button.Root class="hover:underline" on:click={() => openCommunityUrl(mod.author)}>
 				{mod.author}
 			</Button.Root>
-		</span>
+		</div>
+	{/if}
+
+	{#if mod.version}
+		<div class="text-xl text-slate-300 xl:text-2xl">v{mod.version}</div>
 	{/if}
 
 	<div class="flex flex-wrap gap-1">

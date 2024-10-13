@@ -6,7 +6,7 @@
 </script>
 
 <Menubar.Item
-	class="group mx-1 flex cursor-default items-center justify-between rounded-md py-1 pl-4 text-left hover:bg-gray-700 {key
+	class="group mx-1 flex cursor-default items-center justify-between rounded py-1 pl-4 text-left hover:bg-gray-700 {key
 		? 'pr-4'
 		: 'pr-10'}"
 	on:click

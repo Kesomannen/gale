@@ -130,8 +130,20 @@ pub fn run() {
                 .set_focus()
                 .ok();
 
-            if args.len() > 1 {
-                manager::downloader::handle_deep_link(app, &args[1]);
+            let url = match args.into_iter().next() {
+                Some(arg) => arg,
+                None => return
+            };
+
+            if url.starts_with("https") {
+                manager::downloader::handle_deep_link(&url, app );
+            } else if url.ends_with("r2z") {
+                let app = app.to_owned();
+                tauri::async_runtime::spawn(async move {
+                    manager::importer::import_file_from_link(url, &app).await.unwrap_or_else(|err| {
+                        logger::log_js_err("Failed to import profile file", &err, &app);
+                    })
+                });
             }
         }))
         .plugin(tauri_plugin_cli::init())

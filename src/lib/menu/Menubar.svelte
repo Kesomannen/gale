@@ -49,9 +49,8 @@
 		});
 
 		if (path === null) return;
-		invokeCommand('import_local_mod', { path });
-
-		activeProfile.update((profile) => profile);
+		await invokeCommand('import_local_mod', { path });
+		await refreshProfiles();
 	}
 
 	async function importFile() {
@@ -113,13 +112,8 @@
 		let confirmed = await confirm('Are you sure you want to uninstall all disabled mods?');
 		if (!confirmed) return;
 
-		let removed = await invokeCommand<number>('remove_disabled_mods');
-		activeProfile.update((profile) => {
-			if (profile === null) return null;
-
-			profile.modCount -= removed;
-			return profile;
-		});
+		await invokeCommand<number>('remove_disabled_mods');
+		await refreshProfiles();
 	}
 
 	async function zoom(value: { delta: number } | { factor: number }) {
@@ -310,8 +304,8 @@
 >
 	<p class="mb-1 text-slate-300">
 		{profileOperation == 'duplicate'
-			? 'Enter a name for the duplicated profile'
-			: 'Enter a new name for the profile'}
+			? 'Enter a name for the duplicated profile:'
+			: 'Enter a new name for the profile:'}
 	</p>
 	<InputField
 		bind:value={profileOperationName}

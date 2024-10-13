@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Popup from '../components/Popup.svelte';
 	import { refreshProfiles } from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
 	import BigButton from '$lib/components/BigButton.svelte';

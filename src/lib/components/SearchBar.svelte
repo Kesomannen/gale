@@ -12,6 +12,7 @@
 	type="text"
 	class="w-full rounded-lg px-10 py-1.5 bg-gray-{brightness} truncate border border-gray-500 border-opacity-0 text-slate-300 placeholder-slate-400 invalid:ring-red-500 hover:border-opacity-100 focus:outline-none focus:ring-2 valid:focus:ring-green-400 text-{size}"
 	bind:value
+	on:keydown
 	{placeholder}
 />
 <Icon class="absolute left-2.5 top-2 text-2xl text-slate-500" icon="mdi:magnify" />

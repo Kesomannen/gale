@@ -143,13 +143,13 @@ impl Game {
     fn exe_path(&self, prefs: &Prefs) -> Result<PathBuf> {
         self.path(prefs)?
             .read_dir()?
-            .filter_map(|entry| entry.ok())
+            .filter_map(Result::ok)
             .find(|entry| {
                 let file_name = PathBuf::from(entry.file_name());
                 let extension = file_name.extension().and_then(|ext| ext.to_str());
 
-                matches!(extension, Some("exe" | "x86_64" | "x86" | "sh"))
-                    && !!file_name.to_string_lossy().contains("UnityCrashHandler")
+                matches!(extension, Some("exe" | "sh"))
+                    && !file_name.to_string_lossy().contains("UnityCrashHandler")
             })
             .map(|entry| entry.path())
             .and_then(|path| path.exists_or_none())

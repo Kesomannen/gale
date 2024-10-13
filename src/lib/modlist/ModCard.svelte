@@ -12,29 +12,31 @@
 	$: version = split.length >= 2 ? (split.length === 3 ? split[2] : split[1]) : null;
 </script>
 
-<div class="flex overflow-hidden">
+<div class="flex">
 	<img
 		src="https://gcdn.thunderstore.io/live/repository/icons/{fullName}.png"
 		alt={name}
 		class="h-12 w-12 rounded-md"
 	/>
-	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left align-middle">
-		<a
-			class="flex-shrink truncate font-semibold text-white hover:underline"
-			href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
-			target="_blank"
-		>
-			{name}
-		</a>
-		{#if showVersion && version !== null}
-			<span class="px-1 text-slate-400">
-				{version}
-			</span>
-		{/if}
+	<div class="flex-shrink flex-grow flex-wrap overflow-hidden pl-3 text-left align-middle">
+		<div class="flex">
+			<a
+				class="flex-shrink truncate font-semibold text-white hover:underline"
+				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
+				target="_blank"
+			>
+				{name.replace(/_/g, ' ')}
+			</a>
+			{#if showVersion && version !== null}
+				<div class="px-2 text-slate-400">
+					{version}
+				</div>
+			{/if}
+		</div>
 
 		{#if author !== null}
 			<a
-				class="block truncate text-slate-400 hover:underline"
+				class="truncate text-slate-400 hover:underline"
 				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/"
 				target="_blank"
 			>

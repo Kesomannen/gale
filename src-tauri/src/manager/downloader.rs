@@ -553,7 +553,7 @@ fn resolve_deep_link(url: &str, thunderstore: &Thunderstore) -> Result<ModRef> {
     thunderstore.find_mod(owner, name, version).map(Into::into)
 }
 
-pub fn handle_deep_link(handle: &AppHandle, url: &str) {
+pub fn handle_deep_link(url: &str, handle: &AppHandle) {
     let mod_ref = {
         let thunderstore = handle.state::<Mutex<Thunderstore>>();
         let thunderstore = thunderstore.lock().unwrap();

@@ -404,7 +404,7 @@
 	bind:this={removeDependants}
 	title="Confirm uninstallation"
 	verb="Uninstall"
-	description="The following mods depend on %s and will likely not work if it is uninstalled"
+	description="The following mods depend on %s and will likely not work if it is uninstalled:"
 	commandName="remove_mod"
 	onExecute={() => {
 		refresh();
@@ -417,7 +417,7 @@
 	bind:this={disableDependants}
 	title="Confirm disabling"
 	verb="Disable"
-	description="The following mods depend on %s and will likely not work if it is disabled"
+	description="The following mods depend on %s and will likely not work if it is disabled:"
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}
@@ -427,7 +427,7 @@
 	bind:this={enableDependencies}
 	title="Confirm enabling"
 	verb="Enable"
-	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled"
+	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled:"
 	commandName="toggle_mod"
 	onExecute={refresh}
 	onCancel={refresh}

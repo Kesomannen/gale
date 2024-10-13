@@ -34,6 +34,12 @@ pub fn setup(_app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
+pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
+    let data = import_file_from_path(url.into(), app)?;
+    import_data(data, InstallOptions::default(), app).await?;
+    Ok(())
+}
+
 fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
     ensure!(path.is_file(), "path is not a file");
 

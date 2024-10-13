@@ -5,7 +5,7 @@ from PIL import Image
 SIZE = (256, 256)
 
 if __name__ == '__main__':
-    dir = path.join('static', 'games')
+    dir = path.join('..', 'static', 'games')
     for file in os.listdir(dir):
         with Image.open(path.join(dir, file)) as img:
             img.thumbnail(SIZE)

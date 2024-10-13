@@ -17,12 +17,11 @@
 
 	let importFrom: 'r2modman' | 'thunderstore' = 'r2modman';
 	let importData: R2ImportData = {
-		r2modman: undefined,
-		thunderstore: undefined
+		r2modman: null,
+		thunderstore: null
 	};
 
 	let importFlow: ImportR2Flow;
-
 	let prefs: Prefs | null = null;
 
 	$: importText =
@@ -77,10 +76,10 @@
 	}
 </script>
 
-<Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open maxWidth="[55%]">
+<Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open>
 	<div class="text-slate-300">
 		{#if stage === 'gameSelect'}
-			To get started, select a game to mod:
+			To get started, select a game to mod
 			<GameSelection onSelect={onSelectGame} />
 		{:else if stage === 'importProfiles' && importData}
 			<p>
@@ -105,9 +104,9 @@
 				<BigButton color="green" on:click={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
-			<p>Lastly, make sure your settings are correct.</p>
-
-			<p class="mt-1">
+			<p>
+				Let's make sure your settings are correct.
+				<br />
 				You can always edit these later by going to <Icon icon="mdi:settings" class="mb-1 inline" />
 				<b>Settings</b>.
 			</p>
@@ -117,8 +116,8 @@
 					<PathPref
 						label="Steam executable"
 						type="file"
-						value={prefs.steamExePath ?? null}
-						set={set((value, prefs) => (prefs.steamExePath = value ?? undefined))}
+						value={prefs.steamExePath}
+						set={set((value, prefs) => (prefs.steamExePath = value))}
 					>
 						Path to the Steam executable.
 					</PathPref>
@@ -126,8 +125,8 @@
 					<PathPref
 						label="Steam library"
 						type="dir"
-						value={prefs.steamLibraryDir ?? null}
-						set={set((value, prefs) => (prefs.steamLibraryDir = value ?? undefined))}
+						value={prefs.steamLibraryDir}
+						set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 					>
 						Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
 					</PathPref>

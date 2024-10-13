@@ -95,6 +95,7 @@ export interface Mod {
 	dependencies: string[] | null;
 	isPinned: boolean;
 	isDeprecated: boolean;
+	isInstalled: boolean | undefined;
 	containsNsfw: boolean;
 	uuid: string;
 	lastUpdated: string;

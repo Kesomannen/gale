@@ -135,7 +135,7 @@
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
 				<div class="mb-1 text-slate-400">An error occured while reading this config file:</div>
-				<code class="mb-1 flex bg-gray-900 p-3 text-red-500">
+				<code class="mb-1 flex rounded bg-gray-900 p-4 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
 				<BigButton

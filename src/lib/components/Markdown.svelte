@@ -82,7 +82,7 @@
 	}
 
 	.markdown :global(pre) {
-		@apply my-2 overflow-x-auto bg-gray-900 p-4 text-gray-300;
+		@apply my-2 overflow-x-auto rounded bg-gray-900 p-4 text-gray-300;
 	}
 
 	.markdown :global(pre .hljs) {
