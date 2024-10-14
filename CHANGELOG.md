@@ -1,16 +1,19 @@
 # Changelog
 
-## Unreleased
+## 0.8.11 (2024-10-14)
 
 ### Added
 
 - More game icons
 
+### Changed
+
+- Various UI changes
+
 ### Fixed
 
 - Direct launch mode
 - Profile mod count not updating when a mod is installing
--
 
 ## 0.8.10 (2024-10-11)
 
