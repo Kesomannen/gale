@@ -38,7 +38,7 @@ pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<FrontendL
         .map(|res| match res {
             Ok(file) => FrontendLoadFileResult::Ok(file.clone()),
             Err(err) => FrontendLoadFileResult::Err {
-                display_name: err.display_name.clone(),
+                display_name: err.display_name.to_string(),
                 relative_path: err.relative_path.clone(),
                 error: format!("{:#}", err.error),
             },

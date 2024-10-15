@@ -90,7 +90,7 @@ OrphanedEntry = Hi!
 
 fn test_file() -> File {
     File::new(
-        "Test".to_owned(),
+        "Test".into(),
         "test".into(),
         vec![
             Section::new(
@@ -192,7 +192,7 @@ fn test_to_string() {
 #[test]
 fn test_from_string() {
     let (sections, metadata) = de::from_reader(TEST_STR.as_bytes()).unwrap();
-    let mut left = File::new("Test".to_owned(), "test".into(), sections, metadata);
+    let mut left = File::new("Test".into(), "test".into(), sections, metadata);
     let right = test_file();
 
     left.read_time = right.read_time;

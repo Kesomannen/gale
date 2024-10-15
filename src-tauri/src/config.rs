@@ -28,7 +28,7 @@ mod tests;
 #[derive(Error, Debug)]
 #[error("failed to load config file: {}", error)]
 pub struct LoadFileError {
-    display_name: String,
+    display_name: Cow<'static, str>,
     relative_path: PathBuf,
     error: anyhow::Error,
 }
@@ -59,7 +59,7 @@ impl LoadFileResultExt for LoadFileResult {
 #[derive(Serialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
-    display_name: String,
+    display_name: Cow<'static, str>,
     // relative to the BepInEx/config directory
     relative_path: PathBuf,
     #[serde(skip)]
@@ -70,7 +70,7 @@ pub struct File {
 
 impl File {
     pub fn new(
-        display_name: String,
+        display_name: Cow<'static, str>,
         relative_path: PathBuf,
         sections: Vec<Section>,
         metadata: Option<FileMetadata>,
@@ -384,9 +384,10 @@ fn resolve_duplicate_names(vec: &mut [LoadFileResult]) {
     }
 
     for (index, new_name) in name_changes {
+        let cow = Cow::Owned(new_name);
         match &mut vec[index] {
-            Ok(file) => file.display_name = new_name,
-            Err(err) => err.display_name = new_name,
+            Ok(file) => file.display_name = cow,
+            Err(err) => err.display_name = cow,
         }
     }
 
@@ -453,7 +454,10 @@ fn load_config_file(
 
     return Some((res, curr_index));
 
-    fn format_name(name: &str) -> String {
-        name.replace(['_', '-', ' '], "")
+    fn format_name(name: &str) -> Cow<'static, str> {
+        match name.is_empty() {
+            true => Cow::Borrowed("<Nameless>"),
+            false => Cow::Owned(name.replace(['_', '-', ' '], "")),
+        }
     }
 }
