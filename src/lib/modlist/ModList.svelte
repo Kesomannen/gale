@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ModListItem from '$lib/modlist/ModListItem.svelte';
 	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
@@ -13,33 +12,16 @@
 
 	import { categories } from '$lib/stores';
 	import type { Writable } from 'svelte/store';
-	import { createEventDispatcher } from 'svelte';
 
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
 	export let activeMod: Mod | undefined;
 	export let queryArgs: Writable<QueryModsArgs>;
-	export let reorderable = false;
-	export let showInstalledIcon = false;
 
 	let listStart = 0;
 	let listEnd = 0;
 	let virtualList: VirtualList<Mod>;
-
-	const dispatch = createEventDispatcher<{
-		reorder: {
-			uuid: string;
-			delta: number;
-		};
-		finishReorder: {
-			uuid: string;
-			totalDelta: number;
-		};
-		onModCtrlClicked: {
-			mod: Mod;
-		};
-	}>();
 
 	let increasedCount = false;
 
@@ -58,12 +40,7 @@
 		}
 	}
 
-	function onModClicked(mod: Mod, evt: MouseEvent) {
-		if (evt.ctrlKey) {
-			dispatch('onModCtrlClicked', { mod });
-			return;
-		}
-
+	function onModClicked(mod: Mod) {
 		if (activeMod === undefined || activeMod.uuid !== mod.uuid) {
 			activeMod = mod;
 		} else {
@@ -80,49 +57,6 @@
 		if ($queryArgs.includeDisabled) selected.push('Disabled');
 
 		return selected;
-	}
-
-	let dragElement: HTMLElement | null;
-	let totalDelta = 0;
-
-	function onDragStart(evt: DragEvent) {
-		if (!reorderable) return;
-		if (!evt.dataTransfer) return;
-
-		totalDelta = 0;
-		dragElement = evt.currentTarget as HTMLElement;
-		evt.dataTransfer.effectAllowed = 'move';
-		evt.dataTransfer.setData('text/html', dragElement.outerHTML);
-	}
-
-	function onDragOver(evt: DragEvent) {
-		if (!reorderable || !dragElement) return;
-
-		let target = evt.currentTarget as HTMLElement;
-		let draggingUuid = dragElement.dataset.uuid;
-		let targetUuid = target.dataset.uuid;
-
-		if (draggingUuid === targetUuid) return;
-
-		if (isBefore(dragElement, target)) {
-			dispatch('reorder', { uuid: draggingUuid!, delta: -1 });
-			totalDelta--;
-		} else {
-			dispatch('reorder', { uuid: draggingUuid!, delta: 1 });
-			totalDelta++;
-		}
-
-		dragElement = target;
-	}
-
-	function onDragEnd(evt: DragEvent) {
-		if (!reorderable || !dragElement) return;
-
-		let uuid = dragElement.dataset.uuid!;
-
-		dispatch('finishReorder', { uuid, totalDelta });
-		dragElement = null;
-		totalDelta = 0;
 	}
 </script>
 
@@ -318,19 +252,9 @@
 				bind:start={listStart}
 				bind:end={listEnd}
 			>
-				<ModListItem
-					on:click={(evt) => onModClicked(mod, evt)}
-					on:dragstart={onDragStart}
-					on:dragover={onDragOver}
-					on:dragend={onDragEnd}
-					isInstalled={mod.isInstalled ?? false}
-					draggable={reorderable}
-					isSelected={activeMod?.uuid == mod.uuid}
-					{showInstalledIcon}
-					{mod}
-				>
-					<slot name="item" {mod} />
-				</ModListItem>
+				<button class="contents" on:click={() => onModClicked(mod)}>
+					<slot name="item" {mod} isSelected={activeMod === mod} />
+				</button>
 			</VirtualList>
 		{/if}
 	</div>

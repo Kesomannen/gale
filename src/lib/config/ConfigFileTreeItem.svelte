@@ -31,15 +31,16 @@
 <Collapsible.Root bind:open>
 	{#if type !== 'ok' || shownSections.length > 0}
 		<Collapsible.Trigger
-			class="group flex w-full items-center overflow-hidden px-2 py-0.5
-                text-{textColor}
-                {isSelected ? 'bg-slate-600 font-semibold' : 'hover:bg-slate-600'}"
+			class="group flex w-full items-center overflow-hidden px-2 py-0.5 text-{textColor} {isSelected
+				? 'bg-slate-600 font-semibold'
+				: 'hover:bg-slate-600'}"
 			on:click={() => type !== 'ok' && onFileClicked(file)}
 		>
 			<Icon
 				{icon}
-				class="mr-1 flex-shrink-0 text-lg transition-all 
-                    {open && type === 'ok' ? 'rotate-180' : 'rotate-0'}"
+				class="mr-1 flex-shrink-0 text-lg transition-all {open && type === 'ok'
+					? 'rotate-180'
+					: 'rotate-0'}"
 			/>
 
 			<div class="mr-1 flex-shrink truncate" style="direction: rtl;">
@@ -76,13 +77,12 @@
 		>
 			{#each shownSections as section}
 				<Button.Root
-					class="truncate py-0.5 pl-9 pr-2 text-left text-sm
-				{selectedSection === section
+					class="truncate py-0.5 pl-9 pr-2 text-left text-sm {selectedSection === section
 						? 'bg-slate-600 font-semibold text-slate-200'
 						: 'text-slate-300 hover:bg-slate-600'}"
 					on:click={() => onSectionClicked(file, section)}
 				>
-					{section.name}
+					{section.name.length > 0 ? section.name : '<Nameless section>'}
 				</Button.Root>
 			{/each}
 		</Collapsible.Content>

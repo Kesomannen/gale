@@ -20,8 +20,8 @@
 	} from '$lib/models';
 	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
-	import { activeProfile, profileQuery } from '$lib/stores';
-	import { isOutdated } from '$lib/util';
+	import { activeProfile, profileQuery, refreshProfiles } from '$lib/stores';
+	import { isBefore, isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button, DropdownMenu, Switch } from 'bits-ui';
 	import { fly } from 'svelte/transition';
@@ -31,6 +31,7 @@
 	import ModCard from '$lib/modlist/ModCard.svelte';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
+	import ProfileModListItem from '$lib/modlist/ProfileModListItem.svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -100,7 +101,7 @@
 		allUpdates = result.updates;
 	}
 
-	async function toggleMod(enable: boolean, mod: Mod) {
+	async function toggleMod(mod: Mod, newState: boolean) {
 		let response = await invokeCommand<ModActionResponse>('toggle_mod', {
 			uuid: mod.uuid
 		});
@@ -110,7 +111,7 @@
 			return;
 		}
 
-		if (enable) {
+		if (newState) {
 			enableDependencies.openFor(mod, response.content);
 		} else {
 			disableDependants.openFor(mod, response.content);
@@ -121,8 +122,8 @@
 		let response = await invokeCommand<ModActionResponse>('remove_mod', { uuid: mod.uuid });
 
 		if (response.type == 'done') {
-			refresh();
 			activeMod = undefined;
+			await refreshProfiles();
 			return;
 		}
 
@@ -143,16 +144,6 @@
 		let temp = mods[newIndex];
 		mods[newIndex] = mods[oldIndex];
 		mods[oldIndex] = temp;
-	}
-
-	async function finishReorder(uuid: string, delta: number) {
-		if ($profileQuery.sortOrder === SortOrder.Descending) {
-			// list is reversed
-			delta *= -1;
-		}
-
-		await invokeCommand('reorder_mod', { uuid, delta });
-		await refresh();
 	}
 
 	async function openDependants() {
@@ -184,17 +175,59 @@
 
 		activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid);
 	}
+
+	let dragElement: HTMLElement | null;
+	let totalDelta = 0;
+
+	function onDragStart(evt: DragEvent) {
+		if (!reorderable || !evt.dataTransfer) return;
+
+		totalDelta = 0;
+		dragElement = evt.currentTarget as HTMLElement;
+
+		evt.dataTransfer.effectAllowed = 'move';
+		evt.dataTransfer.setData('text/html', dragElement.outerHTML);
+	}
+
+	function onDragOver(evt: DragEvent) {
+		if (!reorderable || !dragElement) return;
+
+		let target = evt.currentTarget as HTMLElement;
+		let draggingUuid = dragElement.dataset.uuid;
+		let targetUuid = target.dataset.uuid;
+
+		if (draggingUuid === targetUuid) return;
+
+		if (isBefore(dragElement, target)) {
+			onReorder(draggingUuid!, -1);
+			totalDelta--;
+		} else {
+			onReorder(draggingUuid!, 1);
+			totalDelta++;
+		}
+
+		dragElement = target;
+	}
+
+	async function onDragEnd(evt: DragEvent) {
+		if (!reorderable || !dragElement) return;
+
+		let uuid = dragElement.dataset.uuid!;
+
+		if ($profileQuery.sortOrder === SortOrder.Descending) {
+			// list is reversed
+			totalDelta *= -1;
+		}
+
+		await invokeCommand('reorder_mod', { uuid, delta: totalDelta });
+		await refresh();
+
+		dragElement = null;
+		totalDelta = 0;
+	}
 </script>
 
-<ModList
-	{sortOptions}
-	{reorderable}
-	bind:mods
-	bind:activeMod
-	on:reorder={({ detail: { uuid, delta } }) => onReorder(uuid, delta)}
-	on:finishReorder={({ detail: { uuid, totalDelta } }) => finishReorder(uuid, totalDelta)}
-	queryArgs={profileQuery}
->
+<ModList {sortOptions} bind:mods bind:activeMod queryArgs={profileQuery}>
 	<div slot="details">
 		{#if activeMod && isOutdated(activeMod)}
 			<Button.Root
@@ -306,35 +339,21 @@
 		{/if}
 	</div>
 
-	<svelte:fragment slot="item" let:mod>
-		<div class="ml-1 mt-2.5 flex items-center">
-			{#if reorderable}
-				<Icon
-					icon="material-symbols:drag-indicator"
-					class="mr-3 cursor-move text-2xl text-slate-400"
-				/>
-			{/if}
-
-			<Switch.Root
-				checked={mod.enabled ?? true}
-				onCheckedChange={(checked) => toggleMod(checked, mod)}
-				on:click={(evt) => evt.stopPropagation()}
-				class="group mr-1 flex h-6 w-12 rounded-full bg-slate-600 px-1
-						py-1 hover:bg-slate-500
-						data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
-			>
-				<Switch.Thumb
-					class="pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75
-							ease-out hover:bg-slate-200
-							data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
-				/>
-			</Switch.Root>
-		</div>
+	<svelte:fragment slot="item" let:mod let:isSelected>
+		<ProfileModListItem
+			{mod}
+			{isSelected}
+			{reorderable}
+			on:dragstart={onDragStart}
+			on:dragend={onDragEnd}
+			on:dragover={onDragOver}
+			on:toggle={({ detail: { mod, newState } }) => toggleMod(mod, newState)}
+		/>
 	</svelte:fragment>
 </ModList>
 
 <ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
-	Select which mods to update
+	Select which mods to update:
 
 	<Checklist
 		title="Update all"
@@ -407,7 +426,7 @@
 	description="The following mods depend on %s and will likely not work if it is uninstalled:"
 	commandName="remove_mod"
 	onExecute={() => {
-		refresh();
+		refreshProfiles();
 		activeMod = undefined;
 	}}
 	onCancel={refresh}
@@ -419,7 +438,7 @@
 	verb="Disable"
 	description="The following mods depend on %s and will likely not work if it is disabled:"
 	commandName="toggle_mod"
-	onExecute={refresh}
+	onExecute={refreshProfiles}
 	onCancel={refresh}
 />
 
@@ -429,7 +448,7 @@
 	verb="Enable"
 	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled:"
 	commandName="toggle_mod"
-	onExecute={refresh}
+	onExecute={refreshProfiles}
 	onCancel={refresh}
 	positive
 />

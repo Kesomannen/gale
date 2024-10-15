@@ -6,6 +6,7 @@
 
 - Symlinks not having .old appended to them when disabling mods
 - Config parse failing for encoded with a BOM
+- Install with mod manager button on thunderstore.io
 
 ## 0.8.11 (2024-10-14)
 

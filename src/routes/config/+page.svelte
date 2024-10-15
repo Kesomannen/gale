@@ -115,7 +115,7 @@
 				{selectedFile.relativePath}
 				{#if selectedSection}
 					<span class="font-light text-slate-400">/</span>
-					{selectedSection.name}
+					{selectedSection.name.length > 0 ? selectedSection.name : '<Nameless section>'}
 				{/if}
 			</div>
 

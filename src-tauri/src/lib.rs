@@ -130,12 +130,14 @@ pub fn run() {
                 .set_focus()
                 .ok();
 
-            let url = match args.into_iter().next() {
+            let url = match args.into_iter().nth(1) {
                 Some(arg) => arg,
                 None => return
             };
 
-            if url.starts_with("https") {
+            println!("{url:?}");
+
+            if url.starts_with("ror2mm") {
                 manager::downloader::handle_deep_link(&url, app );
             } else if url.ends_with("r2z") {
                 let app = app.to_owned();

@@ -13,6 +13,7 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { modQuery, activeGame } from '$lib/stores';
+	import ModListItem from '$lib/modlist/ModListItem.svelte';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
@@ -32,8 +33,6 @@
 			}
 		: undefined;
 
-	let isActiveModInstalled = false;
-
 	let unlistenFromQuery: UnlistenFn | undefined;
 
 	onMount(() => {
@@ -52,10 +51,6 @@
 	});
 
 	$: if (activeMod) {
-		invokeCommand<boolean>('is_mod_installed', { uuid: activeMod.uuid }).then(
-			(result) => (isActiveModInstalled = result)
-		);
-
 		invokeCommand<number>('get_download_size', { modRef: activeModRef }).then(
 			(size) => (activeDownloadSize = size)
 		);
@@ -91,23 +86,14 @@
 	}
 </script>
 
-<ModList
-	bind:activeMod
-	bind:mods
-	queryArgs={modQuery}
-	{sortOptions}
-	showInstalledIcon
-	on:onModCtrlClicked={({ detail: { mod } }) => installLatest(mod)}
->
+<ModList bind:activeMod bind:mods queryArgs={modQuery} {sortOptions}>
 	<div slot="details" class="mt-2 flex text-lg text-white">
 		<Button.Root
-			class="flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2
-							enabled:bg-green-600 enabled:font-semibold enabled:hover:bg-green-500
-							disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
+			class="flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2 enabled:bg-green-600 enabled:font-semibold enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
 			on:click={() => install(activeModRef)}
-			disabled={isActiveModInstalled}
+			disabled={activeMod?.isInstalled}
 		>
-			{#if isActiveModInstalled}
+			{#if activeMod?.isInstalled}
 				Mod already installed
 			{:else}
 				<Icon icon="mdi:download" class="align-middle text-xl" />
@@ -119,10 +105,8 @@
 		</Button.Root>
 		<DropdownMenu.Root bind:open={versionsDropdownOpen}>
 			<DropdownMenu.Trigger
-				class="ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl
-						enabled:bg-green-600 enabled:font-medium enabled:hover:bg-green-500
-						disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
-				disabled={isActiveModInstalled}
+				class="ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl enabled:bg-green-600 enabled:font-medium enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
+				disabled={activeMod?.isInstalled}
 			>
 				<Icon
 					icon="mdi:chevron-down"
@@ -155,15 +139,8 @@
 		</DropdownMenu.Root>
 	</div>
 
-	<div slot="item" let:mod>
-		{#if !mod.isInstalled}
-			<Button.Root
-				class="ml-2 mr-0.5 mt-0.5 hidden rounded-lg bg-green-600 p-2.5 align-middle text-2xl text-white hover:bg-green-500 group-hover:inline"
-				on:click={() => installLatest(mod)}
-			>
-				<Icon icon="mdi:download" />
-			</Button.Root>
-		{/if}
+	<div slot="item" let:mod let:isSelected>
+		<ModListItem {mod} {isSelected} on:install={({ detail: { mod } }) => installLatest(mod)} />
 	</div>
 </ModList>
 
