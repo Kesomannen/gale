@@ -601,7 +601,10 @@ impl Profile {
             let files = WalkDir::new(dir)
                 .into_iter()
                 .filter_map(Result::ok)
-                .filter(|entry| entry.file_type().is_file());
+                .filter(|entry| {
+                    let file_type = entry.file_type();
+                    file_type.is_file() || file_type.is_symlink()
+                });
 
             for file in files {
                 let path = file.path();

@@ -198,7 +198,7 @@ impl<R: Read + BufRead> Parser<R> {
 
     fn peek(&mut self) -> Result<Option<&str>> {
         if self.peeked.is_none() {
-            self.peeked = self.lines.next().transpose()?;
+            self.peeked = self.advance()?;
         }
 
         Ok(self.peeked.as_deref())
@@ -208,8 +208,21 @@ impl<R: Read + BufRead> Parser<R> {
         self.line += 1;
         match self.peeked.take() {
             Some(line) => Ok(Some(line)),
-            None => self.lines.next().transpose().map_err(Into::into),
+            None => self.advance(),
         }
+    }
+
+    fn advance(&mut self) -> Result<Option<String>> {
+        let mut next = self.lines.next().transpose()?;
+
+        if let Some(next) = &mut next {
+            // remove bom
+            if self.line == 0 && next.starts_with("\u{feff}") {
+                next.replace_range(0..3, "");
+            }
+        }
+
+        Ok(next)
     }
 
     fn consume_or_eof(&mut self) -> Result<String> {

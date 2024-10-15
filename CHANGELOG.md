@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Symlinks not having .old appended to them when disabling mods
+- Config parse failing for encoded with a BOM
+
 ## 0.8.11 (2024-10-14)
 
 ### Added
