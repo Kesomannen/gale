@@ -7,10 +7,8 @@ use std::{
 use crate::{games::Game, manager::Profile};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use typeshare::typeshare;
 use uuid::Uuid;
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
     pub categories: HashSet<String>,
@@ -74,7 +72,6 @@ impl PartialEq for PackageListing {
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageVersion {
     pub date_created: DateTime<Utc>,
@@ -104,13 +101,11 @@ impl Hash for PackageVersion {
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LegacyProfileCreateResponse {
     pub key: Uuid,
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PackageManifest {
     pub name: String,
@@ -124,7 +119,6 @@ pub struct PackageManifest {
     pub installers: Option<Vec<PackageInstaller>>,
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PackageInstaller {
     pub identifier: String,

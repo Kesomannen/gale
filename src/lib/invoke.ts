@@ -6,7 +6,10 @@ import { sentenceCase } from './util';
 const errorDuration = 10000;
 const maxErrors = 10;
 
-interface InvokeError { name: string, message: string }
+interface InvokeError {
+	name: string;
+	message: string;
+}
 
 listen<InvokeError>('error', (evt) => pushError(evt.payload));
 
@@ -18,8 +21,12 @@ export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 	} catch (error: any) {
 		let errStr = error as string;
 		let name = `Failed to ${sentenceCase(cmd).toLowerCase()}`;
-		let message = errStr[0].toUpperCase() + errStr.slice(1) + '.';
-		
+		let message = errStr[0].toUpperCase() + errStr.slice(1);
+
+		if (!message.endsWith('.')) {
+			message += '.';
+		}
+
 		pushError({ name, message }, false);
 		throw error;
 	}
@@ -42,7 +49,7 @@ export function pushError(error: InvokeError, throwErr: boolean = true) {
 	}, errorDuration);
 
 	let msg = `${error.name}: ${error.message}`;
-	invoke('log_err', { msg })
+	invoke('log_err', { msg });
 
 	if (throwErr) {
 		throw new Error(msg);

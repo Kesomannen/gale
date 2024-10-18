@@ -4,11 +4,10 @@ use std::{
     process::Command,
 };
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{bail, ensure, Context, Result};
 use log::warn;
 use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
-use typeshare::typeshare;
 
 use super::ManagerGame;
 use crate::{
@@ -19,7 +18,6 @@ use crate::{
 
 pub mod commands;
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase", tag = "type", content = "content")]
 pub enum LaunchMode {
@@ -210,7 +208,7 @@ fn preloader_path(profile_dir: &Path) -> Result<PathBuf> {
 
     let result = core_dir
         .read_dir()
-        .map_err(|_| anyhow!("failed to read BepInEx core directory. Is BepInEx installed?"))?
+        .context("failed to read BepInEx core directory. Is BepInEx installed?")?
         .filter_map(|entry| entry.ok())
         .find(|entry| {
             let file_name = entry.file_name();

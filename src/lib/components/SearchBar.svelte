@@ -17,7 +17,7 @@
 />
 <Icon class="absolute left-2.5 top-2 text-2xl text-slate-500" icon="mdi:magnify" />
 <Button.Root
-	class="absolute right-1.5 top-[0.4rem] rounded-md p-1 text-xl text-slate-500 hover:bg-gray-800 hover:text-slate-400"
+	class="absolute right-1.5 top-[0.4rem] rounded-md p-1 text-xl text-slate-400 hover:bg-gray-800 hover:text-slate-300"
 	on:click={() => (value = '')}
 >
 	<Icon icon="mdi:close" />

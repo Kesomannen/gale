@@ -18,8 +18,8 @@
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
 	let mods: Mod[] = [];
-	let activeMod: Mod | undefined;
-	let activeDownloadSize: number | undefined;
+	let activeMod: Mod | null = null;
+	let activeDownloadSize: number | null = null;
 
 	let versionsDropdownOpen = false;
 
@@ -62,8 +62,15 @@
 		refresh();
 	}
 
+	let refreshing = false;
+
 	async function refresh() {
+		if (refreshing) return;
+		refreshing = true;
+
 		mods = await invokeCommand<Mod[]>('query_thunderstore', { args: $modQuery });
+
+		refreshing = false;
 	}
 
 	async function installLatest(mod: Mod) {
@@ -81,8 +88,7 @@
 		}
 
 		await invokeCommand('install_mod', { modRef });
-		modQuery.update((query) => query);
-		activeMod = activeMod;
+		await refresh();
 	}
 </script>
 
@@ -98,7 +104,7 @@
 			{:else}
 				<Icon icon="mdi:download" class="align-middle text-xl" />
 				Install
-				{#if activeDownloadSize !== undefined && activeDownloadSize > 0}
+				{#if activeDownloadSize !== null && activeDownloadSize > 0}
 					({shortenFileSize(activeDownloadSize)})
 				{/if}
 			{/if}
@@ -140,7 +146,7 @@
 	</div>
 
 	<div slot="item" let:mod let:isSelected>
-		<ModListItem {mod} {isSelected} on:install={({ detail: { mod } }) => installLatest(mod)} />
+		<ModListItem {mod} {isSelected} on:install={({ detail: mod }) => installLatest(mod)} />
 	</div>
 </ModList>
 

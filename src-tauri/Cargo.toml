@@ -48,7 +48,6 @@ zip = "0.6"
 uuid = { version = "1", features = ["serde"] }
 reqwest = { version = "0.12", features = ["json", "stream", "gzip"] }
 walkdir = "2"
-typeshare = "1"
 image = "0.25"
 semver = { version = "1", features = ["serde"] }
 serde_yaml = "0.9"

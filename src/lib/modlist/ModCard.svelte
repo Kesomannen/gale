@@ -16,7 +16,7 @@
 	<img
 		src="https://gcdn.thunderstore.io/live/repository/icons/{fullName}.png"
 		alt={name}
-		class="h-12 w-12 rounded-md"
+		class="size-12 rounded"
 	/>
 	<div class="flex-shrink flex-grow flex-wrap overflow-hidden pl-3 text-left align-middle">
 		<div class="flex">
@@ -24,6 +24,7 @@
 				class="flex-shrink truncate font-semibold text-white hover:underline"
 				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
 				target="_blank"
+				rel="noopener noreferrer"
 			>
 				{name.replace(/_/g, ' ')}
 			</a>

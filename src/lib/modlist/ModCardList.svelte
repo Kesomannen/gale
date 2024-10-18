@@ -7,7 +7,7 @@
 
 	export { className as class };
 
-	// sort by name
+	// sort by name, not author
 	$: names.sort((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
 </script>
 

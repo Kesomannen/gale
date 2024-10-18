@@ -8,9 +8,7 @@
 	export let isSelected: boolean;
 
 	const dispatch = createEventDispatcher<{
-		install: {
-			mod: Mod;
-		};
+		install: Mod;
 	}>();
 
 	$: descriptionClasses = isSelected
@@ -22,7 +20,6 @@
 	class="group flex w-full rounded-lg border border-slate-500 p-2 {isSelected
 		? 'bg-slate-700'
 		: 'border-opacity-0 hover:bg-slate-700'}"
-	data-uuid={mod.uuid}
 	on:click
 >
 	<img src={mod.icon} alt={mod.name} class="size-12 rounded" />
@@ -50,7 +47,7 @@
 	{#if !mod.isInstalled}
 		<Button.Root
 			class="ml-2 mr-0.5 mt-0.5 hidden rounded-lg bg-green-600 p-2.5 align-middle text-2xl text-white hover:bg-green-500 group-hover:inline"
-			on:click={() => dispatch('install', { mod })}
+			on:click={() => dispatch('install', mod)}
 		>
 			<Icon icon="mdi:download" />
 		</Button.Root>

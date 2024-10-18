@@ -45,7 +45,7 @@
 		}
 
 		newValue = clamp(newValue, range.start, range.end);
-		inputString = newValue.toString();
+		inputString = newValue.toFixed(1);
 		content.value = newValue;
 	}
 
@@ -84,11 +84,11 @@
 			content.value = Math.min(range.end, content.value + 1);
 		}
 
-		inputString = content.value.toString();
+		inputString = content.value.toFixed(1);
 	}}
-	on:mousedown={(e) => {
+	on:mousedown={(evt) => {
 		isDragging = true;
-		calculateNewValue(e.clientX);
+		calculateNewValue(evt.clientX);
 	}}
 >
 	<div

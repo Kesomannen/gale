@@ -13,7 +13,6 @@ use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use typeshare::typeshare;
 use uuid::Uuid;
 use walkdir::WalkDir;
 
@@ -82,7 +81,6 @@ struct ManagerGameSaveData {
     active_profile_index: usize,
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalMod {
@@ -108,7 +106,6 @@ impl LocalMod {
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileMod {
@@ -173,7 +170,6 @@ impl ProfileMod {
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum ProfileModKind {
@@ -496,7 +492,6 @@ impl Profile {
     }
 }
 
-#[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Dependant {
@@ -522,9 +517,8 @@ impl From<&ProfileMod> for Dependant {
     }
 }
 
-#[typeshare]
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "content")]
+#[serde(rename_all = "camelCase", tag = "type", content = "dependants")]
 pub enum ModActionResponse {
     Done,
     HasDependants(Vec<Dependant>),

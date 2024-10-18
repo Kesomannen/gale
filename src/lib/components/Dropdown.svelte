@@ -1,27 +1,27 @@
 <script lang="ts" generics="T">
-	import { expoOut, quadOut, quartOut } from 'svelte/easing';
-
+	import { quadOut } from 'svelte/easing';
 	import { Select } from 'bits-ui';
-	import { fly, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
-	import { sentenceCase } from '$lib/util';
 
 	export let items: T[];
 	export let selected: T | T[] = [];
 	export let open = false;
 	export let multiple = false;
 	export let avoidCollisions = true;
-	export let size: 'sm' | 'md' | 'lg' = 'md';
 	export let placeholder: string = '';
 	export let onSelectedChange = (items: T[]) => {};
 	export let onSelectedChangeSingle = (item: T) => {};
 	export let getLabel = (item: T) => item as string;
 
+	export let icon: string | null = null;
+	export let overrideLabel: string | null = null;
+
 	let className: string = '';
 
 	export { className as class };
 
-	$: stringValue = Array.isArray(selected)
+	$: label = Array.isArray(selected)
 		? selected.length > 0
 			? selected.map((item) => getLabel(item)).join(', ')
 			: placeholder
@@ -51,15 +51,19 @@
 	{multiple}
 	bind:open
 >
-	<slot name="trigger" text={stringValue} {open}>
+	<slot name="trigger" text={label} {open}>
 		<Select.Trigger
-			class="flex items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-3 pr-2 hover:border-opacity-100 {className}"
+			class="flex items-center gap-2 overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-3 pr-2 hover:border-opacity-100 {className}"
 		>
-			<div class="flex-shrink flex-grow truncate text-left text-slate-300 text-{size}">
-				{stringValue}
+			{#if icon}
+				<Icon class="flex-shrink-0 text-lg text-slate-400" {icon} />
+			{/if}
+
+			<div class="flex-shrink flex-grow truncate text-left text-slate-300">
+				{overrideLabel ?? label}
 			</div>
 			<Icon
-				class="flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all duration-100 ease-out {open
+				class="flex-shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out {open
 					? 'rotate-180'
 					: 'rotate-0'}"
 				icon="mdi:chevron-down"
@@ -76,7 +80,7 @@
 			<slot name="item" {item}>
 				<Select.Item
 					value={item}
-					class="flex items-center rounded-md px-3 py-1 text-left text-slate-400 text-{size} cursor-default hover:bg-gray-700 hover:text-slate-200"
+					class="flex cursor-default items-center rounded-md px-3 py-1 text-left text-slate-400 hover:bg-gray-700 hover:text-slate-200"
 				>
 					{getLabel(item)}
 

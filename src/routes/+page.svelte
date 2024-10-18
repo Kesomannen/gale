@@ -1,12 +1,4 @@
-<script lang="ts" context="module">
-	import { writable } from 'svelte/store';
-
-	const updateBannerThreshold = writable(0);
-</script>
-
 <script lang="ts">
-	import BigButton from '$lib/components/BigButton.svelte';
-	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
 	import {
@@ -15,23 +7,19 @@
 		type ProfileQuery,
 		type AvailableUpdate,
 		SortBy,
-		SortOrder,
 		type Dependant
 	} from '$lib/models';
-	import ModDetailsDropdownItem from '$lib/modlist/ModDetailsDropdownItem.svelte';
+	import ModContextMenuItem from '$lib/modlist/ModContextMenuItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { activeProfile, profileQuery, refreshProfiles } from '$lib/stores';
-	import { isBefore, isOutdated } from '$lib/util';
+	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button, DropdownMenu, Switch } from 'bits-ui';
+	import { Button, DropdownMenu } from 'bits-ui';
 	import { fly } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
-	import { onMount } from 'svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
-	import ModCard from '$lib/modlist/ModCard.svelte';
-	import Checklist from '$lib/components/Checklist.svelte';
-	import Tooltip from '$lib/components/Tooltip.svelte';
 	import ProfileModListItem from '$lib/modlist/ProfileModListItem.svelte';
+	import UpdateAllBanner from '$lib/modlist/UpdateAllBanner.svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -47,20 +35,15 @@
 
 	let mods: Mod[] = [];
 	let unknownMods: Dependant[] = [];
-	let allUpdates: AvailableUpdate[] = [];
-	let activeMod: Mod | undefined;
+	let updates: AvailableUpdate[] = [];
+	let activeMod: Mod | null = null;
 
 	let removeDependants: DependantsPopup;
 	let disableDependants: DependantsPopup;
 	let enableDependencies: DependantsPopup;
 
-	let updateAllOpen = false;
 	let dependantsOpen = false;
 	let dependants: string[] | null;
-
-	let includeUpdates: Map<AvailableUpdate, boolean> = new Map();
-
-	$: updates = allUpdates.filter((update) => !update.ignore);
 
 	$: {
 		$activeProfile;
@@ -77,28 +60,19 @@
 		$profileQuery.includeNsfw &&
 		$profileQuery.includeDisabled;
 
-	// really ugly hack because reactive statements run once immediately no matter what :/
-	let isFirst = true;
-
-	$: {
-		$activeProfile;
-		resetBannerThreshold();
-	}
-
-	function resetBannerThreshold() {
-		if (isFirst) {
-			isFirst = false;
-			return;
-		}
-
-		$updateBannerThreshold = 0;
-	}
+	let refreshing = false;
 
 	async function refresh() {
+		if (refreshing) return;
+		refreshing = true;
+
 		let result = await invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery });
+
 		mods = result.mods;
 		unknownMods = result.unknownMods;
-		allUpdates = result.updates;
+		updates = result.updates;
+
+		refreshing = false;
 	}
 
 	async function toggleMod(mod: Mod, newState: boolean) {
@@ -112,9 +86,9 @@
 		}
 
 		if (newState) {
-			enableDependencies.openFor(mod, response.content);
+			enableDependencies.openFor(mod, response.dependants);
 		} else {
-			disableDependants.openFor(mod, response.content);
+			disableDependants.openFor(mod, response.dependants);
 		}
 	}
 
@@ -122,28 +96,11 @@
 		let response = await invokeCommand<ModActionResponse>('remove_mod', { uuid: mod.uuid });
 
 		if (response.type == 'done') {
-			activeMod = undefined;
+			activeMod = null;
 			await refreshProfiles();
-			return;
+		} else {
+			removeDependants.openFor(mod, response.dependants);
 		}
-
-		removeDependants.openFor(mod, response.content);
-	}
-
-	async function onReorder(uuid: string, delta: number) {
-		let oldIndex = mods.findIndex((mod) => mod.uuid === uuid);
-
-		if (oldIndex === -1) {
-			console.warn('Could not find mod with uuid', uuid);
-			return;
-		}
-
-		let newIndex = oldIndex + delta;
-
-		if (newIndex < 0 || newIndex >= mods.length) return;
-		let temp = mods[newIndex];
-		mods[newIndex] = mods[oldIndex];
-		mods[oldIndex] = temp;
 	}
 
 	async function openDependants() {
@@ -173,95 +130,90 @@
 
 		await refresh();
 
-		activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid);
+		activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid) ?? null;
 	}
 
 	let dragElement: HTMLElement | null;
-	let totalDelta = 0;
+	let dragStartIndex: number;
+	let dragTargetIndex: number;
 
 	function onDragStart(evt: DragEvent) {
 		if (!reorderable || !evt.dataTransfer) return;
 
-		totalDelta = 0;
 		dragElement = evt.currentTarget as HTMLElement;
+
+		dragStartIndex = parseInt(dragElement.dataset.index!);
+		dragTargetIndex = dragStartIndex;
 
 		evt.dataTransfer.effectAllowed = 'move';
 		evt.dataTransfer.setData('text/html', dragElement.outerHTML);
+
+		console.log('started dragging mod at', dragStartIndex);
 	}
 
 	function onDragOver(evt: DragEvent) {
 		if (!reorderable || !dragElement) return;
 
 		let target = evt.currentTarget as HTMLElement;
-		let draggingUuid = dragElement.dataset.uuid;
-		let targetUuid = target.dataset.uuid;
+		target.dataset.dragTarget = 'true';
 
-		if (draggingUuid === targetUuid) return;
+		let targetIndex = parseInt(target.dataset.index!);
 
-		if (isBefore(dragElement, target)) {
-			onReorder(draggingUuid!, -1);
-			totalDelta--;
-		} else {
-			onReorder(draggingUuid!, 1);
-			totalDelta++;
-		}
-
-		dragElement = target;
+		dragTargetIndex = targetIndex;
+		console.log('new drag target:', dragTargetIndex);
 	}
 
 	async function onDragEnd(evt: DragEvent) {
+		console.log('onDragEnd:', evt);
 		if (!reorderable || !dragElement) return;
 
 		let uuid = dragElement.dataset.uuid!;
+		let delta = dragTargetIndex - dragStartIndex;
+		dragElement = null;
 
-		if ($profileQuery.sortOrder === SortOrder.Descending) {
-			// list is reversed
-			totalDelta *= -1;
+		console.log('moving', dragStartIndex, 'to', dragTargetIndex);
+
+		if (delta === 0) {
+			return;
 		}
 
-		await invokeCommand('reorder_mod', { uuid, delta: totalDelta });
-		await refresh();
+		await invokeCommand('reorder_mod', { uuid, delta });
 
-		dragElement = null;
-		totalDelta = 0;
+		await refresh();
 	}
 </script>
 
 <ModList {sortOptions} bind:mods bind:activeMod queryArgs={profileQuery}>
-	<div slot="details">
+	<svelte:fragment slot="details">
 		{#if activeMod && isOutdated(activeMod)}
 			<Button.Root
-				class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-green-600
-						py-2 text-lg font-medium hover:bg-green-500"
+				class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-2 text-lg font-medium hover:bg-green-500"
 				on:click={() => updateActiveMod('latest')}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
 				Update to {activeMod?.versions[0].name}
 			</Button.Root>
 		{/if}
-	</div>
+	</svelte:fragment>
 
-	<svelte:fragment slot="dropdown">
+	<svelte:fragment slot="context">
 		{#if activeMod && activeMod?.versions.length > 1}
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger
-					class="flex cursor-default items-center truncate rounded-md py-1 pl-3 pr-1 
-							text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
+					class="flex cursor-default items-center truncate rounded-md py-1 pl-3 pr-1 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
 				>
 					<Icon class="mr-1.5 text-lg" icon="mdi:edit" />
 					Change version
 					<Icon class="ml-4 text-xl" icon="mdi:chevron-right" />
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent
-					class="mr-2 flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg
-							border border-gray-500 bg-gray-700 p-1 shadow-xl"
+					class="mr-2 flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg border border-gray-500 bg-gray-700 p-1 shadow-xl"
 					transition={fly}
 					transitionConfig={{ duration: 50 }}
 				>
 					{#each activeMod?.versions ?? [] as version}
 						<DropdownMenu.Item
-							class="flex flex-shrink-0 cursor-default items-center truncate rounded-md py-1 pl-3 pr-12 
-									text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
+							class="flex flex-shrink-0 cursor-default items-center truncate rounded-md py-1 pl-3 pr-12 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
 							on:click={() => updateActiveMod({ specific: version.uuid })}
 						>
 							{version.name}
@@ -271,7 +223,7 @@
 			</DropdownMenu.Sub>
 		{/if}
 
-		<ModDetailsDropdownItem
+		<ModContextMenuItem
 			label="Uninstall"
 			icon="mdi:delete"
 			onClick={() =>
@@ -281,20 +233,16 @@
 				})}
 		/>
 
-		<ModDetailsDropdownItem
-			icon="mdi:source-branch"
-			label="Show dependants"
-			onClick={openDependants}
-		/>
+		<ModContextMenuItem icon="mdi:source-branch" label="Show dependants" onClick={openDependants} />
 
-		<ModDetailsDropdownItem
+		<ModContextMenuItem
 			label="Open directory"
 			icon="mdi:folder"
 			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
 		/>
 	</svelte:fragment>
 
-	<div slot="banner">
+	<svelte:fragment slot="banner">
 		{#if unknownMods.length > 0}
 			<div class="mb-1 mr-3 flex items-center rounded-lg bg-red-600 py-1.5 pl-3 pr-1 text-red-100">
 				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
@@ -312,104 +260,28 @@
 			</div>
 		{/if}
 
-		{#if updates.length > $updateBannerThreshold}
-			<div
-				class="mb-1 mr-3 flex items-center rounded-lg bg-green-700 py-1 pl-3 pr-1 text-green-100"
-			>
-				<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
-				There {updates.length === 1 ? 'is' : 'are'}
-				<strong class="mx-1">{updates.length}</strong>
-				{updates.length === 1 ? ' update' : ' updates'} available.
-				<Button.Root
-					class="ml-1 font-semibold text-white hover:text-green-200 hover:underline"
-					on:click={() => {
-						updateAllOpen = true;
-					}}
-				>
-					Update all?
-				</Button.Root>
+		<UpdateAllBanner {updates} />
+	</svelte:fragment>
 
-				<Button.Root
-					class="ml-auto rounded-md p-1 text-xl hover:bg-green-600"
-					on:click={() => ($updateBannerThreshold = updates.length)}
-				>
-					<Icon icon="mdi:close" />
-				</Button.Root>
-			</div>
-		{/if}
-	</div>
-
-	<svelte:fragment slot="item" let:mod let:isSelected>
+	<svelte:fragment slot="item" let:mod let:index let:isSelected>
 		<ProfileModListItem
 			{mod}
+			{index}
 			{isSelected}
 			{reorderable}
 			on:dragstart={onDragStart}
 			on:dragend={onDragEnd}
 			on:dragover={onDragOver}
-			on:toggle={({ detail: { mod, newState } }) => toggleMod(mod, newState)}
+			on:toggle={({ detail: newState }) => toggleMod(mod, newState)}
 		/>
 	</svelte:fragment>
 </ModList>
-
-<ConfirmPopup title="Confirm update" bind:open={updateAllOpen}>
-	Select which mods to update:
-
-	<Checklist
-		title="Update all"
-		set={(update, _, value) => {
-			includeUpdates.set(update, value);
-			includeUpdates = includeUpdates; // force reactivity
-		}}
-		get={(update, _) => includeUpdates.get(update) ?? true}
-		items={updates}
-		let:item
-		class="mt-1 overflow-y-auto"
-	>
-		<ModCard fullName={item.fullName} showVersion={false} />
-
-		<span class="text-light ml-auto text-slate-400">{item.old}</span>
-		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-slate-400" />
-		<span class="text-lg font-semibold text-green-400">{item.new}</span>
-
-		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
-			<Button.Root
-				class="ml-2 rounded p-1.5 text-slate-400 hover:bg-gray-700 hover:text-slate-200"
-				on:click={() => {
-					item.ignore = true;
-					allUpdates = allUpdates; // force reactivity
-
-					includeUpdates.delete(item);
-					includeUpdates = includeUpdates; // force reactivity
-					invokeCommand('ignore_update', { versionUuid: item.versionUuid });
-				}}><Icon icon="mdi:notifications-off" /></Button.Root
-			>
-		</Tooltip>
-	</Checklist>
-
-	<svelte:fragment slot="buttons">
-		<BigButton
-			color="green"
-			fontWeight="semibold"
-			on:click={() => {
-				let uuids = updates
-					.filter((update) => includeUpdates.get(update) ?? true)
-					.map((update) => update.packageUuid);
-
-				invokeCommand('update_mods', { uuids, respectIgnored: true }).then(refresh);
-				updateAllOpen = false;
-			}}
-		>
-			Update mods
-		</BigButton>
-	</svelte:fragment>
-</ConfirmPopup>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
 	<div class="mt-4 text-center text-slate-300">
 		{#if dependants}
 			{#if dependants.length === 0}
-				No dependants found
+				No dependants found 😢
 			{:else}
 				<ModCardList names={dependants} />
 			{/if}
@@ -427,7 +299,7 @@
 	commandName="remove_mod"
 	onExecute={() => {
 		refreshProfiles();
-		activeMod = undefined;
+		activeMod = null;
 	}}
 	onCancel={refresh}
 />

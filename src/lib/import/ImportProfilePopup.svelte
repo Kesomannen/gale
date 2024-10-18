@@ -44,7 +44,6 @@
 			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
 			name = data.name;
 			mode = isAvailable(name) ? 'new' : 'overwrite';
-			console.log(data);
 		} catch (e) {
 			open = false;
 		} finally {

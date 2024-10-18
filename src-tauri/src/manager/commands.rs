@@ -1,6 +1,5 @@
 use anyhow::Context;
 use serde::Serialize;
-use typeshare::typeshare;
 use uuid::Uuid;
 
 use crate::{
@@ -13,7 +12,6 @@ use crate::{
 use super::{Dependant, ModActionResponse, ModManager, Profile};
 use itertools::Itertools;
 
-#[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameInfo<'a> {
@@ -82,7 +80,6 @@ pub fn set_active_game(
     Ok(())
 }
 
-#[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfilesInfo {
@@ -90,7 +87,6 @@ pub struct ProfilesInfo {
     active_index: usize,
 }
 
-#[typeshare]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileInfo {
@@ -107,9 +103,9 @@ pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfilesInfo {
         profiles: game
             .profiles
             .iter()
-            .map(|p| ProfileInfo {
-                name: p.name.clone(),
-                mod_count: p.mods.len(),
+            .map(|profile| ProfileInfo {
+                name: profile.name.clone(),
+                mod_count: profile.mods.len(),
             })
             .collect(),
         active_index: game.active_profile_index,
@@ -176,16 +172,15 @@ pub fn query_profile(
         .map_ok(|update| {
             let ignore = profile.ignored_updates.contains(&update.latest.uuid4);
 
-            Ok::<_, anyhow::Error>(FrontendAvailableUpdate {
+            FrontendAvailableUpdate {
                 full_name: update.latest.full_name.clone(),
                 package_uuid: update.package.uuid4,
                 version_uuid: update.latest.uuid4,
                 old: update.current.version_number.clone(),
                 new: update.latest.version_number.clone(),
                 ignore,
-            })
+            }
         })
-        .flatten_ok()
         .collect::<anyhow::Result<Vec<_>>>()
         .unwrap_or_else(|err| {
             log::warn!("failed to check for updates: {:#}", err);

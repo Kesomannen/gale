@@ -36,12 +36,12 @@ export interface ConfigSection {
 export interface ConfigFile {
 	displayName: string;
 	relativePath: string;
+	sections: ConfigSection[];
 	metadata: {
 		pluginName: string;
 		pluginVersion: string;
 		pluginGuid: string;
 	} | null;
-	sections: ConfigSection[];
 }
 
 export interface ConfigNum {
@@ -149,7 +149,9 @@ export interface Dependant {
 	uuid: string;
 }
 
-export type ModActionResponse = { type: 'done' } | { type: 'hasDependants'; content: Dependant[] };
+export type ModActionResponse =
+	| { type: 'done' }
+	| { type: 'hasDependants'; dependants: Dependant[] };
 
 export type InstallTask =
 	| { kind: 'done' }

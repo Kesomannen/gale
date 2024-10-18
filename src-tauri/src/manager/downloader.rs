@@ -11,7 +11,6 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 use thiserror::Error;
-use typeshare::typeshare;
 
 use crate::{
     logger,
@@ -176,7 +175,6 @@ impl From<BorrowedMod<'_>> for ModInstall {
     }
 }
 
-#[typeshare]
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallProgress<'a> {
@@ -188,7 +186,6 @@ pub struct InstallProgress<'a> {
     pub task: InstallTask,
 }
 
-#[typeshare]
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "payload")]
 pub enum InstallTask {

@@ -5,8 +5,10 @@
 ### Fixed
 
 - Symlinks not having .old appended to them when disabling mods
-- Config parse failing for encoded with a BOM
+- BOM-encoded config files causing a parse error
 - Install with mod manager button on thunderstore.io
+- Profile mod count not updating when a mod is uninstalled
+- Extra decimals sometimes being added when dragging a config slider
 
 ## 0.8.11 (2024-10-14)
 

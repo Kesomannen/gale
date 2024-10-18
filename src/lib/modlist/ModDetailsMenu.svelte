@@ -11,7 +11,7 @@
 	import { activeGame } from '$lib/stores';
 	import { get } from 'svelte/store';
 	import ModInfoPopup from './ModInfoPopup.svelte';
-	import ModDetailsDropdownItem from './ModDetailsDropdownItem.svelte';
+	import ModDetailsDropdownItem from './ModContextMenuItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import ModCardList from './ModCardList.svelte';
 
@@ -70,9 +70,9 @@
 			transition={slide}
 			transitionConfig={{ duration: 100 }}
 		>
-			<slot name="dropdown" />
+			<slot name="context" />
 
-			{#if mod.websiteUrl && mod.websiteUrl.length > 0}
+			{#if mod.websiteUrl !== null && mod.websiteUrl.length > 0}
 				<ModDetailsDropdownItem
 					icon="mdi:open-in-new"
 					label="Open website"
@@ -80,7 +80,7 @@
 				/>
 			{/if}
 
-			{#if mod.donateUrl}
+			{#if mod.donateUrl !== null}
 				<ModDetailsDropdownItem
 					icon="mdi:heart"
 					label="Donate"
@@ -93,7 +93,7 @@
 	</DropdownMenu.Root>
 
 	<Button.Root
-		class="break-words pb-1 pr-4 text-left text-3xl font-bold text-slate-100 hover:underline xl:text-4xl"
+		class="break-words pr-4 text-left text-3xl font-bold text-slate-100 hover:underline xl:text-4xl"
 		on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}
 		>{mod.name.replace(/_/g, ' ')}</Button.Root
 	>

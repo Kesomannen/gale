@@ -33,8 +33,7 @@
 				<Markdown source={value.markdown} />
 			{:else}
 				<div class="flex items-center justify-center gap-2 text-slate-300">
-					<Icon class="text-lg" icon="mdi:emoticon-sad-outline" />
-					No {path} found
+					No {path} found 😥
 				</div>
 			{/if}
 		{:else}

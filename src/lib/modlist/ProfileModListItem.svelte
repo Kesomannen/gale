@@ -8,14 +8,12 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let mod: Mod;
+	export let index: number;
 	export let isSelected: boolean;
 	export let reorderable: boolean;
 
 	const dispatch = createEventDispatcher<{
-		toggle: {
-			mod: Mod;
-			newState: boolean;
-		};
+		toggle: boolean;
 	}>();
 
 	let imgSrc: string;
@@ -56,6 +54,7 @@
 		? 'bg-slate-700'
 		: 'border-opacity-0 hover:bg-slate-700'}"
 	data-uuid={mod.uuid}
+	data-index={index}
 	on:dragstart
 	on:dragover
 	on:dragend
@@ -100,7 +99,7 @@
 
 	<Switch.Root
 		checked={mod.enabled ?? true}
-		onCheckedChange={(newState) => dispatch('toggle', { mod, newState })}
+		onCheckedChange={(newState) => dispatch('toggle', newState)}
 		on:click={(evt) => {
 			console.log('switch clicked');
 			evt.stopPropagation();

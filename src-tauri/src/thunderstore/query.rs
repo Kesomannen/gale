@@ -4,7 +4,6 @@ use anyhow::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
-use typeshare::typeshare;
 
 use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
@@ -26,7 +25,6 @@ pub struct QueryState {
     pub current_query: Option<QueryModsArgs>,
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum SortBy {
@@ -41,7 +39,6 @@ pub enum SortBy {
     DiskSpace,
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum SortOrder {
@@ -49,7 +46,6 @@ pub enum SortOrder {
     Descending,
 }
 
-#[typeshare]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryModsArgs {

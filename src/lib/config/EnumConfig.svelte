@@ -14,7 +14,7 @@
 		selected = content.options[content.index];
 	}
 
-	function onSelectChange(value: string) {
+	function onSelectedChange(value: string) {
 		let index = content.options.indexOf(value);
 		setConfigEntry(entryId, {
 			type: 'enum',
@@ -28,8 +28,8 @@
 
 <Dropdown
 	items={content.options}
-	class="flex-grow overflow-hidden"
+	class="flex-grow"
 	bind:selected
-	onSelectedChangeSingle={onSelectChange}
+	onSelectedChangeSingle={onSelectedChange}
 />
 <ResetConfigButton {entryId} {onReset} />
