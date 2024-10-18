@@ -56,7 +56,7 @@
 
 <div class="my-1 flex items-center pl-2 text-slate-300">
 	<Tooltip
-		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate pr-2 text-left text-slate-300"
+		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate py-1 pr-2 text-left text-slate-300"
 		side="top"
 		openDelay={50}
 	>
@@ -74,14 +74,14 @@
 
 			{#if entry.defaultValue}
 				<p>
-					<span class="font-medium">Default: </span>
+					<span class="font-semibold">Default: </span>
 					{valueToString(entry.defaultValue)}
 				</p>
 			{/if}
 
 			{#if (value.type === 'int32' || value.type === 'double' || value.type === 'single') && value.content.range}
 				<p>
-					<span class="font-medium">Range: </span>
+					<span class="font-semibold">Range: </span>
 					{value.content.range.start} - {value.content.range.end}
 				</p>
 			{/if}

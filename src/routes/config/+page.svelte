@@ -114,7 +114,7 @@
 			<div class="flex-shrink-0 truncate text-2xl font-bold text-slate-200">
 				{selectedFile.relativePath}
 				{#if selectedSection}
-					<span class="font-light text-slate-400">/</span>
+					<span class="text-slate-400">/</span>
 					{selectedSection.name.length > 0 ? selectedSection.name : '<Nameless section>'}
 				{/if}
 			</div>

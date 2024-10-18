@@ -20,8 +20,9 @@
 </script>
 
 <ConfirmPopup title="Create new profile" bind:open>
+	Choose a name for the new profile:
 	<InputField
-		placeholder="Enter profile name..."
+		placeholder="Enter name..."
 		class="mt-1 w-full"
 		on:submit={createProfile}
 		bind:value={name}

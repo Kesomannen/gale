@@ -16,9 +16,10 @@
 
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Updater from './Updater.svelte';
+	import { quadOut } from 'svelte/easing';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -103,7 +104,9 @@
 		<DropdownMenu.Content
 			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
 			inTransition={fly}
-			inTransitionConfig={{ duration: 50 }}
+			inTransitionConfig={{ duration: 100, y: -7, easing: quadOut }}
+			outTransition={fade}
+			outTransitionConfig={{ duration: 100 }}
 		>
 			{#each profiles as profile, i}
 				<DropdownMenu.Item

@@ -49,34 +49,26 @@
 				{file.displayName ?? file.relativePath}
 			</div>
 
-			<Tooltip
-				text="Open in external program"
+			<Button.Root
 				class="ml-auto hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
+				on:click={(evt) => {
+					evt.stopPropagation();
+					invokeCommand('open_config_file', { file: file.relativePath });
+				}}
 			>
-				<Button.Root
-					on:click={(evt) => {
-						evt.stopPropagation();
-						invokeCommand('open_config_file', { file: file.relativePath });
-					}}
-				>
-					<Icon icon="mdi:open-in-new" />
-				</Button.Root>
-			</Tooltip>
+				<Icon icon="mdi:open-in-new" />
+			</Button.Root>
 
-			<Tooltip
-				text="Delete"
+			<Button.Root
 				class="hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
+				on:click={async (evt) => {
+					evt.stopPropagation();
+					await invokeCommand('delete_config_file', { file: file.relativePath });
+					onDeleted();
+				}}
 			>
-				<Button.Root
-					on:click={async (evt) => {
-						evt.stopPropagation();
-						await invokeCommand('delete_config_file', { file: file.relativePath });
-						onDeleted();
-					}}
-				>
-					<Icon icon="mdi:delete" />
-				</Button.Root>
-			</Tooltip>
+				<Icon icon="mdi:delete" />
+			</Button.Root>
 		</Collapsible.Trigger>
 	{/if}
 	{#if file.type === 'ok' && shownSections.length > 0}
