@@ -149,7 +149,7 @@ impl From<Entry> for EntryKind {
 #[serde(rename_all = "camelCase")]
 pub struct Entry {
     name: String,
-    description: String,
+    description: Option<String>,
     type_name: String,
     default_value: Option<Value>,
     value: Value,
@@ -170,6 +170,10 @@ impl Entry {
 pub enum Value {
     Boolean(bool),
     String(String),
+    Int32(Num<i32>),
+    Single(Num<f32>),
+    Double(Num<f64>),
+    Other(String),
     Enum {
         index: usize,
         options: Vec<String>,
@@ -178,10 +182,6 @@ pub enum Value {
         indicies: Vec<usize>,
         options: Vec<String>,
     },
-    Int32(Num<i32>),
-    Single(Num<f32>),
-    Double(Num<f64>),
-    Other(String),
 }
 
 impl Value {

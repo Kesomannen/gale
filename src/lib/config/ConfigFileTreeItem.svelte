@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ConfigFile, ConfigSection, LoadFileResult } from '$lib/models';
 	import Icon from '@iconify/svelte';
@@ -31,7 +32,7 @@
 <Collapsible.Root bind:open>
 	{#if type !== 'ok' || shownSections.length > 0}
 		<Collapsible.Trigger
-			class="group flex w-full items-center overflow-hidden px-2 py-0.5 text-{textColor} {isSelected
+			class="group flex w-full items-center overflow-hidden py-0.5 pl-2 pr-1 text-{textColor} {isSelected
 				? 'bg-slate-600 font-semibold'
 				: 'hover:bg-slate-600'}"
 			on:click={() => type !== 'ok' && onFileClicked(file)}
@@ -48,25 +49,34 @@
 				{file.displayName ?? file.relativePath}
 			</div>
 
-			<Button.Root
-				class="ml-auto hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:inline"
-				on:click={(evt) => {
-					evt.stopPropagation();
-					invokeCommand('open_config_file', { file: file.relativePath });
-				}}
+			<Tooltip
+				text="Open in external program"
+				class="ml-auto hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
 			>
-				<Icon icon="mdi:open-in-new" />
-			</Button.Root>
-			<Button.Root
-				class="hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:inline"
-				on:click={async (evt) => {
-					evt.stopPropagation();
-					await invokeCommand('delete_config_file', { file: file.relativePath });
-					onDeleted();
-				}}
+				<Button.Root
+					on:click={(evt) => {
+						evt.stopPropagation();
+						invokeCommand('open_config_file', { file: file.relativePath });
+					}}
+				>
+					<Icon icon="mdi:open-in-new" />
+				</Button.Root>
+			</Tooltip>
+
+			<Tooltip
+				text="Delete"
+				class="hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
 			>
-				<Icon icon="mdi:delete" />
-			</Button.Root>
+				<Button.Root
+					on:click={async (evt) => {
+						evt.stopPropagation();
+						await invokeCommand('delete_config_file', { file: file.relativePath });
+						onDeleted();
+					}}
+				>
+					<Icon icon="mdi:delete" />
+				</Button.Root>
+			</Tooltip>
 		</Collapsible.Trigger>
 	{/if}
 	{#if file.type === 'ok' && shownSections.length > 0}

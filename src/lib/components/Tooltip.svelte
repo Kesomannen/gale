@@ -1,13 +1,23 @@
 <script lang="ts">
 	import { Tooltip } from 'bits-ui';
-	import { fade } from 'svelte/transition';
+	import { quadOut } from 'svelte/easing';
+	import { fade, fly } from 'svelte/transition';
 
-	export let text: string = '';
+	export let text: string = '[No text provided]';
 	export let side: 'top' | 'right' | 'bottom' | 'left' = 'top';
 	export let sideOffset: number = 0;
-	export let openDelay: number = 100;
+	export let openDelay: number = 150;
 
 	let triggerClass: string = '';
+
+	const flyDistances = {
+		top: { x: 0, y: 7 },
+		right: { x: -7, y: 0 },
+		bottom: { x: 0, y: -7 },
+		left: { x: 7, y: 0 }
+	};
+
+	$: flyDistance = flyDistances[side];
 
 	export { triggerClass as class };
 </script>
@@ -18,8 +28,10 @@
 	</Tooltip.Trigger>
 	<Tooltip.Content
 		class="max-w-[40rem] rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-slate-300 shadow-lg"
-		transition={fade}
-		transitionConfig={{ duration: 50 }}
+		inTransition={fly}
+		inTransitionConfig={{ duration: 100, ...flyDistance, easing: quadOut }}
+		outTransition={fade}
+		outTransitionConfig={{ duration: 100 }}
 		{sideOffset}
 		{side}
 	>

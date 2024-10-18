@@ -22,11 +22,11 @@
 		if (mod.type === 'remote') {
 			imgSrc = mod.icon!;
 		} else {
-			if (mod.icon) {
+			if (mod.icon === null) {
+				imgSrc = `games/${$activeGame?.id}.webp`;
+			} else {
 				imgSrc = '';
 				loadLoadIcon(mod.icon);
-			} else {
-				imgSrc = `games/${$activeGame?.id}.webp`;
 			}
 		}
 	}
@@ -43,8 +43,8 @@
 			let data = await readFile(path);
 			let blob = new Blob([data], { type: 'image/png' });
 			imgSrc = URL.createObjectURL(blob);
-		} catch (e) {
-			console.error(e);
+		} catch (err) {
+			console.error(err);
 		}
 	}
 </script>
@@ -55,24 +55,24 @@
 		: 'border-opacity-0 hover:bg-slate-700'}"
 	data-uuid={mod.uuid}
 	data-index={index}
+	draggable="true"
+	on:click
 	on:dragstart
 	on:dragover
 	on:dragend
-	on:click
-	draggable="true"
 >
 	<img src={imgSrc} alt={mod.name} class="size-12 rounded" />
 	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
 		<div class="flex items-center gap-1 overflow-hidden">
 			<div
-				class="flex-shrink truncate font-semibold {mod.enabled === false
+				class="flex-shrink truncate font-medium {mod.enabled === false
 					? 'text-slate-300 line-through'
 					: 'text-white'}"
 			>
 				{mod.name.replace(/_/g, ' ')}
 			</div>
 			<div class="px-1 {descriptionClasses}">
-				{mod.version ?? ''}
+				{mod.version ?? '?.?.?'}
 			</div>
 			{#if mod.isPinned}
 				<Icon class="flex-shrink-0 text-slate-400" icon="mdi:pin" />

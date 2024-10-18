@@ -56,13 +56,15 @@
 
 <div class="my-1 flex items-center pl-2 text-slate-300">
 	<Tooltip
-		side="top"
 		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate pr-2 text-left text-slate-300"
+		side="top"
+		openDelay={50}
 	>
 		{sentenceCase(entry.name)}
+
 		<svelte:fragment slot="tooltip">
 			<div>
-				<span class="text-lg font-bold text-slate-200">{entry.name}</span>
+				<span class="text-lg font-semibold text-slate-200">{entry.name}</span>
 				<span class="ml-1 text-slate-400"> ({typeName})</span>
 			</div>
 
@@ -72,14 +74,14 @@
 
 			{#if entry.defaultValue}
 				<p>
-					<span class="font-semibold">Default: </span>
+					<span class="font-medium">Default: </span>
 					{valueToString(entry.defaultValue)}
 				</p>
 			{/if}
 
 			{#if (value.type === 'int32' || value.type === 'double' || value.type === 'single') && value.content.range}
 				<p>
-					<span class="font-semibold">Range: </span>
+					<span class="font-medium">Range: </span>
 					{value.content.range.start} - {value.content.range.end}
 				</p>
 			{/if}

@@ -1,61 +1,37 @@
-use itertools::Itertools;
 use serde::Serialize;
 
 use super::{de::FLAGS_MESSAGE, Entry, EntryKind, File, FileMetadata, Num, Section, Value};
-use std::io;
+use std::{fmt::Display, io::{self, Write}};
 
-struct Serializer<W: io::Write> {
+struct Serializer<W: Write> {
     writer: W,
 }
 
-impl<W: io::Write> Serializer<W> {
-    #[inline]
-    fn write(&mut self, bytes: &[u8]) -> io::Result<()> {
-        self.writer.write_all(bytes)
+impl<W: Write> Write for Serializer<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.writer.write(buf)
     }
 
-    #[inline]
-    fn new_line(&mut self) -> io::Result<()> {
-        self.write(b"\n")
+    fn flush(&mut self) -> io::Result<()> {
+        self.writer.flush()
     }
+}
 
-    #[inline]
-    fn write_str(&mut self, str: &str) -> io::Result<()> {
-        self.write(str.as_bytes())
-    }
-
-    #[inline]
-    fn write_into(&mut self, value: impl ToString) -> io::Result<()> {
-        self.write_str(&value.to_string())
-    }
-
+impl<W: Write> Serializer<W> {
     fn write_metadata(&mut self, metadata: &FileMetadata) -> io::Result<()> {
-        self.write(b"## Settings file was created by plugin ")?;
-        self.write_str(&metadata.plugin_name)?;
-        self.write(b" ")?;
-        self.write_str(&metadata.plugin_version)?;
-
-        self.new_line()?;
-
-        self.write(b"## Plugin GUID: ")?;
-        self.write_str(&metadata.plugin_guid)?;
-
-        self.new_line()?;
-        self.new_line()?;
+        writeln!(self, "## Settings file was created by plugin {} {}", metadata.plugin_name, metadata.plugin_version)?;
+        writeln!(self, "## Plugin GUID: {}", metadata.plugin_guid)?;
+        writeln!(self)?;
 
         Ok(())
     }
 
     fn write_section(&mut self, section: &Section) -> io::Result<()> {
-        self.write(b"[")?;
-        self.write_str(&section.name)?;
-        self.write(b"]")?;
-        self.new_line()?;
-        self.new_line()?;
+        writeln!(self, "[{}]", section.name)?;
+        writeln!(self)?;
 
         for entry in section.entries.iter() {
             self.write_entry_kind(entry)?;
-            self.new_line()?;
         }
 
         Ok(())
@@ -63,14 +39,10 @@ impl<W: io::Write> Serializer<W> {
 
     fn write_num_comment<T>(&mut self, num: &Num<T>) -> io::Result<()>
     where
-        T: Serialize + ToString,
+        T: Serialize + Display,
     {
         if let Some(range) = &num.range {
-            self.write(b"# Acceptable value range: From ")?;
-            self.write_str(&range.start.to_string())?;
-            self.write(b" to ")?;
-            self.write_str(&range.end.to_string())?;
-            self.new_line()?;
+            writeln!(self, "# Acceptable value range: From {} to {}", range.start, range.end)?;
         }
 
         Ok(())
@@ -78,16 +50,28 @@ impl<W: io::Write> Serializer<W> {
 
     fn write_value(&mut self, value: &Value) -> io::Result<()> {
         match value {
-            Value::Boolean(b) => self.write_into(b),
-            Value::String(s) => self.write_str(s),
-            Value::Enum { index, options } => self.write_str(&options[*index]),
+            Value::Boolean(bool) => write!(self, "{bool}"),
+            Value::String(str) => write!(self, "{str}"),
+            Value::Other(str) => write!(self, "{str}"),
+            Value::Int32(num) => write!(self, "{}", num.value),
+            Value::Single(num) => write!(self, "{}", num.value),
+            Value::Double(num) => write!(self, "{}", num.value),
+            Value::Enum { index, options } => write!(self, "{}", options[*index]),
             Value::Flags { indicies, options } => {
-                self.write_str(&indicies.iter().map(|i| &options[*i]).join(", "))
+                if indicies.is_empty() {
+                    return write!(self, "0");
+                }
+
+                for (i, option) in indicies.iter().map(|index| &options[*index]).enumerate() {
+                    if i > 0 {
+                        write!(self, ", ")?;
+                    }
+
+                    write!(self, "{option}")?;
+                }
+
+                Ok(())
             }
-            Value::Int32(num) => self.write_into(num.value),
-            Value::Single(num) => self.write_into(num.value),
-            Value::Double(num) => self.write_into(num.value),
-            Value::Other(s) => self.write_str(s),
         }
     }
 
@@ -99,41 +83,36 @@ impl<W: io::Write> Serializer<W> {
     }
 
     fn write_entry(&mut self, entry: &Entry) -> io::Result<()> {
-        for line in entry.description.lines() {
-            self.write(b"## ")?;
-            self.write_str(line)?;
-            self.new_line()?;
+        if let Some(description) = &entry.description {
+            for line in description.lines() {
+                writeln!(self, "## {}", line)?;
+            }
         }
 
-        self.write(b"# Setting type: ")?;
-        self.write_str(&entry.type_name)?;
-        self.new_line()?;
+        writeln!(self, "# Setting type: {}", entry.type_name)?;
 
         self.write(b"# Default value:")?;
         if let Some(default) = &entry.default_value {
-            self.write(b" ")?;
+            write!(self, " ")?;
             self.write_value(default)?;
         }
-        self.new_line()?;
+        writeln!(self)?;
 
         if let Some(options) = entry.value.options() {
-            self.write(b"# Acceptable values: ")?;
-            let mut is_first = true;
-            for option in options {
-                if !is_first {
-                    self.write(b", ")?;
+            write!(self, "# Acceptable values: ")?;
+            for (i, option) in options.iter().enumerate() {
+                if i > 0 {
+                    write!(self, ", ")?;
                 }
-                is_first = false;
 
-                self.write_str(option)?;
+                write!(self, "{option}")?;
             }
 
-            self.new_line()?;
+            writeln!(self)?;
         }
 
         if let Value::Flags { .. } = entry.value {
-            self.write_str(FLAGS_MESSAGE)?;
-            self.new_line()?;
+            writeln!(self, "{}", FLAGS_MESSAGE)?;
         }
 
         match &entry.value {
@@ -143,25 +122,23 @@ impl<W: io::Write> Serializer<W> {
             _ => Ok(()),
         }?;
 
-        self.write_str(&entry.name)?;
-        self.write(b" = ")?;
+        write!(self, "{} = ", entry.name)?;
         self.write_value(&entry.value)?;
-        self.new_line()?;
+        writeln!(self)?;
+        writeln!(self)?;
 
         Ok(())
     }
 
     fn write_orphaned_entry(&mut self, name: &str, value: &str) -> io::Result<()> {
-        self.write_str(name)?;
-        self.write(b" = ")?;
-        self.write_str(value)?;
-        self.new_line()?;
+        writeln!(self, "{name} = {value}")?;
+        writeln!(self)?;
 
         Ok(())
     }
 }
 
-pub fn to_writer<W: io::Write>(file: &File, writer: W) -> io::Result<()> {
+pub fn to_writer<W: Write>(file: &File, writer: W) -> io::Result<()> {
     let mut serializer = Serializer { writer };
 
     if let Some(metadata) = &file.metadata {

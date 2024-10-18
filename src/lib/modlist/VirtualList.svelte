@@ -160,7 +160,7 @@
 <style>
 	svelte-virtual-list-viewport {
 		position: relative;
-		overflow-y: auto;
+		overflow-y: scroll;
 		-webkit-overflow-scrolling: touch;
 		display: block;
 	}

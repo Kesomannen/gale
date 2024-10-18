@@ -24,7 +24,7 @@
 	$: label = Array.isArray(selected)
 		? selected.length > 0
 			? selected.map((item) => getLabel(item)).join(', ')
-			: placeholder
+			: null
 		: getLabel(selected);
 </script>
 
@@ -59,9 +59,14 @@
 				<Icon class="flex-shrink-0 text-lg text-slate-400" {icon} />
 			{/if}
 
-			<div class="flex-shrink flex-grow truncate text-left text-slate-300">
-				{overrideLabel ?? label}
+			<div
+				class="flex-shrink flex-grow truncate text-left text-slate-300"
+				class:text-slate-300={overrideLabel || label}
+				class:text-slate-400={!overrideLabel && !label}
+			>
+				{overrideLabel ?? label ?? placeholder}
 			</div>
+
 			<Icon
 				class="flex-shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out {open
 					? 'rotate-180'

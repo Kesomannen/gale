@@ -114,7 +114,7 @@
 			<div class="mt-3 flex flex-col gap-1">
 				{#if prefs !== null}
 					<PathPref
-						label="Steam executable"
+						title="Steam executable"
 						type="file"
 						value={prefs.steamExePath}
 						set={set((value, prefs) => (prefs.steamExePath = value))}
@@ -123,7 +123,7 @@
 					</PathPref>
 
 					<PathPref
-						label="Steam library"
+						title="Steam library"
 						type="dir"
 						value={prefs.steamLibraryDir}
 						set={set((value, prefs) => (prefs.steamLibraryDir = value))}
@@ -132,7 +132,7 @@
 					</PathPref>
 
 					<PathPref
-						label="Gale data directory"
+						title="Gale data directory"
 						type="dir"
 						value={prefs.dataDir}
 						set={set((value, prefs) => (prefs.dataDir = value))}

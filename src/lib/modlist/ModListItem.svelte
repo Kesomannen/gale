@@ -25,7 +25,7 @@
 	<img src={mod.icon} alt={mod.name} class="size-12 rounded" />
 	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
 		<div class="flex items-center gap-1 overflow-hidden">
-			<div class="flex-shrink truncate pr-1 font-semibold text-white">
+			<div class="flex-shrink truncate pr-1 font-medium text-white">
 				{mod.name.replace(/_/g, ' ')}
 			</div>
 			{#if mod.isPinned}

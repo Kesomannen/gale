@@ -7,7 +7,8 @@
 		type ProfileQuery,
 		type AvailableUpdate,
 		SortBy,
-		type Dependant
+		type Dependant,
+		SortOrder
 	} from '$lib/models';
 	import ModContextMenuItem from '$lib/modlist/ModContextMenuItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -133,51 +134,47 @@
 		activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid) ?? null;
 	}
 
-	let dragElement: HTMLElement | null;
-	let dragStartIndex: number;
-	let dragTargetIndex: number;
+	let reorderUuid: string;
+	let reorderPrevIndex: number;
 
 	function onDragStart(evt: DragEvent) {
 		if (!reorderable || !evt.dataTransfer) return;
 
-		dragElement = evt.currentTarget as HTMLElement;
+		let element = evt.currentTarget as HTMLElement;
 
-		dragStartIndex = parseInt(dragElement.dataset.index!);
-		dragTargetIndex = dragStartIndex;
+		reorderUuid = element.dataset.uuid!;
+		reorderPrevIndex = parseInt(element.dataset.index!);
 
 		evt.dataTransfer.effectAllowed = 'move';
-		evt.dataTransfer.setData('text/html', dragElement.outerHTML);
-
-		console.log('started dragging mod at', dragStartIndex);
+		evt.dataTransfer.setData('text/html', element.outerHTML);
 	}
 
 	function onDragOver(evt: DragEvent) {
-		if (!reorderable || !dragElement) return;
+		if (!reorderable) return;
 
 		let target = evt.currentTarget as HTMLElement;
-		target.dataset.dragTarget = 'true';
-
-		let targetIndex = parseInt(target.dataset.index!);
-
-		dragTargetIndex = targetIndex;
-		console.log('new drag target:', dragTargetIndex);
-	}
-
-	async function onDragEnd(evt: DragEvent) {
-		console.log('onDragEnd:', evt);
-		if (!reorderable || !dragElement) return;
-
-		let uuid = dragElement.dataset.uuid!;
-		let delta = dragTargetIndex - dragStartIndex;
-		dragElement = null;
-
-		console.log('moving', dragStartIndex, 'to', dragTargetIndex);
+		let newIndex = parseInt(target.dataset.index!);
+		let delta = newIndex - reorderPrevIndex;
 
 		if (delta === 0) {
 			return;
 		}
 
-		await invokeCommand('reorder_mod', { uuid, delta });
+		let temp = mods[reorderPrevIndex];
+		mods[reorderPrevIndex] = mods[newIndex];
+		mods[newIndex] = temp;
+
+		reorderPrevIndex = newIndex;
+
+		if ($profileQuery.sortOrder === SortOrder.Descending) {
+			delta *= -1; // list is reversed
+		}
+
+		invokeCommand('reorder_mod', { uuid: reorderUuid, delta });
+	}
+
+	async function onDragEnd(evt: DragEvent) {
+		if (!reorderable) return;
 
 		await refresh();
 	}

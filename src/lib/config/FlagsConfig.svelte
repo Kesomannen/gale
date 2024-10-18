@@ -6,7 +6,8 @@
 
 	export let entryId: ConfigEntryId;
 
-	let content = entryId.entry.value.content as { indicies: number[]; options: string[] };
+	let value = entryId.entry.value;
+	let content = value.content as { indicies: number[]; options: string[] };
 	let selected = content.indicies.map((index) => content.options[index]);
 
 	function onReset(newValue: ConfigValue) {
@@ -24,10 +25,11 @@
 </script>
 
 <Dropdown
+	placeholder="Select {entryId.entry.typeName}"
 	items={content.options}
 	class="flex-grow overflow-hidden"
 	bind:selected
 	{onSelectedChange}
-	multiple={true}
+	multiple
 />
 <ResetConfigButton {entryId} {onReset} />

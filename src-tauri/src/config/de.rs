@@ -78,9 +78,6 @@ struct EntryBuilder {
 impl EntryBuilder {
     fn build(self) -> Result<Entry> {
         let name = self.name.ok_or(anyhow!("missing entry name"))?;
-        let description = self
-            .description
-            .ok_or(anyhow!("missing entry description"))?;
 
         let type_name = self.type_name.ok_or(anyhow!("missing entry type"))?;
 
@@ -110,10 +107,10 @@ impl EntryBuilder {
 
         Ok(Entry {
             name,
-            description,
             type_name,
             default_value,
             value,
+            description: self.description,
         })
     }
 

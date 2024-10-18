@@ -1,22 +1,29 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
-	import type { MarkdownResponse, Mod } from '../models';
-	import { shortenFileSize, shortenNum, timeSince } from '../util';
-	import { Button, DropdownMenu } from 'bits-ui';
-	import { fly, slide } from 'svelte/transition';
 	import Popup from '$lib/components/Popup.svelte';
-
-	import { open } from '@tauri-apps/plugin-shell';
-	import { fetch } from '@tauri-apps/plugin-http';
-	import { activeGame } from '$lib/stores';
-	import { get } from 'svelte/store';
-	import ModInfoPopup from './ModInfoPopup.svelte';
-	import ModDetailsDropdownItem from './ModContextMenuItem.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
+
+	import ModDetailsDropdownItem from './ModContextMenuItem.svelte';
+	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModCardList from './ModCardList.svelte';
 
+	import { activeGame } from '$lib/stores';
+	import type { MarkdownResponse, Mod } from '$lib/models';
+	import { shortenFileSize, shortenNum, timeSince } from '$lib/util';
+
+	import { Button, DropdownMenu } from 'bits-ui';
+
+	import { slide } from 'svelte/transition';
+	import { get } from 'svelte/store';
+
+	import { fetch } from '@tauri-apps/plugin-http';
+	import { open } from '@tauri-apps/plugin-shell';
+
+	import Icon from '@iconify/svelte';
+	import { createEventDispatcher } from 'svelte';
+
 	export let mod: Mod;
-	export let onClose: () => void;
+
+	const dispatch = createEventDispatcher<{ close: {} }>();
 
 	let dependenciesOpen = false;
 
@@ -88,7 +95,11 @@
 				/>
 			{/if}
 
-			<ModDetailsDropdownItem icon="mdi:close" label="Close" onClick={onClose} />
+			<ModDetailsDropdownItem
+				icon="mdi:close"
+				label="Close"
+				onClick={() => dispatch('close', {})}
+			/>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 

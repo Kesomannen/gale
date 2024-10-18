@@ -39,7 +39,7 @@ impl EntryKind {
     ) -> Self {
         Entry {
             name: name.to_owned(),
-            description: description.to_owned(),
+            description: Some(description.to_owned()),
             type_name: type_name.to_owned(),
             default_value,
             value,

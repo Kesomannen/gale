@@ -132,15 +132,13 @@
 				let:item={mod}
 				let:index
 			>
-				<button class="contents" on:click={() => onModClicked(mod)}>
-					<slot name="item" {mod} {index} isSelected={activeMod === mod} />
-				</button>
+				<slot name="item" {mod} {index} isSelected={activeMod === mod} />
 			</VirtualList>
 		{/if}
 	</div>
 
 	{#if activeMod !== null}
-		<ModDetailsMenu mod={activeMod} onClose={() => (activeMod = null)}>
+		<ModDetailsMenu mod={activeMod} on:close={() => (activeMod = null)}>
 			<slot name="details" />
 			<svelte:fragment slot="context">
 				<slot name="context" />
