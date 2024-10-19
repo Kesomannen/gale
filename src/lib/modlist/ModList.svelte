@@ -1,21 +1,50 @@
 <script lang="ts">
-	import ModDetailsMenu from '$lib/modlist/ModDetailsMenu.svelte';
+	import ModDetails from '$lib/modlist/ModDetails.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import VirtualList from './VirtualList.svelte';
-
+	import { open } from '@tauri-apps/plugin-shell';
 	import { sentenceCase } from '$lib/util';
-	import { SortBy, type Mod, type QueryModsArgs, SortOrder } from '$lib/models';
-
+	import {
+		SortBy,
+		type Mod,
+		type QueryModsArgs,
+		SortOrder,
+		type ModContextItem
+	} from '$lib/models';
 	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
+
+	const defaultContextItems: ModContextItem[] = [
+		{
+			label: 'Open website',
+			icon: 'mdi:open-in-new',
+			onclick: (mod) => openIfNotNull(mod.websiteUrl),
+			showFor: (mod) => mod.websiteUrl !== null && mod.websiteUrl.length > 0
+		},
+		{
+			label: 'Donate',
+			icon: 'mdi:heart',
+			onclick: (mod) => openIfNotNull(mod.donateUrl),
+			showFor: (mod) => mod.donateUrl !== null
+		},
+		{
+			label: 'Close',
+			icon: 'mdi:close',
+			onclick: () => (selected = null)
+		}
+	];
 
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
-	export let selected: Mod | null;
-	export let queryArgs: Writable<QueryModsArgs>;
 	export let maxCount = 20;
+	export let queryArgs: Writable<QueryModsArgs>;
+
+	export let selected: Mod | null;
+	export let contextItems: ModContextItem[] = [];
+
+	$: allContextItems = [...defaultContextItems, ...contextItems];
 
 	let listStart = 0;
 	let listEnd = 0;
@@ -48,6 +77,10 @@
 		if ($queryArgs.includeDisabled) selected.push('Disabled');
 
 		return selected;
+	}
+
+	function openIfNotNull(url: string | null) {
+		if (url !== null) open(url);
 	}
 </script>
 
@@ -130,11 +163,8 @@
 	</div>
 
 	{#if selected !== null}
-		<ModDetailsMenu mod={selected} on:close={() => (selected = null)}>
+		<ModDetails mod={selected} contextItems={allContextItems}>
 			<slot name="details" />
-			<svelte:fragment slot="context">
-				<slot name="context" />
-			</svelte:fragment>
-		</ModDetailsMenu>
+		</ModDetails>
 	{/if}
 </div>

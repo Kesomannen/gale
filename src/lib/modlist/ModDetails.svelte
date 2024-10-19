@@ -2,12 +2,12 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 
-	import ModDetailsDropdownItem from './ModContextMenuItem.svelte';
+	import ModContextMenuItem from './ModContextMenuItem.svelte';
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModCardList from './ModCardList.svelte';
 
 	import { activeGame } from '$lib/stores';
-	import type { MarkdownResponse, Mod } from '$lib/models';
+	import type { MarkdownResponse, Mod, ModContextItem } from '$lib/models';
 	import { shortenFileSize, shortenNum, timeSince } from '$lib/util';
 
 	import { Button, DropdownMenu } from 'bits-ui';
@@ -19,11 +19,9 @@
 	import { open } from '@tauri-apps/plugin-shell';
 
 	import Icon from '@iconify/svelte';
-	import { createEventDispatcher } from 'svelte';
 
 	export let mod: Mod;
-
-	const dispatch = createEventDispatcher<{ close: {} }>();
+	export let contextItems: ModContextItem[] = [];
 
 	let dependenciesOpen = false;
 
@@ -40,10 +38,6 @@
 		if (game === null) return;
 
 		open(`https://thunderstore.io/c/${game.id}/p/${path}/`);
-	}
-
-	function openIfNotNull(url: string | null) {
-		if (url) open(url);
 	}
 
 	let readmePromise: Promise<string | null>;
@@ -77,29 +71,11 @@
 			transition={slide}
 			transitionConfig={{ duration: 100 }}
 		>
-			<slot name="context" />
-
-			{#if mod.websiteUrl !== null && mod.websiteUrl.length > 0}
-				<ModDetailsDropdownItem
-					icon="mdi:open-in-new"
-					label="Open website"
-					onClick={() => openIfNotNull(mod.websiteUrl)}
-				/>
-			{/if}
-
-			{#if mod.donateUrl !== null}
-				<ModDetailsDropdownItem
-					icon="mdi:heart"
-					label="Donate"
-					onClick={() => openIfNotNull(mod.donateUrl)}
-				/>
-			{/if}
-
-			<ModDetailsDropdownItem
-				icon="mdi:close"
-				label="Close"
-				onClick={() => dispatch('close', {})}
-			/>
+			{#each contextItems as { icon, label, onclick, showFor }}
+				{#if showFor === undefined || showFor(mod)}
+					<ModContextMenuItem {icon} {label} on:click={() => onclick(mod)} type="details" />
+				{/if}
+			{/each}
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 

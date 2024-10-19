@@ -27,7 +27,7 @@
 		<slot />
 	</Tooltip.Trigger>
 	<Tooltip.Content
-		class="max-w-[40rem] rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-slate-300 shadow-lg"
+		class="max-w-lg rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-slate-300 shadow-lg"
 		inTransition={fly}
 		inTransitionConfig={{ duration: 100, ...flyDistance, easing: quadOut }}
 		outTransition={fade}

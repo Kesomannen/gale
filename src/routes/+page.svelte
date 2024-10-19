@@ -8,7 +8,8 @@
 		type AvailableUpdate,
 		SortBy,
 		type Dependant,
-		SortOrder
+		SortOrder,
+		type ModContextItem
 	} from '$lib/models';
 	import ModContextMenuItem from '$lib/modlist/ModContextMenuItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -32,6 +33,28 @@
 		SortBy.Author,
 		SortBy.Rating,
 		SortBy.Downloads
+	];
+
+	const contextItems: ModContextItem[] = [
+		{
+			label: 'Uninstall',
+			icon: 'mdi:delete',
+			onclick: (mod) =>
+				uninstall({
+					uuid: mod.uuid,
+					fullName: mod.name
+				})
+		},
+		{
+			label: 'Show dependants',
+			icon: 'mdi:source-branch',
+			onclick: openDependants
+		},
+		{
+			label: 'Open directory',
+			icon: 'mdi:folder',
+			onclick: (mod) => invokeCommand('open_plugin_dir', { uuid: mod.uuid })
+		}
 	];
 
 	let mods: Mod[] = [];
@@ -109,14 +132,12 @@
 		}
 	}
 
-	async function openDependants() {
-		if (selectedMod === null) return;
-
+	async function openDependants(mod: Mod) {
 		dependants = null;
 		dependantsOpen = true;
 
 		dependants = await invokeCommand<string[]>('get_dependants', {
-			uuid: selectedMod.uuid
+			uuid: mod.uuid
 		});
 	}
 
@@ -190,6 +211,7 @@
 
 <ModList
 	{sortOptions}
+	{contextItems}
 	queryArgs={profileQuery}
 	bind:this={modList}
 	bind:mods
@@ -206,52 +228,6 @@
 				Update to {selectedMod?.versions[0].name}
 			</Button.Root>
 		{/if}
-	</svelte:fragment>
-
-	<svelte:fragment slot="context">
-		{#if selectedMod && selectedMod?.versions.length > 1}
-			<DropdownMenu.Sub>
-				<DropdownMenu.SubTrigger
-					class="flex cursor-default items-center truncate rounded-md py-1 pl-3 pr-1 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
-				>
-					<Icon class="mr-1.5 text-lg" icon="mdi:edit" />
-					Change version
-					<Icon class="ml-4 text-xl" icon="mdi:chevron-right" />
-				</DropdownMenu.SubTrigger>
-				<DropdownMenu.SubContent
-					class="mr-2 flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg border border-gray-500 bg-gray-700 p-1 shadow-xl"
-					transition={fly}
-					transitionConfig={{ duration: 50 }}
-				>
-					{#each selectedMod?.versions ?? [] as version}
-						<DropdownMenu.Item
-							class="flex flex-shrink-0 cursor-default items-center truncate rounded-md py-1 pl-3 pr-12 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
-							on:click={() => updateActiveMod({ specific: version.uuid })}
-						>
-							{version.name}
-						</DropdownMenu.Item>
-					{/each}
-				</DropdownMenu.SubContent>
-			</DropdownMenu.Sub>
-		{/if}
-
-		<ModContextMenuItem
-			label="Uninstall"
-			icon="mdi:delete"
-			onClick={() =>
-				uninstall({
-					uuid: selectedMod?.uuid ?? '',
-					fullName: selectedMod?.name ?? ''
-				})}
-		/>
-
-		<ModContextMenuItem icon="mdi:source-branch" label="Show dependants" onClick={openDependants} />
-
-		<ModContextMenuItem
-			label="Open directory"
-			icon="mdi:folder"
-			onClick={() => invokeCommand('open_plugin_dir', { uuid: selectedMod?.uuid })}
-		/>
 	</svelte:fragment>
 
 	<svelte:fragment slot="banner">
@@ -285,10 +261,7 @@
 			on:dragend={onDragEnd}
 			on:dragover={onDragOver}
 			on:toggle={({ detail: newState }) => toggleMod(mod, newState)}
-			on:click={() => {
-				console.log('item clicked');
-				modList.selectMod(mod);
-			}}
+			on:click={() => modList.selectMod(mod)}
 		/>
 	</svelte:fragment>
 </ModList>

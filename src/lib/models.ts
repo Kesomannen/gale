@@ -1,6 +1,10 @@
 export type ConfigValue =
 	| { type: 'boolean'; content: boolean }
 	| { type: 'string'; content: string }
+	| { type: 'int32'; content: ConfigNum }
+	| { type: 'single'; content: ConfigNum }
+	| { type: 'double'; content: ConfigNum }
+	| { type: 'other'; content: string }
 	| {
 			type: 'enum';
 			content: {
@@ -14,26 +18,22 @@ export type ConfigValue =
 				indicies: number[];
 				options: string[];
 			};
-	  }
-	| { type: 'int32'; content: ConfigNum }
-	| { type: 'single'; content: ConfigNum }
-	| { type: 'double'; content: ConfigNum }
-	| { type: 'other'; content: string };
+	  };
 
-export interface ConfigEntry {
+export type ConfigEntry = {
 	name: string;
-	description: string;
+	description: string | null;
 	typeName: string;
 	defaultValue: ConfigValue | null;
 	value: ConfigValue;
-}
+};
 
-export interface ConfigSection {
+export type ConfigSection = {
 	name: string;
 	entries: ({ type: 'orphaned' } | ({ type: 'normal' } & ConfigEntry))[];
-}
+};
 
-export interface ConfigFile {
+export type ConfigFile = {
 	displayName: string;
 	relativePath: string;
 	sections: ConfigSection[];
@@ -42,17 +42,17 @@ export interface ConfigFile {
 		pluginVersion: string;
 		pluginGuid: string;
 	} | null;
-}
+};
 
-export interface ConfigNum {
+export type ConfigNum = {
 	value: number;
 	range: ConfigRange | null;
-}
+};
 
-export interface ConfigRange {
+export type ConfigRange = {
 	start: number;
 	end: number;
-}
+};
 
 export type LoadFileResult =
 	| ({ type: 'ok' } & ConfigFile)
@@ -64,23 +64,23 @@ export type LoadFileResult =
 			error: string;
 	  };
 
-export interface ProfileInfo {
+export type ProfileInfo = {
 	name: string;
 	modCount: number;
-}
+};
 
-export interface ProfilesInfo {
+export type ProfilesInfo = {
 	profiles: ProfileInfo[];
 	activeIndex: number;
-}
+};
 
-export interface GameInfo {
+export type GameInfo = {
 	active: Game;
 	all: Game[];
 	favorites: string[];
-}
+};
 
-export interface Mod {
+export type Mod = {
 	name: string;
 	description: string | null;
 	categories: string[] | null;
@@ -106,7 +106,7 @@ export interface Mod {
 	type: 'local' | 'remote';
 	enabled: boolean | null;
 	configFile: string | null;
-}
+};
 
 export enum SortBy {
 	Newest = 'newest',
@@ -125,7 +125,7 @@ export enum SortOrder {
 	Descending = 'descending'
 }
 
-export interface QueryModsArgs {
+export type QueryModsArgs = {
 	searchTerm: string;
 	includeCategories: string[];
 	excludeCategories: string[];
@@ -135,18 +135,18 @@ export interface QueryModsArgs {
 	includeEnabled: boolean;
 	sortBy: SortBy;
 	sortOrder: SortOrder;
-}
+};
 
-export interface ConfigEntryId {
+export type ConfigEntryId = {
 	file: { relativePath: string };
 	section: ConfigSection;
 	entry: ConfigEntry;
-}
+};
 
-export interface Dependant {
+export type Dependant = {
 	fullName: string;
 	uuid: string;
-}
+};
 
 export type ModActionResponse =
 	| { type: 'done' }
@@ -165,16 +165,16 @@ export type InstallTask =
 			};
 	  };
 
-export interface InstallProgress {
+export type InstallProgress = {
 	totalProgress: number;
 	installedMods: number;
 	totalMods: number;
 	currentName: string;
 	canCancel: boolean;
 	task: InstallTask;
-}
+};
 
-export interface ModpackArgs {
+export type ModpackArgs = {
 	name: string;
 	description: string;
 	author: string;
@@ -187,46 +187,46 @@ export interface ModpackArgs {
 	websiteUrl: string;
 	includeDisabled: boolean;
 	includeFileMap: Map<string, boolean>;
-}
+};
 
-export interface Game {
+export type Game = {
 	id: string;
 	displayName: string;
 	aliases: string[];
 	steamId: number;
 	favorite: boolean;
-}
+};
 
-export interface PackageCategory {
+export type PackageCategory = {
 	id: string;
 	name: string;
 	slug: string;
-}
+};
 
-export interface FiltersResponse {
+export type FiltersResponse = {
 	package_categories: PackageCategory[];
-}
+};
 
 export type LaunchMode =
 	| { type: 'steam' }
 	| { type: 'direct'; content: { instances: number; intervalSecs: number } };
 
-export interface AvailableUpdate {
+export type AvailableUpdate = {
 	fullName: string;
 	ignore: boolean;
 	packageUuid: string;
 	versionUuid: string;
 	old: string;
 	new: string;
-}
+};
 
-export interface ProfileQuery {
+export type ProfileQuery = {
 	mods: Mod[];
 	unknownMods: Dependant[];
 	updates: AvailableUpdate[];
-}
+};
 
-export interface ImportData {
+export type ImportData = {
 	name: string;
 	includes: Map<string, string>;
 	modNames: string[] | null;
@@ -241,9 +241,9 @@ export interface ImportData {
 		overwrite: boolean;
 		installTime: string | null;
 	}[];
-}
+};
 
-export interface R2ImportData {
+export type R2ImportData = {
 	r2modman: {
 		path: string;
 		profiles: string[];
@@ -254,14 +254,14 @@ export interface R2ImportData {
 		profiles: string[];
 		include: boolean[];
 	} | null;
-}
+};
 
-export interface MarkdownResponse {
+export type MarkdownResponse = {
 	markdown: string | null;
 	detail?: string;
-}
+};
 
-export interface Prefs {
+export type Prefs = {
 	steamExePath: string | null;
 	steamLibraryDir: string | null;
 	dataDir: string;
@@ -269,10 +269,17 @@ export interface Prefs {
 	fetchModsAutomatically: boolean;
 	zoomFactor: number;
 	gamePrefs: Map<string, GamePrefs>;
-}
+};
 
-export interface GamePrefs {
+export type GamePrefs = {
 	dirOverride: string | null;
 	customArgs: string[] | null;
 	launchMode: LaunchMode;
-}
+};
+
+export type ModContextItem = {
+	label: string;
+	icon: string;
+	onclick: (mod: Mod) => void;
+	showFor?: (mod: Mod) => boolean;
+};
