@@ -126,7 +126,6 @@ export enum SortOrder {
 }
 
 export interface QueryModsArgs {
-	maxCount: number;
 	searchTerm: string;
 	includeCategories: string[];
 	excludeCategories: string[];

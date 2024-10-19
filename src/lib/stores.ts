@@ -22,7 +22,6 @@ export let profiles: ProfileInfo[] = [];
 export let activeProfile = writable<ProfileInfo | null>(null);
 
 const defaultModQuery = () => ({
-	maxCount: 20,
 	searchTerm: '',
 	includeCategories: [],
 	excludeCategories: [],
@@ -35,7 +34,6 @@ const defaultModQuery = () => ({
 });
 
 const defaultProfileQuery = () => ({
-	maxCount: 20,
 	searchTerm: '',
 	includeCategories: [],
 	excludeCategories: [],

@@ -102,7 +102,7 @@
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
+			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
 			inTransition={fly}
 			inTransitionConfig={{ duration: 100, y: -7, easing: quadOut }}
 			outTransition={fade}

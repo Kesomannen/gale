@@ -85,9 +85,11 @@
 			{/if}
 		</div>
 
-		<div class="truncate {descriptionClasses}">
-			{mod.description ?? ''}
-		</div>
+		{#if mod.description !== null}
+			<div class="truncate {descriptionClasses}">
+				{mod.description}
+			</div>
+		{/if}
 	</div>
 
 	{#if reorderable}
@@ -97,17 +99,18 @@
 		/>
 	{/if}
 
-	<Switch.Root
-		checked={mod.enabled ?? true}
-		onCheckedChange={(newState) => dispatch('toggle', newState)}
-		on:click={(evt) => {
-			console.log('switch clicked');
-			evt.stopPropagation();
-		}}
-		class="group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
-	>
-		<Switch.Thumb
-			class="pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75 ease-out hover:bg-slate-200 data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
-		/>
-	</Switch.Root>
+	<!-- make sure click events don't propagate and cause the mod to be selected -->
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div class="contents" on:click={(evt) => evt.stopPropagation()}>
+		<Switch.Root
+			checked={mod.enabled ?? true}
+			onCheckedChange={(newState) => dispatch('toggle', newState)}
+			class="group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
+		>
+			<Switch.Thumb
+				class="pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75 ease-out hover:bg-slate-200 data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
+			/>
+		</Switch.Root>
+	</div>
 </button>

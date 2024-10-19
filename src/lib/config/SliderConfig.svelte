@@ -10,6 +10,7 @@
 	let type = entryId.entry.value.type as 'int32' | 'double' | 'single';
 
 	$: fillPercent = clamp(((content.value - range.start) / (range.end - range.start)) * 100, 0, 100);
+	$: decimals = type === 'int32' ? 0 : 1;
 
 	let element: HTMLDivElement;
 	let fill: HTMLDivElement;
@@ -45,7 +46,7 @@
 		}
 
 		newValue = clamp(newValue, range.start, range.end);
-		inputString = newValue.toFixed(1);
+		inputString = newValue.toFixed(decimals);
 		content.value = newValue;
 	}
 
@@ -55,22 +56,22 @@
 </script>
 
 <svelte:window
-	on:mousemove={(e) => {
+	on:mousemove={(evt) => {
 		if (isDragging) {
-			calculateNewValue(e.clientX);
+			calculateNewValue(evt.clientX);
 		}
 	}}
-	on:mouseup={(e) => {
+	on:mouseup={(evt) => {
 		if (isDragging) {
 			isDragging = false;
-			calculateNewValue(e.clientX);
+			calculateNewValue(evt.clientX);
 			submitValue();
 		}
 	}}
 />
 
 <div
-	class="group h-5 flex-grow rounded-full bg-gray-900 py-1 pl-1 pr-3"
+	class="group h-5 flex-grow rounded-full bg-gray-900 py-1 pl-1 pr-2"
 	role="slider"
 	aria-valuemin={range.start}
 	aria-valuemax={range.end}
@@ -84,7 +85,7 @@
 			content.value = Math.min(range.end, content.value + 1);
 		}
 
-		inputString = content.value.toFixed(1);
+		inputString = content.value.toFixed(decimals);
 	}}
 	on:mousedown={(evt) => {
 		isDragging = true;

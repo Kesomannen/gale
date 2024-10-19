@@ -18,18 +18,21 @@
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
 	let mods: Mod[] = [];
-	let activeMod: Mod | null = null;
-	let activeDownloadSize: number | null = null;
+
+	let modList: ModList;
+	let maxCount: number;
+	let selectedMod: Mod | null = null;
+	let selectedDownloadSize: number | null = null;
 
 	let versionsDropdownOpen = false;
 
 	let missingDepsOpen = false;
 	let missingDeps: string[] = [];
 
-	$: activeModRef = activeMod
+	$: activeModRef = selectedMod
 		? {
-				packageUuid: activeMod.uuid,
-				versionUuid: activeMod.versions[0].uuid
+				packageUuid: selectedMod.uuid,
+				versionUuid: selectedMod.versions[0].uuid
 			}
 		: undefined;
 
@@ -50,13 +53,13 @@
 		};
 	});
 
-	$: if (activeMod) {
+	$: if (selectedMod) {
 		invokeCommand<number>('get_download_size', { modRef: activeModRef }).then(
-			(size) => (activeDownloadSize = size)
+			(size) => (selectedDownloadSize = size)
 		);
 	}
 
-	$: {
+	$: if (maxCount > 0) {
 		$modQuery;
 		$activeGame;
 		refresh();
@@ -68,7 +71,7 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		mods = await invokeCommand<Mod[]>('query_thunderstore', { args: $modQuery });
+		mods = await invokeCommand<Mod[]>('query_thunderstore', { args: { ...$modQuery, maxCount } });
 
 		refreshing = false;
 	}
@@ -92,27 +95,34 @@
 	}
 </script>
 
-<ModList bind:activeMod bind:mods queryArgs={modQuery} {sortOptions}>
+<ModList
+	{sortOptions}
+	queryArgs={modQuery}
+	bind:this={modList}
+	bind:mods
+	bind:maxCount
+	bind:selected={selectedMod}
+>
 	<div slot="details" class="mt-2 flex text-lg text-white">
 		<Button.Root
 			class="flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2 enabled:bg-green-600 enabled:font-semibold enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
 			on:click={() => install(activeModRef)}
-			disabled={activeMod?.isInstalled}
+			disabled={selectedMod?.isInstalled}
 		>
-			{#if activeMod?.isInstalled}
+			{#if selectedMod?.isInstalled}
 				Mod already installed
 			{:else}
 				<Icon icon="mdi:download" class="align-middle text-xl" />
 				Install
-				{#if activeDownloadSize !== null && activeDownloadSize > 0}
-					({shortenFileSize(activeDownloadSize)})
+				{#if selectedDownloadSize !== null && selectedDownloadSize > 0}
+					({shortenFileSize(selectedDownloadSize)})
 				{/if}
 			{/if}
 		</Button.Root>
 		<DropdownMenu.Root bind:open={versionsDropdownOpen}>
 			<DropdownMenu.Trigger
 				class="ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl enabled:bg-green-600 enabled:font-medium enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
-				disabled={activeMod?.isInstalled}
+				disabled={selectedMod?.isInstalled}
 			>
 				<Icon
 					icon="mdi:chevron-down"
@@ -126,14 +136,14 @@
 				transition={fly}
 				transitionConfig={{ duration: 100 }}
 			>
-				{#each activeMod?.versions ?? [] as version}
+				{#each selectedMod?.versions ?? [] as version}
 					<DropdownMenu.Item
 						class="flex flex-shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
 						on:click={() => {
-							if (!activeMod) return;
+							if (!selectedMod) return;
 
 							install({
-								packageUuid: activeMod.uuid,
+								packageUuid: selectedMod.uuid,
 								versionUuid: version.uuid
 							});
 						}}
@@ -146,12 +156,17 @@
 	</div>
 
 	<div slot="item" let:mod let:isSelected>
-		<ModListItem {mod} {isSelected} on:install={({ detail: mod }) => installLatest(mod)} />
+		<ModListItem
+			{mod}
+			{isSelected}
+			on:install={({ detail: mod }) => installLatest(mod)}
+			on:click={() => modList.selectMod(mod)}
+		/>
 	</div>
 </ModList>
 
 <ConfirmPopup title="Missing dependencies" bind:open={missingDepsOpen}>
-	Some of {activeMod?.name}'s dependencies could not be found:
+	Some of {selectedMod?.name}'s dependencies could not be found:
 
 	<ul class="mt-1">
 		{#each missingDeps as dep}

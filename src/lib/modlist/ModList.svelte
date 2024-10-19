@@ -13,37 +13,29 @@
 	export let sortOptions: SortBy[];
 
 	export let mods: Mod[] = [];
-	export let activeMod: Mod | null;
+	export let selected: Mod | null;
 	export let queryArgs: Writable<QueryModsArgs>;
+	export let maxCount = 20;
 
 	let listStart = 0;
 	let listEnd = 0;
 	let virtualList: VirtualList<Mod>;
 
-	let increasedCount = false;
-
-	$queryArgs.maxCount = 30;
-
-	$: if (listEnd > mods.length - 2 && mods.length === $queryArgs.maxCount) {
-		increasedCount = true;
-		$queryArgs.maxCount += 30;
+	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
+		maxCount += 20;
+		console.log('increasing max count');
 	}
 
 	$: {
-		// scroll to top when query changes except for the max count
 		$queryArgs;
-		if (increasedCount) {
-			increasedCount = false;
-		} else {
-			virtualList?.scrollTo(0);
-		}
+		virtualList?.scrollTo(0);
 	}
 
-	function onModClicked(mod: Mod) {
-		if (activeMod === null || activeMod.uuid !== mod.uuid) {
-			activeMod = mod;
+	export function selectMod(mod: Mod) {
+		if (selected === null || selected.uuid !== mod.uuid) {
+			selected = mod;
 		} else {
-			activeMod = null;
+			selected = null;
 		}
 	}
 
@@ -132,13 +124,13 @@
 				let:item={mod}
 				let:index
 			>
-				<slot name="item" {mod} {index} isSelected={activeMod === mod} />
+				<slot name="item" {mod} {index} isSelected={selected === mod} />
 			</VirtualList>
 		{/if}
 	</div>
 
-	{#if activeMod !== null}
-		<ModDetailsMenu mod={activeMod} on:close={() => (activeMod = null)}>
+	{#if selected !== null}
+		<ModDetailsMenu mod={selected} on:close={() => (selected = null)}>
 			<slot name="details" />
 			<svelte:fragment slot="context">
 				<slot name="context" />

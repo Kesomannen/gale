@@ -64,7 +64,7 @@
 
 		<svelte:fragment slot="tooltip">
 			<div>
-				<span class="text-lg font-semibold text-slate-200">{entry.name}</span>
+				<span class="text-lg font-semibold text-white">{entry.name}</span>
 				<span class="ml-1 text-slate-400"> ({typeName})</span>
 			</div>
 
@@ -73,15 +73,15 @@
 			</div>
 
 			{#if entry.defaultValue}
-				<p>
-					<span class="font-semibold">Default: </span>
+				<p class="break-words">
+					<span class="font-medium text-slate-100">Default: </span>
 					{valueToString(entry.defaultValue)}
 				</p>
 			{/if}
 
 			{#if (value.type === 'int32' || value.type === 'double' || value.type === 'single') && value.content.range}
 				<p>
-					<span class="font-semibold">Range: </span>
+					<span class="font-medium text-white">Range: </span>
 					{value.content.range.start} - {value.content.range.end}
 				</p>
 			{/if}

@@ -37,7 +37,10 @@
 	let mods: Mod[] = [];
 	let unknownMods: Dependant[] = [];
 	let updates: AvailableUpdate[] = [];
-	let activeMod: Mod | null = null;
+
+	let modList: ModList;
+	let maxCount: number;
+	let selectedMod: Mod | null = null;
 
 	let removeDependants: DependantsPopup;
 	let disableDependants: DependantsPopup;
@@ -46,7 +49,7 @@
 	let dependantsOpen = false;
 	let dependants: string[] | null;
 
-	$: {
+	$: if (maxCount > 0) {
 		$activeProfile;
 		$profileQuery;
 		refresh();
@@ -67,7 +70,9 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		let result = await invokeCommand<ProfileQuery>('query_profile', { args: $profileQuery });
+		let result = await invokeCommand<ProfileQuery>('query_profile', {
+			args: { ...$profileQuery, maxCount }
+		});
 
 		mods = result.mods;
 		unknownMods = result.unknownMods;
@@ -97,7 +102,7 @@
 		let response = await invokeCommand<ModActionResponse>('remove_mod', { uuid: mod.uuid });
 
 		if (response.type == 'done') {
-			activeMod = null;
+			selectedMod = null;
 			await refreshProfiles();
 		} else {
 			removeDependants.openFor(mod, response.dependants);
@@ -105,25 +110,25 @@
 	}
 
 	async function openDependants() {
-		if (!activeMod) return;
+		if (selectedMod === null) return;
 
 		dependants = null;
 		dependantsOpen = true;
 
 		dependants = await invokeCommand<string[]>('get_dependants', {
-			uuid: activeMod.uuid
+			uuid: selectedMod.uuid
 		});
 	}
 
 	async function updateActiveMod(version: 'latest' | { specific: string }) {
-		if (!activeMod) return;
+		if (selectedMod === null) return;
 
 		if (version === 'latest') {
-			await invokeCommand('update_mods', { uuids: [activeMod.uuid], respectIgnored: false });
+			await invokeCommand('update_mods', { uuids: [selectedMod.uuid], respectIgnored: false });
 		} else {
 			await invokeCommand('change_mod_version', {
 				modRef: {
-					packageUuid: activeMod.uuid,
+					packageUuid: selectedMod.uuid,
 					versionUuid: version.specific
 				}
 			});
@@ -131,14 +136,14 @@
 
 		await refresh();
 
-		activeMod = mods.find((mod) => mod.uuid === activeMod!.uuid) ?? null;
+		selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
 	}
 
 	let reorderUuid: string;
 	let reorderPrevIndex: number;
 
 	function onDragStart(evt: DragEvent) {
-		if (!reorderable || !evt.dataTransfer) return;
+		if (!reorderable || evt.dataTransfer === null) return;
 
 		let element = evt.currentTarget as HTMLElement;
 
@@ -149,7 +154,7 @@
 		evt.dataTransfer.setData('text/html', element.outerHTML);
 	}
 
-	function onDragOver(evt: DragEvent) {
+	async function onDragOver(evt: DragEvent) {
 		if (!reorderable) return;
 
 		let target = evt.currentTarget as HTMLElement;
@@ -170,31 +175,41 @@
 			delta *= -1; // list is reversed
 		}
 
-		invokeCommand('reorder_mod', { uuid: reorderUuid, delta });
+		await invokeCommand('reorder_mod', { uuid: reorderUuid, delta });
+		console.log('reorder done');
 	}
 
 	async function onDragEnd(evt: DragEvent) {
+		console.log('onDragEnd, reorderable:', reorderable);
 		if (!reorderable) return;
 
 		await refresh();
+		console.log('refresh done');
 	}
 </script>
 
-<ModList {sortOptions} bind:mods bind:activeMod queryArgs={profileQuery}>
+<ModList
+	{sortOptions}
+	queryArgs={profileQuery}
+	bind:this={modList}
+	bind:mods
+	bind:maxCount
+	bind:selected={selectedMod}
+>
 	<svelte:fragment slot="details">
-		{#if activeMod && isOutdated(activeMod)}
+		{#if selectedMod && isOutdated(selectedMod)}
 			<Button.Root
 				class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-2 text-lg font-medium hover:bg-green-500"
 				on:click={() => updateActiveMod('latest')}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
-				Update to {activeMod?.versions[0].name}
+				Update to {selectedMod?.versions[0].name}
 			</Button.Root>
 		{/if}
 	</svelte:fragment>
 
 	<svelte:fragment slot="context">
-		{#if activeMod && activeMod?.versions.length > 1}
+		{#if selectedMod && selectedMod?.versions.length > 1}
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger
 					class="flex cursor-default items-center truncate rounded-md py-1 pl-3 pr-1 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
@@ -208,7 +223,7 @@
 					transition={fly}
 					transitionConfig={{ duration: 50 }}
 				>
-					{#each activeMod?.versions ?? [] as version}
+					{#each selectedMod?.versions ?? [] as version}
 						<DropdownMenu.Item
 							class="flex flex-shrink-0 cursor-default items-center truncate rounded-md py-1 pl-3 pr-12 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
 							on:click={() => updateActiveMod({ specific: version.uuid })}
@@ -225,8 +240,8 @@
 			icon="mdi:delete"
 			onClick={() =>
 				uninstall({
-					uuid: activeMod?.uuid ?? '',
-					fullName: activeMod?.name ?? ''
+					uuid: selectedMod?.uuid ?? '',
+					fullName: selectedMod?.name ?? ''
 				})}
 		/>
 
@@ -235,7 +250,7 @@
 		<ModContextMenuItem
 			label="Open directory"
 			icon="mdi:folder"
-			onClick={() => invokeCommand('open_plugin_dir', { uuid: activeMod?.uuid })}
+			onClick={() => invokeCommand('open_plugin_dir', { uuid: selectedMod?.uuid })}
 		/>
 	</svelte:fragment>
 
@@ -270,13 +285,17 @@
 			on:dragend={onDragEnd}
 			on:dragover={onDragOver}
 			on:toggle={({ detail: newState }) => toggleMod(mod, newState)}
+			on:click={() => {
+				console.log('item clicked');
+				modList.selectMod(mod);
+			}}
 		/>
 	</svelte:fragment>
 </ModList>
 
-<Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
+<Popup title="Dependants of {selectedMod?.name}" bind:open={dependantsOpen}>
 	<div class="mt-4 text-center text-slate-300">
-		{#if dependants}
+		{#if dependants !== null}
 			{#if dependants.length === 0}
 				No dependants found 😢
 			{:else}
@@ -296,7 +315,7 @@
 	commandName="remove_mod"
 	onExecute={() => {
 		refreshProfiles();
-		activeMod = null;
+		selectedMod = null;
 	}}
 	onCancel={refresh}
 />

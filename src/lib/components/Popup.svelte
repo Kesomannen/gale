@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Dialog } from 'bits-ui';
-	import { fade, scale } from 'svelte/transition';
-	import { quartIn, quartOut } from 'svelte/easing';
+	import { fade, fly, scale } from 'svelte/transition';
+	import { quadOut, quartIn, quartOut } from 'svelte/easing';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
@@ -50,10 +50,10 @@
 		/>
 		<Dialog.Content
 			class="pointer-events-none fixed inset-0 flex items-center justify-center"
-			inTransition={scale}
-			inTransitionConfig={{ duration: 200, easing: quartOut, start: 0.9 }}
-			outTransition={scale}
-			outTransitionConfig={{ duration: 100, easing: quartIn, start: 0.95 }}
+			inTransition={fly}
+			inTransitionConfig={{ duration: 150, easing: quadOut, y: 5 }}
+			outTransition={fly}
+			outTransitionConfig={{ duration: 100, easing: quartIn, y: 10 }}
 		>
 			<div
 				class="dialog pointer-events-auto relative z-50 max-h-[85%] overflow-y-auto overflow-x-hidden rounded-xl border border-gray-600 bg-gray-800 p-6 shadow-xl"

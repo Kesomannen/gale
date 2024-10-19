@@ -293,5 +293,7 @@ where
 
     result.sort_by(|a, b| a.cmp(b, args));
 
+    log::debug!("found {} results, max: {}", result.len(), args.max_count);
+
     result.into_iter().take(args.max_count)
 }

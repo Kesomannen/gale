@@ -39,15 +39,20 @@
 			{/if}
 		</div>
 
-		<div class="truncate {descriptionClasses}">
-			{mod.description ?? ''}
-		</div>
+		{#if mod.description !== null}
+			<div class="truncate {descriptionClasses}">
+				{mod.description}
+			</div>
+		{/if}
 	</div>
 
 	{#if !mod.isInstalled}
 		<Button.Root
 			class="ml-2 mr-0.5 mt-0.5 hidden rounded-lg bg-green-600 p-2.5 align-middle text-2xl text-white hover:bg-green-500 group-hover:inline"
-			on:click={() => dispatch('install', mod)}
+			on:click={(evt) => {
+				dispatch('install', mod);
+				evt.stopPropagation();
+			}}
 		>
 			<Icon icon="mdi:download" />
 		</Button.Root>

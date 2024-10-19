@@ -35,7 +35,7 @@
 </script>
 
 <main
-	class="relative flex flex-col overflow-hidden bg-gray-800"
+	class="relative flex flex-col overflow-hidden bg-slate-800"
 	on:contextmenu={(e) => {
 		if (window.location.hostname === 'tauri.localhost') {
 			e.preventDefault();

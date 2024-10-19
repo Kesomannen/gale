@@ -15,6 +15,7 @@
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
+	import Tooltip from '$lib/components/Tooltip.svelte';
 
 	export let open: boolean;
 	export let data: ImportData | null;
@@ -44,7 +45,8 @@
 			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
 			name = data.name;
 			mode = isAvailable(name) ? 'new' : 'overwrite';
-		} catch (e) {
+			console.log(data);
+		} catch (err) {
 			open = false;
 		} finally {
 			loading = false;
@@ -74,7 +76,7 @@
 	}
 </script>
 
-<Popup title="Import profile" large={data !== null} bind:open onClose={() => (data = null)}>
+<Popup title="Import profile" bind:open onClose={() => (data = null)}>
 	{#if data}
 		<TabsMenu
 			bind:value={mode}
@@ -85,23 +87,29 @@
 		>
 			<Tabs.Content value="new">
 				<div class="flex items-center">
-					<Label text="Profile name" />
+					<Label text="Profile name">A unique name for the imported profile.</Label>
 
-					<InputField bind:value={name} class="w-full" />
-				</div>
+					<div class="relative flex-grow">
+						<InputField bind:value={name} class="w-full" />
 
-				{#if !nameAvailable}
-					<div class="text-md mt-1 flex items-center gap-1 font-bold text-red-400">
-						<div class="w-[30%] min-w-52" />
-						<Icon icon="mdi:error" class="text-lg" />
-						Profile '{name}' already exists
+						{#if !nameAvailable}
+							<Tooltip class="absolute bottom-0 right-2 h-full text-xl text-red-500" side="left">
+								<Icon icon="mdi:error" />
+
+								<div slot="tooltip">
+									Profile {name} already exists!
+								</div>
+							</Tooltip>
+						{/if}
 					</div>
-				{/if}
+				</div>
 			</Tabs.Content>
 
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
-					<Label text="Choose profile" />
+					<Label text="Choose profile">
+						Which existing profile to overwrite with the imported one.
+					</Label>
 
 					<Dropdown
 						class="flex-grow"
@@ -113,9 +121,14 @@
 			</Tabs.Content>
 		</TabsMenu>
 
-		{#if data.modNames}
-			<h3 class="mt-2 text-lg font-semibold text-white">{data.mods.length} mods to install</h3>
-			<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] flex-shrink flex-grow" />
+		{#if data.modNames !== null}
+			<details>
+				<summary class="mt-2 cursor-pointer text-slate-300"
+					>{data.mods.length} mods to install</summary
+				>
+
+				<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] flex-shrink flex-grow" />
+			</details>
 		{/if}
 
 		<div class="mt-2 flex w-full items-center justify-end gap-2 text-slate-400">

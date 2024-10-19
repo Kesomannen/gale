@@ -11,11 +11,12 @@ export default {
 	},
 	safelist: [
 		'bg-green-700',
-		'hover:bg-green-600',
+		'enabled:hover:bg-green-600',
 		'bg-red-700',
-		'hover:bg-red-600',
+		'enabled:hover:bg-red-600',
 		'bg-blue-700',
-		'hover:bg-blue-600',
+		'enabled:hover:bg-blue-600',
+		'enabled:hover:bg-gray-600',
 		'ring-red-600',
 		'font-semibold'
 	],
