@@ -5,6 +5,7 @@
 
 	export let title: string;
 	export let items: T[];
+	export let maxHeight: 'none' | 'sm' = 'none';
 
 	export let get: (item: T, index: number) => boolean;
 	export let set: (item: T, index: number, value: boolean) => void;
@@ -13,8 +14,8 @@
 	export { className as class };
 </script>
 
-<div class="overflow-hidden rounded-lg border border-gray-900 {className}">
-	<div class="flex items-center bg-gray-950 px-3 py-2 font-bold text-slate-300">
+<div class="relative overflow-hidden rounded-lg border-2 border-gray-900 {className}">
+	<div class="flex w-full items-center bg-gray-950 px-3 py-2 font-bold text-slate-300">
 		<Checkbox
 			class="mr-3"
 			value={items.every((item, i) => get(item, i))}
@@ -23,17 +24,23 @@
 		{title}
 	</div>
 
-	{#each items as item, i}
-		<div class="flex items-center px-3 py-1.5 text-slate-300 odd:bg-gray-900">
-			<Checkbox
-				class="mr-3"
-				value={get(item, i)}
-				onValueChanged={(newValue) => set(item, i, newValue)}
-			/>
+	<div
+		class="overflow-x-hidden"
+		class:overflow-y-auto={maxHeight !== 'none'}
+		class:max-h-96={maxHeight === 'sm'}
+	>
+		{#each items as item, i}
+			<div class="flex items-center px-3 py-1.5 text-slate-300 even:bg-gray-900">
+				<Checkbox
+					class="mr-3"
+					value={get(item, i)}
+					onValueChanged={(newValue) => set(item, i, newValue)}
+				/>
 
-			<slot {item} index={i}>
-				{getLabel(item, i)}
-			</slot>
-		</div>
-	{/each}
+				<slot {item} index={i}>
+					{getLabel(item, i)}
+				</slot>
+			</div>
+		{/each}
+	</div>
 </div>

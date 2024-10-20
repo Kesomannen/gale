@@ -2,8 +2,8 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { InstallProgress } from '$lib/models';
-	import { activeProfile, refreshProfiles } from '$lib/stores';
-	import { formatTime, shortenFileSize } from '$lib/util';
+	import { refreshProfiles } from '$lib/stores';
+	import { shortenFileSize } from '$lib/util';
 
 	import { listen } from '@tauri-apps/api/event';
 

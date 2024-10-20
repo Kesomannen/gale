@@ -46,7 +46,7 @@
 		});
 
 		return () => {
-			if (unlistenFromQuery) {
+			if (unlistenFromQuery !== undefined) {
 				unlistenFromQuery();
 			}
 			invokeCommand('stop_querying_thunderstore');
@@ -72,6 +72,10 @@
 		refreshing = true;
 
 		mods = await invokeCommand<Mod[]>('query_thunderstore', { args: { ...$modQuery, maxCount } });
+		if (selectedMod !== null) {
+			// isInstalled might have changed
+			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
+		}
 
 		refreshing = false;
 	}
@@ -105,12 +109,12 @@
 >
 	<div slot="details" class="mt-2 flex text-lg text-white">
 		<Button.Root
-			class="flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2 enabled:bg-green-600 enabled:font-semibold enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
+			class="flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold enabled:bg-green-600 enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
 			on:click={() => install(activeModRef)}
 			disabled={selectedMod?.isInstalled}
 		>
 			{#if selectedMod?.isInstalled}
-				Mod already installed
+				Already installed
 			{:else}
 				<Icon icon="mdi:download" class="align-middle text-xl" />
 				Install
@@ -121,7 +125,7 @@
 		</Button.Root>
 		<DropdownMenu.Root bind:open={versionsDropdownOpen}>
 			<DropdownMenu.Trigger
-				class="ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl enabled:bg-green-600 enabled:font-medium enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:opacity-80"
+				class="ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl enabled:bg-green-600 enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
 				disabled={selectedMod?.isInstalled}
 			>
 				<Icon
@@ -155,14 +159,14 @@
 		</DropdownMenu.Root>
 	</div>
 
-	<div slot="item" let:mod let:isSelected>
+	<svelte:fragment slot="item" let:data={{ mod, isSelected }}>
 		<ModListItem
 			{mod}
 			{isSelected}
-			on:install={({ detail: mod }) => installLatest(mod)}
+			on:install={() => installLatest(mod)}
 			on:click={() => modList.selectMod(mod)}
 		/>
-	</div>
+	</svelte:fragment>
 </ModList>
 
 <ConfirmPopup title="Missing dependencies" bind:open={missingDepsOpen}>

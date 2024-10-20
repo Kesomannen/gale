@@ -9,16 +9,18 @@ use std::{
 
 use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
+use commands::save;
 use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
 use walkdir::WalkDir;
 
 use crate::{
     config,
     games::{self, Game},
+    logger,
     prefs::Prefs,
     thunderstore::{
         self,
@@ -51,6 +53,13 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 
     importer::setup(app).context("failed to initialize importer")?;
     downloader::setup(app).context("failed to initialize downloader")?;
+
+    let handle = app.to_owned();
+    app.listen("reorder_mod", move |event| {
+        if let Err(err) = handle_reorder_event(event, &handle) {
+            logger::log_js_err("Failed to reorder mod", &err, &handle);
+        }
+    });
 
     Ok(())
 }
@@ -1049,4 +1058,29 @@ impl ModManager {
             }
         }
     }
+}
+
+fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Payload {
+        uuid: Uuid,
+        delta: i32,
+    }
+
+    let payload: Payload = serde_json::from_str(event.payload())?;
+
+    let manager = app.state::<Mutex<ModManager>>();
+    let prefs = app.state::<Mutex<Prefs>>();
+
+    let mut manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    manager
+        .active_profile_mut()
+        .reorder_mod(&payload.uuid, payload.delta)?;
+
+    save(&manager, &prefs)?;
+
+    Ok(())
 }

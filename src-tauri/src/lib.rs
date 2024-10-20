@@ -78,7 +78,6 @@ pub fn run() {
             manager::commands::force_remove_mods,
             manager::commands::toggle_mod,
             manager::commands::force_toggle_mods,
-            manager::commands::reorder_mod,
             manager::commands::set_all_mods_state,
             manager::commands::remove_disabled_mods,
             manager::commands::open_profile_dir,
@@ -132,19 +131,19 @@ pub fn run() {
 
             let url = match args.into_iter().nth(1) {
                 Some(arg) => arg,
-                None => return
+                None => return,
             };
 
-            println!("{url:?}");
-
-            if url.starts_with("ror2mm") {
-                manager::downloader::handle_deep_link(&url, app );
+            if url.starts_with("ror2mm://") {
+                manager::downloader::handle_deep_link(&url, app);
             } else if url.ends_with("r2z") {
                 let app = app.to_owned();
                 tauri::async_runtime::spawn(async move {
-                    manager::importer::import_file_from_link(url, &app).await.unwrap_or_else(|err| {
-                        logger::log_js_err("Failed to import profile file", &err, &app);
-                    })
+                    manager::importer::import_file_from_link(url, &app)
+                        .await
+                        .unwrap_or_else(|err| {
+                            logger::log_js_err("Failed to import profile file", &err, &app);
+                        })
                 });
             }
         }))

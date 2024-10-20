@@ -27,11 +27,6 @@
 			icon: 'mdi:heart',
 			onclick: (mod) => openIfNotNull(mod.donateUrl),
 			showFor: (mod) => mod.donateUrl !== null
-		},
-		{
-			label: 'Close',
-			icon: 'mdi:close',
-			onclick: () => (selected = null)
 		}
 	];
 
@@ -44,7 +39,7 @@
 	export let selected: Mod | null;
 	export let contextItems: ModContextItem[] = [];
 
-	$: allContextItems = [...defaultContextItems, ...contextItems];
+	$: allContextItems = [...contextItems, ...defaultContextItems];
 
 	let listStart = 0;
 	let listEnd = 0;
@@ -149,21 +144,29 @@
 			<div class="mt-4 text-center text-lg text-slate-300">No mods found 😥</div>
 		{:else}
 			<VirtualList
-				bind:this={virtualList}
 				itemHeight={66}
 				items={mods}
+				bind:this={virtualList}
 				bind:start={listStart}
 				bind:end={listEnd}
 				let:item={mod}
 				let:index
 			>
-				<slot name="item" {mod} {index} isSelected={selected === mod} />
+				<slot
+					name="item"
+					data={{
+						mod,
+						index,
+						contextItems: allContextItems,
+						isSelected: selected?.uuid === mod.uuid
+					}}
+				/>
 			</VirtualList>
 		{/if}
 	</div>
 
 	{#if selected !== null}
-		<ModDetails mod={selected} contextItems={allContextItems}>
+		<ModDetails mod={selected} contextItems={allContextItems} on:close={() => (selected = null)}>
 			<slot name="details" />
 		</ModDetails>
 	{/if}

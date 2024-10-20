@@ -11,17 +11,16 @@
 		SortOrder,
 		type ModContextItem
 	} from '$lib/models';
-	import ModContextMenuItem from '$lib/modlist/ModContextMenuItem.svelte';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { activeProfile, profileQuery, refreshProfiles } from '$lib/stores';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button, DropdownMenu } from 'bits-ui';
-	import { fly } from 'svelte/transition';
+	import { Button } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 	import ProfileModListItem from '$lib/modlist/ProfileModListItem.svelte';
 	import UpdateAllBanner from '$lib/modlist/UpdateAllBanner.svelte';
+	import { emit } from '@tauri-apps/api/event';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -44,6 +43,18 @@
 					uuid: mod.uuid,
 					fullName: mod.name
 				})
+		},
+		{
+			label: 'Enable',
+			icon: 'mdi:toggle-switch',
+			onclick: (mod) => toggleMod(mod, true),
+			showFor: (mod) => mod.enabled === false
+		},
+		{
+			label: 'Disable',
+			icon: 'mdi:toggle-switch-off-outline',
+			onclick: (mod) => toggleMod(mod, false),
+			showFor: (mod) => mod.enabled === true
 		},
 		{
 			label: 'Show dependants',
@@ -70,7 +81,8 @@
 	let enableDependencies: DependantsPopup;
 
 	let dependantsOpen = false;
-	let dependants: string[] | null;
+	let dependantRoot: string;
+	let dependants: string[];
 
 	$: if (maxCount > 0) {
 		$activeProfile;
@@ -133,12 +145,12 @@
 	}
 
 	async function openDependants(mod: Mod) {
-		dependants = null;
-		dependantsOpen = true;
-
 		dependants = await invokeCommand<string[]>('get_dependants', {
 			uuid: mod.uuid
 		});
+
+		dependantRoot = mod.name;
+		dependantsOpen = true;
 	}
 
 	async function updateActiveMod(version: 'latest' | { specific: string }) {
@@ -196,16 +208,8 @@
 			delta *= -1; // list is reversed
 		}
 
-		await invokeCommand('reorder_mod', { uuid: reorderUuid, delta });
+		await emit('reorder_mod', { uuid: reorderUuid, delta });
 		console.log('reorder done');
-	}
-
-	async function onDragEnd(evt: DragEvent) {
-		console.log('onDragEnd, reorderable:', reorderable);
-		if (!reorderable) return;
-
-		await refresh();
-		console.log('refresh done');
 	}
 </script>
 
@@ -251,31 +255,24 @@
 		<UpdateAllBanner {updates} />
 	</svelte:fragment>
 
-	<svelte:fragment slot="item" let:mod let:index let:isSelected>
+	<svelte:fragment slot="item" let:data>
 		<ProfileModListItem
-			{mod}
-			{index}
-			{isSelected}
+			{...data}
 			{reorderable}
 			on:dragstart={onDragStart}
-			on:dragend={onDragEnd}
 			on:dragover={onDragOver}
-			on:toggle={({ detail: newState }) => toggleMod(mod, newState)}
-			on:click={() => modList.selectMod(mod)}
+			on:toggle={({ detail: newState }) => toggleMod(data.mod, newState)}
+			on:click={() => modList.selectMod(data.mod)}
 		/>
 	</svelte:fragment>
 </ModList>
 
-<Popup title="Dependants of {selectedMod?.name}" bind:open={dependantsOpen}>
+<Popup title="Dependants of {dependantRoot}" bind:open={dependantsOpen}>
 	<div class="mt-4 text-center text-slate-300">
-		{#if dependants !== null}
-			{#if dependants.length === 0}
-				No dependants found 😢
-			{:else}
-				<ModCardList names={dependants} />
-			{/if}
+		{#if dependants.length === 0}
+			No dependants found 😢
 		{:else}
-			Loading...
+			<ModCardList names={dependants} />
 		{/if}
 	</div>
 </Popup>

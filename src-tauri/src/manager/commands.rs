@@ -281,23 +281,6 @@ pub fn remove_mod(
 }
 
 #[tauri::command]
-pub fn reorder_mod(
-    uuid: Uuid,
-    delta: i32,
-    manager: StateMutex<ModManager>,
-    prefs: StateMutex<Prefs>,
-) -> Result<()> {
-    let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
-
-    manager.active_profile_mut().reorder_mod(&uuid, delta)?;
-
-    save(&manager, &prefs)?;
-
-    Ok(())
-}
-
-#[tauri::command]
 pub fn toggle_mod(
     uuid: Uuid,
     manager: StateMutex<ModManager>,

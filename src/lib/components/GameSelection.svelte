@@ -79,10 +79,10 @@
 			</Button.Root>
 		{/each}
 	{:else}
-		<div class="mt-4 text-center text-slate-300">No games found</div>
+		<div class="mt-4 text-center text-slate-300">No games found 😢</div>
 		<div class="max-w-[35rem] text-sm text-slate-400">
-			Your game missing? If the game is new there's a chance Thunderstore have yet to add it. If you
-			can find it on
+			Your game missing? If the game is new on Thunderstore there's a chance we have yet to add it.
+			If you can find it on
 			<Link href="https://thunderstore.io">thunderstore.io</Link>
 			but not here, please message us on
 			<Link href="https://discord.com/channels/1168655651455639582/1246088342458863618"

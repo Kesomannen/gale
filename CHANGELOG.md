@@ -2,10 +2,19 @@
 
 ## Unreleased
 
+### Added
+
+- Right-click mod context menu (same as the dropdown on the details panel)
+
+### Changed
+
+- Various UI changes and fixes, including revamped reordering
+
 ### Fixed
 
 - Symlinks not having .old appended to them when disabling mods
 - BOM-encoded config files causing a parse error
+- Extra whitespace around config options causing a parse error
 - Install with mod manager button on thunderstore.io
 - Profile mod count not updating when a mod is uninstalled
 - Extra decimals sometimes being added when dragging a config slider

@@ -2,6 +2,10 @@
 	import { writable } from 'svelte/store';
 
 	const threshold = writable(0);
+
+	activeProfile.subscribe(() => {
+		threshold.set(0);
+	});
 </script>
 
 <script lang="ts">
@@ -14,7 +18,7 @@
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import BigButton from '$lib/components/BigButton.svelte';
-	import { refreshProfiles } from '$lib/stores';
+	import { activeProfile, refreshProfiles } from '$lib/stores';
 
 	export let updates: AvailableUpdate[];
 
@@ -66,13 +70,14 @@
 	<Checklist
 		title="Update all"
 		items={shownUpdates}
+		class="mt-1"
+		maxHeight="sm"
 		let:item={update}
-		class="mt-1 overflow-y-auto"
+		get={(update, _) => include.get(update) ?? true}
 		set={(update, _, value) => {
 			include.set(update, value);
 			include = include; // force reactivity
 		}}
-		get={(update, _) => include.get(update) ?? true}
 	>
 		<ModCard fullName={update.fullName} showVersion={false} />
 

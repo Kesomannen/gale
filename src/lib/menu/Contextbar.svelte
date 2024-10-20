@@ -20,6 +20,7 @@
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Updater from './Updater.svelte';
 	import { quadOut } from 'svelte/easing';
+	import { dropTransition } from '$lib/transitions';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -103,10 +104,7 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
 			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
-			inTransition={fly}
-			inTransitionConfig={{ duration: 100, y: -7, easing: quadOut }}
-			outTransition={fade}
-			outTransitionConfig={{ duration: 100 }}
+			{...dropTransition}
 		>
 			{#each profiles as profile, i}
 				<DropdownMenu.Item
@@ -149,7 +147,7 @@
 				class="flex cursor-default items-center justify-center rounded bg-green-700 py-1 text-white hover:bg-green-600"
 				on:click={() => (newProfilePopupOpen = true)}
 			>
-				<Icon icon="mdi:plus" class="mr-1 text-xl" />
+				<Icon icon="mdi:plus" class="mr-1 text-lg" />
 				New profile
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>

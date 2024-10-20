@@ -4,3 +4,4 @@ pub mod fs;
 pub mod path;
 pub mod window;
 pub mod zip;
+pub mod str;

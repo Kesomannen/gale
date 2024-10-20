@@ -78,7 +78,8 @@
 
 {#if importData.thunderstore || importData.r2modman}
 	<Checklist
-		class="mt-1 max-h-60 overflow-y-auto"
+		class="mt-1"
+		maxHeight="sm"
 		items={profiles}
 		title="Include all"
 		getLabel={(item, _) => item}

@@ -2,9 +2,9 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 
-	import ModContextMenuItem from './ModContextMenuItem.svelte';
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModCardList from './ModCardList.svelte';
+	import ModContextMenuItems from './ModContextMenuItems.svelte';
 
 	import { activeGame } from '$lib/stores';
 	import type { MarkdownResponse, Mod, ModContextItem } from '$lib/models';
@@ -12,16 +12,19 @@
 
 	import { Button, DropdownMenu } from 'bits-ui';
 
-	import { slide } from 'svelte/transition';
 	import { get } from 'svelte/store';
 
 	import { fetch } from '@tauri-apps/plugin-http';
 	import { open } from '@tauri-apps/plugin-shell';
 
 	import Icon from '@iconify/svelte';
+	import { dropTransition } from '$lib/transitions';
+	import { createEventDispatcher } from 'svelte';
 
 	export let mod: Mod;
 	export let contextItems: ModContextItem[] = [];
+
+	const dispatch = createEventDispatcher<{ close: void }>();
 
 	let dependenciesOpen = false;
 
@@ -30,6 +33,15 @@
 
 	let changelogOpen = false;
 	let changelog: ModInfoPopup;
+
+	$: allContextItems = [
+		...contextItems,
+		{
+			label: 'Close',
+			icon: 'mdi:close',
+			onclick: () => dispatch('close')
+		}
+	];
 
 	function openCommunityUrl(path: string | null) {
 		if (path === null) return;
@@ -60,7 +72,7 @@
 </script>
 
 <div
-	class="relative flex w-[40%] min-w-80 flex-col border-l border-gray-600 bg-gray-700 px-6 pb-4 pt-6 text-white"
+	class="relative flex w-[40%] min-w-72 flex-col border-l border-gray-600 bg-gray-700 px-6 pb-4 pt-6 text-white"
 >
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class="absolute right-2 mt-0.5 rounded-full p-1 hover:bg-slate-600">
@@ -68,14 +80,9 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
 			class="flex flex-col gap-0.5 rounded-lg border border-gray-500 bg-gray-700 p-1 shadow-xl"
-			transition={slide}
-			transitionConfig={{ duration: 100 }}
+			{...dropTransition}
 		>
-			{#each contextItems as { icon, label, onclick, showFor }}
-				{#if showFor === undefined || showFor(mod)}
-					<ModContextMenuItem {icon} {label} on:click={() => onclick(mod)} type="details" />
-				{/if}
-			{/each}
+			<ModContextMenuItems {mod} contextItems={allContextItems} type="details" />
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 

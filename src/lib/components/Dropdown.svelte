@@ -1,7 +1,7 @@
 <script lang="ts" generics="T">
-	import { quadOut } from 'svelte/easing';
+	import { dropTransition } from '$lib/transitions';
+
 	import { Select } from 'bits-ui';
-	import { slide } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 
 	export let items: T[];
@@ -77,8 +77,7 @@
 	</slot>
 	<Select.Content
 		class="flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
-		transition={slide}
-		transitionConfig={{ duration: 75, easing: quadOut }}
+		{...dropTransition}
 		{avoidCollisions}
 	>
 		{#each items as item}

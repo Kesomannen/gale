@@ -2,6 +2,8 @@ use std::str;
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 
+use crate::util::str::TrimInPlace;
+
 use super::*;
 use io::{BufRead, Lines, Read};
 use itertools::Itertools;
@@ -195,7 +197,7 @@ impl<R: Read + BufRead> Parser<R> {
 
     fn peek(&mut self) -> Result<Option<&str>> {
         if self.peeked.is_none() {
-            self.peeked = self.advance()?;
+            self.peeked = self.next()?;
         }
 
         Ok(self.peeked.as_deref())
@@ -205,18 +207,20 @@ impl<R: Read + BufRead> Parser<R> {
         self.line += 1;
         match self.peeked.take() {
             Some(line) => Ok(Some(line)),
-            None => self.advance(),
+            None => self.next(),
         }
     }
 
-    fn advance(&mut self) -> Result<Option<String>> {
+    fn next(&mut self) -> Result<Option<String>> {
         let mut next = self.lines.next().transpose()?;
 
-        if let Some(next) = &mut next {
+        if let Some(next_mut) = &mut next {
             // remove bom
-            if self.line == 0 && next.starts_with("\u{feff}") {
-                next.replace_range(0..3, "");
+            if self.line == 0 && next_mut.starts_with("\u{feff}") {
+                next_mut.replace_range(0..3, "");
             }
+
+            next_mut.trim_in_place();
         }
 
         Ok(next)

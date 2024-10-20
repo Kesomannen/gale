@@ -82,14 +82,15 @@ export interface ListSeparator {
 	char: string;
 }
 
-export function getListSeparator(entry: ConfigEntry): ListSeparator {
-	const keyword = 'ListSeparator=';
+const listSeparatorKeyword = 'ListSeparator=';
 
-	let description = entry.description;
-	let separatorIndex = description.indexOf(keyword);
+export function getListSeparator({ description }: ConfigEntry): ListSeparator {
+	if (description !== null) {
+		let separatorIndex = description.indexOf(listSeparatorKeyword);
 
-	if (separatorIndex !== -1) {
-		return { type: 'custom', char: description[separatorIndex + keyword.length] };
+		if (separatorIndex !== -1) {
+			return { type: 'custom', char: description[separatorIndex + listSeparatorKeyword.length] };
+		}
 	}
 
 	return { type: 'default', char: ',' };

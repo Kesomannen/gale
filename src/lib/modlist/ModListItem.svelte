@@ -8,7 +8,7 @@
 	export let isSelected: boolean;
 
 	const dispatch = createEventDispatcher<{
-		install: Mod;
+		install: void;
 	}>();
 
 	$: descriptionClasses = isSelected
@@ -50,7 +50,7 @@
 		<Button.Root
 			class="ml-2 mr-0.5 mt-0.5 hidden rounded-lg bg-green-600 p-2.5 align-middle text-2xl text-white hover:bg-green-500 group-hover:inline"
 			on:click={(evt) => {
-				dispatch('install', mod);
+				dispatch('install');
 				evt.stopPropagation();
 			}}
 		>

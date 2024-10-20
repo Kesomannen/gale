@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Mod } from '../models';
+	import type { Mod, ModContextItem } from '../models';
 	import Icon from '@iconify/svelte';
 	import { isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
@@ -7,10 +7,14 @@
 	import { Switch, ContextMenu } from 'bits-ui';
 	import { createEventDispatcher } from 'svelte';
 	import { slide } from 'svelte/transition';
+	import ModContextMenuItems from './ModContextMenuItems.svelte';
+	import { dropTransition } from '$lib/transitions';
 
 	export let mod: Mod;
 	export let index: number;
 	export let isSelected: boolean;
+	export let contextItems: ModContextItem[];
+
 	export let reorderable: boolean;
 
 	const dispatch = createEventDispatcher<{
@@ -58,11 +62,10 @@
 				: 'border-opacity-0 hover:bg-slate-700'}"
 			data-uuid={mod.uuid}
 			data-index={index}
-			draggable="true"
+			draggable={reorderable}
 			on:click
 			on:dragstart
 			on:dragover
-			on:dragend
 		>
 			<img src={imgSrc} alt={mod.name} class="size-12 rounded" />
 			<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
@@ -109,7 +112,7 @@
 				<Switch.Root
 					checked={mod.enabled ?? true}
 					onCheckedChange={(newState) => dispatch('toggle', newState)}
-					class="group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
+					class="group ml-2 mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
 				>
 					<Switch.Thumb
 						class="pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75 ease-out hover:bg-slate-200 data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
@@ -119,8 +122,9 @@
 		</button>
 	</ContextMenu.Trigger>
 	<ContextMenu.Content
-		class="flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
-		transition={slide}
-		transitionConfig={{ duration: 100 }}>hello</ContextMenu.Content
+		class="flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-lg"
+		{...dropTransition}
 	>
+		<ModContextMenuItems {mod} {contextItems} type="context" />
+	</ContextMenu.Content>
 </ContextMenu.Root>

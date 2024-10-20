@@ -1,7 +1,6 @@
 <script lang="ts">
+	import { dropTransitionTo } from '$lib/transitions';
 	import { Tooltip } from 'bits-ui';
-	import { quadOut } from 'svelte/easing';
-	import { fade, fly } from 'svelte/transition';
 
 	export let text: string = '[No text provided]';
 	export let side: 'top' | 'right' | 'bottom' | 'left' = 'top';
@@ -10,14 +9,14 @@
 
 	let triggerClass: string = '';
 
-	const flyDistances = {
+	const distances = {
 		top: { x: 0, y: 7 },
 		right: { x: -7, y: 0 },
 		bottom: { x: 0, y: -7 },
 		left: { x: 7, y: 0 }
 	};
 
-	$: flyDistance = flyDistances[side];
+	$: distance = distances[side];
 
 	export { triggerClass as class };
 </script>
@@ -28,10 +27,7 @@
 	</Tooltip.Trigger>
 	<Tooltip.Content
 		class="max-w-lg rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-slate-300 shadow-lg"
-		inTransition={fly}
-		inTransitionConfig={{ duration: 100, ...flyDistance, easing: quadOut }}
-		outTransition={fade}
-		outTransitionConfig={{ duration: 100 }}
+		{...dropTransitionTo(distance)}
 		{sideOffset}
 		{side}
 	>

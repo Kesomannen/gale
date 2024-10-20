@@ -7,14 +7,15 @@
 
 	export let open = false;
 
-	let name = '';
+	let name: string;
+
+	$: if (open) name = '';
 
 	async function createProfile() {
 		if (name.length === 0) return;
 
 		await invokeCommand('create_profile', { name });
 		refreshProfiles();
-		name = '';
 		open = false;
 	}
 </script>

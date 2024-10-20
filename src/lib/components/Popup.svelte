@@ -4,6 +4,7 @@
 	import { quadOut, quartIn, quartOut } from 'svelte/easing';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { popupTransition } from '$lib/transitions';
 
 	export let open: boolean;
 	export let title: string | null = null;
@@ -46,14 +47,11 @@
 			data-tauri-drag-region
 			class="fixed inset-0 z-0 rounded-lg bg-black/60"
 			transition={fade}
-			transitionConfig={{ duration: 150 }}
+			transitionConfig={{ duration: 100 }}
 		/>
 		<Dialog.Content
 			class="pointer-events-none fixed inset-0 flex items-center justify-center"
-			inTransition={fly}
-			inTransitionConfig={{ duration: 150, easing: quadOut, y: 5 }}
-			outTransition={fly}
-			outTransitionConfig={{ duration: 100, easing: quartIn, y: 10 }}
+			{...popupTransition}
 		>
 			<div
 				class="dialog pointer-events-auto relative z-50 max-h-[85%] overflow-y-auto overflow-x-hidden rounded-xl border border-gray-600 bg-gray-800 p-6 shadow-xl"
