@@ -42,7 +42,10 @@ pub fn extract(src: impl Read + Seek, target: &Path) -> io::Result<()> {
         };
 
         if !util::fs::is_enclosed(&relative) {
-            warn!("file {} escapes the archive root, skipping", relative.display());
+            warn!(
+                "file {} escapes the archive root, skipping",
+                relative.display()
+            );
             continue;
         }
 

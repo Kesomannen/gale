@@ -55,7 +55,8 @@ impl<'a> R2Mod<'a> {
         let version = package.get_version_with_num(&semver).ok_or_else(|| {
             anyhow!(
                 "failed to find version {} for package {}",
-                semver, self.name
+                semver,
+                self.name
             )
         })?;
 

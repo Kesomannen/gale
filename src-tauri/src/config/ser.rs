@@ -1,7 +1,10 @@
 use serde::Serialize;
 
 use super::{de::FLAGS_MESSAGE, Entry, EntryKind, File, FileMetadata, Num, Section, Value};
-use std::{fmt::Display, io::{self, Write}};
+use std::{
+    fmt::Display,
+    io::{self, Write},
+};
 
 struct Serializer<W: Write> {
     writer: W,
@@ -19,7 +22,11 @@ impl<W: Write> Write for Serializer<W> {
 
 impl<W: Write> Serializer<W> {
     fn write_metadata(&mut self, metadata: &FileMetadata) -> io::Result<()> {
-        writeln!(self, "## Settings file was created by plugin {} {}", metadata.plugin_name, metadata.plugin_version)?;
+        writeln!(
+            self,
+            "## Settings file was created by plugin {} {}",
+            metadata.plugin_name, metadata.plugin_version
+        )?;
         writeln!(self, "## Plugin GUID: {}", metadata.plugin_guid)?;
         writeln!(self)?;
 
@@ -42,7 +49,11 @@ impl<W: Write> Serializer<W> {
         T: Serialize + Display,
     {
         if let Some(range) = &num.range {
-            writeln!(self, "# Acceptable value range: From {} to {}", range.start, range.end)?;
+            writeln!(
+                self,
+                "# Acceptable value range: From {} to {}",
+                range.start, range.end
+            )?;
         }
 
         Ok(())
@@ -91,7 +102,7 @@ impl<W: Write> Serializer<W> {
 
         writeln!(self, "# Setting type: {}", entry.type_name)?;
 
-        self.write(b"# Default value:")?;
+        write!(self, "# Default value:")?;
         if let Some(default) = &entry.default_value {
             write!(self, " ")?;
             self.write_value(default)?;

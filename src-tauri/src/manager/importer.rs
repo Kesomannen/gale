@@ -173,7 +173,7 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     let client = &client.0;
 
     let response = client
-        .get(&format!(
+        .get(format!(
             "https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"
         ))
         .send()

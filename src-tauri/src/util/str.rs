@@ -1,9 +1,9 @@
 pub trait TrimInPlace {
-    fn trim_in_place(self: &mut Self) -> &str;
+    fn trim_in_place(&mut self) -> &str;
 }
 
 impl TrimInPlace for String {
-    fn trim_in_place(self: &mut Self) -> &str {
+    fn trim_in_place(&mut self) -> &str {
         let trim = self.trim();
         let (trim_ptr, trim_len) = (trim.as_ptr(), trim.len());
 
