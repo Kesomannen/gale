@@ -160,7 +160,7 @@ impl Queryable for BorrowedMod<'_> {
 impl IntoFrontendMod for BorrowedMod<'_> {
     fn into_frontend(self, profile: &Profile) -> FrontendMod {
         let pkg = self.package;
-        let vers = pkg.get_version(&self.version.uuid4).unwrap();
+        let vers = pkg.get_version(self.version.uuid4).unwrap();
         FrontendMod {
             name: pkg.name.clone(),
             description: Some(vers.description.clone()),
@@ -181,7 +181,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             is_deprecated: pkg.is_deprecated,
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid4,
-            is_installed: profile.has_mod(&pkg.uuid4),
+            is_installed: profile.has_mod(pkg.uuid4),
             last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions

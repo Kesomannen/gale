@@ -212,7 +212,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
                     .resolve_deps(deps.iter())
                     .0
                     .into_iter()
-                    .filter(|dep| !profile.has_mod(&dep.package.uuid4))
+                    .filter(|dep| !profile.has_mod(dep.package.uuid4))
                     .map(|borrowed| borrowed.into())
                     .collect::<Vec<_>>())
             },
@@ -238,7 +238,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     if let Some(uuid) = existing {
         profile
-            .force_remove_mod(&uuid)
+            .force_remove_mod(uuid)
             .context("failed to remove existing mod")?;
     }
 

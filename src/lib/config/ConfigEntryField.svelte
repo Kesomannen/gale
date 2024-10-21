@@ -69,7 +69,11 @@
 			</div>
 
 			<div class="mb-1">
-				<Render html={entry.description.replace(/\n/g, '<br/>')} />
+				{#if entry.description === null}
+					[No description provided]
+				{:else}
+					<Render html={entry.description.replace(/\n/g, '<br/>')} />
+				{/if}
 			</div>
 
 			{#if entry.defaultValue}

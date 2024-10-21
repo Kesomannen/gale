@@ -218,7 +218,7 @@ impl Profile {
 
             if let Some(file) = file {
                 self.linked_config
-                    .insert(*profile_mod.uuid(), file.relative_path().to_path_buf());
+                    .insert(profile_mod.uuid(), file.relative_path().to_path_buf());
             }
         }
 

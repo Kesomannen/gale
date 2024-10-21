@@ -43,7 +43,7 @@ impl From<AvailableUpdate<'_>> for ModInstall {
 impl Profile {
     pub fn check_update<'a>(
         &'a self,
-        uuid: &Uuid,
+        uuid: Uuid,
         respect_ignored: bool,
         thunderstore: &'a Thunderstore,
     ) -> Result<Option<AvailableUpdate<'a>>> {
@@ -67,7 +67,7 @@ impl Profile {
             return Ok(None);
         }
 
-        if respect_ignored && self.ignored_updates.contains(uuid) {
+        if respect_ignored && self.ignored_updates.contains(&uuid) {
             return Ok(None);
         }
 
@@ -88,10 +88,10 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
         let mut manager = manager.lock().unwrap();
 
         let profile = manager.active_profile_mut();
-        let index = profile.index_of(&mod_ref.package_uuid)?;
+        let index = profile.index_of(mod_ref.package_uuid)?;
         let enabled = profile.mods[index].enabled;
 
-        profile.force_remove_mod(&mod_ref.package_uuid)?;
+        profile.force_remove_mod(mod_ref.package_uuid)?;
 
         ModInstall::new(mod_ref)
             .with_state(enabled)
@@ -108,7 +108,7 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
 }
 
 pub async fn update_mods(
-    uuids: &[Uuid],
+    uuids: Vec<Uuid>,
     respect_ignored: bool,
     app: &tauri::AppHandle,
 ) -> Result<()> {
@@ -124,7 +124,7 @@ pub async fn update_mods(
         let profile = manager.active_profile_mut();
 
         uuids
-            .iter()
+            .into_iter()
             .filter_map(|uuid| {
                 profile
                     .check_update(uuid, respect_ignored, &thunderstore)

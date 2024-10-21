@@ -36,8 +36,8 @@ impl PackageListing {
         self.categories.contains("Modpacks")
     }
 
-    pub fn get_version(&self, uuid: &Uuid) -> Option<&PackageVersion> {
-        self.versions.iter().find(|v| v.uuid4 == *uuid)
+    pub fn get_version(&self, uuid: Uuid) -> Option<&PackageVersion> {
+        self.versions.iter().find(|v| v.uuid4 == uuid)
     }
 
     pub fn get_version_with_num(&self, version: &semver::Version) -> Option<&PackageVersion> {

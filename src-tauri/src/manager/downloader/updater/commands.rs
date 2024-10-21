@@ -19,7 +19,7 @@ pub async fn update_mods(
     respect_ignored: bool,
     app: tauri::AppHandle,
 ) -> Result<()> {
-    super::update_mods(&uuids, respect_ignored, &app).await?;
+    super::update_mods(uuids, respect_ignored, &app).await?;
 
     Ok(())
 }

@@ -198,7 +198,7 @@ pub fn query_profile(
 pub fn is_mod_installed(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<bool> {
     let manager = manager.lock().unwrap();
 
-    let result = manager.active_profile().has_mod(&uuid);
+    let result = manager.active_profile().has_mod(uuid);
 
     Ok(result)
 }
@@ -329,7 +329,7 @@ pub fn force_remove_mods(
     let prefs = prefs.lock().unwrap();
 
     let profile = manager.active_profile_mut();
-    for package_uuid in &uuids {
+    for package_uuid in uuids {
         profile.force_remove_mod(package_uuid)?;
     }
 
@@ -352,11 +352,11 @@ pub fn set_all_mods_state(
         .mods
         .iter()
         .filter(|profile_mod| profile_mod.enabled != enable)
-        .map(|profile_mod| *profile_mod.uuid())
+        .map(|profile_mod| profile_mod.uuid())
         .collect_vec();
 
     for uuid in uuids {
-        profile.force_toggle_mod(&uuid)?;
+        profile.force_toggle_mod(uuid)?;
     }
 
     save(&manager, &prefs)?;
@@ -377,16 +377,18 @@ pub fn remove_disabled_mods(
         .mods
         .iter()
         .filter(|profile_mod| !profile_mod.enabled)
-        .map(|profile_mod| *profile_mod.uuid())
+        .map(|profile_mod| profile_mod.uuid())
         .collect_vec();
 
-    for uuid in &uuids {
+    let len = uuids.len();
+
+    for uuid in uuids {
         profile.force_remove_mod(uuid)?;
     }
 
     save(&manager, &prefs)?;
 
-    Ok(uuids.len())
+    Ok(len)
 }
 
 #[tauri::command]
@@ -399,7 +401,7 @@ pub fn force_toggle_mods(
     let prefs = prefs.lock().unwrap();
 
     let profile = manager.active_profile_mut();
-    for package_uuid in &uuids {
+    for package_uuid in uuids {
         profile.force_toggle_mod(package_uuid)?;
     }
 
@@ -442,7 +444,7 @@ pub fn open_plugin_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()
 
     let profile = manager.active_profile();
 
-    profile.scan_mod(&profile.get_mod(&uuid)?.kind, |dir| {
+    profile.scan_mod(&profile.get_mod(uuid)?.kind, |dir| {
         if dir.exists() {
             open::that(dir).context("failed to open directory")?;
         }

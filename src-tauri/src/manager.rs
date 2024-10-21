@@ -143,7 +143,7 @@ impl ProfileMod {
         Self::now(ProfileModKind::Local(Box::new(data)))
     }
 
-    pub fn uuid(&self) -> &Uuid {
+    pub fn uuid(&self) -> Uuid {
         self.kind.uuid()
     }
 
@@ -197,10 +197,10 @@ fn default_true() -> bool {
 }
 
 impl ProfileModKind {
-    pub fn uuid(&self) -> &Uuid {
+    pub fn uuid(&self) -> Uuid {
         match self {
-            ProfileModKind::Local(local_mod) => &local_mod.uuid,
-            ProfileModKind::Remote { mod_ref, .. } => &mod_ref.package_uuid,
+            ProfileModKind::Local(local_mod) => local_mod.uuid,
+            ProfileModKind::Remote { mod_ref, .. } => mod_ref.package_uuid,
         }
     }
 
@@ -358,28 +358,28 @@ impl Profile {
             && name.chars().all(|c| !FORBIDDEN.contains(&c))
     }
 
-    fn index_of(&self, uuid: &Uuid) -> Result<usize> {
+    fn index_of(&self, uuid: Uuid) -> Result<usize> {
         self.mods
             .iter()
             .position(|p| p.uuid() == uuid)
             .context("mod not found in profile")
     }
 
-    fn get_mod<'a>(&'a self, uuid: &Uuid) -> Result<&'a ProfileMod> {
+    fn get_mod<'a>(&'a self, uuid: Uuid) -> Result<&'a ProfileMod> {
         self.mods
             .iter()
             .find(|p| p.uuid() == uuid)
             .context("mod not found in profile")
     }
 
-    fn get_mod_mut<'a>(&'a mut self, uuid: &Uuid) -> Result<&'a mut ProfileMod> {
+    fn get_mod_mut<'a>(&'a mut self, uuid: Uuid) -> Result<&'a mut ProfileMod> {
         self.mods
             .iter_mut()
             .find(|p| p.uuid() == uuid)
             .context("mod not found in profile")
     }
 
-    pub fn has_mod(&self, uuid: &Uuid) -> bool {
+    pub fn has_mod(&self, uuid: Uuid) -> bool {
         self.get_mod(uuid).is_ok()
     }
 
@@ -447,7 +447,7 @@ impl Profile {
     ) -> impl Iterator<Item = &ProfileMod> + 'a {
         self.mods
             .iter()
-            .filter(move |other| *other.uuid() != uuid)
+            .filter(move |other| other.uuid() != uuid)
             .filter(move |other| {
                 other
                     .kind
@@ -521,7 +521,7 @@ impl From<&ProfileMod> for Dependant {
     fn from(value: &ProfileMod) -> Self {
         Self {
             full_name: value.kind.full_name().into_owned(),
-            uuid: *value.uuid(),
+            uuid: value.uuid(),
         }
     }
 }
@@ -558,17 +558,17 @@ impl Profile {
     }
 
     fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ModActionResponse> {
-        if self.get_mod(&uuid)?.enabled {
+        if self.get_mod(uuid)?.enabled {
             if let Some(dependants) = self.check_dependants(uuid, thunderstore) {
                 return Ok(ModActionResponse::HasDependants(dependants));
             }
         }
 
-        self.force_remove_mod(&uuid)?;
+        self.force_remove_mod(uuid)?;
         Ok(ModActionResponse::Done)
     }
 
-    fn force_remove_mod(&mut self, uuid: &Uuid) -> Result<()> {
+    fn force_remove_mod(&mut self, uuid: Uuid) -> Result<()> {
         let index = self.index_of(uuid)?;
 
         self.scan_mod(&self.mods[index].kind, |dir| {
@@ -581,7 +581,7 @@ impl Profile {
     }
 
     fn toggle_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ModActionResponse> {
-        let dependants = match self.get_mod(&uuid)?.enabled {
+        let dependants = match self.get_mod(uuid)?.enabled {
             true => self.check_dependants(uuid, thunderstore),
             false => self.check_deps(uuid, thunderstore),
         };
@@ -589,13 +589,13 @@ impl Profile {
         match dependants {
             Some(dependants) => Ok(ModActionResponse::HasDependants(dependants)),
             None => {
-                self.force_toggle_mod(&uuid)?;
+                self.force_toggle_mod(uuid)?;
                 Ok(ModActionResponse::Done)
             }
         }
     }
 
-    fn force_toggle_mod(&mut self, uuid: &Uuid) -> Result<()> {
+    fn force_toggle_mod(&mut self, uuid: Uuid) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
         let state = profile_mod.enabled;
         let new_state = !state;
@@ -662,14 +662,14 @@ impl Profile {
     }
 
     fn check_deps(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
-        let profile_mod = self.get_mod(&uuid).ok()?;
+        let profile_mod = self.get_mod(uuid).ok()?;
 
         let disabled_deps = profile_mod
             .kind
             .dependencies(thunderstore)
             .into_iter()
             .filter(|dep| {
-                self.get_mod(&dep.package.uuid4)
+                self.get_mod(dep.package.uuid4)
                     .is_ok_and(|profile_mod| !profile_mod.enabled)
             })
             .map_into()
@@ -703,7 +703,7 @@ impl Profile {
         Ok(())
     }
 
-    fn reorder_mod(&mut self, uuid: &Uuid, delta: i32) -> Result<()> {
+    fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {
         let index = self
             .mods
             .iter()
@@ -1068,7 +1068,7 @@ fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
         delta: i32,
     }
 
-    let payload: Payload = serde_json::from_str(event.payload())?;
+    let Payload { uuid, delta } = serde_json::from_str(event.payload())?;
 
     let manager = app.state::<Mutex<ModManager>>();
     let prefs = app.state::<Mutex<Prefs>>();
@@ -1076,9 +1076,7 @@ fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager
-        .active_profile_mut()
-        .reorder_mod(&payload.uuid, payload.delta)?;
+    manager.active_profile_mut().reorder_mod(uuid, delta)?;
 
     save(&manager, &prefs)?;
 

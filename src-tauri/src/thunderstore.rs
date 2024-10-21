@@ -102,7 +102,7 @@ impl From<BorrowedMod<'_>> for ModRef {
 
 impl ModRef {
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
-        thunderstore.get_mod(&self.package_uuid, &self.version_uuid)
+        thunderstore.get_mod(self.package_uuid, self.version_uuid)
     }
 }
 
@@ -136,9 +136,9 @@ impl Thunderstore {
         })
     }
 
-    pub fn get_package<'a>(&'a self, uuid: &Uuid) -> Result<&'a PackageListing> {
+    pub fn get_package<'a>(&'a self, uuid: Uuid) -> Result<&'a PackageListing> {
         self.packages
-            .get(uuid)
+            .get(&uuid)
             .with_context(|| format!("package with id {} not found", uuid))
     }
 
@@ -151,8 +151,8 @@ impl Thunderstore {
 
     pub fn get_mod<'a>(
         &'a self,
-        package_uuid: &Uuid,
-        version_uuid: &Uuid,
+        package_uuid: Uuid,
+        version_uuid: Uuid,
     ) -> Result<BorrowedMod<'a>> {
         let package = self.get_package(package_uuid)?;
         let version = package.get_version(version_uuid).with_context(|| {
@@ -165,19 +165,19 @@ impl Thunderstore {
         Ok((package, version).into())
     }
 
-    pub fn find_dep<'a>(&'a self, dep_stirng: &str) -> Result<BorrowedMod<'a>> {
-        let mut indicies = dep_stirng.match_indices('-').map(|(i, _)| i);
+    pub fn find_dep<'a>(&'a self, dep_string: &str) -> Result<BorrowedMod<'a>> {
+        let mut indicies = dep_string.match_indices('-').map(|(i, _)| i);
 
         if indicies.clone().count() != 2 {
-            bail!("invalid dependency string format: {}", dep_stirng);
+            bail!("invalid dependency string format: {}", dep_string);
         }
 
         let owner_end = indicies.next().unwrap();
         let name_end = indicies.next().unwrap();
 
-        let owner = &dep_stirng[..owner_end];
-        let name = &dep_stirng[owner_end + 1..name_end];
-        let version = &dep_stirng[name_end + 1..];
+        let owner = &dep_string[..owner_end];
+        let name = &dep_string[owner_end + 1..name_end];
+        let version = &dep_string[name_end + 1..];
 
         self.find_mod(owner, name, version)
     }

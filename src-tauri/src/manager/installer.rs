@@ -156,7 +156,7 @@ pub fn try_cache_install(
             };
 
             if !to_install.enabled {
-                profile.force_toggle_mod(&borrowed.package.uuid4)?;
+                profile.force_toggle_mod(borrowed.package.uuid4)?;
             }
 
             Ok(true)

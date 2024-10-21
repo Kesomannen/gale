@@ -53,7 +53,7 @@ fn missing_deps<'a>(
         .dependencies(borrowed_mod.version)
         .0
         .into_iter()
-        .filter(|dep| !profile.has_mod(&dep.package.uuid4))
+        .filter(|dep| !profile.has_mod(dep.package.uuid4))
 }
 
 fn total_download_size(
@@ -164,8 +164,8 @@ impl ModInstall {
         self
     }
 
-    pub fn uuid(&self) -> &Uuid {
-        &self.mod_ref.package_uuid
+    pub fn uuid(&self) -> Uuid {
+        self.mod_ref.package_uuid
     }
 }
 
@@ -528,7 +528,7 @@ pub async fn install_with_deps(
 
             Ok(deps
                 .into_iter()
-                .unique_by(|install| *install.uuid())
+                .unique_by(|install| install.uuid())
                 .collect())
         },
         options,
