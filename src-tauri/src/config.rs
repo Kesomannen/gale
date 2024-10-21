@@ -84,13 +84,9 @@ impl File {
         }
     }
 
-    pub fn path(&self, profile_dir: &Path) -> PathBuf {
-        profile_dir.join(file_path(&self.relative_path))
-    }
-
-    pub fn save(&self, root: &Path) -> io::Result<()> {
-        let file = fs::File::create(self.path(root))?;
-        let writer = BufWriter::new(file);
+    pub fn save(&self, profile_dir: &Path) -> io::Result<()> {
+        let path = profile_dir.join(file_path(&self.relative_path));
+        let writer = fs::File::create(path).map(BufWriter::new)?;
         ser::to_writer(self, writer)
     }
 }
