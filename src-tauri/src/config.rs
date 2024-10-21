@@ -104,7 +104,7 @@ pub struct FileMetadata {
 }
 
 pub fn file_path(relative: &Path) -> PathBuf {
-    let mut path = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
+    let mut path: PathBuf = ["BepInEx", "config"].into_iter().collect();
     path.push(relative);
     path
 }

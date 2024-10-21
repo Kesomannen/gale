@@ -131,16 +131,16 @@
 		</div>
 	{/if}
 
-	<div class="my-1 flex items-center gap-2 text-lg">
+	<div class="my-1 flex items-center gap-1.5 text-lg">
 		{#if mod.rating !== null}
-			<Icon class="text-yellow-400" icon="mdi:star" />
+			<Icon class="flex-shrink-0 text-yellow-400" icon="mdi:star" />
 			<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
 		{/if}
 		{#if mod.downloads !== null}
-			<Icon class="text-green-400" icon="mdi:download" />
+			<Icon class="flex-shrink-0 text-green-400" icon="mdi:download" />
 			<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
 		{/if}
-		<Icon class="text-slate-400" icon="mdi:weight" />
+		<Icon class="flex-shrink-0 text-slate-400" icon="mdi:weight" />
 		<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
 	</div>
 

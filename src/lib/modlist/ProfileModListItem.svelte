@@ -68,7 +68,7 @@
 			on:dragover
 		>
 			<img src={imgSrc} alt={mod.name} class="size-12 rounded" />
-			<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
+			<div class="flex-shrink flex-grow overflow-hidden pl-3 pr-2 text-left">
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div
 						class="flex-shrink truncate font-medium {mod.enabled === false
@@ -101,7 +101,7 @@
 			{#if reorderable}
 				<Icon
 					icon="material-symbols:drag-indicator"
-					class="mr-3 flex-shrink-0 cursor-move text-2xl text-slate-400"
+					class="mr-2 flex-shrink-0 cursor-move text-2xl text-slate-400"
 				/>
 			{/if}
 
@@ -112,7 +112,7 @@
 				<Switch.Root
 					checked={mod.enabled ?? true}
 					onCheckedChange={(newState) => dispatch('toggle', newState)}
-					class="group ml-2 mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
+					class="group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
 				>
 					<Switch.Thumb
 						class="pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75 ease-out hover:bg-slate-200 data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
