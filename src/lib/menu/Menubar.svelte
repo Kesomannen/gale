@@ -125,6 +125,19 @@
 		writeText(str);
 	}
 
+	async function clearModCache() {
+		let result = await confirm(
+			"Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!",
+			{
+				title: 'Clear mod cache'
+			}
+		);
+
+		if (!result) return;
+
+		await invokeCommand('clear_download_cache', { soft: false });
+	}
+
 	onMount(() => {
 		hotkeys('ctrl|+,ctrl|-,ctrl|0,ctrl|n,ctrl|d,f2', { splitKey: '|' }, (evt, handler) => {
 			console.log(handler.key);
@@ -179,8 +192,9 @@
 				<MenubarSeparator />
 				<MenubarItem
 					on:click={() => invokeCommand('clear_download_cache', { soft: true })}
-					text="Clear unused mod cache"
+					text="Clear mod cache"
 				/>
+				<MenubarItem on:click={clearModCache} text="Clear unused mod cache" />
 				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')} text="Fetch mods" />
 			</Menubar.Content>
 		</Menubar.Menu>
@@ -192,7 +206,7 @@
 				<MenubarItem
 					on:click={() => (newProfileOpen = true)}
 					text="Create new profile"
-					key="Ctrl+N"
+					key="Ctrl N"
 				/>
 				<MenubarItem
 					on:click={() => openProfileOperation('rename')}
@@ -202,7 +216,7 @@
 				<MenubarItem
 					on:click={() => openProfileOperation('duplicate')}
 					text="Duplicate active profile"
-					key="Ctrl+D"
+					key="Ctrl D"
 				/>
 				<MenubarSeparator />
 				<MenubarItem
@@ -249,17 +263,17 @@
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: 0.25 } })}
 					text="Zoom in"
-					key="Ctrl++"
+					key="Ctrl +"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: -0.25 } })}
 					text="Zoom out"
-					key="Ctrl+-"
+					key="Ctrl -"
 				/>
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { factor: 1 } })}
 					text="Reset zoom"
-					key="Ctrl+0"
+					key="Ctrl 0"
 				/>
 			</Menubar.Content>
 		</Menubar.Menu>

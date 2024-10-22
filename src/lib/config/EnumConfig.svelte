@@ -30,6 +30,7 @@
 	items={content.options}
 	class="flex-grow"
 	bind:selected
-	onSelectedChangeSingle={onSelectedChange}
+	{onSelectedChange}
+	multiple={false}
 />
 <ResetConfigButton {entryId} {onReset} />

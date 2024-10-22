@@ -1,3 +1,9 @@
+<script lang="ts" context="module">
+	import { writable } from 'svelte/store';
+
+	export let activeContextMenu = writable<string | null>(null);
+</script>
+
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../models';
 	import Icon from '@iconify/svelte';
@@ -6,7 +12,6 @@
 	import { activeGame } from '$lib/stores';
 	import { Switch, ContextMenu } from 'bits-ui';
 	import { createEventDispatcher } from 'svelte';
-	import { slide } from 'svelte/transition';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 	import { dropTransition } from '$lib/transitions';
 
@@ -22,6 +27,7 @@
 	}>();
 
 	let imgSrc: string;
+	let contextMenuOpen: boolean;
 
 	$: {
 		if (mod.type === 'remote') {
@@ -43,6 +49,10 @@
 				? 'text-slate-300'
 				: 'text-slate-400 group-hover:text-slate-300';
 
+	$: if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
+		contextMenuOpen = false;
+	}
+
 	async function loadLoadIcon(path: string) {
 		try {
 			let data = await readFile(path);
@@ -54,7 +64,16 @@
 	}
 </script>
 
-<ContextMenu.Root>
+<ContextMenu.Root
+	bind:open={contextMenuOpen}
+	onOpenChange={(open) => {
+		if (open) {
+			$activeContextMenu = mod.uuid;
+		} else {
+			$activeContextMenu = null;
+		}
+	}}
+>
 	<ContextMenu.Trigger class="contents">
 		<button
 			class="group flex w-full items-center rounded-lg border border-slate-500 p-2 {isSelected

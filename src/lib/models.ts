@@ -208,7 +208,7 @@ export type FiltersResponse = {
 };
 
 export type LaunchMode =
-	| { type: 'steam' }
+	| { type: 'steam'; content?: undefined }
 	| { type: 'direct'; content: { instances: number; intervalSecs: number } };
 
 export type AvailableUpdate = {
@@ -279,7 +279,8 @@ export type GamePrefs = {
 
 export type ModContextItem = {
 	label: string;
-	icon: string;
-	onclick: (mod: Mod) => void;
+	icon?: string;
 	showFor?: (mod: Mod) => boolean;
+	onclick: (mod: Mod) => void;
+	children?: (mod: Mod) => ModContextItem[];
 };

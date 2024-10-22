@@ -314,14 +314,25 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
     return Ok((local_mod, kind));
 
     fn read_zip_manifest(path: &Path) -> Result<Option<PackageManifest>> {
-        let mut zip = util::fs::open_zip(path).context("failed to read zip archive")?;
+        let mut zip = util::fs::open_zip(path).context("failed to open zip archive")?;
 
         let manifest = zip.by_name("manifest.json");
 
         match manifest {
-            Ok(file) => serde_json::from_reader::<_, PackageManifest>(file)
-                .context("failed to read manifest")
-                .map(Some),
+            Ok(mut file) => {
+                let mut str = String::with_capacity(file.size() as usize);
+                file.read_to_string(&mut str)
+                    .context("failed to read manifest")?;
+
+                // remove BOM
+                if str.starts_with("\u{feff}") {
+                    str.replace_range(0..3, "");
+                }
+
+                serde_json::from_str(&str)
+                    .context("failed to parse manifest")
+                    .map(Some)
+            }
             Err(_) => Ok(None),
         }
     }

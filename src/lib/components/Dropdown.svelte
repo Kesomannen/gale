@@ -1,21 +1,24 @@
-<script lang="ts" generics="T">
+<script lang="ts" generics="T, Multiple extends boolean = false">
 	import { dropTransition } from '$lib/transitions';
 
 	import { Select } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 
+	type Selection = Multiple extends true ? T[] : T;
+
 	export let items: T[];
-	export let selected: T | T[] = [];
+	export let selected: Selection;
+	export let onSelectedChange = (value: Selection) => {};
+
 	export let open = false;
-	export let multiple = false;
-	export let avoidCollisions = true;
-	export let placeholder: string = '';
-	export let onSelectedChange = (items: T[]) => {};
-	export let onSelectedChangeSingle = (item: T) => {};
-	export let getLabel = (item: T) => item as string;
+	export let multiple: Multiple;
 
 	export let icon: string | null = null;
 	export let overrideLabel: string | null = null;
+	export let placeholder: string = '';
+	export let getLabel = (item: T) => item as string;
+
+	export let avoidCollisions = true;
 
 	let className: string = '';
 
@@ -25,29 +28,35 @@
 		? selected.length > 0
 			? selected.map((item) => getLabel(item)).join(', ')
 			: null
-		: getLabel(selected);
+		: getLabel(selected as T);
+
+	type BitsSelection = { value: T; label?: string };
+
+	function onSelectionChangeHandler(selection: BitsSelection | BitsSelection[] | undefined) {
+		if (selection === undefined) return;
+
+		if (multiple) {
+			let values = selection as BitsSelection[];
+			selected = values.map(({ value }) => value) as Selection;
+		} else {
+			let { value } = selection as BitsSelection;
+			selected = value as Selection;
+		}
+
+		onSelectedChange(selected);
+	}
+
+	$: bitsSelected = Array.isArray(selected)
+		? (selected as T[]).map((value) => ({
+				value
+			}))
+		: { value: selected as T };
 </script>
 
 <Select.Root
 	items={items.map((item) => ({ value: item }))}
-	onSelectedChange={(selection) => {
-		if (!selection) return;
-		let values = Array.isArray(selection)
-			? selection.map((single) => single.value)
-			: [selection.value];
-
-		onSelectedChange(values);
-
-		if (multiple) {
-			selected = values;
-		} else {
-			onSelectedChangeSingle(values[0]);
-			selected = values[0];
-		}
-	}}
-	selected={Array.isArray(selected)
-		? selected.map((item) => ({ value: item }))
-		: { value: selected }}
+	onSelectedChange={onSelectionChangeHandler}
+	selected={bitsSelected}
 	{multiple}
 	bind:open
 >

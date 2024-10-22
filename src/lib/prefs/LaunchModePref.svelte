@@ -12,7 +12,7 @@
 	let instances = value.content?.instances ?? 1;
 	let intervalSecs = value.content?.intervalSecs ?? 10;
 
-	async function onSelectedChangeSingle(newValue: string) {
+	async function onSelectedChange(newValue: string) {
 		value.type = newValue as 'steam' | 'direct';
 		await submit();
 	}
@@ -46,7 +46,8 @@
 		items={['steam', 'direct']}
 		getLabel={sentenceCase}
 		selected={value?.type ?? 'steam'}
-		{onSelectedChangeSingle}
+		{onSelectedChange}
+		multiple={false}
 	/>
 </div>
 

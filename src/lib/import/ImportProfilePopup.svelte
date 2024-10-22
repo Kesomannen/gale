@@ -112,6 +112,7 @@
 						class="flex-grow"
 						items={profiles.map((profile) => profile.name)}
 						avoidCollisions={false}
+						multiple={false}
 						bind:selected={name}
 					/>
 				</div>

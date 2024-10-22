@@ -45,16 +45,15 @@
 				})
 		},
 		{
-			label: 'Enable',
-			icon: 'mdi:toggle-switch',
-			onclick: (mod) => toggleMod(mod, true),
-			showFor: (mod) => mod.enabled === false
-		},
-		{
-			label: 'Disable',
-			icon: 'mdi:toggle-switch-off-outline',
-			onclick: (mod) => toggleMod(mod, false),
-			showFor: (mod) => mod.enabled === true
+			label: 'Change version',
+			icon: 'mdi:edit',
+			onclick: () => {},
+			showFor: (mod) => mod.versions.length > 1,
+			children: (mod) =>
+				mod.versions.map((version) => ({
+					label: version.name,
+					onclick: () => updateMod(mod, version.uuid)
+				}))
 		},
 		{
 			label: 'Show dependants',
@@ -81,8 +80,9 @@
 	let enableDependencies: DependantsPopup;
 
 	let dependantsOpen = false;
-	let dependantRoot: string;
 	let dependants: string[];
+
+	let activeMod: Mod | null = null;
 
 	$: if (maxCount > 0) {
 		$activeProfile;
@@ -149,20 +149,20 @@
 			uuid: mod.uuid
 		});
 
-		dependantRoot = mod.name;
+		activeMod = mod;
 		dependantsOpen = true;
 	}
 
-	async function updateActiveMod(version: 'latest' | { specific: string }) {
-		if (selectedMod === null) return;
+	async function updateMod(mod: Mod | null, versionUuid?: string) {
+		if (mod === null) return;
 
-		if (version === 'latest') {
-			await invokeCommand('update_mods', { uuids: [selectedMod.uuid], respectIgnored: false });
+		if (versionUuid === undefined) {
+			await invokeCommand('update_mods', { uuids: [mod.uuid], respectIgnored: false });
 		} else {
 			await invokeCommand('change_mod_version', {
 				modRef: {
-					packageUuid: selectedMod.uuid,
-					versionUuid: version.specific
+					packageUuid: mod.uuid,
+					versionUuid: versionUuid
 				}
 			});
 		}
@@ -170,6 +170,7 @@
 		await refresh();
 
 		selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
+		console.log(selectedMod);
 	}
 
 	let reorderUuid: string;
@@ -226,7 +227,7 @@
 		{#if selectedMod && isOutdated(selectedMod)}
 			<Button.Root
 				class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 py-2 text-lg font-medium hover:bg-green-500"
-				on:click={() => updateActiveMod('latest')}
+				on:click={() => updateMod(selectedMod)}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
 				Update to {selectedMod?.versions[0].name}
@@ -267,7 +268,7 @@
 	</svelte:fragment>
 </ModList>
 
-<Popup title="Dependants of {dependantRoot}" bind:open={dependantsOpen}>
+<Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
 	<div class="mt-4 text-center text-slate-300">
 		{#if dependants.length === 0}
 			No dependants found 😢

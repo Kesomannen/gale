@@ -1,11 +1,12 @@
 use std::{
     ffi::OsStr,
-    fs::{self},
-    io::{self, BufReader},
+    fs::{self, File},
+    io::{self, BufReader, BufWriter},
     path::{Path, PathBuf},
 };
 
 use serde::{de::DeserializeOwned, Serialize};
+use zip::ZipArchive;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Overwrite {
@@ -42,17 +43,15 @@ pub fn copy_dir(src: &Path, dest: &Path, overwrite: Overwrite) -> io::Result<()>
 }
 
 pub fn read_json<T: DeserializeOwned>(path: impl AsRef<Path>) -> anyhow::Result<T> {
-    let file = fs::File::open(path)?;
-    let reader = io::BufReader::new(file);
+    let reader = File::open(path).map(BufReader::new)?;
     let result = serde_json::from_reader(reader)?;
 
     Ok(result)
 }
 
-pub fn open_zip(path: impl AsRef<Path>) -> anyhow::Result<zip::ZipArchive<BufReader<fs::File>>> {
-    let file = fs::File::open(path)?;
-    let reader = io::BufReader::new(file);
-    let archive = zip::ZipArchive::new(reader)?;
+pub fn open_zip(path: impl AsRef<Path>) -> anyhow::Result<ZipArchive<BufReader<File>>> {
+    let reader = File::open(path).map(BufReader::new)?;
+    let archive = ZipArchive::new(reader)?;
 
     Ok(archive)
 }
@@ -68,8 +67,8 @@ pub fn write_json<T: Serialize + ?Sized>(
     value: &T,
     style: JsonStyle,
 ) -> anyhow::Result<()> {
-    let file = fs::File::create(path)?;
-    let writer = io::BufWriter::new(file);
+    let file = File::create(path)?;
+    let writer = BufWriter::new(file);
 
     if style == JsonStyle::Pretty {
         serde_json::to_writer_pretty(writer, value)?;
@@ -118,7 +117,7 @@ pub fn is_enclosed(path: impl AsRef<Path>) -> bool {
 
 pub trait PathExt: Sized {
     fn exists_or_none(self) -> Option<Self>;
-    fn add_extension(&mut self, extension: impl AsRef<OsStr>);
+    fn add_ext(&mut self, extension: impl AsRef<OsStr>);
 }
 
 impl PathExt for PathBuf {
@@ -129,7 +128,7 @@ impl PathExt for PathBuf {
         }
     }
 
-    fn add_extension(&mut self, extension: impl AsRef<OsStr>) {
+    fn add_ext(&mut self, extension: impl AsRef<OsStr>) {
         match self.extension() {
             Some(ext) => {
                 let mut ext = ext.to_os_string();

@@ -74,8 +74,8 @@
 			<Tabs.Content value="text" class="pt-1">
 				<ResizableInputField
 					value={content}
-					on:change={(e) => {
-						content = e.target?.value;
+					on:change={(evt) => {
+						content = evt.target?.value;
 						submitValue();
 					}}
 				/>

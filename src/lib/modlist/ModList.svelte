@@ -95,6 +95,7 @@
 					items={[SortOrder.Descending, SortOrder.Ascending]}
 					bind:selected={$queryArgs.sortOrder}
 					getLabel={sentenceCase}
+					multiple={false}
 				/>
 
 				<Dropdown
@@ -103,6 +104,7 @@
 					bind:selected={$queryArgs.sortBy}
 					getLabel={sentenceCase}
 					icon="mdi:sort"
+					multiple={false}
 				/>
 			</div>
 		</div>

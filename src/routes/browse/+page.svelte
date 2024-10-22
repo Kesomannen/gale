@@ -97,6 +97,14 @@
 		await invokeCommand('install_mod', { modRef });
 		await refresh();
 	}
+
+	function onModClicked(evt: MouseEvent, mod: Mod) {
+		if (evt.ctrlKey) {
+			installLatest(mod);
+		} else {
+			modList.selectMod(mod);
+		}
+	}
 </script>
 
 <ModList
@@ -164,7 +172,7 @@
 			{mod}
 			{isSelected}
 			on:install={() => installLatest(mod)}
-			on:click={() => modList.selectMod(mod)}
+			on:click={(evt) => onModClicked(evt, mod)}
 		/>
 	</svelte:fragment>
 </ModList>

@@ -174,7 +174,7 @@ impl Profile {
         fs::create_dir_all(&path)?;
 
         path.push(&args.version_number);
-        path.add_extension("json");
+        path.add_ext("json");
 
         util::fs::write_json(
             path,

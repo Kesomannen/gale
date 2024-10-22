@@ -96,7 +96,7 @@ pub fn export_pack(
 
     let mut path = dir;
     path.push(format!("{}-{}", args.name, args.version_number));
-    path.add_extension("zip");
+    path.add_ext("zip");
 
     debug!("exporting pack to {:?}", path);
 

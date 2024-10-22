@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Re-added the ability to edit mod versions
+- Being able to open multiple mod context menus at the same time
+- Importing local mods with BOM-encoded manifests
+
 ## 0.9.0 (2024-10-21)
 
 ### Added

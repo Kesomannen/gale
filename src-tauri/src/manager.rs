@@ -621,7 +621,7 @@ impl Profile {
                     fs::rename(path, &new).fs_context("removing .old extension", path)?;
                 } else {
                     let mut new = path.to_path_buf();
-                    new.add_extension("old");
+                    new.add_ext("old");
                     fs::rename(path, &new).fs_context("adding .old extension", path)?;
                 }
             }

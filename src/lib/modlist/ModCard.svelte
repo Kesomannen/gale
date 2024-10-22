@@ -19,21 +19,22 @@
 		class="size-12 rounded"
 	/>
 	<div class="flex-shrink flex-grow flex-wrap overflow-hidden pl-3 text-left align-middle">
-		<div class="flex">
-			<a
-				class="flex-shrink truncate font-semibold text-white hover:underline"
-				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				{name.replace(/_/g, ' ')}
-			</a>
-			{#if showVersion && version !== null}
-				<div class="px-2 text-slate-400">
-					{version}
-				</div>
-			{/if}
-		</div>
+		<a
+			class="truncate font-semibold text-white hover:underline"
+			href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			{name.replace(/_/g, ' ')}
+		</a>
+
+		{#if showVersion && version !== null}
+			<span class="px-1 text-slate-400">
+				{version}
+			</span>
+		{/if}
+
+		<br />
 
 		{#if author !== null}
 			<a
