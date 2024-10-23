@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 
 use super::{downloader::ModInstall, ModManager, ProfileMod};
 use crate::{
@@ -10,9 +10,10 @@ use chrono::Utc;
 use itertools::Itertools;
 use log::{trace, warn};
 use std::{
+    borrow::Cow,
     collections::HashSet,
     ffi::OsStr,
-    fs,
+    fs::{self, File},
     io::{self, Read, Seek},
     path::{Path, PathBuf},
     time::Instant,
@@ -20,8 +21,11 @@ use std::{
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-fn is_bepinex(dir_name: &str) -> bool {
-    match dir_name {
+#[cfg(test)]
+mod tests;
+
+fn is_bepinex(full_name: &str) -> bool {
+    match full_name {
         "bbepis-BepInExPack"
         | "xiaoxiao921-BepInExPack"
         | "xiaoye97-BepInEx"
@@ -174,7 +178,7 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs)
     let path = prefs.data_dir.join("temp").join("extract");
     fs::create_dir_all(&path).context("failed to create temporary directory")?;
 
-    let file = fs::File::open(src).context("failed to open file")?;
+    let file = File::open(src).context("failed to open file")?;
     let reader = io::BufReader::new(file);
     extract(reader, full_name, path.clone())?;
     install(&path, dest, false)?;
@@ -184,96 +188,142 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs)
     Ok(())
 }
 
-pub fn extract(src: impl Read + Seek, dir_name: &str, mut path: PathBuf) -> Result<()> {
-    use std::path::Component;
-
+pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf) -> Result<()> {
     let start = Instant::now();
 
-    path.push("BepInEx");
-
-    fs::create_dir_all(&path)?;
-
-    let is_bepinex = is_bepinex(dir_name);
+    let is_bepinex = is_bepinex(full_name);
     let mut archive = ZipArchive::new(src)?;
 
     for i in 0..archive.len() {
-        let mut file = archive.by_index(i)?;
+        let mut source_file = archive.by_index(i)?;
 
-        if file.is_dir() {
+        if source_file.is_dir() {
             continue; // we create the necessary dirs when copying files instead
         }
 
-        let relative = match cfg!(unix) {
-            true => PathBuf::from(file.name().replace('\\', "/")),
-            false => PathBuf::from(file.name()),
+        let relative_path = match cfg!(unix) {
+            true => PathBuf::from(source_file.name().replace('\\', "/")),
+            false => PathBuf::from(source_file.name()),
         };
 
-        if !util::fs::is_enclosed(&relative) {
+        if !util::fs::is_enclosed(&relative_path) {
             warn!(
                 "file {} escapes the archive root, skipping",
-                relative.display()
+                relative_path.display()
             );
             continue;
         }
 
-        let mut prev: Option<&OsStr> = None;
-        let mut components = relative.components();
+        let target_path_rel = if is_bepinex {
+            let Some(path) = map_file_bepinex(&relative_path) else {
+                continue;
+            };
 
-        let (subdir, is_top_level) = loop {
-            let current = components.next();
+            Cow::Borrowed(path)
+        } else {
+            let path = map_file_default(relative_path, full_name)?;
 
-            match current {
-                Some(Component::Normal(name)) => match name.to_str() {
-                    Some("plugins") => break ("plugins", false),
-                    Some("config") => break ("config", false),
-                    Some("patchers") => break ("patchers", false),
-                    Some("monomod") => break ("monomod", false),
-                    Some("core") => break ("core", false),
-                    _ => prev = Some(name),
-                },
-                Some(_) => prev = None,
-                None => break ("plugins", true),
-            }
+            Cow::Owned(path)
         };
 
-        let mut target: PathBuf;
+        let target_path = dest.join(target_path_rel);
 
-        if is_bepinex {
-            if is_top_level {
-                // extract outside of the BepInEx directory
-                let file_name = prev.ok_or(anyhow!("malformed zip file"))?;
-                target = path.parent().unwrap().join(file_name);
-            } else {
-                target = path.join(subdir);
-                target = components.fold(target, |mut acc, comp| {
-                    acc.push(comp);
-                    acc
-                });
-            }
-        } else {
-            target = path.join(subdir);
-            if subdir != "config" {
-                target.push(dir_name);
-            }
+        fs::create_dir_all(target_path.parent().unwrap())?;
 
-            if is_top_level {
-                let file_name = prev.ok_or(anyhow!("malformed zip file"))?;
-                target.push(file_name);
-            } else {
-                target = components.fold(target, |mut acc, comp| {
-                    acc.push(comp);
-                    acc
-                });
-            }
-        }
-
-        fs::create_dir_all(target.parent().unwrap())?;
-        let mut target_file = fs::File::create(&target)?;
-        io::copy(&mut file, &mut target_file)?;
+        let mut target_file = File::create(&target_path)?;
+        io::copy(&mut source_file, &mut target_file)?;
     }
 
-    trace!("extracted in {:?}", start.elapsed());
+    trace!("extracted {} in {:?}", full_name, start.elapsed());
+
     Ok(())
+}
+
+fn map_file_bepinex<'a>(relative_path: &'a Path) -> Option<&'a Path> {
+    let mut components = relative_path.components();
+    if components.clone().count() == 1 {
+        // ignore top-level files, such as manifest.json and icon.png
+        return None;
+    }
+
+    // remove the top-level dir
+    components.next();
+
+    Some(components.as_path())
+}
+
+/// Maps a file from a mod zip archive to its final extracted path.
+/// Based on r2modman's structure rules, which are available here:
+/// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
+fn map_file_default(relative_path: PathBuf, full_name: &str) -> Result<PathBuf> {
+    use std::path::Component;
+
+    const SUBDIRS: &[&str] = &["plugins", "config", "patchers", "monomod", "core"];
+
+    // first, flatten the path until a subdir appears
+    // if the path contains no subdirs, default to /plugins
+
+    let mut prev: Vec<&OsStr> = Vec::new();
+    let mut components = relative_path.components();
+
+    let (subdir, is_top_level) = loop {
+        let current = components.next();
+
+        match current {
+            Some(Component::Normal(name)) => {
+                // check for a subdir
+                if let Some(name) = name.to_str() {
+                    if let Some(subdir) = SUBDIRS.iter().find(|subdir| **subdir == name) {
+                        break (*subdir, false);
+                    }
+                }
+
+                // otherwise store the parent and continue
+                prev.push(name);
+            }
+            // remove the previous parent
+            Some(Component::ParentDir) => {
+                prev.pop();
+            }
+            // we don't care/don't expect any of these
+            Some(Component::RootDir | Component::Prefix(_) | Component::CurDir) => continue,
+            // default to plugins when the whole path is exhausted
+            None => break ("plugins", true),
+        }
+    };
+
+    // components now contains either:
+    // - the remaining path if a subdir was found, or
+    // - None if the file is top level and thus defaulted to plugins
+
+    // prev is the canonical path leading up to a subdir,
+    // or the whole path if we defaulted
+
+    // dest is the BepInEx dir inside of the target path
+
+    // e.g. profile/BepInEx/plugins
+    let mut target: PathBuf = ["BepInEx", subdir].iter().collect();
+
+    // don't add separators for config
+    if subdir != "config" {
+        // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod
+        target.push(full_name);
+    }
+
+    if is_top_level {
+        // since we advanced components to the end, prev.pop() will give the
+        // last component, i.e. the file name
+        let file_name = prev.pop().context("malformed zip file")?;
+
+        // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/CoolMod.dll
+        target.push(file_name);
+    } else {
+        // add the remainder of the path after the subdir
+        // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/assets/cool_icon.png
+        target.push(components.as_path());
+    }
+
+    Ok(target)
 }
 
 // install from a well structured mod directory

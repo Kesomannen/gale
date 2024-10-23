@@ -1,6 +1,6 @@
 use std::{
     fs,
-    io::{self},
+    io::Cursor,
     iter,
     sync::Mutex,
     time::{Duration, Instant},
@@ -371,7 +371,7 @@ impl<'a> Installer<'a> {
         self.update(InstallTask::Extracting);
 
         installer::extract(
-            io::Cursor::new(data),
+            Cursor::new(data),
             &borrowed.package.full_name,
             cache_path.clone(),
         )

@@ -190,11 +190,11 @@
 				<MenubarItem on:click={() => invokeCommand('open_bepinex_log')} text="Open BepInEx log" />
 				<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open Gale log" />
 				<MenubarSeparator />
+				<MenubarItem on:click={clearModCache} text="Clear mod cache" />
 				<MenubarItem
 					on:click={() => invokeCommand('clear_download_cache', { soft: true })}
-					text="Clear mod cache"
+					text="Clear unused mod cache"
 				/>
-				<MenubarItem on:click={clearModCache} text="Clear unused mod cache" />
 				<MenubarItem on:click={() => invokeCommand('trigger_mod_fetching')} text="Fetch mods" />
 			</Menubar.Content>
 		</Menubar.Menu>

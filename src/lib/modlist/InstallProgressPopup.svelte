@@ -50,15 +50,13 @@
 </script>
 
 <Popup
+	bind:open
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
-	bind:open
+	onClose={() => invokeCommand('cancel_install')}
 	confirmClose={{
 		title: 'Abort installation',
 		message: 'Are you sure you want to abort the installation?'
-	}}
-	onClose={() => {
-		invokeCommand('cancel_install');
 	}}
 >
 	<Dialog.Description class="text-slate-400">

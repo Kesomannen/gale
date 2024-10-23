@@ -2,11 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- Support for TCG Card Shop Simulator
+
 ### Fixed
 
 - Re-added the ability to edit mod versions
 - Being able to open multiple mod context menus at the same time
 - Importing local mods with BOM-encoded manifests
+- IL2CPP BepInEx packs being extracted incorrectly
 
 ## 0.9.0 (2024-10-21)
 

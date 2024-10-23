@@ -54,7 +54,7 @@ impl Game {
 }
 
 lazy_static! {
-    pub static ref GAMES: [Game; 100] = [
+    pub static ref GAMES: [Game; 101] = [
         Game::new("Risk of Rain 2", 632360)
             .id("riskofrain2")
             .aka("ror2"),
@@ -184,7 +184,8 @@ lazy_static! {
             .id("deep-rock-galactic-survivor")
             .on_steam("Deep Rock Survivor"),
         Game::new("Ale & Tale Tavern", 2683150).id("ale-and-tale-tavern"),
-        Game::new("Screw Drivers", 1279510)
+        Game::new("Screw Drivers", 1279510),
+        Game::new("TCG Card Shop Simulator", 3070070).id("tcg-card-shop-simulator")
     ];
 }
 

@@ -185,12 +185,12 @@ fn test_file() -> File {
 }
 
 #[test]
-fn test_to_string() {
+fn check_to_string() {
     assert_eq!(ser::to_string(&test_file()).unwrap(), TEST_STR);
 }
 
 #[test]
-fn test_from_string() {
+fn check_from_string() {
     let (sections, metadata) = de::from_reader(TEST_STR.as_bytes()).unwrap();
     let mut left = File::new("Test".into(), "test".into(), sections, metadata);
     let right = test_file();
