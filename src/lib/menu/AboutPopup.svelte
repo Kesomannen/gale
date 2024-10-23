@@ -21,7 +21,7 @@
 </script>
 
 <Popup bind:open title="About">
-	<div class="h-3" />
+	<div class="h-3"></div>
 	<img src="logo.png" alt="Logo" class="float-right size-20" />
 	<div>
 		<h3 class="text-xl font-semibold text-white">Gale</h3>

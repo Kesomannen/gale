@@ -99,7 +99,7 @@
 
 			<div class="mt-2 flex gap-1.5">
 				<BigButton color="gray" on:click={() => (stage = 'gameSelect')}>Back</BigButton>
-				<div class="flex-grow" />
+				<div class="flex-grow"></div>
 				<BigButton color="gray" on:click={() => (stage = 'settings')}>Skip</BigButton>
 				<BigButton color="green" on:click={importProfiles}>Import</BigButton>
 			</div>

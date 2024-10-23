@@ -168,7 +168,7 @@
 		{/if}
 	{/await}
 
-	<div class="flex-grow" />
+	<div class="flex-grow"></div>
 
 	{#if mod.configFile}
 		<div
