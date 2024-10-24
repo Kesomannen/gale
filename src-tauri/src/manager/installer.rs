@@ -8,7 +8,7 @@ use crate::{
 };
 use chrono::Utc;
 use itertools::Itertools;
-use log::{trace, warn};
+use log::{debug, warn};
 use std::{
     borrow::Cow,
     collections::HashSet,
@@ -221,7 +221,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf) -> Result<
 
             Cow::Borrowed(path)
         } else {
-            let path = map_file_default(relative_path, full_name)?;
+            let path = map_file_default(&relative_path, full_name)?;
 
             Cow::Owned(path)
         };
@@ -234,7 +234,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf) -> Result<
         io::copy(&mut source_file, &mut target_file)?;
     }
 
-    trace!("extracted {} in {:?}", full_name, start.elapsed());
+    debug!("extracted {} in {:?}", full_name, start.elapsed());
 
     Ok(())
 }
@@ -246,7 +246,7 @@ fn map_file_bepinex<'a>(relative_path: &'a Path) -> Option<&'a Path> {
         return None;
     }
 
-    // remove the top-level dir
+    // remove the top-level dir (usually called BepInExPack)
     components.next();
 
     Some(components.as_path())
@@ -255,7 +255,7 @@ fn map_file_bepinex<'a>(relative_path: &'a Path) -> Option<&'a Path> {
 /// Maps a file from a mod zip archive to its final extracted path.
 /// Based on r2modman's structure rules, which are available here:
 /// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
-fn map_file_default(relative_path: PathBuf, full_name: &str) -> Result<PathBuf> {
+fn map_file_default(relative_path: &Path, full_name: &str) -> Result<PathBuf> {
     use std::path::Component;
 
     const SUBDIRS: &[&str] = &["plugins", "config", "patchers", "monomod", "core"];

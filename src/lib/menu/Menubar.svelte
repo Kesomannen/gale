@@ -256,10 +256,6 @@
 			<Menubar.Content
 				class="mt-0.5 flex flex-col gap-0.5 rounded-lg border border-gray-600 bg-gray-800 py-1 shadow-xl"
 			>
-				<MenubarItem on:click={appWindow.minimize} text="Minimize" />
-				<MenubarItem on:click={appWindow.toggleMaximize} text="Maximize" />
-				<MenubarItem on:click={appWindow.close} text="Close" />
-				<MenubarSeparator />
 				<MenubarItem
 					on:click={() => invokeCommand('zoom_window', { value: { delta: 0.25 } })}
 					text="Zoom in"

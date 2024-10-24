@@ -81,7 +81,7 @@
 	>
 		<ModCard fullName={update.fullName} showVersion={false} />
 
-		<span class="text-light ml-auto text-slate-400">{update.old}</span>
+		<span class="text-light ml-auto pl-1 text-slate-400">{update.old}</span>
 		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-slate-400" />
 		<span class="text-lg font-semibold text-green-400">{update.new}</span>
 

@@ -1,10 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.9.1 (2024-10-24)
 
 ### Added
 
 - Support for TCG Card Shop Simulator
+
+### Removed
+
+- Redudant options in the Window menu
 
 ### Fixed
 
@@ -12,6 +16,7 @@
 - Being able to open multiple mod context menus at the same time
 - Importing local mods with BOM-encoded manifests
 - IL2CPP BepInEx packs being extracted incorrectly
+- Small UI fixes
 
 ## 0.9.0 (2024-10-21)
 

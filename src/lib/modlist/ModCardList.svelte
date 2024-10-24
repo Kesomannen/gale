@@ -11,7 +11,7 @@
 	$: names.sort((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
 </script>
 
-<div class="list grid gap-4 overflow-y-auto {className}">
+<div class="list grid gap-3 overflow-y-auto {className}">
 	{#each names as fullName}
 		<ModCard {fullName} />
 	{/each}

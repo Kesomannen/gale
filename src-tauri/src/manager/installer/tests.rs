@@ -42,6 +42,10 @@ fn check_map_bepinex() {
         Some(&[".doorstop-version"]),
     );
     test_map_file_bepinex(
+        &["BepInExPack", "dotnet", "System.dll"],
+        Some(&["dotnet", "System.dll"]),
+    );
+    test_map_file_bepinex(
         &["BepInExPack", "BepInEx", "core", "BepInEx.Core.dll"],
         Some(&["BepInEx", "core", "BepInEx.Core.dll"]),
     );
@@ -51,7 +55,7 @@ fn test_map_file_default(relative_path: &[&str], full_name: &str, expected: &[&s
     let relative_path: PathBuf = relative_path.into_iter().collect();
     let expected: PathBuf = expected.into_iter().collect();
     assert_eq!(
-        map_file_default(relative_path, full_name).unwrap(),
+        map_file_default(&relative_path, full_name).unwrap(),
         expected
     )
 }
