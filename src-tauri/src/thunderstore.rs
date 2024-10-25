@@ -136,7 +136,7 @@ impl Thunderstore {
         })
     }
 
-    pub fn get_package<'a>(&'a self, uuid: Uuid) -> Result<&'a PackageListing> {
+    pub fn get_package(&self, uuid: Uuid) -> Result<&PackageListing> {
         self.packages
             .get(&uuid)
             .with_context(|| format!("package with id {} not found", uuid))
@@ -149,11 +149,7 @@ impl Thunderstore {
             .with_context(|| format!("package {} not found", full_name))
     }
 
-    pub fn get_mod<'a>(
-        &'a self,
-        package_uuid: Uuid,
-        version_uuid: Uuid,
-    ) -> Result<BorrowedMod<'a>> {
+    pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> Result<BorrowedMod<'_>> {
         let package = self.get_package(package_uuid)?;
         let version = package.get_version(version_uuid).with_context(|| {
             format!(

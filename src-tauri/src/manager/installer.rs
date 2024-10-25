@@ -239,7 +239,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf) -> Result<
     Ok(())
 }
 
-fn map_file_bepinex<'a>(relative_path: &'a Path) -> Option<&'a Path> {
+fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
     let mut components = relative_path.components();
     if components.clone().count() == 1 {
         // ignore top-level files, such as manifest.json and icon.png
@@ -298,8 +298,6 @@ fn map_file_default(relative_path: &Path, full_name: &str) -> Result<PathBuf> {
 
     // prev is the canonical path leading up to a subdir,
     // or the whole path if we defaulted
-
-    // dest is the BepInEx dir inside of the target path
 
     // e.g. profile/BepInEx/plugins
     let mut target: PathBuf = ["BepInEx", subdir].iter().collect();

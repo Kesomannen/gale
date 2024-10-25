@@ -52,8 +52,8 @@ fn check_map_bepinex() {
 }
 
 fn test_map_file_default(relative_path: &[&str], full_name: &str, expected: &[&str]) {
-    let relative_path: PathBuf = relative_path.into_iter().collect();
-    let expected: PathBuf = expected.into_iter().collect();
+    let relative_path: PathBuf = relative_path.iter().collect();
+    let expected: PathBuf = expected.iter().collect();
     assert_eq!(
         map_file_default(&relative_path, full_name).unwrap(),
         expected
@@ -61,7 +61,7 @@ fn test_map_file_default(relative_path: &[&str], full_name: &str, expected: &[&s
 }
 
 fn test_map_file_bepinex(relative_path: &[&str], expected: Option<&[&str]>) {
-    let relative_path: PathBuf = relative_path.into_iter().collect();
-    let expected: Option<PathBuf> = expected.map(|comps| comps.into_iter().collect());
+    let relative_path: PathBuf = relative_path.iter().collect();
+    let expected: Option<PathBuf> = expected.map(|comps| comps.iter().collect());
     assert_eq!(map_file_bepinex(&relative_path), expected.as_deref())
 }

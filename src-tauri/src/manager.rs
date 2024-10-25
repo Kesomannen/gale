@@ -365,14 +365,14 @@ impl Profile {
             .context("mod not found in profile")
     }
 
-    fn get_mod<'a>(&'a self, uuid: Uuid) -> Result<&'a ProfileMod> {
+    fn get_mod(&self, uuid: Uuid) -> Result<&ProfileMod> {
         self.mods
             .iter()
             .find(|p| p.uuid() == uuid)
             .context("mod not found in profile")
     }
 
-    fn get_mod_mut<'a>(&'a mut self, uuid: Uuid) -> Result<&'a mut ProfileMod> {
+    fn get_mod_mut(&mut self, uuid: Uuid) -> Result<&mut ProfileMod> {
         self.mods
             .iter_mut()
             .find(|p| p.uuid() == uuid)

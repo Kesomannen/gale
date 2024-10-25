@@ -1683,7 +1683,6 @@ dependencies = [
  "keyring",
  "lazy_static",
  "log",
- "objc",
  "open",
  "rayon",
  "reqwest",

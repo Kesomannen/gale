@@ -8,7 +8,7 @@ description = "A modern and lightweight mod manager for many games on Thundersto
 websiteUrl = "https://github.com/Kesomannen/gale"
 
 [build]
-icon = "app-icon@0,25x.png"
+icon = "images/icons/app-icon@0,25x.png"
 
 [[build.copy]]
 source = "CHANGELOG.md"

@@ -10,10 +10,6 @@ extern crate lazy_static;
 #[cfg(target_os = "linux")]
 extern crate webkit2gtk;
 
-#[cfg(target_os = "macos")]
-#[macro_use]
-extern crate objc;
-
 mod cli;
 mod config;
 mod games;
