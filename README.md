@@ -1,10 +1,7 @@
-<p align="center">
 
 <img width="200" src="https://raw.githubusercontent.com/Kesomannen/gale/master/images/icons/app-icon@0,25x.png" alt="Gale" />
 
-</p>
-
-<h1 align="center">Gale</h1>
+# Gale
 
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/Kesomannen/GaleModManager?style=flat-square)](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fkesomannen.com%2Fgale&up_message=online&down_message=offline&style=flat-square)](https://kesomannen.com/gale)
