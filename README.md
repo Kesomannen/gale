@@ -15,7 +15,7 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 - Feature-rich mod config editor
 - Export profiles as modpacks and upload directly to Thunderstore
 
-[...and more]("https://github.com/Kesomannen/gale/wiki/Features")
+![...and more]("https://github.com/Kesomannen/gale/wiki/Features")
 
 ## Installation
 
