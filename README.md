@@ -1,10 +1,13 @@
-![logo](https://raw.githubusercontent.com/Kesomannen/gale/master/images/icons/app-icon@0,25x.png)
+<div style="text-align: center;">
+<img style="margin-bottom: 10px" src="https://raw.githubusercontent.com/Kesomannen/gale/master/images/icons/app-icon@0,25x.png" alt="Gale" />
 
-# Gale
+<h1> Gale </h1>
 
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/Kesomannen/GaleModManager?style=flat-square)](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fkesomannen.com%2Fgale&up_message=online&down_message=offline&style=flat-square)](https://kesomannen.com/gale)
 [![GitHub License](https://img.shields.io/github/license/Kesomannen/gale?style=flat-square)](https://github.com/Kesomannen/gale?tab=GPL-3.0-1-ov-file#readme)
+
+</div>
 
 The modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/). Supports Windows and Linux.
 
