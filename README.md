@@ -37,6 +37,8 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 > [!TIP]
 > If you're unsure about the safety of this app, I would suggest running it through a service like [VirusTotal](https://www.virustotal.com).
 
+Want to build it yourself? See the [wiki](https://github.com/Kesomannen/gale/wiki/building-from-source).
+
 ## Screenshots
 
 _Profile_
@@ -60,3 +62,7 @@ _Modpack export_
 Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 Thanks to Ebkr for helping to navigate the thunderstore API and BepInEx, and of course making the original mod manager!
+
+---
+
+Still have questions? See the [FAQ](https://github.com/Kesomannen/gale/wiki/faq).
