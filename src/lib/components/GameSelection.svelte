@@ -19,17 +19,20 @@
 		let newGames =
 			searchTerm.length > 0
 				? games.filter((game) => {
-						return (
-							game.displayName.toLowerCase().includes(lowerSearch) ||
-							game.aliases.some((alias) => alias.toLowerCase().includes(lowerSearch))
-						);
+						return game.displayName.toLowerCase().includes(lowerSearch);
 					})
 				: games;
 
 		newGames.sort((a, b) => {
-			if (a.favorite && !b.favorite) return -1;
-			if (!a.favorite && b.favorite) return 1;
-			return 0;
+			if (searchTerm.length === 0) {
+				if (a.favorite && !b.favorite) return -1;
+				if (!a.favorite && b.favorite) return 1;
+
+				if (a.popular && !b.popular) return -1;
+				if (!a.popular && b.popular) return 1;
+			}
+
+			return a.displayName.localeCompare(b.displayName);
 		});
 
 		shownGames = newGames;

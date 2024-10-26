@@ -88,7 +88,7 @@
 
 			<div class="flex flex-grow gap-1.5">
 				<Dropdown
-					class="flex-grow py-1.5"
+					class="flex-grow basis-0 py-1.5"
 					icon={$queryArgs.sortOrder === SortOrder.Descending
 						? 'mdi:sort-descending'
 						: 'mdi:sort-ascending'}
@@ -99,7 +99,7 @@
 				/>
 
 				<Dropdown
-					class="flex-grow py-1.5"
+					class="flex-grow basis-0 py-1.5"
 					items={sortOptions}
 					bind:selected={$queryArgs.sortBy}
 					getLabel={sentenceCase}
@@ -127,7 +127,7 @@
 			<Dropdown
 				overrideLabel="Include"
 				icon="mdi:filter"
-				class="min-w-36 flex-grow py-1.5"
+				class="min-w-36 flex-grow basis-0 py-1.5"
 				items={['Deprecated', 'NSFW', 'Enabled', 'Disabled']}
 				selected={getSelectedIncludes()}
 				onSelectedChange={(items) => {

@@ -878,7 +878,7 @@ impl ManagerGame {
     }
 }
 
-const DEFAULT_GAME_ID: &str = "lethal-company";
+const DEFAULT_GAME_ID: &str = "among-us";
 
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {

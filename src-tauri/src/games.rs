@@ -10,6 +10,7 @@ pub struct Game {
     pub steam_name: String,
     pub aliases: Vec<String>,
     pub steam_id: u32,
+    pub popular: bool,
 }
 
 impl PartialEq for Game {
@@ -32,6 +33,7 @@ impl Game {
             display_name: display_name.to_owned(),
             steam_name: display_name.to_owned(),
             aliases: Vec::new(),
+            popular: false,
             steam_id,
             id,
         }
@@ -51,19 +53,25 @@ impl Game {
         self.aliases.push(alias.to_owned());
         self
     }
+
+    fn popular(mut self) -> Self {
+        self.popular = true;
+        self
+    }
 }
 
 lazy_static! {
     pub static ref GAMES: [Game; 101] = [
         Game::new("Risk of Rain 2", 632360)
             .id("riskofrain2")
-            .aka("ror2"),
+            .aka("ror2")
+            .popular(),
         Game::new("Dyson Sphere Program", 1366540).aka("dsp"),
-        Game::new("Valheim", 892970),
-        Game::new("GTFO", 493520).id("gtfo"),
+        Game::new("Valheim", 892970).popular(),
+        Game::new("GTFO", 493520).id("gtfo").popular(),
         Game::new("Outward", 794260),
         Game::new("TaleSpire", 720620).id("talespire"),
-        Game::new("H3VR", 450540).id("h3vr"),
+        Game::new("H3VR", 450540).id("h3vr").popular(),
         Game::new("ROUNDS", 1557740),
         Game::new("Mechanica", 1226990),
         Game::new("Muck", 1625450),
@@ -151,12 +159,12 @@ lazy_static! {
         Game::new("Cities: Skylines II", 949230)
             .id("cities-skylines-ii")
             .on_steam("Cities Skylines II"),
-        Game::new("Lethal Company", 1966720).aka("lc"),
+        Game::new("Lethal Company", 1966720).aka("lc").popular(),
         Game::new("Meeple Station", 900010),
         Game::new("Void Crew", 1063420),
         Game::new("Sailwind", 1764530),
         Game::new("Plasma", 1409160),
-        Game::new("Content Warning", 2881650).aka("cw"),
+        Game::new("Content Warning", 2881650).aka("cw").popular(),
         Game::new("Bopl Battle", 1686940),
         Game::new("Vertigo 2", 843390),
         Game::new("Against the Storm", 1336490),

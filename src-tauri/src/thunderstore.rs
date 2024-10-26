@@ -119,9 +119,11 @@ pub struct Thunderstore {
 impl Thunderstore {
     pub fn switch_game(&mut self, game: &'static Game, app: AppHandle) {
         if let Some(handle) = self.load_mods_handle.take() {
+            debug!("aborting load mods loop");
             handle.abort();
         }
 
+        self.is_fetching = false;
         self.packages_fetched = false;
         self.packages = IndexMap::new();
 
@@ -275,10 +277,12 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
     }
 
     let mut is_first = true;
+
     loop {
         let fetch_automatically = prefs.lock().unwrap().fetch_mods_automatically();
 
         if !fetch_automatically && !is_first {
+            debug!("automatic fetch cancelled");
             break;
         };
 
@@ -293,8 +297,6 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
             is_fetching
         };
 
-        // we need to check this in case the user manually triggers a fetch,
-        // or the fetch is still ongoing from the last loop
         if !is_fetching {
             let res = fetch_mods(&app, game, is_first).await;
 
@@ -321,7 +323,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
 
 async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
     const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
-    const INSERT_INTERVAL: usize = 2000;
+    const INSERT_EVERY: usize = 1000;
     const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
 
     let state = app.state::<Mutex<Thunderstore>>();
@@ -374,7 +376,7 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
         }
 
         // do this in bigger chunks to not have to lock the state too often
-        if write_directly && package_buffer.len() >= INSERT_INTERVAL {
+        if write_directly && package_buffer.len() >= INSERT_EVERY {
             let mut state = state.lock().unwrap();
             state.packages.extend(package_buffer.drain(..));
         }
@@ -428,7 +430,7 @@ fn read_cache(path: &Path) -> Result<Option<Vec<PackageListing>>> {
         util::fs::read_json(path).context("failed to deserialize cache")?;
 
     debug!(
-        "Read {} mods from cache in {:?}",
+        "read {} mods from cache in {:?}",
         result.len(),
         start.elapsed()
     );

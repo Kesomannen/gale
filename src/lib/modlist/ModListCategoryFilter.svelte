@@ -21,7 +21,7 @@
 	<Select.Trigger
 		let:open
 		slot="trigger"
-		class="flex flex-grow-[3] items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
+		class="flex flex-grow-[3] basis-0 items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
 	>
 		<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" {icon} />
 		{#if selected.length === 0}

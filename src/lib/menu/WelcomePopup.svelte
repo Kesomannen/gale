@@ -79,16 +79,16 @@
 <Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open>
 	<div class="text-slate-300">
 		{#if stage === 'gameSelect'}
-			To get started, select a game to mod
+			To get started, select a game to mod:
 			<GameSelection onSelect={onSelectGame} />
 		{:else if stage === 'importProfiles' && importData}
 			<p>
-				You can choose automatically transfer profiles from {importText} to Gale.
+				You can choose to automatically transfer profiles from {importText} to Gale.
 			</p>
 
 			<p class="mt-1">
 				The process may take a couple of minutes, depending on how many mods and profiles there are
-				to import. It will also transfer configs and cached mods.
+				to import.
 			</p>
 
 			<p class="mt-1">
@@ -98,8 +98,9 @@
 			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
-				<BigButton color="gray" on:click={() => (stage = 'gameSelect')}>Back</BigButton>
-				<div class="flex-grow" />
+				<BigButton color="gray" class="mr-auto" on:click={() => (stage = 'gameSelect')}
+					>Back</BigButton
+				>
 				<BigButton color="gray" on:click={() => (stage = 'settings')}>Skip</BigButton>
 				<BigButton color="green" on:click={importProfiles}>Import</BigButton>
 			</div>
@@ -114,7 +115,7 @@
 			<div class="mt-3 flex flex-col gap-1">
 				{#if prefs !== null}
 					<PathPref
-						title="Steam executable"
+						label="Steam executable"
 						type="file"
 						value={prefs.steamExePath}
 						set={set((value, prefs) => (prefs.steamExePath = value))}
@@ -123,7 +124,7 @@
 					</PathPref>
 
 					<PathPref
-						title="Steam library"
+						label="Steam library"
 						type="dir"
 						value={prefs.steamLibraryDir}
 						set={set((value, prefs) => (prefs.steamLibraryDir = value))}
@@ -132,7 +133,7 @@
 					</PathPref>
 
 					<PathPref
-						title="Gale data directory"
+						label="Gale data directory"
 						type="dir"
 						value={prefs.dataDir}
 						set={set((value, prefs) => (prefs.dataDir = value))}

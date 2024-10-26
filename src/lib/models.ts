@@ -192,9 +192,9 @@ export type ModpackArgs = {
 export type Game = {
 	id: string;
 	displayName: string;
-	aliases: string[];
 	steamId: number;
 	favorite: boolean;
+	popular: boolean;
 };
 
 export type PackageCategory = {
