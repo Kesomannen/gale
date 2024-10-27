@@ -1,11 +1,11 @@
-![Gale](https://raw.githubusercontent.com/Kesomannen/gale/master/images/banner.webp)
+![Gale](https://raw.githubusercontent.com/Kesomannen/gale/master/images/banner.png)
 
 [![Thunder![Uploading banner.png…]()
 store Version](https://img.shields.io/thunderstore/v/Kesomannen/GaleModManager?style=flat-square)](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fkesomannen.com%2Fgale&up_message=online&down_message=offline&style=flat-square)](https://kesomannen.com/gale)
 [![GitHub License](https://img.shields.io/github/license/Kesomannen/gale?style=flat-square)](https://github.com/Kesomannen/gale?tab=GPL-3.0-1-ov-file#readme)
 
-The modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/). Supports Windows and Linux.
+The modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [SvelteKit](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
 ## Features
 
@@ -37,6 +37,11 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 > [!TIP]
 > If you're unsure about the safety of this app, I would suggest running it through a service like [VirusTotal](https://www.virustotal.com).
+
+### Linux
+
+AppImages and dmg files are available in [Releases](https://github.com/Kesomannen/gale/releases).
+You can also get it through the community-maintained [AUR package](https://aur.archlinux.org/packages/gale-bin).
 
 Want to build it yourself? See the [wiki](https://github.com/Kesomannen/gale/wiki/building-from-source).
 
