@@ -273,7 +273,7 @@
 		{#if dependants.length === 0}
 			No dependants found 😢
 		{:else}
-			<ModCardList names={dependants} />
+			<ModCardList names={dependants} showVersion={false} />
 		{/if}
 	</div>
 </Popup>

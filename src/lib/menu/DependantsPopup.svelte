@@ -52,6 +52,7 @@
 	<ModCardList
 		class="my-2 max-h-[50vh] overflow-y-auto"
 		names={dependants.map(({ fullName }) => fullName)}
+		showVersion={false}
 	/>
 
 	<svelte:fragment slot="buttons">

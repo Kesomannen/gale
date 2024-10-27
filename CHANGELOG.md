@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Zoom in hotkey (`Ctrl +`)
+
 ## 0.9.1 (2024-10-24)
 
 ### Added

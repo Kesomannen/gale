@@ -46,7 +46,6 @@
 		"@tauri-apps/plugin-shell": "^2.0.0",
 		"@tauri-apps/plugin-updater": "^2.0.0",
 		"bits-ui": "0.19.6",
-		"hotkeys-js": "^3.13.7",
 		"rehype-highlight": "^7.0.0",
 		"rehype-raw": "^7.0.0",
 		"svelte-exmarkdown": "^3.0.5"

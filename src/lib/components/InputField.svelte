@@ -19,13 +19,11 @@
 	bind:value
 	autocomplete="off"
 	{...$$restProps}
-	on:keydown={(e) => {
-		if (e.key === 'Enter') {
+	on:keydown={(evt) => {
+		if (evt.key === 'Enter') {
 			dispatch('submit', value);
 		}
 	}}
-	on:change={() => {
-		dispatch('change', value);
-	}}
+	on:change={() => dispatch('change', value)}
 	class="min-w-0 flex-grow rounded-lg border border-slate-500 border-opacity-0 bg-gray-900 px-3 py-1 text-slate-300 placeholder-slate-400 invalid:ring-2 invalid:ring-red-500 valid:hover:border-opacity-100 focus:border-opacity-0 focus:outline-none focus:ring-2 valid:focus:ring-green-400 disabled:text-slate-400 text-{size} placeholder:text-{size} {className}"
 />

@@ -2,6 +2,7 @@
 	import ModCard from './ModCard.svelte';
 
 	export let names: string[];
+	export let showVersion = true;
 
 	let className = '';
 
@@ -13,7 +14,7 @@
 
 <div class="list grid gap-3 overflow-y-auto {className}">
 	{#each names as fullName}
-		<ModCard {fullName} />
+		<ModCard {fullName} {showVersion} />
 	{/each}
 </div>
 
