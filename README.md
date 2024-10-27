@@ -40,7 +40,7 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 ### Linux
 
-AppImages and dmg files are available in [Releases](https://github.com/Kesomannen/gale/releases).
+AppImages, .rpm and .deb files are available in [Releases](https://github.com/Kesomannen/gale/releases).
 You can also get it through the community-maintained [AUR package](https://aur.archlinux.org/packages/gale-bin).
 
 Want to build it yourself? See the [wiki](https://github.com/Kesomannen/gale/wiki/building-from-source).
