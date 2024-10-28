@@ -17,11 +17,14 @@
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
+	import { refreshAccentColor } from '$lib/theme';
 
 	let status: string | null = null;
 	let unlisten: UnlistenFn | undefined;
 
 	onMount(async () => {
+		refreshAccentColor();
+
 		unlisten = await listen<string | null>('status_update', (evt) => {
 			status = evt.payload;
 		});

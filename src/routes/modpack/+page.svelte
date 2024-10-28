@@ -400,7 +400,7 @@
 
 	<div class="mt-3 flex justify-end gap-2">
 		<BigButton color="gray" on:click={exportToFile}>Export to file</BigButton>
-		<BigButton color="green" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
+		<BigButton color="accent" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
 	</div>
 </div>
 

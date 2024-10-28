@@ -61,8 +61,8 @@
 					<Icon icon="mdi:check" class="text-xl text-gray-300" />
 					<span class="text-gray-300">You are running the latest version</span>
 				{:else}
-					<Icon icon="mdi:arrow-up-circle" class="inline text-xl text-green-400" />
-					<span class="text-green-400">New version available: {$nextUpdate?.version}</span>
+					<Icon icon="mdi:arrow-up-circle" class="text-accent-400 inline text-xl" />
+					<span class="text-accent-400">New version available: {$nextUpdate?.version}</span>
 				{/if}
 			{/if}
 		</div>

@@ -21,9 +21,8 @@
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;
-			let path = type === 'dir' ? (result as unknown as string) : result.path;
-			await set(path);
-			value = path;
+			await set(result);
+			value = result;
 		});
 	}
 </script>
@@ -34,8 +33,7 @@
 	<svelte:fragment slot="field">
 		{#if canClear}
 			<Button.Root
-				class="absolute right-1 rounded-md p-1 text-xl text-gray-400
-		 		hover:bg-gray-800 hover:text-gray-300"
+				class="absolute right-1 rounded-md p-1 text-xl text-gray-400 hover:bg-gray-800 hover:text-gray-300"
 				on:click={(evt) => {
 					evt.stopPropagation();
 					value = null;

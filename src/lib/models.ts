@@ -1,3 +1,5 @@
+import type { Color } from './theme';
+
 export type ConfigValue =
 	| { type: 'boolean'; content: boolean }
 	| { type: 'string'; content: string }

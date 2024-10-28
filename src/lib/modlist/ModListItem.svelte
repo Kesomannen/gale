@@ -33,7 +33,7 @@
 				<Icon class="flex-shrink-0 text-red-500" icon="mdi:error" />
 			{/if}
 			{#if mod.isInstalled}
-				<Icon class="flex-shrink-0 text-green-500" icon="mdi:check-circle" />
+				<Icon class="text-accent-500 flex-shrink-0" icon="mdi:check-circle" />
 			{/if}
 		</div>
 
@@ -46,7 +46,7 @@
 
 	{#if !mod.isInstalled}
 		<Button.Root
-			class="ml-2 mr-0.5 mt-0.5 hidden rounded-lg bg-green-600 p-2.5 align-middle text-2xl text-white hover:bg-green-500 group-hover:inline"
+			class="bg-accent-600 hover:bg-accent-500 ml-2 mr-0.5 mt-0.5 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
 			on:click={(evt) => {
 				dispatch('install');
 				evt.stopPropagation();

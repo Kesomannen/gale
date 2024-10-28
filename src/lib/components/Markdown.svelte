@@ -58,11 +58,11 @@
 	}
 
 	.markdown :global(a) {
-		@apply text-green-400;
+		@apply text-accent-400;
 	}
 
 	.markdown :global(a):hover {
-		@apply text-green-300 underline;
+		@apply text-accent-300 underline;
 	}
 
 	.markdown :global(p) {

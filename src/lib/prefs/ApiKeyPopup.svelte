@@ -81,6 +81,6 @@
 	</details>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="green" fontWeight="medium" on:click={submit}>Submit</BigButton>
+		<BigButton color="accent" fontWeight="medium" on:click={submit}>Submit</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

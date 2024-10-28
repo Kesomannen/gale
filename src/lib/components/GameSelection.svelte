@@ -76,7 +76,7 @@
 				>
 					<Icon
 						icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
-						class="text-xl text-yellow-400"
+						class="text-accent-500 text-xl"
 					/>
 				</Button.Root>
 			</Button.Root>

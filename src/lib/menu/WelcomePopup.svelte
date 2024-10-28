@@ -102,7 +102,7 @@
 					>Back</BigButton
 				>
 				<BigButton color="gray" on:click={() => (stage = 'settings')}>Skip</BigButton>
-				<BigButton color="green" on:click={importProfiles}>Import</BigButton>
+				<BigButton color="accent" on:click={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
 			<p>
@@ -151,7 +151,7 @@
 							importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}
 					>Back</BigButton
 				>
-				<BigButton color="green" on:click={() => (stage = 'end')}>Next</BigButton>
+				<BigButton color="accent" on:click={() => (stage = 'end')}>Next</BigButton>
 			</div>
 		{:else if stage === 'end'}
 			<p>That's it, you're all set up to start modding!</p>
@@ -160,7 +160,7 @@
 				If you have any questions or need help, feel free to ask in the <a
 					href="https://discord.gg/lcmod"
 					target="_blank"
-					class="text-green-400 hover:underline">Lethal Company Modding Discord server</a
+					class="text-accent-400 hover:underline">Lethal Company Modding Discord server</a
 				>.
 			</p>
 		{/if}

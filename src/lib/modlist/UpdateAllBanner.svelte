@@ -43,20 +43,20 @@
 </script>
 
 {#if shownUpdates.length > $threshold}
-	<div class="mb-1 mr-3 flex items-center rounded-lg bg-green-700 py-1 pl-3 pr-1 text-green-100">
+	<div class="bg-accent-700 text-accent-100 mb-1 mr-3 flex items-center rounded-lg py-1 pl-3 pr-1">
 		<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
 		There {shownUpdates.length === 1 ? 'is' : 'are'}
 		<b class="mx-1">{shownUpdates.length}</b>
 		{shownUpdates.length === 1 ? ' update' : ' updates'} available.
 		<Button.Root
-			class="ml-1 font-semibold text-white hover:text-green-200 hover:underline"
+			class="hover:text-accent-200 ml-1 font-semibold text-white hover:underline"
 			on:click={() => (popupOpen = true)}
 		>
 			Update all?
 		</Button.Root>
 
 		<Button.Root
-			class="ml-auto rounded-md p-1 text-xl hover:bg-green-600"
+			class="hover:bg-accent-600 ml-auto rounded-md p-1 text-xl"
 			on:click={() => ($threshold = shownUpdates.length)}
 		>
 			<Icon icon="mdi:close" />
@@ -83,7 +83,7 @@
 
 		<span class="text-light ml-auto pl-1 text-gray-400">{update.old}</span>
 		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-gray-400" />
-		<span class="text-lg font-semibold text-green-400">{update.new}</span>
+		<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
 		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
 			<Button.Root
@@ -102,6 +102,6 @@
 	</Checklist>
 
 	<svelte:fragment slot="buttons">
-		<BigButton color="green" on:click={updateAll}>Update mods</BigButton>
+		<BigButton color="accent" on:click={updateAll}>Update mods</BigButton>
 	</svelte:fragment>
 </ConfirmPopup>

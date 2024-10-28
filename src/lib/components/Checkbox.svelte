@@ -19,8 +19,8 @@
 >
 	<Checkbox.Indicator
 		class="h-6 w-6 rounded-md p-1 {className}
-          bg-{value ? 'green-700' : 'gray-800'}
-          hover:bg-{value ? 'green-600' : 'gray-700'}
+          bg-{value ? 'accent-700' : 'gray-800'}
+          hover:bg-{value ? 'accent-600' : 'gray-700'}
           {!value && 'border border-gray-500'}"
 	>
 		{#if value}

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Accent color setting
+
 ### Changes
 
 - Minor UI tweaks

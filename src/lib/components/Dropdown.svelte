@@ -98,7 +98,7 @@
 					{getLabel(item)}
 
 					<Select.ItemIndicator class="ml-auto">
-						<Icon icon="mdi:check" class="text-lg text-green-400" />
+						<Icon icon="mdi:check" class="text-accent-400 text-lg" />
 					</Select.ItemIndicator>
 				</Select.Item>
 			</slot>

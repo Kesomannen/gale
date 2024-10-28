@@ -2,7 +2,7 @@
 	import { Button } from 'bits-ui';
 
 	export let disabled: boolean = false;
-	export let color: string = 'green';
+	export let color: string = 'accent';
 	export let fontWeight: string = 'normal';
 	export { className as class };
 

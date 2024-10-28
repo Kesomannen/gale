@@ -117,7 +117,7 @@
 >
 	<div slot="details" class="mt-2 flex text-lg text-white">
 		<Button.Root
-			class="flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold enabled:bg-green-600 enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
+			class="enabled:bg-accent-600 enabled:hover:bg-accent-500 flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
 			on:click={() => install(activeModRef)}
 			disabled={selectedMod?.isInstalled}
 		>
@@ -133,7 +133,7 @@
 		</Button.Root>
 		<DropdownMenu.Root bind:open={versionsDropdownOpen}>
 			<DropdownMenu.Trigger
-				class="ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl enabled:bg-green-600 enabled:hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
+				class="enabled:bg-accent-600 enabled:hover:bg-accent-500 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
 				disabled={selectedMod?.isInstalled}
 			>
 				<Icon

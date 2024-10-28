@@ -289,7 +289,7 @@
 			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
 		{/if}
 		<BigButton
-			color="green"
+			color="accent"
 			fontWeight="medium"
 			disabled={profileOperationInProgress}
 			on:click={doProfileOperation}

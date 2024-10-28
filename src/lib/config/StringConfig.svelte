@@ -35,7 +35,12 @@
 </script>
 
 <div class="relative flex-grow">
-	<InputField bind:value={content} on:change={submit} class="w-full {showExpandButton && 'pr-8'}" />
+	<InputField
+		bind:value={content}
+		on:change={submit}
+		spellcheck="false"
+		class="w-full {showExpandButton && 'pr-8'}"
+	/>
 
 	{#if showExpandButton}
 		<Button.Root

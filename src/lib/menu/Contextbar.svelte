@@ -47,7 +47,7 @@
 
 <div class="flex h-12 flex-shrink-0 flex-row border-b border-t border-gray-600 bg-gray-900">
 	<div
-		class="flex-shrink-0 border-r border-gray-600 pl-6 pr-8 text-green-400 hover:bg-gray-800 hover:text-green-400"
+		class="text-accent-400 hover:text-accent-400 flex-shrink-0 border-r border-gray-600 pl-6 pr-8 hover:bg-gray-800"
 	>
 		<Button.Root
 			class="flex h-full cursor-default items-center font-semibold"
@@ -123,7 +123,7 @@
 
 					<Icon
 						icon="mdi:check"
-						class="mx-2 text-lg text-green-500 {i !== activeProfileIndex && 'invisible'}"
+						class="text-accent-500 mx-2 text-lg {i !== activeProfileIndex && 'invisible'}"
 					/>
 
 					<div class="mr-1 rounded bg-gray-700 px-1.5 py-0.5 text-xs group-hover:bg-gray-600">
@@ -144,7 +144,7 @@
 			{/each}
 
 			<DropdownMenu.Item
-				class="flex cursor-default items-center justify-center rounded bg-green-700 py-1 text-white hover:bg-green-600"
+				class="bg-accent-700 hover:bg-accent-600 flex cursor-default items-center justify-center rounded py-1 text-white"
 				on:click={() => (newProfilePopupOpen = true)}
 			>
 				<Icon icon="mdi:plus" class="mr-1 text-lg" />

@@ -172,7 +172,7 @@
 
 	{#if mod.configFile}
 		<div
-			class="my-2 flex items-center gap-2 text-lg text-green-400 hover:text-green-300 hover:underline"
+			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
 			<a href={'/config?file=' + mod.configFile}>Edit config</a>

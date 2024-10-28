@@ -106,7 +106,7 @@
 						<Icon class="flex-shrink-0 text-red-500" icon="mdi:error" />
 					{/if}
 					{#if isOutdated(mod)}
-						<Icon class="flex-shrink-0 text-green-500" icon="mdi:arrow-up-circle" />
+						<Icon class="text-accent-500 flex-shrink-0" icon="mdi:arrow-up-circle" />
 					{/if}
 				</div>
 
@@ -131,10 +131,10 @@
 				<Switch.Root
 					checked={mod.enabled ?? true}
 					onCheckedChange={(newState) => dispatch('toggle', newState)}
-					class="group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-gray-600 px-1 py-1 hover:bg-gray-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
+					class="data-[state=checked]:bg-accent-700 data-[state=checked]:hover:bg-accent-600 group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-gray-600 px-1 py-1 hover:bg-gray-500"
 				>
 					<Switch.Thumb
-						class="pointer-events-none h-full w-4 rounded-full bg-gray-300 transition-transform duration-75 ease-out hover:bg-gray-200 data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
+						class="data-[state=checked]:bg-accent-200 pointer-events-none h-full w-4 rounded-full bg-gray-300 transition-transform duration-75 ease-out data-[state=checked]:translate-x-6"
 					/>
 				</Switch.Root>
 			</div>

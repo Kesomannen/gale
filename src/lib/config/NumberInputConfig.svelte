@@ -20,7 +20,7 @@
 	type="number"
 	step={type === 'int32' ? 1 : 'any'}
 	bind:value={content.value}
-	class="w-full flex-grow rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1 text-gray-300 placeholder-gray-400 hover:border-opacity-100 focus:border-opacity-0 focus:outline-none focus:ring-2 focus:ring-green-400"
+	class="focus:ring-accent-400 w-full flex-grow rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1 text-gray-300 placeholder-gray-400 hover:border-opacity-100 focus:border-opacity-0 focus:outline-none focus:ring-2"
 />
 
 <ResetConfigButton {entryId} {onReset} />

@@ -79,7 +79,7 @@
 		class="relative mt-2 h-4 w-full overflow-hidden rounded-full bg-gray-900"
 	>
 		<div
-			class="absolute left-0 top-0 h-full rounded-l-full bg-green-600 transition-all"
+			class="bg-accent-600 absolute left-0 top-0 h-full rounded-l-full transition-all"
 			style="width: {progress.totalProgress * 100}%"
 		/>
 	</Progress.Root>

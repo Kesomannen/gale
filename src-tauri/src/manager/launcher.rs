@@ -121,8 +121,14 @@ impl Game {
                     .context("steam library directory not set")?
                     .to_path_buf();
 
-                path.push("steamapps");
-                path.push("common");
+                if !path.ends_with("common") {
+                    if !path.ends_with("steamapps") {
+                        path.push("steamapps");
+                    }
+
+                    path.push("common");
+                }
+
                 path.push(&self.steam_name);
 
                 path

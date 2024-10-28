@@ -12,8 +12,6 @@
 	$: if (open) name = '';
 
 	async function createProfile() {
-		if (name.length === 0) return;
-
 		await invokeCommand('create_profile', { name });
 		refreshProfiles();
 		open = false;
