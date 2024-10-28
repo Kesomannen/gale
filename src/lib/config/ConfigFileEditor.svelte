@@ -25,7 +25,7 @@
 </script>
 
 {#if metadata}
-	<div class="font-medium text-slate-400">
+	<div class="mb-1 px-4 font-medium text-slate-400">
 		Created by {metadata.pluginName}
 		{metadata.pluginVersion}
 	</div>

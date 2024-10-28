@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changes
+
+- Minor UI tweaks
+
 ### Fixed
 
 - Zoom in hotkey (`Ctrl +`)

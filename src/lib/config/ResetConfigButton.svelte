@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import Icon from '@iconify/svelte';

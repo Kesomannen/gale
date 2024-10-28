@@ -54,10 +54,9 @@
 	}
 </script>
 
-<div class="my-1 flex items-center pl-2 text-slate-300">
+<div class="field flex items-center py-1 pl-6 pr-4 text-slate-300 odd:bg-[#1b2433]">
 	<Tooltip
 		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate py-1 pr-2 text-left text-slate-300"
-		side="top"
 		openDelay={50}
 	>
 		{sentenceCase(entry.name)}

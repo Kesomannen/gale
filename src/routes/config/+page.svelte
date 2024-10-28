@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ConfigFileTreeItem from '$lib/config/ConfigFileTreeItem.svelte';
+	import ConfigFileListItem from '$lib/config/ConfigFileListItem.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ConfigSection, LoadFileResult } from '$lib/models';
 	import { capitalize } from '$lib/util';
@@ -10,7 +10,6 @@
 	import { activeProfile } from '$lib/stores';
 	import { page } from '$app/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
-	import ConfigEntryField from '$lib/config/ConfigEntryField.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 
 	let files: LoadFileResult[] | undefined;
@@ -53,19 +52,16 @@
 		files = await invokeCommand<LoadFileResult[]>('get_config_files');
 
 		let searchParam = $page.url.searchParams.get('file');
-		if (searchParam) {
-			selectedFile = files.find((file) => file.relativePath === searchParam);
-			if (selectedFile === undefined) {
-				return;
-			}
+		if (searchParam === null) return;
 
-			if (selectedFile.type === 'ok') {
-				selectedSection = selectedFile.sections[0];
-			}
+		selectedFile = files.find((file) => file.relativePath === searchParam);
+		if (selectedFile === undefined) return;
 
-			searchTerm = selectedFile.relativePath;
+		if (selectedFile.type === 'ok') {
+			selectedSection = selectedFile.sections[0];
 		}
 
+		searchTerm = selectedFile.relativePath;
 		$page.url.searchParams.delete('file');
 	}
 </script>
@@ -89,7 +85,7 @@
 			</div>
 
 			{#each shownFiles ?? [] as file (file.relativePath)}
-				<ConfigFileTreeItem
+				<ConfigFileListItem
 					{file}
 					{selectedSection}
 					onFileClicked={(file) => {
@@ -109,9 +105,9 @@
 		{/if}
 	</div>
 
-	<div class="flex-grow overflow-y-auto p-4">
+	<div class="flex-grow overflow-y-auto py-4">
 		{#if selectedFile !== undefined}
-			<div class="flex-shrink-0 truncate text-2xl font-bold text-slate-200">
+			<div class="flex-shrink-0 truncate px-4 text-2xl font-bold text-slate-200">
 				{selectedFile.relativePath}
 				{#if selectedSection}
 					<span class="text-slate-400">/</span>
@@ -122,11 +118,12 @@
 			{#if selectedFile.type === 'ok'}
 				<ConfigFileEditor file={selectedFile} section={selectedSection} />
 			{:else if selectedFile.type === 'unsupported'}
-				<div class="mb-1 text-slate-400">
+				<div class="mb-1 px-4 text-slate-400">
 					This file is in an unsupported format. Please open it in an external program to make
 					changes.
 				</div>
 				<BigButton
+					class="mx-4"
 					color="gray"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
@@ -134,11 +131,12 @@
 					Open in external program
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<div class="mb-1 text-slate-400">An error occured while reading this config file:</div>
-				<code class="mb-1 flex rounded bg-gray-900 p-4 text-red-500">
+				<div class="mb-1 px-4 text-slate-400">An error occured while reading this config file:</div>
+				<code class="mx-4 mb-1 flex rounded bg-gray-900 p-4 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
 				<BigButton
+					class="mx-4"
 					color="gray"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
