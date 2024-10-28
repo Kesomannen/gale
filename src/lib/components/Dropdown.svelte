@@ -65,19 +65,19 @@
 			class="flex items-center gap-2 overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-3 pr-2 hover:border-opacity-100 {className}"
 		>
 			{#if icon}
-				<Icon class="flex-shrink-0 text-lg text-slate-400" {icon} />
+				<Icon class="flex-shrink-0 text-lg text-gray-400" {icon} />
 			{/if}
 
 			<div
-				class="flex-shrink flex-grow truncate text-left text-slate-300"
-				class:text-slate-300={overrideLabel || label}
-				class:text-slate-400={!overrideLabel && !label}
+				class="flex-shrink flex-grow truncate text-left text-gray-300"
+				class:text-gray-300={overrideLabel || label}
+				class:text-gray-400={!overrideLabel && !label}
 			>
 				{overrideLabel ?? label ?? placeholder}
 			</div>
 
 			<Icon
-				class="flex-shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out {open
+				class="flex-shrink-0 origin-center transform text-lg text-gray-400 transition-all duration-100 ease-out {open
 					? 'rotate-180'
 					: 'rotate-0'}"
 				icon="mdi:chevron-down"
@@ -93,7 +93,7 @@
 			<slot name="item" {item}>
 				<Select.Item
 					value={item}
-					class="flex cursor-default items-center rounded-md px-3 py-1 text-left text-slate-400 hover:bg-gray-700 hover:text-slate-200"
+					class="flex cursor-default items-center rounded-md px-3 py-1 text-left text-gray-400 hover:bg-gray-700 hover:text-gray-200"
 				>
 					{getLabel(item)}
 

@@ -31,11 +31,11 @@
 		<div class="mr-2 rounded">
 			<Icon
 				icon={hasToken ? 'mdi:key' : 'mdi:key-remove'}
-				class="align-middle text-slate-300 group-hover:text-slate-200"
+				class="align-middle text-gray-300 group-hover:text-gray-200"
 			/>
 		</div>
 
-		<div class="truncate text-slate-300 group-hover:text-slate-200">
+		<div class="truncate text-gray-300 group-hover:text-gray-200">
 			{hasToken ? 'Click to override token' : 'Not set'}
 		</div>
 

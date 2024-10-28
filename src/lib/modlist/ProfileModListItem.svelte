@@ -44,10 +44,10 @@
 
 	$: descriptionClasses =
 		mod.enabled === false
-			? 'text-slate-500 line-through'
+			? 'text-gray-500 line-through'
 			: isSelected
-				? 'text-slate-300'
-				: 'text-slate-400 group-hover:text-slate-300';
+				? 'text-gray-300'
+				: 'text-gray-400 group-hover:text-gray-300';
 
 	$: if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
 		contextMenuOpen = false;
@@ -76,9 +76,9 @@
 >
 	<ContextMenu.Trigger class="contents">
 		<button
-			class="group flex w-full items-center rounded-lg border border-slate-500 p-2 {isSelected
-				? 'bg-slate-700'
-				: 'border-opacity-0 hover:bg-slate-700'}"
+			class="group flex w-full items-center rounded-lg border border-gray-500 p-2 {isSelected
+				? 'bg-gray-700'
+				: 'border-opacity-0 hover:bg-gray-700'}"
 			data-uuid={mod.uuid}
 			data-index={index}
 			draggable={reorderable}
@@ -91,7 +91,7 @@
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div
 						class="flex-shrink truncate font-medium {mod.enabled === false
-							? 'text-slate-300 line-through'
+							? 'text-gray-300 line-through'
 							: 'text-white'}"
 					>
 						{mod.name.replace(/_/g, ' ')}
@@ -100,7 +100,7 @@
 						{mod.version ?? '?.?.?'}
 					</div>
 					{#if mod.isPinned}
-						<Icon class="flex-shrink-0 text-slate-400" icon="mdi:pin" />
+						<Icon class="flex-shrink-0 text-gray-400" icon="mdi:pin" />
 					{/if}
 					{#if mod.isDeprecated}
 						<Icon class="flex-shrink-0 text-red-500" icon="mdi:error" />
@@ -120,7 +120,7 @@
 			{#if reorderable}
 				<Icon
 					icon="material-symbols:drag-indicator"
-					class="mr-2 flex-shrink-0 cursor-move text-2xl text-slate-400"
+					class="mr-2 flex-shrink-0 cursor-move text-2xl text-gray-400"
 				/>
 			{/if}
 
@@ -131,10 +131,10 @@
 				<Switch.Root
 					checked={mod.enabled ?? true}
 					onCheckedChange={(newState) => dispatch('toggle', newState)}
-					class="group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
+					class="group mr-1 flex h-6 w-12 flex-shrink-0 rounded-full bg-gray-600 px-1 py-1 hover:bg-gray-500 data-[state=checked]:bg-green-700 data-[state=checked]:hover:bg-green-600"
 				>
 					<Switch.Thumb
-						class="pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75 ease-out hover:bg-slate-200 data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
+						class="pointer-events-none h-full w-4 rounded-full bg-gray-300 transition-transform duration-75 ease-out hover:bg-gray-200 data-[state=checked]:translate-x-6 data-[state=checked]:bg-green-200 data-[state=checked]:group-hover:bg-green-100"
 					/>
 				</Switch.Root>
 			</div>

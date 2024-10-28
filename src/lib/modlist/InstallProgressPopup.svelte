@@ -59,7 +59,7 @@
 		message: 'Are you sure you want to abort the installation?'
 	}}
 >
-	<Dialog.Description class="text-slate-400">
+	<Dialog.Description class="text-gray-400">
 		{#if progress.task.kind == 'done'}
 			Done!
 		{:else if progress.task.kind == 'downloading'}

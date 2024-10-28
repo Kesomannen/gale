@@ -71,12 +71,12 @@
 		class="file-list w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r border-gray-600 bg-gray-700"
 	>
 		{#if files === undefined}
-			<div class="flex h-full w-full items-center justify-center text-lg text-slate-300">
+			<div class="flex h-full w-full items-center justify-center text-lg text-gray-300">
 				<Icon icon="mdi:loading" class="mr-4 animate-spin" />
 				Loading config...
 			</div>
 		{:else if files.length === 0}
-			<div class="flex h-full items-center justify-center text-lg text-slate-300">
+			<div class="flex h-full items-center justify-center text-lg text-gray-300">
 				No config files found
 			</div>
 		{:else}
@@ -107,10 +107,10 @@
 
 	<div class="flex-grow overflow-y-auto py-4">
 		{#if selectedFile !== undefined}
-			<div class="flex-shrink-0 truncate px-4 text-2xl font-bold text-slate-200">
+			<div class="flex-shrink-0 truncate px-4 text-2xl font-bold text-gray-200">
 				{selectedFile.relativePath}
 				{#if selectedSection}
-					<span class="text-slate-400">/</span>
+					<span class="text-gray-400">/</span>
 					{selectedSection.name.length > 0 ? selectedSection.name : '<Nameless section>'}
 				{/if}
 			</div>
@@ -118,7 +118,7 @@
 			{#if selectedFile.type === 'ok'}
 				<ConfigFileEditor file={selectedFile} section={selectedSection} />
 			{:else if selectedFile.type === 'unsupported'}
-				<div class="mb-1 px-4 text-slate-400">
+				<div class="mb-1 px-4 text-gray-400">
 					This file is in an unsupported format. Please open it in an external program to make
 					changes.
 				</div>
@@ -131,7 +131,7 @@
 					Open in external program
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<div class="mb-1 px-4 text-slate-400">An error occured while reading this config file:</div>
+				<div class="mb-1 px-4 text-gray-400">An error occured while reading this config file:</div>
 				<code class="mx-4 mb-1 flex rounded bg-gray-900 p-4 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
@@ -145,7 +145,7 @@
 				</BigButton>
 			{/if}
 		{:else}
-			<div class="flex h-full w-full items-center justify-center text-lg text-slate-400">
+			<div class="flex h-full w-full items-center justify-center text-lg text-gray-400">
 				Select a config file to start editing
 			</div>
 		{/if}

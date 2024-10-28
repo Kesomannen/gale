@@ -59,7 +59,7 @@
 					class="mr-2 h-8 w-8 rounded group-hover:shadow-xl"
 				/>
 
-				<span class="flex-grow text-left text-slate-200">
+				<span class="flex-grow text-left text-gray-200">
 					{game.displayName}
 				</span>
 
@@ -82,8 +82,8 @@
 			</Button.Root>
 		{/each}
 	{:else}
-		<div class="mt-4 text-center text-slate-300">No games found 😢</div>
-		<div class="max-w-[35rem] text-sm text-slate-400">
+		<div class="mt-4 text-center text-gray-300">No games found 😢</div>
+		<div class="max-w-[35rem] text-sm text-gray-400">
 			Your game missing? If the game is new on Thunderstore there's a chance we have yet to add it.
 			If you can find it on
 			<Link href="https://thunderstore.io">thunderstore.io</Link>

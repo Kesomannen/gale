@@ -21,7 +21,7 @@
 </script>
 
 <Button.Root
-	class="ml-1 rounded-lg p-1.5 text-xl text-slate-400 hover:bg-gray-700 hover:text-slate-300"
+	class="ml-1 rounded-lg p-1.5 text-xl text-gray-400 hover:bg-gray-700 hover:text-gray-300"
 	on:click={onClick}
 >
 	<Icon icon="mdi:refresh" />

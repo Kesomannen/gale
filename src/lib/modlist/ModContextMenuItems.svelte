@@ -78,11 +78,11 @@
 	}
 
 	:global(.dropdown-menu-item) {
-		@apply text-slate-300 hover:bg-gray-600 hover:text-slate-100;
+		@apply text-gray-300 hover:bg-gray-600 hover:text-gray-100;
 	}
 
 	:global(.context-menu-item) {
-		@apply text-slate-400 hover:bg-gray-700 hover:text-slate-200;
+		@apply text-gray-400 hover:bg-gray-700 hover:text-gray-200;
 	}
 
 	:global(.sub-menu) {

@@ -150,7 +150,7 @@
 			>
 				{#each selectedMod?.versions ?? [] as version}
 					<DropdownMenu.Item
-						class="flex flex-shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left text-slate-300 hover:bg-gray-600 hover:text-slate-100"
+						class="flex flex-shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left text-gray-300 hover:bg-gray-600 hover:text-gray-100"
 						on:click={() => {
 							if (!selectedMod) return;
 

@@ -54,9 +54,9 @@
 	}
 </script>
 
-<div class="field flex items-center py-1 pl-6 pr-4 text-slate-300 odd:bg-[#1b2433]">
+<div class="field flex items-center py-1 pl-6 pr-4 text-gray-300 odd:bg-[#1b2433]">
 	<Tooltip
-		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate py-1 pr-2 text-left text-slate-300"
+		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate py-1 pr-2 text-left text-gray-300"
 		openDelay={50}
 	>
 		{sentenceCase(entry.name)}
@@ -64,7 +64,7 @@
 		<svelte:fragment slot="tooltip">
 			<div>
 				<span class="text-lg font-semibold text-white">{entry.name}</span>
-				<span class="ml-1 text-slate-400"> ({typeName})</span>
+				<span class="ml-1 text-gray-400"> ({typeName})</span>
 			</div>
 
 			<div class="mb-1">
@@ -77,7 +77,7 @@
 
 			{#if entry.defaultValue}
 				<p class="break-words">
-					<span class="font-medium text-slate-100">Default: </span>
+					<span class="font-medium text-gray-100">Default: </span>
 					{valueToString(entry.defaultValue)}
 				</p>
 			{/if}

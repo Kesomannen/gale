@@ -269,7 +269,7 @@
 </ModList>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
-	<div class="mt-4 text-center text-slate-300">
+	<div class="mt-4 text-center text-gray-300">
 		{#if dependants.length === 0}
 			No dependants found 😢
 		{:else}

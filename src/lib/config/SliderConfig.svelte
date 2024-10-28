@@ -128,10 +128,10 @@
 
 		inputString = content.value.toString();
 	}}
-	class="ml-3 w-1/6 min-w-0 flex-shrink rounded-lg border border-slate-500 border-opacity-0 bg-gray-900
+	class="ml-3 w-1/6 min-w-0 flex-shrink rounded-lg border border-gray-500 border-opacity-0 bg-gray-900
 		 px-3 py-1
-		 text-slate-300 placeholder-slate-400 hover:border-opacity-100
-		   hover:text-slate-200 focus:border-opacity-0 focus:outline-none focus:ring-2 focus:ring-green-400"
+		 text-gray-300 placeholder-gray-400 hover:border-opacity-100
+		   hover:text-gray-200 focus:border-opacity-0 focus:outline-none focus:ring-2 focus:ring-green-400"
 />
 <ResetConfigButton {entryId} {onReset} />
 

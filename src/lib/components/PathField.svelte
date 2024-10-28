@@ -23,10 +23,10 @@
 		on:click={onClick}
 	>
 		<div class="mr-2 rounded">
-			<Icon {icon} class="align-middle text-slate-300" />
+			<Icon {icon} class="align-middle text-gray-300" />
 		</div>
 
-		<div class="truncate text-slate-300" style="direction: rtl;">
+		<div class="truncate text-gray-300" style="direction: rtl;">
 			&#x200E;
 			{hasValue ? value : 'Not set'}
 		</div>

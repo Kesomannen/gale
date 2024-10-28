@@ -25,7 +25,7 @@
 	<img src="logo.png" alt="Logo" class="float-right size-20" />
 	<div>
 		<h3 class="text-xl font-semibold text-white">Gale</h3>
-		<p class="text-slate-300">
+		<p class="text-gray-300">
 			Version {version}
 			<br />
 			GNU General Public License v3.0
@@ -54,12 +54,12 @@
 			>
 
 			{#if $isChecking}
-				<Icon icon="mdi:loading" class="animate-spin text-xl text-slate-400" />
-				<span class="text-slate-400">Checking for updates...</span>
+				<Icon icon="mdi:loading" class="animate-spin text-xl text-gray-400" />
+				<span class="text-gray-400">Checking for updates...</span>
 			{:else if checkedUpdate}
 				{#if $nextUpdate === null}
-					<Icon icon="mdi:check" class="text-xl text-slate-300" />
-					<span class="text-slate-300">You are running the latest version</span>
+					<Icon icon="mdi:check" class="text-xl text-gray-300" />
+					<span class="text-gray-300">You are running the latest version</span>
 				{:else}
 					<Icon icon="mdi:arrow-up-circle" class="inline text-xl text-green-400" />
 					<span class="text-green-400">New version available: {$nextUpdate?.version}</span>

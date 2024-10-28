@@ -42,7 +42,7 @@
 
 <div class="flex w-full flex-col gap-1 overflow-y-auto px-6 py-4">
 	{#if prefs !== null && gamePrefs !== null}
-		<div class="mb-1 mt-2 border-b border-slate-500 pb-1 text-2xl font-bold text-slate-100">
+		<div class="mb-1 mt-2 border-b border-gray-500 pb-1 text-2xl font-bold text-gray-100">
 			Global settings
 		</div>
 
@@ -95,7 +95,7 @@
 			Changing this will move the existing data.
 		</PathPref>
 
-		<div class="mb-1 mt-6 border-b border-slate-500 pb-1 text-2xl font-bold text-slate-100">
+		<div class="mb-1 mt-6 border-b border-gray-500 pb-1 text-2xl font-bold text-gray-100">
 			{$activeGame?.displayName} settings
 		</div>
 

@@ -61,7 +61,7 @@
 
 	{#if status !== null}
 		<div
-			class="flex w-full items-center border-t border-gray-600 px-3 py-1 text-sm text-slate-400"
+			class="flex w-full items-center border-t border-gray-600 px-3 py-1 text-sm text-gray-400"
 			transition:slide={{ duration: 200, easing: expoOut }}
 		>
 			<Icon icon="mdi:loading" class="animate-spin" />
@@ -87,11 +87,11 @@
 					class="rounded-sm p-1 hover:bg-red-500"
 					on:click={() => writeText('`' + error.name + ' - ' + error.message + '`')}
 				>
-					<Icon icon="mdi:clipboard-text" class="text-lg text-slate-100" />
+					<Icon icon="mdi:clipboard-text" class="text-lg text-gray-100" />
 				</Button.Root>
 
 				<Button.Root class="rounded-md p-1 hover:bg-red-500" on:click={() => removeError(i)}>
-					<Icon icon="mdi:close" class="text-lg text-slate-100" />
+					<Icon icon="mdi:close" class="text-lg text-gray-100" />
 				</Button.Root>
 			</div>
 		{/each}

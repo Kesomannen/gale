@@ -11,7 +11,7 @@
 </script>
 
 <Popup {title} onClose={onCancel} bind:open>
-	<Dialog.Description class="text-slate-300">
+	<Dialog.Description class="text-gray-300">
 		<slot>
 			{description}
 		</slot>

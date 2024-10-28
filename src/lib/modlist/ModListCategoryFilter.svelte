@@ -23,14 +23,14 @@
 		slot="trigger"
 		class="flex flex-grow-[3] basis-0 items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 px-3 py-1.5 hover:border-opacity-100"
 	>
-		<Icon class="mr-2 flex-shrink-0 text-lg text-slate-400" {icon} />
+		<Icon class="mr-2 flex-shrink-0 text-lg text-gray-400" {icon} />
 		{#if selected.length === 0}
-			<span class="truncate text-slate-300">{label}</span>
+			<span class="truncate text-gray-300">{label}</span>
 		{:else}
 			<div class="mr-2 flex flex-wrap gap-1">
 				{#each selected as category}
 					<div
-						class="overflow-hidden rounded-lg bg-gray-800 py-0.5 pl-2 pr-0.5 text-sm text-slate-200"
+						class="overflow-hidden rounded-lg bg-gray-800 py-0.5 pl-2 pr-0.5 text-sm text-gray-200"
 					>
 						<span class="overflow-hidden truncate">{category}</span>
 
@@ -48,7 +48,7 @@
 			</div>
 		{/if}
 		<Icon
-			class="ml-auto flex-shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out {open
+			class="ml-auto flex-shrink-0 origin-center transform text-lg text-gray-400 transition-all duration-100 ease-out {open
 				? 'rotate-180'
 				: 'rotate-0'}"
 			icon="mdi:chevron-down"

@@ -81,13 +81,13 @@
 	>
 		<ModCard fullName={update.fullName} showVersion={false} />
 
-		<span class="text-light ml-auto pl-1 text-slate-400">{update.old}</span>
-		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-slate-400" />
+		<span class="text-light ml-auto pl-1 text-gray-400">{update.old}</span>
+		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-gray-400" />
 		<span class="text-lg font-semibold text-green-400">{update.new}</span>
 
 		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
 			<Button.Root
-				class="ml-2 rounded p-1.5 text-slate-400 hover:bg-gray-700 hover:text-slate-200"
+				class="ml-2 rounded p-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
 				on:click={() => {
 					update.ignore = true;
 					updates = updates; // force reactivity

@@ -11,15 +11,13 @@
 		install: void;
 	}>();
 
-	$: descriptionClasses = isSelected
-		? 'text-slate-300'
-		: 'text-slate-400 group-hover:text-slate-300';
+	$: descriptionClasses = isSelected ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300';
 </script>
 
 <button
-	class="group flex w-full rounded-lg border border-slate-500 p-2 {isSelected
-		? 'bg-slate-700'
-		: 'border-opacity-0 hover:bg-slate-700'}"
+	class="group flex w-full rounded-lg border border-gray-500 p-2 {isSelected
+		? 'bg-gray-700'
+		: 'border-opacity-0 hover:bg-gray-700'}"
 	on:click
 >
 	<img src={mod.icon} alt={mod.name} class="size-12 rounded" />
@@ -29,7 +27,7 @@
 				{mod.name.replace(/_/g, ' ')}
 			</div>
 			{#if mod.isPinned}
-				<Icon class="flex-shrink-0 text-slate-400" icon="mdi:pin" />
+				<Icon class="flex-shrink-0 text-gray-400" icon="mdi:pin" />
 			{/if}
 			{#if mod.isDeprecated}
 				<Icon class="flex-shrink-0 text-red-500" icon="mdi:error" />

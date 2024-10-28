@@ -266,7 +266,7 @@
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
-	<p class="mb-1 text-slate-300">
+	<p class="mb-1 text-gray-300">
 		{profileOperation == 'duplicate'
 			? 'Enter a name for the duplicated profile:'
 			: 'Enter a new name for the profile:'}
@@ -279,7 +279,7 @@
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}
-		<p class="mt-2 text-sm text-slate-400">
+		<p class="mt-2 text-sm text-gray-400">
 			This process might take up to a minute depending on the size of the profile, please be
 			patient.
 		</p>

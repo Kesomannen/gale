@@ -26,7 +26,7 @@
 		<slot />
 	</Tooltip.Trigger>
 	<Tooltip.Content
-		class="max-w-lg rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-slate-300 shadow-lg"
+		class="max-w-lg rounded-lg border border-gray-600 bg-gray-800 px-4 py-2 text-gray-300 shadow-lg"
 		{...dropTransitionTo(distance)}
 		{sideOffset}
 		{side}

@@ -11,9 +11,9 @@
 		: 'pr-10'}"
 	on:click
 >
-	<span class="text-slate-400 group-hover:text-slate-300">{text}</span>
+	<span class="text-gray-400 group-hover:text-gray-300">{text}</span>
 
 	{#if key}
-		<span class="pl-6 font-mono text-sm text-slate-400 group-hover:text-slate-300">{key}</span>
+		<span class="pl-6 font-mono text-sm text-gray-400 group-hover:text-gray-300">{key}</span>
 	{/if}
 </Menubar.Item>

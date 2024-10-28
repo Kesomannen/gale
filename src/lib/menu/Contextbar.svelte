@@ -60,7 +60,7 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-gray-600 pl-2 pr-4 font-semibold text-slate-300 hover:bg-gray-800 group-hover:text-slate-200"
+		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-gray-600 pl-2 pr-4 font-semibold text-gray-300 hover:bg-gray-800 group-hover:text-gray-200"
 	>
 		{#if $activeGame}
 			<img
@@ -76,14 +76,14 @@
 
 		<Icon
 			icon="mdi:menu"
-			class="ml-6 flex-shrink-0 text-xl text-slate-300 transition-all group-hover:text-slate-200"
+			class="ml-6 flex-shrink-0 text-xl text-gray-300 transition-all group-hover:text-gray-200"
 		/>
 	</Button.Root>
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
 			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-gray-600 pl-6 
-						pr-4 text-slate-300 hover:bg-gray-800 group-hover:text-slate-200"
+						pr-4 text-gray-300 hover:bg-gray-800 group-hover:text-gray-200"
 		>
 			<span class="mr-auto flex-shrink truncate font-semibold">
 				{$activeProfile?.name}
@@ -110,8 +110,8 @@
 				<DropdownMenu.Item
 					class="group flex cursor-default items-center rounded-md py-1 pl-3 pr-1 text-left hover:bg-gray-700
 						{i == activeProfileIndex
-						? 'font-medium text-slate-300 hover:text-slate-200'
-						: 'text-slate-400 hover:text-slate-300'}"
+						? 'font-medium text-gray-300 hover:text-gray-200'
+						: 'text-gray-400 hover:text-gray-300'}"
 					on:click={() => {
 						setActiveProfile(i);
 						profilesOpen = false;
@@ -131,7 +131,7 @@
 					</div>
 
 					<Button.Root
-						class="rounded p-1 text-slate-400 hover:bg-red-600 hover:text-red-200"
+						class="rounded p-1 text-gray-400 hover:bg-red-600 hover:text-red-200"
 						on:click={(evt) => {
 							evt.stopPropagation();
 							deleteProfile(i);
@@ -157,7 +157,7 @@
 </div>
 
 <Popup title="Launching {$activeGame?.displayName}..." bind:open={launchGamePopupOpen}>
-	<Dialog.Description class="text-slate-400">
+	<Dialog.Description class="text-gray-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
 	</Dialog.Description>
 </Popup>

@@ -15,7 +15,7 @@
 </script>
 
 <div class="relative overflow-hidden rounded-lg border-2 border-gray-900 {className}">
-	<div class="flex w-full items-center bg-gray-950 px-3 py-2 font-bold text-slate-300">
+	<div class="flex w-full items-center bg-gray-950 px-3 py-2 font-bold text-gray-300">
 		<Checkbox
 			class="mr-3"
 			value={items.every((item, i) => get(item, i))}
@@ -30,7 +30,7 @@
 		class:max-h-96={maxHeight === 'sm'}
 	>
 		{#each items as item, i}
-			<div class="flex items-center px-3 py-1.5 text-slate-300 even:bg-gray-900">
+			<div class="flex items-center px-3 py-1.5 text-gray-300 even:bg-gray-900">
 				<Checkbox
 					class="mr-3"
 					value={get(item, i)}

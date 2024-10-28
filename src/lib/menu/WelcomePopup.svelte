@@ -77,7 +77,7 @@
 </script>
 
 <Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open>
-	<div class="text-slate-300">
+	<div class="text-gray-300">
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
 			<GameSelection onSelect={onSelectGame} />
