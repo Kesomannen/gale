@@ -8,7 +8,9 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Accent color">Changes the zoom level of the mod manager.</Label>
+	<Label text="Accent color"
+		>Changes the color of highlighted elements, such as buttons and checkboxes.</Label
+	>
 
 	<Dropdown
 		class="flex-grow"
