@@ -61,9 +61,9 @@ impl<W: Write> Serializer<W> {
 
     fn write_value(&mut self, value: &Value) -> io::Result<()> {
         match value {
-            Value::Boolean(bool) => write!(self, "{bool}"),
-            Value::String(str) => write!(self, "{str}"),
+            Value::String(str) => write!(self, "{}", str.replace('\n', r"\n")),
             Value::Other(str) => write!(self, "{str}"),
+            Value::Boolean(bool) => write!(self, "{bool}"),
             Value::Int32(num) => write!(self, "{}", num.value),
             Value::Single(num) => write!(self, "{}", num.value),
             Value::Double(num) => write!(self, "{}", num.value),

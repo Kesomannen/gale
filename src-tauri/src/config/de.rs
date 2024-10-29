@@ -2,8 +2,6 @@ use std::str;
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 
-use crate::util::str::TrimInPlace;
-
 use super::*;
 use io::{BufRead, Lines, Read};
 use itertools::Itertools;
@@ -155,7 +153,7 @@ impl EntryBuilder {
     ) -> Result<Value> {
         Ok(match type_name {
             "Boolean" => Value::Boolean(value.parse()?),
-            "String" => Value::String(value),
+            "String" => Value::String(value.replace(r"\n", "\n")),
             "Int32" => Value::Int32(Num::parse(&value, range)?),
             "Single" => Value::Single(Num::parse(&value, range)?),
             "Double" => Value::Double(Num::parse(&value, range)?),
@@ -219,8 +217,6 @@ impl<R: Read + BufRead> Parser<R> {
             if self.line == 0 && next_mut.starts_with("\u{feff}") {
                 next_mut.replace_range(0..3, "");
             }
-
-            next_mut.trim_in_place();
         }
 
         Ok(next)
@@ -331,12 +327,9 @@ impl<R: Read + BufRead> Parser<R> {
     }
 
     fn parse_orphaned_entry<'a>(&mut self, line: &'a str) -> Result<(&'a str, &'a str)> {
-        let mut split = line.split(" = ");
-
-        let name = split.next().ok_or(anyhow!("expected entry name"))?;
-        let value = split.next().unwrap_or_default();
-
-        Ok((name, value))
+        line.split_once("=")
+            .ok_or(anyhow!("expected entry name"))
+            .map(|(name, value)| (name.trim(), value.trim()))
     }
 
     fn push_entry(&mut self, entry: EntryKind) -> Result<()> {
