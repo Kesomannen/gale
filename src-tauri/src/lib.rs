@@ -53,7 +53,7 @@ pub fn run() {
             thunderstore::commands::set_thunderstore_token,
             thunderstore::commands::has_thunderstore_token,
             thunderstore::commands::clear_thunderstore_token,
-            thunderstore::commands::trigger_mod_fetching,
+            thunderstore::commands::trigger_mod_fetch,
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
             prefs::commands::is_first_run,

@@ -35,7 +35,7 @@
 						<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent
-						class="sub-menu dropdown-sub-menu border-gray-500 bg-gray-700"
+						class="sub-menu dropdown-sub-menu border-slate-500 bg-slate-700"
 						{...dropTransition}
 					>
 						<svelte:self {mod} {type} contextItems={children(mod)} />
@@ -64,7 +64,7 @@
 
 					<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 				</ContextMenu.SubTrigger>
-				<ContextMenu.SubContent class="sub-menu border-gray-600 bg-gray-800" {...dropTransition}>
+				<ContextMenu.SubContent class="sub-menu border-slate-600 bg-slate-800" {...dropTransition}>
 					<svelte:self {mod} {type} contextItems={children(mod)} />
 				</ContextMenu.SubContent>
 			</ContextMenu.Sub>
@@ -78,11 +78,11 @@
 	}
 
 	:global(.dropdown-menu-item) {
-		@apply text-gray-300 hover:bg-gray-600 hover:text-gray-100;
+		@apply text-slate-300 hover:bg-slate-600 hover:text-slate-100;
 	}
 
 	:global(.context-menu-item) {
-		@apply text-gray-400 hover:bg-gray-700 hover:text-gray-200;
+		@apply text-slate-400 hover:bg-slate-700 hover:text-slate-200;
 	}
 
 	:global(.sub-menu) {
@@ -90,6 +90,6 @@
 	}
 
 	:global(.dropdown-sub-menu) {
-		scrollbar-color: theme(colors.gray.400) theme(colors.gray.700);
+		scrollbar-color: theme(colors.slate.400) theme(colors.slate.700);
 	}
 </style>

@@ -44,7 +44,7 @@
 
 	{#if showExpandButton}
 		<Button.Root
-			class="absolute right-1 top-1 rounded-lg bg-gray-900 p-1 text-lg text-gray-400 hover:bg-gray-800"
+			class="absolute right-1 top-1 rounded-lg bg-slate-900 p-1 text-lg text-slate-400 hover:bg-slate-800"
 			on:click={() => ($expandedEntry = entryId)}
 		>
 			<Icon icon="mdi:arrow-expand" />

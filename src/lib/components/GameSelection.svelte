@@ -47,7 +47,7 @@
 	{#if shownGames.length > 0}
 		{#each shownGames as game}
 			<Button.Root
-				class="group mr-2 flex items-center rounded-lg p-1 hover:bg-gray-700"
+				class="group mr-2 flex items-center rounded-lg p-1 hover:bg-slate-700"
 				on:click={() => {
 					setActiveGame(game);
 					onSelect();
@@ -59,14 +59,14 @@
 					class="mr-2 h-8 w-8 rounded group-hover:shadow-xl"
 				/>
 
-				<span class="flex-grow text-left text-gray-200">
+				<span class="flex-grow text-left text-slate-200">
 					{game.displayName}
 				</span>
 
 				<Button.Root
 					class="{game.favorite
 						? 'block'
-						: 'hidden group-hover:block'} mr-1 rounded-md p-1 hover:bg-gray-600"
+						: 'hidden group-hover:block'} mr-1 rounded-md p-1 hover:bg-slate-600"
 					on:click={(evt) => {
 						evt.stopPropagation();
 						game.favorite = !game.favorite;
@@ -76,14 +76,14 @@
 				>
 					<Icon
 						icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
-						class="text-accent-500 text-xl"
+						class="text-xl text-accent-500"
 					/>
 				</Button.Root>
 			</Button.Root>
 		{/each}
 	{:else}
-		<div class="mt-4 text-center text-gray-300">No games found 😢</div>
-		<div class="max-w-[35rem] text-sm text-gray-400">
+		<div class="mt-4 text-center text-slate-300">No games found 😢</div>
+		<div class="max-w-[35rem] text-sm text-slate-400">
 			Your game missing? If the game is new on Thunderstore there's a chance we have yet to add it.
 			If you can find it on
 			<Link href="https://thunderstore.io">thunderstore.io</Link>

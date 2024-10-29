@@ -38,7 +38,7 @@
 </script>
 
 <Popup bind:open title="Import profiles from other manager" canClose={!loading}>
-	<div class="text-gray-300">
+	<div class="text-slate-300">
 		<p>
 			This will import cached mods and profiles <b>for the current game</b> from r2modman or Thunderstore
 			Mod Manager.
@@ -57,7 +57,7 @@
 
 	<div class="mr-0.5 mt-3 flex w-full justify-end gap-2">
 		{#if importData?.r2modman || importData?.thunderstore}
-			<BigButton color="gray" on:click={() => (open = false)}>Cancel</BigButton>
+			<BigButton color="slate" on:click={() => (open = false)}>Cancel</BigButton>
 			<BigButton color="accent" on:click={doImport}>Import</BigButton>
 		{/if}
 	</div>

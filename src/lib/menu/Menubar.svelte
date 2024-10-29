@@ -163,7 +163,7 @@
 	});
 </script>
 
-<header data-tauri-drag-region class="flex h-8 flex-shrink-0 bg-gray-800">
+<header data-tauri-drag-region class="flex h-8 flex-shrink-0 bg-slate-800">
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<MenubarMenu label="File">
@@ -179,6 +179,7 @@
 				on:click={() => invokeCommand('clear_download_cache', { soft: true })}
 				text="Clear unused mod cache"
 			/>
+			<MenubarItem on:click={() => invokeCommand('trigger_mod_fetch')} text="Fetch mods" />
 		</MenubarMenu>
 		<MenubarMenu label="Profile">
 			<MenubarItem
@@ -250,14 +251,14 @@
 		</MenubarMenu>
 	</Menubar.Root>
 
-	<Button.Root class="group ml-auto px-3 py-1.5 hover:bg-gray-700" on:click={appWindow.minimize}>
-		<Icon icon="mdi:minimize" class="text-gray-500 group-hover:text-white" />
+	<Button.Root class="group ml-auto px-3 py-1.5 hover:bg-slate-700" on:click={appWindow.minimize}>
+		<Icon icon="mdi:minimize" class="text-slate-500 group-hover:text-white" />
 	</Button.Root>
-	<Button.Root class="group px-3 py-1.5 hover:bg-gray-700" on:click={appWindow.toggleMaximize}>
-		<Icon icon="mdi:maximize" class="text-gray-500 group-hover:text-white" />
+	<Button.Root class="group px-3 py-1.5 hover:bg-slate-700" on:click={appWindow.toggleMaximize}>
+		<Icon icon="mdi:maximize" class="text-slate-500 group-hover:text-white" />
 	</Button.Root>
 	<Button.Root class="group px-3 py-1.5 hover:bg-red-700" on:click={appWindow.close}>
-		<Icon icon="mdi:close" class="text-gray-500 group-hover:text-white" />
+		<Icon icon="mdi:close" class="text-slate-500 group-hover:text-white" />
 	</Button.Root>
 </header>
 
@@ -266,7 +267,7 @@
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
-	<p class="mb-1 text-gray-300">
+	<p class="mb-1 text-slate-300">
 		{profileOperation == 'duplicate'
 			? 'Enter a name for the duplicated profile:'
 			: 'Enter a new name for the profile:'}
@@ -279,14 +280,14 @@
 		on:submit={doProfileOperation}
 	/>
 	{#if profileOperation == 'duplicate'}
-		<p class="mt-2 text-sm text-gray-400">
+		<p class="mt-2 text-sm text-slate-400">
 			This process might take up to a minute depending on the size of the profile, please be
 			patient.
 		</p>
 	{/if}
 	<div class="ml-auto mt-2 flex justify-end gap-2">
 		{#if !profileOperationInProgress}
-			<BigButton color="gray" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
+			<BigButton color="slate" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
 		{/if}
 		<BigButton
 			color="accent"

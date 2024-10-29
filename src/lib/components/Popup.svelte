@@ -54,12 +54,12 @@
 			{...popupTransition}
 		>
 			<div
-				class="dialog pointer-events-auto relative z-50 max-h-[85%] overflow-y-auto overflow-x-hidden rounded-xl border border-gray-600 bg-gray-800 p-6 shadow-xl"
+				class="dialog pointer-events-auto relative z-50 max-h-[85%] overflow-y-auto overflow-x-hidden rounded-xl border border-slate-600 bg-slate-800 p-6 shadow-xl"
 				class:large
 			>
 				{#if canClose}
 					<Button.Root
-						class="absolute right-5 top-5 rounded-md p-0.5 text-3xl text-gray-400 hover:bg-red-600/80 hover:text-red-100"
+						class="absolute right-5 top-5 rounded-md p-0.5 text-3xl text-slate-400 hover:bg-red-600/80 hover:text-red-100"
 						on:click={close}
 					>
 						<Icon icon="mdi:close" />

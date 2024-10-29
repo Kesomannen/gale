@@ -43,7 +43,7 @@
 	}
 </script>
 
-<div class="flex w-full flex-col gap-1 overflow-y-auto px-6 pb-6 pt-3">
+<div class="flex w-full flex-col gap-1 overflow-y-auto px-6 pb-6 pt-2">
 	{#if prefs !== null && gamePrefs !== null}
 		<LargePrefsHeading>Global settings</LargePrefsHeading>
 
@@ -64,8 +64,7 @@
 			value={prefs.steamLibraryDir ?? null}
 			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 		>
-			Path to your default Steam game library. This can be overriden per game with the setting
-			below.
+			Path to your default Steam game library.
 		</PathPref>
 
 		<PathPref

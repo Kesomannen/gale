@@ -121,7 +121,7 @@
 
 		{#if data.modNames !== null}
 			<details>
-				<summary class="mt-2 cursor-pointer text-gray-300"
+				<summary class="mt-2 cursor-pointer text-slate-300"
 					>{data.mods.length} mods to install</summary
 				>
 
@@ -129,9 +129,9 @@
 			</details>
 		{/if}
 
-		<div class="mt-2 flex w-full items-center justify-end gap-2 text-gray-400">
+		<div class="mt-2 flex w-full items-center justify-end gap-2 text-slate-400">
 			<BigButton
-				color="gray"
+				color="slate"
 				on:click={() => {
 					open = false;
 					data = null;

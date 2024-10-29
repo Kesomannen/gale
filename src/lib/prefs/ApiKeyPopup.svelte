@@ -44,7 +44,7 @@
 	/>
 
 	<details>
-		<summary class="mt-1 cursor-pointer text-sm text-gray-400"
+		<summary class="mt-1 cursor-pointer text-sm text-slate-400"
 			>Unsure how to get your API token?</summary
 		>
 		<ol class="my-1 ml-1 flex flex-col gap-1">

@@ -29,7 +29,7 @@ export default {
 		'enabled:hover:bg-accent-600',
 		'bg-red-700',
 		'enabled:hover:bg-red-600',
-		'enabled:hover:bg-gray-600',
+		'enabled:hover:bg-slate-600',
 		'ring-red-600',
 		'font-semibold'
 	],

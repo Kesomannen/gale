@@ -43,20 +43,20 @@
 </script>
 
 {#if shownUpdates.length > $threshold}
-	<div class="bg-accent-700 text-accent-100 mb-1 mr-3 flex items-center rounded-lg py-1 pl-3 pr-1">
+	<div class="mb-1 mr-3 flex items-center rounded-lg bg-accent-700 py-1 pl-3 pr-1 text-accent-100">
 		<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
 		There {shownUpdates.length === 1 ? 'is' : 'are'}
 		<b class="mx-1">{shownUpdates.length}</b>
 		{shownUpdates.length === 1 ? ' update' : ' updates'} available.
 		<Button.Root
-			class="hover:text-accent-200 ml-1 font-semibold text-white hover:underline"
+			class="ml-1 font-semibold text-white hover:text-accent-200 hover:underline"
 			on:click={() => (popupOpen = true)}
 		>
 			Update all?
 		</Button.Root>
 
 		<Button.Root
-			class="hover:bg-accent-600 ml-auto rounded-md p-1 text-xl"
+			class="ml-auto rounded-md p-1 text-xl hover:bg-accent-600"
 			on:click={() => ($threshold = shownUpdates.length)}
 		>
 			<Icon icon="mdi:close" />
@@ -81,13 +81,13 @@
 	>
 		<ModCard fullName={update.fullName} showVersion={false} />
 
-		<span class="text-light ml-auto pl-1 text-gray-400">{update.old}</span>
-		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-gray-400" />
-		<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
+		<span class="text-light ml-auto pl-1 text-slate-400">{update.old}</span>
+		<Icon icon="mdi:arrow-right" class="mx-1.5 text-lg text-slate-400" />
+		<span class="text-lg font-semibold text-accent-400">{update.new}</span>
 
 		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
 			<Button.Root
-				class="ml-2 rounded p-1.5 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+				class="ml-2 rounded p-1.5 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
 				on:click={() => {
 					update.ignore = true;
 					updates = updates; // force reactivity

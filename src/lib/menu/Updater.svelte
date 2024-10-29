@@ -77,8 +77,8 @@
 
 {#if $nextUpdate != null}
 	<Button.Root
-		class="bg-accent-600 enabled:hover:bg-accent-500 my-auto ml-auto mr-1.5 flex items-center 
-            rounded-md px-2.5 py-1 font-semibold text-gray-100"
+		class="my-auto ml-auto mr-1.5 flex items-center rounded-md bg-accent-600 
+            px-2.5 py-1 font-semibold text-slate-100 enabled:hover:bg-accent-500"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
@@ -92,7 +92,7 @@
 {/if}
 
 <ConfirmPopup title="App update available" bind:open={popupOpen}>
-	<Dialog.Description class="text-gray-300">
+	<Dialog.Description class="text-slate-300">
 		<p>
 			{#if nextUpdate}
 				Version {$nextUpdate?.version} of Gale is available - you have {$nextUpdate?.currentVersion}.

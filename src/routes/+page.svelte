@@ -226,7 +226,7 @@
 	<svelte:fragment slot="details">
 		{#if selectedMod && isOutdated(selectedMod)}
 			<Button.Root
-				class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
+				class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 py-2 text-lg font-medium hover:bg-accent-500"
 				on:click={() => updateMod(selectedMod)}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
@@ -269,7 +269,7 @@
 </ModList>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
-	<div class="mt-4 text-center text-gray-300">
+	<div class="mt-4 text-center text-slate-300">
 		{#if dependants.length === 0}
 			No dependants found 😢
 		{:else}

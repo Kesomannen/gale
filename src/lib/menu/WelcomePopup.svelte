@@ -77,7 +77,7 @@
 </script>
 
 <Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open>
-	<div class="text-gray-300">
+	<div class="text-slate-300">
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
 			<GameSelection onSelect={onSelectGame} />
@@ -98,10 +98,10 @@
 			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
-				<BigButton color="gray" class="mr-auto" on:click={() => (stage = 'gameSelect')}
+				<BigButton color="slate" class="mr-auto" on:click={() => (stage = 'gameSelect')}
 					>Back</BigButton
 				>
-				<BigButton color="gray" on:click={() => (stage = 'settings')}>Skip</BigButton>
+				<BigButton color="slate" on:click={() => (stage = 'settings')}>Skip</BigButton>
 				<BigButton color="accent" on:click={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
@@ -145,7 +145,7 @@
 
 			<div class="mt-3 flex justify-between">
 				<BigButton
-					color="gray"
+					color="slate"
 					on:click={() =>
 						(stage =
 							importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}

@@ -59,7 +59,7 @@
 		message: 'Are you sure you want to abort the installation?'
 	}}
 >
-	<Dialog.Description class="text-gray-400">
+	<Dialog.Description class="text-slate-400">
 		{#if progress.task.kind == 'done'}
 			Done!
 		{:else if progress.task.kind == 'downloading'}
@@ -76,10 +76,10 @@
 	<Progress.Root
 		value={progress.totalProgress}
 		max={1}
-		class="relative mt-2 h-4 w-full overflow-hidden rounded-full bg-gray-900"
+		class="relative mt-2 h-4 w-full overflow-hidden rounded-full bg-slate-900"
 	>
 		<div
-			class="bg-accent-600 absolute left-0 top-0 h-full rounded-l-full transition-all"
+			class="absolute left-0 top-0 h-full rounded-l-full bg-accent-600 transition-all"
 			style="width: {progress.totalProgress * 100}%"
 		/>
 	</Progress.Root>

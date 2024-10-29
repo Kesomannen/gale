@@ -72,14 +72,14 @@
 </script>
 
 <div
-	class="relative flex w-[40%] min-w-72 flex-col border-l border-gray-600 bg-gray-700 px-6 pb-4 pt-6 text-white"
+	class="relative flex w-[40%] min-w-72 flex-col border-l border-slate-600 bg-slate-700 px-6 pb-4 pt-6 text-white"
 >
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class="absolute right-2 mt-0.5 rounded-full p-1 hover:bg-gray-600">
-			<Icon class="text-2xl text-gray-200" icon="mdi:dots-vertical" />
+		<DropdownMenu.Trigger class="absolute right-2 mt-0.5 rounded-full p-1 hover:bg-slate-600">
+			<Icon class="text-2xl text-slate-200" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex flex-col gap-0.5 rounded-lg border border-gray-500 bg-gray-700 p-1 shadow-xl"
+			class="flex flex-col gap-0.5 rounded-lg border border-slate-500 bg-slate-700 p-1 shadow-xl"
 			{...dropTransition}
 		>
 			<ModContextMenuItems {mod} contextItems={allContextItems} type="details" />
@@ -87,13 +87,13 @@
 	</DropdownMenu.Root>
 
 	<Button.Root
-		class="break-words pr-4 text-left text-3xl font-bold text-gray-100 hover:underline xl:text-4xl"
+		class="break-words pr-4 text-left text-3xl font-bold text-slate-100 hover:underline xl:text-4xl"
 		on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}
 		>{mod.name.replace(/_/g, ' ')}</Button.Root
 	>
 
 	{#if mod.author}
-		<div class="text-xl text-gray-300 xl:text-2xl">
+		<div class="text-xl text-slate-300 xl:text-2xl">
 			By
 			<Button.Root class="hover:underline" on:click={() => openCommunityUrl(mod.author)}>
 				{mod.author}
@@ -102,7 +102,7 @@
 	{/if}
 
 	{#if mod.version}
-		<div class="text-xl text-gray-300 xl:text-2xl">v{mod.version}</div>
+		<div class="text-xl text-slate-300 xl:text-2xl">v{mod.version}</div>
 	{/if}
 
 	<div class="flex flex-wrap gap-1">
@@ -124,7 +124,7 @@
 	{#if mod.categories}
 		<div class="text-md my-2 flex flex-wrap gap-1">
 			{#each mod.categories as category}
-				<div class="rounded-full bg-gray-600 px-4 py-1 text-gray-200">
+				<div class="rounded-full bg-slate-600 px-4 py-1 text-slate-200">
 					{category}
 				</div>
 			{/each}
@@ -140,29 +140,29 @@
 			<Icon class="flex-shrink-0 text-green-400" icon="mdi:download" />
 			<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
 		{/if}
-		<Icon class="flex-shrink-0 text-gray-400" icon="mdi:weight" />
-		<span class="text-gray-400">{shortenFileSize(mod.fileSize)}</span>
+		<Icon class="flex-shrink-0 text-slate-400" icon="mdi:weight" />
+		<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
 	</div>
 
 	{#if mod.lastUpdated}
-		<div class="text-lg text-gray-400">
+		<div class="text-lg text-slate-400">
 			Last updated {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}
 
-	<p class="mt-3 flex-shrink overflow-hidden text-xl text-gray-300 lg:hidden">
+	<p class="mt-3 flex-shrink overflow-hidden text-xl text-slate-300 lg:hidden">
 		{mod.description ?? ''}
 	</p>
 
 	{#await readmePromise}
 		<div class="hidden h-full w-full items-center justify-center lg:flex">
-			<Icon class="animate-spin text-5xl text-gray-300" icon="mdi:loading" />
+			<Icon class="animate-spin text-5xl text-slate-300" icon="mdi:loading" />
 		</div>
 	{:then readme}
 		{#if readme}
 			<Markdown source={readme} class="readme hidden lg:block" />
 		{:else}
-			<p class="mt-3 hidden flex-shrink overflow-hidden text-xl text-gray-300 lg:block">
+			<p class="mt-3 hidden flex-shrink overflow-hidden text-xl text-slate-300 lg:block">
 				{mod.description ?? ''}
 			</p>
 		{/if}
@@ -172,7 +172,7 @@
 
 	{#if mod.configFile}
 		<div
-			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
+			class="my-2 flex items-center gap-2 text-lg text-accent-400 hover:text-accent-300 hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
 			<a href={'/config?file=' + mod.configFile}>Edit config</a>
@@ -181,7 +181,7 @@
 
 	{#if mod.type === 'remote'}
 		<Button.Root
-			class="group flex items-center rounded-md bg-gray-600 py-1 pl-3 pr-1.5 text-white hover:bg-gray-500"
+			class="group flex items-center rounded-md bg-slate-600 py-1 pl-3 pr-1.5 text-white hover:bg-slate-500"
 			on:mouseenter={changelog.fetchMarkdown}
 			on:click={() => (changelogOpen = true)}
 		>
@@ -190,7 +190,7 @@
 		</Button.Root>
 
 		<Button.Root
-			class="group mt-1 flex items-center rounded-md bg-gray-600 py-1 pl-3 pr-1.5 text-white hover:bg-gray-500"
+			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pl-3 pr-1.5 text-white hover:bg-slate-500"
 			on:mouseenter={readme.fetchMarkdown}
 			on:click={() => (readmeOpen = true)}
 		>
@@ -201,12 +201,12 @@
 
 	{#if mod.dependencies && mod.dependencies.length > 0}
 		<Button.Root
-			class="group mt-1 flex items-center rounded-md bg-gray-600 py-1 pl-3 pr-1 text-white hover:bg-gray-500"
+			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pl-3 pr-1 text-white hover:bg-slate-500"
 			on:click={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />
 			Dependencies
-			<div class="ml-auto rounded-md bg-gray-500 px-3 py-0.5 text-sm group-hover:bg-gray-400">
+			<div class="ml-auto rounded-md bg-slate-500 px-3 py-0.5 text-sm group-hover:bg-slate-400">
 				{mod.dependencies.length}
 			</div>
 		</Button.Root>
@@ -236,6 +236,6 @@
 
 <style lang="postcss">
 	:global(.readme) {
-		scrollbar-color: theme(colors.gray.400) theme(colors.gray.700);
+		scrollbar-color: theme(colors.slate.400) theme(colors.slate.700);
 	}
 </style>

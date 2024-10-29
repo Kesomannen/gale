@@ -33,12 +33,12 @@
 
 <style global lang="postcss">
 	.markdown {
-		@apply text-gray-100;
+		@apply text-slate-100;
 	}
 
 	.markdown :global(h1),
 	.markdown :global(h2) {
-		@apply mb-3 border-b border-gray-500 pb-1 pt-4;
+		@apply mb-3 border-b border-slate-500 pb-1 pt-4;
 	}
 
 	.markdown :global(h1) {
@@ -46,7 +46,7 @@
 	}
 
 	.markdown :global(h2) {
-		@apply text-2xl font-semibold text-gray-100;
+		@apply text-2xl font-semibold text-slate-100;
 	}
 
 	.markdown :global(h3) {
@@ -82,7 +82,7 @@
 	}
 
 	.markdown :global(pre) {
-		@apply my-2 overflow-x-auto rounded bg-gray-900 p-4 text-gray-300;
+		@apply my-2 overflow-x-auto rounded bg-slate-900 p-4 text-slate-300;
 	}
 
 	.markdown :global(pre .hljs) {
@@ -90,7 +90,7 @@
 	}
 
 	.markdown :global(code) {
-		@apply bg-gray-900;
+		@apply bg-slate-900;
 	}
 
 	.markdown :global(img) {
@@ -98,19 +98,19 @@
 	}
 
 	.markdown :global(table) {
-		@apply max-w-full border-collapse overflow-x-auto border-2 border-gray-950;
+		@apply max-w-full border-collapse overflow-x-auto border-2 border-slate-950;
 	}
 
 	.markdown :global(th) {
-		@apply bg-gray-950 px-3 py-1 text-left font-semibold;
+		@apply bg-slate-950 px-3 py-1 text-left font-semibold;
 	}
 
 	.markdown :global(tr) {
-		@apply border-b border-gray-900;
+		@apply border-b border-slate-900;
 	}
 
 	.markdown :global(tr:nth-child(2n)) {
-		@apply bg-gray-900;
+		@apply bg-slate-900;
 	}
 
 	.markdown :global(td) {
@@ -118,11 +118,11 @@
 	}
 
 	.markdown :global(hr) {
-		@apply my-4 border-gray-500;
+		@apply my-4 border-slate-500;
 	}
 
 	.markdown :global(blockquote) {
-		@apply my-3 border-l-4 border-gray-600 pl-3 text-gray-400;
+		@apply my-3 border-l-4 border-slate-600 pl-3 text-slate-400;
 	}
 
 	.markdown :global(summary) {

@@ -8,6 +8,10 @@
 	let className = '';
 
 	export { className as class };
+
+	$: stateClasses = value
+		? 'bg-accent-700 hover:bg-accent-600'
+		: 'bg-slate-800 hover:bg-slate-700 border border-slate-500';
 </script>
 
 <Checkbox.Root
@@ -17,12 +21,7 @@
 		onValueChanged(value);
 	}}
 >
-	<Checkbox.Indicator
-		class="h-6 w-6 rounded-md p-1 {className}
-          bg-{value ? 'accent-700' : 'gray-800'}
-          hover:bg-{value ? 'accent-600' : 'gray-700'}
-          {!value && 'border border-gray-500'}"
-	>
+	<Checkbox.Indicator class="{stateClasses} {className} size-6 rounded-md p-1">
 		{#if value}
 			<Icon class="h-full w-full font-bold text-white" icon="mdi:check" />
 		{/if}

@@ -52,8 +52,8 @@
 		class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60"
 		transition:fade={{ duration: 50 }}
 	>
-		<Icon icon="mdi:loading" class="animate-spin text-4xl text-gray-300" />
-		<div class="text-gray-300">{loadingText}</div>
+		<Icon icon="mdi:loading" class="animate-spin text-4xl text-slate-300" />
+		<div class="text-slate-300">{loadingText}</div>
 	</div>
 {/if}
 

@@ -38,10 +38,11 @@
 </script>
 
 <main
-	class="relative flex flex-col overflow-hidden bg-gray-800"
-	on:contextmenu={(e) => {
+	class="relative flex flex-col overflow-hidden bg-slate-800"
+	on:contextmenu={(evt) => {
+		// hide context menu in release builds
 		if (window.location.hostname === 'tauri.localhost') {
-			e.preventDefault();
+			evt.preventDefault();
 		}
 	}}
 >
@@ -50,7 +51,7 @@
 
 	<div class="relative flex flex-grow overflow-hidden">
 		<nav
-			class="flex w-14 flex-shrink-0 flex-col items-center gap-1 border-r border-gray-600 bg-gray-900 p-2"
+			class="flex w-14 flex-shrink-0 flex-col items-center gap-1 border-r border-slate-600 bg-slate-900 p-2"
 		>
 			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
@@ -64,7 +65,7 @@
 
 	{#if status !== null}
 		<div
-			class="flex w-full items-center border-t border-gray-600 px-3 py-1 text-sm text-gray-400"
+			class="flex w-full items-center border-t border-slate-600 px-3 py-1 text-sm text-slate-400"
 			transition:slide={{ duration: 200, easing: expoOut }}
 		>
 			<Icon icon="mdi:loading" class="animate-spin" />
@@ -90,11 +91,11 @@
 					class="rounded-sm p-1 hover:bg-red-500"
 					on:click={() => writeText('`' + error.name + ' - ' + error.message + '`')}
 				>
-					<Icon icon="mdi:clipboard-text" class="text-lg text-gray-100" />
+					<Icon icon="mdi:clipboard-text" class="text-lg text-slate-100" />
 				</Button.Root>
 
 				<Button.Root class="rounded-md p-1 hover:bg-red-500" on:click={() => removeError(i)}>
-					<Icon icon="mdi:close" class="text-lg text-gray-100" />
+					<Icon icon="mdi:close" class="text-lg text-slate-100" />
 				</Button.Root>
 			</div>
 		{/each}
@@ -117,6 +118,6 @@
 	}
 
 	:global(div) {
-		scrollbar-color: theme(colors.gray.500) theme(colors.gray.800);
+		scrollbar-color: theme(colors.slate.500) theme(colors.slate.800);
 	}
 </style>

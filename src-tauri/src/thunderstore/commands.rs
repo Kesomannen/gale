@@ -39,7 +39,7 @@ pub fn stop_querying_thunderstore(state: StateMutex<QueryState>) {
 }
 
 #[tauri::command]
-pub fn trigger_mod_fetching(
+pub fn trigger_mod_fetch(
     app: AppHandle,
     state: StateMutex<Thunderstore>,
     manager: StateMutex<ModManager>,

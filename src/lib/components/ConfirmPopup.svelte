@@ -11,7 +11,7 @@
 </script>
 
 <Popup {title} onClose={onCancel} bind:open>
-	<Dialog.Description class="text-gray-300">
+	<Dialog.Description class="text-slate-300">
 		<slot>
 			{description}
 		</slot>
@@ -19,7 +19,7 @@
 
 	<div class="ml-auto mt-3 flex justify-end gap-2 overflow-hidden">
 		<BigButton
-			color="gray"
+			color="slate"
 			on:click={() => {
 				onCancel();
 				open = false;

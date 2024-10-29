@@ -187,7 +187,7 @@
 <div class="relative flex w-full flex-col gap-1.5 overflow-y-auto px-6 py-4">
 	{#if loading}
 		<div
-			class="fixed inset-0 flex items-center justify-center bg-black/40 text-lg text-gray-200"
+			class="fixed inset-0 flex items-center justify-center bg-black/40 text-lg text-slate-200"
 			transition:fade={{ duration: 50 }}
 		>
 			<Icon icon="mdi:loading" class="mr-4 animate-spin" />
@@ -253,18 +253,18 @@
 				<Select.Trigger
 					let:open
 					slot="trigger"
-					class="flex w-full items-center overflow-hidden rounded-lg border border-gray-500 border-opacity-0 bg-gray-900 py-1 pl-1 pr-3 hover:border-opacity-100"
+					class="flex w-full items-center overflow-hidden rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 py-1 pl-1 pr-3 hover:border-opacity-100"
 				>
 					{#if selectedCategories.length === 0}
-						<span class="truncate pl-2 text-gray-400">Select categories...</span>
+						<span class="truncate pl-2 text-slate-400">Select categories...</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
-								<div class="rounded-md bg-gray-800 py-1 pl-3 pr-1 text-sm text-gray-200">
+								<div class="rounded-md bg-slate-800 py-1 pl-3 pr-1 text-sm text-slate-200">
 									<span class="overflow-hidden truncate">{category.name}</span>
 
 									<Button.Root
-										class="ml-1 rounded-md px-1.5 hover:bg-gray-700"
+										class="ml-1 rounded-md px-1.5 hover:bg-slate-700"
 										on:click={(evt) => {
 											evt.stopPropagation();
 											selectedCategories = selectedCategories.filter((c) => c !== category);
@@ -277,7 +277,7 @@
 						</div>
 					{/if}
 					<Icon
-						class="ml-auto flex-shrink-0 origin-center transform text-xl text-gray-400 transition-all
+						class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
                 duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 						icon="mdi:chevron-down"
 					/>
@@ -335,9 +335,9 @@
 		/>
 
 		<details class="mt-1">
-			<summary class="cursor-pointer text-sm text-gray-300">Preview</summary>
+			<summary class="cursor-pointer text-sm text-slate-300">Preview</summary>
 			<Markdown class="mt-1 px-4" source={readme} />
-			<div class="mt-4 h-[2px] bg-gray-500" />
+			<div class="mt-4 h-[2px] bg-slate-500" />
 		</details>
 	</FormField>
 
@@ -352,15 +352,15 @@
 			mono={true}
 		/>
 
-		<BigButton color="gray" on:click={() => generateChangelog(false)}
+		<BigButton color="slate" on:click={() => generateChangelog(false)}
 			>Generate for {versionNumber}</BigButton
 		>
-		<BigButton color="gray" on:click={() => generateChangelog(true)}>Generate all</BigButton>
+		<BigButton color="slate" on:click={() => generateChangelog(true)}>Generate all</BigButton>
 
 		<details class="mt-1">
-			<summary class="cursor-pointer text-sm text-gray-300">Preview</summary>
+			<summary class="cursor-pointer text-sm text-slate-300">Preview</summary>
 			<Markdown class="mt-1 px-4" source={changelog} />
-			<div class="mt-4 h-[2px] bg-gray-500" />
+			<div class="mt-4 h-[2px] bg-slate-500" />
 		</details>
 	</FormField>
 
@@ -370,7 +370,7 @@
 	>
 		<details>
 			{#if includeFiles}
-				<summary class="cursor-pointer text-sm text-gray-300">Show list</summary>
+				<summary class="cursor-pointer text-sm text-slate-300">Show list</summary>
 				<Checklist
 					class="mt-1"
 					title="Include all"
@@ -386,20 +386,20 @@
 		</details>
 	</FormField>
 
-	<div class="mt-1 flex items-center text-lg font-medium text-gray-200">
+	<div class="mt-1 flex items-center text-lg font-medium text-slate-200">
 		<span class="max-w-96 flex-grow">Contains NSFW content</span>
 
 		<Checkbox onValueChanged={saveArgs} bind:value={nsfw} />
 	</div>
 
-	<div class="flex items-center text-lg font-medium text-gray-200">
+	<div class="flex items-center text-lg font-medium text-slate-200">
 		<span class="max-w-96 flex-grow">Include disabled mods</span>
 
 		<Checkbox onValueChanged={saveArgs} bind:value={includeDisabled} />
 	</div>
 
 	<div class="mt-3 flex justify-end gap-2">
-		<BigButton color="gray" on:click={exportToFile}>Export to file</BigButton>
+		<BigButton color="slate" on:click={exportToFile}>Export to file</BigButton>
 		<BigButton color="accent" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
 	</div>
 </div>
@@ -407,7 +407,7 @@
 <ApiKeyPopup />
 
 <Popup bind:open={donePopupOpen} title="Modpack upload complete">
-	<Dialog.Description class="text-gray-300">
+	<Dialog.Description class="text-slate-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!
 		<Link href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}"
@@ -415,7 +415,7 @@
 		>.
 	</Dialog.Description>
 
-	<div class="mt-2 text-sm text-gray-400">
+	<div class="mt-2 text-sm text-slate-400">
 		The changes may take up to an hour to appear in Gale and other mod managers.
 		<br />
 		To publish a new update, increment the version number and publish the modpack again.

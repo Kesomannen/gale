@@ -45,9 +45,9 @@
 	}
 </script>
 
-<div class="flex h-12 flex-shrink-0 flex-row border-b border-t border-gray-600 bg-gray-900">
+<div class="flex h-12 flex-shrink-0 flex-row border-b border-t border-slate-600 bg-slate-900">
 	<div
-		class="text-accent-400 hover:text-accent-400 flex-shrink-0 border-r border-gray-600 pl-6 pr-8 hover:bg-gray-800"
+		class="flex-shrink-0 border-r border-slate-600 pl-6 pr-8 text-accent-400 hover:bg-slate-800 hover:text-accent-400"
 	>
 		<Button.Root
 			class="flex h-full cursor-default items-center font-semibold"
@@ -60,7 +60,7 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-gray-600 pl-2 pr-4 font-semibold text-gray-300 hover:bg-gray-800 group-hover:text-gray-200"
+		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-slate-600 pl-2 pr-4 font-semibold text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
 	>
 		{#if $activeGame}
 			<img
@@ -76,21 +76,21 @@
 
 		<Icon
 			icon="mdi:menu"
-			class="ml-6 flex-shrink-0 text-xl text-gray-300 transition-all group-hover:text-gray-200"
+			class="ml-6 flex-shrink-0 text-xl text-slate-300 transition-all group-hover:text-slate-200"
 		/>
 	</Button.Root>
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-gray-600 pl-6 
-						pr-4 text-gray-300 hover:bg-gray-800 group-hover:text-gray-200"
+			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-slate-600 pl-6 
+						pr-4 text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
 		>
 			<span class="mr-auto flex-shrink truncate font-semibold">
 				{$activeProfile?.name}
 			</span>
 
 			<div
-				class="ml-6 mr-2 rounded bg-gray-800 px-2 py-0.5 text-sm font-medium group-hover:bg-gray-700"
+				class="ml-6 mr-2 rounded bg-slate-800 px-2 py-0.5 text-sm font-medium group-hover:bg-slate-700"
 			>
 				{$activeProfile?.modCount}
 			</div>
@@ -103,15 +103,15 @@
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border border-gray-600 bg-gray-800 p-1 shadow-xl"
+			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border border-slate-600 bg-slate-800 p-1 shadow-xl"
 			{...dropTransition}
 		>
 			{#each profiles as profile, i}
 				<DropdownMenu.Item
-					class="group flex cursor-default items-center rounded-md py-1 pl-3 pr-1 text-left hover:bg-gray-700
+					class="group flex cursor-default items-center rounded-md py-1 pl-3 pr-1 text-left hover:bg-slate-700
 						{i == activeProfileIndex
-						? 'font-medium text-gray-300 hover:text-gray-200'
-						: 'text-gray-400 hover:text-gray-300'}"
+						? 'font-medium text-slate-300 hover:text-slate-200'
+						: 'text-slate-400 hover:text-slate-300'}"
 					on:click={() => {
 						setActiveProfile(i);
 						profilesOpen = false;
@@ -123,15 +123,15 @@
 
 					<Icon
 						icon="mdi:check"
-						class="text-accent-500 mx-2 text-lg {i !== activeProfileIndex && 'invisible'}"
+						class="mx-2 text-lg text-accent-500 {i !== activeProfileIndex && 'invisible'}"
 					/>
 
-					<div class="mr-1 rounded bg-gray-700 px-1.5 py-0.5 text-xs group-hover:bg-gray-600">
+					<div class="mr-1 rounded bg-slate-700 px-1.5 py-0.5 text-xs group-hover:bg-slate-600">
 						{profile.modCount}
 					</div>
 
 					<Button.Root
-						class="rounded p-1 text-gray-400 hover:bg-red-600 hover:text-red-200"
+						class="rounded p-1 text-slate-400 hover:bg-red-600 hover:text-red-200"
 						on:click={(evt) => {
 							evt.stopPropagation();
 							deleteProfile(i);
@@ -144,7 +144,7 @@
 			{/each}
 
 			<DropdownMenu.Item
-				class="bg-accent-700 hover:bg-accent-600 flex cursor-default items-center justify-center rounded py-1 text-white"
+				class="flex cursor-default items-center justify-center rounded bg-accent-700 py-1 text-white hover:bg-accent-600"
 				on:click={() => (newProfilePopupOpen = true)}
 			>
 				<Icon icon="mdi:plus" class="mr-1 text-lg" />
@@ -157,7 +157,7 @@
 </div>
 
 <Popup title="Launching {$activeGame?.displayName}..." bind:open={launchGamePopupOpen}>
-	<Dialog.Description class="text-gray-400">
+	<Dialog.Description class="text-slate-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
 	</Dialog.Description>
 </Popup>

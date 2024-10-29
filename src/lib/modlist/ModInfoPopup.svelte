@@ -26,13 +26,13 @@
 
 <Popup large bind:open>
 	{#await promise}
-		<Icon class="animate-spin text-4xl text-gray-300" icon="mdi:loading" />
+		<Icon class="animate-spin text-4xl text-slate-300" icon="mdi:loading" />
 	{:then value}
 		{#if value !== null}
 			{#if value.markdown}
 				<Markdown source={value.markdown} />
 			{:else}
-				<div class="flex items-center justify-center gap-2 text-gray-300">
+				<div class="flex items-center justify-center gap-2 text-slate-300">
 					No {path} found 😥
 				</div>
 			{/if}

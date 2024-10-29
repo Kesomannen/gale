@@ -13,6 +13,7 @@
 ### Fixed
 
 - Zoom in hotkey (`Ctrl +`)
+- Empty string config options causing an extra `=` to be added
 
 ## 0.9.1 (2024-10-24)
 

@@ -11,13 +11,15 @@
 		install: void;
 	}>();
 
-	$: descriptionClasses = isSelected ? 'text-gray-300' : 'text-gray-400 group-hover:text-gray-300';
+	$: descriptionClasses = isSelected
+		? 'text-slate-300'
+		: 'text-slate-400 group-hover:text-slate-300';
 </script>
 
 <button
-	class="group flex w-full rounded-lg border border-gray-500 p-2 {isSelected
-		? 'bg-gray-700'
-		: 'border-opacity-0 hover:bg-gray-700'}"
+	class="group flex w-full rounded-lg border border-slate-500 p-2 {isSelected
+		? 'bg-slate-700'
+		: 'border-opacity-0 hover:bg-slate-700'}"
 	on:click
 >
 	<img src={mod.icon} alt={mod.name} class="size-12 rounded" />
@@ -27,13 +29,13 @@
 				{mod.name.replace(/_/g, ' ')}
 			</div>
 			{#if mod.isPinned}
-				<Icon class="flex-shrink-0 text-gray-400" icon="mdi:pin" />
+				<Icon class="flex-shrink-0 text-slate-400" icon="mdi:pin" />
 			{/if}
 			{#if mod.isDeprecated}
 				<Icon class="flex-shrink-0 text-red-500" icon="mdi:error" />
 			{/if}
 			{#if mod.isInstalled}
-				<Icon class="text-accent-500 flex-shrink-0" icon="mdi:check-circle" />
+				<Icon class="flex-shrink-0 text-accent-500" icon="mdi:check-circle" />
 			{/if}
 		</div>
 
@@ -46,7 +48,7 @@
 
 	{#if !mod.isInstalled}
 		<Button.Root
-			class="bg-accent-600 hover:bg-accent-500 ml-2 mr-0.5 mt-0.5 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
+			class="ml-2 mr-0.5 mt-0.5 hidden rounded-lg bg-accent-600 p-2.5 align-middle text-2xl text-white hover:bg-accent-500 group-hover:inline"
 			on:click={(evt) => {
 				dispatch('install');
 				evt.stopPropagation();
