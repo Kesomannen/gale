@@ -3,6 +3,7 @@ use crate::{
     prefs::Prefs,
     util::cmd::{Result, StateMutex},
 };
+use anyhow::Context;
 use itertools::Itertools;
 
 #[tauri::command]
@@ -29,4 +30,15 @@ pub fn get_launch_args(
         .join(" ");
 
     Ok(text)
+}
+
+#[tauri::command]
+pub fn open_game_dir(manager: StateMutex<ModManager>, prefs: StateMutex<Prefs>) -> Result<()> {
+    let manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    let path = manager.active_game.path(&prefs)?;
+    open::that(path).context("failed to open directory")?;
+
+    Ok(())
 }

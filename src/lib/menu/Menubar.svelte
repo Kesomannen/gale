@@ -171,6 +171,7 @@
 				on:click={() => invokeCommand('open_profile_dir')}
 				text="Open profile directory"
 			/>
+			<MenubarItem on:click={() => invokeCommand('open_game_dir')} text="Open game directory" />
 			<MenubarItem on:click={() => invokeCommand('open_bepinex_log')} text="Open BepInEx log" />
 			<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open Gale log" />
 			<MenubarSeparator />

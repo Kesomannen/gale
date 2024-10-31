@@ -115,7 +115,7 @@
 	</div>
 
 	{#if mod.categories}
-		<div class="text-md my-2 flex flex-wrap gap-1">
+		<div class="my-2 flex flex-wrap gap-1">
 			{#each mod.categories as category}
 				<div class="rounded-full bg-slate-600 px-4 py-1 text-slate-200">
 					{category}

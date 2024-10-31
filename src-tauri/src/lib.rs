@@ -81,6 +81,7 @@ pub fn run() {
             manager::commands::open_bepinex_log,
             manager::launcher::commands::launch_game,
             manager::launcher::commands::get_launch_args,
+            manager::launcher::commands::open_game_dir,
             manager::downloader::commands::install_mod,
             manager::downloader::commands::cancel_install,
             manager::downloader::commands::clear_download_cache,
