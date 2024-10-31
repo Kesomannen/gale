@@ -1,4 +1,6 @@
+import { get } from 'svelte/store';
 import type { Mod, ConfigEntry } from './models';
+import { activeGame } from './stores';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -67,6 +69,10 @@ export function isOutdated(mod: Mod): boolean {
 	}
 
 	return mod.version !== mod.versions[0].name;
+}
+
+export function communityUrl(path: string) {
+	return `https://thunderstore.io/c/${get(activeGame)?.id}/p/${path}/`;
 }
 
 export function capitalize(str: string): string {

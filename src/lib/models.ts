@@ -100,7 +100,7 @@ export type Mod = {
 	isInstalled: boolean | undefined;
 	containsNsfw: boolean;
 	uuid: string;
-	lastUpdated: string;
+	lastUpdated: string | null;
 	versions: {
 		name: string;
 		uuid: string;

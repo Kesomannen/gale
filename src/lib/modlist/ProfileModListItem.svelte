@@ -120,7 +120,7 @@
 			{#if reorderable}
 				<Icon
 					icon="material-symbols:drag-indicator"
-					class="mr-2 flex-shrink-0 cursor-move text-2xl text-slate-400"
+					class="mr-4 flex-shrink-0 cursor-move text-2xl text-slate-400"
 				/>
 			{/if}
 

@@ -40,8 +40,7 @@
 <Popup bind:open title="Import profiles from other manager" canClose={!loading}>
 	<div class="text-slate-300">
 		<p>
-			This will import cached mods and profiles <b>for the current game</b> from r2modman or Thunderstore
-			Mod Manager.
+			This will import profiles <b>for the current game</b> from r2modman or Thunderstore Mod Manager.
 		</p>
 
 		<p class="mt-2">

@@ -8,7 +8,7 @@
 
 	import { activeGame } from '$lib/stores';
 	import type { MarkdownResponse, Mod, ModContextItem } from '$lib/models';
-	import { shortenFileSize, shortenNum, timeSince } from '$lib/util';
+	import { communityUrl, shortenFileSize, shortenNum, timeSince } from '$lib/util';
 
 	import { Button, DropdownMenu } from 'bits-ui';
 
@@ -43,21 +43,14 @@
 		}
 	];
 
-	function openCommunityUrl(path: string | null) {
-		if (path === null) return;
-
-		let game = get(activeGame);
-		if (game === null) return;
-
-		open(`https://thunderstore.io/c/${game.id}/p/${path}/`);
-	}
-
 	let readmePromise: Promise<string | null>;
 
 	async function extractReadme(response: Response) {
 		let res = (await response.json()) as MarkdownResponse;
 
 		if (!res.markdown) return null;
+
+		console.log('extracted readme');
 
 		return res.markdown
 			.split('\n')
@@ -86,18 +79,18 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<Button.Root
-		class="break-words pr-4 text-left text-3xl font-bold text-slate-100 hover:underline xl:text-4xl"
-		on:click={() => openCommunityUrl(mod.author + '/' + mod.name)}
-		>{mod.name.replace(/_/g, ' ')}</Button.Root
+	<a
+		class="break-words pr-4 text-left text-3xl font-bold text-white hover:underline xl:text-4xl"
+		href={communityUrl(mod.author + '/' + mod.name)}
+		target="_blank">{mod.name.replace(/_/g, ' ')}</a
 	>
 
 	{#if mod.author}
 		<div class="text-xl text-slate-300 xl:text-2xl">
 			By
-			<Button.Root class="hover:underline" on:click={() => openCommunityUrl(mod.author)}>
+			<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
 				{mod.author}
-			</Button.Root>
+			</a>
 		</div>
 	{/if}
 
@@ -144,15 +137,17 @@
 		<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
 	</div>
 
-	{#if mod.lastUpdated}
+	{#if mod.lastUpdated !== null}
 		<div class="text-lg text-slate-400">
 			Last updated {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}
 
-	<p class="mt-3 flex-shrink overflow-hidden text-xl text-slate-300 lg:hidden">
-		{mod.description ?? ''}
-	</p>
+	{#if mod.description !== null}
+		<p class="mt-2 flex-shrink overflow-hidden text-xl text-slate-300 lg:hidden">
+			{mod.description}
+		</p>
+	{/if}
 
 	{#await readmePromise}
 		<div class="hidden h-full w-full items-center justify-center lg:flex">

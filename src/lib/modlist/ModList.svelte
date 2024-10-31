@@ -4,7 +4,7 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import VirtualList from '$lib/components/VirtualList.svelte';
 	import { open } from '@tauri-apps/plugin-shell';
-	import { sentenceCase } from '$lib/util';
+	import { communityUrl, sentenceCase } from '$lib/util';
 	import {
 		SortBy,
 		type Mod,
