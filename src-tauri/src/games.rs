@@ -32,7 +32,11 @@ struct Platforms {
 #[serde(rename_all = "camelCase", untagged)]
 enum Steam {
     Concise(u32),
-    Full { id: u32, dir_name: String },
+    #[serde(rename_all = "camelCase")]
+    Full {
+        id: u32,
+        dir_name: String,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq)]
