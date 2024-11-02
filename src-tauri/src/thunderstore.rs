@@ -331,7 +331,7 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
 
     state.lock().unwrap().is_fetching = true;
 
-    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.id);
+    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.slug);
     let mut response = client.get(url).send().await?.error_for_status()?;
 
     let mut is_first_chunk = true;

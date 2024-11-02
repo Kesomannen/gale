@@ -19,7 +19,7 @@
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
 
-	$: gameId = $activeGame?.id ?? '';
+	$: gameId = $activeGame?.slug ?? '';
 	$: gamePrefs = prefs?.gamePrefs.get(gameId) ?? {
 		launchMode: { type: 'steam' },
 		dirOverride: null,
@@ -101,7 +101,7 @@
 		</TogglePref>
 
 		<LargePrefsHeading>
-			{$activeGame?.displayName} settings
+			{$activeGame?.name} settings
 		</LargePrefsHeading>
 
 		<SmallPrefsHeading>Locations</SmallPrefsHeading>
@@ -113,7 +113,7 @@
 			value={gamePrefs.dirOverride ?? null}
 			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
-			Path to the {$activeGame?.displayName} game directory. Leave empty to use the default Steam library.
+			Path to the {$activeGame?.name} game directory. Leave empty to use the default Steam library.
 		</PathPref>
 
 		<SmallPrefsHeading>Launch</SmallPrefsHeading>

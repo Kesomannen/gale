@@ -8,7 +8,7 @@ SIZE = (256, 256)
 
 if __name__ == '__main__':
     dir = path.join(__file__, '..', '..', 'static', 'games')
-    dir = os.path.realpath(dir)
+    dir = path.realpath(dir)
 
     for file in os.listdir(dir):
         absolute = path.join(dir, file)

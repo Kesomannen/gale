@@ -19,7 +19,7 @@
 		let newGames =
 			searchTerm.length > 0
 				? games.filter((game) => {
-						return game.displayName.toLowerCase().includes(lowerSearch);
+						return game.name.toLowerCase().includes(lowerSearch);
 					})
 				: games;
 
@@ -32,7 +32,7 @@
 				if (!a.popular && b.popular) return 1;
 			}
 
-			return a.displayName.localeCompare(b.displayName);
+			return a.name.localeCompare(b.name);
 		});
 
 		shownGames = newGames;
@@ -54,13 +54,13 @@
 				}}
 			>
 				<img
-					src="games/{game.id}.webp"
-					alt={game.displayName}
+					src="games/{game.slug}.webp"
+					alt={game.name}
 					class="mr-2 h-8 w-8 rounded group-hover:shadow-xl"
 				/>
 
 				<span class="flex-grow text-left text-slate-200">
-					{game.displayName}
+					{game.name}
 				</span>
 
 				<Button.Root
@@ -71,7 +71,7 @@
 						evt.stopPropagation();
 						game.favorite = !game.favorite;
 						refresh(searchTerm);
-						invokeCommand('favorite_game', { id: game.id });
+						invokeCommand('favorite_game', { slug: game.slug });
 					}}
 				>
 					<Icon

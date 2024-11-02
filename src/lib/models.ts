@@ -192,8 +192,8 @@ export type ModpackArgs = {
 };
 
 export type Game = {
-	id: string;
-	displayName: string;
+	name: string;
+	slug: string;
 	steamId: number;
 	favorite: boolean;
 	popular: boolean;

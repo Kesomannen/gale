@@ -1,0 +1,701 @@
+[
+	{
+		"name": "Risk of Rain 2",
+		"slug": "riskofrain2",
+		"popular": true,
+		"platforms": {
+			"steam": 632360
+		}
+	},
+	{
+		"name": "Dyson Sphere Program",
+		"platforms": {
+			"steam": 1366540
+		}
+	},
+	{
+		"name": "Valheim",
+		"popular": true,
+		"platforms": {
+			"steam": 892970
+		}
+	},
+	{
+		"name": "GTFO",
+		"slug": "gtfo",
+		"popular": true,
+		"platforms": {
+			"steam": 493520
+		}
+	},
+	{
+		"name": "Outward",
+		"platforms": {
+			"steam": 794260
+		}
+	},
+	{
+		"name": "TaleSpire",
+		"slug": "talespire",
+		"platforms": {
+			"steam": 720620
+		}
+	},
+	{
+		"name": "H3VR",
+		"slug": "h3vr",
+		"popular": true,
+		"platforms": {
+			"steam": 450540
+		}
+	},
+	{
+		"name": "ROUNDS",
+		"platforms": {
+			"steam": 1557740
+		}
+	},
+	{
+		"name": "Mechanica",
+		"platforms": {
+			"steam": 1226990
+		}
+	},
+	{
+		"name": "Muck",
+		"platforms": {
+			"steam": 1625450
+		}
+	},
+	{
+		"name": "Lethal League Blaze",
+		"platforms": {
+			"steam": {
+				"id": 553310,
+				"dir_name": "LLBlaze"
+			}
+		}
+	},
+	{
+		"name": "Timberborn",
+		"platforms": {
+			"steam": 1062090
+		}
+	},
+	{
+		"name": "TABS",
+		"slug": "totally-accurate-battle-simulator",
+		"platforms": {
+			"steam": {
+				"id": 508440,
+				"dir_name": "Totally Accurate Battle Simulator"
+			}
+		}
+	},
+	{
+		"name": "Nickelodeon All-Star Brawl",
+		"slug": "nasb",
+		"platforms": {
+			"steam": 1414850
+		}
+	},
+	{
+		"name": "Inscryption",
+		"platforms": {
+			"steam": 1092790
+		}
+	},
+	{
+		"name": "Starsand",
+		"platforms": {
+			"steam": 1380220
+		}
+	},
+	{
+		"name": "Cats are Liquid - A Better Place",
+		"slug": "cats-are-liquid",
+		"platforms": {
+			"steam": 1188080
+		}
+	},
+	{
+		"name": "Potion Craft",
+		"platforms": {
+			"steam": 1210320
+		}
+	},
+	{
+		"name": "Nearly Dead",
+		"platforms": {
+			"steam": 1268900
+		}
+	},
+	{
+		"name": "AGAINST",
+		"slug": "against",
+		"platforms": {
+			"steam": {
+				"id": 1584840,
+				"dir_name": "AGAINST_steam"
+			}
+		}
+	},
+	{
+		"name": "Rogue Tower",
+		"platforms": {
+			"steam": 1843760
+		}
+	},
+	{
+		"name": "House of the Dying Sun",
+		"slug": "hotds",
+		"platforms": {
+			"steam": {
+				"id": 283160,
+				"dir_name": "DyingSun"
+			}
+		}
+	},
+	{
+		"name": "For The King",
+		"platforms": {
+			"steam": 527230
+		}
+	},
+	{
+		"name": "Subnautica",
+		"platforms": {
+			"steam": 264710
+		}
+	},
+	{
+		"name": "Subnautica: Below Zero",
+		"slug": "belowzero",
+		"platforms": {
+			"steam": {
+				"id": 848450,
+				"dir_name": "SubnauticaZero"
+			}
+		}
+	},
+	{
+		"name": "Core Keeper",
+		"platforms": {
+			"steam": 1621690
+		}
+	},
+	{
+		"name": "Peglin",
+		"platforms": {
+			"steam": 1296610
+		}
+	},
+	{
+		"name": "V Rising",
+		"platforms": {
+			"steam": {
+				"id": 1604030,
+				"dir_name": "VRising"
+			}
+		}
+	},
+	{
+		"name": "20 Minutes Till Dawn",
+		"platforms": {
+			"steam": {
+				"id": 1966900,
+				"dir_name": "20MinuteTillDawn"
+			}
+		}
+	},
+	{
+		"name": "Green Hell VR",
+		"platforms": {
+			"steam": 1782330
+		}
+	},
+	{
+		"name": "VTOL VR",
+		"platforms": {
+			"steam": 667970
+		}
+	},
+	{
+		"name": "Stacklands",
+		"platforms": {
+			"steam": 1948280
+		}
+	},
+	{
+		"name": "Enter the Gungeon",
+		"platforms": {
+			"steam": 311690
+		}
+	},
+	{
+		"name": "Ravenfield",
+		"platforms": {
+			"steam": 636480
+		}
+	},
+	{
+		"name": "Aloft",
+		"platforms": {
+			"steam": {
+				"id": 2051980,
+				"dir_name": "Aloft Demo"
+			}
+		}
+	},
+	{
+		"name": "Cult of the Lamb",
+		"platforms": {
+			"steam": 1313140
+		}
+	},
+	{
+		"name": "Chrono Ark",
+		"platforms": {
+			"steam": 1188930
+		}
+	},
+	{
+		"name": "BONELAB",
+		"platforms": {
+			"steam": 1592190
+		}
+	},
+	{
+		"name": "Trombone Champ",
+		"platforms": {
+			"steam": {
+				"id": 1059990,
+				"dir_name": "TromboneChamp"
+			}
+		}
+	},
+	{
+		"name": "Rogue : Genesia",
+		"slug": "rogue-genesia",
+		"platforms": {
+			"steam": {
+				"id": 2067920,
+				"dir_name": "Rogue Genesia"
+			}
+		}
+	},
+	{
+		"name": "Across the Obelisk",
+		"platforms": {
+			"steam": 1385380
+		}
+	},
+	{
+		"name": "ULTRAKILL",
+		"platforms": {
+			"steam": 1229490
+		}
+	},
+	{
+		"name": "Ultimate Chicken Horse",
+		"platforms": {
+			"steam": 386940
+		}
+	},
+	{
+		"name": "Atrio: The Dark Wild",
+		"slug": "atrio-the-dark-wild",
+		"platforms": {
+			"steam": {
+				"id": 1125390,
+				"dir_name": "Atrio The Dark Wild"
+			}
+		}
+	},
+	{
+		"name": "Ancient Dungeon VR",
+		"platforms": {
+			"steam": 1125240
+		}
+	},
+	{
+		"name": "RUMBLE",
+		"platforms": {
+			"steam": 890550
+		}
+	},
+	{
+		"name": "Skul: The Hero Slayer",
+		"slug": "skul-the-hero-slayer",
+		"platforms": {
+			"steam": {
+				"id": 1147560,
+				"dir_name": "Skul"
+			}
+		}
+	},
+	{
+		"name": "Sons Of The Forest",
+		"platforms": {
+			"steam": 1326470
+		}
+	},
+	{
+		"name": "The Ouroboros King",
+		"platforms": {
+			"steam": 2096510
+		}
+	},
+	{
+		"name": "Wrestling Empire",
+		"platforms": {
+			"steam": 1620340
+		}
+	},
+	{
+		"name": "Receiver 2",
+		"platforms": {
+			"steam": 1129310
+		}
+	},
+	{
+		"name": "The Planet Crafter",
+		"platforms": {
+			"steam": 1284190
+		}
+	},
+	{
+		"name": "Patch Quest",
+		"platforms": {
+			"steam": 1347970
+		}
+	},
+	{
+		"name": "Shadows Over Loathing",
+		"platforms": {
+			"steam": 1939160
+		}
+	},
+	{
+		"name": "West of Loathing",
+		"platforms": {
+			"steam": 597220
+		}
+	},
+	{
+		"name": "Sun Haven",
+		"platforms": {
+			"steam": 1432860
+		}
+	},
+	{
+		"name": "Wildfrost",
+		"platforms": {
+			"steam": 1811990
+		}
+	},
+	{
+		"name": "Shadows of Doubt",
+		"platforms": {
+			"steam": 986130
+		}
+	},
+	{
+		"name": "Garfield Kart - Furious Racing",
+		"platforms": {
+			"steam": 1085510
+		}
+	},
+	{
+		"name": "Techtonica",
+		"platforms": {
+			"steam": 1457320
+		}
+	},
+	{
+		"name": "Thronefall",
+		"platforms": {
+			"steam": 2239150
+		}
+	},
+	{
+		"name": "We Love Katamari REROLL+ Royal Reverie",
+		"slug": "we-love-katamari-reroll-royal-reverie",
+		"platforms": {
+			"steam": {
+				"id": 1730700,
+				"dir_name": "WLKRR"
+			}
+		}
+	},
+	{
+		"name": "Wizard of Legend",
+		"platforms": {
+			"steam": 445980
+		}
+	},
+	{
+		"name": "Bomb Rush Cyberfunk",
+		"platforms": {
+			"steam": {
+				"id": 1353230,
+				"dir_name": "BombRushCyberfunk"
+			}
+		}
+	},
+	{
+		"name": "TouhouLostBranchOfLegend",
+		"platforms": {
+			"steam": {
+				"id": 1140150,
+				"dir_name": "LBoL"
+			}
+		}
+	},
+	{
+		"name": "Wizard With A Gun",
+		"platforms": {
+			"steam": 1150530
+		}
+	},
+	{
+		"name": "Sunkenland",
+		"platforms": {
+			"steam": 2080690
+		}
+	},
+	{
+		"name": "Atomicrops",
+		"platforms": {
+			"steam": 757320
+		}
+	},
+	{
+		"name": "Erenshor",
+		"platforms": {
+			"steam": 2382520
+		}
+	},
+	{
+		"name": "Last Train Outta' Wormtown",
+		"slug": "last-train-outta-wormtown",
+		"platforms": {
+			"steam": 2318480
+		}
+	},
+	{
+		"name": "DREDGE",
+		"platforms": {
+			"steam": 1562430
+		}
+	},
+	{
+		"name": "Cities: Skylines II",
+		"slug": "cities-skylines-ii",
+		"platforms": {
+			"steam": {
+				"id": 949230,
+				"dir_name": "Cities Skylines II"
+			}
+		}
+	},
+	{
+		"name": "Lethal Company",
+		"popular": true,
+		"platforms": {
+			"steam": 1966720
+		}
+	},
+	{
+		"name": "Meeple Station",
+		"platforms": {
+			"steam": 900010
+		}
+	},
+	{
+		"name": "Void Crew",
+		"platforms": {
+			"steam": 1063420
+		}
+	},
+	{
+		"name": "Sailwind",
+		"platforms": {
+			"steam": 1764530
+		}
+	},
+	{
+		"name": "Plasma",
+		"platforms": {
+			"steam": 1409160
+		}
+	},
+	{
+		"name": "Content Warning",
+		"popular": true,
+		"platforms": {
+			"steam": 2881650
+		}
+	},
+	{
+		"name": "Bopl Battle",
+		"platforms": {
+			"steam": 1686940
+		}
+	},
+	{
+		"name": "Vertigo 2",
+		"platforms": {
+			"steam": 843390
+		}
+	},
+	{
+		"name": "Against the Storm",
+		"platforms": {
+			"steam": 1336490
+		}
+	},
+	{
+		"name": "Lycans",
+		"platforms": {
+			"steam": 2596100
+		}
+	},
+	{
+		"name": "Castle Story",
+		"platforms": {
+			"steam": 227860
+		}
+	},
+	{
+		"name": "Panicore",
+		"platforms": {
+			"steam": 2695940
+		}
+	},
+	{
+		"name": "Magicraft",
+		"platforms": {
+			"steam": 2103140
+		}
+	},
+	{
+		"name": "Another Crab's Treasure",
+		"slug": "another-crabs-treasure",
+		"platforms": {
+			"steam": {
+				"id": 1887840,
+				"dir_name": "AnotherCrabsTreasure"
+			}
+		}
+	},
+	{
+		"name": "Gladio Mori",
+		"platforms": {
+			"steam": {
+				"id": 2908480,
+				"dir_name": "Gladio Mori Demo"
+			}
+		}
+	},
+	{
+		"name": "Slipstream: Rogue Space",
+		"slug": "slipstream-rogue-space",
+		"platforms": {
+			"steam": {
+				"id": 2765860,
+				"dir_name": "Slipstream Rogue Space"
+			}
+		}
+	},
+	{
+		"name": "Supermarket Together",
+		"platforms": {
+			"steam": 2709570
+		}
+	},
+	{
+		"name": "Goodbye Volcano High",
+		"platforms": {
+			"steam": 1310330
+		}
+	},
+	{
+		"name": "Nine Sols",
+		"platforms": {
+			"steam": 1809540
+		}
+	},
+	{
+		"name": "Back to the Dawn",
+		"platforms": {
+			"steam": {
+				"id": 1735700,
+				"dir_name": "MetalHeadGames"
+			}
+		}
+	},
+	{
+		"name": "Below the Stone",
+		"platforms": {
+			"steam": {
+				"id": 1170230,
+				"dir_name": "Below The Stone"
+			}
+		}
+	},
+	{
+		"name": "Gloomwood",
+		"platforms": {
+			"steam": 1150760
+		}
+	},
+	{
+		"name": "Among Us",
+		"platforms": {
+			"steam": 945360
+		}
+	},
+	{
+		"name": "Betrayal Beach",
+		"platforms": {
+			"steam": 2643810
+		}
+	},
+	{
+		"name": "Archus Chroma",
+		"platforms": {
+			"steam": 1447350
+		}
+	},
+	{
+		"name": "Deep Rock Galactic: Survivor",
+		"slug": "deep-rock-galactic-survivor",
+		"platforms": {
+			"steam": {
+				"id": 2321470,
+				"dir_name": "Deep Rock Survivor"
+			}
+		}
+	},
+	{
+		"name": "Ale & Tale Tavern",
+		"slug": "ale-and-tale-tavern",
+		"platforms": {
+			"steam": 2683150
+		}
+	},
+	{
+		"name": "Screw Drivers",
+		"platforms": {
+			"steam": 1279510
+		}
+	},
+	{
+		"name": "TCG Card Shop Simulator",
+		"slug": "tcg-card-shop-simulator",
+		"platforms": {
+			"steam": 3070070
+		}
+	}
+]

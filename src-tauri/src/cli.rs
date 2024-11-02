@@ -23,7 +23,7 @@ pub fn run(app: &App) -> Result<()> {
 
             if let Some(arg) = matches.args.get("game") {
                 if let Value::String(game) = &arg.value {
-                    let game = games::from_id(game).context("unknown game id")?;
+                    let game = games::from_slug(game).context("unknown game id")?;
 
                     manager
                         .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())

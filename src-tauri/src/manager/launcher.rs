@@ -44,7 +44,7 @@ impl ManagerGame {
     fn launch_command(&self, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
         let (launch_mode, custom_args) = prefs
             .game_prefs
-            .get(&self.game.id)
+            .get(&self.game.slug)
             .map(|prefs| (prefs.launch_mode.clone(), prefs.custom_args.as_ref()))
             .unwrap_or_default();
 
@@ -109,7 +109,7 @@ impl ManagerGame {
 
 impl Game {
     pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
-        let path = match prefs.game_prefs.get(&self.id) {
+        let path = match prefs.game_prefs.get(&self.slug) {
             Some(GamePrefs {
                 dir_override: Some(path),
                 ..

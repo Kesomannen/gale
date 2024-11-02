@@ -34,7 +34,7 @@
 			imgSrc = mod.icon!;
 		} else {
 			if (mod.icon === null) {
-				imgSrc = `games/${$activeGame?.id}.webp`;
+				imgSrc = `games/${$activeGame?.slug}.webp`;
 			} else {
 				imgSrc = '';
 				loadLoadIcon(mod.icon);

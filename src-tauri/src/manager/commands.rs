@@ -42,17 +42,17 @@ pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo<'static> {
 
 #[tauri::command]
 pub fn favorite_game(
-    id: String,
+    slug: String,
     manager: StateMutex<ModManager>,
     prefs: StateMutex<Prefs>,
 ) -> Result<()> {
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = games::from_id(&id).context("invalid game id")?;
+    let game = games::from_slug(&slug).context("invalid game id")?;
     manager.ensure_game(game, &prefs)?;
 
-    let manager_game = manager.games.get_mut(&id).unwrap();
+    let manager_game = manager.games.get_mut(&slug).unwrap();
     manager_game.favorite = !manager_game.favorite;
 
     save(&manager, &prefs)?;
@@ -62,7 +62,7 @@ pub fn favorite_game(
 
 #[tauri::command]
 pub fn set_active_game(
-    id: &str,
+    slug: &str,
     app: tauri::AppHandle,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
@@ -72,7 +72,7 @@ pub fn set_active_game(
     let mut thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = games::from_id(id).context("invalid game id")?;
+    let game = games::from_slug(slug).context("invalid game id")?;
 
     manager.set_active_game(game, &mut thunderstore, &prefs, app)?;
     save(&manager, &prefs)?;

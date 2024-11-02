@@ -834,9 +834,8 @@ impl ManagerGame {
 
     fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
         let file_name = util::fs::file_name_owned(&path);
-        let game = match games::from_id(&file_name) {
-            Some(game) => game,
-            None => return Ok(None),
+        let Some(game) = games::from_slug(&file_name) else {
+            return Ok(None);
         };
 
         path.push("game.json");
@@ -878,7 +877,7 @@ impl ManagerGame {
     }
 }
 
-const DEFAULT_GAME_ID: &str = "among-us";
+const DEFAULT_GAME_SLUG: &str = "among-us";
 
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
@@ -886,7 +885,7 @@ impl ModManager {
         let save_data = match save_path.try_exists()? {
             true => util::fs::read_json(&save_path).context("failed to read manager save data")?,
             false => ManagerSaveData {
-                active_game: DEFAULT_GAME_ID.to_owned(),
+                active_game: DEFAULT_GAME_SLUG.to_owned(),
             },
         };
 
@@ -897,13 +896,13 @@ impl ModManager {
 
             if path.is_dir() {
                 if let Some((game, game_data)) = ManagerGame::load(path)? {
-                    games.insert(&game.id, game_data);
+                    games.insert(&game.slug, game_data);
                 }
             }
         }
 
-        let active_game = games::from_id(&save_data.active_game).unwrap_or_else(|| {
-            games::from_id(DEFAULT_GAME_ID).expect("default game should be valid")
+        let active_game = games::from_slug(&save_data.active_game).unwrap_or_else(|| {
+            games::from_slug(DEFAULT_GAME_SLUG).expect("default game should be valid")
         });
 
         let mut manager = Self { games, active_game };
@@ -916,13 +915,13 @@ impl ModManager {
 
     pub fn active_game(&self) -> &ManagerGame {
         self.games
-            .get(&self.active_game.id)
+            .get(&self.active_game.slug)
             .expect("active game not found")
     }
 
     pub fn active_game_mut(&mut self) -> &mut ManagerGame {
         self.games
-            .get_mut(&self.active_game.id)
+            .get_mut(&self.active_game.slug)
             .expect("active game not found")
     }
 
@@ -943,7 +942,7 @@ impl ModManager {
     ) -> Result<()> {
         self.ensure_game(game, prefs)?;
 
-        if self.active_game.id != game.id {
+        if self.active_game.slug != game.slug {
             self.active_game = game;
             thunderstore.switch_game(game, app);
         }
@@ -952,20 +951,20 @@ impl ModManager {
     }
 
     fn ensure_game(&mut self, game: &'static Game, prefs: &Prefs) -> Result<()> {
-        if self.games.contains_key(&game.id) {
+        if self.games.contains_key(&game.slug) {
             return Ok(());
         }
 
         let mut manager_game = ManagerGame {
             game,
             profiles: Vec::new(),
-            path: prefs.data_dir.join(&game.id),
+            path: prefs.data_dir.join(&game.slug),
             favorite: false,
             active_profile_index: 0,
         };
 
         manager_game.create_profile("Default".to_owned())?;
-        self.games.insert(&game.id, manager_game);
+        self.games.insert(&game.slug, manager_game);
 
         Ok(())
     }
@@ -997,7 +996,7 @@ impl ModManager {
         util::fs::write_json(
             &path,
             &ManagerSaveData {
-                active_game: self.active_game.id.to_owned(),
+                active_game: self.active_game.slug.to_owned(),
             },
             JsonStyle::Pretty,
         )?;

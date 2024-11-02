@@ -64,12 +64,12 @@
 	>
 		{#if $activeGame}
 			<img
-				src="games/{$activeGame.id}.webp"
+				src="games/{$activeGame.slug}.webp"
 				class="mr-2 max-h-8 max-w-8 rounded"
-				alt={$activeGame.displayName}
+				alt={$activeGame.name}
 			/>
 
-			{$activeGame.displayName}
+			{$activeGame.name}
 		{:else}
 			Loading...
 		{/if}
@@ -156,7 +156,7 @@
 	<Updater />
 </div>
 
-<Popup title="Launching {$activeGame?.displayName}..." bind:open={launchGamePopupOpen}>
+<Popup title="Launching {$activeGame?.name}..." bind:open={launchGamePopupOpen}>
 	<Dialog.Description class="text-slate-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
 	</Dialog.Description>

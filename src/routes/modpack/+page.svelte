@@ -410,7 +410,7 @@
 	<Dialog.Description class="text-slate-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!
-		<Link href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}"
+		<Link href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/{name}"
 			>Click here to view its page on the website</Link
 		>.
 	</Dialog.Description>

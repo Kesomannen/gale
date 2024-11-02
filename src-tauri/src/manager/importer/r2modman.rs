@@ -205,7 +205,7 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
     let manager = manager.lock().unwrap();
 
     let dir_name = ID_TO_R2_DIR
-        .get(manager.active_game.id.as_str())
+        .get(manager.active_game.slug.as_str())
         .ok_or_else(|| anyhow!("current game unsupported"))?;
 
     path.push(dir_name);

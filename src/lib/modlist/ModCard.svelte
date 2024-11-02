@@ -22,7 +22,7 @@
 		<div class="flex gap-2">
 			<a
 				class="flex-shrink truncate font-medium text-white hover:underline"
-				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/{name}/"
+				href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/{name}/"
 				target="_blank"
 				rel="noopener noreferrer"
 			>
@@ -39,7 +39,7 @@
 		{#if author !== null}
 			<a
 				class="truncate text-slate-400 hover:underline"
-				href="https://thunderstore.io/c/{$activeGame?.id}/p/{author}/"
+				href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/"
 				target="_blank"
 			>
 				{author}

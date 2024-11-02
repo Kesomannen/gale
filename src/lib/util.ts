@@ -72,7 +72,7 @@ export function isOutdated(mod: Mod): boolean {
 }
 
 export function communityUrl(path: string) {
-	return `https://thunderstore.io/c/${get(activeGame)?.id}/p/${path}/`;
+	return `https://thunderstore.io/c/${get(activeGame)?.slug}/p/${path}/`;
 }
 
 export function capitalize(str: string): string {

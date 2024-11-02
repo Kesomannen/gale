@@ -139,7 +139,7 @@ pub async fn upload_pack(
             warn!("failed to take profile snapshot: {}", err);
         }
 
-        (data, &manager.active_game.id, args, token)
+        (data, &manager.active_game.slug, args, token)
     };
 
     let client = client.0.clone();

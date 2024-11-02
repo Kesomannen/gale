@@ -95,7 +95,7 @@ export async function refreshGames() {
 	games = info.all;
 
 	for (let game of games) {
-		game.favorite = info.favorites.includes(game.id);
+		game.favorite = info.favorites.includes(game.slug);
 	}
 
 	activeGame.set(info.active);
@@ -104,12 +104,12 @@ export async function refreshGames() {
 }
 
 export async function setActiveGame(game: Game) {
-	await invokeCommand('set_active_game', { id: game.id });
+	await invokeCommand('set_active_game', { slug: game.slug });
 	refreshGames();
 }
 
 export async function refreshCategories() {
-	let gameId = get(activeGame)?.id;
+	let gameId = get(activeGame)?.slug;
 	if (!gameId) return;
 
 	try {

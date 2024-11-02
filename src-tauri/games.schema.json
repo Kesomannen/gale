@@ -1,0 +1,36 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Games",
+	"description": "List of Gale's supported games.",
+	"type": "array",
+	"items": {
+		"description": "A supported game.",
+		"type": "object",
+		"properties": {
+			"name": {
+				"description": "the name as displayed on the UI.",
+				"type": "string"
+			},
+			"slug": {
+				"description": "The game's URL slug on thunderstore. Defaults to the kebab-case version of name.",
+				"type": "string"
+			},
+			"favorite": {
+				"description": "Whether the game is grouped under 'Popular communities' on thunderstore.io. Defaults to false.",
+				"type": "boolean"
+			},
+			"platforms": {
+				"description": "Info about the platforms where the game is available",
+				"type": "object",
+				"properties": {
+					"steam": {
+						"description": "Steam's internal ID for the game.",
+						"type": "integer"
+					}
+				},
+				"required": ["steam"]
+			}
+		},
+		"required": ["name", "platforms"]
+	}
+}
