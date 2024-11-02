@@ -1,19 +1,19 @@
+use chrono::{DateTime, Utc};
 use itertools::Itertools;
+use log::info;
 use std::sync::Mutex;
 use tauri::Manager;
 use uuid::Uuid;
 
 use crate::{
-    profile::{install::download::install_with_deps, ModManager, Profile, Result},
+    profile::{install, ModManager, Profile, Result},
     thunderstore::{
         models::{PackageListing, PackageVersion},
         ModId, Thunderstore,
     },
 };
-use chrono::{DateTime, Utc};
-use log::info;
 
-use super::install::download::{self, InstallOptions, ModInstall};
+use super::install::{InstallOptions, ModInstall};
 
 pub mod commands;
 
@@ -99,7 +99,7 @@ pub async fn change_version(mod_ref: ModId, app: &tauri::AppHandle) -> Result<()
             .with_index(index)
     };
 
-    download::install_with_deps(
+    install::install_with_deps(
         vec![install],
         InstallOptions::default().can_cancel(false),
         false,
@@ -135,7 +135,7 @@ pub async fn update_mods(
             .collect::<Result<Vec<ModInstall>>>()?
     };
 
-    install_with_deps(
+    install::install_with_deps(
         to_update,
         InstallOptions::default().before_install(|install, manager, _| {
             // remove the old version

@@ -307,6 +307,18 @@ impl Profile {
             })
     }
 
+    fn missing_deps<'a>(
+        &'a self,
+        idents: impl IntoIterator<Item = &'a VersionIdent>,
+        thunderstore: &'a Thunderstore,
+    ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
+        thunderstore
+            .resolve_deps(idents.into_iter())
+            .0
+            .into_iter()
+            .filter(|dep| !self.has_mod(dep.package.uuid4))
+    }
+
     fn bepinex_log_path(&self) -> Result<PathBuf> {
         let path = self.path.join("BepInEx").join("LogOutput.log");
 

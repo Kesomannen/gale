@@ -19,6 +19,7 @@
 		"name": "Valheim",
 		"popular": true,
 		"modLoader": "BepInEx",
+		"subdirs": ["SlimVML"],
 		"platforms": {
 			"steam": 892970
 		}
@@ -28,6 +29,7 @@
 		"slug": "gtfo",
 		"popular": true,
 		"modLoader": "BepInEx",
+		"subdirs": ["Assets", "GameData"],
 		"platforms": {
 			"steam": 493520
 		}
@@ -52,6 +54,7 @@
 		"slug": "h3vr",
 		"popular": true,
 		"modLoader": "BepInEx",
+		"subdirs": ["Sideloader"],
 		"platforms": {
 			"steam": 450540
 		}
@@ -90,6 +93,7 @@
 	{
 		"name": "Timberborn",
 		"modLoader": "BepInEx",
+		"subdirs": ["Maps"],
 		"platforms": {
 			"steam": 1062090
 		}
@@ -334,6 +338,7 @@
 	{
 		"name": "ULTRAKILL",
 		"modLoader": "BepInEx",
+		"subdirs": ["UMM Mods"],
 		"platforms": {
 			"steam": 1229490
 		}

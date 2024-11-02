@@ -10,26 +10,21 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
+use tempfile::tempdir;
 use uuid::Uuid;
 
 use crate::{
     prefs::Prefs,
     profile::{
         commands::save,
-        install::{self, download::InstallOptions},
-        LocalMod, ProfileMod,
+        export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
+        install::{self, InstallOptions, ModInstall},
+        LocalMod, ModManager, ProfileMod,
     },
     thunderstore::{models::PackageManifest, Thunderstore},
     util::{self, error::IoResultExt, fs::PathExt},
     NetworkClient,
 };
-
-use super::{
-    export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
-    install::download::{self, ModInstall},
-    ModManager,
-};
-use tempfile::tempdir;
 
 pub mod commands;
 pub mod r2modman;
@@ -138,7 +133,7 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         profile.path.clone()
     };
 
-    download::install_mods(data.mods, options, app)
+    install::install_mods(data.mods, options, app)
         .await
         .context("error while importing mods")?;
 
@@ -208,7 +203,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     let (mut local_mod, kind) = read_local_mod(&path)?;
 
     if let Some(deps) = &local_mod.dependencies {
-        download::install_with_mods(
+        install::install_with_mods(
             |manager, thunderstore| {
                 let profile = manager.active_profile();
 

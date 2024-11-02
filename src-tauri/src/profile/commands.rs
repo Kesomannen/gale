@@ -1,4 +1,5 @@
 use anyhow::Context;
+use log::warn;
 use serde::Serialize;
 use uuid::Uuid;
 
@@ -183,7 +184,7 @@ pub fn query_profile(
         })
         .collect::<anyhow::Result<Vec<_>>>()
         .unwrap_or_else(|err| {
-            log::warn!("failed to check for updates: {:#}", err);
+            warn!("failed to check for updates: {:#}", err);
             Vec::new()
         });
 

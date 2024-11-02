@@ -1,4 +1,6 @@
-use super::*;
+use std::path::PathBuf;
+
+use super::fs::*;
 
 #[test]
 fn check_map_top_level_file() {

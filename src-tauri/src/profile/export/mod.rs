@@ -1,22 +1,22 @@
-use anyhow::{anyhow, Context};
-use base64::{prelude::BASE64_STANDARD, Engine};
-use serde::{Deserialize, Serialize};
 use std::{
     fmt::Display,
     fs,
     io::{self, Cursor, Seek, Write},
     path::{Path, PathBuf},
 };
+
+use anyhow::{anyhow, Context};
+use base64::{prelude::BASE64_STANDARD, Engine};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use walkdir::WalkDir;
+use zip::ZipWriter;
 
-use super::{install::download::ModInstall, ModManager, Profile, Result};
-
+use super::{install::ModInstall, ModManager, Profile, Result};
 use crate::{
     thunderstore::{models::LegacyProfileCreateResponse, ModId, Thunderstore},
     util::cmd::StateMutex,
 };
-use walkdir::WalkDir;
-use zip::ZipWriter;
 
 pub mod changelog;
 pub mod commands;

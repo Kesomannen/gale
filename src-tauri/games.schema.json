@@ -24,6 +24,13 @@
 				"type": "string",
 				"enum": ["BepInEx"]
 			},
+			"subdirs": {
+				"description": "",
+				"type": "array",
+				"items": {
+					"type": "string"
+				}
+			},
 			"platforms": {
 				"description": "Info about the platforms where the game is available",
 				"type": "object",

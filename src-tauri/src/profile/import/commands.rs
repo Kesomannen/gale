@@ -1,14 +1,15 @@
 use std::path::PathBuf;
 
-use crate::{profile::install::download::InstallOptions, util::cmd::Result};
+use anyhow::anyhow;
+use tauri::AppHandle;
+use uuid::Uuid;
+
+use crate::{profile::install::InstallOptions, util::cmd::Result};
 
 use super::{
     r2modman::{self, ManagerData, ProfileImportData},
     ImportData,
 };
-use anyhow::anyhow;
-use tauri::AppHandle;
-use uuid::Uuid;
 
 #[tauri::command]
 pub async fn import_data(data: ImportData, app: AppHandle) -> Result<()> {

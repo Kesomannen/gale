@@ -1,121 +1,25 @@
-use anyhow::{anyhow, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use log::{info, warn};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager};
-
 use std::{
-    collections::HashMap,
     fs::{self},
     path::PathBuf,
     sync::Mutex,
     time::Duration,
 };
+use tauri::{AppHandle, Emitter, Manager};
 
 use super::ImportData;
 use crate::{
     logger,
     profile::{
         export::{ImportSource, R2Mod},
-        install::download::InstallOptions,
+        install::InstallOptions,
         ModManager,
     },
     thunderstore::Thunderstore,
     util::{self, error::IoResultExt, fs::PathExt},
 };
-
-lazy_static! {
-    static ref ID_TO_R2_DIR: HashMap<&'static str, &'static str> = HashMap::from([
-        ("ror2", "RiskOfRain2"),
-        ("dsp", "DysonSphereProgram"),
-        ("valheim", "Valheim"),
-        ("gtfo", "GTFO"),
-        ("outward", "Outward"),
-        ("talespire", "TaleSpire"),
-        ("h3vr", "H3VR"),
-        ("rounds", "ROUNDS"),
-        ("mechanica", "Mechanica"),
-        ("muck", "Muck"),
-        ("boneworks", "BONEWORKS"),
-        ("lethal-league-blaze", "LethalLeagueBlaze"),
-        ("timberborn", "Timberborn"),
-        ("totally-accurate-battle-simulator", "TABS"),
-        ("nasb", "NASB"),
-        ("inscryption", "Inscryption"),
-        ("starsand", "Starsand"),
-        ("cats-are-liquid", "CatsAreLiquidABP"),
-        ("potion-craft", "PotionCraft"),
-        ("nearly-dead", "NearlyDead"),
-        ("against", "AGAINST"),
-        ("rogue-tower", "RogueTower"),
-        ("hotds", "HOTDS"),
-        ("for-the-king", "ForTheKing"),
-        ("subnautica", "Subnautica"),
-        ("belowzero", "SubnauticaBZ"),
-        ("core-keeper", "CoreKeeper"),
-        ("northstar", "Titanfall2"),
-        ("peglin", "Peglin"),
-        ("v-rising", "VRising"),
-        ("hard-bullet", "HardBullet"),
-        ("20-minutes-till-dawn", "20MinutesTillDawn"),
-        ("green-hell-vr", "GreenHellVR"),
-        ("vtol-vr", "VTOL_VR"),
-        ("backpack-hero", "BackpackHero"),
-        ("stacklands", "Stacklands"),
-        ("enter-the-gungeon", "ETG"),
-        ("ravenfield", "Ravenfield"),
-        ("aloft", "Aloft"),
-        ("cult-of-the-lamb", "COTL"),
-        ("chrono-ark", "ChronoArk"),
-        ("bonelab", "BONELAB"),
-        ("trombone-champ", "TromboneChamp"),
-        ("rogue-genesia", "RogueGenesia"),
-        ("across-the-obelisk", "AcrossTheObelisk"),
-        ("ultrakill", "ULTRAKILL"),
-        ("ultimate-chicken-horse", "UltimateChickenHorse"),
-        ("atrio-the-dark-wild", "AtrioTheDarkWild"),
-        ("brotato", "Brotato"),
-        ("ancient-dungeon-vr", "AncientDungeonVR"),
-        ("rumble", "RUMBLE"),
-        ("dome-keeper", "DomeKeeper"),
-        ("skul-the-hero-slayer", "SkulTheHeroSlayer"),
-        ("sons-of-the-forest", "SonsOfTheForest"),
-        ("the-ouroboros-king", "TheOuroborosKing"),
-        ("wrestling-empire", "WrestlingEmpire"),
-        ("receiver-2", "Receiver2"),
-        ("the-planet-crafter", "ThePlanetCrafter"),
-        ("patch-quest", "PatchQuest"),
-        ("shadows-over-loathing", "ShadowsOverLoathing"),
-        ("west-of-loathing", "WestofLoathing"),
-        ("sun-haven", "SunHaven"),
-        ("wildfrost", "Wildfrost"),
-        ("shadows-of-doubt", "ShadowsofDoubt"),
-        ("garfield-kart-furious-racing", "GarfieldKartFuriousRacing"),
-        ("techtonica", "Techtonica"),
-        ("thronefall", "Thronefall"),
-        (
-            "we-love-katamari-reroll-royal-reverie",
-            "WeLoveKatamariRerollRoyalReverie"
-        ),
-        ("wizard-of-legend", "WizardOfLegend"),
-        ("bomb-rush-cyberfunk", "BombRushCyberfunk"),
-        ("touhou-lost-branch-of-legend", "TouhouLostBranchOfLegend"),
-        ("wizard-with-a-gun", "WizardWithAGun"),
-        ("sunkenland", "Sunkenland"),
-        ("atomicrops", "Atomicrops"),
-        ("erenshor", "Erenshor"),
-        ("last-train-outta-wormtown", "LastTrainOuttaWormtown"),
-        ("dredge", "Dredge"),
-        ("cities-skylines-ii", "CitiesSkylines2"),
-        ("lethal-company", "LethalCompany"),
-        ("meeple-station", "MeepleStation"),
-        ("void-crew", "VoidCrew"),
-        ("sailwind", "Sailwind"),
-        ("voices-of-the-void", "VotV"),
-        ("palworld", "Palworld"),
-        ("plasma", "Plasma"),
-        ("content-warning", "ContentWarning"),
-    ]);
-}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -204,11 +108,7 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
-    let dir_name = ID_TO_R2_DIR
-        .get(manager.active_game.slug.as_str())
-        .ok_or_else(|| anyhow!("current game unsupported"))?;
-
-    path.push(dir_name);
+    path.push(&manager.active_game.r2_dir_name);
     path.push("profiles");
 
     ensure!(path.exists(), "no profiles found");

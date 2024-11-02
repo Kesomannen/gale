@@ -12,11 +12,13 @@ struct GameData {
     popular: bool,
     #[allow(unused)]
     mod_loader: ModLoader,
+    #[serde(default, rename = "subdirs")]
+    extra_sub_dirs: Vec<String>,
     platforms: Platforms,
 }
 
-#[derive(Deserialize, Debug)]
-enum ModLoader {
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub enum ModLoader {
     BepInEx,
 }
 
@@ -40,7 +42,29 @@ pub struct Game {
     pub slug: String,
     pub steam_name: String,
     pub steam_id: u32,
+    pub mod_loader: ModLoader,
+    pub r2_dir_name: String,
+    pub extra_sub_dirs: Vec<String>,
     pub popular: bool,
+}
+
+impl Game {
+    pub fn subdirs(&self) -> impl Iterator<Item = &str> {
+        self.mod_loader
+            .subdirs()
+            .chain(self.extra_sub_dirs.iter().map(String::as_str))
+    }
+}
+
+impl ModLoader {
+    fn subdirs(&self) -> impl Iterator<Item = &str> {
+        match self {
+            ModLoader::BepInEx => {
+                const SUBDIRS: [&str; 5] = ["plugins", "config", "patchers", "monomod", "core"];
+                SUBDIRS.into_iter()
+            }
+        }
+    }
 }
 
 impl From<GameData> for Game {
@@ -49,7 +73,8 @@ impl From<GameData> for Game {
             name,
             slug,
             popular,
-            mod_loader: _,
+            mod_loader,
+            extra_sub_dirs,
             platforms,
         } = value;
 
@@ -65,6 +90,9 @@ impl From<GameData> for Game {
             slug,
             steam_name,
             steam_id,
+            mod_loader,
+            r2_dir_name: Default::default(),
+            extra_sub_dirs,
             popular,
         }
     }

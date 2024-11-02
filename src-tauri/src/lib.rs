@@ -132,7 +132,7 @@ pub fn run() {
             };
 
             if url.starts_with("ror2mm://") {
-                profile::install::download::handle_deep_link(&url, app);
+                profile::install::deep_link::handle(&url, app);
             } else if url.ends_with("r2z") {
                 let app = app.to_owned();
                 tauri::async_runtime::spawn(async move {
