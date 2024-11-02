@@ -19,6 +19,11 @@
 				"description": "Whether the game is grouped under 'Popular communities' on thunderstore.io. Defaults to false.",
 				"type": "boolean"
 			},
+			"modLoader": {
+				"description": "The mod loader to use for the game.",
+				"type": "string",
+				"enum": ["BepInEx"]
+			},
 			"platforms": {
 				"description": "Info about the platforms where the game is available",
 				"type": "object",

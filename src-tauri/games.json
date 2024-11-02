@@ -3,12 +3,14 @@
 		"name": "Risk of Rain 2",
 		"slug": "riskofrain2",
 		"popular": true,
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 632360
 		}
 	},
 	{
 		"name": "Dyson Sphere Program",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1366540
 		}
@@ -16,6 +18,7 @@
 	{
 		"name": "Valheim",
 		"popular": true,
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 892970
 		}
@@ -24,12 +27,14 @@
 		"name": "GTFO",
 		"slug": "gtfo",
 		"popular": true,
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 493520
 		}
 	},
 	{
 		"name": "Outward",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 794260
 		}
@@ -37,38 +42,45 @@
 	{
 		"name": "TaleSpire",
 		"slug": "talespire",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 720620
 		}
 	},
 	{
 		"name": "H3VR",
+		"modLoader": "BepInEx",
 		"slug": "h3vr",
 		"popular": true,
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 450540
 		}
 	},
 	{
 		"name": "ROUNDS",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1557740
 		}
 	},
 	{
 		"name": "Mechanica",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1226990
 		}
 	},
 	{
 		"name": "Muck",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1625450
 		}
 	},
 	{
 		"name": "Lethal League Blaze",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 553310,
@@ -78,6 +90,7 @@
 	},
 	{
 		"name": "Timberborn",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1062090
 		}
@@ -85,6 +98,7 @@
 	{
 		"name": "TABS",
 		"slug": "totally-accurate-battle-simulator",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 508440,
@@ -95,18 +109,21 @@
 	{
 		"name": "Nickelodeon All-Star Brawl",
 		"slug": "nasb",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1414850
 		}
 	},
 	{
 		"name": "Inscryption",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1092790
 		}
 	},
 	{
 		"name": "Starsand",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1380220
 		}
@@ -114,18 +131,21 @@
 	{
 		"name": "Cats are Liquid - A Better Place",
 		"slug": "cats-are-liquid",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1188080
 		}
 	},
 	{
 		"name": "Potion Craft",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1210320
 		}
 	},
 	{
 		"name": "Nearly Dead",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1268900
 		}
@@ -133,6 +153,7 @@
 	{
 		"name": "AGAINST",
 		"slug": "against",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1584840,
@@ -142,6 +163,7 @@
 	},
 	{
 		"name": "Rogue Tower",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1843760
 		}
@@ -149,6 +171,7 @@
 	{
 		"name": "House of the Dying Sun",
 		"slug": "hotds",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 283160,
@@ -158,12 +181,14 @@
 	},
 	{
 		"name": "For The King",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 527230
 		}
 	},
 	{
 		"name": "Subnautica",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 264710
 		}
@@ -171,6 +196,7 @@
 	{
 		"name": "Subnautica: Below Zero",
 		"slug": "belowzero",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 848450,
@@ -180,18 +206,21 @@
 	},
 	{
 		"name": "Core Keeper",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1621690
 		}
 	},
 	{
 		"name": "Peglin",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1296610
 		}
 	},
 	{
 		"name": "V Rising",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1604030,
@@ -201,6 +230,7 @@
 	},
 	{
 		"name": "20 Minutes Till Dawn",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1966900,
@@ -210,36 +240,42 @@
 	},
 	{
 		"name": "Green Hell VR",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1782330
 		}
 	},
 	{
 		"name": "VTOL VR",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 667970
 		}
 	},
 	{
 		"name": "Stacklands",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1948280
 		}
 	},
 	{
 		"name": "Enter the Gungeon",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 311690
 		}
 	},
 	{
 		"name": "Ravenfield",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 636480
 		}
 	},
 	{
 		"name": "Aloft",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 2051980,
@@ -249,24 +285,28 @@
 	},
 	{
 		"name": "Cult of the Lamb",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1313140
 		}
 	},
 	{
 		"name": "Chrono Ark",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1188930
 		}
 	},
 	{
 		"name": "BONELAB",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1592190
 		}
 	},
 	{
 		"name": "Trombone Champ",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1059990,
@@ -277,6 +317,7 @@
 	{
 		"name": "Rogue : Genesia",
 		"slug": "rogue-genesia",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 2067920,
@@ -286,18 +327,21 @@
 	},
 	{
 		"name": "Across the Obelisk",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1385380
 		}
 	},
 	{
 		"name": "ULTRAKILL",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1229490
 		}
 	},
 	{
 		"name": "Ultimate Chicken Horse",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 386940
 		}
@@ -305,6 +349,7 @@
 	{
 		"name": "Atrio: The Dark Wild",
 		"slug": "atrio-the-dark-wild",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1125390,
@@ -314,12 +359,14 @@
 	},
 	{
 		"name": "Ancient Dungeon VR",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1125240
 		}
 	},
 	{
 		"name": "RUMBLE",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 890550
 		}
@@ -327,6 +374,7 @@
 	{
 		"name": "Skul: The Hero Slayer",
 		"slug": "skul-the-hero-slayer",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1147560,
@@ -336,84 +384,98 @@
 	},
 	{
 		"name": "Sons Of The Forest",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1326470
 		}
 	},
 	{
 		"name": "The Ouroboros King",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2096510
 		}
 	},
 	{
 		"name": "Wrestling Empire",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1620340
 		}
 	},
 	{
 		"name": "Receiver 2",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1129310
 		}
 	},
 	{
 		"name": "The Planet Crafter",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1284190
 		}
 	},
 	{
 		"name": "Patch Quest",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1347970
 		}
 	},
 	{
 		"name": "Shadows Over Loathing",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1939160
 		}
 	},
 	{
 		"name": "West of Loathing",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 597220
 		}
 	},
 	{
 		"name": "Sun Haven",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1432860
 		}
 	},
 	{
 		"name": "Wildfrost",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1811990
 		}
 	},
 	{
 		"name": "Shadows of Doubt",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 986130
 		}
 	},
 	{
 		"name": "Garfield Kart - Furious Racing",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1085510
 		}
 	},
 	{
 		"name": "Techtonica",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1457320
 		}
 	},
 	{
 		"name": "Thronefall",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2239150
 		}
@@ -421,6 +483,7 @@
 	{
 		"name": "We Love Katamari REROLL+ Royal Reverie",
 		"slug": "we-love-katamari-reroll-royal-reverie",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1730700,
@@ -430,12 +493,14 @@
 	},
 	{
 		"name": "Wizard of Legend",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 445980
 		}
 	},
 	{
 		"name": "Bomb Rush Cyberfunk",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1353230,
@@ -445,6 +510,7 @@
 	},
 	{
 		"name": "TouhouLostBranchOfLegend",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1140150,
@@ -454,24 +520,28 @@
 	},
 	{
 		"name": "Wizard With A Gun",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1150530
 		}
 	},
 	{
 		"name": "Sunkenland",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2080690
 		}
 	},
 	{
 		"name": "Atomicrops",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 757320
 		}
 	},
 	{
 		"name": "Erenshor",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2382520
 		}
@@ -479,12 +549,14 @@
 	{
 		"name": "Last Train Outta' Wormtown",
 		"slug": "last-train-outta-wormtown",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2318480
 		}
 	},
 	{
 		"name": "DREDGE",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1562430
 		}
@@ -492,6 +564,7 @@
 	{
 		"name": "Cities: Skylines II",
 		"slug": "cities-skylines-ii",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 949230,
@@ -501,6 +574,7 @@
 	},
 	{
 		"name": "Lethal Company",
+		"modLoader": "BepInEx",
 		"popular": true,
 		"platforms": {
 			"steam": 1966720
@@ -508,18 +582,21 @@
 	},
 	{
 		"name": "Meeple Station",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 900010
 		}
 	},
 	{
 		"name": "Void Crew",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1063420
 		}
 	},
 	{
 		"name": "Sailwind",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1764530
 		}
@@ -527,54 +604,63 @@
 	{
 		"name": "Plasma",
 		"platforms": {
+			"modLoader": "BepInEx",
 			"steam": 1409160
 		}
 	},
 	{
 		"name": "Content Warning",
 		"popular": true,
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2881650
 		}
 	},
 	{
 		"name": "Bopl Battle",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1686940
 		}
 	},
 	{
 		"name": "Vertigo 2",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 843390
 		}
 	},
 	{
 		"name": "Against the Storm",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1336490
 		}
 	},
 	{
 		"name": "Lycans",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2596100
 		}
 	},
 	{
 		"name": "Castle Story",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 227860
 		}
 	},
 	{
 		"name": "Panicore",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2695940
 		}
 	},
 	{
 		"name": "Magicraft",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2103140
 		}
@@ -582,6 +668,7 @@
 	{
 		"name": "Another Crab's Treasure",
 		"slug": "another-crabs-treasure",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1887840,
@@ -591,6 +678,7 @@
 	},
 	{
 		"name": "Gladio Mori",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 2908480,
@@ -601,6 +689,7 @@
 	{
 		"name": "Slipstream: Rogue Space",
 		"slug": "slipstream-rogue-space",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 2765860,
@@ -610,24 +699,28 @@
 	},
 	{
 		"name": "Supermarket Together",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2709570
 		}
 	},
 	{
 		"name": "Goodbye Volcano High",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1310330
 		}
 	},
 	{
 		"name": "Nine Sols",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1809540
 		}
 	},
 	{
 		"name": "Back to the Dawn",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1735700,
@@ -637,6 +730,7 @@
 	},
 	{
 		"name": "Below the Stone",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 1170230,
@@ -646,24 +740,28 @@
 	},
 	{
 		"name": "Gloomwood",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1150760
 		}
 	},
 	{
 		"name": "Among Us",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 945360
 		}
 	},
 	{
 		"name": "Betrayal Beach",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2643810
 		}
 	},
 	{
 		"name": "Archus Chroma",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1447350
 		}
@@ -671,6 +769,7 @@
 	{
 		"name": "Deep Rock Galactic: Survivor",
 		"slug": "deep-rock-galactic-survivor",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
 				"id": 2321470,
@@ -681,12 +780,14 @@
 	{
 		"name": "Ale & Tale Tavern",
 		"slug": "ale-and-tale-tavern",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 2683150
 		}
 	},
 	{
 		"name": "Screw Drivers",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1279510
 		}
@@ -694,6 +795,7 @@
 	{
 		"name": "TCG Card Shop Simulator",
 		"slug": "tcg-card-shop-simulator",
+		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 3070070
 		}

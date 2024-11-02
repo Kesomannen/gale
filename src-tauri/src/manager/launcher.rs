@@ -90,12 +90,9 @@ impl ManagerGame {
             .path
             .read_dir()?
             .filter_map(|entry| entry.ok())
-            .filter(|entry| match entry.file_type() {
-                Ok(file_type) => file_type.is_file(),
-                Err(_) => false,
-            })
-            .filter(|name| {
-                let name = name.file_name();
+            .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_file()))
+            .filter(|entry| {
+                let name = entry.file_name();
                 EXCLUDES.iter().all(|exclude| name != *exclude)
             });
 

@@ -13,7 +13,14 @@ struct GameData {
     slug: Option<String>,
     #[serde(default)]
     popular: bool,
+    #[allow(unused)]
+    mod_loader: ModLoader,
     platforms: Platforms,
+}
+
+#[derive(Deserialize, Debug)]
+enum ModLoader {
+    BepInEx,
 }
 
 #[derive(Deserialize, Debug)]
@@ -47,6 +54,7 @@ impl TryFrom<GameData> for Game {
             name,
             slug,
             popular,
+            mod_loader: _,
             platforms,
         } = value;
 
