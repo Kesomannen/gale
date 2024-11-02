@@ -10,7 +10,7 @@ use super::{
     BorrowedMod, Thunderstore,
 };
 
-use crate::manager::{LocalMod, ModManager, Profile};
+use crate::profile::{LocalMod, ModManager, Profile};
 use log::debug;
 
 pub fn setup(app: &AppHandle) {

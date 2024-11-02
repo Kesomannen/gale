@@ -10,7 +10,7 @@ use std::{
 use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use commands::save;
-use exporter::modpack::ModpackArgs;
+use export::modpack::ModpackArgs;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener, Manager};
@@ -36,11 +36,11 @@ use crate::{
 };
 
 pub mod commands;
-pub mod downloader;
-pub mod exporter;
-pub mod importer;
-pub mod installer;
-pub mod launcher;
+pub mod export;
+pub mod import;
+pub mod install;
+pub mod launch;
+pub mod update;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     {
@@ -51,8 +51,8 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         app.manage(Mutex::new(manager));
     }
 
-    importer::setup(app).context("failed to initialize importer")?;
-    downloader::setup(app).context("failed to initialize downloader")?;
+    import::setup(app).context("failed to initialize importer")?;
+    install::setup(app).context("failed to initialize downloader")?;
 
     let handle = app.to_owned();
     app.listen("reorder_mod", move |event| {

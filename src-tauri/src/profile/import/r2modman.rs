@@ -14,9 +14,9 @@ use std::{
 use super::ImportData;
 use crate::{
     logger,
-    manager::{
-        downloader::InstallOptions,
-        exporter::{ImportSource, R2Mod},
+    profile::{
+        export::{ImportSource, R2Mod},
+        install::download::InstallOptions,
         ModManager,
     },
     thunderstore::Thunderstore,

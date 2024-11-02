@@ -15,33 +15,20 @@ use thiserror::Error;
 use crate::{
     logger,
     prefs::Prefs,
-    thunderstore::{BorrowedMod, Thunderstore},
+    profile::{commands::save, ModManager, Profile},
+    thunderstore::{BorrowedMod, ModRef, Thunderstore},
     util::{cmd::StateMutex, error::IoResultExt},
     NetworkClient,
 };
 
-use super::{
-    commands::save,
-    installer::{self},
-    ModManager, ModRef, Profile,
-};
 use chrono::{DateTime, Utc};
 use core::str;
 use itertools::Itertools;
 use uuid::Uuid;
 
-pub mod commands;
-pub mod updater;
-
-pub fn setup(handle: &AppHandle) -> Result<()> {
-    handle.manage(Mutex::new(InstallState::default()));
-
-    Ok(())
-}
-
 #[derive(Default)]
 pub struct InstallState {
-    cancelled: bool,
+    pub cancelled: bool,
 }
 
 fn missing_deps<'a>(
@@ -56,7 +43,7 @@ fn missing_deps<'a>(
         .filter(|dep| !profile.has_mod(dep.package.uuid4))
 }
 
-fn total_download_size(
+pub fn total_download_size(
     borrowed_mod: BorrowedMod<'_>,
     profile: &Profile,
     prefs: &Prefs,
@@ -64,7 +51,7 @@ fn total_download_size(
 ) -> Result<u64> {
     Ok(missing_deps(borrowed_mod, profile, thunderstore)
         .chain(iter::once(borrowed_mod))
-        .filter(|borrowed| match installer::cache_path(*borrowed, prefs) {
+        .filter(|borrowed| match super::cache_path(*borrowed, prefs) {
             Ok(cache_path) => !cache_path.exists(),
             Err(_) => true,
         })
@@ -295,7 +282,7 @@ impl<'a> Installer<'a> {
         let prefs = self.prefs.lock().unwrap();
 
         let borrowed = data.mod_ref.borrow(&thunderstore)?;
-        let path = installer::cache_path(borrowed, &prefs)?;
+        let path = super::cache_path(borrowed, &prefs)?;
 
         self.current_name.clone_from(&borrowed.package.name);
         self.update(InstallTask::Installing);
@@ -306,7 +293,7 @@ impl<'a> Installer<'a> {
             }
         }
 
-        if installer::try_cache_install(data, &path, &mut manager, &thunderstore)? {
+        if super::try_cache_install(data, &path, &mut manager, &thunderstore)? {
             self.completed_bytes += borrowed.version.file_size;
             save(&manager, &prefs)?;
             return Ok(InstallMethod::Cached);
@@ -363,14 +350,14 @@ impl<'a> Installer<'a> {
         let prefs = self.prefs.lock().unwrap();
 
         let borrowed = install.mod_ref.borrow(&thunderstore)?;
-        let cache_path = installer::cache_path(borrowed, &prefs)?;
+        let cache_path = super::cache_path(borrowed, &prefs)?;
 
         fs::create_dir_all(&cache_path).fs_context("create mod cache dir", &cache_path)?;
 
         self.check_cancelled()?;
         self.update(InstallTask::Extracting);
 
-        installer::extract(
+        super::extract(
             Cursor::new(data),
             &borrowed.package.full_name,
             cache_path.clone(),
@@ -384,7 +371,7 @@ impl<'a> Installer<'a> {
             callback(install, &mut manager, &thunderstore);
         }
 
-        installer::try_cache_install(install, &cache_path, &mut manager, &thunderstore)
+        super::try_cache_install(install, &cache_path, &mut manager, &thunderstore)
             .context("failed to install after download")?;
 
         manager

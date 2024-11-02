@@ -1,6 +1,8 @@
 use anyhow::{Context, Result};
+use download::{InstallState, ModInstall};
+use tauri::{AppHandle, Manager};
 
-use super::{downloader::ModInstall, ModManager, ProfileMod};
+use super::{ModManager, ProfileMod};
 use crate::{
     prefs::Prefs,
     thunderstore::{BorrowedMod, Thunderstore},
@@ -16,13 +18,22 @@ use std::{
     fs::{self, File},
     io::{self, Read, Seek},
     path::{Path, PathBuf},
+    sync::Mutex,
     time::Instant,
 };
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
+pub mod commands;
+pub mod download;
 #[cfg(test)]
 mod tests;
+
+pub fn setup(handle: &AppHandle) -> Result<()> {
+    handle.manage(Mutex::new(InstallState::default()));
+
+    Ok(())
+}
 
 fn is_bepinex(full_name: &str) -> bool {
     match full_name {

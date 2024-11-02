@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 
-use crate::{games, manager::ModManager, prefs::Prefs, thunderstore::Thunderstore};
+use crate::{games, prefs::Prefs, profile::ModManager, thunderstore::Thunderstore};
 use serde_json::Value;
 use std::sync::Mutex;
 use tauri::{App, Manager};

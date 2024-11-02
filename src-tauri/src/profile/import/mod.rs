@@ -13,16 +13,20 @@ use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
 use crate::{
-    manager::{commands::save, downloader::InstallOptions, installer, LocalMod, ProfileMod},
     prefs::Prefs,
+    profile::{
+        commands::save,
+        install::{self, download::InstallOptions},
+        LocalMod, ProfileMod,
+    },
     thunderstore::{models::PackageManifest, Thunderstore},
     util::{self, error::IoResultExt, fs::PathExt},
     NetworkClient,
 };
 
 use super::{
-    downloader::{self, ModInstall},
-    exporter::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
+    export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
+    install::download::{self, ModInstall},
     ModManager,
 };
 use tempfile::tempdir;
@@ -71,7 +75,7 @@ impl ImportData {
         source: ImportSource,
         thunderstore: &Thunderstore,
     ) -> Result<Self> {
-        let includes = exporter::find_includes(&path).collect();
+        let includes = export::find_includes(&path).collect();
         let mod_names = mods.iter().map(|r2| r2.full_name()).collect();
         let mods = mods
             .into_iter()
@@ -134,7 +138,7 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         profile.path.clone()
     };
 
-    downloader::install_mods(data.mods, options, app)
+    download::install_mods(data.mods, options, app)
         .await
         .context("error while importing mods")?;
 
@@ -204,7 +208,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     let (mut local_mod, kind) = read_local_mod(&path)?;
 
     if let Some(deps) = &local_mod.dependencies {
-        downloader::install_with_mods(
+        download::install_with_mods(
             |manager, thunderstore| {
                 let profile = manager.active_profile();
 
@@ -249,7 +253,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     match kind {
         LocalModKind::Zip => {
-            installer::install_from_zip(&path, &profile.path, &local_mod.name, &prefs)
+            install::install_from_zip(&path, &profile.path, &local_mod.name, &prefs)
                 .context("failed to install local mod")?;
 
             local_mod.icon = plugin_dir.join("icon.png").exists_or_none();

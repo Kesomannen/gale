@@ -8,7 +8,7 @@ use std::{
 };
 use uuid::Uuid;
 
-use super::{downloader::ModInstall, ModManager, Profile, Result};
+use super::{install::download::ModInstall, ModManager, Profile, Result};
 
 use crate::{
     thunderstore::{models::LegacyProfileCreateResponse, ModRef, Thunderstore},
@@ -17,6 +17,7 @@ use crate::{
 use walkdir::WalkDir;
 use zip::ZipWriter;
 
+pub mod changelog;
 pub mod commands;
 pub mod modpack;
 

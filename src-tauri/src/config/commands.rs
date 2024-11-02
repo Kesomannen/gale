@@ -2,7 +2,7 @@ use anyhow::Context;
 
 use super::{File, LoadFileResultExt};
 use crate::{
-    manager::ModManager,
+    profile::ModManager,
     util::cmd::{Result, StateMutex},
 };
 use serde::Serialize;

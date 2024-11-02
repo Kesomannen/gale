@@ -14,8 +14,8 @@ mod cli;
 mod config;
 mod games;
 mod logger;
-mod manager;
 mod prefs;
+mod profile;
 mod thunderstore;
 mod util;
 
@@ -36,7 +36,7 @@ fn setup(app: &AppHandle) -> anyhow::Result<()> {
     app.manage(NetworkClient::create()?);
 
     prefs::setup(app).context("Failed to read settings")?;
-    manager::setup(app).context("Failed to initialize mod manager")?;
+    profile::setup(app).context("Failed to initialize mod manager")?;
     thunderstore::setup(app);
 
     Ok(())
@@ -58,52 +58,52 @@ pub fn run() {
             prefs::commands::set_prefs,
             prefs::commands::is_first_run,
             prefs::commands::zoom_window,
-            manager::commands::get_game_info,
-            manager::commands::favorite_game,
-            manager::commands::set_active_game,
-            manager::commands::get_profile_info,
-            manager::commands::set_active_profile,
-            manager::commands::is_mod_installed,
-            manager::commands::query_profile,
-            manager::commands::get_dependants,
-            manager::commands::create_profile,
-            manager::commands::delete_profile,
-            manager::commands::rename_profile,
-            manager::commands::duplicate_profile,
-            manager::commands::remove_mod,
-            manager::commands::force_remove_mods,
-            manager::commands::toggle_mod,
-            manager::commands::force_toggle_mods,
-            manager::commands::set_all_mods_state,
-            manager::commands::remove_disabled_mods,
-            manager::commands::open_profile_dir,
-            manager::commands::open_plugin_dir,
-            manager::commands::open_bepinex_log,
-            manager::launcher::commands::launch_game,
-            manager::launcher::commands::get_launch_args,
-            manager::launcher::commands::open_game_dir,
-            manager::downloader::commands::install_mod,
-            manager::downloader::commands::cancel_install,
-            manager::downloader::commands::clear_download_cache,
-            manager::downloader::commands::get_download_size,
-            manager::downloader::updater::commands::change_mod_version,
-            manager::downloader::updater::commands::update_mods,
-            manager::downloader::updater::commands::ignore_update,
-            manager::importer::commands::import_data,
-            manager::importer::commands::import_code,
-            manager::importer::commands::import_file,
-            manager::importer::commands::import_local_mod,
-            manager::importer::commands::get_r2modman_info,
-            manager::importer::commands::import_r2modman,
-            manager::exporter::commands::export_code,
-            manager::exporter::commands::export_file,
-            manager::exporter::commands::export_pack,
-            manager::exporter::commands::upload_pack,
-            manager::exporter::commands::get_pack_args,
-            manager::exporter::commands::set_pack_args,
-            manager::exporter::commands::generate_changelog,
-            manager::exporter::commands::copy_dependency_strings,
-            manager::exporter::commands::copy_debug_info,
+            profile::commands::get_game_info,
+            profile::commands::favorite_game,
+            profile::commands::set_active_game,
+            profile::commands::get_profile_info,
+            profile::commands::set_active_profile,
+            profile::commands::is_mod_installed,
+            profile::commands::query_profile,
+            profile::commands::get_dependants,
+            profile::commands::create_profile,
+            profile::commands::delete_profile,
+            profile::commands::rename_profile,
+            profile::commands::duplicate_profile,
+            profile::commands::remove_mod,
+            profile::commands::force_remove_mods,
+            profile::commands::toggle_mod,
+            profile::commands::force_toggle_mods,
+            profile::commands::set_all_mods_state,
+            profile::commands::remove_disabled_mods,
+            profile::commands::open_profile_dir,
+            profile::commands::open_plugin_dir,
+            profile::commands::open_bepinex_log,
+            profile::launch::commands::launch_game,
+            profile::launch::commands::get_launch_args,
+            profile::launch::commands::open_game_dir,
+            profile::install::commands::install_mod,
+            profile::install::commands::cancel_install,
+            profile::install::commands::clear_download_cache,
+            profile::install::commands::get_download_size,
+            profile::update::commands::change_mod_version,
+            profile::update::commands::update_mods,
+            profile::update::commands::ignore_update,
+            profile::import::commands::import_data,
+            profile::import::commands::import_code,
+            profile::import::commands::import_file,
+            profile::import::commands::import_local_mod,
+            profile::import::commands::get_r2modman_info,
+            profile::import::commands::import_r2modman,
+            profile::export::commands::export_code,
+            profile::export::commands::export_file,
+            profile::export::commands::export_pack,
+            profile::export::commands::upload_pack,
+            profile::export::commands::get_pack_args,
+            profile::export::commands::set_pack_args,
+            profile::export::commands::generate_changelog,
+            profile::export::commands::copy_dependency_strings,
+            profile::export::commands::copy_debug_info,
             config::commands::get_config_files,
             config::commands::set_config_entry,
             config::commands::reset_config_entry,
@@ -132,11 +132,11 @@ pub fn run() {
             };
 
             if url.starts_with("ror2mm://") {
-                manager::downloader::handle_deep_link(&url, app);
+                profile::install::download::handle_deep_link(&url, app);
             } else if url.ends_with("r2z") {
                 let app = app.to_owned();
                 tauri::async_runtime::spawn(async move {
-                    manager::importer::import_file_from_link(url, &app)
+                    profile::import::import_file_from_link(url, &app)
                         .await
                         .unwrap_or_else(|err| {
                             logger::log_js_err("Failed to import profile file", &err, &app);

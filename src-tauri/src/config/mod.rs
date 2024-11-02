@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use walkdir::WalkDir;
 
-use crate::manager::Profile;
+use crate::profile::Profile;
 
 pub mod commands;
 pub mod de;

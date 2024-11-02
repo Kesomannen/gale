@@ -1,6 +1,6 @@
 use crate::{
     logger,
-    manager::ModManager,
+    profile::ModManager,
     util::cmd::{Result, StateMutex},
 };
 

@@ -16,8 +16,8 @@ use uuid::Uuid;
 use crate::{
     games::Game,
     logger,
-    manager::ModManager,
     prefs::Prefs,
+    profile::ModManager,
     util::{self, fs::JsonStyle},
     NetworkClient,
 };

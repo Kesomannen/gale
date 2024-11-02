@@ -3,9 +3,8 @@ use std::sync::Mutex;
 use tauri::Manager;
 use uuid::Uuid;
 
-use super::{install_with_deps, InstallOptions, ModInstall};
 use crate::{
-    manager::{ModManager, Profile, Result},
+    profile::{install::download::install_with_deps, ModManager, Profile, Result},
     thunderstore::{
         models::{PackageListing, PackageVersion},
         ModRef, Thunderstore,
@@ -13,6 +12,8 @@ use crate::{
 };
 use chrono::{DateTime, Utc};
 use log::info;
+
+use super::install::download::{self, InstallOptions, ModInstall};
 
 pub mod commands;
 
@@ -98,7 +99,7 @@ pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<(
             .with_index(index)
     };
 
-    super::install_with_deps(
+    download::install_with_deps(
         vec![install],
         InstallOptions::default().can_cancel(false),
         false,

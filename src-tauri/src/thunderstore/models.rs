@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use crate::{games::Game, manager::Profile};
+use crate::{games::Game, profile::Profile};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

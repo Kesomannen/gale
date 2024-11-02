@@ -14,7 +14,7 @@ use tauri_plugin_fs::FsExt;
 
 use crate::{
     logger,
-    manager::{launcher::LaunchMode, ModManager},
+    profile::{launch::LaunchMode, ModManager},
     util::{
         self,
         fs::{JsonStyle, Overwrite, PathExt},

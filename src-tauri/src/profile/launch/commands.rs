@@ -1,6 +1,6 @@
 use crate::{
-    manager::ModManager,
     prefs::Prefs,
+    profile::ModManager,
     util::cmd::{Result, StateMutex},
 };
 use anyhow::Context;

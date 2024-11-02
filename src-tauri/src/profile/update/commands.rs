@@ -1,6 +1,6 @@
 use crate::{
-    manager::{commands::save, ModManager},
     prefs::Prefs,
+    profile::{commands::save, ModManager},
     thunderstore::ModRef,
     util::cmd::{Result, StateMutex},
 };
