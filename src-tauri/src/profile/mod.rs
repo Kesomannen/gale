@@ -1,6 +1,5 @@
 use std::{
     borrow::Cow,
-    cmp::Ordering,
     collections::{HashMap, HashSet},
     fs,
     path::{Path, PathBuf},
@@ -22,12 +21,7 @@ use crate::{
     games::{self, Game},
     logger,
     prefs::Prefs,
-    thunderstore::{
-        self,
-        models::{FrontendProfileMod, IntoFrontendMod},
-        query::{self, QueryModsArgs, Queryable, SortBy, SortOrder},
-        BorrowedMod, ModRef, Thunderstore,
-    },
+    thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::{
         self,
         error::IoResultExt,
@@ -41,6 +35,11 @@ pub mod import;
 pub mod install;
 pub mod launch;
 pub mod update;
+
+mod query;
+
+mod local;
+pub use local::*;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     {
@@ -64,17 +63,23 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
+/// The main struct of the app.
 pub struct ModManager {
+    /// Holds all the currently managed games, indexed by their slug.
+    ///
+    /// Note that this only contains entries for `Game`s which the user has selected at least once.
     pub games: HashMap<&'static String, ManagerGame>,
     pub active_game: &'static Game,
 }
 
+/// Persistent data for ModManager
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ManagerSaveData {
     active_game: String,
 }
 
+/// Stores information and profiles about one game.
 pub struct ManagerGame {
     pub game: &'static Game,
     pub profiles: Vec<Profile>,
@@ -83,6 +88,7 @@ pub struct ManagerGame {
     pub active_profile_index: usize,
 }
 
+/// Persistent data for ManagerGame
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ManagerGameSaveData {
@@ -90,123 +96,118 @@ struct ManagerGameSaveData {
     active_profile_index: usize,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct LocalMod {
+pub struct Profile {
     pub name: String,
-    pub icon: Option<PathBuf>,
-    pub author: Option<String>,
-    pub description: Option<String>,
-    pub version: Option<semver::Version>,
-    #[serde(default)]
-    pub file_size: u64,
-    pub dependencies: Option<Vec<String>>,
-    pub uuid: Uuid,
+    pub path: PathBuf,
+    pub mods: Vec<ProfileMod>,
+    pub ignored_updates: HashSet<Uuid>,
+    pub config: Vec<config::LoadFileResult>,
+    pub linked_config: HashMap<Uuid, PathBuf>,
+    pub modpack: Option<ModpackArgs>,
 }
 
-impl LocalMod {
-    fn full_name(&self) -> Cow<'_, str> {
-        match (&self.author, &self.version) {
-            (None, None) => Cow::Borrowed(&self.name),
-            (None, Some(vers)) => format!("{}-{}", self.name, vers).into(),
-            (Some(author), None) => format!("{}-{}", author, self.name).into(),
-            (Some(author), Some(vers)) => format!("{}-{}-{}", author, self.name, vers).into(),
-        }
-    }
+/// Persistent data for Profile
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProfileSaveData {
+    mods: Vec<ProfileMod>,
+
+    #[serde(default)]
+    modpack: Option<ModpackArgs>,
+
+    #[serde(default)]
+    ignored_updates: HashSet<Uuid>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileMod {
-    #[serde(default = "default_true")]
     pub enabled: bool,
+
     #[serde(default = "Utc::now")]
     pub install_time: DateTime<Utc>,
+
     #[serde(flatten)]
     pub kind: ProfileModKind,
-}
-
-impl ProfileMod {
-    fn new(install_time: DateTime<Utc>, kind: ProfileModKind) -> Self {
-        Self {
-            kind,
-            install_time,
-            enabled: true,
-        }
-    }
-
-    fn now(kind: ProfileModKind) -> Self {
-        Self::new(Utc::now(), kind)
-    }
-
-    fn local_now(data: LocalMod) -> Self {
-        Self::now(ProfileModKind::Local(Box::new(data)))
-    }
-
-    pub fn uuid(&self) -> Uuid {
-        self.kind.uuid()
-    }
-
-    fn as_remote(&self) -> Option<(&ModRef, &str, bool)> {
-        self.kind
-            .as_remote()
-            .map(|remote| (remote.0, remote.1, self.enabled))
-    }
-
-    fn as_local(&self) -> Option<(&LocalMod, bool)> {
-        self.kind.as_local().map(|local| (local, self.enabled))
-    }
-
-    fn queryable<'a>(
-        &'a self,
-        index: usize,
-        thunderstore: &'a Thunderstore,
-    ) -> Result<QueryableProfileMod<'a>> {
-        let kind = match &self.kind {
-            ProfileModKind::Local(local) => QueryableProfileModKind::Local(local),
-            ProfileModKind::Remote { mod_ref, .. } => {
-                let borrow = mod_ref.borrow(thunderstore)?;
-                QueryableProfileModKind::Remote(borrow)
-            }
-        };
-
-        Ok(QueryableProfileMod {
-            kind,
-            index,
-            install_time: self.install_time,
-            enabled: self.enabled,
-        })
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum ProfileModKind {
-    Local(Box<LocalMod>), // box to decrease size of enum, since this variant is rare and much larger
-    #[serde(rename_all = "camelCase")]
-    Remote {
-        #[serde(default)] // for backwards compatibility
-        full_name: String,
-        #[serde(flatten)]
-        mod_ref: ModRef,
-    },
+    Thunderstore(ThunderstoreMod),
+    // Box to decrease size of enum, since this variant is rare and much larger
+    Local(Box<LocalMod>),
 }
 
-fn default_true() -> bool {
-    true
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ThunderstoreMod {
+    #[serde(alias = "fullName")]
+    ident: VersionIdent,
+
+    #[serde(flatten)]
+    id: ModId,
 }
 
-impl ProfileModKind {
-    pub fn uuid(&self) -> Uuid {
-        match self {
-            ProfileModKind::Local(local_mod) => local_mod.uuid,
-            ProfileModKind::Remote { mod_ref, .. } => mod_ref.package_uuid,
+impl ProfileMod {
+    fn new(kind: ProfileModKind) -> Self {
+        Self {
+            kind,
+            install_time: Utc::now(),
+            enabled: true,
         }
     }
 
-    pub fn as_remote(&self) -> Option<(&ModRef, &str)> {
+    fn new_at(install_time: DateTime<Utc>, kind: ProfileModKind) -> Self {
+        Self {
+            install_time,
+            ..Self::new(kind)
+        }
+    }
+
+    fn new_local(local_mod: LocalMod) -> Self {
+        Self::new(ProfileModKind::Local(Box::new(local_mod)))
+    }
+
+    /// See [`ProfileModKind::uuid`]
+    pub fn uuid(&self) -> Uuid {
+        self.kind.uuid()
+    }
+
+    pub fn ident(&self) -> Cow<'_, VersionIdent> {
+        self.kind.ident()
+    }
+
+    fn as_thunderstore(&self) -> Option<(&ThunderstoreMod, bool)> {
+        self.kind
+            .as_thunderstore()
+            .map(|remote| (remote, self.enabled))
+    }
+
+    fn as_local(&self) -> Option<(&LocalMod, bool)> {
+        self.kind.as_local().map(|local| (local, self.enabled))
+    }
+}
+
+impl ProfileModKind {
+    /// A unique ID for this mod in its profile - **not** unique across profiles.
+    pub fn uuid(&self) -> Uuid {
         match self {
-            ProfileModKind::Remote { mod_ref, full_name } => Some((mod_ref, full_name)),
+            ProfileModKind::Local(local_mod) => local_mod.uuid,
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod.id.package,
+        }
+    }
+
+    pub fn ident(&self) -> Cow<'_, VersionIdent> {
+        match self {
+            ProfileModKind::Thunderstore(ts_mod) => Cow::Borrowed(&ts_mod.ident),
+            ProfileModKind::Local(local_mod) => Cow::Owned(local_mod.ident()),
+        }
+    }
+
+    pub fn as_thunderstore(&self) -> Option<&ThunderstoreMod> {
+        match self {
+            ProfileModKind::Thunderstore(ts_mod) => Some(ts_mod),
             _ => None,
         }
     }
@@ -218,44 +219,15 @@ impl ProfileModKind {
         }
     }
 
-    pub fn name(&self) -> &str {
-        match self {
-            ProfileModKind::Local(local) => &local.name,
-            ProfileModKind::Remote { full_name, .. } => {
-                match thunderstore::parse_full_name(full_name) {
-                    Some((_, name, _)) => name,
-                    None => full_name,
-                }
-            }
-        }
-    }
-
-    pub fn dir_name(&self) -> Cow<'_, str> {
-        match self {
-            ProfileModKind::Local(local) => Cow::Borrowed(&local.name),
-            ProfileModKind::Remote { full_name, .. } => {
-                match thunderstore::parse_full_name(full_name) {
-                    Some((author, name, _)) => format!("{}-{}", author, name).into(),
-                    None => full_name.into(),
-                }
-            }
-        }
-    }
-
-    pub fn full_name(&self) -> Cow<'_, str> {
-        match self {
-            ProfileModKind::Local(local) => local.full_name(),
-            ProfileModKind::Remote { full_name, .. } => full_name.into(),
-        }
-    }
-
-    pub fn dependencies<'a>(&'a self, thunderstore: &'a Thunderstore) -> Vec<BorrowedMod<'a>> {
+    /// Finds **all** dependencies of this mod.
+    pub fn deps<'a>(&'a self, thunderstore: &'a Thunderstore) -> Vec<BorrowedMod<'a>> {
         let deps = match self {
             ProfileModKind::Local(local_mod) => local_mod.dependencies.as_ref(),
-            ProfileModKind::Remote { mod_ref, .. } => mod_ref
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod
+                .id
                 .borrow(thunderstore)
-                .ok()
-                .map(|borrowed| &borrowed.version.dependencies),
+                .map(|borrowed| &borrowed.version.dependencies)
+                .ok(),
         };
 
         match deps {
@@ -263,90 +235,6 @@ impl ProfileModKind {
             None => Vec::new(),
         }
     }
-}
-
-struct QueryableProfileMod<'a> {
-    enabled: bool,
-    index: usize,
-    install_time: DateTime<Utc>,
-    kind: QueryableProfileModKind<'a>,
-}
-
-impl<'a> Queryable for QueryableProfileMod<'a> {
-    fn full_name(&self) -> &str {
-        use QueryableProfileModKind as Kind;
-
-        match &self.kind {
-            Kind::Local(local) => &local.name,
-            Kind::Remote(remote) => &remote.package.full_name,
-        }
-    }
-
-    fn matches(&self, args: &QueryModsArgs) -> bool {
-        use QueryableProfileModKind as Kind;
-
-        if !args.include_disabled && !self.enabled {
-            return false;
-        }
-
-        if !args.include_enabled && self.enabled {
-            return false;
-        }
-
-        match &self.kind {
-            Kind::Local(local) => local.matches(args),
-            Kind::Remote(remote) => remote.matches(args),
-        }
-    }
-
-    fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
-        use QueryableProfileModKind as Kind;
-
-        let overridden = match args.sort_by {
-            SortBy::InstallDate => Some(self.install_time.cmp(&other.install_time)),
-            SortBy::Custom => Some(self.index.cmp(&other.index)),
-            _ => None,
-        };
-
-        if let Some(order) = overridden {
-            return match args.sort_order {
-                SortOrder::Ascending => order,
-                SortOrder::Descending => order.reverse(),
-            };
-        }
-
-        match (&self.kind, &other.kind) {
-            (Kind::Remote(a), Kind::Remote(b)) => a.cmp(b, args),
-            (Kind::Local(a), Kind::Local(b)) => a.cmp(b, args),
-            (Kind::Local(_), _) => Ordering::Less,
-            (_, Kind::Local(_)) => Ordering::Greater,
-        }
-    }
-}
-
-enum QueryableProfileModKind<'a> {
-    Local(&'a LocalMod),
-    Remote(BorrowedMod<'a>),
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProfileManifest {
-    mods: Vec<ProfileMod>,
-    #[serde(default)]
-    modpack: Option<ModpackArgs>,
-    #[serde(default)]
-    ignored_updates: HashSet<Uuid>,
-}
-
-pub struct Profile {
-    pub name: String,
-    pub path: PathBuf,
-    pub mods: Vec<ProfileMod>,
-    pub ignored_updates: HashSet<Uuid>,
-    pub config: Vec<config::LoadFileResult>,
-    pub linked_config: HashMap<Uuid, PathBuf>,
-    pub modpack: Option<ModpackArgs>,
 }
 
 impl Profile {
@@ -383,63 +271,25 @@ impl Profile {
         self.get_mod(uuid).is_ok()
     }
 
-    fn remote_mods(&self) -> impl Iterator<Item = (&ModRef, &str, bool)> {
-        self.mods.iter().filter_map(ProfileMod::as_remote)
+    fn thunderstore_mods(&self) -> impl Iterator<Item = (&ThunderstoreMod, bool)> {
+        self.mods.iter().filter_map(ProfileMod::as_thunderstore)
     }
 
     fn local_mods(&self) -> impl Iterator<Item = (&LocalMod, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_local)
     }
 
-    fn manifest(&self) -> ProfileManifest {
-        ProfileManifest {
+    fn save_data(&self) -> ProfileSaveData {
+        ProfileSaveData {
             modpack: self.modpack.clone(),
             mods: self.mods.clone(),
             ignored_updates: self.ignored_updates.clone(),
         }
     }
 
-    fn query_mods(
-        &self,
-        args: &QueryModsArgs,
-        thunderstore: &Thunderstore,
-    ) -> (Vec<FrontendProfileMod>, Vec<Dependant>) {
-        let mut unknown = Vec::new();
-
-        let queryables = self
-            .mods
-            .iter()
-            .enumerate()
-            .filter_map(
-                |(index, profile_mod)| match profile_mod.queryable(index, thunderstore) {
-                    Ok(queryable) => Some(queryable),
-                    Err(_) => {
-                        unknown.push(Dependant::from(profile_mod));
-                        None
-                    }
-                },
-            );
-
-        let found = query::query_mods(args, queryables)
-            .map(|queryable| {
-                let (data, uuid) = match queryable.kind {
-                    QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
-                    QueryableProfileModKind::Remote(remote) => {
-                        (remote.into_frontend(self), remote.package.uuid4)
-                    }
-                };
-
-                FrontendProfileMod {
-                    data,
-                    enabled: queryable.enabled,
-                    config_file: self.linked_config.get(&uuid).cloned(),
-                }
-            })
-            .collect();
-
-        (found, unknown)
-    }
-
+    /// Finds the dependants of a mod in this profile.
+    ///
+    /// This is an expensive operation, use with care!
     fn dependants<'a>(
         &'a self,
         uuid: Uuid,
@@ -451,7 +301,7 @@ impl Profile {
             .filter(move |other| {
                 other
                     .kind
-                    .dependencies(thunderstore)
+                    .deps(thunderstore)
                     .iter()
                     .any(|dep| dep.package.uuid4 == uuid)
             })
@@ -474,7 +324,7 @@ impl Profile {
             return Ok(None);
         }
 
-        let manifest: ProfileManifest = util::fs::read_json(&path).with_context(|| {
+        let manifest: ProfileSaveData = util::fs::read_json(&path).with_context(|| {
             format!(
                 "failed to read profile manifest for '{}'",
                 path.parent()
@@ -504,14 +354,14 @@ impl Profile {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Dependant {
-    pub full_name: String,
+    pub full_name: VersionIdent,
     pub uuid: Uuid,
 }
 
 impl From<BorrowedMod<'_>> for Dependant {
     fn from(value: BorrowedMod) -> Self {
         Self {
-            full_name: value.version.full_name.clone(),
+            full_name: value.version.ident.clone(),
             uuid: value.package.uuid4,
         }
     }
@@ -520,7 +370,7 @@ impl From<BorrowedMod<'_>> for Dependant {
 impl From<&ProfileMod> for Dependant {
     fn from(value: &ProfileMod) -> Self {
         Self {
-            full_name: value.kind.full_name().into_owned(),
+            full_name: value.ident().into_owned(),
             uuid: value.uuid(),
         }
     }
@@ -646,10 +496,12 @@ impl Profile {
 
                 match &profile_mod.kind {
                     ProfileModKind::Local(_) => true,
-                    ProfileModKind::Remote { mod_ref, .. } => match mod_ref.borrow(thunderstore) {
-                        Ok(borrowed) => !borrowed.package.is_modpack(), // ignore modpacks
-                        Err(_) => false,
-                    },
+                    ProfileModKind::Thunderstore(ts_mod) => {
+                        match ts_mod.id.borrow(thunderstore) {
+                            Ok(borrowed) => !borrowed.package.is_modpack(), // ignore modpacks
+                            Err(_) => false,
+                        }
+                    }
                 }
             })
             .map_into()
@@ -666,7 +518,7 @@ impl Profile {
 
         let disabled_deps = profile_mod
             .kind
-            .dependencies(thunderstore)
+            .deps(thunderstore)
             .into_iter()
             .filter(|dep| {
                 self.get_mod(dep.package.uuid4)
@@ -686,11 +538,12 @@ impl Profile {
         F: Fn(&Path) -> Result<()>,
     {
         let mut path = self.path.join("BepInEx");
-        let dir_name = profile_mod.dir_name();
+
+        let ident = profile_mod.ident();
 
         for dir in ["core", "patchers", "plugins"].into_iter() {
             path.push(dir);
-            path.push(&*dir_name);
+            path.push(ident.full_name());
 
             if path.exists() {
                 scan_dir(&path)?;
@@ -827,8 +680,8 @@ impl ManagerGame {
     ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
         self.profiles.iter().flat_map(|profile| {
             profile
-                .remote_mods()
-                .map(|(mod_ref, _, _)| mod_ref.borrow(thunderstore))
+                .thunderstore_mods()
+                .map(|(ts_mod, _)| ts_mod.id.borrow(thunderstore))
         })
     }
 
@@ -976,8 +829,8 @@ impl ModManager {
             .iter()
             .flat_map(|profile| {
                 profile
-                    .remote_mods()
-                    .map(|(mod_ref, _, _)| mod_ref.borrow(thunderstore))
+                    .thunderstore_mods()
+                    .map(|(ts_mod, _)| ts_mod.id.borrow(thunderstore))
             })
             .filter_map(Result::ok)
             .map(|borrowed| borrowed.package)
@@ -1023,7 +876,7 @@ impl ModManager {
                 path.push(&profile.name);
                 path.push("profile.json");
 
-                util::fs::write_json(&path, &profile.manifest(), JsonStyle::Pretty)?;
+                util::fs::write_json(&path, &profile.save_data(), JsonStyle::Pretty)?;
 
                 path.pop();
                 path.pop();
@@ -1034,28 +887,6 @@ impl ModManager {
         }
 
         Ok(())
-    }
-
-    // ProfileModKind::Remote didn't use to have a full_name field
-    // so for backwards compatibility we need to add it to all remote mods
-    //
-    // REMOVE IN THE FUTURE!
-    pub fn fill_profile_mod_names(&mut self, thunderstore: &Thunderstore) {
-        for game in self.games.values_mut() {
-            for profile in &mut game.profiles {
-                for profile_mod in &mut profile.mods {
-                    if let ProfileModKind::Remote { mod_ref, full_name } = &mut profile_mod.kind {
-                        if full_name.is_empty()
-                            || full_name.chars().filter(|c| *c == '-').count() < 3
-                        {
-                            if let Ok(borrowed) = mod_ref.borrow(thunderstore) {
-                                full_name.clone_from(&borrowed.version.full_name);
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 

@@ -7,7 +7,7 @@ use crate::{
     profile::{install::download::install_with_deps, ModManager, Profile, Result},
     thunderstore::{
         models::{PackageListing, PackageVersion},
-        ModRef, Thunderstore,
+        ModId, Thunderstore,
     },
 };
 use chrono::{DateTime, Utc};
@@ -28,9 +28,9 @@ pub struct AvailableUpdate<'a> {
 
 impl From<AvailableUpdate<'_>> for ModInstall {
     fn from(value: AvailableUpdate<'_>) -> Self {
-        let latest_mod_ref = ModRef {
-            package_uuid: value.package.uuid4,
-            version_uuid: value.latest.uuid4,
+        let latest_mod_ref = ModId {
+            package: value.package.uuid4,
+            version: value.latest.uuid4,
         };
 
         ModInstall::new(latest_mod_ref)
@@ -51,12 +51,12 @@ impl Profile {
         let index = self.index_of(uuid)?;
 
         let profile_mod = &self.mods[index];
-        let mod_ref = match profile_mod.as_remote() {
-            Some(x) => x.0,
+        let ts_mod = match profile_mod.as_thunderstore() {
+            Some((ts_mod, _)) => ts_mod,
             None => return Ok(None), // local mods can't be updated
         };
 
-        let current = mod_ref.borrow(thunderstore)?.version;
+        let current = ts_mod.id.borrow(thunderstore)?.version;
         let package = thunderstore.get_package(uuid)?;
 
         let latest = package
@@ -64,7 +64,7 @@ impl Profile {
             .first()
             .expect("package should have at least one version");
 
-        if current.version_number >= latest.version_number {
+        if current.parsed_version() >= latest.parsed_version() {
             return Ok(None);
         }
 
@@ -83,16 +83,16 @@ impl Profile {
     }
 }
 
-pub async fn change_version(mod_ref: ModRef, app: &tauri::AppHandle) -> Result<()> {
+pub async fn change_version(mod_ref: ModId, app: &tauri::AppHandle) -> Result<()> {
     let install = {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
 
         let profile = manager.active_profile_mut();
-        let index = profile.index_of(mod_ref.package_uuid)?;
+        let index = profile.index_of(mod_ref.package)?;
         let enabled = profile.mods[index].enabled;
 
-        profile.force_remove_mod(mod_ref.package_uuid)?;
+        profile.force_remove_mod(mod_ref.package)?;
 
         ModInstall::new(mod_ref)
             .with_state(enabled)

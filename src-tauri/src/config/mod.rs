@@ -209,8 +209,8 @@ impl Profile {
 
     fn link_config(&mut self) {
         for profile_mod in &self.mods {
-            let name = profile_mod.kind.name();
-            let file = self.config.iter().find(|file| matches(file, name));
+            let ident = profile_mod.ident();
+            let file = self.config.iter().find(|file| matches(file, ident.name()));
 
             if let Some(file) = file {
                 self.linked_config

@@ -2,10 +2,10 @@ use anyhow::{Context, Result};
 use download::{InstallState, ModInstall};
 use tauri::{AppHandle, Manager};
 
-use super::{ModManager, ProfileMod};
+use super::{ModManager, ProfileMod, ProfileModKind, ThunderstoreMod};
 use crate::{
     prefs::Prefs,
-    thunderstore::{BorrowedMod, Thunderstore},
+    thunderstore::{Thunderstore, VersionIdent},
     util::{self},
 };
 use chrono::Utc;
@@ -58,11 +58,11 @@ fn is_bepinex(full_name: &str) -> bool {
     }
 }
 
-pub fn cache_path(borrowed_mod: BorrowedMod, prefs: &Prefs) -> Result<PathBuf> {
+pub fn cache_path(ident: &VersionIdent, prefs: &Prefs) -> Result<PathBuf> {
     let mut path = prefs.cache_dir();
 
-    path.push(&borrowed_mod.package.full_name);
-    path.push(borrowed_mod.version.version_number.to_string());
+    path.push(ident.full_name());
+    path.push(ident.version());
 
     Ok(path)
 }
@@ -90,8 +90,8 @@ pub fn soft_clear_cache(
         .installed_mods(thunderstore)
         .map_ok(|borrowed| {
             (
-                &borrowed.package.full_name,
-                borrowed.version.version_number.to_string(),
+                borrowed.package.ident.as_str(),
+                borrowed.version.ident.version(),
             )
         })
         .collect::<Result<HashSet<_>>>()
@@ -125,7 +125,7 @@ pub fn soft_clear_cache(
             let path = entry.path();
             let version = util::fs::file_name_owned(&path);
 
-            if installed_mods.contains(&(&package_name, version)) {
+            if installed_mods.contains(&(&package_name, &version)) {
                 // package is installed, skip
                 continue;
             }
@@ -152,14 +152,13 @@ pub fn try_cache_install(
             install(path, &profile.path, to_install.overwrite)?;
 
             let install_time = to_install.install_time.unwrap_or(Utc::now());
-            let profile_mod = ProfileMod {
+            let profile_mod = ProfileMod::new_at(
                 install_time,
-                enabled: true, // we switch it off later if needed
-                kind: super::ProfileModKind::Remote {
-                    mod_ref: to_install.mod_ref.clone(),
-                    full_name: borrowed.version.full_name.clone(),
-                },
-            };
+                ProfileModKind::Thunderstore(ThunderstoreMod {
+                    ident: borrowed.version.ident.clone(),
+                    id: borrowed.into(),
+                }),
+            );
 
             match to_install.index {
                 Some(index) if index < profile.mods.len() => {

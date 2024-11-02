@@ -8,16 +8,17 @@ use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 use log::warn;
 
-use super::ModpackArgs;
 use crate::{
     games::Game,
-    manager::Profile,
-    thunderstore::{models::PackageListing, BorrowedMod, ModRef, Thunderstore},
+    profile::Profile,
+    thunderstore::{models::PackageListing, BorrowedMod, ModId, Thunderstore},
     util::{
         self,
         fs::{JsonStyle, PathExt},
     },
 };
+
+use super::modpack::ModpackArgs;
 
 pub fn generate_all(
     args: &ModpackArgs,
@@ -34,7 +35,7 @@ pub fn generate_all(
         .find_snapshots()?
         .filter(|(_, version)| *version < current_version)
         .map(|(entry, version)| {
-            let mods = util::fs::read_json::<Vec<ModRef>>(entry.path())
+            let mods = util::fs::read_json::<Vec<ModId>>(entry.path())
                 .with_context(|| format!("failed to read snapshot for version {}", version))?;
 
             let mods = borrow_mods(mods, thunderstore);
@@ -107,7 +108,7 @@ pub fn generate_latest(
         .find_snapshots()?
         .filter(|(_, v)| *v < version)
         .max_by(|(_, a), (_, b)| a.cmp(b))
-        .map(|(entry, _)| util::fs::read_json::<Vec<ModRef>>(entry.path()))
+        .map(|(entry, _)| util::fs::read_json::<Vec<ModId>>(entry.path()))
         .transpose()?;
 
     let latest_snapshot = match latest_snapshot {
@@ -161,7 +162,7 @@ pub fn generate_latest(
 
 fn borrow_mods<T>(mods: T, thunderstore: &Thunderstore) -> Vec<BorrowedMod<'_>>
 where
-    T: IntoIterator<Item = ModRef>,
+    T: IntoIterator<Item = ModId>,
 {
     mods.into_iter()
         .filter_map(|mod_ref| mod_ref.borrow(thunderstore).ok())
@@ -243,7 +244,7 @@ fn generate_diff(old: &[BorrowedMod<'_>], new: &[BorrowedMod<'_>], game: &'stati
             "{} by {} ({})",
             package_link(item.package, game),
             author_link(item.package, game),
-            item.version.version_number
+            item.ident().version()
         )
     });
 
@@ -263,8 +264,8 @@ fn generate_diff(old: &[BorrowedMod<'_>], new: &[BorrowedMod<'_>], game: &'stati
             format!(
                 "{} {} ⇒ {}",
                 package_link(old.package, game),
-                old.version.version_number,
-                new.version.version_number
+                old.ident().version(),
+                new.ident().version()
             )
         },
     );
@@ -277,11 +278,11 @@ fn markdown_link(url: impl Display, text: impl Display) -> String {
 }
 
 fn package_link(package: &PackageListing, game: &'static Game) -> String {
-    markdown_link(package.url(game), &package.name)
+    markdown_link(package.url(game), package.name())
 }
 
 fn author_link(package: &PackageListing, game: &'static Game) -> String {
-    markdown_link(package.owner_url(game), &package.owner)
+    markdown_link(package.owner_url(game), package.owner())
 }
 
 fn write_changelog_section<T, F>(

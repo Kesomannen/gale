@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context};
 use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use std::{
+    fmt::Display,
     fs,
     io::{self, Cursor, Seek, Write},
     path::{Path, PathBuf},
@@ -11,7 +12,7 @@ use uuid::Uuid;
 use super::{install::download::ModInstall, ModManager, Profile, Result};
 
 use crate::{
-    thunderstore::{models::LegacyProfileCreateResponse, ModRef, Thunderstore},
+    thunderstore::{models::LegacyProfileCreateResponse, ModId, Thunderstore},
     util::cmd::StateMutex,
 };
 use walkdir::WalkDir;
@@ -45,25 +46,26 @@ pub enum ImportSource {
 pub struct R2Mod<'a> {
     pub name: &'a str,
     #[serde(alias = "versionNumber")]
-    pub version: ExportVersion,
+    pub version: R2Version,
     pub enabled: bool,
 }
 
 impl<'a> R2Mod<'a> {
     pub fn into_install(self, thunderstore: &Thunderstore) -> Result<ModInstall> {
         let package = thunderstore.find_package(self.name)?;
-        let semver = semver::Version::from(self.version);
-        let version = package.get_version_with_num(&semver).ok_or_else(|| {
+
+        let version = self.version.to_string();
+        let version = package.get_version_with_num(&version).ok_or_else(|| {
             anyhow!(
                 "failed to find version {} for package {}",
-                semver,
+                version,
                 self.name
             )
         })?;
 
-        let mod_ref = ModRef {
-            package_uuid: package.uuid4,
-            version_uuid: version.uuid4,
+        let mod_ref = ModId {
+            package: package.uuid4,
+            version: version.uuid4,
         };
 
         Ok(ModInstall::new(mod_ref).with_state(self.enabled))
@@ -76,15 +78,11 @@ impl<'a> R2Mod<'a> {
         )
     }
 
-    fn from_mod_ref(
-        mod_ref: &ModRef,
-        enabled: bool,
-        thunderstore: &'a Thunderstore,
-    ) -> Result<Self> {
-        let borrowed = mod_ref.borrow(thunderstore)?;
+    fn from_mod_id(id: &ModId, enabled: bool, thunderstore: &'a Thunderstore) -> Result<Self> {
+        let borrowed = id.borrow(thunderstore)?;
         Ok(Self {
-            name: &borrowed.package.full_name,
-            version: ExportVersion::from(&borrowed.version.version_number),
+            name: borrowed.package.ident.as_str(),
+            version: borrowed.version.parsed_version().into(),
             enabled,
         })
     }
@@ -92,20 +90,20 @@ impl<'a> R2Mod<'a> {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ExportVersion {
+pub struct R2Version {
     pub major: u64,
     pub minor: u64,
     pub patch: u64,
 }
 
-impl From<ExportVersion> for semver::Version {
-    fn from(value: ExportVersion) -> Self {
-        semver::Version::new(value.major, value.minor, value.patch)
+impl Display for R2Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
     }
 }
 
-impl From<&semver::Version> for ExportVersion {
-    fn from(value: &semver::Version) -> Self {
+impl From<semver::Version> for R2Version {
+    fn from(value: semver::Version) -> Self {
         Self {
             major: value.major,
             minor: value.minor,
@@ -124,8 +122,8 @@ fn export_zip(
     let mut zip = ZipWriter::new(writer);
 
     let mods = profile
-        .remote_mods()
-        .map(|(mod_ref, _, enabled)| R2Mod::from_mod_ref(mod_ref, enabled, thunderstore))
+        .thunderstore_mods()
+        .map(|(ts_mod, enabled)| R2Mod::from_mod_id(&ts_mod.id, enabled, thunderstore))
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve profile mods")?;
 

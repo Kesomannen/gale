@@ -266,7 +266,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
         }
     }
 
-    profile.mods.push(ProfileMod::local_now(local_mod));
+    profile.mods.push(ProfileMod::new_local(local_mod));
 
     save(&manager, &prefs)?;
 

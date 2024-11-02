@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     games::{self, Game, GAMES},
     prefs::Prefs,
-    thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore},
+    thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore, VersionIdent},
     util::cmd::{Result, StateMutex},
 };
 
@@ -34,7 +34,7 @@ pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo<'static> {
         .collect();
 
     GameInfo {
-        all: &*GAMES,
+        all: &GAMES,
         active: manager.active_game,
         favorites,
     }
@@ -134,7 +134,7 @@ pub fn set_active_profile(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FrontendAvailableUpdate {
-    pub full_name: String,
+    pub full_name: VersionIdent,
     pub ignore: bool,
     pub package_uuid: Uuid,
     pub version_uuid: Uuid,
@@ -173,11 +173,11 @@ pub fn query_profile(
             let ignore = profile.ignored_updates.contains(&update.latest.uuid4);
 
             FrontendAvailableUpdate {
-                full_name: update.latest.full_name.clone(),
+                full_name: update.latest.ident.clone(),
                 package_uuid: update.package.uuid4,
                 version_uuid: update.latest.uuid4,
-                old: update.current.version_number.clone(),
-                new: update.latest.version_number.clone(),
+                old: update.current.parsed_version().clone(),
+                new: update.latest.parsed_version().clone(),
                 ignore,
             }
         })
@@ -415,14 +415,14 @@ pub fn get_dependants(
     uuid: Uuid,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
-) -> Result<Vec<String>> {
+) -> Result<Vec<VersionIdent>> {
     let manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
 
     let dependants = manager
         .active_profile()
         .dependants(uuid, &thunderstore)
-        .map(|profile_mod| profile_mod.kind.full_name().into_owned())
+        .map(|profile_mod| profile_mod.ident().into_owned())
         .collect();
 
     Ok(dependants)

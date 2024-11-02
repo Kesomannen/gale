@@ -1,14 +1,14 @@
 use crate::{
     prefs::Prefs,
     profile::ModManager,
-    thunderstore::{ModRef, Thunderstore},
+    thunderstore::{ModId, Thunderstore},
     util::cmd::{Result, StateMutex},
 };
 
 use super::{download::InstallOptions, InstallState, ModInstall};
 
 #[tauri::command]
-pub async fn install_mod(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
+pub async fn install_mod(mod_ref: ModId, app: tauri::AppHandle) -> Result<()> {
     super::download::install_with_deps(
         vec![ModInstall::new(mod_ref)],
         InstallOptions::default(),
@@ -50,7 +50,7 @@ pub fn clear_download_cache(
 
 #[tauri::command]
 pub fn get_download_size(
-    mod_ref: ModRef,
+    mod_ref: ModId,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,

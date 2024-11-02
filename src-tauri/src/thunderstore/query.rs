@@ -102,7 +102,7 @@ pub trait Queryable {
 
 impl Queryable for BorrowedMod<'_> {
     fn full_name(&self) -> &str {
-        &self.package.full_name
+        self.package.ident.as_str()
     }
 
     fn description(&self) -> Option<&str> {
@@ -139,8 +139,8 @@ impl Queryable for BorrowedMod<'_> {
         b.is_pinned.cmp(&a.is_pinned).then_with(|| {
             let order = match args.sort_by {
                 SortBy::Newest => a.date_created.cmp(&b.date_created),
-                SortBy::Name => b.name.cmp(&a.name),
-                SortBy::Author => b.full_name.cmp(&a.full_name),
+                SortBy::Name => b.name().cmp(a.name()),
+                SortBy::Author => b.ident.cmp(&a.ident),
                 SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
                 SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
                 SortBy::Rating => a.rating_score.cmp(&b.rating_score),
@@ -162,11 +162,11 @@ impl IntoFrontendMod for BorrowedMod<'_> {
         let pkg = self.package;
         let vers = pkg.get_version(self.version.uuid4).unwrap();
         FrontendMod {
-            name: pkg.name.clone(),
+            name: pkg.name().to_owned(),
             description: Some(vers.description.clone()),
-            version: Some(vers.version_number.clone()),
+            version: Some(vers.parsed_version()),
             categories: Some(pkg.categories.clone()),
-            author: Some(pkg.owner.clone()),
+            author: Some(pkg.owner().to_owned()),
             rating: Some(pkg.rating_score),
             downloads: Some(pkg.total_downloads()),
             file_size: vers.file_size,
@@ -187,7 +187,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
                 .versions
                 .iter()
                 .map(|v| FrontendVersion {
-                    name: v.version_number.clone(),
+                    name: v.parsed_version(),
                     uuid: v.uuid4,
                 })
                 .collect(),

@@ -1,7 +1,10 @@
-use super::modpack::{self, changelog, ModpackArgs};
+use super::{
+    changelog,
+    modpack::{self, ModpackArgs},
+};
 use crate::{
-    manager::{commands::save, ModManager, ProfileModKind},
     prefs::Prefs,
+    profile::{commands::save, ModManager, ProfileModKind},
     thunderstore::{self, Thunderstore},
     util::{
         cmd::{Result, StateMutex},
@@ -156,7 +159,7 @@ pub fn copy_dependency_strings(app: AppHandle, manager: StateMutex<ModManager>) 
         .active_profile()
         .mods
         .iter()
-        .map(|profile_mod| profile_mod.kind.full_name())
+        .map(|profile_mod| profile_mod.ident())
         .join("\n");
 
     app.clipboard()
@@ -183,20 +186,13 @@ pub fn copy_debug_info(app: AppHandle, manager: StateMutex<ModManager>) -> Resul
         profile
             .mods
             .iter()
-            .map(|profile_mod| match &profile_mod.kind {
-                ProfileModKind::Remote { full_name, .. } => {
-                    let (name, author) = full_name
-                        .split_once('-')
-                        .expect("mod should have a name and author");
-                    format!("{} by {}", author, name)
-                }
-                ProfileModKind::Local(data) => {
-                    format!(
-                        "{} by {} [LOCAL]",
-                        data.name,
-                        data.author.as_deref().unwrap_or("unknown"),
-                    )
-                }
+            .map(|profile_mod| {
+                let ty = match &profile_mod.kind {
+                    ProfileModKind::Thunderstore(_) => "thunderstore",
+                    ProfileModKind::Local(_) => "local",
+                };
+
+                format!("{} [{}]", profile_mod.ident(), ty)
             })
             .join("\n"),
         match log {

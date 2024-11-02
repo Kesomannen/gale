@@ -7,7 +7,7 @@ use crate::{
 use super::{
     models::FrontendMod,
     query::{self, QueryModsArgs, QueryState},
-    ModRef, Thunderstore,
+    ModId, Thunderstore, VersionIdent,
 };
 use anyhow::anyhow;
 use tauri::AppHandle;
@@ -64,17 +64,17 @@ pub fn trigger_mod_fetch(
 
 #[tauri::command]
 pub fn get_missing_deps(
-    mod_ref: ModRef,
+    mod_ref: ModId,
     thunderstore: StateMutex<Thunderstore>,
-) -> Result<Vec<String>> {
+) -> Result<Vec<VersionIdent>> {
     let thunderstore = thunderstore.lock().unwrap();
 
     let borrowed = mod_ref.borrow(&thunderstore)?;
     Ok(thunderstore
-        .dependencies(borrowed.version)
+        .deps_of(borrowed.version)
         .1
         .into_iter()
-        .map(String::from)
+        .map(|ident| ident.to_owned())
         .collect())
 }
 

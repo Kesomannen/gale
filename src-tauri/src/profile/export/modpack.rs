@@ -15,22 +15,20 @@ use std::{
 };
 
 use crate::{
-    manager::Profile,
+    profile::Profile,
     thunderstore::{
         models::{
             CompletedPart, PackageManifest, PackageSubmissionMetadata, UploadPartUrl,
             UserMediaFinishUploadParams, UserMediaInitiateUploadParams,
             UserMediaInitiateUploadResponse,
         },
-        ModRef, Thunderstore,
+        ModId, Thunderstore,
     },
     util::zip::ZipWriterExt,
 };
 use bytes::Bytes;
 use itertools::Itertools;
 use zip::ZipWriter;
-
-pub mod changelog;
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -74,10 +72,13 @@ pub struct ModpackArgs {
 }
 
 impl Profile {
-    fn mods_to_pack<'a>(&'a self, args: &'a ModpackArgs) -> impl Iterator<Item = &'a ModRef> + 'a {
-        self.remote_mods()
-            .filter(move |(_, _, enabled)| args.include_disabled || *enabled)
-            .map(|(mod_ref, _, _)| mod_ref)
+    pub(super) fn mods_to_pack<'a>(
+        &'a self,
+        args: &'a ModpackArgs,
+    ) -> impl Iterator<Item = &'a ModId> + 'a {
+        self.thunderstore_mods()
+            .filter(move |(_, enabled)| args.include_disabled || *enabled)
+            .map(|(ts_mod, _)| &ts_mod.id)
     }
 
     pub fn export_pack(
@@ -93,7 +94,7 @@ impl Profile {
             .mods_to_pack(args)
             .map(|mod_ref| {
                 let borrowed = mod_ref.borrow(thunderstore)?;
-                Ok(borrowed.version.full_name.clone())
+                Ok(borrowed.version.ident.clone())
             })
             .collect::<Result<Vec<_>>>()
             .context("failed to resolve modpack dependencies")?;

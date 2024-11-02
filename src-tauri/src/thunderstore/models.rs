@@ -9,18 +9,19 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::{PackageIdent, VersionIdent};
+
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
+    #[serde(rename = "full_name")]
+    pub ident: PackageIdent,
     pub categories: HashSet<String>,
     pub date_created: DateTime<Utc>,
     pub date_updated: DateTime<Utc>,
     pub donation_link: Option<String>,
-    pub full_name: String,
     pub has_nsfw_content: bool,
     pub is_deprecated: bool,
     pub is_pinned: bool,
-    pub name: String,
-    pub owner: String,
     pub package_url: String,
     pub rating_score: u32,
     pub uuid4: Uuid,
@@ -28,6 +29,18 @@ pub struct PackageListing {
 }
 
 impl PackageListing {
+    pub fn owner(&self) -> &str {
+        self.ident.owner()
+    }
+
+    pub fn name(&self) -> &str {
+        self.ident.name()
+    }
+
+    pub fn full_name(&self) -> &str {
+        self.ident.as_str()
+    }
+
     pub fn latest(&self) -> &PackageVersion {
         &self.versions[0]
     }
@@ -40,8 +53,8 @@ impl PackageListing {
         self.versions.iter().find(|v| v.uuid4 == uuid)
     }
 
-    pub fn get_version_with_num(&self, version: &semver::Version) -> Option<&PackageVersion> {
-        self.versions.iter().find(|v| v.version_number == *version)
+    pub fn get_version_with_num(&self, version: &str) -> Option<&PackageVersion> {
+        self.versions.iter().find(|v| v.version() == version)
     }
 
     pub fn total_downloads(&self) -> u32 {
@@ -49,13 +62,19 @@ impl PackageListing {
     }
 
     pub fn owner_url(&self, game: &'static Game) -> String {
-        format!("https://thunderstore.io/c/{}/p/{}/", game.slug, self.owner)
+        format!(
+            "https://thunderstore.io/c/{}/p/{}/",
+            game.slug,
+            self.owner()
+        )
     }
 
     pub fn url(&self, game: &'static Game) -> String {
         format!(
             "https://thunderstore.io/c/{}/p/{}/{}/",
-            game.slug, self.owner, self.name
+            game.slug,
+            self.owner(),
+            self.name()
         )
     }
 }
@@ -74,19 +93,43 @@ impl PartialEq for PackageListing {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageVersion {
+    #[serde(rename = "full_name")]
+    pub ident: VersionIdent,
     pub date_created: DateTime<Utc>,
-    pub dependencies: Vec<String>,
+    pub dependencies: Vec<VersionIdent>,
     pub description: String,
     pub download_url: String,
     pub downloads: u32,
     pub file_size: u64,
-    pub full_name: String,
     pub icon: String,
     pub is_active: bool,
-    pub name: String,
     pub uuid4: Uuid,
-    pub version_number: semver::Version,
     pub website_url: String,
+}
+
+impl PackageVersion {
+    pub fn owner(&self) -> &str {
+        self.ident.owner()
+    }
+
+    pub fn name(&self) -> &str {
+        self.ident.name()
+    }
+
+    pub fn version(&self) -> &str {
+        self.ident.version()
+    }
+
+    pub fn full_name(&self) -> &str {
+        self.ident.full_name()
+    }
+
+    pub fn parsed_version(&self) -> semver::Version {
+        self.ident
+            .version()
+            .parse()
+            .expect("thunderstore package has invalid version")
+    }
 }
 
 impl PartialEq for PackageVersion {
@@ -113,7 +156,7 @@ pub struct PackageManifest {
     pub author: Option<String>,
     pub description: String,
     pub version_number: semver::Version,
-    pub dependencies: Vec<String>,
+    pub dependencies: Vec<VersionIdent>,
     pub website_url: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub installers: Option<Vec<PackageInstaller>>,
@@ -210,7 +253,7 @@ pub struct FrontendMod {
     pub website_url: Option<String>,
     pub donate_url: Option<String>,
     pub icon: Option<String>,
-    pub dependencies: Option<Vec<String>>,
+    pub dependencies: Option<Vec<VersionIdent>>,
     pub is_pinned: bool,
     pub is_deprecated: bool,
     pub contains_nsfw: bool,

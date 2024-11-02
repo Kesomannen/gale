@@ -6,7 +6,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use indexmap::IndexMap;
 use log::{debug, warn};
 use serde::{Deserialize, Serialize};
@@ -28,6 +28,9 @@ pub mod commands;
 pub mod models;
 pub mod query;
 pub mod token;
+
+mod id;
+pub use id::*;
 
 pub fn setup(app: &AppHandle) {
     let manager = app.state::<Mutex<ModManager>>();
@@ -63,8 +66,8 @@ pub struct BorrowedMod<'a> {
 }
 
 impl<'a> BorrowedMod<'a> {
-    pub fn reference(self) -> ModRef {
-        self.into()
+    pub fn ident(&self) -> &VersionIdent {
+        &self.version.ident
     }
 
     pub fn split(self) -> (&'a PackageListing, &'a PackageVersion) {
@@ -86,23 +89,26 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct ModRef {
-    pub package_uuid: Uuid,
-    pub version_uuid: Uuid,
+pub struct ModId {
+    #[serde(alias = "packageUuid")]
+    pub package: Uuid,
+
+    #[serde(alias = "versionUuid")]
+    pub version: Uuid,
 }
 
-impl From<BorrowedMod<'_>> for ModRef {
-    fn from(borrowed_mod: BorrowedMod<'_>) -> Self {
+impl From<BorrowedMod<'_>> for ModId {
+    fn from(borrowed: BorrowedMod<'_>) -> Self {
         Self {
-            package_uuid: borrowed_mod.package.uuid4,
-            version_uuid: borrowed_mod.version.uuid4,
+            package: borrowed.package.uuid4,
+            version: borrowed.version.uuid4,
         }
     }
 }
 
-impl ModRef {
+impl ModId {
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
-        thunderstore.get_mod(self.package_uuid, self.version_uuid)
+        thunderstore.get_mod(self.package, self.version)
     }
 }
 
@@ -147,7 +153,7 @@ impl Thunderstore {
     pub fn find_package<'a>(&'a self, full_name: &str) -> Result<&'a PackageListing> {
         self.packages
             .values()
-            .find(|mod_listing| mod_listing.full_name == full_name)
+            .find(|package| package.ident.as_str() == full_name)
             .with_context(|| format!("package {} not found", full_name))
     }
 
@@ -156,28 +162,15 @@ impl Thunderstore {
         let version = package.get_version(version_uuid).with_context(|| {
             format!(
                 "version with id {} not found in package {}",
-                version_uuid, package.full_name
+                version_uuid, package.ident
             )
         })?;
 
         Ok((package, version).into())
     }
 
-    pub fn find_dep<'a>(&'a self, dep_string: &str) -> Result<BorrowedMod<'a>> {
-        let mut indicies = dep_string.match_indices('-').map(|(i, _)| i);
-
-        if indicies.clone().count() != 2 {
-            bail!("invalid dependency string format: {}", dep_string);
-        }
-
-        let owner_end = indicies.next().unwrap();
-        let name_end = indicies.next().unwrap();
-
-        let owner = &dep_string[..owner_end];
-        let name = &dep_string[owner_end + 1..name_end];
-        let version = &dep_string[name_end + 1..];
-
-        self.find_mod(owner, name, version)
+    pub fn find_ident<'a>(&'a self, ident: &VersionIdent) -> Result<BorrowedMod<'a>> {
+        self.find_mod(ident.owner(), ident.name(), ident.version())
     }
 
     pub fn find_mod<'a>(
@@ -189,13 +182,10 @@ impl Thunderstore {
         let package = self
             .packages
             .values()
-            .find(|package| package.owner == owner && package.name == name)
+            .find(|package| package.owner() == owner && package.name() == name)
             .with_context(|| format!("package {}-{} not found", owner, name))?;
 
-        let version = semver::Version::parse(version)
-            .with_context(|| format!("invalid version format: {}", version))?;
-
-        let version = package.get_version_with_num(&version).with_context(|| {
+        let version = package.get_version_with_num(version).with_context(|| {
             format!(
                 "version {} not found in package {}-{}",
                 version, owner, name
@@ -207,28 +197,25 @@ impl Thunderstore {
 
     pub fn resolve_deps<'a>(
         &'a self,
-        dependency_strings: impl Iterator<Item = &'a String>,
-    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a str>) {
+        idents: impl Iterator<Item = &'a VersionIdent>,
+    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a VersionIdent>) {
         let mut result = Vec::new();
         let mut not_found = Vec::new();
-        let mut queue = dependency_strings
-            .map(String::as_str)
-            .collect::<VecDeque<_>>();
+
+        let mut queue = idents.collect::<VecDeque<_>>();
         let mut visited = queue
             .iter()
-            .map(|str| exclude_version(str))
+            .map(|str| str.full_name())
             .collect::<HashSet<_>>();
 
         while let Some(current) = queue.pop_front() {
-            if let Ok(current) = self.find_dep(current) {
-                for dependency in &current.version.dependencies {
-                    let (author, name) = exclude_version(dependency);
-
-                    if !visited.insert((author, name)) {
+            if let Ok(current) = self.find_ident(current) {
+                for dep in &current.version.dependencies {
+                    if !visited.insert(dep.full_name()) {
                         continue;
                     }
 
-                    queue.push_back(dependency.as_str());
+                    queue.push_back(dep);
                 }
 
                 result.push(current);
@@ -237,18 +224,13 @@ impl Thunderstore {
             }
         }
 
-        return (result, not_found);
-
-        fn exclude_version(dependency: &str) -> (&str, &str) {
-            let mut split = dependency.split('-');
-            (split.next().unwrap(), split.next().unwrap())
-        }
+        (result, not_found)
     }
 
-    pub fn dependencies<'a>(
+    pub fn deps_of<'a>(
         &'a self,
         version: &'a PackageVersion,
-    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a str>) {
+    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a VersionIdent>) {
         self.resolve_deps(version.dependencies.iter())
     }
 }
@@ -304,13 +286,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
             thunderstore.is_fetching = false;
 
             match res {
-                Ok(_) => {
-                    is_first = false;
-
-                    // REMOVE IN THE FUTURE!
-                    let mut manager = manager.lock().unwrap();
-                    manager.fill_profile_mod_names(&thunderstore);
-                }
+                Ok(_) => is_first = false,
                 Err(err) => {
                     logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
                 }
@@ -364,7 +340,7 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
 
             match serde_json::from_str::<PackageListing>(json) {
                 Ok(package) => {
-                    if !IGNORED_NAMES.contains(&package.name.as_str()) {
+                    if !IGNORED_NAMES.contains(&package.name()) {
                         package_buffer.insert(package.uuid4, package);
                         total_packages += 1;
                     }
@@ -459,9 +435,4 @@ pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
 
 pub fn cache_path(manager: &ModManager) -> PathBuf {
     manager.active_game().path.join("thunderstore_cache.json")
-}
-
-pub fn parse_full_name(full_name: &str) -> Option<(&str, &str, &str)> {
-    let mut split = full_name.split('-');
-    Some((split.next()?, split.next()?, split.next()?))
 }

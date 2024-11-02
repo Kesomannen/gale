@@ -16,7 +16,7 @@ use crate::{
     logger,
     prefs::Prefs,
     profile::{commands::save, ModManager, Profile},
-    thunderstore::{BorrowedMod, ModRef, Thunderstore},
+    thunderstore::{BorrowedMod, ModId, Thunderstore},
     util::{cmd::StateMutex, error::IoResultExt},
     NetworkClient,
 };
@@ -37,7 +37,7 @@ fn missing_deps<'a>(
     thunderstore: &'a Thunderstore,
 ) -> impl Iterator<Item = BorrowedMod<'a>> {
     thunderstore
-        .dependencies(borrowed_mod.version)
+        .deps_of(borrowed_mod.version)
         .0
         .into_iter()
         .filter(|dep| !profile.has_mod(dep.package.uuid4))
@@ -51,10 +51,12 @@ pub fn total_download_size(
 ) -> Result<u64> {
     Ok(missing_deps(borrowed_mod, profile, thunderstore)
         .chain(iter::once(borrowed_mod))
-        .filter(|borrowed| match super::cache_path(*borrowed, prefs) {
-            Ok(cache_path) => !cache_path.exists(),
-            Err(_) => true,
-        })
+        .filter(
+            |borrowed| match super::cache_path(&borrowed.version.ident, prefs) {
+                Ok(cache_path) => !cache_path.exists(),
+                Err(_) => true,
+            },
+        )
         .map(|borrowed_mod| borrowed_mod.version.file_size)
         .sum())
 }
@@ -113,7 +115,7 @@ impl InstallOptions {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModInstall {
-    pub mod_ref: ModRef,
+    pub mod_ref: ModId,
     pub enabled: bool,
     pub overwrite: bool,
     pub index: Option<usize>,
@@ -121,7 +123,7 @@ pub struct ModInstall {
 }
 
 impl ModInstall {
-    pub fn new(mod_ref: ModRef) -> Self {
+    pub fn new(mod_ref: ModId) -> Self {
         Self {
             mod_ref,
             enabled: true,
@@ -152,7 +154,7 @@ impl ModInstall {
     }
 
     pub fn uuid(&self) -> Uuid {
-        self.mod_ref.package_uuid
+        self.mod_ref.package
     }
 }
 
@@ -282,9 +284,9 @@ impl<'a> Installer<'a> {
         let prefs = self.prefs.lock().unwrap();
 
         let borrowed = data.mod_ref.borrow(&thunderstore)?;
-        let path = super::cache_path(borrowed, &prefs)?;
+        let path = super::cache_path(&borrowed.version.ident, &prefs)?;
 
-        self.current_name.clone_from(&borrowed.package.name);
+        self.current_name = borrowed.package.name().to_owned();
         self.update(InstallTask::Installing);
 
         if path.exists() {
@@ -350,7 +352,7 @@ impl<'a> Installer<'a> {
         let prefs = self.prefs.lock().unwrap();
 
         let borrowed = install.mod_ref.borrow(&thunderstore)?;
-        let cache_path = super::cache_path(borrowed, &prefs)?;
+        let cache_path = super::cache_path(&borrowed.version.ident, &prefs)?;
 
         fs::create_dir_all(&cache_path).fs_context("create mod cache dir", &cache_path)?;
 
@@ -359,7 +361,7 @@ impl<'a> Installer<'a> {
 
         super::extract(
             Cursor::new(data),
-            &borrowed.package.full_name,
+            borrowed.package.ident.as_str(),
             cache_path.clone(),
         )
         .context("failed to extract mod")?;
@@ -424,7 +426,7 @@ impl<'a> Installer<'a> {
                     let thunderstore = self.thunderstore.lock().unwrap();
 
                     let borrowed = data.mod_ref.borrow(&thunderstore)?;
-                    let name = &borrowed.package.full_name;
+                    let name = &borrowed.package.ident;
 
                     return Err(err.context(format!("failed to install {}", name)));
                 }
@@ -524,7 +526,7 @@ pub async fn install_with_deps(
     .await
 }
 
-fn resolve_deep_link(url: &str, thunderstore: &Thunderstore) -> Result<ModRef> {
+fn resolve_deep_link(url: &str, thunderstore: &Thunderstore) -> Result<ModId> {
     let (owner, name, version) = url
         .strip_prefix("ror2mm://v1/install/thunderstore.io/")
         .and_then(|path| {

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{manager::downloader::InstallOptions, util::cmd::Result};
+use crate::{profile::install::download::InstallOptions, util::cmd::Result};
 
 use super::{
     r2modman::{self, ManagerData, ProfileImportData},

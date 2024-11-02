@@ -1,13 +1,13 @@
 use crate::{
     prefs::Prefs,
     profile::{commands::save, ModManager},
-    thunderstore::ModRef,
+    thunderstore::ModId,
     util::cmd::{Result, StateMutex},
 };
 use uuid::Uuid;
 
 #[tauri::command]
-pub async fn change_mod_version(mod_ref: ModRef, app: tauri::AppHandle) -> Result<()> {
+pub async fn change_mod_version(mod_ref: ModId, app: tauri::AppHandle) -> Result<()> {
     super::change_version(mod_ref, &app).await?;
 
     Ok(())
