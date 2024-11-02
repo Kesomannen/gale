@@ -114,7 +114,7 @@ export async function refreshCategories() {
 
 	try {
 		let response = await fetch(
-			`https://thunderstore.io/api/cyberstorm/community/${gameId}/filters/`
+			`https://thunderstore.io/api/experimental/community/${gameId}/category/`
 		);
 
 		if (!response.ok) {
@@ -123,7 +123,7 @@ export async function refreshCategories() {
 		}
 
 		let data = (await response.json()) as FiltersResponse;
-		categories.set(data.package_categories);
+		categories.set(data.results);
 	} catch (e) {
 		console.error('Failed to fetch categories:', e);
 	}

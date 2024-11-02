@@ -200,13 +200,12 @@ export type Game = {
 };
 
 export type PackageCategory = {
-	id: string;
 	name: string;
 	slug: string;
 };
 
 export type FiltersResponse = {
-	package_categories: PackageCategory[];
+	results: PackageCategory[];
 };
 
 export type LaunchMode =
