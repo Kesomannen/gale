@@ -49,7 +49,6 @@
 	},
 	{
 		"name": "H3VR",
-		"modLoader": "BepInEx",
 		"slug": "h3vr",
 		"popular": true,
 		"modLoader": "BepInEx",
@@ -603,8 +602,8 @@
 	},
 	{
 		"name": "Plasma",
+		"modLoader": "BepInEx",
 		"platforms": {
-			"modLoader": "BepInEx",
 			"steam": 1409160
 		}
 	},

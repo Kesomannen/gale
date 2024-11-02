@@ -1,9 +1,6 @@
 use heck::ToKebabCase;
 use serde::{Deserialize, Serialize};
-use std::{
-    convert::Infallible,
-    hash::{self, Hash},
-};
+use std::hash::{self, Hash};
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -37,7 +34,7 @@ enum Steam {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq)]
-#[serde(rename_all = "camelCase", try_from = "GameData")]
+#[serde(rename_all = "camelCase", from = "GameData")]
 pub struct Game {
     pub name: String,
     pub slug: String,
@@ -46,10 +43,8 @@ pub struct Game {
     pub popular: bool,
 }
 
-impl TryFrom<GameData> for Game {
-    type Error = Infallible;
-
-    fn try_from(value: GameData) -> Result<Self, Self::Error> {
+impl From<GameData> for Game {
+    fn from(value: GameData) -> Self {
         let GameData {
             name,
             slug,
@@ -65,13 +60,13 @@ impl TryFrom<GameData> for Game {
             Steam::Full { id, dir_name } => (id, dir_name),
         };
 
-        Ok(Self {
+        Self {
             name,
             slug,
             steam_name,
             steam_id,
             popular,
-        })
+        }
     }
 }
 
