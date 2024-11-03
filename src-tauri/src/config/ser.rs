@@ -1,10 +1,11 @@
-use serde::Serialize;
-
-use super::{de::FLAGS_MESSAGE, Entry, EntryKind, File, FileMetadata, Num, Section, Value};
 use std::{
     fmt::Display,
     io::{self, Write},
 };
+
+use super::{de::FLAGS_MESSAGE, Entry, EntryKind, File, FileMetadata, Num, Section, Value};
+
+use serde::Serialize;
 
 struct Serializer<W: Write> {
     writer: W,

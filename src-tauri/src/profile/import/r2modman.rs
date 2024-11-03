@@ -1,12 +1,13 @@
-use anyhow::{ensure, Context, Result};
-use log::{info, warn};
-use serde::Serialize;
 use std::{
     fs::{self},
     path::PathBuf,
     sync::Mutex,
     time::Duration,
 };
+
+use anyhow::{ensure, Context, Result};
+use log::{info, warn};
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
 use super::ImportData;
@@ -44,7 +45,7 @@ pub struct ProfileImportData {
     profiles: Vec<String>,
 }
 
-pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
+pub(super) fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     find_paths().and_then(|path| {
         let profiles = find_profiles(path.clone(), app)
             .ok()?
@@ -54,7 +55,7 @@ pub fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
     })
 }
 
-pub async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<()> {
+pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<()> {
     wait_for_mods(app).await;
 
     info!("importing profiles from {}", path.display());
@@ -108,7 +109,7 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
-    path.push(&manager.active_game.r2_dir_name);
+    path.push(manager.active_game.r2_dir_name());
     path.push("profiles");
 
     ensure!(path.exists(), "no profiles found");
@@ -133,7 +134,7 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
             .can_cancel(false)
             .send_progress(false)
             .on_progress(move |progress, app| {
-                let percentage = (progress.total_progress * 100.0).round();
+                let percentage = (progress.total_progress() * 100.0).round();
                 emit_update(
                     &format!("Importing profile '{}'... {}%", name, percentage),
                     app,
@@ -196,7 +197,7 @@ async fn wait_for_mods(app: &AppHandle) {
     loop {
         {
             let thunderstore = thunderstore.lock().unwrap();
-            if thunderstore.packages_fetched {
+            if thunderstore.packages_fetched() {
                 return;
             }
         }

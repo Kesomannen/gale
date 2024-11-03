@@ -8,22 +8,21 @@ use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 use log::warn;
 
+use super::modpack::ModpackArgs;
 use crate::{
-    games::Game,
+    game::Game,
     profile::Profile,
-    thunderstore::{models::PackageListing, BorrowedMod, ModId, Thunderstore},
+    thunderstore::{BorrowedMod, ModId, PackageListing, Thunderstore},
     util::{
         self,
         fs::{JsonStyle, PathExt},
     },
 };
 
-use super::modpack::ModpackArgs;
-
-pub fn generate_all(
+pub(super) fn generate_all(
     args: &ModpackArgs,
     profile: &Profile,
-    game: &'static Game,
+    game: Game,
     thunderstore: &Thunderstore,
 ) -> Result<String> {
     let current_version: semver::Version = args
@@ -93,10 +92,10 @@ pub fn generate_all(
     }
 }
 
-pub fn generate_latest(
+pub(super) fn generate_latest(
     args: &mut ModpackArgs,
     profile: &Profile,
-    game: &'static Game,
+    game: Game,
     thunderstore: &Thunderstore,
 ) -> Result<()> {
     let version = args
@@ -191,32 +190,29 @@ impl Profile {
             return Ok(Box::new(iter::empty()));
         }
 
-        let iter = path
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .filter_map(|entry| {
-                match entry
-                    .file_name()
-                    .to_string_lossy()
-                    .trim_end_matches(".json")
-                    .parse::<semver::Version>()
-                {
-                    Ok(version) => Some((entry, version)),
-                    _ => {
-                        warn!(
-                            "snapshot file is not a valid version (at {})",
-                            entry.path().display()
-                        );
-                        None
-                    }
+        let iter = path.read_dir()?.filter_map(Result::ok).filter_map(|entry| {
+            match entry
+                .file_name()
+                .to_string_lossy()
+                .trim_end_matches(".json")
+                .parse::<semver::Version>()
+            {
+                Ok(version) => Some((entry, version)),
+                _ => {
+                    warn!(
+                        "snapshot file is not a valid version (at {})",
+                        entry.path().display()
+                    );
+                    None
                 }
-            });
+            }
+        });
 
         Ok(Box::new(iter))
     }
 }
 
-fn generate_diff(old: &[BorrowedMod<'_>], new: &[BorrowedMod<'_>], game: &'static Game) -> String {
+fn generate_diff(old: &[BorrowedMod<'_>], new: &[BorrowedMod<'_>], game: Game) -> String {
     let mut added = Vec::new();
     let mut removed = Vec::new();
     let mut updated = Vec::new();
@@ -277,11 +273,11 @@ fn markdown_link(url: impl Display, text: impl Display) -> String {
     format!("[{}]({})", text, url)
 }
 
-fn package_link(package: &PackageListing, game: &'static Game) -> String {
+fn package_link(package: &PackageListing, game: Game) -> String {
     markdown_link(package.url(game), package.name())
 }
 
-fn author_link(package: &PackageListing, game: &'static Game) -> String {
+fn author_link(package: &PackageListing, game: Game) -> String {
     markdown_link(package.owner_url(game), package.owner())
 }
 

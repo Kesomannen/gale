@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use super::fs::*;
+use crate::game::ModLoader;
 
 #[test]
 fn check_map_top_level_file() {
@@ -57,7 +58,7 @@ fn test_map_file_default(relative_path: &[&str], full_name: &str, expected: &[&s
     let relative_path: PathBuf = relative_path.iter().collect();
     let expected: PathBuf = expected.iter().collect();
     assert_eq!(
-        map_file_default(&relative_path, full_name).unwrap(),
+        map_file_default(&relative_path, full_name, || ModLoader::BepInEx.subdirs()).unwrap(),
         expected
     )
 }

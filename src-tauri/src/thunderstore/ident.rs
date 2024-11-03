@@ -7,6 +7,9 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
+/// A unique identifier for a package version.
+///
+/// Often formatted as `owner-name-version`, also known as a dependency string.
 #[derive(Eq, Clone, Serialize, Deserialize)]
 #[serde(into = "String", try_from = "String")]
 pub struct VersionIdent {
@@ -16,6 +19,9 @@ pub struct VersionIdent {
 }
 
 impl VersionIdent {
+    /// Creates a new identifier with the given parts.
+    ///
+    /// This allocates a new string and copies the slices into it.
     pub fn new(owner: &str, name: &str, version: &str) -> Self {
         let repr = format!("{}-{}-{}", owner, name, version);
         let name_start = owner.len() + 1;
@@ -104,27 +110,35 @@ impl Display for VersionIdent {
 
 impl Debug for VersionIdent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "VersionId({:?})", self.repr)
+        f.debug_tuple("VersionIdent").field(&self.repr).finish()
     }
 }
 
 #[derive(Debug)]
-pub struct SyntaxError;
+pub struct ParseError;
 
-impl Display for SyntaxError {
+impl Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "invalid package identifier syntax")
+        write!(f, "invalid identifier")
     }
 }
 
 impl TryFrom<String> for VersionIdent {
-    type Error = SyntaxError;
+    type Error = ParseError;
 
-    fn try_from(value: String) -> Result<Self, SyntaxError> {
+    /// Parses a string into a `VersionIdent`.
+    ///
+    /// This does not allocate or copy memory.
+    fn try_from(value: String) -> Result<Self, ParseError> {
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        let name_start = indices.next().ok_or(SyntaxError)? + 1;
-        let version_start = indices.next().ok_or(SyntaxError)? + 1;
+        let name_start = indices.next().ok_or(ParseError)? + 1;
+        let version_start = indices.next().ok_or(ParseError)? + 1;
+
+        // make sure there aren't any more hyphens
+        if indices.next().is_some() {
+            return Err(ParseError);
+        }
 
         Ok(Self {
             repr: value,
@@ -135,9 +149,9 @@ impl TryFrom<String> for VersionIdent {
 }
 
 impl FromStr for VersionIdent {
-    type Err = SyntaxError;
+    type Err = ParseError;
 
-    fn from_str(s: &str) -> Result<Self, SyntaxError> {
+    fn from_str(s: &str) -> Result<Self, ParseError> {
         s.to_string().try_into()
     }
 }
@@ -181,6 +195,7 @@ impl<'a> Display for VersionIdentPath<'a> {
     }
 }
 
+/// A unique identifier for a package, often formatted as `owner-name`.
 #[derive(Eq, Clone, Serialize, Deserialize)]
 #[serde(into = "String", try_from = "String")]
 pub struct PackageIdent {
@@ -189,6 +204,9 @@ pub struct PackageIdent {
 }
 
 impl PackageIdent {
+    /// Creates a new identifier with the given parts.
+    ///
+    /// This allocates a new string and copies the slices into it.
     pub fn new(owner: &str, name: &str) -> Self {
         let repr = format!("{}-{}", owner, name);
         let name_start = owner.len() + 1;
@@ -264,17 +282,25 @@ impl Display for PackageIdent {
 
 impl Debug for PackageIdent {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "PackageId({:?})", self.repr)
+        f.debug_tuple("PackageId").field(&self.repr).finish()
     }
 }
 
 impl TryFrom<String> for PackageIdent {
-    type Error = SyntaxError;
+    type Error = ParseError;
 
-    fn try_from(value: String) -> Result<Self, SyntaxError> {
+    /// Parses a string into a `VersionIdent`.
+    ///
+    /// This does not allocate or copy memory.
+    fn try_from(value: String) -> Result<Self, ParseError> {
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        let name_start = indices.next().ok_or(SyntaxError)? + 1;
+        let name_start = indices.next().ok_or(ParseError)? + 1;
+
+        // make sure there aren't any more hyphens
+        if indices.next().is_some() {
+            return Err(ParseError);
+        }
 
         Ok(Self {
             repr: value,
@@ -284,9 +310,9 @@ impl TryFrom<String> for PackageIdent {
 }
 
 impl FromStr for PackageIdent {
-    type Err = SyntaxError;
+    type Err = ParseError;
 
-    fn from_str(s: &str) -> Result<Self, SyntaxError> {
+    fn from_str(s: &str) -> Result<Self, ParseError> {
         s.to_string().try_into()
     }
 }
@@ -298,6 +324,10 @@ impl From<(&str, &str)> for PackageIdent {
 }
 
 impl From<VersionIdent> for PackageIdent {
+    /// Converts a VersionIdent to a PackageIdent, discarding the version.
+    ///
+    /// This shrinks the existing string, which may or may not reallocate
+    /// depending on the allocator.
     fn from(id: VersionIdent) -> Self {
         let version_start = id.version_start;
         let name_start = id.name_start;

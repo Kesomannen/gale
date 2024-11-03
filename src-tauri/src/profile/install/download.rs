@@ -11,14 +11,13 @@ use futures_util::StreamExt;
 use tauri::{AppHandle, Emitter, Manager};
 use thiserror::Error;
 
+use super::{cache, InstallOptions, InstallProgress, InstallTask, ModInstall};
 use crate::{
     prefs::Prefs,
-    profile::{commands::save, ModManager},
+    profile::ModManager,
     thunderstore::Thunderstore,
     util::{cmd::StateMutex, error::IoResultExt},
 };
-
-use super::{cache, InstallOptions, InstallProgress, InstallTask, ModInstall};
 
 #[derive(Default)]
 pub struct InstallState {
@@ -139,7 +138,7 @@ impl<'a> Installer<'a> {
 
         if super::fs::try_cache_install(data, &path, &mut manager, &thunderstore)? {
             self.completed_bytes += borrowed.version.file_size;
-            save(&manager, &prefs)?;
+            manager.save(&prefs)?;
             return Ok(InstallMethod::Cached);
         }
 
@@ -205,6 +204,7 @@ impl<'a> Installer<'a> {
             Cursor::new(data),
             borrowed.package.ident.as_str(),
             cache_path.clone(),
+            manager.active_game,
         )
         .context("failed to extract mod")?;
 

@@ -1,19 +1,16 @@
+use std::sync::Mutex;
+
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use log::info;
-use std::sync::Mutex;
 use tauri::Manager;
 use uuid::Uuid;
 
+use super::install::{InstallOptions, ModInstall};
 use crate::{
     profile::{install, ModManager, Profile, Result},
-    thunderstore::{
-        models::{PackageListing, PackageVersion},
-        ModId, Thunderstore,
-    },
+    thunderstore::{ModId, PackageListing, PackageVersion, Thunderstore},
 };
-
-use super::install::{InstallOptions, ModInstall};
 
 pub mod commands;
 
@@ -28,12 +25,12 @@ pub struct AvailableUpdate<'a> {
 
 impl From<AvailableUpdate<'_>> for ModInstall {
     fn from(value: AvailableUpdate<'_>) -> Self {
-        let latest_mod_ref = ModId {
-            package: value.package.uuid4,
-            version: value.latest.uuid4,
+        let latest_id = ModId {
+            package_uuid: value.package.uuid,
+            version_uuid: value.latest.uuid,
         };
 
-        ModInstall::new(latest_mod_ref)
+        ModInstall::new(latest_id)
             .with_state(value.enabled)
             .with_index(value.index)
             .with_time(value.install_time)
@@ -89,10 +86,10 @@ pub async fn change_version(mod_ref: ModId, app: &tauri::AppHandle) -> Result<()
         let mut manager = manager.lock().unwrap();
 
         let profile = manager.active_profile_mut();
-        let index = profile.index_of(mod_ref.package)?;
+        let index = profile.index_of(mod_ref.package_uuid)?;
         let enabled = profile.mods[index].enabled;
 
-        profile.force_remove_mod(mod_ref.package)?;
+        profile.force_remove_mod(mod_ref.package_uuid)?;
 
         ModInstall::new(mod_ref)
             .with_state(enabled)

@@ -1,12 +1,13 @@
+use std::path::{Path, PathBuf};
+
 use anyhow::Context;
+use serde::Serialize;
 
 use super::{File, LoadFileResultExt};
 use crate::{
     profile::ModManager,
     util::cmd::{Result, StateMutex},
 };
-use serde::Serialize;
-use std::path::{Path, PathBuf};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]

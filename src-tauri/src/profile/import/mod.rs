@@ -16,12 +16,11 @@ use uuid::Uuid;
 use crate::{
     prefs::Prefs,
     profile::{
-        commands::save,
         export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
         install::{self, InstallOptions, ModInstall},
         LocalMod, ModManager, ProfileMod,
     },
-    thunderstore::{models::PackageManifest, Thunderstore},
+    thunderstore::{PackageManifest, Thunderstore},
     util::{self, error::IoResultExt, fs::PathExt},
     NetworkClient,
 };
@@ -204,19 +203,18 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     if let Some(deps) = &local_mod.dependencies {
         install::install_with_mods(
+            InstallOptions::default().can_cancel(false),
+            app,
             |manager, thunderstore| {
                 let profile = manager.active_profile();
 
                 Ok(thunderstore
-                    .resolve_deps(deps.iter())
-                    .0
+                    .dependencies(deps)
                     .into_iter()
-                    .filter(|dep| !profile.has_mod(dep.package.uuid4))
+                    .filter(|dep| !profile.has_mod(dep.package.uuid))
                     .map(|borrowed| borrowed.into())
                     .collect::<Vec<_>>())
             },
-            InstallOptions::default().can_cancel(false),
-            app,
         )
         .await?;
     }
@@ -226,6 +224,8 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
+
+    let game = manager.active_game;
 
     let profile = manager.active_profile_mut();
 
@@ -248,7 +248,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     match kind {
         LocalModKind::Zip => {
-            install::install_from_zip(&path, &profile.path, &local_mod.name, &prefs)
+            install::install_from_zip(&path, &profile.path, &local_mod.name, game, &prefs)
                 .context("failed to install local mod")?;
 
             local_mod.icon = plugin_dir.join("icon.png").exists_or_none();
@@ -263,7 +263,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     profile.mods.push(ProfileMod::new_local(local_mod));
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }

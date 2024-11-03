@@ -1,10 +1,11 @@
-use anyhow::{anyhow, Context, Result};
-
-use crate::{games, prefs::Prefs, profile::ModManager, thunderstore::Thunderstore};
-use serde_json::Value;
 use std::sync::Mutex;
+
+use anyhow::{anyhow, Context, Result};
+use serde_json::Value;
 use tauri::{App, Manager};
 use tauri_plugin_cli::CliExt;
+
+use crate::{game::Game, prefs::Prefs, profile::ModManager, thunderstore::Thunderstore};
 
 pub fn run(app: &App) -> Result<()> {
     match app.cli().matches() {
@@ -22,8 +23,8 @@ pub fn run(app: &App) -> Result<()> {
             let prefs = prefs.lock().unwrap();
 
             if let Some(arg) = matches.args.get("game") {
-                if let Value::String(game) = &arg.value {
-                    let game = games::from_slug(game).context("unknown game id")?;
+                if let Value::String(slug) = &arg.value {
+                    let game = Game::from_slug(slug).context("unknown game id")?;
 
                     manager
                         .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())

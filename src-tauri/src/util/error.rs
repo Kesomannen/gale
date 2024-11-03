@@ -1,5 +1,7 @@
-use anyhow::Context;
 use std::path::Path;
+
+use anyhow::Context;
+
 pub trait IoResultExt<T> {
     fn fs_context(self, op: &str, path: &Path) -> anyhow::Result<T>;
 }

@@ -1,14 +1,15 @@
-use anyhow::{anyhow, Context, Result};
-use log::LevelFilter;
-use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
-use tauri::{AppHandle, Emitter};
-
-use crate::util;
-use serde::Serialize;
 use std::{
     fs::{self, File},
     path::PathBuf,
 };
+
+use anyhow::{anyhow, Context, Result};
+use log::LevelFilter;
+use serde::Serialize;
+use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
+use tauri::{AppHandle, Emitter};
+
+use crate::util;
 
 #[derive(Serialize, Clone)]
 struct JsError<'a> {

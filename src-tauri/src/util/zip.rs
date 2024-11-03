@@ -1,15 +1,16 @@
-use log::{debug, warn};
 use std::{
     fs::{self, File},
     io::{self, Read, Seek, Write},
     path::{Path, PathBuf},
 };
+
+use log::{debug, warn};
 use zip::ZipArchive;
+
+use crate::util;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-
-use crate::util;
 
 pub trait ZipWriterExt {
     fn write_str<S: Into<String>>(&mut self, name: S, data: &str) -> io::Result<()>;

@@ -1,16 +1,16 @@
+use anyhow::anyhow;
+use tauri::AppHandle;
+
+use super::{
+    models::FrontendMod,
+    query::{self, QueryModsArgs, QueryState},
+    Thunderstore,
+};
 use crate::{
     logger,
     profile::ModManager,
     util::cmd::{Result, StateMutex},
 };
-
-use super::{
-    models::FrontendMod,
-    query::{self, QueryModsArgs, QueryState},
-    ModId, Thunderstore, VersionIdent,
-};
-use anyhow::anyhow;
-use tauri::AppHandle;
 
 #[tauri::command]
 pub fn query_thunderstore(
@@ -34,8 +34,7 @@ pub fn query_thunderstore(
 
 #[tauri::command]
 pub fn stop_querying_thunderstore(state: StateMutex<QueryState>) {
-    let mut state = state.lock().unwrap();
-    state.current_query = None;
+    state.lock().unwrap().current_query = None;
 }
 
 #[tauri::command]
@@ -54,28 +53,12 @@ pub fn trigger_mod_fetch(
     let game = manager.lock().unwrap().active_game;
 
     tauri::async_runtime::spawn(async move {
-        if let Err(err) = super::fetch_mods(&app, game, write_directly).await {
+        if let Err(err) = super::fetch::fetch_packages(&app, game, write_directly).await {
             logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
         }
     });
 
     Ok(())
-}
-
-#[tauri::command]
-pub fn get_missing_deps(
-    mod_ref: ModId,
-    thunderstore: StateMutex<Thunderstore>,
-) -> Result<Vec<VersionIdent>> {
-    let thunderstore = thunderstore.lock().unwrap();
-
-    let borrowed = mod_ref.borrow(&thunderstore)?;
-    Ok(thunderstore
-        .deps_of(borrowed.version)
-        .1
-        .into_iter()
-        .map(|ident| ident.to_owned())
-        .collect())
 }
 
 #[tauri::command]

@@ -1,41 +1,40 @@
 use anyhow::Context;
+use itertools::Itertools;
 use log::warn;
 use serde::Serialize;
 use uuid::Uuid;
 
+use super::{Dependant, ModActionResponse, ModManager, Profile};
 use crate::{
-    games::{self, Game, GAMES},
+    game::Game,
     prefs::Prefs,
-    thunderstore::{models::FrontendProfileMod, query::QueryModsArgs, Thunderstore, VersionIdent},
+    thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
     util::cmd::{Result, StateMutex},
 };
 
-use super::{Dependant, ModActionResponse, ModManager, Profile};
-use itertools::Itertools;
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GameInfo<'a> {
-    all: &'a [Game],
-    active: &'a Game,
-    favorites: Vec<&'a str>,
+pub struct GameInfo {
+    all: Vec<Game>,
+    active: Game,
+    favorites: Vec<&'static str>,
 }
 
 #[tauri::command]
-pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo<'static> {
+pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo {
     let manager = manager.lock().unwrap();
 
     let favorites = manager
         .games
         .iter()
-        .filter_map(|(id, game)| match game.favorite {
-            true => Some(id.as_str()),
+        .filter_map(|(slug, game)| match game.favorite {
+            true => Some(*slug),
             false => None,
         })
         .collect();
 
     GameInfo {
-        all: &GAMES,
+        all: Game::all().collect(),
         active: manager.active_game,
         favorites,
     }
@@ -50,13 +49,13 @@ pub fn favorite_game(
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = games::from_slug(&slug).context("invalid game id")?;
+    let game = Game::from_slug(&slug).context("unknown game")?;
     manager.ensure_game(game, &prefs)?;
 
-    let manager_game = manager.games.get_mut(&slug).unwrap();
+    let manager_game = manager.games.get_mut(game.slug()).unwrap();
     manager_game.favorite = !manager_game.favorite;
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -73,10 +72,10 @@ pub fn set_active_game(
     let mut thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = games::from_slug(slug).context("invalid game id")?;
+    let game = Game::from_slug(slug).context("unknown game")?;
 
     manager.set_active_game(game, &mut thunderstore, &prefs, app)?;
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -127,7 +126,7 @@ pub fn set_active_profile(
     manager
         .active_game_mut()
         .set_active_profile(index, Some(&thunderstore))?;
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -171,12 +170,12 @@ pub fn query_profile(
                 .transpose()
         })
         .map_ok(|update| {
-            let ignore = profile.ignored_updates.contains(&update.latest.uuid4);
+            let ignore = profile.ignored_updates.contains(&update.latest.uuid);
 
             FrontendAvailableUpdate {
                 full_name: update.latest.ident.clone(),
-                package_uuid: update.package.uuid4,
-                version_uuid: update.latest.uuid4,
+                package_uuid: update.package.uuid,
+                version_uuid: update.latest.uuid,
                 old: update.current.parsed_version().clone(),
                 new: update.latest.parsed_version().clone(),
                 ignore,
@@ -214,7 +213,7 @@ pub fn create_profile(
     let prefs = prefs.lock().unwrap();
 
     manager.active_game_mut().create_profile(name)?;
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -229,7 +228,7 @@ pub fn delete_profile(
     let prefs = prefs.lock().unwrap();
 
     manager.active_game_mut().delete_profile(index, false)?;
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -244,7 +243,7 @@ pub fn rename_profile(
     let prefs = prefs.lock().unwrap();
 
     manager.active_profile_mut().rename(name)?;
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -260,7 +259,7 @@ pub fn duplicate_profile(
 
     let game = manager.active_game_mut();
     game.duplicate_profile(name, game.active_profile_index)?;
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -314,7 +313,7 @@ where
     let response = action(manager.active_profile_mut(), uuid, &thunderstore)?;
 
     if let ModActionResponse::Done = response {
-        save(&manager, &prefs)?;
+        manager.save(&prefs)?;
     }
 
     Ok(response)
@@ -334,7 +333,7 @@ pub fn force_remove_mods(
         profile.force_remove_mod(package_uuid)?;
     }
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -360,7 +359,7 @@ pub fn set_all_mods_state(
         profile.force_toggle_mod(uuid)?;
     }
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -387,7 +386,7 @@ pub fn remove_disabled_mods(
         profile.force_remove_mod(uuid)?;
     }
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(len)
 }
@@ -406,7 +405,7 @@ pub fn force_toggle_mods(
         profile.force_toggle_mod(package_uuid)?;
     }
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -462,14 +461,6 @@ pub fn open_bepinex_log(manager: StateMutex<ModManager>) -> Result<()> {
 
     let path = manager.active_profile().bepinex_log_path()?;
     open::that(path).context("failed to open log file")?;
-
-    Ok(())
-}
-
-pub fn save(manager: &ModManager, prefs: &Prefs) -> Result<()> {
-    manager
-        .save(prefs)
-        .context("failed to save manager state")?;
 
     Ok(())
 }

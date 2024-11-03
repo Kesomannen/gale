@@ -19,7 +19,7 @@
 		"name": "Valheim",
 		"popular": true,
 		"modLoader": "BepInEx",
-		"subdirs": ["SlimVML"],
+		"subdirs": [{ "name": "SlimVML" }],
 		"platforms": {
 			"steam": 892970
 		}
@@ -29,7 +29,7 @@
 		"slug": "gtfo",
 		"popular": true,
 		"modLoader": "BepInEx",
-		"subdirs": ["Assets", "GameData"],
+		"subdirs": [{ "name": "Assets" }, { "name": "GameData" }],
 		"platforms": {
 			"steam": 493520
 		}
@@ -54,7 +54,7 @@
 		"slug": "h3vr",
 		"popular": true,
 		"modLoader": "BepInEx",
-		"subdirs": ["Sideloader"],
+		"subdirs": [{ "name": "Sideloader" }],
 		"platforms": {
 			"steam": 450540
 		}
@@ -93,7 +93,7 @@
 	{
 		"name": "Timberborn",
 		"modLoader": "BepInEx",
-		"subdirs": ["Maps"],
+		"subdirs": [{ "name": "Maps" }],
 		"platforms": {
 			"steam": 1062090
 		}
@@ -102,6 +102,7 @@
 		"name": "TABS",
 		"slug": "totally-accurate-battle-simulator",
 		"modLoader": "BepInEx",
+		"r2dirName": "TABS",
 		"platforms": {
 			"steam": {
 				"id": 508440,
@@ -338,7 +339,7 @@
 	{
 		"name": "ULTRAKILL",
 		"modLoader": "BepInEx",
-		"subdirs": ["UMM Mods"],
+		"subdirs": [{ "name": "UMM Mods" }],
 		"platforms": {
 			"steam": 1229490
 		}

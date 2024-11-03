@@ -1,12 +1,12 @@
+use anyhow::anyhow;
+use serde::Deserialize;
+use tauri::{AppHandle, Manager, Window};
+
+use super::Prefs;
 use crate::util::{
     cmd::{Result, StateMutex},
     window::WindowExt,
 };
-
-use super::Prefs;
-use anyhow::anyhow;
-use serde::Deserialize;
-use tauri::{AppHandle, Manager, Window};
 
 #[tauri::command]
 pub fn get_prefs(prefs: StateMutex<Prefs>) -> Prefs {

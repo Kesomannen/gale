@@ -1,16 +1,14 @@
 use std::cmp::Ordering;
 
+use anyhow::Result;
 use chrono::{DateTime, Utc};
 
+use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
 use crate::thunderstore::{
     self,
-    models::{FrontendProfileMod, IntoFrontendMod},
     query::{QueryModsArgs, Queryable, SortBy, SortOrder},
-    BorrowedMod, Thunderstore,
+    BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
 };
-
-use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
-use anyhow::Result;
 
 struct QueryableProfileMod<'a> {
     enabled: bool,
@@ -126,7 +124,7 @@ impl Profile {
                 let (data, uuid) = match queryable.kind {
                     QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
                     QueryableProfileModKind::Thunderstore(remote) => {
-                        (remote.into_frontend(self), remote.package.uuid4)
+                        (remote.into_frontend(self), remote.package.uuid)
                     }
                 };
 

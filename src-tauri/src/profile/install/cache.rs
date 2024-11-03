@@ -1,6 +1,7 @@
+use std::{collections::HashSet, fs, path::PathBuf};
+
 use anyhow::{Context, Result};
 use itertools::Itertools;
-use std::{collections::HashSet, fs, path::PathBuf};
 
 use crate::{
     prefs::Prefs,
@@ -39,9 +40,7 @@ pub(super) fn soft_clear_cache(
     let installed_mods = manager
         .active_game()
         .installed_mods(thunderstore)
-        .map_ok(|BorrowedMod { package, version }| {
-            (package.ident.as_str(), version.ident.version())
-        })
+        .map_ok(|BorrowedMod { package, version }| (package.ident.as_str(), version.version()))
         .collect::<Result<HashSet<_>>>()
         .context("failed to resolve installed mods")?;
 

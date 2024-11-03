@@ -4,7 +4,7 @@ use super::{
 };
 use crate::{
     prefs::Prefs,
-    profile::{commands::save, ModManager, ProfileModKind},
+    profile::{ModManager, ProfileModKind},
     thunderstore::{self, Thunderstore},
     util::{
         cmd::{Result, StateMutex},
@@ -79,8 +79,7 @@ pub fn set_pack_args(
     let prefs = prefs.lock().unwrap();
 
     manager.active_profile_mut().modpack = Some(args);
-
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }
@@ -126,7 +125,7 @@ pub async fn upload_pack(
     thunderstore: StateMutex<'_, Thunderstore>,
     client: tauri::State<'_, NetworkClient>,
 ) -> Result<()> {
-    let (data, game_id, args, token) = {
+    let (data, game, args, token) = {
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
@@ -142,11 +141,11 @@ pub async fn upload_pack(
             warn!("failed to take profile snapshot: {}", err);
         }
 
-        (data, &manager.active_game.slug, args, token)
+        (data, manager.active_game, args, token)
     };
 
     let client = client.0.clone();
-    modpack::publish(data.into_inner().into(), game_id, args, token, client).await?;
+    modpack::publish(data.into_inner().into(), game, args, token, client).await?;
 
     Ok(())
 }

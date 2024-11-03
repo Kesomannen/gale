@@ -1,10 +1,11 @@
+use uuid::Uuid;
+
 use crate::{
     prefs::Prefs,
-    profile::{commands::save, ModManager},
+    profile::ModManager,
     thunderstore::ModId,
     util::cmd::{Result, StateMutex},
 };
-use uuid::Uuid;
 
 #[tauri::command]
 pub async fn change_mod_version(mod_ref: ModId, app: tauri::AppHandle) -> Result<()> {
@@ -38,7 +39,7 @@ pub fn ignore_update(
         .ignored_updates
         .insert(version_uuid);
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }

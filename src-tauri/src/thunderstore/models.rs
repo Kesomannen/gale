@@ -4,12 +4,12 @@ use std::{
     path::PathBuf,
 };
 
-use crate::{games::Game, profile::Profile};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::{PackageIdent, VersionIdent};
+use crate::{game::Game, profile::Profile};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
@@ -24,7 +24,8 @@ pub struct PackageListing {
     pub is_pinned: bool,
     pub package_url: String,
     pub rating_score: u32,
-    pub uuid4: Uuid,
+    #[serde(rename = "uuid4")]
+    pub uuid: Uuid,
     pub versions: Vec<PackageVersion>,
 }
 
@@ -50,7 +51,7 @@ impl PackageListing {
     }
 
     pub fn get_version(&self, uuid: Uuid) -> Option<&PackageVersion> {
-        self.versions.iter().find(|v| v.uuid4 == uuid)
+        self.versions.iter().find(|v| v.uuid == uuid)
     }
 
     pub fn get_version_with_num(&self, version: &str) -> Option<&PackageVersion> {
@@ -61,18 +62,18 @@ impl PackageListing {
         self.versions.iter().map(|v| v.downloads).sum()
     }
 
-    pub fn owner_url(&self, game: &'static Game) -> String {
+    pub fn owner_url(&self, game: Game) -> String {
         format!(
             "https://thunderstore.io/c/{}/p/{}/",
-            game.slug,
+            game.slug(),
             self.owner()
         )
     }
 
-    pub fn url(&self, game: &'static Game) -> String {
+    pub fn url(&self, game: Game) -> String {
         format!(
             "https://thunderstore.io/c/{}/p/{}/{}/",
-            game.slug,
+            game.slug(),
             self.owner(),
             self.name()
         )
@@ -81,13 +82,13 @@ impl PackageListing {
 
 impl Hash for PackageListing {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.uuid4.hash(state);
+        self.uuid.hash(state);
     }
 }
 
 impl PartialEq for PackageListing {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid4 == other.uuid4
+        self.uuid == other.uuid
     }
 }
 
@@ -103,7 +104,8 @@ pub struct PackageVersion {
     pub file_size: u64,
     pub icon: String,
     pub is_active: bool,
-    pub uuid4: Uuid,
+    #[serde(rename = "uuid4")]
+    pub uuid: Uuid,
     pub website_url: String,
 }
 
@@ -134,13 +136,13 @@ impl PackageVersion {
 
 impl PartialEq for PackageVersion {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid4 == other.uuid4
+        self.uuid == other.uuid
     }
 }
 
 impl Hash for PackageVersion {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.uuid4.hash(state);
+        self.uuid.hash(state);
     }
 }
 
@@ -227,7 +229,7 @@ pub struct PackageSubmissionMetadata {
     pub categories: Vec<String>,
     pub communities: Vec<String>,
     pub has_nsfw_content: bool,
-    pub upload_uuid: String,
+    pub upload_uuid: Uuid,
     pub community_categories: HashMap<String, Vec<String>>,
 }
 

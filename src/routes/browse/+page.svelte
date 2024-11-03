@@ -26,9 +26,6 @@
 
 	let versionsDropdownOpen = false;
 
-	let missingDepsOpen = false;
-	let missingDeps: string[] = [];
-
 	$: activeModRef = selectedMod
 		? {
 				packageUuid: selectedMod.uuid,
@@ -88,12 +85,6 @@
 	}
 
 	async function install(modRef?: { packageUuid: string; versionUuid: string }) {
-		missingDeps = await invokeCommand<string[]>('get_missing_deps', { modRef });
-		if (missingDeps.length > 0) {
-			missingDepsOpen = true;
-			return;
-		}
-
 		await invokeCommand('install_mod', { modRef });
 		await refresh();
 	}
@@ -176,25 +167,3 @@
 		/>
 	</svelte:fragment>
 </ModList>
-
-<ConfirmPopup title="Missing dependencies" bind:open={missingDepsOpen}>
-	Some of {selectedMod?.name}'s dependencies could not be found:
-
-	<ul class="mt-1">
-		{#each missingDeps as dep}
-			<li>- {dep}</li>
-		{/each}
-	</ul>
-
-	<svelte:fragment slot="buttons">
-		<BigButton
-			color="red"
-			fontWeight="semibold"
-			on:click={() => {
-				invokeCommand('install_mod', { modRef: activeModRef });
-			}}
-		>
-			Install anyway
-		</BigButton>
-	</svelte:fragment>
-</ConfirmPopup>

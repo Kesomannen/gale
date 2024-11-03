@@ -1,6 +1,3 @@
-use anyhow::{Context, Result};
-use chrono::Utc;
-use log::{debug, warn};
 use std::{
     borrow::Cow,
     ffi::OsStr,
@@ -9,17 +6,21 @@ use std::{
     path::{Path, PathBuf},
     time::Instant,
 };
+
+use anyhow::{Context, Result};
+use chrono::Utc;
+use log::{debug, warn};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
+use super::ModInstall;
 use crate::{
+    game::{Game, Subdir},
     prefs::Prefs,
     profile::{ModManager, ProfileMod, ProfileModKind, ThunderstoreMod},
     thunderstore::Thunderstore,
     util,
 };
-
-use super::ModInstall;
 
 pub fn try_cache_install(
     to_install: &ModInstall,
@@ -53,7 +54,7 @@ pub fn try_cache_install(
             };
 
             if !to_install.enabled {
-                profile.force_toggle_mod(borrowed.package.uuid4)?;
+                profile.force_toggle_mod(borrowed.package.uuid)?;
             }
 
             Ok(true)
@@ -62,7 +63,13 @@ pub fn try_cache_install(
     }
 }
 
-pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs) -> Result<()> {
+pub fn install_from_zip(
+    src: &Path,
+    dest: &Path,
+    full_name: &str,
+    game: Game,
+    prefs: &Prefs,
+) -> Result<()> {
     // temporarily extract the zip so the same install method can be used
 
     // dont use tempdir since we need the files on the same drive as the destination
@@ -74,7 +81,8 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs)
     let reader = File::open(src)
         .map(BufReader::new)
         .context("failed to open file")?;
-    extract(reader, full_name, path.clone())?;
+
+    extract(reader, full_name, path.clone(), game)?;
     install(&path, dest, false)?;
 
     fs::remove_dir_all(path).context("failed to remove temporary directory")?;
@@ -82,7 +90,7 @@ pub fn install_from_zip(src: &Path, dest: &Path, full_name: &str, prefs: &Prefs)
     Ok(())
 }
 
-pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf) -> Result<()> {
+pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf, game: Game) -> Result<()> {
     let start = Instant::now();
 
     let is_bepinex = is_bepinex(full_name);
@@ -117,7 +125,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf) -> Result<
 
             Cow::Borrowed(path)
         } else {
-            let path = map_file_default(&relative_path, full_name)?;
+            let path = map_file_default(&relative_path, full_name, || game.subdirs())?;
 
             Cow::Owned(path)
         };
@@ -151,10 +159,18 @@ pub(super) fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
 /// Maps a file from a mod zip archive to its final extracted path.
 /// Based on r2modman's structure rules, which are available here:
 /// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
-pub(super) fn map_file_default(relative_path: &Path, full_name: &str) -> Result<PathBuf> {
+pub(super) fn map_file_default<F, S>(
+    relative_path: &Path,
+    full_name: &str,
+    subdirs: F,
+) -> Result<PathBuf>
+where
+    F: Fn() -> S,
+    S: Iterator<Item = &'static Subdir<'static>>,
+{
     use std::path::Component;
 
-    const SUBDIRS: &[&str] = &["plugins", "config", "patchers", "monomod", "core"];
+    const DEFAULT_SUBDIR: &Subdir<'static> = &Subdir::new("plugins");
 
     // first, flatten the path until a subdir appears
     // if the path contains no subdirs, default to /plugins
@@ -169,10 +185,8 @@ pub(super) fn map_file_default(relative_path: &Path, full_name: &str) -> Result<
             Some(Component::Normal(name)) => {
                 // check for a subdir
                 if let Some(name) = name.to_str() {
-                    let subdir = SUBDIRS.iter().find(|subdir| **subdir == name);
-
-                    if let Some(subdir) = subdir {
-                        break (*subdir, false);
+                    if let Some(subdir) = subdirs().find(|subdir| subdir.name() == name) {
+                        break (subdir, false);
                     }
                 }
 
@@ -186,7 +200,7 @@ pub(super) fn map_file_default(relative_path: &Path, full_name: &str) -> Result<
             // we don't care/don't expect any of these
             Some(Component::RootDir | Component::Prefix(_) | Component::CurDir) => continue,
             // default to plugins when the whole path is exhausted
-            None => break ("plugins", true),
+            None => break (DEFAULT_SUBDIR, true),
         }
     };
 
@@ -198,10 +212,9 @@ pub(super) fn map_file_default(relative_path: &Path, full_name: &str) -> Result<
     // or the whole path if we defaulted
 
     // e.g. profile/BepInEx/plugins
-    let mut target: PathBuf = ["BepInEx", subdir].iter().collect();
+    let mut target: PathBuf = ["BepInEx", subdir.name()].iter().collect();
 
-    // don't add separators for config
-    if subdir != "config" {
+    if subdir.separate_mods() {
         // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod
         target.push(full_name);
     }

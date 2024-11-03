@@ -1,10 +1,12 @@
-use std::str;
+use std::{
+    io::{BufRead, Lines, Read},
+    str,
+};
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
+use itertools::Itertools;
 
 use super::*;
-use io::{BufRead, Lines, Read};
-use itertools::Itertools;
 
 pub const FLAGS_MESSAGE: &str =
     "# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)";

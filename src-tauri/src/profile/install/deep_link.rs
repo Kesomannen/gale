@@ -3,12 +3,11 @@ use std::sync::Mutex;
 use anyhow::{anyhow, Result};
 use tauri::{AppHandle, Manager};
 
+use super::{InstallOptions, ModInstall};
 use crate::{
     logger,
     thunderstore::{ModId, Thunderstore},
 };
-
-use super::{InstallOptions, ModInstall};
 
 pub fn handle(url: &str, handle: &AppHandle) {
     let mod_id = {

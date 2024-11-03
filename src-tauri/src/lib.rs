@@ -12,7 +12,7 @@ extern crate webkit2gtk;
 
 mod cli;
 mod config;
-mod games;
+mod game;
 mod logger;
 mod prefs;
 mod profile;
@@ -49,7 +49,6 @@ pub fn run() {
             logger::log_err,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
-            thunderstore::commands::get_missing_deps,
             thunderstore::commands::set_thunderstore_token,
             thunderstore::commands::has_thunderstore_token,
             thunderstore::commands::clear_thunderstore_token,

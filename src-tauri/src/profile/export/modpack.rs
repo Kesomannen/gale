@@ -1,12 +1,3 @@
-use anyhow::{anyhow, bail, ensure, Context, Result};
-use futures_util::future::try_join_all;
-use image::{imageops::FilterType, ImageFormat};
-use log::{debug, info, trace};
-use reqwest::StatusCode;
-use serde::{Deserialize, Serialize};
-use tauri::Url;
-use uuid::Uuid;
-
 use std::{
     collections::HashMap,
     fmt::Display,
@@ -14,21 +5,19 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::{
-    profile::Profile,
-    thunderstore::{
-        models::{
-            CompletedPart, PackageManifest, PackageSubmissionMetadata, UploadPartUrl,
-            UserMediaFinishUploadParams, UserMediaInitiateUploadParams,
-            UserMediaInitiateUploadResponse,
-        },
-        ModId, Thunderstore,
-    },
-    util::zip::ZipWriterExt,
-};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use bytes::Bytes;
+use futures_util::future::try_join_all;
+use image::{imageops::FilterType, ImageFormat};
 use itertools::Itertools;
+use log::{debug, info, trace};
+use reqwest::StatusCode;
+use serde::{Deserialize, Serialize};
+use tauri::Url;
+use uuid::Uuid;
 use zip::ZipWriter;
+
+use crate::{game::Game, profile::Profile, thunderstore::*, util::zip::ZipWriterExt};
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -170,7 +159,7 @@ fn base_request(
 
 pub async fn publish(
     data: Bytes,
-    game_id: &str,
+    game: Game,
     args: ModpackArgs,
     token: String,
     client: reqwest::Client,
@@ -213,7 +202,7 @@ pub async fn publish(
         .await
         .context("failed to finalize upload")?;
 
-    submit_package(uuid, game_id, args, &token, &client)
+    submit_package(uuid, game, args, &token, &client)
         .await
         .context("failed to submit package")?;
 
@@ -310,7 +299,7 @@ async fn finish_upload(
 
 async fn submit_package(
     uuid: Uuid,
-    game_id: &str,
+    game: Game,
     args: ModpackArgs,
     token: &str,
     client: &reqwest::Client,
@@ -318,10 +307,10 @@ async fn submit_package(
     let metadata = PackageSubmissionMetadata {
         author_name: args.author,
         has_nsfw_content: args.nsfw,
-        upload_uuid: uuid.to_string(),
+        upload_uuid: uuid,
         categories: Vec::new(),
-        communities: vec![game_id.to_owned()],
-        community_categories: HashMap::from([(game_id.to_owned(), args.categories)]),
+        communities: vec![game.slug().to_owned()],
+        community_categories: HashMap::from([(game.slug().to_owned(), args.categories)]),
     };
 
     debug!("submitting package");

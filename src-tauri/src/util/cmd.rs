@@ -1,8 +1,9 @@
-use serde::Serialize;
 use std::{
     fmt::{self, Display},
     sync::Mutex,
 };
+
+use serde::Serialize;
 
 #[derive(Debug)]
 pub struct CommandError(pub anyhow::Error);
@@ -20,7 +21,7 @@ impl Serialize for CommandError {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(&format!("{:#}", self.0))
+        serializer.serialize_str(&self.to_string())
     }
 }
 

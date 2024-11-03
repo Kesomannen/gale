@@ -8,7 +8,6 @@ use std::{
 
 use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
-use commands::save;
 use export::modpack::ModpackArgs;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -18,7 +17,7 @@ use walkdir::WalkDir;
 
 use crate::{
     config,
-    games::{self, Game},
+    game::Game,
     logger,
     prefs::Prefs,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
@@ -68,8 +67,8 @@ pub struct ModManager {
     /// Holds all the currently managed games, indexed by their slug.
     ///
     /// Note that this only contains entries for `Game`s which the user has selected at least once.
-    pub games: HashMap<&'static String, ManagerGame>,
-    pub active_game: &'static Game,
+    pub games: HashMap<&'static str, ManagerGame>,
+    pub active_game: Game,
 }
 
 /// Persistent data for ModManager
@@ -81,7 +80,7 @@ struct ManagerSaveData {
 
 /// Stores information and profiles about one game.
 pub struct ManagerGame {
-    pub game: &'static Game,
+    pub game: Game,
     pub profiles: Vec<Profile>,
     pub path: PathBuf,
     pub favorite: bool,
@@ -187,6 +186,16 @@ impl ProfileMod {
     fn as_local(&self) -> Option<(&LocalMod, bool)> {
         self.kind.as_local().map(|local| (local, self.enabled))
     }
+
+    /// Finds all dependencies of this mod.
+    ///
+    /// See [`Thunderstore::find_deps`] for more information.
+    pub fn dependencies<'a>(
+        &'a self,
+        thunderstore: &'a Thunderstore,
+    ) -> impl Iterator<Item = BorrowedMod<'a>> {
+        self.kind.dependencies(thunderstore)
+    }
 }
 
 impl ProfileModKind {
@@ -194,7 +203,7 @@ impl ProfileModKind {
     pub fn uuid(&self) -> Uuid {
         match self {
             ProfileModKind::Local(local_mod) => local_mod.uuid,
-            ProfileModKind::Thunderstore(ts_mod) => ts_mod.id.package,
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod.id.package_uuid,
         }
     }
 
@@ -219,9 +228,14 @@ impl ProfileModKind {
         }
     }
 
-    /// Finds **all** dependencies of this mod.
-    pub fn deps<'a>(&'a self, thunderstore: &'a Thunderstore) -> Vec<BorrowedMod<'a>> {
-        let deps = match self {
+    /// Finds all dependencies of this mod.
+    ///
+    /// See [`Thunderstore::find_deps`] for more information.
+    pub fn dependencies<'a>(
+        &'a self,
+        thunderstore: &'a Thunderstore,
+    ) -> impl Iterator<Item = BorrowedMod<'a>> {
+        let idents = match self {
             ProfileModKind::Local(local_mod) => local_mod.dependencies.as_ref(),
             ProfileModKind::Thunderstore(ts_mod) => ts_mod
                 .id
@@ -230,10 +244,9 @@ impl ProfileModKind {
                 .ok(),
         };
 
-        match deps {
-            Some(deps) => thunderstore.resolve_deps(deps.iter()).0,
-            None => Vec::new(),
-        }
+        idents
+            .into_iter()
+            .flat_map(|deps| thunderstore.dependencies(deps))
     }
 }
 
@@ -287,9 +300,9 @@ impl Profile {
         }
     }
 
-    /// Finds the dependants of a mod in this profile.
+    /// Finds all the dependants of a mod in this profile.
     ///
-    /// This is an expensive operation, use with care!
+    /// This includes both direct and indirect relations.
     fn dependants<'a>(
         &'a self,
         uuid: Uuid,
@@ -300,23 +313,24 @@ impl Profile {
             .filter(move |other| other.uuid() != uuid)
             .filter(move |other| {
                 other
-                    .kind
-                    .deps(thunderstore)
-                    .iter()
-                    .any(|dep| dep.package.uuid4 == uuid)
+                    .dependencies(thunderstore)
+                    .any(|dep| dep.package.uuid == uuid)
             })
     }
 
+    /// Recursively finds the dependencies of the given mods and filters
+    /// out those already installed.
+    ///
+    /// This also includes
     fn missing_deps<'a>(
         &'a self,
         idents: impl IntoIterator<Item = &'a VersionIdent>,
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
         thunderstore
-            .resolve_deps(idents.into_iter())
-            .0
+            .dependencies(idents.into_iter())
             .into_iter()
-            .filter(|dep| !self.has_mod(dep.package.uuid4))
+            .filter(|dep| !self.has_mod(dep.package.uuid))
     }
 
     fn bepinex_log_path(&self) -> Result<PathBuf> {
@@ -374,7 +388,7 @@ impl From<BorrowedMod<'_>> for Dependant {
     fn from(value: BorrowedMod) -> Self {
         Self {
             full_name: value.version.ident.clone(),
-            uuid: value.package.uuid4,
+            uuid: value.package.uuid,
         }
     }
 }
@@ -529,11 +543,9 @@ impl Profile {
         let profile_mod = self.get_mod(uuid).ok()?;
 
         let disabled_deps = profile_mod
-            .kind
-            .deps(thunderstore)
-            .into_iter()
+            .dependencies(thunderstore)
             .filter(|dep| {
-                self.get_mod(dep.package.uuid4)
+                self.get_mod(dep.package.uuid)
                     .is_ok_and(|profile_mod| !profile_mod.enabled)
             })
             .map_into()
@@ -697,9 +709,9 @@ impl ManagerGame {
         })
     }
 
-    fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
+    fn load(mut path: PathBuf) -> Result<Option<(Game, Self)>> {
         let file_name = util::fs::file_name_owned(&path);
-        let Some(game) = games::from_slug(&file_name) else {
+        let Some(game) = Game::from_slug(&file_name) else {
             return Ok(None);
         };
 
@@ -761,13 +773,13 @@ impl ModManager {
 
             if path.is_dir() {
                 if let Some((game, game_data)) = ManagerGame::load(path)? {
-                    games.insert(&game.slug, game_data);
+                    games.insert(game.slug(), game_data);
                 }
             }
         }
 
-        let active_game = games::from_slug(&save_data.active_game).unwrap_or_else(|| {
-            games::from_slug(DEFAULT_GAME_SLUG).expect("default game should be valid")
+        let active_game = Game::from_slug(&save_data.active_game).unwrap_or_else(|| {
+            Game::from_slug(DEFAULT_GAME_SLUG).expect("default game should be valid")
         });
 
         let mut manager = Self { games, active_game };
@@ -780,13 +792,13 @@ impl ModManager {
 
     pub fn active_game(&self) -> &ManagerGame {
         self.games
-            .get(&self.active_game.slug)
+            .get(self.active_game.slug())
             .expect("active game not found")
     }
 
     pub fn active_game_mut(&mut self) -> &mut ManagerGame {
         self.games
-            .get_mut(&self.active_game.slug)
+            .get_mut(self.active_game.slug())
             .expect("active game not found")
     }
 
@@ -800,14 +812,14 @@ impl ModManager {
 
     pub fn set_active_game(
         &mut self,
-        game: &'static Game,
+        game: Game,
         thunderstore: &mut Thunderstore,
         prefs: &Prefs,
         app: AppHandle,
     ) -> Result<()> {
         self.ensure_game(game, prefs)?;
 
-        if self.active_game.slug != game.slug {
+        if self.active_game != game {
             self.active_game = game;
             thunderstore.switch_game(game, app);
         }
@@ -815,26 +827,26 @@ impl ModManager {
         Ok(())
     }
 
-    fn ensure_game(&mut self, game: &'static Game, prefs: &Prefs) -> Result<()> {
-        if self.games.contains_key(&game.slug) {
+    fn ensure_game(&mut self, game: Game, prefs: &Prefs) -> Result<()> {
+        if self.games.contains_key(game.slug()) {
             return Ok(());
         }
 
         let mut manager_game = ManagerGame {
             game,
             profiles: Vec::new(),
-            path: prefs.data_dir.join(&game.slug),
+            path: prefs.data_dir.join(game.slug()),
             favorite: false,
             active_profile_index: 0,
         };
 
         manager_game.create_profile("Default".to_owned())?;
-        self.games.insert(&game.slug, manager_game);
+        self.games.insert(game.slug(), manager_game);
 
         Ok(())
     }
 
-    pub fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
+    fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
         let packages = self
             .active_game()
             .profiles
@@ -849,8 +861,7 @@ impl ModManager {
             .unique()
             .collect_vec();
 
-        let path = thunderstore::cache_path(self);
-        thunderstore::write_cache(&packages, &path)
+        thunderstore::write_cache(&packages, self)
     }
 
     fn save(&self, prefs: &Prefs) -> Result<()> {
@@ -861,7 +872,7 @@ impl ModManager {
         util::fs::write_json(
             &path,
             &ManagerSaveData {
-                active_game: self.active_game.slug.to_owned(),
+                active_game: self.active_game.slug().to_owned(),
             },
             JsonStyle::Pretty,
         )?;
@@ -920,7 +931,7 @@ fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
 
     manager.active_profile_mut().reorder_mod(uuid, delta)?;
 
-    save(&manager, &prefs)?;
+    manager.save(&prefs)?;
 
     Ok(())
 }

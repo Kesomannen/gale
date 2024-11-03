@@ -9,14 +9,11 @@ use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
     BorrowedMod, Thunderstore,
 };
-
 use crate::profile::{LocalMod, ModManager, Profile};
-use log::debug;
 
 pub fn setup(app: &AppHandle) {
     app.manage(Mutex::new(QueryState::default()));
 
-    debug!("spawning query loop");
     tauri::async_runtime::spawn(query_loop(app.clone()));
 }
 
@@ -90,11 +87,19 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
     }
 }
 
+/// Abstracts logic needed for `query_mods`, allowing it to be reused
+/// for both Thunderstore and profile querying.
 pub trait Queryable {
+    /// The package's full name, including the author.
     fn full_name(&self) -> &str;
+
+    /// Whether the package should be included in the given query.
     fn matches(&self, args: &QueryModsArgs) -> bool;
+
+    /// Whether the package should rank higher than `other` in the given query.
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering;
 
+    /// A longer description of the package.
     fn description(&self) -> Option<&str> {
         None
     }
@@ -160,7 +165,7 @@ impl Queryable for BorrowedMod<'_> {
 impl IntoFrontendMod for BorrowedMod<'_> {
     fn into_frontend(self, profile: &Profile) -> FrontendMod {
         let pkg = self.package;
-        let vers = pkg.get_version(self.version.uuid4).unwrap();
+        let vers = pkg.get_version(self.version.uuid).unwrap();
         FrontendMod {
             name: pkg.name().to_owned(),
             description: Some(vers.description.clone()),
@@ -180,15 +185,15 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
             contains_nsfw: pkg.has_nsfw_content,
-            uuid: pkg.uuid4,
-            is_installed: profile.has_mod(pkg.uuid4),
+            uuid: pkg.uuid,
+            is_installed: profile.has_mod(pkg.uuid),
             last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions
                 .iter()
                 .map(|v| FrontendVersion {
                     name: v.parsed_version(),
-                    uuid: v.uuid4,
+                    uuid: v.uuid,
                 })
                 .collect(),
             kind: FrontendModKind::Remote,
@@ -244,6 +249,8 @@ impl From<LocalMod> for FrontendMod {
     }
 }
 
+/// Sorts and filters `mods` according to `args` and converts the
+/// results to [`FrontendMod`].
 pub fn query_frontend_mods<T, I>(
     args: &QueryModsArgs,
     mods: I,
@@ -258,6 +265,7 @@ where
         .collect()
 }
 
+/// Sorts and filters `mods` according to `args`.
 pub fn query_mods<'a, T, I>(args: &QueryModsArgs, mods: I) -> impl Iterator<Item = T> + 'a
 where
     T: Queryable + 'a,

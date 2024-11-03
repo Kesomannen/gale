@@ -1,36 +1,35 @@
 use std::{
     collections::{HashSet, VecDeque},
-    path::{Path, PathBuf},
+    path::PathBuf,
     str::{self},
     sync::Mutex,
-    time::{Duration, Instant},
+    time::Instant,
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use indexmap::IndexMap;
-use log::{debug, warn};
+use log::debug;
 use serde::{Deserialize, Serialize};
-use tauri::{async_runtime::JoinHandle, AppHandle, Emitter, Manager};
+use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
 
 use crate::{
-    games::Game,
-    logger,
-    prefs::Prefs,
+    game::Game,
     profile::ModManager,
     util::{self, fs::JsonStyle},
-    NetworkClient,
 };
 
-use self::models::{PackageListing, PackageVersion};
-
 pub mod commands;
-pub mod models;
 pub mod query;
 pub mod token;
 
-mod id;
-pub use id::*;
+mod fetch;
+
+mod models;
+pub use models::*;
+
+mod ident;
+pub use ident::*;
 
 pub fn setup(app: &AppHandle) {
     let manager = app.state::<Mutex<ModManager>>();
@@ -44,21 +43,11 @@ pub fn setup(app: &AppHandle) {
     query::setup(app);
 }
 
-#[derive(Serialize, Debug, Clone)]
-pub struct OwnedMod {
-    pub package: PackageListing,
-    pub version: PackageVersion,
-}
-
-impl From<BorrowedMod<'_>> for OwnedMod {
-    fn from(borrowed_mod: BorrowedMod) -> Self {
-        Self {
-            package: borrowed_mod.package.clone(),
-            version: borrowed_mod.version.clone(),
-        }
-    }
-}
-
+/// A pair of a package and one of its versions.
+///
+/// This is tied to the lifetime of the `Thunderstore` struct and thus
+/// can only be held when its Mutex is locked. To avoid that limitation,
+/// use [`ModId`] instead.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq, Hash)]
 pub struct BorrowedMod<'a> {
     pub package: &'a PackageListing,
@@ -66,12 +55,28 @@ pub struct BorrowedMod<'a> {
 }
 
 impl<'a> BorrowedMod<'a> {
-    pub fn ident(&self) -> &VersionIdent {
+    pub fn ident(&self) -> &'a VersionIdent {
         &self.version.ident
+    }
+
+    pub fn owner(&self) -> &'a str {
+        self.ident().owner()
+    }
+
+    pub fn name(&self) -> &'a str {
+        self.ident().name()
+    }
+
+    pub fn version(&self) -> &'a str {
+        self.ident().version()
     }
 
     pub fn split(self) -> (&'a PackageListing, &'a PackageVersion) {
         (self.package, self.version)
+    }
+
+    pub fn deps(&self) -> impl Iterator<Item = &'a VersionIdent> + 'a {
+        self.version.dependencies.iter()
     }
 }
 
@@ -87,56 +92,60 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
     }
 }
 
+/// A pair of a package's uuid and the uuid of one of its versions.
+///
+/// This is a "persistent" version of [`BorrowedMod`] which can be held
+/// without locking [`Thunderstore`].
+///
+/// To convert it back into a [`BorrowedMod`], use [`ModId::borrow`].
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ModId {
-    #[serde(alias = "packageUuid")]
-    pub package: Uuid,
-
-    #[serde(alias = "versionUuid")]
-    pub version: Uuid,
+    #[serde(alias = "package")]
+    pub package_uuid: Uuid,
+    #[serde(alias = "version")]
+    pub version_uuid: Uuid,
 }
 
 impl From<BorrowedMod<'_>> for ModId {
     fn from(borrowed: BorrowedMod<'_>) -> Self {
         Self {
-            package: borrowed.package.uuid4,
-            version: borrowed.version.uuid4,
+            package_uuid: borrowed.package.uuid,
+            version_uuid: borrowed.version.uuid,
         }
     }
 }
 
 impl ModId {
+    /// Looks up the mod in [`Thunderstore`] and returns a borrowed reference to it.
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
-        thunderstore.get_mod(self.package, self.version)
+        thunderstore.get_mod(self.package_uuid, self.version_uuid)
     }
 }
 
+/// Registry of Thunderstore mods for the active game.
 #[derive(Default)]
 pub struct Thunderstore {
-    pub load_mods_handle: Option<JoinHandle<()>>,
-    pub packages_fetched: bool,
-    pub is_fetching: bool,
+    /// A handle to the current [`fetch_package_loop`] task.
+    fetch_loop_handle: Option<JoinHandle<()>>,
+    /// Whether packages have been succesfully fetched at least one since
+    /// the last call to [`Thunderstore::switch_game`].
+    packages_fetched: bool,
+    /// Whether a [`fetch_mods`] task i currently running.
+    is_fetching: bool,
     // IndexMap is not used for ordering here, but for fast iteration,
-    // since we iterate over all mods when querying and resolving dependencies
-    pub packages: IndexMap<Uuid, PackageListing>,
+    // since we iterate over all mods when resolving identifiers and querying.
+    packages: IndexMap<Uuid, PackageListing>,
 }
 
 impl Thunderstore {
-    pub fn switch_game(&mut self, game: &'static Game, app: AppHandle) {
-        if let Some(handle) = self.load_mods_handle.take() {
-            debug!("aborting load mods loop");
-            handle.abort();
-        }
-
-        self.is_fetching = false;
-        self.packages_fetched = false;
-        self.packages = IndexMap::new();
-
-        let load_mods_handle = tauri::async_runtime::spawn(load_mods_loop(app, game));
-        self.load_mods_handle = Some(load_mods_handle);
+    /// Whether packages have been succesfully fetched at least one since
+    /// the last call to [`Thunderstore::switch_game`].
+    pub fn packages_fetched(&self) -> bool {
+        self.packages_fetched
     }
 
+    /// Returns an iterator over the lastest versions of every package.
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
         self.packages.values().map(move |package| BorrowedMod {
             package,
@@ -150,6 +159,7 @@ impl Thunderstore {
             .with_context(|| format!("package with id {} not found", uuid))
     }
 
+    /// Finds a package with the given `full_name` (formatted as `owner-name`).
     pub fn find_package<'a>(&'a self, full_name: &str) -> Result<&'a PackageListing> {
         self.packages
             .values()
@@ -195,207 +205,73 @@ impl Thunderstore {
         Ok((package, version).into())
     }
 
-    pub fn resolve_deps<'a>(
+    /// Switches the active game, clearing the fetched mods and aborting any fetching.
+    pub fn switch_game(&mut self, game: Game, app: AppHandle) {
+        if let Some(handle) = self.fetch_loop_handle.take() {
+            debug!("aborting load mods loop");
+            handle.abort();
+        }
+
+        self.is_fetching = false;
+        self.packages_fetched = false;
+        self.packages = IndexMap::new();
+
+        let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(app, game));
+        self.fetch_loop_handle = Some(load_mods_handle);
+    }
+}
+
+pub struct Dependencies<'a> {
+    queue: VecDeque<&'a VersionIdent>,
+    visited: HashSet<&'a str>,
+    thunderstore: &'a Thunderstore,
+}
+
+impl<'a> Iterator for Dependencies<'a> {
+    type Item = BorrowedMod<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.queue.pop_front().and_then(|current| {
+            let current = self.thunderstore.find_ident(current).ok()?;
+
+            for dep in &current.version.dependencies {
+                if !self.visited.insert(dep.full_name()) {
+                    continue;
+                }
+
+                self.queue.push_back(dep);
+            }
+
+            Some(current)
+        })
+    }
+}
+
+impl Thunderstore {
+    /// Recursively finds dependencies of the given mods.
+    ///
+    /// This uses a breadth-first algorithm which means the result
+    /// is sorted by ascending depth. You can think of it as going "layer-by-layer"
+    /// down the dependency tree.
+    ///
+    /// Additionally, duplicates of the same package are removed. The specific version
+    /// of the package that is returned is non-deterministic.
+    pub fn dependencies<'a>(
         &'a self,
-        idents: impl Iterator<Item = &'a VersionIdent>,
-    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a VersionIdent>) {
-        let mut result = Vec::new();
-        let mut not_found = Vec::new();
-
-        let mut queue = idents.collect::<VecDeque<_>>();
-        let mut visited = queue
-            .iter()
-            .map(|str| str.full_name())
-            .collect::<HashSet<_>>();
-
-        while let Some(current) = queue.pop_front() {
-            if let Ok(current) = self.find_ident(current) {
-                for dep in &current.version.dependencies {
-                    if !visited.insert(dep.full_name()) {
-                        continue;
-                    }
-
-                    queue.push_back(dep);
-                }
-
-                result.push(current);
-            } else {
-                not_found.push(current);
-            }
+        idents: impl IntoIterator<Item = &'a VersionIdent>,
+    ) -> Dependencies<'a> {
+        Dependencies {
+            queue: idents.into_iter().collect(),
+            visited: HashSet::new(),
+            thunderstore: self,
         }
-
-        (result, not_found)
-    }
-
-    pub fn deps_of<'a>(
-        &'a self,
-        version: &'a PackageVersion,
-    ) -> (Vec<BorrowedMod<'a>>, Vec<&'a VersionIdent>) {
-        self.resolve_deps(version.dependencies.iter())
     }
 }
 
-const TIME_BETWEEN_LOADS: Duration = Duration::from_secs(60 * 15);
-
-async fn load_mods_loop(app: AppHandle, game: &'static Game) {
-    let manager = app.state::<Mutex<ModManager>>();
-    let state = app.state::<Mutex<Thunderstore>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    {
-        let manager = manager.lock().unwrap();
-
-        match read_cache(&cache_path(&manager)) {
-            Ok(Some(mods)) => {
-                let mut thunderstore = state.lock().unwrap();
-
-                for package in mods {
-                    thunderstore.packages.insert(package.uuid4, package);
-                }
-            }
-            Ok(None) => (),
-            Err(err) => warn!("failed to read cache: {}", err),
-        }
-    }
-
-    let mut is_first = true;
-
-    loop {
-        let fetch_automatically = prefs.lock().unwrap().fetch_mods_automatically();
-
-        if !fetch_automatically && !is_first {
-            debug!("automatic fetch cancelled");
-            break;
-        };
-
-        let is_fetching = {
-            let mut thunderstore = state.lock().unwrap();
-            let is_fetching = thunderstore.is_fetching;
-
-            if !is_fetching {
-                thunderstore.is_fetching = true;
-            }
-
-            is_fetching
-        };
-
-        if !is_fetching {
-            let res = fetch_mods(&app, game, is_first).await;
-
-            let mut thunderstore = state.lock().unwrap();
-            thunderstore.is_fetching = false;
-
-            match res {
-                Ok(_) => is_first = false,
-                Err(err) => {
-                    logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
-                }
-            }
-        }
-
-        tokio::time::sleep(TIME_BETWEEN_LOADS).await;
-    }
-}
-
-async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) -> Result<()> {
-    const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
-    const INSERT_EVERY: usize = 1000;
-    const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
-
-    let state = app.state::<Mutex<Thunderstore>>();
-    let client = &app.state::<NetworkClient>().0;
-
-    state.lock().unwrap().is_fetching = true;
-
-    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.slug);
-    let mut response = client.get(url).send().await?.error_for_status()?;
-
-    let mut is_first_chunk = true;
-    let mut buffer = String::new();
-    let mut byte_buffer = Vec::new();
-    let mut package_buffer = IndexMap::new();
-    let mut total_packages = 0;
-
-    let start_time = Instant::now();
-    let mut last_update = Instant::now();
-
-    while let Some(chunk) = response.chunk().await? {
-        byte_buffer.extend_from_slice(&chunk);
-        let chunk = match str::from_utf8(&byte_buffer) {
-            Ok(chunk) => chunk,
-            Err(_) => continue,
-        };
-
-        if is_first_chunk {
-            is_first_chunk = false;
-            buffer.extend(chunk.chars().skip(1)); // remove leading [
-        } else {
-            buffer.push_str(chunk);
-        }
-
-        byte_buffer.clear();
-
-        while let Some(index) = buffer.find("}]},") {
-            let (json, _) = buffer.split_at(index + 3);
-
-            match serde_json::from_str::<PackageListing>(json) {
-                Ok(package) => {
-                    if !IGNORED_NAMES.contains(&package.name()) {
-                        package_buffer.insert(package.uuid4, package);
-                        total_packages += 1;
-                    }
-                }
-                Err(err) => logger::log_js_err("failed to fetch mod", &anyhow!(err), app),
-            }
-
-            buffer.replace_range(..index + 4, "");
-        }
-
-        // do this in bigger chunks to not have to lock the state too often
-        if write_directly && package_buffer.len() >= INSERT_EVERY {
-            let mut state = state.lock().unwrap();
-            state.packages.extend(package_buffer.drain(..));
-        }
-
-        if last_update.elapsed() >= UPDATE_INTERVAL {
-            emit_update(total_packages, app);
-            last_update = Instant::now();
-        }
-    }
-
-    let mut state = state.lock().unwrap();
-    if write_directly {
-        // add any remaining packages
-        state.packages.extend(package_buffer.into_iter());
-    } else {
-        // remove all packages and replace them with the new ones
-        state.packages = package_buffer;
-    }
-
-    state.packages_fetched = true;
-    state.is_fetching = false;
-
-    debug!(
-        "loaded {} mods in {:?}",
-        state.packages.len(),
-        start_time.elapsed()
-    );
-
-    app.emit("status_update", None::<String>).ok();
-
-    return Ok(());
-
-    fn emit_update(mods: usize, app: &AppHandle) {
-        app.emit(
-            "status_update",
-            Some(format!("Fetching mods from Thunderstore... {}", mods)),
-        )
-        .ok();
-    }
-}
-
-fn read_cache(path: &Path) -> Result<Option<Vec<PackageListing>>> {
+pub fn read_cache(manager: &ModManager) -> Result<Option<Vec<PackageListing>>> {
     let start = Instant::now();
+
+    let path = cache_path(manager);
 
     if !path.exists() {
         debug!("no cache file found at {}", path.display());
@@ -414,14 +290,14 @@ fn read_cache(path: &Path) -> Result<Option<Vec<PackageListing>>> {
     Ok(Some(result))
 }
 
-pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
+pub fn write_cache(packages: &[&PackageListing], manager: &ModManager) -> Result<()> {
     if packages.is_empty() {
         return Ok(());
     }
 
     let start = Instant::now();
 
-    util::fs::write_json(path, packages, JsonStyle::Compact)
+    util::fs::write_json(cache_path(manager), packages, JsonStyle::Compact)
         .context("failed to write mod cache")?;
 
     debug!(
@@ -433,6 +309,6 @@ pub fn write_cache(packages: &[&PackageListing], path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn cache_path(manager: &ModManager) -> PathBuf {
+fn cache_path(manager: &ModManager) -> PathBuf {
     manager.active_game().path.join("thunderstore_cache.json")
 }

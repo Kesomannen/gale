@@ -14,7 +14,7 @@ use zip::ZipWriter;
 
 use super::{install::ModInstall, ModManager, Profile, Result};
 use crate::{
-    thunderstore::{models::LegacyProfileCreateResponse, ModId, Thunderstore},
+    thunderstore::{LegacyProfileCreateResponse, ModId, Thunderstore},
     util::cmd::StateMutex,
 };
 
@@ -64,8 +64,8 @@ impl<'a> R2Mod<'a> {
         })?;
 
         let mod_ref = ModId {
-            package: package.uuid4,
-            version: version.uuid4,
+            package_uuid: package.uuid,
+            version_uuid: version.uuid,
         };
 
         Ok(ModInstall::new(mod_ref).with_state(self.enabled))

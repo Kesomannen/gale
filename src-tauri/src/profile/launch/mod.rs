@@ -11,7 +11,7 @@ use tokio::time::Duration;
 
 use super::ManagerGame;
 use crate::{
-    games::Game,
+    game::Game,
     prefs::{GamePrefs, Prefs},
     util::{error::IoResultExt, fs::PathExt},
 };
@@ -29,7 +29,7 @@ pub enum LaunchMode {
 
 impl ManagerGame {
     pub fn launch(&self, prefs: &Prefs) -> Result<()> {
-        let game_dir = self.game.path(prefs)?;
+        let game_dir = game_dir(self.game, prefs)?;
         if let Err(err) = self.link_files(&game_dir) {
             warn!("failed to link files: {:#}", err);
         }
@@ -44,7 +44,7 @@ impl ManagerGame {
     fn launch_command(&self, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
         let (launch_mode, custom_args) = prefs
             .game_prefs
-            .get(&self.game.slug)
+            .get(self.game.slug())
             .map(|prefs| (prefs.launch_mode.clone(), prefs.custom_args.as_ref()))
             .unwrap_or_default();
 
@@ -64,12 +64,12 @@ impl ManagerGame {
                 let mut command = Command::new(steam_path);
                 command
                     .arg("-applaunch")
-                    .arg(self.game.steam_id.to_string());
+                    .arg(self.game.steam_id().to_string());
 
                 command
             }
             LaunchMode::Direct { .. } => {
-                let path = self.game.exe_path(prefs)?;
+                let path = exe_path(self.game, prefs)?;
                 Command::new(path)
             }
         };
@@ -82,7 +82,7 @@ impl ManagerGame {
         Ok((launch_mode, command))
     }
 
-    fn link_files(&self, target: &Path) -> Result<()> {
+    fn link_files(&self, game_dir: &Path) -> Result<()> {
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
 
         let files = self
@@ -97,65 +97,63 @@ impl ManagerGame {
             });
 
         for file in files {
-            fs::copy(file.path(), target.join(file.file_name()))?;
+            fs::copy(file.path(), game_dir.join(file.file_name()))?;
         }
 
         Ok(())
     }
 }
 
-impl Game {
-    pub fn path(&self, prefs: &Prefs) -> Result<PathBuf> {
-        let path = match prefs.game_prefs.get(&self.slug) {
-            Some(GamePrefs {
-                dir_override: Some(path),
-                ..
-            }) => path.to_path_buf(),
-            _ => {
-                let mut path = prefs
-                    .steam_library_dir
-                    .as_ref()
-                    .context("steam library directory not set")?
-                    .to_path_buf();
+fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
+    let path = match prefs.game_prefs.get(game.slug()) {
+        Some(GamePrefs {
+            dir_override: Some(path),
+            ..
+        }) => path.to_path_buf(),
+        _ => {
+            let mut path = prefs
+                .steam_library_dir
+                .as_ref()
+                .context("steam library directory not set")?
+                .to_path_buf();
 
-                if !path.ends_with("common") {
-                    if !path.ends_with("steamapps") {
-                        path.push("steamapps");
-                    }
-
-                    path.push("common");
+            if !path.ends_with("common") {
+                if !path.ends_with("steamapps") {
+                    path.push("steamapps");
                 }
 
-                path.push(&self.steam_name);
-
-                path
+                path.push("common");
             }
-        };
 
-        ensure!(
-            path.exists(),
-            "game directory not found, please check your settings (expected at {})",
-            path.display()
-        );
+            path.push(game.steam_name());
 
-        Ok(path)
-    }
+            path
+        }
+    };
 
-    fn exe_path(&self, prefs: &Prefs) -> Result<PathBuf> {
-        self.path(prefs)?
-            .read_dir()?
-            .filter_map(Result::ok)
-            .find(|entry| {
-                let file_name = PathBuf::from(entry.file_name());
-                let extension = file_name.extension().and_then(|ext| ext.to_str());
+    ensure!(
+        path.exists(),
+        "game directory not found, please check your settings (expected at {})",
+        path.display()
+    );
 
-                matches!(extension, Some("exe" | "sh"))
-                    && !file_name.to_string_lossy().contains("UnityCrashHandler")
-            })
-            .map(|entry| entry.path())
-            .and_then(|path| path.exists_or_none())
-            .context("game executable not found, try repairing the game through Steam")
-    }
+    Ok(path)
+}
+
+fn exe_path(game: Game, prefs: &Prefs) -> Result<PathBuf> {
+    game_dir(game, prefs)?
+        .read_dir()?
+        .filter_map(Result::ok)
+        .find(|entry| {
+            let file_name = PathBuf::from(entry.file_name());
+            let extension = file_name.extension().and_then(|ext| ext.to_str());
+
+            matches!(extension, Some("exe" | "sh"))
+                && !file_name.to_string_lossy().contains("UnityCrashHandler")
+        })
+        .map(|entry| entry.path())
+        .and_then(|path| path.exists_or_none())
+        .context("game executable not found, try repairing the game through Steam")
 }
 
 fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
