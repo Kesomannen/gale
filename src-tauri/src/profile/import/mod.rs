@@ -210,7 +210,6 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
                 Ok(thunderstore
                     .dependencies(deps)
-                    .into_iter()
                     .filter(|dep| !profile.has_mod(dep.package.uuid))
                     .map(|borrowed| borrowed.into())
                     .collect::<Vec<_>>())

@@ -40,9 +40,9 @@ pub fn clear_download_cache(
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
-        super::cache::soft_clear_cache(&manager, &thunderstore, &prefs)?;
+        super::cache::soft_clear(&manager, &thunderstore, &prefs)?;
     } else {
-        super::cache::clear_cache(&prefs)?;
+        super::cache::clear(&prefs)?;
     }
 
     Ok(())

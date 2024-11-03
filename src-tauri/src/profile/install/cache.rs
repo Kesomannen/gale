@@ -19,7 +19,7 @@ pub(super) fn path(ident: &VersionIdent, prefs: &Prefs) -> PathBuf {
     path
 }
 
-pub(super) fn clear_cache(prefs: &Prefs) -> Result<()> {
+pub(super) fn clear(prefs: &Prefs) -> Result<()> {
     let cache_dir = prefs.cache_dir();
 
     if !cache_dir.exists() {
@@ -32,7 +32,7 @@ pub(super) fn clear_cache(prefs: &Prefs) -> Result<()> {
     Ok(())
 }
 
-pub(super) fn soft_clear_cache(
+pub(super) fn soft_clear(
     manager: &ModManager,
     thunderstore: &Thunderstore,
     prefs: &Prefs,

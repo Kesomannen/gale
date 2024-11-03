@@ -99,7 +99,6 @@ pub struct PackageVersion {
     pub date_created: DateTime<Utc>,
     pub dependencies: Vec<VersionIdent>,
     pub description: String,
-    pub download_url: String,
     pub downloads: u32,
     pub file_size: u64,
     pub icon: String,
@@ -131,6 +130,13 @@ impl PackageVersion {
             .version()
             .parse()
             .expect("thunderstore package has invalid version")
+    }
+
+    pub fn download_url(&self) -> String {
+        format!(
+            "https://thunderstore.io/package/download/{}/",
+            self.ident.path()
+        )
     }
 }
 

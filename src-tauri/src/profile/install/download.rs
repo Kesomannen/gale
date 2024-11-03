@@ -1,11 +1,13 @@
 use std::{
     fs,
     io::Cursor,
+    path::Path,
     sync::Mutex,
     time::{Duration, Instant},
 };
 
 use anyhow::{Context, Result};
+use chrono::Utc;
 use core::str;
 use futures_util::StreamExt;
 use tauri::{AppHandle, Emitter, Manager};
@@ -14,7 +16,7 @@ use thiserror::Error;
 use super::{cache, InstallOptions, InstallProgress, InstallTask, ModInstall};
 use crate::{
     prefs::Prefs,
-    profile::ModManager,
+    profile::{ModManager, ProfileMod, ProfileModKind, ThunderstoreMod},
     thunderstore::Thunderstore,
     util::{cmd::StateMutex, error::IoResultExt},
 };
@@ -46,7 +48,7 @@ pub struct Installer<'a> {
 
 enum InstallMethod {
     Cached,
-    Download { url: String, size: u64 },
+    Download { url: String, file_size: u64 },
 }
 
 #[derive(Debug, Error)]
@@ -91,7 +93,7 @@ impl<'a> Installer<'a> {
         self.options.can_cancel && self.install_state.lock().unwrap().cancelled
     }
 
-    fn check_cancelled(&self) -> InstallResult<()> {
+    fn check_cancel(&self) -> InstallResult<()> {
         match self.is_cancelled() {
             true => Err(InstallError::Cancelled),
             false => Ok(()),
@@ -119,33 +121,35 @@ impl<'a> Installer<'a> {
         }
     }
 
-    fn prepare_install(&mut self, data: &ModInstall) -> Result<InstallMethod> {
+    fn try_cache_install(&mut self, data: &ModInstall) -> Result<InstallMethod> {
         let mut manager = self.manager.lock().unwrap();
         let thunderstore = self.thunderstore.lock().unwrap();
         let prefs = self.prefs.lock().unwrap();
 
-        let borrowed = data.id.borrow(&thunderstore)?;
-        let path = cache::path(&borrowed.version.ident, &prefs);
+        let version = data.id.borrow(&thunderstore)?.version;
+        let cache_path = cache::path(&version.ident, &prefs);
 
-        self.current_name = borrowed.package.name().to_owned();
-        self.update(InstallTask::Installing);
+        self.current_name = version.name().to_owned();
 
-        if path.exists() {
+        if cache_path.exists() {
+            self.update(InstallTask::Installing);
+
             if let Some(callback) = &self.options.before_install {
                 callback(data, &mut manager, &thunderstore);
             }
-        }
 
-        if super::fs::try_cache_install(data, &path, &mut manager, &thunderstore)? {
-            self.completed_bytes += borrowed.version.file_size;
+            cache_install(data, &cache_path, &mut manager, &thunderstore)?;
+
+            self.completed_bytes += version.file_size;
             manager.save(&prefs)?;
-            return Ok(InstallMethod::Cached);
-        }
 
-        Ok(InstallMethod::Download {
-            url: borrowed.version.download_url.clone(),
-            size: borrowed.version.file_size,
-        })
+            Ok(InstallMethod::Cached)
+        } else {
+            Ok(InstallMethod::Download {
+                url: version.download_url(),
+                file_size: version.file_size,
+            })
+        }
     }
 
     async fn download(&mut self, url: &str, file_size: u64) -> InstallResult<Vec<u8>> {
@@ -180,7 +184,7 @@ impl<'a> Installer<'a> {
 
                 last_update = Instant::now();
 
-                self.check_cancelled()?;
+                self.check_cancel()?;
             };
         }
 
@@ -192,31 +196,30 @@ impl<'a> Installer<'a> {
         let thunderstore = self.thunderstore.lock().unwrap();
         let prefs = self.prefs.lock().unwrap();
 
-        let borrowed = install.id.borrow(&thunderstore)?;
-        let cache_path = cache::path(&borrowed.version.ident, &prefs);
+        let version = install.id.borrow(&thunderstore)?.version;
+        let cache_path = cache::path(&version.ident, &prefs);
 
         fs::create_dir_all(&cache_path).fs_context("create mod cache dir", &cache_path)?;
 
-        self.check_cancelled()?;
+        self.check_cancel()?;
         self.update(InstallTask::Extracting);
 
         super::fs::extract(
             Cursor::new(data),
-            borrowed.package.ident.as_str(),
+            version.full_name(),
             cache_path.clone(),
             manager.active_game,
         )
         .context("failed to extract mod")?;
 
-        self.check_cancelled()?;
+        self.check_cancel()?;
         self.update(InstallTask::Installing);
 
         if let Some(callback) = &self.options.before_install {
             callback(install, &mut manager, &thunderstore);
         }
 
-        super::fs::try_cache_install(install, &cache_path, &mut manager, &thunderstore)
-            .context("failed to install after download")?;
+        cache_install(install, &cache_path, &mut manager, &thunderstore)?;
 
         manager
             .save(&prefs)
@@ -226,24 +229,23 @@ impl<'a> Installer<'a> {
     }
 
     async fn install(&mut self, data: &ModInstall) -> InstallResult<()> {
-        if let InstallMethod::Download { url, size } = self.prepare_install(data)? {
-            // this means we didn't install from cache
-            let response = self.download(&url, size).await?;
+        if let InstallMethod::Download { url, file_size } = self.try_cache_install(data)? {
+            let response = self.download(&url, file_size).await?;
             self.install_from_download(response, data)?;
         }
 
         Ok(())
     }
 
-    pub async fn install_all(&mut self, to_install: Vec<ModInstall>) -> Result<()> {
+    pub async fn install_all(&mut self, mods: Vec<ModInstall>) -> Result<()> {
         self.install_state.lock().unwrap().cancelled = false;
 
-        self.total_mods = to_install.len();
-        self.count_total_bytes(&to_install)?;
+        self.total_mods = mods.len();
+        self.count_total_bytes(&mods)?;
 
-        for i in 0..to_install.len() {
+        for i in 0..mods.len() {
             self.index = i;
-            let data = &to_install[i];
+            let data = &mods[i];
 
             match self.install(data).await {
                 Ok(()) => (),
@@ -254,7 +256,7 @@ impl<'a> Installer<'a> {
 
                     let profile = manager.active_profile_mut();
 
-                    for install in to_install.iter().take(i) {
+                    for install in mods.iter().take(i) {
                         profile
                             .force_remove_mod(install.uuid())
                             .context("failed to clean up after cancellation")?;
@@ -285,13 +287,50 @@ impl<'a> Installer<'a> {
         Ok(())
     }
 
-    fn count_total_bytes(&mut self, to_install: &Vec<ModInstall>) -> Result<()> {
+    fn count_total_bytes(&mut self, mods: &Vec<ModInstall>) -> Result<()> {
         let thunderstore = self.thunderstore.lock().unwrap();
-        for install in to_install {
-            let borrowed_mod = install.id.borrow(&thunderstore)?;
-            self.total_bytes += borrowed_mod.version.file_size;
+        for install in mods {
+            let borrowed = install.id.borrow(&thunderstore)?;
+            self.total_bytes += borrowed.version.file_size;
         }
 
         Ok(())
     }
+}
+
+fn cache_install(
+    data: &ModInstall,
+    src: &Path,
+    manager: &mut ModManager,
+    thunderstore: &Thunderstore,
+) -> Result<()> {
+    let borrowed = data.id.borrow(thunderstore)?;
+    let profile = manager.active_profile_mut();
+
+    super::fs::install(src, &profile.path, data.overwrite)?;
+
+    let install_time = data.install_time.unwrap_or(Utc::now());
+
+    let profile_mod = ProfileMod::new_at(
+        install_time,
+        ProfileModKind::Thunderstore(ThunderstoreMod {
+            ident: borrowed.ident().clone(),
+            id: borrowed.into(),
+        }),
+    );
+
+    match data.index {
+        Some(index) if index < profile.mods.len() => {
+            profile.mods.insert(index, profile_mod);
+        }
+        _ => {
+            profile.mods.push(profile_mod);
+        }
+    };
+
+    if !data.enabled {
+        profile.force_toggle_mod(borrowed.package.uuid)?;
+    }
+
+    Ok(())
 }

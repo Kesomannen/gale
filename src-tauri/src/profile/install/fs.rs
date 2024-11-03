@@ -8,60 +8,15 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use chrono::Utc;
 use log::{debug, warn};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-use super::ModInstall;
 use crate::{
     game::{Game, Subdir},
     prefs::Prefs,
-    profile::{ModManager, ProfileMod, ProfileModKind, ThunderstoreMod},
-    thunderstore::Thunderstore,
     util,
 };
-
-pub fn try_cache_install(
-    to_install: &ModInstall,
-    path: &Path,
-    manager: &mut ModManager,
-    thunderstore: &Thunderstore,
-) -> Result<bool> {
-    let borrowed = to_install.id.borrow(thunderstore)?;
-    let profile = manager.active_profile_mut();
-
-    match path.exists() {
-        true => {
-            install(path, &profile.path, to_install.overwrite)?;
-
-            let install_time = to_install.install_time.unwrap_or(Utc::now());
-            let profile_mod = ProfileMod::new_at(
-                install_time,
-                ProfileModKind::Thunderstore(ThunderstoreMod {
-                    ident: borrowed.version.ident.clone(),
-                    id: borrowed.into(),
-                }),
-            );
-
-            match to_install.index {
-                Some(index) if index < profile.mods.len() => {
-                    profile.mods.insert(index, profile_mod);
-                }
-                _ => {
-                    profile.mods.push(profile_mod);
-                }
-            };
-
-            if !to_install.enabled {
-                profile.force_toggle_mod(borrowed.package.uuid)?;
-            }
-
-            Ok(true)
-        }
-        false => Ok(false),
-    }
-}
 
 pub fn install_from_zip(
     src: &Path,
@@ -143,7 +98,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf, game: Game
     Ok(())
 }
 
-pub(super) fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
+pub fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
     let mut components = relative_path.components();
     if components.clone().count() == 1 {
         // ignore top-level files, such as manifest.json and icon.png
@@ -159,11 +114,7 @@ pub(super) fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
 /// Maps a file from a mod zip archive to its final extracted path.
 /// Based on r2modman's structure rules, which are available here:
 /// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
-pub(super) fn map_file_default<F, S>(
-    relative_path: &Path,
-    full_name: &str,
-    subdirs: F,
-) -> Result<PathBuf>
+pub fn map_file_default<F, S>(relative_path: &Path, full_name: &str, subdirs: F) -> Result<PathBuf>
 where
     F: Fn() -> S,
     S: Iterator<Item = &'static Subdir<'static>>,
@@ -246,7 +197,7 @@ where
 //         - ...
 //     - config
 //       - KeepItDown.cfg
-fn install(src: &Path, dest: &Path, overwrite: bool) -> Result<()> {
+pub fn install(src: &Path, dest: &Path, overwrite: bool) -> Result<()> {
     let config_dir = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
     let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
 

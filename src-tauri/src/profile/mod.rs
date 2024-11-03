@@ -4,12 +4,14 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::Mutex,
+    time::Instant,
 };
 
 use anyhow::{bail, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use itertools::Itertools;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
@@ -189,7 +191,7 @@ impl ProfileMod {
 
     /// Finds all dependencies of this mod.
     ///
-    /// See [`Thunderstore::find_deps`] for more information.
+    /// See [`Thunderstore::dependencies`] for more information.
     pub fn dependencies<'a>(
         &'a self,
         thunderstore: &'a Thunderstore,
@@ -302,20 +304,27 @@ impl Profile {
 
     /// Finds all the dependants of a mod in this profile.
     ///
-    /// This includes both direct and indirect relations.
+    /// This includes both direct and indirect dependencies.
     fn dependants<'a>(
         &'a self,
         uuid: Uuid,
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = &ProfileMod> + 'a {
-        self.mods
+        let start = Instant::now();
+
+        let result = self
+            .mods
             .iter()
             .filter(move |other| other.uuid() != uuid)
             .filter(move |other| {
                 other
                     .dependencies(thunderstore)
                     .any(|dep| dep.package.uuid == uuid)
-            })
+            });
+
+        debug!("finding dependants took {:?}", start.elapsed());
+
+        result
     }
 
     /// Recursively finds the dependencies of the given mods and filters
@@ -328,8 +337,7 @@ impl Profile {
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
         thunderstore
-            .dependencies(idents.into_iter())
-            .into_iter()
+            .dependencies(idents)
             .filter(|dep| !self.has_mod(dep.package.uuid))
     }
 

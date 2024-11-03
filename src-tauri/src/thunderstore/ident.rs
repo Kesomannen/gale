@@ -7,7 +7,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-/// A unique identifier for a package version.
+/// A unique identifier for a specific version of a package.
 ///
 /// Often formatted as `owner-name-version`, also known as a dependency string.
 #[derive(Eq, Clone, Serialize, Deserialize)]

@@ -9,12 +9,12 @@ use serde::{Deserialize, Serialize};
 const JSON: &str = include_str!("../games.json");
 
 lazy_static! {
-    static ref GAMES: Vec<GameInner<'static>> = serde_json::from_str(JSON).unwrap();
+    static ref GAMES: Vec<GameData<'static>> = serde_json::from_str(JSON).unwrap();
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct GameData<'a> {
+struct JsonGame<'a> {
     name: &'a str,
     #[serde(default)]
     slug: Option<&'a str>,
@@ -53,8 +53,8 @@ enum Steam<'a> {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase", from = "GameData")]
-struct GameInner<'a> {
+#[serde(rename_all = "camelCase", from = "JsonGame")]
+struct GameData<'a> {
     name: &'a str,
     slug: Cow<'a, str>,
     steam_name: &'a str,
@@ -65,9 +65,9 @@ struct GameInner<'a> {
     popular: bool,
 }
 
-impl<'a> From<GameData<'a>> for GameInner<'a> {
-    fn from(value: GameData<'a>) -> Self {
-        let GameData {
+impl<'a> From<JsonGame<'a>> for GameData<'a> {
+    fn from(value: JsonGame<'a>) -> Self {
+        let JsonGame {
             name,
             slug,
             popular,
@@ -105,13 +105,13 @@ impl<'a> From<GameData<'a>> for GameInner<'a> {
     }
 }
 
-impl PartialEq for GameInner<'_> {
+impl PartialEq for GameData<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.slug == other.slug
     }
 }
 
-impl Hash for GameInner<'_> {
+impl Hash for GameData<'_> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.slug.hash(state);
     }
@@ -171,7 +171,7 @@ impl ModLoader {
 
 #[derive(Debug, Clone, Copy, PartialEq, Hash, Serialize)]
 #[serde(transparent)]
-pub struct Game(&'static GameInner<'static>);
+pub struct Game(&'static GameData<'static>);
 
 impl Game {
     pub fn all() -> impl Iterator<Item = Self> {

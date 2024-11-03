@@ -92,10 +92,10 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
     }
 }
 
-/// A pair of a package's uuid and the uuid of one of its versions.
+/// A pair of a package uuid and the uuid of one of its versions.
 ///
 /// This is a "persistent" version of [`BorrowedMod`] which can be held
-/// without locking [`Thunderstore`].
+/// without locking [`Thunderstore`] as well as (de)serialized.
 ///
 /// To convert it back into a [`BorrowedMod`], use [`ModId::borrow`].
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -117,7 +117,7 @@ impl From<BorrowedMod<'_>> for ModId {
 }
 
 impl ModId {
-    /// Looks up the mod in [`Thunderstore`] and returns a borrowed reference to it.
+    /// Borrows the mod from [`Thunderstore`].
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
         thunderstore.get_mod(self.package_uuid, self.version_uuid)
     }
@@ -205,10 +205,9 @@ impl Thunderstore {
         Ok((package, version).into())
     }
 
-    /// Switches the active game, clearing the fetched mods and aborting any fetching.
+    /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
     pub fn switch_game(&mut self, game: Game, app: AppHandle) {
         if let Some(handle) = self.fetch_loop_handle.take() {
-            debug!("aborting load mods loop");
             handle.abort();
         }
 
@@ -221,6 +220,7 @@ impl Thunderstore {
     }
 }
 
+/// See [`Thunderstore::dependencies`].
 pub struct Dependencies<'a> {
     queue: VecDeque<&'a VersionIdent>,
     visited: HashSet<&'a str>,
@@ -234,12 +234,12 @@ impl<'a> Iterator for Dependencies<'a> {
         self.queue.pop_front().and_then(|current| {
             let current = self.thunderstore.find_ident(current).ok()?;
 
-            for dep in &current.version.dependencies {
-                if !self.visited.insert(dep.full_name()) {
+            for dependency in &current.version.dependencies {
+                if !self.visited.insert(dependency.full_name()) {
                     continue;
                 }
 
-                self.queue.push_back(dep);
+                self.queue.push_back(dependency);
             }
 
             Some(current)
@@ -248,14 +248,12 @@ impl<'a> Iterator for Dependencies<'a> {
 }
 
 impl Thunderstore {
-    /// Recursively finds dependencies of the given mods.
+    /// Recursively finds the dependencies of the given mods,
+    /// sorted by ascending depth.
     ///
-    /// This uses a breadth-first algorithm which means the result
-    /// is sorted by ascending depth. You can think of it as going "layer-by-layer"
-    /// down the dependency tree.
-    ///
-    /// Additionally, duplicates of the same package are removed. The specific version
-    /// of the package that is returned is non-deterministic.
+    /// Duplicates of the same package are removed. The specific
+    /// version of a package that is chosen depends on which
+    /// is encountered first.
     pub fn dependencies<'a>(
         &'a self,
         idents: impl IntoIterator<Item = &'a VersionIdent>,
