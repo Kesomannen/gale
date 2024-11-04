@@ -16,10 +16,8 @@
 
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
-	import { fade, fly } from 'svelte/transition';
 	import GameSelection from '$lib/components/GameSelection.svelte';
 	import Updater from './Updater.svelte';
-	import { quadOut } from 'svelte/easing';
 	import { dropTransition } from '$lib/transitions';
 
 	let launchGamePopupOpen = false;
@@ -29,9 +27,7 @@
 	let profilesOpen = false;
 
 	function deleteProfile(index: number) {
-		confirm(`Are you sure you want to delete ${profiles[index].name}?`, {
-			title: 'Delete profile'
-		}).then(async (result) => {
+		confirm(`Are you sure you want to delete ${profiles[index].name}?`).then(async (result) => {
 			if (result) {
 				await invokeCommand('delete_profile', { index });
 				refreshProfiles();

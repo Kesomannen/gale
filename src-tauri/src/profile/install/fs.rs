@@ -38,7 +38,7 @@ pub fn install_from_zip(
         .context("failed to open file")?;
 
     extract(reader, full_name, path.clone(), game)?;
-    install(&path, dest, false)?;
+    install(&path, dest, false, game)?;
 
     fs::remove_dir_all(path).context("failed to remove temporary directory")?;
 
@@ -80,7 +80,7 @@ pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf, game: Game
 
             Cow::Borrowed(path)
         } else {
-            let path = map_file_default(&relative_path, full_name, || game.subdirs())?;
+            let path = map_file_default(&relative_path, full_name, game)?;
 
             Cow::Owned(path)
         };
@@ -111,17 +111,30 @@ pub fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
     Some(components.as_path())
 }
 
+pub trait FileMapper {
+    fn match_subdir(&self, name: &str) -> Option<&Subdir>;
+    fn default_subdir(&self) -> &Subdir;
+}
+
+impl FileMapper for Game {
+    fn match_subdir(&self, name: &str) -> Option<&Subdir> {
+        self.subdirs().find(|subdir| subdir.name() == name)
+    }
+
+    fn default_subdir(&self) -> &Subdir {
+        self.mod_loader().default_subdir()
+    }
+}
+
 /// Maps a file from a mod zip archive to its final extracted path.
 /// Based on r2modman's structure rules, which are available here:
 /// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
-pub fn map_file_default<F, S>(relative_path: &Path, full_name: &str, subdirs: F) -> Result<PathBuf>
-where
-    F: Fn() -> S,
-    S: Iterator<Item = &'static Subdir<'static>>,
-{
+pub fn map_file_default(
+    relative_path: &Path,
+    full_name: &str,
+    mapper: impl FileMapper,
+) -> Result<PathBuf> {
     use std::path::Component;
-
-    const DEFAULT_SUBDIR: &Subdir<'static> = &Subdir::new("plugins");
 
     // first, flatten the path until a subdir appears
     // if the path contains no subdirs, default to /plugins
@@ -136,7 +149,7 @@ where
             Some(Component::Normal(name)) => {
                 // check for a subdir
                 if let Some(name) = name.to_str() {
-                    if let Some(subdir) = subdirs().find(|subdir| subdir.name() == name) {
+                    if let Some(subdir) = mapper.match_subdir(name) {
                         break (subdir, false);
                     }
                 }
@@ -151,7 +164,7 @@ where
             // we don't care/don't expect any of these
             Some(Component::RootDir | Component::Prefix(_) | Component::CurDir) => continue,
             // default to plugins when the whole path is exhausted
-            None => break (DEFAULT_SUBDIR, true),
+            None => break (mapper.default_subdir(), true),
         }
     };
 
@@ -163,7 +176,7 @@ where
     // or the whole path if we defaulted
 
     // e.g. profile/BepInEx/plugins
-    let mut target: PathBuf = ["BepInEx", subdir.name()].iter().collect();
+    let mut target = PathBuf::from(subdir.target());
 
     if subdir.separate_mods() {
         // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod
@@ -197,10 +210,8 @@ where
 //         - ...
 //     - config
 //       - KeepItDown.cfg
-pub fn install(src: &Path, dest: &Path, overwrite: bool) -> Result<()> {
-    let config_dir = ["BepInEx", "config"].into_iter().collect::<PathBuf>();
-    let entries = WalkDir::new(src).into_iter().filter_map(|entry| entry.ok());
-
+pub fn install(src: &Path, dest: &Path, overwrite: bool, game: Game) -> Result<()> {
+    let entries = WalkDir::new(src).into_iter().filter_map(Result::ok);
     for entry in entries {
         let relative = entry
             .path()
@@ -227,8 +238,12 @@ pub fn install(src: &Path, dest: &Path, overwrite: bool) -> Result<()> {
                 }
             }
 
-            if relative.starts_with(&config_dir) {
-                // copy config files so they can be edited without affecting the original
+            let mutable = game
+                .subdirs()
+                .find(|subdir| relative.starts_with(subdir.target()))
+                .is_some_and(|subdir| subdir.is_mutable());
+
+            if mutable {
                 fs::copy(entry.path(), target)
                     .with_context(|| format!("failed to copy file {}", relative.display()))?;
             } else {

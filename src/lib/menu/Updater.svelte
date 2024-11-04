@@ -67,9 +67,7 @@
 
 		if (platform() !== 'windows') {
 			// on other platforms installUpdate() relaunches the app itself
-			await message('Gale will now restart in order to apply the update.', {
-				title: 'Update installed'
-			});
+			await message('Gale will now restart in order to apply the update.');
 			await relaunch();
 		}
 	}

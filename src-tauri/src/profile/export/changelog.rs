@@ -169,7 +169,7 @@ where
 }
 
 impl Profile {
-    pub fn take_snapshot(&self, args: &ModpackArgs) -> Result<()> {
+    pub(super) fn take_snapshot(&self, args: &ModpackArgs) -> Result<()> {
         let mut path = self.path.join("snapshots");
         fs::create_dir_all(&path)?;
 

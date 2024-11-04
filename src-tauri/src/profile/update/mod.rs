@@ -46,22 +46,16 @@ impl Profile {
         thunderstore: &'a Thunderstore,
     ) -> Result<Option<AvailableUpdate<'a>>> {
         let index = self.index_of(uuid)?;
-
         let profile_mod = &self.mods[index];
-        let ts_mod = match profile_mod.as_thunderstore() {
-            Some((ts_mod, _)) => ts_mod,
-            None => return Ok(None), // local mods can't be updated
+
+        let Some((ts_mod, _)) = profile_mod.as_thunderstore() else {
+            return Ok(None); // local mods can't be updated
         };
 
         let current = ts_mod.id.borrow(thunderstore)?.version;
         let package = thunderstore.get_package(uuid)?;
 
-        let latest = package
-            .versions
-            .first()
-            .expect("package should have at least one version");
-
-        if current.parsed_version() >= latest.parsed_version() {
+        if current.parsed_version() >= package.latest().parsed_version() {
             return Ok(None);
         }
 
@@ -73,7 +67,7 @@ impl Profile {
             index,
             package,
             current,
-            latest,
+            latest: package.latest(),
             enabled: profile_mod.enabled,
             install_time: profile_mod.install_time,
         }))

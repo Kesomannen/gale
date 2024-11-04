@@ -56,9 +56,7 @@
 		data.name = name;
 
 		if (mode === 'overwrite') {
-			let confirmed = await confirm(`Are you sure you want to override '${data.name}'?`, {
-				title: 'Overwrite profile'
-			});
+			let confirmed = await confirm(`Are you sure you want to override '${data.name}'?`);
 
 			if (!confirmed) return;
 		}
@@ -90,7 +88,10 @@
 						<InputField bind:value={name} class="w-full" />
 
 						{#if !nameAvailable}
-							<Tooltip class="absolute bottom-0 right-2 h-full text-xl text-red-500" side="left">
+							<Tooltip
+								class="absolute bottom-0 right-2 h-full cursor-text text-xl text-red-500"
+								side="left"
+							>
 								<Icon icon="mdi:error" />
 
 								<div slot="tooltip">

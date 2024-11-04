@@ -36,13 +36,9 @@ pub fn run(app: &App) -> Result<()> {
                 if let Value::String(profile) = &arg.value {
                     let game = manager.active_game_mut();
 
-                    let index = game
-                        .profiles
-                        .iter()
-                        .position(|p| p.name == *profile)
-                        .context("unknown profile")?;
+                    let index = game.profile_index(&profile).context("unknown profile")?;
 
-                    game.set_active_profile(index, Some(&thunderstore))
+                    game.set_active_profile(index)
                         .context("failed to set profile")?;
                 }
             }

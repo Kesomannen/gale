@@ -4,7 +4,7 @@ use log::warn;
 use serde::Serialize;
 use uuid::Uuid;
 
-use super::{Dependant, ModActionResponse, ModManager, Profile};
+use super::{actions::ActionResult, Dependant, ModManager, Profile};
 use crate::{
     game::Game,
     prefs::Prefs,
@@ -14,9 +14,27 @@ use crate::{
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct FrontendGame {
+    name: &'static str,
+    slug: &'static str,
+    popular: bool,
+}
+
+impl From<Game> for FrontendGame {
+    fn from(value: Game) -> Self {
+        Self {
+            name: value.name(),
+            slug: value.slug(),
+            popular: value.is_popular(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GameInfo {
-    all: Vec<Game>,
-    active: Game,
+    all: Vec<FrontendGame>,
+    active: FrontendGame,
     favorites: Vec<&'static str>,
 }
 
@@ -27,15 +45,15 @@ pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo {
     let favorites = manager
         .games
         .iter()
-        .filter_map(|(slug, game)| match game.favorite {
-            true => Some(*slug),
+        .filter_map(|(game, managed_game)| match managed_game.favorite {
+            true => Some(game.name()),
             false => None,
         })
         .collect();
 
     GameInfo {
-        all: Game::all().collect(),
-        active: manager.active_game,
+        all: Game::all().map_into().collect(),
+        active: manager.active_game.into(),
         favorites,
     }
 }
@@ -52,8 +70,8 @@ pub fn favorite_game(
     let game = Game::from_slug(&slug).context("unknown game")?;
     manager.ensure_game(game, &prefs)?;
 
-    let manager_game = manager.games.get_mut(game.slug()).unwrap();
-    manager_game.favorite = !manager_game.favorite;
+    let managed_game = manager.games.get_mut(&game).unwrap();
+    managed_game.favorite = !managed_game.favorite;
 
     manager.save(&prefs)?;
 
@@ -116,16 +134,12 @@ pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfilesInfo {
 pub fn set_active_profile(
     index: usize,
     manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
 ) -> Result<()> {
     let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager
-        .active_game_mut()
-        .set_active_profile(index, Some(&thunderstore))?;
+    manager.active_game_mut().set_active_profile(index)?;
     manager.save(&prefs)?;
 
     Ok(())
@@ -134,20 +148,20 @@ pub fn set_active_profile(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FrontendAvailableUpdate {
-    pub full_name: VersionIdent,
-    pub ignore: bool,
-    pub package_uuid: Uuid,
-    pub version_uuid: Uuid,
-    pub old: semver::Version,
-    pub new: semver::Version,
+    full_name: VersionIdent,
+    ignore: bool,
+    package_uuid: Uuid,
+    version_uuid: Uuid,
+    old: semver::Version,
+    new: semver::Version,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileQuery {
-    pub updates: Vec<FrontendAvailableUpdate>,
-    pub mods: Vec<FrontendProfileMod>,
-    pub unknown_mods: Vec<Dependant>,
+    updates: Vec<FrontendAvailableUpdate>,
+    mods: Vec<FrontendProfileMod>,
+    unknown_mods: Vec<Dependant>,
 }
 
 #[tauri::command]
@@ -270,14 +284,10 @@ pub fn remove_mod(
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
-) -> Result<ModActionResponse> {
-    mod_action_command(
-        uuid,
-        manager,
-        thunderstore,
-        prefs,
-        |profile, uuid, thunderstore| profile.remove_mod(uuid, thunderstore),
-    )
+) -> Result<ActionResult> {
+    mod_action_command(manager, thunderstore, prefs, |profile, thunderstore| {
+        profile.remove_mod(uuid, thunderstore)
+    })
 }
 
 #[tauri::command]
@@ -286,33 +296,28 @@ pub fn toggle_mod(
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
-) -> Result<ModActionResponse> {
-    mod_action_command(
-        uuid,
-        manager,
-        thunderstore,
-        prefs,
-        |profile, uuid, thunderstore| profile.toggle_mod(uuid, thunderstore),
-    )
+) -> Result<ActionResult> {
+    mod_action_command(manager, thunderstore, prefs, |profile, thunderstore| {
+        profile.toggle_mod(uuid, thunderstore)
+    })
 }
 
 fn mod_action_command<F>(
-    uuid: Uuid,
     manager: StateMutex<ModManager>,
     thunderstore: StateMutex<Thunderstore>,
     prefs: StateMutex<Prefs>,
     action: F,
-) -> Result<ModActionResponse>
+) -> Result<ActionResult>
 where
-    F: FnOnce(&mut Profile, Uuid, &Thunderstore) -> anyhow::Result<ModActionResponse>,
+    F: FnOnce(&mut Profile, &Thunderstore) -> anyhow::Result<ActionResult>,
 {
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let response = action(manager.active_profile_mut(), uuid, &thunderstore)?;
+    let response = action(manager.active_profile_mut(), &thunderstore)?;
 
-    if let ModActionResponse::Done = response {
+    if let ActionResult::Done = response {
         manager.save(&prefs)?;
     }
 
@@ -439,7 +444,7 @@ pub fn open_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn open_plugin_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()> {
+pub fn open_mod_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let profile = manager.active_profile();
@@ -459,7 +464,7 @@ pub fn open_plugin_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()
 pub fn open_bepinex_log(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
-    let path = manager.active_profile().bepinex_log_path()?;
+    let path = manager.active_profile().log_path()?;
     open::that(path).context("failed to open log file")?;
 
     Ok(())

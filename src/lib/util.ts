@@ -75,6 +75,10 @@ export function communityUrl(path: string) {
 	return `https://thunderstore.io/c/${get(activeGame)?.slug}/p/${path}/`;
 }
 
+export function iconUrl(mod: Mod) {
+	return `https://gcdn.thunderstore.io/live/repository/icons/${mod.author}-${mod.name}-${mod.version}.png`;
+}
+
 export function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }

@@ -28,21 +28,15 @@ use uuid::Uuid;
 pub async fn export_code(
     client: State<'_, NetworkClient>,
     manager: StateMutex<'_, ModManager>,
-    thunderstore: StateMutex<'_, Thunderstore>,
 ) -> Result<Uuid> {
-    let key = super::export_code(&client.0, manager, thunderstore).await?;
+    let key = super::export_code(&client.0, manager).await?;
 
     Ok(key)
 }
 
 #[tauri::command]
-pub fn export_file(
-    dir: PathBuf,
-    manager: StateMutex<'_, ModManager>,
-    thunderstore: StateMutex<'_, Thunderstore>,
-) -> Result<()> {
+pub fn export_file(dir: PathBuf, manager: StateMutex<'_, ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
 
     let profile = manager.active_profile();
 
@@ -52,7 +46,7 @@ pub fn export_file(
 
     let file = fs::File::create(&path).map_err(|err| anyhow!(err))?;
     let writer = BufWriter::new(file);
-    super::export_zip(manager.active_profile(), writer, &thunderstore)?;
+    super::export_zip(manager.active_profile(), writer)?;
 
     open::that(path.parent().unwrap()).ok();
 
@@ -174,7 +168,7 @@ pub fn copy_debug_info(app: AppHandle, manager: StateMutex<ModManager>) -> Resul
     let profile = manager.active_profile();
 
     let log = profile
-        .bepinex_log_path()
+        .log_path()
         .and_then(|path| fs::read_to_string(path).map_err(|err| anyhow!(err)));
 
     let content = format!(

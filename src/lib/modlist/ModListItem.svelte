@@ -3,6 +3,7 @@
 	import type { Mod } from '../models';
 	import Icon from '@iconify/svelte';
 	import { createEventDispatcher } from 'svelte';
+	import { iconUrl } from '$lib/util';
 
 	export let mod: Mod;
 	export let isSelected: boolean;
@@ -22,7 +23,7 @@
 		: 'border-opacity-0 hover:bg-slate-700'}"
 	on:click
 >
-	<img src={mod.icon} alt={mod.name} class="size-12 rounded" />
+	<img src={iconUrl(mod)} alt={mod.name} class="size-12 rounded" />
 	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
 		<div class="flex items-center gap-1 overflow-hidden">
 			<div class="flex-shrink truncate pr-1 font-medium text-white">

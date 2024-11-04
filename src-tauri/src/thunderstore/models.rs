@@ -101,7 +101,6 @@ pub struct PackageVersion {
     pub description: String,
     pub downloads: u32,
     pub file_size: u64,
-    pub icon: String,
     pub is_active: bool,
     #[serde(rename = "uuid4")]
     pub uuid: Uuid,
@@ -252,7 +251,7 @@ pub enum FrontendModKind {
 pub struct FrontendMod {
     pub name: String,
     pub description: Option<String>,
-    pub categories: Option<HashSet<String>>,
+    pub categories: Option<Vec<String>>,
     pub version: Option<semver::Version>,
     pub author: Option<String>,
     pub rating: Option<u32>,
@@ -260,7 +259,6 @@ pub struct FrontendMod {
     pub file_size: u64,
     pub website_url: Option<String>,
     pub donate_url: Option<String>,
-    pub icon: Option<String>,
     pub dependencies: Option<Vec<VersionIdent>>,
     pub is_pinned: bool,
     pub is_deprecated: bool,

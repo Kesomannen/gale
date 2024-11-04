@@ -19,7 +19,7 @@
 		"name": "Valheim",
 		"popular": true,
 		"modLoader": "BepInEx",
-		"subdirs": [{ "name": "SlimVML" }],
+		"subdirs": [{ "from": "SlimVML", "to": "BepInEx/SlimVML" }],
 		"platforms": {
 			"steam": 892970
 		}
@@ -29,7 +29,10 @@
 		"slug": "gtfo",
 		"popular": true,
 		"modLoader": "BepInEx",
-		"subdirs": [{ "name": "Assets" }, { "name": "GameData" }],
+		"subdirs": [
+			{ "from": "Assets", "to": "BepInEx/Assets" },
+			{ "from": "GameData", "to": "BepInEx/GameData" }
+		],
 		"platforms": {
 			"steam": 493520
 		}
@@ -54,7 +57,7 @@
 		"slug": "h3vr",
 		"popular": true,
 		"modLoader": "BepInEx",
-		"subdirs": [{ "name": "Sideloader" }],
+		"subdirs": [{ "from": "Sideloader", "to": "BepInEx/Sideloader" }],
 		"platforms": {
 			"steam": 450540
 		}
@@ -93,7 +96,7 @@
 	{
 		"name": "Timberborn",
 		"modLoader": "BepInEx",
-		"subdirs": [{ "name": "Maps" }],
+		"subdirs": [{ "from": "Maps", "to": "BepInEx/Maps" }],
 		"platforms": {
 			"steam": 1062090
 		}
@@ -339,7 +342,7 @@
 	{
 		"name": "ULTRAKILL",
 		"modLoader": "BepInEx",
-		"subdirs": [{ "name": "UMM Mods" }],
+		"subdirs": [{ "from": "UMM Mods", "to": "BepInEx/UMM Mods" }],
 		"platforms": {
 			"steam": 1229490
 		}

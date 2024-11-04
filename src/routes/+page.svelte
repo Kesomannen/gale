@@ -63,7 +63,7 @@
 		{
 			label: 'Open directory',
 			icon: 'mdi:folder',
-			onclick: (mod) => invokeCommand('open_plugin_dir', { uuid: mod.uuid })
+			onclick: (mod) => invokeCommand('open_mod_dir', { uuid: mod.uuid })
 		}
 	];
 

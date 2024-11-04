@@ -1,32 +1,27 @@
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
-    fs,
     path::{Path, PathBuf},
     sync::Mutex,
-    time::Instant,
 };
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use itertools::Itertools;
-use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
-use walkdir::WalkDir;
 
 use crate::{
     config,
-    game::Game,
+    game::{Game, ModLoader},
     logger,
     prefs::Prefs,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::{
         self,
-        error::IoResultExt,
-        fs::{JsonStyle, Overwrite, PathExt},
+        fs::{JsonStyle, PathExt},
     },
 };
 
@@ -37,10 +32,8 @@ pub mod install;
 pub mod launch;
 pub mod update;
 
+mod actions;
 mod query;
-
-mod local;
-pub use local::*;
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     {
@@ -56,7 +49,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 
     let handle = app.to_owned();
     app.listen("reorder_mod", move |event| {
-        if let Err(err) = handle_reorder_event(event, &handle) {
+        if let Err(err) = actions::handle_reorder_event(event, &handle) {
             logger::log_js_err("Failed to reorder mod", &err, &handle);
         }
     });
@@ -69,7 +62,7 @@ pub struct ModManager {
     /// Holds all the currently managed games, indexed by their slug.
     ///
     /// Note that this only contains entries for `Game`s which the user has selected at least once.
-    pub games: HashMap<&'static str, ManagerGame>,
+    pub games: HashMap<Game, ManagedGame>,
     pub active_game: Game,
 }
 
@@ -81,18 +74,18 @@ struct ManagerSaveData {
 }
 
 /// Stores information and profiles about one game.
-pub struct ManagerGame {
-    pub game: Game,
-    pub profiles: Vec<Profile>,
-    pub path: PathBuf,
-    pub favorite: bool,
-    pub active_profile_index: usize,
+pub struct ManagedGame {
+    game: Game,
+    profiles: Vec<Profile>,
+    path: PathBuf,
+    favorite: bool,
+    active_profile_index: usize,
 }
 
 /// Persistent data for ManagerGame
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct ManagerGameSaveData {
+struct ManagedGameSaveData {
     favorite: bool,
     active_profile_index: usize,
 }
@@ -101,6 +94,7 @@ pub struct Profile {
     pub name: String,
     pub path: PathBuf,
     pub mods: Vec<ProfileMod>,
+    pub game: Game,
     pub ignored_updates: HashSet<Uuid>,
     pub config: Vec<config::LoadFileResult>,
     pub linked_config: HashMap<Uuid, PathBuf>,
@@ -232,7 +226,7 @@ impl ProfileModKind {
 
     /// Finds all dependencies of this mod.
     ///
-    /// See [`Thunderstore::find_deps`] for more information.
+    /// See [`Thunderstore::dependencies`] for more information.
     pub fn dependencies<'a>(
         &'a self,
         thunderstore: &'a Thunderstore,
@@ -253,6 +247,19 @@ impl ProfileModKind {
 }
 
 impl Profile {
+    fn new(name: String, path: PathBuf, game: Game) -> Self {
+        Self {
+            name,
+            path,
+            game,
+            mods: Vec::new(),
+            ignored_updates: HashSet::new(),
+            config: Vec::new(),
+            linked_config: HashMap::new(),
+            modpack: None,
+        }
+    }
+
     fn is_valid_name(name: &str) -> bool {
         const FORBIDDEN: &[char] = &['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
 
@@ -294,14 +301,6 @@ impl Profile {
         self.mods.iter().filter_map(ProfileMod::as_local)
     }
 
-    fn save_data(&self) -> ProfileSaveData {
-        ProfileSaveData {
-            modpack: self.modpack.clone(),
-            mods: self.mods.clone(),
-            ignored_updates: self.ignored_updates.clone(),
-        }
-    }
-
     /// Finds all the dependants of a mod in this profile.
     ///
     /// This includes both direct and indirect dependencies.
@@ -310,21 +309,14 @@ impl Profile {
         uuid: Uuid,
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = &ProfileMod> + 'a {
-        let start = Instant::now();
-
-        let result = self
-            .mods
+        self.mods
             .iter()
             .filter(move |other| other.uuid() != uuid)
             .filter(move |other| {
                 other
                     .dependencies(thunderstore)
                     .any(|dep| dep.package.uuid == uuid)
-            });
-
-        debug!("finding dependants took {:?}", start.elapsed());
-
-        result
+            })
     }
 
     /// Recursively finds the dependencies of the given mods and filters
@@ -341,61 +333,96 @@ impl Profile {
             .filter(|dep| !self.has_mod(dep.package.uuid))
     }
 
-    fn bepinex_log_path(&self) -> Result<PathBuf> {
-        let path = self.path.join("BepInEx").join("LogOutput.log");
+    fn log_path(&self) -> Result<PathBuf> {
+        let path: PathBuf = match self.game.mod_loader() {
+            ModLoader::BepInEx => ["BepInEx", "LogOutput.log"].iter().collect(),
+        };
 
-        if !path.exists() {
-            bail!("no log file found");
-        }
-
-        Ok(path)
+        self.path
+            .join(path)
+            .exists_or_none()
+            .ok_or(anyhow!("no log file found"))
     }
 
-    fn load(mut path: PathBuf) -> Result<Option<Self>> {
+    fn load(mut path: PathBuf, game: Game) -> Result<Option<Self>> {
+        let name = util::fs::file_name_owned(&path);
+
         path.push("profile.json");
 
         if !path.exists() {
             return Ok(None);
         }
 
-        let manifest: ProfileSaveData = util::fs::read_json(&path).with_context(|| {
-            format!(
-                "failed to read profile manifest for '{}'",
-                path.parent()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-            )
-        })?;
+        let manifest: ProfileSaveData = util::fs::read_json(&path)
+            .with_context(|| format!("failed to read profile manifest for '{}'", name))?;
 
         path.pop();
 
-        let profile = Profile {
+        let profile = Self {
             modpack: manifest.modpack,
-            name: util::fs::file_name_owned(&path),
             mods: manifest.mods,
-            linked_config: HashMap::new(),
-            config: Vec::new(),
             ignored_updates: manifest.ignored_updates,
-            path,
+            ..Self::new(name, path, game)
         };
 
         Ok(Some(profile))
+    }
+
+    fn save_data(&self) -> ProfileSaveData {
+        ProfileSaveData {
+            modpack: self.modpack.clone(),
+            mods: self.mods.clone(),
+            ignored_updates: self.ignored_updates.clone(),
+        }
+    }
+
+    fn save(&self, path: &mut PathBuf) -> Result<()> {
+        path.push("profile.json");
+        util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
+        path.pop();
+
+        Ok(())
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalMod {
+    pub name: String,
+    pub icon: Option<PathBuf>,
+    pub author: Option<String>,
+    pub description: Option<String>,
+    pub version: Option<semver::Version>,
+    pub dependencies: Option<Vec<VersionIdent>>,
+    pub uuid: Uuid,
+    #[serde(default)]
+    pub file_size: u64,
+}
+
+impl LocalMod {
+    pub fn ident(&self) -> VersionIdent {
+        let version = self.version.as_ref().map(|vers| vers.to_string());
+
+        VersionIdent::new(
+            self.author.as_deref().unwrap_or(""),
+            &self.name,
+            version.as_deref().unwrap_or(""),
+        )
     }
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Dependant {
-    pub full_name: VersionIdent,
-    pub uuid: Uuid,
+    #[serde(rename = "fullName")]
+    ident: VersionIdent,
+    uuid: Uuid,
 }
 
 impl From<BorrowedMod<'_>> for Dependant {
     fn from(value: BorrowedMod) -> Self {
         Self {
-            full_name: value.version.ident.clone(),
+            ident: value.version.ident.clone(),
             uuid: value.package.uuid,
         }
     }
@@ -404,272 +431,32 @@ impl From<BorrowedMod<'_>> for Dependant {
 impl From<&ProfileMod> for Dependant {
     fn from(value: &ProfileMod) -> Self {
         Self {
-            full_name: value.ident().into_owned(),
+            ident: value.ident().into_owned(),
             uuid: value.uuid(),
         }
     }
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "dependants")]
-pub enum ModActionResponse {
-    Done,
-    HasDependants(Vec<Dependant>),
-}
-
-impl Profile {
-    fn rename(&mut self, name: String) -> Result<()> {
-        ensure!(
-            Self::is_valid_name(&name),
-            "invalid profile name '{}'",
-            name
-        );
-
-        let new_path = self.path.parent().unwrap().join(&name);
-
-        ensure!(
-            !new_path.exists(),
-            "profile with name '{}' already exists",
-            name
-        );
-
-        fs::rename(&self.path, &new_path).fs_context("renaming profile directory", &self.path)?;
-
-        self.name = name;
-        self.path = new_path;
-
-        Ok(())
-    }
-
-    fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ModActionResponse> {
-        if self.get_mod(uuid)?.enabled {
-            if let Some(dependants) = self.check_dependants(uuid, thunderstore) {
-                return Ok(ModActionResponse::HasDependants(dependants));
-            }
-        }
-
-        self.force_remove_mod(uuid)?;
-        Ok(ModActionResponse::Done)
-    }
-
-    fn force_remove_mod(&mut self, uuid: Uuid) -> Result<()> {
-        let index = self.index_of(uuid)?;
-
-        self.scan_mod(&self.mods[index].kind, |dir| {
-            fs::remove_dir_all(dir).fs_context("removing mod directory", dir)
-        })?;
-
-        self.mods.remove(index);
-
-        Ok(())
-    }
-
-    fn toggle_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ModActionResponse> {
-        let dependants = match self.get_mod(uuid)?.enabled {
-            true => self.check_dependants(uuid, thunderstore),
-            false => self.check_deps(uuid, thunderstore),
-        };
-
-        match dependants {
-            Some(dependants) => Ok(ModActionResponse::HasDependants(dependants)),
-            None => {
-                self.force_toggle_mod(uuid)?;
-                Ok(ModActionResponse::Done)
-            }
-        }
-    }
-
-    fn force_toggle_mod(&mut self, uuid: Uuid) -> Result<()> {
-        let profile_mod = self.get_mod(uuid)?;
-        let state = profile_mod.enabled;
-        let new_state = !state;
-
-        self.scan_mod(&profile_mod.kind, |dir| {
-            let files = WalkDir::new(dir)
-                .into_iter()
-                .filter_map(Result::ok)
-                .filter(|entry| {
-                    let file_type = entry.file_type();
-                    file_type.is_file() || file_type.is_symlink()
-                });
-
-            for file in files {
-                let path = file.path();
-                if new_state {
-                    // remove any .old extensions
-                    let mut new = path.to_owned();
-                    while let Some("old") = new.extension().and_then(|ext| ext.to_str()) {
-                        new.set_extension("");
-                    }
-
-                    fs::rename(path, &new).fs_context("removing .old extension", path)?;
-                } else {
-                    let mut new = path.to_path_buf();
-                    new.add_ext("old");
-                    fs::rename(path, &new).fs_context("adding .old extension", path)?;
-                }
-            }
-
-            Ok(())
-        })?;
-
-        self.get_mod_mut(uuid)
-            .expect("profile mod should already be validated through get_mod")
-            .enabled = new_state;
-
-        Ok(())
-    }
-
-    fn check_dependants(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
-        let dependants = self
-            .dependants(uuid, thunderstore)
-            .filter(|profile_mod| {
-                if !profile_mod.enabled {
-                    return false;
-                }
-
-                match &profile_mod.kind {
-                    ProfileModKind::Local(_) => true,
-                    ProfileModKind::Thunderstore(ts_mod) => {
-                        match ts_mod.id.borrow(thunderstore) {
-                            Ok(borrowed) => !borrowed.package.is_modpack(), // ignore modpacks
-                            Err(_) => false,
-                        }
-                    }
-                }
-            })
-            .map_into()
-            .collect_vec();
-
-        match dependants.is_empty() {
-            true => None,
-            false => Some(dependants),
-        }
-    }
-
-    fn check_deps(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
-        let profile_mod = self.get_mod(uuid).ok()?;
-
-        let disabled_deps = profile_mod
-            .dependencies(thunderstore)
-            .filter(|dep| {
-                self.get_mod(dep.package.uuid)
-                    .is_ok_and(|profile_mod| !profile_mod.enabled)
-            })
-            .map_into()
-            .collect_vec();
-
-        match disabled_deps.is_empty() {
-            true => None,
-            false => Some(disabled_deps),
-        }
-    }
-
-    fn scan_mod<F>(&self, profile_mod: &ProfileModKind, scan_dir: F) -> Result<()>
-    where
-        F: Fn(&Path) -> Result<()>,
-    {
-        let mut path = self.path.join("BepInEx");
-
-        let ident = profile_mod.ident();
-
-        for dir in ["core", "patchers", "plugins"].into_iter() {
-            path.push(dir);
-            path.push(ident.full_name());
-
-            if path.exists() {
-                scan_dir(&path)?;
-            }
-
-            path.pop();
-            path.pop();
-        }
-
-        Ok(())
-    }
-
-    fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {
-        let index = self
-            .mods
-            .iter()
-            .position(|m| m.uuid() == uuid)
-            .context("mod not found in profile")?;
-
-        let target = (index as i32 + delta).clamp(0, self.mods.len() as i32 - 1) as usize;
-        let profile_mod = self.mods.remove(index);
-        self.mods.insert(target, profile_mod);
-
-        Ok(())
-    }
-}
-
-impl ManagerGame {
-    fn create_profile(&mut self, name: String) -> Result<&mut Profile> {
-        ensure!(
-            Profile::is_valid_name(&name),
-            "profile name '{}' is invalid",
-            name
-        );
-
-        ensure!(
-            !self.profiles.iter().any(|p| p.name == name),
-            "profile with name '{}' already exists",
-            name
-        );
-
-        let mut path = self.path.join("profiles");
-        path.push(&name);
-        fs::create_dir_all(&path)?;
-
-        let profile = Profile {
-            name,
+impl ManagedGame {
+    fn new(path: PathBuf, game: Game) -> Self {
+        Self {
+            game,
             path,
-            mods: Vec::new(),
-            config: Vec::new(),
-            linked_config: HashMap::new(),
-            ignored_updates: HashSet::new(),
-            modpack: None,
-        };
-        self.profiles.push(profile);
-
-        let index = self.profiles.len() - 1;
-        self.active_profile_index = index;
-        Ok(&mut self.profiles[index])
+            profiles: Vec::new(),
+            favorite: false,
+            active_profile_index: 0,
+        }
     }
 
-    fn delete_profile(&mut self, index: usize, allow_delete_last: bool) -> Result<()> {
-        ensure!(
-            allow_delete_last || self.profiles.len() > 1,
-            "cannot delete last profile"
-        );
-
-        let profile = self.profile(index)?;
-
-        fs::remove_dir_all(&profile.path)?;
-        self.profiles.remove(index);
-
-        self.active_profile_index = 0;
-
-        Ok(())
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 
-    fn duplicate_profile(&mut self, duplicate_name: String, index: usize) -> Result<()> {
-        self.create_profile(duplicate_name)?;
-        let profile = self.profile(index)?;
-        let new_profile = self.active_profile();
-
-        util::fs::copy_dir(&profile.path, &new_profile.path, Overwrite::Yes)?;
-
-        let mods = profile.mods.clone();
-
-        let new_profile = self.active_profile_mut();
-
-        new_profile.mods = mods;
-
-        Ok(())
+    pub fn profiles_mut(&mut self) -> &mut [Profile] {
+        &mut self.profiles
     }
 
-    fn profile_index(&self, name: &str) -> Option<usize> {
+    pub fn profile_index(&self, name: &str) -> Option<usize> {
         self.profiles
             .iter()
             .position(|profile| profile.name == name)
@@ -689,11 +476,7 @@ impl ManagerGame {
         &mut self.profiles[self.active_profile_index]
     }
 
-    pub fn set_active_profile(
-        &mut self,
-        index: usize,
-        _thunderstore: Option<&Thunderstore>,
-    ) -> Result<()> {
+    pub fn set_active_profile(&mut self, index: usize) -> Result<()> {
         ensure!(
             index < self.profiles.len(),
             "profile index {} is out of bounds",
@@ -701,11 +484,13 @@ impl ManagerGame {
         );
 
         self.active_profile_index = index;
-        //self.active_profile_mut().refresh_config(thunderstore);
 
         Ok(())
     }
 
+    /// Installed thunderstore mods across all the game's profiles.
+    ///
+    /// May contain duplicates.
     fn installed_mods<'a>(
         &'a self,
         thunderstore: &'a Thunderstore,
@@ -718,30 +503,29 @@ impl ManagerGame {
     }
 
     fn load(mut path: PathBuf) -> Result<Option<(Game, Self)>> {
-        let file_name = util::fs::file_name_owned(&path);
-        let Some(game) = Game::from_slug(&file_name) else {
+        let Some(game) = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .and_then(Game::from_slug)
+        else {
             return Ok(None);
         };
 
         path.push("game.json");
 
-        let data: ManagerGameSaveData =
-            util::fs::read_json(&path).context("failed to read game save data")?;
+        let data = util::fs::read_json::<ManagedGameSaveData>(&path)
+            .context("failed to read game save data")?;
 
         path.pop();
 
-        let mut profiles = Vec::new();
         path.push("profiles");
 
-        for entry in path.read_dir()? {
-            let path = entry?.path();
-
-            if path.is_dir() {
-                if let Some(profile) = Profile::load(path)? {
-                    profiles.push(profile);
-                }
-            }
-        }
+        let profiles = path
+            .read_dir()?
+            .filter_map(Result::ok)
+            .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
+            .filter_map(|entry| Profile::load(entry.path(), game).transpose())
+            .collect::<Result<Vec<Profile>>>()?;
 
         path.pop();
 
@@ -749,64 +533,82 @@ impl ManagerGame {
             .active_profile_index
             .min(profiles.len().saturating_sub(1));
 
-        Ok(Some((
+        let result = Self {
             game,
-            Self {
-                game,
-                profiles,
-                path,
-                active_profile_index,
-                favorite: data.favorite,
-            },
-        )))
+            profiles,
+            path,
+            active_profile_index,
+            favorite: data.favorite,
+        };
+
+        Ok(Some((game, result)))
+    }
+
+    fn save_data(&self) -> ManagedGameSaveData {
+        ManagedGameSaveData {
+            favorite: self.favorite,
+            active_profile_index: self.active_profile_index,
+        }
+    }
+
+    fn save(&self, path: &mut PathBuf) -> Result<()> {
+        path.push("game.json");
+        util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
+        path.pop();
+
+        path.push("profiles");
+
+        for profile in &self.profiles {
+            path.push(&profile.name);
+            profile.save(path)?;
+            path.pop();
+        }
+
+        path.pop();
+
+        Ok(())
     }
 }
 
-const DEFAULT_GAME_SLUG: &str = "among-us";
-
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
-        let save_path = prefs.data_dir.join("manager.json");
-        let save_data = match save_path.try_exists()? {
-            true => util::fs::read_json(&save_path).context("failed to read manager save data")?,
-            false => ManagerSaveData {
+        const DEFAULT_GAME_SLUG: &str = "among-us";
+
+        let path = prefs.data_dir.join("manager.json");
+        let save = match path.exists_or_none() {
+            Some(path) => util::fs::read_json(path).context("failed to read manager save data")?,
+            None => ManagerSaveData {
                 active_game: DEFAULT_GAME_SLUG.to_owned(),
             },
         };
 
-        let mut games = HashMap::new();
+        let games = prefs
+            .data_dir
+            .read_dir()?
+            .filter_map(Result::ok)
+            .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
+            .filter_map(|entry| ManagedGame::load(entry.path()).transpose())
+            .collect::<Result<_>>()?;
 
-        for entry in prefs.data_dir.read_dir()? {
-            let path = entry?.path();
-
-            if path.is_dir() {
-                if let Some((game, game_data)) = ManagerGame::load(path)? {
-                    games.insert(game.slug(), game_data);
-                }
-            }
-        }
-
-        let active_game = Game::from_slug(&save_data.active_game).unwrap_or_else(|| {
-            Game::from_slug(DEFAULT_GAME_SLUG).expect("default game should be valid")
-        });
+        let active_game = Game::from_slug(&save.active_game)
+            .unwrap_or_else(|| Game::from_slug(DEFAULT_GAME_SLUG).unwrap());
 
         let mut manager = Self { games, active_game };
 
         manager.ensure_game(manager.active_game, prefs)?;
-        manager.save(prefs)?;
 
         Ok(manager)
     }
 
-    pub fn active_game(&self) -> &ManagerGame {
+    pub fn active_game(&self) -> &ManagedGame {
         self.games
-            .get(self.active_game.slug())
+            .get(&self.active_game)
             .expect("active game not found")
     }
 
-    pub fn active_game_mut(&mut self) -> &mut ManagerGame {
+    pub fn active_game_mut(&mut self) -> &mut ManagedGame {
         self.games
-            .get_mut(self.active_game.slug())
+            .get_mut(&self.active_game)
             .expect("active game not found")
     }
 
@@ -836,20 +638,18 @@ impl ModManager {
     }
 
     fn ensure_game(&mut self, game: Game, prefs: &Prefs) -> Result<()> {
-        if self.games.contains_key(game.slug()) {
+        const DEFAULT_PROFILE_NAME: &str = "Default";
+
+        if self.games.contains_key(&game) {
             return Ok(());
         }
 
-        let mut manager_game = ManagerGame {
-            game,
-            profiles: Vec::new(),
-            path: prefs.data_dir.join(game.slug()),
-            favorite: false,
-            active_profile_index: 0,
-        };
+        let path = prefs.data_dir.join(game.slug());
 
-        manager_game.create_profile("Default".to_owned())?;
-        self.games.insert(game.slug(), manager_game);
+        let mut managed_game = ManagedGame::new(path, game);
+        managed_game.create_profile(DEFAULT_PROFILE_NAME.to_owned())?;
+
+        self.games.insert(game, managed_game);
 
         Ok(())
     }
@@ -872,74 +672,25 @@ impl ModManager {
         thunderstore::write_cache(&packages, self)
     }
 
+    fn save_data(&self) -> ManagerSaveData {
+        ManagerSaveData {
+            active_game: self.active_game.slug().to_owned(),
+        }
+    }
+
     fn save(&self, prefs: &Prefs) -> Result<()> {
         let mut path = prefs.data_dir.get().to_path_buf();
 
         path.push("manager.json");
-
-        util::fs::write_json(
-            &path,
-            &ManagerSaveData {
-                active_game: self.active_game.slug().to_owned(),
-            },
-            JsonStyle::Pretty,
-        )?;
-
+        util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
         path.pop();
 
-        for (game_id, manager_game) in &self.games {
-            path.push(game_id);
-            path.push("game.json");
-
-            util::fs::write_json(
-                &path,
-                &ManagerGameSaveData {
-                    favorite: manager_game.favorite,
-                    active_profile_index: manager_game.active_profile_index,
-                },
-                JsonStyle::Pretty,
-            )?;
-
-            path.pop();
-
-            path.push("profiles");
-            for profile in &manager_game.profiles {
-                path.push(&profile.name);
-                path.push("profile.json");
-
-                util::fs::write_json(&path, &profile.save_data(), JsonStyle::Pretty)?;
-
-                path.pop();
-                path.pop();
-            }
-            path.pop();
-
+        for (game, managed_game) in &self.games {
+            path.push(game.slug());
+            managed_game.save(&mut path)?;
             path.pop();
         }
 
         Ok(())
     }
-}
-
-fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Payload {
-        uuid: Uuid,
-        delta: i32,
-    }
-
-    let Payload { uuid, delta } = serde_json::from_str(event.payload())?;
-
-    let manager = app.state::<Mutex<ModManager>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
-
-    manager.active_profile_mut().reorder_mod(uuid, delta)?;
-
-    manager.save(&prefs)?;
-
-    Ok(())
 }

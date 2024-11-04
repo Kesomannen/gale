@@ -58,9 +58,9 @@ pub struct QueryModsArgs {
     pub sort_order: SortOrder,
 }
 
-const TIME_BETWEEN_QUERIES: Duration = Duration::from_millis(250);
-
 pub async fn query_loop(app: AppHandle) -> Result<()> {
+    const INTERVAL: Duration = Duration::from_millis(250);
+
     let thunderstore = app.state::<Mutex<Thunderstore>>();
     let query_state = app.state::<Mutex<QueryState>>();
     let manager = app.state::<Mutex<ModManager>>();
@@ -83,7 +83,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
             }
         };
 
-        tokio::time::sleep(TIME_BETWEEN_QUERIES).await;
+        tokio::time::sleep(INTERVAL).await;
     }
 }
 
@@ -170,7 +170,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             name: pkg.name().to_owned(),
             description: Some(vers.description.clone()),
             version: Some(vers.parsed_version()),
-            categories: Some(pkg.categories.clone()),
+            categories: Some(pkg.categories.iter().cloned().collect()),
             author: Some(pkg.owner().to_owned()),
             rating: Some(pkg.rating_score),
             downloads: Some(pkg.total_downloads()),
@@ -180,7 +180,6 @@ impl IntoFrontendMod for BorrowedMod<'_> {
                 false => Some(vers.website_url.clone()),
             },
             donate_url: pkg.donation_link.clone(),
-            icon: Some(vers.icon.clone()),
             dependencies: Some(vers.dependencies.clone()),
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
@@ -201,48 +200,25 @@ impl IntoFrontendMod for BorrowedMod<'_> {
     }
 }
 
-impl Queryable for LocalMod {
-    fn full_name(&self) -> &str {
-        &self.name
-    }
-
-    fn description(&self) -> Option<&str> {
-        self.description.as_deref()
-    }
-
-    fn matches(&self, _args: &QueryModsArgs) -> bool {
-        true
-    }
-
-    fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
-        let order = match args.sort_by {
-            SortBy::Name => other.name.cmp(&self.name),
-            SortBy::Author => match (&other.author, &self.author) {
-                (Some(a), Some(b)) => a.cmp(b),
-                (Some(_), None) => Ordering::Greater,
-                (None, Some(_)) => Ordering::Less,
-                (None, None) => Ordering::Equal,
-            },
-            _ => Ordering::Equal,
-        };
-
-        match args.sort_order {
-            SortOrder::Ascending => order,
-            SortOrder::Descending => order.reverse(),
-        }
-    }
-}
-
 impl From<LocalMod> for FrontendMod {
     fn from(value: LocalMod) -> Self {
+        let LocalMod {
+            name,
+            description,
+            version,
+            file_size,
+            uuid,
+            dependencies,
+            ..
+        } = value;
+
         FrontendMod {
-            name: value.name,
-            description: value.description,
-            version: value.version,
-            file_size: value.file_size,
-            uuid: value.uuid,
-            dependencies: value.dependencies,
-            icon: value.icon.and_then(|path| Some(path.to_str()?.to_owned())),
+            name,
+            description,
+            version,
+            file_size,
+            uuid,
+            dependencies,
             kind: FrontendModKind::Local,
             ..Default::default()
         }

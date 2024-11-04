@@ -52,7 +52,7 @@ enum Steam<'a> {
     },
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq)]
 #[serde(rename_all = "camelCase", from = "JsonGame")]
 struct GameData<'a> {
     name: &'a str,
@@ -117,24 +117,33 @@ impl Hash for GameData<'_> {
     }
 }
 
-fn separate_mods_default() -> bool {
+fn default_true() -> bool {
     true
+}
+
+fn default_false() -> bool {
+    false
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Subdir<'a> {
     name: &'a str,
+    target: &'a str,
     /// Whether to separate mods into `author-name` dirs.
-    #[serde(default = "separate_mods_default")]
+    #[serde(default = "default_true")]
     separate_mods: bool,
+    #[serde(default = "default_false")]
+    mutable: bool,
 }
 
 impl<'a> Subdir<'a> {
-    pub const fn new(name: &'a str) -> Self {
+    pub const fn new(name: &'a str, target: &'a str) -> Self {
         Self {
             name,
+            target,
             separate_mods: true,
+            mutable: false,
         }
     }
 
@@ -143,33 +152,57 @@ impl<'a> Subdir<'a> {
         self
     }
 
+    pub const fn mutable(mut self) -> Self {
+        self.mutable = true;
+        self
+    }
+
     pub fn name(&self) -> &'a str {
         self.name
+    }
+
+    pub fn target(&self) -> &'a str {
+        self.target
     }
 
     pub fn separate_mods(&self) -> bool {
         self.separate_mods
     }
+
+    pub fn is_mutable(&self) -> bool {
+        self.mutable
+    }
 }
 
 impl ModLoader {
-    pub fn subdirs(&self) -> impl Iterator<Item = &Subdir<'static>> {
+    pub fn default_subdir(&self) -> &'static Subdir<'static> {
+        match self {
+            ModLoader::BepInEx => {
+                const SUBDIR: &Subdir = &Subdir::new("plugins", "BepInEx/plugins");
+                SUBDIR
+            }
+        }
+    }
+
+    pub fn subdirs(&self) -> &'static [Subdir<'static>] {
         match self {
             ModLoader::BepInEx => {
                 const SUBDIRS: &[Subdir] = &[
-                    Subdir::new("plugins"),
-                    Subdir::new("patchers"),
-                    Subdir::new("monomod"),
-                    Subdir::new("core"),
-                    Subdir::new("config").dont_separate_mods(),
+                    Subdir::new("plugins", "BepInEx/plugins"),
+                    Subdir::new("patchers", "BepInEx/patchers"),
+                    Subdir::new("monomod", "BepInEx/monomod"),
+                    Subdir::new("core", "BepInEx/core"),
+                    Subdir::new("config", "BepInEx/config")
+                        .dont_separate_mods()
+                        .mutable(),
                 ];
-                SUBDIRS.iter()
+                SUBDIRS
             }
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 #[serde(transparent)]
 pub struct Game(&'static GameData<'static>);
 
@@ -186,6 +219,7 @@ impl Game {
         self.0
             .mod_loader
             .subdirs()
+            .into_iter()
             .chain(self.0.extra_sub_dirs.iter())
     }
 

@@ -1,6 +1,6 @@
 use std::{
-    fs,
-    io::{Cursor, Read, Seek},
+    fs::{self, File},
+    io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
     sync::Mutex,
 };
@@ -62,7 +62,7 @@ pub struct ImportData {
 impl ImportData {
     pub fn from_r2_mods(
         name: String,
-        mods: Vec<R2Mod<'_>>,
+        mods: Vec<R2Mod>,
         path: PathBuf,
         delete_after_import: bool,
         ignored_updates: Vec<Uuid>,
@@ -70,7 +70,7 @@ impl ImportData {
         thunderstore: &Thunderstore,
     ) -> Result<Self> {
         let includes = export::find_includes(&path).collect();
-        let mod_names = mods.iter().map(|r2| r2.full_name()).collect();
+        let mod_names = mods.iter().map(|r2| r2.ident()).collect();
         let mods = mods
             .into_iter()
             .map(|r2| r2.into_install(thunderstore))
@@ -90,21 +90,22 @@ impl ImportData {
     }
 }
 
-fn import_file<S: Read + Seek>(source: S, app: &AppHandle) -> Result<ImportData> {
+fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> {
     let thunderstore = app.state::<Mutex<Thunderstore>>();
     let thunderstore = thunderstore.lock().unwrap();
 
     let temp_dir = tempdir().context("failed to create temporary directory")?;
     util::zip::extract(source, temp_dir.path())?;
 
-    let manifest = fs::read_to_string(temp_dir.path().join("export.r2x"))
-        .context("failed to read profile manifest")?;
+    let reader = File::open(temp_dir.path().join("export.r2x"))
+        .map(BufReader::new)
+        .context("failed to open profile manifest")?;
 
     let manifest: LegacyProfileManifest =
-        serde_yaml::from_str(&manifest).context("failed to parse profile manifest")?;
+        serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
 
     ImportData::from_r2_mods(
-        manifest.profile_name.to_owned(),
+        manifest.profile_name,
         manifest.mods,
         temp_dir.into_path(),
         true,

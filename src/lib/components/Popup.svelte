@@ -8,7 +8,7 @@
 
 	export let open: boolean;
 	export let title: string | null = null;
-	export let confirmClose: { title: string; message: string } | null = null;
+	export let confirmClose: { message: string } | null = null;
 	export let canClose: boolean = true;
 	export let large: boolean = false;
 	export let onClose: () => void = () => {};
@@ -21,7 +21,7 @@
 
 		if (confirmClose) {
 			evt.preventDefault();
-			let result = await confirm(confirmClose.message, { title: confirmClose.title });
+			let result = await confirm(confirmClose.message);
 			if (!result) {
 				return;
 			}

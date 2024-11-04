@@ -14,8 +14,8 @@ use serde::{Deserialize, Serialize};
 #[serde(into = "String", try_from = "String")]
 pub struct VersionIdent {
     repr: String,
-    name_start: usize,
-    version_start: usize,
+    name_start: u32,
+    version_start: u32,
 }
 
 impl VersionIdent {
@@ -24,8 +24,10 @@ impl VersionIdent {
     /// This allocates a new string and copies the slices into it.
     pub fn new(owner: &str, name: &str, version: &str) -> Self {
         let repr = format!("{}-{}-{}", owner, name, version);
-        let name_start = owner.len() + 1;
-        let version_start = name_start + name.len() + 1;
+
+        let name_start = owner.len() as u32 + 1;
+        let version_start = name_start + name.len() as u32 + 1;
+
         Self {
             repr,
             name_start,
@@ -34,19 +36,19 @@ impl VersionIdent {
     }
 
     pub fn owner(&self) -> &str {
-        &self.repr[..self.name_start - 1]
+        &self.repr[..self.name_start as usize - 1]
     }
 
     pub fn name(&self) -> &str {
-        &self.repr[self.name_start..self.version_start - 1]
+        &self.repr[self.name_start as usize..self.version_start as usize - 1]
     }
 
     pub fn full_name(&self) -> &str {
-        &self.repr[..self.version_start - 1]
+        &self.repr[..self.version_start as usize - 1]
     }
 
     pub fn version(&self) -> &str {
-        &self.repr[self.version_start..]
+        &self.repr[self.version_start as usize..]
     }
 
     pub fn split(&self) -> (&str, &str, &str) {
@@ -132,8 +134,8 @@ impl TryFrom<String> for VersionIdent {
     fn try_from(value: String) -> Result<Self, ParseError> {
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        let name_start = indices.next().ok_or(ParseError)? + 1;
-        let version_start = indices.next().ok_or(ParseError)? + 1;
+        let name_start = indices.next().ok_or(ParseError)? as u32 + 1;
+        let version_start = indices.next().ok_or(ParseError)? as u32 + 1;
 
         // make sure there aren't any more hyphens
         if indices.next().is_some() {
@@ -200,7 +202,7 @@ impl<'a> Display for VersionIdentPath<'a> {
 #[serde(into = "String", try_from = "String")]
 pub struct PackageIdent {
     repr: String,
-    name_start: usize,
+    name_start: u32,
 }
 
 impl PackageIdent {
@@ -209,16 +211,16 @@ impl PackageIdent {
     /// This allocates a new string and copies the slices into it.
     pub fn new(owner: &str, name: &str) -> Self {
         let repr = format!("{}-{}", owner, name);
-        let name_start = owner.len() + 1;
+        let name_start = owner.len() as u32 + 1;
         Self { repr, name_start }
     }
 
     pub fn owner(&self) -> &str {
-        &self.repr[..self.name_start - 1]
+        &self.repr[..self.name_start as usize - 1]
     }
 
     pub fn name(&self) -> &str {
-        &self.repr[self.name_start..]
+        &self.repr[self.name_start as usize..]
     }
 
     pub fn split(&self) -> (&str, &str) {
@@ -295,7 +297,7 @@ impl TryFrom<String> for PackageIdent {
     fn try_from(value: String) -> Result<Self, ParseError> {
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        let name_start = indices.next().ok_or(ParseError)? + 1;
+        let name_start = indices.next().ok_or(ParseError)? as u32 + 1;
 
         // make sure there aren't any more hyphens
         if indices.next().is_some() {
@@ -333,7 +335,7 @@ impl From<VersionIdent> for PackageIdent {
         let name_start = id.name_start;
 
         let mut repr = id.into_string();
-        repr.truncate(version_start - 1);
+        repr.truncate(version_start as usize - 1);
         repr.shrink_to_fit();
 
         Self { repr, name_start }

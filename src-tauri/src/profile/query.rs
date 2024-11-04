@@ -139,3 +139,35 @@ impl Profile {
         (found, unknown)
     }
 }
+
+impl Queryable for LocalMod {
+    fn full_name(&self) -> &str {
+        &self.name
+    }
+
+    fn description(&self) -> Option<&str> {
+        self.description.as_deref()
+    }
+
+    fn matches(&self, _args: &QueryModsArgs) -> bool {
+        true
+    }
+
+    fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering {
+        let order = match args.sort_by {
+            SortBy::Name => other.name.cmp(&self.name),
+            SortBy::Author => match (&other.author, &self.author) {
+                (Some(a), Some(b)) => a.cmp(b),
+                (Some(_), None) => Ordering::Greater,
+                (None, Some(_)) => Ordering::Less,
+                (None, None) => Ordering::Equal,
+            },
+            _ => Ordering::Equal,
+        };
+
+        match args.sort_order {
+            SortOrder::Ascending => order,
+            SortOrder::Descending => order.reverse(),
+        }
+    }
+}

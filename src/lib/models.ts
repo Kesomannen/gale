@@ -93,7 +93,6 @@ export type Mod = {
 	fileSize: number;
 	websiteUrl: string | null;
 	donateUrl: string | null;
-	icon: string | null;
 	dependencies: string[] | null;
 	isPinned: boolean;
 	isDeprecated: boolean;
@@ -194,7 +193,6 @@ export type ModpackArgs = {
 export type Game = {
 	name: string;
 	slug: string;
-	steamId: number;
 	favorite: boolean;
 	popular: boolean;
 };

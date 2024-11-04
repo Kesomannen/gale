@@ -9,7 +9,7 @@ use log::warn;
 use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
 
-use super::ManagerGame;
+use super::ManagedGame;
 use crate::{
     game::Game,
     prefs::{GamePrefs, Prefs},
@@ -27,7 +27,7 @@ pub enum LaunchMode {
     Direct { instances: u32, interval_secs: f32 },
 }
 
-impl ManagerGame {
+impl ManagedGame {
     pub fn launch(&self, prefs: &Prefs) -> Result<()> {
         let game_dir = game_dir(self.game, prefs)?;
         if let Err(err) = self.link_files(&game_dir) {

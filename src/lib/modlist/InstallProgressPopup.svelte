@@ -23,6 +23,8 @@
 		}
 	};
 
+	$: currentName = progress.currentName.replace('_', ' ');
+
 	onMount(() => {
 		listen<InstallProgress>('install_progress', (event) => {
 			progress = event.payload;
@@ -55,7 +57,6 @@
 	canClose={progress.canCancel}
 	onClose={() => invokeCommand('cancel_install')}
 	confirmClose={{
-		title: 'Abort installation',
 		message: 'Are you sure you want to abort the installation?'
 	}}
 >
@@ -63,13 +64,13 @@
 		{#if progress.task.kind == 'done'}
 			Done!
 		{:else if progress.task.kind == 'downloading'}
-			Downloading {progress.currentName} ({shortenFileSize(
+			Downloading {currentName} ({shortenFileSize(
 				progress.task.payload.downloaded
 			)}/{shortenFileSize(progress.task.payload.total)})
 		{:else if progress.task.kind == 'extracting'}
-			Extracting {progress.currentName}
+			Extracting {currentName}
 		{:else if progress.task.kind == 'installing'}
-			Installing {progress.currentName}
+			Installing {currentName}
 		{/if}
 	</Dialog.Description>
 

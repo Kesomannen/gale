@@ -129,10 +129,7 @@
 
 	async function clearModCache() {
 		let result = await confirm(
-			"Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!",
-			{
-				title: 'Clear mod cache'
-			}
+			"Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!"
 		);
 
 		if (!result) return;

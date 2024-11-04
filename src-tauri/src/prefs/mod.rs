@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{anyhow, ensure, Result};
-use log::{debug, info, warn};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
@@ -174,21 +174,11 @@ pub struct Prefs {
     #[serde(skip)]
     is_first_run: bool,
 
-    // aliases are for backwards compatibility
-    // will be removed in the future
-    #[serde(alias = "steam_exe_path")]
     pub steam_exe_path: Option<PathBuf>,
-    #[serde(alias = "steam_game_dir")]
     pub steam_library_dir: Option<PathBuf>,
-
-    #[serde(alias = "data_dir")]
     pub data_dir: DirPref,
-    #[serde(alias = "cache_dir", alias = "cacheDir")]
-    cache_dir_old: Option<DirPref>,
 
     fetch_mods_automatically: bool,
-
-    #[serde(alias = "zoom_factor")]
     zoom_factor: f32,
 
     pub game_prefs: HashMap<String, GamePrefs>,
@@ -264,11 +254,9 @@ impl Default for Prefs {
 
             steam_exe_path,
             steam_library_dir,
-
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep("prefs.json")
                 .keep("logs"),
-            cache_dir_old: None,
 
             fetch_mods_automatically: true,
 
@@ -309,8 +297,6 @@ impl Prefs {
                 let window = app.get_webview_window("main").unwrap();
                 window.zoom(prefs.zoom_factor as f64).ok();
 
-                remove_old_cache(&mut prefs, app);
-
                 prefs
             }
         };
@@ -341,11 +327,11 @@ impl Prefs {
             let mut manager = manager.lock().unwrap();
 
             let mut path = value.data_dir.to_path_buf();
-            for (id, game) in &mut manager.games {
-                path.push(id);
+            for (key, game) in &mut manager.games {
+                path.push(key.slug());
                 path.push("profiles");
 
-                for profile in &mut game.profiles {
+                for profile in game.profiles_mut() {
                     profile.path = path.join(&profile.name);
                 }
 
@@ -375,32 +361,10 @@ impl Prefs {
     }
 
     pub fn cache_dir(&self) -> PathBuf {
-        self.data_dir.get().join("cache")
+        self.data_dir.join("cache")
     }
 
     pub fn fetch_mods_automatically(&self) -> bool {
         self.fetch_mods_automatically
-    }
-}
-
-fn remove_old_cache(prefs: &mut Prefs, app: &AppHandle) {
-    if let Some(cache_dir) = &prefs.cache_dir_old {
-        if cache_dir.exists() {
-            let handle = app.to_owned();
-            let cache_dir = cache_dir.to_owned();
-            tauri::async_runtime::spawn_blocking(move || {
-                fs::remove_dir_all(cache_dir)
-                    .unwrap_or_else(|err| warn!("failed to remove old cache directory: {:#}", err));
-
-                let prefs = handle.state::<Mutex<Prefs>>();
-                let mut prefs = prefs.lock().unwrap();
-
-                prefs.cache_dir_old = None;
-
-                info!("removed old cache directory");
-            });
-        } else {
-            prefs.cache_dir_old = None;
-        }
     }
 }

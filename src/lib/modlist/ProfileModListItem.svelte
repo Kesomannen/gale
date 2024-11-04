@@ -7,7 +7,7 @@
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../models';
 	import Icon from '@iconify/svelte';
-	import { isOutdated } from '$lib/util';
+	import { iconUrl, isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
 	import { Switch, ContextMenu } from 'bits-ui';
@@ -31,14 +31,17 @@
 
 	$: {
 		if (mod.type === 'remote') {
-			imgSrc = mod.icon!;
+			imgSrc = iconUrl(mod);
 		} else {
+			imgSrc = `games/${$activeGame?.slug}.webp`;
+			/*
 			if (mod.icon === null) {
 				imgSrc = `games/${$activeGame?.slug}.webp`;
 			} else {
 				imgSrc = '';
 				loadLoadIcon(mod.icon);
 			}
+				*/
 		}
 	}
 

@@ -308,5 +308,5 @@ pub fn write_cache(packages: &[&PackageListing], manager: &ModManager) -> Result
 }
 
 fn cache_path(manager: &ModManager) -> PathBuf {
-    manager.active_game().path.join("thunderstore_cache.json")
+    manager.active_game().path().join("thunderstore_cache.json")
 }

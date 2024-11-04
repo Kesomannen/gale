@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use super::fs::*;
-use crate::game::ModLoader;
+use crate::game::{ModLoader, Subdir};
 
 #[test]
 fn check_map_top_level_file() {
@@ -55,10 +55,25 @@ fn check_map_bepinex() {
 }
 
 fn test_map_file_default(relative_path: &[&str], full_name: &str, expected: &[&str]) {
+    struct TestMapper;
+
+    impl FileMapper for TestMapper {
+        fn match_subdir(&self, name: &str) -> Option<&Subdir> {
+            ModLoader::BepInEx
+                .subdirs()
+                .into_iter()
+                .find(|subdir| subdir.name() == name)
+        }
+
+        fn default_subdir(&self) -> &Subdir {
+            ModLoader::BepInEx.default_subdir()
+        }
+    }
+
     let relative_path: PathBuf = relative_path.iter().collect();
     let expected: PathBuf = expected.iter().collect();
     assert_eq!(
-        map_file_default(&relative_path, full_name, || ModLoader::BepInEx.subdirs()).unwrap(),
+        map_file_default(&relative_path, full_name, TestMapper).unwrap(),
         expected
     )
 }
