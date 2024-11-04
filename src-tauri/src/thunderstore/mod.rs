@@ -1,5 +1,6 @@
 use std::{
     collections::{HashSet, VecDeque},
+    iter::FusedIterator,
     path::PathBuf,
     str::{self},
     sync::Mutex,
@@ -231,8 +232,11 @@ impl<'a> Iterator for Dependencies<'a> {
     type Item = BorrowedMod<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.queue.pop_front().and_then(|current| {
-            let current = self.thunderstore.find_ident(current).ok()?;
+        loop {
+            let current = self.queue.pop_front()?;
+            let Ok(current) = self.thunderstore.find_ident(&current) else {
+                continue;
+            };
 
             for dependency in &current.version.dependencies {
                 if !self.visited.insert(dependency.full_name()) {
@@ -242,10 +246,12 @@ impl<'a> Iterator for Dependencies<'a> {
                 self.queue.push_back(dependency);
             }
 
-            Some(current)
-        })
+            break Some(current);
+        }
     }
 }
+
+impl FusedIterator for Dependencies<'_> {}
 
 impl Thunderstore {
     /// Recursively finds the dependencies of the given mods,
