@@ -1,6 +1,7 @@
 use std::{
     borrow::Cow,
     hash::{self, Hash},
+    path::PathBuf,
 };
 
 use heck::{ToKebabCase, ToPascalCase};
@@ -20,49 +21,28 @@ struct JsonGame<'a> {
     slug: Option<&'a str>,
     #[serde(default)]
     popular: bool,
-    mod_loader: ModLoader,
     #[serde(default, rename = "r2dirName")]
     r2_dir_name: Option<&'a str>,
-    #[serde(default)]
-    extra_sub_dirs: Vec<Subdir<'a>>,
     #[serde(borrow)]
-    platforms: Platforms<'a>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-pub enum ModLoader {
-    BepInEx,
+    mod_loader: ModLoader<'a>,
+    platforms: JsonPlatforms<'a>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct Platforms<'a> {
-    #[serde(borrow)]
-    steam: Steam<'a>,
+struct JsonPlatforms<'a> {
+    steam: Option<Steam<'a>>,
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase", untagged)]
-enum Steam<'a> {
-    Concise(u32),
-    #[serde(rename_all = "camelCase")]
-    Full {
-        id: u32,
-        dir_name: &'a str,
-    },
-}
-
-#[derive(Serialize, Deserialize, Debug, Eq)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase", from = "JsonGame")]
-struct GameData<'a> {
-    name: &'a str,
-    slug: Cow<'a, str>,
-    steam_name: &'a str,
-    steam_id: u32,
-    mod_loader: ModLoader,
-    r2_dir_name: Cow<'a, str>,
-    extra_sub_dirs: Vec<Subdir<'a>>,
-    popular: bool,
+pub struct GameData<'a> {
+    pub name: &'a str,
+    pub slug: Cow<'a, str>,
+    pub r2_dir_name: Cow<'a, str>,
+    pub popular: bool,
+    pub mod_loader: ModLoader<'a>,
+    pub platforms: Vec<Platform<'a>>,
 }
 
 impl<'a> From<JsonGame<'a>> for GameData<'a> {
@@ -71,9 +51,8 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             name,
             slug,
             popular,
-            mod_loader,
             r2_dir_name,
-            extra_sub_dirs,
+            mod_loader,
             platforms,
         } = value;
 
@@ -87,20 +66,23 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             None => Cow::Owned(slug.to_pascal_case()),
         };
 
-        let (steam_id, steam_name) = match platforms.steam {
-            Steam::Concise(id) => (id, name),
-            Steam::Full { id, dir_name } => (id, dir_name),
+        let platforms = {
+            let mut vec = Vec::new();
+
+            if let Some(steam) = platforms.steam {
+                vec.push(Platform::Steam(steam));
+            }
+
+            vec
         };
 
         Self {
             name,
             slug,
-            steam_name,
-            steam_id,
-            mod_loader,
             r2_dir_name,
-            extra_sub_dirs,
             popular,
+            mod_loader,
+            platforms,
         }
     }
 }
@@ -111,30 +93,54 @@ impl PartialEq for GameData<'_> {
     }
 }
 
+impl Eq for GameData<'_> {}
+
 impl Hash for GameData<'_> {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
         self.slug.hash(state);
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase", tag = "name")]
+pub enum Platform<'a> {
+    Steam(Steam<'a>),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Steam<'a> {
+    pub id: u32,
+    #[serde(default)]
+    pub dir_name: Cow<'a, str>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[serde(tag = "name")]
+pub enum ModLoader<'a> {
+    #[serde(rename_all = "camelCase")]
+    BepInEx {
+        #[serde(borrow)]
+        extra_sub_dirs: Vec<Subdir<'a>>,
+    },
+    MelonLoader,
+}
+
 fn default_true() -> bool {
     true
 }
-
-fn default_false() -> bool {
-    false
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Subdir<'a> {
-    name: &'a str,
-    target: &'a str,
+    pub name: &'a str,
+    pub target: &'a str,
     /// Whether to separate mods into `author-name` dirs.
     #[serde(default = "default_true")]
-    separate_mods: bool,
-    #[serde(default = "default_false")]
-    mutable: bool,
+    pub separate_mods: bool,
+    #[serde(default)]
+    pub mutable: bool,
+    #[serde(default)]
+    pub extension: Option<&'a str>,
 }
 
 impl<'a> Subdir<'a> {
@@ -144,6 +150,7 @@ impl<'a> Subdir<'a> {
             target,
             separate_mods: true,
             mutable: false,
+            extension: None,
         }
     }
 
@@ -157,97 +164,109 @@ impl<'a> Subdir<'a> {
         self
     }
 
-    pub fn name(&self) -> &'a str {
-        self.name
-    }
-
-    pub fn target(&self) -> &'a str {
-        self.target
-    }
-
-    pub fn separate_mods(&self) -> bool {
-        self.separate_mods
-    }
-
-    pub fn is_mutable(&self) -> bool {
-        self.mutable
+    pub const fn extension(mut self, ext: &'a str) -> Self {
+        self.extension = Some(ext);
+        self
     }
 }
 
-impl ModLoader {
-    pub fn default_subdir(&self) -> &'static Subdir<'static> {
+impl<'a> ModLoader<'a> {
+    pub fn log_path(&self) -> PathBuf {
         match self {
-            ModLoader::BepInEx => {
+            ModLoader::BepInEx { .. } => &["BepInEx", "LogOutput.log"],
+            ModLoader::MelonLoader => &["MelonLoader", "Latest.log"],
+        }
+        .iter()
+        .collect()
+    }
+
+    pub fn default_subdir(&self) -> Option<&Subdir> {
+        match self {
+            ModLoader::BepInEx { .. } => {
                 const SUBDIR: &Subdir = &Subdir::new("plugins", "BepInEx/plugins");
-                SUBDIR
+                Some(SUBDIR)
             }
+            ModLoader::MelonLoader => None,
         }
     }
 
-    pub fn subdirs(&self) -> &'static [Subdir<'static>] {
+    pub fn subdirs(&self) -> Box<dyn Iterator<Item = &Subdir> + '_> {
         match self {
-            ModLoader::BepInEx => {
+            ModLoader::BepInEx { extra_sub_dirs } => {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::new("plugins", "BepInEx/plugins"),
                     Subdir::new("patchers", "BepInEx/patchers"),
-                    Subdir::new("monomod", "BepInEx/monomod"),
+                    Subdir::new("monomod", "BepInEx/monomod").extension(".mm.dll"),
                     Subdir::new("core", "BepInEx/core"),
                     Subdir::new("config", "BepInEx/config")
                         .dont_separate_mods()
                         .mutable(),
                 ];
-                SUBDIRS
+                Box::new(SUBDIRS.iter().chain(extra_sub_dirs))
+            }
+            ModLoader::MelonLoader => {
+                const SUBDIRS: &[Subdir] = &[
+                    Subdir::new("Mods", "Mods")
+                        .dont_separate_mods()
+                        .extension(".dll"),
+                    Subdir::new("Plugins", "Plugins")
+                        .dont_separate_mods()
+                        .extension(".plugin.dll"),
+                    Subdir::new("MelonLoader", "MelonLoader").dont_separate_mods(),
+                    Subdir::new("Managed", "MelonLoader/Managed")
+                        .dont_separate_mods()
+                        .extension(".managed.dll"),
+                    Subdir::new("Libs", "MelonLoader/Libs")
+                        .dont_separate_mods()
+                        .extension(".lib.dll"),
+                    Subdir::new("UserData", "UserData").dont_separate_mods(),
+                    Subdir::new("CustomItems", "UserData/CustomItems")
+                        .dont_separate_mods()
+                        .extension(".melon"),
+                    Subdir::new("CustomMaps", "UserData/CustomMaps")
+                        .dont_separate_mods()
+                        .extension(".bcm"),
+                    Subdir::new("PlayerModels", "UserData/PlayerModels")
+                        .dont_separate_mods()
+                        .extension(".body"),
+                    Subdir::new("CustomLoadScreens", "UserData/CustomLoadScreens")
+                        .dont_separate_mods()
+                        .extension(".load"),
+                    Subdir::new("Music", "UserData/Music")
+                        .dont_separate_mods()
+                        .extension(".wav"),
+                    Subdir::new("Food", "UserData/Food")
+                        .dont_separate_mods()
+                        .extension(".food"),
+                    Subdir::new("Scoreworks", "UserData/Scoreworks")
+                        .dont_separate_mods()
+                        .extension(".sw"),
+                    Subdir::new("CustomSkins", "UserData/CustomSkins")
+                        .dont_separate_mods()
+                        .extension(".png"),
+                    Subdir::new("Grenades", "UserData/Grenades")
+                        .dont_separate_mods()
+                        .extension(".grenade"),
+                ];
+
+                Box::new(SUBDIRS.iter())
             }
         }
     }
+
+    pub fn match_subdir(&self, name: &str) -> Option<&Subdir> {
+        self.subdirs().find(|subdir| {
+            subdir.name == name || subdir.extension.is_some_and(|ext| name.ends_with(ext))
+        })
+    }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
-#[serde(transparent)]
-pub struct Game(&'static GameData<'static>);
+pub type Game = &'static GameData<'static>;
 
-impl Game {
-    pub fn all() -> impl Iterator<Item = Self> {
-        GAMES.iter().map(Self)
-    }
+pub fn all() -> impl Iterator<Item = Game> {
+    GAMES.iter()
+}
 
-    pub fn from_slug(slug: &str) -> Option<Self> {
-        GAMES.iter().find(|game| game.slug == slug).map(Self)
-    }
-
-    pub fn subdirs(self) -> impl Iterator<Item = &'static Subdir<'static>> {
-        self.0
-            .mod_loader
-            .subdirs()
-            .into_iter()
-            .chain(self.0.extra_sub_dirs.iter())
-    }
-
-    pub fn name(self) -> &'static str {
-        self.0.name
-    }
-
-    pub fn slug(self) -> &'static str {
-        &self.0.slug
-    }
-
-    pub fn steam_name(self) -> &'static str {
-        self.0.steam_name
-    }
-
-    pub fn steam_id(self) -> u32 {
-        self.0.steam_id
-    }
-
-    pub fn mod_loader(self) -> ModLoader {
-        self.0.mod_loader.clone()
-    }
-
-    pub fn r2_dir_name(self) -> &'static str {
-        &self.0.r2_dir_name
-    }
-
-    pub fn is_popular(self) -> bool {
-        self.0.popular
-    }
+pub fn from_slug(slug: &str) -> Option<Game> {
+    GAMES.iter().find(|game| game.slug == slug)
 }

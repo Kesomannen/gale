@@ -44,7 +44,7 @@ impl ManagedGame {
     fn launch_command(&self, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
         let (launch_mode, custom_args) = prefs
             .game_prefs
-            .get(self.game.slug())
+            .get(&*self.game.slug)
             .map(|prefs| (prefs.launch_mode.clone(), prefs.custom_args.as_ref()))
             .unwrap_or_default();
 
@@ -62,9 +62,8 @@ impl ManagedGame {
                 );
 
                 let mut command = Command::new(steam_path);
-                command
-                    .arg("-applaunch")
-                    .arg(self.game.steam_id().to_string());
+                command.arg("-applaunch");
+                //.arg(self.game.steam_id.to_string());
 
                 command
             }
@@ -105,7 +104,7 @@ impl ManagedGame {
 }
 
 fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
-    let path = match prefs.game_prefs.get(game.slug()) {
+    let path = match prefs.game_prefs.get(&*game.slug) {
         Some(GamePrefs {
             dir_override: Some(path),
             ..
@@ -125,7 +124,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                 path.push("common");
             }
 
-            path.push(game.steam_name());
+            //path.push(game.steam_name);
 
             path
         }

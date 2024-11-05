@@ -180,9 +180,14 @@ impl Profile {
         let mut path = self.path.join("BepInEx");
 
         let ident = profile_mod.ident();
+        let subdirs = self
+            .game
+            .mod_loader
+            .subdirs()
+            .filter(|subdir| subdir.separate_mods);
 
-        for dir in self.game.subdirs().filter(|subdir| subdir.separate_mods()) {
-            path.push(dir.name());
+        for dir in subdirs {
+            path.push(dir.name);
             path.push(ident.full_name());
 
             if path.exists() {

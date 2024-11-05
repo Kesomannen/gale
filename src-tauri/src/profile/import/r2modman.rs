@@ -109,7 +109,7 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
-    path.push(manager.active_game.r2_dir_name());
+    path.push(&*manager.active_game.r2_dir_name);
     path.push("profiles");
 
     ensure!(path.exists(), "no profiles found");

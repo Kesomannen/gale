@@ -12,17 +12,13 @@ use log::{debug, warn};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-use crate::{
-    game::{Game, Subdir},
-    prefs::Prefs,
-    util,
-};
+use crate::{game::ModLoader, prefs::Prefs, util};
 
 pub fn install_from_zip(
     src: &Path,
     dest: &Path,
     full_name: &str,
-    game: Game,
+    mod_loader: &ModLoader,
     prefs: &Prefs,
 ) -> Result<()> {
     // temporarily extract the zip so the same install method can be used
@@ -37,15 +33,20 @@ pub fn install_from_zip(
         .map(BufReader::new)
         .context("failed to open file")?;
 
-    extract(reader, full_name, path.clone(), game)?;
-    install(&path, dest, false, game)?;
+    extract(reader, full_name, path.clone(), mod_loader)?;
+    install(&path, dest, false, mod_loader)?;
 
     fs::remove_dir_all(path).context("failed to remove temporary directory")?;
 
     Ok(())
 }
 
-pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf, game: Game) -> Result<()> {
+pub fn extract(
+    src: impl Read + Seek,
+    full_name: &str,
+    dest: PathBuf,
+    mod_loader: &ModLoader,
+) -> Result<()> {
     let start = Instant::now();
 
     let is_bepinex = is_bepinex(full_name);
@@ -80,7 +81,9 @@ pub fn extract(src: impl Read + Seek, full_name: &str, dest: PathBuf, game: Game
 
             Cow::Borrowed(path)
         } else {
-            let path = map_file_default(&relative_path, full_name, game)?;
+            let Some(path) = map_file_default(&relative_path, full_name, mod_loader)? else {
+                continue;
+            };
 
             Cow::Owned(path)
         };
@@ -111,29 +114,14 @@ pub fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
     Some(components.as_path())
 }
 
-pub trait FileMapper {
-    fn match_subdir(&self, name: &str) -> Option<&Subdir>;
-    fn default_subdir(&self) -> &Subdir;
-}
-
-impl FileMapper for Game {
-    fn match_subdir(&self, name: &str) -> Option<&Subdir> {
-        self.subdirs().find(|subdir| subdir.name() == name)
-    }
-
-    fn default_subdir(&self) -> &Subdir {
-        self.mod_loader().default_subdir()
-    }
-}
-
 /// Maps a file from a mod zip archive to its final extracted path.
 /// Based on r2modman's structure rules, which are available here:
 /// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
 pub fn map_file_default(
     relative_path: &Path,
     full_name: &str,
-    mapper: impl FileMapper,
-) -> Result<PathBuf> {
+    mod_loader: &ModLoader,
+) -> Result<Option<PathBuf>> {
     use std::path::Component;
 
     // first, flatten the path until a subdir appears
@@ -142,20 +130,18 @@ pub fn map_file_default(
     let mut prev: Vec<&OsStr> = Vec::new();
     let mut components = relative_path.components();
 
-    let (subdir, is_top_level) = loop {
+    let subdir = loop {
         let current = components.next();
 
         match current {
             Some(Component::Normal(name)) => {
-                // check for a subdir
+                prev.push(name);
+
                 if let Some(name) = name.to_str() {
-                    if let Some(subdir) = mapper.match_subdir(name) {
-                        break (subdir, false);
+                    if let Some(subdir) = mod_loader.match_subdir(name) {
+                        break subdir;
                     }
                 }
-
-                // otherwise store the parent and continue
-                prev.push(name);
             }
             // remove the previous parent
             Some(Component::ParentDir) => {
@@ -164,7 +150,10 @@ pub fn map_file_default(
             // we don't care/don't expect any of these
             Some(Component::RootDir | Component::Prefix(_) | Component::CurDir) => continue,
             // default to plugins when the whole path is exhausted
-            None => break (mapper.default_subdir(), true),
+            None => match mod_loader.default_subdir() {
+                Some(subdir) => break subdir,
+                None => return Ok(None),
+            },
         }
     };
 
@@ -176,14 +165,14 @@ pub fn map_file_default(
     // or the whole path if we defaulted
 
     // e.g. profile/BepInEx/plugins
-    let mut target = PathBuf::from(subdir.target());
+    let mut target = PathBuf::from(subdir.target);
 
-    if subdir.separate_mods() {
+    if subdir.separate_mods {
         // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod
         target.push(full_name);
     }
 
-    if is_top_level {
+    if components.clone().next().is_none() {
         // since we advanced components to the end, prev.pop() will give the
         // last component, i.e. the file name
         let file_name = prev.pop().context("malformed zip file")?;
@@ -193,10 +182,10 @@ pub fn map_file_default(
     } else {
         // add the remainder of the path after the subdir
         // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/assets/cool_icon.png
-        target.push(components.as_path());
+        target.push(components);
     }
 
-    Ok(target)
+    Ok(Some(target))
 }
 
 // install from a well structured mod directory
@@ -210,7 +199,7 @@ pub fn map_file_default(
 //         - ...
 //     - config
 //       - KeepItDown.cfg
-pub fn install(src: &Path, dest: &Path, overwrite: bool, game: Game) -> Result<()> {
+pub fn install(src: &Path, dest: &Path, overwrite: bool, mod_loder: &ModLoader) -> Result<()> {
     let entries = WalkDir::new(src).into_iter().filter_map(Result::ok);
     for entry in entries {
         let relative = entry
@@ -238,10 +227,10 @@ pub fn install(src: &Path, dest: &Path, overwrite: bool, game: Game) -> Result<(
                 }
             }
 
-            let mutable = game
+            let mutable = mod_loder
                 .subdirs()
-                .find(|subdir| relative.starts_with(subdir.target()))
-                .is_some_and(|subdir| subdir.is_mutable());
+                .find(|subdir| relative.starts_with(subdir.target))
+                .is_some_and(|subdir| subdir.mutable);
 
             if mutable {
                 fs::copy(entry.path(), target)

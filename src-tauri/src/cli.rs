@@ -5,7 +5,12 @@ use serde_json::Value;
 use tauri::{App, Manager};
 use tauri_plugin_cli::CliExt;
 
-use crate::{game::Game, prefs::Prefs, profile::ModManager, thunderstore::Thunderstore};
+use crate::{
+    game::{self},
+    prefs::Prefs,
+    profile::ModManager,
+    thunderstore::Thunderstore,
+};
 
 pub fn run(app: &App) -> Result<()> {
     match app.cli().matches() {
@@ -24,7 +29,7 @@ pub fn run(app: &App) -> Result<()> {
 
             if let Some(arg) = matches.args.get("game") {
                 if let Value::String(slug) = &arg.value {
-                    let game = Game::from_slug(slug).context("unknown game id")?;
+                    let game = game::from_slug(slug).context("unknown game id")?;
 
                     manager
                         .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())
@@ -36,7 +41,7 @@ pub fn run(app: &App) -> Result<()> {
                 if let Value::String(profile) = &arg.value {
                     let game = manager.active_game_mut();
 
-                    let index = game.profile_index(&profile).context("unknown profile")?;
+                    let index = game.profile_index(profile).context("unknown profile")?;
 
                     game.set_active_profile(index)
                         .context("failed to set profile")?;

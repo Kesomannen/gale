@@ -225,8 +225,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = manager.active_game;
-
+    let mod_loader = manager.active_mod_loader();
     let profile = manager.active_profile_mut();
 
     let existing = profile
@@ -248,7 +247,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     match kind {
         LocalModKind::Zip => {
-            install::install_from_zip(&path, &profile.path, &local_mod.name, game, &prefs)
+            install::install_from_zip(&path, &profile.path, &local_mod.name, mod_loader, &prefs)
                 .context("failed to install local mod")?;
 
             local_mod.icon = plugin_dir.join("icon.png").exists_or_none();

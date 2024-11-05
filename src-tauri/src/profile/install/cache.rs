@@ -1,12 +1,11 @@
 use std::{collections::HashSet, fs, path::PathBuf};
 
 use anyhow::{Context, Result};
-use itertools::Itertools;
 
 use crate::{
     prefs::Prefs,
     profile::ModManager,
-    thunderstore::{BorrowedMod, Thunderstore, VersionIdent},
+    thunderstore::{Thunderstore, VersionIdent},
     util,
 };
 
@@ -40,15 +39,14 @@ pub(super) fn soft_clear(
     let installed_mods = manager
         .active_game()
         .installed_mods(thunderstore)
-        .map_ok(|BorrowedMod { package, version }| (package.ident.as_str(), version.version()))
-        .collect::<Result<HashSet<_>>>()
-        .context("failed to resolve installed mods")?;
+        .map(|borrowed| (borrowed.ident().full_name(), borrowed.ident().version()))
+        .collect::<HashSet<_>>();
 
     let packages = prefs
         .cache_dir()
         .read_dir()
         .context("failed to read cache directory")?
-        .filter_map(|err| err.ok());
+        .filter_map(Result::ok);
 
     for entry in packages {
         let path = entry.path();

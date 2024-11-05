@@ -309,8 +309,8 @@ async fn submit_package(
         has_nsfw_content: args.nsfw,
         upload_uuid: uuid,
         categories: Vec::new(),
-        communities: vec![game.slug().to_owned()],
-        community_categories: HashMap::from([(game.slug().to_owned(), args.categories)]),
+        communities: vec![game.slug.to_string()],
+        community_categories: HashMap::from([(game.slug.to_string(), args.categories)]),
     };
 
     debug!("submitting package");

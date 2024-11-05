@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use super::{actions::ActionResult, Dependant, ModManager, Profile};
 use crate::{
-    game::Game,
+    game::{self, Game},
     prefs::Prefs,
     thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
     util::cmd::{Result, StateMutex},
@@ -23,9 +23,9 @@ pub struct FrontendGame {
 impl From<Game> for FrontendGame {
     fn from(value: Game) -> Self {
         Self {
-            name: value.name(),
-            slug: value.slug(),
-            popular: value.is_popular(),
+            name: value.name,
+            slug: &*value.slug,
+            popular: value.popular,
         }
     }
 }
@@ -46,13 +46,13 @@ pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo {
         .games
         .iter()
         .filter_map(|(game, managed_game)| match managed_game.favorite {
-            true => Some(game.name()),
+            true => Some(game.name),
             false => None,
         })
         .collect();
 
     GameInfo {
-        all: Game::all().map_into().collect(),
+        all: game::all().map_into().collect(),
         active: manager.active_game.into(),
         favorites,
     }
@@ -67,7 +67,7 @@ pub fn favorite_game(
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = Game::from_slug(&slug).context("unknown game")?;
+    let game = game::from_slug(&slug).context("unknown game")?;
     manager.ensure_game(game, &prefs)?;
 
     let managed_game = manager.games.get_mut(&game).unwrap();
@@ -90,7 +90,7 @@ pub fn set_active_game(
     let mut thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = Game::from_slug(slug).context("unknown game")?;
+    let game = game::from_slug(slug).context("unknown game")?;
 
     manager.set_active_game(game, &mut thunderstore, &prefs, app)?;
     manager.save(&prefs)?;

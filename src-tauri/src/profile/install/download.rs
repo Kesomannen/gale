@@ -208,7 +208,7 @@ impl<'a> Installer<'a> {
             Cursor::new(data),
             version.full_name(),
             cache_path.clone(),
-            manager.active_game,
+            &manager.active_game.mod_loader,
         )
         .context("failed to extract mod")?;
 
@@ -304,12 +304,12 @@ fn cache_install(
     manager: &mut ModManager,
     thunderstore: &Thunderstore,
 ) -> Result<()> {
-    let game = manager.active_game;
+    let mod_loader = &manager.active_game.mod_loader;
 
     let borrowed = data.id.borrow(thunderstore)?;
     let profile = manager.active_profile_mut();
 
-    super::fs::install(src, &profile.path, data.overwrite, game)?;
+    super::fs::install(src, &profile.path, data.overwrite, mod_loader)?;
 
     let install_time = data.install_time.unwrap_or(Utc::now());
 

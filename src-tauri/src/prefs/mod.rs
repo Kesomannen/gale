@@ -328,7 +328,7 @@ impl Prefs {
 
             let mut path = value.data_dir.to_path_buf();
             for (key, game) in &mut manager.games {
-                path.push(key.slug());
+                path.push(&*key.slug);
                 path.push("profiles");
 
                 for profile in game.profiles_mut() {

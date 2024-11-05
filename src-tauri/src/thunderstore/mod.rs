@@ -60,18 +60,6 @@ impl<'a> BorrowedMod<'a> {
         &self.version.ident
     }
 
-    pub fn owner(&self) -> &'a str {
-        self.ident().owner()
-    }
-
-    pub fn name(&self) -> &'a str {
-        self.ident().name()
-    }
-
-    pub fn version(&self) -> &'a str {
-        self.ident().version()
-    }
-
     pub fn split(self) -> (&'a PackageListing, &'a PackageVersion) {
         (self.package, self.version)
     }
@@ -234,7 +222,7 @@ impl<'a> Iterator for Dependencies<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let current = self.queue.pop_front()?;
-            let Ok(current) = self.thunderstore.find_ident(&current) else {
+            let Ok(current) = self.thunderstore.find_ident(current) else {
                 continue;
             };
 

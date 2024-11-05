@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 use crate::{
     config,
-    game::{Game, ModLoader},
+    game::{self, Game, ModLoader},
     logger,
     prefs::Prefs,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
@@ -334,12 +334,8 @@ impl Profile {
     }
 
     fn log_path(&self) -> Result<PathBuf> {
-        let path: PathBuf = match self.game.mod_loader() {
-            ModLoader::BepInEx => ["BepInEx", "LogOutput.log"].iter().collect(),
-        };
-
         self.path
-            .join(path)
+            .join(self.game.mod_loader.log_path())
             .exists_or_none()
             .ok_or(anyhow!("no log file found"))
     }
@@ -465,7 +461,7 @@ impl ManagedGame {
     fn profile(&self, index: usize) -> Result<&Profile> {
         self.profiles
             .get(index)
-            .with_context(|| format!("profile index {} is out of bounds", index))
+            .ok_or_else(|| anyhow!("profile index {} is out of bounds", index))
     }
 
     fn active_profile(&self) -> &Profile {
@@ -488,17 +484,17 @@ impl ManagedGame {
         Ok(())
     }
 
-    /// Installed thunderstore mods across all the game's profiles.
+    /// Returns an iterator over all installed thunderstore mods across all of the game's profiles.
     ///
-    /// May contain duplicates.
+    /// May contain duplicates
     fn installed_mods<'a>(
         &'a self,
         thunderstore: &'a Thunderstore,
-    ) -> impl Iterator<Item = Result<BorrowedMod<'a>>> + 'a {
+    ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
         self.profiles.iter().flat_map(|profile| {
             profile
                 .thunderstore_mods()
-                .map(|(ts_mod, _)| ts_mod.id.borrow(thunderstore))
+                .filter_map(|(ts_mod, _)| ts_mod.id.borrow(thunderstore).ok())
         })
     }
 
@@ -506,7 +502,7 @@ impl ManagedGame {
         let Some(game) = path
             .file_name()
             .and_then(|name| name.to_str())
-            .and_then(Game::from_slug)
+            .and_then(game::from_slug)
         else {
             return Ok(None);
         };
@@ -590,14 +586,18 @@ impl ModManager {
             .filter_map(|entry| ManagedGame::load(entry.path()).transpose())
             .collect::<Result<_>>()?;
 
-        let active_game = Game::from_slug(&save.active_game)
-            .unwrap_or_else(|| Game::from_slug(DEFAULT_GAME_SLUG).unwrap());
+        let active_game = game::from_slug(&save.active_game)
+            .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
 
         let mut manager = Self { games, active_game };
 
         manager.ensure_game(manager.active_game, prefs)?;
 
         Ok(manager)
+    }
+
+    pub fn active_mod_loader(&self) -> &'static ModLoader<'static> {
+        &self.active_game.mod_loader
     }
 
     pub fn active_game(&self) -> &ManagedGame {
@@ -644,7 +644,7 @@ impl ModManager {
             return Ok(());
         }
 
-        let path = prefs.data_dir.join(game.slug());
+        let path = prefs.data_dir.join(&*game.slug);
 
         let mut managed_game = ManagedGame::new(path, game);
         managed_game.create_profile(DEFAULT_PROFILE_NAME.to_owned())?;
@@ -657,14 +657,7 @@ impl ModManager {
     fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
         let packages = self
             .active_game()
-            .profiles
-            .iter()
-            .flat_map(|profile| {
-                profile
-                    .thunderstore_mods()
-                    .map(|(ts_mod, _)| ts_mod.id.borrow(thunderstore))
-            })
-            .filter_map(Result::ok)
+            .installed_mods(thunderstore)
             .map(|borrowed| borrowed.package)
             .unique()
             .collect_vec();
@@ -674,7 +667,7 @@ impl ModManager {
 
     fn save_data(&self) -> ManagerSaveData {
         ManagerSaveData {
-            active_game: self.active_game.slug().to_owned(),
+            active_game: self.active_game.slug.to_string(),
         }
     }
 
@@ -686,7 +679,7 @@ impl ModManager {
         path.pop();
 
         for (game, managed_game) in &self.games {
-            path.push(game.slug());
+            path.push(&*game.slug);
             managed_game.save(&mut path)?;
             path.pop();
         }

@@ -65,7 +65,7 @@ impl PackageListing {
     pub fn owner_url(&self, game: Game) -> String {
         format!(
             "https://thunderstore.io/c/{}/p/{}/",
-            game.slug(),
+            game.slug,
             self.owner()
         )
     }
@@ -73,7 +73,7 @@ impl PackageListing {
     pub fn url(&self, game: Game) -> String {
         format!(
             "https://thunderstore.io/c/{}/p/{}/{}/",
-            game.slug(),
+            game.slug,
             self.owner(),
             self.name()
         )

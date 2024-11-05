@@ -99,7 +99,7 @@ pub(super) async fn fetch_packages(
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
 
-    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.slug());
+    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.slug);
     let mut response = client.get(url).send().await?.error_for_status()?;
 
     let mut i = 0;
