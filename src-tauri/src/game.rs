@@ -115,48 +115,70 @@ pub struct Steam<'a> {
     pub dir_name: Cow<'a, str>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(tag = "name")]
-pub enum ModLoader<'a> {
-    #[serde(rename_all = "camelCase")]
-    BepInEx {
-        #[serde(borrow)]
-        extra_sub_dirs: Vec<Subdir<'a>>,
-    },
-    MelonLoader,
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum SubdirMode {
+    /// Separate mods into `author-name` dirs.
+    Separate,
+    /// Same as [`SubdirMode::Separate`], but also flatten any dirs that
+    /// come before the subdir.
+    #[default]
+    SeparateFlatten,
+    /// Track which files are installed by which mod.
+    Track,
+    /// Don't track or separate mods. This prevents disabling
+    /// or uninstallation of files in the subdir.
+    None,
 }
 
-fn default_true() -> bool {
-    true
-}
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Subdir<'a> {
+    /// The name which "triggers" the subdir. Must be a single path component.
     pub name: &'a str,
+    /// The target path of the subdir, relative to the profile dir.
+    ///
+    /// Use forward slashes to separate path components.
     pub target: &'a str,
-    /// Whether to separate mods into `author-name` dirs.
-    #[serde(default = "default_true")]
-    pub separate_mods: bool,
+    #[serde(default)]
+    pub mode: SubdirMode,
+    /// Whether files in this subdir can be/are expected to be mutated.
+    ///
+    /// When this is `false` (as default), files are installed using hard links
+    /// instead of copying, which saves disk space and copy time.
     #[serde(default)]
     pub mutable: bool,
+    /// File extension(s) that automatically route to this subdir.
+    /// Multiple extensions are separated by a comma.
     #[serde(default)]
     pub extension: Option<&'a str>,
 }
 
 impl<'a> Subdir<'a> {
-    pub const fn new(name: &'a str, target: &'a str) -> Self {
+    pub const fn new(name: &'a str, target: &'a str, mode: SubdirMode) -> Self {
         Self {
             name,
             target,
-            separate_mods: true,
+            mode,
             mutable: false,
             extension: None,
         }
     }
 
-    pub const fn dont_separate_mods(mut self) -> Self {
-        self.separate_mods = false;
-        self
+    pub const fn separate(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, target, SubdirMode::Separate)
+    }
+
+    pub const fn separate_flat(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, target, SubdirMode::SeparateFlatten)
+    }
+
+    pub const fn track(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, target, SubdirMode::Track)
+    }
+
+    pub const fn untracked(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, target, SubdirMode::None)
     }
 
     pub const fn mutable(mut self) -> Self {
@@ -170,93 +192,95 @@ impl<'a> Subdir<'a> {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ModLoader<'a> {
+    #[serde(default)]
+    pub package_name: Option<&'a str>,
+    #[serde(default, borrow, rename = "subdirs")]
+    pub extra_sub_dirs: Vec<Subdir<'a>>,
+    #[serde(flatten)]
+    pub kind: ModLoaderKind,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "name")]
+pub enum ModLoaderKind {
+    BepInEx,
+    MelonLoader,
+}
+
 impl<'a> ModLoader<'a> {
+    /// Checks for the mod loader's own package on Thunderstore.
+    ///
+    /// We need the `package_name` field because this name sometimes varies from game to game.
+    pub fn is_package(&self, full_name: &str) -> bool {
+        if let Some(package_name) = self.package_name {
+            full_name == package_name
+        } else {
+            match &self.kind {
+                ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
+                ModLoaderKind::MelonLoader => full_name == "LavaGang-MelonLoader",
+            }
+        }
+    }
+
     pub fn log_path(&self) -> PathBuf {
-        match self {
-            ModLoader::BepInEx { .. } => &["BepInEx", "LogOutput.log"],
-            ModLoader::MelonLoader => &["MelonLoader", "Latest.log"],
+        match &self.kind {
+            ModLoaderKind::BepInEx { .. } => &["BepInEx", "LogOutput.log"],
+            ModLoaderKind::MelonLoader => &["MelonLoader", "Latest.log"],
         }
         .iter()
         .collect()
     }
 
     pub fn default_subdir(&self) -> Option<&Subdir> {
-        match self {
-            ModLoader::BepInEx { .. } => {
-                const SUBDIR: &Subdir = &Subdir::new("plugins", "BepInEx/plugins");
+        match &self.kind {
+            ModLoaderKind::BepInEx { .. } => {
+                const SUBDIR: &Subdir = &Subdir::separate_flat("plugins", "BepInEx/plugins");
                 Some(SUBDIR)
             }
-            ModLoader::MelonLoader => None,
+            ModLoaderKind::MelonLoader => {
+                const SUBDIR: &Subdir = &Subdir::track("Mods", "Mods");
+                Some(SUBDIR)
+            }
         }
     }
 
-    pub fn subdirs(&self) -> Box<dyn Iterator<Item = &Subdir> + '_> {
-        match self {
-            ModLoader::BepInEx { extra_sub_dirs } => {
+    pub fn subdirs(&self) -> impl Iterator<Item = &Subdir> {
+        let default = match &self.kind {
+            ModLoaderKind::BepInEx => {
                 const SUBDIRS: &[Subdir] = &[
-                    Subdir::new("plugins", "BepInEx/plugins"),
-                    Subdir::new("patchers", "BepInEx/patchers"),
-                    Subdir::new("monomod", "BepInEx/monomod").extension(".mm.dll"),
-                    Subdir::new("core", "BepInEx/core"),
-                    Subdir::new("config", "BepInEx/config")
-                        .dont_separate_mods()
-                        .mutable(),
+                    Subdir::separate_flat("plugins", "BepInEx/plugins"),
+                    Subdir::separate_flat("patchers", "BepInEx/patchers"),
+                    Subdir::separate_flat("monomod", "BepInEx/monomod").extension(".mm.dll"),
+                    Subdir::separate_flat("core", "BepInEx/core"),
+                    Subdir::untracked("config", "BepInEx/config").mutable(),
                 ];
-                Box::new(SUBDIRS.iter().chain(extra_sub_dirs))
+                SUBDIRS
             }
-            ModLoader::MelonLoader => {
+            ModLoaderKind::MelonLoader => {
                 const SUBDIRS: &[Subdir] = &[
-                    Subdir::new("Mods", "Mods")
-                        .dont_separate_mods()
-                        .extension(".dll"),
-                    Subdir::new("Plugins", "Plugins")
-                        .dont_separate_mods()
-                        .extension(".plugin.dll"),
-                    Subdir::new("MelonLoader", "MelonLoader").dont_separate_mods(),
-                    Subdir::new("Managed", "MelonLoader/Managed")
-                        .dont_separate_mods()
-                        .extension(".managed.dll"),
-                    Subdir::new("Libs", "MelonLoader/Libs")
-                        .dont_separate_mods()
-                        .extension(".lib.dll"),
-                    Subdir::new("UserData", "UserData").dont_separate_mods(),
-                    Subdir::new("CustomItems", "UserData/CustomItems")
-                        .dont_separate_mods()
-                        .extension(".melon"),
-                    Subdir::new("CustomMaps", "UserData/CustomMaps")
-                        .dont_separate_mods()
-                        .extension(".bcm"),
-                    Subdir::new("PlayerModels", "UserData/PlayerModels")
-                        .dont_separate_mods()
-                        .extension(".body"),
-                    Subdir::new("CustomLoadScreens", "UserData/CustomLoadScreens")
-                        .dont_separate_mods()
-                        .extension(".load"),
-                    Subdir::new("Music", "UserData/Music")
-                        .dont_separate_mods()
-                        .extension(".wav"),
-                    Subdir::new("Food", "UserData/Food")
-                        .dont_separate_mods()
-                        .extension(".food"),
-                    Subdir::new("Scoreworks", "UserData/Scoreworks")
-                        .dont_separate_mods()
-                        .extension(".sw"),
-                    Subdir::new("CustomSkins", "UserData/CustomSkins")
-                        .dont_separate_mods()
-                        .extension(".png"),
-                    Subdir::new("Grenades", "UserData/Grenades")
-                        .dont_separate_mods()
-                        .extension(".grenade"),
+                    Subdir::track("UserLibs", "UserLibs").extension(".lib.dll"),
+                    Subdir::track("Managed", "MelonLoader/Managed").extension(".managed.dll"),
+                    Subdir::track("Mods", "Mods").extension(".dll"),
+                    Subdir::separate("ModManager", "UserData/ModManager"),
+                    Subdir::track("MelonLoader", "MelonLoader"),
+                    Subdir::track("Libs", "MelonLoader/Libs"),
                 ];
+                SUBDIRS
+            }
+        };
 
-                Box::new(SUBDIRS.iter())
-            }
-        }
+        self.extra_sub_dirs.iter().chain(default.iter())
     }
 
     pub fn match_subdir(&self, name: &str) -> Option<&Subdir> {
         self.subdirs().find(|subdir| {
-            subdir.name == name || subdir.extension.is_some_and(|ext| name.ends_with(ext))
+            subdir.name == name
+                || subdir
+                    .extension
+                    .is_some_and(|ext| ext.split(',').any(|ext| name.ends_with(ext)))
         })
     }
 }

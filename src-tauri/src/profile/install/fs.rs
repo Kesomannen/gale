@@ -12,7 +12,11 @@ use log::{debug, warn};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-use crate::{game::ModLoader, prefs::Prefs, util};
+use crate::{
+    game::{ModLoader, SubdirMode},
+    prefs::Prefs,
+    util,
+};
 
 pub fn install_from_zip(
     src: &Path,
@@ -49,7 +53,7 @@ pub fn extract(
 ) -> Result<()> {
     let start = Instant::now();
 
-    let is_bepinex = is_bepinex(full_name);
+    let is_loader = mod_loader.is_package(full_name);
     let mut archive = ZipArchive::new(src)?;
 
     for i in 0..archive.len() {
@@ -74,8 +78,8 @@ pub fn extract(
             continue;
         }
 
-        let target_path_rel = if is_bepinex {
-            let Some(path) = map_file_bepinex(&relative_path) else {
+        let target_path_rel = if is_loader {
+            let Some(path) = map_file_loader(&relative_path) else {
                 continue;
             };
 
@@ -101,7 +105,7 @@ pub fn extract(
     Ok(())
 }
 
-pub fn map_file_bepinex(relative_path: &Path) -> Option<&Path> {
+pub fn map_file_loader(relative_path: &Path) -> Option<&Path> {
     let mut components = relative_path.components();
     if components.clone().count() == 1 {
         // ignore top-level files, such as manifest.json and icon.png
@@ -131,9 +135,7 @@ pub fn map_file_default(
     let mut components = relative_path.components();
 
     let subdir = loop {
-        let current = components.next();
-
-        match current {
+        match components.next() {
             Some(Component::Normal(name)) => {
                 prev.push(name);
 
@@ -167,7 +169,10 @@ pub fn map_file_default(
     // e.g. profile/BepInEx/plugins
     let mut target = PathBuf::from(subdir.target);
 
-    if subdir.separate_mods {
+    if matches!(
+        subdir.mode,
+        SubdirMode::SeparateFlatten | SubdirMode::Separate
+    ) {
         // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod
         target.push(full_name);
     }
@@ -180,6 +185,14 @@ pub fn map_file_default(
         // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/CoolMod.dll
         target.push(file_name);
     } else {
+        if subdir.mode != SubdirMode::SeparateFlatten {
+            // don't include the subdir component itself
+            let len = prev.len() - 1;
+            let prev = prev.iter().take(len).collect::<PathBuf>();
+
+            target.push(prev);
+        }
+
         // add the remainder of the path after the subdir
         // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/assets/cool_icon.png
         target.push(components);
@@ -199,13 +212,13 @@ pub fn map_file_default(
 //         - ...
 //     - config
 //       - KeepItDown.cfg
-pub fn install(src: &Path, dest: &Path, overwrite: bool, mod_loder: &ModLoader) -> Result<()> {
+pub fn install(src: &Path, dest: &Path, overwrite: bool, mod_loader: &ModLoader) -> Result<()> {
     let entries = WalkDir::new(src).into_iter().filter_map(Result::ok);
     for entry in entries {
         let relative = entry
             .path()
             .strip_prefix(src)
-            .expect("walkdir should only return full paths inside of the root");
+            .expect("WalkDir should only return full paths inside of the root");
 
         let target = dest.join(relative);
         if entry.file_type().is_dir() {
@@ -227,7 +240,7 @@ pub fn install(src: &Path, dest: &Path, overwrite: bool, mod_loder: &ModLoader) 
                 }
             }
 
-            let mutable = mod_loder
+            let mutable = mod_loader
                 .subdirs()
                 .find(|subdir| relative.starts_with(subdir.target))
                 .is_some_and(|subdir| subdir.mutable);
@@ -243,27 +256,4 @@ pub fn install(src: &Path, dest: &Path, overwrite: bool, mod_loder: &ModLoader) 
     }
 
     Ok(())
-}
-
-fn is_bepinex(full_name: &str) -> bool {
-    match full_name {
-        "bbepis-BepInExPack"
-        | "xiaoxiao921-BepInExPack"
-        | "xiaoye97-BepInEx"
-        | "denikson-BepInExPack_Valheim"
-        | "1F31A-BepInEx_Valheim_Full"
-        | "bbepisTaleSpire-BepInExPack"
-        | "Zinal001-BepInExPack_MECHANICA"
-        | "bbepis-BepInEx_Rogue_Tower"
-        | "Subnautica_Modding-BepInExPack_Subnautica"
-        | "Subnautica_Modding-BepInExPack_Subnautica_Experimental"
-        | "Subnautica_Modding-BepInExPack_BelowZero"
-        | "PCVR_Modders-BepInExPack_GHVR"
-        | "BepInExPackMTD-BepInExPack_20MTD"
-        | "Modding_Council-BepInExPack_of_Legend"
-        | "SunkenlandModding-BepInExPack_Sunkenland"
-        | "BepInEx_Wormtown-BepInExPack" => true,
-        full_name if full_name.starts_with("BepInEx-BepInExPack") => true,
-        _ => false,
-    }
 }

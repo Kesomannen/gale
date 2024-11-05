@@ -9,6 +9,7 @@ use walkdir::WalkDir;
 
 use super::{Dependant, ManagedGame, Profile, ProfileModKind};
 use crate::{
+    game::SubdirMode,
     prefs::Prefs,
     profile::ModManager,
     thunderstore::Thunderstore,
@@ -180,21 +181,24 @@ impl Profile {
         let mut path = self.path.join("BepInEx");
 
         let ident = profile_mod.ident();
-        let subdirs = self
-            .game
-            .mod_loader
-            .subdirs()
-            .filter(|subdir| subdir.separate_mods);
 
-        for dir in subdirs {
-            path.push(dir.name);
-            path.push(ident.full_name());
+        for subdir in self.game.mod_loader.subdirs() {
+            path.push(subdir.name);
 
-            if path.exists() {
-                scan_dir(&path)?;
+            match subdir.mode {
+                SubdirMode::Separate | SubdirMode::SeparateFlatten => {
+                    path.push(ident.full_name());
+
+                    if path.exists() {
+                        scan_dir(&path)?;
+                    }
+
+                    path.pop();
+                }
+                SubdirMode::Track => (),
+                SubdirMode::None => (),
             }
 
-            path.pop();
             path.pop();
         }
 

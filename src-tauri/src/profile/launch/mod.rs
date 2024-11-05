@@ -11,7 +11,7 @@ use tokio::time::Duration;
 
 use super::ManagedGame;
 use crate::{
-    game::Game,
+    game::{Game, ModLoader, ModLoaderKind},
     prefs::{GamePrefs, Prefs},
     util::{error::IoResultExt, fs::PathExt},
 };
@@ -73,7 +73,11 @@ impl ManagedGame {
             }
         };
 
-        add_bepinex_args(&mut command, &self.active_profile().path)?;
+        add_loader_args(
+            &mut command,
+            &self.active_profile().path,
+            &self.game.mod_loader,
+        )?;
         if let Some(custom_args) = custom_args {
             command.args(custom_args);
         }
@@ -182,9 +186,20 @@ fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
     Ok(())
 }
 
-fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+fn add_loader_args(
+    command: &mut Command,
+    profile_dir: &Path,
+    mod_loader: &ModLoader,
+) -> Result<()> {
+    match &mod_loader.kind {
+        ModLoaderKind::BepInEx { .. } => add_bepinex_args(command, profile_dir),
+        ModLoaderKind::MelonLoader => add_melon_loader_args(command, profile_dir),
+    }
+}
+
+pub fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     let (enable_prefix, target_prefix) = doorstop_args(profile_dir)?;
-    let preloader_path = preloader_path(profile_dir)?;
+    let preloader_path = bepinex_preloader_path(profile_dir)?;
 
     command
         .args([enable_prefix, "true", target_prefix])
@@ -193,13 +208,13 @@ fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn preloader_path(profile_dir: &Path) -> Result<PathBuf> {
+fn bepinex_preloader_path(profile_dir: &Path) -> Result<PathBuf> {
     let mut core_dir = profile_dir.to_path_buf();
 
     core_dir.push("BepInEx");
     core_dir.push("core");
 
-    const PRELOADER_NAMES: [&str; 4] = [
+    const PRELOADER_NAMES: &[&str] = &[
         "BepInEx.Unity.Mono.Preloader.dll",
         "BepInEx.Unity.IL2CPP.dll",
         "BepInEx.Preloader.dll",
@@ -212,7 +227,7 @@ fn preloader_path(profile_dir: &Path) -> Result<PathBuf> {
         .filter_map(|entry| entry.ok())
         .find(|entry| {
             let file_name = entry.file_name();
-            PRELOADER_NAMES.iter().any(|name| file_name == *name)
+            PRELOADER_NAMES.iter().any(|name| file_name == **name)
         })
         .context("BepInEx preloader not found. Is BepInEx installed?")?
         .path();
@@ -238,4 +253,18 @@ fn doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
         4 => Ok(("--doorstop-enabled", "--doorstop-target-assembly")),
         vers => bail!("unsupported doorstop version: {}", vers),
     }
+}
+
+pub fn add_melon_loader_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+    command.arg("--melonloader.basedir").arg(profile_dir);
+
+    let agf_path: PathBuf = ["MelonLoader", "Managed", "Assembly-CSharp.dll"]
+        .iter()
+        .collect();
+
+    if !profile_dir.join(agf_path).exists() {
+        command.arg(" --melonloader.agfregenerate");
+    }
+
+    Ok(())
 }
