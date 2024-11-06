@@ -2,11 +2,12 @@ use anyhow::Context;
 use itertools::Itertools;
 use log::warn;
 use serde::Serialize;
+use strum::IntoEnumIterator;
 use uuid::Uuid;
 
 use super::{actions::ActionResult, Dependant, ModManager, Profile};
 use crate::{
-    game::{self, Game},
+    game::{self, Game, Platform},
     prefs::Prefs,
     thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
     util::cmd::{Result, StateMutex},
@@ -18,14 +19,20 @@ pub struct FrontendGame {
     name: &'static str,
     slug: &'static str,
     popular: bool,
+    platforms: Vec<Platform>,
 }
 
 impl From<Game> for FrontendGame {
     fn from(value: Game) -> Self {
+        let platforms = Platform::iter()
+            .filter(|platform| value.platforms.has(*platform))
+            .collect();
+
         Self {
             name: value.name,
             slug: &*value.slug,
             popular: value.popular,
+            platforms,
         }
     }
 }

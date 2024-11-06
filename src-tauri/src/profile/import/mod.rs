@@ -247,7 +247,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     match kind {
         LocalModKind::Zip => {
-            install::install_from_zip(&path, &profile.path, &local_mod.name, mod_loader, &prefs)
+            install::install_from_zip(&path, &profile, &local_mod.name, mod_loader, &prefs)
                 .context("failed to install local mod")?;
 
             local_mod.icon = plugin_dir.join("icon.png").exists_or_none();

@@ -13,7 +13,7 @@
 	let intervalSecs = value.content?.intervalSecs ?? 10;
 
 	async function onSelectedChange(newValue: string) {
-		value.type = newValue as 'steam' | 'direct';
+		value.type = newValue as 'launcher' | 'direct';
 		await submit();
 	}
 
@@ -32,18 +32,17 @@
 	<Label text="Launch mode">
 		<p>Determines how the game is launched.</p>
 		<p class="my-1.5">
-			<b>Steam:</b> Launches through Steam, which slower than directly. However, some games require Steam
-			to be running, including Lethal Company.
+			<b>Launcher:</b> Launches through the specified platform.
 		</p>
 		<p>
-			<b>Direct:</b> Launches the game directly from the executable. Also allows you to launch multiple
-			instances at once.
+			<b>Direct:</b> Launches the game directly from the executable. Allows you to launch multiple instances
+			at once.
 		</p>
 	</Label>
 
 	<Dropdown
 		class="flex-grow"
-		items={['steam', 'direct']}
+		items={['launcher', 'direct']}
 		getLabel={sentenceCase}
 		selected={value?.type ?? 'steam'}
 		{onSelectedChange}

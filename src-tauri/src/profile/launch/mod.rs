@@ -1,3 +1,4 @@
+use core::str;
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -5,15 +6,15 @@ use std::{
 };
 
 use anyhow::{bail, ensure, Context, Result};
-use log::warn;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
 
 use super::ManagedGame;
 use crate::{
-    game::{Game, ModLoader, ModLoaderKind, PlatformType},
+    game::{Game, ModLoader, ModLoaderKind, Platform},
     prefs::{GamePrefs, Prefs},
-    util::{error::IoResultExt, fs::PathExt},
+    util::{self, error::IoResultExt},
 };
 
 pub mod commands;
@@ -35,42 +36,46 @@ impl ManagedGame {
             warn!("failed to link files: {:#}", err);
         }
 
-        let (launch_mode, command) = self.launch_command(prefs)?;
-
+        let (launch_mode, command) = self.launch_command(&game_dir, prefs)?;
+        info!("launching with command {:?}", command);
         do_launch(command, launch_mode)?;
 
         Ok(())
     }
 
-    fn launch_command(&self, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
-        let (launch_mode, custom_args) = prefs
+    fn launch_command(&self, game_dir: &Path, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
+        let (launch_mode, platform, custom_args) = prefs
             .game_prefs
             .get(&*self.game.slug)
-            .map(|prefs| (prefs.launch_mode.clone(), prefs.custom_args.as_ref()))
+            .map(|prefs| {
+                (
+                    prefs.launch_mode.clone(),
+                    prefs.platform,
+                    prefs.custom_args.as_ref(),
+                )
+            })
             .unwrap_or_default();
 
-        let mut command = match launch_mode {
-            LaunchMode::Launcher => {
-                let steam_path = prefs
-                    .steam_exe_path
-                    .as_ref()
-                    .context("steam executable path not set")?;
+        let mut command = match (&launch_mode, platform) {
+            (LaunchMode::Launcher, Platform::Steam) => steam_command(self.game, prefs)?,
+            (LaunchMode::Launcher, Platform::EpicGames) => {
+                let Some(epic) = &self.game.platforms.epic_games else {
+                    bail!("{} is not available on Epic Games", self.game.name)
+                };
 
-                ensure!(
-                    steam_path.exists(),
-                    "steam executable not found at {}",
-                    steam_path.display()
+                let path = format!(
+                    "com.epicgames.launcher://apps/{}?action=launch&silent=true",
+                    epic.identifier.unwrap_or(self.game.name)
                 );
 
-                let mut command = Command::new(steam_path);
-                command.arg("-applaunch");
-                //.arg(self.game.steam_id.to_string());
-
-                command
+                open::commands(path)
+                    .into_iter()
+                    .next()
+                    .context("open returned no commands to try")?
             }
-            LaunchMode::Direct { .. } => {
-                let path = exe_path(self.game, prefs)?;
-                Command::new(path)
+            (LaunchMode::Direct { .. }, _)
+            | (_, Platform::Oculus | Platform::Origin | Platform::XboxGamePass) => {
+                Command::new(exe_path(game_dir)?)
             }
         };
 
@@ -79,6 +84,7 @@ impl ManagedGame {
             &self.active_profile().path,
             &self.game.mod_loader,
         )?;
+
         if let Some(custom_args) = custom_args {
             command.args(custom_args);
         }
@@ -108,6 +114,28 @@ impl ManagedGame {
     }
 }
 
+fn steam_command(game: Game, prefs: &Prefs) -> Result<Command> {
+    let Some(steam) = &game.platforms.steam else {
+        bail!("{} is not available on Steam", game.name)
+    };
+
+    let steam_path = prefs
+        .steam_exe_path
+        .as_ref()
+        .context("steam executable path not set")?;
+
+    ensure!(
+        steam_path.exists(),
+        "steam executable not found at {}",
+        steam_path.display()
+    );
+
+    let mut command = Command::new(steam_path);
+    command.arg("-applaunch").arg(steam.id.to_string());
+
+    Ok(command)
+}
+
 fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     let game_prefs = prefs.game_prefs.get(&*game.slug);
 
@@ -121,7 +149,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
         let platform = game_prefs.map(|prefs| prefs.platform).unwrap_or_default();
 
         match platform {
-            PlatformType::Steam => {
+            Platform::Steam => {
                 let Some(steam) = &game.platforms.steam else {
                     bail!("{} is not available on Steam", game.name)
                 };
@@ -144,6 +172,73 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
 
                 path
             }
+            #[cfg(windows)]
+            Platform::XboxGamePass => {
+                let Some(xbox) = &game.platforms.xbox_game_pass else {
+                    bail!("{} is not available on Xbox Game Pass", game.name)
+                };
+
+                let name = xbox.identifier.unwrap_or(game.name);
+
+                let query = Command::new("powershell.exe")
+                    .args([
+                        "get-appxpackage",
+                        "-Name",
+                        name,
+                        "|",
+                        "select",
+                        "-expand",
+                        "InstallLocation",
+                    ])
+                    .output()?;
+
+                ensure!(
+                    query.status.success(),
+                    "query returned with error code {}",
+                    query.status.code().unwrap_or(-1)
+                );
+
+                let str =
+                    String::from_utf8(query.stdout).context("query returned invalid UTF-8")?;
+                PathBuf::from(str)
+            }
+            #[cfg(windows)]
+            Platform::EpicGames => {
+                let Some(epic) = &game.platforms.epic_games else {
+                    bail!("{} is not available on Epic Games", game.name)
+                };
+
+                let name = epic.identifier.unwrap_or(game.name);
+
+                let dat_path: PathBuf = [
+                    "C:",
+                    "ProgramData",
+                    "Epic",
+                    "UnrealEngineLauncher",
+                    "LauncherInstalled.dat",
+                ]
+                .iter()
+                .collect();
+
+                #[derive(Debug, Deserialize)]
+                #[serde(rename_all = "PascalCase")]
+                struct ListItem {
+                    install_location: PathBuf,
+                    app_name: String,
+                }
+
+                let list: Vec<ListItem> = util::fs::read_json(dat_path)
+                    .context("failed to read LauncherInstalled.dat file")?;
+
+                list.into_iter()
+                    .find(|item| item.app_name == name)
+                    .map(|item| item.install_location)
+                    .context("could not find entry in the list of installed games")?
+            }
+            #[allow(unreachable_patterns)] // on windows
+            Platform::Oculus | Platform::Origin | Platform::EpicGames | Platform::XboxGamePass => {
+                bail!("game directory not set")
+            }
         }
     };
 
@@ -156,8 +251,8 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     Ok(path)
 }
 
-fn exe_path(game: Game, prefs: &Prefs) -> Result<PathBuf> {
-    game_dir(game, prefs)?
+fn exe_path(game_dir: &Path) -> Result<PathBuf> {
+    game_dir
         .read_dir()?
         .filter_map(Result::ok)
         .find(|entry| {
@@ -168,32 +263,26 @@ fn exe_path(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                 && !file_name.to_string_lossy().contains("UnityCrashHandler")
         })
         .map(|entry| entry.path())
-        .and_then(|path| path.exists_or_none())
-        .context("game executable not found, try repairing the game through Steam")
+        .context("game executable not found")
 }
 
 fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
     match mode {
-        LaunchMode::Launcher => {
+        LaunchMode::Launcher | LaunchMode::Direct { instances: 1, .. } => {
             command.spawn()?;
         }
+        LaunchMode::Direct { instances: 0, .. } => bail!("instances must be greater than 0"),
         LaunchMode::Direct {
             instances,
             interval_secs,
-        } => match instances {
-            0 => bail!("instances must be greater than 0"),
-            1 => {
-                command.spawn()?;
-            }
-            _ => {
-                tauri::async_runtime::spawn(async move {
-                    for _ in 0..instances {
-                        command.spawn().ok();
-                        tokio::time::sleep(Duration::from_secs_f32(interval_secs)).await;
-                    }
-                });
-            }
-        },
+        } => {
+            tauri::async_runtime::spawn(async move {
+                for _ in 0..instances {
+                    command.spawn().ok();
+                    tokio::time::sleep(Duration::from_secs_f32(interval_secs)).await;
+                }
+            });
+        }
     };
 
     Ok(())
@@ -276,7 +365,7 @@ pub fn add_melon_loader_args(command: &mut Command, profile_dir: &Path) -> Resul
         .collect();
 
     if !profile_dir.join(agf_path).exists() {
-        command.arg(" --melonloader.agfregenerate");
+        command.arg("--melonloader.agfregenerate");
     }
 
     Ok(())

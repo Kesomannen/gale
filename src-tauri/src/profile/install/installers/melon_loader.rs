@@ -1,20 +1,70 @@
-use std::{borrow::Cow, path::Path};
+use std::{
+    borrow::Cow,
+    path::{Component, Path},
+};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 
+use super::{FileInstallMethod, PackageInstaller, ScanFn};
 use crate::profile::{Profile, ProfileMod};
 
-pub struct Installer;
+pub struct MelonLoaderInstaller;
 
-impl Installer {
-    pub fn map_file<'p>(&self, relative_path: &'p Path) -> Result<Option<Cow<'p, Path>>> {
+impl PackageInstaller for MelonLoaderInstaller {
+    fn map_file<'p>(
+        &mut self,
+        relative_path: &'p Path,
+        _package_name: &str,
+    ) -> Result<Option<Cow<'p, Path>>> {
+        let mut components = relative_path.components();
+
+        let first = match components.next() {
+            Some(Component::Normal(name)) => name,
+            _ => bail!("malformed package"),
+        };
+
+        if components.next().is_none() {
+            // top level file
+            if first != "dobby.dll" && first != "version.dll" {
+                return Ok(None);
+            }
+        }
+
         Ok(Some(Cow::Borrowed(relative_path)))
     }
 
-    pub fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, scan: F) -> Result<()>
-    where
-        F: Fn(&Path) -> Result<()>,
-    {
-        todo!()
+    fn scan_mod(
+        &mut self,
+        _profile_mod: &ProfileMod,
+        profile: &Profile,
+        scan: ScanFn,
+    ) -> Result<()> {
+        let mut path = profile.path.to_path_buf();
+
+        path.push("dobby.dll");
+        scan(&path)?;
+        path.pop();
+
+        path.push("version.dll");
+        scan(&path)?;
+        path.pop();
+
+        path.push("MelonLoader");
+        for dir in ["Dependencies", "Documentation", "net6", "net35"] {
+            path.push(dir);
+            scan(&path)?;
+            path.pop();
+        }
+        path.pop();
+
+        Ok(())
+    }
+
+    fn install_file(
+        &mut self,
+        _relative_path: &Path,
+        _profile: &Profile,
+    ) -> Result<FileInstallMethod> {
+        Ok(FileInstallMethod::Link)
     }
 }

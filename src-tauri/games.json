@@ -78,6 +78,9 @@
 		"platforms": {
 			"steam": {
 				"id": 632360
+			},
+			"epicGames": {
+				"identifier": "4b3dcc5723454a47a9112d8fe8fd5f5c"
 			}
 		}
 	},
@@ -97,6 +100,9 @@
 		"platforms": {
 			"steam": {
 				"id": 892970
+			},
+			"xboxGamePass": {
+				"identifier": "CoffeeStainStudios.Valheim"
 			}
 		}
 	},
@@ -110,6 +116,9 @@
 			"steam": {
 				"id": 1966900,
 				"dirName": "20MinuteTillDawn"
+			},
+			"epicGames": {
+				"identifier": "4656facc740742a39e265b026e13d075"
 			}
 		}
 	},
@@ -180,6 +189,12 @@
 		"platforms": {
 			"steam": {
 				"id": 945360
+			},
+			"epicGames": {
+				"identifier": "among-us"
+			},
+			"xboxGamePass": {
+				"identifier": "Innersloth.AmongUs"
 			}
 		}
 	},
@@ -199,7 +214,8 @@
 		"platforms": {
 			"steam": {
 				"id": 1125240
-			}
+			},
+			"oculus": {}
 		}
 	},
 	{
@@ -326,7 +342,8 @@
 		"platforms": {
 			"steam": {
 				"id": 1592190
-			}
+			},
+			"oculus": {}
 		}
 	},
 	{
@@ -406,7 +423,8 @@
 			"steam": {
 				"id": 823500,
 				"dirName": "BONEWORKS/BONEWORKS"
-			}
+			},
+			"oculus": {}
 		}
 	},
 	{
@@ -475,6 +493,9 @@
 			"steam": {
 				"id": 1353230,
 				"dirName": "BombRushCyberfunk"
+			},
+			"xboxGamePass": {
+				"identifier": "TeamReptile.BombRushCyberfunk"
 			}
 		}
 	},
@@ -533,6 +554,9 @@
 			"steam": {
 				"id": 949230,
 				"dirName": "Cities Skylines II"
+			},
+			"xboxGamePass": {
+				"identifier": "ParadoxInteractive.CitiesSkylinesII-PCEdition"
 			}
 		}
 	},
@@ -590,6 +614,9 @@
 		"platforms": {
 			"steam": {
 				"id": 1366540
+			},
+			"xboxGamePass": {
+				"identifier": "GameraGame.DysonSphereProgram"
 			}
 		}
 	},
@@ -601,6 +628,9 @@
 		"platforms": {
 			"steam": {
 				"id": 311690
+			},
+			"epicGames": {
+				"identifier": "Garlic"
 			}
 		}
 	},
@@ -623,6 +653,9 @@
 		"platforms": {
 			"steam": {
 				"id": 527230
+			},
+			"epicGames": {
+				"identifier": "Discus"
 			}
 		}
 	},
@@ -680,7 +713,8 @@
 		"platforms": {
 			"steam": {
 				"id": 1782330
-			}
+			},
+			"oculus": {}
 		}
 	},
 	{
@@ -871,6 +905,9 @@
 		"platforms": {
 			"steam": {
 				"id": 794260
+			},
+			"epicGames": {
+				"identifier": "Viola"
 			}
 		}
 	},
@@ -1110,6 +1147,9 @@
 		"platforms": {
 			"steam": {
 				"id": 1380220
+			},
+			"epicGames": {
+				"identifier": "a774278c0813447c96a76b053cbf73ff"
 			}
 		}
 	},
@@ -1129,6 +1169,12 @@
 		"platforms": {
 			"steam": {
 				"id": 264710
+			},
+			"epicGames": {
+				"identifier": "Jaguar"
+			},
+			"xboxGamePass": {
+				"identifier": "UnknownWorldsEntertainmen.GAMEPREVIEWSubnautica"
 			}
 		}
 	},
@@ -1150,6 +1196,9 @@
 			"steam": {
 				"id": 848450,
 				"dirName": "SubnauticaZero"
+			},
+			"xboxGamePass": {
+				"identifier": "UnknownWorldsEntertainmen.SubnauticaBelowZero"
 			}
 		}
 	},
@@ -1197,6 +1246,12 @@
 			"steam": {
 				"id": 508440,
 				"dirName": "Totally Accurate Battle Simulator"
+			},
+			"epicGames": {
+				"identifier": "Driftfish"
+			},
+			"xboxGamePass": {
+				"identifier": "LandfallGames.TotallyAccurateBattleSimulator"
 			}
 		}
 	},
@@ -1283,6 +1338,9 @@
 		"platforms": {
 			"steam": {
 				"id": 1062090
+			},
+			"epicGames": {
+				"identifier": "972a4ca2631e43b4ba7bc3b7586ad8c4"
 			}
 		}
 	},

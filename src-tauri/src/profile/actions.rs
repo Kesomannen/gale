@@ -94,16 +94,17 @@ impl Profile {
 
     pub fn force_toggle_mod(&mut self, uuid: Uuid) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
+        let enabled = profile_mod.enabled;
 
-        self.scan_mod(&profile_mod, |path| {
+        self.scan_mod(&profile_mod, move |path| {
             if path.is_file() {
-                toggle_file(path, profile_mod.enabled)
+                toggle_file(path, enabled)
             } else {
-                toggle_dir(path, profile_mod.enabled)
+                toggle_dir(path, enabled)
             }
         })?;
 
-        self.get_mod_mut(uuid).unwrap().enabled = !profile_mod.enabled;
+        self.get_mod_mut(uuid).unwrap().enabled = !enabled;
 
         return Ok(());
 
@@ -192,14 +193,14 @@ impl Profile {
 
     pub fn scan_mod<F>(&self, profile_mod: &ProfileMod, scan: F) -> Result<()>
     where
-        F: Fn(&Path) -> Result<()>,
+        F: Fn(&Path) -> Result<()> + 'static,
     {
         let ident = profile_mod.ident();
         let full_name = ident.full_name();
         self.game
             .mod_loader
             .installer(full_name)
-            .scan_mod(profile_mod, self, scan)
+            .scan_mod(profile_mod, self, Box::new(scan))
     }
 
     fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {

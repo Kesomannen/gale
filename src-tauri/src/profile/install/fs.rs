@@ -11,13 +11,13 @@ use log::{debug, warn};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-use crate::{game::ModLoader, prefs::Prefs, util};
+use crate::{game::ModLoader, prefs::Prefs, profile::Profile, util};
 
-use super::PackageInstaller;
+use super::{FileInstallMethod, PackageInstaller};
 
 pub fn install_from_zip(
     src: &Path,
-    dest: &Path,
+    profile: &Profile,
     full_name: &str,
     mod_loader: &ModLoader,
     prefs: &Prefs,
@@ -34,9 +34,9 @@ pub fn install_from_zip(
         .map(BufReader::new)
         .context("failed to open file")?;
 
-    let installer = mod_loader.installer(full_name);
-    extract(reader, full_name, path.clone(), &installer)?;
-    install(&path, dest, false, &installer)?;
+    let mut installer = mod_loader.installer(full_name);
+    extract(reader, full_name, path.clone(), &mut *installer)?;
+    install(&path, profile, false, &mut *installer)?;
 
     fs::remove_dir_all(path).context("failed to remove temporary directory")?;
 
@@ -47,7 +47,7 @@ pub fn extract(
     src: impl Read + Seek,
     full_name: &str,
     dest: PathBuf,
-    installer: &PackageInstaller,
+    installer: &mut dyn PackageInstaller,
 ) -> Result<()> {
     let start = Instant::now();
 
@@ -105,18 +105,19 @@ pub fn extract(
 //       - KeepItDown.cfg
 pub fn install(
     src: &Path,
-    dest: &Path,
+    profile: &Profile,
     overwrite: bool,
-    installer: &PackageInstaller,
+    installer: &mut dyn PackageInstaller,
 ) -> Result<()> {
-    let entries = WalkDir::new(src).into_iter().filter_map(Result::ok);
-    for entry in entries {
+    for entry in WalkDir::new(src) {
+        let entry = entry?;
+
         let relative = entry
             .path()
             .strip_prefix(src)
             .expect("WalkDir should only return full paths inside of the root");
 
-        let target = dest.join(relative);
+        let target = profile.path.join(relative);
         if entry.file_type().is_dir() {
             if target.exists() {
                 continue;
@@ -136,21 +137,17 @@ pub fn install(
                 }
             }
 
-            /*
-            let mutable = mod_loader
-                .subdirs()
-                .find(|subdir| relative.starts_with(subdir.target))
-                .is_some_and(|subdir| subdir.mutable);
-            */
+            let mode = installer.install_file(relative, &profile)?;
 
-            let mutable = false;
-
-            if mutable {
-                fs::copy(entry.path(), target)
-                    .with_context(|| format!("failed to copy file {}", relative.display()))?;
-            } else {
-                fs::hard_link(entry.path(), target)
-                    .with_context(|| format!("failed to link file {}", relative.display()))?;
+            match mode {
+                FileInstallMethod::Link => {
+                    fs::copy(entry.path(), target)
+                        .with_context(|| format!("failed to copy file {}", relative.display()))?;
+                }
+                FileInstallMethod::Copy => {
+                    fs::hard_link(entry.path(), target)
+                        .with_context(|| format!("failed to link file {}", relative.display()))?;
+                }
             }
         }
     }

@@ -1,5 +1,5 @@
 use crate::game::{ModLoader, ModLoaderKind};
-use std::path::PathBuf;
+use std::{marker::PhantomData, path::PathBuf};
 
 use super::PackageInstaller;
 
@@ -88,6 +88,7 @@ fn bepinex() -> ModLoader<'static> {
         package_name: None,
         kind: ModLoaderKind::BepInEx {
             extra_sub_dirs: Vec::new(),
+            lifetime: PhantomData,
         },
     }
 }
@@ -110,7 +111,7 @@ fn test_map_mod_loader(
     test_map_file(
         relative_path,
         full_name,
-        mod_loader.installer(full_name),
+        &mut *mod_loader.installer(full_name),
         expected,
     );
 }
@@ -118,7 +119,7 @@ fn test_map_mod_loader(
 fn test_map_file(
     relative_path: &[&str],
     full_name: &str,
-    installer: PackageInstaller,
+    installer: &mut dyn PackageInstaller,
     expected: Option<&[&str]>,
 ) {
     let relative_path: PathBuf = relative_path.iter().collect();

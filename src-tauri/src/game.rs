@@ -1,13 +1,17 @@
 use std::{
     borrow::Cow,
     hash::{self, Hash},
+    marker::PhantomData,
     path::PathBuf,
 };
 
 use heck::{ToKebabCase, ToPascalCase};
 use serde::{Deserialize, Serialize};
+use strum_macros::EnumIter;
 
-use crate::profile::install::{PackageInstaller, Subdir};
+use crate::profile::install::{
+    BepinexInstaller, MelonLoaderInstaller, PackageInstaller, Subdir, SubdirInstaller,
+};
 
 const JSON: &str = include_str!("../games.json");
 
@@ -37,13 +41,33 @@ struct JsonGame<'a> {
     r2_dir_name: Option<&'a str>,
     #[serde(borrow)]
     mod_loader: ModLoader<'a>,
+    #[serde(borrow)]
     platforms: Platforms<'a>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Platforms<'a> {
+    #[serde(borrow)]
     pub steam: Option<Steam<'a>>,
+    #[serde(borrow)]
+    pub epic_games: Option<EpicGames<'a>>,
+    pub oculus: Option<Oculus>,
+    pub origin: Option<Origin>,
+    #[serde(borrow)]
+    pub xbox_game_pass: Option<XboxGamePass<'a>>,
+}
+
+impl Platforms<'_> {
+    pub fn has(&self, platform: Platform) -> bool {
+        match platform {
+            Platform::Steam => self.steam.is_some(),
+            Platform::EpicGames => self.epic_games.is_some(),
+            Platform::Oculus => self.oculus.is_some(),
+            Platform::Origin => self.origin.is_some(),
+            Platform::XboxGamePass => self.xbox_game_pass.is_some(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -103,11 +127,15 @@ impl Hash for GameData<'_> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, EnumIter)]
 #[serde(rename_all = "camelCase")]
-pub enum PlatformType {
+pub enum Platform {
     #[default]
     Steam,
+    EpicGames,
+    Oculus,
+    Origin,
+    XboxGamePass,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -116,6 +144,28 @@ pub struct Steam<'a> {
     pub id: u32,
     #[serde(default)]
     pub dir_name: Cow<'a, str>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct EpicGames<'a> {
+    #[serde(default)]
+    pub identifier: Option<&'a str>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Oculus {}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Origin {}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct XboxGamePass<'a> {
+    #[serde(default)]
+    pub identifier: Option<&'a str>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -133,6 +183,8 @@ pub enum ModLoaderKind<'a> {
     BepInEx {
         #[serde(default, borrow, rename = "subdirs")]
         extra_sub_dirs: Vec<Subdir<'a>>,
+        #[serde(skip)]
+        lifetime: PhantomData<&'a ()>,
     },
     MelonLoader {
         #[serde(default, borrow, rename = "subdirs")]
@@ -141,9 +193,9 @@ pub enum ModLoaderKind<'a> {
 }
 
 impl<'a> ModLoader<'a> {
-    pub fn installer(&self, package_name: &str) -> PackageInstaller {
+    pub fn installer(&self, package_name: &str) -> Box<dyn PackageInstaller> {
         match (self.is_loader_package(package_name), &self.kind) {
-            (false, ModLoaderKind::BepInEx { extra_sub_dirs }) => {
+            (false, ModLoaderKind::BepInEx { extra_sub_dirs, .. }) => {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::separate_flatten("plugins", "BepInEx/plugins"),
                     Subdir::separate_flatten("patchers", "BepInEx/patchers"),
@@ -156,9 +208,9 @@ impl<'a> ModLoader<'a> {
 
                 const IGNORED: &[&str] = &[];
 
-                PackageInstaller::rule(SUBDIRS, Some(DEFAULT), IGNORED)
+                Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
             }
-            (true, ModLoaderKind::BepInEx { .. }) => PackageInstaller::bepinex(),
+            (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
             (false, ModLoaderKind::MelonLoader { extra_sub_dirs }) => {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::track("UserLibs", "UserLibs").extension(".lib.dll"),
@@ -173,9 +225,9 @@ impl<'a> ModLoader<'a> {
 
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
 
-                PackageInstaller::rule(SUBDIRS, Some(DEFAULT), IGNORED)
+                Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
             }
-            (true, ModLoaderKind::MelonLoader { .. }) => PackageInstaller::melon_loader(),
+            (true, ModLoaderKind::MelonLoader { .. }) => Box::new(MelonLoaderInstaller),
         }
     }
 

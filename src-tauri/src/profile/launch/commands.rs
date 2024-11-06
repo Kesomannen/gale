@@ -25,7 +25,8 @@ pub fn get_launch_args(
     let manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let (_, command) = manager.active_game().launch_command(&prefs)?;
+    let game_dir = game_dir(manager.active_game, &prefs)?;
+    let (_, command) = manager.active_game().launch_command(&game_dir, &prefs)?;
     let text = command
         .get_args()
         .map(|arg| format!("\"{}\"", arg.to_string_lossy()))

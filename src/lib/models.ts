@@ -193,6 +193,7 @@ export type ModpackArgs = {
 export type Game = {
 	name: string;
 	slug: string;
+	platforms: Platform[];
 	favorite: boolean;
 	popular: boolean;
 };
@@ -207,7 +208,7 @@ export type FiltersResponse = {
 };
 
 export type LaunchMode =
-	| { type: 'steam'; content?: undefined }
+	| { type: 'launcher'; content?: undefined }
 	| { type: 'direct'; content: { instances: number; intervalSecs: number } };
 
 export type AvailableUpdate = {
@@ -274,7 +275,16 @@ export type GamePrefs = {
 	dirOverride: string | null;
 	customArgs: string[] | null;
 	launchMode: LaunchMode;
+	platform: Platform;
 };
+
+export enum Platform {
+	Steam = 'steam',
+	EpicGames = 'epicGames',
+	Oculus = 'oculus',
+	Origin = 'origin',
+	XboxGamePass = 'xboxGamePass'
+}
 
 export type ModContextItem = {
 	label: string;

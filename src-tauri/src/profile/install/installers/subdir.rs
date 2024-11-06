@@ -4,12 +4,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::profile::{Profile, ProfileMod};
 
-pub struct Installer<'a> {
+use super::{FileInstallMethod, PackageInstaller, ScanFn};
+
+pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
     default_subdir: Option<&'a Subdir<'a>>,
     ignored_files: &'a [&'a str],
@@ -92,15 +94,15 @@ impl<'a> Subdir<'a> {
     }
 }
 
-impl<'a> Installer<'a> {
+impl<'a> SubdirInstaller<'a> {
     pub fn new(
         subdirs: &'a [Subdir<'a>],
-        default_subdir: Option<&'a Subdir<'a>>,
+        default: Option<&'a Subdir<'a>>,
         ignored_files: &'a [&'a str],
     ) -> Self {
         Self {
             subdirs,
-            default_subdir,
+            default_subdir: default,
             ignored_files,
         }
     }
@@ -113,9 +115,11 @@ impl<'a> Installer<'a> {
                     .is_some_and(|ext| ext.split(',').any(|ext| name.ends_with(ext)))
         })
     }
+}
 
-    pub fn map_file<'p>(
-        &self,
+impl<'a> PackageInstaller for SubdirInstaller<'a> {
+    fn map_file<'p>(
+        &mut self,
         relative_path: &'p Path,
         package_name: &str,
     ) -> Result<Option<Cow<'p, Path>>> {
@@ -200,10 +204,12 @@ impl<'a> Installer<'a> {
         Ok(Some(Cow::Owned(target)))
     }
 
-    pub fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, scan: F) -> Result<()>
-    where
-        F: Fn(&Path) -> Result<()>,
-    {
+    fn scan_mod(
+        &mut self,
+        profile_mod: &ProfileMod,
+        profile: &Profile,
+        scan: ScanFn,
+    ) -> Result<()> {
         let mut path = profile.path.to_path_buf();
 
         let ident = profile_mod.ident();
@@ -230,5 +236,30 @@ impl<'a> Installer<'a> {
         }
 
         Ok(())
+    }
+
+    fn install_file(
+        &mut self,
+        relative_path: &Path,
+        _profile: &Profile,
+    ) -> Result<FileInstallMethod> {
+        let Some(subdir) = self
+            .subdirs
+            .iter()
+            .find(|subdir| relative_path.starts_with(subdir.target))
+        else {
+            bail!(
+                "file at {} does not match any subdir",
+                relative_path.display()
+            )
+        };
+
+        if subdir.mode == SubdirMode::Track {}
+
+        if subdir.mutable {
+            Ok(FileInstallMethod::Copy)
+        } else {
+            Ok(FileInstallMethod::Link)
+        }
     }
 }

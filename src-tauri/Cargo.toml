@@ -67,6 +67,8 @@ trash = "5"
 tempfile = "3"
 rayon = "1"
 bytes = "1.7"
+strum = "0.26"
+strum_macros = "0.26"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

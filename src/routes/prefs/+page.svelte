@@ -8,22 +8,24 @@
 
 	import { activeGame } from '$lib/stores';
 	import { Separator } from 'bits-ui';
-	import type { Prefs, GamePrefs } from '$lib/models';
+	import { type Prefs, type GamePrefs, Platform } from '$lib/models';
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
 	import AccentColorPref from '$lib/prefs/AccentColorPref.svelte';
 	import LargePrefsHeading from '$lib/prefs/LargePrefsHeading.svelte';
 	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
+	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
 
 	$: gameId = $activeGame?.slug ?? '';
 	$: gamePrefs = prefs?.gamePrefs.get(gameId) ?? {
-		launchMode: { type: 'steam' },
+		launchMode: { type: 'launcher' },
 		dirOverride: null,
-		customArgs: null
+		customArgs: null,
+		platform: Platform.Steam
 	};
 
 	onMount(async () => {
@@ -113,8 +115,10 @@
 			value={gamePrefs.dirOverride ?? null}
 			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
-			Path to the {$activeGame?.name} game directory. Leave empty to use the default Steam library.
+			Path to the {$activeGame?.name} game directory.
 		</PathPref>
+
+		<PlatformPref value={gamePrefs.platform} set={set((value) => (gamePrefs.platform = value))} />
 
 		<SmallPrefsHeading>Launch</SmallPrefsHeading>
 
