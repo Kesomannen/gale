@@ -449,9 +449,9 @@ pub fn open_mod_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()> {
 
     let profile = manager.active_profile();
 
-    profile.scan_mod(&profile.get_mod(uuid)?.kind, |dir| {
-        if dir.exists() {
-            open::that(dir).context("failed to open directory")?;
+    profile.scan_mod(profile.get_mod(uuid)?, |path| {
+        if path.is_dir() {
+            open::that(path).context("failed to open directory")?;
         }
 
         Ok(())

@@ -6,6 +6,7 @@ use std::{
 };
 
 use serde::{de::DeserializeOwned, Serialize};
+use walkdir::WalkDir;
 use zip::ZipArchive;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -16,26 +17,24 @@ pub enum Overwrite {
 
 pub fn copy_dir(src: &Path, dest: &Path, overwrite: Overwrite) -> io::Result<()> {
     fs::create_dir_all(dest)?;
+    let entries = WalkDir::new(src);
 
-    for entry in src.read_dir()? {
+    for entry in entries {
         let entry = entry?;
 
-        let entry_path = entry.path();
-        let file_name = entry_path.file_name().unwrap();
-        let new_path = dest.join(file_name);
+        let relative = entry.path().strip_prefix(src).unwrap();
+        let new_path = src.join(relative);
 
-        if entry_path.is_dir() {
+        if entry.file_type().is_dir() {
             if !new_path.exists() {
-                fs::create_dir(&new_path)?;
+                fs::create_dir(new_path)?;
             }
-
-            copy_dir(&entry_path, &new_path, overwrite)?;
         } else {
             if new_path.exists() && overwrite == Overwrite::No {
                 continue;
             }
 
-            fs::copy(&entry_path, &new_path)?;
+            fs::copy(entry.path(), new_path)?;
         }
     }
 

@@ -7,9 +7,8 @@ use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 use walkdir::WalkDir;
 
-use super::{Dependant, ManagedGame, Profile, ProfileModKind};
+use super::{Dependant, ManagedGame, Profile, ProfileMod};
 use crate::{
-    game::SubdirMode,
     prefs::Prefs,
     profile::ModManager,
     thunderstore::Thunderstore,
@@ -65,8 +64,12 @@ impl Profile {
     pub fn force_remove_mod(&mut self, uuid: Uuid) -> Result<()> {
         let index = self.index_of(uuid)?;
 
-        self.scan_mod(&self.mods[index].kind, |dir| {
-            fs::remove_dir_all(dir).fs_context("removing mod directory", dir)
+        self.scan_mod(&self.mods[index], |path| {
+            if path.is_file() {
+                fs::remove_file(path).fs_context("removing mod file", path)
+            } else {
+                fs::remove_dir_all(path).fs_context("removing mod directory", path)
+            }
         })?;
 
         self.mods.remove(index);
@@ -92,8 +95,37 @@ impl Profile {
     pub fn force_toggle_mod(&mut self, uuid: Uuid) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
 
-        self.scan_mod(&profile_mod.kind, |dir| {
-            let files = WalkDir::new(dir)
+        self.scan_mod(&profile_mod, |path| {
+            if path.is_file() {
+                toggle_file(path, profile_mod.enabled)
+            } else {
+                toggle_dir(path, profile_mod.enabled)
+            }
+        })?;
+
+        self.get_mod_mut(uuid).unwrap().enabled = !profile_mod.enabled;
+
+        return Ok(());
+
+        fn toggle_file(path: &Path, enabled: bool) -> Result<()> {
+            let mut new_path = path.to_path_buf();
+
+            if enabled {
+                new_path.add_ext("old");
+            } else {
+                // remove all old extensions if multiple got added somehow
+                while let Some("old") = new_path.extension().and_then(|ext| ext.to_str()) {
+                    new_path.set_extension("");
+                }
+            }
+
+            fs::rename(path, &new_path)?;
+
+            Ok(())
+        }
+
+        fn toggle_dir(path: &Path, enabled: bool) -> Result<()> {
+            let files = WalkDir::new(path)
                 .into_iter()
                 .filter_map(Result::ok)
                 .filter(|entry| {
@@ -102,27 +134,11 @@ impl Profile {
                 });
 
             for file in files {
-                let path = file.path();
-                let mut new_path = path.to_path_buf();
-
-                if profile_mod.enabled {
-                    new_path.add_ext("old");
-                } else {
-                    // remove all old extensions if multiple got added somehow
-                    while let Some("old") = new_path.extension().and_then(|ext| ext.to_str()) {
-                        new_path.set_extension("");
-                    }
-                }
-
-                fs::rename(path, &new_path)?;
+                toggle_file(file.path(), enabled)?;
             }
 
             Ok(())
-        })?;
-
-        self.get_mod_mut(uuid).unwrap().enabled = !profile_mod.enabled;
-
-        Ok(())
+        }
     }
 
     fn check_dependants(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
@@ -174,35 +190,16 @@ impl Profile {
         }
     }
 
-    pub fn scan_mod<F>(&self, profile_mod: &ProfileModKind, scan_dir: F) -> Result<()>
+    pub fn scan_mod<F>(&self, profile_mod: &ProfileMod, scan: F) -> Result<()>
     where
         F: Fn(&Path) -> Result<()>,
     {
-        let mut path = self.path.join("BepInEx");
-
         let ident = profile_mod.ident();
-
-        for subdir in self.game.mod_loader.subdirs() {
-            path.push(subdir.name);
-
-            match subdir.mode {
-                SubdirMode::Separate | SubdirMode::SeparateFlatten => {
-                    path.push(ident.full_name());
-
-                    if path.exists() {
-                        scan_dir(&path)?;
-                    }
-
-                    path.pop();
-                }
-                SubdirMode::Track => (),
-                SubdirMode::None => (),
-            }
-
-            path.pop();
-        }
-
-        Ok(())
+        let full_name = ident.full_name();
+        self.game
+            .mod_loader
+            .installer(full_name)
+            .scan_mod(profile_mod, self, scan)
     }
 
     fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {

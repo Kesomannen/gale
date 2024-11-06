@@ -11,7 +11,7 @@ use tokio::time::Duration;
 
 use super::ManagedGame;
 use crate::{
-    game::{Game, ModLoader, ModLoaderKind},
+    game::{Game, ModLoader, ModLoaderKind, PlatformType},
     prefs::{GamePrefs, Prefs},
     util::{error::IoResultExt, fs::PathExt},
 };
@@ -22,7 +22,8 @@ pub mod commands;
 #[serde(rename_all = "camelCase", tag = "type", content = "content")]
 pub enum LaunchMode {
     #[default]
-    Steam,
+    #[serde(alias = "steam")]
+    Launcher,
     #[serde(rename_all = "camelCase")]
     Direct { instances: u32, interval_secs: f32 },
 }
@@ -49,7 +50,7 @@ impl ManagedGame {
             .unwrap_or_default();
 
         let mut command = match launch_mode {
-            LaunchMode::Steam => {
+            LaunchMode::Launcher => {
                 let steam_path = prefs
                     .steam_exe_path
                     .as_ref()
@@ -108,29 +109,41 @@ impl ManagedGame {
 }
 
 fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
-    let path = match prefs.game_prefs.get(&*game.slug) {
-        Some(GamePrefs {
-            dir_override: Some(path),
-            ..
-        }) => path.to_path_buf(),
-        _ => {
-            let mut path = prefs
-                .steam_library_dir
-                .as_ref()
-                .context("steam library directory not set")?
-                .to_path_buf();
+    let game_prefs = prefs.game_prefs.get(&*game.slug);
 
-            if !path.ends_with("common") {
-                if !path.ends_with("steamapps") {
-                    path.push("steamapps");
+    let path = if let Some(GamePrefs {
+        dir_override: Some(path),
+        ..
+    }) = game_prefs
+    {
+        path.to_path_buf()
+    } else {
+        let platform = game_prefs.map(|prefs| prefs.platform).unwrap_or_default();
+
+        match platform {
+            PlatformType::Steam => {
+                let Some(steam) = &game.platforms.steam else {
+                    bail!("{} is not available on Steam", game.name)
+                };
+
+                let mut path = prefs
+                    .steam_library_dir
+                    .as_ref()
+                    .context("steam library directory not set")?
+                    .to_path_buf();
+
+                if !path.ends_with("common") {
+                    if !path.ends_with("steamapps") {
+                        path.push("steamapps");
+                    }
+
+                    path.push("common");
                 }
 
-                path.push("common");
+                path.push(&*steam.dir_name);
+
+                path
             }
-
-            //path.push(game.steam_name);
-
-            path
         }
     };
 
@@ -161,7 +174,7 @@ fn exe_path(game: Game, prefs: &Prefs) -> Result<PathBuf> {
 
 fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
     match mode {
-        LaunchMode::Steam => {
+        LaunchMode::Launcher => {
             command.spawn()?;
         }
         LaunchMode::Direct {
@@ -193,7 +206,7 @@ fn add_loader_args(
 ) -> Result<()> {
     match &mod_loader.kind {
         ModLoaderKind::BepInEx { .. } => add_bepinex_args(command, profile_dir),
-        ModLoaderKind::MelonLoader => add_melon_loader_args(command, profile_dir),
+        ModLoaderKind::MelonLoader { .. } => add_melon_loader_args(command, profile_dir),
     }
 }
 

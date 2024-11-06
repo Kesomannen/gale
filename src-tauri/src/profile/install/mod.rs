@@ -20,6 +20,8 @@ pub mod commands;
 pub mod deep_link;
 mod download;
 mod fs;
+mod installers;
+pub use installers::*;
 #[cfg(test)]
 mod tests;
 

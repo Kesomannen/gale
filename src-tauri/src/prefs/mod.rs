@@ -13,6 +13,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
 
 use crate::{
+    game::PlatformType,
     logger,
     profile::{launch::LaunchMode, ModManager},
     util::{
@@ -191,6 +192,8 @@ pub struct GamePrefs {
     #[serde(default)]
     pub custom_args: Option<Vec<String>>,
     pub launch_mode: LaunchMode,
+    #[serde(default)]
+    pub platform: PlatformType,
 }
 
 #[cfg(target_os = "windows")]

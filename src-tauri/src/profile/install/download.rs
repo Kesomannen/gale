@@ -199,16 +199,21 @@ impl<'a> Installer<'a> {
         let version = install.id.borrow(&thunderstore)?.version;
         let cache_path = cache::path(&version.ident, &prefs);
 
-        fs::create_dir_all(&cache_path).fs_context("create mod cache dir", &cache_path)?;
+        fs::create_dir_all(&cache_path).fs_context("creating mod cache dir", &cache_path)?;
 
         self.check_cancel()?;
         self.update(InstallTask::Extracting);
+
+        let installer = manager
+            .active_game
+            .mod_loader
+            .installer(version.full_name());
 
         super::fs::extract(
             Cursor::new(data),
             version.full_name(),
             cache_path.clone(),
-            &manager.active_game.mod_loader,
+            &installer,
         )
         .context("failed to extract mod")?;
 
@@ -304,12 +309,16 @@ fn cache_install(
     manager: &mut ModManager,
     thunderstore: &Thunderstore,
 ) -> Result<()> {
-    let mod_loader = &manager.active_game.mod_loader;
-
     let borrowed = data.id.borrow(thunderstore)?;
+
+    let installer = manager
+        .active_game
+        .mod_loader
+        .installer(borrowed.ident().full_name());
+
     let profile = manager.active_profile_mut();
 
-    super::fs::install(src, &profile.path, data.overwrite, mod_loader)?;
+    super::fs::install(src, &profile.path, data.overwrite, &installer)?;
 
     let install_time = data.install_time.unwrap_or(Utc::now());
 
