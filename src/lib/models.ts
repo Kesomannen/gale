@@ -201,7 +201,9 @@ export type Game = {
 
 export enum ModLoader {
 	BepInEx = 'BepInEx',
-	MelonLoader = 'MelonLoader'
+	MelonLoader = 'MelonLoader',
+	Northstar = 'Northstar',
+	GDWeave = 'GDWeave'
 }
 
 export type PackageCategory = {

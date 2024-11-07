@@ -80,7 +80,7 @@
 
 				{#if game.modLoader !== ModLoader.BepInEx}
 					<Tooltip
-						class="mr-1 flex items-center rounded bg-accent-600 p-1.5 text-sm text-slate-200"
+						class="mr-1 flex items-center rounded bg-accent-600 p-1.5 text-sm text-white"
 						text="Experimental support. Use at your own risk!"
 					>
 						<Icon icon="mdi:beta" />

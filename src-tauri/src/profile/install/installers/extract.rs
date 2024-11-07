@@ -1,25 +1,20 @@
-use std::{
-    borrow::Cow,
-    path::{Component, Path},
-};
+use std::{borrow::Cow, path::Path};
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 
-use super::{FileInstallMethod, PackageInstaller, ScanFn};
+use super::{PackageInstaller, ScanFn};
 use crate::profile::{Profile, ProfileMod};
 
 pub struct ExtractInstaller<'a> {
-    dir_name: &'a str,
-    dirs: &'a [&'a str],
-    top_level_files: &'a [&'a str],
+    files: &'a [&'a str],
+    flatten_top_level: bool,
 }
 
 impl<'a> ExtractInstaller<'a> {
-    pub fn new(dir_name: &'a str, dirs: &'a [&'a str], top_level_files: &'a [&'a str]) -> Self {
+    pub fn new(files: &'a [&'a str], flatten_top_level: bool) -> Self {
         Self {
-            dir_name,
-            dirs,
-            top_level_files,
+            files,
+            flatten_top_level,
         }
     }
 }
@@ -32,19 +27,17 @@ impl<'a> PackageInstaller for ExtractInstaller<'a> {
     ) -> Result<Option<Cow<'p, Path>>> {
         let mut components = relative_path.components();
 
-        let first = match components.next() {
-            Some(Component::Normal(name)) => name,
-            _ => bail!("malformed package"),
-        };
-
-        if components.next().is_none() {
-            // top level file
-            if !self.top_level_files.iter().any(|file| *file == first) {
-                return Ok(None);
-            }
+        if self.flatten_top_level {
+            components.next();
         }
 
-        Ok(Some(Cow::Borrowed(relative_path)))
+        let path = components.as_path();
+
+        if self.files.iter().any(|file| path.starts_with(file)) {
+            Ok(Some(Cow::Borrowed(path)))
+        } else {
+            Ok(None)
+        }
     }
 
     fn scan_mod(
@@ -53,29 +46,10 @@ impl<'a> PackageInstaller for ExtractInstaller<'a> {
         profile: &Profile,
         scan: ScanFn,
     ) -> Result<()> {
-        let mut path = profile.path.to_path_buf();
-
-        for file in self.top_level_files {
-            path.push(file);
-            scan(&path)?;
-            path.pop();
+        for file in self.files {
+            scan(&profile.path.join(file))?;
         }
-        path.push(self.dir_name);
-        for dir in self.dirs {
-            path.push(dir);
-            scan(&path)?;
-            path.pop();
-        }
-        path.pop();
 
         Ok(())
-    }
-
-    fn install_file(
-        &mut self,
-        _relative_path: &Path,
-        _profile: &Profile,
-    ) -> Result<FileInstallMethod> {
-        Ok(FileInstallMethod::Link)
     }
 }

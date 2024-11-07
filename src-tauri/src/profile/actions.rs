@@ -97,10 +97,21 @@ impl Profile {
         let enabled = profile_mod.enabled;
 
         self.scan_mod(&profile_mod, move |path| {
-            if path.is_file() {
-                toggle_file(path, enabled)
+            if let Ok(metadata) = path.metadata() {
+                if metadata.is_dir() {
+                    toggle_dir(path, enabled)
+                } else {
+                    toggle_file(path, enabled)
+                }
             } else {
-                toggle_dir(path, enabled)
+                let mut path = path.to_path_buf();
+                path.add_ext("old");
+
+                if path.exists() {
+                    toggle_file(&path, enabled)
+                } else {
+                    Ok(())
+                }
             }
         })?;
 

@@ -87,12 +87,20 @@ fn read_and_insert_cache(manager: StateMutex<ModManager>, state: StateMutex<Thun
     }
 }
 
+const EXCLUDED_PACKAGES_STR: &str = include_str!("../../excluded_packages.txt");
+
+lazy_static! {
+    static ref EXCLUDED_PACKAGES: Vec<&'static str> = EXCLUDED_PACKAGES_STR
+        .split('\n')
+        .map(|line| line.trim())
+        .collect();
+}
+
 pub(super) async fn fetch_packages(
     app: &AppHandle,
     game: Game,
     write_directly: bool,
 ) -> Result<()> {
-    const IGNORED_NAMES: [&str; 2] = ["r2modman", "GaleModManager"];
     const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
     const INSERT_EVERY: usize = 1000;
 
@@ -133,7 +141,7 @@ pub(super) async fn fetch_packages(
 
             match serde_json::from_str::<PackageListing>(json) {
                 Ok(package) => {
-                    if !IGNORED_NAMES.contains(&package.name()) {
+                    if !EXCLUDED_PACKAGES.contains(&package.full_name()) {
                         package_buffer.insert(package.uuid, package);
                         package_count += 1;
                     }

@@ -320,7 +320,7 @@ fn cache_install(
 
     super::fs::install(src, profile, data.overwrite, &mut *installer)?;
 
-    let install_time = data.install_time.unwrap_or(Utc::now());
+    let install_time = data.install_time.unwrap_or_else(Utc::now);
 
     let profile_mod = ProfileMod::new_at(
         install_time,

@@ -296,11 +296,12 @@ fn add_loader_args(
     match &mod_loader.kind {
         ModLoaderKind::BepInEx { .. } => add_bepinex_args(command, profile_dir),
         ModLoaderKind::MelonLoader { .. } => add_melon_loader_args(command, profile_dir),
-        ModLoaderKind::GDWeave {} => todo!(),
+        ModLoaderKind::Northstar {} => add_northstar_args(command, profile_dir),
+        ModLoaderKind::GDWeave {} => add_gd_weave_args(command, profile_dir),
     }
 }
 
-pub fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     let (enable_prefix, target_prefix) = doorstop_args(profile_dir)?;
     let preloader_path = bepinex_preloader_path(profile_dir)?;
 
@@ -358,7 +359,7 @@ fn doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
     }
 }
 
-pub fn add_melon_loader_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+fn add_melon_loader_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     command.arg("--melonloader.basedir").arg(profile_dir);
 
     let agf_path: PathBuf = ["MelonLoader", "Managed", "Assembly-CSharp.dll"]
@@ -368,6 +369,24 @@ pub fn add_melon_loader_args(command: &mut Command, profile_dir: &Path) -> Resul
     if !profile_dir.join(agf_path).exists() {
         command.arg("--melonloader.agfregenerate");
     }
+
+    Ok(())
+}
+
+fn add_northstar_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+    let path = profile_dir.join("R2Northstar");
+    let path = path.to_str().context("profile path is not valid UTF-8")?;
+
+    command.arg("-northstar").arg(format!("-profile={}", path));
+
+    Ok(())
+}
+
+fn add_gd_weave_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+    let path = profile_dir.join("GDWeave");
+    let path = path.to_str().context("profile path is not valid UTF-8")?;
+
+    command.arg(format!("--gdweave-folder-override={}", path));
 
     Ok(())
 }

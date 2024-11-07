@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{ensure, Context, Result};
-use log::{info, warn};
+use log::{debug, info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -111,6 +111,8 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
 
     path.push(&*manager.active_game.r2_dir_name);
     path.push("profiles");
+
+    debug!("scanning {path:?}");
 
     ensure!(path.exists(), "no profiles found");
 

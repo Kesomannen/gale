@@ -10,13 +10,14 @@ use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 use crate::profile::install::{
-    BepinexInstaller, ExtractInstaller, PackageInstaller, Subdir, SubdirInstaller,
+    BepinexInstaller, ExtractInstaller, GDWeaveModInstaller, PackageInstaller, Subdir,
+    SubdirInstaller,
 };
 
-const JSON: &str = include_str!("../games.json");
+const GAMES_JSON: &str = include_str!("../games.json");
 
 lazy_static! {
-    static ref GAMES: Vec<GameData<'static>> = serde_json::from_str(JSON).unwrap();
+    static ref GAMES: Vec<GameData<'static>> = serde_json::from_str(GAMES_JSON).unwrap();
 }
 
 pub type Game = &'static GameData<'static>;
@@ -190,6 +191,7 @@ pub enum ModLoaderKind<'a> {
         #[serde(default, borrow, rename = "subdirs")]
         extra_sub_dirs: Vec<Subdir<'a>>,
     },
+    Northstar {},
     GDWeave {},
 }
 
@@ -198,12 +200,14 @@ impl<'a> ModLoader<'a> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => "BepInEx",
             ModLoaderKind::MelonLoader { .. } => "MelonLoader",
+            ModLoaderKind::Northstar {} => "Northstar",
             ModLoaderKind::GDWeave {} => "GDWeave",
         }
     }
 
     pub fn installer(&self, package_name: &str) -> Box<dyn PackageInstaller> {
         match (self.is_loader_package(package_name), &self.kind) {
+            (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
             (false, ModLoaderKind::BepInEx { extra_sub_dirs, .. }) => {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::flat_separated("plugins", "BepInEx/plugins"),
@@ -217,7 +221,19 @@ impl<'a> ModLoader<'a> {
 
                 Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
             }
-            (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
+
+            (true, ModLoaderKind::MelonLoader { .. }) => {
+                const FILES: &[&str] = &[
+                    "dobby.dll",
+                    "version.dll",
+                    "MelonLoader/Dependencies",
+                    "MelonLoader/Documentation",
+                    "MelonLoader/net6",
+                    "MelonLoader/net35",
+                ];
+
+                Box::new(ExtractInstaller::new(FILES, false))
+            }
             (false, ModLoaderKind::MelonLoader { extra_sub_dirs }) => {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
@@ -232,20 +248,34 @@ impl<'a> ModLoader<'a> {
 
                 Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
             }
-            (true, ModLoaderKind::MelonLoader { .. }) => {
-                const DIR_NAME: &str = "MelonLoader";
-                const DIRS: &[&str] = &["Dependencies", "Documentation", "net6", "net35"];
-                const FILES: &[&str] = &["dobby.dll", "version.dll"];
 
-                Box::new(ExtractInstaller::new(DIR_NAME, DIRS, FILES))
-            }
-            (false, ModLoaderKind::GDWeave {}) => todo!(),
             (true, ModLoaderKind::GDWeave {}) => {
-                const DIR_NAME: &str = "GDWeave";
-                const DIRS: &[&str] = &["core"];
-                const FILES: &[&str] = &["winmm.dll", "version.dll"];
+                const FILES: &[&str] = &["winmm.dll", "GDWeave/core"];
 
-                Box::new(ExtractInstaller::new(DIR_NAME, DIRS, FILES))
+                Box::new(ExtractInstaller::new(FILES, false))
+            }
+            (false, ModLoaderKind::GDWeave {}) => Box::new(GDWeaveModInstaller),
+
+            (true, ModLoaderKind::Northstar {}) => {
+                const FILES: &[&str] = &[
+                    "Northstar.dll",
+                    "NorthstarLauncher.exe",
+                    "r2ds.bat",
+                    "bin",
+                    "R2Northstar/plugins",
+                    "R2Northstar/mods/Northstar.Client",
+                    "R2Northstar/mods/Northstar.Custom",
+                    "R2Northstar/mods/Northstar.CustomServers",
+                    "R2Northstar/mods/md5sum.text",
+                ];
+
+                Box::new(ExtractInstaller::new(FILES, true))
+            }
+            (false, ModLoaderKind::Northstar {}) => {
+                const SUBDIRS: &[Subdir] = &[Subdir::tracked("mods", "R2Northstar/mods")];
+                const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md", "LICENSE"];
+
+                Box::new(SubdirInstaller::new(SUBDIRS, None, IGNORED))
             }
         }
     }
@@ -259,6 +289,7 @@ impl<'a> ModLoader<'a> {
                 ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
                 ModLoaderKind::MelonLoader { .. } => full_name == "LavaGang-MelonLoader",
                 ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
+                ModLoaderKind::Northstar {} => full_name == "northstar-Northstar",
             }
         }
     }
@@ -268,6 +299,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::BepInEx { .. } => &["BepInEx", "LogOutput.log"],
             ModLoaderKind::MelonLoader { .. } => &["MelonLoader", "Latest.log"],
             ModLoaderKind::GDWeave {} => todo!(),
+            ModLoaderKind::Northstar {} => todo!(),
         }
         .iter()
         .collect()

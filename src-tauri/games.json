@@ -1,7 +1,7 @@
 [
 	{
 		"name": "BONEWORKS",
-		"slug": "boneworks",
+		"r2dirName": "BONEWORKS",
 		"popular": true,
 		"modLoader": {
 			"name": "MelonLoader",
@@ -164,6 +164,21 @@
 			"epicGames": {
 				"identifier": "4b3dcc5723454a47a9112d8fe8fd5f5c"
 			}
+		}
+	},
+	{
+		"name": "Titanfall 2: Northstar",
+		"slug": "northstar",
+		"r2dirName": "Titanfall2",
+		"popular": true,
+		"modLoader": {
+			"name": "Northstar"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1237970
+			},
+			"origin": {}
 		}
 	},
 	{
@@ -350,7 +365,6 @@
 	},
 	{
 		"name": "BONELAB",
-		"slug": "bonelab",
 		"modLoader": {
 			"name": "MelonLoader",
 			"subdirs": [
@@ -969,7 +983,6 @@
 	},
 	{
 		"name": "RUMBLE",
-		"slug": "rumble",
 		"modLoader": {
 			"name": "MelonLoader"
 		},
@@ -1417,6 +1430,17 @@
 		"platforms": {
 			"steam": {
 				"id": 1063420
+			}
+		}
+	},
+	{
+		"name": "WEBFISHING",
+		"modLoader": {
+			"name": "GDWeave"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3146520
 			}
 		}
 	},

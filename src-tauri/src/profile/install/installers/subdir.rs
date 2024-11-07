@@ -238,7 +238,7 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         Ok(())
     }
 
-    fn install_file(
+    fn install_method(
         &mut self,
         relative_path: &Path,
         _profile: &Profile,

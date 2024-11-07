@@ -18,7 +18,7 @@ use super::{FileInstallMethod, PackageInstaller};
 pub fn install_from_zip(
     src: &Path,
     profile: &Profile,
-    full_name: &str,
+    package_name: &str,
     mod_loader: &ModLoader,
     prefs: &Prefs,
 ) -> Result<()> {
@@ -34,8 +34,8 @@ pub fn install_from_zip(
         .map(BufReader::new)
         .context("failed to open file")?;
 
-    let mut installer = mod_loader.installer(full_name);
-    extract(reader, full_name, path.clone(), &mut *installer)?;
+    let mut installer = mod_loader.installer(package_name);
+    extract(reader, package_name, path.clone(), &mut *installer)?;
     install(&path, profile, false, &mut *installer)?;
 
     fs::remove_dir_all(path).context("failed to remove temporary directory")?;
@@ -45,7 +45,7 @@ pub fn install_from_zip(
 
 pub fn extract(
     src: impl Read + Seek,
-    full_name: &str,
+    package_name: &str,
     dest: PathBuf,
     installer: &mut dyn PackageInstaller,
 ) -> Result<()> {
@@ -75,7 +75,7 @@ pub fn extract(
             continue;
         }
 
-        let Some(relative_target) = installer.map_file(&relative_path, full_name)? else {
+        let Some(relative_target) = installer.map_file(&relative_path, package_name)? else {
             continue;
         };
 
@@ -87,7 +87,7 @@ pub fn extract(
         io::copy(&mut source_file, &mut target_file)?;
     }
 
-    debug!("extracted {} in {:?}", full_name, start.elapsed());
+    debug!("extracted {} in {:?}", package_name, start.elapsed());
 
     Ok(())
 }
@@ -137,7 +137,7 @@ pub fn install(
                 }
             }
 
-            let mode = installer.install_file(relative, &profile)?;
+            let mode = installer.install_method(relative, &profile)?;
 
             match mode {
                 FileInstallMethod::Link => {

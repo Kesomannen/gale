@@ -44,12 +44,11 @@
 		</p>
 
 		<p class="mt-2">
-			The process may take a couple of minutes, depending on how many mods and profiles there are to
-			import.
-			<b>Profiles with the same name will be overwritten!</b>
+			The process may take a couple of minutes, depending on how many mods there are to import.
+			<b>Existing profiles with the same name will be overwritten!</b>
 		</p>
 
-		<p class="mt-2">Please do not close Gale while the import is in progress.</p>
+		<p class="mt-2">Do not close Gale while the import is in progress.</p>
 	</div>
 
 	<ImportR2Flow bind:this={importFlow} bind:importData bind:importFrom bind:loading />

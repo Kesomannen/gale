@@ -85,7 +85,7 @@ impl File {
     }
 
     pub fn save(&self, profile_dir: &Path) -> io::Result<()> {
-        let path = profile_dir.join(file_path(&self.relative_path));
+        let path = profile_dir.join(&self.relative_path);
         let writer = fs::File::create(path).map(BufWriter::new)?;
         ser::to_writer(self, writer)
     }
@@ -97,12 +97,6 @@ pub struct FileMetadata {
     plugin_name: String,
     plugin_version: String,
     plugin_guid: String,
-}
-
-pub fn file_path(relative: &Path) -> PathBuf {
-    let mut path: PathBuf = ["BepInEx", "config"].into_iter().collect();
-    path.push(relative);
-    path
 }
 
 #[derive(Serialize, Clone, PartialEq, Debug)]
@@ -284,7 +278,7 @@ impl Profile {
 }
 
 // returns a list of non-cfg files that were found
-pub fn load_config(mut profile_dir: PathBuf, vec: &mut Vec<LoadFileResult>) -> Vec<PathBuf> {
+pub fn load_config(mut profile_path: PathBuf, vec: &mut Vec<LoadFileResult>) -> Vec<PathBuf> {
     enum File {
         Cfg {
             res: LoadFileResult,
@@ -295,23 +289,20 @@ pub fn load_config(mut profile_dir: PathBuf, vec: &mut Vec<LoadFileResult>) -> V
 
     const OTHER_EXTENSIONS: &[&str] = &["json", "toml", "yaml", "yml", "xml", "ini"];
 
-    profile_dir.push("BepInEx");
-    profile_dir.push("config");
-
-    let files = WalkDir::new(&profile_dir)
+    let files = WalkDir::new(&profile_path)
         .into_iter()
         .par_bridge()
-        .filter_map(|entry| entry.ok())
+        .filter_map(Result::ok)
         .filter_map(|entry| {
             let extension = entry.path().extension()?;
 
             if extension == "cfg" {
-                load_config_file(entry, &profile_dir, vec)
+                load_config_file(entry, &profile_path, vec)
                     .map(|(res, index)| File::Cfg { res, index })
             } else if OTHER_EXTENSIONS.iter().any(|ext| extension == *ext) {
                 let relative_path = entry
                     .path()
-                    .strip_prefix(&profile_dir)
+                    .strip_prefix(&profile_path)
                     .expect("file path should be a child of root")
                     .to_path_buf();
 

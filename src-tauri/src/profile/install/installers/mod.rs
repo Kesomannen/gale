@@ -6,11 +6,13 @@ use crate::profile::{Profile, ProfileMod};
 
 mod bepinex;
 mod extract;
+mod gd_weave;
 mod subdir;
 
 pub use self::{
     bepinex::BepinexInstaller,
     extract::ExtractInstaller,
+    gd_weave::GDWeaveModInstaller,
     subdir::{Subdir, SubdirInstaller},
 };
 
@@ -26,11 +28,13 @@ pub trait PackageInstaller {
     fn scan_mod(&mut self, profile_mod: &ProfileMod, profile: &Profile, scan: ScanFn)
         -> Result<()>;
 
-    fn install_file(
+    fn install_method(
         &mut self,
         relative_path: &Path,
         profile: &Profile,
-    ) -> Result<FileInstallMethod>;
+    ) -> Result<FileInstallMethod> {
+        Ok(FileInstallMethod::Link)
+    }
 }
 
 #[derive(Debug)]

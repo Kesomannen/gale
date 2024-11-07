@@ -50,7 +50,7 @@ impl PackageInstaller for BepinexInstaller {
         Ok(())
     }
 
-    fn install_file(
+    fn install_method(
         &mut self,
         relative_path: &Path,
         _profile: &Profile,

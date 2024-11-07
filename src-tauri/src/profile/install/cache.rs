@@ -21,12 +21,10 @@ pub(super) fn path(ident: &VersionIdent, prefs: &Prefs) -> PathBuf {
 pub(super) fn clear(prefs: &Prefs) -> Result<()> {
     let cache_dir = prefs.cache_dir();
 
-    if !cache_dir.exists() {
-        return Ok(());
+    if cache_dir.exists() {
+        fs::remove_dir_all(&cache_dir).context("failed to delete cache")?;
+        fs::create_dir_all(cache_dir).context("failed to recreate cache directory")?;
     }
-
-    fs::remove_dir_all(&cache_dir).context("failed to delete cache")?;
-    fs::create_dir_all(cache_dir).context("failed to recreate cache directory")?;
 
     Ok(())
 }

@@ -98,7 +98,7 @@ pub fn open_config_file(file: &Path, manager: StateMutex<ModManager>) -> Result<
     let manager = manager.lock().unwrap();
 
     let profile = manager.active_profile();
-    let path = profile.path.join(super::file_path(file));
+    let path = profile.path.join(file);
     open::that(&path)
         .with_context(|| format!("failed to open config file at {}", path.display()))?;
 
@@ -129,7 +129,7 @@ pub fn delete_config_file(file: &Path, manager: StateMutex<ModManager>) -> Resul
         profile.config.remove(index).ok();
     }
 
-    let path = profile.path.join(super::file_path(file));
+    let path = profile.path.join(file);
     trash::delete(path).context("failed to move file to recycle bin")?;
 
     Ok(())
