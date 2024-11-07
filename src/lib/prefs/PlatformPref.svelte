@@ -8,20 +8,24 @@
 
 	export let value: Platform;
 	export let set: (value: Platform) => Promise<void>;
+
+	$: platforms = $activeGame?.platforms ?? [];
 </script>
 
-<div class="flex items-center">
-	<Label text="Platform"></Label>
+{#if platforms.length > 1}
+	<div class="flex items-center">
+		<Label text="Platform"></Label>
 
-	<Dropdown
-		class="flex-grow"
-		items={$activeGame?.platforms ?? []}
-		getLabel={sentenceCase}
-		selected={value}
-		onSelectedChange={(newValue) => {
-			value = newValue;
-			set(value);
-		}}
-		multiple={false}
-	/>
-</div>
+		<Dropdown
+			class="flex-grow"
+			items={platforms}
+			getLabel={sentenceCase}
+			selected={value}
+			onSelectedChange={(newValue) => {
+				value = newValue;
+				set(value);
+			}}
+			multiple={false}
+		/>
+	</div>
+{/if}

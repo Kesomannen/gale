@@ -67,15 +67,15 @@ impl<'a> Subdir<'a> {
         }
     }
 
-    pub const fn separate(name: &'a str, target: &'a str) -> Self {
+    pub const fn separated(name: &'a str, target: &'a str) -> Self {
         Self::new(name, target, SubdirMode::Separate)
     }
 
-    pub const fn separate_flatten(name: &'a str, target: &'a str) -> Self {
+    pub const fn flat_separated(name: &'a str, target: &'a str) -> Self {
         Self::new(name, target, SubdirMode::SeparateFlatten)
     }
 
-    pub const fn track(name: &'a str, target: &'a str) -> Self {
+    pub const fn tracked(name: &'a str, target: &'a str) -> Self {
         Self::new(name, target, SubdirMode::Track)
     }
 

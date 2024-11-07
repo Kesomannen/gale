@@ -1,5 +1,87 @@
 [
 	{
+		"name": "BONEWORKS",
+		"slug": "boneworks",
+		"popular": true,
+		"modLoader": {
+			"name": "MelonLoader",
+			"subdirs": [
+				{
+					"name": "Plugins",
+					"target": "Plugins",
+					"mode": "track",
+					"extension": ".plugin.dll"
+				},
+				{
+					"name": "UserData",
+					"target": "UserData",
+					"mode": "track"
+				},
+				{
+					"name": "CustomItems",
+					"target": "UserData/CustomItems",
+					"mode": "track",
+					"extension": ".melon"
+				},
+				{
+					"name": "CustomMaps",
+					"target": "UserData/CustomMaps",
+					"mode": "track",
+					"extension": ".bcm,.cma"
+				},
+				{
+					"name": "PlayerModels",
+					"target": "UserData/PlayerModels",
+					"mode": "track",
+					"extension": ".body"
+				},
+				{
+					"name": "CustomLoadScreens",
+					"target": "UserData/CustomLoadScreens",
+					"mode": "track",
+					"extension": ".load"
+				},
+				{
+					"name": "Music",
+					"target": "UserData/Music",
+					"mode": "track",
+					"extension": ".wav"
+				},
+				{
+					"name": "Food",
+					"target": "UserData/Food",
+					"mode": "track",
+					"extension": ".food"
+				},
+				{
+					"name": "Scoreworks",
+					"target": "UserData/Scoreworks",
+					"mode": "track",
+					"extension": ".sw"
+				},
+				{
+					"name": "CustomSkins",
+					"target": "UserData/CustomSkins",
+					"mode": "track",
+					"extension": ".png"
+				},
+				{
+					"name": "Grenades",
+					"target": "UserData/Grenades",
+					"mode": "track",
+					"extension": ".grenade"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 823500,
+				"dirName": "BONEWORKS/BONEWORKS"
+			},
+			"oculus": {}
+		}
+	},
+	{
 		"name": "Content Warning",
 		"popular": true,
 		"modLoader": {
@@ -347,87 +429,6 @@
 		}
 	},
 	{
-		"name": "BONEWORKS",
-		"slug": "boneworks",
-		"modLoader": {
-			"name": "MelonLoader",
-			"subdirs": [
-				{
-					"name": "Plugins",
-					"target": "Plugins",
-					"mode": "track",
-					"extension": ".plugin.dll"
-				},
-				{
-					"name": "UserData",
-					"target": "UserData",
-					"mode": "track"
-				},
-				{
-					"name": "CustomItems",
-					"target": "UserData/CustomItems",
-					"mode": "track",
-					"extension": ".melon"
-				},
-				{
-					"name": "CustomMaps",
-					"target": "UserData/CustomMaps",
-					"mode": "track",
-					"extension": ".bcm,.cma"
-				},
-				{
-					"name": "PlayerModels",
-					"target": "UserData/PlayerModels",
-					"mode": "track",
-					"extension": ".body"
-				},
-				{
-					"name": "CustomLoadScreens",
-					"target": "UserData/CustomLoadScreens",
-					"mode": "track",
-					"extension": ".load"
-				},
-				{
-					"name": "Music",
-					"target": "UserData/Music",
-					"mode": "track",
-					"extension": ".wav"
-				},
-				{
-					"name": "Food",
-					"target": "UserData/Food",
-					"mode": "track",
-					"extension": ".food"
-				},
-				{
-					"name": "Scoreworks",
-					"target": "UserData/Scoreworks",
-					"mode": "track",
-					"extension": ".sw"
-				},
-				{
-					"name": "CustomSkins",
-					"target": "UserData/CustomSkins",
-					"mode": "track",
-					"extension": ".png"
-				},
-				{
-					"name": "Grenades",
-					"target": "UserData/Grenades",
-					"mode": "track",
-					"extension": ".grenade"
-				}
-			]
-		},
-		"platforms": {
-			"steam": {
-				"id": 823500,
-				"dirName": "BONEWORKS/BONEWORKS"
-			},
-			"oculus": {}
-		}
-	},
-	{
 		"name": "Back to the Dawn",
 		"modLoader": {
 			"name": "BepInEx"
@@ -436,17 +437,6 @@
 			"steam": {
 				"id": 1735700,
 				"dirName": "MetalHeadGames"
-			}
-		}
-	},
-	{
-		"name": "Backpack Hero",
-		"modLoader": {
-			"name": "MelonLoader"
-		},
-		"platforms": {
-			"steam": {
-				"id": 1970580
 			}
 		}
 	},
@@ -974,17 +964,6 @@
 		"platforms": {
 			"steam": {
 				"id": 1557740
-			}
-		}
-	},
-	{
-		"name": "RUMBLE",
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 890550
 			}
 		}
 	},

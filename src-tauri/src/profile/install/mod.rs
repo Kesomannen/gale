@@ -225,7 +225,7 @@ pub async fn install_with_deps(
 
                 Ok(iter::once(install).chain(
                     profile
-                        .missing_deps(borrowed.deps(), thunderstore)
+                        .missing_deps(borrowed.dependencies(), thunderstore)
                         .map_into(),
                 ))
             })
@@ -247,7 +247,7 @@ fn total_download_size(
     thunderstore: &Thunderstore,
 ) -> u64 {
     profile
-        .missing_deps(borrowed.deps(), thunderstore)
+        .missing_deps(borrowed.dependencies(), thunderstore)
         .chain(iter::once(borrowed))
         .filter(|borrowed| !cache::path(borrowed.ident(), prefs).exists())
         .map(|borrowed| borrowed.version.file_size)

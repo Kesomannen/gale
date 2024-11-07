@@ -296,6 +296,7 @@ fn add_loader_args(
     match &mod_loader.kind {
         ModLoaderKind::BepInEx { .. } => add_bepinex_args(command, profile_dir),
         ModLoaderKind::MelonLoader { .. } => add_melon_loader_args(command, profile_dir),
+        ModLoaderKind::GDWeave {} => todo!(),
     }
 }
 

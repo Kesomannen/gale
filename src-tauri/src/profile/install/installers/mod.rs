@@ -5,12 +5,12 @@ use anyhow::Result;
 use crate::profile::{Profile, ProfileMod};
 
 mod bepinex;
-mod melon_loader;
+mod extract;
 mod subdir;
 
 pub use self::{
     bepinex::BepinexInstaller,
-    melon_loader::MelonLoaderInstaller,
+    extract::ExtractInstaller,
     subdir::{Subdir, SubdirInstaller},
 };
 

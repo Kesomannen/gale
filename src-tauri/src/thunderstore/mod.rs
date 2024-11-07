@@ -60,11 +60,7 @@ impl<'a> BorrowedMod<'a> {
         &self.version.ident
     }
 
-    pub fn split(self) -> (&'a PackageListing, &'a PackageVersion) {
-        (self.package, self.version)
-    }
-
-    pub fn deps(&self) -> impl Iterator<Item = &'a VersionIdent> + 'a {
+    pub fn dependencies(&self) -> impl Iterator<Item = &'a VersionIdent> + 'a {
         self.version.dependencies.iter()
     }
 }
@@ -90,9 +86,7 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ModId {
-    #[serde(alias = "package")]
     pub package_uuid: Uuid,
-    #[serde(alias = "version")]
     pub version_uuid: Uuid,
 }
 

@@ -8,9 +8,23 @@ use anyhow::{bail, Result};
 use super::{FileInstallMethod, PackageInstaller, ScanFn};
 use crate::profile::{Profile, ProfileMod};
 
-pub struct MelonLoaderInstaller;
+pub struct ExtractInstaller<'a> {
+    dir_name: &'a str,
+    dirs: &'a [&'a str],
+    top_level_files: &'a [&'a str],
+}
 
-impl PackageInstaller for MelonLoaderInstaller {
+impl<'a> ExtractInstaller<'a> {
+    pub fn new(dir_name: &'a str, dirs: &'a [&'a str], top_level_files: &'a [&'a str]) -> Self {
+        Self {
+            dir_name,
+            dirs,
+            top_level_files,
+        }
+    }
+}
+
+impl<'a> PackageInstaller for ExtractInstaller<'a> {
     fn map_file<'p>(
         &mut self,
         relative_path: &'p Path,
@@ -25,7 +39,7 @@ impl PackageInstaller for MelonLoaderInstaller {
 
         if components.next().is_none() {
             // top level file
-            if first != "dobby.dll" && first != "version.dll" {
+            if !self.top_level_files.iter().any(|file| *file == first) {
                 return Ok(None);
             }
         }
@@ -41,16 +55,13 @@ impl PackageInstaller for MelonLoaderInstaller {
     ) -> Result<()> {
         let mut path = profile.path.to_path_buf();
 
-        path.push("dobby.dll");
-        scan(&path)?;
-        path.pop();
-
-        path.push("version.dll");
-        scan(&path)?;
-        path.pop();
-
-        path.push("MelonLoader");
-        for dir in ["Dependencies", "Documentation", "net6", "net35"] {
+        for file in self.top_level_files {
+            path.push(file);
+            scan(&path)?;
+            path.pop();
+        }
+        path.push(self.dir_name);
+        for dir in self.dirs {
             path.push(dir);
             scan(&path)?;
             path.pop();

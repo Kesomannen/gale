@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 use crate::profile::install::{
-    BepinexInstaller, MelonLoaderInstaller, PackageInstaller, Subdir, SubdirInstaller,
+    BepinexInstaller, ExtractInstaller, PackageInstaller, Subdir, SubdirInstaller,
 };
 
 const JSON: &str = include_str!("../games.json");
@@ -190,22 +190,29 @@ pub enum ModLoaderKind<'a> {
         #[serde(default, borrow, rename = "subdirs")]
         extra_sub_dirs: Vec<Subdir<'a>>,
     },
+    GDWeave {},
 }
 
 impl<'a> ModLoader<'a> {
+    pub fn to_str(&self) -> &'static str {
+        match &self.kind {
+            ModLoaderKind::BepInEx { .. } => "BepInEx",
+            ModLoaderKind::MelonLoader { .. } => "MelonLoader",
+            ModLoaderKind::GDWeave {} => "GDWeave",
+        }
+    }
+
     pub fn installer(&self, package_name: &str) -> Box<dyn PackageInstaller> {
         match (self.is_loader_package(package_name), &self.kind) {
             (false, ModLoaderKind::BepInEx { extra_sub_dirs, .. }) => {
                 const SUBDIRS: &[Subdir] = &[
-                    Subdir::separate_flatten("plugins", "BepInEx/plugins"),
-                    Subdir::separate_flatten("patchers", "BepInEx/patchers"),
-                    Subdir::separate_flatten("monomod", "BepInEx/monomod").extension(".mm.dll"),
-                    Subdir::separate_flatten("core", "BepInEx/core"),
+                    Subdir::flat_separated("plugins", "BepInEx/plugins"),
+                    Subdir::flat_separated("patchers", "BepInEx/patchers"),
+                    Subdir::flat_separated("monomod", "BepInEx/monomod").extension(".mm.dll"),
+                    Subdir::flat_separated("core", "BepInEx/core"),
                     Subdir::untracked("config", "BepInEx/config").mutable(),
                 ];
-
-                const DEFAULT: &Subdir = &Subdir::separate_flatten("plugins", "BepInEx/plugins");
-
+                const DEFAULT: &Subdir = &Subdir::flat_separated("plugins", "BepInEx/plugins");
                 const IGNORED: &[&str] = &[];
 
                 Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
@@ -213,21 +220,33 @@ impl<'a> ModLoader<'a> {
             (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
             (false, ModLoaderKind::MelonLoader { extra_sub_dirs }) => {
                 const SUBDIRS: &[Subdir] = &[
-                    Subdir::track("UserLibs", "UserLibs").extension(".lib.dll"),
-                    Subdir::track("Managed", "MelonLoader/Managed").extension(".managed.dll"),
-                    Subdir::track("Mods", "Mods").extension(".dll"),
-                    Subdir::separate("ModManager", "UserData/ModManager"),
-                    Subdir::track("MelonLoader", "MelonLoader"),
-                    Subdir::track("Libs", "MelonLoader/Libs"),
+                    Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
+                    Subdir::tracked("Managed", "MelonLoader/Managed").extension(".managed.dll"),
+                    Subdir::tracked("Mods", "Mods").extension(".dll"),
+                    Subdir::separated("ModManager", "UserData/ModManager"),
+                    Subdir::tracked("MelonLoader", "MelonLoader"),
+                    Subdir::tracked("Libs", "MelonLoader/Libs"),
                 ];
-
-                const DEFAULT: &Subdir = &Subdir::track("Mods", "Mods");
-
+                const DEFAULT: &Subdir = &Subdir::tracked("Mods", "Mods");
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
 
                 Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
             }
-            (true, ModLoaderKind::MelonLoader { .. }) => Box::new(MelonLoaderInstaller),
+            (true, ModLoaderKind::MelonLoader { .. }) => {
+                const DIR_NAME: &str = "MelonLoader";
+                const DIRS: &[&str] = &["Dependencies", "Documentation", "net6", "net35"];
+                const FILES: &[&str] = &["dobby.dll", "version.dll"];
+
+                Box::new(ExtractInstaller::new(DIR_NAME, DIRS, FILES))
+            }
+            (false, ModLoaderKind::GDWeave {}) => todo!(),
+            (true, ModLoaderKind::GDWeave {}) => {
+                const DIR_NAME: &str = "GDWeave";
+                const DIRS: &[&str] = &["core"];
+                const FILES: &[&str] = &["winmm.dll", "version.dll"];
+
+                Box::new(ExtractInstaller::new(DIR_NAME, DIRS, FILES))
+            }
         }
     }
 
@@ -239,6 +258,7 @@ impl<'a> ModLoader<'a> {
             match &self.kind {
                 ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
                 ModLoaderKind::MelonLoader { .. } => full_name == "LavaGang-MelonLoader",
+                ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
             }
         }
     }
@@ -247,6 +267,7 @@ impl<'a> ModLoader<'a> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => &["BepInEx", "LogOutput.log"],
             ModLoaderKind::MelonLoader { .. } => &["MelonLoader", "Latest.log"],
+            ModLoaderKind::GDWeave {} => todo!(),
         }
         .iter()
         .collect()

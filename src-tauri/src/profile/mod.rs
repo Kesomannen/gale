@@ -321,8 +321,6 @@ impl Profile {
 
     /// Recursively finds the dependencies of the given mods and filters
     /// out those already installed.
-    ///
-    /// This also includes
     fn missing_deps<'a>(
         &'a self,
         idents: impl IntoIterator<Item = &'a VersionIdent>,
@@ -486,7 +484,7 @@ impl ManagedGame {
 
     /// Returns an iterator over all installed thunderstore mods across all of the game's profiles.
     ///
-    /// May contain duplicates
+    /// May contain duplicates.
     fn installed_mods<'a>(
         &'a self,
         thunderstore: &'a Thunderstore,

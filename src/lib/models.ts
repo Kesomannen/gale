@@ -195,8 +195,14 @@ export type Game = {
 	slug: string;
 	platforms: Platform[];
 	favorite: boolean;
+	modLoader: ModLoader;
 	popular: boolean;
 };
+
+export enum ModLoader {
+	BepInEx = 'BepInEx',
+	MelonLoader = 'MelonLoader'
+}
 
 export type PackageCategory = {
 	name: string;

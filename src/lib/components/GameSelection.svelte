@@ -5,6 +5,8 @@
 	import { Button } from 'bits-ui';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from './Link.svelte';
+	import { ModLoader } from '$lib/models';
+	import Tooltip from './Tooltip.svelte';
 
 	export let onSelect: () => void;
 
@@ -53,11 +55,7 @@
 					onSelect();
 				}}
 			>
-				<img
-					src="games/{game.slug}.webp"
-					alt={game.name}
-					class="mr-2 h-8 w-8 rounded group-hover:shadow-xl"
-				/>
+				<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-8 rounded" />
 
 				<span class="flex-grow text-left text-slate-200">
 					{game.name}
@@ -66,7 +64,7 @@
 				<Button.Root
 					class="{game.favorite
 						? 'block'
-						: 'hidden group-hover:block'} mr-1 rounded-md p-1 hover:bg-slate-600"
+						: 'hidden group-hover:block'} mr-1 rounded p-1 hover:bg-slate-600"
 					on:click={(evt) => {
 						evt.stopPropagation();
 						game.favorite = !game.favorite;
@@ -79,6 +77,15 @@
 						class="text-xl text-accent-500"
 					/>
 				</Button.Root>
+
+				{#if game.modLoader !== ModLoader.BepInEx}
+					<Tooltip
+						class="mr-1 flex items-center rounded bg-accent-600 p-1.5 text-sm text-slate-200"
+						text="Experimental support. Use at your own risk!"
+					>
+						<Icon icon="mdi:beta" />
+					</Tooltip>
+				{/if}
 			</Button.Root>
 		{/each}
 	{:else}

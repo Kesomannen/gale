@@ -19,6 +19,7 @@ pub struct FrontendGame {
     name: &'static str,
     slug: &'static str,
     popular: bool,
+    mod_loader: &'static str,
     platforms: Vec<Platform>,
 }
 
@@ -32,6 +33,7 @@ impl From<Game> for FrontendGame {
             name: value.name,
             slug: &*value.slug,
             popular: value.popular,
+            mod_loader: value.mod_loader.to_str(),
             platforms,
         }
     }
