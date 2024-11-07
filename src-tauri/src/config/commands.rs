@@ -117,13 +117,12 @@ pub fn delete_config_file(file: &Path, manager: StateMutex<ModManager>) -> Resul
         .is_some_and(|ext| ext == "cfg");
 
     if is_cfg {
-        let index = match profile
+        let Some(index) = profile
             .config
             .iter()
             .position(|f| f.relative_path() == file)
-        {
-            Some(index) => index,
-            None => return Ok(()), // ignore if the file is not in the list
+        else {
+            return Ok(()); // ignore if the file is not in the list
         };
 
         profile.config.remove(index).ok();

@@ -50,14 +50,15 @@ impl PackageInstaller for BepinexInstaller {
         Ok(())
     }
 
-    fn install_method(
+    fn install_file(
         &mut self,
         relative_path: &Path,
+        _package_name: &str,
         _profile: &Profile,
     ) -> Result<FileInstallMethod> {
         if relative_path
             .file_name()
-            .is_some_and(|name| name == "BepInex.cfg")
+            .is_some_and(|name| name == "BepInEx.cfg")
         {
             Ok(FileInstallMethod::Copy)
         } else {

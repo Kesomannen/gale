@@ -36,7 +36,7 @@ pub fn install_from_zip(
 
     let mut installer = mod_loader.installer(package_name);
     extract(reader, package_name, path.clone(), &mut *installer)?;
-    install(&path, profile, false, &mut *installer)?;
+    install(&path, profile, package_name, false, &mut *installer)?;
 
     fs::remove_dir_all(path).context("failed to remove temporary directory")?;
 
@@ -106,47 +106,53 @@ pub fn extract(
 pub fn install(
     src: &Path,
     profile: &Profile,
+    package_name: &str,
     overwrite: bool,
     installer: &mut dyn PackageInstaller,
 ) -> Result<()> {
     for entry in WalkDir::new(src) {
         let entry = entry?;
 
-        let relative = entry
+        let relative_path = entry
             .path()
             .strip_prefix(src)
             .expect("WalkDir should only return full paths inside of the root");
 
-        let target = profile.path.join(relative);
+        let target = profile.path.join(relative_path);
         if entry.file_type().is_dir() {
             if target.exists() {
                 continue;
             }
 
-            fs::create_dir(target)
-                .with_context(|| format!("failed to create directory {}", relative.display()))?;
+            fs::create_dir(target).with_context(|| {
+                format!("failed to create directory {}", relative_path.display())
+            })?;
         } else {
             if target.exists() {
-                match overwrite {
-                    true => {
-                        fs::remove_file(&target).with_context(|| {
-                            format!("failed to remove existing file {}", relative.display())
-                        })?;
-                    }
-                    false => continue,
+                if overwrite {
+                    fs::remove_file(&target).with_context(|| {
+                        format!(
+                            "failed to remove existing file at {}",
+                            relative_path.display()
+                        )
+                    })?;
+                } else {
+                    continue;
                 }
             }
 
-            let mode = installer.install_method(relative, &profile)?;
+            let mode = installer.install_file(relative_path, package_name, &profile)?;
 
             match mode {
                 FileInstallMethod::Link => {
-                    fs::copy(entry.path(), target)
-                        .with_context(|| format!("failed to copy file {}", relative.display()))?;
+                    fs::copy(entry.path(), target).with_context(|| {
+                        format!("failed to copy file at {}", relative_path.display())
+                    })?;
                 }
                 FileInstallMethod::Copy => {
-                    fs::hard_link(entry.path(), target)
-                        .with_context(|| format!("failed to link file {}", relative.display()))?;
+                    fs::hard_link(entry.path(), target).with_context(|| {
+                        format!("failed to link file at {}", relative_path.display())
+                    })?;
                 }
             }
         }

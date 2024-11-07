@@ -1,6 +1,8 @@
 use std::{
     borrow::Cow,
     ffi::OsStr,
+    fs::File,
+    io::Write,
     path::{Path, PathBuf},
 };
 
@@ -238,10 +240,11 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         Ok(())
     }
 
-    fn install_method(
+    fn install_file(
         &mut self,
         relative_path: &Path,
-        _profile: &Profile,
+        package_name: &str,
+        profile: &Profile,
     ) -> Result<FileInstallMethod> {
         let Some(subdir) = self
             .subdirs
@@ -251,10 +254,19 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
             bail!(
                 "file at {} does not match any subdir",
                 relative_path.display()
-            )
+            );
         };
 
-        if subdir.mode == SubdirMode::Track {}
+        if subdir.mode == SubdirMode::Track {
+            let path = profile
+                .path
+                .join("_state")
+                .join(package_name)
+                .with_extension("txt");
+            let mut file = File::options().append(true).create(true).open(path)?;
+            file.write_all(relative_path.as_os_str().as_encoded_bytes())?;
+            file.write_all(b"\n")?;
+        }
 
         if subdir.mutable {
             Ok(FileInstallMethod::Copy)

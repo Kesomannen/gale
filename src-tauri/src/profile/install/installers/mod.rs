@@ -28,10 +28,11 @@ pub trait PackageInstaller {
     fn scan_mod(&mut self, profile_mod: &ProfileMod, profile: &Profile, scan: ScanFn)
         -> Result<()>;
 
-    fn install_method(
+    fn install_file(
         &mut self,
-        relative_path: &Path,
-        profile: &Profile,
+        _relative_path: &Path,
+        _package_name: &str,
+        _profile: &Profile,
     ) -> Result<FileInstallMethod> {
         Ok(FileInstallMethod::Link)
     }

@@ -310,15 +310,12 @@ fn cache_install(
     thunderstore: &Thunderstore,
 ) -> Result<()> {
     let borrowed = data.id.borrow(thunderstore)?;
+    let package_name = borrowed.ident().full_name();
 
-    let mut installer = manager
-        .active_game
-        .mod_loader
-        .installer(borrowed.ident().full_name());
-
+    let mut installer = manager.active_game.mod_loader.installer(package_name);
     let profile = manager.active_profile_mut();
 
-    super::fs::install(src, profile, data.overwrite, &mut *installer)?;
+    super::fs::install(src, profile, package_name, data.overwrite, &mut *installer)?;
 
     let install_time = data.install_time.unwrap_or_else(Utc::now);
 
