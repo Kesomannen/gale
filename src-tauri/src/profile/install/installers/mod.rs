@@ -1,7 +1,12 @@
-use std::{borrow::Cow, path::Path};
+use std::{
+    io::Cursor,
+    path::{Path, PathBuf},
+};
 
 use anyhow::Result;
+use zip::ZipArchive;
 
+use super::fs::{ConflictResolution, FileInstallMethod};
 use crate::profile::{Profile, ProfileMod};
 
 mod bepinex;
@@ -16,30 +21,26 @@ pub use self::{
     subdir::{Subdir, SubdirInstaller},
 };
 
-pub type ScanFn = Box<dyn Fn(&Path) -> Result<()>>;
+pub type ModArchive = ZipArchive<Cursor<Vec<u8>>>;
 
 pub trait PackageInstaller {
-    fn map_file<'p>(
+    fn extract(&mut self, archive: ModArchive, package_name: &str, dest: PathBuf) -> Result<()>;
+
+    fn install(
         &mut self,
-        relative_path: &'p Path,
+        src: &Path,
         package_name: &str,
-    ) -> Result<Option<Cow<'p, Path>>>;
-
-    fn scan_mod(&mut self, profile_mod: &ProfileMod, profile: &Profile, scan: ScanFn)
-        -> Result<()>;
-
-    fn install_file(
-        &mut self,
-        _relative_path: &Path,
-        _package_name: &str,
-        _profile: &Profile,
-    ) -> Result<FileInstallMethod> {
-        Ok(FileInstallMethod::Link)
+        overwrite: bool,
+        profile: &Profile,
+    ) -> Result<()> {
+        super::fs::install(
+            src,
+            profile,
+            |_| FileInstallMethod::Link,
+            |_| ConflictResolution::overwrite(overwrite),
+        )
     }
-}
 
-#[derive(Debug)]
-pub enum FileInstallMethod {
-    Link,
-    Copy,
+    fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
+    fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
 }

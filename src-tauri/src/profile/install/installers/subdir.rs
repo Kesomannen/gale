@@ -1,17 +1,23 @@
 use std::{
     borrow::Cow,
     ffi::OsStr,
-    fs::File,
-    io::Write,
+    fs::{self, File},
+    io::{self, Write},
     path::{Path, PathBuf},
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::profile::{Profile, ProfileMod};
+use crate::profile::{
+    install::{
+        self,
+        fs::{ConflictResolution, FileInstallMethod},
+    },
+    Profile, ProfileMod,
+};
 
-use super::{FileInstallMethod, PackageInstaller, ScanFn};
+use super::{ModArchive, PackageInstaller};
 
 pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
@@ -117,11 +123,9 @@ impl<'a> SubdirInstaller<'a> {
                     .is_some_and(|ext| ext.split(',').any(|ext| name.ends_with(ext)))
         })
     }
-}
 
-impl<'a> PackageInstaller for SubdirInstaller<'a> {
     fn map_file<'p>(
-        &mut self,
+        &self,
         relative_path: &'p Path,
         package_name: &str,
     ) -> Result<Option<Cow<'p, Path>>> {
@@ -185,7 +189,7 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         if components.clone().next().is_none() {
             // since we advanced components to the end, prev.pop() will give the
             // last component, i.e. the file name
-            let file_name = prev.pop().context("malformed zip file")?;
+            let file_name = prev.pop().context("malformed mod archive file")?;
 
             // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/CoolMod.dll
             target.push(file_name);
@@ -206,72 +210,119 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         Ok(Some(Cow::Owned(target)))
     }
 
-    fn scan_mod(
-        &mut self,
-        profile_mod: &ProfileMod,
-        profile: &Profile,
-        scan: ScanFn,
-    ) -> Result<()> {
-        let mut path = profile.path.to_path_buf();
-
+    fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, mut scan: F) -> Result<()>
+    where
+        F: FnMut(&Path) -> Result<()>,
+    {
         let ident = profile_mod.ident();
         let full_name = ident.full_name();
 
         for subdir in self.subdirs {
-            path.push(subdir.target);
-
             match subdir.mode {
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => {
+                    let mut path = profile.path.to_path_buf();
+                    path.push(subdir.target);
                     path.push(full_name);
 
-                    if path.exists() {
-                        scan(&path)?;
-                    }
-
-                    path.pop();
+                    scan(&path)?;
                 }
-                SubdirMode::Track => (),
+                SubdirMode::Track => todo!(),
                 SubdirMode::None => (),
-            }
-
-            path.pop();
+            };
         }
 
         Ok(())
     }
+}
 
-    fn install_file(
+struct StateFile {
+    package_state: File,
+    profile_state: File,
+}
+
+impl StateFile {
+    pub fn create(package_name: &str, profile: &Profile) -> Result<Self> {
+        let path = profile.path.join("_state");
+        fs::create_dir_all(&path).context("failed to create state directory");
+
+        let package_state = open(path.clone(), package_name)?;
+        let profile_state = open(path, "profile")?;
+
+        return Ok(Self {
+            package_state,
+            profile_state,
+        });
+
+        fn open(mut path: PathBuf, name: &str) -> io::Result<File> {
+            path.push(name);
+            path.set_extension("txt");
+
+            File::options().append(true).create(true).open(path)
+        }
+    }
+}
+
+impl<'a> PackageInstaller for SubdirInstaller<'a> {
+    fn extract(&mut self, archive: ModArchive, package_name: &str, dest: PathBuf) -> Result<()> {
+        install::fs::extract(archive, dest, |relative_path| {
+            self.map_file(relative_path, package_name)
+        })
+    }
+
+    fn install(
         &mut self,
-        relative_path: &Path,
+        src: &Path,
         package_name: &str,
+        overwrite: bool,
         profile: &Profile,
-    ) -> Result<FileInstallMethod> {
-        let Some(subdir) = self
-            .subdirs
-            .iter()
-            .find(|subdir| relative_path.starts_with(subdir.target))
-        else {
-            bail!(
-                "file at {} does not match any subdir",
-                relative_path.display()
-            );
-        };
+    ) -> Result<()> {
+        let mut state_file: Option<StateFile> = None;
 
-        if subdir.mode == SubdirMode::Track {
-            let path = profile
-                .path
-                .join("_state")
-                .join(package_name)
-                .with_extension("txt");
-            let mut file = File::options().append(true).create(true).open(path)?;
-            file.write_all(relative_path.as_os_str().as_encoded_bytes())?;
-            file.write_all(b"\n")?;
-        }
+        install::fs::install(
+            src,
+            profile,
+            |relative_path| {
+                let subdir = self
+                    .subdirs
+                    .iter()
+                    .find(|subdir| relative_path.starts_with(subdir.target))
+                    .expect("file should be in a subdir");
 
-        if subdir.mutable {
-            Ok(FileInstallMethod::Copy)
-        } else {
-            Ok(FileInstallMethod::Link)
-        }
+                if subdir.mode == SubdirMode::Track {
+                    let file = match &mut state_file {
+                        Some(file) => file,
+                        None => {
+                            let file = StateFile::create(package_name, profile)
+                                .context("failed to open state file")?;
+
+                            state_file = Some(file);
+                            state_file.as_mut().unwrap()
+                        }
+                    };
+
+                    file.write_all(relative_path.as_os_str().as_encoded_bytes())
+                        .unwrap();
+                    file.write_all(b"\n").unwrap();
+                }
+
+                Ok(FileInstallMethod::Link)
+            },
+            |_| ConflictResolution::overwrite(overwrite),
+        )
+    }
+
+    fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
+        self.scan_mod(profile_mod, profile, |path| {
+            install::fs::toggle_any(path, enabled)
+        })
+    }
+
+    fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
+        self.scan_mod(profile_mod, profile, |path| {
+            install::fs::uninstall_any(path)?;
+            Ok(())
+        })?;
+
+        Ok(())
     }
 }

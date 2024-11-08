@@ -1,9 +1,9 @@
-use std::{borrow::Cow, path::Path};
+use std::{borrow::Cow, path::PathBuf};
 
 use anyhow::Result;
 
-use super::{PackageInstaller, ScanFn};
-use crate::profile::{Profile, ProfileMod};
+use super::{ModArchive, PackageInstaller};
+use crate::profile::{install, Profile, ProfileMod};
 
 pub struct ExtractInstaller<'a> {
     files: &'a [&'a str],
@@ -17,37 +17,47 @@ impl<'a> ExtractInstaller<'a> {
             flatten_top_level,
         }
     }
+
+    fn scan_mod<'b>(&'b self, profile: &'b Profile) -> impl Iterator<Item = PathBuf> + 'b {
+        self.files.iter().map(|file| profile.path.join(file))
+    }
 }
 
 impl<'a> PackageInstaller for ExtractInstaller<'a> {
-    fn map_file<'p>(
-        &mut self,
-        relative_path: &'p Path,
-        _package_name: &str,
-    ) -> Result<Option<Cow<'p, Path>>> {
-        let mut components = relative_path.components();
+    fn extract(&mut self, archive: ModArchive, _package_name: &str, dest: PathBuf) -> Result<()> {
+        install::fs::extract(archive, dest, |relative_path| {
+            let mut components = relative_path.components();
 
-        if self.flatten_top_level {
-            components.next();
-        }
+            if self.flatten_top_level {
+                components.next();
+            }
 
-        let path = components.as_path();
+            let path = components.as_path();
 
-        if self.files.iter().any(|file| path.starts_with(file)) {
-            Ok(Some(Cow::Borrowed(path)))
-        } else {
-            Ok(None)
-        }
+            Ok(if self.files.iter().any(|file| path.starts_with(file)) {
+                Some(Cow::Borrowed(path))
+            } else {
+                None
+            })
+        })
     }
 
-    fn scan_mod(
+    fn toggle(
         &mut self,
+        enabled: bool,
         _profile_mod: &ProfileMod,
         profile: &Profile,
-        scan: ScanFn,
     ) -> Result<()> {
-        for file in self.files {
-            scan(&profile.path.join(file))?;
+        for path in self.scan_mod(profile) {
+            install::fs::toggle_any(path, enabled)?;
+        }
+
+        Ok(())
+    }
+
+    fn uninstall(&mut self, _profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
+        for path in self.scan_mod(profile) {
+            install::fs::uninstall_any(path)?;
         }
 
         Ok(())

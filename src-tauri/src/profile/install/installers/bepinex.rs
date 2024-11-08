@@ -1,68 +1,85 @@
 use std::{
     borrow::Cow,
+    fs,
     path::{Path, PathBuf},
 };
 
 use anyhow::Result;
 
-use super::{FileInstallMethod, PackageInstaller, ScanFn};
-use crate::profile::{Profile, ProfileMod};
+use super::{FileInstallMethod, ModArchive, PackageInstaller};
+use crate::profile::{
+    install::{self, fs::ConflictResolution},
+    Profile, ProfileMod,
+};
 
 pub struct BepinexInstaller;
 
+fn scan(profile: &Profile) -> Result<impl Iterator<Item = PathBuf>> {
+    let core_path: PathBuf = ["BepInEx", "core"].iter().collect();
+
+    Ok(profile
+        .path
+        .join(core_path)
+        .read_dir()?
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_file()))
+        .map(|entry| entry.path()))
+}
+
 impl PackageInstaller for BepinexInstaller {
-    fn map_file<'p>(
+    fn extract(&mut self, archive: ModArchive, _package_name: &str, dest: PathBuf) -> Result<()> {
+        install::fs::extract(archive, dest, |relative_path| {
+            let mut components = relative_path.components();
+            if components.clone().count() == 1 {
+                // ignore top-level files, such as manifest.json and icon.png
+                return Ok(None);
+            }
+
+            // remove the top-level dir (usually called BepInExPack)
+            components.next();
+
+            Ok(Some(Cow::Borrowed(components.as_path())))
+        })
+    }
+    fn install(
         &mut self,
-        relative_path: &'p Path,
+        src: &Path,
         _package_name: &str,
-    ) -> Result<Option<Cow<'p, Path>>> {
-        let mut components = relative_path.components();
-        if components.clone().count() == 1 {
-            // ignore top-level files, such as manifest.json and icon.png
-            return Ok(None);
-        }
-
-        // remove the top-level dir (usually called BepInExPack)
-        components.next();
-
-        Ok(Some(Cow::Borrowed(components.as_path())))
+        overwrite: bool,
+        profile: &Profile,
+    ) -> Result<()> {
+        install::fs::install(
+            src,
+            profile,
+            |relative_path| {
+                if relative_path.extension().is_some_and(|ext| ext == "cfg") {
+                    FileInstallMethod::Copy
+                } else {
+                    FileInstallMethod::Link
+                }
+            },
+            |_| ConflictResolution::overwrite(overwrite),
+        )
     }
 
-    fn scan_mod(
+    fn toggle(
         &mut self,
+        enabled: bool,
         _profile_mod: &ProfileMod,
         profile: &Profile,
-        scan: ScanFn,
     ) -> Result<()> {
-        let core_path: PathBuf = ["BepInEx", "core"].iter().collect();
-
-        let files = profile
-            .path
-            .join(core_path)
-            .read_dir()?
-            .filter_map(Result::ok)
-            .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_file()));
-
-        for file in files {
-            scan(&file.path())?;
+        for file in scan(profile)? {
+            install::fs::toggle_file(file, enabled)?;
         }
 
         Ok(())
     }
 
-    fn install_file(
-        &mut self,
-        relative_path: &Path,
-        _package_name: &str,
-        _profile: &Profile,
-    ) -> Result<FileInstallMethod> {
-        if relative_path
-            .file_name()
-            .is_some_and(|name| name == "BepInEx.cfg")
-        {
-            Ok(FileInstallMethod::Copy)
-        } else {
-            Ok(FileInstallMethod::Link)
+    fn uninstall(&mut self, _profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
+        for file in scan(profile)? {
+            fs::remove_file(file)?;
         }
+
+        Ok(())
     }
 }

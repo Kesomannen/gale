@@ -205,7 +205,7 @@ impl<'a> ModLoader<'a> {
         }
     }
 
-    pub fn installer(&self, package_name: &str) -> Box<dyn PackageInstaller> {
+    pub fn installer_for(&self, package_name: &str) -> Box<dyn PackageInstaller> {
         match (self.is_loader_package(package_name), &self.kind) {
             (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
             (false, ModLoaderKind::BepInEx { extra_sub_dirs, .. }) => {

@@ -12,6 +12,7 @@ use core::str;
 use futures_util::StreamExt;
 use tauri::{AppHandle, Emitter, Manager};
 use thiserror::Error;
+use zip::ZipArchive;
 
 use super::{cache, InstallOptions, InstallProgress, InstallTask, ModInstall};
 use crate::{
@@ -207,15 +208,13 @@ impl<'a> Installer<'a> {
         let mut installer = manager
             .active_game
             .mod_loader
-            .installer(version.full_name());
+            .installer_for(version.full_name());
 
-        super::fs::extract(
-            Cursor::new(data),
-            version.full_name(),
-            cache_path.clone(),
-            &mut *installer,
-        )
-        .context("failed to extract mod")?;
+        let archive = ZipArchive::new(Cursor::new(data)).context("failed to open archive")?;
+
+        installer
+            .extract(archive, version.full_name(), cache_path.clone())
+            .context("failed to extract mod")?;
 
         self.check_cancel()?;
         self.update(InstallTask::Installing);
@@ -226,9 +225,7 @@ impl<'a> Installer<'a> {
 
         cache_install(install, &cache_path, &mut manager, &thunderstore)?;
 
-        manager
-            .save(&prefs)
-            .context("failed to save manager state")?;
+        manager.save(&prefs)?;
 
         Ok(())
     }
@@ -312,10 +309,10 @@ fn cache_install(
     let borrowed = data.id.borrow(thunderstore)?;
     let package_name = borrowed.ident().full_name();
 
-    let mut installer = manager.active_game.mod_loader.installer(package_name);
+    let mut installer = manager.active_game.mod_loader.installer_for(package_name);
     let profile = manager.active_profile_mut();
 
-    super::fs::install(src, profile, package_name, data.overwrite, &mut *installer)?;
+    installer.install(src, package_name, data.overwrite, &profile);
 
     let install_time = data.install_time.unwrap_or_else(Utc::now);
 

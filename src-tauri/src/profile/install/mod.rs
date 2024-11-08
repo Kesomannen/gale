@@ -204,7 +204,7 @@ where
 /// Downloads and installs mods and their missing dependencies on the active profile.
 ///
 /// Dependencies are installed right after each respective mod. The ordering of the
-/// dependencies is decided by [`Thunderstore::find_deps`].
+/// dependencies is decided by [`Thunderstore::dependencies`].
 pub async fn install_with_deps(
     mods: Vec<ModInstall>,
     options: InstallOptions,

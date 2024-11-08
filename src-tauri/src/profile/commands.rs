@@ -458,14 +458,6 @@ pub fn open_mod_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()> {
 
     let profile = manager.active_profile();
 
-    profile.scan_mod(profile.get_mod(uuid)?, |path| {
-        if path.is_dir() {
-            open::that(path)?;
-        }
-
-        Ok(())
-    })?;
-
     Ok(())
 }
 

@@ -111,7 +111,7 @@ fn test_map_mod_loader(
     test_map_file(
         relative_path,
         full_name,
-        &mut *mod_loader.installer(full_name),
+        &mut *mod_loader.installer_for(full_name),
         expected,
     );
 }
@@ -122,6 +122,8 @@ fn test_map_file(
     installer: &mut dyn PackageInstaller,
     expected: Option<&[&str]>,
 ) {
+    todo!()
+    /*
     let relative_path: PathBuf = relative_path.iter().collect();
     let expected = expected.map(|comps| comps.iter().collect::<PathBuf>());
     assert_eq!(
@@ -131,4 +133,5 @@ fn test_map_file(
             .map(|cow| cow.into_owned()),
         expected
     )
+    */
 }

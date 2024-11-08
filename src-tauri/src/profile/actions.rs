@@ -1,22 +1,17 @@
-use std::{fs, path::Path, sync::Mutex};
+use std::{fs, sync::Mutex};
 
 use anyhow::{ensure, Context, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
-use walkdir::WalkDir;
 
-use super::{Dependant, ManagedGame, Profile, ProfileMod};
+use super::{install::PackageInstaller, Dependant, ManagedGame, Profile, ProfileMod};
 use crate::{
     prefs::Prefs,
     profile::ModManager,
     thunderstore::Thunderstore,
-    util::{
-        self,
-        error::IoResultExt,
-        fs::{Overwrite, PathExt},
-    },
+    util::{self, error::IoResultExt, fs::Overwrite},
 };
 
 #[derive(Serialize)]
@@ -63,14 +58,10 @@ impl Profile {
 
     pub fn force_remove_mod(&mut self, uuid: Uuid) -> Result<()> {
         let index = self.index_of(uuid)?;
+        let profile_mod = &self.mods[index];
 
-        self.scan_mod(&self.mods[index], |path| {
-            if path.is_file() {
-                fs::remove_file(path).fs_context("removing mod file", path)
-            } else {
-                fs::remove_dir_all(path).fs_context("removing mod directory", path)
-            }
-        })?;
+        self.installer_for(profile_mod)
+            .uninstall(profile_mod, self)?;
 
         self.mods.remove(index);
 
@@ -96,61 +87,12 @@ impl Profile {
         let profile_mod = self.get_mod(uuid)?;
         let enabled = profile_mod.enabled;
 
-        self.scan_mod(&profile_mod, move |path| {
-            if let Ok(metadata) = path.metadata() {
-                if metadata.is_dir() {
-                    toggle_dir(path, enabled)
-                } else {
-                    toggle_file(path, enabled)
-                }
-            } else {
-                let mut path = path.to_path_buf();
-                path.add_ext("old");
-
-                if path.exists() {
-                    toggle_file(&path, enabled)
-                } else {
-                    Ok(())
-                }
-            }
-        })?;
+        self.installer_for(profile_mod)
+            .toggle(enabled, profile_mod, self)?;
 
         self.get_mod_mut(uuid).unwrap().enabled = !enabled;
 
         return Ok(());
-
-        fn toggle_file(path: &Path, enabled: bool) -> Result<()> {
-            let mut new_path = path.to_path_buf();
-
-            if enabled {
-                new_path.add_ext("old");
-            } else {
-                // remove all old extensions if multiple got added somehow
-                while let Some("old") = new_path.extension().and_then(|ext| ext.to_str()) {
-                    new_path.set_extension("");
-                }
-            }
-
-            fs::rename(path, &new_path)?;
-
-            Ok(())
-        }
-
-        fn toggle_dir(path: &Path, enabled: bool) -> Result<()> {
-            let files = WalkDir::new(path)
-                .into_iter()
-                .filter_map(Result::ok)
-                .filter(|entry| {
-                    let file_type = entry.file_type();
-                    file_type.is_file() || file_type.is_symlink()
-                });
-
-            for file in files {
-                toggle_file(file.path(), enabled)?;
-            }
-
-            Ok(())
-        }
     }
 
     fn check_dependants(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
@@ -202,16 +144,10 @@ impl Profile {
         }
     }
 
-    pub fn scan_mod<F>(&self, profile_mod: &ProfileMod, scan: F) -> Result<()>
-    where
-        F: Fn(&Path) -> Result<()> + 'static,
-    {
+    fn installer_for(&self, profile_mod: &ProfileMod) -> Box<dyn PackageInstaller> {
         let ident = profile_mod.ident();
         let full_name = ident.full_name();
-        self.game
-            .mod_loader
-            .installer(full_name)
-            .scan_mod(profile_mod, self, Box::new(scan))
+        self.game.mod_loader.installer_for(full_name)
     }
 
     fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {

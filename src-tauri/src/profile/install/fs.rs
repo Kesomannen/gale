@@ -1,19 +1,21 @@
 use std::{
     borrow::Cow,
     fs::{self, File},
-    io::{self, BufReader, Read, Seek},
+    io::{self, Cursor, Read, Seek},
     path::{Path, PathBuf},
-    time::Instant,
 };
 
 use anyhow::{Context, Result};
-use log::{debug, warn};
+use log::warn;
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-use crate::{game::ModLoader, prefs::Prefs, profile::Profile, util};
-
-use super::{FileInstallMethod, PackageInstaller};
+use crate::{
+    game::ModLoader,
+    prefs::Prefs,
+    profile::Profile,
+    util::{self, fs::PathExt},
+};
 
 pub fn install_from_zip(
     src: &Path,
@@ -27,32 +29,32 @@ pub fn install_from_zip(
     // dont use tempdir since we need the files on the same drive as the destination
     // for hard linking to work
 
-    let path = prefs.data_dir.join("temp").join("extract");
-    fs::create_dir_all(&path).context("failed to create temporary directory")?;
+    let temp_path = prefs.data_dir.join("temp").join("extract");
+    fs::create_dir_all(&temp_path).context("failed to create temporary directory")?;
 
-    let reader = File::open(src)
-        .map(BufReader::new)
-        .context("failed to open file")?;
+    let reader = fs::read(src)
+        .map(Cursor::new)
+        .context("failed to read file")?;
+    let archive = ZipArchive::new(reader)?;
 
-    let mut installer = mod_loader.installer(package_name);
-    extract(reader, package_name, path.clone(), &mut *installer)?;
-    install(&path, profile, package_name, false, &mut *installer)?;
+    let mut installer = mod_loader.installer_for(package_name);
+    installer.extract(archive, package_name, temp_path.clone())?;
+    installer.install(&temp_path, package_name, false, profile);
 
-    fs::remove_dir_all(path).context("failed to remove temporary directory")?;
+    fs::remove_dir_all(temp_path).context("failed to remove temporary directory")?;
 
     Ok(())
 }
 
-pub fn extract(
-    src: impl Read + Seek,
-    package_name: &str,
+pub(super) fn extract<S, M>(
+    mut archive: ZipArchive<S>,
     dest: PathBuf,
-    installer: &mut dyn PackageInstaller,
-) -> Result<()> {
-    let start = Instant::now();
-
-    let mut archive = ZipArchive::new(src)?;
-
+    mut map_file: M,
+) -> Result<()>
+where
+    S: Read + Seek,
+    M: FnMut(&Path) -> Result<Option<Cow<Path>>>,
+{
     for i in 0..archive.len() {
         let mut source_file = archive.by_index(i)?;
 
@@ -75,7 +77,7 @@ pub fn extract(
             continue;
         }
 
-        let Some(relative_target) = installer.map_file(&relative_path, package_name)? else {
+        let Some(relative_target) = map_file(&relative_path)? else {
             continue;
         };
 
@@ -87,29 +89,42 @@ pub fn extract(
         io::copy(&mut source_file, &mut target_file)?;
     }
 
-    debug!("extracted {} in {:?}", package_name, start.elapsed());
-
     Ok(())
 }
 
-// install from a well structured mod directory
-// for example:
-// - Kesomannen-KeepItDown (src)
-//   - BepInEx
-//     - plugins
-//       - Kesomannen-KeepItDown
-//         - KeepItDown.dll
-//         - manifest.json
-//         - ...
-//     - config
-//       - KeepItDown.cfg
-pub fn install(
+#[derive(Debug)]
+pub enum FileInstallMethod {
+    Link,
+    Copy,
+}
+
+#[derive(Debug)]
+pub enum ConflictResolution {
+    Skip,
+    Overwrite,
+}
+
+impl ConflictResolution {
+    pub fn overwrite(yes: bool) -> Self {
+        if yes {
+            ConflictResolution::Overwrite
+        } else {
+            ConflictResolution::Skip
+        }
+    }
+}
+
+/// Install from a well structured mod directory.
+pub(super) fn install<F, G>(
     src: &Path,
     profile: &Profile,
-    package_name: &str,
-    overwrite: bool,
-    installer: &mut dyn PackageInstaller,
-) -> Result<()> {
+    mut method: F,
+    mut on_conflict: G,
+) -> Result<()>
+where
+    F: FnMut(&Path) -> Result<FileInstallMethod>,
+    G: FnMut(&Path) -> ConflictResolution,
+{
     for entry in WalkDir::new(src) {
         let entry = entry?;
 
@@ -129,21 +144,20 @@ pub fn install(
             })?;
         } else {
             if target.exists() {
-                if overwrite {
-                    fs::remove_file(&target).with_context(|| {
-                        format!(
-                            "failed to remove existing file at {}",
-                            relative_path.display()
-                        )
-                    })?;
-                } else {
-                    continue;
+                match on_conflict(relative_path) {
+                    ConflictResolution::Skip => continue,
+                    ConflictResolution::Overwrite => {
+                        fs::remove_file(&target).with_context(|| {
+                            format!(
+                                "failed to remove existing file at {}",
+                                relative_path.display()
+                            )
+                        })?;
+                    }
                 }
             }
 
-            let mode = installer.install_file(relative_path, package_name, &profile)?;
-
-            match mode {
+            match method(relative_path)? {
                 FileInstallMethod::Link => {
                     fs::copy(entry.path(), target).with_context(|| {
                         format!("failed to copy file at {}", relative_path.display())
@@ -156,6 +170,78 @@ pub fn install(
                 }
             }
         }
+    }
+
+    Ok(())
+}
+
+pub(super) fn uninstall_any(path: impl AsRef<Path>) -> Result<()> {
+    for_any(
+        path.as_ref(),
+        |path| fs::remove_dir_all(path).map_err(|err| err.into()),
+        |path| fs::remove_file(path).map_err(|err| err.into()),
+    )
+}
+
+pub(super) fn toggle_any(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
+    for_any(
+        path.as_ref(),
+        |path| toggle_dir(path, enabled),
+        |path| toggle_file(path, enabled),
+    )
+}
+
+fn for_any<F, G>(path: &Path, for_dir: F, for_file: G) -> Result<()>
+where
+    F: FnOnce(&Path) -> Result<()>,
+    G: FnOnce(&Path) -> Result<()>,
+{
+    if let Ok(metadata) = path.metadata() {
+        if metadata.is_dir() {
+            for_dir(path)
+        } else {
+            for_file(path)
+        }
+    } else {
+        let mut path = path.to_path_buf();
+        path.add_ext("old");
+
+        if path.exists() {
+            for_file(&path)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+pub(super) fn toggle_file(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
+    let mut new_path = path.as_ref().to_path_buf();
+
+    if enabled {
+        new_path.add_ext("old");
+    } else {
+        // remove all old extensions if multiple got added somehow
+        while let Some("old") = new_path.extension().and_then(|ext| ext.to_str()) {
+            new_path.set_extension("");
+        }
+    }
+
+    fs::rename(path, &new_path)?;
+
+    Ok(())
+}
+
+pub(super) fn toggle_dir(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
+    let files = WalkDir::new(path)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            let file_type = entry.file_type();
+            file_type.is_file() || file_type.is_symlink()
+        });
+
+    for file in files {
+        toggle_file(file.path(), enabled)?;
     }
 
     Ok(())
