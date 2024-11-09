@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 (2024-11-09)
+
+### Fixed
+
+- Importing profiles with local mods (they are ignored now)
+- r2modman/Thunderstore Mod Manager profile transfer for Risk Of Rain 2
+
 ## 1.0.0 (2024-11-09)
 
 ### Added

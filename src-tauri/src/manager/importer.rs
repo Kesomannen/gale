@@ -7,6 +7,7 @@ use std::{
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use base64::{prelude::BASE64_STANDARD, Engine};
+use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -76,8 +77,8 @@ impl ImportData {
         let mods = mods
             .into_iter()
             .map(|r2| r2.into_install(thunderstore))
-            .collect::<Result<Vec<_>>>()
-            .context("failed to resolve mod references")?;
+            .filter_map(Result::ok)
+            .collect_vec();
 
         Ok(Self {
             name,

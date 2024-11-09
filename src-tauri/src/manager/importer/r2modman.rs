@@ -25,7 +25,7 @@ use crate::{
 
 lazy_static! {
     static ref ID_TO_R2_DIR: HashMap<&'static str, &'static str> = HashMap::from([
-        ("ror2", "RiskOfRain2"),
+        ("riskofrain2", "RiskOfRain2"),
         ("dsp", "DysonSphereProgram"),
         ("valheim", "Valheim"),
         ("gtfo", "GTFO"),
