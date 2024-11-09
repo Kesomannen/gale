@@ -194,7 +194,7 @@
 	},
 	{
 		"name": "Subnautica: Below Zero",
-		"slug": "belowzero",
+		"slug": "subnautica-below-zero",
 		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": {
@@ -759,7 +759,7 @@
 		}
 	},
 	{
-		"name": "Archus Chroma",
+		"name": "Arcus Chroma",
 		"modLoader": "BepInEx",
 		"platforms": {
 			"steam": 1447350
