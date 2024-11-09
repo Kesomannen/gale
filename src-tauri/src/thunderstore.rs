@@ -272,7 +272,7 @@ async fn load_mods_loop(app: AppHandle, game: &'static Game) {
                 }
             }
             Ok(None) => (),
-            Err(err) => warn!("failed to read cache: {}", err),
+            Err(err) => warn!("failed to read cache: {:#}", err),
         }
     }
 
