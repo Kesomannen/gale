@@ -48,13 +48,17 @@
 		refresh();
 	}
 
-	// make sure 'Modpacks' category is always selected
+	// some communities don't have a specific modpack category
+	$: modpackCategoryExists = $categories.some((category) => category.slug === 'modpacks');
+
+	// make sure the modpacks category is always selected if it exists
 	$: if (
+		modpackCategoryExists &&
 		selectedCategories &&
-		!selectedCategories.some((category) => category?.name === 'Modpacks')
+		!selectedCategories.some((category) => category?.slug === 'modpacks')
 	) {
 		selectedCategories = [
-			$categories.find((category) => category.name === 'Modpacks')!,
+			$categories.find((category) => category.slug === 'modpacks')!,
 			...selectedCategories
 		];
 	}
@@ -197,9 +201,7 @@
 
 	<FormField
 		label="Name"
-		description="The name of the modpack, as shown on Thunderstore. 
-			        Make sure this stays consistent between updates.
-			        Cannot contain spaces or hyphens."
+		description="The name of the modpack, as shown on Thunderstore. Make sure this stays consistent between updates. Cannot contain spaces or hyphens."
 		required={true}
 	>
 		<InputField
@@ -237,10 +239,7 @@
 		/>
 	</FormField>
 
-	<FormField
-		label="Categories"
-		description="The categories that the modpack belongs to. 'Modpacks' is always included."
-	>
+	<FormField label="Categories" description="The categories that the modpack belongs to.">
 		{#if selectedCategories}
 			<Dropdown
 				avoidCollisions={false}

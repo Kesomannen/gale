@@ -12,6 +12,7 @@ use chrono::{DateTime, Utc};
 use commands::save;
 use exporter::modpack::ModpackArgs;
 use itertools::Itertools;
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
@@ -51,7 +52,6 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         app.manage(Mutex::new(manager));
     }
 
-    importer::setup(app).context("failed to initialize importer")?;
     downloader::setup(app).context("failed to initialize downloader")?;
 
     let handle = app.to_owned();
@@ -468,28 +468,26 @@ impl Profile {
     }
 
     fn load(mut path: PathBuf) -> Result<Option<Self>> {
+        let name = util::fs::file_name_owned(&path);
+
         path.push("profile.json");
 
         if !path.exists() {
+            warn!(
+                "profile directory at {} does not contain a manifest, skipping",
+                path.display()
+            );
             return Ok(None);
         }
 
-        let manifest: ProfileManifest = util::fs::read_json(&path).with_context(|| {
-            format!(
-                "failed to read profile manifest for '{}'",
-                path.parent()
-                    .unwrap()
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-            )
-        })?;
+        let manifest: ProfileManifest = util::fs::read_json(&path)
+            .with_context(|| format!("failed to read profile manifest for '{}'", name))?;
 
         path.pop();
 
         let profile = Profile {
+            name,
             modpack: manifest.modpack,
-            name: util::fs::file_name_owned(&path),
             mods: manifest.mods,
             linked_config: HashMap::new(),
             config: Vec::new(),
@@ -734,7 +732,7 @@ impl ManagerGame {
 
         let mut path = self.path.join("profiles");
         path.push(&name);
-        fs::create_dir_all(&path)?;
+        fs::create_dir_all(&path).fs_context("creating profile directory", &path)?;
 
         let profile = Profile {
             name,
@@ -749,6 +747,7 @@ impl ManagerGame {
 
         let index = self.profiles.len() - 1;
         self.active_profile_index = index;
+
         Ok(&mut self.profiles[index])
     }
 
@@ -835,6 +834,10 @@ impl ManagerGame {
     fn load(mut path: PathBuf) -> Result<Option<(&'static Game, Self)>> {
         let file_name = util::fs::file_name_owned(&path);
         let Some(game) = games::from_slug(&file_name) else {
+            info!(
+                "directory '{}' does not match any game, skipping",
+                file_name
+            );
             return Ok(None);
         };
 
@@ -848,11 +851,17 @@ impl ManagerGame {
         let mut profiles = Vec::new();
         path.push("profiles");
 
-        for entry in path.read_dir()? {
-            let path = entry?.path();
+        for entry in path
+            .read_dir()
+            .context("failed to read profiles directory")?
+        {
+            let path = entry.context("failed to read profile directory")?.path();
 
             if path.is_dir() {
-                if let Some(profile) = Profile::load(path)? {
+                let result = Profile::load(path.clone())
+                    .with_context(|| format!("failed to read profile from {}", path.display()))?;
+
+                if let Some(profile) = result {
                     profiles.push(profile);
                 }
             }
@@ -882,33 +891,56 @@ const DEFAULT_GAME_SLUG: &str = "among-us";
 impl ModManager {
     pub fn create(prefs: &Prefs) -> Result<Self> {
         let save_path = prefs.data_dir.join("manager.json");
-        let save_data = match save_path.try_exists()? {
-            true => util::fs::read_json(&save_path).context("failed to read manager save data")?,
-            false => ManagerSaveData {
+        info!("loading manager from {}", save_path.display());
+
+        let save_data = util::fs::read_json(&save_path).unwrap_or_else(|_| {
+            info!("manager save file is missing or invalid, creating default manager");
+
+            ManagerSaveData {
                 active_game: DEFAULT_GAME_SLUG.to_owned(),
-            },
-        };
+            }
+        });
 
         let mut games = HashMap::new();
 
-        for entry in prefs.data_dir.read_dir()? {
-            let path = entry?.path();
+        for entry in prefs
+            .data_dir
+            .read_dir()
+            .fs_context("reading data directory", &prefs.data_dir)?
+        {
+            let path = entry.context("failed to read data directory entry")?.path();
 
             if path.is_dir() {
-                if let Some((game, game_data)) = ManagerGame::load(path)? {
-                    games.insert(&game.slug, game_data);
+                let result = ManagerGame::load(path.clone())
+                    .with_context(|| format!("failed to load game from {}", path.display()))?;
+
+                if let Some((game, manager_game)) = result {
+                    debug!(
+                        "loaded game {} with {} profiles",
+                        game.slug,
+                        manager_game.profiles.len()
+                    );
+                    games.insert(&game.slug, manager_game);
                 }
             }
         }
 
         let active_game = games::from_slug(&save_data.active_game).unwrap_or_else(|| {
+            info!(
+                "active game ('{}') unknown, defaulting to {}",
+                save_data.active_game, DEFAULT_GAME_SLUG
+            );
             games::from_slug(DEFAULT_GAME_SLUG).expect("default game should be valid")
         });
 
         let mut manager = Self { games, active_game };
 
         manager.ensure_game(manager.active_game, prefs)?;
-        manager.save(prefs)?;
+
+        info!(
+            "manager successfully loaded with {} games",
+            manager.games.len()
+        );
 
         Ok(manager)
     }
@@ -963,7 +995,9 @@ impl ModManager {
             active_profile_index: 0,
         };
 
-        manager_game.create_profile("Default".to_owned())?;
+        manager_game
+            .create_profile("Default".to_owned())
+            .context("failed to create default profile")?;
         self.games.insert(&game.slug, manager_game);
 
         Ok(())

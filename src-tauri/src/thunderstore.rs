@@ -400,7 +400,7 @@ async fn fetch_mods(app: &AppHandle, game: &'static Game, write_directly: bool) 
     state.is_fetching = false;
 
     debug!(
-        "loaded {} mods in {:?}",
+        "fetched {} mods in {:?}",
         state.packages.len(),
         start_time.elapsed()
     );

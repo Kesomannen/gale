@@ -84,8 +84,8 @@
 				"transparent": true,
 				"resizable": true,
 				"title": "Gale",
-				"width": 1000,
-				"height": 800,
+				"width": 900,
+				"height": 700,
 				"minWidth": 800,
 				"minHeight": 600,
 				"dragDropEnabled": false

@@ -31,10 +31,6 @@ use tempfile::tempdir;
 pub mod commands;
 pub mod r2modman;
 
-pub fn setup(_app: &AppHandle) -> Result<()> {
-    Ok(())
-}
-
 pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
     let data = import_file_from_path(url.into(), app)?;
     import_data(data, InstallOptions::default(), app).await?;

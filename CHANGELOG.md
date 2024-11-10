@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- More logging and error context, especially during the startup process
+
+### Fixed
+
+- Modpack export causing the app to freeze on games without a "Modpack" category
+
 ## 1.0.1 (2024-11-09)
 
 ### Fixed

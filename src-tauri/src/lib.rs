@@ -1,5 +1,8 @@
+use std::time::Instant;
+
 use ::log::error;
 use anyhow::Context;
+use log::{debug, info};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -33,11 +36,29 @@ impl NetworkClient {
 }
 
 fn setup(app: &AppHandle) -> anyhow::Result<()> {
+    let start = Instant::now();
+
+    info!(
+        "gale v{} running on {}",
+        env!("CARGO_PKG_VERSION"),
+        std::env::consts::OS
+    );
+
     app.manage(NetworkClient::create()?);
 
-    prefs::setup(app).context("Failed to read settings")?;
+    prefs::setup(app).context("Failed to initialize settings")?;
+    let prefs_done = Instant::now();
     manager::setup(app).context("Failed to initialize mod manager")?;
+    let manager_done = Instant::now();
     thunderstore::setup(app);
+
+    info!("setup done in {:?}", start.elapsed());
+    debug!(
+        "prefs: {:?} | manager {:?} | thunderstore {:?}",
+        prefs_done - start,
+        manager_done - prefs_done,
+        manager_done.elapsed()
+    );
 
     Ok(())
 }

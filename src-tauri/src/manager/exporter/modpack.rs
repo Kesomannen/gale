@@ -39,7 +39,6 @@ pub fn refresh_args(profile: &mut Profile) {
             readme: format!("# {}\n\n", profile.name),
             changelog: "# Changelog\n\n## 1.0.0\n\n- Initial release".to_owned(),
             version_number: "1.0.0".to_owned(),
-            categories: vec!["modpacks".to_owned()],
             ..Default::default()
         });
     }
