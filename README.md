@@ -1,6 +1,7 @@
 ![Gale](https://raw.githubusercontent.com/Kesomannen/gale/master/images/banner.png)
 
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/Kesomannen/GaleModManager?style=flat-square)](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/)
+[![Discord](https://img.shields.io/discord/1288196347597688912?style=flat&label=discord)](https://discord.gg/sfuWXRfeTt)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Fkesomannen.com%2Fgale&up_message=online&down_message=offline&style=flat-square)](https://kesomannen.com/gale)
 [![GitHub License](https://img.shields.io/github/license/Kesomannen/gale?style=flat-square)](https://github.com/Kesomannen/gale?tab=GPL-3.0-1-ov-file#readme)
 

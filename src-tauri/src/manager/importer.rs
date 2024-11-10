@@ -1,5 +1,5 @@
 use std::{
-    fs,
+    fs::{self, File},
     io::{Cursor, Read, Seek},
     path::{Path, PathBuf},
     sync::Mutex,
@@ -38,9 +38,7 @@ pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
 }
 
 fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
-    ensure!(path.is_file(), "path is not a file");
-
-    let file = fs::File::open(&path).fs_context("opening file", &path)?;
+    let file = File::open(&path).fs_context("opening file", &path)?;
 
     import_file(file, app)
 }

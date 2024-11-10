@@ -775,10 +775,12 @@ impl ManagerGame {
         util::fs::copy_dir(&profile.path, &new_profile.path, Overwrite::Yes)?;
 
         let mods = profile.mods.clone();
+        let ignored_updates = profile.ignored_updates.clone();
 
         let new_profile = self.active_profile_mut();
 
         new_profile.mods = mods;
+        new_profile.ignored_updates = ignored_updates;
 
         Ok(())
     }
