@@ -6,16 +6,12 @@
 	import ModCardList from './ModCardList.svelte';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 
-	import { activeGame } from '$lib/stores';
 	import type { MarkdownResponse, Mod, ModContextItem } from '$lib/models';
 	import { communityUrl, shortenFileSize, shortenNum, timeSince } from '$lib/util';
 
 	import { Button, DropdownMenu } from 'bits-ui';
 
-	import { get } from 'svelte/store';
-
 	import { fetch } from '@tauri-apps/plugin-http';
-	import { open } from '@tauri-apps/plugin-shell';
 
 	import Icon from '@iconify/svelte';
 	import { dropTransition } from '$lib/transitions';

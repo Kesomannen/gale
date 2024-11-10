@@ -174,8 +174,7 @@ pub fn run() {
                 error!("failed to launch Gale! {:#}", err);
 
                 app.dialog()
-                    .message(format!("{:#}", err))
-                    .title("Error while launching Gale!")
+                    .message(format!("Failed to launch Gale:\n{:#}", err))
                     .blocking_show();
 
                 return Err(err.into());
