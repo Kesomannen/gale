@@ -158,9 +158,9 @@
 
 			<p class="mt-1">
 				If you have any questions or need help, feel free to ask in the <a
-					href="https://discord.gg/lcmod"
+					href="https://discord.gg/sfuWXRfeTt"
 					target="_blank"
-					class="text-accent-400 hover:underline">Lethal Company Modding Discord server</a
+					class="text-accent-400 hover:underline">Discord server</a
 				>.
 			</p>
 		{/if}
