@@ -1,17 +1,10 @@
-use std::{
-    borrow::Cow,
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{borrow::Cow, fs, path::PathBuf};
 
 use anyhow::{ensure, Context, Result};
 
 use super::{ModArchive, PackageInstaller};
 use crate::profile::{
-    install::{
-        self,
-        fs::{ConflictResolution, FileInstallMethod},
-    },
+    install::{self},
     Profile, ProfileMod,
 };
 
@@ -74,21 +67,6 @@ impl PackageInstaller for GDWeaveModInstaller {
                 Ok(None)
             }
         })
-    }
-
-    fn install(
-        &mut self,
-        src: &Path,
-        _package_name: &str,
-        overwrite: bool,
-        profile: &Profile,
-    ) -> Result<()> {
-        install::fs::install(
-            src,
-            profile,
-            |_| FileInstallMethod::Link,
-            |_| ConflictResolution::overwrite(overwrite),
-        )
     }
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {

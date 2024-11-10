@@ -1,5 +1,5 @@
 use crate::game::{ModLoader, ModLoaderKind};
-use std::{marker::PhantomData, path::PathBuf};
+use std::marker::PhantomData;
 
 use super::PackageInstaller;
 
@@ -87,7 +87,7 @@ fn bepinex() -> ModLoader<'static> {
     ModLoader {
         package_name: None,
         kind: ModLoaderKind::BepInEx {
-            extra_sub_dirs: Vec::new(),
+            extra_subdirs: Vec::new(),
             lifetime: PhantomData,
         },
     }
@@ -97,7 +97,7 @@ fn melon_loader() -> ModLoader<'static> {
     ModLoader {
         package_name: None,
         kind: ModLoaderKind::MelonLoader {
-            extra_sub_dirs: Vec::new(),
+            extra_subdirs: Vec::new(),
         },
     }
 }
@@ -108,12 +108,15 @@ fn test_map_mod_loader(
     mod_loader: ModLoader,
     expected: Option<&[&str]>,
 ) {
+    todo!()
+    /*
     test_map_file(
         relative_path,
         full_name,
         &mut *mod_loader.installer_for(full_name),
         expected,
     );
+    */
 }
 
 fn test_map_file(

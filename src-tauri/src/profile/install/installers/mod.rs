@@ -26,19 +26,10 @@ pub type ModArchive = ZipArchive<Cursor<Vec<u8>>>;
 pub trait PackageInstaller {
     fn extract(&mut self, archive: ModArchive, package_name: &str, dest: PathBuf) -> Result<()>;
 
-    fn install(
-        &mut self,
-        src: &Path,
-        package_name: &str,
-        overwrite: bool,
-        profile: &Profile,
-    ) -> Result<()> {
-        super::fs::install(
-            src,
-            profile,
-            |_| FileInstallMethod::Link,
-            |_| ConflictResolution::overwrite(overwrite),
-        )
+    fn install(&mut self, src: &Path, _package_name: &str, profile: &Profile) -> Result<()> {
+        super::fs::install(src, profile, |_, _| {
+            Ok((FileInstallMethod::Link, ConflictResolution::Skip))
+        })
     }
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;

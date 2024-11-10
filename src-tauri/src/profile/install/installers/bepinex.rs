@@ -41,25 +41,17 @@ impl PackageInstaller for BepinexInstaller {
             Ok(Some(Cow::Borrowed(components.as_path())))
         })
     }
-    fn install(
-        &mut self,
-        src: &Path,
-        _package_name: &str,
-        overwrite: bool,
-        profile: &Profile,
-    ) -> Result<()> {
-        install::fs::install(
-            src,
-            profile,
-            |relative_path| {
-                if relative_path.extension().is_some_and(|ext| ext == "cfg") {
-                    FileInstallMethod::Copy
-                } else {
-                    FileInstallMethod::Link
-                }
-            },
-            |_| ConflictResolution::overwrite(overwrite),
-        )
+
+    fn install(&mut self, src: &Path, _package_name: &str, profile: &Profile) -> Result<()> {
+        install::fs::install(src, profile, |relative_path, _| {
+            let method = if relative_path.extension().is_some_and(|ext| ext == "cfg") {
+                FileInstallMethod::Copy
+            } else {
+                FileInstallMethod::Link
+            };
+
+            Ok((method, ConflictResolution::Skip))
+        })
     }
 
     fn toggle(

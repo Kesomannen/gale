@@ -1,6 +1,6 @@
 use std::{
     fs::{self, File},
-    io::{self, Read, Seek, Write},
+    io::{self, Read, Seek},
     path::{Path, PathBuf},
 };
 
@@ -11,18 +11,6 @@ use crate::util;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
-
-pub trait ZipWriterExt {
-    fn write_str<S: Into<String>>(&mut self, name: S, data: &str) -> io::Result<()>;
-}
-
-impl<W: Write + Seek> ZipWriterExt for zip::ZipWriter<W> {
-    fn write_str<S: Into<String>>(&mut self, name: S, data: &str) -> io::Result<()> {
-        self.start_file(name, Default::default())?;
-        self.write_all(data.as_bytes())?;
-        Ok(())
-    }
-}
 
 pub fn extract(src: impl Read + Seek, target: &Path) -> io::Result<()> {
     fs::create_dir_all(target)?;

@@ -312,7 +312,7 @@ fn cache_install(
     let mut installer = manager.active_game.mod_loader.installer_for(package_name);
     let profile = manager.active_profile_mut();
 
-    installer.install(src, package_name, data.overwrite, &profile);
+    installer.install(src, package_name, &profile)?;
 
     let install_time = data.install_time.unwrap_or_else(Utc::now);
 

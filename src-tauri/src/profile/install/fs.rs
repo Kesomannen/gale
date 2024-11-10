@@ -21,7 +21,7 @@ pub fn install_from_zip(
     src: &Path,
     profile: &Profile,
     package_name: &str,
-    mod_loader: &ModLoader,
+    mod_loader: &'static ModLoader,
     prefs: &Prefs,
 ) -> Result<()> {
     // temporarily extract the zip so the same install method can be used
@@ -39,7 +39,7 @@ pub fn install_from_zip(
 
     let mut installer = mod_loader.installer_for(package_name);
     installer.extract(archive, package_name, temp_path.clone())?;
-    installer.install(&temp_path, package_name, false, profile);
+    installer.install(&temp_path, package_name, profile)?;
 
     fs::remove_dir_all(temp_path).context("failed to remove temporary directory")?;
 
@@ -104,26 +104,10 @@ pub enum ConflictResolution {
     Overwrite,
 }
 
-impl ConflictResolution {
-    pub fn overwrite(yes: bool) -> Self {
-        if yes {
-            ConflictResolution::Overwrite
-        } else {
-            ConflictResolution::Skip
-        }
-    }
-}
-
 /// Install from a well structured mod directory.
-pub(super) fn install<F, G>(
-    src: &Path,
-    profile: &Profile,
-    mut method: F,
-    mut on_conflict: G,
-) -> Result<()>
+pub(super) fn install<F>(src: &Path, profile: &Profile, mut before_install: F) -> Result<()>
 where
-    F: FnMut(&Path) -> Result<FileInstallMethod>,
-    G: FnMut(&Path) -> ConflictResolution,
+    F: FnMut(&Path, bool) -> Result<(FileInstallMethod, ConflictResolution)>,
 {
     for entry in WalkDir::new(src) {
         let entry = entry?;
@@ -143,9 +127,18 @@ where
                 format!("failed to create directory {}", relative_path.display())
             })?;
         } else {
-            if target.exists() {
-                match on_conflict(relative_path) {
-                    ConflictResolution::Skip => continue,
+            let target_exists = target.exists();
+            let (method, conflict) = before_install(relative_path, target_exists)?;
+
+            if target_exists {
+                match conflict {
+                    ConflictResolution::Skip => {
+                        warn!(
+                            "skipping file {} since it already exists",
+                            relative_path.display()
+                        );
+                        continue;
+                    }
                     ConflictResolution::Overwrite => {
                         fs::remove_file(&target).with_context(|| {
                             format!(
@@ -157,7 +150,7 @@ where
                 }
             }
 
-            match method(relative_path)? {
+            match method {
                 FileInstallMethod::Link => {
                     fs::copy(entry.path(), target).with_context(|| {
                         format!("failed to copy file at {}", relative_path.display())

@@ -183,13 +183,13 @@ pub struct ModLoader<'a> {
 pub enum ModLoaderKind<'a> {
     BepInEx {
         #[serde(default, borrow, rename = "subdirs")]
-        extra_sub_dirs: Vec<Subdir<'a>>,
+        extra_subdirs: Vec<Subdir<'a>>,
         #[serde(skip)]
         lifetime: PhantomData<&'a ()>,
     },
     MelonLoader {
         #[serde(default, borrow, rename = "subdirs")]
-        extra_sub_dirs: Vec<Subdir<'a>>,
+        extra_subdirs: Vec<Subdir<'a>>,
     },
     Northstar {},
     GDWeave {},
@@ -202,81 +202,6 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::MelonLoader { .. } => "MelonLoader",
             ModLoaderKind::Northstar {} => "Northstar",
             ModLoaderKind::GDWeave {} => "GDWeave",
-        }
-    }
-
-    pub fn installer_for(&self, package_name: &str) -> Box<dyn PackageInstaller> {
-        match (self.is_loader_package(package_name), &self.kind) {
-            (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
-            (false, ModLoaderKind::BepInEx { extra_sub_dirs, .. }) => {
-                const SUBDIRS: &[Subdir] = &[
-                    Subdir::flat_separated("plugins", "BepInEx/plugins"),
-                    Subdir::flat_separated("patchers", "BepInEx/patchers"),
-                    Subdir::flat_separated("monomod", "BepInEx/monomod").extension(".mm.dll"),
-                    Subdir::flat_separated("core", "BepInEx/core"),
-                    Subdir::untracked("config", "BepInEx/config").mutable(),
-                ];
-                const DEFAULT: &Subdir = &Subdir::flat_separated("plugins", "BepInEx/plugins");
-                const IGNORED: &[&str] = &[];
-
-                Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
-            }
-
-            (true, ModLoaderKind::MelonLoader { .. }) => {
-                const FILES: &[&str] = &[
-                    "dobby.dll",
-                    "version.dll",
-                    "MelonLoader/Dependencies",
-                    "MelonLoader/Documentation",
-                    "MelonLoader/net6",
-                    "MelonLoader/net35",
-                ];
-
-                Box::new(ExtractInstaller::new(FILES, false))
-            }
-            (false, ModLoaderKind::MelonLoader { extra_sub_dirs }) => {
-                const SUBDIRS: &[Subdir] = &[
-                    Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
-                    Subdir::tracked("Managed", "MelonLoader/Managed").extension(".managed.dll"),
-                    Subdir::tracked("Mods", "Mods").extension(".dll"),
-                    Subdir::separated("ModManager", "UserData/ModManager"),
-                    Subdir::tracked("MelonLoader", "MelonLoader"),
-                    Subdir::tracked("Libs", "MelonLoader/Libs"),
-                ];
-                const DEFAULT: &Subdir = &Subdir::tracked("Mods", "Mods");
-                const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
-
-                Box::new(SubdirInstaller::new(SUBDIRS, Some(DEFAULT), IGNORED))
-            }
-
-            (true, ModLoaderKind::GDWeave {}) => {
-                const FILES: &[&str] = &["winmm.dll", "GDWeave/core"];
-
-                Box::new(ExtractInstaller::new(FILES, false))
-            }
-            (false, ModLoaderKind::GDWeave {}) => Box::new(GDWeaveModInstaller),
-
-            (true, ModLoaderKind::Northstar {}) => {
-                const FILES: &[&str] = &[
-                    "Northstar.dll",
-                    "NorthstarLauncher.exe",
-                    "r2ds.bat",
-                    "bin",
-                    "R2Northstar/plugins",
-                    "R2Northstar/mods/Northstar.Client",
-                    "R2Northstar/mods/Northstar.Custom",
-                    "R2Northstar/mods/Northstar.CustomServers",
-                    "R2Northstar/mods/md5sum.text",
-                ];
-
-                Box::new(ExtractInstaller::new(FILES, true))
-            }
-            (false, ModLoaderKind::Northstar {}) => {
-                const SUBDIRS: &[Subdir] = &[Subdir::tracked("mods", "R2Northstar/mods")];
-                const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md", "LICENSE"];
-
-                Box::new(SubdirInstaller::new(SUBDIRS, None, IGNORED))
-            }
         }
     }
 
@@ -303,5 +228,93 @@ impl<'a> ModLoader<'a> {
         }
         .iter()
         .collect()
+    }
+}
+
+impl ModLoader<'static> {
+    pub fn installer_for(&'static self, package_name: &str) -> Box<dyn PackageInstaller> {
+        match (self.is_loader_package(package_name), &self.kind) {
+            (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
+            (false, ModLoaderKind::BepInEx { extra_subdirs, .. }) => {
+                const SUBDIRS: &[Subdir] = &[
+                    Subdir::flat_separated("plugins", "BepInEx/plugins"),
+                    Subdir::flat_separated("patchers", "BepInEx/patchers"),
+                    Subdir::flat_separated("monomod", "BepInEx/monomod").extension(".mm.dll"),
+                    Subdir::flat_separated("core", "BepInEx/core"),
+                    Subdir::untracked("config", "BepInEx/config").mutable(),
+                ];
+                const DEFAULT: &Subdir = &Subdir::flat_separated("plugins", "BepInEx/plugins");
+                const IGNORED: &[&str] = &[];
+
+                Box::new(SubdirInstaller::new(
+                    SUBDIRS,
+                    extra_subdirs,
+                    Some(DEFAULT),
+                    IGNORED,
+                ))
+            }
+
+            (true, ModLoaderKind::MelonLoader { .. }) => {
+                const FILES: &[&str] = &[
+                    "dobby.dll",
+                    "version.dll",
+                    "MelonLoader/Dependencies",
+                    "MelonLoader/Documentation",
+                    "MelonLoader/net6",
+                    "MelonLoader/net35",
+                ];
+
+                Box::new(ExtractInstaller::new(FILES, false))
+            }
+            (false, ModLoaderKind::MelonLoader { extra_subdirs }) => {
+                const SUBDIRS: &[Subdir] = &[
+                    Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
+                    Subdir::tracked("Managed", "MelonLoader/Managed").extension(".managed.dll"),
+                    Subdir::tracked("Mods", "Mods").extension(".dll"),
+                    Subdir::separated("ModManager", "UserData/ModManager"),
+                    Subdir::tracked("MelonLoader", "MelonLoader"),
+                    Subdir::tracked("Libs", "MelonLoader/Libs"),
+                ];
+                const DEFAULT: &Subdir = &Subdir::tracked("Mods", "Mods");
+                const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
+
+                Box::new(SubdirInstaller::new(
+                    SUBDIRS,
+                    extra_subdirs,
+                    Some(DEFAULT),
+                    IGNORED,
+                ))
+            }
+
+            (true, ModLoaderKind::GDWeave {}) => {
+                const FILES: &[&str] = &["winmm.dll", "GDWeave/core"];
+
+                Box::new(ExtractInstaller::new(FILES, false))
+            }
+            (false, ModLoaderKind::GDWeave {}) => Box::new(GDWeaveModInstaller),
+
+            (true, ModLoaderKind::Northstar {}) => {
+                const FILES: &[&str] = &[
+                    "Northstar.dll",
+                    "NorthstarLauncher.exe",
+                    "r2ds.bat",
+                    "bin",
+                    "R2Northstar/plugins",
+                    "R2Northstar/mods/Northstar.Client",
+                    "R2Northstar/mods/Northstar.Custom",
+                    "R2Northstar/mods/Northstar.CustomServers",
+                    "R2Northstar/mods/md5sum.text",
+                ];
+
+                Box::new(ExtractInstaller::new(FILES, true))
+            }
+            (false, ModLoaderKind::Northstar {}) => {
+                const SUBDIRS: &[Subdir] = &[Subdir::tracked("mods", "R2Northstar/mods")];
+                const EXTRA: &[Subdir] = &[];
+                const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md", "LICENSE"];
+
+                Box::new(SubdirInstaller::new(SUBDIRS, EXTRA, None, IGNORED))
+            }
+        }
     }
 }

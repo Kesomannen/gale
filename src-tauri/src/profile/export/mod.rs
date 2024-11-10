@@ -10,7 +10,7 @@ use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use walkdir::WalkDir;
-use zip::ZipWriter;
+use zip::{write::SimpleFileOptions, ZipWriter};
 
 use super::{install::ModInstall, ModManager, Profile, Result};
 use crate::{
@@ -135,7 +135,7 @@ fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
         mods,
     };
 
-    zip.start_file("export.r2x", Default::default())?;
+    zip.start_file("export.r2x", SimpleFileOptions::default())?;
     serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
     write_includes(find_includes(&profile.path), &profile.path, &mut zip)?;
@@ -185,7 +185,7 @@ where
 {
     for file in files {
         let path = file.as_ref().to_string_lossy().replace('\\', "/");
-        zip.start_file(path, Default::default())?;
+        zip.start_file(path, SimpleFileOptions::default())?;
 
         let mut reader = File::open(source.join(file))?;
 

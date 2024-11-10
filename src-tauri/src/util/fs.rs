@@ -66,8 +66,7 @@ pub fn write_json<T: Serialize + ?Sized>(
     value: &T,
     style: JsonStyle,
 ) -> anyhow::Result<()> {
-    let file = File::create(path)?;
-    let writer = BufWriter::new(file);
+    let writer = File::create(path).map(BufWriter::new)?;
 
     if style == JsonStyle::Pretty {
         serde_json::to_writer_pretty(writer, value)?;

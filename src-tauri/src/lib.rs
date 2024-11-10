@@ -1,5 +1,8 @@
+use std::path::Path;
+
 use ::log::error;
 use anyhow::Context;
+use log::info;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;

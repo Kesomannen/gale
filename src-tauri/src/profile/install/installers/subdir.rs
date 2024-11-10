@@ -1,26 +1,30 @@
 use std::{
     borrow::Cow,
+    collections::HashMap,
     ffi::OsStr,
-    fs::{self, File},
-    io::{self, Write},
+    fs,
     path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::profile::{
-    install::{
-        self,
-        fs::{ConflictResolution, FileInstallMethod},
+use crate::{
+    profile::{
+        install::{
+            self,
+            fs::{ConflictResolution, FileInstallMethod},
+        },
+        Profile, ProfileMod,
     },
-    Profile, ProfileMod,
+    util::{self, fs::JsonStyle},
 };
 
 use super::{ModArchive, PackageInstaller};
 
 pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
+    extra_subdirs: &'a [Subdir<'a>],
     default_subdir: Option<&'a Subdir<'a>>,
     ignored_files: &'a [&'a str],
 }
@@ -48,7 +52,7 @@ pub struct Subdir<'a> {
     pub extension: Option<&'a str>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum SubdirMode {
     /// Separate mods into `author-name` dirs.
@@ -105,18 +109,24 @@ impl<'a> Subdir<'a> {
 impl<'a> SubdirInstaller<'a> {
     pub fn new(
         subdirs: &'a [Subdir<'a>],
+        extra_subdirs: &'a [Subdir<'a>],
         default: Option<&'a Subdir<'a>>,
         ignored_files: &'a [&'a str],
     ) -> Self {
         Self {
             subdirs,
+            extra_subdirs,
             default_subdir: default,
             ignored_files,
         }
     }
 
+    fn subdirs(&self) -> impl Iterator<Item = &Subdir> {
+        self.extra_subdirs.iter().chain(self.subdirs.iter())
+    }
+
     fn match_subdir(&self, name: &str) -> Option<&Subdir> {
-        self.subdirs.iter().find(|subdir| {
+        self.subdirs().find(|subdir| {
             subdir.name == name
                 || subdir
                     .extension
@@ -214,19 +224,29 @@ impl<'a> SubdirInstaller<'a> {
     where
         F: FnMut(&Path) -> Result<()>,
     {
-        let ident = profile_mod.ident();
-        let full_name = ident.full_name();
+        let mut scanned_tracked_files = false;
 
-        for subdir in self.subdirs {
+        let ident = profile_mod.ident();
+        let package_name = ident.full_name();
+
+        for subdir in self.subdirs() {
             match subdir.mode {
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => {
                     let mut path = profile.path.to_path_buf();
                     path.push(subdir.target);
-                    path.push(full_name);
+                    path.push(package_name);
 
                     scan(&path)?;
                 }
-                SubdirMode::Track => todo!(),
+                SubdirMode::Track if !scanned_tracked_files => {
+                    scanned_tracked_files = true;
+
+                    let mut state = PackageStateHandle::new(package_name, profile);
+                    for file in state.files() {
+                        scan(&file)?;
+                    }
+                }
+                SubdirMode::Track => (),
                 SubdirMode::None => (),
             };
         }
@@ -235,30 +255,76 @@ impl<'a> SubdirInstaller<'a> {
     }
 }
 
-struct StateFile {
-    package_state: File,
-    profile_state: File,
+fn state_file_path(name: &str, profile: &Profile) -> PathBuf {
+    profile
+        .path
+        .join("_state")
+        .join(name)
+        .with_extension("json")
 }
 
-impl StateFile {
-    pub fn create(package_name: &str, profile: &Profile) -> Result<Self> {
-        let path = profile.path.join("_state");
-        fs::create_dir_all(&path).context("failed to create state directory");
+struct PackageStateHandle {
+    path: PathBuf,
+    state: PackageState,
+}
 
-        let package_state = open(path.clone(), package_name)?;
-        let profile_state = open(path, "profile")?;
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct PackageState {
+    files: Vec<PathBuf>,
+}
 
-        return Ok(Self {
-            package_state,
-            profile_state,
-        });
+impl PackageStateHandle {
+    fn new(package_name: &str, profile: &Profile) -> Self {
+        let path = state_file_path(package_name, profile);
+        let state = util::fs::read_json(&path).unwrap_or_default();
+        Self { path, state }
+    }
 
-        fn open(mut path: PathBuf, name: &str) -> io::Result<File> {
-            path.push(name);
-            path.set_extension("txt");
+    fn from_profile_mod(profile_mod: &ProfileMod, profile: &Profile) -> Self {
+        let ident = profile_mod.ident();
+        Self::new(ident.full_name(), profile)
+    }
 
-            File::options().append(true).create(true).open(path)
-        }
+    fn files(&mut self) -> &mut Vec<PathBuf> {
+        &mut self.state.files
+    }
+
+    fn commit(&self) -> Result<()> {
+        fs::create_dir_all(self.path.parent().unwrap())?;
+        util::fs::write_json(&self.path, &self.state, JsonStyle::Pretty)
+    }
+
+    fn delete(self) {
+        fs::remove_file(self.path).ok();
+    }
+}
+
+struct ProfileStateHandle {
+    path: PathBuf,
+    state: ProfileState,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct ProfileState {
+    file_map: HashMap<PathBuf, String>,
+}
+
+impl ProfileStateHandle {
+    fn new(profile: &Profile) -> Self {
+        let path = state_file_path("profile", profile);
+        let state = util::fs::read_json(&path).unwrap_or_default();
+        Self { path, state }
+    }
+
+    fn file_map(&mut self) -> &mut HashMap<PathBuf, String> {
+        &mut self.state.file_map
+    }
+
+    fn commit(&self) -> Result<()> {
+        fs::create_dir_all(self.path.parent().unwrap())?;
+        util::fs::write_json(&self.path, &self.state, JsonStyle::Pretty)
     }
 }
 
@@ -269,59 +335,77 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         })
     }
 
-    fn install(
-        &mut self,
-        src: &Path,
-        package_name: &str,
-        overwrite: bool,
-        profile: &Profile,
-    ) -> Result<()> {
-        let mut state_file: Option<StateFile> = None;
+    fn install(&mut self, src: &Path, package_name: &str, profile: &Profile) -> Result<()> {
+        let mut state: Option<PackageStateHandle> = None;
+        let mut profile_state: Option<ProfileStateHandle> = None;
 
-        install::fs::install(
-            src,
-            profile,
-            |relative_path| {
-                let subdir = self
-                    .subdirs
-                    .iter()
-                    .find(|subdir| relative_path.starts_with(subdir.target))
-                    .expect("file should be in a subdir");
+        install::fs::install(src, profile, |relative_path, exists| {
+            let subdir = self
+                .subdirs()
+                .find(|subdir| relative_path.starts_with(subdir.target))
+                .expect("file should be in a subdir");
 
-                if subdir.mode == SubdirMode::Track {
-                    let file = match &mut state_file {
-                        Some(file) => file,
-                        None => {
-                            let file = StateFile::create(package_name, profile)
-                                .context("failed to open state file")?;
+            let method = if subdir.mutable {
+                FileInstallMethod::Copy
+            } else {
+                FileInstallMethod::Link
+            };
 
-                            state_file = Some(file);
-                            state_file.as_mut().unwrap()
+            let conflict = match subdir.mode {
+                // this should never happen
+                SubdirMode::Separate | SubdirMode::SeparateFlatten => ConflictResolution::Skip,
+                SubdirMode::None => ConflictResolution::Overwrite,
+                SubdirMode::Track => {
+                    state
+                        .get_or_insert_with(|| PackageStateHandle::new(package_name, profile))
+                        .files()
+                        .push(relative_path.to_owned());
+
+                    let profile_state =
+                        profile_state.get_or_insert_with(|| ProfileStateHandle::new(profile));
+
+                    if exists {
+                        if let Some(owner) = profile_state.file_map().get(relative_path) {
+                            let mut package = PackageStateHandle::new(&owner, profile);
+                            package.files().retain(|file| file != relative_path);
+                            package.commit()?;
                         }
-                    };
+                    }
 
-                    file.write_all(relative_path.as_os_str().as_encoded_bytes())
-                        .unwrap();
-                    file.write_all(b"\n").unwrap();
+                    profile_state
+                        .file_map()
+                        .insert(relative_path.to_owned(), package_name.to_owned());
+
+                    ConflictResolution::Overwrite
                 }
+            };
 
-                Ok(FileInstallMethod::Link)
-            },
-            |_| ConflictResolution::overwrite(overwrite),
-        )
+            Ok((method, conflict))
+        })?;
+
+        if let Some(state) = state {
+            state.commit().context("failed to write state")?;
+        }
+
+        if let Some(state) = profile_state {
+            state.commit().context("failed to write profile state")?;
+        }
+
+        Ok(())
     }
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
         self.scan_mod(profile_mod, profile, |path| {
-            install::fs::toggle_any(path, enabled)
+            install::fs::toggle_any(profile.path.join(path), enabled)
         })
     }
 
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
         self.scan_mod(profile_mod, profile, |path| {
-            install::fs::uninstall_any(path)?;
-            Ok(())
+            install::fs::uninstall_any(profile.path.join(path))
         })?;
+
+        PackageStateHandle::from_profile_mod(profile_mod, profile).delete();
 
         Ok(())
     }

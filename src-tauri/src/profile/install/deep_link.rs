@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use tauri::{AppHandle, Manager};
 
 use super::{InstallOptions, ModInstall};
@@ -46,7 +46,7 @@ fn resolve_url(url: &str, thunderstore: &Thunderstore) -> Result<ModId> {
 
             Some((split.next()?, split.next()?, split.next()?))
         })
-        .ok_or(anyhow!("invalid deep link url"))?;
+        .context("invalid deep link url")?;
 
     thunderstore.find_mod(owner, name, version).map(Into::into)
 }

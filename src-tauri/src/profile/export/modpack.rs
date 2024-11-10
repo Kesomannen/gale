@@ -15,9 +15,9 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::Url;
 use uuid::Uuid;
-use zip::ZipWriter;
+use zip::{write::SimpleFileOptions, ZipWriter};
 
-use crate::{game::Game, profile::Profile, thunderstore::*, util::zip::ZipWriterExt};
+use crate::{game::Game, profile::Profile, thunderstore::*};
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -105,16 +105,18 @@ impl Profile {
 
         if !args.readme.is_empty() {
             trace!("writing readme");
-            zip.write_str("README.md", &args.readme)?;
+            zip.start_file("README.md", SimpleFileOptions::default())?;
+            zip.write_all(args.readme.as_bytes())?;
         }
 
         if !args.changelog.is_empty() {
             trace!("writing changelog");
-            zip.write_str("CHANGELOG.md", &args.changelog)?;
+            zip.start_file("CHANGELOG.md", SimpleFileOptions::default())?;
+            zip.write_all(args.changelog.as_bytes())?;
         }
 
         trace!("writing manifest");
-        zip.start_file("manifest.json", Default::default())?;
+        zip.start_file("manifest.json", SimpleFileOptions::default())?;
         serde_json::to_writer_pretty(&mut zip, &manifest)?;
 
         write_icon(&args.icon_path, &mut zip).context("failed to write icon")?;
@@ -141,7 +143,7 @@ where
 
     let mut bytes = Vec::new();
     img.write_to(&mut Cursor::new(&mut bytes), ImageFormat::Png)?;
-    zip.start_file("icon.png", Default::default())?;
+    zip.start_file("icon.png", SimpleFileOptions::default())?;
     zip.write_all(&bytes)?;
 
     Ok(())
