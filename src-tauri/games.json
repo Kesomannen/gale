@@ -916,9 +916,20 @@
 		}
 	},
 	{
+		"name": "Palworld",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1623730
+			}
+		}
+	},
+	{
 		"name": "Panicore",
 		"modLoader": {
-			"name": "BepInEx"
+			"name": "Shimloader"
 		},
 		"platforms": {
 			"steam": {
@@ -1421,6 +1432,14 @@
 				"id": 843390
 			}
 		}
+	},
+	{
+		"name": "Voices of the Void",
+		"r2dirName": "VotV",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {}
 	},
 	{
 		"name": "Void Crew",

@@ -1,12 +1,13 @@
 <script lang="ts">
 	import SearchBar from '$lib/components/SearchBar.svelte';
-	import { games, setActiveGame } from '$lib/stores';
+	import { activeGame, games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from './Link.svelte';
 	import { ModLoader } from '$lib/models';
 	import Tooltip from './Tooltip.svelte';
+	import { titleCase } from '$lib/util';
 
 	export let onSelect: () => void;
 
@@ -49,17 +50,30 @@
 	{#if shownGames.length > 0}
 		{#each shownGames as game}
 			<Button.Root
-				class="group mr-2 flex items-center rounded-lg p-1 hover:bg-slate-700"
+				class="group mr-2 flex items-center rounded-lg border border-slate-500 p-2 hover:bg-slate-700 {$activeGame?.slug ===
+				game.slug
+					? 'bg-slate-700'
+					: 'border-opacity-0 hover:bg-slate-700'}"
 				on:click={() => {
 					setActiveGame(game);
 					onSelect();
 				}}
 			>
-				<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-8 rounded" />
+				<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-12 rounded" />
 
-				<span class="flex-grow text-left text-slate-200">
-					{game.name}
-				</span>
+				<div class="flex-grow pl-1 text-left">
+					<div class="font-medium text-white">
+						{game.name}
+					</div>
+
+					<div class="text-slate-400">
+						<span>{game.modLoader}</span>
+
+						<span class="mx-1">|</span>
+
+						<span class="mr-1">{game.platforms.map(titleCase).join(', ')}</span>
+					</div>
+				</div>
 
 				<Button.Root
 					class="{game.favorite

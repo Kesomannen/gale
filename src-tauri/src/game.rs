@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 use crate::profile::install::{
-    BepinexInstaller, ExtractInstaller, GDWeaveModInstaller, PackageInstaller, Subdir,
-    SubdirInstaller,
+    BepinexInstaller, ExtractInstaller, GDWeaveModInstaller, PackageInstaller, ShimloaderInstaller,
+    Subdir, SubdirInstaller,
 };
 
 const GAMES_JSON: &str = include_str!("../games.json");
@@ -193,6 +193,7 @@ pub enum ModLoaderKind<'a> {
     },
     Northstar {},
     GDWeave {},
+    Shimloader {},
 }
 
 impl<'a> ModLoader<'a> {
@@ -202,6 +203,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::MelonLoader { .. } => "MelonLoader",
             ModLoaderKind::Northstar {} => "Northstar",
             ModLoaderKind::GDWeave {} => "GDWeave",
+            ModLoaderKind::Shimloader {} => "Shimloader",
         }
     }
 
@@ -215,6 +217,7 @@ impl<'a> ModLoader<'a> {
                 ModLoaderKind::MelonLoader { .. } => full_name == "LavaGang-MelonLoader",
                 ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
                 ModLoaderKind::Northstar {} => full_name == "northstar-Northstar",
+                ModLoaderKind::Shimloader {} => full_name == "Thunderstore-unreal_shimloader",
             }
         }
     }
@@ -225,6 +228,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::MelonLoader { .. } => &["MelonLoader", "Latest.log"],
             ModLoaderKind::GDWeave {} => todo!(),
             ModLoaderKind::Northstar {} => todo!(),
+            ModLoaderKind::Shimloader {} => todo!(),
         }
         .iter()
         .collect()
@@ -314,6 +318,20 @@ impl ModLoader<'static> {
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md", "LICENSE"];
 
                 Box::new(SubdirInstaller::new(SUBDIRS, EXTRA, None, IGNORED))
+            }
+
+            (true, ModLoaderKind::Shimloader {}) => Box::new(ShimloaderInstaller),
+            (false, ModLoaderKind::Shimloader {}) => {
+                const SUBDIRS: &[Subdir] = &[
+                    Subdir::flat_separated("mod", "shimloader/mod"),
+                    Subdir::flat_separated("pak", "shimloader/pak"),
+                    Subdir::untracked("cfg", "shimloader/cfg").mutable(),
+                ];
+                const EXTRA: &[Subdir] = &[];
+                const DEFAULT: &Subdir = &Subdir::flat_separated("mod", "shimloader/mod");
+                const IGNORED: &[&str] = &[];
+
+                Box::new(SubdirInstaller::new(SUBDIRS, EXTRA, Some(DEFAULT), IGNORED))
             }
         }
     }

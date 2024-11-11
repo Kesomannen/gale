@@ -108,6 +108,8 @@
 
 		<SmallPrefsHeading>Locations</SmallPrefsHeading>
 
+		<PlatformPref value={gamePrefs.platform} set={set((value) => (gamePrefs.platform = value))} />
+
 		<PathPref
 			label="Override directory"
 			type="dir"
@@ -117,8 +119,6 @@
 		>
 			Path to the {$activeGame?.name} game directory.
 		</PathPref>
-
-		<PlatformPref value={gamePrefs.platform} set={set((value) => (gamePrefs.platform = value))} />
 
 		<SmallPrefsHeading>Launch</SmallPrefsHeading>
 

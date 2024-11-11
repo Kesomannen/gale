@@ -9,6 +9,7 @@ use std::{
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
+use super::{ModArchive, PackageInstaller};
 use crate::{
     profile::{
         install::{
@@ -19,8 +20,6 @@ use crate::{
     },
     util::{self, fs::JsonStyle},
 };
-
-use super::{ModArchive, PackageInstaller};
 
 pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
@@ -225,23 +224,21 @@ impl<'a> SubdirInstaller<'a> {
         F: FnMut(&Path) -> Result<()>,
     {
         let mut scanned_tracked_files = false;
-
-        let ident = profile_mod.ident();
-        let package_name = ident.full_name();
+        let package_name = profile_mod.full_name();
 
         for subdir in self.subdirs() {
             match subdir.mode {
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => {
                     let mut path = profile.path.to_path_buf();
                     path.push(subdir.target);
-                    path.push(package_name);
+                    path.push(&*package_name);
 
                     scan(&path)?;
                 }
                 SubdirMode::Track if !scanned_tracked_files => {
                     scanned_tracked_files = true;
 
-                    let mut state = PackageStateHandle::new(package_name, profile);
+                    let mut state = PackageStateHandle::new(&package_name, profile);
                     for file in state.files() {
                         scan(&file)?;
                     }
@@ -295,8 +292,9 @@ impl PackageStateHandle {
         util::fs::write_json(&self.path, &self.state, JsonStyle::Pretty)
     }
 
-    fn delete(self) {
-        fs::remove_file(self.path).ok();
+    fn delete(self) -> Result<()> {
+        fs::remove_file(self.path)?;
+        Ok(())
     }
 }
 
@@ -405,7 +403,13 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
             install::fs::uninstall_any(profile.path.join(path))
         })?;
 
-        PackageStateHandle::from_profile_mod(profile_mod, profile).delete();
+        PackageStateHandle::from_profile_mod(profile_mod, profile).delete()?;
+
+        let mut profile_state = ProfileStateHandle::new(profile);
+        profile_state
+            .file_map()
+            .retain(|_, package| *package != profile_mod.full_name());
+        profile_state.commit()?;
 
         Ok(())
     }

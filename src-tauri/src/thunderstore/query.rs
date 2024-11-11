@@ -59,7 +59,7 @@ pub struct QueryModsArgs {
 }
 
 pub async fn query_loop(app: AppHandle) -> Result<()> {
-    const INTERVAL: Duration = Duration::from_millis(250);
+    const INTERVAL: Duration = Duration::from_millis(500);
 
     let thunderstore = app.state::<Mutex<Thunderstore>>();
     let query_state = app.state::<Mutex<QueryState>>();

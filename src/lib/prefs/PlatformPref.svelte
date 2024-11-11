@@ -12,20 +12,19 @@
 	$: platforms = $activeGame?.platforms ?? [];
 </script>
 
-{#if platforms.length > 1}
-	<div class="flex items-center">
-		<Label text="Platform"></Label>
+<div class="flex items-center">
+	<Label text="Platform">The platform where your game is hosted.</Label>
 
-		<Dropdown
-			class="flex-grow"
-			items={platforms}
-			getLabel={sentenceCase}
-			selected={value}
-			onSelectedChange={(newValue) => {
-				value = newValue;
-				set(value);
-			}}
-			multiple={false}
-		/>
-	</div>
-{/if}
+	<Dropdown
+		class="flex-grow"
+		items={platforms}
+		getLabel={sentenceCase}
+		selected={value}
+		multiple={false}
+		disabled={platforms.length <= 1}
+		onSelectedChange={(newValue) => {
+			value = newValue;
+			set(value);
+		}}
+	/>
+</div>

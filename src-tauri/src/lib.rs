@@ -1,8 +1,5 @@
-use std::path::Path;
-
 use ::log::error;
 use anyhow::Context;
-use log::info;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -128,9 +125,8 @@ pub fn run() {
                 .set_focus()
                 .ok();
 
-            let url = match args.into_iter().nth(1) {
-                Some(arg) => arg,
-                None => return,
+            let Some(url) = args.into_iter().nth(1) else {
+                return;
             };
 
             if url.starts_with("ror2mm://") {

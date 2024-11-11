@@ -12,12 +12,14 @@ use crate::profile::{Profile, ProfileMod};
 mod bepinex;
 mod extract;
 mod gd_weave;
+mod shimloader;
 mod subdir;
 
 pub use self::{
     bepinex::BepinexInstaller,
     extract::ExtractInstaller,
     gd_weave::GDWeaveModInstaller,
+    shimloader::ShimloaderInstaller,
     subdir::{Subdir, SubdirInstaller},
 };
 

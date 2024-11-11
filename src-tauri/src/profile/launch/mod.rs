@@ -298,6 +298,7 @@ fn add_loader_args(
         ModLoaderKind::MelonLoader { .. } => add_melon_loader_args(command, profile_dir),
         ModLoaderKind::Northstar {} => add_northstar_args(command, profile_dir),
         ModLoaderKind::GDWeave {} => add_gd_weave_args(command, profile_dir),
+        ModLoaderKind::Shimloader {} => add_shimloader_args(command, profile_dir),
     }
 }
 
@@ -387,6 +388,20 @@ fn add_gd_weave_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     let path = path.to_str().context("profile path is not valid UTF-8")?;
 
     command.arg(format!("--gdweave-folder-override={}", path));
+
+    Ok(())
+}
+
+fn add_shimloader_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+    let path = profile_dir.join("shimloader");
+
+    command
+        .arg("--mod-dir")
+        .arg(path.join("mod"))
+        .arg("--pak-dir")
+        .arg(path.join("pak"))
+        .arg("--cfg-dir")
+        .arg(path.join("cfg"));
 
     Ok(())
 }

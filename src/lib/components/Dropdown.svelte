@@ -11,6 +11,7 @@
 	export let onSelectedChange = (value: Selection) => {};
 
 	export let open = false;
+	export let disabled = false;
 	export let multiple: Multiple;
 
 	export let icon: string | null = null;
@@ -57,19 +58,20 @@
 	items={items.map((item) => ({ value: item }))}
 	onSelectedChange={onSelectionChangeHandler}
 	selected={bitsSelected}
+	{disabled}
 	{multiple}
 	bind:open
 >
 	<slot name="trigger" text={label} {open}>
 		<Select.Trigger
-			class="flex items-center gap-2 overflow-hidden rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 py-1 pl-3 pr-2 hover:border-opacity-100 {className}"
+			class="group flex items-center gap-2 overflow-hidden rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 py-1 pl-3 pr-2 enabled:hover:border-opacity-100 disabled:cursor-not-allowed {className}"
 		>
 			{#if icon}
 				<Icon class="flex-shrink-0 text-lg text-slate-400" {icon} />
 			{/if}
 
 			<div
-				class="flex-shrink flex-grow truncate text-left text-slate-300"
+				class="flex-shrink flex-grow truncate text-left text-slate-300 group-disabled:text-slate-400"
 				class:text-slate-300={overrideLabel || label}
 				class:text-slate-400={!overrideLabel && !label}
 			>
@@ -77,7 +79,7 @@
 			</div>
 
 			<Icon
-				class="flex-shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out {open
+				class="flex-shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out group-disabled:text-slate-500 {open
 					? 'rotate-180'
 					: 'rotate-0'}"
 				icon="mdi:chevron-down"

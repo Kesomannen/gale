@@ -92,13 +92,13 @@ where
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum FileInstallMethod {
     Link,
     Copy,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum ConflictResolution {
     Skip,
     Overwrite,
@@ -131,15 +131,17 @@ where
             let (method, conflict) = before_install(relative_path, target_exists)?;
 
             if target_exists {
-                match conflict {
-                    ConflictResolution::Skip => {
+                match (conflict, method) {
+                    (ConflictResolution::Skip, _) => {
                         warn!(
                             "skipping file {} since it already exists",
                             relative_path.display()
                         );
                         continue;
                     }
-                    ConflictResolution::Overwrite => {
+                    // fs::copy already overwrites the target, no need to remove it
+                    (ConflictResolution::Overwrite, FileInstallMethod::Copy) => (),
+                    (ConflictResolution::Overwrite, FileInstallMethod::Link) => {
                         fs::remove_file(&target).with_context(|| {
                             format!(
                                 "failed to remove existing file at {}",
@@ -152,13 +154,13 @@ where
 
             match method {
                 FileInstallMethod::Link => {
-                    fs::copy(entry.path(), target).with_context(|| {
-                        format!("failed to copy file at {}", relative_path.display())
+                    fs::hard_link(entry.path(), target).with_context(|| {
+                        format!("failed to link file at {}", relative_path.display())
                     })?;
                 }
                 FileInstallMethod::Copy => {
-                    fs::hard_link(entry.path(), target).with_context(|| {
-                        format!("failed to link file at {}", relative_path.display())
+                    fs::copy(entry.path(), target).with_context(|| {
+                        format!("failed to copy file at {}", relative_path.display())
                     })?;
                 }
             }

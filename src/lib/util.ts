@@ -33,6 +33,16 @@ export function sentenceCase(str: string): string {
 	return textcase.charAt(0).toUpperCase() + textcase.slice(1);
 }
 
+export function titleCase(str: string): string {
+	return String(str)
+		.replace(/^[^A-Za-z0-9]*|[^A-Za-z0-9]*$/g, '')
+		.replace(/([a-z])([A-Z])/g, (m, a, b) => `${a} ${b}`)
+		.replace(/[^A-Za-z0-9]+|_+/g, ' ')
+		.split(' ')
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		.join(' ');
+}
+
 export function timeSince(date: Date): string {
 	var seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
 	var interval = Math.floor(seconds / 31536000);
@@ -57,10 +67,6 @@ export function timeSince(date: Date): string {
 		return interval + ' minutes';
 	}
 	return Math.floor(seconds) + ' seconds';
-}
-
-export function titleCase(str: string): string {
-	return str.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 export function isOutdated(mod: Mod): boolean {

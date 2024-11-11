@@ -18,7 +18,7 @@ use crate::{
     game::{self, Game, ModLoader},
     logger,
     prefs::Prefs,
-    thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
+    thunderstore::{self, BorrowedMod, ModId, PackageIdent, Thunderstore, VersionIdent},
     util::{
         self,
         fs::{JsonStyle, PathExt},
@@ -173,6 +173,10 @@ impl ProfileMod {
         self.kind.ident()
     }
 
+    pub fn full_name(&self) -> Cow<'_, str> {
+        self.kind.full_name()
+    }
+
     fn as_thunderstore(&self) -> Option<(&ThunderstoreMod, bool)> {
         self.kind
             .as_thunderstore()
@@ -207,6 +211,13 @@ impl ProfileModKind {
         match self {
             ProfileModKind::Thunderstore(ts_mod) => Cow::Borrowed(&ts_mod.ident),
             ProfileModKind::Local(local_mod) => Cow::Owned(local_mod.ident()),
+        }
+    }
+
+    pub fn full_name(&self) -> Cow<'_, str> {
+        match self.ident() {
+            Cow::Borrowed(borrow) => Cow::Borrowed(borrow.full_name()),
+            Cow::Owned(owned) => Cow::Owned(PackageIdent::from(owned).into_string()),
         }
     }
 

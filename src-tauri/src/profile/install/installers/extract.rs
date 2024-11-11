@@ -34,11 +34,11 @@ impl<'a> PackageInstaller for ExtractInstaller<'a> {
 
             let path = components.as_path();
 
-            Ok(if self.files.iter().any(|file| path.starts_with(file)) {
-                Some(Cow::Borrowed(path))
-            } else {
-                None
-            })
+            Ok(self
+                .files
+                .iter()
+                .any(|file| path.starts_with(file))
+                .then(|| Cow::Borrowed(path)))
         })
     }
 

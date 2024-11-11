@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use tauri::{AppHandle, Manager};
 
 use super::{InstallOptions, ModInstall};
