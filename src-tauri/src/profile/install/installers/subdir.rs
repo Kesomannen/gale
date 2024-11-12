@@ -9,7 +9,7 @@ use std::{
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
-use super::{ModArchive, PackageInstaller};
+use super::{PackageInstaller, PackageZip};
 use crate::{
     profile::{
         install::{
@@ -329,7 +329,7 @@ impl ProfileStateHandle {
 }
 
 impl<'a> PackageInstaller for SubdirInstaller<'a> {
-    fn extract(&mut self, archive: ModArchive, package_name: &str, dest: PathBuf) -> Result<()> {
+    fn extract(&mut self, archive: PackageZip, package_name: &str, dest: PathBuf) -> Result<()> {
         install::fs::extract(archive, dest, |relative_path| {
             self.map_file(relative_path, package_name)
         })
@@ -408,15 +408,26 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         })?;
 
         if has_tracked_files {
-            PackageStateHandle::from_profile_mod(profile_mod, profile).delete()?;
+            PackageStateHandle::from_profile_mod(profile_mod, profile)
+                .delete()
+                .context("failed to delete state file")?;
 
             let mut profile_state = ProfileStateHandle::new(profile);
             profile_state
                 .file_map()
                 .retain(|_, package| *package != profile_mod.full_name());
-            profile_state.commit()?;
+            profile_state
+                .commit()
+                .context("failed to write profile state")?;
         }
 
         Ok(())
+    }
+
+    fn mod_dir<'b>(&'b self, _profile_mod: &ProfileMod, _profile: &Profile) -> Option<&'b Path> {
+        self.default_subdir.and_then(|index| {
+            let path: &Path = self.subdirs[index].target.as_ref();
+            path.exists().then_some(path)
+        })
     }
 }

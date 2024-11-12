@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{Context, Result};
 
-use super::{ModArchive, PackageInstaller};
+use super::{PackageZip, PackageInstaller};
 use crate::profile::{
     install::{self},
     Profile, ProfileMod,
@@ -15,7 +15,7 @@ use crate::profile::{
 pub struct ShimloaderInstaller;
 
 impl PackageInstaller for ShimloaderInstaller {
-    fn extract(&mut self, archive: ModArchive, _package_name: &str, dest: PathBuf) -> Result<()> {
+    fn extract(&mut self, archive: PackageZip, _package_name: &str, dest: PathBuf) -> Result<()> {
         fs::create_dir_all(dest.join("shimloader").join("cfg"))
             .context("failed to create cfg directory")?;
 

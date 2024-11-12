@@ -2,7 +2,7 @@ use std::{borrow::Cow, path::PathBuf};
 
 use anyhow::Result;
 
-use super::{ModArchive, PackageInstaller};
+use super::{PackageZip, PackageInstaller};
 use crate::profile::{install, Profile, ProfileMod};
 
 pub struct ExtractInstaller<'a> {
@@ -24,7 +24,7 @@ impl<'a> ExtractInstaller<'a> {
 }
 
 impl<'a> PackageInstaller for ExtractInstaller<'a> {
-    fn extract(&mut self, archive: ModArchive, _package_name: &str, dest: PathBuf) -> Result<()> {
+    fn extract(&mut self, archive: PackageZip, _package_name: &str, dest: PathBuf) -> Result<()> {
         install::fs::extract(archive, dest, |relative_path| {
             let mut components = relative_path.components();
 

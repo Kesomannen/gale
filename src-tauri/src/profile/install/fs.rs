@@ -46,6 +46,13 @@ pub fn install_from_zip(
     Ok(())
 }
 
+/// Extract a package archive to `dest`, mapping files using `map_file`.
+///
+/// `map_file` is called with each file's relative path. It should return
+/// the (relative) output path where the file should be copied. `Ok(None)`
+/// skips the file entirely.
+///
+/// Directories are created as needed.
 pub(super) fn extract<S, M>(
     mut archive: ZipArchive<S>,
     dest: PathBuf,
@@ -94,17 +101,26 @@ where
 
 #[derive(Debug, Clone, Copy)]
 pub enum FileInstallMethod {
+    /// Use a hard link.
     Link,
+    /// Copy the file.
     Copy,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum ConflictResolution {
+    /// Do nothing, keeping the current file.
     Skip,
+    /// Overwrite the current file.
     Overwrite,
 }
 
 /// Install from a well structured mod directory.
+///
+/// This essentially copies `src` to the profile directory.
+///
+/// `before_install` is called each time a file is encountered,
+/// with the file's relative path and whether the target file already exists.
 pub(super) fn install<F>(src: &Path, profile: &Profile, mut before_install: F) -> Result<()>
 where
     F: FnMut(&Path, bool) -> Result<(FileInstallMethod, ConflictResolution)>,
@@ -170,6 +186,8 @@ where
     Ok(())
 }
 
+/// Removes either a directory or file at `path`. Also accounts for any
+/// `.old` extensions that may exist.
 pub(super) fn uninstall_any(path: impl AsRef<Path>) -> Result<()> {
     for_any(
         path.as_ref(),
@@ -178,6 +196,7 @@ pub(super) fn uninstall_any(path: impl AsRef<Path>) -> Result<()> {
     )
 }
 
+/// Toggles either a directory or file at `path`.
 pub(super) fn toggle_any(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
     for_any(
         path.as_ref(),
@@ -213,6 +232,7 @@ where
     }
 }
 
+/// Toggles a file by adding/removing a `.old` extension to it.
 pub(super) fn toggle_file(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
     let path = path.as_ref();
     let mut new_path = path.to_path_buf();
@@ -231,6 +251,7 @@ pub(super) fn toggle_file(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
     Ok(())
 }
 
+/// Toggles a directory by recursively adding/removing a `.old` extension to all files within it.
 pub(super) fn toggle_dir(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
     let files = WalkDir::new(path)
         .into_iter()

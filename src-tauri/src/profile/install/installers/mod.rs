@@ -23,11 +23,13 @@ pub use self::{
     subdir::{Subdir, SubdirInstaller},
 };
 
-pub type ModArchive = ZipArchive<Cursor<Vec<u8>>>;
+pub type PackageZip = ZipArchive<Cursor<Vec<u8>>>;
 
 pub trait PackageInstaller {
-    fn extract(&mut self, archive: ModArchive, package_name: &str, dest: PathBuf) -> Result<()>;
+    /// Extracts a mod archive to `dest`.
+    fn extract(&mut self, archive: PackageZip, package_name: &str, dest: PathBuf) -> Result<()>;
 
+    /// Installs a package from `src` to a profile.
     fn install(&mut self, src: &Path, _package_name: &str, profile: &Profile) -> Result<()> {
         super::fs::install(src, profile, |_, _| {
             Ok((FileInstallMethod::Link, ConflictResolution::Overwrite))
@@ -36,4 +38,8 @@ pub trait PackageInstaller {
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
+
+    fn mod_dir<'a>(&'a self, profile_mod: &ProfileMod, profile: &Profile) -> Option<&'a Path> {
+        None
+    }
 }

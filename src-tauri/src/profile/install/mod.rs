@@ -4,7 +4,6 @@ use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Utc};
 use download::InstallState;
 use itertools::Itertools;
-use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
@@ -242,6 +241,8 @@ pub async fn install_with_deps(
     .await
 }
 
+/// Gets the number of bytes to download the given mod and its
+/// missing dependencies.
 fn total_download_size(
     borrowed: BorrowedMod<'_>,
     profile: &Profile,

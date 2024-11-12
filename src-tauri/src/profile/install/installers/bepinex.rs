@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::Result;
 
-use super::{FileInstallMethod, ModArchive, PackageInstaller};
+use super::{FileInstallMethod, PackageInstaller, PackageZip};
 use crate::profile::{
     install::{self, fs::ConflictResolution},
     Profile, ProfileMod,
@@ -27,7 +27,7 @@ fn scan(profile: &Profile) -> Result<impl Iterator<Item = PathBuf>> {
 }
 
 impl PackageInstaller for BepinexInstaller {
-    fn extract(&mut self, archive: ModArchive, _package_name: &str, dest: PathBuf) -> Result<()> {
+    fn extract(&mut self, archive: PackageZip, _package_name: &str, dest: PathBuf) -> Result<()> {
         install::fs::extract(archive, dest, |relative_path| {
             let mut components = relative_path.components();
             if components.clone().count() == 1 {

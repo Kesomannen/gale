@@ -2,7 +2,7 @@ use std::{borrow::Cow, fs, path::PathBuf};
 
 use anyhow::{ensure, Context, Result};
 
-use super::{ModArchive, PackageInstaller};
+use super::{PackageZip, PackageInstaller};
 use crate::profile::{
     install::{self},
     Profile, ProfileMod,
@@ -23,7 +23,7 @@ fn profile_mod_dir(profile_mod: &ProfileMod, profile: &Profile) -> PathBuf {
 impl PackageInstaller for GDWeaveModInstaller {
     fn extract(
         &mut self,
-        mut archive: ModArchive,
+        mut archive: PackageZip,
         package_name: &str,
         dest: PathBuf,
     ) -> Result<()> {
