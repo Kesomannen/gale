@@ -457,7 +457,7 @@ pub fn open_mod_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn open_bepinex_log(manager: StateMutex<ModManager>) -> Result<()> {
+pub fn open_game_log(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let path = manager.active_profile().log_path()?;

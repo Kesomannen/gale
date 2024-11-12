@@ -4,6 +4,7 @@ use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Utc};
 use download::InstallState;
 use itertools::Itertools;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
@@ -195,7 +196,7 @@ where
         let manager = manager.lock().unwrap();
         let thunderstore = thunderstore.lock().unwrap();
 
-        mods(&manager, &thunderstore).context("failed to resolve dependencies")?
+        mods(&manager, &thunderstore)?
     };
 
     install_mods(mods, options, app).await
@@ -223,14 +224,14 @@ pub async fn install_with_deps(
             .map(|install| {
                 let borrowed = install.id.borrow(thunderstore)?;
 
-                Ok(iter::once(install).chain(
-                    profile
-                        .missing_deps(borrowed.dependencies(), thunderstore)
-                        .map_into(),
-                ))
+                Ok(profile
+                    .missing_deps(borrowed.dependencies(), thunderstore)
+                    .map(ModInstall::from)
+                    .chain(iter::once(install)))
             })
             .flatten_ok()
-            .collect::<Result<Vec<_>>>()?;
+            .collect::<Result<Vec<_>>>()
+            .context("failed to resolve dependencies")?;
 
         Ok(deps
             .into_iter()

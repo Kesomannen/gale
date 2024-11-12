@@ -169,7 +169,8 @@
 				text="Open profile directory"
 			/>
 			<MenubarItem on:click={() => invokeCommand('open_game_dir')} text="Open game directory" />
-			<MenubarItem on:click={() => invokeCommand('open_bepinex_log')} text="Open BepInEx log" />
+			<MenubarSeparator />
+			<MenubarItem on:click={() => invokeCommand('open_game_log')} text="Open game log" />
 			<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open Gale log" />
 			<MenubarSeparator />
 			<MenubarItem on:click={clearModCache} text="Clear mod cache" />

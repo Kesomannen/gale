@@ -204,7 +204,7 @@ impl ManagedGame {
 
         let mut path = self.path.join("profiles");
         path.push(&name);
-        fs::create_dir_all(&path).fs_context("creating profile directory", &path);
+        fs::create_dir_all(&path).fs_context("creating profile directory", &path)?;
 
         self.profiles.push(Profile::new(name, path, self.game));
 
@@ -236,7 +236,7 @@ impl ManagedGame {
         let new_profile = self.active_profile();
 
         util::fs::copy_dir(&old_profile.path, &new_profile.path, Overwrite::Yes)
-            .context("failed to copy profile directory");
+            .context("failed to copy profile directory")?;
 
         let mods = old_profile.mods.clone();
         let ignored_updates = old_profile.ignored_updates.clone();
