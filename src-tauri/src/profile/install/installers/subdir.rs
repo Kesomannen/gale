@@ -424,10 +424,10 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         Ok(())
     }
 
-    fn mod_dir<'b>(&'b self, _profile_mod: &ProfileMod, _profile: &Profile) -> Option<&'b Path> {
+    fn mod_dir(&self, _profile_mod: &ProfileMod, profile: &Profile) -> Option<PathBuf> {
         self.default_subdir.and_then(|index| {
             let path: &Path = self.subdirs[index].target.as_ref();
-            path.exists().then_some(path)
+            path.exists().then(|| profile.path.join(path))
         })
     }
 }

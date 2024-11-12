@@ -1,6 +1,6 @@
 use std::{fs, sync::Mutex};
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -144,10 +144,26 @@ impl Profile {
         }
     }
 
+    pub fn open_mod_dir(&self, uuid: Uuid) -> Result<()> {
+        let profile_mod = self.get_mod(uuid)?;
+        let installer = self.installer_for(profile_mod);
+
+        match installer.mod_dir(profile_mod, self) {
+            Some(path) => {
+                open::that(path)?;
+                Ok(())
+            }
+            None => Err(anyhow!(
+                "not supported for {}",
+                self.game.mod_loader.to_str()
+            )),
+        }
+    }
+
     fn installer_for(&self, profile_mod: &ProfileMod) -> Box<dyn PackageInstaller> {
-        let ident = profile_mod.ident();
-        let full_name = ident.full_name();
-        self.game.mod_loader.installer_for(full_name)
+        self.game
+            .mod_loader
+            .installer_for(&*profile_mod.full_name())
     }
 
     fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {

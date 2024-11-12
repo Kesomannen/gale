@@ -451,7 +451,7 @@ pub fn open_profile_dir(manager: StateMutex<ModManager>) -> Result<()> {
 pub fn open_mod_dir(uuid: Uuid, manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
-    let profile = manager.active_profile();
+    manager.active_profile().open_mod_dir(uuid)?;
 
     Ok(())
 }

@@ -2,7 +2,7 @@ use std::{borrow::Cow, fs, path::PathBuf};
 
 use anyhow::{ensure, Context, Result};
 
-use super::{PackageZip, PackageInstaller};
+use super::{PackageInstaller, PackageZip};
 use crate::profile::{
     install::{self},
     Profile, ProfileMod,
@@ -76,5 +76,9 @@ impl PackageInstaller for GDWeaveModInstaller {
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
         fs::remove_dir_all(profile_mod_dir(profile_mod, profile))?;
         Ok(())
+    }
+
+    fn mod_dir<'a>(&'a self, profile_mod: &ProfileMod, profile: &Profile) -> Option<PathBuf> {
+        Some(profile_mod_dir(profile_mod, profile))
     }
 }

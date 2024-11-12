@@ -15,11 +15,9 @@ use crate::profile::{
 pub struct BepinexInstaller;
 
 fn scan(profile: &Profile) -> Result<impl Iterator<Item = PathBuf>> {
-    let core_path: PathBuf = ["BepInEx", "core"].iter().collect();
-
     Ok(profile
         .path
-        .join(core_path)
+        .join("BepInEx/core")
         .read_dir()?
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_file()))
@@ -71,5 +69,9 @@ impl PackageInstaller for BepinexInstaller {
         }
 
         Ok(())
+    }
+
+    fn mod_dir(&self, _profile_mod: &ProfileMod, profile: &Profile) -> Option<PathBuf> {
+        Some(profile.path.join("BepInEx/core"))
     }
 }
