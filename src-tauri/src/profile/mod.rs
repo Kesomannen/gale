@@ -9,6 +9,7 @@ use anyhow::{anyhow, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use itertools::Itertools;
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
@@ -21,6 +22,7 @@ use crate::{
     thunderstore::{self, BorrowedMod, ModId, PackageIdent, Thunderstore, VersionIdent},
     util::{
         self,
+        error::IoResultExt,
         fs::{JsonStyle, PathExt},
     },
 };
@@ -44,7 +46,6 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         app.manage(Mutex::new(manager));
     }
 
-    import::setup(app).context("failed to initialize importer")?;
     install::setup(app).context("failed to initialize downloader")?;
 
     let handle = app.to_owned();
@@ -355,6 +356,10 @@ impl Profile {
         path.push("profile.json");
 
         if !path.exists() {
+            warn!(
+                "profile directory at {} does not contain a manifest, skipping",
+                path.display()
+            );
             return Ok(None);
         }
 
@@ -508,11 +513,13 @@ impl ManagedGame {
     }
 
     fn load(mut path: PathBuf) -> Result<Option<(Game, Self)>> {
-        let Some(game) = path
-            .file_name()
-            .and_then(|name| name.to_str())
-            .and_then(game::from_slug)
-        else {
+        let file_name = util::fs::file_name_owned(&path);
+
+        let Some(game) = game::from_slug(&file_name) else {
+            info!(
+                "directory '{}' does not match any game, skipping",
+                file_name
+            );
             return Ok(None);
         };
 
@@ -525,12 +532,23 @@ impl ManagedGame {
 
         path.push("profiles");
 
-        let profiles = path
-            .read_dir()?
-            .filter_map(Result::ok)
-            .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
-            .filter_map(|entry| Profile::load(entry.path(), game).transpose())
-            .collect::<Result<Vec<Profile>>>()?;
+        let mut profiles = Vec::new();
+
+        for entry in path
+            .read_dir()
+            .context("failed to read profiles directory")?
+        {
+            let path = entry.context("failed to read profile directory")?.path();
+
+            if path.is_dir() {
+                let result = Profile::load(path.clone(), game)
+                    .with_context(|| format!("failed to read profile from {}", path.display()))?;
+
+                if let Some(profile) = result {
+                    profiles.push(profile);
+                }
+            }
+        }
 
         path.pop();
 
@@ -587,13 +605,29 @@ impl ModManager {
             },
         };
 
-        let games = prefs
+        let mut games = HashMap::new();
+
+        for entry in prefs
             .data_dir
-            .read_dir()?
-            .filter_map(Result::ok)
-            .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
-            .filter_map(|entry| ManagedGame::load(entry.path()).transpose())
-            .collect::<Result<_>>()?;
+            .read_dir()
+            .fs_context("reading data directory", &prefs.data_dir)?
+        {
+            let path = entry.context("failed to read data directory entry")?.path();
+
+            if path.is_dir() {
+                let result = ManagedGame::load(path.clone())
+                    .with_context(|| format!("failed to load game from {}", path.display()))?;
+
+                if let Some((game, manager_game)) = result {
+                    debug!(
+                        "loaded game {} with {} profiles",
+                        game.slug,
+                        manager_game.profiles.len()
+                    );
+                    games.insert(game, manager_game);
+                }
+            }
+        }
 
         let active_game = game::from_slug(&save.active_game)
             .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());

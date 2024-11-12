@@ -2,7 +2,6 @@ use anyhow::Context;
 use itertools::Itertools;
 use log::warn;
 use serde::Serialize;
-use strum::IntoEnumIterator;
 use uuid::Uuid;
 
 use super::{actions::ActionResult, Dependant, ModManager, Profile};

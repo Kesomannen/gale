@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 use super::{ModArchive, PackageInstaller};
