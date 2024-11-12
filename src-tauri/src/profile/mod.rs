@@ -646,21 +646,19 @@ impl ModManager {
         Ok(())
     }
 
-    fn ensure_game(&mut self, game: Game, prefs: &Prefs) -> Result<()> {
+    fn ensure_game<'a>(&'a mut self, game: Game, prefs: &Prefs) -> Result<&'a mut ManagedGame> {
         const DEFAULT_PROFILE_NAME: &str = "Default";
 
-        if self.games.contains_key(&game) {
-            return Ok(());
+        if !self.games.contains_key(game) {
+            let path = prefs.data_dir.join(&*game.slug);
+
+            let mut managed_game = ManagedGame::new(path, game);
+            managed_game.create_profile(DEFAULT_PROFILE_NAME.to_owned())?;
+
+            self.games.insert(game, managed_game);
         }
 
-        let path = prefs.data_dir.join(&*game.slug);
-
-        let mut managed_game = ManagedGame::new(path, game);
-        managed_game.create_profile(DEFAULT_PROFILE_NAME.to_owned())?;
-
-        self.games.insert(game, managed_game);
-
-        Ok(())
+        Ok(self.games.get_mut(game).unwrap())
     }
 
     fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {

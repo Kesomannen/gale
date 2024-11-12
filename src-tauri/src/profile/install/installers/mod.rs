@@ -30,7 +30,7 @@ pub trait PackageInstaller {
 
     fn install(&mut self, src: &Path, _package_name: &str, profile: &Profile) -> Result<()> {
         super::fs::install(src, profile, |_, _| {
-            Ok((FileInstallMethod::Link, ConflictResolution::Skip))
+            Ok((FileInstallMethod::Link, ConflictResolution::Overwrite))
         })
     }
 

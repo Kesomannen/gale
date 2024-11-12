@@ -16,17 +16,25 @@
 	import LargePrefsHeading from '$lib/prefs/LargePrefsHeading.svelte';
 	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
+	import { platform } from '@tauri-apps/plugin-os';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
 
-	$: gameId = $activeGame?.slug ?? '';
-	$: gamePrefs = prefs?.gamePrefs.get(gameId) ?? {
+	$: gameSlug = $activeGame?.slug ?? '';
+	$: gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 		launchMode: { type: 'launcher' },
 		dirOverride: null,
 		customArgs: null,
-		platform: Platform.Steam
+		platform: null
 	};
+
+	$: platforms = $activeGame?.platforms ?? [];
+	$: needsDirectory = !platforms.some(
+		(p) =>
+			p === Platform.Steam ||
+			(platform() === 'windows' && (p === Platform.EpicGames || p === Platform.XboxStore))
+	);
 
 	onMount(async () => {
 		let newPrefs = await invokeCommand<Prefs>('get_prefs');
@@ -39,7 +47,7 @@
 			if (prefs === null) return;
 
 			update(value, prefs);
-			prefs.gamePrefs.set(gameId, gamePrefs!);
+			prefs.gamePrefs.set(gameSlug, gamePrefs!);
 			await invokeCommand('set_prefs', { value: prefs });
 		};
 	}
@@ -108,13 +116,15 @@
 
 		<SmallPrefsHeading>Locations</SmallPrefsHeading>
 
-		<PlatformPref value={gamePrefs.platform} set={set((value) => (gamePrefs.platform = value))} />
+		{#if platforms.length > 0}
+			<PlatformPref value={gamePrefs.platform} set={set((value) => (gamePrefs.platform = value))} />
+		{/if}
 
 		<PathPref
-			label="Override directory"
+			label={needsDirectory ? 'Game directory' : 'Override directory'}
 			type="dir"
 			canClear={true}
-			value={gamePrefs.dirOverride ?? null}
+			value={gamePrefs.dirOverride}
 			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
 			Path to the {$activeGame?.name} game directory.

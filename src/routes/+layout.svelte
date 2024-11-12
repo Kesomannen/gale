@@ -18,6 +18,8 @@
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 	import { refreshAccentColor } from '$lib/theme';
+	import { activeGame } from '$lib/stores';
+	import { ModLoader } from '$lib/models';
 
 	let status: string | null = null;
 	let unlisten: UnlistenFn | undefined;
@@ -55,7 +57,10 @@
 		>
 			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
-			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
+			{#if $activeGame?.modLoader === ModLoader.BepInEx}
+				<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
+			{/if}
+
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</nav>
@@ -78,13 +83,13 @@
 	>
 		{#each $errors as error, i}
 			<div
-				class="flex items-start rounded-md bg-red-600 p-1.5 xl:p-2 xl:text-lg"
+				class="flex items-start overflow-hidden rounded-md bg-red-600 p-1.5 xl:p-2 xl:text-lg"
 				in:slide={{ duration: 150, easing: expoOut }}
 				out:fade={{ duration: 100 }}
 			>
-				<div class="mr-3 mt-auto flex-grow px-2">
+				<div class="mr-3 mt-auto flex-grow overflow-hidden px-2">
 					<span class="text-red-200">{error.name} -</span>
-					<span class="ml-1 font-medium text-white">{error.message}</span>
+					<span class="ml-1 break-words font-medium text-white">{error.message}</span>
 				</div>
 
 				<Button.Root

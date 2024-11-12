@@ -83,6 +83,7 @@
 		selectedCategories = args.categories.map(
 			(selected) => $categories.find((category) => category.slug === selected)!
 		);
+		console.log(args.categories, $categories, selectedCategories);
 		changelog = args.changelog;
 		readme = args.readme;
 		versionNumber = args.versionNumber;
@@ -241,49 +242,47 @@
 		label="Categories"
 		description="The categories that the modpack belongs to. 'Modpacks' is always included."
 	>
-		{#if selectedCategories}
-			<Dropdown
-				avoidCollisions={false}
-				items={$categories}
-				bind:selected={selectedCategories}
-				onSelectedChange={saveArgs}
-				multiple={true}
-				getLabel={(category) => category.name}
+		<Dropdown
+			avoidCollisions={false}
+			items={$categories}
+			bind:selected={selectedCategories}
+			onSelectedChange={saveArgs}
+			multiple={true}
+			getLabel={(category) => category}
+		>
+			<Select.Trigger
+				let:open
+				slot="trigger"
+				class="flex w-full items-center overflow-hidden rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 py-1 pl-1 pr-3 hover:border-opacity-100"
 			>
-				<Select.Trigger
-					let:open
-					slot="trigger"
-					class="flex w-full items-center overflow-hidden rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 py-1 pl-1 pr-3 hover:border-opacity-100"
-				>
-					{#if selectedCategories.length === 0}
-						<span class="truncate pl-2 text-slate-400">Select categories...</span>
-					{:else}
-						<div class="flex flex-wrap gap-1">
-							{#each selectedCategories as category}
-								<div class="rounded-md bg-slate-800 py-1 pl-3 pr-1 text-sm text-slate-200">
-									<span class="overflow-hidden truncate">{category.name}</span>
+				{#if selectedCategories.length === 0}
+					<span class="truncate pl-2 text-slate-400">Select categories...</span>
+				{:else}
+					<div class="flex flex-wrap gap-1">
+						{#each selectedCategories as category}
+							<div class="rounded-md bg-slate-800 py-1 pl-3 pr-1 text-sm text-slate-200">
+								<span class="overflow-hidden truncate">{category}</span>
 
-									<Button.Root
-										class="ml-1 rounded-md px-1.5 hover:bg-slate-700"
-										on:click={(evt) => {
-											evt.stopPropagation();
-											selectedCategories = selectedCategories.filter((c) => c !== category);
-										}}
-									>
-										x
-									</Button.Root>
-								</div>
-							{/each}
-						</div>
-					{/if}
-					<Icon
-						class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
+								<Button.Root
+									class="ml-1 rounded-md px-1.5 hover:bg-slate-700"
+									on:click={(evt) => {
+										evt.stopPropagation();
+										selectedCategories = selectedCategories.filter((c) => c !== category);
+									}}
+								>
+									x
+								</Button.Root>
+							</div>
+						{/each}
+					</div>
+				{/if}
+				<Icon
+					class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
                 duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
-						icon="mdi:chevron-down"
-					/>
-				</Select.Trigger>
-			</Dropdown>
-		{/if}
+					icon="mdi:chevron-down"
+				/>
+			</Select.Trigger>
+		</Dropdown>
 	</FormField>
 
 	<FormField

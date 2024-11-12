@@ -278,7 +278,7 @@ impl Profile {
 }
 
 // returns a list of non-cfg files that were found
-pub fn load_config(mut profile_path: PathBuf, vec: &mut Vec<LoadFileResult>) -> Vec<PathBuf> {
+pub fn load_config(profile_path: PathBuf, vec: &mut Vec<LoadFileResult>) -> Vec<PathBuf> {
     enum File {
         Cfg {
             res: LoadFileResult,
@@ -289,7 +289,7 @@ pub fn load_config(mut profile_path: PathBuf, vec: &mut Vec<LoadFileResult>) -> 
 
     const OTHER_EXTENSIONS: &[&str] = &["json", "toml", "yaml", "yml", "xml", "ini"];
 
-    let files = WalkDir::new(&profile_path)
+    let files = WalkDir::new(profile_path.join("BepInEx/config"))
         .into_iter()
         .par_bridge()
         .filter_map(Result::ok)

@@ -21,7 +21,7 @@ pub struct VersionIdent {
 impl VersionIdent {
     /// Creates a new identifier with the given parts.
     ///
-    /// This allocates a new string and copies the slices into it.
+    /// This allocates a new string.
     pub fn new(owner: &str, name: &str, version: &str) -> Self {
         let repr = format!("{}-{}-{}", owner, name, version);
 

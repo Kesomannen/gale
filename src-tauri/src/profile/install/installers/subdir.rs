@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 
 use super::{ModArchive, PackageInstaller};
@@ -24,7 +24,7 @@ use crate::{
 pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
     extra_subdirs: &'a [Subdir<'a>],
-    default_subdir: Option<&'a Subdir<'a>>,
+    default_subdir: Option<usize>,
     ignored_files: &'a [&'a str],
 }
 
@@ -109,7 +109,7 @@ impl<'a> SubdirInstaller<'a> {
     pub fn new(
         subdirs: &'a [Subdir<'a>],
         extra_subdirs: &'a [Subdir<'a>],
-        default: Option<&'a Subdir<'a>>,
+        default: Option<usize>,
         ignored_files: &'a [&'a str],
     ) -> Self {
         Self {
@@ -171,7 +171,7 @@ impl<'a> SubdirInstaller<'a> {
                 Some(Component::RootDir | Component::Prefix(_) | Component::CurDir) => continue,
                 // default to plugins when the whole path is exhausted
                 None => match self.default_subdir {
-                    Some(subdir) => break subdir,
+                    Some(index) => break &self.subdirs[index],
                     None => return Ok(None),
                 },
             }
@@ -219,7 +219,7 @@ impl<'a> SubdirInstaller<'a> {
         Ok(Some(Cow::Owned(target)))
     }
 
-    fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, mut scan: F) -> Result<()>
+    fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, mut scan: F) -> Result<bool>
     where
         F: FnMut(&Path) -> Result<()>,
     {
@@ -240,7 +240,7 @@ impl<'a> SubdirInstaller<'a> {
 
                     let mut state = PackageStateHandle::new(&package_name, profile);
                     for file in state.files() {
-                        scan(&file)?;
+                        scan(&profile.path.join(file))?;
                     }
                 }
                 SubdirMode::Track => (),
@@ -248,16 +248,18 @@ impl<'a> SubdirInstaller<'a> {
             };
         }
 
-        Ok(())
+        Ok(scanned_tracked_files)
     }
 }
 
 fn state_file_path(name: &str, profile: &Profile) -> PathBuf {
-    profile
-        .path
-        .join("_state")
-        .join(name)
-        .with_extension("json")
+    let mut path = profile.path.to_path_buf();
+
+    path.push("_state");
+    path.push(name);
+    path.set_extension("json");
+
+    path
 }
 
 struct PackageStateHandle {
@@ -394,22 +396,26 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
         self.scan_mod(profile_mod, profile, |path| {
-            install::fs::toggle_any(profile.path.join(path), enabled)
-        })
+            install::fs::toggle_any(path, enabled)
+        })?;
+
+        Ok(())
     }
 
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        self.scan_mod(profile_mod, profile, |path| {
-            install::fs::uninstall_any(profile.path.join(path))
+        let has_tracked_files = self.scan_mod(profile_mod, profile, |path| {
+            install::fs::uninstall_any(path)
         })?;
 
-        PackageStateHandle::from_profile_mod(profile_mod, profile).delete()?;
+        if has_tracked_files {
+            PackageStateHandle::from_profile_mod(profile_mod, profile).delete()?;
 
-        let mut profile_state = ProfileStateHandle::new(profile);
-        profile_state
-            .file_map()
-            .retain(|_, package| *package != profile_mod.full_name());
-        profile_state.commit()?;
+            let mut profile_state = ProfileStateHandle::new(profile);
+            profile_state
+                .file_map()
+                .retain(|_, package| *package != profile_mod.full_name());
+            profile_state.commit()?;
+        }
 
         Ok(())
     }

@@ -3,10 +3,10 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	import type { Platform } from '$lib/models';
-	import { sentenceCase } from '$lib/util';
+	import { sentenceCase, titleCase } from '$lib/util';
 	import { activeGame } from '$lib/stores';
 
-	export let value: Platform;
+	export let value: Platform | null;
 	export let set: (value: Platform) => Promise<void>;
 
 	$: platforms = $activeGame?.platforms ?? [];
@@ -18,10 +18,10 @@
 	<Dropdown
 		class="flex-grow"
 		items={platforms}
-		getLabel={sentenceCase}
-		selected={value}
+		getLabel={titleCase}
+		selected={value ?? platforms[0]}
+		disabled={platforms.length === 1}
 		multiple={false}
-		disabled={platforms.length <= 1}
 		onSelectedChange={(newValue) => {
 			value = newValue;
 			set(value);

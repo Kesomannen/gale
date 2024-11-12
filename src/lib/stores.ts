@@ -94,6 +94,8 @@ export async function refreshGames() {
 	const info: GameInfo = await invokeCommand('get_game_info');
 	games = info.all;
 
+	console.log(info.favorites);
+
 	for (let game of games) {
 		game.favorite = info.favorites.includes(game.slug);
 	}
@@ -124,6 +126,8 @@ export async function refreshCategories() {
 
 		let data = (await response.json()) as FiltersResponse;
 		categories.set(data.results);
+
+		console.log(categories);
 	} catch (e) {
 		console.error('Failed to fetch categories:', e);
 	}

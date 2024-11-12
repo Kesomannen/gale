@@ -46,11 +46,11 @@
 	<SearchBar bind:value={searchTerm} placeholder="Search for games..." />
 </div>
 
-<div class="mt-2 flex h-80 flex-col overflow-y-auto">
+<div class="mt-2 flex h-80 flex-col overflow-y-scroll">
 	{#if shownGames.length > 0}
 		{#each shownGames as game}
 			<Button.Root
-				class="group mr-2 flex items-center rounded-lg border border-slate-500 p-2 hover:bg-slate-700 {$activeGame?.slug ===
+				class="group mr-2 flex items-center rounded-lg border border-slate-500 p-1.5 hover:bg-slate-700 {$activeGame?.slug ===
 				game.slug
 					? 'bg-slate-700'
 					: 'border-opacity-0 hover:bg-slate-700'}"
@@ -67,18 +67,29 @@
 					</div>
 
 					<div class="text-slate-400">
-						<span>{game.modLoader}</span>
+						<span>{game.modLoader} </span>
 
-						<span class="mx-1">|</span>
+						{#if game.modLoader !== ModLoader.BepInEx}
+							<Tooltip
+								class="inline-flex rounded bg-red-600 p-0.5 text-sm text-white"
+								text="Experimental support. Here be dragons!"
+							>
+								<Icon icon="mdi:beta" />
+							</Tooltip>
+						{/if}
 
-						<span class="mr-1">{game.platforms.map(titleCase).join(', ')}</span>
+						{#if game.platforms.length > 0}
+							<span class="mx-1 text-slate-500">|</span>
+
+							<span class="mr-1">{game.platforms.map(titleCase).join(', ')}</span>
+						{/if}
 					</div>
 				</div>
 
 				<Button.Root
-					class="{game.favorite
+					class="mr-1 rounded p-1.5 hover:bg-slate-600 {game.favorite
 						? 'block'
-						: 'hidden group-hover:block'} mr-1 rounded p-1 hover:bg-slate-600"
+						: 'hidden group-hover:block'}"
 					on:click={(evt) => {
 						evt.stopPropagation();
 						game.favorite = !game.favorite;
@@ -91,15 +102,6 @@
 						class="text-xl text-accent-500"
 					/>
 				</Button.Root>
-
-				{#if game.modLoader !== ModLoader.BepInEx}
-					<Tooltip
-						class="mr-1 flex items-center rounded bg-accent-600 p-1.5 text-sm text-white"
-						text="Experimental support. Use at your own risk!"
-					>
-						<Icon icon="mdi:beta" />
-					</Tooltip>
-				{/if}
 			</Button.Root>
 		{/each}
 	{:else}

@@ -6,14 +6,14 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
 
 use crate::{
-    game::Platform,
+    game::{self, Platform},
     logger,
     profile::{launch::LaunchMode, ModManager},
     util::{
@@ -185,15 +185,13 @@ pub struct Prefs {
     pub game_prefs: HashMap<String, GamePrefs>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub struct GamePrefs {
     pub dir_override: Option<PathBuf>,
-    #[serde(default)]
     pub custom_args: Option<Vec<String>>,
     pub launch_mode: LaunchMode,
-    #[serde(default)]
-    pub platform: Platform,
+    pub platform: Option<Platform>,
 }
 
 #[cfg(target_os = "windows")]
@@ -317,7 +315,24 @@ impl Prefs {
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
         self.steam_exe_path = value.steam_exe_path;
         self.steam_library_dir = value.steam_library_dir;
+
         self.game_prefs = value.game_prefs;
+        for (slug, value) in &mut self.game_prefs {
+            let game = game::from_slug(&slug)
+                .with_context(|| format!("settings key for game {} is invalid", slug))?;
+
+            if let Some(platform) = game.platforms.iter().next() {
+                value.platform.get_or_insert(platform);
+            } else {
+                value.platform = None;
+                if let LaunchMode::Launcher = value.launch_mode {
+                    value.launch_mode = LaunchMode::Direct {
+                        instances: 1,
+                        interval_secs: 10.0,
+                    };
+                }
+            }
+        }
 
         if self.data_dir != value.data_dir {
             let scope = app.fs_scope();

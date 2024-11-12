@@ -44,13 +44,11 @@ impl PackageInstaller for BepinexInstaller {
 
     fn install(&mut self, src: &Path, _package_name: &str, profile: &Profile) -> Result<()> {
         install::fs::install(src, profile, |relative_path, _| {
-            let method = if relative_path.extension().is_some_and(|ext| ext == "cfg") {
-                FileInstallMethod::Copy
+            if relative_path.extension().is_some_and(|ext| ext == "cfg") {
+                Ok((FileInstallMethod::Copy, ConflictResolution::Skip))
             } else {
-                FileInstallMethod::Link
-            };
-
-            Ok((method, ConflictResolution::Skip))
+                Ok((FileInstallMethod::Link, ConflictResolution::Overwrite))
+            }
         })
     }
 

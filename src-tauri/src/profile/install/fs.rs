@@ -14,7 +14,7 @@ use crate::{
     game::ModLoader,
     prefs::Prefs,
     profile::Profile,
-    util::{self, fs::PathExt},
+    util::{self, error::IoResultExt, fs::PathExt},
 };
 
 pub fn install_from_zip(
@@ -204,13 +204,18 @@ where
         if path.exists() {
             for_file(&path)
         } else {
+            warn!(
+                "tried to toggle/remove file at {}(.old), but it does not exist",
+                path.with_extension("").display()
+            );
             Ok(())
         }
     }
 }
 
 pub(super) fn toggle_file(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
-    let mut new_path = path.as_ref().to_path_buf();
+    let path = path.as_ref();
+    let mut new_path = path.to_path_buf();
 
     if enabled {
         new_path.add_ext("old");
@@ -221,7 +226,7 @@ pub(super) fn toggle_file(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
         }
     }
 
-    fs::rename(path, &new_path)?;
+    fs::rename(path, &new_path).fs_context("renaming file", path)?;
 
     Ok(())
 }

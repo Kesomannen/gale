@@ -283,7 +283,7 @@ export type GamePrefs = {
 	dirOverride: string | null;
 	customArgs: string[] | null;
 	launchMode: LaunchMode;
-	platform: Platform;
+	platform: Platform | null;
 };
 
 export enum Platform {
@@ -291,7 +291,7 @@ export enum Platform {
 	EpicGames = 'epicGames',
 	Oculus = 'oculus',
 	Origin = 'origin',
-	XboxGamePass = 'xboxGamePass'
+	XboxStore = 'xboxStore'
 }
 
 export type ModContextItem = {

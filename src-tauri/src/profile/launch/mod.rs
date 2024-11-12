@@ -57,8 +57,8 @@ impl ManagedGame {
             .unwrap_or_default();
 
         let mut command = match (&launch_mode, platform) {
-            (LaunchMode::Launcher, Platform::Steam) => steam_command(self.game, prefs)?,
-            (LaunchMode::Launcher, Platform::EpicGames) => {
+            (LaunchMode::Launcher, Some(Platform::Steam)) => steam_command(self.game, prefs)?,
+            (LaunchMode::Launcher, Some(Platform::EpicGames)) => {
                 let Some(epic) = &self.game.platforms.epic_games else {
                     bail!("{} is not available on Epic Games", self.game.name)
                 };
@@ -73,10 +73,7 @@ impl ManagedGame {
                     .next()
                     .context("open returned no commands to try")?
             }
-            (LaunchMode::Direct { .. }, _)
-            | (_, Platform::Oculus | Platform::Origin | Platform::XboxGamePass) => {
-                Command::new(exe_path(game_dir)?)
-            }
+            (_, _) => Command::new(exe_path(game_dir)?),
         };
 
         add_loader_args(
@@ -146,10 +143,10 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     {
         path.to_path_buf()
     } else {
-        let platform = game_prefs.map(|prefs| prefs.platform).unwrap_or_default();
+        let platform = game_prefs.and_then(|prefs| prefs.platform);
 
         match platform {
-            Platform::Steam => {
+            Some(Platform::Steam) => {
                 let Some(steam) = &game.platforms.steam else {
                     bail!("{} is not available on Steam", game.name)
                 };
@@ -173,9 +170,9 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                 path
             }
             #[cfg(windows)]
-            Platform::XboxGamePass => {
-                let Some(xbox) = &game.platforms.xbox_game_pass else {
-                    bail!("{} is not available on Xbox Game Pass", game.name)
+            Some(Platform::XboxStore) => {
+                let Some(xbox) = &game.platforms.xbox_store else {
+                    bail!("{} is not available on Xbox Store", game.name)
                 };
 
                 let name = xbox.identifier.unwrap_or(game.name);
@@ -203,22 +200,15 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                 PathBuf::from(str)
             }
             #[cfg(windows)]
-            Platform::EpicGames => {
+            Some(Platform::EpicGames) => {
                 let Some(epic) = &game.platforms.epic_games else {
                     bail!("{} is not available on Epic Games", game.name)
                 };
 
                 let name = epic.identifier.unwrap_or(game.name);
 
-                let dat_path: PathBuf = [
-                    "C:",
-                    "ProgramData",
-                    "Epic",
-                    "UnrealEngineLauncher",
-                    "LauncherInstalled.dat",
-                ]
-                .iter()
-                .collect();
+                let dat_path: PathBuf =
+                    PathBuf::from("C:/ProgramData/Epic/UnrealEngineLauncher/LauncherInstalled.dat");
 
                 #[derive(Debug, Deserialize)]
                 #[serde(rename_all = "PascalCase")]
@@ -235,10 +225,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                     .map(|item| item.install_location)
                     .context("could not find entry in the list of installed games")?
             }
-            #[allow(unreachable_patterns)] // on windows
-            Platform::Oculus | Platform::Origin | Platform::EpicGames | Platform::XboxGamePass => {
-                bail!("game directory not set")
-            }
+            _ => bail!("game directory not set"),
         }
     };
 

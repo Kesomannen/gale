@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { open } from '@tauri-apps/plugin-dialog';
 
-	import { invokeCommand } from '$lib/invoke';
 	import PathField from '$lib/components/PathField.svelte';
 	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
@@ -33,7 +32,7 @@
 	<svelte:fragment slot="field">
 		{#if canClear}
 			<Button.Root
-				class="absolute right-1 rounded-md p-1 text-xl text-slate-400 hover:bg-slate-800 hover:text-slate-300"
+				class="absolute right-1 rounded p-1 text-lg text-slate-400 hover:bg-slate-800 hover:text-slate-300"
 				on:click={(evt) => {
 					evt.stopPropagation();
 					value = null;

@@ -25,9 +25,7 @@ pub struct FrontendGame {
 
 impl From<Game> for FrontendGame {
     fn from(value: Game) -> Self {
-        let platforms = Platform::iter()
-            .filter(|platform| value.platforms.has(*platform))
-            .collect();
+        let platforms = value.platforms.iter().collect();
 
         Self {
             name: value.name,
@@ -55,7 +53,7 @@ pub fn get_game_info(manager: StateMutex<ModManager>) -> GameInfo {
         .games
         .iter()
         .filter_map(|(game, managed_game)| match managed_game.favorite {
-            true => Some(game.name),
+            true => Some(&*game.slug),
             false => None,
         })
         .collect();
@@ -77,9 +75,7 @@ pub fn favorite_game(
     let prefs = prefs.lock().unwrap();
 
     let game = game::from_slug(&slug).context("unknown game")?;
-    manager.ensure_game(game, &prefs)?;
-
-    let managed_game = manager.games.get_mut(&game).unwrap();
+    let managed_game = manager.ensure_game(game, &prefs)?;
     managed_game.favorite = !managed_game.favorite;
 
     manager.save(&prefs)?;

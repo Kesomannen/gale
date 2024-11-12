@@ -198,7 +198,7 @@
 			"steam": {
 				"id": 892970
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "CoffeeStainStudios.Valheim"
 			}
 		}
@@ -290,7 +290,7 @@
 			"epicGames": {
 				"identifier": "among-us"
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "Innersloth.AmongUs"
 			}
 		}
@@ -498,7 +498,7 @@
 				"id": 1353230,
 				"dirName": "BombRushCyberfunk"
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "TeamReptile.BombRushCyberfunk"
 			}
 		}
@@ -559,7 +559,7 @@
 				"id": 949230,
 				"dirName": "Cities Skylines II"
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "ParadoxInteractive.CitiesSkylinesII-PCEdition"
 			}
 		}
@@ -619,7 +619,7 @@
 			"steam": {
 				"id": 1366540
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "GameraGame.DysonSphereProgram"
 			}
 		}
@@ -1176,7 +1176,7 @@
 			"epicGames": {
 				"identifier": "Jaguar"
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "UnknownWorldsEntertainmen.GAMEPREVIEWSubnautica"
 			}
 		}
@@ -1200,7 +1200,7 @@
 				"id": 848450,
 				"dirName": "SubnauticaZero"
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "UnknownWorldsEntertainmen.SubnauticaBelowZero"
 			}
 		}
@@ -1253,7 +1253,7 @@
 			"epicGames": {
 				"identifier": "Driftfish"
 			},
-			"xboxGamePass": {
+			"xboxStore": {
 				"identifier": "LandfallGames.TotallyAccurateBattleSimulator"
 			}
 		}
@@ -1454,6 +1454,7 @@
 	},
 	{
 		"name": "WEBFISHING",
+		"popular": true,
 		"modLoader": {
 			"name": "GDWeave"
 		},

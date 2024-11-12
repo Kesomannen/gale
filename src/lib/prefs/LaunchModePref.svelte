@@ -5,6 +5,7 @@
 
 	import type { LaunchMode } from '$lib/models';
 	import { sentenceCase } from '$lib/util';
+	import { activeGame } from '$lib/stores';
 
 	export let value: LaunchMode;
 	export let set: (value: LaunchMode) => Promise<void>;
@@ -26,6 +27,8 @@
 
 		await set(value);
 	}
+
+	$: platforms = $activeGame?.platforms ?? [];
 </script>
 
 <div class="flex items-center">
@@ -44,9 +47,10 @@
 		class="flex-grow"
 		items={['launcher', 'direct']}
 		getLabel={sentenceCase}
-		selected={value?.type ?? 'steam'}
-		{onSelectedChange}
+		selected={value?.type ?? 'launcher'}
 		multiple={false}
+		disabled={platforms.length === 0}
+		{onSelectedChange}
 	/>
 </div>
 
