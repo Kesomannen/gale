@@ -224,10 +224,11 @@ pub async fn install_with_deps(
             .map(|install| {
                 let borrowed = install.id.borrow(thunderstore)?;
 
-                Ok(profile
-                    .missing_deps(borrowed.dependencies(), thunderstore)
-                    .map(ModInstall::from)
-                    .chain(iter::once(install)))
+                Ok(iter::once(install).chain(
+                    profile
+                        .missing_deps(borrowed.dependencies(), thunderstore)
+                        .map(ModInstall::from),
+                ))
             })
             .flatten_ok()
             .collect::<Result<Vec<_>>>()
