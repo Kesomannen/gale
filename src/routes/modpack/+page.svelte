@@ -48,13 +48,17 @@
 		refresh();
 	}
 
-	// make sure 'Modpacks' category is always selected
+	// some communities don't have a specific modpack category
+	$: modpackCategoryExists = $categories.some((category) => category.slug === 'modpacks');
+
+	// make sure the modpacks category is always selected if it exists
 	$: if (
+		modpackCategoryExists &&
 		selectedCategories &&
-		!selectedCategories.some((category) => category?.name === 'Modpacks')
+		!selectedCategories.some((category) => category?.slug === 'modpacks')
 	) {
 		selectedCategories = [
-			$categories.find((category) => category.name === 'Modpacks')!,
+			$categories.find((category) => category.slug === 'modpacks')!,
 			...selectedCategories
 		];
 	}
@@ -198,9 +202,7 @@
 
 	<FormField
 		label="Name"
-		description="The name of the modpack, as shown on Thunderstore. 
-			        Make sure this stays consistent between updates.
-			        Cannot contain spaces or hyphens."
+		description="The name of the modpack, as shown on Thunderstore. Make sure this stays consistent between updates. Cannot contain spaces or hyphens."
 		required={true}
 	>
 		<InputField
@@ -248,7 +250,7 @@
 			bind:selected={selectedCategories}
 			onSelectedChange={saveArgs}
 			multiple={true}
-			getLabel={(category) => category}
+			getLabel={(category) => category.name}
 		>
 			<Select.Trigger
 				let:open
@@ -261,7 +263,7 @@
 					<div class="flex flex-wrap gap-1">
 						{#each selectedCategories as category}
 							<div class="rounded-md bg-slate-800 py-1 pl-3 pr-1 text-sm text-slate-200">
-								<span class="overflow-hidden truncate">{category}</span>
+								<span class="overflow-hidden truncate">{category.name}</span>
 
 								<Button.Root
 									class="ml-1 rounded-md px-1.5 hover:bg-slate-700"

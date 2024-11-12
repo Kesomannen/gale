@@ -55,9 +55,9 @@
 </script>
 
 <!-- odd:bg-[#1b2433] -->
-<div class="field my-1 flex items-center pl-6 pr-4 text-slate-300">
+<div class="flex items-center py-0.5 pl-6 pr-4 text-slate-300">
 	<Tooltip
-		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate py-1 pr-2 text-left text-slate-300"
+		class="w-[45%] min-w-52 flex-shrink-0 cursor-auto truncate pr-2 text-left text-slate-300"
 		openDelay={50}
 	>
 		{sentenceCase(entry.name)}

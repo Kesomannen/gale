@@ -1,5 +1,8 @@
+use std::time::Instant;
+
 use ::log::error;
 use anyhow::Context;
+use log::{debug, info};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -33,11 +36,29 @@ impl NetworkClient {
 }
 
 fn setup(app: &AppHandle) -> anyhow::Result<()> {
+    let start = Instant::now();
+
+    info!(
+        "gale v{} running on {}",
+        env!("CARGO_PKG_VERSION"),
+        std::env::consts::OS
+    );
+
     app.manage(NetworkClient::create()?);
 
-    prefs::setup(app).context("Failed to read settings")?;
+    prefs::setup(app).context("Failed to initialize settings")?;
+    let prefs_done = Instant::now();
     profile::setup(app).context("Failed to initialize mod manager")?;
+    let manager_done = Instant::now();
     thunderstore::setup(app);
+
+    info!("setup done in {:?}", start.elapsed());
+    debug!(
+        "prefs: {:?} | manager {:?} | thunderstore {:?}",
+        prefs_done - start,
+        manager_done - prefs_done,
+        manager_done.elapsed()
+    );
 
     Ok(())
 }
@@ -119,6 +140,7 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             app.get_window("main")
                 .expect("app should have main window")
@@ -142,7 +164,6 @@ pub fn run() {
                 });
             }
         }))
-        .plugin(tauri_plugin_cli::init())
         .setup(|app| {
             let handle = app.handle().clone();
             logger::setup().ok();
@@ -151,8 +172,7 @@ pub fn run() {
                 error!("failed to launch Gale! {:#}", err);
 
                 app.dialog()
-                    .message(format!("{:#}", err))
-                    .title("Error while launching Gale!")
+                    .message(format!("Failed to launch Gale:\n{:#}", err))
                     .blocking_show();
 
                 return Err(err.into());

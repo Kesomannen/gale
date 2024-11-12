@@ -14,6 +14,7 @@
 	} from '$lib/models';
 	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
+	import { activeGame } from '$lib/stores';
 
 	const defaultContextItems: ModContextItem[] = [
 		{
@@ -53,6 +54,11 @@
 	$: {
 		$queryArgs;
 		virtualList?.scrollTo(0);
+	}
+
+	$: {
+		$activeGame;
+		selected = null;
 	}
 
 	export function selectMod(mod: Mod) {

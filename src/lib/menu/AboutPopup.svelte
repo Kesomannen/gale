@@ -30,7 +30,7 @@
 			<br />
 			GNU General Public License v3.0
 		</p>
-		<div class="mt-2 flex items-center gap-2">
+		<div class="mt-3 flex items-center gap-2">
 			<Icon icon="mdi:file-document" class="text-xl text-white" />
 			<Link href="https://github.com/Kesomannen/gale/blob/master/CHANGELOG.md">Changelog</Link>
 		</div>
@@ -39,10 +39,10 @@
 			<Link href="https://github.com/Kesomannen/gale">GitHub</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="mdi:link" class="text-xl text-white" />
-			<Link href="https://kesomannen.com/gale">Website</Link>
+			<Icon icon="mdi:discord" class="text-xl text-white" />
+			<Link href="https://discord.gg/sfuWXRfeTt">Discord</Link>
 		</div>
-		<div class="mt-2 flex items-center gap-2">
+		<div class="mt-3 flex items-center gap-2">
 			<BigButton
 				on:click={() => refreshUpdate().then(() => (checkedUpdate = true))}
 				disabled={$isChecking}

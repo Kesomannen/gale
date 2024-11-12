@@ -7,6 +7,7 @@ use std::{
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use base64::{prelude::BASE64_STANDARD, Engine};
+use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -28,10 +29,6 @@ use crate::{
 pub mod commands;
 pub mod r2modman;
 
-pub fn setup(_app: &AppHandle) -> Result<()> {
-    Ok(())
-}
-
 pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
     let data = import_file_from_path(url.into(), app)?;
     import_data(data, InstallOptions::default(), app).await?;
@@ -39,9 +36,7 @@ pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
 }
 
 fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
-    ensure!(path.is_file(), "path is not a file");
-
-    let file = fs::File::open(&path).fs_context("opening file", &path)?;
+    let file = File::open(&path).fs_context("opening file", &path)?;
 
     import_file(file, app)
 }
@@ -74,8 +69,8 @@ impl ImportData {
         let mods = mods
             .into_iter()
             .map(|r2| r2.into_install(thunderstore))
-            .collect::<Result<Vec<_>>>()
-            .context("failed to resolve mod references")?;
+            .filter_map(Result::ok)
+            .collect_vec();
 
         Ok(Self {
             name,

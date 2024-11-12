@@ -237,13 +237,8 @@
 				text="Report a bug"
 			/>
 			<MenubarItem
-				on:click={() => shellOpen('https://discord.gg/lcmod')}
-				text="Join LC modding server"
-			/>
-			<MenubarItem
-				on:click={() =>
-					shellOpen('https://discord.com/channels/1168655651455639582/1246088342458863618')}
-				text="Open discord thread"
+				on:click={() => shellOpen('https://discord.gg/sfuWXRfeTt')}
+				text="Join discord server"
 			/>
 			<MenubarItem on:click={() => (aboutOpen = true)} text="About Gale" />
 		</MenubarMenu>

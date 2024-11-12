@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
-use log::debug;
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
@@ -275,17 +275,21 @@ impl Prefs {
 
     pub fn create(app: &AppHandle) -> Result<Self> {
         let path = Self::path();
-        fs::create_dir_all(path.parent().unwrap())?;
+        fs::create_dir_all(path.parent().unwrap())
+            .context("failed to create settings directory")?;
+
+        info!("loading settings from {}", path.display());
 
         let is_first_run = !path.exists();
         let prefs = match is_first_run {
             true => {
+                info!("no settings file found, creating new default");
+
                 let prefs = Prefs {
                     is_first_run,
                     ..Default::default()
                 };
 
-                prefs.save()?;
                 prefs
             }
             false => {
