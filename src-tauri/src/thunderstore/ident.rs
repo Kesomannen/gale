@@ -134,13 +134,8 @@ impl TryFrom<String> for VersionIdent {
     fn try_from(value: String) -> Result<Self, ParseError> {
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        let name_start = indices.next().ok_or(ParseError)? as u32 + 1;
-        let version_start = indices.next().ok_or(ParseError)? as u32 + 1;
-
-        // make sure there aren't any more hyphens
-        if indices.next().is_some() {
-            return Err(ParseError);
-        }
+        let version_start = indices.next_back().ok_or(ParseError)? as u32 + 1;
+        let name_start = indices.next_back().ok_or(ParseError)? as u32 + 1;
 
         Ok(Self {
             repr: value,
@@ -297,12 +292,7 @@ impl TryFrom<String> for PackageIdent {
     fn try_from(value: String) -> Result<Self, ParseError> {
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        let name_start = indices.next().ok_or(ParseError)? as u32 + 1;
-
-        // make sure there aren't any more hyphens
-        if indices.next().is_some() {
-            return Err(ParseError);
-        }
+        let name_start = indices.next_back().ok_or(ParseError)? as u32 + 1;
 
         Ok(Self {
             repr: value,
