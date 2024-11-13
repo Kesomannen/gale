@@ -1,14 +1,21 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 (2024-11-13)
 
 ### Added
 
+- Experimental support for:
+  - 4 platforms: Epic Games, Xbox Store, Oculus and Origin
+  - 4 mod loaders: MelonLoader, Shimloader, GDWeave and Northstar
+  - 11 games using those mod loaders
 - More logging and error context, especially during the startup process
+- Tons of game icons
+- Links to the new Discord server
 
 ### Fixed
 
 - Modpack export causing the app to freeze on games without a "Modpack" category
+- Arcus Chroma and Subnautica Below Zero not working at all
 
 ## 1.0.1 (2024-11-09)
 
