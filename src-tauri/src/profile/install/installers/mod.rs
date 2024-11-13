@@ -26,10 +26,8 @@ pub use self::{
 pub type PackageZip = ZipArchive<Cursor<Vec<u8>>>;
 
 pub trait PackageInstaller {
-    /// Extracts a mod archive to `dest`.
     fn extract(&mut self, archive: PackageZip, package_name: &str, dest: PathBuf) -> Result<()>;
 
-    /// Installs a package from `src` to a profile.
     fn install(&mut self, src: &Path, _package_name: &str, profile: &Profile) -> Result<()> {
         super::fs::install(src, profile, |_, _| {
             Ok((FileInstallMethod::Link, ConflictResolution::Overwrite))
@@ -39,7 +37,7 @@ pub trait PackageInstaller {
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
 
-    fn mod_dir(&self, profile_mod: &ProfileMod, profile: &Profile) -> Option<PathBuf> {
+    fn mod_dir(&self, _profile_mod: &ProfileMod, _profile: &Profile) -> Option<PathBuf> {
         None
     }
 }

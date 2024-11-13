@@ -115,7 +115,6 @@ impl InstallOptions {
 pub struct ModInstall {
     id: ModId,
     enabled: bool,
-    overwrite: bool,
     index: Option<usize>,
     install_time: Option<DateTime<Utc>>,
 }
@@ -125,7 +124,6 @@ impl ModInstall {
         Self {
             id,
             enabled: true,
-            overwrite: false,
             index: None,
             install_time: None,
         }
@@ -143,11 +141,6 @@ impl ModInstall {
 
     pub fn with_time(mut self, date: DateTime<Utc>) -> Self {
         self.install_time = Some(date);
-        self
-    }
-
-    pub fn with_overwrite(mut self, overwrite: bool) -> Self {
-        self.overwrite = overwrite;
         self
     }
 

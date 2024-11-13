@@ -58,11 +58,12 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-/// The main struct of the app.
+/// The main state of the app.
 pub struct ModManager {
-    /// Holds all the currently managed games, indexed by their slug.
+    /// Holds all the currently managed games.
     ///
-    /// Note that this only contains entries for `Game`s which the user has selected at least once.
+    /// Note that this only contains entries for `Game`s
+    /// which the user has selected at least once.
     pub games: HashMap<Game, ManagedGame>,
     pub active_game: Game,
 }
@@ -74,7 +75,7 @@ struct ManagerSaveData {
     active_game: String,
 }
 
-/// Stores information and profiles about one game.
+/// Stores profiles and other state for one game.
 pub struct ManagedGame {
     game: Game,
     profiles: Vec<Profile>,
@@ -138,7 +139,7 @@ pub enum ProfileModKind {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ThunderstoreMod {
-    #[serde(alias = "fullName")]
+    #[serde(rename = "fullName")]
     ident: VersionIdent,
 
     #[serde(flatten)]

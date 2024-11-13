@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{anyhow, ensure, Context, Result};
-use log::{debug, info, warn};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_fs::FsExt;
