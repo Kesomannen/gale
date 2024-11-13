@@ -424,10 +424,14 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         Ok(())
     }
 
-    fn mod_dir(&self, _profile_mod: &ProfileMod, profile: &Profile) -> Option<PathBuf> {
-        self.default_subdir.and_then(|index| {
-            let path: &Path = self.subdirs[index].target.as_ref();
-            path.exists().then(|| profile.path.join(path))
+    fn mod_dir(&self, profile_mod: &ProfileMod, profile: &Profile) -> Option<PathBuf> {
+        self.default_subdir.map(|index| {
+            let mut path = profile.path.to_path_buf();
+
+            path.push(self.subdirs[index].target);
+            path.push(&*profile_mod.full_name());
+
+            path
         })
     }
 }

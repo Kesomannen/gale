@@ -7,7 +7,7 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Zoom factor">Changes the zoom level of the mod manager.</Label>
+	<Label text="Zoom factor">Changes the zoom level of the app.</Label>
 
 	<Dropdown
 		class="flex-grow"

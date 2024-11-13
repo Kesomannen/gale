@@ -329,7 +329,7 @@
 		}
 	},
 	{
-		"name": "Archus Chroma",
+		"name": "Arcus Chroma",
 		"modLoader": {
 			"name": "BepInEx"
 		},
@@ -1183,7 +1183,7 @@
 	},
 	{
 		"name": "Subnautica: Below Zero",
-		"slug": "belowzero",
+		"slug": "subnautica-below-zero",
 		"modLoader": {
 			"name": "BepInEx",
 			"packageName": "Subnautica_Modding-BepInExPack_BelowZero",

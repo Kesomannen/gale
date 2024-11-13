@@ -16,6 +16,10 @@ if __name__ == '__main__':
         with Image.open(absolute) as img:
             img.thumbnail(SIZE)
 
-        os.remove(absolute)
-        name, ext = path.splitext(file)
-        img.save(path.join(dir, name + '.webp'), optimize=True)
+            name, ext = path.splitext(file)
+            print('saving', name + '.webp')
+            img.save(path.join(dir, name + '.webp'), format='webp', optimize=True)
+
+        if not file.endswith('webp'):
+            print('removing', file)
+            os.remove(absolute)

@@ -148,7 +148,7 @@ pub enum Platform {
 pub struct Steam<'a> {
     pub id: u32,
     #[serde(default)]
-    pub dir_name: Cow<'a, str>,
+    pub dir_name: Option<&'a str>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

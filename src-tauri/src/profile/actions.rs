@@ -146,17 +146,12 @@ impl Profile {
 
     pub fn open_mod_dir(&self, uuid: Uuid) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
-        let installer = self.installer_for(profile_mod);
 
-        match installer.mod_dir(profile_mod, self) {
-            Some(path) => {
-                open::that(path)?;
-                Ok(())
-            }
-            None => Err(anyhow!(
-                "not supported for {}",
-                self.game.mod_loader.to_str()
-            )),
+        if let Some(path) = self.installer_for(profile_mod).mod_dir(profile_mod, self) {
+            open::that(path)?;
+            Ok(())
+        } else {
+            Err(anyhow!("unsupported"))
         }
     }
 

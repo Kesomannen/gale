@@ -65,7 +65,7 @@
 			value={prefs.steamExePath ?? null}
 			set={set((value, prefs) => (prefs.steamExePath = value))}
 		>
-			Path to the Steam executable.
+			Path to the Steam executable (steam.exe). Used for Steam launching.
 		</PathPref>
 
 		<PathPref
@@ -74,7 +74,7 @@
 			value={prefs.steamLibraryDir ?? null}
 			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 		>
-			Path to your default Steam game library.
+			Path to your default Steam game library. Used to find the location of Steam games.
 		</PathPref>
 
 		<PathPref
@@ -104,8 +104,8 @@
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}
 		>
-			Whether to automatically fetch mods every 15 minutes. This will ensure the mod list is
-			up-to-date, but can be disabled to save bandwidth.
+			Whether to automatically fetch mods every 15 minutes. This will ensure the mod list stays
+			relatively up-to-date, but can be disabled to save bandwidth.
 			<br />
 			To manually trigger a fetch, go to <b>File &gt; Fetch mods</b>.
 		</TogglePref>
@@ -127,7 +127,10 @@
 			value={gamePrefs.dirOverride}
 			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
-			Path to the {$activeGame?.name} game directory.
+			Overrides the path to the {$activeGame?.name} game directory.
+			{#if !needsDirectory}
+				If unset, Gale will try to find it through the specified Steam library instead.
+			{/if}
 		</PathPref>
 
 		<SmallPrefsHeading>Launch</SmallPrefsHeading>

@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{bail, ensure, Context, Result};
-use log::{info, warn};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
 
@@ -165,7 +165,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                     path.push("common");
                 }
 
-                path.push(&*steam.dir_name);
+                path.push(steam.dir_name.unwrap_or(game.name));
 
                 path
             }

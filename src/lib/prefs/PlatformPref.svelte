@@ -3,7 +3,7 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	import type { Platform } from '$lib/models';
-	import { sentenceCase, titleCase } from '$lib/util';
+	import { titleCase } from '$lib/util';
 	import { activeGame } from '$lib/stores';
 
 	export let value: Platform | null;
@@ -13,7 +13,7 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Platform">The platform where your game is hosted.</Label>
+	<Label text="Platform">The platform where your game is installed.</Label>
 
 	<Dropdown
 		class="flex-grow"
