@@ -204,6 +204,18 @@
 		}
 	},
 	{
+		"name": "WEBFISHING",
+		"popular": true,
+		"modLoader": {
+			"name": "GDWeave"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3146520
+			}
+		}
+	},
+	{
 		"name": "20 Minutes Till Dawn",
 		"modLoader": {
 			"name": "BepInEx",
@@ -1449,18 +1461,6 @@
 		"platforms": {
 			"steam": {
 				"id": 1063420
-			}
-		}
-	},
-	{
-		"name": "WEBFISHING",
-		"popular": true,
-		"modLoader": {
-			"name": "GDWeave"
-		},
-		"platforms": {
-			"steam": {
-				"id": 3146520
 			}
 		}
 	},

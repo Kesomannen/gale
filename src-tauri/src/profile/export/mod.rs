@@ -198,20 +198,19 @@ where
 pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
     // Include any files in the BepInEx/config directory,
     // and any other files with the following extensions:
-    const INCLUDE_EXTENSIONS: [&str; 6] = ["cfg", "txt", "json", "yml", "yaml", "ini"];
-    const EXCLUDE_FILES: [&str; 5] = [
+    const INCLUDE_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini"];
+    const EXCLUDE_FILES: &[&str] = &[
         "profile.json",
         "manifest.json",
         "mods.yml",
         "doorstop_config.ini",
         "snapshots",
+        "_state",
     ];
-
-    let config_dir = ["BepInEx", "config"].iter().collect::<PathBuf>();
 
     WalkDir::new(root)
         .into_iter()
-        .filter_map(|entry| entry.ok())
+        .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_file())
         .map(move |entry| entry.into_path().strip_prefix(root).unwrap().to_path_buf())
         .filter(|path| {
@@ -220,9 +219,7 @@ pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
                 .any(|exc| path.starts_with(exc) || path.ends_with(exc))
         })
         .filter(move |path| {
-            path.starts_with(&config_dir)
-                || path
-                    .extension()
-                    .is_some_and(|ext| INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext))
+            path.extension()
+                .is_some_and(|ext| INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext))
         })
 }

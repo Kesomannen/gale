@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{bail, ensure, Context, Result};
-use log::{debug, info, warn};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
 
