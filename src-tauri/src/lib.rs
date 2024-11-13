@@ -46,9 +46,9 @@ fn setup(app: &AppHandle) -> anyhow::Result<()> {
 
     app.manage(NetworkClient::create()?);
 
-    prefs::setup(app).context("Failed to initialize settings")?;
+    prefs::setup(app).context("failed to initialize settings")?;
     let prefs_done = Instant::now();
-    profile::setup(app).context("Failed to initialize mod manager")?;
+    profile::setup(app).context("failed to initialize mod manager")?;
     let manager_done = Instant::now();
     thunderstore::setup(app);
 

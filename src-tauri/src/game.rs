@@ -2,7 +2,6 @@ use std::{
     borrow::Cow,
     hash::{self, Hash},
     marker::PhantomData,
-    path::PathBuf,
 };
 
 use heck::{ToKebabCase, ToPascalCase};
@@ -227,16 +226,14 @@ impl<'a> ModLoader<'a> {
         }
     }
 
-    pub fn log_path(&self) -> PathBuf {
+    pub fn log_path(&self) -> &str {
         match &self.kind {
-            ModLoaderKind::BepInEx { .. } => &["BepInEx", "LogOutput.log"],
-            ModLoaderKind::MelonLoader { .. } => &["MelonLoader", "Latest.log"],
-            ModLoaderKind::GDWeave {} => todo!(),
-            ModLoaderKind::Northstar {} => todo!(),
-            ModLoaderKind::Shimloader {} => todo!(),
+            ModLoaderKind::BepInEx { .. } => "BepInEx/LogOutput.log",
+            ModLoaderKind::MelonLoader { .. } => "MelonLoader/Latest.log",
+            ModLoaderKind::GDWeave {} => "GDWeave/GDWeave.log",
+            ModLoaderKind::Northstar {} => "",
+            ModLoaderKind::Shimloader {} => "",
         }
-        .iter()
-        .collect()
     }
 }
 

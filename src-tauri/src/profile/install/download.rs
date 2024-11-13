@@ -214,7 +214,11 @@ impl<'a> Installer<'a> {
 
         installer
             .extract(archive, version.full_name(), cache_path.clone())
-            .context("failed to extract mod")?;
+            .map_err(|err| {
+                // the cached mod is probably in an invalid state
+                fs::remove_dir_all(&cache_path).ok();
+                err.context("failed to extract archive")
+            })?;
 
         self.check_cancel()?;
         self.update(InstallTask::Installing);

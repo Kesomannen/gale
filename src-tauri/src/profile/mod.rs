@@ -347,12 +347,10 @@ impl Profile {
         self.path
             .join(self.game.mod_loader.log_path())
             .exists_or_none()
-            .ok_or(anyhow!("no log file found"))
+            .context("no log file found")
     }
 
     fn load(mut path: PathBuf, game: Game) -> Result<Option<Self>> {
-        let name = util::fs::file_name_owned(&path);
-
         path.push("profile.json");
 
         if !path.exists() {
@@ -364,9 +362,11 @@ impl Profile {
         }
 
         let manifest: ProfileSaveData = util::fs::read_json(&path)
-            .with_context(|| format!("failed to read profile manifest for '{}'", name))?;
+            .with_context(|| format!("failed to read profile manifest"))?;
 
         path.pop();
+
+        let name = util::fs::file_name_owned(&path);
 
         let profile = Self {
             modpack: manifest.modpack,
@@ -541,8 +541,12 @@ impl ManagedGame {
             let path = entry.context("failed to read profile directory")?.path();
 
             if path.is_dir() {
-                let result = Profile::load(path.clone(), game)
-                    .with_context(|| format!("failed to read profile from {}", path.display()))?;
+                let result = Profile::load(path.clone(), game).with_context(|| {
+                    format!(
+                        "failed to load profile {}",
+                        path.file_name().unwrap().to_string_lossy()
+                    )
+                })?;
 
                 if let Some(profile) = result {
                     profiles.push(profile);
@@ -614,18 +618,24 @@ impl ModManager {
         {
             let path = entry.context("failed to read data directory entry")?.path();
 
-            if path.is_dir() {
-                let result = ManagedGame::load(path.clone())
-                    .with_context(|| format!("failed to load game from {}", path.display()))?;
+            if !path.is_dir() {
+                continue;
+            }
 
-                if let Some((game, manager_game)) = result {
-                    debug!(
-                        "loaded game {} with {} profiles",
-                        game.slug,
-                        manager_game.profiles.len()
-                    );
-                    games.insert(game, manager_game);
-                }
+            let result = ManagedGame::load(path.clone()).with_context(|| {
+                format!(
+                    "failed to load game {}",
+                    path.file_name().unwrap().to_string_lossy()
+                )
+            })?;
+
+            if let Some((game, manager_game)) = result {
+                debug!(
+                    "loaded game {} with {} profiles",
+                    game.slug,
+                    manager_game.profiles.len()
+                );
+                games.insert(game, manager_game);
             }
         }
 

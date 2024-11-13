@@ -1,6 +1,10 @@
-use std::{borrow::Cow, fs, path::PathBuf};
+use std::{
+    borrow::Cow,
+    fs,
+    path::{self, PathBuf},
+};
 
-use anyhow::{ensure, Context, Result};
+use anyhow::{bail, Result};
 
 use super::{PackageInstaller, PackageZip};
 use crate::profile::{
@@ -30,35 +34,34 @@ impl PackageInstaller for GDWeaveModInstaller {
         // find a directory with a manifest.json file in it
         // except the top level one since that has thunderstore's manifest
 
-        let mut dirs = Vec::new();
-        let mut manifests = Vec::new();
+        let mut roots: Vec<PathBuf> = Vec::new();
 
         for i in 0..archive.len() {
             let file = archive.by_index(i)?;
+            let Some(path) = file.enclosed_name() else {
+                continue;
+            };
 
-            if file.is_dir() {
-                dirs.push(PathBuf::from(file.name()));
-            } else if file.name().ends_with("manifest.json") {
-                manifests.push(PathBuf::from(file.name()));
+            let mut components = path.components();
+
+            match components.next_back() {
+                Some(path::Component::Normal(name))
+                    if name == "manifest.json" && components.clone().count() > 0 =>
+                {
+                    roots.push(components.collect());
+                }
+                _ => (),
             }
         }
 
-        let mut mod_roots = manifests.into_iter().filter_map(|path| {
-            let parent = path.parent()?;
-            dirs.iter().find(|dir| *dir == parent)
-        });
-
-        let mod_root = mod_roots
-            .next()
-            .context("malformed mod archive: no mod root found")?;
-
-        ensure!(
-            mod_roots.next().is_none(),
-            "malformed mod archive: multiple mod roots found"
-        );
+        let root = match roots.len() {
+            0 => bail!("no mod root found"),
+            1 => roots.into_iter().next().unwrap(),
+            _ => bail!("multiple mod roots found"),
+        };
 
         install::fs::extract(archive, dest, |relative_path| {
-            if let Ok(relative_to_root) = relative_path.strip_prefix(mod_root) {
+            if let Ok(relative_to_root) = relative_path.strip_prefix(&root) {
                 let mut path = relative_mod_dir(package_name);
                 path.push(relative_to_root);
 
