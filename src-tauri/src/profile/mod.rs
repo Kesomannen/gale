@@ -19,7 +19,7 @@ use crate::{
     game::{self, Game, ModLoader},
     logger,
     prefs::Prefs,
-    thunderstore::{self, BorrowedMod, ModId, PackageIdent, Thunderstore, VersionIdent},
+    thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::{
         self,
         error::IoResultExt,
@@ -77,11 +77,11 @@ struct ManagerSaveData {
 
 /// Stores profiles and other state for one game.
 pub struct ManagedGame {
-    game: Game,
-    profiles: Vec<Profile>,
-    path: PathBuf,
-    favorite: bool,
-    active_profile_index: usize,
+    pub game: Game,
+    pub profiles: Vec<Profile>,
+    pub path: PathBuf,
+    pub favorite: bool,
+    pub active_profile_index: usize,
 }
 
 /// Persistent data for ManagerGame
@@ -219,7 +219,7 @@ impl ProfileModKind {
     pub fn full_name(&self) -> Cow<'_, str> {
         match self.ident() {
             Cow::Borrowed(borrow) => Cow::Borrowed(borrow.full_name()),
-            Cow::Owned(owned) => Cow::Owned(PackageIdent::from(owned).into_string()),
+            Cow::Owned(owned) => Cow::Owned(owned.name().to_owned()),
         }
     }
 
@@ -457,14 +457,6 @@ impl ManagedGame {
             favorite: false,
             active_profile_index: 0,
         }
-    }
-
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
-
-    pub fn profiles_mut(&mut self) -> &mut [Profile] {
-        &mut self.profiles
     }
 
     pub fn profile_index(&self, name: &str) -> Option<usize> {

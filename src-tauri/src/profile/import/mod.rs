@@ -13,8 +13,10 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tempfile::tempdir;
 use uuid::Uuid;
+use zip::ZipArchive;
 
 use crate::{
+    game::ModLoader,
     prefs::Prefs,
     profile::{
         export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
@@ -25,6 +27,8 @@ use crate::{
     util::{self, error::IoResultExt, fs::PathExt},
     NetworkClient,
 };
+
+use super::Profile;
 
 pub mod commands;
 pub mod r2modman;
@@ -211,7 +215,8 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
                     .collect::<Vec<_>>())
             },
         )
-        .await?;
+        .await
+        .context("failed to install dependencies")?;
     }
 
     let manager = app.state::<Mutex<ModManager>>();
@@ -232,7 +237,7 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     if let Some(uuid) = existing {
         profile
             .force_remove_mod(uuid)
-            .context("failed to remove existing mod")?;
+            .context("failed to remove existing version")?;
     }
 
     let mut plugin_dir = profile.path.clone();
@@ -242,16 +247,13 @@ async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
 
     match kind {
         LocalModKind::Zip => {
-            install::install_from_zip(&path, &profile, &local_mod.name, mod_loader, &prefs)
-                .context("failed to install local mod")?;
+            install_from_zip(&path, &profile, &local_mod.name, mod_loader, &prefs)
+                .context("failed to install")?;
 
             local_mod.icon = plugin_dir.join("icon.png").exists_or_none();
         }
         LocalModKind::Dll => {
-            let file_name = path.file_name().unwrap();
-
-            fs::create_dir_all(&plugin_dir)?;
-            fs::copy(&path, plugin_dir.join(file_name))?;
+            bail!("currently unsupported")
         }
     }
 
@@ -329,4 +331,33 @@ fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
             Err(_) => Ok(None),
         }
     }
+}
+
+fn install_from_zip(
+    src: &Path,
+    profile: &Profile,
+    package_name: &str,
+    mod_loader: &'static ModLoader,
+    prefs: &Prefs,
+) -> Result<()> {
+    // temporarily extract the zip so the same install method can be used
+
+    // dont use tempdir since we need the files on the same drive as the destination
+    // for hard linking to work
+
+    let temp_path = prefs.data_dir.join("temp").join("extract");
+    fs::create_dir_all(&temp_path).context("failed to create temporary directory")?;
+
+    let reader = fs::read(src)
+        .map(Cursor::new)
+        .context("failed to read file")?;
+    let archive = ZipArchive::new(reader).context("failed to read archive")?;
+
+    let mut installer = mod_loader.installer_for(package_name);
+    installer.extract(archive, package_name, temp_path.clone())?;
+    installer.install(&temp_path, package_name, profile)?;
+
+    fs::remove_dir_all(temp_path).context("failed to remove temporary directory")?;
+
+    Ok(())
 }

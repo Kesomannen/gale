@@ -1,7 +1,7 @@
 use std::{
     borrow::Cow,
     fs::{self, File},
-    io::{self, Cursor, Read, Seek},
+    io::{self, Read, Seek},
     path::{Path, PathBuf},
 };
 
@@ -11,40 +11,9 @@ use walkdir::WalkDir;
 use zip::ZipArchive;
 
 use crate::{
-    game::ModLoader,
-    prefs::Prefs,
     profile::Profile,
     util::{self, error::IoResultExt, fs::PathExt},
 };
-
-pub fn install_from_zip(
-    src: &Path,
-    profile: &Profile,
-    package_name: &str,
-    mod_loader: &'static ModLoader,
-    prefs: &Prefs,
-) -> Result<()> {
-    // temporarily extract the zip so the same install method can be used
-
-    // dont use tempdir since we need the files on the same drive as the destination
-    // for hard linking to work
-
-    let temp_path = prefs.data_dir.join("temp").join("extract");
-    fs::create_dir_all(&temp_path).context("failed to create temporary directory")?;
-
-    let reader = fs::read(src)
-        .map(Cursor::new)
-        .context("failed to read file")?;
-    let archive = ZipArchive::new(reader)?;
-
-    let mut installer = mod_loader.installer_for(package_name);
-    installer.extract(archive, package_name, temp_path.clone())?;
-    installer.install(&temp_path, package_name, profile)?;
-
-    fs::remove_dir_all(temp_path).context("failed to remove temporary directory")?;
-
-    Ok(())
-}
 
 /// Extract a package archive to `dest`, mapping files using `map_file`.
 ///

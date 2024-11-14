@@ -42,9 +42,8 @@ pub enum ImportSource {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct R2Mod {
-    #[serde(alias = "name")]
+    #[serde(rename = "name")]
     pub full_name: String,
     #[serde(alias = "versionNumber")]
     pub version: R2Version,

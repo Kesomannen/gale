@@ -120,6 +120,7 @@
 	{
 		"name": "H3VR",
 		"slug": "h3vr",
+		"r2dirName": "H3VR",
 		"popular": true,
 		"modLoader": {
 			"name": "BepInEx",

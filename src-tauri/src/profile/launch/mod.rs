@@ -225,7 +225,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                     .map(|item| item.install_location)
                     .context("could not find entry in the list of installed games")?
             }
-            _ => bail!("game directory not set"),
+            _ => bail!("game directory not found, you may need to specify it in the settings"),
         }
     };
 

@@ -1,11 +1,20 @@
 # Changelog
 
+## 1.1.2 (2024-11-14)
+
+### Fixed
+
+- Local mod uninstall and toggle throwing errors
+- `File is used by another process` error when changing data directory
+- Gale profile codes/files causing an error when imported in r2modman
+
 ## 1.1.1 (2024-11-14)
 
 ### Fixed
 
 - Startup crash due to extra hyphens in mod names (`failed to read profile manifest ...`)
 - BepInEx config files installing with extra directories, causing them to seem duplicated
+- Uninstalling mods on H3VR throwing a `Failed to delete state file` error
 - Re-added Dyson Sphere Program icon
 
 ## 1.1.0 (2024-11-13)

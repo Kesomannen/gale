@@ -47,7 +47,7 @@
 		class="flex-grow"
 		items={['launcher', 'direct']}
 		getLabel={sentenceCase}
-		selected={value?.type ?? 'launcher'}
+		selected={value?.type ?? 'direct'}
 		multiple={false}
 		disabled={platforms.length === 0}
 		{onSelectedChange}

@@ -25,8 +25,6 @@ pub use installers::*;
 #[cfg(test)]
 mod tests;
 
-pub use fs::install_from_zip;
-
 pub fn setup(handle: &AppHandle) -> Result<()> {
     handle.manage(Mutex::new(InstallState::default()));
 

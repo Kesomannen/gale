@@ -18,6 +18,7 @@ use crate::{
     profile::{launch::LaunchMode, ModManager},
     util::{
         self,
+        error::IoResultExt,
         fs::{JsonStyle, Overwrite, PathExt},
         window::WindowExt,
     },
@@ -73,7 +74,7 @@ impl DirPref {
             "new directory is not empty"
         );
 
-        debug!(
+        info!(
             "attempting to rename directory: {} -> {}",
             self.value.display(),
             new_value.display()
@@ -85,7 +86,7 @@ impl DirPref {
 
         match fs::rename(&self.value, &new_value) {
             Ok(_) => {
-                debug!("renaming succeeded");
+                info!("renaming succeeded");
 
                 if !self.keep_files.is_empty() {
                     // move files back to the original directory
@@ -108,15 +109,20 @@ impl DirPref {
                 }
             }
             Err(err) => {
-                debug!("renaming failed, falling back to copying: {}", err);
+                info!("renaming failed, falling back to copying: {}", err);
 
-                fs::create_dir_all(&new_value)?;
+                fs::create_dir_all(&new_value).fs_context("creating new directory", &new_value)?;
 
-                for entry in self.value.read_dir()? {
-                    let entry = entry?;
+                for entry in self
+                    .value
+                    .read_dir()
+                    .fs_context("reading old directory", &self.value)?
+                {
+                    let entry = entry.context("failed to read file in old directory")?;
                     let file_name = entry.file_name();
 
                     if self.keep_files.iter().any(|file| file_name == *file) {
+                        info!("skipping {}", file_name.to_string_lossy());
                         continue;
                     }
 
@@ -124,11 +130,17 @@ impl DirPref {
                     let new_path = new_value.join(file_name);
 
                     if entry.file_type()?.is_dir() {
-                        util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes)?;
-                        fs::remove_dir_all(old_path)?;
+                        debug!("copying dir {:?} -> {:?}", old_path, new_path);
+
+                        util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes)
+                            .context("failed to copy subdirectory")?;
+                        fs::remove_dir_all(&old_path)
+                            .fs_context("removing old subdirectory", &old_path)?;
                     } else {
-                        fs::copy(&old_path, &new_path)?;
-                        fs::remove_file(old_path)?;
+                        debug!("copying file {:?} -> {:?}", old_path, new_path);
+
+                        fs::copy(&old_path, &new_path).fs_context("copying file", &new_path)?;
+                        fs::remove_file(&old_path).fs_context("removing old file", &old_path)?;
                     }
                 }
             }
@@ -290,6 +302,8 @@ impl Prefs {
                     ..Default::default()
                 };
 
+                prefs.save().context("failed to write initial settings")?;
+
                 prefs
             }
             false => {
@@ -297,7 +311,10 @@ impl Prefs {
                     anyhow!("failed to read settings: {} (at {})\n\nThe file might be corrupted or too old to run with your version of Gale.", err, path.display())
                 })?;
 
-                prefs.data_dir.keep_files.extend(&["prefs.json", "logs"]);
+                prefs
+                    .data_dir
+                    .keep_files
+                    .extend(&["prefs.json", "latest.log"]);
 
                 let window = app.get_webview_window("main").unwrap();
                 window.zoom(prefs.zoom_factor as f64).ok();
@@ -351,9 +368,12 @@ impl Prefs {
             let mut path = value.data_dir.to_path_buf();
             for (key, game) in &mut manager.games {
                 path.push(&*key.slug);
+
+                game.path = path.clone();
+
                 path.push("profiles");
 
-                for profile in game.profiles_mut() {
+                for profile in &mut game.profiles {
                     profile.path = path.join(&profile.name);
                 }
 
@@ -378,8 +398,7 @@ impl Prefs {
 
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 
-        self.save()?;
-        Ok(())
+        self.save().context("failed write to settings file")
     }
 
     pub fn cache_dir(&self) -> PathBuf {
