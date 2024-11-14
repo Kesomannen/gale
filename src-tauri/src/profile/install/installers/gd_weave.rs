@@ -19,9 +19,9 @@ fn relative_mod_dir(package_name: &str) -> PathBuf {
 }
 
 fn profile_mod_dir(profile_mod: &ProfileMod, profile: &Profile) -> PathBuf {
-    let ident = profile_mod.ident();
-    let package_name = ident.full_name();
-    profile.path.join(relative_mod_dir(package_name))
+    profile
+        .path
+        .join(relative_mod_dir(&*profile_mod.full_name()))
 }
 
 impl PackageInstaller for GDWeaveModInstaller {

@@ -198,7 +198,7 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     }
 }
 
-async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
+pub async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     let (mut local_mod, kind) = read_local_mod(&path)?;
 
     if let Some(deps) = &local_mod.dependencies {

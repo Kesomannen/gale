@@ -282,8 +282,7 @@ impl PackageStateHandle {
     }
 
     fn from_profile_mod(profile_mod: &ProfileMod, profile: &Profile) -> Self {
-        let ident = profile_mod.ident();
-        Self::new(ident.full_name(), profile)
+        Self::new(&*profile_mod.full_name(), profile)
     }
 
     fn files(&mut self) -> &mut Vec<PathBuf> {

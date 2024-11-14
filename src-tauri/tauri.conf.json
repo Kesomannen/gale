@@ -70,6 +70,11 @@
 					"takesValue": true
 				},
 				{
+					"name": "install",
+					"short": "i",
+					"takesValue": true
+				},
+				{
 					"name": "launch",
 					"short": "l"
 				}

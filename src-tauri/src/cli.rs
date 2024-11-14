@@ -1,6 +1,7 @@
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 
 use anyhow::{anyhow, Context, Result};
+use log::error;
 use serde_json::Value;
 use tauri::{App, Manager};
 use tauri_plugin_cli::CliExt;
@@ -8,7 +9,7 @@ use tauri_plugin_cli::CliExt;
 use crate::{
     game::{self},
     prefs::Prefs,
-    profile::ModManager,
+    profile::{self, ModManager},
     thunderstore::Thunderstore,
 };
 
@@ -27,36 +28,41 @@ pub fn run(app: &App) -> Result<()> {
             let mut thunderstore = thunderstore.lock().unwrap();
             let prefs = prefs.lock().unwrap();
 
-            if let Some(arg) = matches.args.get("game") {
-                if let Value::String(slug) = &arg.value {
-                    let game = game::from_slug(slug).context("unknown game id")?;
+            if let Some(Value::String(slug)) = matches.args.get("game").map(|arg| &arg.value) {
+                let game = game::from_slug(slug).context("unknown game id")?;
 
-                    manager
-                        .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())
-                        .context("failed to set game")?;
-                }
+                manager
+                    .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())
+                    .context("failed to set game")?;
             }
 
-            if let Some(arg) = matches.args.get("profile") {
-                if let Value::String(profile) = &arg.value {
-                    let game = manager.active_game_mut();
+            if let Some(Value::String(profile)) = matches.args.get("profile").map(|arg| &arg.value)
+            {
+                let game = manager.active_game_mut();
 
-                    let index = game.profile_index(profile).context("unknown profile")?;
+                let index = game.profile_index(profile).context("unknown profile")?;
 
-                    game.set_active_profile(index)
-                        .context("failed to set profile")?;
-                }
+                game.set_active_profile(index)
+                    .context("failed to set profile")?;
             }
 
-            if let Some(arg) = matches.args.get("launch") {
-                if let Value::Bool(true) = &arg.value {
-                    manager
-                        .active_game()
-                        .launch(&prefs)
-                        .context("failed to launch game")?;
+            if let Some(Value::String(path)) = matches.args.get("install").map(|arg| &arg.value) {
+                let path = PathBuf::from(path);
+                let handle = app.handle().to_owned();
+                tauri::async_runtime::spawn(async move {
+                    if let Err(err) = profile::import::import_local_mod(path, &handle).await {
+                        error!("failed to install mod from cli: {:#}", err)
+                    }
+                });
+            }
 
-                    std::process::exit(0);
-                }
+            if let Some(Value::Bool(true)) = matches.args.get("launch").map(|arg| &arg.value) {
+                manager
+                    .active_game()
+                    .launch(&prefs)
+                    .context("failed to launch game")?;
+
+                std::process::exit(0);
             }
 
             Ok(())

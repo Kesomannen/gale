@@ -227,11 +227,6 @@ fn default_steam_exe_path() -> PathBuf {
         }
     }
 
-    #[cfg(target_os = "macos")]
-    {
-        "/Applications/Steam.app/Contents/MacOS/Steam".into()
-    }
-
     #[cfg(target_os = "linux")]
     {
         "/usr/bin/steam".into()
@@ -242,11 +237,6 @@ fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
         exe_path.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
-    }
-
-    #[cfg(target_os = "macos")]
-    {
-        Some("~/Library/Application Support/Steam".into())
     }
 
     #[cfg(target_os = "linux")]
