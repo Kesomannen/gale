@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use super::{PackageInstaller, PackageZip};
@@ -408,9 +409,13 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
         })?;
 
         if has_tracked_files {
-            PackageStateHandle::from_profile_mod(profile_mod, profile)
-                .delete()
-                .context("failed to delete state file")?;
+            if let Err(err) = PackageStateHandle::from_profile_mod(profile_mod, profile).delete() {
+                warn!(
+                    "failed to delete state file for {}: {:#}",
+                    profile_mod.full_name(),
+                    err
+                )
+            }
 
             let mut profile_state = ProfileStateHandle::new(profile);
             profile_state
