@@ -203,7 +203,7 @@ impl<'a> SubdirInstaller<'a> {
             // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/CoolMod.dll
             target.push(file_name);
         } else {
-            if subdir.mode != SubdirMode::SeparateFlatten {
+            if subdir.mode == SubdirMode::Separate {
                 // don't include the subdir component itself
                 let len = prev.len() - 1;
                 let prev = prev.iter().take(len).collect::<PathBuf>();

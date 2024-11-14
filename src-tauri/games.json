@@ -625,7 +625,8 @@
 	{
 		"name": "Dyson Sphere Program",
 		"modLoader": {
-			"name": "BepInEx"
+			"name": "BepInEx",
+			"packageName": "xiaoye97-BepInEx"
 		},
 		"platforms": {
 			"steam": {

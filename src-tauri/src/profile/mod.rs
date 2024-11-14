@@ -646,6 +646,7 @@ impl ModManager {
         let mut manager = Self { games, active_game };
 
         manager.ensure_game(manager.active_game, prefs)?;
+        manager.save(prefs)?;
 
         Ok(manager)
     }

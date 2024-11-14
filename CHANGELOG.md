@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 (2024-11-14)
+
+### Fixed
+
+- Startup crash due to extra hyphens in mod names (`failed to read profile manifest ...`)
+- BepInEx config files installing with extra directories, causing them to seem duplicated
+- Re-added Dyson Sphere Program icon
+
 ## 1.1.0 (2024-11-13)
 
 ### Added

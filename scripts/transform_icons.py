@@ -11,6 +11,9 @@ if __name__ == '__main__':
     dir = path.realpath(dir)
 
     for file in os.listdir(dir):
+        if file.endswith('webp'):
+            continue
+
         absolute = path.join(dir, file)
 
         with Image.open(absolute) as img:
