@@ -7,13 +7,14 @@
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../models';
 	import Icon from '@iconify/svelte';
-	import { iconUrl, isOutdated } from '$lib/util';
+	import { iconSrc, isOutdated } from '$lib/util';
 	import { readFile } from '@tauri-apps/plugin-fs';
 	import { activeGame } from '$lib/stores';
 	import { Switch, ContextMenu } from 'bits-ui';
 	import { createEventDispatcher } from 'svelte';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 	import { dropTransition } from '$lib/transitions';
+	import { convertFileSrc } from '@tauri-apps/api/core';
 
 	export let mod: Mod;
 	export let index: number;
@@ -26,24 +27,7 @@
 		toggle: boolean;
 	}>();
 
-	let imgSrc: string;
 	let contextMenuOpen: boolean;
-
-	$: {
-		if (mod.type === 'remote') {
-			imgSrc = iconUrl(mod);
-		} else {
-			imgSrc = `games/${$activeGame?.slug}.webp`;
-			/*
-			if (mod.icon === null) {
-				imgSrc = `games/${$activeGame?.slug}.webp`;
-			} else {
-				imgSrc = '';
-				loadLoadIcon(mod.icon);
-			}
-				*/
-		}
-	}
 
 	$: descriptionClasses =
 		mod.enabled === false
@@ -54,16 +38,6 @@
 
 	$: if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
 		contextMenuOpen = false;
-	}
-
-	async function loadLoadIcon(path: string) {
-		try {
-			let data = await readFile(path);
-			let blob = new Blob([data], { type: 'image/png' });
-			imgSrc = URL.createObjectURL(blob);
-		} catch (err) {
-			console.error(err);
-		}
 	}
 </script>
 
@@ -89,7 +63,7 @@
 			on:dragstart
 			on:dragover
 		>
-			<img src={imgSrc} alt={mod.name} class="size-12 rounded" />
+			<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded" />
 			<div class="flex-shrink flex-grow overflow-hidden pl-3 pr-2 text-left">
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div

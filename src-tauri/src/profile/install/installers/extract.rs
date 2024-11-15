@@ -1,6 +1,6 @@
 use std::{borrow::Cow, path::PathBuf};
 
-use anyhow::Result;
+use eyre::Result;
 
 use super::{PackageZip, PackageInstaller};
 use crate::profile::{install, Profile, ProfileMod};

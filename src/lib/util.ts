@@ -1,6 +1,7 @@
 import { get } from 'svelte/store';
-import type { Mod, ConfigEntry } from './models';
+import type { Mod, ConfigEntry, Dependant } from './models';
 import { activeGame } from './stores';
+import { convertFileSrc } from '@tauri-apps/api/core';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -81,16 +82,29 @@ export function communityUrl(path: string) {
 	return `https://thunderstore.io/c/${get(activeGame)?.slug}/p/${path}/`;
 }
 
-export function iconUrl(mod: Mod) {
-	return `https://gcdn.thunderstore.io/live/repository/icons/${mod.author}-${mod.name}-${mod.version}.png`;
+export function iconSrc(mod: Mod | Dependant) {
+	if (mod.type === 'remote') {
+		let fullName: string;
+		if ('fullName' in mod) {
+			fullName = mod.fullName;
+		} else {
+			fullName = `${mod.author}-${mod.name}-${mod.version}`;
+		}
+
+		return thunderstoreIconUrl(fullName);
+	} else if (mod.icon !== null) {
+		return convertFileSrc(mod.icon);
+	} else {
+		return `games/${get(activeGame)?.slug}.webp`;
+	}
+}
+
+export function thunderstoreIconUrl(fullName: string) {
+	return `https://gcdn.thunderstore.io/live/repository/icons/${fullName}.png`;
 }
 
 export function capitalize(str: string): string {
 	return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-export function isBefore(el1: HTMLElement, el2: HTMLElement) {
-	return el1.compareDocumentPosition(el2) === Node.DOCUMENT_POSITION_PRECEDING;
 }
 
 export interface ListSeparator {

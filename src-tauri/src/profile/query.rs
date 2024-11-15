@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
-use anyhow::Result;
 use chrono::{DateTime, Utc};
+use eyre::Result;
 
 use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
 use crate::thunderstore::{

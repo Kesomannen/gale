@@ -10,7 +10,7 @@ use std::{
     time::SystemTime,
 };
 
-use anyhow::{anyhow, Context, Result};
+use eyre::{anyhow, Context, Result};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -30,7 +30,7 @@ mod tests;
 pub struct LoadFileError {
     display_name: String,
     relative_path: PathBuf,
-    error: anyhow::Error,
+    error: eyre::Error,
 }
 
 pub type LoadFileResult = std::result::Result<File, LoadFileError>;
@@ -289,7 +289,7 @@ pub fn load_config(profile_path: PathBuf, vec: &mut Vec<LoadFileResult>) -> Vec<
 
     const OTHER_EXTENSIONS: &[&str] = &["json", "toml", "yaml", "yml", "xml", "ini"];
 
-    let files = WalkDir::new(profile_path.join("BepInEx/config"))
+    let files = WalkDir::new(profile_path.join("BepInEx").join("config"))
         .into_iter()
         .par_bridge()
         .filter_map(Result::ok)

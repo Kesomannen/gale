@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, collections::HashSet, sync::Mutex, time::Duration};
 
-use anyhow::Result;
+use eyre::Result;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
@@ -196,6 +196,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
                 })
                 .collect(),
             kind: FrontendModKind::Remote,
+            icon: None,
         }
     }
 }
@@ -209,6 +210,7 @@ impl From<LocalMod> for FrontendMod {
             file_size,
             uuid,
             dependencies,
+            icon,
             ..
         } = value;
 
@@ -219,6 +221,7 @@ impl From<LocalMod> for FrontendMod {
             file_size,
             uuid,
             dependencies,
+            icon,
             kind: FrontendModKind::Local,
             ..Default::default()
         }

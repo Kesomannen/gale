@@ -16,12 +16,12 @@ pub enum Overwrite {
     No,
 }
 
-pub fn copy_dir(src: &Path, dest: &Path, overwrite: Overwrite) -> anyhow::Result<()> {
+pub fn copy_dir(src: &Path, dest: &Path, overwrite: Overwrite) -> eyre::Result<()> {
     fs::create_dir_all(dest).fs_context("creating root directory", dest)?;
     copy_contents(src, dest, overwrite)
 }
 
-pub fn copy_contents(src: &Path, dest: &Path, overwrite: Overwrite) -> anyhow::Result<()> {
+pub fn copy_contents(src: &Path, dest: &Path, overwrite: Overwrite) -> eyre::Result<()> {
     for entry in src.read_dir().fs_context("reading directory", src)? {
         let entry = entry?;
 
@@ -47,14 +47,14 @@ pub fn copy_contents(src: &Path, dest: &Path, overwrite: Overwrite) -> anyhow::R
     Ok(())
 }
 
-pub fn read_json<T: DeserializeOwned>(path: impl AsRef<Path>) -> anyhow::Result<T> {
+pub fn read_json<T: DeserializeOwned>(path: impl AsRef<Path>) -> eyre::Result<T> {
     let reader = File::open(path).map(BufReader::new)?;
     let result = serde_json::from_reader(reader)?;
 
     Ok(result)
 }
 
-pub fn open_zip(path: impl AsRef<Path>) -> anyhow::Result<ZipArchive<BufReader<File>>> {
+pub fn open_zip(path: impl AsRef<Path>) -> eyre::Result<ZipArchive<BufReader<File>>> {
     let reader = File::open(path).map(BufReader::new)?;
     let archive = ZipArchive::new(reader)?;
 
@@ -71,7 +71,7 @@ pub fn write_json<T: Serialize + ?Sized>(
     path: impl AsRef<Path>,
     value: &T,
     style: JsonStyle,
-) -> anyhow::Result<()> {
+) -> eyre::Result<()> {
     let writer = File::create(path).map(BufWriter::new)?;
 
     if style == JsonStyle::Pretty {

@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::Result;
+use eyre::Result;
 use zip::ZipArchive;
 
 use super::fs::{ConflictResolution, FileInstallMethod};

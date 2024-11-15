@@ -1,6 +1,6 @@
 use std::{collections::HashSet, fs, path::PathBuf};
 
-use anyhow::{Context, Result};
+use eyre::{Context, Result};
 
 use crate::{
     prefs::Prefs,

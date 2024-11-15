@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use eyre::{Context, Result};
 use log::warn;
 use walkdir::WalkDir;
 use zip::ZipArchive;

@@ -1,4 +1,4 @@
-use anyhow::Context;
+use eyre::Context;
 use itertools::Itertools;
 
 use super::game_dir;

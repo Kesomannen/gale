@@ -3,30 +3,35 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{anyhow, Context, Result};
+use eyre::{Context, OptionExt, Result};
 use log::LevelFilter;
 use serde::Serialize;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 use tauri::{AppHandle, Emitter};
 
-use crate::util;
+use crate::util::{self, fs::PathExt};
 
 #[derive(Serialize, Clone)]
-struct JsError<'a> {
+struct WebviewError<'a> {
     name: &'a str,
     message: String,
 }
 
-pub fn log_js_err(name: &str, error: &anyhow::Error, handle: &AppHandle) {
+/// Emits an error to the webview, causing it to show an error toast and
+/// log the message properly to the log file/terminal.
+pub fn log_webview_err(name: &str, error: eyre::Error, handle: &AppHandle) {
     handle
         .emit(
             "error",
-            JsError {
+            WebviewError {
                 name,
                 message: format!("{:#}", error),
             },
         )
-        .ok();
+        .unwrap_or_else(|err| {
+            log::warn!("failed to log error to webview:");
+            log::error!("{:#}", err)
+        })
 }
 
 fn log_path() -> PathBuf {
@@ -58,11 +63,12 @@ pub fn setup() -> Result<()> {
 
 #[tauri::command]
 pub fn open_gale_log() -> util::cmd::Result<()> {
-    let path = log_path();
-    if !path.exists() {
-        return Err(anyhow!("no log file found").into());
-    }
-    open::that_detached(&path).context("failed to open log file")?;
+    let path = log_path()
+        .exists_or_none()
+        .ok_or_eyre("no log file found")?;
+
+    open::that(&path).context("failed to open log file")?;
+
     Ok(())
 }
 

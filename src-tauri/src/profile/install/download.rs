@@ -6,10 +6,11 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::{Context, Result};
 use chrono::Utc;
 use core::str;
+use eyre::{Context, Result};
 use futures_util::StreamExt;
+use log::warn;
 use tauri::{AppHandle, Emitter, Manager};
 use thiserror::Error;
 use zip::ZipArchive;
@@ -58,7 +59,7 @@ enum InstallError {
     Cancelled,
 
     #[error(transparent)]
-    Error(#[from] anyhow::Error),
+    Error(#[from] eyre::Error),
 }
 
 type InstallResult<T> = std::result::Result<T, InstallError>;
@@ -216,9 +217,15 @@ impl<'a> Installer<'a> {
             .extract(archive, version.full_name(), cache_path.clone())
             .map_err(|err| {
                 // the cached mod is probably in an invalid state
-                fs::remove_dir_all(&cache_path).ok();
-                err.context("failed to extract archive")
-            })?;
+                fs::remove_dir_all(&cache_path).unwrap_or_else(|err| {
+                    warn!(
+                        "failed to clean up after failed extraction of {}: {:#}",
+                        self.current_name, err
+                    );
+                });
+                err
+            })
+            .context("error while extracting")?;
 
         self.check_cancel()?;
         self.update(InstallTask::Installing);
@@ -278,7 +285,7 @@ impl<'a> Installer<'a> {
                     let borrowed = data.id.borrow(&thunderstore)?;
                     let name = &borrowed.package.ident;
 
-                    return Err(err.context(format!("failed to install {}", name)));
+                    return Err(err.wrap_err(format!("failed to install {}", name)));
                 }
             }
         }

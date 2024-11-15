@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::anyhow;
+use eyre::anyhow;
 use tauri::AppHandle;
 use uuid::Uuid;
 

@@ -17,7 +17,7 @@ path = "src/main.rs"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["unstable"] }
+tauri = { version = "2", features = [ "protocol-asset", "unstable"] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-window-state = "2"
 tauri-plugin-dialog = "2"
@@ -36,9 +36,9 @@ serde = { version = "1.0", features = ["derive"] }
 
 tokio = { version = "1", features = ["full"] }
 
-anyhow = "1.0"
-thiserror = "1.0"
-justerror = "1.0"
+eyre = "0.6"
+thiserror = "1"
+justerror = "1"
 
 futures-util = { version = "0.3", features = ["io"] }
 indexmap = { version = "2.2", features = ["serde"] }

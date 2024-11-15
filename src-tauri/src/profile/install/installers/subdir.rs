@@ -6,7 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use eyre::{Context, OptionExt, Result};
 use log::warn;
 use serde::{Deserialize, Serialize};
 
@@ -199,7 +199,7 @@ impl<'a> SubdirInstaller<'a> {
         if components.clone().next().is_none() {
             // since we advanced components to the end, prev.pop() will give the
             // last component, i.e. the file name
-            let file_name = prev.pop().context("malformed mod archive file")?;
+            let file_name = prev.pop().ok_or_eyre("malformed mod archive file")?;
 
             // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/CoolMod.dll
             target.push(file_name);

@@ -94,8 +94,6 @@ export async function refreshGames() {
 	const info: GameInfo = await invokeCommand('get_game_info');
 	games = info.all;
 
-	console.log(info.favorites);
-
 	for (let game of games) {
 		game.favorite = info.favorites.includes(game.slug);
 	}

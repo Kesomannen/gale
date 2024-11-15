@@ -5,7 +5,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{ensure, Context, Result};
+use eyre::{ensure, Context, Result};
 use log::{debug, info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
@@ -73,9 +73,9 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
                 continue;
             }
             Err(err) => {
-                logger::log_js_err(
+                logger::log_webview_err(
                     "Error while importing from r2modman",
-                    &err.context(format!("Failed to prepare import of profile '{}'", name)),
+                    err.wrap_err(format!("Failed to prepare import of profile '{}'", name)),
                     app,
                 );
                 continue;
@@ -83,9 +83,9 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
         };
 
         if let Err(err) = import_profile(data, app).await {
-            logger::log_js_err(
+            logger::log_webview_err(
                 "Error while importing from r2modman",
-                &err.context(format!("Failed to import profile '{}'", name)),
+                err.wrap_err(format!("Failed to import profile '{}'", name)),
                 app,
             );
 

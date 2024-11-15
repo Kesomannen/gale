@@ -1,14 +1,13 @@
 use std::{
     fmt::{self, Display},
+    result::Result as StdResult,
     sync::Mutex,
 };
 
 use serde::Serialize;
 
 #[derive(Debug)]
-pub struct CommandError(pub anyhow::Error);
-
-impl std::error::Error for CommandError {}
+pub struct CommandError(eyre::Error);
 
 impl Display for CommandError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -17,7 +16,7 @@ impl Display for CommandError {
 }
 
 impl Serialize for CommandError {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    fn serialize<S>(&self, serializer: S) -> StdResult<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
@@ -25,12 +24,15 @@ impl Serialize for CommandError {
     }
 }
 
-impl From<anyhow::Error> for CommandError {
-    fn from(error: anyhow::Error) -> Self {
-        Self(error)
+impl<T> From<T> for CommandError
+where
+    T: Into<eyre::Report>,
+{
+    fn from(value: T) -> Self {
+        Self(value.into())
     }
 }
 
-pub type Result<T> = std::result::Result<T, CommandError>;
+pub type Result<T> = StdResult<T, CommandError>;
 
 pub type StateMutex<'r, S> = tauri::State<'r, Mutex<S>>;

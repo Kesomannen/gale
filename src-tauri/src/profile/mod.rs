@@ -5,9 +5,9 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{anyhow, ensure, Context, Result};
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
+use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
@@ -51,7 +51,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     let handle = app.to_owned();
     app.listen("reorder_mod", move |event| {
         if let Err(err) = actions::handle_reorder_event(event, &handle) {
-            logger::log_js_err("Failed to reorder mod", &err, &handle);
+            logger::log_webview_err("Failed to reorder mod", err, &handle);
         }
     });
 
@@ -285,21 +285,21 @@ impl Profile {
         self.mods
             .iter()
             .position(|p| p.uuid() == uuid)
-            .context("mod not found in profile")
+            .ok_or_eyre("mod not found in profile")
     }
 
     fn get_mod(&self, uuid: Uuid) -> Result<&ProfileMod> {
         self.mods
             .iter()
             .find(|p| p.uuid() == uuid)
-            .context("mod not found in profile")
+            .ok_or_eyre("mod not found in profile")
     }
 
     fn get_mod_mut(&mut self, uuid: Uuid) -> Result<&mut ProfileMod> {
         self.mods
             .iter_mut()
             .find(|p| p.uuid() == uuid)
-            .context("mod not found in profile")
+            .ok_or_eyre("mod not found in profile")
     }
 
     pub fn has_mod(&self, uuid: Uuid) -> bool {
@@ -348,7 +348,7 @@ impl Profile {
         self.path
             .join(self.game.mod_loader.log_path())
             .exists_or_none()
-            .context("no log file found")
+            .ok_or_eyre("no log file found")
     }
 
     fn load(mut path: PathBuf, game: Game) -> Result<Option<Self>> {
@@ -428,6 +428,8 @@ pub struct Dependant {
     #[serde(rename = "fullName")]
     ident: VersionIdent,
     uuid: Uuid,
+    local: bool,
+    icon: Option<PathBuf>,
 }
 
 impl From<BorrowedMod<'_>> for Dependant {
@@ -435,15 +437,24 @@ impl From<BorrowedMod<'_>> for Dependant {
         Self {
             ident: value.version.ident.clone(),
             uuid: value.package.uuid,
+            local: false,
+            icon: None,
         }
     }
 }
 
 impl From<&ProfileMod> for Dependant {
     fn from(value: &ProfileMod) -> Self {
+        let (local, icon) = match &value.kind {
+            ProfileModKind::Thunderstore(_) => (false, None),
+            ProfileModKind::Local(local_mod) => (true, local_mod.icon.clone()),
+        };
+
         Self {
             ident: value.ident().into_owned(),
             uuid: value.uuid(),
+            local,
+            icon,
         }
     }
 }

@@ -7,7 +7,7 @@ use std::{
     time::Instant,
 };
 
-use anyhow::{Context, Result};
+use eyre::{eyre, Context, Result};
 use indexmap::IndexMap;
 use log::debug;
 use serde::{Deserialize, Serialize};
@@ -139,7 +139,7 @@ impl Thunderstore {
     pub fn get_package(&self, uuid: Uuid) -> Result<&PackageListing> {
         self.packages
             .get(&uuid)
-            .with_context(|| format!("package with id {} not found", uuid))
+            .ok_or_else(|| eyre!("package with id {} not found", uuid))
     }
 
     /// Finds a package with the given `full_name` (formatted as `owner-name`).
@@ -147,15 +147,16 @@ impl Thunderstore {
         self.packages
             .values()
             .find(|package| package.ident.as_str() == full_name)
-            .with_context(|| format!("package {} not found", full_name))
+            .ok_or_else(|| eyre!("package {} not found", full_name))
     }
 
     pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> Result<BorrowedMod<'_>> {
         let package = self.get_package(package_uuid)?;
-        let version = package.get_version(version_uuid).with_context(|| {
-            format!(
+        let version = package.get_version(version_uuid).ok_or_else(|| {
+            eyre!(
                 "version with id {} not found in package {}",
-                version_uuid, package.ident
+                version_uuid,
+                package.ident
             )
         })?;
 
@@ -176,12 +177,14 @@ impl Thunderstore {
             .packages
             .values()
             .find(|package| package.owner() == owner && package.name() == name)
-            .with_context(|| format!("package {}-{} not found", owner, name))?;
+            .ok_or_else(|| eyre!("package {}-{} not found", owner, name))?;
 
-        let version = package.get_version_with_num(version).with_context(|| {
-            format!(
+        let version = package.get_version_with_num(version).ok_or_else(|| {
+            eyre!(
                 "version {} not found in package {}-{}",
-                version, owner, name
+                version,
+                owner,
+                name
             )
         })?;
 

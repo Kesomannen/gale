@@ -1,6 +1,6 @@
 use std::{iter, sync::Mutex};
 
-use anyhow::{bail, Context, Result};
+use eyre::{bail, Context, Result};
 use chrono::{DateTime, Utc};
 use download::InstallState;
 use itertools::Itertools;
@@ -194,8 +194,7 @@ where
 
 /// Downloads and installs mods and their missing dependencies on the active profile.
 ///
-/// Dependencies are installed right after each respective mod. The ordering of the
-/// dependencies is decided by [`Thunderstore::dependencies`].
+/// Dependencies are installed before each respective mod, sorted by descending depth.
 pub async fn install_with_deps(
     mods: Vec<ModInstall>,
     options: InstallOptions,
@@ -209,7 +208,7 @@ pub async fn install_with_deps(
             bail!("mod already installed");
         }
 
-        let deps = mods
+        let mods = mods
             .into_iter()
             .map(|install| {
                 let borrowed = install.id.borrow(thunderstore)?;
@@ -224,16 +223,17 @@ pub async fn install_with_deps(
             .collect::<Result<Vec<_>>>()
             .context("failed to resolve dependencies")?;
 
-        Ok(deps
+        Ok(mods
             .into_iter()
             .unique_by(|install| install.uuid())
+            .rev() // install dependencies first
             .collect())
     })
     .await
 }
 
 /// Gets the number of bytes to download the given mod and its
-/// missing dependencies.
+/// missing dependencies (ignoring already cached mods).
 fn total_download_size(
     borrowed: BorrowedMod<'_>,
     profile: &Profile,

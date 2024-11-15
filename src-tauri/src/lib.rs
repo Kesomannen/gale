@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use ::log::error;
-use anyhow::Context;
+use eyre::Context;
 use log::{debug, info};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
@@ -35,7 +35,7 @@ impl NetworkClient {
     }
 }
 
-fn setup(app: &AppHandle) -> anyhow::Result<()> {
+fn setup(app: &AppHandle) -> eyre::Result<()> {
     let start = Instant::now();
 
     info!(
@@ -159,7 +159,7 @@ pub fn run() {
                     profile::import::import_file_from_link(url, &app)
                         .await
                         .unwrap_or_else(|err| {
-                            logger::log_js_err("Failed to import profile file", &err, &app);
+                            logger::log_webview_err("Failed to import profile file", err, &app);
                         })
                 });
             }

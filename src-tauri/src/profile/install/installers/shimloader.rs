@@ -4,7 +4,7 @@ use std::{
     path::{Component, PathBuf},
 };
 
-use anyhow::{Context, Result};
+use eyre::{Context, Result};
 
 use super::{PackageZip, PackageInstaller};
 use crate::profile::{

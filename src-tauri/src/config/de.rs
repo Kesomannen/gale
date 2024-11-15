@@ -3,7 +3,7 @@ use std::{
     str,
 };
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 
 use super::*;
@@ -53,7 +53,7 @@ pub fn from_reader(reader: impl BufRead) -> Result<(Vec<Section>, Option<FileMet
 
     match parser.parse() {
         Ok(_) => Ok((parser.sections, parser.metadata)),
-        Err(err) => Err(err.context(format!("failed to parse file (at line {})", parser.line))),
+        Err(err) => Err(err.wrap_err(format!("failed to parse file (at line {})", parser.line))),
     }
 }
 
@@ -226,7 +226,7 @@ impl<R: Read + BufRead> Parser<R> {
 
     fn consume_or_eof(&mut self) -> Result<String> {
         self.consume()
-            .and_then(|line| line.context("unexpected end of file"))
+            .and_then(|line| line.ok_or_eyre("unexpected end of file"))
     }
 
     fn parse_metadata(&mut self) -> Result<()> {
@@ -314,7 +314,9 @@ impl<R: Read + BufRead> Parser<R> {
                     builder.acceptable_values =
                         Some(acceptable_values.split(", ").map(str::to_owned).collect());
                 } else if let Some(range) = line.strip_prefix("Acceptable value range: From ") {
-                    let (min, max) = range.split_once(" to ").context("expected value range")?;
+                    let (min, max) = range
+                        .split_once(" to ")
+                        .ok_or_eyre("expected value range")?;
                     builder.range = Some((min.to_owned(), max.to_owned()));
                 }
             } else {

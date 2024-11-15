@@ -33,7 +33,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@jill64/svelte-sanitize": "^1.2.12",
 		"@tauri-apps/api": "^2.0.0",
 		"@tauri-apps/plugin-cli": "^2.0.0",
 		"@tauri-apps/plugin-clipboard-manager": "^2.0.0",

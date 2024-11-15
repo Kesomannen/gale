@@ -1,4 +1,4 @@
-use anyhow::Context;
+use eyre::{Context, OptionExt};
 use itertools::Itertools;
 use log::warn;
 use serde::Serialize;
@@ -73,7 +73,7 @@ pub fn favorite_game(
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = game::from_slug(&slug).context("unknown game")?;
+    let game = game::from_slug(&slug).ok_or_eyre("unknown game")?;
     let managed_game = manager.ensure_game(game, &prefs)?;
     managed_game.favorite = !managed_game.favorite;
 
@@ -94,7 +94,7 @@ pub fn set_active_game(
     let mut thunderstore = thunderstore.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game = game::from_slug(slug).context("unknown game")?;
+    let game = game::from_slug(slug).ok_or_eyre("unknown game")?;
 
     manager.set_active_game(game, &mut thunderstore, &prefs, app)?;
     manager.save(&prefs)?;
@@ -199,7 +199,7 @@ pub fn query_profile(
                 ignore,
             }
         })
-        .collect::<anyhow::Result<Vec<_>>>()
+        .collect::<eyre::Result<Vec<_>>>()
         .unwrap_or_else(|err| {
             warn!("failed to check for updates: {:#}", err);
             Vec::new()
@@ -313,7 +313,7 @@ fn mod_action_command<F>(
     action: F,
 ) -> Result<ActionResult>
 where
-    F: FnOnce(&mut Profile, &Thunderstore) -> anyhow::Result<ActionResult>,
+    F: FnOnce(&mut Profile, &Thunderstore) -> eyre::Result<ActionResult>,
 {
     let mut manager = manager.lock().unwrap();
     let thunderstore = thunderstore.lock().unwrap();

@@ -5,7 +5,7 @@ use std::{
     process::Command,
 };
 
-use anyhow::{bail, ensure, Context, Result};
+use eyre::{bail, ensure, Context, OptionExt, Result};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
@@ -71,7 +71,7 @@ impl ManagedGame {
                 open::commands(path)
                     .into_iter()
                     .next()
-                    .context("open returned no commands to try")?
+                    .ok_or_eyre("open returned no commands to try")?
             }
             (_, _) => Command::new(exe_path(game_dir)?),
         };
@@ -119,7 +119,7 @@ fn steam_command(game: Game, prefs: &Prefs) -> Result<Command> {
     let steam_path = prefs
         .steam_exe_path
         .as_ref()
-        .context("steam executable path not set")?;
+        .ok_or_eyre("steam executable path not set")?;
 
     ensure!(
         steam_path.exists(),
@@ -154,7 +154,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                 let mut path = prefs
                     .steam_library_dir
                     .as_ref()
-                    .context("steam library directory not set")?
+                    .ok_or_eyre("steam library directory not set")?
                     .to_path_buf();
 
                 if !path.ends_with("common") {
@@ -223,7 +223,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
                 list.into_iter()
                     .find(|item| item.app_name == name)
                     .map(|item| item.install_location)
-                    .context("could not find entry in the list of installed games")?
+                    .ok_or_eyre("could not find entry in the list of installed games")?
             }
             _ => bail!("game directory not found, you may need to specify it in the settings"),
         }
@@ -250,7 +250,7 @@ fn exe_path(game_dir: &Path) -> Result<PathBuf> {
                 && !file_name.to_string_lossy().contains("UnityCrashHandler")
         })
         .map(|entry| entry.path())
-        .context("game executable not found")
+        .ok_or_eyre("game executable not found")
 }
 
 fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
@@ -321,7 +321,7 @@ fn bepinex_preloader_path(profile_dir: &Path) -> Result<PathBuf> {
             let file_name = entry.file_name();
             PRELOADER_NAMES.iter().any(|name| file_name == **name)
         })
-        .context("BepInEx preloader not found. Is BepInEx installed?")?
+        .ok_or_eyre("BepInEx preloader not found. Is BepInEx installed?")?
         .path();
 
     Ok(result)
@@ -336,7 +336,7 @@ fn doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
             .split('.') // read only the major version number
             .next()
             .and_then(|str| str.parse().ok())
-            .context("invalid version format")?,
+            .ok_or_eyre("invalid version format")?,
         false => 3,
     };
 
@@ -363,7 +363,9 @@ fn add_melon_loader_args(command: &mut Command, profile_dir: &Path) -> Result<()
 
 fn add_northstar_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     let path = profile_dir.join("R2Northstar");
-    let path = path.to_str().context("profile path is not valid UTF-8")?;
+    let path = path
+        .to_str()
+        .ok_or_eyre("profile path is not valid UTF-8")?;
 
     command.arg("-northstar").arg(format!("-profile={}", path));
 
@@ -372,7 +374,9 @@ fn add_northstar_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
 
 fn add_gd_weave_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     let path = profile_dir.join("GDWeave");
-    let path = path.to_str().context("profile path is not valid UTF-8")?;
+    let path = path
+        .to_str()
+        .ok_or_eyre("profile path is not valid UTF-8")?;
 
     command.arg(format!("--gdweave-folder-override={}", path));
 

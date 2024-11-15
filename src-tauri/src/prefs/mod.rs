@@ -6,7 +6,7 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{anyhow, ensure, Context, Result};
+use eyre::{anyhow, ensure, eyre, Context, Result};
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -320,7 +320,7 @@ impl Prefs {
 
     fn save(&self) -> Result<()> {
         util::fs::write_json(Self::path(), self, JsonStyle::Pretty)
-            .map_err(|err| err.context("failed to save settings"))
+            .context("failed to save settings")
     }
 
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
@@ -330,7 +330,7 @@ impl Prefs {
         self.game_prefs = value.game_prefs;
         for (slug, value) in &mut self.game_prefs {
             let game = game::from_slug(&slug)
-                .with_context(|| format!("settings key for game {} is invalid", slug))?;
+                .ok_or_else(|| eyre!("settings key for game {} is invalid", slug))?;
 
             if let Some(platform) = game.platforms.iter().next() {
                 value.platform.get_or_insert(platform);
@@ -376,13 +376,16 @@ impl Prefs {
 
         if self.zoom_factor != value.zoom_factor {
             let window = app.get_webview_window("main").unwrap();
-            if let Err(err) = window.zoom(value.zoom_factor as f64) {
-                logger::log_js_err(
-                    "Error while updating settings",
-                    &anyhow!("failed to set zoom level: {}", err),
-                    app,
-                );
-            }
+            window
+                .zoom(value.zoom_factor as f64)
+                .context("failed to set zoom level")
+                .unwrap_or_else(|err| {
+                    logger::log_webview_err(
+                        "Error while updating settings",
+                        eyre!("failed to set zoom level: {}", err),
+                        app,
+                    );
+                });
         }
         self.zoom_factor = value.zoom_factor;
 

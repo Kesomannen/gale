@@ -1,6 +1,6 @@
 use std::{fs, sync::Mutex};
 
-use anyhow::{anyhow, ensure, Context, Result};
+use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
@@ -166,7 +166,7 @@ impl Profile {
             .mods
             .iter()
             .position(|m| m.uuid() == uuid)
-            .context("mod not found in profile")?;
+            .ok_or_eyre("mod not found in profile")?;
 
         let target = (index as i32 + delta).clamp(0, self.mods.len() as i32 - 1) as usize;
         let profile_mod = self.mods.remove(index);

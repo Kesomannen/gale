@@ -1,6 +1,6 @@
 use std::{path::PathBuf, sync::Mutex};
 
-use anyhow::{anyhow, Context, Result};
+use eyre::{anyhow, Context, OptionExt, Result};
 use log::error;
 use serde_json::Value;
 use tauri::{App, Manager};
@@ -29,7 +29,7 @@ pub fn run(app: &App) -> Result<()> {
             let prefs = prefs.lock().unwrap();
 
             if let Some(Value::String(slug)) = matches.args.get("game").map(|arg| &arg.value) {
-                let game = game::from_slug(slug).context("unknown game id")?;
+                let game = game::from_slug(slug).ok_or_eyre("unknown game id")?;
 
                 manager
                     .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())
@@ -40,7 +40,7 @@ pub fn run(app: &App) -> Result<()> {
             {
                 let game = manager.active_game_mut();
 
-                let index = game.profile_index(profile).context("unknown profile")?;
+                let index = game.profile_index(profile).ok_or_eyre("unknown profile")?;
 
                 game.set_active_profile(index)
                     .context("failed to set profile")?;

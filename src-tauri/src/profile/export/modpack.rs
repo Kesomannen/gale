@@ -5,8 +5,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
 use bytes::Bytes;
+use eyre::{anyhow, bail, ensure, eyre, Context, OptionExt, Result};
 use futures_util::future::try_join_all;
 use image::{imageops::FilterType, ImageFormat};
 use itertools::Itertools;
@@ -179,7 +179,7 @@ pub async fn publish(
         .await
         .context("failed to initiate upload")?;
 
-    let uuid = response.user_media.uuid.context("no uuid in response")?;
+    let uuid = response.user_media.uuid.ok_or_eyre("no uuid in response")?;
 
     let tasks = response.upload_urls.into_iter().map(|part| {
         let data = data.clone();
@@ -195,7 +195,7 @@ pub async fn publish(
         Ok(parts) => parts,
         Err(err) => {
             tauri::async_runtime::spawn(async move { abort_upload(&uuid, &token, client).await });
-            return Err(err.context("failed to upload file"));
+            return Err(err.wrap_err("failed to upload file"));
         }
     };
 
@@ -256,7 +256,7 @@ async fn upload_chunk(
     let tag = response
         .headers()
         .get("ETag")
-        .context("no ETag in response")?
+        .ok_or_eyre("no ETag in response")?
         .to_str()
         .context("ETag is not valid utf-8")?
         .to_owned();
@@ -361,31 +361,31 @@ async fn submit_package(
 }
 
 trait ReqwestResponseExt {
-    fn map_auth_err_with<F>(self, f: F) -> anyhow::Result<reqwest::Response>
+    fn map_auth_err_with<F>(self, f: F) -> eyre::Result<reqwest::Response>
     where
-        F: FnOnce(StatusCode) -> Option<anyhow::Error>;
+        F: FnOnce(StatusCode) -> Option<eyre::Error>;
 
-    fn map_auth_err(self) -> anyhow::Result<reqwest::Response>;
+    fn map_auth_err(self) -> eyre::Result<reqwest::Response>;
 }
 
 impl ReqwestResponseExt for reqwest::Response {
-    fn map_auth_err_with<F>(self, f: F) -> anyhow::Result<reqwest::Response>
+    fn map_auth_err_with<F>(self, f: F) -> eyre::Result<reqwest::Response>
     where
-        F: FnOnce(StatusCode) -> Option<anyhow::Error>,
+        F: FnOnce(StatusCode) -> Option<eyre::Error>,
     {
         self.error_for_status().map_err(|err| match err.status() {
             Some(status) => match status {
-                StatusCode::UNAUTHORIZED => anyhow!("thunderstore API token is invalid"),
+                StatusCode::UNAUTHORIZED => eyre!("thunderstore API token is invalid"),
                 _ => match f(status) {
                     Some(err) => err,
-                    None => anyhow!(err),
+                    None => eyre!(err),
                 },
             },
-            None => anyhow!(err),
+            None => eyre!(err),
         })
     }
 
-    fn map_auth_err(self) -> anyhow::Result<reqwest::Response> {
+    fn map_auth_err(self) -> eyre::Result<reqwest::Response> {
         self.map_auth_err_with(|_| None)
     }
 }

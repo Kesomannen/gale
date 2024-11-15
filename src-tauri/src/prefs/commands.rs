@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use eyre::anyhow;
 use serde::Deserialize;
 use tauri::{AppHandle, Manager, Window};
 

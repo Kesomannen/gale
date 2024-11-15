@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use anyhow::{Context, Result};
+use eyre::{OptionExt, Result};
 use tauri::{AppHandle, Manager};
 
 use super::{InstallOptions, ModInstall};
@@ -17,7 +17,7 @@ pub fn handle(url: &str, handle: &AppHandle) {
         match resolve_url(url, &thunderstore) {
             Ok(mod_id) => mod_id,
             Err(err) => {
-                logger::log_js_err("Failed to resolve deep link", &err, handle);
+                logger::log_webview_err("Failed to resolve deep link", err, handle);
                 return;
             }
         }
@@ -33,7 +33,7 @@ pub fn handle(url: &str, handle: &AppHandle) {
         )
         .await
         .unwrap_or_else(|err| {
-            logger::log_js_err("Failed to install mod from deep link", &err, &handle);
+            logger::log_webview_err("Failed to install mod from deep link", err, &handle);
         });
     });
 }
@@ -46,7 +46,7 @@ fn resolve_url(url: &str, thunderstore: &Thunderstore) -> Result<ModId> {
 
             Some((split.next()?, split.next()?, split.next()?))
         })
-        .context("invalid deep link url")?;
+        .ok_or_eyre("invalid deep link url")?;
 
     thunderstore.find_mod(owner, name, version).map(Into::into)
 }

@@ -190,7 +190,7 @@
 		</Button.Root>
 	{/if}
 
-	{#if mod.dependencies && mod.dependencies.length > 0}
+	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		<Button.Root
 			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pl-3 pr-1 text-white hover:bg-slate-500"
 			on:click={() => (dependenciesOpen = true)}

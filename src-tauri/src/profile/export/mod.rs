@@ -5,8 +5,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{anyhow, Context};
 use base64::{prelude::BASE64_STANDARD, Engine};
+use eyre::{anyhow, Context};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -197,7 +197,7 @@ where
 pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
     // Include any files in the BepInEx/config directory,
     // and any other files with the following extensions:
-    const INCLUDE_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini"];
+    const INCLUDE_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];
     const EXCLUDE_FILES: &[&str] = &[
         "profile.json",
         "manifest.json",

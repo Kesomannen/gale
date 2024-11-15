@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use eyre::anyhow;
 use tauri::AppHandle;
 
 use super::{
@@ -54,7 +54,7 @@ pub fn trigger_mod_fetch(
 
     tauri::async_runtime::spawn(async move {
         if let Err(err) = super::fetch::fetch_packages(&app, game, write_directly).await {
-            logger::log_js_err("error while fetching mods from Thunderstore", &err, &app);
+            logger::log_webview_err("error while fetching mods from Thunderstore", err, &app);
         }
     });
 

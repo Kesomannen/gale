@@ -267,6 +267,7 @@ pub struct FrontendMod {
     pub is_installed: bool,
     pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,
+    pub icon: Option<PathBuf>,
     #[serde(rename = "type")]
     pub kind: FrontendModKind,
 }

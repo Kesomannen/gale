@@ -12,7 +12,7 @@ use crate::{
     },
     NetworkClient,
 };
-use anyhow::{anyhow, Context};
+use eyre::{anyhow, Context};
 use itertools::Itertools;
 use log::{debug, warn};
 use std::{

@@ -104,10 +104,16 @@ export type Mod = {
 		name: string;
 		uuid: string;
 	}[];
-	type: 'local' | 'remote';
-	enabled: boolean | null;
+	type: ModType;
+	enabled?: boolean | null;
+	icon: string | null;
 	configFile: string | null;
 };
+
+export enum ModType {
+	Local = 'local',
+	Remote = 'remote'
+}
 
 export enum SortBy {
 	Newest = 'newest',
@@ -147,6 +153,8 @@ export type ConfigEntryId = {
 export type Dependant = {
 	fullName: string;
 	uuid: string;
+	icon: string | null;
+	type: ModType;
 };
 
 export type ModActionResponse =

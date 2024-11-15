@@ -1,4 +1,4 @@
-use anyhow::Result;
+use eyre::Result;
 use keyring::Entry;
 use log::info;
 

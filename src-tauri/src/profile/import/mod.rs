@@ -5,7 +5,7 @@ use std::{
     sync::Mutex,
 };
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use eyre::{anyhow, bail, ensure, Context, Result};
 use base64::{prelude::BASE64_STANDARD, Engine};
 use itertools::Itertools;
 use reqwest::StatusCode;

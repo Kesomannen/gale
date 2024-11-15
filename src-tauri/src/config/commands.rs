@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::Context;
+use eyre::Context;
 use serde::Serialize;
 
 use super::{File, LoadFileResultExt};
