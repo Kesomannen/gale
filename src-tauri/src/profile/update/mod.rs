@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
+use eyre::Context;
 use itertools::Itertools;
 use log::info;
 use tauri::Manager;
@@ -127,13 +128,13 @@ pub async fn update_mods(
 
     install::install_with_deps(
         to_update,
-        InstallOptions::default().before_install(|install, manager, _| {
+        InstallOptions::default().before_install(Box::new(|install, manager, _| {
             // remove the old version
             manager
                 .active_profile_mut()
                 .force_remove_mod(install.uuid())
-                .ok();
-        }),
+                .context("failed to remove existing version")
+        })),
         true,
         app,
     )

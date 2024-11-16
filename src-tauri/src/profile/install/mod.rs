@@ -1,10 +1,11 @@
 use std::{iter, sync::Mutex};
 
-use eyre::{bail, Context, Result};
 use chrono::{DateTime, Utc};
 use download::InstallState;
+use eyre::{bail, Context, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use strum_macros::Display;
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
@@ -35,22 +36,17 @@ pub fn setup(handle: &AppHandle) -> Result<()> {
 #[serde(rename_all = "camelCase")]
 pub struct InstallProgress<'a> {
     /// The percentage of "completed" bytes, from 0 to 1.
-    total_progress: f32,
-    installed_mods: usize,
-    total_mods: usize,
-    current_name: &'a str,
-    can_cancel: bool,
-    task: InstallTask,
+    pub total_progress: f32,
+    pub installed_mods: usize,
+    pub total_mods: usize,
+    pub current_name: &'a str,
+    pub can_cancel: bool,
+    pub task: InstallTask,
 }
 
-impl<'a> InstallProgress<'a> {
-    pub fn total_progress(&self) -> f32 {
-        self.total_progress
-    }
-}
-
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Debug, Clone, Display)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "payload")]
+#[strum(serialize_all = "camelCase")]
 pub enum InstallTask {
     Done,
     Error,
@@ -60,7 +56,8 @@ pub enum InstallTask {
 }
 
 type ProgressHandler = Box<dyn Fn(&InstallProgress, &AppHandle) + 'static + Send>;
-type EventHandler = Box<dyn Fn(&ModInstall, &mut ModManager, &Thunderstore) + 'static + Send>;
+type EventHandler =
+    Box<dyn Fn(&ModInstall, &mut ModManager, &Thunderstore) -> Result<()> + 'static + Send>;
 
 pub struct InstallOptions {
     can_cancel: bool,
@@ -91,19 +88,13 @@ impl InstallOptions {
         self
     }
 
-    pub fn on_progress<F>(mut self, on_progress: F) -> Self
-    where
-        F: Fn(&InstallProgress, &AppHandle) + 'static + Send,
-    {
-        self.on_progress = Some(Box::new(on_progress));
+    pub fn on_progress(mut self, on_progress: ProgressHandler) -> Self {
+        self.on_progress = Some(on_progress);
         self
     }
 
-    pub fn before_install<F>(mut self, before_install: F) -> Self
-    where
-        F: Fn(&ModInstall, &mut ModManager, &Thunderstore) + 'static + Send,
-    {
-        self.before_install = Some(Box::new(before_install));
+    pub fn before_install(mut self, before_install: EventHandler) -> Self {
+        self.before_install = Some(before_install);
         self
     }
 }

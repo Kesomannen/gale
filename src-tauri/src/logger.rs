@@ -67,7 +67,7 @@ pub fn open_gale_log() -> util::cmd::Result<()> {
         .exists_or_none()
         .ok_or_eyre("no log file found")?;
 
-    open::that(&path).context("failed to open log file")?;
+    open::that_detached(&path).context("failed to open log file")?;
 
     Ok(())
 }

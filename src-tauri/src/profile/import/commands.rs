@@ -35,7 +35,7 @@ pub fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
 
 #[tauri::command]
 pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
-    super::import_local_mod(path, &app).await?;
+    super::import_local_mod(path, &app, InstallOptions::default().can_cancel(false)).await?;
 
     Ok(())
 }

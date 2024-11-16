@@ -137,7 +137,7 @@ impl<'a> Installer<'a> {
             self.update(InstallTask::Installing);
 
             if let Some(callback) = &self.options.before_install {
-                callback(data, &mut manager, &thunderstore);
+                callback(data, &mut manager, &thunderstore)?;
             }
 
             cache_install(data, &cache_path, &mut manager, &thunderstore)?;
@@ -231,7 +231,7 @@ impl<'a> Installer<'a> {
         self.update(InstallTask::Installing);
 
         if let Some(callback) = &self.options.before_install {
-            callback(install, &mut manager, &thunderstore);
+            callback(install, &mut manager, &thunderstore)?;
         }
 
         cache_install(install, &cache_path, &mut manager, &thunderstore)?;

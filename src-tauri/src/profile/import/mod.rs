@@ -5,8 +5,8 @@ use std::{
     sync::Mutex,
 };
 
-use eyre::{anyhow, bail, ensure, Context, Result};
 use base64::{prelude::BASE64_STANDARD, Engine};
+use eyre::{anyhow, bail, ensure, Context, Result};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -198,23 +198,23 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     }
 }
 
-pub async fn import_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
+pub async fn import_local_mod(
+    path: PathBuf,
+    app: &AppHandle,
+    options: InstallOptions,
+) -> Result<()> {
     let (mut local_mod, kind) = read_local_mod(&path)?;
 
     if let Some(deps) = &local_mod.dependencies {
-        install::install_with_mods(
-            InstallOptions::default().can_cancel(false),
-            app,
-            |manager, thunderstore| {
-                let profile = manager.active_profile();
+        install::install_with_mods(options, app, |manager, thunderstore| {
+            let profile = manager.active_profile();
 
-                Ok(thunderstore
-                    .dependencies(deps)
-                    .filter(|dep| !profile.has_mod(dep.package.uuid))
-                    .map(|borrowed| borrowed.into())
-                    .collect::<Vec<_>>())
-            },
-        )
+            Ok(thunderstore
+                .dependencies(deps)
+                .filter(|dep| !profile.has_mod(dep.package.uuid))
+                .map(|borrowed| borrowed.into())
+                .collect::<Vec<_>>())
+        })
         .await
         .context("failed to install dependencies")?;
     }

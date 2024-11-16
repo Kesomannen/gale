@@ -135,13 +135,13 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
         InstallOptions::default()
             .can_cancel(false)
             .send_progress(false)
-            .on_progress(move |progress, app| {
-                let percentage = (progress.total_progress() * 100.0).round();
+            .on_progress(Box::new(move |progress, app| {
+                let percentage = (progress.total_progress * 100.0).round();
                 emit_update(
                     &format!("Importing profile '{}'... {}%", name, percentage),
                     app,
                 );
-            }),
+            })),
         app,
     )
     .await

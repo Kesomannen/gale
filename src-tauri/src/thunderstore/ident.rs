@@ -59,10 +59,12 @@ impl VersionIdent {
         VersionIdentPath(self)
     }
 
+    #[inline]
     pub fn into_string(self) -> String {
         self.repr
     }
 
+    #[inline]
     pub fn as_str(&self) -> &str {
         &self.repr
     }
@@ -100,7 +102,7 @@ impl AsRef<str> for VersionIdent {
 
 impl From<VersionIdent> for String {
     fn from(id: VersionIdent) -> Self {
-        id.repr
+        id.into_string()
     }
 }
 
@@ -226,10 +228,12 @@ impl PackageIdent {
         PackageIdentPath(self)
     }
 
+    #[inline]
     pub fn into_string(self) -> String {
         self.repr
     }
 
+    #[inline]
     pub fn as_str(&self) -> &str {
         &self.repr
     }
@@ -267,7 +271,7 @@ impl AsRef<str> for PackageIdent {
 
 impl From<PackageIdent> for String {
     fn from(id: PackageIdent) -> Self {
-        id.repr
+        id.into_string()
     }
 }
 

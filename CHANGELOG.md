@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- CLI argument `--install [PATH]` (`-i` for short) which installs a local mod on startup
+
+### Fixed
+
+- Mod updates going through even if the old version failed to uninstall
+- Dependency install order, which should fix issues with modpack config being overriden
+- Various issues with local mod icons
+- Opening game log while the game is running causing an error
+
 ## 1.1.2 (2024-11-14)
 
 ### Fixed

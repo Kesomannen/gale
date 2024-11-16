@@ -461,7 +461,7 @@ pub fn open_game_log(manager: StateMutex<ModManager>) -> Result<()> {
     let manager = manager.lock().unwrap();
 
     let path = manager.active_profile().log_path()?;
-    open::that(path).context("failed to open log file")?;
+    open::that_detached(path).context("failed to open log file")?;
 
     Ok(())
 }

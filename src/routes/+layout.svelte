@@ -42,10 +42,12 @@
 <main
 	class="relative flex flex-col overflow-hidden bg-slate-800"
 	on:contextmenu={(evt) => {
+		/*
 		// hide context menu in release builds
 		if (window.location.hostname === 'tauri.localhost') {
 			evt.preventDefault();
 		}
+		*/
 	}}
 >
 	<Menubar />
