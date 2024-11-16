@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.1.3 (2024-11-16)
 
 ### Added
 
+- A few more game icons
 - CLI argument `--install [PATH]` (`-i` for short) which installs a local mod on startup
 
 ### Fixed

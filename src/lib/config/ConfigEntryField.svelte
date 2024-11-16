@@ -2,7 +2,6 @@
 	import { sentenceCase } from '$lib/util';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import type { ConfigEntry, ConfigEntryId, ConfigValue } from '$lib/models';
-	import { Render } from '@jill64/svelte-sanitize';
 	import StringConfig from './StringConfig.svelte';
 	import EnumConfig from './EnumConfig.svelte';
 	import FlagsConfig from './FlagsConfig.svelte';

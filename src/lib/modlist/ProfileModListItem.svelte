@@ -8,13 +8,10 @@
 	import type { Mod, ModContextItem } from '../models';
 	import Icon from '@iconify/svelte';
 	import { iconSrc, isOutdated } from '$lib/util';
-	import { readFile } from '@tauri-apps/plugin-fs';
-	import { activeGame } from '$lib/stores';
 	import { Switch, ContextMenu } from 'bits-ui';
 	import { createEventDispatcher } from 'svelte';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 	import { dropTransition } from '$lib/transitions';
-	import { convertFileSrc } from '@tauri-apps/api/core';
 
 	export let mod: Mod;
 	export let index: number;

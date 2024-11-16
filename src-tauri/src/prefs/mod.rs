@@ -10,7 +10,6 @@ use eyre::{anyhow, ensure, eyre, Context, Result};
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use tauri_plugin_fs::FsExt;
 
 use crate::{
     game::{self, Platform},
@@ -313,8 +312,6 @@ impl Prefs {
             }
         };
 
-        app.fs_scope().allow_directory(prefs.data_dir.get(), true);
-
         Ok(prefs)
     }
 
@@ -346,11 +343,6 @@ impl Prefs {
         }
 
         if self.data_dir != value.data_dir {
-            let scope = app.fs_scope();
-
-            scope.forbid_directory(&self.data_dir, true);
-            scope.allow_directory(&value.data_dir, true);
-
             // move profile paths
             let manager = app.state::<Mutex<ModManager>>();
             let mut manager = manager.lock().unwrap();
