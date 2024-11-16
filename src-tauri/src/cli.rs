@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 
 use eyre::{anyhow, Context, OptionExt, Result};
 use log::{error, info};
@@ -47,19 +47,25 @@ pub fn run(app: &App) -> Result<()> {
             }
 
             if let Some(Value::String(path)) = matches.args.get("install").map(|arg| &arg.value) {
-                tauri::async_runtime::block_on(profile::import::import_local_mod(
-                    path.into(),
-                    app.handle(),
-                    InstallOptions::default().on_progress(Box::new(|progress, _| {
-                        info!(
-                            "{} {} ({}%)",
-                            progress.task,
-                            progress.current_name,
-                            (progress.total_progress * 100.0).round()
-                        )
-                    })),
-                ))
-                .unwrap_or_else(|err| error!("failed to install mod from cli: {:#}", err));
+                let path = PathBuf::from(path);
+                let handle = app.handle().to_owned();
+
+                tauri::async_runtime::spawn(async move {
+                    profile::import::import_local_mod(
+                        path,
+                        &handle,
+                        InstallOptions::default().on_progress(Box::new(|progress, _| {
+                            info!(
+                                "{} {} ({}%)",
+                                progress.task,
+                                progress.current_name,
+                                (progress.total_progress * 100.0).round()
+                            )
+                        })),
+                    )
+                    .await
+                    .unwrap_or_else(|err| error!("failed to install mod from cli: {:#}", err));
+                });
             }
 
             if let Some(Value::Bool(true)) = matches.args.get("launch").map(|arg| &arg.value) {
