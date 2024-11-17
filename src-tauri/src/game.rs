@@ -235,6 +235,16 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::Shimloader {} => "",
         }
     }
+
+    pub fn config_path(&self) -> &str {
+        match &self.kind {
+            ModLoaderKind::BepInEx { .. } => "BepInEx/config",
+            ModLoaderKind::MelonLoader { .. } => "",
+            ModLoaderKind::GDWeave {} => "GDWeave/configs",
+            ModLoaderKind::Northstar {} => "",
+            ModLoaderKind::Shimloader {} => "",
+        }
+    }
 }
 
 impl ModLoader<'static> {

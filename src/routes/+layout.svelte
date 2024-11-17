@@ -42,12 +42,10 @@
 <main
 	class="relative flex flex-col overflow-hidden bg-slate-800"
 	on:contextmenu={(evt) => {
-		/*
 		// hide context menu in release builds
 		if (window.location.hostname === 'tauri.localhost') {
 			evt.preventDefault();
 		}
-		*/
 	}}
 >
 	<Menubar />
@@ -59,10 +57,7 @@
 		>
 			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
-			{#if $activeGame?.modLoader === ModLoader.BepInEx}
-				<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
-			{/if}
-
+			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</nav>

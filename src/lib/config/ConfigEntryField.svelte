@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { sentenceCase } from '$lib/util';
 	import Tooltip from '$lib/components/Tooltip.svelte';
-	import type { ConfigEntry, ConfigEntryId, ConfigValue } from '$lib/models';
+	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import StringConfig from './StringConfig.svelte';
 	import EnumConfig from './EnumConfig.svelte';
 	import FlagsConfig from './FlagsConfig.svelte';
@@ -15,40 +15,34 @@
 	$: ({ entry } = entryId);
 	$: ({ value } = entry);
 
-	$: typeName = getTypeName(entry);
+	$: typeName = getTypeName(value);
 
 	function valueToString(val: ConfigValue) {
 		switch (val.type) {
-			case 'boolean':
+			case 'bool':
 				return val.content ? 'True' : 'False';
 			case 'string':
 				return val.content;
-			case 'double':
-			case 'int32':
-			case 'single':
+			case 'int':
+			case 'float':
 				return val.content.value.toString();
 			case 'enum':
 				return val.content.options[val.content.index];
 			case 'flags':
 				return val.content.indicies.map((i) => val.content.options[i]).join(', ');
-			case 'other':
-				return val.content;
 		}
 	}
 
-	function getTypeName(entry: ConfigEntry) {
+	function getTypeName(value: ConfigValue) {
 		switch (value.type) {
-			case 'int32':
+			case 'int':
 				return 'Integer';
-			case 'double':
-			case 'single':
+			case 'float':
 				return 'Decimal';
 			case 'string':
 				return 'String';
-			case 'boolean':
+			case 'bool':
 				return 'Boolean';
-			default:
-				return entry.typeName;
 		}
 	}
 </script>
@@ -73,14 +67,14 @@
 				</p>
 			{/if}
 
-			{#if entry.defaultValue}
+			{#if entry.default}
 				<p class="break-words">
 					<span class="font-medium text-slate-100">Default: </span>
-					{valueToString(entry.defaultValue)}
+					{valueToString(entry.default)}
 				</p>
 			{/if}
 
-			{#if (value.type === 'int32' || value.type === 'double' || value.type === 'single') && value.content.range}
+			{#if (value.type === 'int' || value.type === 'float') && value.content.range !== null}
 				<p>
 					<span class="font-medium text-white">Range: </span>
 					{value.content.range.start} - {value.content.range.end}
@@ -94,12 +88,10 @@
 		<EnumConfig {entryId} />
 	{:else if value.type === 'flags'}
 		<FlagsConfig {entryId} />
-	{:else if value.type === 'boolean'}
+	{:else if value.type === 'bool'}
 		<BoolConfig {entryId} />
-	{:else if value.type == 'other'}
-		<StringConfig {entryId} isOther={true} />
 	{:else if isNum(value)}
-		{#if value.content.range}
+		{#if value.content.range !== null}
 			<SliderConfig {entryId} />
 		{:else}
 			<NumberInputConfig {entryId} />

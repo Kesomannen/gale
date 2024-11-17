@@ -7,10 +7,10 @@
 
 	let content = entryId.entry.value.content as ConfigNum;
 	let range = content.range as ConfigRange;
-	let type = entryId.entry.value.type as 'int32' | 'double' | 'single';
+	let type = entryId.entry.value.type as 'int' | 'float';
 
 	$: fillPercent = clamp(((content.value - range.start) / (range.end - range.start)) * 100, 0, 100);
-	$: decimals = type === 'int32' ? 0 : 1;
+	$: decimals = type === 'int' ? 0 : 1;
 
 	let element: HTMLDivElement;
 	let fill: HTMLDivElement;
@@ -39,9 +39,9 @@
 		let x = clientX - rect.left;
 		let newValue = range.start + (range.end - range.start) * (x / rect.width);
 
-		if (type === 'double' || type == 'single') {
+		if (type === 'float') {
 			newValue = Math.round(newValue / DECIMAL_STEP) * DECIMAL_STEP;
-		} else if (type === 'int32') {
+		} else if (type === 'int') {
 			newValue = Math.round(newValue);
 		}
 
@@ -118,7 +118,7 @@
 		if (!isNaN(newValue)) {
 			newValue = clamp(newValue, range.start, range.end);
 
-			if (type === 'int32') {
+			if (type === 'int') {
 				newValue = Math.round(newValue);
 			}
 

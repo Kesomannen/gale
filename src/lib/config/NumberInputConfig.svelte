@@ -7,19 +7,22 @@
 
 	let value = entryId.entry.value;
 	let content = value.content as ConfigNum;
-	let type = value.type as 'int32' | 'double' | 'single';
+	let type = value.type as 'int' | 'float';
 
 	function onReset(value: ConfigValue) {
 		content = value.content as ConfigNum;
 	}
 
-	$: setConfigEntry(entryId, { type, content });
+	function submit() {
+		setConfigEntry(entryId, { type, content });
+	}
 </script>
 
 <input
 	type="number"
-	step={type === 'int32' ? 1 : 'any'}
+	step={type === 'int' ? 1 : 'any'}
 	bind:value={content.value}
+	on:change={submit}
 	class="w-full flex-grow rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 hover:border-opacity-100 focus:border-opacity-0 focus:outline-none focus:ring-2 focus:ring-accent-400"
 />
 

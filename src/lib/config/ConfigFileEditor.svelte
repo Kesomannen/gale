@@ -1,21 +1,15 @@
 <script lang="ts">
-	import type { ConfigEntry, ConfigFile, ConfigSection } from '$lib/models';
+	import type { ConfigEntry, ConfigFileData, ConfigSection } from '$lib/models';
 	import ConfigEntryField from './ConfigEntryField.svelte';
 
-	export let file: ConfigFile;
+	export let file: ConfigFileData;
 	export let section: ConfigSection | undefined;
 
 	let search = '';
 
 	$: ({ metadata } = file);
 
-	$: shownEntries =
-		section === undefined
-			? []
-			: filterEntries(
-					section.entries.filter((entry) => entry.type !== 'orphaned'),
-					search
-				);
+	$: shownEntries = section === undefined ? [] : filterEntries(section.entries, search);
 
 	function filterEntries(entries: ConfigEntry[], search: string) {
 		return entries.filter((entry) => {
@@ -26,8 +20,8 @@
 
 {#if metadata}
 	<div class="mb-1 px-4 font-medium text-slate-400">
-		Created by {metadata.pluginName}
-		{metadata.pluginVersion}
+		Created by {metadata.modName}
+		{metadata.modVersion}
 	</div>
 {/if}
 

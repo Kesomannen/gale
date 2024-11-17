@@ -3,7 +3,7 @@ use std::{
     io::{self, Write},
 };
 
-use super::{de::FLAGS_MESSAGE, Entry, EntryKind, File, FileMetadata, Num, Section, Value};
+use super::{de::FLAGS_MESSAGE, Entry, EntryKind, File, Metadata, Num, Section, Value};
 
 use serde::Serialize;
 
@@ -22,7 +22,7 @@ impl<W: Write> Write for Serializer<W> {
 }
 
 impl<W: Write> Serializer<W> {
-    fn write_metadata(&mut self, metadata: &FileMetadata) -> io::Result<()> {
+    fn write_metadata(&mut self, metadata: &Metadata) -> io::Result<()> {
         writeln!(
             self,
             "## Settings file was created by plugin {} {}",

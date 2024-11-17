@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use chrono::{DateTime, Utc};
 use eyre::Context;
 use itertools::Itertools;
-use log::info;
+use log::{debug, info};
 use tauri::Manager;
 use uuid::Uuid;
 
@@ -62,6 +62,11 @@ impl Profile {
         if respect_ignored && self.ignored_updates.contains(&uuid) {
             return Ok(None);
         }
+        debug!(
+            "update {} is available for {}",
+            package.latest().version(),
+            profile_mod.full_name()
+        );
 
         Ok(Some(AvailableUpdate {
             index,
@@ -130,10 +135,16 @@ pub async fn update_mods(
         to_update,
         InstallOptions::default().before_install(Box::new(|install, manager, _| {
             // remove the old version
-            manager
-                .active_profile_mut()
-                .force_remove_mod(install.uuid())
-                .context("failed to remove existing version")
+            let profile = manager.active_profile_mut();
+
+            // check since it could be a dependency, not an update itself
+            if profile.has_mod(install.uuid()) {
+                profile
+                    .force_remove_mod(install.uuid())
+                    .context("failed to remove existing version")?;
+            }
+
+            Ok(())
         })),
         true,
         app,

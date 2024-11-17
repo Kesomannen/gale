@@ -25,7 +25,7 @@
 </script>
 
 <Dropdown
-	placeholder="Select {entryId.entry.typeName}"
+	placeholder="Select values"
 	items={content.options}
 	class="flex-grow overflow-hidden"
 	bind:selected

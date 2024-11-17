@@ -2,7 +2,7 @@ import { invokeCommand } from './invoke';
 import type { ConfigEntryId, ConfigValue } from './models';
 
 export function isNum(value: ConfigValue) {
-	return value.type === 'int32' || value.type === 'double' || value.type === 'single';
+	return value.type === 'int' || value.type === 'float';
 }
 
 export async function setConfigEntry(id: ConfigEntryId, value: ConfigValue) {

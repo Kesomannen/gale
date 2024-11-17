@@ -89,10 +89,8 @@ OrphanedEntry = Hi!
 "###;
 
 fn test_file() -> File {
-    File::new(
-        "Test".into(),
-        "test".into(),
-        vec![
+    File {
+        sections: vec![
             Section::new(
                 "Section1",
                 vec![
@@ -176,12 +174,12 @@ fn test_file() -> File {
                 ],
             ),
         ],
-        Some(FileMetadata {
+        metadata: Some(Metadata {
             plugin_name: "Plugin".to_owned(),
             plugin_version: "v1.0.0".to_owned(),
             plugin_guid: "Author.PluginGuid".to_owned(),
         }),
-    )
+    }
 }
 
 #[test]
@@ -191,11 +189,8 @@ fn check_to_string() {
 
 #[test]
 fn check_from_string() {
-    let (sections, metadata) = de::from_reader(TEST_STR.as_bytes()).unwrap();
-    let mut left = File::new("Test".into(), "test".into(), sections, metadata);
+    let left = de::from_reader(TEST_STR.as_bytes()).unwrap();
     let right = test_file();
-
-    left.read_time = right.read_time;
 
     assert_eq!(left, right);
 }

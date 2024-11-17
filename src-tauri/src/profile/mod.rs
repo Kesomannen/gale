@@ -15,7 +15,7 @@ use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
 
 use crate::{
-    config,
+    config::ConfigCache,
     game::{self, Game, ModLoader},
     logger,
     prefs::Prefs,
@@ -98,7 +98,7 @@ pub struct Profile {
     pub mods: Vec<ProfileMod>,
     pub game: Game,
     pub ignored_updates: HashSet<Uuid>,
-    pub config: Vec<config::LoadFileResult>,
+    pub config_cache: ConfigCache,
     pub linked_config: HashMap<Uuid, PathBuf>,
     pub modpack: Option<ModpackArgs>,
 }
@@ -267,7 +267,7 @@ impl Profile {
             game,
             mods: Vec::new(),
             ignored_updates: HashSet::new(),
-            config: Vec::new(),
+            config_cache: ConfigCache::default(),
             linked_config: HashMap::new(),
             modpack: None,
         }

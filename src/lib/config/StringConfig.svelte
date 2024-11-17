@@ -10,7 +10,6 @@
 	import { getListSeparator } from '$lib/util';
 
 	export let entryId: ConfigEntryId;
-	export let isOther: boolean = false;
 
 	let content = entryId.entry.value.content as string;
 	let listSeparator = getListSeparator(entryId.entry);
@@ -22,7 +21,7 @@
 
 	async function submit() {
 		await setConfigEntry(entryId, {
-			type: isOther ? 'other' : 'string',
+			type: 'string',
 			content
 		});
 	}

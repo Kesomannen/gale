@@ -14,7 +14,7 @@
 
 	function onValueChanged(newValue: boolean) {
 		content = newValue;
-		setConfigEntry(entryId, { type: 'boolean', content });
+		setConfigEntry(entryId, { type: 'bool', content });
 	}
 </script>
 

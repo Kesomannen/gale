@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigFile, ConfigSection, LoadFileResult } from '$lib/models';
+	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/models';
 	import Icon from '@iconify/svelte';
 	import { Button, Collapsible } from 'bits-ui';
 	import { quadOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
 
-	export let file: LoadFileResult;
+	export let file: ConfigFile;
 	export let selectedSection: ConfigSection | undefined;
 	export let onDeleted: () => void;
-	export let onFileClicked: (file: LoadFileResult) => void;
-	export let onSectionClicked: (file: ConfigFile, section: ConfigSection) => void;
+	export let onFileClicked: (file: ConfigFile) => void;
+	export let onSectionClicked: (file: ConfigFileData, section: ConfigSection) => void;
 
 	let open = false;
 
@@ -21,11 +21,7 @@
 	$: icon = type === 'ok' ? 'mdi:chevron-down' : type === 'err' ? 'mdi:error' : 'mdi:help';
 
 	$: shownSections =
-		file.type === 'ok'
-			? file.sections.filter(
-					({ entries }) => entries.filter(({ type }) => type === 'normal').length > 0
-				)
-			: [];
+		file.type === 'ok' ? file.sections.filter((section) => section.entries.length > 0) : [];
 </script>
 
 <Collapsible.Root bind:open>

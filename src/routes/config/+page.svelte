@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ConfigFileListItem from '$lib/config/ConfigFileListItem.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigSection, LoadFileResult } from '$lib/models';
+	import type { ConfigSection, ConfigFile } from '$lib/models';
 	import { capitalize } from '$lib/util';
 	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
@@ -12,11 +12,11 @@
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 
-	let files: LoadFileResult[] | undefined;
+	let files: ConfigFile[] | undefined;
 
 	let searchTerm = '';
 
-	let selectedFile: LoadFileResult | undefined;
+	let selectedFile: ConfigFile | undefined;
 	let selectedSection: ConfigSection | undefined;
 
 	$: {
@@ -29,7 +29,7 @@
 
 	$: shownFiles = sortAndFilterFiles(searchTerm, files ?? []);
 
-	function sortAndFilterFiles(searchTerm: string, files: LoadFileResult[]) {
+	function sortAndFilterFiles(searchTerm: string, files: ConfigFile[]) {
 		if (searchTerm.length > 0) {
 			files = files.filter((file) => {
 				let lowerSearch = searchTerm.toLowerCase().trim();
@@ -49,7 +49,8 @@
 	}
 
 	async function refresh() {
-		files = await invokeCommand<LoadFileResult[]>('get_config_files');
+		files = await invokeCommand<ConfigFile[]>('get_config_files');
+		console.log(files);
 
 		let searchParam = $page.url.searchParams.get('file');
 		if (searchParam === null) return;

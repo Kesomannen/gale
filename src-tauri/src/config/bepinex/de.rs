@@ -1,10 +1,12 @@
 use std::{
+    fmt::Display,
     io::{BufRead, Lines, Read},
-    str,
+    str::{self, FromStr},
 };
 
 use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
+use serde::Serialize;
 
 use super::*;
 
@@ -42,7 +44,7 @@ where
     }
 }
 
-pub fn from_reader(reader: impl BufRead) -> Result<(Vec<Section>, Option<FileMetadata>)> {
+pub fn from_reader(reader: impl BufRead) -> Result<File> {
     let mut parser = Parser {
         lines: reader.lines(),
         peeked: None,
@@ -52,7 +54,13 @@ pub fn from_reader(reader: impl BufRead) -> Result<(Vec<Section>, Option<FileMet
     };
 
     match parser.parse() {
-        Ok(_) => Ok((parser.sections, parser.metadata)),
+        Ok(_) => {
+            let Parser {
+                sections, metadata, ..
+            } = parser;
+
+            Ok(File { metadata, sections })
+        }
         Err(err) => Err(err.wrap_err(format!("failed to parse file (at line {})", parser.line))),
     }
 }
@@ -62,7 +70,7 @@ struct Parser<R: BufRead> {
     peeked: Option<String>,
     line: usize,
     sections: Vec<Section>,
-    metadata: Option<FileMetadata>,
+    metadata: Option<Metadata>,
 }
 
 #[derive(Default)]
@@ -249,7 +257,7 @@ impl<R: Read + BufRead> Parser<R> {
             .ok_or(anyhow!("expected plugin GUID"))?
             .to_owned();
 
-        self.metadata = Some(FileMetadata {
+        self.metadata = Some(Metadata {
             plugin_name,
             plugin_version,
             plugin_guid,

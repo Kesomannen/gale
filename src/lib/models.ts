@@ -1,12 +1,8 @@
-import type { Color } from './theme';
-
 export type ConfigValue =
-	| { type: 'boolean'; content: boolean }
+	| { type: 'bool'; content: boolean }
 	| { type: 'string'; content: string }
-	| { type: 'int32'; content: ConfigNum }
-	| { type: 'single'; content: ConfigNum }
-	| { type: 'double'; content: ConfigNum }
-	| { type: 'other'; content: string }
+	| { type: 'int'; content: ConfigNum }
+	| { type: 'float'; content: ConfigNum }
 	| {
 			type: 'enum';
 			content: {
@@ -25,24 +21,22 @@ export type ConfigValue =
 export type ConfigEntry = {
 	name: string;
 	description: string | null;
-	typeName: string;
-	defaultValue: ConfigValue | null;
+	default: ConfigValue | null;
 	value: ConfigValue;
 };
 
 export type ConfigSection = {
 	name: string;
-	entries: ({ type: 'orphaned' } | ({ type: 'normal' } & ConfigEntry))[];
+	entries: ConfigEntry[];
 };
 
-export type ConfigFile = {
+export type ConfigFileData = {
 	displayName: string;
 	relativePath: string;
 	sections: ConfigSection[];
 	metadata: {
-		pluginName: string;
-		pluginVersion: string;
-		pluginGuid: string;
+		modName: string;
+		modVersion: string;
 	} | null;
 };
 
@@ -56,15 +50,14 @@ export type ConfigRange = {
 	end: number;
 };
 
-export type LoadFileResult =
-	| ({ type: 'ok' } & ConfigFile)
-	| { type: 'unsupported'; relativePath: string; displayName: null }
+export type ConfigFile = { relativePath: string; displayName: string | null } & (
+	| ({ type: 'ok' } & ConfigFileData)
+	| { type: 'unsupported' }
 	| {
 			type: 'err';
-			displayName: string;
-			relativePath: string;
 			error: string;
-	  };
+	  }
+);
 
 export type ProfileInfo = {
 	name: string;
