@@ -76,15 +76,15 @@ impl ManagedGame {
             (_, _) => Command::new(exe_path(game_dir)?),
         };
 
-        add_loader_args(
-            &mut command,
-            &self.active_profile().path,
-            &self.game.mod_loader,
-        )?;
+        let profile = self.active_profile();
+
+        add_loader_args(&mut command, &profile.path, &self.game.mod_loader)?;
 
         if let Some(custom_args) = custom_args {
             command.args(custom_args);
         }
+
+        command.args(["--gale-profile", &profile.name]);
 
         Ok((launch_mode, command))
     }

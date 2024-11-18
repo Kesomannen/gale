@@ -2,6 +2,7 @@ use std::{
     borrow::Cow,
     hash::{self, Hash},
     marker::PhantomData,
+    path::PathBuf,
 };
 
 use heck::{ToKebabCase, ToPascalCase};
@@ -236,13 +237,13 @@ impl<'a> ModLoader<'a> {
         }
     }
 
-    pub fn config_path(&self) -> &str {
+    pub fn config_path(&self) -> PathBuf {
         match &self.kind {
-            ModLoaderKind::BepInEx { .. } => "BepInEx/config",
-            ModLoaderKind::MelonLoader { .. } => "",
-            ModLoaderKind::GDWeave {} => "GDWeave/configs",
-            ModLoaderKind::Northstar {} => "",
-            ModLoaderKind::Shimloader {} => "",
+            ModLoaderKind::BepInEx { .. } => ["BepInEx", "config"].iter().collect(),
+            ModLoaderKind::MelonLoader { .. } => PathBuf::new(),
+            ModLoaderKind::GDWeave {} => ["GDWeave", "configs"].iter().collect(),
+            ModLoaderKind::Northstar {} => PathBuf::new(),
+            ModLoaderKind::Shimloader {} => PathBuf::new(),
         }
     }
 }

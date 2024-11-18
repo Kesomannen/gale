@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use chrono::{DateTime, Utc};
 use eyre::Context;
 use itertools::Itertools;
-use log::{debug, info};
+use log::info;
 use tauri::Manager;
 use uuid::Uuid;
 
@@ -62,11 +62,6 @@ impl Profile {
         if respect_ignored && self.ignored_updates.contains(&uuid) {
             return Ok(None);
         }
-        debug!(
-            "update {} is available for {}",
-            package.latest().version(),
-            profile_mod.full_name()
-        );
 
         Ok(Some(AvailableUpdate {
             index,

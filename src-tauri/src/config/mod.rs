@@ -119,7 +119,7 @@ impl ConfigCache {
             .into_iter()
             .par_bridge()
             .filter_map(Result::ok)
-            .filter_map(|entry| self.read_file(entry, root, mod_loader))
+            .filter_map(|entry| self.read_file(entry, root, &config_dir, mod_loader))
             .collect_vec_list()
             .into_iter()
             .flatten();
@@ -138,6 +138,7 @@ impl ConfigCache {
         &self,
         entry: walkdir::DirEntry,
         root: &Path,
+        config_dir: &Path,
         mod_loader: &ModLoader,
     ) -> Option<(AnyFile, Option<usize>)> {
         const EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];
@@ -172,7 +173,16 @@ impl ConfigCache {
 
         let display_name = match kind.mod_name() {
             Some(name) => Cow::Borrowed(name),
-            None => relative_path.to_string_lossy(),
+            None => match &kind {
+                AnyFileKind::BepInEx(_) | AnyFileKind::GDWeave(_) => {
+                    relative_path.file_stem().unwrap().to_string_lossy()
+                }
+                AnyFileKind::Unsupported | AnyFileKind::Err(_) => entry
+                    .path()
+                    .strip_prefix(config_dir)
+                    .unwrap()
+                    .to_string_lossy(),
+            },
         }
         .replace(['_', '-', ' '], "");
 

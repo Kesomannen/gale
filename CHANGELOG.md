@@ -6,6 +6,11 @@
 
 - Config support to WEBFISHING (TackleBox)
 
+### Fixed
+
+- Older versions of dependencies sometimes being installed
+- CLI mod install causing the app to freeze
+
 ## 1.1.3 (2024-11-16)
 
 ### Added

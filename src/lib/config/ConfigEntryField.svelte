@@ -43,6 +43,10 @@
 				return 'String';
 			case 'bool':
 				return 'Boolean';
+			case 'enum':
+				return 'Enum';
+			case 'flags':
+				return 'Flags';
 		}
 	}
 </script>
