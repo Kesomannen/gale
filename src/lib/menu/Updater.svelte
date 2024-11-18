@@ -61,6 +61,7 @@
 	}
 
 	async function update() {
+		popupOpen = false;
 		loading = true;
 		await installUpdate();
 		loading = false;

@@ -146,8 +146,6 @@ export type ConfigEntryId = {
 export type Dependant = {
 	fullName: string;
 	uuid: string;
-	icon: string | null;
-	type: ModType;
 };
 
 export type ModActionResponse =

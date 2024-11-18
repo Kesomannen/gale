@@ -428,8 +428,6 @@ pub struct Dependant {
     #[serde(rename = "fullName")]
     ident: VersionIdent,
     uuid: Uuid,
-    local: bool,
-    icon: Option<PathBuf>,
 }
 
 impl From<BorrowedMod<'_>> for Dependant {
@@ -437,24 +435,15 @@ impl From<BorrowedMod<'_>> for Dependant {
         Self {
             ident: value.version.ident.clone(),
             uuid: value.package.uuid,
-            local: false,
-            icon: None,
         }
     }
 }
 
 impl From<&ProfileMod> for Dependant {
     fn from(value: &ProfileMod) -> Self {
-        let (local, icon) = match &value.kind {
-            ProfileModKind::Thunderstore(_) => (false, None),
-            ProfileModKind::Local(local_mod) => (true, local_mod.icon.clone()),
-        };
-
         Self {
             ident: value.ident().into_owned(),
             uuid: value.uuid(),
-            local,
-            icon,
         }
     }
 }
