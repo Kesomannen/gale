@@ -9,7 +9,7 @@ use std::{
 
 use eyre::{eyre, Context, Result};
 use indexmap::IndexMap;
-use log::debug;
+use log::{debug, trace};
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
@@ -223,14 +223,19 @@ impl<'a> Iterator for Dependencies<'a> {
                 continue;
             };
 
+            trace!("resolving {}", current.ident());
+
             for dependency in &current.version.dependencies {
                 if !self.visited.insert(dependency.full_name()) {
+                    trace!("skipping {}", dependency);
                     continue;
                 }
 
+                trace!("queuing {}", dependency);
                 self.queue.push_back(dependency);
             }
 
+            debug!("adding {}", current.ident());
             break Some(current);
         }
     }
@@ -249,9 +254,15 @@ impl Thunderstore {
         &'a self,
         idents: impl IntoIterator<Item = &'a VersionIdent>,
     ) -> Dependencies<'a> {
+        let queue = idents.into_iter().collect::<VecDeque<_>>();
+        let mut visited = HashSet::with_capacity(queue.len());
+        for item in &queue {
+            visited.insert(item.full_name());
+        }
+
         Dependencies {
-            queue: idents.into_iter().collect(),
-            visited: HashSet::new(),
+            queue,
+            visited,
             thunderstore: self,
         }
     }

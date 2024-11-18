@@ -68,13 +68,6 @@ impl AnyFile {
 }
 
 impl AnyFileKind {
-    fn is_err(&self) -> bool {
-        match self {
-            Self::Err(_) => true,
-            _ => false,
-        }
-    }
-
     fn mod_name(&self) -> Option<&str> {
         match self {
             Self::BepInEx(file) => file.mod_name(),
@@ -179,10 +172,7 @@ impl ConfigCache {
 
         let display_name = match kind.mod_name() {
             Some(name) => Cow::Borrowed(name),
-            None => relative_path
-                .file_stem()
-                .expect("file should have name")
-                .to_string_lossy(),
+            None => relative_path.to_string_lossy(),
         }
         .replace(['_', '-', ' '], "");
 
@@ -217,9 +207,6 @@ impl ConfigCache {
             return true;
         };
         let Some(curr_file) = self.0.get(curr_index) else {
-            return true;
-        };
-        if curr_file.kind.is_err() {
             return true;
         };
         let Ok(metadata) = entry.metadata() else {

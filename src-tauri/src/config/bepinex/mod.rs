@@ -38,11 +38,7 @@ impl File {
             mod_version: metadata.plugin_version.clone(),
         });
 
-        let sections = self
-            .sections
-            .iter()
-            .map(|section| section.to_frontend())
-            .collect();
+        let sections = self.sections.iter().map(Section::to_frontend).collect();
 
         frontend::FileData { metadata, sections }
     }
@@ -78,7 +74,7 @@ impl Section {
         let entries = self
             .entries
             .iter()
-            .filter_map(|entry| entry.to_frontend())
+            .filter_map(EntryKind::to_frontend)
             .collect();
 
         frontend::Section {
