@@ -40,7 +40,7 @@ pub(super) async fn fetch_package_loop(app: AppHandle, game: Game) {
         };
 
         if let Err(err) = loop_iter(game, &mut is_first, &app, thunderstore.clone()).await {
-            logger::log_webview_err("error while fetching packages from Thunderstore", err, &app);
+            logger::log_webview_err("Error while fetching packages from Thunderstore", err, &app);
         }
 
         tokio::time::sleep(FETCH_INTERVAL).await;
