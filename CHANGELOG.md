@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.4 (2024-11-19)
 
 ## Added
 
