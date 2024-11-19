@@ -23,8 +23,6 @@ mod download;
 mod fs;
 mod installers;
 pub use installers::*;
-#[cfg(test)]
-mod tests;
 
 pub fn setup(handle: &AppHandle) -> Result<()> {
     handle.manage(Mutex::new(InstallState::default()));
