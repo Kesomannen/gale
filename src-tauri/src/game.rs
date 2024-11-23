@@ -8,7 +8,7 @@ use std::{
 use heck::{ToKebabCase, ToPascalCase};
 use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum_macros::{Display, EnumIter};
 
 use crate::profile::install::{
     BepinexInstaller, ExtractInstaller, GDWeaveModInstaller, PackageInstaller, ShimloaderInstaller,
@@ -39,6 +39,8 @@ struct JsonGame<'a> {
     slug: Option<&'a str>,
     #[serde(default)]
     popular: bool,
+    #[serde(default)]
+    server: bool,
     #[serde(default, rename = "r2dirName")]
     r2_dir_name: Option<&'a str>,
     #[serde(borrow)]
@@ -83,6 +85,7 @@ pub struct GameData<'a> {
     pub slug: Cow<'a, str>,
     pub r2_dir_name: Cow<'a, str>,
     pub popular: bool,
+    pub server: bool,
     pub mod_loader: ModLoader<'a>,
     pub platforms: Platforms<'a>,
 }
@@ -93,6 +96,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             name,
             slug,
             popular,
+            server,
             r2_dir_name,
             mod_loader,
             platforms,
@@ -113,6 +117,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             slug,
             r2_dir_name,
             popular,
+            server,
             mod_loader,
             platforms,
         }
@@ -133,7 +138,7 @@ impl Hash for GameData<'_> {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, EnumIter)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, Display, EnumIter)]
 #[serde(rename_all = "camelCase")]
 pub enum Platform {
     #[default]

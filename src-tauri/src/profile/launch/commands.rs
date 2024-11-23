@@ -1,5 +1,6 @@
 use eyre::Context;
 use itertools::Itertools;
+use tauri::AppHandle;
 
 use super::game_dir;
 use crate::{
@@ -9,11 +10,15 @@ use crate::{
 };
 
 #[tauri::command]
-pub fn launch_game(manager: StateMutex<ModManager>, prefs: StateMutex<Prefs>) -> Result<()> {
+pub fn launch_game(
+    manager: StateMutex<ModManager>,
+    prefs: StateMutex<Prefs>,
+    app: AppHandle,
+) -> Result<()> {
     let manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    manager.active_game().launch(&prefs)?;
+    manager.active_game().launch(&prefs, app)?;
     Ok(())
 }
 

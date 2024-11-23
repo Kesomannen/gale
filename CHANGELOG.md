@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- CLI mod installation when the `--no-gui` flag is set
+
 ## 1.1.4 (2024-11-19)
 
 ## Added

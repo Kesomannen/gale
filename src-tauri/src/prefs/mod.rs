@@ -7,7 +7,7 @@ use std::{
 };
 
 use eyre::{anyhow, ensure, eyre, Context, Result};
-use log::{debug, info};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
@@ -325,22 +325,7 @@ impl Prefs {
         self.steam_library_dir = value.steam_library_dir;
 
         self.game_prefs = value.game_prefs;
-        for (slug, value) in &mut self.game_prefs {
-            let game = game::from_slug(&slug)
-                .ok_or_else(|| eyre!("settings key for game {} is invalid", slug))?;
-
-            if let Some(platform) = game.platforms.iter().next() {
-                value.platform.get_or_insert(platform);
-            } else {
-                value.platform = None;
-                if let LaunchMode::Launcher = value.launch_mode {
-                    value.launch_mode = LaunchMode::Direct {
-                        instances: 1,
-                        interval_secs: 10.0,
-                    };
-                }
-            }
-        }
+        self.validate_game_prefs();
 
         if self.data_dir != value.data_dir {
             // move profile paths
@@ -384,6 +369,27 @@ impl Prefs {
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 
         self.save().context("failed write to settings file")
+    }
+
+    fn validate_game_prefs(&mut self) {
+        for (slug, value) in &mut self.game_prefs {
+            let Some(game) = game::from_slug(&slug) else {
+                warn!("game prefs key {} is invalid", slug);
+                continue;
+            };
+
+            if let Some(platform) = game.platforms.iter().next() {
+                value.platform.get_or_insert(platform);
+            } else {
+                value.platform = None;
+                if let LaunchMode::Launcher = value.launch_mode {
+                    value.launch_mode = LaunchMode::Direct {
+                        instances: 1,
+                        interval_secs: 10.0,
+                    };
+                }
+            }
+        }
     }
 
     pub fn cache_dir(&self) -> PathBuf {

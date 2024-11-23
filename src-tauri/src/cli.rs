@@ -46,41 +46,53 @@ pub fn run(app: &App) -> Result<()> {
                     .context("failed to set profile")?;
             }
 
-            if let Some(Value::String(path)) = matches.args.get("install").map(|arg| &arg.value) {
-                let path = PathBuf::from(path);
-                let handle = app.handle().to_owned();
+            let handle = match matches.args.get("install").map(|arg| &arg.value) {
+                Some(Value::String(path)) => {
+                    let path = PathBuf::from(path);
+                    let handle = app.handle().to_owned();
 
-                tauri::async_runtime::spawn(async move {
-                    profile::import::import_local_mod(
-                        path,
-                        &handle,
-                        InstallOptions::default().on_progress(Box::new(|progress, _| {
-                            info!(
-                                "{} {} ({}%)",
-                                progress.task,
-                                progress.current_name,
-                                (progress.total_progress * 100.0).round()
-                            )
-                        })),
-                    )
-                    .await
-                    .unwrap_or_else(|err| error!("failed to install mod from cli: {:#}", err));
-                });
-            }
+                    Some(tauri::async_runtime::spawn(install_local_mod(path, handle)))
+                }
+                _ => None,
+            };
 
             if let Some(Value::Bool(true)) = matches.args.get("launch").map(|arg| &arg.value) {
                 manager
                     .active_game()
-                    .launch(&prefs)
+                    .launch(&prefs, app.handle().to_owned())
                     .context("failed to launch game")?;
             }
 
             if let Some(Value::Bool(true)) = matches.args.get("no-gui").map(|arg| &arg.value) {
-                std::process::exit(0);
+                if let Some(handle) = handle {
+                    tauri::async_runtime::spawn(async move {
+                        handle.await.ok();
+                        std::process::exit(0);
+                    });
+                } else {
+                    std::process::exit(0);
+                }
             }
 
             Ok(())
         }
         Err(err) => Err(anyhow!(err)),
     }
+}
+
+async fn install_local_mod(path: PathBuf, handle: tauri::AppHandle) {
+    profile::import::import_local_mod(
+        path,
+        &handle,
+        InstallOptions::default().on_progress(Box::new(|progress, _| {
+            info!(
+                "{} {} ({}%)",
+                progress.task,
+                progress.current_name,
+                (progress.total_progress * 100.0).round()
+            )
+        })),
+    )
+    .await
+    .unwrap_or_else(|err| error!("failed to install mod from cli: {:#}", err));
 }

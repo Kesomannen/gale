@@ -64,6 +64,10 @@ fn setup(app: &AppHandle) -> eyre::Result<()> {
 }
 
 pub fn run() {
+    logger::setup().unwrap_or_else(|err| {
+        eprintln!("failed to set up logger: {:#}", err);
+    });
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             logger::open_gale_log,
@@ -165,13 +169,12 @@ pub fn run() {
         }))
         .setup(|app| {
             let handle = app.handle().clone();
-            logger::setup().ok();
 
             if let Err(err) = setup(&handle) {
-                error!("failed to launch Gale! {:#}", err);
+                error!("failed to start app: {:#}", err);
 
                 app.dialog()
-                    .message(format!("Failed to launch Gale:\n{:#}", err))
+                    .message(format!("Failed to launch Gale: {:#}", err))
                     .blocking_show();
 
                 return Err(err.into());

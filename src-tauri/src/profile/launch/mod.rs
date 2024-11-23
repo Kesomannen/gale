@@ -5,14 +5,16 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, Context, OptionExt, Result};
+use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
 use tokio::time::Duration;
 
 use super::ManagedGame;
 use crate::{
     game::{Game, ModLoader, ModLoaderKind, Platform},
+    logger::log_webview_err,
     prefs::{GamePrefs, Prefs},
     util::{self, error::IoResultExt},
 };
@@ -30,15 +32,15 @@ pub enum LaunchMode {
 }
 
 impl ManagedGame {
-    pub fn launch(&self, prefs: &Prefs) -> Result<()> {
+    pub fn launch(&self, prefs: &Prefs, app: AppHandle) -> Result<()> {
         let game_dir = game_dir(self.game, prefs)?;
         if let Err(err) = self.link_files(&game_dir) {
             warn!("failed to link files: {:#}", err);
         }
 
         let (launch_mode, command) = self.launch_command(&game_dir, prefs)?;
-        info!("launching with command {:?}", command);
-        do_launch(command, launch_mode)?;
+        info!("launching {} with command {:?}", self.game.slug, command);
+        do_launch(command, app, launch_mode)?;
 
         Ok(())
     }
@@ -63,12 +65,14 @@ impl ManagedGame {
                     bail!("{} is not available on Epic Games", self.game.name)
                 };
 
-                let path = format!(
+                let url = format!(
                     "com.epicgames.launcher://apps/{}?action=launch&silent=true",
                     epic.identifier.unwrap_or(self.game.name)
                 );
 
-                open::commands(path)
+                info!("launching from Epic Games with URL {}", url);
+
+                open::commands(url)
                     .into_iter()
                     .next()
                     .ok_or_eyre("open returned no commands to try")?
@@ -82,6 +86,10 @@ impl ManagedGame {
 
         if let Some(custom_args) = custom_args {
             command.args(custom_args);
+        }
+
+        if self.game.server {
+            command.arg("--server");
         }
 
         command.args(["--gale-profile", &profile.name]);
@@ -104,6 +112,10 @@ impl ManagedGame {
             });
 
         for file in files {
+            info!(
+                "copying {} to game directory",
+                file.file_name().to_string_lossy()
+            );
             fs::copy(file.path(), game_dir.join(file.file_name()))?;
         }
 
@@ -141,90 +153,19 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
         ..
     }) = game_prefs
     {
+        info!("using game path override at {}", path.display());
         path.to_path_buf()
     } else {
-        let platform = game_prefs.and_then(|prefs| prefs.platform);
+        let platform = game_prefs
+            .and_then(|prefs| prefs.platform)
+            .or_else(|| game.platforms.iter().next());
 
         match platform {
-            Some(Platform::Steam) => {
-                let Some(steam) = &game.platforms.steam else {
-                    bail!("{} is not available on Steam", game.name)
-                };
-
-                let mut path = prefs
-                    .steam_library_dir
-                    .as_ref()
-                    .ok_or_eyre("steam library directory not set")?
-                    .to_path_buf();
-
-                if !path.ends_with("common") {
-                    if !path.ends_with("steamapps") {
-                        path.push("steamapps");
-                    }
-
-                    path.push("common");
-                }
-
-                path.push(steam.dir_name.unwrap_or(game.name));
-
-                path
-            }
+            Some(Platform::Steam) => steam_game_dir(game, prefs)?,
             #[cfg(windows)]
-            Some(Platform::XboxStore) => {
-                let Some(xbox) = &game.platforms.xbox_store else {
-                    bail!("{} is not available on Xbox Store", game.name)
-                };
-
-                let name = xbox.identifier.unwrap_or(game.name);
-
-                let query = Command::new("powershell.exe")
-                    .args([
-                        "get-appxpackage",
-                        "-Name",
-                        name,
-                        "|",
-                        "select",
-                        "-expand",
-                        "InstallLocation",
-                    ])
-                    .output()?;
-
-                ensure!(
-                    query.status.success(),
-                    "query returned with error code {}",
-                    query.status.code().unwrap_or(-1)
-                );
-
-                let str =
-                    String::from_utf8(query.stdout).context("query returned invalid UTF-8")?;
-                PathBuf::from(str)
-            }
+            Some(Platform::XboxStore) => xbox_game_dir(game)?,
             #[cfg(windows)]
-            Some(Platform::EpicGames) => {
-                let Some(epic) = &game.platforms.epic_games else {
-                    bail!("{} is not available on Epic Games", game.name)
-                };
-
-                let name = epic.identifier.unwrap_or(game.name);
-
-                let dat_path: PathBuf =
-                    PathBuf::from("C:/ProgramData/Epic/UnrealEngineLauncher/LauncherInstalled.dat");
-
-                #[derive(Debug, Deserialize)]
-                #[serde(rename_all = "PascalCase")]
-                struct ListItem {
-                    install_location: PathBuf,
-                    app_name: String,
-                }
-
-                let list: Vec<ListItem> = util::fs::read_json(dat_path)
-                    .context("failed to read LauncherInstalled.dat file")?;
-
-                list.into_iter()
-                    .find(|item| item.app_name == name)
-                    .map(|item| item.install_location)
-                    .ok_or_eyre("could not find entry in the list of installed games")?
-            }
+            Some(Platform::EpicGames) => epic_game_dir(game)?,
             _ => bail!("game directory not found, you may need to specify it in the settings"),
         }
     };
@@ -236,6 +177,101 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     );
 
     Ok(path)
+}
+
+fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
+    let Some(steam) = &game.platforms.steam else {
+        bail!("{} is not available on Steam", game.name)
+    };
+
+    let mut path = prefs
+        .steam_library_dir
+        .as_ref()
+        .ok_or_eyre("steam library directory not set")?
+        .to_path_buf();
+
+    if !path.ends_with("common") {
+        if !path.ends_with("steamapps") {
+            path.push("steamapps");
+        }
+
+        path.push("common");
+    }
+
+    info!(
+        "finding path to {} from steam library at {}",
+        game.slug,
+        path.display()
+    );
+
+    path.push(steam.dir_name.unwrap_or(game.name));
+
+    Ok(path)
+}
+
+#[cfg(windows)]
+fn xbox_game_dir(game: Game) -> Result<PathBuf> {
+    let Some(xbox) = &game.platforms.xbox_store else {
+        bail!("{} is not available on Xbox Store", game.name)
+    };
+
+    let name = xbox.identifier.unwrap_or(game.name);
+    let mut query = Command::new("powershell.exe");
+    query.args([
+        "get-appxpackage",
+        "-Name",
+        name,
+        "|",
+        "select",
+        "-expand",
+        "InstallLocation",
+    ]);
+
+    info!("querying path for {} with command {:?}", game.slug, query);
+
+    let out = query.output()?;
+
+    ensure!(
+        out.status.success(),
+        "query returned with error code {}",
+        out.status.code().unwrap_or(-1)
+    );
+
+    let str = String::from_utf8(out.stdout).context("query returned invalid UTF-8")?;
+
+    Ok(PathBuf::from(str))
+}
+
+#[cfg(windows)]
+fn epic_game_dir(game: &crate::game::GameData<'_>) -> Result<PathBuf, eyre::Error> {
+    let Some(epic) = &game.platforms.epic_games else {
+        bail!("{} is not available on Epic Games", game.name)
+    };
+
+    let name = epic.identifier.unwrap_or(game.name);
+    let dat_path: PathBuf =
+        PathBuf::from("C:/ProgramData/Epic/UnrealEngineLauncher/LauncherInstalled.dat");
+
+    #[derive(Debug, Deserialize)]
+    #[serde(rename_all = "PascalCase")]
+    struct ListItem {
+        install_location: PathBuf,
+        app_name: String,
+    }
+
+    info!(
+        "reading Epic Games installations from {}",
+        dat_path.display()
+    );
+
+    let list: Vec<ListItem> =
+        util::fs::read_json(dat_path).context("failed to read LauncherInstalled.dat file")?;
+
+    Ok(list
+        .into_iter()
+        .find(|item| item.app_name == name)
+        .map(|item| item.install_location)
+        .ok_or_eyre("could not find entry in the list of installed games")?)
 }
 
 fn exe_path(game_dir: &Path) -> Result<PathBuf> {
@@ -253,7 +289,7 @@ fn exe_path(game_dir: &Path) -> Result<PathBuf> {
         .ok_or_eyre("game executable not found")
 }
 
-fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
+fn do_launch(mut command: Command, app: AppHandle, mode: LaunchMode) -> Result<()> {
     match mode {
         LaunchMode::Launcher | LaunchMode::Direct { instances: 1, .. } => {
             command.spawn()?;
@@ -264,8 +300,14 @@ fn do_launch(mut command: Command, mode: LaunchMode) -> Result<()> {
             interval_secs,
         } => {
             tauri::async_runtime::spawn(async move {
-                for _ in 0..instances {
-                    command.spawn().ok();
+                for i in 0..instances {
+                    if let Err(err) = command.spawn() {
+                        log_webview_err(
+                            "Failed to launch game",
+                            eyre!("launch command {i} failed: {}", err),
+                            &app,
+                        );
+                    }
                     tokio::time::sleep(Duration::from_secs_f32(interval_secs)).await;
                 }
             });
@@ -330,14 +372,19 @@ fn bepinex_preloader_path(profile_dir: &Path) -> Result<PathBuf> {
 fn doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
     let path = profile_dir.join(".doorstop_version");
 
-    let version = match path.exists() {
-        true => fs::read_to_string(&path)
+    let version = if path.exists() {
+        let version = fs::read_to_string(&path)
             .fs_context("reading version file", &path)?
             .split('.') // read only the major version number
             .next()
             .and_then(|str| str.parse().ok())
-            .ok_or_eyre("invalid version format")?,
-        false => 3,
+            .ok_or_eyre("invalid version format")?;
+
+        info!("doorstop version read: {}", version);
+        version
+    } else {
+        warn!(".doorstop_version file is missing, defaulting to 3");
+        3
     };
 
     match version {
