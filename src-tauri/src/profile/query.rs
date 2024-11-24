@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
+use log::warn;
 
 use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
 use crate::thunderstore::{
@@ -113,6 +114,11 @@ impl Profile {
                 match QueryableProfileMod::create(profile_mod, index, thunderstore) {
                     Ok(queryable) => Some(queryable),
                     Err(_) => {
+                        warn!(
+                            "unknown mod: '{}' while querying {}",
+                            profile_mod.ident(),
+                            self.name
+                        );
                         unknown.push(Dependant::from(profile_mod));
                         None
                     }

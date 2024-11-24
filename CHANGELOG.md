@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- More logging
+
 ### Fixed
 
 - CLI mod installation when the `--no-gui` flag is set
+- Automatic game directory detection not working until a setting is changed
 
 ## 1.1.4 (2024-11-19)
 

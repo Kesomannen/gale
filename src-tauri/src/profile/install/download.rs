@@ -10,7 +10,7 @@ use chrono::Utc;
 use core::str;
 use eyre::{Context, Result};
 use futures_util::StreamExt;
-use log::warn;
+use log::{info, warn};
 use tauri::{AppHandle, Emitter, Manager};
 use thiserror::Error;
 use zip::ZipArchive;
@@ -134,6 +134,8 @@ impl<'a> Installer<'a> {
         self.current_name = version.name().to_owned();
 
         if cache_path.exists() {
+            info!("using cached {}", version.ident);
+
             self.update(InstallTask::Installing);
 
             if let Some(callback) = &self.options.before_install {
@@ -147,6 +149,8 @@ impl<'a> Installer<'a> {
 
             Ok(InstallMethod::Cached)
         } else {
+            info!("downloading {}", version.ident);
+
             Ok(InstallMethod::Download {
                 url: version.download_url(),
                 file_size: version.file_size,
@@ -244,10 +248,10 @@ impl<'a> Installer<'a> {
     async fn install(&mut self, data: &ModInstall) -> InstallResult<()> {
         if let InstallMethod::Download { url, file_size } = self.try_cache_install(data)? {
             let response = self.download(&url, file_size).await?;
-            self.install_from_download(response, data)?;
+            self.install_from_download(response, data)
+        } else {
+            Ok(())
         }
-
-        Ok(())
     }
 
     pub async fn install_all(&mut self, mods: Vec<ModInstall>) -> Result<()> {
@@ -255,6 +259,11 @@ impl<'a> Installer<'a> {
 
         self.total_mods = mods.len();
         self.count_total_bytes(&mods)?;
+
+        info!(
+            "installing {} mod(s): {} bytes in total",
+            self.total_mods, self.total_bytes
+        );
 
         for i in 0..mods.len() {
             self.index = i;

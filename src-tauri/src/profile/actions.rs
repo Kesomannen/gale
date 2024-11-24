@@ -2,6 +2,7 @@ use std::{fs, sync::Mutex};
 
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
+use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
@@ -38,6 +39,8 @@ impl Profile {
         );
 
         fs::rename(&self.path, &new_path).fs_context("renaming profile directory", &self.path)?;
+
+        info!("renamed profile: {} -> {}", self.name, name);
 
         self.name = name;
         self.path = new_path;

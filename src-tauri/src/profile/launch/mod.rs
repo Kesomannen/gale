@@ -199,7 +199,7 @@ fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     }
 
     info!(
-        "finding path to {} from steam library at {}",
+        "using {} path from steam library at {}",
         game.slug,
         path.display()
     );

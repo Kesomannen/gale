@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use ::log::error;
 use eyre::Context;
-use log::{debug, info};
+use log::{debug, info, warn};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -145,12 +145,15 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_cli::init())
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            info!("received deep link: {:?}", args);
+
             app.get_window("main")
                 .expect("app should have main window")
                 .set_focus()
                 .ok();
 
             let Some(url) = args.into_iter().nth(1) else {
+                warn!("deep link has too few arguments");
                 return;
             };
 
@@ -165,6 +168,8 @@ pub fn run() {
                             logger::log_webview_err("Failed to import profile file", err, &app);
                         })
                 });
+            } else {
+                warn!("unknown deep link protocol");
             }
         }))
         .setup(|app| {

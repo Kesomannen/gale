@@ -2,6 +2,7 @@ use std::{cmp::Ordering, collections::HashSet, sync::Mutex, time::Duration};
 
 use eyre::Result;
 use itertools::Itertools;
+use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -78,6 +79,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
                 app.emit("mod_query_result", &mods)?;
 
                 if thunderstore.packages_fetched {
+                    info!("all packages fetched, pausing query loop");
                     state.current_query = None;
                 }
             }

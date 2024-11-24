@@ -9,7 +9,7 @@ use std::{
 
 use eyre::{eyre, Context, Result};
 use indexmap::IndexMap;
-use log::debug;
+use log::info;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
@@ -193,7 +193,10 @@ impl Thunderstore {
 
     /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
     pub fn switch_game(&mut self, game: Game, app: AppHandle) {
+        info!("switching thunderstore registry to game {}", game.slug);
+
         if let Some(handle) = self.fetch_loop_handle.take() {
+            info!("aborting ongoing fetch");
             handle.abort();
         }
 
@@ -265,19 +268,18 @@ impl Thunderstore {
 
 pub fn read_cache(manager: &ModManager) -> Result<Option<Vec<PackageListing>>> {
     let start = Instant::now();
-
     let path = cache_path(manager);
 
     if !path.exists() {
-        debug!("no cache file found at {}", path.display());
+        info!("no cache file found at {}", path.display());
         return Ok(None);
     }
 
     let result: Vec<PackageListing> =
         util::fs::read_json(path).context("failed to deserialize cache")?;
 
-    debug!(
-        "read {} mods from cache in {:?}",
+    info!(
+        "read {} packages from cache in {:?}",
         result.len(),
         start.elapsed()
     );
@@ -287,6 +289,7 @@ pub fn read_cache(manager: &ModManager) -> Result<Option<Vec<PackageListing>>> {
 
 pub fn write_cache(packages: &[&PackageListing], manager: &ModManager) -> Result<()> {
     if packages.is_empty() {
+        info!("no packages to write to cache");
         return Ok(());
     }
 
@@ -295,8 +298,8 @@ pub fn write_cache(packages: &[&PackageListing], manager: &ModManager) -> Result
     util::fs::write_json(cache_path(manager), packages, JsonStyle::Compact)
         .context("failed to write mod cache")?;
 
-    debug!(
-        "wrote {} mods to cache in {:?}",
+    info!(
+        "wrote {} packages to cache in {:?}",
         packages.len(),
         start.elapsed()
     );

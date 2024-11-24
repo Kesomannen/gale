@@ -3,6 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
     sync::Mutex,
+    time::Instant,
 };
 
 use chrono::{DateTime, Utc};
@@ -488,6 +489,11 @@ impl ManagedGame {
 
         self.active_profile_index = index;
 
+        info!(
+            "set active profile for game {} to {} (index {})",
+            self.game.slug, self.profiles[index].name, index
+        );
+
         Ok(())
     }
 
@@ -681,13 +687,18 @@ impl ModManager {
             thunderstore.switch_game(game, app);
         }
 
+        info!("set active game to {}", game.slug);
+
         Ok(())
     }
 
     fn ensure_game<'a>(&'a mut self, game: Game, prefs: &Prefs) -> Result<&'a mut ManagedGame> {
         const DEFAULT_PROFILE_NAME: &str = "Default";
 
-        if !self.games.contains_key(game) {
+        if self.games.contains_key(game) {
+            debug!("{} is already managed", game.slug);
+        } else {
+            info!("managing new game: {}", game.slug);
             let path = prefs.data_dir.join(&*game.slug);
 
             let mut managed_game = ManagedGame::new(path, game);
@@ -717,6 +728,7 @@ impl ModManager {
     }
 
     fn save(&self, prefs: &Prefs) -> Result<()> {
+        let start = Instant::now();
         let mut path = prefs.data_dir.get().to_path_buf();
 
         path.push("manager.json");
@@ -728,6 +740,12 @@ impl ModManager {
             managed_game.save(&mut path)?;
             path.pop();
         }
+
+        debug!(
+            "saved manager data to {} in {:?}",
+            path.display(),
+            start.elapsed()
+        );
 
         Ok(())
     }

@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 use eyre::{OptionExt, Result};
+use log::info;
 use tauri::{AppHandle, Manager};
 
 use super::{InstallOptions, ModInstall};
@@ -48,5 +49,9 @@ fn resolve_url(url: &str, thunderstore: &Thunderstore) -> Result<ModId> {
         })
         .ok_or_eyre("invalid deep link url")?;
 
-    thunderstore.find_mod(owner, name, version).map(Into::into)
+    let borrow = thunderstore.find_mod(owner, name, version)?;
+
+    info!("installing {} from deep link", borrow.ident());
+
+    Ok(borrow.into())
 }

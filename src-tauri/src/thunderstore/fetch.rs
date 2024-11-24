@@ -6,7 +6,7 @@ use std::{
 
 use eyre::Result;
 use indexmap::IndexMap;
-use log::{debug, warn};
+use log::{info, warn};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
@@ -35,7 +35,7 @@ pub(super) async fn fetch_package_loop(app: AppHandle, game: Game) {
 
         // always fetch once, even if the setting is turned off
         if !fetch_automatically && !is_first {
-            debug!("automatic fetch cancelled");
+            info!("automatic fetch cancelled by user setting");
             break;
         };
 
@@ -53,6 +53,7 @@ pub(super) async fn fetch_package_loop(app: AppHandle, game: Game) {
         thunderstore: StateMutex<'_, Thunderstore>,
     ) -> Result<()> {
         if thunderstore.lock().unwrap().is_fetching {
+            warn!("automatic fetch cancelled due to ongoing fetch");
             return Ok(());
         }
 
@@ -99,6 +100,11 @@ pub(super) async fn fetch_packages(
 ) -> Result<()> {
     const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
     const INSERT_EVERY: usize = 1000;
+
+    info!(
+        "fetching packages for {}, write_directly: {}",
+        game.slug, write_directly
+    );
 
     let state = app.state::<Mutex<Thunderstore>>();
     let client = &app.state::<NetworkClient>().0;
@@ -174,9 +180,10 @@ pub(super) async fn fetch_packages(
     state.packages_fetched = true;
     state.is_fetching = false;
 
-    debug!(
-        "loaded {} packages in {:?}",
+    info!(
+        "fetched {} packages for {} in {:?}",
         state.packages.len(),
+        game.slug,
         start_time.elapsed()
     );
 
