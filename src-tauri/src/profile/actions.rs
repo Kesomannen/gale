@@ -150,7 +150,10 @@ impl Profile {
     pub fn open_mod_dir(&self, uuid: Uuid) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
 
-        if let Some(path) = self.installer_for(profile_mod).mod_dir(profile_mod, self) {
+        if let Some(path) = self
+            .installer_for(profile_mod)
+            .mod_dir(&*profile_mod.full_name(), self)
+        {
             open::that(path)?;
             Ok(())
         } else {

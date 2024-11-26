@@ -18,10 +18,8 @@ fn relative_mod_dir(package_name: &str) -> PathBuf {
     ["GDWeave", "mods", package_name].iter().collect()
 }
 
-fn profile_mod_dir(profile_mod: &ProfileMod, profile: &Profile) -> PathBuf {
-    profile
-        .path
-        .join(relative_mod_dir(&*profile_mod.full_name()))
+fn profile_mod_dir(package_name: &str, profile: &Profile) -> PathBuf {
+    profile.path.join(relative_mod_dir(package_name))
 }
 
 impl PackageInstaller for GDWeaveModInstaller {
@@ -73,15 +71,15 @@ impl PackageInstaller for GDWeaveModInstaller {
     }
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        install::fs::toggle_dir(profile_mod_dir(profile_mod, profile), enabled)
+        install::fs::toggle_dir(profile_mod_dir(&*profile_mod.full_name(), profile), enabled)
     }
 
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        fs::remove_dir_all(profile_mod_dir(profile_mod, profile))?;
+        fs::remove_dir_all(profile_mod_dir(&*profile_mod.full_name(), profile))?;
         Ok(())
     }
 
-    fn mod_dir<'a>(&'a self, profile_mod: &ProfileMod, profile: &Profile) -> Option<PathBuf> {
-        Some(profile_mod_dir(profile_mod, profile))
+    fn mod_dir<'a>(&'a self, package_name: &str, profile: &Profile) -> Option<PathBuf> {
+        Some(profile_mod_dir(package_name, profile))
     }
 }

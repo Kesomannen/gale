@@ -6,32 +6,30 @@ use std::{
 };
 
 use base64::{prelude::BASE64_STANDARD, Engine};
-use eyre::{anyhow, bail, ensure, Context, Result};
+use eyre::{anyhow, Context, Result};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tempfile::tempdir;
 use uuid::Uuid;
-use zip::ZipArchive;
 
 use crate::{
-    game::ModLoader,
-    prefs::Prefs,
     profile::{
         export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
         install::{self, InstallOptions, ModInstall},
-        LocalMod, ModManager, ProfileMod,
+        ModManager,
     },
-    thunderstore::{PackageManifest, Thunderstore},
-    util::{self, error::IoResultExt, fs::PathExt},
+    thunderstore::Thunderstore,
+    util::{self, error::IoResultExt},
     NetworkClient,
 };
 
-use super::Profile;
-
 pub mod commands;
-pub mod r2modman;
+mod local;
+mod r2modman;
+
+pub use local::import_local_mod;
 
 pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
     let data = import_file_from_path(url.into(), app)?;
@@ -196,168 +194,4 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
         }
         None => Err(anyhow!("invalid profile data")),
     }
-}
-
-pub async fn import_local_mod(
-    path: PathBuf,
-    app: &AppHandle,
-    options: InstallOptions,
-) -> Result<()> {
-    let (mut local_mod, kind) = read_local_mod(&path)?;
-
-    if let Some(deps) = &local_mod.dependencies {
-        install::install_with_mods(options, app, |manager, thunderstore| {
-            let profile = manager.active_profile();
-
-            Ok(thunderstore
-                .dependencies(deps)
-                .filter(|dep| !profile.has_mod(dep.package.uuid))
-                .map(|borrowed| borrowed.into())
-                .collect::<Vec<_>>())
-        })
-        .await
-        .context("failed to install dependencies")?;
-    }
-
-    let manager = app.state::<Mutex<ModManager>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
-
-    let mod_loader = manager.active_mod_loader();
-    let profile = manager.active_profile_mut();
-
-    let existing = profile
-        .local_mods()
-        .find(|(LocalMod { name, .. }, _)| *name == local_mod.name);
-
-    let existing = existing.map(|(LocalMod { uuid, .. }, _)| *uuid);
-
-    if let Some(uuid) = existing {
-        profile
-            .force_remove_mod(uuid)
-            .context("failed to remove existing version")?;
-    }
-
-    let mut plugin_dir = profile.path.clone();
-    plugin_dir.push("BepInEx");
-    plugin_dir.push("plugins");
-    plugin_dir.push(&local_mod.name);
-
-    match kind {
-        LocalModKind::Zip => {
-            install_from_zip(&path, &profile, &local_mod.name, mod_loader, &prefs)
-                .context("failed to install")?;
-
-            local_mod.icon = plugin_dir.join("icon.png").exists_or_none();
-        }
-        LocalModKind::Dll => {
-            bail!("currently unsupported")
-        }
-    }
-
-    profile.mods.push(ProfileMod::new_local(local_mod));
-
-    manager.save(&prefs)?;
-
-    Ok(())
-}
-
-#[derive(PartialEq, Eq)]
-enum LocalModKind {
-    Zip,
-    Dll,
-}
-
-fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
-    ensure!(path.is_file(), "path is not a file");
-
-    let kind = match path.extension().and_then(|ext| ext.to_str()) {
-        Some("dll") => LocalModKind::Dll,
-        Some("zip") => LocalModKind::Zip,
-        _ => bail!("unsupported file type"),
-    };
-
-    let manifest = match kind {
-        LocalModKind::Zip => read_zip_manifest(path)?,
-        LocalModKind::Dll => None,
-    };
-
-    let uuid = Uuid::new_v4();
-    let file_size = path.metadata()?.len();
-
-    let local_mod = match manifest {
-        Some(manifest) => LocalMod {
-            uuid,
-            file_size,
-            name: manifest.name,
-            author: manifest.author,
-            description: Some(manifest.description),
-            version: Some(manifest.version_number),
-            dependencies: Some(manifest.dependencies),
-            ..Default::default()
-        },
-        None => LocalMod {
-            uuid,
-            file_size,
-            name: util::fs::file_name_owned(path.with_extension("")),
-            ..Default::default()
-        },
-    };
-
-    return Ok((local_mod, kind));
-
-    fn read_zip_manifest(path: &Path) -> Result<Option<PackageManifest>> {
-        let mut zip = util::fs::open_zip(path).context("failed to open zip archive")?;
-
-        let manifest = zip.by_name("manifest.json");
-
-        match manifest {
-            Ok(mut file) => {
-                let mut str = String::with_capacity(file.size() as usize);
-                file.read_to_string(&mut str)
-                    .context("failed to read manifest")?;
-
-                // remove BOM
-                if str.starts_with("\u{feff}") {
-                    str.replace_range(0..3, "");
-                }
-
-                serde_json::from_str(&str)
-                    .context("failed to parse manifest")
-                    .map(Some)
-            }
-            Err(_) => Ok(None),
-        }
-    }
-}
-
-fn install_from_zip(
-    src: &Path,
-    profile: &Profile,
-    package_name: &str,
-    mod_loader: &'static ModLoader,
-    prefs: &Prefs,
-) -> Result<()> {
-    // temporarily extract the zip so the same install method can be used
-
-    // dont use tempdir since we need the files on the same drive as the destination
-    // for hard linking to work
-
-    let temp_path = prefs.data_dir.join("temp").join("extract");
-    fs::create_dir_all(&temp_path).context("failed to create temporary directory")?;
-
-    let reader = fs::read(src)
-        .map(Cursor::new)
-        .context("failed to read file")?;
-    let archive = ZipArchive::new(reader).context("failed to read archive")?;
-
-    let mut installer = mod_loader.installer_for(package_name);
-    installer.extract(archive, package_name, temp_path.clone())?;
-    installer.install(&temp_path, package_name, profile)?;
-
-    fs::remove_dir_all(temp_path).context("failed to remove temporary directory")?;
-
-    Ok(())
 }

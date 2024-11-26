@@ -259,7 +259,7 @@ where
         (full, package)
     });
 
-    let mut result = mods
+    let mut results = mods
         .filter(|queryable| {
             if let Some((full_search, package_search)) = &search_terms {
                 let name_match = queryable
@@ -280,9 +280,6 @@ where
         })
         .collect_vec();
 
-    result.sort_by(|a, b| a.cmp(b, args));
-
-    log::debug!("found {} results, max: {}", result.len(), args.max_count);
-
-    result.into_iter().take(args.max_count)
+    results.sort_by(|a, b| a.cmp(b, args));
+    results.into_iter().take(args.max_count)
 }

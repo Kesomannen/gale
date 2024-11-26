@@ -37,7 +37,7 @@ pub trait PackageInstaller {
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()>;
 
-    fn mod_dir(&self, _profile_mod: &ProfileMod, _profile: &Profile) -> Option<PathBuf> {
+    fn mod_dir(&self, _package_name: &str, _profile: &Profile) -> Option<PathBuf> {
         None
     }
 }

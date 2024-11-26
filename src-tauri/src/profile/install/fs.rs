@@ -192,10 +192,6 @@ where
         if path.exists() {
             for_file(&path)
         } else {
-            warn!(
-                "tried to toggle/remove file at {}(.old), but it does not exist",
-                path.with_extension("").display()
-            );
             Ok(())
         }
     }

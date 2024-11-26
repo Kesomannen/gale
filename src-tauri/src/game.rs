@@ -1,7 +1,6 @@
 use std::{
     borrow::Cow,
     hash::{self, Hash},
-    marker::PhantomData,
     path::PathBuf,
 };
 
@@ -194,8 +193,6 @@ pub enum ModLoaderKind<'a> {
     BepInEx {
         #[serde(default, borrow, rename = "subdirs")]
         extra_subdirs: Vec<Subdir<'a>>,
-        #[serde(skip)]
-        lifetime: PhantomData<&'a ()>,
     },
     MelonLoader {
         #[serde(default, borrow, rename = "subdirs")]
