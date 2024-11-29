@@ -213,14 +213,15 @@ impl ManagedGame {
             name
         );
 
+        let mut path = self.path.join("profiles");
+        path.push(&name);
+
         ensure!(
-            !self.profiles.iter().any(|p| p.name == name),
+            !path.exists(),
             "profile with name '{}' already exists",
             name
         );
 
-        let mut path = self.path.join("profiles");
-        path.push(&name);
         fs::create_dir_all(&path).fs_context("creating profile directory", &path)?;
 
         self.profiles.push(Profile::new(name, path, self.game));
@@ -236,7 +237,7 @@ impl ManagedGame {
             "cannot delete last profile"
         );
 
-        let profile = self.profile(index)?;
+        let profile = self.profile_at(index)?;
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
@@ -249,7 +250,7 @@ impl ManagedGame {
     pub fn duplicate_profile(&mut self, duplicate_name: String, index: usize) -> Result<()> {
         self.create_profile(duplicate_name)?;
 
-        let old_profile = self.profile(index)?;
+        let old_profile = self.profile_at(index)?;
         let new_profile = self.active_profile();
 
         util::fs::copy_dir(&old_profile.path, &new_profile.path, Overwrite::Yes)

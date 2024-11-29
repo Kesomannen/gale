@@ -466,7 +466,7 @@ impl ManagedGame {
             .position(|profile| profile.name == name)
     }
 
-    fn profile(&self, index: usize) -> Result<&Profile> {
+    fn profile_at(&self, index: usize) -> Result<&Profile> {
         self.profiles
             .get(index)
             .ok_or_else(|| anyhow!("profile index {} is out of bounds", index))
