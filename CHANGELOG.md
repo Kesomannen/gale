@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.5 (2024-11-29)
 
 ### Added
 
@@ -12,6 +12,7 @@
 - CLI mod installation when the `--no-gui` flag is set
 - Automatic game directory detection not working until a setting is changed
 - Re-added local DLL installs (only BepInEx for now)
+- Profile name case issues on Windows
 
 ## 1.1.4 (2024-11-19)
 
