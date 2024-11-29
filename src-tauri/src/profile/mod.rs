@@ -10,7 +10,7 @@ use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
-use log::{debug, info, warn};
+use log::{debug, info, trace, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
@@ -741,7 +741,7 @@ impl ModManager {
             path.pop();
         }
 
-        debug!(
+        trace!(
             "saved manager data to {} in {:?}",
             path.display(),
             start.elapsed()

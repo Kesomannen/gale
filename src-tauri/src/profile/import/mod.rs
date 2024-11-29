@@ -33,7 +33,7 @@ pub use local::import_local_mod;
 
 pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
     let data = import_file_from_path(url.into(), app)?;
-    import_data(data, InstallOptions::default(), app).await?;
+    import_data(data, InstallOptions::default(), false, app).await?;
     Ok(())
 }
 
@@ -46,27 +46,25 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
-    pub name: String,
-    pub mod_names: Option<Vec<String>>,
-    pub mods: Vec<ModInstall>,
-    pub path: PathBuf,
-    pub delete_after_import: bool,
-    pub includes: Vec<PathBuf>,
-    pub ignored_updates: Vec<Uuid>,
-    pub source: ImportSource,
+    name: String,
+    mod_names: Vec<String>,
+    mods: Vec<ModInstall>,
+    path: PathBuf,
+    delete_after_import: bool,
+    ignored_updates: Vec<Uuid>,
+    source: ImportSource,
 }
 
 impl ImportData {
-    pub fn from_r2_mods(
+    pub fn create(
         name: String,
         mods: Vec<R2Mod>,
+        ignored_updates: Vec<Uuid>,
         path: PathBuf,
         delete_after_import: bool,
-        ignored_updates: Vec<Uuid>,
         source: ImportSource,
         thunderstore: &Thunderstore,
     ) -> Result<Self> {
-        let includes = export::find_includes(&path).collect();
         let mod_names = mods.iter().map(|r2| r2.ident()).collect();
         let mods = mods
             .into_iter()
@@ -76,11 +74,10 @@ impl ImportData {
 
         Ok(Self {
             name,
+            mod_names,
             mods,
             path,
             delete_after_import,
-            includes,
-            mod_names: Some(mod_names),
             ignored_updates,
             source,
         })
@@ -101,18 +98,23 @@ fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> 
     let manifest: LegacyProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
 
-    ImportData::from_r2_mods(
+    ImportData::create(
         manifest.profile_name,
         manifest.mods,
+        manifest.ignored_updates,
         temp_dir.into_path(),
         true,
-        manifest.ignored_updates,
         manifest.source,
         &thunderstore,
     )
 }
 
-async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle) -> Result<()> {
+async fn import_data(
+    data: ImportData,
+    options: InstallOptions,
+    import_all: bool,
+    app: &AppHandle,
+) -> Result<()> {
     let path = {
         let manager = app.state::<Mutex<ModManager>>();
         let mut manager = manager.lock().unwrap();
@@ -134,8 +136,8 @@ async fn import_data(data: ImportData, options: InstallOptions, app: &AppHandle)
         .await
         .context("error while importing mods")?;
 
-    import_config(&path, &data.path, data.includes.into_iter())
-        .context("failed to import config")?;
+    let includes = export::find_includes(&data.path, import_all);
+    import_config(&path, &data.path, includes).context("failed to import config")?;
 
     if data.delete_after_import {
         fs::remove_dir_all(&data.path).ok();

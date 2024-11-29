@@ -134,8 +134,6 @@ impl<'a> Installer<'a> {
         self.current_name = version.name().to_owned();
 
         if cache_path.exists() {
-            info!("using cached {}", version.ident);
-
             self.update(InstallTask::Installing);
 
             if let Some(callback) = &self.options.before_install {
@@ -149,8 +147,6 @@ impl<'a> Installer<'a> {
 
             Ok(InstallMethod::Cached)
         } else {
-            info!("downloading {}", version.ident);
-
             Ok(InstallMethod::Download {
                 url: version.download_url(),
                 file_size: version.file_size,

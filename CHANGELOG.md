@@ -4,12 +4,14 @@
 
 ### Added
 
+- Option to import all files from profiles instead of just standard config extensions
 - More logging
 
 ### Fixed
 
 - CLI mod installation when the `--no-gui` flag is set
 - Automatic game directory detection not working until a setting is changed
+- Re-added local DLL installs (only BepInEx for now)
 
 ## 1.1.4 (2024-11-19)
 

@@ -12,8 +12,8 @@ use super::{
 };
 
 #[tauri::command]
-pub async fn import_data(data: ImportData, app: AppHandle) -> Result<()> {
-    super::import_data(data, InstallOptions::default(), &app).await?;
+pub async fn import_data(data: ImportData, import_all: bool, app: AppHandle) -> Result<()> {
+    super::import_data(data, InstallOptions::default(), import_all, &app).await?;
 
     Ok(())
 }

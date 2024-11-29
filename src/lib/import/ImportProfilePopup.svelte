@@ -16,6 +16,7 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	export let open: boolean;
 	export let data: ImportData | null;
@@ -23,6 +24,7 @@
 	let key: string;
 	let name: string;
 	let loading: boolean;
+	let importAll: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
 
 	$: if (open) {
@@ -56,13 +58,14 @@
 		data.name = name;
 
 		if (mode === 'overwrite') {
-			let confirmed = await confirm(`Are you sure you want to override '${data.name}'?`);
+			let confirmed = await confirm(`Are you sure you want to override ${data.name}?`);
 
 			if (!confirmed) return;
 		}
 
-		invokeCommand('import_data', { data }).then(refreshProfiles);
+		invokeCommand('import_data', { data, importAll }).then(refreshProfiles);
 		data = null;
+		importAll = false;
 		open = false;
 	}
 
@@ -71,8 +74,15 @@
 	}
 </script>
 
-<Popup title="Import profile" bind:open onClose={() => (data = null)}>
-	{#if data}
+<Popup
+	title="Import profile"
+	bind:open
+	onClose={() => {
+		data = null;
+		importAll = false;
+	}}
+>
+	{#if data !== null}
 		<TabsMenu
 			bind:value={mode}
 			options={[
@@ -120,15 +130,27 @@
 			</Tabs.Content>
 		</TabsMenu>
 
-		{#if data.modNames !== null}
-			<details>
-				<summary class="mt-2 cursor-pointer text-slate-300"
-					>{data.mods.length} mods to install</summary
-				>
+		<details>
+			<summary class="mt-2 cursor-pointer text-slate-300"
+				>{data.modNames.length} mods to install</summary
+			>
 
-				<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] flex-shrink flex-grow" />
-			</details>
-		{/if}
+			<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] flex-shrink flex-grow" />
+		</details>
+
+		<details>
+			<summary class="mt-1 cursor-pointer text-slate-300">Advanced options</summary>
+
+			<div class="mt-1 flex items-center">
+				<Label text="Import all files">
+					Import all files found in the profile, instead of just well-known config file formats.
+					This is unsafe and can let an attacker install malware on your system. <b
+						>Only enable this for trusted profiles!</b
+					>
+				</Label>
+				<Checkbox bind:value={importAll} />
+			</div>
+		</details>
 
 		<div class="mt-2 flex w-full items-center justify-end gap-2 text-slate-400">
 			<BigButton

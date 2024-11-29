@@ -235,19 +235,7 @@ export type ProfileQuery = {
 
 export type ImportData = {
 	name: string;
-	includes: Map<string, string>;
-	modNames: string[] | null;
-	source: 'r2' | 'gale';
-	mods: {
-		modRef: {
-			packageUuid: string;
-			versionUuid: string;
-		};
-		enabled: boolean;
-		index: number | null;
-		overwrite: boolean;
-		installTime: string | null;
-	}[];
+	modNames: string[];
 };
 
 export type R2ImportData = {

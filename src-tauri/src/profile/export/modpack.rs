@@ -35,7 +35,7 @@ pub fn refresh_args(profile: &mut Profile) {
     // remove deleted files
     includes.retain(|file, _| profile.path.join(file).exists());
 
-    for path in super::find_includes(&profile.path) {
+    for path in super::find_includes(&profile.path, false) {
         includes.entry(path).or_insert(true);
     }
 }

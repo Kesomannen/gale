@@ -137,7 +137,7 @@ fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
     serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
-    write_includes(find_includes(&profile.path), &profile.path, &mut zip)?;
+    write_includes(find_includes(&profile.path, false), &profile.path, &mut zip)?;
 
     Ok(())
 }
@@ -194,7 +194,7 @@ where
     Ok(())
 }
 
-pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
+pub fn find_includes(root: &Path, include_all: bool) -> impl Iterator<Item = PathBuf> + '_ {
     // Include any files in the BepInEx/config directory,
     // and any other files with the following extensions:
     const INCLUDE_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];
@@ -218,7 +218,9 @@ pub fn find_includes(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
                 .any(|exc| path.starts_with(exc) || path.ends_with(exc))
         })
         .filter(move |path| {
-            path.extension()
-                .is_some_and(|ext| INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext))
+            include_all
+                || path
+                    .extension()
+                    .is_some_and(|ext| INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext))
         })
 }

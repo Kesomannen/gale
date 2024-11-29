@@ -397,11 +397,9 @@ fn doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
 fn add_melon_loader_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
     command.arg("--melonloader.basedir").arg(profile_dir);
 
-    let agf_path: PathBuf = ["MelonLoader", "Managed", "Assembly-CSharp.dll"]
-        .iter()
-        .collect();
+    let agf_path = profile_dir.join("MelonLoader/Managed/Assembly-CSharp.dll");
 
-    if !profile_dir.join(agf_path).exists() {
+    if !agf_path.exists() {
         command.arg("--melonloader.agfregenerate");
     }
 
