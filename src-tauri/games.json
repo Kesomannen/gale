@@ -234,7 +234,6 @@
 	},
 	{
 		"name": "AGAINST",
-		"slug": "against",
 		"modLoader": {
 			"name": "BepInEx"
 		},
@@ -242,6 +241,17 @@
 			"steam": {
 				"id": 1584840,
 				"dirName": "AGAINST_steam"
+			}
+		}
+	},
+	{
+		"name": "ATLYSS",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2768430
 			}
 		}
 	},
