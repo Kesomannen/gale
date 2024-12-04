@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 (2024-12-04)
+
+### Added
+
+- Support for ATLYSS and Risk Of Rain Returns
+
 ## 1.1.5 (2024-11-29)
 
 ### Added

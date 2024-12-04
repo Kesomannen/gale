@@ -1050,6 +1050,17 @@
 		}
 	},
 	{
+		"name": "Risk Of Rain Returns",
+		"modLoader": {
+			"name": "ReturnOfModding"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1337520
+			}
+		}
+	},
+	{
 		"name": "Rogue : Genesia",
 		"slug": "rogue-genesia",
 		"modLoader": {
@@ -1542,17 +1553,6 @@
 		"platforms": {
 			"steam": {
 				"id": 1620340
-			}
-		}
-	},
-	{
-		"name": "Risk Of Rain Returns",
-		"modLoader": {
-			"name": "ReturnOfModding"
-		},
-		"platforms": {
-			"steam": {
-				"id": 1337520
 			}
 		}
 	}
