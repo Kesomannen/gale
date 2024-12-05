@@ -6,7 +6,7 @@ from PIL import Image
 
 SIZE = (256, 256)
 
-if __name__ == '__main__':
+def transform_icons():
     dir = path.join(__file__, '..', '..', 'static', 'games')
     dir = path.realpath(dir)
 
@@ -26,3 +26,6 @@ if __name__ == '__main__':
         if not file.endswith('webp'):
             print('removing', file)
             os.remove(absolute)
+
+if __name__ == '__main__':
+    transform_icons()

@@ -3,13 +3,8 @@
 
 from os import path
 import json
-from re import sub
 
-def kebab(s):
-  return '-'.join(
-    sub(r"(\s|_|-)+"," ",
-    sub(r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+",
-    lambda mo: ' ' + mo.group(0).lower(), s)).split())
+from utils import kebab_case
 
 if __name__ == '__main__':
     json_path = path.join(__file__, '..', '..', 'src-tauri', 'games.json')
@@ -25,7 +20,7 @@ if __name__ == '__main__':
         try:
             slug = game['slug']
         except KeyError:
-            slug = kebab(game['name'])
+            slug = kebab_case(game['name'])
 
         print(f'    "{slug}",')
 
