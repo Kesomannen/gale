@@ -1192,6 +1192,18 @@
 		}
 	},
 	{
+		"name": "STRAFTAT",
+		"slug": "straftat",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2386720
+			}
+		}
+	},
+	{
 		"name": "Subnautica",
 		"modLoader": {
 			"name": "BepInEx",
