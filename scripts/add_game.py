@@ -74,6 +74,7 @@ if __name__ == '__main__':
                 break
             
         if found:
+            print('Icon found, resizing and optimizing...')
             break
         
         print('Icon not found, try again')
@@ -89,7 +90,7 @@ if __name__ == '__main__':
         'platforms': platforms
     }
     
-    print(f'Inserting into games.json')
+    print(f'Inserting into games.json...')
     
     (json_path, games) = read_games()
     games.append(game)
