@@ -1233,7 +1233,7 @@
 		"slug": "subnautica-below-zero",
 		"modLoader": {
 			"name": "BepInEx",
-			"packageName": "Subnautica_Modding-BepInExPack_BelowZero",
+			"packageName": "Subnautica_Modding-BepInExPack",
 			"subdirs": [
 				{
 					"name": "QMods",

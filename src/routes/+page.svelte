@@ -22,6 +22,12 @@
 	import UpdateAllBanner from '$lib/modlist/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
 
+	import { dndzone } from 'svelte-dnd-action';
+	import { onMount } from 'svelte';
+	import { flip } from 'svelte/animate';
+	import ModDetails from '$lib/modlist/ModDetails.svelte';
+	import ModListFilters from '$lib/modlist/ModListFilters.svelte';
+
 	const sortOptions = [
 		SortBy.Custom,
 		SortBy.InstallDate,
@@ -64,6 +70,18 @@
 			label: 'Open directory',
 			icon: 'mdi:folder',
 			onclick: (mod) => invokeCommand('open_mod_dir', { uuid: mod.uuid })
+		},
+		{
+			label: 'Open website',
+			icon: 'mdi:open-in-new',
+			onclick: (mod) => openIfNotNull(mod.websiteUrl),
+			showFor: (mod) => mod.websiteUrl !== null && mod.websiteUrl.length > 0
+		},
+		{
+			label: 'Donate',
+			icon: 'mdi:heart',
+			onclick: (mod) => openIfNotNull(mod.donateUrl),
+			showFor: (mod) => mod.donateUrl !== null
 		}
 	];
 
@@ -71,9 +89,9 @@
 	let unknownMods: Dependant[] = [];
 	let updates: AvailableUpdate[] = [];
 
-	let modList: ModList;
-	let maxCount: number;
+	let maxCount: number = 100;
 	let selectedMod: Mod | null = null;
+	let activeMod: Mod | null = null;
 
 	let removeDependants: DependantsPopup;
 	let disableDependants: DependantsPopup;
@@ -81,8 +99,6 @@
 
 	let dependantsOpen = false;
 	let dependants: string[];
-
-	let activeMod: Mod | null = null;
 
 	$: if (maxCount > 0) {
 		$activeProfile;
@@ -101,6 +117,8 @@
 
 	let refreshing = false;
 
+	onMount(() => refresh());
+
 	async function refresh() {
 		if (refreshing) return;
 		refreshing = true;
@@ -109,7 +127,8 @@
 			args: { ...$profileQuery, maxCount }
 		});
 
-		mods = result.mods;
+		mods = result.mods.map((mod, i) => ({ id: i, children: [], ...mod }));
+		console.log(mods);
 		unknownMods = result.unknownMods;
 		updates = result.updates;
 
@@ -173,47 +192,32 @@
 		console.log(selectedMod);
 	}
 
-	let reorderUuid: string;
-	let reorderPrevIndex: number;
-
-	function onDragStart(evt: DragEvent) {
-		if (!reorderable || evt.dataTransfer === null) return;
-
-		let element = evt.currentTarget as HTMLElement;
-
-		reorderUuid = element.dataset.uuid!;
-		reorderPrevIndex = parseInt(element.dataset.index!);
-
-		evt.dataTransfer.effectAllowed = 'move';
-		evt.dataTransfer.setData('text/html', element.outerHTML);
+	export function selectMod(mod: Mod) {
+		if (selectedMod === null || selectedMod.uuid !== mod.uuid) {
+			selectedMod = mod;
+		} else {
+			selectedMod = null;
+		}
 	}
 
-	async function onDragOver(evt: DragEvent) {
-		if (!reorderable) return;
-
-		let target = evt.currentTarget as HTMLElement;
-		let newIndex = parseInt(target.dataset.index!);
-		let delta = newIndex - reorderPrevIndex;
-
-		if (delta === 0) {
-			return;
-		}
-
-		let temp = mods[reorderPrevIndex];
-		mods[reorderPrevIndex] = mods[newIndex];
-		mods[newIndex] = temp;
-
-		reorderPrevIndex = newIndex;
-
-		if ($profileQuery.sortOrder === SortOrder.Descending) {
-			delta *= -1; // list is reversed
-		}
-
-		await emit('reorder_mod', { uuid: reorderUuid, delta });
-		console.log('reorder done');
+	function openIfNotNull(url: string | null) {
+		if (url !== null) open(url);
 	}
 </script>
 
+<!--
+<div
+	class="overflow-y-scroll"
+	use:dndzone={{ items: mods, flipDurationMs: 150 }}
+	on:consider={({ detail }) => (mods = detail.items)}
+	on:finalize={({ detail }) => (mods = detail.items)}
+>
+	{#each mods as mod (mod.id)}
+		<div class="cursor-move bg-black px-4 py-2 text-white" animate:flip={{ duration: 150 }}>
+			{mod.name}
+		</div>
+	{/each}
+</div>
 <ModList
 	{sortOptions}
 	{contextItems}
@@ -236,6 +240,26 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="banner">
+
+	</svelte:fragment>
+
+	<svelte:fragment slot="item" let:data>
+		<ProfileModListItem
+			{...data}
+			{reorderable}
+			on:dragstart={onDragStart}
+			on:dragover={onDragOver}
+			on:toggle={({ detail: newState }) => toggleMod(data.mod, newState)}
+			on:click={() => modList.selectMod(data.mod)}
+		/>
+	</svelte:fragment>
+</ModList>
+-->
+
+<div class="flex flex-grow overflow-hidden">
+	<div class="flex w-[60%] flex-grow flex-col overflow-hidden pl-3 pt-3">
+		<ModListFilters {sortOptions} queryArgs={profileQuery} />
+
 		{#if unknownMods.length > 0}
 			<div class="mb-1 mr-3 flex items-center rounded-lg bg-red-600 py-1.5 pl-3 pr-1 text-red-100">
 				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
@@ -254,19 +278,51 @@
 		{/if}
 
 		<UpdateAllBanner {updates} />
-	</svelte:fragment>
 
-	<svelte:fragment slot="item" let:data>
-		<ProfileModListItem
-			{...data}
-			{reorderable}
-			on:dragstart={onDragStart}
-			on:dragover={onDragOver}
-			on:toggle={({ detail: newState }) => toggleMod(data.mod, newState)}
-			on:click={() => modList.selectMod(data.mod)}
-		/>
-	</svelte:fragment>
-</ModList>
+		{#if mods.length === 0}
+			<div class="mt-4 text-center text-lg text-slate-300">No mods found 😥</div>
+		{:else}
+			<div
+				class="overflow-y-scroll"
+				use:dndzone={{ items: mods, flipDurationMs: 150 }}
+				on:consider={({ detail }) => (mods = detail.items)}
+				on:finalize={({ detail }) => (mods = detail.items)}
+			>
+				{#each mods as mod (mod.id)}
+					<button
+						class="w-full py-1 text-left text-white hover:bg-slate-600"
+						animate:flip={{ duration: 150 }}
+						on:click={() => selectMod(mod)}
+						use:dndzone={{ items: mod.children, flipDurationMs: 150 }}
+						on:consider={({ detail }) => (mod.children = detail.items)}
+						on:finalize={({ detail }) => (mod.children = detail.items)}
+					>
+						<div>{mod.name}</div>
+						<div class="pl-2">
+							{#each mod.children as child (child.id)}
+								{child}
+							{/each}
+						</div>
+					</button>
+				{/each}
+			</div>
+		{/if}
+	</div>
+
+	{#if selectedMod !== null}
+		<ModDetails mod={selectedMod} {contextItems} on:close={() => (selectedMod = null)}>
+			{#if selectedMod && isOutdated(selectedMod)}
+				<Button.Root
+					class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 py-2 text-lg font-medium hover:bg-accent-500"
+					on:click={() => updateMod(selectedMod)}
+				>
+					<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
+					Update to {selectedMod?.versions[0].name}
+				</Button.Root>
+			{/if}
+		</ModDetails>
+	{/if}
+</div>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
 	<div class="mt-4 text-center text-slate-300">
