@@ -20,13 +20,13 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 ### Windows
 
-**Through Thunderstore**
+**From Thunderstore**
 
-- Go to the [thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and click _Manual Download_.
+- Go to the [Thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and click _Manual Download_.
 - Extract the downloaded .zip file (for example by right-clicking and choosing _Extract All_).
 - Run the `Gale_X.X.X_x64_en-US.msi` file inside of the extracted folder.
 
-**Through Github**
+**From Github**
 
 - Go to [Releases](https://github.com/Kesomannen/gale/releases).
 - Download the `Gale_X.X.X_x64_en-US.msi` file for your desired version (the latest is recommended).
