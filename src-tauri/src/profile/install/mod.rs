@@ -131,6 +131,7 @@ impl ModInstall {
         self
     }
 
+    /// The uuid the resulting `ProfileMod` will get after the mod is installed.
     pub fn uuid(&self) -> Uuid {
         self.id.package_uuid
     }

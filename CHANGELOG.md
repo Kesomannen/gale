@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for Hades II, Peaks of Yore, Subterror and STRAFTAT
+
+## Fixed
+
+- ReturnOfModding mods being installed incorrectly
+- Launch mode defaulting to `Direct` instead of `Launcher` for first time users
+- Unexpected behaviour if an install error occurs while changing the version of a mod
+
 ## 1.2.0 (2024-12-04)
 
 ### Added

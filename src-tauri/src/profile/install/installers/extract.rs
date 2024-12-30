@@ -2,7 +2,7 @@ use std::{borrow::Cow, path::PathBuf};
 
 use eyre::Result;
 
-use super::{PackageZip, PackageInstaller};
+use super::{PackageInstaller, PackageZip};
 use crate::profile::{install, Profile, ProfileMod};
 
 pub struct ExtractInstaller<'a> {

@@ -201,7 +201,9 @@ pub enum ModLoaderKind<'a> {
     Northstar {},
     GDWeave {},
     Shimloader {},
-    ReturnOfModding {},
+    ReturnOfModding {
+        files: Vec<&'a str>,
+    },
 }
 
 impl<'a> ModLoader<'a> {
@@ -212,7 +214,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::Northstar {} => "Northstar",
             ModLoaderKind::GDWeave {} => "GDWeave",
             ModLoaderKind::Shimloader {} => "Shimloader",
-            ModLoaderKind::ReturnOfModding {} => "ReturnOfModding",
+            ModLoaderKind::ReturnOfModding { .. } => "ReturnOfModding",
         }
     }
 
@@ -227,7 +229,9 @@ impl<'a> ModLoader<'a> {
                 ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
                 ModLoaderKind::Northstar {} => full_name == "northstar-Northstar",
                 ModLoaderKind::Shimloader {} => full_name == "Thunderstore-unreal_shimloader",
-                ModLoaderKind::ReturnOfModding {} => full_name == "ReturnOfModding-ReturnOfModding",
+                ModLoaderKind::ReturnOfModding { .. } => {
+                    full_name == "ReturnOfModding-ReturnOfModding"
+                }
             }
         }
     }
@@ -239,7 +243,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::GDWeave {} => "GDWeave/GDWeave.log",
             ModLoaderKind::Northstar {} => "",
             ModLoaderKind::Shimloader {} => "",
-            ModLoaderKind::ReturnOfModding {} => "",
+            ModLoaderKind::ReturnOfModding { .. } => "",
         }
     }
 
@@ -250,7 +254,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::GDWeave {} => ["GDWeave", "configs"].iter().collect(),
             ModLoaderKind::Northstar {} => PathBuf::new(),
             ModLoaderKind::Shimloader {} => PathBuf::new(),
-            ModLoaderKind::ReturnOfModding {} => ["ReturnOfModding", "config"].iter().collect(),
+            ModLoaderKind::ReturnOfModding { .. } => ["ReturnOfModding", "config"].iter().collect(),
         }
     }
 }
@@ -354,16 +358,14 @@ impl ModLoader<'static> {
                 Box::new(SubdirInstaller::new(SUBDIRS, EXTRA, Some(DEFAULT), IGNORED))
             }
 
-            (true, ModLoaderKind::ReturnOfModding {}) => {
-                const FILES: &[&str] = &["version.dll"];
-
-                Box::new(ExtractInstaller::new(FILES, true))
+            (true, ModLoaderKind::ReturnOfModding { files }) => {
+                Box::new(ExtractInstaller::new(files, true))
             }
-            (false, ModLoaderKind::ReturnOfModding {}) => {
+            (false, ModLoaderKind::ReturnOfModding { .. }) => {
                 const SUBDIRS: &[Subdir] = &[
-                    Subdir::flat_separated("plugins", "ReturnOfModding/plugins"),
-                    Subdir::flat_separated("plugins_data", "ReturnOfModding/plugins_data"),
-                    Subdir::flat_separated("config", "ReturnOfModding/config"),
+                    Subdir::separated("plugins", "ReturnOfModding/plugins"),
+                    Subdir::separated("plugins_data", "ReturnOfModding/plugins_data"),
+                    Subdir::separated("config", "ReturnOfModding/config").mutable(),
                 ];
                 const EXTRA: &[Subdir] = &[];
                 const DEFAULT: usize = 0;

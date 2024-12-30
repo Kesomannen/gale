@@ -46,7 +46,7 @@ impl ManagedGame {
     }
 
     fn launch_command(&self, game_dir: &Path, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
-        let (launch_mode, platform, custom_args) = prefs
+        let (launch_mode, mut platform, custom_args) = prefs
             .game_prefs
             .get(&*self.game.slug)
             .map(|prefs| {
@@ -56,7 +56,13 @@ impl ManagedGame {
                     prefs.custom_args.as_ref(),
                 )
             })
-            .unwrap_or_default();
+            .unwrap_or_else(|| {
+                info!("game prefs not set, using default settings");
+                Default::default()
+            });
+
+        // if the game has a platform, but the setting is unset, fill it in anyway
+        platform = platform.or_else(|| self.game.platforms.iter().next());
 
         let mut command = match (&launch_mode, platform) {
             (LaunchMode::Launcher, Some(Platform::Steam)) => steam_command(self.game, prefs)?,
@@ -166,13 +172,13 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
             Some(Platform::XboxStore) => xbox_game_dir(game)?,
             #[cfg(windows)]
             Some(Platform::EpicGames) => epic_game_dir(game)?,
-            _ => bail!("game directory not found, you may need to specify it in the settings"),
+            _ => bail!("game directory not found - you may need to specify it in the settings"),
         }
     };
 
     ensure!(
         path.exists(),
-        "game directory not found, please check your settings (expected at {})",
+        "game directory does not exist, please check your settings (expected at {})",
         path.display()
     );
 
@@ -328,7 +334,7 @@ fn add_loader_args(
         ModLoaderKind::Northstar {} => add_northstar_args(command, profile_dir),
         ModLoaderKind::GDWeave {} => add_gd_weave_args(command, profile_dir),
         ModLoaderKind::Shimloader {} => add_shimloader_args(command, profile_dir),
-        ModLoaderKind::ReturnOfModding {} => add_return_of_modding_args(command, profile_dir),
+        ModLoaderKind::ReturnOfModding { .. } => add_return_of_modding_args(command, profile_dir),
     }
 }
 

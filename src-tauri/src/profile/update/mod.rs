@@ -3,7 +3,6 @@ use std::sync::Mutex;
 use chrono::{DateTime, Utc};
 use eyre::Context;
 use itertools::Itertools;
-use log::info;
 use tauri::Manager;
 use uuid::Uuid;
 
@@ -77,26 +76,21 @@ impl Profile {
 pub async fn change_version(mod_ref: ModId, app: &tauri::AppHandle) -> Result<()> {
     let install = {
         let manager = app.state::<Mutex<ModManager>>();
-        let mut manager = manager.lock().unwrap();
+        let manager = manager.lock().unwrap();
 
-        let profile = manager.active_profile_mut();
+        let profile = manager.active_profile();
+
         let index = profile.index_of(mod_ref.package_uuid)?;
         let enabled = profile.mods[index].enabled;
-
-        profile.force_remove_mod(mod_ref.package_uuid)?;
+        let install_time = profile.mods[index].install_time;
 
         ModInstall::new(mod_ref)
             .with_state(enabled)
             .with_index(index)
+            .with_time(install_time)
     };
 
-    install::install_with_deps(
-        vec![install],
-        InstallOptions::default().can_cancel(false),
-        false,
-        app,
-    )
-    .await
+    _update_mods(vec![install], app).await
 }
 
 pub async fn update_mods(
@@ -104,9 +98,7 @@ pub async fn update_mods(
     respect_ignored: bool,
     app: &tauri::AppHandle,
 ) -> Result<()> {
-    info!("updating {} mods", uuids.len());
-
-    let to_update = {
+    let installs = {
         let manager = app.state::<Mutex<ModManager>>();
         let thunderstore = app.state::<Mutex<Thunderstore>>();
 
@@ -126,13 +118,17 @@ pub async fn update_mods(
             .collect::<Result<Vec<ModInstall>>>()?
     };
 
+    _update_mods(installs, app).await
+}
+
+async fn _update_mods(installs: Vec<ModInstall>, app: &tauri::AppHandle) -> Result<()> {
     install::install_with_deps(
-        to_update,
+        installs,
         InstallOptions::default().before_install(Box::new(|install, manager, _| {
             // remove the old version
             let profile = manager.active_profile_mut();
 
-            // check since it could be a dependency, not an update itself
+            // check since it could be a new dependency being installed, not an update itself
             if profile.has_mod(install.uuid()) {
                 profile
                     .force_remove_mod(install.uuid())

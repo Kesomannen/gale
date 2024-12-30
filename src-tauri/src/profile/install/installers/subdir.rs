@@ -1,13 +1,12 @@
 use std::{
     borrow::Cow,
     collections::HashMap,
-    ffi::OsStr,
     fs,
     path::{Path, PathBuf},
 };
 
 use eyre::{Context, OptionExt, Result};
-use log::warn;
+use log::{trace, warn};
 use serde::{Deserialize, Serialize};
 
 use super::{PackageInstaller, PackageZip};
@@ -147,17 +146,13 @@ impl<'a> SubdirInstaller<'a> {
             }
         }
 
-        // first, flatten the path until a subdir appears
-        // if the path contains no subdirs, default to /plugins
-
-        let mut prev: Vec<&OsStr> = Vec::new();
+        let mut prev = PathBuf::new();
         let mut components = relative_path.components();
 
         let subdir = loop {
             match components.next() {
                 Some(Component::Normal(name)) => {
                     prev.push(name);
-
                     if let Some(name) = name.to_str() {
                         if let Some(subdir) = self.match_subdir(name) {
                             break subdir;
@@ -170,7 +165,7 @@ impl<'a> SubdirInstaller<'a> {
                 }
                 // we don't care/don't expect any of these
                 Some(Component::RootDir | Component::Prefix(_) | Component::CurDir) => continue,
-                // default to plugins when the whole path is exhausted
+                // default when the whole path is exhausted
                 None => match self.default_subdir {
                     Some(index) => break &self.subdirs[index],
                     None => return Ok(None),
@@ -178,42 +173,36 @@ impl<'a> SubdirInstaller<'a> {
             }
         };
 
-        // components now contains either:
-        // - the remaining path if a subdir was found, or
-        // - None if the file is top level and thus defaulted to plugins
-
-        // prev is the canonical path leading up to a subdir,
-        // or the whole path if we defaulted
-
-        // e.g. profile/BepInEx/plugins
         let mut target = PathBuf::from(subdir.target);
 
-        if matches!(
+        let separate = matches!(
             subdir.mode,
-            SubdirMode::SeparateFlatten | SubdirMode::Separate
-        ) {
-            // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod
+            SubdirMode::Separate | SubdirMode::SeparateFlatten
+        );
+        let flatten = matches!(subdir.mode, SubdirMode::SeparateFlatten);
+        let is_top_level = components.clone().next().is_none();
+
+        if separate {
             target.push(package_name);
         }
 
-        if components.clone().next().is_none() {
-            // since we advanced components to the end, prev.pop() will give the
-            // last component, i.e. the file name
-            let file_name = prev.pop().ok_or_eyre("malformed mod archive file")?;
+        if is_top_level {
+            if flatten {
+                let file_name = prev.file_name().ok_or_eyre("malformed archive")?;
 
-            // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/CoolMod.dll
-            target.push(file_name);
+                target.push(file_name);
+            } else {
+                target.push(&prev);
+            }
         } else {
-            if subdir.mode == SubdirMode::Separate {
-                // don't include the subdir component itself
-                let len = prev.len() - 1;
-                let prev = prev.iter().take(len).collect::<PathBuf>();
+            if !flatten {
+                let mut prev = prev.components();
+                // remove the subdir component itself
+                prev.next_back();
 
                 target.push(prev);
             }
 
-            // add the remainder of the path after the subdir
-            // e.g. profile/BepInEx/plugins/Kesomannen-CoolMod/assets/cool_icon.png
             target.push(components);
         }
 

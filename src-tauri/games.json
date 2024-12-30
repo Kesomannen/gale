@@ -746,6 +746,21 @@
 		}
 	},
 	{
+		"name": "Hades II",
+		"slug": "hades-ii",
+		"modLoader": {
+			"name": "ReturnOfModding",
+			"packageName": "Hell2Modding-Hell2Modding",
+			"files": ["d3d12.dll"]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1145350,
+				"dirName": "Hades II/Ship"
+			}
+		}
+	},
+	{
 		"name": "Hard Bullet",
 		"modLoader": {
 			"name": "MelonLoader",
@@ -973,6 +988,18 @@
 		}
 	},
 	{
+		"name": "Peaks of Yore",
+		"slug": "peaks-of-yore",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2236070
+			}
+		}
+	},
+	{
 		"name": "Peglin",
 		"modLoader": {
 			"name": "BepInEx"
@@ -1052,7 +1079,8 @@
 	{
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
-			"name": "ReturnOfModding"
+			"name": "ReturnOfModding",
+			"files": ["version.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -1082,6 +1110,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1843760
+			}
+		}
+	},
+	{
+		"name": "STRAFTAT",
+		"slug": "straftat",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2386720
 			}
 		}
 	},
@@ -1192,18 +1232,6 @@
 		}
 	},
 	{
-		"name": "STRAFTAT",
-		"slug": "straftat",
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 2386720
-			}
-		}
-	},
-	{
 		"name": "Subnautica",
 		"modLoader": {
 			"name": "BepInEx",
@@ -1249,6 +1277,18 @@
 			},
 			"xboxStore": {
 				"identifier": "UnknownWorldsEntertainmen.SubnauticaBelowZero"
+			}
+		}
+	},
+	{
+		"name": "Subterror",
+		"slug": "subterror",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2846060
 			}
 		}
 	},
