@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use log::{trace, warn};
+use log::warn;
 use serde::{Deserialize, Serialize};
 
 use super::{PackageInstaller, PackageZip};
@@ -23,8 +23,8 @@ use crate::{
 
 pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
-    extra_subdirs: &'a [Subdir<'a>],
     default_subdir: Option<usize>,
+    extra_subdirs: &'a [Subdir<'a>],
     ignored_files: &'a [&'a str],
 }
 
@@ -106,18 +106,31 @@ impl<'a> Subdir<'a> {
 }
 
 impl<'a> SubdirInstaller<'a> {
-    pub fn new(
-        subdirs: &'a [Subdir<'a>],
-        extra_subdirs: &'a [Subdir<'a>],
-        default: Option<usize>,
-        ignored_files: &'a [&'a str],
-    ) -> Self {
+    pub fn new(subdirs: &'a [Subdir<'a>]) -> Self {
+        const DEFAULT_EXTRA: &[Subdir] = &[];
+        const DEFAULT_IGNORED: &[&str] = &[];
+
         Self {
             subdirs,
-            extra_subdirs,
-            default_subdir: default,
-            ignored_files,
+            default_subdir: None,
+            extra_subdirs: DEFAULT_EXTRA,
+            ignored_files: DEFAULT_IGNORED,
         }
+    }
+
+    pub fn with_default(mut self, index: usize) -> Self {
+        self.default_subdir = Some(index);
+        self
+    }
+
+    pub fn with_extras(mut self, subdirs: &'a [Subdir<'a>]) -> Self {
+        self.extra_subdirs = subdirs;
+        self
+    }
+
+    pub fn with_ignored_files(mut self, files: &'a [&'a str]) -> Self {
+        self.ignored_files = files;
+        self
     }
 
     fn subdirs(&self) -> impl Iterator<Item = &Subdir> {

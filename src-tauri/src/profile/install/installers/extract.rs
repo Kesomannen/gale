@@ -5,13 +5,22 @@ use eyre::Result;
 use super::{PackageInstaller, PackageZip};
 use crate::profile::{install, Profile, ProfileMod};
 
+pub enum FlattenTopLevel {
+    Yes,
+    No,
+}
+
+/// Installs packages with normal zip extraction rules.
 pub struct ExtractInstaller<'a> {
+    /// The files/directories to copy over.
+    /// Any paths that start with any of these will match.
     files: &'a [&'a str],
-    flatten_top_level: bool,
+    /// Whether to remove any top-level directories in the zip.
+    flatten_top_level: FlattenTopLevel,
 }
 
 impl<'a> ExtractInstaller<'a> {
-    pub fn new(files: &'a [&'a str], flatten_top_level: bool) -> Self {
+    pub fn new(files: &'a [&'a str], flatten_top_level: FlattenTopLevel) -> Self {
         Self {
             files,
             flatten_top_level,
@@ -28,7 +37,7 @@ impl<'a> PackageInstaller for ExtractInstaller<'a> {
         install::fs::extract(archive, dest, |relative_path| {
             let mut components = relative_path.components();
 
-            if self.flatten_top_level {
+            if matches!(self.flatten_top_level, FlattenTopLevel::Yes) {
                 components.next();
             }
 

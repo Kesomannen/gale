@@ -17,7 +17,7 @@ mod subdir;
 
 pub use self::{
     bepinex::BepinexInstaller,
-    extract::ExtractInstaller,
+    extract::{ExtractInstaller, FlattenTopLevel},
     gd_weave::GDWeaveModInstaller,
     shimloader::ShimloaderInstaller,
     subdir::{Subdir, SubdirInstaller},

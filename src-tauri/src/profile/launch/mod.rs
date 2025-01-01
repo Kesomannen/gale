@@ -334,6 +334,7 @@ fn add_loader_args(
         ModLoaderKind::Northstar {} => add_northstar_args(command, profile_dir),
         ModLoaderKind::GDWeave {} => add_gd_weave_args(command, profile_dir),
         ModLoaderKind::Shimloader {} => add_shimloader_args(command, profile_dir),
+        ModLoaderKind::Lovely {} => add_lovely_args(command, profile_dir),
         ModLoaderKind::ReturnOfModding { .. } => add_return_of_modding_args(command, profile_dir),
     }
 }
@@ -445,6 +446,13 @@ fn add_shimloader_args(command: &mut Command, profile_dir: &Path) -> Result<()> 
         .arg(path.join("pak"))
         .arg("--cfg-dir")
         .arg(path.join("cfg"));
+
+    Ok(())
+}
+
+fn add_lovely_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+    let path = profile_dir.join("mods");
+    command.arg("--mod-dir").arg(path);
 
     Ok(())
 }

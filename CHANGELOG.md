@@ -4,7 +4,12 @@
 
 ### Added
 
-- Support for Hades II, Peaks of Yore, Subterror and STRAFTAT
+- Support for 5 games, including the mod loader Lovely:
+  - Balatro
+  - Hades II
+  - Peaks of Yore
+  - Subterror
+  - STRAFTAT
 
 ## Fixed
 

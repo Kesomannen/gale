@@ -35,7 +35,7 @@ if __name__ == '__main__':
             else:
                 print("Slug not found on thunderstore, try again")
         
-    mod_loader = multiple_choice(f'Which mod loader does {name} use?', ['BepInEx', 'MelonLoader', 'GDWeave', 'Shimloader', 'Northstar', 'ReturnOfModding'])
+    mod_loader = multiple_choice(f'Which mod loader does {name} use?', ['BepInEx', 'MelonLoader', 'GDWeave', 'Shimloader', 'Lovely', 'Northstar', 'ReturnOfModding'])
     
     platforms = {}
     all_platforms = ['steam', 'epicGames', 'xboxStore', 'oculus', 'origin', 'done']

@@ -10,8 +10,8 @@ use strum::IntoEnumIterator;
 use strum_macros::{Display, EnumIter};
 
 use crate::profile::install::{
-    BepinexInstaller, ExtractInstaller, GDWeaveModInstaller, PackageInstaller, ShimloaderInstaller,
-    Subdir, SubdirInstaller,
+    BepinexInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, PackageInstaller,
+    ShimloaderInstaller, Subdir, SubdirInstaller,
 };
 
 const GAMES_JSON: &str = include_str!("../games.json");
@@ -201,6 +201,7 @@ pub enum ModLoaderKind<'a> {
     Northstar {},
     GDWeave {},
     Shimloader {},
+    Lovely {},
     ReturnOfModding {
         files: Vec<&'a str>,
     },
@@ -214,6 +215,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::Northstar {} => "Northstar",
             ModLoaderKind::GDWeave {} => "GDWeave",
             ModLoaderKind::Shimloader {} => "Shimloader",
+            ModLoaderKind::Lovely {} => "Lovely",
             ModLoaderKind::ReturnOfModding { .. } => "ReturnOfModding",
         }
     }
@@ -229,6 +231,7 @@ impl<'a> ModLoader<'a> {
                 ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
                 ModLoaderKind::Northstar {} => full_name == "northstar-Northstar",
                 ModLoaderKind::Shimloader {} => full_name == "Thunderstore-unreal_shimloader",
+                ModLoaderKind::Lovely {} => full_name == "Thunderstore-lovely",
                 ModLoaderKind::ReturnOfModding { .. } => {
                     full_name == "ReturnOfModding-ReturnOfModding"
                 }
@@ -243,6 +246,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::GDWeave {} => "GDWeave/GDWeave.log",
             ModLoaderKind::Northstar {} => "",
             ModLoaderKind::Shimloader {} => "",
+            ModLoaderKind::Lovely {} => "",
             ModLoaderKind::ReturnOfModding { .. } => "",
         }
     }
@@ -254,6 +258,7 @@ impl<'a> ModLoader<'a> {
             ModLoaderKind::GDWeave {} => ["GDWeave", "configs"].iter().collect(),
             ModLoaderKind::Northstar {} => PathBuf::new(),
             ModLoaderKind::Shimloader {} => PathBuf::new(),
+            ModLoaderKind::Lovely {} => PathBuf::new(),
             ModLoaderKind::ReturnOfModding { .. } => ["ReturnOfModding", "config"].iter().collect(),
         }
     }
@@ -271,15 +276,12 @@ impl ModLoader<'static> {
                     Subdir::flat_separated("core", "BepInEx/core"),
                     Subdir::untracked("config", "BepInEx/config").mutable(),
                 ];
-                const DEFAULT: usize = 0;
-                const IGNORED: &[&str] = &[];
 
-                Box::new(SubdirInstaller::new(
-                    SUBDIRS,
-                    extra_subdirs,
-                    Some(DEFAULT),
-                    IGNORED,
-                ))
+                Box::new(
+                    SubdirInstaller::new(SUBDIRS)
+                        .with_default(0)
+                        .with_extras(extra_subdirs),
+                )
             }
 
             (true, ModLoaderKind::MelonLoader { .. }) => {
@@ -292,7 +294,7 @@ impl ModLoader<'static> {
                     "MelonLoader/net35",
                 ];
 
-                Box::new(ExtractInstaller::new(FILES, false))
+                Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
             }
             (false, ModLoaderKind::MelonLoader { extra_subdirs }) => {
                 const SUBDIRS: &[Subdir] = &[
@@ -303,21 +305,20 @@ impl ModLoader<'static> {
                     Subdir::tracked("MelonLoader", "MelonLoader"),
                     Subdir::tracked("Libs", "MelonLoader/Libs"),
                 ];
-                const DEFAULT: usize = 2;
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
 
-                Box::new(SubdirInstaller::new(
-                    SUBDIRS,
-                    extra_subdirs,
-                    Some(DEFAULT),
-                    IGNORED,
-                ))
+                Box::new(
+                    SubdirInstaller::new(SUBDIRS)
+                        .with_default(2)
+                        .with_extras(extra_subdirs)
+                        .with_ignored_files(IGNORED),
+                )
             }
 
             (true, ModLoaderKind::GDWeave {}) => {
                 const FILES: &[&str] = &["winmm.dll", "GDWeave/core"];
 
-                Box::new(ExtractInstaller::new(FILES, false))
+                Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
             }
             (false, ModLoaderKind::GDWeave {}) => Box::new(GDWeaveModInstaller),
 
@@ -334,14 +335,13 @@ impl ModLoader<'static> {
                     "R2Northstar/mods/md5sum.text",
                 ];
 
-                Box::new(ExtractInstaller::new(FILES, true))
+                Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::Yes))
             }
             (false, ModLoaderKind::Northstar {}) => {
                 const SUBDIRS: &[Subdir] = &[Subdir::tracked("mods", "R2Northstar/mods")];
-                const EXTRA: &[Subdir] = &[];
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md", "LICENSE"];
 
-                Box::new(SubdirInstaller::new(SUBDIRS, EXTRA, None, IGNORED))
+                Box::new(SubdirInstaller::new(SUBDIRS).with_ignored_files(IGNORED))
             }
 
             (true, ModLoaderKind::Shimloader {}) => Box::new(ShimloaderInstaller),
@@ -351,15 +351,12 @@ impl ModLoader<'static> {
                     Subdir::flat_separated("pak", "shimloader/pak"),
                     Subdir::untracked("cfg", "shimloader/cfg").mutable(),
                 ];
-                const EXTRA: &[Subdir] = &[];
-                const DEFAULT: usize = 0;
-                const IGNORED: &[&str] = &[];
 
-                Box::new(SubdirInstaller::new(SUBDIRS, EXTRA, Some(DEFAULT), IGNORED))
+                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
             }
 
             (true, ModLoaderKind::ReturnOfModding { files }) => {
-                Box::new(ExtractInstaller::new(files, true))
+                Box::new(ExtractInstaller::new(files, FlattenTopLevel::Yes))
             }
             (false, ModLoaderKind::ReturnOfModding { .. }) => {
                 const SUBDIRS: &[Subdir] = &[
@@ -367,11 +364,19 @@ impl ModLoader<'static> {
                     Subdir::separated("plugins_data", "ReturnOfModding/plugins_data"),
                     Subdir::separated("config", "ReturnOfModding/config").mutable(),
                 ];
-                const EXTRA: &[Subdir] = &[];
-                const DEFAULT: usize = 0;
-                const IGNORED: &[&str] = &[];
 
-                Box::new(SubdirInstaller::new(SUBDIRS, EXTRA, Some(DEFAULT), IGNORED))
+                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+            }
+
+            (true, ModLoaderKind::Lovely {}) => {
+                const FILES: &[&str] = &["version.dll"];
+
+                Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
+            }
+            (false, ModLoaderKind::Lovely {}) => {
+                const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
+
+                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
             }
         }
     }

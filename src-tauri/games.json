@@ -489,6 +489,17 @@
 		}
 	},
 	{
+		"name": "Balatro",
+		"modLoader": {
+			"name": "Lovely"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2379780
+			}
+		}
+	},
+	{
 		"name": "Below the Stone",
 		"modLoader": {
 			"name": "BepInEx"
