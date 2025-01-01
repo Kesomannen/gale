@@ -1,10 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.2.1 (2025-01-01 🎉)
 
 ### Added
 
-- Support for 5 games, including the mod loader Lovely:
+- Support for 5 games, including the Lovely mod loader:
   - Balatro
   - Hades II
   - Peaks of Yore

@@ -71,4 +71,4 @@ Thanks to Ebkr for helping to navigate the thunderstore API and BepInEx, and of 
 
 ---
 
-Still have questions? See the [FAQ](https://github.com/Kesomannen/gale/wiki/faq).
+Still have questions? See the [FAQ](https://github.com/Kesomannen/gale/wiki/faq) or a [detailed list of features](https://github.com/Kesomannen/gale/wiki/Features).
