@@ -192,7 +192,10 @@ impl<'a> SubdirInstaller<'a> {
             subdir.mode,
             SubdirMode::Separate | SubdirMode::SeparateFlatten
         );
-        let flatten = matches!(subdir.mode, SubdirMode::SeparateFlatten);
+        let flatten = matches!(
+            subdir.mode,
+            SubdirMode::SeparateFlatten | SubdirMode::Track | SubdirMode::None
+        );
         let is_top_level = components.clone().next().is_none();
 
         if separate {

@@ -28,21 +28,26 @@ pub fn cancel_install(install_state: StateMutex<InstallState>) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn clear_download_cache(
+pub async fn clear_download_cache(
     soft: bool,
-    prefs: StateMutex<Prefs>,
-    manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
+    prefs: StateMutex<'_, Prefs>,
+    manager: StateMutex<'_, ModManager>,
+    thunderstore: StateMutex<'_, Thunderstore>,
 ) -> Result<()> {
-    let prefs = prefs.lock().unwrap();
-
     if soft {
-        let manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
+        let paths = {
+            let prefs = prefs.lock().unwrap();
+            let manager = manager.lock().unwrap();
+            let thunderstore = thunderstore.lock().unwrap();
 
-        super::cache::soft_clear(&manager, &thunderstore, &prefs)?;
+            super::cache::prepare_soft_clear(&manager, &thunderstore, &prefs)?
+        };
+
+        tauri::async_runtime::spawn_blocking(|| super::cache::do_soft_clear(paths)).await??;
     } else {
-        super::cache::clear(&prefs)?;
+        let path = prefs.lock().unwrap().cache_dir();
+
+        tauri::async_runtime::spawn_blocking(|| super::cache::clear(path)).await??;
     }
 
     Ok(())

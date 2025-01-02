@@ -1,6 +1,7 @@
 use std::{collections::HashSet, fs, path::PathBuf};
 
 use eyre::{Context, Result};
+use log::info;
 
 use crate::{
     prefs::Prefs,
@@ -18,26 +19,27 @@ pub(super) fn path(ident: &VersionIdent, prefs: &Prefs) -> PathBuf {
     path
 }
 
-pub(super) fn clear(prefs: &Prefs) -> Result<()> {
-    let cache_dir = prefs.cache_dir();
-
-    if cache_dir.exists() {
-        fs::remove_dir_all(&cache_dir).context("failed to delete cache")?;
-        fs::create_dir_all(cache_dir).context("failed to recreate cache directory")?;
+pub(super) fn clear(path: PathBuf) -> Result<()> {
+    if path.exists() {
+        fs::remove_dir_all(&path).context("failed to delete cache directory")?;
+        fs::create_dir_all(path).context("failed to recreate cache directory")?;
     }
 
     Ok(())
 }
 
-pub(super) fn soft_clear(
+pub(super) fn prepare_soft_clear(
     manager: &ModManager,
     thunderstore: &Thunderstore,
     prefs: &Prefs,
-) -> Result<()> {
+) -> Result<Vec<PathBuf>> {
     let installed_mods = manager
         .active_game()
         .installed_mods(thunderstore)
-        .map(|borrowed| (borrowed.ident().full_name(), borrowed.ident().version()))
+        .map(|borrowed| {
+            let ident = borrowed.ident();
+            (ident.full_name(), ident.version())
+        })
         .collect::<HashSet<_>>();
 
     let packages = prefs
@@ -45,6 +47,8 @@ pub(super) fn soft_clear(
         .read_dir()
         .context("failed to read cache directory")?
         .filter_map(Result::ok);
+
+    let mut to_remove = Vec::new();
 
     for entry in packages {
         let path = entry.path();
@@ -73,10 +77,21 @@ pub(super) fn soft_clear(
                 continue;
             }
 
-            fs::remove_dir_all(path)
-                .with_context(|| format!("failed to delete cache for {}", &package_name))?;
+            to_remove.push(path);
         }
     }
+
+    Ok(to_remove)
+}
+
+pub(super) fn do_soft_clear(paths: Vec<PathBuf>) -> Result<()> {
+    let count = paths.len();
+
+    for path in paths {
+        fs::remove_dir_all(path)?;
+    }
+
+    info!("cleared {} mods from cache", count);
 
     Ok(())
 }

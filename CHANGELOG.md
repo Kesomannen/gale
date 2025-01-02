@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 (2025-01-02)
+
+### Fixed
+
+- Files in untracked subdirs (such as `BepInEx/config`) not being flattened properly
+
 ## 1.2.1 (2025-01-01 🎉)
 
 ### Added
