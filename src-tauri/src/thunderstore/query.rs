@@ -146,8 +146,8 @@ impl Queryable for BorrowedMod<'_> {
         b.is_pinned.cmp(&a.is_pinned).then_with(|| {
             let order = match args.sort_by {
                 SortBy::Newest => a.date_created.cmp(&b.date_created),
-                SortBy::Name => b.name().cmp(a.name()),
-                SortBy::Author => b.ident.cmp(&a.ident),
+                SortBy::Name => a.name().cmp(b.name()),
+                SortBy::Author => a.ident.cmp(&b.ident),
                 SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
                 SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
                 SortBy::Rating => a.rating_score.cmp(&b.rating_score),
