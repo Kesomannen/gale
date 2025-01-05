@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for 10 new games:
+  - Distance
+  - Five Nights at Freddy's: Into the Pit
+  - GoreBox
+  - Hard Time III
+  - Old Market Simulator
+  - Paquerette Down the Bunborrows
+  - Shapez 2
+  - Subterranauts
+  - Sulfur
+  - Tank Team
+
+### Fixed
+
+- Missing icon for Lycans
+
 ## 1.2.2 (2025-01-02)
 
 ### Fixed

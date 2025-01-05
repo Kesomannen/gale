@@ -645,6 +645,18 @@
 		}
 	},
 	{
+		"name": "Distance",
+		"slug": "distance",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 233610
+			}
+		}
+	},
+	{
 		"name": "Dyson Sphere Program",
 		"modLoader": {
 			"name": "BepInEx",
@@ -681,6 +693,18 @@
 		"platforms": {
 			"steam": {
 				"id": 2382520
+			}
+		}
+	},
+	{
+		"name": "Five Nights at Freddy's: Into the Pit",
+		"slug": "five-nights-at-freddys-into-the-pit",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2638370
 			}
 		}
 	},
@@ -744,6 +768,18 @@
 		}
 	},
 	{
+		"name": "GoreBox",
+		"slug": "gorebox",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2027330
+			}
+		}
+	},
+	{
 		"name": "Green Hell VR",
 		"modLoader": {
 			"name": "BepInEx",
@@ -787,6 +823,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1294760
+			}
+		}
+	},
+	{
+		"name": "Hard Time III",
+		"slug": "hard-time-3",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3009850
 			}
 		}
 	},
@@ -952,6 +1000,18 @@
 		}
 	},
 	{
+		"name": "Old Market Simulator",
+		"slug": "old-market-simulator",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2878420
+			}
+		}
+	},
+	{
 		"name": "Outward",
 		"modLoader": {
 			"name": "BepInEx"
@@ -984,6 +1044,18 @@
 		"platforms": {
 			"steam": {
 				"id": 2695940
+			}
+		}
+	},
+	{
+		"name": "Paquerette Down the Bunburrows",
+		"slug": "paquerette-down-the-bunburrows",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1628610
 			}
 		}
 	},
@@ -1137,6 +1209,18 @@
 		}
 	},
 	{
+		"name": "SULFUR",
+		"slug": "sulfur",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2124120
+			}
+		}
+	},
+	{
 		"name": "Sailwind",
 		"modLoader": {
 			"name": "BepInEx"
@@ -1177,6 +1261,18 @@
 		"platforms": {
 			"steam": {
 				"id": 986130
+			}
+		}
+	},
+	{
+		"name": "Shapez 2",
+		"slug": "shapez-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2162800
 			}
 		}
 	},
@@ -1292,6 +1388,18 @@
 		}
 	},
 	{
+		"name": "Subterranauts",
+		"slug": "subterranauts",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3075800
+			}
+		}
+	},
+	{
 		"name": "Subterror",
 		"slug": "subterror",
 		"modLoader": {
@@ -1378,6 +1486,18 @@
 		"platforms": {
 			"steam": {
 				"id": 720620
+			}
+		}
+	},
+	{
+		"name": "Tank Team",
+		"slug": "tank-team",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2587450
 			}
 		}
 	},
