@@ -35,6 +35,7 @@ pub struct Installer<'a> {
     index: usize,
     current_name: String,
 
+    start_time: Instant,
     total_mods: usize,
     total_bytes: u64,
     completed_bytes: u64,
@@ -88,6 +89,7 @@ impl<'a> Installer<'a> {
             thunderstore,
             prefs,
             install_state,
+            start_time: Instant::now(),
         })
     }
 
@@ -112,6 +114,7 @@ impl<'a> Installer<'a> {
             total_mods: self.total_mods,
             can_cancel: self.options.can_cancel,
             current_name: &self.current_name,
+            duration_secs: self.start_time.elapsed().as_secs_f32(),
         };
 
         if let Some(callback) = &self.options.on_progress {

@@ -3,7 +3,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import type { InstallProgress } from '$lib/models';
 	import { refreshProfiles } from '$lib/stores';
-	import { shortenFileSize } from '$lib/util';
+	import { formatTime, shortenFileSize } from '$lib/util';
 
 	import { listen } from '@tauri-apps/api/event';
 
@@ -13,6 +13,7 @@
 	let open = false;
 
 	let progress: InstallProgress = {
+		durationSecs: 0,
 		totalProgress: 0,
 		installedMods: 0,
 		totalMods: 0,
@@ -24,6 +25,10 @@
 	};
 
 	$: currentName = progress.currentName.replace('_', ' ');
+	$: estimatedTimeLeft =
+		progress.durationSecs > 1
+			? formatTime(progress.durationSecs * (1 / progress.totalProgress - 1))
+			: '---';
 
 	onMount(() => {
 		listen<InstallProgress>('install_progress', (event) => {
@@ -63,14 +68,22 @@
 	<Dialog.Description class="text-slate-400">
 		{#if progress.task.kind == 'done'}
 			Done!
-		{:else if progress.task.kind == 'downloading'}
-			Downloading {currentName} ({shortenFileSize(
-				progress.task.payload.downloaded
-			)}/{shortenFileSize(progress.task.payload.total)})
-		{:else if progress.task.kind == 'extracting'}
-			Extracting {currentName}
-		{:else if progress.task.kind == 'installing'}
-			Installing {currentName}
+		{:else}
+			<div>
+				{#if progress.task.kind == 'downloading'}
+					Downloading {currentName} ({shortenFileSize(
+						progress.task.payload.downloaded
+					)}/{shortenFileSize(progress.task.payload.total)})
+				{:else if progress.task.kind == 'extracting'}
+					Extracting {currentName}
+				{:else if progress.task.kind == 'installing'}
+					Installing {currentName}
+				{/if}
+			</div>
+
+			<div>
+				Estimated time remaining: {estimatedTimeLeft}
+			</div>
 		{/if}
 	</Dialog.Description>
 

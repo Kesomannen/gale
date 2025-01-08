@@ -35,6 +35,7 @@ pub fn setup(handle: &AppHandle) -> Result<()> {
 pub struct InstallProgress<'a> {
     /// The percentage of "completed" bytes, from 0 to 1.
     pub total_progress: f32,
+    pub duration_secs: f32,
     pub installed_mods: usize,
     pub total_mods: usize,
     pub current_name: &'a str,

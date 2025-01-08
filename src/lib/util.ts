@@ -9,11 +9,17 @@ export function shortenFileSize(size: number): string {
 }
 
 export function formatTime(seconds: number): string {
-	var hours = Math.floor(seconds / 3600);
-	var minutes = Math.floor((seconds % 3600) / 60);
-	var secs = Math.floor(seconds % 60);
+	if (seconds < 60) {
+		return `${Math.round(seconds)} seconds`;
+	}
 
-	return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+	if (seconds < 3600) {
+		let minutes = Math.floor(seconds / 60);
+		return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+	}
+
+	let hours = Math.floor(seconds / 3600);
+	return `${hours} hour${hours > 1 ? 's' : ''}`;
 }
 
 export function shortenNum(value: number): string {
@@ -82,15 +88,9 @@ export function communityUrl(path: string) {
 	return `https://thunderstore.io/c/${get(activeGame)?.slug}/p/${path}/`;
 }
 
-export function iconSrc(mod: Mod | Dependant) {
+export function iconSrc(mod: Mod) {
 	if (mod.type === 'remote') {
-		let fullName: string;
-		if ('fullName' in mod) {
-			fullName = mod.fullName;
-		} else {
-			fullName = `${mod.author}-${mod.name}-${mod.version}`;
-		}
-
+		let fullName = `${mod.author}-${mod.name}-${mod.version}`;
 		return thunderstoreIconUrl(fullName);
 	} else if (mod.icon !== null) {
 		return convertFileSrc(mod.icon);

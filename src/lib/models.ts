@@ -166,6 +166,7 @@ export type InstallTask =
 	  };
 
 export type InstallProgress = {
+	durationSecs: number;
 	totalProgress: number;
 	installedMods: number;
 	totalMods: number;

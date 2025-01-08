@@ -4,6 +4,7 @@
 
 ### Added
 
+- Time estimate to install progress dialog
 - Support for 10 new games:
   - Distance
   - Five Nights at Freddy's: Into the Pit
