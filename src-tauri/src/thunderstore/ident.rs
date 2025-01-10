@@ -338,7 +338,7 @@ impl From<VersionIdent> for PackageIdent {
 
 struct PackageIdentPath<'a>(&'a PackageIdent);
 
-impl<'a> Display for PackageIdentPath<'a> {
+impl Display for PackageIdentPath<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}/{}", self.0.owner(), self.0.name(),)
     }
