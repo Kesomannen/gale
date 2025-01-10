@@ -26,7 +26,7 @@
 	}
 </script>
 
-<PathField {label} {value} onClick={browse} icon={type === 'file' ? 'mdi:file' : 'mdi:folder'}>
+<PathField {label} {value} on:click={browse} icon={type === 'file' ? 'mdi:file' : 'mdi:folder'}>
 	<slot />
 
 	<svelte:fragment slot="field">

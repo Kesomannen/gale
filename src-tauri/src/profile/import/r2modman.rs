@@ -24,41 +24,30 @@ use crate::{
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ManagerData<T> {
-    r2modman: Option<T>,
-    thunderstore: Option<T>,
-}
-
-impl<T> ManagerData<T> {
-    pub fn and_then<U, F: FnOnce(T) -> Option<U> + Copy>(self, f: F) -> ManagerData<U> {
-        ManagerData {
-            r2modman: self.r2modman.and_then(f),
-            thunderstore: self.thunderstore.and_then(f),
-        }
-    }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ProfileImportData {
     path: PathBuf,
     profiles: Vec<String>,
 }
 
-pub(super) fn gather_info(app: &AppHandle) -> ManagerData<ProfileImportData> {
-    find_paths().and_then(|path| {
-        let profiles = find_profiles(path.clone(), app)
-            .ok()?
-            .map(util::fs::file_name_owned)
-            .collect();
-        Some(ProfileImportData { path, profiles })
-    })
+pub(super) fn gather_info(
+    path: Option<PathBuf>,
+    app: &AppHandle,
+) -> Result<Option<ProfileImportData>> {
+    let Some(path) = path.or_else(find_path) else {
+        return Ok(None);
+    };
+
+    let profiles = find_profiles(path.clone(), app)?
+        .map(util::fs::file_name_owned)
+        .collect();
+
+    Ok(Some(ProfileImportData { path, profiles }))
 }
 
 pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<()> {
     wait_for_mods(app).await;
 
-    info!("importing profiles from {}", path.display());
+    info!("importing r2modman profiles from {}", path.display());
 
     for (i, profile_dir) in find_profiles(path, app)?.enumerate() {
         if !include[i] {
@@ -111,10 +100,6 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
 
     path.push(&*manager.active_game.r2_dir_name);
     path.push("profiles");
-
-    debug!("scanning {path:?}");
-
-    ensure!(path.exists(), "no profiles found");
 
     Ok(path
         .read_dir()
@@ -211,7 +196,7 @@ async fn wait_for_mods(app: &AppHandle) {
     }
 }
 
-fn find_paths() -> ManagerData<PathBuf> {
+fn find_path() -> Option<PathBuf> {
     let parent_dir = match cfg!(target_os = "linux") {
         // r2modman uses the config dir instead of the data dir on linux.
         true => dirs_next::config_dir(),
@@ -219,13 +204,15 @@ fn find_paths() -> ManagerData<PathBuf> {
     }
     .unwrap();
 
-    ManagerData {
-        r2modman: parent_dir.join("r2modmanPlus-local").exists_or_none(),
-        thunderstore: parent_dir
-            .join("Thunderstore Mod Manager")
-            .join("DataFolder")
-            .exists_or_none(),
-    }
+    parent_dir
+        .join("r2modmanPlus-local")
+        .exists_or_none()
+        .or_else(|| {
+            parent_dir
+                .join("Thunderstore Mod Manager")
+                .join("DataFolder")
+                .exists_or_none()
+        })
 }
 
 fn emit_update(message: &str, app: &AppHandle) {

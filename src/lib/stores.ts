@@ -124,8 +124,6 @@ export async function refreshCategories() {
 
 		let data = (await response.json()) as FiltersResponse;
 		categories.set(data.results);
-
-		console.log(categories);
 	} catch (e) {
 		console.error('Failed to fetch categories:', e);
 	}

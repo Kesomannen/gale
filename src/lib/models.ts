@@ -241,16 +241,9 @@ export type ImportData = {
 };
 
 export type R2ImportData = {
-	r2modman: {
-		path: string;
-		profiles: string[];
-		include: boolean[];
-	} | null;
-	thunderstore: {
-		path: string;
-		profiles: string[];
-		include: boolean[];
-	} | null;
+	path: string;
+	profiles: string[];
+	include: boolean[];
 };
 
 export type MarkdownResponse = {

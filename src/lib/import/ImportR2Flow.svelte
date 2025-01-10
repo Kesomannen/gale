@@ -1,7 +1,4 @@
 <script lang="ts">
-	import TabsMenu from '$lib/components/TabsMenu.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-
 	import { invokeCommand } from '$lib/invoke';
 	import type { R2ImportData } from '$lib/models';
 	import { refreshProfiles } from '$lib/stores';
@@ -9,24 +6,31 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { fade } from 'svelte/transition';
 	import Checklist from '$lib/components/Checklist.svelte';
-
-	export let importData: R2ImportData = {
-		r2modman: null,
-		thunderstore: null
-	};
-
-	export let importFrom: 'r2modman' | 'thunderstore' = 'r2modman';
-
-	$: profiles = importData[importFrom]?.profiles ?? [];
-	$: include = importData[importFrom]?.include ?? [];
+	import PathPref from '$lib/prefs/PathPref.svelte';
 
 	export let loading = false;
 	let loadingText = '';
 
-	export async function doImport() {
-		let data = importData[importFrom];
+	export let importData: R2ImportData | null | undefined = undefined;
+	let path: string | null = null;
 
-		if (!data) {
+	$: profiles = importData?.profiles ?? [];
+	$: include = importData?.include ?? [];
+
+	$: {
+		path = importData?.path ?? null;
+
+		if (importData) {
+			importData.include = importData.profiles.map(() => true);
+		}
+	}
+
+	async function refresh(newPath: string | null) {
+		importData = await invokeCommand('get_r2modman_info', { path: newPath });
+	}
+
+	export async function doImport() {
+		if (importData === null) {
 			return;
 		}
 
@@ -37,7 +41,7 @@
 		});
 
 		try {
-			await invokeCommand('import_r2modman', { path: data.path, include: data.include });
+			await invokeCommand('import_r2modman', importData);
 			refreshProfiles();
 		} finally {
 			unlisten();
@@ -46,6 +50,10 @@
 		}
 	}
 </script>
+
+<PathPref label="Data directory" type="dir" value={path} set={refresh}>
+	The data directory of your r2modman/TMM installation.
+</PathPref>
 
 {#if loading}
 	<div
@@ -57,26 +65,14 @@
 	</div>
 {/if}
 
-{#if !importData.r2modman && !importData.thunderstore}
-	<div
-		class="mt-3 flex w-full items-center justify-center gap-2 text-lg font-semibold text-red-400"
-	>
-		<Icon icon="mdi:error" />
-		No installations found
+{#if importData === undefined}
+	<div class="text-slate-300">Loading...</div>
+{:else if importData === null}
+	<div class="mt-2 flex w-full items-center gap-2 text-slate-300">
+		<Icon icon="mdi:warning" />
+		No installations found, please specify the data path above.
 	</div>
-{/if}
-
-{#if importData.r2modman && importData.thunderstore}
-	<TabsMenu
-		bind:value={importFrom}
-		options={[
-			{ value: 'r2modman', label: 'r2modman' },
-			{ value: 'thunderstore', label: 'Thunderstore Mod Manager' }
-		]}
-	/>
-{/if}
-
-{#if importData.thunderstore || importData.r2modman}
+{:else}
 	<Checklist
 		class="mt-1"
 		maxHeight="sm"

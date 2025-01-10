@@ -322,7 +322,7 @@ impl Profile {
         &'a self,
         uuid: Uuid,
         thunderstore: &'a Thunderstore,
-    ) -> impl Iterator<Item = &ProfileMod> + 'a {
+    ) -> impl Iterator<Item = &'a ProfileMod> + 'a {
         self.mods
             .iter()
             .filter(move |other| other.uuid() != uuid)

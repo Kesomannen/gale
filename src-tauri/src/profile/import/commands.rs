@@ -7,7 +7,7 @@ use uuid::Uuid;
 use crate::{profile::install::InstallOptions, util::cmd::Result};
 
 use super::{
-    r2modman::{self, ManagerData, ProfileImportData},
+    r2modman::{self, ProfileImportData},
     ImportData,
 };
 
@@ -41,8 +41,13 @@ pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn get_r2modman_info(app: AppHandle) -> Result<ManagerData<ProfileImportData>> {
-    Ok(r2modman::gather_info(&app))
+pub fn get_r2modman_info(
+    path: Option<PathBuf>,
+    app: AppHandle,
+) -> Result<Option<ProfileImportData>> {
+    let info = r2modman::gather_info(path, &app)?;
+
+    Ok(info)
 }
 
 #[tauri::command]

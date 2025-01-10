@@ -15,21 +15,10 @@
 
 	let stage: 'gameSelect' | 'importProfiles' | 'settings' | 'end' = 'gameSelect';
 
-	let importFrom: 'r2modman' | 'thunderstore' = 'r2modman';
-	let importData: R2ImportData = {
-		r2modman: null,
-		thunderstore: null
-	};
-
 	let importFlow: ImportR2Flow;
-	let prefs: Prefs | null = null;
+	let importData: R2ImportData | null | undefined;
 
-	$: importText =
-		importData.r2modman && importData.thunderstore
-			? 'r2modman or Thunderstore Mod Manager'
-			: importData.r2modman
-				? 'r2modman'
-				: 'Thunderstore Mod Manager';
+	let prefs: Prefs | null = null;
 
 	onMount(async () => {
 		if (await invokeCommand<boolean>('is_first_run')) {
@@ -39,26 +28,8 @@
 	});
 
 	async function onSelectGame() {
-		let result = await invokeCommand<R2ImportData>('get_r2modman_info');
-
-		if (!result.r2modman && !result.thunderstore) {
-			stage = 'settings';
-			return;
-		}
-
-		importData = result;
-
-		if (result.r2modman) {
-			result.r2modman.include = result.r2modman.profiles.map(() => true);
-			importFrom = 'r2modman';
-		}
-
-		if (result.thunderstore) {
-			result.thunderstore.include = result.thunderstore.profiles.map(() => true);
-			importFrom = 'thunderstore';
-		}
-
-		stage = 'importProfiles';
+		importData = await invokeCommand('get_r2modman_info');
+		stage = importData === null ? 'settings' : 'importProfiles';
 	}
 
 	async function importProfiles() {
@@ -81,10 +52,8 @@
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
 			<GameSelection onSelect={onSelectGame} />
-		{:else if stage === 'importProfiles' && importData}
-			<p>
-				You can choose to automatically transfer profiles from {importText} to Gale.
-			</p>
+		{:else if stage === 'importProfiles'}
+			<p>You can choose to automatically transfer profiles from another mod manager to Gale.</p>
 
 			<p class="mt-1">
 				The process may take a couple of minutes, depending on how many mods and profiles there are
@@ -95,7 +64,7 @@
 				You can always import profiles later by going to <b>Import &gt; ...from r2modman</b>.
 			</p>
 
-			<ImportR2Flow bind:importData bind:importFrom bind:this={importFlow} />
+			<ImportR2Flow bind:importData bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
 				<BigButton color="slate" class="mr-auto" on:click={() => (stage = 'gameSelect')}
@@ -146,9 +115,7 @@
 			<div class="mt-3 flex justify-between">
 				<BigButton
 					color="slate"
-					on:click={() =>
-						(stage =
-							importData.r2modman || importData.thunderstore ? 'importProfiles' : 'gameSelect')}
+					on:click={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
 					>Back</BigButton
 				>
 				<BigButton color="accent" on:click={() => (stage = 'end')}>Next</BigButton>
