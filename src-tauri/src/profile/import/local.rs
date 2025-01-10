@@ -65,7 +65,7 @@ pub async fn import_local_mod(
 
     match kind {
         LocalModKind::Zip => {
-            local_mod.icon = install_from_zip(&path, &profile, &local_mod.name, mod_loader, &prefs)
+            local_mod.icon = install_from_zip(&path, profile, &local_mod.name, mod_loader, &prefs)
                 .context("failed to install")?;
         }
         LocalModKind::Dll => match mod_loader.kind {

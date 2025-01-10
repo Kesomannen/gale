@@ -10,7 +10,7 @@ use chrono::Utc;
 use core::str;
 use eyre::{Context, Result};
 use futures_util::StreamExt;
-use log::{info, warn};
+use log::warn;
 use tauri::{AppHandle, Emitter, Manager};
 use thiserror::Error;
 use zip::ZipArchive;
@@ -218,7 +218,7 @@ impl<'a> Installer<'a> {
 
         installer
             .extract(archive, version.full_name(), cache_path.clone())
-            .map_err(|err| {
+            .inspect_err(|_| {
                 // the cached mod is probably in an invalid state
                 fs::remove_dir_all(&cache_path).unwrap_or_else(|err| {
                     warn!(
@@ -226,7 +226,6 @@ impl<'a> Installer<'a> {
                         self.current_name, err
                     );
                 });
-                err
             })
             .context("error while extracting")?;
 
@@ -326,7 +325,7 @@ fn cache_install(
     let mut installer = manager.active_game.mod_loader.installer_for(package_name);
     let profile = manager.active_profile_mut();
 
-    installer.install(src, package_name, &profile)?;
+    installer.install(src, package_name, profile)?;
 
     let install_time = data.install_time.unwrap_or_else(Utc::now);
 

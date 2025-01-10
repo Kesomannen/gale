@@ -32,7 +32,7 @@ impl<'a> ExtractInstaller<'a> {
     }
 }
 
-impl<'a> PackageInstaller for ExtractInstaller<'a> {
+impl PackageInstaller for ExtractInstaller<'_> {
     fn extract(&mut self, archive: PackageZip, _package_name: &str, dest: PathBuf) -> Result<()> {
         install::fs::extract(archive, dest, |relative_path| {
             let mut components = relative_path.components();
@@ -47,7 +47,7 @@ impl<'a> PackageInstaller for ExtractInstaller<'a> {
                 .files
                 .iter()
                 .any(|file| path.starts_with(file))
-                .then(|| Cow::Borrowed(path)))
+                .then_some(Cow::Borrowed(path)))
         })
     }
 

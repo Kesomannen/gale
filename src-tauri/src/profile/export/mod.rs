@@ -3,6 +3,7 @@ use std::{
     fs::File,
     io::{self, Cursor, Seek, Write},
     path::{Path, PathBuf},
+    time::Instant,
 };
 
 use base64::{prelude::BASE64_STANDARD, Engine};
@@ -146,6 +147,8 @@ async fn export_code(
     client: &reqwest::Client,
     manager: StateMutex<'_, ModManager>,
 ) -> Result<Uuid> {
+    let start = Instant::now();
+
     let base64 = {
         let mut manager = manager.lock().unwrap();
 
@@ -161,6 +164,9 @@ async fn export_code(
         base64
     };
 
+    println!("creating archive took {:?}", start.elapsed());
+    let start = Instant::now();
+
     const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
 
     let response = client
@@ -172,6 +178,8 @@ async fn export_code(
         .error_for_status()?
         .json::<LegacyProfileCreateResponse>()
         .await?;
+
+    println!("upload took {:?}", start.elapsed());
 
     Ok(response.key)
 }

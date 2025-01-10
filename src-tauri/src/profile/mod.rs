@@ -363,8 +363,8 @@ impl Profile {
             return Ok(None);
         }
 
-        let manifest: ProfileSaveData = util::fs::read_json(&path)
-            .with_context(|| format!("failed to read profile manifest"))?;
+        let manifest: ProfileSaveData =
+            util::fs::read_json(&path).context("failed to read profile manifest")?;
 
         path.pop();
 

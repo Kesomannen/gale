@@ -95,7 +95,7 @@ impl Profile {
 
         self.get_mod_mut(uuid).unwrap().enabled = !enabled;
 
-        return Ok(());
+        Ok(())
     }
 
     fn check_dependants(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
@@ -152,7 +152,7 @@ impl Profile {
 
         if let Some(path) = self
             .installer_for(profile_mod)
-            .mod_dir(&*profile_mod.full_name(), self)
+            .mod_dir(&profile_mod.full_name(), self)
         {
             open::that(path)?;
             Ok(())
@@ -162,9 +162,7 @@ impl Profile {
     }
 
     fn installer_for(&self, profile_mod: &ProfileMod) -> Box<dyn PackageInstaller> {
-        self.game
-            .mod_loader
-            .installer_for(&*profile_mod.full_name())
+        self.game.mod_loader.installer_for(&profile_mod.full_name())
     }
 
     fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {

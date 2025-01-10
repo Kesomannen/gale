@@ -287,7 +287,7 @@ impl PackageStateHandle {
     }
 
     fn from_profile_mod(profile_mod: &ProfileMod, profile: &Profile) -> Self {
-        Self::new(&*profile_mod.full_name(), profile)
+        Self::new(&profile_mod.full_name(), profile)
     }
 
     fn files(&mut self) -> &mut Vec<PathBuf> {
@@ -333,7 +333,7 @@ impl ProfileStateHandle {
     }
 }
 
-impl<'a> PackageInstaller for SubdirInstaller<'a> {
+impl PackageInstaller for SubdirInstaller<'_> {
     fn extract(&mut self, archive: PackageZip, package_name: &str, dest: PathBuf) -> Result<()> {
         install::fs::extract(archive, dest, |relative_path| {
             self.map_file(relative_path, package_name)
@@ -371,7 +371,7 @@ impl<'a> PackageInstaller for SubdirInstaller<'a> {
 
                     if exists {
                         if let Some(owner) = profile_state.file_map().get(relative_path) {
-                            let mut package = PackageStateHandle::new(&owner, profile);
+                            let mut package = PackageStateHandle::new(owner, profile);
                             package.files().retain(|file| file != relative_path);
                             package.commit()?;
                         }

@@ -207,7 +207,7 @@ pub enum ModLoaderKind<'a> {
     },
 }
 
-impl<'a> ModLoader<'a> {
+impl ModLoader<'_> {
     pub fn to_str(&self) -> &'static str {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => "BepInEx",
@@ -280,7 +280,7 @@ impl ModLoader<'static> {
                 Box::new(
                     SubdirInstaller::new(SUBDIRS)
                         .with_default(0)
-                        .with_extras(extra_subdirs),
+                        .with_extras(&extra_subdirs),
                 )
             }
 
@@ -310,7 +310,7 @@ impl ModLoader<'static> {
                 Box::new(
                     SubdirInstaller::new(SUBDIRS)
                         .with_default(2)
-                        .with_extras(extra_subdirs)
+                        .with_extras(&extra_subdirs)
                         .with_ignored_files(IGNORED),
                 )
             }
@@ -356,7 +356,7 @@ impl ModLoader<'static> {
             }
 
             (true, ModLoaderKind::ReturnOfModding { files }) => {
-                Box::new(ExtractInstaller::new(files, FlattenTopLevel::Yes))
+                Box::new(ExtractInstaller::new(&files, FlattenTopLevel::Yes))
             }
             (false, ModLoaderKind::ReturnOfModding { .. }) => {
                 const SUBDIRS: &[Subdir] = &[

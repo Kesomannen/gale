@@ -182,7 +182,7 @@ where
 
 struct VersionIdentPath<'a>(&'a VersionIdent);
 
-impl<'a> Display for VersionIdentPath<'a> {
+impl Display for VersionIdentPath<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

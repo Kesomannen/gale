@@ -373,7 +373,7 @@ impl Prefs {
 
     fn validate_game_prefs(&mut self) {
         for (slug, value) in &mut self.game_prefs {
-            let Some(game) = game::from_slug(&slug) else {
+            let Some(game) = game::from_slug(slug) else {
                 warn!("game prefs key {} is invalid", slug);
                 continue;
             };

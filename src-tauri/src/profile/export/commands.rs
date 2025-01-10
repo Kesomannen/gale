@@ -131,6 +131,7 @@ pub async fn upload_pack(
 
         let mut data = Cursor::new(Vec::new());
         profile.export_pack(&args, &mut data, &thunderstore)?;
+
         if let Err(err) = profile.take_snapshot(&args) {
             warn!("failed to take profile snapshot: {}", err);
         }

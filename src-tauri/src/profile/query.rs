@@ -46,7 +46,7 @@ impl<'a> QueryableProfileMod<'a> {
     }
 }
 
-impl<'a> Queryable for QueryableProfileMod<'a> {
+impl Queryable for QueryableProfileMod<'_> {
     fn full_name(&self) -> &str {
         use QueryableProfileModKind as Kind;
 

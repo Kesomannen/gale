@@ -273,11 +273,10 @@ fn epic_game_dir(game: &crate::game::GameData<'_>) -> Result<PathBuf, eyre::Erro
     let list: Vec<ListItem> =
         util::fs::read_json(dat_path).context("failed to read LauncherInstalled.dat file")?;
 
-    Ok(list
-        .into_iter()
+    list.into_iter()
         .find(|item| item.app_name == name)
         .map(|item| item.install_location)
-        .ok_or_eyre("could not find entry in the list of installed games")?)
+        .ok_or_eyre("could not find entry in the list of installed games")
 }
 
 fn exe_path(game_dir: &Path) -> Result<PathBuf> {

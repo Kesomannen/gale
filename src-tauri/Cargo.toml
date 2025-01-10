@@ -43,7 +43,7 @@ futures-util = { version = "0.3", features = ["io"] }
 indexmap = { version = "2.2", features = ["serde"] }
 open = "5.1"
 itertools = "0.13"
-zip = "2"
+zip = { version = "2", features = ["deflate"] }
 uuid = { version = "1", features = ["serde"] }
 reqwest = { version = "0.12", features = ["json", "stream", "gzip"] }
 walkdir = "2"
