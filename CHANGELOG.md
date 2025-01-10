@@ -4,7 +4,8 @@
 
 ### Added
 
-- Time estimate to install progress dialog
+- Ability to change the path to import r2modman/Thunderstore Mod Manager profiles from
+- Mod install time estimate
 - Support for 10 new games:
   - Distance
   - Five Nights at Freddy's: Into the Pit

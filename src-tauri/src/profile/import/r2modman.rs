@@ -5,8 +5,8 @@ use std::{
     time::Duration,
 };
 
-use eyre::{ensure, Context, Result};
-use log::{debug, info, warn};
+use eyre::{bail, Context, Result};
+use log::{info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -98,8 +98,17 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
-    path.push(&*manager.active_game.r2_dir_name);
+    let game = &manager.active_game;
+
+    path.push(&*game.r2_dir_name);
     path.push("profiles");
+
+    if !path.exists() {
+        bail!(
+            "directory was either not a r2modman data folder, or no profiles for {} exist",
+            game.name
+        );
+    }
 
     Ok(path
         .read_dir()
@@ -152,11 +161,6 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
     let mods = serde_yaml::from_str::<Vec<R2Mod>>(&yaml).context("failed to parse mods.yml")?;
 
     profile_dir.pop();
-
-    if mods.is_empty() {
-        info!("profile '{}' is empty, skipping", name);
-        return Ok(None);
-    }
 
     if let Some(index) = manager.active_game().profile_index(&name) {
         info!("deleting existing profile '{}'", name);

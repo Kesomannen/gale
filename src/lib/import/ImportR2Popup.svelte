@@ -17,7 +17,6 @@
 
 	async function onOpen() {
 		importData = await invokeCommand('get_r2modman_info');
-		console.log(importData);
 	}
 
 	async function doImport() {
@@ -39,7 +38,7 @@
 
 		<p class="mt-2">Do not close Gale while the import is in progress.</p>
 	</div>
-	<ImportR2Flow bind:this={importFlow} bind:loading />
+	<ImportR2Flow bind:this={importFlow} bind:loading bind:importData />
 
 	<div class="mr-0.5 mt-3 flex w-full justify-end gap-2">
 		<BigButton color="slate" on:click={() => (open = false)}>Cancel</BigButton>

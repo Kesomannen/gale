@@ -9,7 +9,7 @@ use std::{
 
 use eyre::{eyre, Context, Result};
 use indexmap::IndexMap;
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
 use uuid::Uuid;
@@ -298,7 +298,7 @@ pub fn write_cache(packages: &[&PackageListing], manager: &ModManager) -> Result
     util::fs::write_json(cache_path(manager), packages, JsonStyle::Compact)
         .context("failed to write mod cache")?;
 
-    info!(
+    debug!(
         "wrote {} packages to cache in {:?}",
         packages.len(),
         start.elapsed()

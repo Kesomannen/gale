@@ -259,11 +259,6 @@ impl<'a> Installer<'a> {
         self.total_mods = mods.len();
         self.count_total_bytes(&mods)?;
 
-        info!(
-            "installing {} mod(s): {} bytes in total",
-            self.total_mods, self.total_bytes
-        );
-
         for i in 0..mods.len() {
             self.index = i;
             let data = &mods[i];
