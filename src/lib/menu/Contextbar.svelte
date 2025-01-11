@@ -55,7 +55,7 @@
 	</div>
 
 	<Button.Root
-		on:click={() => (gamesOpen = !gamesOpen)}
+		onclick={() => (gamesOpen = !gamesOpen)}
 		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-slate-600 pl-2 pr-4 font-semibold text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
 	>
 		{#if $activeGame}
@@ -78,8 +78,7 @@
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-slate-600 pl-6 
-						pr-4 text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
+			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-slate-600 pl-6 pr-4 text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
 		>
 			<span class="mr-auto flex-shrink truncate font-semibold">
 				{$activeProfile?.name}

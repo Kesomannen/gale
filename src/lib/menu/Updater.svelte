@@ -76,8 +76,7 @@
 
 {#if $nextUpdate != null}
 	<Button.Root
-		class="my-auto ml-auto mr-1.5 flex items-center rounded-md bg-accent-600 
-            px-2.5 py-1 font-semibold text-slate-100 enabled:hover:bg-accent-500"
+		class="my-auto ml-auto mr-1.5 flex items-center rounded-md bg-accent-600 px-2.5 py-1 font-semibold text-slate-100 enabled:hover:bg-accent-500"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>

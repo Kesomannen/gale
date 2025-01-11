@@ -17,7 +17,6 @@
 <Checkbox.Root
 	bind:checked={value}
 	onCheckedChange={(value) => {
-		if (value === 'indeterminate') return;
 		onValueChanged(value);
 	}}
 >
