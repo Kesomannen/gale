@@ -16,7 +16,7 @@
 
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
-	import GameSelection from '$lib/components/GameSelection.svelte';
+	import GameSelection from '$lib/menu/GameSelection.svelte';
 	import Updater from './Updater.svelte';
 	import { dropTransition } from '$lib/transitions';
 
