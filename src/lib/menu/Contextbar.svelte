@@ -16,9 +16,10 @@
 
 	import Icon from '@iconify/svelte';
 	import { Button, Dialog, DropdownMenu } from 'bits-ui';
-	import GameSelection from '$lib/components/GameSelection.svelte';
+	import GameSelection from '$lib/menu/GameSelection.svelte';
 	import Updater from './Updater.svelte';
 	import { dropTransition } from '$lib/transitions';
+	import ProfileSelection from './ProfileSelection.svelte';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -58,96 +59,33 @@
 		on:click={() => (gamesOpen = !gamesOpen)}
 		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-slate-600 pl-2 pr-4 font-semibold text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
 	>
-		{#if $activeGame}
-			<img
-				src="games/{$activeGame.slug}.webp"
-				class="mr-2 max-h-8 max-w-8 rounded"
-				alt={$activeGame.name}
-			/>
-
-			{$activeGame.name}
-		{:else}
-			Loading...
-		{/if}
-
-		<Icon
-			icon="mdi:menu"
-			class="ml-6 flex-shrink-0 text-xl text-slate-300 transition-all group-hover:text-slate-200"
+		<img
+			src="games/{$activeGame?.slug}.webp"
+			class="mr-2 max-h-8 max-w-8 rounded"
+			alt={$activeGame?.name}
 		/>
+
+		<div>{$activeGame?.name}</div>
+
+		<Icon icon="mdi:menu" class="ml-6 flex-shrink-0 text-xl" />
 	</Button.Root>
 
-	<DropdownMenu.Root bind:open={profilesOpen}>
-		<DropdownMenu.Trigger
-			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-slate-600 pl-6 
-						pr-4 text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
+	<Button.Root
+		on:click={() => (profilesOpen = !profilesOpen)}
+		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-slate-600 pl-6 pr-4 font-semibold text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
+	>
+		<div class="mr-auto flex-shrink truncate font-semibold">
+			{$activeProfile?.name}
+		</div>
+
+		<div
+			class="ml-6 mr-2 rounded bg-slate-800 px-2 py-0.5 text-sm font-medium group-hover:bg-slate-700"
 		>
-			<span class="mr-auto flex-shrink truncate font-semibold">
-				{$activeProfile?.name}
-			</span>
+			{$activeProfile?.modCount}
+		</div>
 
-			<div
-				class="ml-6 mr-2 rounded bg-slate-800 px-2 py-0.5 text-sm font-medium group-hover:bg-slate-700"
-			>
-				{$activeProfile?.modCount}
-			</div>
-
-			<Icon
-				icon="mdi:expand-more"
-				class="flex-shrink-0 origin-center transform text-xl transition-all {profilesOpen
-					? 'rotate-180'
-					: 'rotate-0'}"
-			/>
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Content
-			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border border-slate-600 bg-slate-800 p-1 shadow-xl"
-			{...dropTransition}
-		>
-			{#each profiles as profile, i}
-				<DropdownMenu.Item
-					class="group flex cursor-default items-center rounded-md py-1 pl-3 pr-1 text-left hover:bg-slate-700
-						{i == activeProfileIndex
-						? 'font-medium text-slate-300 hover:text-slate-200'
-						: 'text-slate-400 hover:text-slate-300'}"
-					on:click={() => {
-						setActiveProfile(i);
-						profilesOpen = false;
-					}}
-				>
-					<span class="mr-3 flex-grow">
-						{profile.name}
-					</span>
-
-					<Icon
-						icon="mdi:check"
-						class="mx-2 text-lg text-accent-500 {i !== activeProfileIndex && 'invisible'}"
-					/>
-
-					<div class="mr-1 rounded bg-slate-700 px-1.5 py-0.5 text-xs group-hover:bg-slate-600">
-						{profile.modCount}
-					</div>
-
-					<Button.Root
-						class="rounded p-1 text-slate-400 hover:bg-red-600 hover:text-red-200"
-						on:click={(evt) => {
-							evt.stopPropagation();
-							deleteProfile(i);
-							profilesOpen = false;
-						}}
-					>
-						<Icon icon="mdi:delete" />
-					</Button.Root>
-				</DropdownMenu.Item>
-			{/each}
-
-			<DropdownMenu.Item
-				class="flex cursor-default items-center justify-center rounded bg-accent-700 py-1 text-white hover:bg-accent-600"
-				on:click={() => (newProfilePopupOpen = true)}
-			>
-				<Icon icon="mdi:plus" class="mr-1 text-lg" />
-				New profile
-			</DropdownMenu.Item>
-		</DropdownMenu.Content>
-	</DropdownMenu.Root>
+		<Icon icon="mdi:menu" class="flex-shrink-0 text-xl" />
+	</Button.Root>
 
 	<Updater />
 </div>
@@ -160,6 +98,10 @@
 
 <Popup title="Select game to mod" bind:open={gamesOpen}>
 	<GameSelection onSelect={() => (gamesOpen = false)} />
+</Popup>
+
+<Popup title="Select profile" bind:open={profilesOpen}>
+	<ProfileSelection onSelect={() => (profilesOpen = false)} />
 </Popup>
 
 <NewProfilePopup bind:open={newProfilePopupOpen} />
