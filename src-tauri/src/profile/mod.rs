@@ -741,12 +741,6 @@ impl ModManager {
             path.pop();
         }
 
-        trace!(
-            "saved manager data to {} in {:?}",
-            path.display(),
-            start.elapsed()
-        );
-
         Ok(())
     }
 }

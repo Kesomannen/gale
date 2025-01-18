@@ -1,5 +1,5 @@
 <script lang="ts">
-	import GameSelection from '$lib/components/GameSelection.svelte';
+	import GameSelection from '$lib/menu/GameSelection.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
