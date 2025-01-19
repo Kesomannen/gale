@@ -17,7 +17,7 @@
   - Subterranauts
   - Sulfur
   - Tank Team
-- Telementary data collection on app startup
+- Telementry data collection on app startup
   - By updating to this version, you agree to the [Privacy Policy](https://github.com/Kesomannen/gale/blob/master/privacy_policy.md).
 
 ### Fixed

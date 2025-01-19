@@ -111,7 +111,7 @@
 		</TogglePref>
 
 		<TogglePref
-			label="Send telementary"
+			label="Send telementry"
 			value={prefs.sendTelementary}
 			set={set((value, prefs) => (prefs.sendTelementary = value))}
 		>
