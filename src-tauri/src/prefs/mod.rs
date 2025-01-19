@@ -190,6 +190,7 @@ pub struct Prefs {
     pub steam_library_dir: Option<PathBuf>,
     pub data_dir: DirPref,
 
+    send_telementary: bool,
     fetch_mods_automatically: bool,
     zoom_factor: f32,
 
@@ -258,8 +259,10 @@ impl Default for Prefs {
             steam_library_dir,
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep("prefs.json")
-                .keep("logs"),
+                .keep("telementary.json")
+                .keep("latest.log"),
 
+            send_telementary: true,
             fetch_mods_automatically: true,
 
             zoom_factor: 1.0,
@@ -303,7 +306,7 @@ impl Prefs {
                 prefs
                     .data_dir
                     .keep_files
-                    .extend(&["prefs.json", "latest.log"]);
+                    .extend(&["prefs.json", "telementary.json", "latest.log"]);
 
                 let window = app.get_webview_window("main").unwrap();
                 window.zoom(prefs.zoom_factor as f64).ok();
@@ -366,6 +369,7 @@ impl Prefs {
         }
         self.zoom_factor = value.zoom_factor;
 
+        self.send_telementary = value.send_telementary;
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 
         self.save().context("failed write to settings file")
@@ -398,5 +402,9 @@ impl Prefs {
 
     pub fn fetch_mods_automatically(&self) -> bool {
         self.fetch_mods_automatically
+    }
+
+    pub fn send_telementary(&self) -> bool {
+        self.send_telementary
     }
 }

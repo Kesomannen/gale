@@ -18,8 +18,6 @@
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 	import { refreshAccentColor } from '$lib/theme';
-	import { activeGame } from '$lib/stores';
-	import { ModLoader } from '$lib/models';
 
 	let status: string | null = null;
 	let unlisten: UnlistenFn | undefined;

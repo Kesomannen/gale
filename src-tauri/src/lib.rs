@@ -19,6 +19,7 @@ mod game;
 mod logger;
 mod prefs;
 mod profile;
+mod telementary;
 mod thunderstore;
 mod util;
 
@@ -192,6 +193,10 @@ pub fn run() {
             cli::run(app).unwrap_or_else(|err| {
                 error!("failed to run CLI: {:#}", err);
             });
+
+            tauri::async_runtime::spawn(
+                async move { telementary::send_app_start_event(handle).await },
+            );
 
             Ok(())
         })

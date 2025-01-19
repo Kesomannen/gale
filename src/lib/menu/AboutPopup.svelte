@@ -35,6 +35,12 @@
 			<Link href="https://github.com/Kesomannen/gale/blob/master/CHANGELOG.md">Changelog</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
+			<Icon icon="mdi:file-document" class="text-xl text-white" />
+			<Link href="https://github.com/Kesomannen/gale/blob/master/privacy_policy.md"
+				>Privacy Policy</Link
+			>
+		</div>
+		<div class="mt-1 flex items-center gap-2">
 			<Icon icon="mdi:github" class="text-xl text-white" />
 			<Link href="https://github.com/Kesomannen/gale">GitHub</Link>
 		</div>

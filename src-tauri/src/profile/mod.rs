@@ -3,14 +3,13 @@ use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
     sync::Mutex,
-    time::Instant,
 };
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
-use log::{debug, info, trace, warn};
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener, Manager};
 use uuid::Uuid;
@@ -728,7 +727,6 @@ impl ModManager {
     }
 
     fn save(&self, prefs: &Prefs) -> Result<()> {
-        let start = Instant::now();
         let mut path = prefs.data_dir.get().to_path_buf();
 
         path.push("manager.json");

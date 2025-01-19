@@ -47,7 +47,7 @@
 		<SearchBar bind:value={searchTerm} placeholder="Search for games..." />
 	</div>
 
-	<div class="mt-1 flex h-80 flex-col">
+	<div class="mt-1 flex h-80 flex-col overflow-y-scroll">
 		{#if shownGames.length > 0}
 			{#each shownGames as game}
 				<Button.Root

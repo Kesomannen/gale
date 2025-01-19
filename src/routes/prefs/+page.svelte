@@ -110,6 +110,14 @@
 			To manually trigger a fetch, go to <b>File &gt; Fetch mods</b>.
 		</TogglePref>
 
+		<TogglePref
+			label="Send telementary"
+			value={prefs.sendTelementary}
+			set={set((value, prefs) => (prefs.sendTelementary = value))}
+		>
+			Whether to send anonymous usage metrics when the app starts.
+		</TogglePref>
+
 		<LargePrefsHeading>
 			{$activeGame?.name} settings
 		</LargePrefsHeading>

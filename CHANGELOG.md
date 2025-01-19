@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 (2025-01-19)
 
 ### Added
 
@@ -17,6 +17,8 @@
   - Subterranauts
   - Sulfur
   - Tank Team
+- Telementary data collection on app startup
+  - By updating to this version, you agree to the [Privacy Policy](https://github.com/Kesomannen/gale/blob/master/privacy_policy.md).
 
 ### Fixed
 
