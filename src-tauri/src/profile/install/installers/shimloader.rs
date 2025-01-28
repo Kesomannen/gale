@@ -21,8 +21,9 @@ impl PackageInstaller for ShimloaderInstaller {
 
         install::fs::extract(archive, dest, |relative_path| {
             let mut components = relative_path.components();
+            let in_ue4ss = relative_path.starts_with("UE4SS");
 
-            if relative_path.starts_with("UE4SS") {
+            if in_ue4ss {
                 components.next();
             }
 
@@ -31,7 +32,15 @@ impl PackageInstaller for ShimloaderInstaller {
             };
 
             Ok(match next.to_str() {
-                Some("dwmapi.dll" | "ue4ss.dll" | "UE4SS-settings.ini") => {
+                Some("dwmapi.dll") => {
+                    //The Shimloader package has 2 dwmapi.dll files, the one inside "UE4SS" doesn't seem to work.
+                    if in_ue4ss {
+                        return Ok(None);
+                    }
+
+                    Some(Cow::Borrowed(components.as_path()))
+                }
+                Some("UE4SS.dll" | "UE4SS-settings.ini") => {
                     Some(Cow::Borrowed(components.as_path()))
                 }
                 Some("Mods") => {
