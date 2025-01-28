@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 (2025-01-28)
+
+### Fixed
+
+- Typo in telementry setting name
+- Modpack icon selector not working
+
 ## 1.3.0 (2025-01-19)
 
 ### Added
