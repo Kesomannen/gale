@@ -87,7 +87,6 @@
 		selectedCategories = args.categories.map(
 			(selected) => $categories.find((category) => category.slug === selected)!
 		);
-		console.log(args.categories, $categories, selectedCategories);
 		changelog = args.changelog;
 		readme = args.readme;
 		versionNumber = args.versionNumber;
@@ -319,7 +318,7 @@
                  it's recommended to be a square image to avoid stretching or squishing."
 		required={true}
 	>
-		<PathField icon="mdi:file-image" onClick={browseIcon} value={iconPath} />
+		<PathField icon="mdi:file-image" on:click={browseIcon} value={iconPath} />
 	</FormField>
 
 	<FormField
