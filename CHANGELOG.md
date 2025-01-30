@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- Typo in telementry setting name
+- Typo in telemetry setting name
 - Modpack icon selector not working
 
 ## 1.3.0 (2025-01-19)
