@@ -72,7 +72,7 @@ struct SaveData {
 }
 
 fn read_save_data() -> Result<SaveData> {
-    let path = util::path::default_app_data_dir().join("telementary.json");
+    let path = util::path::default_app_data_dir().join("telementary.json"); // old typo -- oops
 
     if path.exists() {
         util::fs::read_json(path).context("failed to read save file")
@@ -82,7 +82,7 @@ fn read_save_data() -> Result<SaveData> {
         };
 
         info!(
-            "telementary save data does not exist, creating new user with id {}",
+            "telemetry save data does not exist, creating new user with id {}",
             data.user_id
         );
 
