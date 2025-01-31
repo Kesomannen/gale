@@ -6,7 +6,7 @@ use std::{
 
 use eyre::{Context, Result};
 
-use super::{PackageZip, PackageInstaller};
+use super::{PackageInstaller, PackageZip};
 use crate::profile::{
     install::{self},
     Profile, ProfileMod,
@@ -21,8 +21,9 @@ impl PackageInstaller for ShimloaderInstaller {
 
         install::fs::extract(archive, dest, |relative_path| {
             let mut components = relative_path.components();
+            let in_ue4ss = relative_path.starts_with("UE4SS");
 
-            if relative_path.starts_with("UE4SS") {
+            if in_ue4ss {
                 components.next();
             }
 
@@ -31,7 +32,15 @@ impl PackageInstaller for ShimloaderInstaller {
             };
 
             Ok(match next.to_str() {
-                Some("dwmapi.dll" | "ue4ss.dll" | "UE4SS-settings.ini") => {
+                Some("dwmapi.dll") => {
+                    // The Shimloader package has 2 dwmapi.dll files, the one inside "UE4SS" doesn't seem to work.
+                    if in_ue4ss {
+                        return Ok(None);
+                    }
+
+                    Some(Cow::Borrowed(components.as_path()))
+                }
+                Some("UE4SS.dll" | "UE4SS-settings.ini") => {
                     Some(Cow::Borrowed(components.as_path()))
                 }
                 Some("Mods") => {
@@ -53,7 +62,7 @@ impl PackageInstaller for ShimloaderInstaller {
         _profile_mod: &ProfileMod,
         profile: &Profile,
     ) -> Result<()> {
-        for file in ["dwmapi.dll", "ue4ss.dll", "UE4SS-settings.ini"] {
+        for file in ["dwmapi.dll", "UE4SS.dll", "UE4SS-settings.ini"] {
             install::fs::toggle_file(profile.path.join(file), enabled)?;
         }
 
@@ -61,7 +70,7 @@ impl PackageInstaller for ShimloaderInstaller {
     }
 
     fn uninstall(&mut self, _profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        for file in ["dwmapi.dll", "ue4ss.dll", "UE4SS-settings.ini"] {
+        for file in ["dwmapi.dll", "UE4SS.dll", "UE4SS-settings.ini"] {
             fs::remove_file(profile.path.join(file))?;
         }
 
