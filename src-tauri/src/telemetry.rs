@@ -19,18 +19,18 @@ const ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 pub async fn send_app_start_event(app: AppHandle) {
     let prefs = app.state::<Mutex<Prefs>>();
 
-    if !prefs.lock().unwrap().send_telementary() {
-        info!("telementary is disabled");
+    if !prefs.lock().unwrap().send_telemetry() {
+        info!("telemetry is disabled");
         return;
     }
 
-    debug!("sending app_start telementary event");
+    debug!("sending app_start telemetry event");
 
     let client = &app.state::<NetworkClient>().inner().0;
     let data = match read_save_data() {
         Ok(data) => data,
         Err(err) => {
-            error!("failed to read telementary save data: {:#}", err);
+            error!("failed to read telemetry save data: {:#}", err);
             return;
         }
     };
@@ -43,8 +43,8 @@ pub async fn send_app_start_event(app: AppHandle) {
     });
 
     match send_request(url, payload, client).await {
-        Ok(_) => debug!("sent telementary successfully"),
-        Err(err) => error!("failed to send telementary: {:#}", err),
+        Ok(_) => debug!("successfully sent telemetry"),
+        Err(err) => error!("failed to send telemetry: {:#}", err),
     }
 }
 
@@ -52,19 +52,17 @@ async fn send_request(
     url: String,
     payload: serde_json::Value,
     client: &reqwest::Client,
-) -> Result<String> {
-    let result = client
+) -> Result<()> {
+    client
         .post(url)
         .bearer_auth(ANON_KEY)
         .header("apikey", ANON_KEY)
         .json(&payload)
         .send()
         .await?
-        .error_for_status()?
-        .text()
-        .await?;
+        .error_for_status()?;
 
-    Ok(result)
+    Ok(())
 }
 
 #[derive(Debug, Serialize, Deserialize)]

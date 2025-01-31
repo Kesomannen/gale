@@ -19,7 +19,7 @@ mod game;
 mod logger;
 mod prefs;
 mod profile;
-mod telementary;
+mod telemetry;
 mod thunderstore;
 mod util;
 
@@ -195,7 +195,7 @@ pub fn run() {
             });
 
             tauri::async_runtime::spawn(
-                async move { telementary::send_app_start_event(handle).await },
+                async move { telemetry::send_app_start_event(handle).await },
             );
 
             Ok(())

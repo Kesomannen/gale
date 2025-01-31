@@ -3,7 +3,6 @@ use std::{
     fs::File,
     io::{self, Cursor, Seek, Write},
     path::{Path, PathBuf},
-    time::Instant,
 };
 
 use base64::{prelude::BASE64_STANDARD, Engine};
@@ -138,7 +137,7 @@ fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
     serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
-    write_includes(find_includes(&profile.path, false), &profile.path, &mut zip)?;
+    write_config(find_config(&profile.path, false), &profile.path, &mut zip)?;
 
     Ok(())
 }
@@ -147,8 +146,6 @@ async fn export_code(
     client: &reqwest::Client,
     manager: StateMutex<'_, ModManager>,
 ) -> Result<Uuid> {
-    let start = Instant::now();
-
     let base64 = {
         let mut manager = manager.lock().unwrap();
 
@@ -164,9 +161,6 @@ async fn export_code(
         base64
     };
 
-    println!("creating archive took {:?}", start.elapsed());
-    let start = Instant::now();
-
     const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
 
     let response = client
@@ -179,12 +173,10 @@ async fn export_code(
         .json::<LegacyProfileCreateResponse>()
         .await?;
 
-    println!("upload took {:?}", start.elapsed());
-
     Ok(response.key)
 }
 
-fn write_includes<P, I, W>(files: I, source: &Path, zip: &mut ZipWriter<W>) -> Result<()>
+fn write_config<P, I, W>(files: I, source: &Path, zip: &mut ZipWriter<W>) -> Result<()>
 where
     P: AsRef<Path>,
     I: Iterator<Item = P>,
@@ -202,7 +194,7 @@ where
     Ok(())
 }
 
-pub fn find_includes(root: &Path, include_all: bool) -> impl Iterator<Item = PathBuf> + '_ {
+pub fn find_config(root: &Path, include_all: bool) -> impl Iterator<Item = PathBuf> + '_ {
     // Include any files in the BepInEx/config directory,
     // and any other files with the following extensions:
     const INCLUDE_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];

@@ -273,12 +273,6 @@
 		class="w-full"
 		on:submit={doProfileOperation}
 	/>
-	{#if profileOperation == 'duplicate'}
-		<p class="mt-2 text-sm text-slate-400">
-			This process might take up to a minute depending on the size of the profile, please be
-			patient.
-		</p>
-	{/if}
 	<div class="ml-auto mt-2 flex justify-end gap-2">
 		{#if !profileOperationInProgress}
 			<BigButton color="slate" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>

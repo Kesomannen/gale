@@ -56,7 +56,7 @@ pub struct ImportData {
 }
 
 impl ImportData {
-    pub fn create(
+    pub fn create_r2(
         name: String,
         mods: Vec<R2Mod>,
         ignored_updates: Vec<Uuid>,
@@ -98,7 +98,7 @@ fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> 
     let manifest: LegacyProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
 
-    ImportData::create(
+    ImportData::create_r2(
         manifest.profile_name,
         manifest.mods,
         manifest.ignored_updates,
@@ -136,7 +136,7 @@ async fn import_data(
         .await
         .context("error while importing mods")?;
 
-    let includes = export::find_includes(&data.path, import_all);
+    let includes = export::find_config(&data.path, import_all);
     import_config(&path, &data.path, includes).context("failed to import config")?;
 
     if data.delete_after_import {
@@ -146,7 +146,11 @@ async fn import_data(
     Ok(())
 }
 
-fn import_config(target: &Path, source: &Path, files: impl Iterator<Item = PathBuf>) -> Result<()> {
+pub fn import_config(
+    target: &Path,
+    source: &Path,
+    files: impl Iterator<Item = PathBuf>,
+) -> Result<()> {
     for file in files {
         let source = source.join(&file);
 

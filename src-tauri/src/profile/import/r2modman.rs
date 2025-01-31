@@ -171,7 +171,7 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
             .context("failed to delete existing profile")?;
     }
 
-    ImportData::create(
+    ImportData::create_r2(
         name,
         mods,
         Vec::new(),

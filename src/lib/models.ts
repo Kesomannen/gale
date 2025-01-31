@@ -256,7 +256,7 @@ export type Prefs = {
 	steamLibraryDir: string | null;
 	dataDir: string;
 	cacheDir: string;
-	sendTelementary: boolean;
+	sendTelemetry: boolean;
 	fetchModsAutomatically: boolean;
 	zoomFactor: number;
 	gamePrefs: Map<string, GamePrefs>;

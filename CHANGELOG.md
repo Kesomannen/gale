@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Typo in telemetry setting name (again)
+- Profile duplication causing more disk space to be used than necessary
+- Inconsistent profile sorting order on some file systems and platforms
+
 ## 1.3.1 (2025-01-28)
 
 ### Fixed

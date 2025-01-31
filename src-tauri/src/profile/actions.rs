@@ -7,12 +7,18 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
-use super::{install::PackageInstaller, Dependant, ManagedGame, Profile, ProfileMod};
+use super::{
+    export, import, install::PackageInstaller, Dependant, ManagedGame, Profile, ProfileMod,
+};
 use crate::{
     prefs::Prefs,
     profile::ModManager,
     thunderstore::Thunderstore,
-    util::{self, error::IoResultExt, fs::Overwrite},
+    util::{
+        self,
+        error::IoResultExt,
+        fs::{Overwrite, UseLinks},
+    },
 };
 
 #[derive(Serialize)]
@@ -251,8 +257,18 @@ impl ManagedGame {
         let old_profile = self.profile_at(index)?;
         let new_profile = self.active_profile();
 
-        util::fs::copy_dir(&old_profile.path, &new_profile.path, Overwrite::Yes)
-            .context("failed to copy profile directory")?;
+        // make sure the config files are properly copied and not linked between the two profiles.
+        let config_files = export::find_config(&old_profile.path, false);
+        import::import_config(&new_profile.path, &old_profile.path, config_files)
+            .context("failed to copy config files")?;
+
+        util::fs::copy_dir(
+            &old_profile.path,
+            &new_profile.path,
+            Overwrite::No,
+            UseLinks::Yes,
+        )
+        .context("failed to copy profile directory")?;
 
         let mods = old_profile.mods.clone();
         let ignored_updates = old_profile.ignored_updates.clone();

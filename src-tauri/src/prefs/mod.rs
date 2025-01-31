@@ -18,7 +18,7 @@ use crate::{
     util::{
         self,
         error::IoResultExt,
-        fs::{JsonStyle, Overwrite, PathExt},
+        fs::{JsonStyle, Overwrite, PathExt, UseLinks},
         window::WindowExt,
     },
 };
@@ -100,7 +100,12 @@ impl DirPref {
                         }
 
                         if moved_path.is_dir() {
-                            util::fs::copy_dir(&moved_path, &original_path, Overwrite::Yes)?;
+                            util::fs::copy_dir(
+                                &moved_path,
+                                &original_path,
+                                Overwrite::Yes,
+                                UseLinks::No,
+                            )?;
                         } else {
                             fs::copy(&moved_path, &original_path)?;
                         }
@@ -131,7 +136,7 @@ impl DirPref {
                     if entry.file_type()?.is_dir() {
                         debug!("copying dir {:?} -> {:?}", old_path, new_path);
 
-                        util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes)
+                        util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes, UseLinks::No)
                             .context("failed to copy subdirectory")?;
                         fs::remove_dir_all(&old_path)
                             .fs_context("removing old subdirectory", &old_path)?;
@@ -190,7 +195,8 @@ pub struct Prefs {
     pub steam_library_dir: Option<PathBuf>,
     pub data_dir: DirPref,
 
-    send_telementary: bool,
+    #[serde(rename = "sendTelementary")] // old typo (oops)
+    send_telemetry: bool,
     fetch_mods_automatically: bool,
     zoom_factor: f32,
 
@@ -262,7 +268,7 @@ impl Default for Prefs {
                 .keep("telementary.json")
                 .keep("latest.log"),
 
-            send_telementary: true,
+            send_telemetry: true,
             fetch_mods_automatically: true,
 
             zoom_factor: 1.0,
@@ -369,7 +375,7 @@ impl Prefs {
         }
         self.zoom_factor = value.zoom_factor;
 
-        self.send_telementary = value.send_telementary;
+        self.send_telemetry = value.send_telemetry;
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 
         self.save().context("failed write to settings file")
@@ -404,7 +410,7 @@ impl Prefs {
         self.fetch_mods_automatically
     }
 
-    pub fn send_telementary(&self) -> bool {
-        self.send_telementary
+    pub fn send_telemetry(&self) -> bool {
+        self.send_telemetry
     }
 }
