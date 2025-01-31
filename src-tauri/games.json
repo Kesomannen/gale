@@ -852,6 +852,18 @@
 		}
 	},
 	{
+		"name": "I Am Your Beast",
+		"slug": "i-am-your-beast",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1876590
+			}
+		}
+	},
+	{
 		"name": "Inscryption",
 		"modLoader": {
 			"name": "BepInEx"
@@ -929,6 +941,18 @@
 		"platforms": {
 			"steam": {
 				"id": 900010
+			}
+		}
+	},
+	{
+		"name": "MiSide",
+		"slug": "miside",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2527500
 			}
 		}
 	},

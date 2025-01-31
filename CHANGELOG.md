@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Support for I Am Your Beast and MiSide
+
 ### Fixed
 
 - Typo in telemetry setting name (again)
