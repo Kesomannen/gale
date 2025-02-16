@@ -7,7 +7,6 @@
 	import ApiKeyPopup from '$lib/prefs/ApiKeyPopup.svelte';
 
 	import { activeGame } from '$lib/stores';
-	import { Separator } from 'bits-ui';
 	import { type Prefs, type GamePrefs, Platform } from '$lib/models';
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -60,12 +59,21 @@
 		<SmallPrefsHeading>Locations</SmallPrefsHeading>
 
 		<PathPref
+			label="Gale data directory"
+			type="dir"
+			value={prefs.dataDir}
+			set={set((value, prefs) => (prefs.dataDir = value))}
+		>
+			Directory where mods and profiles are stored. Changing this will move the existing data.
+		</PathPref>
+
+		<PathPref
 			label="Steam executable"
 			type="file"
 			value={prefs.steamExePath ?? null}
 			set={set((value, prefs) => (prefs.steamExePath = value))}
 		>
-			Path to the Steam executable (steam.exe). Used for Steam launching.
+			Path to the Steam executable (steam.exe). Used for Steam launch.
 		</PathPref>
 
 		<PathPref
@@ -75,15 +83,6 @@
 			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 		>
 			Path to your default Steam game library. Used to find the location of Steam games.
-		</PathPref>
-
-		<PathPref
-			label="Data directory"
-			type="dir"
-			value={prefs.dataDir}
-			set={set((value, prefs) => (prefs.dataDir = value))}
-		>
-			Directory where mods and profiles are stored. Changing this will move the existing data.
 		</PathPref>
 
 		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
@@ -129,7 +128,7 @@
 		{/if}
 
 		<PathPref
-			label={needsDirectory ? 'Game directory' : 'Override directory'}
+			label={needsDirectory ? 'Game directory' : 'Override game directory'}
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride}

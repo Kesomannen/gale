@@ -149,7 +149,9 @@
 		<slot name="banner" />
 
 		{#if mods.length === 0}
-			<div class="mt-4 text-center text-lg text-slate-300">No mods found 😥</div>
+			<div class="mt-4 text-center text-slate-300">
+				<slot name="placeholder" />
+			</div>
 		{:else}
 			<VirtualList
 				itemHeight={66}

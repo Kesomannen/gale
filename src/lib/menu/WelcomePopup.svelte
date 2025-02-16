@@ -10,6 +10,7 @@
 	import { onMount } from 'svelte';
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 	import Icon from '@iconify/svelte';
+	import { invoke } from '@tauri-apps/api/core';
 
 	export let open = false;
 
@@ -28,7 +29,12 @@
 	});
 
 	async function onSelectGame() {
-		importData = await invokeCommand('get_r2modman_info');
+		try {
+			importData = await invoke('get_r2modman_info');
+		} catch {
+			importData = null;
+		}
+
 		stage = importData === null ? 'settings' : 'importProfiles';
 	}
 
@@ -84,21 +90,12 @@
 			<div class="mt-3 flex flex-col gap-1">
 				{#if prefs !== null}
 					<PathPref
-						label="Steam executable"
-						type="file"
-						value={prefs.steamExePath}
-						set={set((value, prefs) => (prefs.steamExePath = value))}
-					>
-						Path to the Steam executable.
-					</PathPref>
-
-					<PathPref
 						label="Steam library"
 						type="dir"
 						value={prefs.steamLibraryDir}
 						set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 					>
-						Path to the Steam game library. This should <b>contain</b> the 'steamapps' directory.
+						Path to your default Steam game library.
 					</PathPref>
 
 					<PathPref

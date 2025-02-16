@@ -163,8 +163,9 @@ pub struct FrontendAvailableUpdate {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileQuery {
-    updates: Vec<FrontendAvailableUpdate>,
     mods: Vec<FrontendProfileMod>,
+    total_mod_count: usize,
+    updates: Vec<FrontendAvailableUpdate>,
     unknown_mods: Vec<Dependant>,
 }
 
@@ -178,7 +179,10 @@ pub fn query_profile(
     let thunderstore = thunderstore.lock().unwrap();
 
     let profile = manager.active_profile();
+
     let (mods, unknown_mods) = profile.query_mods(&args, &thunderstore);
+    let total_mod_count = profile.mods.len();
+
     let updates = profile
         .mods
         .iter()
@@ -206,8 +210,9 @@ pub fn query_profile(
         });
 
     Ok(ProfileQuery {
-        updates,
         mods,
+        total_mod_count,
+        updates,
         unknown_mods,
     })
 }

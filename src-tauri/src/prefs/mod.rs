@@ -195,7 +195,7 @@ pub struct Prefs {
     pub steam_library_dir: Option<PathBuf>,
     pub data_dir: DirPref,
 
-    #[serde(rename = "sendTelementary")] // old typo (oops)
+    #[serde(alias = "sendTelementary")] // old typo (oops)
     send_telemetry: bool,
     fetch_mods_automatically: bool,
     zoom_factor: f32,

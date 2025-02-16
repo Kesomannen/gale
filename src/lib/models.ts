@@ -231,6 +231,7 @@ export type AvailableUpdate = {
 
 export type ProfileQuery = {
 	mods: Mod[];
+	totalModCount: number;
 	unknownMods: Dependant[];
 	updates: AvailableUpdate[];
 };

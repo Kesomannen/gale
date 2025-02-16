@@ -21,6 +21,7 @@
 	import ProfileModListItem from '$lib/modlist/ProfileModListItem.svelte';
 	import UpdateAllBanner from '$lib/modlist/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
+	import Link from '$lib/components/Link.svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -68,6 +69,7 @@
 	];
 
 	let mods: Mod[] = [];
+	let totalModCount = 0;
 	let unknownMods: Dependant[] = [];
 	let updates: AvailableUpdate[] = [];
 
@@ -99,6 +101,7 @@
 		$profileQuery.includeNsfw &&
 		$profileQuery.includeDisabled;
 
+	let hasRefreshed = false;
 	let refreshing = false;
 
 	async function refresh() {
@@ -110,10 +113,12 @@
 		});
 
 		mods = result.mods;
+		totalModCount = result.totalModCount;
 		unknownMods = result.unknownMods;
 		updates = result.updates;
 
 		refreshing = false;
+		hasRefreshed = true;
 	}
 
 	async function toggleMod(mod: Mod, newState: boolean) {
@@ -254,6 +259,22 @@
 		{/if}
 
 		<UpdateAllBanner {updates} />
+	</svelte:fragment>
+
+	<svelte:fragment slot="placeholder">
+		{#if hasRefreshed}
+			{#if totalModCount === 0}
+				<span class="text-lg">No mods installed</span>
+				<br />
+				<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
+					>Click to browse Thunderstore</a
+				>
+			{:else}
+				<span class="text-lg">No matching mods found in profile</span>
+				<br />
+				<span class="text-slate-400">Try to adjust your search query/filters</span>
+			{/if}
+		{/if}
 	</svelte:fragment>
 
 	<svelte:fragment slot="item" let:data>

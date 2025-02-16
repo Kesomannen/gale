@@ -114,7 +114,7 @@
 	}
 
 	main {
-		height: calc(100vh - 1px);
+		height: 100vh;
 	}
 
 	:global(div) {

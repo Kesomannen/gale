@@ -62,6 +62,7 @@
 		refresh();
 	}
 
+	let hasRefreshed = false;
 	let refreshing = false;
 
 	async function refresh() {
@@ -75,6 +76,7 @@
 		}
 
 		refreshing = false;
+		hasRefreshed = true;
 	}
 
 	async function installLatest(mod: Mod) {
@@ -157,6 +159,14 @@
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
 	</div>
+
+	<svelte:fragment slot="placeholder">
+		{#if hasRefreshed}
+			<span class="text-lg">No matching mods found</span>
+			<br />
+			<span class="text-slate-400">Try to adjust your search query/filters</span>
+		{/if}
+	</svelte:fragment>
 
 	<svelte:fragment slot="item" let:data={{ mod, isSelected }}>
 		<ModListItem
