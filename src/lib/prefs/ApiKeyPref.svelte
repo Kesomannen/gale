@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import { apiKeyPopupOpen } from './ApiKeyPopup.svelte';
@@ -18,10 +19,12 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Thunderstore API token">
+	<Label>Thunderstore API token</Label>
+
+	<Info>
 		Thunderstore API token to use for modpack publishing. Once this is set, you will <b>not</b> be able
 		to view the token again.
-	</Label>
+	</Info>
 
 	<Button.Root
 		class="group relative flex grow items-center truncate rounded-lg border border-transparent  bg-slate-900 px-3 py-1 text-right hover:border-slate-500"

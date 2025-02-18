@@ -2,8 +2,9 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
 	import Label from './Label.svelte';
+	import Info from './Info.svelte';
 
-	export let label: string = '';
+	export let label: string | null = null;
 	export let value: string | null;
 	export let icon: string = 'mdi:folder';
 
@@ -11,11 +12,15 @@
 </script>
 
 <div class="relative flex items-center">
-	{#if label}
-		<Label text={label}>
-			<slot />
+	{#if label !== null}
+		<Label>
+			{label}
 		</Label>
 	{/if}
+
+	<Info>
+		<slot />
+	</Info>
 
 	<Button.Root
 		class="group flex grow basis-0 items-center truncate rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-right hover:border-slate-500"

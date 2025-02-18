@@ -52,19 +52,19 @@
 	}
 </script>
 
-<div class="flex w-full flex-col gap-1 overflow-y-auto px-6 pb-6 pt-2">
+<div class="mx-auto flex w-full max-w-4xl flex-col gap-1 overflow-y-auto px-6 pt-2 pb-6">
 	{#if prefs !== null && gamePrefs !== null}
 		<LargePrefsHeading>Global settings</LargePrefsHeading>
 
 		<SmallPrefsHeading>Locations</SmallPrefsHeading>
 
 		<PathPref
-			label="Gale data directory"
+			label="Gale data folder"
 			type="dir"
 			value={prefs.dataDir}
 			set={set((value, prefs) => (prefs.dataDir = value))}
 		>
-			Directory where mods and profiles are stored. Changing this will move the existing data.
+			The folder where mods and profiles are stored. Changing this will move the existing data.
 		</PathPref>
 
 		<PathPref

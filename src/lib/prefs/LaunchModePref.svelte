@@ -6,6 +6,7 @@
 	import type { LaunchMode } from '$lib/models';
 	import { sentenceCase } from '$lib/util';
 	import { activeGame } from '$lib/stores';
+	import Info from '$lib/components/Info.svelte';
 
 	export let value: LaunchMode;
 	export let set: (value: LaunchMode) => Promise<void>;
@@ -32,7 +33,9 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Launch mode">
+	<Label>Launch mode</Label>
+
+	<Info>
 		<p>Determines how the game is launched.</p>
 		<p class="my-1.5">
 			<b>Launcher:</b> Launches through the specified platform.
@@ -41,7 +44,7 @@
 			<b>Direct:</b> Launches the game directly from the executable. Allows you to launch multiple instances
 			at once.
 		</p>
-	</Label>
+	</Info>
 
 	<Dropdown
 		class="grow"
@@ -55,9 +58,9 @@
 </div>
 
 <div class="flex items-center">
-	<Label text="Number of instances">
-		How many instances of the game to launch at once. Only available in direct mode.
-	</Label>
+	<Label>Number of instances</Label>
+
+	<Info>How many instances of the game to launch at once. Only available in direct mode.</Info>
 
 	<InputField
 		disabled={value.type !== 'direct'}
@@ -70,10 +73,12 @@
 </div>
 
 <div class="flex items-center">
-	<Label text="Interval between launches">
+	<Label>Interval between launches</Label>
+
+	<Info>
 		How many seconds to wait between launching each instance. Only applicable in direct mode with
 		multiple instances.
-	</Label>
+	</Info>
 
 	<InputField
 		disabled={value.type !== 'direct' || instances <= 1}

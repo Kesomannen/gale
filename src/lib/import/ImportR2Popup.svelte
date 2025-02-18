@@ -1,7 +1,6 @@
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import { invokeCommand } from '$lib/invoke';
 	import type { R2ImportData } from '$lib/models';
 	import ImportR2Flow from './ImportR2Flow.svelte';
 
@@ -11,17 +10,14 @@
 	let importFlow: ImportR2Flow;
 	let importData: R2ImportData;
 
-	$: if (open) {
-		onOpen();
-	}
-
-	async function onOpen() {
-		importData = await invokeCommand('get_r2modman_info');
+	$: if (open && importFlow) {
+		importFlow.refresh(null);
 	}
 
 	async function doImport() {
-		await importFlow.doImport();
-		open = false;
+		if (await importFlow.doImport()) {
+			open = false;
+		}
 	}
 </script>
 
@@ -32,15 +28,12 @@
 		</p>
 
 		<p class="mt-2">
-			The process may take a couple of minutes, depending on how many mods there are to import.
-			<b>Existing profiles with the same name will be overwritten!</b>
+			<b>Do not close Gale while the import is in progress.</b>
 		</p>
-
-		<p class="mt-2">Do not close Gale while the import is in progress.</p>
 	</div>
 	<ImportR2Flow bind:this={importFlow} bind:loading bind:importData />
 
-	<div class="mr-0.5 mt-3 flex w-full justify-end gap-2">
+	<div class="mt-3 mr-0.5 flex w-full justify-end gap-2">
 		<BigButton color="slate" on:click={() => (open = false)}>Cancel</BigButton>
 		<BigButton color="accent" on:click={doImport}>Import</BigButton>
 	</div>

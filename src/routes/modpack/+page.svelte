@@ -117,7 +117,7 @@
 
 	async function exportToFile() {
 		let dir = await open({
-			title: 'Choose directory to save modpack',
+			title: 'Choose folder to save modpack',
 			defaultPath: `${name}.zip`,
 			directory: true
 		});

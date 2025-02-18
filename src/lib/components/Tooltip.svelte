@@ -31,7 +31,7 @@
 		{sideOffset}
 		{side}
 	>
-		<Tooltip.Arrow class="rounded-[2px] border-l border-t border-slate-600" />
+		<Tooltip.Arrow class="rounded-[2px] border-t border-l border-slate-600" />
 		<slot name="tooltip">
 			{text}
 		</slot>

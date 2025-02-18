@@ -11,6 +11,7 @@
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 	import Icon from '@iconify/svelte';
 	import { invoke } from '@tauri-apps/api/core';
+	import AccentColorPref from '$lib/prefs/AccentColorPref.svelte';
 
 	export let open = false;
 
@@ -22,7 +23,7 @@
 	let prefs: Prefs | null = null;
 
 	onMount(async () => {
-		if (await invokeCommand<boolean>('is_first_run')) {
+		if ((await invokeCommand<boolean>('is_first_run')) || true) {
 			open = true;
 			prefs = await invokeCommand('get_prefs');
 		}
@@ -39,8 +40,9 @@
 	}
 
 	async function importProfiles() {
-		await importFlow.doImport();
-		stage = 'settings';
+		if (await importFlow.doImport()) {
+			stage = 'settings';
+		}
 	}
 
 	function set<T>(update: (value: T, prefs: Prefs) => void) {
@@ -59,12 +61,7 @@
 			To get started, select a game to mod:
 			<GameSelection onSelect={onSelectGame} />
 		{:else if stage === 'importProfiles'}
-			<p>You can choose to automatically transfer profiles from another mod manager to Gale.</p>
-
-			<p class="mt-1">
-				The process may take a couple of minutes, depending on how many mods and profiles there are
-				to import.
-			</p>
+			<p>You can automatically transfer profiles from another mod manager to Gale.</p>
 
 			<p class="mt-1">
 				You can always import profiles later by going to <b>Import &gt; ...from r2modman</b>.
@@ -81,7 +78,7 @@
 			</div>
 		{:else if stage === 'settings'}
 			<p>
-				Let's make sure your settings are correct.
+				Let's make sure your settings are to your liking.
 				<br />
 				You can always edit these later by going to <Icon icon="mdi:settings" class="mb-1 inline" />
 				<b>Settings</b>.
@@ -90,21 +87,21 @@
 			<div class="mt-3 flex flex-col gap-1">
 				{#if prefs !== null}
 					<PathPref
-						label="Steam library"
+						label="Gale data folder"
+						type="dir"
+						value={prefs.dataDir}
+						set={set((value, prefs) => (prefs.dataDir = value))}
+					>
+						The folder where mods and profiles are stored.
+					</PathPref>
+
+					<PathPref
+						label="Steam library location"
 						type="dir"
 						value={prefs.steamLibraryDir}
 						set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 					>
 						Path to your default Steam game library.
-					</PathPref>
-
-					<PathPref
-						label="Gale data directory"
-						type="dir"
-						value={prefs.dataDir}
-						set={set((value, prefs) => (prefs.dataDir = value))}
-					>
-						Directory where mods and profiles are stored.
 					</PathPref>
 				{/if}
 			</div>

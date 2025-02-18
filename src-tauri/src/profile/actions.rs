@@ -197,16 +197,21 @@ pub fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> 
     let Payload { uuid, delta } = serde_json::from_str(event.payload())?;
 
     let manager = app.state::<Mutex<ModManager>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
     let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
 
     manager.active_profile_mut().reorder_mod(uuid, delta)?;
 
-    manager.save(&prefs)?;
-
     Ok(())
+}
+
+pub fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
+    let manager = app.state::<Mutex<ModManager>>();
+    let prefs = app.state::<Mutex<Prefs>>();
+
+    let manager = manager.lock().unwrap();
+    let prefs = prefs.lock().unwrap();
+
+    manager.save(&prefs)
 }
 
 impl ManagedGame {

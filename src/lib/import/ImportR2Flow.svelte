@@ -7,12 +7,16 @@
 	import { fade } from 'svelte/transition';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
+	import { invoke } from '@tauri-apps/api/core';
+	import { capitalize } from '$lib/util';
+
+	export let importData: R2ImportData | null | undefined = undefined;
+
+	let path: string | null = null;
+	let error = '';
 
 	export let loading = false;
 	let loadingText = '';
-
-	export let importData: R2ImportData | null | undefined = undefined;
-	let path: string | null = null;
 
 	$: profiles = importData?.profiles ?? [];
 	$: include = importData?.include ?? [];
@@ -25,8 +29,20 @@
 		}
 	}
 
-	async function refresh(newPath: string | null) {
-		importData = await invokeCommand('get_r2modman_info', { path: newPath });
+	export async function refresh(newPath: string | null) {
+		console.log('refreshing path', newPath);
+
+		error = '';
+		path = newPath;
+
+		try {
+			importData = await invoke<R2ImportData | null>('get_r2modman_info', { path: newPath });
+		} catch (e) {
+			importData = null;
+			error = e as string;
+
+			console.error(error);
+		}
 	}
 
 	export async function doImport() {
@@ -40,19 +56,25 @@
 			loadingText = evt.payload;
 		});
 
+		let success = false;
+
 		try {
 			await invokeCommand('import_r2modman', importData);
 			refreshProfiles();
+
+			success = true;
 		} finally {
 			unlisten();
 
 			loading = false;
 		}
+
+		return success;
 	}
 </script>
 
-<PathPref label="Data directory" type="dir" value={path} set={refresh}>
-	The data directory of your r2modman/TMM installation.
+<PathPref label="R2 data folder" type="dir" value={path} set={refresh}>
+	The data folder of your r2modman/TMM installation.
 </PathPref>
 
 {#if loading}
@@ -69,8 +91,13 @@
 	<div class="text-slate-300">Loading...</div>
 {:else if importData === null}
 	<div class="mt-2 flex w-full items-center gap-2 text-slate-300">
-		<Icon icon="mdi:warning" />
-		No installations found, please specify the data path above.
+		{#if path === null}
+			<Icon icon="mdi:warning" />
+			No installations found, please specify the path above.
+		{:else}
+			<Icon icon="mdi:error" class="shrink-0" />
+			{capitalize(error)}
+		{/if}
 	</div>
 {:else}
 	<Checklist

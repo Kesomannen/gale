@@ -62,7 +62,7 @@
 			onclick: openDependants
 		},
 		{
-			label: 'Open directory',
+			label: 'Open folder',
 			icon: 'mdi:folder',
 			onclick: (mod) => invokeCommand('open_mod_dir', { uuid: mod.uuid })
 		}
@@ -215,7 +215,12 @@
 		}
 
 		await emit('reorder_mod', { uuid: reorderUuid, delta });
-		console.log('reorder done');
+	}
+
+	async function onDragEnd(evt: DragEvent) {
+		if (!reorderable) return;
+
+		await emit('finish_reorder');
 	}
 </script>
 
@@ -231,7 +236,7 @@
 	<svelte:fragment slot="details">
 		{#if selectedMod && isOutdated(selectedMod)}
 			<Button.Root
-				class="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-accent-600 py-2 text-lg font-medium hover:bg-accent-500"
+				class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
 				on:click={() => updateMod(selectedMod)}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
@@ -242,7 +247,7 @@
 
 	<svelte:fragment slot="banner">
 		{#if unknownMods.length > 0}
-			<div class="mb-1 mr-3 flex items-center rounded-lg bg-red-600 py-1.5 pl-3 pr-1 text-red-100">
+			<div class="mr-3 mb-1 flex items-center rounded-lg bg-red-600 py-1.5 pr-1 pl-3 text-red-100">
 				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
 				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
 					.map((mod) => mod.fullName)
@@ -283,6 +288,7 @@
 			{reorderable}
 			on:dragstart={onDragStart}
 			on:dragover={onDragOver}
+			on:dragend={onDragEnd}
 			on:toggle={({ detail: newState }) => toggleMod(data.mod, newState)}
 			on:click={() => modList.selectMod(data.mod)}
 		/>

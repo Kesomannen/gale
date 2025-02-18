@@ -17,6 +17,7 @@
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Info from '$lib/components/Info.svelte';
 
 	export let open: boolean;
 	export let data: ImportData | null;
@@ -92,14 +93,14 @@
 		>
 			<Tabs.Content value="new">
 				<div class="flex items-center">
-					<Label text="Profile name">A unique name for the imported profile.</Label>
+					<Label>Profile name</Label>
 
 					<div class="relative grow">
 						<InputField bind:value={name} class="w-full" />
 
 						{#if !nameAvailable}
 							<Tooltip
-								class="absolute bottom-0 right-2 h-full cursor-text text-xl text-red-500"
+								class="absolute right-2 bottom-0 h-full cursor-text text-xl text-red-500"
 								side="left"
 							>
 								<Icon icon="mdi:error" />
@@ -110,14 +111,14 @@
 							</Tooltip>
 						{/if}
 					</div>
+
+					<Info>A unique name for the imported profile.</Info>
 				</div>
 			</Tabs.Content>
 
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
-					<Label text="Choose profile">
-						Which existing profile to overwrite with the imported one.
-					</Label>
+					<Label>Choose profile</Label>
 
 					<Dropdown
 						class="grow"
@@ -126,6 +127,8 @@
 						multiple={false}
 						bind:selected={name}
 					/>
+
+					<Info>Which existing profile to overwrite with the imported one.</Info>
 				</div>
 			</Tabs.Content>
 		</TabsMenu>
@@ -142,13 +145,14 @@
 			<summary class="mt-1 cursor-pointer text-slate-300">Advanced options</summary>
 
 			<div class="mt-1 flex items-center">
-				<Label text="Import all files">
+				<Label>Import all files</Label>
+				<Checkbox bind:value={importAll} />
+				<Info>
 					Import all files found in the profile, instead of just well-known config file formats.
 					This is unsafe and can let an attacker install malware on your system. <b
 						>Only enable this for trusted profiles!</b
 					>
-				</Label>
-				<Checkbox bind:value={importAll} />
+				</Info>
 			</div>
 		</details>
 

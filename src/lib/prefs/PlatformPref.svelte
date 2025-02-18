@@ -5,6 +5,7 @@
 	import type { Platform } from '$lib/models';
 	import { titleCase } from '$lib/util';
 	import { activeGame } from '$lib/stores';
+	import Info from '$lib/components/Info.svelte';
 
 	export let value: Platform | null;
 	export let set: (value: Platform) => Promise<void>;
@@ -13,7 +14,9 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Platform">The platform where your game is installed.</Label>
+	<Label>Platform</Label>
+
+	<Info>The platform where your game is installed.</Info>
 
 	<Dropdown
 		class="grow"

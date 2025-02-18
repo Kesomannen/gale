@@ -12,6 +12,7 @@
 - Profile duplication causing more disk space to be used than necessary
 - Inconsistent profile sorting order on some file systems and platforms
 - Small gap between the taskbar and window while the app is maximized
+- Decreased the number of disk writes when reordering mods
 - UI tweaks
 
 ## 1.3.1 (2025-01-28)

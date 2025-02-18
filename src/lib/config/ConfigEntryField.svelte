@@ -9,6 +9,7 @@
 	import SliderConfig from './SliderConfig.svelte';
 	import NumberInputConfig from './NumberInputConfig.svelte';
 	import { isNum } from '$lib/config';
+	import Info from '$lib/components/Info.svelte';
 
 	export let entryId: ConfigEntryId;
 
@@ -52,40 +53,38 @@
 </script>
 
 <!-- odd:bg-[#1b2433] -->
-<div class="flex items-center py-0.5 pl-6 pr-4 text-slate-300">
-	<Tooltip
-		class="w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left text-slate-300"
-		openDelay={50}
-	>
+<div class="flex items-center py-0.5 pr-4 pl-6 text-slate-300">
+	<div class="w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left text-slate-300">
 		{sentenceCase(entry.name)}
+	</div>
 
-		<svelte:fragment slot="tooltip">
-			<h4>
-				<span class="text-lg font-semibold text-white">{entry.name}</span>
-				<span class="ml-1 text-slate-400"> ({typeName})</span>
-			</h4>
+	<Info>
+		<h4>
+			<span class="text-lg font-semibold text-white">{entry.name}</span>
+			<span class="ml-1 text-slate-400"> ({typeName})</span>
+		</h4>
 
-			{#if entry.description !== null}
-				<p class="mb-1">
-					{entry.description}
-				</p>
-			{/if}
+		{#if entry.description !== null}
+			<p class="mb-1">
+				{entry.description}
+			</p>
+		{/if}
 
-			{#if entry.default}
-				<p class="break-words">
-					<span class="font-medium text-slate-100">Default: </span>
-					{valueToString(entry.default)}
-				</p>
-			{/if}
+		{#if entry.default}
+			<p class="break-words">
+				<span class="font-medium text-slate-100">Default: </span>
+				{valueToString(entry.default)}
+			</p>
+		{/if}
 
-			{#if (value.type === 'int' || value.type === 'float') && value.content.range !== null}
-				<p>
-					<span class="font-medium text-white">Range: </span>
-					{value.content.range.start} - {value.content.range.end}
-				</p>
-			{/if}
-		</svelte:fragment>
-	</Tooltip>
+		{#if (value.type === 'int' || value.type === 'float') && value.content.range !== null}
+			<p>
+				<span class="font-medium text-white">Range: </span>
+				{value.content.range.start} - {value.content.range.end}
+			</p>
+		{/if}
+	</Info>
+
 	{#if value.type === 'string'}
 		<StringConfig {entryId} />
 	{:else if value.type === 'enum'}

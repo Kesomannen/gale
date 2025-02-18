@@ -55,6 +55,13 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         }
     });
 
+    let handle = app.to_owned();
+    app.listen("finish_reorder", move |_| {
+        if let Err(err) = actions::handle_finish_reorder_event(&handle) {
+            logger::log_webview_err("Failed to finish reordering", err, &handle);
+        }
+    });
+
     Ok(())
 }
 
@@ -387,7 +394,7 @@ impl Profile {
         }
     }
 
-    fn save(&self, path: &mut PathBuf) -> Result<()> {
+    fn save_to(&self, path: &mut PathBuf) -> Result<()> {
         path.push("profile.json");
         util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
         path.pop();
@@ -578,7 +585,7 @@ impl ManagedGame {
         }
     }
 
-    fn save(&self, path: &mut PathBuf) -> Result<()> {
+    fn save_to(&self, path: &mut PathBuf) -> Result<()> {
         path.push("game.json");
         util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
         path.pop();
@@ -587,7 +594,7 @@ impl ManagedGame {
 
         for profile in &self.profiles {
             path.push(&profile.name);
-            profile.save(path)?;
+            profile.save_to(path)?;
             path.pop();
         }
 
@@ -737,7 +744,7 @@ impl ModManager {
 
         for (game, managed_game) in &self.games {
             path.push(&*game.slug);
-            managed_game.save(&mut path)?;
+            managed_game.save_to(&mut path)?;
             path.pop();
         }
 

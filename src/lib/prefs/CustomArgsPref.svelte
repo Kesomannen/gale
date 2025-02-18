@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Info from '$lib/components/Info.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import Icon from '@iconify/svelte';
@@ -12,7 +13,9 @@
 </script>
 
 <div class="mt-1 flex items-center">
-	<Label text="Set custom launch arguments">
+	<Label>Set custom launch arguments</Label>
+
+	<Info>
 		<p>
 			Allows you to add custom arguments to the launch command. Depending on <b>Launch mode</b>,
 			these are either ran against the game or steam executable.
@@ -23,7 +26,7 @@
 			<code>--foo</code>
 			and <code>value</code> separately.
 		</p>
-	</Label>
+	</Info>
 
 	<Checkbox
 		value={value !== null}

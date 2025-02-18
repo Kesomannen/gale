@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Dropdown from '$lib/components/Dropdown.svelte';
+	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
 
 	export let value: number;
@@ -7,7 +8,9 @@
 </script>
 
 <div class="flex items-center">
-	<Label text="Zoom factor">Changes the zoom level of the app.</Label>
+	<Label>Zoom factor</Label>
+
+	<Info>Changes the zoom level of the app.</Info>
 
 	<Dropdown
 		class="grow"

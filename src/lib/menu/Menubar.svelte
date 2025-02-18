@@ -71,7 +71,7 @@
 	async function exportFile() {
 		let dir = await open({
 			directory: true,
-			title: 'Select the directory to export the profile to'
+			title: 'Select the folder to export the profile to'
 		});
 
 		if (dir === null) return;
@@ -162,13 +162,10 @@
 
 <header data-tauri-drag-region class="flex h-8 shrink-0 bg-slate-800">
 	<Menubar.Root class="flex items-center py-1">
-		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
+		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />
 		<MenubarMenu label="File">
-			<MenubarItem
-				on:click={() => invokeCommand('open_profile_dir')}
-				text="Open profile directory"
-			/>
-			<MenubarItem on:click={() => invokeCommand('open_game_dir')} text="Open game directory" />
+			<MenubarItem on:click={() => invokeCommand('open_profile_dir')} text="Open profile folder" />
+			<MenubarItem on:click={() => invokeCommand('open_game_dir')} text="Open game folder" />
 			<MenubarSeparator />
 			<MenubarItem on:click={() => invokeCommand('open_game_log')} text="Open game log" />
 			<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open Gale log" />
@@ -273,7 +270,7 @@
 		class="w-full"
 		on:submit={doProfileOperation}
 	/>
-	<div class="ml-auto mt-2 flex justify-end gap-2">
+	<div class="mt-2 ml-auto flex justify-end gap-2">
 		{#if !profileOperationInProgress}
 			<BigButton color="slate" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
 		{/if}

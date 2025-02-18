@@ -59,6 +59,7 @@
 			on:click
 			on:dragstart
 			on:dragover
+			on:dragend
 		>
 			<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
 			<div class="shrink grow overflow-hidden pr-2 pl-3 text-left">
