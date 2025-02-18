@@ -67,7 +67,7 @@
 	}
 </script>
 
-<div class="flex flex-grow overflow-hidden">
+<div class="flex grow overflow-hidden">
 	<div
 		class="file-list w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r border-slate-600 bg-slate-700"
 	>
@@ -106,9 +106,9 @@
 		{/if}
 	</div>
 
-	<div class="max-w-4xl flex-grow overflow-y-auto py-4">
+	<div class="max-w-4xl grow overflow-y-auto py-4">
 		{#if selectedFile !== undefined}
-			<div class="flex-shrink-0 truncate px-4 text-2xl font-bold text-white">
+			<div class="shrink-0 truncate px-4 text-2xl font-bold text-white">
 				{selectedFile.relativePath}
 				{#if selectedSection}
 					<span class="text-slate-400">/</span>
@@ -133,7 +133,7 @@
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
 				<div class="mb-1 px-4 text-slate-400">An error occured while reading this config file:</div>
-				<code class="mx-4 mb-1 flex rounded bg-slate-900 p-4 text-red-500">
+				<code class="mx-4 mb-1 flex rounded-sm bg-slate-900 p-4 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
 				<BigButton
@@ -156,7 +156,9 @@
 <ExpandedEntryPopup />
 
 <style lang="postcss">
+	@reference 'tailwindcss';
+
 	.file-list {
-		scrollbar-color: theme(colors.slate.400) theme(colors.slate.700);
+		scrollbar-color: var(--color-slate-400) var(--color-slate-700);
 	}
 </style>

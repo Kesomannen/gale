@@ -32,13 +32,15 @@
 </div>
 
 <style global lang="postcss">
+	@reference '../../app.css';
+
 	.markdown {
 		@apply text-slate-100;
 	}
 
 	.markdown :global(h1),
 	.markdown :global(h2) {
-		@apply mb-3 border-b border-slate-500 pb-1 pt-4;
+		@apply mb-3 border-b border-slate-500 pt-4 pb-1;
 	}
 
 	.markdown :global(h1) {
@@ -50,11 +52,11 @@
 	}
 
 	.markdown :global(h3) {
-		@apply pb-1 pt-2 text-xl font-semibold;
+		@apply pt-2 pb-1 text-xl font-semibold;
 	}
 
 	.markdown :global(h4) {
-		@apply pb-0.5 pt-1 text-lg font-medium;
+		@apply pt-1 pb-0.5 text-lg font-medium;
 	}
 
 	.markdown :global(a) {

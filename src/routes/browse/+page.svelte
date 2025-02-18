@@ -110,7 +110,7 @@
 >
 	<div slot="details" class="mt-2 flex text-lg text-white">
 		<Button.Root
-			class="flex flex-grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+			class="flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
 			on:click={() => install(activeModRef)}
 			disabled={selectedMod?.isInstalled}
 		>
@@ -143,7 +143,7 @@
 			>
 				{#each selectedMod?.versions ?? [] as version}
 					<DropdownMenu.Item
-						class="flex flex-shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left text-slate-300 hover:bg-slate-600 hover:text-slate-100"
+						class="flex shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left text-slate-300 hover:bg-slate-600 hover:text-slate-100"
 						on:click={() => {
 							if (!selectedMod) return;
 

@@ -73,8 +73,10 @@
 {/each}
 
 <style lang="postcss">
+	@reference 'tailwindcss';
+
 	:global(.menu-item) {
-		@apply flex flex-shrink-0 cursor-default items-center truncate rounded py-1 pl-3 text-left;
+		@apply flex shrink-0 cursor-default items-center truncate rounded-sm py-1 pl-3 text-left;
 	}
 
 	:global(.dropdown-menu-item) {
@@ -90,6 +92,6 @@
 	}
 
 	:global(.dropdown-sub-menu) {
-		scrollbar-color: theme(colors.slate.400) theme(colors.slate.700);
+		scrollbar-color: var(--color-slate-400) var(--color-slate-700);
 	}
 </style>

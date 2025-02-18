@@ -41,9 +41,9 @@
 	}
 </script>
 
-<div class="flex h-12 flex-shrink-0 flex-row border-b border-t border-slate-600 bg-slate-900">
+<div class="flex h-12 shrink-0 flex-row border-b border-t border-slate-600 bg-slate-900">
 	<div
-		class="flex-shrink-0 border-r border-slate-600 pl-6 pr-8 text-accent-400 hover:bg-slate-800 hover:text-accent-400"
+		class="shrink-0 border-r border-slate-600 pl-6 pr-8 text-accent-400 hover:bg-slate-800 hover:text-accent-400"
 	>
 		<Button.Root
 			class="flex h-full cursor-default items-center font-semibold"
@@ -56,12 +56,12 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="group flex flex-shrink-0 cursor-default items-center justify-between border-r border-slate-600 pl-2 pr-4 font-semibold text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
+		class="group flex shrink-0 cursor-default items-center justify-between border-r border-slate-600 pl-2 pr-4 font-semibold text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
 	>
 		{#if $activeGame}
 			<img
 				src="games/{$activeGame.slug}.webp"
-				class="mr-2 max-h-8 max-w-8 rounded"
+				class="mr-2 max-h-8 max-w-8 rounded-sm"
 				alt={$activeGame.name}
 			/>
 
@@ -72,28 +72,28 @@
 
 		<Icon
 			icon="mdi:menu"
-			class="ml-6 flex-shrink-0 text-xl text-slate-300 transition-all group-hover:text-slate-200"
+			class="ml-6 shrink-0 text-xl text-slate-300 transition-all group-hover:text-slate-200"
 		/>
 	</Button.Root>
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="group flex min-w-40 flex-shrink cursor-default items-center border-r border-slate-600 pl-6 
+			class="group flex min-w-40 shrink cursor-default items-center border-r border-slate-600 pl-6 
 						pr-4 text-slate-300 hover:bg-slate-800 group-hover:text-slate-200"
 		>
-			<span class="mr-auto flex-shrink truncate font-semibold">
+			<span class="mr-auto shrink truncate font-semibold">
 				{$activeProfile?.name}
 			</span>
 
 			<div
-				class="ml-6 mr-2 rounded bg-slate-800 px-2 py-0.5 text-sm font-medium group-hover:bg-slate-700"
+				class="ml-6 mr-2 rounded-sm bg-slate-800 px-2 py-0.5 text-sm font-medium group-hover:bg-slate-700"
 			>
 				{$activeProfile?.modCount}
 			</div>
 
 			<Icon
 				icon="mdi:expand-more"
-				class="flex-shrink-0 origin-center transform text-xl transition-all {profilesOpen
+				class="shrink-0 origin-center transform text-xl transition-all {profilesOpen
 					? 'rotate-180'
 					: 'rotate-0'}"
 			/>
@@ -113,7 +113,7 @@
 						profilesOpen = false;
 					}}
 				>
-					<span class="mr-3 flex-grow">
+					<span class="mr-3 grow">
 						{profile.name}
 					</span>
 
@@ -122,12 +122,12 @@
 						class="mx-2 text-lg text-accent-500 {i !== activeProfileIndex && 'invisible'}"
 					/>
 
-					<div class="mr-1 rounded bg-slate-700 px-1.5 py-0.5 text-xs group-hover:bg-slate-600">
+					<div class="mr-1 rounded-sm bg-slate-700 px-1.5 py-0.5 text-xs group-hover:bg-slate-600">
 						{profile.modCount}
 					</div>
 
 					<Button.Root
-						class="rounded p-1 text-slate-400 hover:bg-red-600 hover:text-red-200"
+						class="rounded-sm p-1 text-slate-400 hover:bg-red-600 hover:text-red-200"
 						on:click={(evt) => {
 							evt.stopPropagation();
 							deleteProfile(i);
@@ -140,7 +140,7 @@
 			{/each}
 
 			<DropdownMenu.Item
-				class="flex cursor-default items-center justify-center rounded bg-accent-700 py-1 text-white hover:bg-accent-600"
+				class="flex cursor-default items-center justify-center rounded-sm bg-accent-700 py-1 text-white hover:bg-accent-600"
 				on:click={() => (newProfilePopupOpen = true)}
 			>
 				<Icon icon="mdi:plus" class="mr-1 text-lg" />

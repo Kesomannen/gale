@@ -33,7 +33,7 @@
 
 {#each file.sections as section}
 	<div
-		class="mx-6 mb-1 mt-4 flex-shrink-0 truncate border-b border-slate-600 text-xl font-medium text-slate-100"
+		class="mx-6 mb-1 mt-4 shrink-0 truncate border-b border-slate-600 text-xl font-medium text-slate-100"
 	>
 		{section.name}
 	</div>

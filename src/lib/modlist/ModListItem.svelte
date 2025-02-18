@@ -18,25 +18,25 @@
 </script>
 
 <button
-	class="group flex w-full rounded-lg border border-slate-500 p-2 {isSelected
-		? 'bg-slate-700'
-		: 'border-opacity-0 hover:bg-slate-700'}"
+	class="group flex w-full rounded-lg border p-2 {isSelected
+		? 'border-slate-500 bg-slate-700'
+		: 'border-transparent hover:bg-slate-700'}"
 	on:click
 >
-	<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded" />
-	<div class="flex-shrink flex-grow overflow-hidden pl-3 text-left">
+	<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
+	<div class="shrink grow overflow-hidden pl-3 text-left">
 		<div class="flex items-center gap-1 overflow-hidden">
-			<div class="flex-shrink truncate pr-1 font-medium text-white">
+			<div class="shrink truncate pr-1 font-medium text-white">
 				{mod.name.replace(/_/g, ' ')}
 			</div>
 			{#if mod.isPinned}
-				<Icon class="flex-shrink-0 text-slate-400" icon="mdi:pin" />
+				<Icon class="shrink-0 text-slate-400" icon="mdi:pin" />
 			{/if}
 			{#if mod.isDeprecated}
-				<Icon class="flex-shrink-0 text-red-500" icon="mdi:error" />
+				<Icon class="shrink-0 text-red-500" icon="mdi:error" />
 			{/if}
 			{#if mod.isInstalled}
-				<Icon class="flex-shrink-0 text-accent-500" icon="mdi:check-circle" />
+				<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
 			{/if}
 		</div>
 
@@ -49,7 +49,7 @@
 
 	{#if !mod.isInstalled}
 		<Button.Root
-			class="ml-2 mr-0.5 mt-0.5 hidden rounded-lg bg-accent-600 p-2.5 align-middle text-2xl text-white hover:bg-accent-500 group-hover:inline"
+			class="bg-accent-600 hover:bg-accent-500 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
 			on:click={(evt) => {
 				dispatch('install');
 				evt.stopPropagation();

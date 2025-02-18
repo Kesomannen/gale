@@ -10,7 +10,7 @@
 	<Label text="Zoom factor">Changes the zoom level of the app.</Label>
 
 	<Dropdown
-		class="flex-grow"
+		class="grow"
 		items={[0.5, 0.75, 1, 1.25, 1.5]}
 		selected={value}
 		onSelectedChange={(newValue) => {

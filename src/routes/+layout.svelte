@@ -49,9 +49,9 @@
 	<Menubar />
 	<Contextbar />
 
-	<div class="relative flex flex-grow overflow-hidden">
+	<div class="relative flex grow overflow-hidden">
 		<nav
-			class="flex w-14 flex-shrink-0 flex-col items-center gap-1 border-r border-slate-600 bg-slate-900 p-2"
+			class="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-slate-600 bg-slate-900 p-2"
 		>
 			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
@@ -74,7 +74,7 @@
 	{/if}
 
 	<div
-		class="absolute bottom-0 right-0 z-10 flex max-w-[50rem] flex-col-reverse justify-end gap-1 p-2 xl:max-w-[90rem]"
+		class="absolute right-0 bottom-0 z-10 flex max-w-[50rem] flex-col-reverse justify-end gap-1 p-2 xl:max-w-[90rem]"
 	>
 		{#each $errors as error, i}
 			<div
@@ -82,13 +82,13 @@
 				in:slide={{ duration: 150, easing: expoOut }}
 				out:fade={{ duration: 100 }}
 			>
-				<div class="mr-3 mt-auto flex-grow overflow-hidden px-2">
+				<div class="mt-auto mr-3 grow overflow-hidden px-2">
 					<span class="text-red-200">{error.name} -</span>
-					<span class="ml-1 break-words font-medium text-white">{error.message}</span>
+					<span class="ml-1 font-medium break-words text-white">{error.message}</span>
 				</div>
 
 				<Button.Root
-					class="rounded-sm p-1 hover:bg-red-500"
+					class="rounded-xs p-1 hover:bg-red-500"
 					on:click={() => writeText('`' + error.name + ' - ' + error.message + '`')}
 				>
 					<Icon icon="mdi:clipboard-text" class="text-lg text-slate-100" />
@@ -106,6 +106,8 @@
 <WelcomePopup />
 
 <style lang="postcss">
+	@reference 'tailwindcss';
+
 	:global(body) {
 		overflow: hidden;
 		position: fixed;
@@ -118,6 +120,6 @@
 	}
 
 	:global(div) {
-		scrollbar-color: theme(colors.slate.500) theme(colors.slate.800);
+		scrollbar-color: var(--color-slate-500) var(--color-slate-800);
 	}
 </style>

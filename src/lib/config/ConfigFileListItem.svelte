@@ -34,18 +34,18 @@
 		>
 			<Icon
 				{icon}
-				class="mr-1 flex-shrink-0 text-lg transition-all {open && type === 'ok'
+				class="mr-1 shrink-0 text-lg transition-all {open && type === 'ok'
 					? 'rotate-180'
 					: 'rotate-0'}"
 			/>
 
-			<div class="mr-1 flex-shrink truncate" style="direction: rtl;">
+			<div class="mr-1 shrink truncate" style="direction: rtl;">
 				&#x200E;
 				{file.displayName ?? file.relativePath}
 			</div>
 
 			<Button.Root
-				class="ml-auto hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
+				class="ml-auto hidden shrink-0 rounded-sm p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
 				on:click={(evt) => {
 					evt.stopPropagation();
 					invokeCommand('open_config_file', { file: file.relativePath });
@@ -55,7 +55,7 @@
 			</Button.Root>
 
 			<Button.Root
-				class="hidden flex-shrink-0 rounded p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
+				class="hidden shrink-0 rounded-sm p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
 				on:click={async (evt) => {
 					evt.stopPropagation();
 					await invokeCommand('delete_config_file', { file: file.relativePath });

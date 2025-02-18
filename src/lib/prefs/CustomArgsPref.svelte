@@ -48,7 +48,7 @@
 					<Icon icon="mdi:remove" />
 				</Button.Root>
 				<InputField
-					class="flex-grow"
+					class="grow"
 					value={argument}
 					on:change={({ detail }) => {
 						if (value === null) return;
@@ -74,6 +74,8 @@
 {/if}
 
 <style lang="postcss">
+	@reference 'tailwindcss';
+
 	code {
 		@apply bg-slate-900 px-1 text-sm;
 	}

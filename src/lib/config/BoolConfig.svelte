@@ -18,7 +18,7 @@
 	}
 </script>
 
-<div class="flex flex-grow items-center">
+<div class="flex grow items-center">
 	<Checkbox bind:value={content} {onValueChanged} />
 </div>
 <ResetConfigButton {entryId} {onReset} />

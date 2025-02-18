@@ -254,15 +254,15 @@
 			<Select.Trigger
 				let:open
 				slot="trigger"
-				class="flex w-full items-center overflow-hidden rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 py-1 pl-1 pr-3 hover:border-opacity-100"
+				class="flex w-full items-center overflow-hidden rounded-lg border border-transparent bg-slate-900 py-1 pr-3 pl-1 hover:border-slate-500"
 			>
 				{#if selectedCategories.length === 0}
 					<span class="truncate pl-2 text-slate-400">Select categories...</span>
 				{:else}
 					<div class="flex flex-wrap gap-1">
 						{#each selectedCategories as category}
-							<div class="rounded-md bg-slate-800 py-1 pl-3 pr-1 text-sm text-slate-200">
-								<span class="overflow-hidden truncate">{category.name}</span>
+							<div class="rounded-md bg-slate-800 py-1 pr-1 pl-3 text-sm text-slate-200">
+								<span class="truncate overflow-hidden">{category.name}</span>
 
 								<Button.Root
 									class="ml-1 rounded-md px-1.5 hover:bg-slate-700"
@@ -278,7 +278,7 @@
 					</div>
 				{/if}
 				<Icon
-					class="ml-auto flex-shrink-0 origin-center transform text-xl text-slate-400 transition-all
+					class="ml-auto shrink-0 origin-center transform text-xl text-slate-400 transition-all
                 duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
 					icon="mdi:chevron-down"
 				/>
@@ -387,13 +387,13 @@
 	</FormField>
 
 	<div class="mt-1 flex items-center text-lg font-medium text-slate-200">
-		<span class="max-w-96 flex-grow">Contains NSFW content</span>
+		<span class="max-w-96 grow">Contains NSFW content</span>
 
 		<Checkbox onValueChanged={saveArgs} bind:value={nsfw} />
 	</div>
 
 	<div class="flex items-center text-lg font-medium text-slate-200">
-		<span class="max-w-96 flex-grow">Include disabled mods</span>
+		<span class="max-w-96 grow">Include disabled mods</span>
 
 		<Checkbox onValueChanged={saveArgs} bind:value={includeDisabled} />
 	</div>

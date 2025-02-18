@@ -16,7 +16,7 @@
 	<Label text="Platform">The platform where your game is installed.</Label>
 
 	<Dropdown
-		class="flex-grow"
+		class="grow"
 		items={platforms}
 		getLabel={titleCase}
 		selected={value ?? platforms[0]}

@@ -64,14 +64,14 @@
 >
 	<slot name="trigger" text={label} {open}>
 		<Select.Trigger
-			class="group flex items-center gap-2 overflow-hidden rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 py-1 pl-3 pr-2 enabled:hover:border-opacity-100 disabled:cursor-not-allowed {className}"
+			class="group flex items-center gap-2 overflow-hidden rounded-lg border border-transparent bg-slate-900 py-1 pr-2 pl-3 enabled:hover:border-slate-500 disabled:cursor-not-allowed {className}"
 		>
 			{#if icon}
-				<Icon class="flex-shrink-0 text-lg text-slate-400" {icon} />
+				<Icon class="shrink-0 text-lg text-slate-400" {icon} />
 			{/if}
 
 			<div
-				class="flex-shrink flex-grow truncate text-left text-slate-300 group-disabled:text-slate-400"
+				class="shrink grow truncate text-left text-slate-300 group-disabled:text-slate-400"
 				class:text-slate-300={overrideLabel || label}
 				class:text-slate-400={!overrideLabel && !label}
 			>
@@ -79,7 +79,7 @@
 			</div>
 
 			<Icon
-				class="flex-shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out group-disabled:text-slate-500 {open
+				class="shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out group-disabled:text-slate-500 {open
 					? 'rotate-180'
 					: 'rotate-0'}"
 				icon="mdi:chevron-down"
@@ -100,7 +100,7 @@
 					{getLabel(item)}
 
 					<Select.ItemIndicator class="ml-auto">
-						<Icon icon="mdi:check" class="text-lg text-accent-400" />
+						<Icon icon="mdi:check" class="text-accent-400 text-lg" />
 					</Select.ItemIndicator>
 				</Select.Item>
 			</slot>

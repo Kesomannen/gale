@@ -95,7 +95,7 @@
 								<Icon icon="mdi:remove" />
 							</Button.Root>
 							<InputField
-								class="flex-grow"
+								class="grow"
 								value={element}
 								on:change={({ detail }) => {
 									items[i] = detail;

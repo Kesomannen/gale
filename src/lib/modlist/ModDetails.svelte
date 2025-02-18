@@ -59,7 +59,7 @@
 </script>
 
 <div
-	class="relative flex w-[40%] min-w-72 flex-col border-l border-slate-600 bg-slate-700 px-6 pb-4 pt-6 text-white"
+	class="relative flex w-[40%] min-w-72 flex-col border-l border-slate-600 bg-slate-700 px-6 pt-6 pb-4 text-white"
 >
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class="absolute right-2 mt-0.5 rounded-full p-1 hover:bg-slate-600">
@@ -74,7 +74,7 @@
 	</DropdownMenu.Root>
 
 	<a
-		class="break-words pr-4 text-left text-3xl font-bold text-white hover:underline xl:text-4xl"
+		class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
 		href={communityUrl(mod.author + '/' + mod.name)}
 		target="_blank">{mod.name.replace(/_/g, ' ')}</a
 	>
@@ -120,14 +120,14 @@
 
 	<div class="my-1 flex items-center gap-1.5 text-lg">
 		{#if mod.rating !== null}
-			<Icon class="flex-shrink-0 text-yellow-400" icon="mdi:star" />
+			<Icon class="shrink-0 text-yellow-400" icon="mdi:star" />
 			<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
 		{/if}
 		{#if mod.downloads !== null}
-			<Icon class="flex-shrink-0 text-green-400" icon="mdi:download" />
+			<Icon class="shrink-0 text-green-400" icon="mdi:download" />
 			<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
 		{/if}
-		<Icon class="flex-shrink-0 text-slate-400" icon="mdi:weight" />
+		<Icon class="shrink-0 text-slate-400" icon="mdi:weight" />
 		<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
 	</div>
 
@@ -138,7 +138,7 @@
 	{/if}
 
 	{#if mod.description !== null}
-		<p class="mt-2 flex-shrink overflow-hidden text-xl text-slate-300 lg:hidden">
+		<p class="mt-2 shrink overflow-hidden text-xl text-slate-300 lg:hidden">
 			{mod.description}
 		</p>
 	{/if}
@@ -151,17 +151,17 @@
 		{#if readme}
 			<Markdown source={readme} class="readme hidden lg:block" />
 		{:else}
-			<p class="mt-3 hidden flex-shrink overflow-hidden text-xl text-slate-300 lg:block">
+			<p class="mt-3 hidden shrink overflow-hidden text-xl text-slate-300 lg:block">
 				{mod.description ?? ''}
 			</p>
 		{/if}
 	{/await}
 
-	<div class="flex-grow" />
+	<div class="grow" />
 
 	{#if mod.configFile}
 		<div
-			class="my-2 flex items-center gap-2 text-lg text-accent-400 hover:text-accent-300 hover:underline"
+			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
 			<a href={'/config?file=' + mod.configFile}>Edit config</a>
@@ -170,7 +170,7 @@
 
 	{#if mod.type === 'remote'}
 		<Button.Root
-			class="group flex items-center rounded-md bg-slate-600 py-1 pl-3 pr-1.5 text-white hover:bg-slate-500"
+			class="group flex items-center rounded-md bg-slate-600 py-1 pr-1.5 pl-3 text-white hover:bg-slate-500"
 			on:mouseenter={changelog.fetchMarkdown}
 			on:click={() => (changelogOpen = true)}
 		>
@@ -179,7 +179,7 @@
 		</Button.Root>
 
 		<Button.Root
-			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pl-3 pr-1.5 text-white hover:bg-slate-500"
+			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pr-1.5 pl-3 text-white hover:bg-slate-500"
 			on:mouseenter={readme.fetchMarkdown}
 			on:click={() => (readmeOpen = true)}
 		>
@@ -190,7 +190,7 @@
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		<Button.Root
-			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pl-3 pr-1 text-white hover:bg-slate-500"
+			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pr-1 pl-3 text-white hover:bg-slate-500"
 			on:click={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />
@@ -224,7 +224,9 @@
 />
 
 <style lang="postcss">
+	@reference 'tailwindcss';
+
 	:global(.readme) {
-		scrollbar-color: theme(colors.slate.400) theme(colors.slate.700);
+		scrollbar-color: var(--color-slate-400) theme(--color-slate-700);
 	}
 </style>

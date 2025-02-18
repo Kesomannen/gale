@@ -85,16 +85,16 @@
 	}
 </script>
 
-<div class="flex flex-grow overflow-hidden">
-	<div class="flex w-[60%] flex-grow flex-col overflow-hidden pl-3 pt-3">
+<div class="flex grow overflow-hidden">
+	<div class="flex w-[60%] grow flex-col overflow-hidden pl-3 pt-3">
 		<div class="mb-1.5 flex flex-wrap gap-1.5 pr-3">
-			<div class="relative flex-grow-[3]">
+			<div class="relative flex-grow-3">
 				<SearchBar bind:value={$queryArgs.searchTerm} placeholder="Search for mods..." />
 			</div>
 
-			<div class="flex flex-grow gap-1.5">
+			<div class="flex grow gap-1.5">
 				<Dropdown
-					class="flex-grow basis-0 py-1.5"
+					class="grow basis-0 py-1.5"
 					icon={$queryArgs.sortOrder === SortOrder.Descending
 						? 'mdi:sort-descending'
 						: 'mdi:sort-ascending'}
@@ -105,7 +105,7 @@
 				/>
 
 				<Dropdown
-					class="flex-grow basis-0 py-1.5"
+					class="grow basis-0 py-1.5"
 					items={sortOptions}
 					bind:selected={$queryArgs.sortBy}
 					getLabel={sentenceCase}
@@ -133,7 +133,7 @@
 			<Dropdown
 				overrideLabel="Include"
 				icon="mdi:filter"
-				class="min-w-36 flex-grow basis-0 py-1.5"
+				class="min-w-36 grow basis-0 py-1.5"
 				items={['Deprecated', 'NSFW', 'Enabled', 'Disabled']}
 				selected={getSelectedIncludes()}
 				onSelectedChange={(items) => {

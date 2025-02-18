@@ -94,7 +94,7 @@
 				<div class="flex items-center">
 					<Label text="Profile name">A unique name for the imported profile.</Label>
 
-					<div class="relative flex-grow">
+					<div class="relative grow">
 						<InputField bind:value={name} class="w-full" />
 
 						{#if !nameAvailable}
@@ -120,7 +120,7 @@
 					</Label>
 
 					<Dropdown
-						class="flex-grow"
+						class="grow"
 						items={profiles.map((profile) => profile.name)}
 						avoidCollisions={false}
 						multiple={false}
@@ -135,7 +135,7 @@
 				>{data.modNames.length} mods to install</summary
 			>
 
-			<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] flex-shrink flex-grow" />
+			<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] shrink grow" />
 		</details>
 
 		<details>
@@ -164,7 +164,7 @@
 		</div>
 	{:else}
 		<div class="mt-1 flex gap-2">
-			<div class="flex-grow">
+			<div class="grow">
 				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
 			</div>
 

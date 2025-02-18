@@ -160,7 +160,7 @@
 	});
 </script>
 
-<header data-tauri-drag-region class="flex h-8 flex-shrink-0 bg-slate-800">
+<header data-tauri-drag-region class="flex h-8 shrink-0 bg-slate-800">
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="ml-4 mr-2 h-5 w-5 opacity-50" />
 		<MenubarMenu label="File">

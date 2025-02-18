@@ -44,7 +44,7 @@
 	</Label>
 
 	<Dropdown
-		class="flex-grow"
+		class="grow"
 		items={['launcher', 'direct']}
 		getLabel={sentenceCase}
 		selected={value?.type ?? 'direct'}

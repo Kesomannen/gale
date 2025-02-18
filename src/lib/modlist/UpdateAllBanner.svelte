@@ -87,7 +87,7 @@
 
 		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
 			<Button.Root
-				class="ml-2 rounded p-1.5 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+				class="ml-2 rounded-sm p-1.5 text-slate-400 hover:bg-slate-700 hover:text-slate-200"
 				on:click={() => {
 					update.ignore = true;
 					updates = updates; // force reactivity

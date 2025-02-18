@@ -33,7 +33,7 @@
 		content.includes(listSeparator.char);
 </script>
 
-<div class="relative flex-grow">
+<div class="relative grow">
 	<InputField
 		bind:value={content}
 		on:change={submit}

@@ -16,12 +16,12 @@
 	<img
 		src="https://gcdn.thunderstore.io/live/repository/icons/{fullName}.png"
 		alt={name}
-		class="size-12 rounded"
+		class="size-12 rounded-sm"
 	/>
-	<div class="flex-shrink overflow-hidden pl-3 text-left">
+	<div class="shrink overflow-hidden pl-3 text-left">
 		<div class="flex gap-2">
 			<a
-				class="flex-shrink truncate font-medium text-white hover:underline"
+				class="shrink truncate font-medium text-white hover:underline"
 				href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/{name}/"
 				target="_blank"
 				rel="noopener noreferrer"
@@ -30,7 +30,7 @@
 			</a>
 
 			{#if showVersion && version !== null}
-				<span class=" flex-shrink-0 text-slate-400">
+				<span class=" shrink-0 text-slate-400">
 					{version}
 				</span>
 			{/if}

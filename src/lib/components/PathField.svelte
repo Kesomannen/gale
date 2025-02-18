@@ -18,10 +18,10 @@
 	{/if}
 
 	<Button.Root
-		class="group flex flex-grow basis-0 items-center truncate rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 px-3 py-1 text-right hover:border-opacity-100"
+		class="group flex grow basis-0 items-center truncate rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-right hover:border-slate-500"
 		on:click
 	>
-		<div class="mr-2 rounded">
+		<div class="mr-2 rounded-sm">
 			<Icon {icon} class="align-middle text-slate-300" />
 		</div>
 

@@ -71,7 +71,7 @@
 />
 
 <div
-	class="group h-5 flex-grow rounded-full bg-slate-900 py-1 pl-1 pr-2"
+	class="group h-5 grow rounded-full bg-slate-900 py-1 pr-2 pl-1"
 	role="slider"
 	aria-valuemin={range.start}
 	aria-valuemax={range.end}
@@ -128,10 +128,7 @@
 
 		inputString = content.value.toString();
 	}}
-	class="ml-3 w-1/6 min-w-0 flex-shrink rounded-lg border border-slate-500 border-opacity-0 bg-slate-900
-		 px-3 py-1
-		 text-slate-300 placeholder-slate-400 hover:border-opacity-100
-		   hover:text-slate-200 focus:border-opacity-0 focus:outline-none focus:ring-2 focus:ring-accent-400"
+	class="focus:ring-accent-400 ml-3 w-1/6 min-w-0 shrink rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 hover:border-slate-500 hover:text-slate-200 focus:border-transparent focus:ring-2 focus:outline-hidden"
 />
 <ResetConfigButton {entryId} {onReset} />
 

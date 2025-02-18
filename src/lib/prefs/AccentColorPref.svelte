@@ -13,7 +13,7 @@
 	>
 
 	<Dropdown
-		class="flex-grow"
+		class="grow"
 		selected={value}
 		items={colors}
 		getLabel={capitalize}

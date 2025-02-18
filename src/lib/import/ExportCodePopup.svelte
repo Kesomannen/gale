@@ -34,7 +34,7 @@
 	</Dialog.Description>
 
 	{#await codePromise then code}
-		<code class="rounded bg-slate-900 px-3 py-1 text-lg text-slate-400">
+		<code class="rounded-sm bg-slate-900 px-3 py-1 text-lg text-slate-400">
 			{code}
 		</code>
 	{/await}

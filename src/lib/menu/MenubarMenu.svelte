@@ -6,7 +6,7 @@
 
 <Menubar.Menu>
 	<Menubar.Trigger
-		class="mx-[-1px] h-full cursor-default rounded px-3 text-sm text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+		class="mx-[-1px] h-full cursor-default rounded-sm px-3 text-sm text-slate-400 hover:bg-slate-700 hover:text-slate-200"
 	>
 		{label}
 	</Menubar.Trigger>

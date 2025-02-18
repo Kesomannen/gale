@@ -23,7 +23,7 @@
 	step={type === 'int' ? 1 : 'any'}
 	bind:value={content.value}
 	on:change={submit}
-	class="w-full flex-grow rounded-lg border border-slate-500 border-opacity-0 bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 hover:border-opacity-100 focus:border-opacity-0 focus:outline-none focus:ring-2 focus:ring-accent-400"
+	class="focus:ring-accent-400 w-full grow rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 hover:border-slate-500 focus:border-transparent focus:ring-2 focus:outline-hidden"
 />
 
 <ResetConfigButton {entryId} {onReset} />

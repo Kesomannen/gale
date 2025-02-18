@@ -28,7 +28,7 @@
 
 <Dropdown
 	items={content.options}
-	class="flex-grow"
+	class="grow"
 	bind:selected
 	{onSelectedChange}
 	multiple={false}

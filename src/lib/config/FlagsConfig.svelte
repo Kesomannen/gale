@@ -27,7 +27,7 @@
 <Dropdown
 	placeholder="Select values"
 	items={content.options}
-	class="flex-grow overflow-hidden"
+	class="grow overflow-hidden"
 	bind:selected
 	{onSelectedChange}
 	multiple

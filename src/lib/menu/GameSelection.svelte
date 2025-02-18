@@ -43,7 +43,7 @@
 </script>
 
 <div class="mt-1">
-	<div class="relative flex-grow">
+	<div class="relative grow">
 		<SearchBar bind:value={searchTerm} placeholder="Search for games..." />
 	</div>
 
@@ -51,18 +51,18 @@
 		{#if shownGames.length > 0}
 			{#each shownGames as game}
 				<Button.Root
-					class="group mr-2 flex items-center rounded-lg border border-slate-500 p-1.5 hover:bg-slate-700 {$activeGame?.slug ===
+					class="group mr-2 flex items-center rounded-lg border p-1.5 hover:bg-slate-700 {$activeGame?.slug ===
 					game.slug
-						? 'bg-slate-700'
-						: 'border-opacity-0 hover:bg-slate-700'}"
+						? ' border-slate-500 bg-slate-700'
+						: 'border-transparent hover:bg-slate-700'}"
 					on:click={() => {
 						setActiveGame(game);
 						onSelect();
 					}}
 				>
-					<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-12 rounded" />
+					<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-12 rounded-sm" />
 
-					<div class="flex-grow pl-1 text-left">
+					<div class="grow pl-1 text-left">
 						<div class="font-medium text-white">
 							{game.name}
 						</div>
@@ -73,7 +73,7 @@
 							<!--
 							{#if game.modLoader !== ModLoader.BepInEx}
 								<Tooltip
-									class="inline-flex rounded bg-red-600 p-0.5 text-sm text-white"
+									class="inline-flex rounded-sm bg-red-600 p-0.5 text-sm text-white"
 									text="Experimental support. Here be dragons!"
 								>
 									<Icon icon="mdi:beta" />
@@ -102,7 +102,7 @@
 					>
 						<Icon
 							icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
-							class="text-xl text-accent-500"
+							class="text-accent-500 text-xl"
 						/>
 					</Button.Root>
 				</Button.Root>
