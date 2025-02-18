@@ -4,7 +4,7 @@ use eyre::anyhow;
 use tauri::AppHandle;
 use uuid::Uuid;
 
-use crate::{profile::install::InstallOptions, util::cmd::Result};
+use crate::{profile::install::InstallOptions, thunderstore, util::cmd::Result};
 
 use super::{
     r2modman::{self, ProfileImportData},
@@ -21,13 +21,18 @@ pub async fn import_data(data: ImportData, import_all: bool, app: AppHandle) -> 
 #[tauri::command]
 pub async fn import_code(key: &str, app: AppHandle) -> Result<ImportData> {
     let key = Uuid::parse_str(key).map_err(|_| anyhow!("invalid code format"))?;
+
+    thunderstore::wait_for_fetch(&app).await;
+
     let data = super::import_code(key, &app).await?;
 
     Ok(data)
 }
 
 #[tauri::command]
-pub fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
+pub async fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
+    thunderstore::wait_for_fetch(&app).await;
+
     let data = super::import_file_from_path(path, &app)?;
 
     Ok(data)
@@ -35,6 +40,8 @@ pub fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
 
 #[tauri::command]
 pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
+    thunderstore::wait_for_fetch(&app).await;
+
     super::import_local_mod(path, &app, InstallOptions::default().can_cancel(false)).await?;
 
     Ok(())

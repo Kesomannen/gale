@@ -188,7 +188,7 @@
 	}
 </script>
 
-<div class="relative flex w-full flex-col gap-1.5 overflow-y-auto px-6 py-4">
+<div class="relative mx-auto flex w-full max-w-4xl flex-col gap-1.5 overflow-y-auto px-6 py-4">
 	{#if loading}
 		<div
 			class="fixed inset-0 flex items-center justify-center bg-black/40 text-lg text-slate-200"

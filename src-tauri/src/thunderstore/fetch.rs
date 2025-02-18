@@ -199,3 +199,18 @@ pub(super) async fn fetch_packages(
         .ok();
     }
 }
+
+pub async fn wait_for_fetch(app: &AppHandle) {
+    let thunderstore = app.state::<Mutex<Thunderstore>>();
+
+    loop {
+        {
+            let thunderstore = thunderstore.lock().unwrap();
+            if thunderstore.packages_fetched() {
+                return;
+            }
+        }
+
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+}

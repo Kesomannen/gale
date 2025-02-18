@@ -70,6 +70,7 @@
 						<div class="text-slate-400">
 							<span>{game.modLoader} </span>
 
+							<!--
 							{#if game.modLoader !== ModLoader.BepInEx}
 								<Tooltip
 									class="inline-flex rounded bg-red-600 p-0.5 text-sm text-white"
@@ -78,6 +79,7 @@
 									<Icon icon="mdi:beta" />
 								</Tooltip>
 							{/if}
+							-->
 
 							{#if game.platforms.length > 0}
 								<span class="mx-1 text-slate-500">|</span>

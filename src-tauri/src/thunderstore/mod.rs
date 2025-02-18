@@ -25,6 +25,7 @@ pub mod query;
 pub mod token;
 
 mod fetch;
+pub use fetch::wait_for_fetch;
 
 mod models;
 pub use models::*;

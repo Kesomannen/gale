@@ -46,8 +46,6 @@
 
 		if (!res.markdown) return null;
 
-		console.log('extracted readme');
-
 		return res.markdown
 			.split('\n')
 			.filter((line) => !line.startsWith('# '))

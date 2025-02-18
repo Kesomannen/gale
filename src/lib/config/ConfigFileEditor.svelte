@@ -9,7 +9,13 @@
 
 	$: ({ metadata } = file);
 
-	$: shownEntries = section === undefined ? [] : filterEntries(section.entries, search);
+	$: shownEntries =
+		section === undefined
+			? []
+			: filterEntries(
+					file.sections.flatMap((section) => section.entries),
+					search
+				);
 
 	function filterEntries(entries: ConfigEntry[], search: string) {
 		return entries.filter((entry) => {
@@ -25,8 +31,14 @@
 	</div>
 {/if}
 
-{#if section}
-	{#each shownEntries as entry (entry)}
+{#each file.sections as section}
+	<div
+		class="mx-6 mb-1 mt-4 flex-shrink-0 truncate border-b border-slate-600 text-xl font-medium text-slate-100"
+	>
+		{section.name}
+	</div>
+
+	{#each section.entries as entry (entry)}
 		<ConfigEntryField
 			entryId={{
 				file,
@@ -35,4 +47,4 @@
 			}}
 		/>
 	{/each}
-{/if}
+{/each}

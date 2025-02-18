@@ -106,9 +106,9 @@
 		{/if}
 	</div>
 
-	<div class="flex-grow overflow-y-auto py-4">
+	<div class="max-w-4xl flex-grow overflow-y-auto py-4">
 		{#if selectedFile !== undefined}
-			<div class="flex-shrink-0 truncate px-4 text-2xl font-bold text-slate-200">
+			<div class="flex-shrink-0 truncate px-4 text-2xl font-bold text-white">
 				{selectedFile.relativePath}
 				{#if selectedSection}
 					<span class="text-slate-400">/</span>

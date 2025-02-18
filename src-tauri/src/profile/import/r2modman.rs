@@ -2,7 +2,6 @@ use std::{
     fs::{self},
     path::PathBuf,
     sync::Mutex,
-    time::Duration,
 };
 
 use eyre::{bail, Context, Result};
@@ -18,7 +17,7 @@ use crate::{
         install::InstallOptions,
         ModManager,
     },
-    thunderstore::Thunderstore,
+    thunderstore::{self, Thunderstore},
     util::{self, error::IoResultExt, fs::PathExt},
 };
 
@@ -45,7 +44,9 @@ pub(super) fn gather_info(
 }
 
 pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<()> {
-    wait_for_mods(app).await;
+    emit_update("Fetching mods from Thunderstore...", app);
+
+    thunderstore::wait_for_fetch(app).await;
 
     info!("importing r2modman profiles from {}", path.display());
 
@@ -181,23 +182,6 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
         &thunderstore,
     )
     .map(Some)
-}
-
-async fn wait_for_mods(app: &AppHandle) {
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-
-    loop {
-        {
-            let thunderstore = thunderstore.lock().unwrap();
-            if thunderstore.packages_fetched() {
-                return;
-            }
-        }
-
-        emit_update("Fetching mods from Thunderstore...", app);
-
-        tokio::time::sleep(Duration::from_secs(1)).await;
-    }
 }
 
 fn find_path() -> Option<PathBuf> {
