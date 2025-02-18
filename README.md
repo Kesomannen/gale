@@ -22,13 +22,13 @@ By installing Gale, you agree to the [Privacy Policy](https://github.com/Kesoman
 
 ### Windows
 
-**From Thunderstore**
+**Via Thunderstore**
 
 - Go to the [Thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and click _Manual Download_.
 - Extract the downloaded .zip file (for example by right-clicking and choosing _Extract All_).
 - Run the `Gale_X.X.X_x64_en-US.msi` file inside of the extracted folder.
 
-**From Github**
+**Via Github**
 
 - Go to [Releases](https://github.com/Kesomannen/gale/releases).
 - Download the `Gale_X.X.X_x64_en-US.msi` file for your desired version (the latest is recommended).

@@ -73,7 +73,7 @@
 			value={prefs.steamExePath ?? null}
 			set={set((value, prefs) => (prefs.steamExePath = value))}
 		>
-			Path to the Steam executable (steam.exe). Used for Steam launch.
+			Path to the Steam executable (steam.exe). Used for launching via Steam.
 		</PathPref>
 
 		<PathPref
@@ -82,7 +82,8 @@
 			value={prefs.steamLibraryDir ?? null}
 			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
 		>
-			Path to your default Steam game library. Used to find the location of Steam games.
+			Path to your default Steam game library. Used to automatically find the location of Steam
+			games.
 		</PathPref>
 
 		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
@@ -134,9 +135,9 @@
 			value={gamePrefs.dirOverride}
 			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
-			Overrides the path to the {$activeGame?.name} game directory.
+			Overrides the location of the {$activeGame?.name} folder.
 			{#if !needsDirectory}
-				If unset, Gale will try to find it through the specified Steam library instead.
+				If unset, Gale will try to find it via the specified platform instead.
 			{/if}
 		</PathPref>
 

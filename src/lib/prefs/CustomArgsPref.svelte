@@ -18,7 +18,7 @@
 	<Info>
 		<p>
 			Allows you to add custom arguments to the launch command. Depending on <b>Launch mode</b>,
-			these are either ran against the game or steam executable.
+			these are either ran against the game or launcher executable.
 		</p>
 
 		<p>

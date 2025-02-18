@@ -23,7 +23,7 @@
 	let prefs: Prefs | null = null;
 
 	onMount(async () => {
-		if ((await invokeCommand<boolean>('is_first_run')) || true) {
+		if (await invokeCommand<boolean>('is_first_run')) {
 			open = true;
 			prefs = await invokeCommand('get_prefs');
 		}

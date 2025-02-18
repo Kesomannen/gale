@@ -38,7 +38,8 @@
 	<Info>
 		<p>Determines how the game is launched.</p>
 		<p class="my-1.5">
-			<b>Launcher:</b> Launches through the specified platform.
+			<b>Launcher:</b> Launches via the specified platform. This is required for some games that, for
+			example, need Steam running to work.
 		</p>
 		<p>
 			<b>Direct:</b> Launches the game directly from the executable. Allows you to launch multiple instances
