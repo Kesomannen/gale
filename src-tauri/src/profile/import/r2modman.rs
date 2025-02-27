@@ -95,25 +95,53 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
     Ok(())
 }
 
-fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
+fn find_dir(path: &PathBuf, dir: &str) -> Result<Option<PathBuf>> {
+    // Search for the game directory in a case-insensitive fashion
+    let dir = dir.to_lowercase();
+
+    Ok(path
+        .read_dir()
+        .fs_context("searching for r2modman game directory", &path)?
+        .filter_map(Result::ok)
+        .find(|entry| {
+            entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false)
+                && entry
+                    .file_name()
+                    .to_str()
+                    .map(|name| name.to_lowercase() == dir)
+                    .unwrap_or(false)
+        })
+        .map(|entry| entry.path()))
+}
+
+fn find_profiles(path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
     let manager = app.state::<Mutex<ModManager>>();
     let manager = manager.lock().unwrap();
 
     let game = &manager.active_game;
 
-    path.push(&*game.r2_dir_name);
-    path.push("profiles");
-
-    if !path.exists() {
+    // The r2_dir_name we have may not match the case of the directory
+    // on the filesystem. This matters for case sensitive filesystems
+    let Some(game_dir) = find_dir(&path, &game.r2_dir_name)? else {
         bail!(
-            "directory was either not a r2modman data folder, or no profiles for {} exist",
-            game.name
+            "no r2modman game directory found for game {} at {}",
+            game.name,
+            path.display()
+        );
+    };
+
+    let profiles_path = game_dir.join("profiles");
+    if !profiles_path.exists() {
+        bail!(
+            "no profiles found for game {} at {}",
+            game.name,
+            game_dir.display()
         );
     }
 
-    Ok(path
+    Ok(profiles_path
         .read_dir()
-        .fs_context("reading profiles directory", &path)?
+        .fs_context("reading profiles directory", &profiles_path)?
         .filter_map(|entry| entry.ok())
         .filter(|entry| entry.file_type().unwrap().is_dir())
         .map(|entry| entry.path()))
