@@ -216,7 +216,7 @@
 
 	<FormField
 		label="Author"
-		description="The author of the modpack, which should be the name of your Thunderstore team."
+		description="The name of the Thunderstore team connected to your API token."
 		required={true}
 	>
 		<InputField

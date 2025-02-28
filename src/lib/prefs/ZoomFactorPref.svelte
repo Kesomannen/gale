@@ -10,8 +10,6 @@
 <div class="flex items-center">
 	<Label>Zoom factor</Label>
 
-	<Info>Changes the zoom level of the app.</Info>
-
 	<Dropdown
 		class="grow"
 		items={[0.5, 0.75, 1, 1.25, 1.5]}

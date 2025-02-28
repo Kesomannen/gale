@@ -11,8 +11,6 @@
 <div class="flex items-center">
 	<Label>Accent color</Label>
 
-	<Info>Changes the color of highlighted elements, such as buttons and checkboxes.</Info>
-
 	<Dropdown
 		class="grow"
 		selected={value}

@@ -39,7 +39,7 @@
 		<p>Determines how the game is launched.</p>
 		<p class="my-1.5">
 			<b>Launcher:</b> Launches via the specified platform. This is required for some games that, for
-			example, need Steam running to work.
+			example, require Steam to be running.
 		</p>
 		<p>
 			<b>Direct:</b> Launches the game directly from the executable. Allows you to launch multiple instances
@@ -61,7 +61,9 @@
 <div class="flex items-center">
 	<Label>Number of instances</Label>
 
-	<Info>How many instances of the game to launch at once. Only available in direct mode.</Info>
+	<Info
+		>How many instances of the game to launch at once. Only available in <b>Direct</b> mode.</Info
+	>
 
 	<InputField
 		disabled={value.type !== 'direct'}
@@ -77,7 +79,7 @@
 	<Label>Interval between launches</Label>
 
 	<Info>
-		How many seconds to wait between launching each instance. Only applicable in direct mode with
+		How many seconds to wait between launching each instance. Only applicable in <b>Direct</b> mode with
 		multiple instances.
 	</Info>
 

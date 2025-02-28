@@ -330,7 +330,24 @@ impl Prefs {
     }
 
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
-        self.steam_exe_path = value.steam_exe_path;
+        // prevent the user from setting the steam exe to the game's exe, for example
+        let is_valid_steam_exe = value.steam_exe_path.as_ref().is_some_and(|path| {
+            path.file_name()
+                .is_some_and(|name| name.to_string_lossy().to_lowercase().contains("steam"))
+        });
+
+        if is_valid_steam_exe {
+            self.steam_exe_path = value.steam_exe_path;
+        } else {
+            logger::log_webview_err(
+                "Failed to update prefs",
+                eyre!(
+                    "Steam executable is invalid. Maybe you entered the game's location instead?"
+                ),
+                app,
+            );
+        }
+
         self.steam_library_dir = value.steam_library_dir;
 
         self.game_prefs = value.game_prefs;

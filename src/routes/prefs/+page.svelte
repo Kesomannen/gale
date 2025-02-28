@@ -73,7 +73,10 @@
 			value={prefs.steamExePath ?? null}
 			set={set((value, prefs) => (prefs.steamExePath = value))}
 		>
-			Path to the Steam executable (steam.exe). Used for launching via Steam.
+			Path to the Steam executable (steam.exe on Windows). Used for launching games via Steam.
+			<br />
+			This is <b>not</b> the location of the game's exe. If you want to manually set the game's
+			location, use the <b>Override location</b> option further down.
 		</PathPref>
 
 		<PathPref
@@ -129,15 +132,17 @@
 		{/if}
 
 		<PathPref
-			label={needsDirectory ? 'Game directory' : 'Override game directory'}
+			label={needsDirectory ? 'Location' : 'Override location'}
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride}
 			set={set((value) => (gamePrefs.dirOverride = value))}
 		>
-			Overrides the location of the {$activeGame?.name} folder.
-			{#if !needsDirectory}
-				If unset, Gale will try to find it via the specified platform instead.
+			{#if needsDirectory}
+				The location of the {$activeGame?.name} folder.
+			{:else}
+				Overrides the location of the {$activeGame?.name} folder. If unset, Gale will try to find it
+				via the specified platform instead.
 			{/if}
 		</PathPref>
 

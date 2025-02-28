@@ -1,19 +1,20 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 (2025-02-28)
 
 ### Added
 
 - Support for I Am Your Beast, MiSide and R.E.P.O.
+- Confirmation dialog before resetting config entries
 
 ### Fixed
 
 - Typo in telemetry setting name (again)
 - Profile duplication causing more disk space to be used than necessary
-- Inconsistent profile sorting order on some file systems and platforms
+- Inconsistent profile sorting order on some file systems/platforms
 - Small gap between the taskbar and window while the app is maximized
 - Decreased the number of disk writes when reordering mods
-- Various UI changes to make the interface more responsive and easier to understand
+- Various changes to make the interface more responsive and easier to understand
 
 ## 1.3.1 (2025-01-28)
 

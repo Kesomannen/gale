@@ -159,7 +159,7 @@
 
 		let size = await invokeCommand<number>('clear_download_cache', { soft });
 		pushInfoToast({
-			message: `Deleted ${soft ? 'unused' : ''} mod download cache (cleared ${shortenFileSize(size)} in total).`
+			message: `Deleted${soft ? ' unused' : ''} mod cache (cleared ${shortenFileSize(size)}).`
 		});
 	}
 
