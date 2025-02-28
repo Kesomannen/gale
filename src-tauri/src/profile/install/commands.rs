@@ -2,7 +2,10 @@ use crate::{
     prefs::Prefs,
     profile::ModManager,
     thunderstore::{ModId, Thunderstore},
-    util::cmd::{Result, StateMutex},
+    util::{
+        self,
+        cmd::{Result, StateMutex},
+    },
 };
 
 use super::{InstallOptions, InstallState, ModInstall};
@@ -33,7 +36,7 @@ pub async fn clear_download_cache(
     prefs: StateMutex<'_, Prefs>,
     manager: StateMutex<'_, ModManager>,
     thunderstore: StateMutex<'_, Thunderstore>,
-) -> Result<()> {
+) -> Result<u64> {
     if soft {
         let paths = {
             let prefs = prefs.lock().unwrap();
@@ -43,14 +46,23 @@ pub async fn clear_download_cache(
             super::cache::prepare_soft_clear(&manager, &thunderstore, &prefs)?
         };
 
+        let size = paths
+            .iter()
+            .map(|path| util::fs::get_directory_size(path))
+            .sum();
+
         tauri::async_runtime::spawn_blocking(|| super::cache::do_soft_clear(paths)).await??;
+
+        Ok(size)
     } else {
         let path = prefs.lock().unwrap().cache_dir();
 
-        tauri::async_runtime::spawn_blocking(|| super::cache::clear(path)).await??;
-    }
+        let size = util::fs::get_directory_size(&path);
 
-    Ok(())
+        tauri::async_runtime::spawn_blocking(|| super::cache::clear(path)).await??;
+
+        Ok(size)
+    }
 }
 
 #[tauri::command]

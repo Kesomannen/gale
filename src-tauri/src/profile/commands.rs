@@ -357,7 +357,7 @@ pub fn set_all_mods_state(
     enable: bool,
     manager: StateMutex<ModManager>,
     prefs: StateMutex<Prefs>,
-) -> Result<()> {
+) -> Result<usize> {
     let mut manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
@@ -369,13 +369,15 @@ pub fn set_all_mods_state(
         .map(|profile_mod| profile_mod.uuid())
         .collect_vec();
 
+    let count = uuids.len();
+
     for uuid in uuids {
         profile.force_toggle_mod(uuid)?;
     }
 
     manager.save(&prefs)?;
 
-    Ok(())
+    Ok(count)
 }
 
 #[tauri::command]

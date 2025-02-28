@@ -7,6 +7,7 @@ use std::{
 
 use log::warn;
 use serde::{de::DeserializeOwned, Serialize};
+use walkdir::WalkDir;
 use zip::ZipArchive;
 
 use super::error::IoResultExt;
@@ -80,6 +81,17 @@ pub fn copy_contents(
     }
 
     Ok(())
+}
+
+pub fn get_directory_size(path: impl AsRef<Path>) -> u64 {
+    WalkDir::new(path)
+        .into_iter()
+        .filter_map(Result::ok)
+        .map(|entry| match entry.file_type().is_file() {
+            true => entry.metadata().map(|meta| meta.len()).unwrap_or(0),
+            false => 0,
+        })
+        .sum()
 }
 
 pub fn read_json<T: DeserializeOwned>(path: impl AsRef<Path>) -> eyre::Result<T> {

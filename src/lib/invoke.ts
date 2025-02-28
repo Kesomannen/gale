@@ -1,19 +1,19 @@
 import { invoke } from '@tauri-apps/api/core';
-import { writable, type Writable } from 'svelte/store';
 import { listen } from '@tauri-apps/api/event';
 import { sentenceCase } from './util';
+import { pushToast } from './toast';
 
-const errorDuration = 10000;
-const maxErrors = 10;
-
-interface InvokeError {
+type Error = {
 	name: string;
 	message: string;
-}
+};
 
-listen<InvokeError>('error', (evt) => pushError(evt.payload));
-
-export const errors: Writable<InvokeError[]> = writable([]);
+listen<Error>('error', (evt) =>
+	pushToast({
+		type: 'error',
+		...evt.payload
+	})
+);
 
 export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 	try {
@@ -23,42 +23,21 @@ export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 		let name = `Failed to ${sentenceCase(cmd).toLowerCase()}`;
 		let message = errStr[0].toUpperCase() + errStr.slice(1);
 
-		if (!message.endsWith('.')) {
+		if (!message.endsWith('.') || !message.endsWith('?') || !message.endsWith('!')) {
 			message += '.';
 		}
 
-		pushError({ name, message }, false);
+		pushError({ name, message });
 		throw error;
 	}
 }
 
-export function pushError(error: InvokeError, throwErr: boolean = true) {
-	errors.update((errs) => {
-		errs.push(error);
-		if (errs.length > maxErrors) {
-			errs.shift();
-		}
-		return errs;
-	});
-
-	setTimeout(() => {
-		errors.update((errs) => {
-			errs.shift();
-			return errs;
-		});
-	}, errorDuration);
-
+function pushError(error: Error) {
 	let msg = `${error.name}: ${error.message}`;
 	invoke('log_err', { msg });
 
-	if (throwErr) {
-		throw new Error(msg);
-	}
-}
-
-export function removeError(index: number) {
-	errors.update((errs) => {
-		errs.splice(index, 1);
-		return errs;
+	pushToast({
+		type: 'error',
+		...error
 	});
 }

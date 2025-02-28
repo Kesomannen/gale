@@ -4,8 +4,6 @@
 	import Menubar from '$lib/menu/Menubar.svelte';
 	import Contextbar from '$lib/menu/Contextbar.svelte';
 
-	import { errors, removeError } from '$lib/invoke';
-
 	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 
@@ -18,6 +16,7 @@
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 	import { refreshAccentColor } from '$lib/theme';
+	import { clearToast, toasts } from '$lib/toast';
 
 	let status: string | null = null;
 	let unlisten: UnlistenFn | undefined;
@@ -76,25 +75,40 @@
 	<div
 		class="absolute right-0 bottom-0 z-10 flex max-w-[50rem] flex-col-reverse justify-end gap-1 p-2 xl:max-w-[90rem]"
 	>
-		{#each $errors as error, i}
+		{#each $toasts as toast, i}
 			<div
-				class="flex items-start overflow-hidden rounded-md bg-red-600 p-1.5 xl:p-2 xl:text-lg"
+				class="flex items-start overflow-hidden rounded-md p-1.5 xl:p-2 xl:text-lg {toast.type ===
+				'error'
+					? 'bg-red-600'
+					: 'bg-accent-600'}"
 				in:slide={{ duration: 150, easing: expoOut }}
 				out:fade={{ duration: 100 }}
 			>
 				<div class="mt-auto mr-3 grow overflow-hidden px-2">
-					<span class="text-red-200">{error.name} -</span>
-					<span class="ml-1 font-medium break-words text-white">{error.message}</span>
+					{#if toast.name !== undefined}
+						<span class={toast.type === 'error' ? 'text-red-200' : 'text-accent-200'}
+							>{toast.name} -</span
+						>
+					{/if}
+
+					<span class="font-medium break-words text-white">{toast.message}</span>
 				</div>
 
-				<Button.Root
-					class="rounded-xs p-1 hover:bg-red-500"
-					on:click={() => writeText('`' + error.name + ' - ' + error.message + '`')}
-				>
-					<Icon icon="mdi:clipboard-text" class="text-lg text-slate-100" />
-				</Button.Root>
+				{#if toast.type === 'error'}
+					<Button.Root
+						class="rounded-xs p-1 hover:bg-red-500"
+						on:click={() => writeText('`' + toast.name + ' - ' + toast.message + '`')}
+					>
+						<Icon icon="mdi:clipboard-text" class="text-lg text-slate-100" />
+					</Button.Root>
+				{/if}
 
-				<Button.Root class="rounded-md p-1 hover:bg-red-500" on:click={() => removeError(i)}>
+				<Button.Root
+					class="rounded-md p-1 {toast.type === 'error'
+						? 'hover:bg-red-500'
+						: 'hover:bg-accent-500'}"
+					on:click={() => clearToast(i)}
+				>
 					<Icon icon="mdi:close" class="text-lg text-slate-100" />
 				</Button.Root>
 			</div>

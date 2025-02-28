@@ -4,7 +4,7 @@
 
 ### Added
 
-- Support for I Am Your Beast and MiSide
+- Support for I Am Your Beast, MiSide and R.E.P.O.
 
 ### Fixed
 
@@ -13,7 +13,7 @@
 - Inconsistent profile sorting order on some file systems and platforms
 - Small gap between the taskbar and window while the app is maximized
 - Decreased the number of disk writes when reordering mods
-- UI tweaks
+- Various UI changes to make the interface more responsive and easier to understand
 
 ## 1.3.1 (2025-01-28)
 

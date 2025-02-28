@@ -1140,6 +1140,18 @@
 		}
 	},
 	{
+		"name": "R.E.P.O.",
+		"slug": "repo",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3241660
+			}
+		}
+	},
+	{
 		"name": "ROUNDS",
 		"modLoader": {
 			"name": "BepInEx"

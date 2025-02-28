@@ -18,13 +18,13 @@
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import { pushError } from '$lib/invoke';
 	import Icon from '@iconify/svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { relaunch } from '@tauri-apps/plugin-process';
 	import { Button, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
+	import { pushToast } from '$lib/toast';
 
 	let popupOpen = false;
 	let loading = false;
@@ -48,13 +48,11 @@
 				message = 'Unknown error';
 			}
 
-			pushError(
-				{
-					name: 'Failed to update Gale',
-					message
-				},
-				true
-			);
+			pushToast({
+				type: 'error',
+				name: 'Failed to update Gale',
+				message
+			});
 		}
 
 		$nextUpdate = null;
@@ -76,8 +74,8 @@
 
 {#if $nextUpdate != null}
 	<Button.Root
-		class="my-auto ml-auto mr-1.5 flex items-center rounded-md bg-accent-600 
-            px-2.5 py-1 font-semibold text-slate-100 enabled:hover:bg-accent-500"
+		class="bg-accent-600 enabled:hover:bg-accent-500 my-auto mr-1.5 ml-auto flex items-center 
+            rounded-md px-2.5 py-1 font-semibold text-slate-100"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>

@@ -3,8 +3,8 @@
 	import Tooltip from './Tooltip.svelte';
 </script>
 
-<Tooltip class="mr-2 cursor-default text-slate-300" openDelay={50}>
-	<Icon icon="mdi:info" />
+<Tooltip class="cursor-help px-2 py-1 text-slate-400" openDelay={50}>
+	<Icon icon="mdi:question-mark-circle" />
 
 	<svelte:fragment slot="tooltip">
 		<slot />

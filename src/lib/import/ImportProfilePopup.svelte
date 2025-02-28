@@ -95,14 +95,13 @@
 				<div class="flex items-center">
 					<Label>Profile name</Label>
 
+					<Info>A unique name for the imported profile.</Info>
+
 					<div class="relative grow">
 						<InputField bind:value={name} class="w-full" />
 
 						{#if !nameAvailable}
-							<Tooltip
-								class="absolute right-2 bottom-0 h-full cursor-text text-xl text-red-500"
-								side="left"
-							>
+							<Tooltip class="absolute right-2 bottom-0 h-full cursor-text text-xl text-red-500">
 								<Icon icon="mdi:error" />
 
 								<div slot="tooltip">
@@ -111,14 +110,14 @@
 							</Tooltip>
 						{/if}
 					</div>
-
-					<Info>A unique name for the imported profile.</Info>
 				</div>
 			</Tabs.Content>
 
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
 					<Label>Choose profile</Label>
+
+					<Info>Which existing profile to overwrite with the imported one.</Info>
 
 					<Dropdown
 						class="grow"
@@ -127,8 +126,6 @@
 						multiple={false}
 						bind:selected={name}
 					/>
-
-					<Info>Which existing profile to overwrite with the imported one.</Info>
 				</div>
 			</Tabs.Content>
 		</TabsMenu>
@@ -146,13 +143,13 @@
 
 			<div class="mt-1 flex items-center">
 				<Label>Import all files</Label>
-				<Checkbox bind:value={importAll} />
 				<Info>
 					Import all files found in the profile, instead of just well-known config file formats.
 					This is unsafe and can let an attacker install malware on your system. <b
 						>Only enable this for trusted profiles!</b
 					>
 				</Info>
+				<Checkbox bind:value={importAll} />
 			</div>
 		</details>
 

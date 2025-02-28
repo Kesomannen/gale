@@ -18,7 +18,7 @@
 	import NewProfilePopup from './NewProfilePopup.svelte';
 	import MenubarSeparator from './MenubarSeparator.svelte';
 
-	import { capitalize } from '$lib/util';
+	import { capitalize, shortenFileSize } from '$lib/util';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ImportData } from '$lib/models';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
@@ -27,6 +27,7 @@
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { open as shellOpen } from '@tauri-apps/plugin-shell';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+	import { pushInfoToast, pushToast } from '$lib/toast';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -79,7 +80,12 @@
 	}
 
 	async function setAllModsState(enable: boolean) {
-		await invokeCommand('set_all_mods_state', { enable });
+		let count = await invokeCommand<number>('set_all_mods_state', { enable });
+
+		pushInfoToast({
+			message: `${enable ? 'Enabled' : 'Disabled'} ${count} mods.`
+		});
+
 		activeProfile.update((profile) => profile);
 	}
 
@@ -97,8 +103,14 @@
 		try {
 			if (profileOperation == 'rename') {
 				await invokeCommand('rename_profile', { name: profileOperationName });
+				pushInfoToast({
+					message: `Renamed profile to ${profileOperationName}.`
+				});
 			} else if (profileOperation == 'duplicate') {
 				await invokeCommand('duplicate_profile', { name: profileOperationName });
+				pushInfoToast({
+					message: `Duplicated profile to ${profileOperationName}.`
+				});
 			}
 		} catch (e) {
 			profileOperationInProgress = false;
@@ -114,7 +126,12 @@
 		let confirmed = await confirm('Are you sure you want to uninstall all disabled mods?');
 		if (!confirmed) return;
 
-		await invokeCommand<number>('remove_disabled_mods');
+		let count = await invokeCommand<number>('remove_disabled_mods');
+
+		pushInfoToast({
+			message: `Uninstalled ${count} disabled mods.`
+		});
+
 		await refreshProfiles();
 	}
 
@@ -124,17 +141,40 @@
 
 	async function copyLaunchArgs() {
 		let str = await invokeCommand<string>('get_launch_args');
-		writeText(str);
+		await writeText(str);
+
+		pushInfoToast({
+			message: `Copied launch arguments to clipboard.`
+		});
 	}
 
-	async function clearModCache() {
-		let result = await confirm(
-			"Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!"
-		);
+	async function clearModCache(soft: boolean) {
+		if (!soft) {
+			let result = await confirm(
+				"Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!"
+			);
 
-		if (!result) return;
+			if (!result) return;
+		}
 
-		await invokeCommand('clear_download_cache', { soft: false });
+		let size = await invokeCommand<number>('clear_download_cache', { soft });
+		pushInfoToast({
+			message: `Deleted ${soft ? 'unused' : ''} mod download cache (cleared ${shortenFileSize(size)} in total).`
+		});
+	}
+
+	async function copyModList() {
+		await invokeCommand('copy_dependency_strings');
+		pushInfoToast({
+			message: 'Copied mod list to clipboard.'
+		});
+	}
+
+	async function copyDebugInfo() {
+		await invokeCommand('copy_debug_info');
+		pushInfoToast({
+			message: 'Copied debug info to clipboard.'
+		});
 	}
 
 	const hotkeys: { [key: string]: () => void } = {
@@ -170,11 +210,8 @@
 			<MenubarItem on:click={() => invokeCommand('open_game_log')} text="Open game log" />
 			<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open Gale log" />
 			<MenubarSeparator />
-			<MenubarItem on:click={clearModCache} text="Clear mod cache" />
-			<MenubarItem
-				on:click={() => invokeCommand('clear_download_cache', { soft: true })}
-				text="Clear unused mod cache"
-			/>
+			<MenubarItem on:click={() => clearModCache(false)} text="Clear mod cache" />
+			<MenubarItem on:click={() => clearModCache(true)} text="Clear unused mod cache" />
 			<MenubarItem on:click={() => invokeCommand('trigger_mod_fetch')} text="Fetch mods" />
 		</MenubarMenu>
 		<MenubarMenu label="Profile">
@@ -194,8 +231,8 @@
 				key="Ctrl D"
 			/>
 			<MenubarSeparator />
-			<MenubarItem on:click={() => invokeCommand('copy_dependency_strings')} text="Copy mod list" />
-			<MenubarItem on:click={() => invokeCommand('copy_debug_info')} text="Copy debug info" />
+			<MenubarItem on:click={copyModList} text="Copy mod list" />
+			<MenubarItem on:click={copyDebugInfo} text="Copy debug info" />
 			<MenubarItem on:click={copyLaunchArgs} text="Copy launch arguments" />
 			<MenubarSeparator />
 			<MenubarItem on:click={() => setAllModsState(true)} text="Enable all mods" />
