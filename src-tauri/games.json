@@ -1147,7 +1147,8 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3241660
+				"id": 3241660,
+				"dirName": "REPO"
 			}
 		}
 	},

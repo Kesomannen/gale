@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 (2025-03-01)
+
+### Fixed
+
+- Incorrect steam directory name for R.E.P.O.
+
 ## 1.4.0 (2025-02-28)
 
 ### Added
