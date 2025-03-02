@@ -723,6 +723,17 @@
 		}
 	},
 	{
+		"name": "Gang Beasts",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 285900
+			}
+		}
+	},
+	{
 		"name": "Garfield Kart - Furious Racing",
 		"modLoader": {
 			"name": "BepInEx"

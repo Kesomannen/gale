@@ -8,7 +8,10 @@ use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
 use super::{
-    export, import, install::PackageInstaller, Dependant, ManagedGame, Profile, ProfileMod,
+    export::{self, IncludeExtensions, IncludeGenerated},
+    import,
+    install::PackageInstaller,
+    Dependant, ManagedGame, Profile, ProfileMod,
 };
 use crate::{
     prefs::Prefs,
@@ -262,15 +265,20 @@ impl ManagedGame {
         let old_profile = self.profile_at(index)?;
         let new_profile = self.active_profile();
 
-        // make sure the config files are properly copied and not linked between the two profiles.
-        let config_files = export::find_config(&old_profile.path, false);
+        // Make sure generated files and configs are properly copied
+        // and not linked between the two profiles.
+        let config_files = export::find_config(
+            &old_profile.path,
+            IncludeExtensions::Default,
+            IncludeGenerated::Yes,
+        );
         import::import_config(&new_profile.path, &old_profile.path, config_files)
             .context("failed to copy config files")?;
 
         util::fs::copy_dir(
             &old_profile.path,
             &new_profile.path,
-            Overwrite::No,
+            Overwrite::No, // don't override the copied mutable files
             UseLinks::Yes,
         )
         .context("failed to copy profile directory")?;

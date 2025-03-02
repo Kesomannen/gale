@@ -1,6 +1,6 @@
 [package]
 name = "gale"
-version = "1.4.1"
+version = "1.4.2"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"
@@ -57,7 +57,6 @@ log = "0.4"
 simplelog = "0.12"
 chrono = { version = "0.4", features = ["serde"] }
 keyring = { version = "3", features = [
-    "apple-native",
     "windows-native",
     "linux-native",
 ] }

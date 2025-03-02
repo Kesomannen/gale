@@ -31,6 +31,8 @@ mod r2modman;
 
 pub use local::import_local_mod;
 
+use super::export::{IncludeExtensions, IncludeGenerated};
+
 pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
     let data = import_file_from_path(url.into(), app)?;
     import_data(data, InstallOptions::default(), false, app).await?;
@@ -136,7 +138,15 @@ async fn import_data(
         .await
         .context("error while importing mods")?;
 
-    let includes = export::find_config(&data.path, import_all);
+    let includes = export::find_config(
+        &data.path,
+        if import_all {
+            IncludeExtensions::All
+        } else {
+            IncludeExtensions::Default
+        },
+        IncludeGenerated::No,
+    );
     import_config(&path, &data.path, includes).context("failed to import config")?;
 
     if data.delete_after_import {

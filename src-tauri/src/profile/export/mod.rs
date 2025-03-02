@@ -137,7 +137,7 @@ fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
     serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
-    write_config(find_config(&profile.path, false), &profile.path, &mut zip)?;
+    write_config(find_default_config(&profile.path), &profile.path, &mut zip)?;
 
     Ok(())
 }
@@ -194,33 +194,57 @@ where
     Ok(())
 }
 
-pub fn find_config(root: &Path, include_all: bool) -> impl Iterator<Item = PathBuf> + '_ {
-    // Include any files in the BepInEx/config directory,
-    // and any other files with the following extensions:
-    const INCLUDE_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];
-    const EXCLUDE_FILES: &[&str] = &[
-        "profile.json",
-        "manifest.json",
-        "mods.yml",
-        "doorstop_config.ini",
-        "snapshots",
-        "_state",
-    ];
+const COMMON_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];
 
+const GENERATED_FILES: &[&str] = &[
+    "profile.json",
+    "manifest.json",
+    "mods.yml",
+    "doorstop_config.ini",
+    "snapshots",
+    "_state",
+];
+
+pub enum IncludeExtensions {
+    /// All extensions.
+    All,
+    /// Only common config extensions (see [`COMMON_EXTENSIONS`]).
+    Default,
+}
+
+pub enum IncludeGenerated {
+    /// Include every file (as long as they fit [`IncludeExtensions`]).
+    Yes,
+    /// Skip common mod-manager generated files (see [`GENERATED_FILES`]).
+    No,
+}
+
+pub fn find_config(
+    root: &Path,
+    include_extensions: IncludeExtensions,
+    include_generated: IncludeGenerated,
+) -> impl Iterator<Item = PathBuf> + '_ {
     WalkDir::new(root)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_file())
         .map(move |entry| entry.into_path().strip_prefix(root).unwrap().to_path_buf())
-        .filter(|path| {
-            !EXCLUDE_FILES
-                .iter()
-                .any(|exc| path.starts_with(exc) || path.ends_with(exc))
+        .filter(move |path| {
+            matches!(include_generated, IncludeGenerated::Yes)
+                || !GENERATED_FILES
+                    .iter()
+                    .any(|exc| path.starts_with(exc) || path.ends_with(exc))
         })
         .filter(move |path| {
-            include_all
+            matches!(include_extensions, IncludeExtensions::All)
                 || path
                     .extension()
-                    .is_some_and(|ext| INCLUDE_EXTENSIONS.iter().any(|inc| *inc == ext))
+                    .is_some_and(|ext| COMMON_EXTENSIONS.iter().any(|inc| *inc == ext))
         })
+}
+
+/// Alias for [`find_config`] with [`IncludeExtensions`] and [`IncludeGenerated`] set
+/// to their default values.
+pub fn find_default_config(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
+    find_config(root, IncludeExtensions::Default, IncludeGenerated::No)
 }

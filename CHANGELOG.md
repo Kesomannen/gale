@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.2 (2025-03-02)
+
+### Added
+
+- Support for Gang Beasts
+
+### Fixed
+
+- Profile duplication causing the profiles to be linked
+
 ## 1.4.1 (2025-03-01)
 
 ### Fixed
