@@ -33,7 +33,7 @@ pub use local::import_local_mod;
 
 use super::export::{IncludeExtensions, IncludeGenerated};
 
-pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
+pub async fn import_file_from_deep_link(url: String, app: &AppHandle) -> Result<()> {
     let data = import_file_from_path(url.into(), app)?;
     import_data(data, InstallOptions::default(), false, app).await?;
     Ok(())
@@ -84,9 +84,13 @@ impl ImportData {
             source,
         })
     }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
 
-fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> {
+pub(super) fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> {
     let thunderstore = app.state::<Mutex<Thunderstore>>();
     let thunderstore = thunderstore.lock().unwrap();
 
@@ -111,7 +115,7 @@ fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> 
     )
 }
 
-async fn import_data(
+pub(super) async fn import_data(
     data: ImportData,
     options: InstallOptions,
     import_all: bool,

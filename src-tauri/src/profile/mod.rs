@@ -19,7 +19,6 @@ use crate::{
     game::{self, Game, ModLoader},
     logger,
     prefs::Prefs,
-    sync,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::{
         self,
@@ -33,6 +32,7 @@ pub mod export;
 pub mod import;
 pub mod install;
 pub mod launch;
+pub mod sync;
 pub mod update;
 
 mod actions;

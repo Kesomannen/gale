@@ -39,13 +39,13 @@ pub async fn send_app_start_event(app: AppHandle) {
         "user_id": data.user_id
     });
 
-    let response = supabase::request(Method::POST, "/rpc/send_event")
-        .payload(payload)
-        .send(&client)
+    let response = supabase::request(Method::POST, "/rest/v1/rpc/send_event")
+        .json_body(payload)
+        .send_raw(&client)
         .await;
 
     match response {
-        Ok(()) => debug!("successfully sent telemetry"),
+        Ok(_) => debug!("successfully sent telemetry"),
         Err(err) => error!("failed to send telemetry: {:#}", err),
     }
 }

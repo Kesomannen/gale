@@ -105,7 +105,7 @@ impl From<semver::Version> for R2Version {
 
 pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
-fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
+pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
     let mut zip = ZipWriter::new(writer);
 
     let mods = profile

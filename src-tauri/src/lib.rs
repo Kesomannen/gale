@@ -20,7 +20,6 @@ mod logger;
 mod prefs;
 mod profile;
 mod supabase;
-mod sync;
 mod telemetry;
 mod thunderstore;
 mod util;
@@ -131,12 +130,14 @@ pub fn run() {
             profile::export::commands::generate_changelog,
             profile::export::commands::copy_dependency_strings,
             profile::export::commands::copy_debug_info,
+            profile::sync::commands::create_sync_profile,
+            profile::sync::commands::push_sync_profile,
+            profile::sync::commands::clone_sync_profile,
             config::commands::get_config_files,
             config::commands::set_config_entry,
             config::commands::reset_config_entry,
             config::commands::open_config_file,
             config::commands::delete_config_file,
-            sync::commands::connect
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())
@@ -166,7 +167,7 @@ pub fn run() {
             } else if url.ends_with("r2z") {
                 let app = app.to_owned();
                 tauri::async_runtime::spawn(async move {
-                    profile::import::import_file_from_link(url, &app)
+                    profile::import::import_file_from_deep_link(url, &app)
                         .await
                         .unwrap_or_else(|err| {
                             logger::log_webview_err("Failed to import profile file", err, &app);
