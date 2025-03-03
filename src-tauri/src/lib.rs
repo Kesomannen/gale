@@ -19,6 +19,8 @@ mod game;
 mod logger;
 mod prefs;
 mod profile;
+mod supabase;
+mod sync;
 mod telemetry;
 mod thunderstore;
 mod util;
@@ -134,6 +136,7 @@ pub fn run() {
             config::commands::reset_config_entry,
             config::commands::open_config_file,
             config::commands::delete_config_file,
+            sync::commands::connect
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())

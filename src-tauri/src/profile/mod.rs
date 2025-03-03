@@ -19,6 +19,7 @@ use crate::{
     game::{self, Game, ModLoader},
     logger,
     prefs::Prefs,
+    sync,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::{
         self,
@@ -108,6 +109,7 @@ pub struct Profile {
     pub config_cache: ConfigCache,
     pub linked_config: HashMap<Uuid, PathBuf>,
     pub modpack: Option<ModpackArgs>,
+    pub sync_data: Option<sync::ProfileData>,
 }
 
 /// Persistent data for Profile
@@ -121,6 +123,9 @@ pub struct ProfileSaveData {
 
     #[serde(default)]
     ignored_updates: HashSet<Uuid>,
+
+    #[serde(default)]
+    sync_data: Option<sync::ProfileData>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -277,6 +282,7 @@ impl Profile {
             config_cache: ConfigCache::default(),
             linked_config: HashMap::new(),
             modpack: None,
+            sync_data: None,
         }
     }
 
@@ -391,6 +397,7 @@ impl Profile {
             modpack: self.modpack.clone(),
             mods: self.mods.clone(),
             ignored_updates: self.ignored_updates.clone(),
+            sync_data: self.sync_data.clone(),
         }
     }
 
