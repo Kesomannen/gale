@@ -137,12 +137,15 @@ pub fn run() {
             profile::sync::commands::push_sync_profile,
             profile::sync::commands::clone_sync_profile,
             profile::sync::commands::pull_sync_profile,
-            profile::sync::commands::login,
+            profile::sync::commands::fetch_sync_profile,
             config::commands::get_config_files,
             config::commands::set_config_entry,
             config::commands::reset_config_entry,
             config::commands::open_config_file,
             config::commands::delete_config_file,
+            supabase::commands::login,
+            supabase::commands::logout,
+            supabase::commands::get_user,
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())

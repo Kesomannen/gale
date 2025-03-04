@@ -31,7 +31,7 @@
 	<Markdown md={source} {plugins} />
 </div>
 
-<style global lang="postcss">
+<style lang="postcss">
 	@reference '../../app.css';
 
 	.markdown {

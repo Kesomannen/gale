@@ -67,8 +67,9 @@ export type ProfileInfo = {
 
 export type ProfileSyncInfo = {
 	id: string;
+	ownerId: string;
 	lastSynced: string;
-	isOwner: boolean;
+	lastUpdatedByOwner: string;
 };
 
 export type ProfilesInfo = {
@@ -82,11 +83,11 @@ export type GameInfo = {
 	favorites: string[];
 };
 
-export type AuthInfo = {
+export type UserInfo = {
 	id: string;
 	name: String;
-	display_name: string | null;
-	avatar_url: string;
+	displayName: string | null;
+	avatarUrl: string;
 };
 
 export type Mod = {

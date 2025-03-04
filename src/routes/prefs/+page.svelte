@@ -12,8 +12,8 @@
 	import { invokeCommand } from '$lib/invoke';
 	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
 	import AccentColorPref from '$lib/prefs/AccentColorPref.svelte';
-	import LargePrefsHeading from '$lib/prefs/LargePrefsHeading.svelte';
-	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
+	import LargeHeading from '$lib/prefs/LargeHeading.svelte';
+	import SmallHeading from '$lib/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
 
@@ -54,9 +54,9 @@
 
 <div class="mx-auto flex w-full max-w-4xl flex-col gap-1 overflow-y-auto px-6 pt-2 pb-6">
 	{#if prefs !== null && gamePrefs !== null}
-		<LargePrefsHeading>Global settings</LargePrefsHeading>
+		<LargeHeading>Global settings</LargeHeading>
 
-		<SmallPrefsHeading>Locations</SmallPrefsHeading>
+		<SmallHeading>Locations</SmallHeading>
 
 		<PathPref
 			label="Gale data folder"
@@ -89,7 +89,7 @@
 			games.
 		</PathPref>
 
-		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
+		<SmallHeading>Appearance</SmallHeading>
 
 		<AccentColorPref />
 
@@ -98,7 +98,7 @@
 			set={set((value, prefs) => (prefs.zoomFactor = value))}
 		/>
 
-		<SmallPrefsHeading>Miscellaneous</SmallPrefsHeading>
+		<SmallHeading>Miscellaneous</SmallHeading>
 
 		<ApiKeyPref />
 
@@ -121,11 +121,11 @@
 			Whether to send anonymous usage metrics when the app starts.
 		</TogglePref>
 
-		<LargePrefsHeading>
+		<LargeHeading>
 			{$activeGame?.name} settings
-		</LargePrefsHeading>
+		</LargeHeading>
 
-		<SmallPrefsHeading>Locations</SmallPrefsHeading>
+		<SmallHeading>Locations</SmallHeading>
 
 		{#if platforms.length > 0}
 			<PlatformPref value={gamePrefs.platform} set={set((value) => (gamePrefs.platform = value))} />
@@ -146,7 +146,7 @@
 			{/if}
 		</PathPref>
 
-		<SmallPrefsHeading>Launch</SmallPrefsHeading>
+		<SmallHeading>Launch</SmallHeading>
 
 		<LaunchModePref
 			value={gamePrefs.launchMode}

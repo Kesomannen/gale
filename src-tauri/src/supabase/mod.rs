@@ -11,7 +11,9 @@ use tauri::{
 use crate::NetworkClient;
 
 mod auth;
-pub use auth::{login_with_oauth, user_id, OAuthProvider};
+pub use auth::{login_with_oauth, logout, user_info, OAuthProvider};
+
+pub mod commands;
 
 const PROJECT_URL: &str = "https://phpkxfkbquscgqvhtuuv.supabase.co";
 const ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBocGt4ZmticXVzY2dxdmh0dXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyODAzNDgsImV4cCI6MjA1Mjg1NjM0OH0._eOEhNdG5dIpLnArUcTiicwuxv-hYQlZSSqc06-Aj0k";

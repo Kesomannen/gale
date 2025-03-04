@@ -3,6 +3,7 @@ import { invokeCommand } from './invoke';
 import {
 	SortBy,
 	SortOrder,
+	type UserInfo,
 	type FiltersResponse,
 	type Game,
 	type GameInfo,
@@ -20,6 +21,8 @@ export let activeGame = writable<Game | null>(null);
 export let activeProfileIndex: number = 0;
 export let profiles: ProfileInfo[] = [];
 export let activeProfile = writable<ProfileInfo | null>(null);
+
+export let user = writable<UserInfo | null>(null);
 
 const defaultModQuery = () => ({
 	searchTerm: '',
@@ -65,6 +68,7 @@ activeGame.subscribe((value) => {
 });
 
 refreshGames();
+refreshUser();
 
 function loadQuery(key: string, getDefault: () => QueryModsArgs) {
 	let json = localStorage.getItem(key);
@@ -140,4 +144,19 @@ export async function refreshProfiles() {
 export async function setActiveProfile(index: number) {
 	await invokeCommand('set_active_profile', { index });
 	refreshProfiles();
+}
+
+export async function refreshUser() {
+	let info = await invokeCommand<UserInfo | null>('get_user');
+	user.set(info);
+}
+
+export async function login(provider: 'discord' | 'github') {
+	let info = await invokeCommand<UserInfo>('login', { provider });
+	user.set(info);
+}
+
+export async function logout() {
+	await invokeCommand('logout');
+	user.set(null);
 }

@@ -1,7 +1,7 @@
 use tauri::AppHandle;
 use uuid::Uuid;
 
-use crate::{supabase, util::cmd::Result};
+use crate::util::cmd::Result;
 
 #[tauri::command]
 pub async fn create_sync_profile(app: AppHandle) -> Result<Uuid> {
@@ -32,8 +32,8 @@ pub async fn pull_sync_profile(app: AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn login(provider: supabase::OAuthProvider, app: AppHandle) -> Result<()> {
-    supabase::login_with_oauth(provider, app).await?;
+pub async fn fetch_sync_profile(app: AppHandle) -> Result<()> {
+    super::fetch_profile(&app).await?;
 
     Ok(())
 }

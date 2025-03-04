@@ -25,21 +25,28 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", transparent)]
 pub struct AuthState {
-    user: Option<UserAuthState>,
-    refresh_token: Option<String>,
+    #[serde(rename = "auth")]
+    inner: Option<AuthStateInner>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct UserAuthState {
-    id: Uuid,
-    name: String,
-    display_name: Option<String>,
-    avatar_url: String,
-    token_expiry: i64,
+struct AuthStateInner {
+    user: User,
     access_token: String,
+    token_expiry: i64,
+    refresh_token: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct User {
+    pub id: Uuid,
+    pub name: String,
+    pub display_name: Option<String>,
+    pub avatar_url: String,
 }
 
 impl AuthState {
@@ -48,36 +55,37 @@ impl AuthState {
         util::fs::read_json(path)
     }
 
-    fn set(
-        &mut self,
-        payload: JwtPayload,
-        access_token: String,
-        refresh_token: String,
-    ) -> Result<()> {
-        let JwtPayload {
-            exp,
-            sub,
-            user_metadata,
-        } = payload;
-
-        *self = AuthState {
-            user: Some(UserAuthState {
-                id: sub,
-                name: user_metadata.full_name,
-                display_name: user_metadata.custom_claims.global_name,
-                avatar_url: user_metadata.avatar_url,
-                token_expiry: exp,
-                access_token,
-            }),
-            refresh_token: Some(refresh_token),
-        };
+    fn set(&mut self, inner: Option<AuthStateInner>) -> Result<()> {
+        self.inner = inner;
 
         let path = util::path::default_app_data_dir().join("auth.json");
         util::fs::write_json(path, self, JsonStyle::Pretty).context("failed to write to file")
     }
 }
 
-const OAUTH_TIMEOUT: Duration = Duration::from_secs(60 * 5);
+impl AuthStateInner {
+    fn from_jwt(access_token: String, refresh_token: String) -> Result<Self> {
+        let JwtPayload {
+            exp,
+            sub,
+            user_metadata,
+        } = decode_jwt(&access_token).context("failed to decode jwt")?;
+
+        Ok(Self {
+            access_token,
+            refresh_token,
+            token_expiry: exp,
+            user: User {
+                id: sub,
+                name: user_metadata.full_name,
+                display_name: user_metadata.custom_claims.global_name,
+                avatar_url: user_metadata.avatar_url,
+            },
+        })
+    }
+}
+
+const OAUTH_TIMEOUT: Duration = Duration::from_secs(60);
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -95,7 +103,7 @@ impl Display for OAuthProvider {
     }
 }
 
-pub async fn login_with_oauth(provider: OAuthProvider, app: AppHandle) -> Result<()> {
+pub async fn login_with_oauth(provider: OAuthProvider, app: AppHandle) -> Result<User> {
     let url = format!(
         "{}/auth/v1/authorize?provider={}&scopes=identify",
         super::PROJECT_URL,
@@ -109,21 +117,25 @@ pub async fn login_with_oauth(provider: OAuthProvider, app: AppHandle) -> Result
 
     app.get_window("main").unwrap().set_focus().ok();
 
-    let payload = decode_jwt(&access_token).context("failed to parse jwt")?;
+    let state =
+        AuthStateInner::from_jwt(access_token, refresh_token).context("failed to save state")?;
+    let user = state.user.clone();
 
-    info!(
-        "logged in as {} with {}",
-        payload.user_metadata.full_name, provider
-    );
+    info!("logged in as {} with {}", user.name, provider);
 
     let auth_state = app.state::<Mutex<AuthState>>();
     let mut auth_state = auth_state.lock().unwrap();
 
-    auth_state
-        .set(payload, access_token, refresh_token)
-        .context("failed to save auth data")?;
+    auth_state.set(Some(state))?;
 
-    Ok(())
+    Ok(user)
+}
+
+pub async fn logout(app: AppHandle) -> Result<()> {
+    let state = app.state::<Mutex<AuthState>>();
+    let mut state = state.lock().unwrap();
+
+    state.set(None)
 }
 
 async fn run_oauth_server() -> Result<(String, String)> {
@@ -202,15 +214,15 @@ fn decode_jwt(token: &str) -> Result<JwtPayload> {
     serde_json::from_slice(&bytes).context("failed to deserialize json")
 }
 
-pub fn user_id(app: &AppHandle) -> Option<Uuid> {
+pub fn user_info(app: &AppHandle) -> Option<User> {
     let state = app.state::<Mutex<AuthState>>();
-    let id = state
+    let user = state
         .lock()
         .unwrap()
-        .user
+        .inner
         .as_ref()
-        .map(|user| user.id.clone());
-    id
+        .map(|inner| inner.user.clone());
+    user
 }
 
 #[derive(Debug, Deserialize)]
@@ -224,18 +236,18 @@ pub async fn access_token(app: &AppHandle) -> Option<String> {
 
     let refresh_token = {
         let state = state.lock().unwrap();
-        let user = state.user.as_ref()?;
+        let inner = state.inner.as_ref()?;
 
-        let Some(expiry) = DateTime::from_timestamp(user.token_expiry, 0) else {
+        let Some(expiry) = DateTime::from_timestamp(inner.token_expiry, 0) else {
             warn!("token expiry date is invalid");
             return None;
         };
 
         if Utc::now() < expiry {
-            return Some(user.access_token.clone());
+            return Some(inner.access_token.clone());
         }
 
-        state.refresh_token.clone()?
+        inner.refresh_token.clone()
     };
 
     match request_token(refresh_token, app).await {
@@ -260,17 +272,13 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
         .json()
         .await?;
 
-    let state = app.state::<Mutex<AuthState>>();
-    let mut state = state.lock().unwrap();
+    let state = AuthStateInner::from_jwt(response.access_token.clone(), response.refresh_token)?;
 
-    let payload = decode_jwt(&response.access_token).context("failed to decode jwt")?;
+    let auth_state = app.state::<Mutex<AuthState>>();
+    let mut auth_state = auth_state.lock().unwrap();
 
-    state
-        .set(
-            payload,
-            response.access_token.clone(),
-            response.refresh_token,
-        )
+    auth_state
+        .set(Some(state))
         .context("failed to save state")?;
 
     Ok(response.access_token)
