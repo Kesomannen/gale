@@ -62,6 +62,13 @@ export type ConfigFile = { relativePath: string; displayName: string | null } & 
 export type ProfileInfo = {
 	name: string;
 	modCount: number;
+	sync: ProfileSyncInfo | null;
+};
+
+export type ProfileSyncInfo = {
+	id: string;
+	lastSynced: string;
+	isOwner: boolean;
 };
 
 export type ProfilesInfo = {
@@ -73,6 +80,13 @@ export type GameInfo = {
 	active: Game;
 	all: Game[];
 	favorites: string[];
+};
+
+export type AuthInfo = {
+	id: string;
+	name: String;
+	display_name: string | null;
+	avatar_url: string;
 };
 
 export type Mod = {

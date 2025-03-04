@@ -107,6 +107,8 @@ pub async fn login_with_oauth(provider: OAuthProvider, app: AppHandle) -> Result
         .await
         .context("failed to run OAuth callback server")?;
 
+    app.get_window("main").unwrap().set_focus().ok();
+
     let payload = decode_jwt(&access_token).context("failed to parse jwt")?;
 
     info!(

@@ -1,10 +1,11 @@
+use chrono::{DateTime, Utc};
 use eyre::{Context, OptionExt};
 use itertools::Itertools;
 use log::warn;
 use serde::Serialize;
 use uuid::Uuid;
 
-use super::{actions::ActionResult, Dependant, ModManager, Profile};
+use super::{actions::ActionResult, sync, Dependant, ModManager, Profile};
 use crate::{
     game::{self, Game, Platform},
     prefs::Prefs,
@@ -114,6 +115,7 @@ pub struct ProfilesInfo {
 pub struct ProfileInfo {
     name: String,
     mod_count: usize,
+    sync: Option<sync::ProfileData>,
 }
 
 #[tauri::command]
@@ -128,6 +130,7 @@ pub fn get_profile_info(manager: StateMutex<ModManager>) -> ProfilesInfo {
             .map(|profile| ProfileInfo {
                 name: profile.name.clone(),
                 mod_count: profile.mods.len(),
+                sync: profile.sync_data.clone(),
             })
             .collect(),
         active_index: game.active_profile_index,
