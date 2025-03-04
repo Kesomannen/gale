@@ -63,7 +63,7 @@ impl PackageInstaller for ShimloaderInstaller {
         profile: &Profile,
     ) -> Result<()> {
         for file in ["dwmapi.dll", "UE4SS.dll", "UE4SS-settings.ini"] {
-            install::fs::toggle_file(profile.path.join(file), enabled)?;
+            install::fs::toggle_file(profile.path.join(file), enabled).ok();
         }
 
         Ok(())
@@ -71,7 +71,7 @@ impl PackageInstaller for ShimloaderInstaller {
 
     fn uninstall(&mut self, _profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
         for file in ["dwmapi.dll", "UE4SS.dll", "UE4SS-settings.ini"] {
-            fs::remove_file(profile.path.join(file))?;
+            fs::remove_file(profile.path.join(file)).ok();
         }
 
         Ok(())

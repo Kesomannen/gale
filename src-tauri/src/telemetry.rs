@@ -12,7 +12,6 @@ use crate::{
     prefs::Prefs,
     supabase,
     util::{self, fs::JsonStyle},
-    NetworkClient,
 };
 
 pub async fn send_app_start_event(app: AppHandle) {
@@ -25,7 +24,6 @@ pub async fn send_app_start_event(app: AppHandle) {
 
     debug!("sending app_start telemetry event");
 
-    let client = &app.state::<NetworkClient>().inner().0;
     let data = match read_save_data() {
         Ok(data) => data,
         Err(err) => {
@@ -41,7 +39,7 @@ pub async fn send_app_start_event(app: AppHandle) {
 
     let response = supabase::request(Method::POST, "/rest/v1/rpc/send_event")
         .json_body(payload)
-        .send_raw(&client)
+        .send_raw(&app)
         .await;
 
     match response {

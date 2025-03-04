@@ -386,6 +386,7 @@ impl Profile {
             modpack: manifest.modpack,
             mods: manifest.mods,
             ignored_updates: manifest.ignored_updates,
+            sync_data: manifest.sync_data,
             ..Self::new(name, path, game)
         };
 

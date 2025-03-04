@@ -48,6 +48,8 @@ fn setup(app: &AppHandle) -> eyre::Result<()> {
 
     app.manage(NetworkClient::create()?);
 
+    supabase::setup(app).context("failed to initialize supabase")?;
+    let supabase_done = Instant::now();
     prefs::setup(app).context("failed to initialize settings")?;
     let prefs_done = Instant::now();
     profile::setup(app).context("failed to initialize mod manager")?;
@@ -56,8 +58,9 @@ fn setup(app: &AppHandle) -> eyre::Result<()> {
 
     info!("setup done in {:?}", start.elapsed());
     debug!(
-        "prefs: {:?} | manager {:?} | thunderstore {:?}",
-        prefs_done - start,
+        "supabase: {:?} | prefs: {:?} | manager {:?} | thunderstore {:?}",
+        supabase_done - start,
+        prefs_done - supabase_done,
         manager_done - prefs_done,
         manager_done.elapsed()
     );
@@ -133,6 +136,8 @@ pub fn run() {
             profile::sync::commands::create_sync_profile,
             profile::sync::commands::push_sync_profile,
             profile::sync::commands::clone_sync_profile,
+            profile::sync::commands::pull_sync_profile,
+            profile::sync::commands::login,
             config::commands::get_config_files,
             config::commands::set_config_entry,
             config::commands::reset_config_entry,

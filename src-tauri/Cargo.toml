@@ -29,6 +29,7 @@ tauri-plugin-clipboard-manager = "2"
 tauri-plugin-http = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-cli = "2"
+tauri-plugin-oauth = "2"
 
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -67,7 +68,6 @@ rayon = "1"
 bytes = "1"
 strum = "0.26"
 strum_macros = "0.26"
-supabase-storage-rs = "0.1"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

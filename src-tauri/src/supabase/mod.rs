@@ -1,12 +1,20 @@
 use std::{borrow::Cow, collections::HashMap, fmt::Display};
 
-use eyre::{OptionExt, Result};
+use eyre::{Context, OptionExt, Result};
 use reqwest::Body;
 use serde::{de::DeserializeOwned, Serialize};
-use tauri::http::{HeaderMap, HeaderValue};
+use tauri::{
+    http::{HeaderMap, HeaderValue},
+    AppHandle, Manager,
+};
+
+use crate::NetworkClient;
+
+mod auth;
+pub use auth::{login_with_oauth, user_id, OAuthProvider};
 
 pub const PROJECT_URL: &str = "https://phpkxfkbquscgqvhtuuv.supabase.co";
-pub const ANON_KEY: &str = "...";
+pub const ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBocGt4ZmticXVzY2dxdmh0dXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyODAzNDgsImV4cCI6MjA1Mjg1NjM0OH0._eOEhNdG5dIpLnArUcTiicwuxv-hYQlZSSqc06-Aj0k";
 
 type CowStr = Cow<'static, str>;
 
@@ -20,6 +28,10 @@ pub fn storage_request(method: reqwest::Method, path: impl Display) -> RequestBu
 
 pub fn db_request(method: reqwest::Method, path: impl Display) -> RequestBuilder {
     RequestBuilder::new(method, format!("/rest/v1{}", path))
+}
+
+pub fn auth_request(method: reqwest::Method, path: impl Display) -> RequestBuilder {
+    RequestBuilder::new(method, format!("/auth/v1{}", path))
 }
 
 pub struct RequestBuilder {
@@ -63,14 +75,15 @@ impl RequestBuilder {
         self
     }
 
-    pub async fn send_raw(self, client: &reqwest::Client) -> Result<reqwest::Response> {
+    pub async fn send_raw_no_auth(self, app: &AppHandle) -> Result<reqwest::Response> {
+        let client = &app.state::<NetworkClient>().0;
+
         let url = format!("{}{}", PROJECT_URL, self.path);
 
         let mut request = client
             .request(self.method, url)
-            .bearer_auth(ANON_KEY)
-            .header("apikey", ANON_KEY)
             .header("Prefer", "return=representation")
+            .header("apikey", ANON_KEY)
             .headers(self.headers)
             .query(&self.query);
 
@@ -82,27 +95,48 @@ impl RequestBuilder {
         Ok(response)
     }
 
-    pub async fn send<T>(self, client: &reqwest::Client) -> Result<T>
+    pub async fn send_raw(mut self, app: &AppHandle) -> Result<reqwest::Response> {
+        let token = auth::access_token(app)
+            .await
+            .unwrap_or_else(|| ANON_KEY.to_owned());
+
+        let header = format!("Bearer {}", token);
+
+        self.headers.insert(
+            "Authorization",
+            HeaderValue::from_maybe_shared(header).unwrap(),
+        );
+
+        self.send_raw_no_auth(app).await
+    }
+
+    pub async fn send<T>(self, app: &AppHandle) -> Result<T>
     where
         T: DeserializeOwned,
     {
-        let result = self.send_raw(client).await?.json().await?;
+        let result = self.send_raw(app).await?.json().await?;
         Ok(result)
     }
 
-    pub async fn send_optional<T>(self, client: &reqwest::Client) -> Result<Option<T>>
+    pub async fn send_optional<T>(self, app: &AppHandle) -> Result<Option<T>>
     where
         T: DeserializeOwned,
     {
-        Ok(self.send::<Vec<T>>(client).await?.into_iter().next())
+        Ok(self.send::<Vec<T>>(app).await?.into_iter().next())
     }
 
-    pub async fn send_single<T>(self, client: &reqwest::Client) -> Result<T>
+    pub async fn send_single<T>(self, app: &AppHandle) -> Result<T>
     where
         T: DeserializeOwned,
     {
-        self.send_optional(client)
+        self.send_optional(app)
             .await?
             .ok_or_eyre("expected at least one result, got zero")
     }
+}
+
+pub fn setup(app: &AppHandle) -> Result<()> {
+    auth::setup(app).context("failed to initialze auth")?;
+
+    Ok(())
 }

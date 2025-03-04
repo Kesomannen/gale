@@ -6,6 +6,12 @@
 	let loading = false;
 	let id = '';
 
+	async function login() {
+		loading = true;
+		await invokeCommand('login', { provider: 'discord' });
+		loading = false;
+	}
+
 	async function create() {
 		loading = true;
 		await invokeCommand('create_sync_profile');
@@ -32,6 +38,10 @@
 </script>
 
 <div class="flex flex-col gap-4">
+	<div>
+		<BigButton disabled={loading} on:click={login}>Login</BigButton>
+	</div>
+
 	<div>
 		<BigButton disabled={loading} on:click={create}>Create</BigButton>
 		<BigButton disabled={loading} on:click={push}>Push</BigButton>

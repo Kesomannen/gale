@@ -48,7 +48,7 @@ fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
-    name: String,
+    pub name: String,
     mod_names: Vec<String>,
     mods: Vec<ModInstall>,
     path: PathBuf,
@@ -83,10 +83,6 @@ impl ImportData {
             ignored_updates,
             source,
         })
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
     }
 }
 
@@ -126,7 +122,7 @@ pub(super) async fn import_data(
         let mut manager = manager.lock().unwrap();
 
         let game = manager.active_game_mut();
-        if let Some(index) = game.profiles.iter().position(|p| p.name == data.name) {
+        if let Some(index) = game.profile_index(&data.name) {
             game.delete_profile(index, true)
                 .context("failed to delete existing profile")?;
         }
