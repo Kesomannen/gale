@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import type { Mod, ConfigEntry, Dependant } from './models';
+import type { Mod, ConfigEntry, Dependant, ProfileInfo } from './models';
 import { activeGame } from './stores';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
@@ -124,4 +124,10 @@ export function getListSeparator({ description }: ConfigEntry): ListSeparator {
 	}
 
 	return { type: 'default', char: ',' };
+}
+
+export function syncProfileOutOfDate(profile: ProfileInfo | null) {
+	if (profile === null || profile.sync === null) return false;
+
+	return new Date(profile.sync.lastUpdatedByOwner) > new Date(profile.sync.lastSynced);
 }

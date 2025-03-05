@@ -1,7 +1,7 @@
 use std::{io::Cursor, sync::Mutex};
 
 use chrono::{DateTime, Utc};
-use eyre::{bail, ensure, Context, ContextCompat, OptionExt, Result};
+use eyre::{bail, Context, ContextCompat, OptionExt, Result};
 use log::debug;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
@@ -187,45 +187,43 @@ async fn clone_profile(id: Uuid, app: &AppHandle) -> Result<()> {
     let sync_profile = get_profile(id, app).await?;
 
     let name = format!("{} (client)", sync_profile.name);
-    download_and_import_file(name.clone(), sync_profile.into(), app).await
+    download_and_import_file(name, sync_profile, app).await
 }
 
 async fn pull_profile(app: &AppHandle) -> Result<()> {
     let manager = app.state::<Mutex<ModManager>>();
 
-    let (name, sync_data) = {
+    let (name, id, last_synced) = {
         let mut manager = manager.lock().unwrap();
         let profile = manager.active_profile_mut();
 
-        match &mut profile.sync_data {
-            Some(data) => {
-                let mut data = data.clone();
-                data.last_synced = Utc::now();
-                (profile.name.clone(), data)
-            }
+        match &profile.sync_data {
+            Some(data) => (profile.name.clone(), data.id, data.last_synced),
             None => bail!("profile is not synced"),
         }
     };
 
-    download_and_import_file(name, sync_data, app).await?;
+    let sync_profile = get_profile(id, app).await?;
+
+    if last_synced < sync_profile.updated_at {
+        download_and_import_file(name, sync_profile, app).await?;
+    }
 
     Ok(())
 }
 
-async fn fetch_profile(app: &AppHandle) -> Result<DateTime<Utc>> {
+async fn fetch_profile(app: &AppHandle) -> Result<()> {
     let manager = app.state::<Mutex<ModManager>>();
 
     let id = {
         let manager = manager.lock().unwrap();
         let profile = manager.active_profile();
 
-        let id = profile
+        profile
             .sync_data
             .as_ref()
-            .map(|sync| sync.id)
-            .ok_or_eyre("profile is not synced")?;
-
-        id
+            .map(|data| data.id)
+            .ok_or_eyre("profile is not synced")?
     };
 
     let updated_at = get_profile(id, app)
@@ -240,15 +238,19 @@ async fn fetch_profile(app: &AppHandle) -> Result<DateTime<Utc>> {
         .unwrap()
         .last_updated_by_owner = updated_at;
 
-    Ok(updated_at)
+    Ok(())
+}
+
+async fn fetch_and_pull_profile(app: &AppHandle) -> Result<()> {
+    Ok(())
 }
 
 async fn download_and_import_file(
     name: String,
-    sync_data: ProfileData,
+    sync_profile: SyncProfile,
     app: &AppHandle,
-) -> Result<(), eyre::Error> {
-    let path = format!("/object/profile/{}", sync_data.id);
+) -> Result<()> {
+    let path = format!("/object/profile/{}", sync_profile.id);
     let bytes = supabase::storage_request(Method::GET, path)
         .send_raw(app)
         .await
@@ -266,13 +268,15 @@ async fn download_and_import_file(
         .await
         .context("failed to import profile")?;
 
-    // import_data deletes the profile, so we need to set sync_data again
+    // import_data deletes and recreates the profile, so we need to set sync_data again
     let manager = app.state::<Mutex<ModManager>>();
     let mut manager = manager.lock().unwrap();
 
     let game = manager.active_game_mut();
     let index = game.profile_index(&name).context("profile not found")?;
 
+    let mut sync_data: ProfileData = sync_profile.into();
+    sync_data.last_synced = Utc::now();
     game.profiles[index].sync_data = Some(sync_data);
 
     let prefs = app.state::<Mutex<Prefs>>();
