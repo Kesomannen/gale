@@ -2,7 +2,6 @@ use eyre::Context;
 use itertools::Itertools;
 use tauri::AppHandle;
 
-use super::game_dir;
 use crate::{
     prefs::Prefs,
     profile::ModManager,
@@ -30,7 +29,7 @@ pub fn get_launch_args(
     let manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let game_dir = game_dir(manager.active_game, &prefs)?;
+    let game_dir = super::game_dir(manager.active_game, &prefs)?;
     let (_, command) = manager.active_game().launch_command(&game_dir, &prefs)?;
     let text = command
         .get_args()
@@ -45,7 +44,7 @@ pub fn open_game_dir(manager: StateMutex<ModManager>, prefs: StateMutex<Prefs>) 
     let manager = manager.lock().unwrap();
     let prefs = prefs.lock().unwrap();
 
-    let path = game_dir(manager.active_game, &prefs)?;
+    let path = super::game_dir(manager.active_game, &prefs)?;
     open::that(path).context("failed to open directory")?;
 
     Ok(())
