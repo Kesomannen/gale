@@ -23,7 +23,7 @@ export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 		let name = `Failed to ${sentenceCase(cmd).toLowerCase()}`;
 		let message = errStr[0].toUpperCase() + errStr.slice(1);
 
-		if (!message.endsWith('.') || !message.endsWith('?') || !message.endsWith('!')) {
+		if (!message.endsWith('.') && !message.endsWith('?') && !message.endsWith('!')) {
 			message += '.';
 		}
 

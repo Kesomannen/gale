@@ -36,9 +36,7 @@
 	);
 
 	onMount(async () => {
-		let newPrefs = await invokeCommand<Prefs>('get_prefs');
-		newPrefs.gamePrefs = new Map(Object.entries(newPrefs.gamePrefs));
-		prefs = newPrefs;
+		await refresh();
 	});
 
 	function set<T>(update: (value: T, prefs: Prefs) => void) {
@@ -47,8 +45,19 @@
 
 			update(value, prefs);
 			prefs.gamePrefs.set(gameSlug, gamePrefs!);
-			await invokeCommand('set_prefs', { value: prefs });
+			try {
+				await invokeCommand('set_prefs', { value: prefs });
+			} catch (e) {
+				await refresh();
+				throw e;
+			}
 		};
+	}
+
+	async function refresh() {
+		let newPrefs = await invokeCommand<Prefs>('get_prefs');
+		newPrefs.gamePrefs = new Map(Object.entries(newPrefs.gamePrefs));
+		prefs = newPrefs;
 	}
 </script>
 
