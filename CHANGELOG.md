@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.3 (2025-03-11)
+
+### Fixed
+
+- The `dotnet` directory not being copied when launching BepInEx IL2CPP games
+- Corrected default r2modman import directory for Risk Of Rain 2
+- Valheim launching with the .sh file instead of the .exe on Windows
+- MelonLoader rebuilding on each launch
+- Small UI changes
+
 ## 1.4.2 (2025-03-02)
 
 ### Added

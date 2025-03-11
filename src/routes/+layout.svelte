@@ -74,7 +74,7 @@
 	{/if}
 
 	<div
-		class="absolute right-0 bottom-0 z-10 flex max-w-[50rem] flex-col-reverse justify-end gap-1 p-2 xl:max-w-[90rem]"
+		class="absolute right-0 bottom-0 z-10 flex max-w-[50rem] flex-col items-end justify-end gap-1 p-2 xl:max-w-[90rem]"
 	>
 		{#each $toasts as toast, i}
 			<div

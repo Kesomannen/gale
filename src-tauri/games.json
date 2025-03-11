@@ -153,6 +153,7 @@
 	{
 		"name": "Risk of Rain 2",
 		"slug": "riskofrain2",
+		"r2dirName": "RiskOfRain2",
 		"popular": true,
 		"modLoader": {
 			"name": "BepInEx",

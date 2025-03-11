@@ -6,14 +6,13 @@ use std::{
     sync::Mutex,
 };
 
-use eyre::{anyhow, ensure, eyre, Context, Result};
+use eyre::{anyhow, bail, ensure, Context, Result};
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 use crate::{
     game::{self, Platform},
-    logger,
     profile::{launch::LaunchMode, ModManager},
     util::{
         self,
@@ -339,19 +338,15 @@ impl Prefs {
         if is_valid_steam_exe {
             self.steam_exe_path = value.steam_exe_path;
         } else {
-            logger::log_webview_err(
-                "Failed to update prefs",
-                eyre!(
-                    "Steam executable is invalid. Maybe you entered the game's location instead?"
-                ),
-                app,
+            bail!(
+                "Steam executable path is invalid. Maybe you entered the game's location instead?",
             );
         }
 
         self.steam_library_dir = value.steam_library_dir;
 
         self.game_prefs = value.game_prefs;
-        self.validate_game_prefs();
+        self.validate_game_prefs()?;
 
         if self.data_dir != value.data_dir {
             // move profile paths
@@ -381,14 +376,7 @@ impl Prefs {
             let window = app.get_webview_window("main").unwrap();
             window
                 .zoom(value.zoom_factor as f64)
-                .context("failed to set zoom level")
-                .unwrap_or_else(|err| {
-                    logger::log_webview_err(
-                        "Error while updating settings",
-                        eyre!("failed to set zoom level: {}", err),
-                        app,
-                    );
-                });
+                .context("failed to set zoom level")?;
         }
         self.zoom_factor = value.zoom_factor;
 
@@ -398,7 +386,7 @@ impl Prefs {
         self.save().context("failed write to settings file")
     }
 
-    fn validate_game_prefs(&mut self) {
+    fn validate_game_prefs(&mut self) -> Result<()> {
         for (slug, value) in &mut self.game_prefs {
             let Some(game) = game::from_slug(slug) else {
                 warn!("game prefs key {} is invalid", slug);
@@ -416,7 +404,23 @@ impl Prefs {
                     };
                 }
             }
+
+            // make sure people don't select the steam library
+            if value.dir_override.as_ref().is_some_and(|path| {
+                path.file_name().is_some_and(|name| {
+                    let name = name.to_string_lossy().to_lowercase();
+                    name.contains("steam") || name.contains("common") || name.contains("steamapps")
+                })
+            }) {
+                value.dir_override = None;
+                bail!(
+                    "Location override for {} is invalid. Please ensure you selected the game's directory.",
+                    slug
+                );
+            }
         }
+
+        Ok(())
     }
 
     pub fn cache_dir(&self) -> PathBuf {

@@ -380,4 +380,13 @@ impl ModLoader<'static> {
             }
         }
     }
+
+    pub fn proxy_dll(&'static self) -> Option<&'static str> {
+        match &self.kind {
+            ModLoaderKind::BepInEx { .. } => Some("winhttp"),
+            ModLoaderKind::GDWeave {} => Some("winmm"),
+            ModLoaderKind::ReturnOfModding { files } => Some(files[0]),
+            _ => None,
+        }
+    }
 }
