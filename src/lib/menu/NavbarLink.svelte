@@ -6,6 +6,7 @@
 	export let to: string;
 	export let icon: string;
 	export let tooltip: string;
+	export let beta = false;
 
 	$: active = $page.url.pathname === to;
 </script>
@@ -19,4 +20,13 @@
 	>
 		<Icon {icon} />
 	</a>
+
+	{#if beta}
+		<Icon
+			icon="mdi:beta"
+			class="absolute top-0 left-0 rounded {active
+				? 'bg-red-600 text-white'
+				: 'text-slate-400'} p-0.5 text-lg"
+		/>
+	{/if}
 </Tooltip>

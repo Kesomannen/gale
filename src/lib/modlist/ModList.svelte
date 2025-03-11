@@ -4,7 +4,7 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import VirtualList from '$lib/components/VirtualList.svelte';
 	import { open } from '@tauri-apps/plugin-shell';
-	import { communityUrl, sentenceCase } from '$lib/util';
+	import { sentenceCase } from '$lib/util';
 	import {
 		SortBy,
 		type Mod,
@@ -39,6 +39,8 @@
 
 	export let selected: Mod | null;
 	export let contextItems: ModContextItem[] = [];
+
+	export let locked: boolean;
 
 	$: allContextItems = [...contextItems, ...defaultContextItems];
 
@@ -86,7 +88,7 @@
 </script>
 
 <div class="flex grow overflow-hidden">
-	<div class="flex w-[60%] grow flex-col overflow-hidden pl-3 pt-3">
+	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
 		<div class="mb-1.5 flex flex-wrap gap-1.5 pr-3">
 			<div class="relative flex-grow-3">
 				<SearchBar bind:value={$queryArgs.searchTerm} placeholder="Search for mods..." />
@@ -176,7 +178,12 @@
 	</div>
 
 	{#if selected !== null}
-		<ModDetails mod={selected} contextItems={allContextItems} on:close={() => (selected = null)}>
+		<ModDetails
+			{locked}
+			mod={selected}
+			contextItems={allContextItems}
+			on:close={() => (selected = null)}
+		>
 			<slot name="details" />
 		</ModDetails>
 	{/if}

@@ -7,6 +7,7 @@
 
 	export let mod: Mod;
 	export let isSelected: boolean;
+	export let locked: boolean;
 
 	const dispatch = createEventDispatcher<{
 		install: void;
@@ -47,7 +48,7 @@
 		{/if}
 	</div>
 
-	{#if !mod.isInstalled}
+	{#if !mod.isInstalled && !locked}
 		<Button.Root
 			class="bg-accent-600 hover:bg-accent-500 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
 			on:click={(evt) => {

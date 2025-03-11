@@ -1,4 +1,4 @@
-import { get, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { invokeCommand } from './invoke';
 import {
 	SortBy,
@@ -23,6 +23,14 @@ export let profiles: ProfileInfo[] = [];
 export let activeProfile = writable<ProfileInfo | null>(null);
 
 export let user = writable<UserInfo | null>(null);
+
+export let activeProfileLocked = derived([activeProfile, user], ([activeProfile, user]) => {
+	if (activeProfile === null) return false;
+	if (activeProfile.sync === null) return false;
+	if (user === null) return true;
+
+	return activeProfile.sync.ownerId != user.id;
+});
 
 const defaultModQuery = () => ({
 	searchTerm: '',

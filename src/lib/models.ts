@@ -296,7 +296,7 @@ export enum Platform {
 export type ModContextItem = {
 	label: string;
 	icon?: string;
-	showFor?: (mod: Mod) => boolean;
+	showFor?: (mod: Mod, locked: boolean) => boolean;
 	onclick: (mod: Mod) => void;
 	children?: (mod: Mod) => ModContextItem[];
 };

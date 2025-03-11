@@ -19,6 +19,7 @@
 	export let contextItems: ModContextItem[];
 
 	export let reorderable: boolean;
+	export let locked: boolean;
 
 	const dispatch = createEventDispatcher<{
 		toggle: boolean;
@@ -92,7 +93,7 @@
 				{/if}
 			</div>
 
-			{#if reorderable}
+			{#if reorderable && !locked}
 				<Icon
 					icon="material-symbols:drag-indicator"
 					class="mr-4 shrink-0 cursor-move text-2xl text-slate-400"
@@ -104,9 +105,10 @@
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
 			<div class="contents" on:click={(evt) => evt.stopPropagation()}>
 				<Switch.Root
+					disabled={locked}
 					checked={mod.enabled ?? true}
 					onCheckedChange={(newState) => dispatch('toggle', newState)}
-					class="group data-[state=checked]:bg-accent-700 data-[state=checked]:hover:bg-accent-600 mr-1 flex h-6 w-12 shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500"
+					class="group data-[state=checked]:bg-accent-700 enabled:data-[state=checked]:hover:bg-accent-600 mr-1 flex h-6 w-12 shrink-0 rounded-full bg-slate-600 px-1 py-1 enabled:hover:bg-slate-500"
 				>
 					<Switch.Thumb
 						class="data-[state=checked]:bg-accent-200 pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75 ease-out data-[state=checked]:translate-x-6"
@@ -119,6 +121,6 @@
 		class="flex flex-col gap-0.5 rounded-lg border border-slate-600 bg-slate-800 p-1 shadow-lg"
 		{...dropTransition}
 	>
-		<ModContextMenuItems {mod} {contextItems} type="context" />
+		<ModContextMenuItems {mod} {contextItems} {locked} type="context" />
 	</ContextMenu.Content>
 </ContextMenu.Root>

@@ -87,6 +87,10 @@
 			class="group flex min-w-40 shrink cursor-default items-center border-r border-slate-600 pr-4 
 						pl-6 text-slate-300 group-hover:text-slate-200 hover:bg-slate-800"
 		>
+			{#if $activeProfile?.sync}
+				<Icon icon="mdi:cloud" class="mr-2" />
+			{/if}
+
 			<span class="mr-auto shrink truncate font-semibold">
 				{$activeProfile?.name}
 			</span>
@@ -110,7 +114,7 @@
 		>
 			{#each profiles as profile, i}
 				<DropdownMenu.Item
-					class="group flex cursor-default items-center rounded-md py-1 pr-1 pl-3 text-left hover:bg-slate-700
+					class="group flex cursor-default items-center rounded py-1 pr-1 pl-3 text-left hover:bg-slate-700
 						{i == activeProfileIndex
 						? 'font-medium text-slate-300 hover:text-slate-200'
 						: 'text-slate-400 hover:text-slate-300'}"
@@ -119,6 +123,10 @@
 						profilesOpen = false;
 					}}
 				>
+					{#if profile.sync}
+						<Icon icon="mdi:cloud" class="mr-2" />
+					{/if}
+
 					<span class="mr-3 grow">
 						{profile.name}
 					</span>

@@ -5,6 +5,7 @@
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
 
 	let content = entryId.entry.value.content as { index: number; options: string[] };
 	let selected = content.options[content.index];
@@ -32,5 +33,6 @@
 	bind:selected
 	{onSelectedChange}
 	multiple={false}
+	disabled={locked}
 />
-<ResetConfigButton {entryId} {onReset} />
+<ResetConfigButton {entryId} {onReset} {locked} />

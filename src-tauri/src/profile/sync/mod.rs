@@ -1,4 +1,4 @@
-use std::{io::Cursor, sync::Mutex};
+use std::{io::Cursor, sync::Mutex, time::Duration};
 
 use chrono::{DateTime, Utc};
 use eyre::{bail, Context, ContextCompat, OptionExt, Result};
@@ -238,10 +238,6 @@ async fn fetch_profile(app: &AppHandle) -> Result<()> {
         .unwrap()
         .last_updated_by_owner = updated_at;
 
-    Ok(())
-}
-
-async fn fetch_and_pull_profile(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 

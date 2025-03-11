@@ -4,6 +4,7 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
 
 	let content = entryId.entry.value.content as ConfigNum;
 	let range = content.range as ConfigRange;
@@ -53,20 +54,37 @@
 	function clamp(value: number, min: number, max: number) {
 		return Math.max(min, Math.min(max, value));
 	}
+
+	function onInputFieldChanged() {
+		let newValue = parseFloat(inputString);
+
+		if (!isNaN(newValue)) {
+			newValue = clamp(newValue, range.start, range.end);
+
+			if (type === 'int') {
+				newValue = Math.round(newValue);
+			}
+
+			content.value = newValue;
+			submitValue();
+		}
+
+		inputString = content.value.toString();
+	}
 </script>
 
 <svelte:window
 	on:mousemove={(evt) => {
-		if (isDragging) {
-			calculateNewValue(evt.clientX);
-		}
+		if (locked || isDragging) return;
+
+		calculateNewValue(evt.clientX);
 	}}
 	on:mouseup={(evt) => {
-		if (isDragging) {
-			isDragging = false;
-			calculateNewValue(evt.clientX);
-			submitValue();
-		}
+		if (locked || !isDragging) return;
+
+		isDragging = false;
+		calculateNewValue(evt.clientX);
+		submitValue();
 	}}
 />
 
@@ -76,9 +94,12 @@
 	aria-valuemin={range.start}
 	aria-valuemax={range.end}
 	aria-valuenow={content.value}
+	aria-disabled={locked}
 	tabindex="0"
 	bind:this={element}
 	on:keydown={(e) => {
+		if (locked) return;
+
 		if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
 			content.value = Math.max(range.start, content.value - 1);
 		} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
@@ -88,6 +109,8 @@
 		inputString = content.value.toFixed(decimals);
 	}}
 	on:mousedown={(evt) => {
+		if (locked) return;
+
 		isDragging = true;
 		calculateNewValue(evt.clientX);
 	}}
@@ -111,26 +134,12 @@
 
 <input
 	type="number"
+	disabled={locked}
 	bind:value={inputString}
-	on:change={() => {
-		let newValue = parseFloat(inputString);
-
-		if (!isNaN(newValue)) {
-			newValue = clamp(newValue, range.start, range.end);
-
-			if (type === 'int') {
-				newValue = Math.round(newValue);
-			}
-
-			content.value = newValue;
-			submitValue();
-		}
-
-		inputString = content.value.toString();
-	}}
+	on:change={() => onInputFieldChanged}
 	class="focus:ring-accent-400 ml-3 w-1/6 min-w-0 shrink rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 hover:border-slate-500 hover:text-slate-200 focus:border-transparent focus:ring-2 focus:outline-hidden"
 />
-<ResetConfigButton {entryId} {onReset} />
+<ResetConfigButton {entryId} {onReset} {locked} />
 
 <style>
 	input[type='number']::-webkit-inner-spin-button,

@@ -3,13 +3,15 @@
 	import ConfigEntryField from './ConfigEntryField.svelte';
 
 	export let file: ConfigFileData;
-	export let section: ConfigSection | undefined;
+	export let section: ConfigSection | null;
+
+	export let locked: boolean;
 
 	let search = '';
 
 	$: ({ metadata } = file);
 
-	$: shownEntries = section === undefined ? [] : filterEntries(section.entries, search);
+	$: shownEntries = section === null ? [] : filterEntries(section.entries, search);
 
 	function filterEntries(entries: ConfigEntry[], search: string) {
 		return entries.filter((entry) => {
@@ -25,9 +27,10 @@
 	</div>
 {/if}
 
-{#if section !== undefined}
+{#if section !== null}
 	{#each shownEntries as entry (entry)}
 		<ConfigEntryField
+			{locked}
 			entryId={{
 				file,
 				section,

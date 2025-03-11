@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { sentenceCase } from '$lib/util';
-	import Tooltip from '$lib/components/Tooltip.svelte';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import StringConfig from './StringConfig.svelte';
 	import EnumConfig from './EnumConfig.svelte';
@@ -12,6 +11,7 @@
 	import Info from '$lib/components/Info.svelte';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
 
 	$: ({ entry } = entryId);
 	$: ({ value } = entry);
@@ -86,18 +86,18 @@
 	</Info>
 
 	{#if value.type === 'string'}
-		<StringConfig {entryId} />
+		<StringConfig {entryId} {locked} />
 	{:else if value.type === 'enum'}
-		<EnumConfig {entryId} />
+		<EnumConfig {entryId} {locked} />
 	{:else if value.type === 'flags'}
-		<FlagsConfig {entryId} />
+		<FlagsConfig {entryId} {locked} />
 	{:else if value.type === 'bool'}
-		<BoolConfig {entryId} />
+		<BoolConfig {entryId} {locked} />
 	{:else if isNum(value)}
 		{#if value.content.range !== null}
-			<SliderConfig {entryId} />
+			<SliderConfig {entryId} {locked} />
 		{:else}
-			<NumberInputConfig {entryId} />
+			<NumberInputConfig {entryId} {locked} />
 		{/if}
 	{/if}
 </div>

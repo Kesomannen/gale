@@ -7,23 +7,23 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { activeProfile } from '$lib/stores';
+	import { activeProfile, activeProfileIndex, activeProfileLocked } from '$lib/stores';
 	import { page } from '$app/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 
-	let files: ConfigFile[] | undefined;
+	let files: ConfigFile[] | null;
 
 	let searchTerm = '';
 
-	let selectedFile: ConfigFile | undefined;
-	let selectedSection: ConfigSection | undefined;
+	let selectedFile: ConfigFile | null;
+	let selectedSection: ConfigSection | null;
 
 	$: {
 		$activeProfile;
-		files = undefined;
-		selectedFile = undefined;
-		selectedSection = undefined;
+		files = null;
+		selectedFile = null;
+		selectedSection = null;
 		refresh();
 	}
 
@@ -54,8 +54,8 @@
 		let searchParam = $page.url.searchParams.get('file');
 		if (searchParam === null) return;
 
-		selectedFile = files.find((file) => file.relativePath === searchParam);
-		if (selectedFile === undefined) return;
+		selectedFile = files.find((file) => file.relativePath === searchParam) ?? null;
+		if (selectedFile === null) return;
 
 		if (selectedFile.type === 'ok') {
 			selectedSection = selectedFile.sections[0];
@@ -70,7 +70,7 @@
 	<div
 		class="file-list w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r border-slate-600 bg-slate-700"
 	>
-		{#if files === undefined}
+		{#if files === null}
 			<div class="flex h-full w-full items-center justify-center text-lg text-slate-300">
 				<Icon icon="mdi:loading" class="mr-4 animate-spin" />
 				Loading config...
@@ -88,9 +88,10 @@
 				<ConfigFileListItem
 					{file}
 					{selectedSection}
+					locked={$activeProfileLocked}
 					onFileClicked={(file) => {
 						selectedFile = file;
-						selectedSection = undefined;
+						selectedSection = null;
 					}}
 					onSectionClicked={(file, section) => {
 						selectedFile = { type: 'ok', ...file };
@@ -98,7 +99,7 @@
 					}}
 					onDeleted={() => {
 						refresh();
-						selectedFile = undefined;
+						selectedFile = null;
 					}}
 				/>
 			{/each}
@@ -106,7 +107,7 @@
 	</div>
 
 	<div class="max-w-4xl grow overflow-y-auto py-4">
-		{#if selectedFile !== undefined}
+		{#if selectedFile !== null}
 			<div class="shrink-0 truncate px-4 text-2xl font-bold text-white">
 				{selectedFile.relativePath}
 				{#if selectedSection}
@@ -116,7 +117,11 @@
 			</div>
 
 			{#if selectedFile.type === 'ok'}
-				<ConfigFileEditor file={selectedFile} section={selectedSection} />
+				<ConfigFileEditor
+					file={selectedFile}
+					section={selectedSection}
+					locked={$activeProfileLocked}
+				/>
 			{:else if selectedFile.type === 'unsupported'}
 				<div class="mb-1 px-4 text-slate-400">
 					This file is in an unsupported format. Please open it in an external program to make

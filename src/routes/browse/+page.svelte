@@ -12,8 +12,9 @@
 	import { fly } from 'svelte/transition';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import { modQuery, activeGame } from '$lib/stores';
+	import { modQuery, activeGame, activeProfileLocked } from '$lib/stores';
 	import ModListItem from '$lib/modlist/ModListItem.svelte';
+	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
 
@@ -103,62 +104,71 @@
 <ModList
 	{sortOptions}
 	queryArgs={modQuery}
+	locked={$activeProfileLocked}
 	bind:this={modList}
 	bind:mods
 	bind:maxCount
 	bind:selected={selectedMod}
 >
 	<div slot="details" class="mt-2 flex text-lg text-white">
-		<Button.Root
-			class="flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
-			on:click={() => install(activeModRef)}
-			disabled={selectedMod?.isInstalled}
-		>
-			{#if selectedMod?.isInstalled}
-				Already installed
-			{:else}
-				<Icon icon="mdi:download" class="align-middle text-xl" />
-				Install
-				{#if selectedDownloadSize !== null && selectedDownloadSize > 0}
-					({shortenFileSize(selectedDownloadSize)})
-				{/if}
-			{/if}
-		</Button.Root>
-		<DropdownMenu.Root bind:open={versionsDropdownOpen}>
-			<DropdownMenu.Trigger
-				class="ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+		{#if !$activeProfileLocked}
+			<Button.Root
+				class="enabled:bg-accent-600 enabled:hover:bg-accent-500 flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+				on:click={() => install(activeModRef)}
 				disabled={selectedMod?.isInstalled}
 			>
-				<Icon
-					icon="mdi:chevron-down"
-					class="origin-center transform align-middle text-xl transition-transform {versionsDropdownOpen
-						? 'rotate-180'
-						: 'rotate-0'}"
-				/>
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content
-				class="flex max-h-72 w-48 flex-col gap-0.5 overflow-y-auto rounded-lg border border-slate-500 bg-slate-700 p-1 shadow-xl"
-				transition={fly}
-				transitionConfig={{ duration: 100 }}
-			>
-				{#each selectedMod?.versions ?? [] as version}
-					<DropdownMenu.Item
-						class="flex shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left text-slate-300 hover:bg-slate-600 hover:text-slate-100"
-						on:click={() => {
-							if (!selectedMod) return;
+				{#if selectedMod?.isInstalled}
+					Already installed
+				{:else}
+					<Icon icon="mdi:download" class="align-middle text-xl" />
+					Install
+					{#if selectedDownloadSize !== null && selectedDownloadSize > 0}
+						({shortenFileSize(selectedDownloadSize)})
+					{/if}
+				{/if}
+			</Button.Root>
+			<DropdownMenu.Root bind:open={versionsDropdownOpen}>
+				<DropdownMenu.Trigger
+					class="enabled:bg-accent-600 enabled:hover:bg-accent-500 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+					disabled={selectedMod?.isInstalled}
+				>
+					<Icon
+						icon="mdi:chevron-down"
+						class="origin-center transform align-middle text-xl transition-transform {versionsDropdownOpen
+							? 'rotate-180'
+							: 'rotate-0'}"
+					/>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content
+					class="flex max-h-72 w-48 flex-col gap-0.5 overflow-y-auto rounded-lg border border-slate-500 bg-slate-700 p-1 shadow-xl"
+					transition={fly}
+					transitionConfig={{ duration: 100 }}
+				>
+					{#each selectedMod?.versions ?? [] as version}
+						<DropdownMenu.Item
+							class="flex shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left text-slate-300 hover:bg-slate-600 hover:text-slate-100"
+							on:click={() => {
+								if (!selectedMod) return;
 
-							install({
-								packageUuid: selectedMod.uuid,
-								versionUuid: version.uuid
-							});
-						}}
-					>
-						{version.name}
-					</DropdownMenu.Item>
-				{/each}
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
+								install({
+									packageUuid: selectedMod.uuid,
+									versionUuid: version.uuid
+								});
+							}}
+						>
+							{version.name}
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		{/if}
 	</div>
+
+	<svelte:fragment slot="banner">
+		{#if $activeProfileLocked}
+			<ProfileLockedBanner />
+		{/if}
+	</svelte:fragment>
 
 	<svelte:fragment slot="placeholder">
 		{#if hasRefreshed}
@@ -172,6 +182,7 @@
 		<ModListItem
 			{mod}
 			{isSelected}
+			locked={$activeProfileLocked}
 			on:install={() => installLatest(mod)}
 			on:click={(evt) => onModClicked(evt, mod)}
 		/>

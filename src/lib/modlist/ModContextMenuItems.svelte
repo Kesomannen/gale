@@ -7,10 +7,11 @@
 	export let mod: Mod;
 	export let contextItems: ModContextItem[];
 	export let type: 'details' | 'context';
+	export let locked: boolean;
 </script>
 
 {#each contextItems as { icon, label, onclick, showFor, children }}
-	{#if showFor === undefined || showFor(mod)}
+	{#if showFor === undefined || showFor(mod, locked)}
 		{#if type === 'details'}
 			{#if children === undefined}
 				<DropdownMenu.Item class="menu-item dropdown-menu-item pr-6" on:click={() => onclick(mod)}>

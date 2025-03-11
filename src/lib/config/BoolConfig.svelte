@@ -5,6 +5,7 @@
 	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
 
 	let content = entryId.entry.value.content as boolean;
 
@@ -19,6 +20,6 @@
 </script>
 
 <div class="flex grow items-center">
-	<Checkbox bind:value={content} {onValueChanged} />
+	<Checkbox bind:value={content} {onValueChanged} disabled={locked} />
 </div>
-<ResetConfigButton {entryId} {onReset} />
+<ResetConfigButton {entryId} {locked} {onReset} />

@@ -12,7 +12,7 @@
 		type ModContextItem
 	} from '$lib/models';
 	import ModList from '$lib/modlist/ModList.svelte';
-	import { activeProfile, profileQuery, refreshProfiles } from '$lib/stores';
+	import { activeProfile, activeProfileLocked, profileQuery, refreshProfiles } from '$lib/stores';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
@@ -22,6 +22,7 @@
 	import UpdateAllBanner from '$lib/modlist/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
 	import Link from '$lib/components/Link.svelte';
+	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
 	const sortOptions = [
 		SortBy.Custom,
@@ -43,13 +44,14 @@
 				uninstall({
 					uuid: mod.uuid,
 					fullName: mod.name
-				})
+				}),
+			showFor: (_, profileLocked) => !profileLocked
 		},
 		{
 			label: 'Change version',
 			icon: 'mdi:edit',
 			onclick: () => {},
-			showFor: (mod) => mod.versions.length > 1,
+			showFor: (mod, profileLocked) => mod.versions.length > 1 && !profileLocked,
 			children: (mod) =>
 				mod.versions.map((version) => ({
 					label: version.name,
@@ -228,13 +230,14 @@
 	{sortOptions}
 	{contextItems}
 	queryArgs={profileQuery}
+	locked={$activeProfileLocked}
 	bind:this={modList}
 	bind:mods
 	bind:maxCount
 	bind:selected={selectedMod}
 >
 	<svelte:fragment slot="details">
-		{#if selectedMod && isOutdated(selectedMod)}
+		{#if selectedMod && isOutdated(selectedMod) && !$activeProfileLocked}
 			<Button.Root
 				class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
 				on:click={() => updateMod(selectedMod)}
@@ -246,6 +249,12 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="banner">
+		{#if $activeProfileLocked}
+			<ProfileLockedBanner />
+		{:else}
+			<UpdateAllBanner {updates} />
+		{/if}
+
 		{#if unknownMods.length > 0}
 			<div class="mr-3 mb-1 flex items-center rounded-lg bg-red-600 py-1.5 pr-1 pl-3 text-red-100">
 				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
@@ -262,8 +271,6 @@
 				</Button.Root>
 			</div>
 		{/if}
-
-		<UpdateAllBanner {updates} />
 	</svelte:fragment>
 
 	<svelte:fragment slot="placeholder">
@@ -286,6 +293,7 @@
 		<ProfileModListItem
 			{...data}
 			{reorderable}
+			locked={$activeProfileLocked}
 			on:dragstart={onDragStart}
 			on:dragover={onDragOver}
 			on:dragend={onDragEnd}

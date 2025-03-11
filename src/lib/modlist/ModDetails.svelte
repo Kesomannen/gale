@@ -19,6 +19,7 @@
 
 	export let mod: Mod;
 	export let contextItems: ModContextItem[] = [];
+	export let locked: boolean;
 
 	const dispatch = createEventDispatcher<{ close: void }>();
 
@@ -69,7 +70,7 @@
 			class="flex flex-col gap-0.5 rounded-lg border border-slate-500 bg-slate-700 p-1 shadow-xl"
 			{...dropTransition}
 		>
-			<ModContextMenuItems {mod} contextItems={allContextItems} type="details" />
+			<ModContextMenuItems {mod} {locked} contextItems={allContextItems} type="details" />
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
