@@ -1,16 +1,14 @@
 use std::path::Path;
 
 use eyre::{eyre, Context};
+use tauri::AppHandle;
 
 use super::{frontend, AnyFileKind};
-use crate::{
-    profile::ModManager,
-    util::cmd::{Result, StateMutex},
-};
+use crate::{state::ManagerExt, util::cmd::Result};
 
 #[tauri::command]
-pub fn get_config_files(manager: StateMutex<ModManager>) -> Result<Vec<frontend::File>> {
-    let mut manager = manager.lock().unwrap();
+pub fn get_config_files(app: AppHandle) -> Result<Vec<frontend::File>> {
+    let mut manager = app.lock_manager();
     let profile = manager.active_profile_mut();
 
     profile.refresh_config();
@@ -24,9 +22,9 @@ pub fn set_config_entry(
     section: &str,
     entry: &str,
     value: frontend::Value,
-    manager: StateMutex<ModManager>,
+    app: AppHandle,
 ) -> Result<()> {
-    let mut manager = manager.lock().unwrap();
+    let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
     let file = profile.config_cache.find_file(file)?;
@@ -46,9 +44,9 @@ pub fn reset_config_entry(
     file: &Path,
     section: &str,
     entry: &str,
-    manager: StateMutex<ModManager>,
+    app: AppHandle,
 ) -> Result<frontend::Value> {
-    let mut manager = manager.lock().unwrap();
+    let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
     let file = profile.config_cache.find_file(file)?;
@@ -63,8 +61,8 @@ pub fn reset_config_entry(
 }
 
 #[tauri::command]
-pub fn open_config_file(file: &Path, manager: StateMutex<ModManager>) -> Result<()> {
-    let manager = manager.lock().unwrap();
+pub fn open_config_file(file: &Path, app: AppHandle) -> Result<()> {
+    let manager = app.lock_manager();
 
     let profile = manager.active_profile();
     let path = profile.path.join(file);
@@ -75,8 +73,8 @@ pub fn open_config_file(file: &Path, manager: StateMutex<ModManager>) -> Result<
 }
 
 #[tauri::command]
-pub fn delete_config_file(file: &Path, manager: StateMutex<ModManager>) -> Result<()> {
-    let mut manager = manager.lock().unwrap();
+pub fn delete_config_file(file: &Path, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
 

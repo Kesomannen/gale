@@ -1,42 +1,37 @@
-use super::{
-    changelog,
-    modpack::{self, ModpackArgs},
-};
-use crate::{
-    prefs::Prefs,
-    profile::{ModManager, ProfileModKind},
-    thunderstore::{self, Thunderstore},
-    util::{
-        cmd::{Result, StateMutex},
-        fs::PathExt,
-    },
-    NetworkClient,
-};
-use eyre::{anyhow, Context};
-use itertools::Itertools;
-use log::{debug, warn};
 use std::{
     fs,
     io::{BufWriter, Cursor},
     path::PathBuf,
 };
-use tauri::{AppHandle, State};
+
+use eyre::{anyhow, Context};
+use itertools::Itertools;
+use log::{debug, warn};
+use tauri::AppHandle;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use uuid::Uuid;
 
+use super::{
+    changelog,
+    modpack::{self, ModpackArgs},
+};
+use crate::{
+    profile::ProfileModKind,
+    state::ManagerExt,
+    thunderstore::{self},
+    util::{cmd::Result, fs::PathExt},
+};
+
 #[tauri::command]
-pub async fn export_code(
-    client: State<'_, NetworkClient>,
-    manager: StateMutex<'_, ModManager>,
-) -> Result<Uuid> {
-    let key = super::export_code(&client.0, manager).await?;
+pub async fn export_code(app: AppHandle) -> Result<Uuid> {
+    let key = super::export_code(&app).await?;
 
     Ok(key)
 }
 
 #[tauri::command]
-pub fn export_file(dir: PathBuf, manager: StateMutex<'_, ModManager>) -> Result<()> {
-    let manager = manager.lock().unwrap();
+pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
+    let manager = app.lock_manager();
 
     let profile = manager.active_profile();
 
@@ -54,8 +49,8 @@ pub fn export_file(dir: PathBuf, manager: StateMutex<'_, ModManager>) -> Result<
 }
 
 #[tauri::command]
-pub fn get_pack_args(manager: StateMutex<'_, ModManager>) -> Result<Option<ModpackArgs>> {
-    let mut manager = manager.lock().unwrap();
+pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
+    let mut manager = app.lock_manager();
     let profile = manager.active_profile_mut();
 
     modpack::refresh_args(profile);
@@ -64,13 +59,9 @@ pub fn get_pack_args(manager: StateMutex<'_, ModManager>) -> Result<Option<Modpa
 }
 
 #[tauri::command]
-pub fn set_pack_args(
-    args: ModpackArgs,
-    manager: StateMutex<'_, ModManager>,
-    prefs: StateMutex<'_, Prefs>,
-) -> Result<()> {
-    let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+pub fn set_pack_args(args: ModpackArgs, app: AppHandle) -> Result<()> {
+    let prefs = app.lock_prefs();
+    let mut manager = app.lock_manager();
 
     manager.active_profile_mut().modpack = Some(args);
     manager.save(&prefs)?;
@@ -79,14 +70,9 @@ pub fn set_pack_args(
 }
 
 #[tauri::command]
-pub fn export_pack(
-    dir: PathBuf,
-    args: ModpackArgs,
-    manager: StateMutex<'_, ModManager>,
-    thunderstore: StateMutex<'_, Thunderstore>,
-) -> Result<()> {
-    let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
+pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
 
     let profile = manager.active_profile_mut();
 
@@ -113,15 +99,10 @@ pub fn export_pack(
 }
 
 #[tauri::command]
-pub async fn upload_pack(
-    args: ModpackArgs,
-    manager: StateMutex<'_, ModManager>,
-    thunderstore: StateMutex<'_, Thunderstore>,
-    client: tauri::State<'_, NetworkClient>,
-) -> Result<()> {
+pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
     let (data, game, args, token) = {
-        let manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
+        let manager = app.lock_manager();
+        let thunderstore = app.lock_thunderstore();
 
         let token = thunderstore::token::get()
             .context("failed to get thunderstore API token")?
@@ -139,15 +120,15 @@ pub async fn upload_pack(
         (data, manager.active_game, args, token)
     };
 
-    let client = client.0.clone();
+    let client = app.http().clone();
     modpack::publish(data.into_inner().into(), game, args, token, client).await?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub fn copy_dependency_strings(app: AppHandle, manager: StateMutex<ModManager>) -> Result<()> {
-    let manager = manager.lock().unwrap();
+pub fn copy_dependency_strings(app: AppHandle) -> Result<()> {
+    let manager = app.lock_manager();
 
     let content = manager
         .active_profile()
@@ -164,8 +145,8 @@ pub fn copy_dependency_strings(app: AppHandle, manager: StateMutex<ModManager>) 
 }
 
 #[tauri::command]
-pub fn copy_debug_info(app: AppHandle, manager: StateMutex<ModManager>) -> Result<()> {
-    let manager = manager.lock().unwrap();
+pub fn copy_debug_info(app: AppHandle) -> Result<()> {
+    let manager = app.lock_manager();
     let profile = manager.active_profile();
 
     let log = profile
@@ -203,14 +184,9 @@ pub fn copy_debug_info(app: AppHandle, manager: StateMutex<ModManager>) -> Resul
 }
 
 #[tauri::command]
-pub fn generate_changelog(
-    mut args: ModpackArgs,
-    all: bool,
-    manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
-) -> Result<String> {
-    let manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
+pub fn generate_changelog(mut args: ModpackArgs, all: bool, app: AppHandle) -> Result<String> {
+    let manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
 
     if all {
         let changelog = changelog::generate_all(

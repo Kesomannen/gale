@@ -3,26 +3,26 @@ use serde::Deserialize;
 use tauri::{AppHandle, Manager, Window};
 
 use super::Prefs;
-use crate::util::{
-    cmd::{Result, StateMutex},
-    window::WindowExt,
+use crate::{
+    state::ManagerExt,
+    util::{cmd::Result, window::WindowExt},
 };
 
 #[tauri::command]
-pub fn get_prefs(prefs: StateMutex<Prefs>) -> Prefs {
-    prefs.lock().unwrap().clone()
+pub fn get_prefs(app: AppHandle) -> Prefs {
+    app.lock_prefs().clone()
 }
 
 #[tauri::command]
-pub fn set_prefs(value: Prefs, prefs: StateMutex<Prefs>, app: AppHandle) -> Result<()> {
-    let mut prefs = prefs.lock().unwrap();
+pub fn set_prefs(value: Prefs, app: AppHandle) -> Result<()> {
+    let mut prefs = app.lock_prefs();
     prefs.set(value, &app)?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn is_first_run(prefs: StateMutex<Prefs>) -> Result<bool> {
-    let mut prefs = prefs.lock().unwrap();
+pub fn is_first_run(app: AppHandle) -> Result<bool> {
+    let mut prefs = app.lock_prefs();
     match prefs.is_first_run {
         true => {
             prefs.is_first_run = false;
@@ -40,8 +40,8 @@ pub enum Zoom {
 }
 
 #[tauri::command]
-pub fn zoom_window(value: Zoom, prefs: StateMutex<Prefs>, window: Window) -> Result<()> {
-    let mut prefs = prefs.lock().unwrap();
+pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
+    let mut prefs = app.lock_prefs();
     prefs.zoom_factor = match value {
         Zoom::Set { factor } => factor,
         Zoom::Modify { delta } => prefs.zoom_factor + delta,

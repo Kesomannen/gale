@@ -1,38 +1,26 @@
+use tauri::AppHandle;
 use uuid::Uuid;
 
-use crate::{
-    prefs::Prefs,
-    profile::ModManager,
-    thunderstore::ModId,
-    util::cmd::{Result, StateMutex},
-};
+use crate::{state::ManagerExt, thunderstore::ModId, util::cmd::Result};
 
 #[tauri::command]
-pub async fn change_mod_version(mod_ref: ModId, app: tauri::AppHandle) -> Result<()> {
+pub async fn change_mod_version(mod_ref: ModId, app: AppHandle) -> Result<()> {
     super::change_version(mod_ref, &app).await?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn update_mods(
-    uuids: Vec<Uuid>,
-    respect_ignored: bool,
-    app: tauri::AppHandle,
-) -> Result<()> {
+pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: AppHandle) -> Result<()> {
     super::update_mods(uuids, respect_ignored, &app).await?;
 
     Ok(())
 }
 
 #[tauri::command]
-pub fn ignore_update(
-    version_uuid: Uuid,
-    manager: StateMutex<ModManager>,
-    prefs: StateMutex<Prefs>,
-) -> Result<()> {
-    let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+pub fn ignore_update(version_uuid: Uuid, app: AppHandle) -> Result<()> {
+    let prefs = app.lock_prefs();
+    let mut manager = app.lock_manager();
 
     manager
         .active_profile_mut()

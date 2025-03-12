@@ -12,8 +12,8 @@ use uuid::Uuid;
 use super::{ModManager, Profile};
 use crate::{
     prefs::Prefs,
+    state::ManagerExt,
     thunderstore::{BorrowedMod, ModId, Thunderstore},
-    NetworkClient,
 };
 
 mod cache;
@@ -153,8 +153,7 @@ pub async fn install_mods(
     options: InstallOptions,
     app: &AppHandle,
 ) -> Result<()> {
-    let client = app.state::<NetworkClient>();
-    let mut installer = download::Installer::create(options, &client.0, app)?;
+    let mut installer = download::Installer::create(options, app.http(), app)?;
     installer.install_all(mods).await
 }
 
@@ -171,11 +170,8 @@ where
     F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<ModInstall>>,
 {
     let mods = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-
-        let manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
+        let manager = app.lock_manager();
+        let thunderstore = app.lock_thunderstore();
 
         mods(&manager, &thunderstore)?
     };

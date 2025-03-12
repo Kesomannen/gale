@@ -3,7 +3,6 @@ use std::{
     fs,
     ops::Deref,
     path::{Path, PathBuf},
-    sync::Mutex,
 };
 
 use eyre::{anyhow, bail, ensure, Context, Result};
@@ -13,7 +12,8 @@ use tauri::{AppHandle, Manager};
 
 use crate::{
     game::{self, Platform},
-    profile::{launch::LaunchMode, ModManager},
+    profile::launch::LaunchMode,
+    state::ManagerExt,
     util::{
         self,
         error::IoResultExt,
@@ -23,14 +23,6 @@ use crate::{
 };
 
 pub mod commands;
-
-pub fn setup(app: &AppHandle) -> Result<()> {
-    let prefs = Prefs::create(app)?;
-
-    app.manage(Mutex::new(prefs));
-
-    Ok(())
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq)]
 #[serde(transparent)]
@@ -188,16 +180,16 @@ impl From<PathBuf> for DirPref {
 #[serde(default, rename_all = "camelCase")]
 pub struct Prefs {
     #[serde(skip)]
-    is_first_run: bool,
+    pub is_first_run: bool,
 
     pub steam_exe_path: Option<PathBuf>,
     pub steam_library_dir: Option<PathBuf>,
     pub data_dir: DirPref,
 
     #[serde(alias = "sendTelementary")] // old typo (oops)
-    send_telemetry: bool,
-    fetch_mods_automatically: bool,
-    zoom_factor: f32,
+    pub send_telemetry: bool,
+    pub fetch_mods_automatically: bool,
+    pub zoom_factor: f32,
 
     pub game_prefs: HashMap<String, GamePrefs>,
 }
@@ -278,10 +270,6 @@ impl Default for Prefs {
 }
 
 impl Prefs {
-    fn path() -> PathBuf {
-        util::path::default_app_config_dir().join("prefs.json")
-    }
-
     pub fn create(app: &AppHandle) -> Result<Self> {
         let path = Self::path();
         fs::create_dir_all(path.parent().unwrap())
@@ -323,6 +311,10 @@ impl Prefs {
         Ok(prefs)
     }
 
+    fn path() -> PathBuf {
+        util::path::default_app_config_dir().join("prefs.json")
+    }
+
     fn save(&self) -> Result<()> {
         util::fs::write_json(Self::path(), self, JsonStyle::Pretty)
             .context("failed to save settings")
@@ -350,8 +342,7 @@ impl Prefs {
 
         if self.data_dir != value.data_dir {
             // move profile paths
-            let manager = app.state::<Mutex<ModManager>>();
-            let mut manager = manager.lock().unwrap();
+            let mut manager = app.lock_manager();
 
             let mut path = value.data_dir.to_path_buf();
             for (key, game) in &mut manager.games {

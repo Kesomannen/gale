@@ -2,7 +2,6 @@ use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
     path::PathBuf,
-    sync::Mutex,
 };
 
 use chrono::{DateTime, Utc};
@@ -11,7 +10,7 @@ use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Listener, Manager};
+use tauri::{AppHandle, Listener};
 use uuid::Uuid;
 
 use crate::{
@@ -19,6 +18,7 @@ use crate::{
     game::{self, Game, ModLoader},
     logger,
     prefs::Prefs,
+    state::ManagerExt,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::{
         self,
@@ -37,14 +37,8 @@ pub mod update;
 mod actions;
 mod query;
 
-pub fn setup(app: &AppHandle) -> Result<()> {
-    {
-        let prefs = app.state::<Mutex<Prefs>>();
-        let prefs = prefs.lock().unwrap();
-
-        let manager = ModManager::create(&prefs)?;
-        app.manage(Mutex::new(manager));
-    }
+pub fn setup(prefs: &Prefs, app: &AppHandle) -> Result<ModManager> {
+    let manager = ModManager::create(prefs)?;
 
     install::setup(app).context("failed to initialize downloader")?;
 
@@ -62,7 +56,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         }
     });
 
-    Ok(())
+    Ok(manager)
 }
 
 /// The main state of the app.
@@ -681,18 +675,14 @@ impl ModManager {
         self.active_game_mut().active_profile_mut()
     }
 
-    pub fn set_active_game(
-        &mut self,
-        game: Game,
-        thunderstore: &mut Thunderstore,
-        prefs: &Prefs,
-        app: AppHandle,
-    ) -> Result<()> {
-        self.ensure_game(game, prefs)?;
+    pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<()> {
+        self.ensure_game(game, &app.lock_prefs())?;
 
         if self.active_game != game {
             self.active_game = game;
-            thunderstore.switch_game(game, app);
+
+            let mut thunderstore = app.lock_thunderstore();
+            thunderstore.switch_game(game, app.clone());
         }
 
         info!("set active game to {}", game.slug);

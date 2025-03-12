@@ -2,32 +2,22 @@ use eyre::Context;
 use itertools::Itertools;
 use tauri::AppHandle;
 
-use crate::{
-    prefs::Prefs,
-    profile::ModManager,
-    util::cmd::{Result, StateMutex},
-};
+use crate::{state::ManagerExt, util::cmd::Result};
 
 #[tauri::command]
-pub fn launch_game(
-    manager: StateMutex<ModManager>,
-    prefs: StateMutex<Prefs>,
-    app: AppHandle,
-) -> Result<()> {
-    let manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+pub fn launch_game(app: AppHandle) -> Result<()> {
+    let prefs = app.lock_prefs();
+    let manager = app.lock_manager();
 
-    manager.active_game().launch(&prefs, app)?;
+    manager.active_game().launch(&prefs, &app)?;
+
     Ok(())
 }
 
 #[tauri::command]
-pub fn get_launch_args(
-    manager: StateMutex<ModManager>,
-    prefs: StateMutex<Prefs>,
-) -> Result<String> {
-    let manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+pub fn get_launch_args(app: AppHandle) -> Result<String> {
+    let prefs = app.lock_prefs();
+    let manager = app.lock_manager();
 
     let game_dir = super::game_dir(manager.active_game, &prefs)?;
     let (_, command) = manager.active_game().launch_command(&game_dir, &prefs)?;
@@ -40,9 +30,9 @@ pub fn get_launch_args(
 }
 
 #[tauri::command]
-pub fn open_game_dir(manager: StateMutex<ModManager>, prefs: StateMutex<Prefs>) -> Result<()> {
-    let manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+pub fn open_game_dir(app: AppHandle) -> Result<()> {
+    let prefs = app.lock_prefs();
+    let manager = app.lock_manager();
 
     let path = super::game_dir(manager.active_game, &prefs)?;
     open::that(path).context("failed to open directory")?;

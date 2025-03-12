@@ -1,26 +1,22 @@
-use std::{cmp::Ordering, collections::HashSet, sync::Mutex, time::Duration};
+use std::{cmp::Ordering, collections::HashSet, time::Duration};
 
 use eyre::Result;
 use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
 use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
-    BorrowedMod, Thunderstore,
+    BorrowedMod,
 };
-use crate::profile::{LocalMod, ModManager, Profile};
+use crate::{
+    profile::{LocalMod, Profile},
+    state::ManagerExt,
+};
 
 pub fn setup(app: &AppHandle) {
-    app.manage(Mutex::new(QueryState::default()));
-
     tauri::async_runtime::spawn(query_loop(app.clone()));
-}
-
-#[derive(Default)]
-pub struct QueryState {
-    pub current_query: Option<QueryModsArgs>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -62,17 +58,12 @@ pub struct QueryModsArgs {
 pub async fn query_loop(app: AppHandle) -> Result<()> {
     const INTERVAL: Duration = Duration::from_millis(500);
 
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-    let query_state = app.state::<Mutex<QueryState>>();
-    let manager = app.state::<Mutex<ModManager>>();
-
     loop {
         {
-            let mut state = query_state.lock().unwrap();
+            let mut thunderstore = app.lock_thunderstore();
 
-            if let Some(args) = &state.current_query {
-                let thunderstore = thunderstore.lock().unwrap();
-                let manager = manager.lock().unwrap();
+            if let Some(args) = &thunderstore.current_query {
+                let manager = app.lock_manager();
 
                 let mods =
                     query_frontend_mods(args, thunderstore.latest(), manager.active_profile());
@@ -80,7 +71,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
 
                 if thunderstore.packages_fetched {
                     info!("all packages fetched, pausing query loop");
-                    state.current_query = None;
+                    thunderstore.current_query = None;
                 }
             }
         };

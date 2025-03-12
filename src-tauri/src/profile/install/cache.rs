@@ -2,13 +2,9 @@ use std::{collections::HashSet, fs, path::PathBuf};
 
 use eyre::{Context, Result};
 use log::info;
+use tauri::AppHandle;
 
-use crate::{
-    prefs::Prefs,
-    profile::ModManager,
-    thunderstore::{Thunderstore, VersionIdent},
-    util,
-};
+use crate::{prefs::Prefs, state::ManagerExt, thunderstore::VersionIdent, util};
 
 pub(super) fn path(ident: &VersionIdent, prefs: &Prefs) -> PathBuf {
     let mut path = prefs.cache_dir();
@@ -28,14 +24,14 @@ pub(super) fn clear(path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-pub(super) fn prepare_soft_clear(
-    manager: &ModManager,
-    thunderstore: &Thunderstore,
-    prefs: &Prefs,
-) -> Result<Vec<PathBuf>> {
+pub(super) fn prepare_soft_clear(app: AppHandle) -> Result<Vec<PathBuf>> {
+    let prefs = app.lock_prefs();
+    let manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
+
     let installed_mods = manager
         .active_game()
-        .installed_mods(thunderstore)
+        .installed_mods(&thunderstore)
         .map(|borrowed| {
             let ident = borrowed.ident();
             (ident.full_name(), ident.version())

@@ -3,57 +3,45 @@ use tauri::AppHandle;
 
 use super::{
     models::FrontendMod,
-    query::{self, QueryModsArgs, QueryState},
-    Thunderstore,
+    query::{self, QueryModsArgs},
 };
-use crate::{
-    logger,
-    profile::ModManager,
-    util::cmd::{Result, StateMutex},
-};
+use crate::{logger, state::ManagerExt, util::cmd::Result};
 
 #[tauri::command]
-pub fn query_thunderstore(
-    args: QueryModsArgs,
-    thunderstore: StateMutex<Thunderstore>,
-    state: StateMutex<QueryState>,
-    manager: StateMutex<ModManager>,
-) -> Vec<FrontendMod> {
-    let thunderstore = thunderstore.lock().unwrap();
-    let manager = manager.lock().unwrap();
+pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMod> {
+    let manager = app.lock_manager();
+    let mut thunderstore = app.lock_thunderstore();
 
     let result = query::query_frontend_mods(&args, thunderstore.latest(), manager.active_profile());
 
     if !thunderstore.packages_fetched {
-        let mut state = state.lock().unwrap();
-        state.current_query = Some(args);
+        thunderstore.current_query = Some(args);
     }
 
     result
 }
 
 #[tauri::command]
-pub fn stop_querying_thunderstore(state: StateMutex<QueryState>) {
-    state.lock().unwrap().current_query = None;
+pub fn stop_querying_thunderstore(app: AppHandle) {
+    app.lock_thunderstore().current_query = None;
 }
 
 #[tauri::command]
-pub fn trigger_mod_fetch(
-    app: AppHandle,
-    state: StateMutex<Thunderstore>,
-    manager: StateMutex<ModManager>,
-) -> Result<()> {
-    let state = state.lock().unwrap();
+pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
+    let write_directly = {
+        let state = app.lock_thunderstore();
 
-    if state.is_fetching {
-        return Err(anyhow!("already fetching mods").into());
-    }
+        if state.is_fetching {
+            return Err(anyhow!("already fetching mods").into());
+        }
 
-    let write_directly = !state.packages_fetched;
-    let game = manager.lock().unwrap().active_game;
+        !state.packages_fetched
+    };
+
+    let game = app.lock_manager().active_game;
 
     tauri::async_runtime::spawn(async move {
-        if let Err(err) = super::fetch::fetch_packages(&app, game, write_directly).await {
+        if let Err(err) = super::fetch::fetch_packages(game, write_directly, &app).await {
             logger::log_webview_err("error while fetching mods from Thunderstore", err, &app);
         }
     });

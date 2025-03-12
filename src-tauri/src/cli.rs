@@ -1,16 +1,15 @@
-use std::{path::PathBuf, sync::Mutex};
+use std::path::PathBuf;
 
 use eyre::{anyhow, Context, OptionExt, Result};
 use log::{error, info};
 use serde_json::Value;
-use tauri::{App, Manager};
+use tauri::App;
 use tauri_plugin_cli::CliExt;
 
 use crate::{
     game::{self},
-    prefs::Prefs,
-    profile::{self, install::InstallOptions, ModManager},
-    thunderstore::Thunderstore,
+    profile::{self, install::InstallOptions},
+    state::ManagerExt,
 };
 
 pub fn run(app: &App) -> Result<()> {
@@ -20,19 +19,13 @@ pub fn run(app: &App) -> Result<()> {
                 return Ok(());
             }
 
-            let manager = app.state::<Mutex<ModManager>>();
-            let thunderstore = app.state::<Mutex<Thunderstore>>();
-            let prefs = app.state::<Mutex<Prefs>>();
-
-            let mut manager = manager.lock().unwrap();
-            let mut thunderstore = thunderstore.lock().unwrap();
-            let prefs = prefs.lock().unwrap();
+            let mut manager = app.lock_manager();
 
             if let Some(Value::String(slug)) = matches.args.get("game").map(|arg| &arg.value) {
                 let game = game::from_slug(slug).ok_or_eyre("unknown game id")?;
 
                 manager
-                    .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())
+                    .set_active_game(game, app.handle())
                     .context("failed to set game")?;
             }
 
@@ -59,7 +52,7 @@ pub fn run(app: &App) -> Result<()> {
             if let Some(Value::Bool(true)) = matches.args.get("launch").map(|arg| &arg.value) {
                 manager
                     .active_game()
-                    .launch(&prefs, app.handle().to_owned())
+                    .launch(&app.lock_prefs(), app.handle())
                     .context("failed to launch game")?;
             }
 

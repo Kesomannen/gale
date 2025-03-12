@@ -1,17 +1,17 @@
+use std::sync::Mutex;
+
+use tauri::{AppHandle, State};
+
 use crate::{
-    prefs::Prefs,
-    profile::ModManager,
-    thunderstore::{ModId, Thunderstore},
-    util::{
-        self,
-        cmd::{Result, StateMutex},
-    },
+    state::ManagerExt,
+    thunderstore::ModId,
+    util::{self, cmd::Result},
 };
 
 use super::{InstallOptions, InstallState, ModInstall};
 
 #[tauri::command]
-pub async fn install_mod(mod_ref: ModId, app: tauri::AppHandle) -> Result<()> {
+pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
     super::install_with_deps(
         vec![ModInstall::new(mod_ref)],
         InstallOptions::default(),
@@ -24,27 +24,16 @@ pub async fn install_mod(mod_ref: ModId, app: tauri::AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn cancel_install(install_state: StateMutex<InstallState>) -> Result<()> {
-    install_state.lock().unwrap().cancelled = true;
+pub fn cancel_install(state: State<'_, Mutex<InstallState>>) -> Result<()> {
+    state.lock().unwrap().cancelled = true;
 
     Ok(())
 }
 
 #[tauri::command]
-pub async fn clear_download_cache(
-    soft: bool,
-    prefs: StateMutex<'_, Prefs>,
-    manager: StateMutex<'_, ModManager>,
-    thunderstore: StateMutex<'_, Thunderstore>,
-) -> Result<u64> {
+pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     if soft {
-        let paths = {
-            let prefs = prefs.lock().unwrap();
-            let manager = manager.lock().unwrap();
-            let thunderstore = thunderstore.lock().unwrap();
-
-            super::cache::prepare_soft_clear(&manager, &thunderstore, &prefs)?
-        };
+        let paths = super::cache::prepare_soft_clear(app)?;
 
         let size = paths
             .iter()
@@ -55,7 +44,7 @@ pub async fn clear_download_cache(
 
         Ok(size)
     } else {
-        let path = prefs.lock().unwrap().cache_dir();
+        let path = app.lock_prefs().cache_dir();
 
         let size = util::fs::get_directory_size(&path);
 
@@ -66,15 +55,10 @@ pub async fn clear_download_cache(
 }
 
 #[tauri::command]
-pub fn get_download_size(
-    mod_ref: ModId,
-    manager: StateMutex<ModManager>,
-    thunderstore: StateMutex<Thunderstore>,
-    prefs: StateMutex<Prefs>,
-) -> Result<u64> {
-    let manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+pub fn get_download_size(mod_ref: ModId, app: AppHandle) -> Result<u64> {
+    let prefs = app.lock_prefs();
+    let manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
 
     Ok(super::total_download_size(
         mod_ref.borrow(&thunderstore)?,

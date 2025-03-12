@@ -8,14 +8,15 @@ use std::{
 use base64::{prelude::BASE64_STANDARD, Engine};
 use eyre::{anyhow, Context};
 use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
 use uuid::Uuid;
 use walkdir::WalkDir;
 use zip::{write::SimpleFileOptions, ZipWriter};
 
-use super::{install::ModInstall, ModManager, Profile, Result};
+use super::{install::ModInstall, Profile, Result};
 use crate::{
+    state::ManagerExt,
     thunderstore::{LegacyProfileCreateResponse, ModId, Thunderstore},
-    util::cmd::StateMutex,
 };
 
 mod changelog;
@@ -142,12 +143,9 @@ fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
     Ok(())
 }
 
-async fn export_code(
-    client: &reqwest::Client,
-    manager: StateMutex<'_, ModManager>,
-) -> Result<Uuid> {
+async fn export_code(app: &AppHandle) -> Result<Uuid> {
     let base64 = {
-        let mut manager = manager.lock().unwrap();
+        let mut manager = app.lock_manager();
 
         let profile = manager.active_profile_mut();
         profile.refresh_config();
@@ -163,7 +161,8 @@ async fn export_code(
 
     const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
 
-    let response = client
+    let response = app
+        .http()
         .post(URL)
         .header("Content-Type", "application/octet-stream")
         .body(base64)

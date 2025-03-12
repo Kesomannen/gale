@@ -1,32 +1,26 @@
-use std::sync::Mutex;
-
 use eyre::{Context, Result};
 use log::{debug, error, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use uuid::Uuid;
 
 use crate::{
-    prefs::Prefs,
+    state::ManagerExt,
     util::{self, fs::JsonStyle},
-    NetworkClient,
 };
 
 const PROJECT_URL: &str = "https://phpkxfkbquscgqvhtuuv.supabase.co";
 const ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBocGt4ZmticXVzY2dxdmh0dXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyODAzNDgsImV4cCI6MjA1Mjg1NjM0OH0._eOEhNdG5dIpLnArUcTiicwuxv-hYQlZSSqc06-Aj0k";
 
 pub async fn send_app_start_event(app: AppHandle) {
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    if !prefs.lock().unwrap().send_telemetry() {
+    if !app.lock_prefs().send_telemetry() {
         info!("telemetry is disabled");
         return;
     }
 
     debug!("sending app_start telemetry event");
 
-    let client = &app.state::<NetworkClient>().inner().0;
     let data = match read_save_data() {
         Ok(data) => data,
         Err(err) => {
@@ -42,7 +36,7 @@ pub async fn send_app_start_event(app: AppHandle) {
         "user_id": data.user_id
     });
 
-    match send_request(url, payload, client).await {
+    match send_request(url, payload, app.http()).await {
         Ok(_) => debug!("successfully sent telemetry"),
         Err(err) => error!("failed to send telemetry: {:#}", err),
     }
@@ -51,10 +45,9 @@ pub async fn send_app_start_event(app: AppHandle) {
 async fn send_request(
     url: String,
     payload: serde_json::Value,
-    client: &reqwest::Client,
+    http: &reqwest::Client,
 ) -> Result<()> {
-    client
-        .post(url)
+    http.post(url)
         .bearer_auth(ANON_KEY)
         .header("apikey", ANON_KEY)
         .json(&payload)

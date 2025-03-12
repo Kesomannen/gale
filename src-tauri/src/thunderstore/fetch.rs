@@ -1,37 +1,22 @@
 use core::str;
-use std::{
-    sync::Mutex,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 use eyre::Result;
 use indexmap::IndexMap;
 use log::{info, warn};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
-use crate::{
-    game::Game,
-    logger,
-    prefs::Prefs,
-    profile::ModManager,
-    thunderstore::{PackageListing, Thunderstore},
-    util::cmd::StateMutex,
-    NetworkClient,
-};
+use crate::{game::Game, logger, state::ManagerExt, thunderstore::PackageListing};
 
-pub(super) async fn fetch_package_loop(app: AppHandle, game: Game) {
+pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
     const FETCH_INTERVAL: Duration = Duration::from_secs(60 * 15);
 
-    let manager = app.state::<Mutex<ModManager>>();
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    read_and_insert_cache(manager, thunderstore.clone());
+    read_and_insert_cache(&app);
 
     let mut is_first = true;
 
     loop {
-        let fetch_automatically = prefs.lock().unwrap().fetch_mods_automatically();
+        let fetch_automatically = app.lock_prefs().fetch_mods_automatically();
 
         // always fetch once, even if the setting is turned off
         if !fetch_automatically && !is_first {
@@ -39,41 +24,36 @@ pub(super) async fn fetch_package_loop(app: AppHandle, game: Game) {
             break;
         };
 
-        if let Err(err) = loop_iter(game, &mut is_first, &app, thunderstore.clone()).await {
+        if let Err(err) = loop_iter(game, &mut is_first, &app).await {
             logger::log_webview_err("Error while fetching packages from Thunderstore", err, &app);
         }
 
         tokio::time::sleep(FETCH_INTERVAL).await;
     }
 
-    async fn loop_iter(
-        game: Game,
-        is_first: &mut bool,
-        app: &AppHandle,
-        thunderstore: StateMutex<'_, Thunderstore>,
-    ) -> Result<()> {
-        if thunderstore.lock().unwrap().is_fetching {
+    async fn loop_iter(game: Game, is_first: &mut bool, app: &AppHandle) -> Result<()> {
+        if app.lock_thunderstore().is_fetching {
             warn!("automatic fetch cancelled due to ongoing fetch");
             return Ok(());
         }
 
-        let result = fetch_packages(app, game, *is_first).await;
+        let result = fetch_packages(game, *is_first, app).await;
 
-        let mut lock = thunderstore.lock().unwrap();
-        lock.is_fetching = false;
-        lock.packages_fetched |= result.is_ok();
+        let mut state = app.lock_thunderstore();
+
+        state.is_fetching = false;
+        state.packages_fetched |= result.is_ok();
+
         *is_first &= result.is_err();
 
         result
     }
 }
 
-fn read_and_insert_cache(manager: StateMutex<ModManager>, state: StateMutex<Thunderstore>) {
-    let manager = manager.lock().unwrap();
-
-    match super::read_cache(&manager) {
+fn read_and_insert_cache(app: &AppHandle) {
+    match super::read_cache(&app.lock_manager()) {
         Ok(Some(mods)) => {
-            let mut thunderstore = state.lock().unwrap();
+            let mut thunderstore = app.lock_thunderstore();
 
             for package in mods {
                 thunderstore.packages.insert(package.uuid, package);
@@ -94,9 +74,9 @@ lazy_static! {
 }
 
 pub(super) async fn fetch_packages(
-    app: &AppHandle,
     game: Game,
     write_directly: bool,
+    app: &AppHandle,
 ) -> Result<()> {
     const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
     const INSERT_EVERY: usize = 1000;
@@ -106,11 +86,8 @@ pub(super) async fn fetch_packages(
         game.slug, write_directly
     );
 
-    let state = app.state::<Mutex<Thunderstore>>();
-    let client = &app.state::<NetworkClient>().0;
-
     let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.slug);
-    let mut response = client.get(url).send().await?.error_for_status()?;
+    let mut response = app.http().get(url).send().await?.error_for_status()?;
 
     let mut i = 0;
     let mut package_count = 0;
@@ -156,7 +133,7 @@ pub(super) async fn fetch_packages(
 
         // do this in bigger chunks to not have to lock the state too often
         if write_directly && package_buffer.len() >= INSERT_EVERY {
-            let mut state = state.lock().unwrap();
+            let mut state = app.lock_thunderstore();
             state.packages.extend(package_buffer.drain(..));
         }
 
@@ -168,7 +145,7 @@ pub(super) async fn fetch_packages(
         i += 1;
     }
 
-    let mut state = state.lock().unwrap();
+    let mut state = app.lock_thunderstore();
     if write_directly {
         // add any remaining packages
         state.packages.extend(package_buffer.into_iter());
@@ -201,14 +178,9 @@ pub(super) async fn fetch_packages(
 }
 
 pub async fn wait_for_fetch(app: &AppHandle) {
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-
     loop {
-        {
-            let thunderstore = thunderstore.lock().unwrap();
-            if thunderstore.packages_fetched() {
-                return;
-            }
+        if app.lock_thunderstore().packages_fetched() {
+            return;
         }
 
         tokio::time::sleep(Duration::from_secs(1)).await;
