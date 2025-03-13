@@ -17,6 +17,7 @@ use uuid::Uuid;
 use crate::{
     game::Game,
     profile::ModManager,
+    state::ManagerExt,
     util::{self, fs::JsonStyle},
 };
 
@@ -33,13 +34,10 @@ pub use models::*;
 mod ident;
 pub use ident::*;
 
-pub fn setup(manager: &ModManager, app: &AppHandle) -> Result<Thunderstore> {
-    let mut thunderstore = Thunderstore::default();
-    thunderstore.switch_game(manager.active_game, app.clone());
-
-    query::setup(app);
-
-    Ok(thunderstore)
+pub fn start(app: &AppHandle) {
+    query::setup(&app);
+    app.lock_thunderstore()
+        .switch_game(app.lock_manager().active_game, app.clone());
 }
 
 /// A pair of a package and one of its versions.

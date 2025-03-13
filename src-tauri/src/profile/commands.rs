@@ -1,6 +1,6 @@
 use eyre::{Context, OptionExt};
 use itertools::Itertools;
-use log::warn;
+use log::{info, warn};
 use serde::Serialize;
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -278,6 +278,12 @@ where
 
     if let ActionResult::Done = response {
         manager.save(&prefs)?;
+
+        app.db()
+            .save_manager(&manager)
+            .context("failed to write to database")?;
+
+        info!("wrote manager to database");
     }
 
     Ok(response)

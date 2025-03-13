@@ -89,6 +89,8 @@ pub struct ManagedGame {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ManagedGameSaveData {
+    #[serde(default)]
+    slug: String,
     favorite: bool,
     active_profile_index: usize,
 }
@@ -108,6 +110,9 @@ pub struct Profile {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileSaveData {
+    #[serde(default)]
+    name: String,
+
     mods: Vec<ProfileMod>,
 
     #[serde(default)]
@@ -380,8 +385,9 @@ impl Profile {
         Ok(Some(profile))
     }
 
-    fn save_data(&self) -> ProfileSaveData {
+    pub fn save_data(&self) -> impl Serialize {
         ProfileSaveData {
+            name: self.name.clone(),
             modpack: self.modpack.clone(),
             mods: self.mods.clone(),
             ignored_updates: self.ignored_updates.clone(),
@@ -572,8 +578,9 @@ impl ManagedGame {
         Ok(Some((game, result)))
     }
 
-    fn save_data(&self) -> ManagedGameSaveData {
+    pub fn save_data(&self) -> impl Serialize {
         ManagedGameSaveData {
+            slug: self.game.slug.to_string(),
             favorite: self.favorite,
             active_profile_index: self.active_profile_index,
         }
@@ -719,7 +726,7 @@ impl ModManager {
         thunderstore::write_cache(&packages, self)
     }
 
-    fn save_data(&self) -> ManagerSaveData {
+    pub fn save_data(&self) -> impl Serialize {
         ManagerSaveData {
             active_game: self.active_game.slug.to_string(),
         }

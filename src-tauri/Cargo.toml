@@ -67,7 +67,7 @@ rayon = "1"
 bytes = "1"
 strum = "0.26"
 strum_macros = "0.26"
-rusqlite = "0.34"
+rusqlite = { version = "0.34", features = ["bundled"] }
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

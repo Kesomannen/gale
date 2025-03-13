@@ -4,6 +4,7 @@ use eyre::{Context, Result};
 use tauri::{AppHandle, Manager};
 
 use crate::{
+    db::{self, Db},
     prefs::Prefs,
     profile::{self, ModManager},
     thunderstore::{self, Thunderstore},
@@ -14,6 +15,7 @@ pub struct AppState {
     prefs: Mutex<Prefs>,
     manager: Mutex<ModManager>,
     thunderstore: Mutex<Thunderstore>,
+    db: Db,
 }
 
 impl AppState {
@@ -32,6 +34,10 @@ impl AppState {
     pub fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.thunderstore.lock().unwrap()
     }
+
+    pub fn db(&self) -> &Db {
+        &self.db
+    }
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {
@@ -42,9 +48,11 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 
     let prefs = Prefs::create(app).context("failed to init prefs")?;
     let manager = profile::setup(&prefs, app).context("failed to init profiles")?;
-    let thunderstore = thunderstore::setup(&manager, app).context("failed to init thunderstore")?;
+    let thunderstore = Thunderstore::default();
+    let db = db::init().context("failed to init database")?;
 
     let state = AppState {
+        db,
         http,
         prefs: Mutex::new(prefs),
         manager: Mutex::new(manager),
@@ -52,6 +60,8 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     };
 
     app.manage(state);
+
+    thunderstore::start(app);
 
     Ok(())
 }
@@ -73,6 +83,10 @@ pub trait ManagerExt<R> {
 
     fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.app_state().lock_thunderstore()
+    }
+
+    fn db(&self) -> &Db {
+        self.app_state().db()
     }
 }
 

@@ -14,6 +14,7 @@ extern crate webkit2gtk;
 
 mod cli;
 mod config;
+mod db;
 mod game;
 mod logger;
 mod prefs;

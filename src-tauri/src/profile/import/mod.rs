@@ -124,9 +124,7 @@ async fn import_data(
         }
 
         let profile = game.create_profile(data.name)?;
-
         profile.ignored_updates.extend(data.ignored_updates);
-
         profile.path.clone()
     };
 
