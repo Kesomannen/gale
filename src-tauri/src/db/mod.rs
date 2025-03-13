@@ -1,5 +1,6 @@
 use std::{
     collections::HashSet,
+    iter,
     sync::{Mutex, MutexGuard},
 };
 
@@ -9,7 +10,7 @@ use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
 use crate::{
-    profile::{self, ModManager},
+    profile::{self, ManagedGame, ModManager, Profile},
     util,
 };
 
@@ -59,21 +60,6 @@ fn create_tables(conn: &rusqlite::Connection) -> Result<()> {
     Ok(())
 }
 
-fn map_json_option_row<I, T>(row: &rusqlite::Row, idx: I) -> rusqlite::Result<Option<T>>
-where
-    I: rusqlite::RowIndex,
-    T: DeserializeOwned,
-{
-    let string = match row.get::<_, String>(idx) {
-        Ok(str) => str,
-        Err(rusqlite::Error::InvalidColumnType(_, _, SqliteType::Null)) => return Ok(None),
-        Err(err) => return Err(err),
-    };
-    serde_json::from_str(&string).map_err(|err| {
-        rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(err))
-    })
-}
-
 fn map_json_row<I, T>(row: &rusqlite::Row, idx: I) -> rusqlite::Result<T>
 where
     I: rusqlite::RowIndex,
@@ -83,6 +69,18 @@ where
     serde_json::from_str(&string).map_err(|err| {
         rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(err))
     })
+}
+
+fn map_json_option_row<I, T>(row: &rusqlite::Row, idx: I) -> rusqlite::Result<Option<T>>
+where
+    I: rusqlite::RowIndex,
+    T: DeserializeOwned,
+{
+    match map_json_row(row, idx) {
+        Ok(value) => Ok(Some(value)),
+        Err(rusqlite::Error::InvalidColumnType(_, _, SqliteType::Null)) => Ok(None),
+        Err(err) => Err(err),
+    }
 }
 
 pub struct ManagerData {
@@ -118,6 +116,19 @@ impl Db {
         self.0.lock().unwrap()
     }
 
+    fn with_transaction<F>(&self, f: F) -> Result<()>
+    where
+        F: FnOnce(&rusqlite::Transaction) -> Result<()>,
+    {
+        let mut conn = self.conn();
+        let tx = conn.transaction()?;
+
+        f(&tx)?;
+
+        tx.commit()?;
+        Ok(())
+    }
+
     pub fn next_profile_id(&self) -> Result<i64> {
         let conn = self.conn();
 
@@ -133,7 +144,7 @@ impl Db {
         Ok(res)
     }
 
-    pub fn get(&self) -> Result<SaveData> {
+    pub fn read(&self) -> Result<SaveData> {
         let conn = self.conn();
 
         let manager = conn
@@ -174,7 +185,7 @@ impl Db {
                     path: row.get(2)?,
                     game_slug: row.get(3)?,
                     mods: map_json_row(row, 4)?,
-                    modpack: map_json_row(row, 5)?,
+                    modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_row(row, 6)?,
                 })
             })?
@@ -187,124 +198,91 @@ impl Db {
         })
     }
 
-    pub fn write(&self, manager: &ModManager) -> Result<()> {
-        let mut conn = self.conn();
-        let tx = conn.transaction()?;
+    pub fn save_all(&self, manager: &ModManager) -> Result<()> {
+        self.with_transaction(|tx| {
+            self._save_manager(tx, manager)?;
+            self.save_games(tx, manager.games.values())?;
+            self.save_profiles(tx, manager.games.values().flat_map(|game| &game.profiles))?;
 
+            Ok(())
+        })
+    }
+
+    pub fn save_manager(&self, manager: &ModManager) -> Result<()> {
+        self.with_transaction(|tx| self._save_manager(&tx, manager))
+    }
+
+    fn _save_manager(&self, tx: &rusqlite::Transaction, manager: &ModManager) -> Result<()> {
         tx.execute(
             "INSERT OR REPLACE INTO manager (id, active_game_slug)
             VALUES (?, ?)",
             params![1, manager.active_game.slug],
         )?;
 
-        {
-            let mut stmt = tx.prepare(
-                "INSERT OR REPLACE INTO managed_games (id, slug, favorite, active_profile_id)
-                    VALUES (?, ?, ?, ?)",
-            )?;
-
-            for game in manager.games.values() {
-                stmt.execute(params![
-                    game.id,
-                    game.game.slug,
-                    game.favorite,
-                    game.active_profile_id
-                ])?;
-            }
-        }
-
-        {
-            let mut stmt = tx.prepare(
-                "INSERT OR REPLACE INTO profiles 
-                    (id, name, path, game_slug, mods, modpack, ignored_updates) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)",
-            )?;
-
-            for profile in manager.games.values().flat_map(|game| &game.profiles) {
-                let mods = serde_json::to_string(&profile.mods)?;
-                let modpack = profile
-                    .modpack
-                    .as_ref()
-                    .map(|modpack| serde_json::to_string(modpack))
-                    .transpose()?;
-                let ignored_updates = serde_json::to_string(&profile.ignored_updates)?;
-
-                stmt.execute(params![
-                    profile.id,
-                    profile.name,
-                    profile.path.to_string_lossy(),
-                    profile.game.slug,
-                    mods,
-                    modpack,
-                    ignored_updates
-                ])?;
-            }
-        }
-
-        tx.commit()?;
         Ok(())
     }
 
-    /*
-    pub fn get_all_profiles(&self) -> Result<Vec<ProfileSaveData>> {
-        let conn = self.conn();
-        let profiles = conn
-            .prepare("SELECT id, data FROM profiles")?
-            .query_map((), |row| {
-                Ok(ProfileSaveData {
-                    name: row.get("name")?,
-                    mods: map_json_row(row, "mods")?,
-                    modpack: map_json_row(row, "modpack")?,
-                    ignored_updates: map_json_row(row, "ignored_updates")?,
-                })
-            })?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
-
-        Ok(profiles)
+    pub fn save_game(&self, game: &ManagedGame) -> Result<()> {
+        self.with_transaction(|tx| self.save_games(&tx, iter::once(game)))
     }
 
-    pub fn save_manager(&self, manager: &ModManager) -> Result<()> {
-        let start = Instant::now();
-
-        let mut conn = self.conn();
-
-        let tx = conn.transaction()?;
-
-        let string = serde_json::to_string(&manager.save_data())?;
-        tx.execute(
-            "INSERT OR REPLACE INTO manager (id, data)
-            VALUES (1, ?)",
-            [string],
+    fn save_games<'a>(
+        &self,
+        tx: &rusqlite::Transaction,
+        games: impl Iterator<Item = &'a ManagedGame>,
+    ) -> Result<()> {
+        let mut stmt = tx.prepare(
+            "INSERT OR REPLACE INTO managed_games (id, slug, favorite, active_profile_id)
+                VALUES (?, ?, ?, ?)",
         )?;
 
-        {
-            let mut stmt =
-                tx.prepare("INSERT OR REPLACE INTO managed_games (id, data) VALUES (?, ?)")?;
-            for (i, game) in manager.games.values().enumerate() {
-                let string = serde_json::to_string(&game.save_data())?;
-                stmt.execute(params![i + 1, string])?;
-            }
+        for game in games {
+            stmt.execute(params![
+                game.id,
+                game.game.slug,
+                game.favorite,
+                game.active_profile_id
+            ])?;
         }
-
-        {
-            let mut stmt =
-                tx.prepare("INSERT OR REPLACE INTO profiles (id, data) VALUES (?, ?)")?;
-            for (i, profile) in manager
-                .games
-                .values()
-                .flat_map(|game| &game.profiles)
-                .enumerate()
-            {
-                let string = serde_json::to_string(&profile.save_data())?;
-                stmt.execute(params![i + 1, string])?;
-            }
-        }
-
-        tx.commit()?;
-
-        info!("saving to database took {:?}", start.elapsed());
 
         Ok(())
     }
-    */
+
+    pub fn save_profile(&self, profile: &Profile) -> Result<()> {
+        self.with_transaction(|tx| self.save_profiles(&tx, iter::once(profile)))
+    }
+
+    fn save_profiles<'a>(
+        &self,
+        tx: &rusqlite::Transaction,
+        profiles: impl Iterator<Item = &'a Profile>,
+    ) -> Result<()> {
+        let mut stmt = tx.prepare(
+            "INSERT OR REPLACE INTO profiles 
+                (id, name, path, game_slug, mods, modpack, ignored_updates) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )?;
+
+        for profile in profiles {
+            let mods = serde_json::to_string(&profile.mods)?;
+            let modpack = profile
+                .modpack
+                .as_ref()
+                .map(|modpack| serde_json::to_string(modpack))
+                .transpose()?;
+            let ignored_updates = serde_json::to_string(&profile.ignored_updates)?;
+
+            stmt.execute(params![
+                profile.id,
+                profile.name,
+                profile.path.to_string_lossy(),
+                profile.game.slug,
+                mods,
+                modpack,
+                ignored_updates
+            ])?;
+        }
+
+        Ok(())
+    }
 }

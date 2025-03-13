@@ -74,7 +74,7 @@ pub fn favorite_game(slug: String, app: AppHandle) -> Result<()> {
     let managed_game = manager.ensure_game(game, &prefs, app.db())?;
     managed_game.favorite = !managed_game.favorite;
 
-    manager.save(app.db())?;
+    managed_game.save(app.db())?;
 
     Ok(())
 }
@@ -129,8 +129,9 @@ pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
 pub fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    manager.active_game_mut().set_active_profile(index)?;
-    manager.save(app.db())?;
+    let game = manager.active_game_mut();
+    game.set_active_profile(index)?;
+    game.save(app.db())?;
 
     Ok(())
 }
@@ -213,7 +214,7 @@ pub fn create_profile(name: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     manager.active_game_mut().create_profile(name, app.db())?;
-    manager.save(app.db())?;
+    manager.save_all(app.db())?;
 
     Ok(())
 }
@@ -222,8 +223,9 @@ pub fn create_profile(name: String, app: AppHandle) -> Result<()> {
 pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    manager.active_game_mut().delete_profile(index, false)?;
-    manager.save(app.db())?;
+    let game = manager.active_game_mut();
+    game.delete_profile(index, false)?;
+    game.save(app.db())?;
 
     Ok(())
 }
@@ -232,8 +234,9 @@ pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
 pub fn rename_profile(name: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    manager.active_profile_mut().rename(name)?;
-    manager.save(app.db())?;
+    let profile = manager.active_profile_mut();
+    profile.rename(name)?;
+    profile.save(app.db())?;
 
     Ok(())
 }
@@ -244,7 +247,7 @@ pub fn duplicate_profile(name: String, app: AppHandle) -> Result<()> {
 
     let game = manager.active_game_mut();
     game.duplicate_profile(name, game.active_profile_id, app.db())?;
-    manager.save(app.db())?;
+    manager.save_all(app.db())?;
 
     Ok(())
 }
@@ -270,10 +273,11 @@ where
     let mut manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
 
-    let response = action(manager.active_profile_mut(), &thunderstore)?;
+    let profile = manager.active_profile_mut();
+    let response = action(profile, &thunderstore)?;
 
     if let ActionResult::Done = response {
-        manager.save(app.db())?;
+        profile.save(app.db())?;
     }
 
     Ok(response)
@@ -288,7 +292,7 @@ pub fn force_remove_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
         profile.force_remove_mod(package_uuid)?;
     }
 
-    manager.save(app.db())?;
+    profile.save(app.db())?;
 
     Ok(())
 }
@@ -311,7 +315,7 @@ pub fn set_all_mods_state(enable: bool, app: AppHandle) -> Result<usize> {
         profile.force_toggle_mod(uuid)?;
     }
 
-    manager.save(app.db())?;
+    profile.save(app.db())?;
 
     Ok(count)
 }
@@ -334,7 +338,7 @@ pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
         profile.force_remove_mod(uuid)?;
     }
 
-    manager.save(app.db())?;
+    profile.save(app.db())?;
 
     Ok(len)
 }
@@ -348,7 +352,7 @@ pub fn force_toggle_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
         profile.force_toggle_mod(package_uuid)?;
     }
 
-    manager.save(app.db())?;
+    profile.save(app.db())?;
 
     Ok(())
 }

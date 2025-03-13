@@ -359,6 +359,8 @@ impl Prefs {
                 path.pop();
                 path.pop();
             }
+
+            manager.save_all(app.db())?;
         }
 
         self.data_dir.set(value.data_dir.value)?;

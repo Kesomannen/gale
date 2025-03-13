@@ -6,18 +6,17 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
+use eyre::{anyhow, ensure, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Listener};
+use tauri::AppHandle;
 use uuid::Uuid;
 
 use crate::{
     config::ConfigCache,
     db::{self, Db},
     game::{self, Game, ModLoader},
-    logger,
     prefs::Prefs,
     state::ManagerExt,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
@@ -35,25 +34,10 @@ mod actions;
 mod query;
 
 pub fn setup(prefs: &Prefs, db: &Db, app: &AppHandle) -> Result<ModManager> {
-    let manager = ModManager::create(prefs, db)?;
+    install::setup(app)?;
+    actions::setup(app)?;
 
-    install::setup(app).context("failed to initialize downloader")?;
-
-    let handle = app.to_owned();
-    app.listen("reorder_mod", move |event| {
-        if let Err(err) = actions::handle_reorder_event(event, &handle) {
-            logger::log_webview_err("Failed to reorder mod", err, &handle);
-        }
-    });
-
-    let handle = app.to_owned();
-    app.listen("finish_reorder", move |_| {
-        if let Err(err) = actions::handle_finish_reorder_event(&handle) {
-            logger::log_webview_err("Failed to finish reordering", err, &handle);
-        }
-    });
-
-    Ok(manager)
+    ModManager::create(prefs, db)
 }
 
 /// The main state of the app.
@@ -309,6 +293,10 @@ impl Profile {
             .exists_or_none()
             .ok_or_eyre("no log file found")
     }
+
+    pub fn save(&self, db: &Db) -> Result<()> {
+        db.save_profile(self)
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -424,6 +412,10 @@ impl ManagedGame {
                 .filter_map(|(ts_mod, _)| ts_mod.id.borrow(thunderstore).ok())
         })
     }
+
+    pub fn save(&self, db: &Db) -> Result<()> {
+        db.save_game(self)
+    }
 }
 
 impl ModManager {
@@ -436,7 +428,7 @@ impl ModManager {
             manager,
             games,
             profiles,
-        } = db.get()?;
+        } = db.read()?;
 
         let mut games = games
             .into_iter()
@@ -481,7 +473,7 @@ impl ModManager {
         let mut manager = Self { games, active_game };
 
         manager.ensure_game(manager.active_game, prefs, db)?;
-        manager.save(db)?;
+        manager.save_all(db)?;
 
         Ok(manager)
     }
@@ -572,7 +564,19 @@ impl ModManager {
         thunderstore::write_cache(&packages, self)
     }
 
+    pub fn save_all(&self, db: &Db) -> Result<()> {
+        db.save_all(self)
+    }
+
     pub fn save(&self, db: &Db) -> Result<()> {
-        db.write(self)
+        db.save_all(self)
+    }
+
+    pub fn save_active_game(&self, db: &Db) -> Result<()> {
+        self.active_game().save(db)
+    }
+
+    pub fn save_active_profile(&self, db: &Db) -> Result<()> {
+        self.active_profile().save(db)
     }
 }

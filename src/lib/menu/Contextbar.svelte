@@ -108,14 +108,14 @@
 			class="flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border border-slate-600 bg-slate-800 p-1 shadow-xl"
 			{...dropTransition}
 		>
-			{#each profiles as profile, i}
+			{#each profiles as profile, index}
 				<DropdownMenu.Item
 					class="group flex cursor-default items-center rounded-md py-1 pr-1 pl-3 text-left hover:bg-slate-700
-						{i == activeProfileId
+						{profile.id == activeProfileId
 						? 'font-medium text-slate-300 hover:text-slate-200'
 						: 'text-slate-400 hover:text-slate-300'}"
 					on:click={() => {
-						setActiveProfile(i);
+						setActiveProfile(index);
 						profilesOpen = false;
 					}}
 				>
@@ -125,7 +125,7 @@
 
 					<Icon
 						icon="mdi:check"
-						class="text-accent-500 mx-2 text-lg {i !== activeProfileId && 'invisible'}"
+						class="text-accent-500 mx-2 text-lg {profile.id !== activeProfileId && 'invisible'}"
 					/>
 
 					<div class="mr-1 rounded-sm bg-slate-700 px-1.5 py-0.5 text-xs group-hover:bg-slate-600">
@@ -136,7 +136,7 @@
 						class="rounded-sm p-1 text-slate-400 hover:bg-red-600 hover:text-red-200"
 						on:click={(evt) => {
 							evt.stopPropagation();
-							deleteProfile(i);
+							deleteProfile(index);
 							profilesOpen = false;
 						}}
 					>

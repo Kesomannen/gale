@@ -62,8 +62,9 @@ pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
 pub fn set_pack_args(args: ModpackArgs, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    manager.active_profile_mut().modpack = Some(args);
-    manager.save(app.db())?;
+    let profile = manager.active_profile_mut();
+    profile.modpack = Some(args);
+    profile.save(app.db())?;
 
     Ok(())
 }

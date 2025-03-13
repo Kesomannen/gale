@@ -21,12 +21,9 @@ pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: AppHandle
 pub fn ignore_update(version_uuid: Uuid, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    manager
-        .active_profile_mut()
-        .ignored_updates
-        .insert(version_uuid);
-
-    manager.save(app.db())?;
+    let profile = manager.active_profile_mut();
+    profile.ignored_updates.insert(version_uuid);
+    profile.save(app.db())?;
 
     Ok(())
 }

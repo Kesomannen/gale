@@ -7,7 +7,7 @@ use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
-use tauri::AppHandle;
+use tauri::{AppHandle, Listener};
 use uuid::Uuid;
 
 use super::{
@@ -19,6 +19,7 @@ use super::{
 use crate::{
     config::ConfigCache,
     db::Db,
+    logger,
     state::ManagerExt,
     thunderstore::Thunderstore,
     util::{
@@ -27,6 +28,24 @@ use crate::{
         fs::{Overwrite, UseLinks},
     },
 };
+
+pub fn setup(app: &AppHandle) -> Result<()> {
+    let handle = app.to_owned();
+    app.listen("reorder_mod", move |event| {
+        if let Err(err) = handle_reorder_event(event, &handle) {
+            logger::log_webview_err("Failed to reorder mod", err, &handle);
+        }
+    });
+
+    let handle = app.to_owned();
+    app.listen("finish_reorder", move |_| {
+        if let Err(err) = handle_finish_reorder_event(&handle) {
+            logger::log_webview_err("Failed to finish reordering", err, &handle);
+        }
+    });
+
+    Ok(())
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
@@ -193,7 +212,7 @@ impl Profile {
     }
 }
 
-pub fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
+fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Payload {
@@ -209,8 +228,8 @@ pub fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> 
     Ok(())
 }
 
-pub fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
-    app.lock_manager().save(&app.db())
+fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
+    app.lock_manager().save_active_profile(app.db())
 }
 
 impl ManagedGame {

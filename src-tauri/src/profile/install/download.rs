@@ -137,7 +137,7 @@ impl<'a> Installer<'a> {
             cache_install(data, &cache_path, &mut manager, &thunderstore)?;
 
             self.completed_bytes += version.file_size;
-            manager.save(self.app.db())?;
+            manager.active_profile().save(self.app.db())?;
 
             Ok(InstallMethod::Cached)
         } else {
@@ -229,7 +229,7 @@ impl<'a> Installer<'a> {
 
         cache_install(install, &cache_path, &mut manager, &thunderstore)?;
 
-        manager.save(self.app.db())?;
+        manager.active_profile().save(self.app.db())?;
 
         Ok(())
     }
