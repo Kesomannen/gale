@@ -1,6 +1,6 @@
-use std::sync::Mutex;
+use std::sync::atomic::Ordering;
 
-use tauri::{AppHandle, State};
+use tauri::AppHandle;
 
 use crate::{
     state::ManagerExt,
@@ -8,7 +8,7 @@ use crate::{
     util::{self, cmd::Result},
 };
 
-use super::{InstallOptions, InstallState, ModInstall};
+use super::{InstallOptions, ModInstall};
 
 #[tauri::command]
 pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
@@ -24,8 +24,10 @@ pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub fn cancel_install(state: State<'_, Mutex<InstallState>>) -> Result<()> {
-    state.lock().unwrap().cancelled = true;
+pub fn cancel_install(app: AppHandle) -> Result<()> {
+    app.app_state()
+        .cancel_install_flag()
+        .store(true, Ordering::Relaxed);
 
     Ok(())
 }

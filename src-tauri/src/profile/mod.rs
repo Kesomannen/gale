@@ -34,7 +34,6 @@ mod actions;
 mod query;
 
 pub fn setup(prefs: &Prefs, db: &Db, app: &AppHandle) -> Result<ModManager> {
-    install::setup(app)?;
     actions::setup(app)?;
 
     ModManager::create(prefs, db)
@@ -428,7 +427,7 @@ impl ModManager {
             manager,
             games,
             profiles,
-        } = db.read()?;
+        } = db.read(prefs)?;
 
         let mut games = games
             .into_iter()

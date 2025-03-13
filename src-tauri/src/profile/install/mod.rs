@@ -1,12 +1,11 @@
-use std::{iter, sync::Mutex};
+use std::iter;
 
 use chrono::{DateTime, Utc};
-use download::InstallState;
 use eyre::{bail, Context, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use uuid::Uuid;
 
 use super::{ModManager, Profile};
@@ -23,12 +22,6 @@ mod download;
 mod fs;
 mod installers;
 pub use installers::*;
-
-pub fn setup(handle: &AppHandle) -> Result<()> {
-    handle.manage(Mutex::new(InstallState::default()));
-
-    Ok(())
-}
 
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

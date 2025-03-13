@@ -10,9 +10,12 @@ use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
 use crate::{
+    prefs::Prefs,
     profile::{self, ManagedGame, ModManager, Profile},
     util,
 };
+
+mod migrate;
 
 pub struct Db(Mutex<rusqlite::Connection>);
 
@@ -144,7 +147,11 @@ impl Db {
         Ok(res)
     }
 
-    pub fn read(&self) -> Result<SaveData> {
+    pub fn read(&self, prefs: &Prefs) -> Result<SaveData> {
+        if migrate::should_migrate(prefs) {
+            return migrate::migrate(prefs);
+        }
+
         let conn = self.conn();
 
         let manager = conn

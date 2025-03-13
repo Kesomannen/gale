@@ -1,4 +1,4 @@
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{atomic::AtomicBool, Mutex, MutexGuard};
 
 use eyre::{Context, Result};
 use tauri::{AppHandle, Manager};
@@ -16,6 +16,7 @@ pub struct AppState {
     manager: Mutex<ModManager>,
     thunderstore: Mutex<Thunderstore>,
     db: Db,
+    cancel_install_flag: AtomicBool,
 }
 
 impl AppState {
@@ -38,6 +39,10 @@ impl AppState {
     pub fn db(&self) -> &Db {
         &self.db
     }
+
+    pub fn cancel_install_flag(&self) -> &AtomicBool {
+        &self.cancel_install_flag
+    }
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {
@@ -46,9 +51,10 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         .build()
         .context("failed to init http client")?;
 
+    let prefs = Prefs::create(app).context("failed to init prefs")?;
+
     let db = db::init().context("failed to init database")?;
 
-    let prefs = Prefs::create(app).context("failed to init prefs")?;
     let manager = profile::setup(&prefs, &db, app).context("failed to init profiles")?;
     let thunderstore = Thunderstore::default();
 
@@ -58,6 +64,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         prefs: Mutex::new(prefs),
         manager: Mutex::new(manager),
         thunderstore: Mutex::new(thunderstore),
+        cancel_install_flag: AtomicBool::new(false),
     };
 
     app.manage(state);

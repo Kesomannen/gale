@@ -2,7 +2,7 @@ use std::{
     fs,
     io::Cursor,
     path::Path,
-    sync::Mutex,
+    sync::atomic::Ordering,
     time::{Duration, Instant},
 };
 
@@ -11,7 +11,7 @@ use core::str;
 use eyre::{Context, Result};
 use futures_util::StreamExt;
 use log::warn;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter};
 use thiserror::Error;
 use zip::ZipArchive;
 
@@ -22,11 +22,6 @@ use crate::{
     thunderstore::Thunderstore,
     util::error::IoResultExt,
 };
-
-#[derive(Default)]
-pub struct InstallState {
-    pub cancelled: bool,
-}
 
 const DOWNLOAD_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
@@ -42,8 +37,6 @@ pub struct Installer<'a> {
 
     app: &'a AppHandle,
     client: &'a reqwest::Client,
-
-    install_state: State<'a, Mutex<InstallState>>,
 }
 
 enum InstallMethod {
@@ -68,8 +61,6 @@ impl<'a> Installer<'a> {
         client: &'a reqwest::Client,
         app: &'a AppHandle,
     ) -> Result<Self> {
-        let install_state = app.state::<Mutex<InstallState>>();
-
         Ok(Self {
             options,
             index: 0,
@@ -79,13 +70,17 @@ impl<'a> Installer<'a> {
             total_bytes: 0,
             completed_bytes: 0,
             current_name: String::new(),
-            install_state,
             start_time: Instant::now(),
         })
     }
 
     fn is_cancelled(&self) -> bool {
-        self.options.can_cancel && self.install_state.lock().unwrap().cancelled
+        self.options.can_cancel
+            && self
+                .app
+                .app_state()
+                .cancel_install_flag()
+                .load(Ordering::Relaxed)
     }
 
     fn check_cancel(&self) -> InstallResult<()> {
@@ -244,7 +239,10 @@ impl<'a> Installer<'a> {
     }
 
     pub async fn install_all(&mut self, mods: Vec<ModInstall>) -> Result<()> {
-        self.install_state.lock().unwrap().cancelled = false;
+        self.app
+            .app_state()
+            .cancel_install_flag()
+            .store(false, Ordering::Relaxed);
 
         self.total_mods = mods.len();
         self.count_total_bytes(&mods)?;
