@@ -1,5 +1,5 @@
 use eyre::anyhow;
-use tauri::AppHandle;
+use tauri::{command, AppHandle};
 
 use super::{
     models::FrontendMod,
@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{logger, state::ManagerExt, util::cmd::Result};
 
-#[tauri::command]
+#[command]
 pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMod> {
     let manager = app.lock_manager();
     let mut thunderstore = app.lock_thunderstore();
@@ -21,12 +21,12 @@ pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMo
     result
 }
 
-#[tauri::command]
+#[command]
 pub fn stop_querying_thunderstore(app: AppHandle) {
     app.lock_thunderstore().current_query = None;
 }
 
-#[tauri::command]
+#[command]
 pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
     let write_directly = {
         let state = app.lock_thunderstore();
@@ -49,18 +49,18 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn set_thunderstore_token(token: &str) -> Result<()> {
     super::token::set(token)?;
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn has_thunderstore_token() -> bool {
     super::token::get().is_ok_and(|token| token.is_some())
 }
 
-#[tauri::command]
+#[command]
 pub fn clear_thunderstore_token() -> Result<()> {
     super::token::clear()?;
     Ok(())

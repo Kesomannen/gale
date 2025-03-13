@@ -1,12 +1,12 @@
 use std::path::Path;
 
 use eyre::{eyre, Context};
-use tauri::AppHandle;
+use tauri::{command, AppHandle};
 
 use super::{frontend, AnyFileKind};
 use crate::{state::ManagerExt, util::cmd::Result};
 
-#[tauri::command]
+#[command]
 pub fn get_config_files(app: AppHandle) -> Result<Vec<frontend::File>> {
     let mut manager = app.lock_manager();
     let profile = manager.active_profile_mut();
@@ -16,7 +16,7 @@ pub fn get_config_files(app: AppHandle) -> Result<Vec<frontend::File>> {
     Ok(profile.config_cache.to_frontend())
 }
 
-#[tauri::command]
+#[command]
 pub fn set_config_entry(
     file: &Path,
     section: &str,
@@ -39,7 +39,7 @@ pub fn set_config_entry(
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn reset_config_entry(
     file: &Path,
     section: &str,
@@ -60,7 +60,7 @@ pub fn reset_config_entry(
     Ok(value)
 }
 
-#[tauri::command]
+#[command]
 pub fn open_config_file(file: &Path, app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
@@ -72,7 +72,7 @@ pub fn open_config_file(file: &Path, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn delete_config_file(file: &Path, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 

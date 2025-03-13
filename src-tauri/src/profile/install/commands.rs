@@ -1,6 +1,6 @@
 use std::sync::atomic::Ordering;
 
-use tauri::AppHandle;
+use tauri::{command, AppHandle};
 
 use crate::{
     state::ManagerExt,
@@ -10,7 +10,7 @@ use crate::{
 
 use super::{InstallOptions, ModInstall};
 
-#[tauri::command]
+#[command]
 pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
     super::install_with_deps(
         vec![ModInstall::new(mod_ref)],
@@ -23,7 +23,7 @@ pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn cancel_install(app: AppHandle) -> Result<()> {
     app.app_state()
         .cancel_install_flag()
@@ -32,7 +32,7 @@ pub fn cancel_install(app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     if soft {
         let paths = super::cache::prepare_soft_clear(app)?;
@@ -56,7 +56,7 @@ pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     }
 }
 
-#[tauri::command]
+#[command]
 pub fn get_download_size(mod_ref: ModId, app: AppHandle) -> Result<u64> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();

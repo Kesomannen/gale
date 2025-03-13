@@ -7,7 +7,7 @@ use std::{
 use eyre::{anyhow, Context};
 use itertools::Itertools;
 use log::{debug, warn};
-use tauri::AppHandle;
+use tauri::{command, AppHandle};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use uuid::Uuid;
 
@@ -22,14 +22,14 @@ use crate::{
     util::{cmd::Result, fs::PathExt},
 };
 
-#[tauri::command]
+#[command]
 pub async fn export_code(app: AppHandle) -> Result<Uuid> {
     let key = super::export_code(&app).await?;
 
     Ok(key)
 }
 
-#[tauri::command]
+#[command]
 pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
@@ -48,7 +48,7 @@ pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
     let mut manager = app.lock_manager();
     let profile = manager.active_profile_mut();
@@ -58,7 +58,7 @@ pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
     Ok(profile.modpack.clone())
 }
 
-#[tauri::command]
+#[command]
 pub fn set_pack_args(args: ModpackArgs, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
@@ -69,7 +69,7 @@ pub fn set_pack_args(args: ModpackArgs, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
@@ -98,7 +98,7 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
     let (data, game, args, token) = {
         let manager = app.lock_manager();
@@ -126,7 +126,7 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn copy_dependency_strings(app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
@@ -144,7 +144,7 @@ pub fn copy_dependency_strings(app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn copy_debug_info(app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
     let profile = manager.active_profile();
@@ -183,7 +183,7 @@ pub fn copy_debug_info(app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn generate_changelog(mut args: ModpackArgs, all: bool, app: AppHandle) -> Result<String> {
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();

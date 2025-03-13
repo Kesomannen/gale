@@ -1,6 +1,6 @@
 use eyre::anyhow;
 use serde::Deserialize;
-use tauri::{AppHandle, Manager, Window};
+use tauri::{command, AppHandle, Manager, Window};
 
 use super::Prefs;
 use crate::{
@@ -8,19 +8,19 @@ use crate::{
     util::{cmd::Result, window::WindowExt},
 };
 
-#[tauri::command]
+#[command]
 pub fn get_prefs(app: AppHandle) -> Prefs {
     app.lock_prefs().clone()
 }
 
-#[tauri::command]
+#[command]
 pub fn set_prefs(value: Prefs, app: AppHandle) -> Result<()> {
     let mut prefs = app.lock_prefs();
     prefs.set(value, &app)?;
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn is_first_run(app: AppHandle) -> Result<bool> {
     let mut prefs = app.lock_prefs();
     match prefs.is_first_run {
@@ -39,7 +39,7 @@ pub enum Zoom {
     Modify { delta: f32 },
 }
 
-#[tauri::command]
+#[command]
 pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
     let mut prefs = app.lock_prefs();
     prefs.zoom_factor = match value {

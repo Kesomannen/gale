@@ -7,7 +7,7 @@ use eyre::{Context, OptionExt, Result};
 use log::LevelFilter;
 use serde::Serialize;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
-use tauri::{AppHandle, Emitter};
+use tauri::{command, AppHandle, Emitter};
 
 use crate::util::{self, fs::PathExt};
 
@@ -61,7 +61,7 @@ pub fn setup() -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn open_gale_log() -> util::cmd::Result<()> {
     let path = log_path()
         .exists_or_none()
@@ -72,7 +72,7 @@ pub fn open_gale_log() -> util::cmd::Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn log_err(msg: String) {
     log::error!("{}", msg);
 }

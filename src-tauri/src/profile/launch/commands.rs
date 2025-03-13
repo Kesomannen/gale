@@ -1,10 +1,10 @@
 use eyre::Context;
 use itertools::Itertools;
-use tauri::AppHandle;
+use tauri::{command, AppHandle};
 
 use crate::{state::ManagerExt, util::cmd::Result};
 
-#[tauri::command]
+#[command]
 pub fn launch_game(app: AppHandle) -> Result<()> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
@@ -14,7 +14,7 @@ pub fn launch_game(app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn get_launch_args(app: AppHandle) -> Result<String> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
@@ -29,7 +29,7 @@ pub fn get_launch_args(app: AppHandle) -> Result<String> {
     Ok(text)
 }
 
-#[tauri::command]
+#[command]
 pub fn open_game_dir(app: AppHandle) -> Result<()> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
