@@ -17,7 +17,7 @@ export let games: Game[] = [];
 export let categories = writable<PackageCategory[]>([]);
 export let activeGame = writable<Game | null>(null);
 
-export let activeProfileIndex: number = 0;
+export let activeProfileId: number = 0;
 export let profiles: ProfileInfo[] = [];
 export let activeProfile = writable<ProfileInfo | null>(null);
 
@@ -132,9 +132,9 @@ export async function refreshCategories() {
 export async function refreshProfiles() {
 	let info = await invokeCommand<ProfilesInfo>('get_profile_info');
 
-	activeProfileIndex = info.activeIndex;
+	activeProfileId = info.activeId;
 	profiles = info.profiles;
-	activeProfile.set(profiles[activeProfileIndex]);
+	activeProfile.set(profiles.find((profile) => profile.id === activeProfileId) ?? null);
 }
 
 export async function setActiveProfile(index: number) {

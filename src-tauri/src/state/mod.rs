@@ -46,10 +46,11 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         .build()
         .context("failed to init http client")?;
 
-    let prefs = Prefs::create(app).context("failed to init prefs")?;
-    let manager = profile::setup(&prefs, app).context("failed to init profiles")?;
-    let thunderstore = Thunderstore::default();
     let db = db::init().context("failed to init database")?;
+
+    let prefs = Prefs::create(app).context("failed to init prefs")?;
+    let manager = profile::setup(&prefs, &db, app).context("failed to init profiles")?;
+    let thunderstore = Thunderstore::default();
 
     let state = AppState {
         db,

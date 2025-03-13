@@ -1,4 +1,7 @@
-use std::fs;
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+};
 
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
@@ -14,6 +17,8 @@ use super::{
     Dependant, ManagedGame, Profile, ProfileMod,
 };
 use crate::{
+    config::ConfigCache,
+    db::Db,
     state::ManagerExt,
     thunderstore::Thunderstore,
     util::{
@@ -205,11 +210,11 @@ pub fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> 
 }
 
 pub fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
-    app.lock_manager().save(&app.lock_prefs())
+    app.lock_manager().save(&app.db())
 }
 
 impl ManagedGame {
-    pub fn create_profile(&mut self, name: String) -> Result<&mut Profile> {
+    pub fn create_profile(&mut self, name: String, db: &Db) -> Result<&mut Profile> {
         ensure!(
             Profile::is_valid_name(&name),
             "profile name '{}' is invalid",
@@ -227,11 +232,22 @@ impl ManagedGame {
 
         fs::create_dir_all(&path).fs_context("creating profile directory", &path)?;
 
-        self.profiles.push(Profile::new(name, path, self.game));
+        let id = db.next_profile_id()?;
 
-        let index = self.profiles.len() - 1;
-        self.active_profile_index = index;
-        Ok(&mut self.profiles[index])
+        self.profiles.push(Profile {
+            id,
+            name,
+            path,
+            mods: Vec::new(),
+            game: self.game,
+            ignored_updates: HashSet::new(),
+            config_cache: ConfigCache::default(),
+            linked_config: HashMap::new(),
+            modpack: None,
+        });
+
+        self.active_profile_id = id;
+        Ok(self.active_profile_mut())
     }
 
     pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool) -> Result<()> {
@@ -245,15 +261,15 @@ impl ManagedGame {
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
 
-        self.active_profile_index = 0;
+        self.active_profile_id = 1;
 
         Ok(())
     }
 
-    pub fn duplicate_profile(&mut self, duplicate_name: String, index: usize) -> Result<()> {
-        self.create_profile(duplicate_name)?;
+    pub fn duplicate_profile(&mut self, duplicate_name: String, id: i64, db: &Db) -> Result<()> {
+        self.create_profile(duplicate_name, db)?;
 
-        let old_profile = self.profile_at(index)?;
+        let old_profile = self.find_profile(id)?;
         let new_profile = self.active_profile();
 
         // Make sure generated files and configs are properly copied

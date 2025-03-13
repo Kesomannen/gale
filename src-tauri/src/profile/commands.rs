@@ -1,6 +1,6 @@
 use eyre::{Context, OptionExt};
 use itertools::Itertools;
-use log::{info, warn};
+use log::warn;
 use serde::Serialize;
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -71,10 +71,10 @@ pub fn favorite_game(slug: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     let game = game::from_slug(&slug).ok_or_eyre("unknown game")?;
-    let managed_game = manager.ensure_game(game, &prefs)?;
+    let managed_game = manager.ensure_game(game, &prefs, app.db())?;
     managed_game.favorite = !managed_game.favorite;
 
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }
@@ -86,7 +86,7 @@ pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
     let game = game::from_slug(slug).ok_or_eyre("unknown game")?;
 
     manager.set_active_game(game, &app)?;
-    manager.save(&app.lock_prefs())?;
+    manager.save(app.db())?;
 
     Ok(())
 }
@@ -95,12 +95,13 @@ pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
 #[serde(rename_all = "camelCase")]
 pub struct ProfilesInfo {
     profiles: Vec<ProfileInfo>,
-    active_index: usize,
+    active_id: i64,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileInfo {
+    id: i64,
     name: String,
     mod_count: usize,
 }
@@ -117,19 +118,19 @@ pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
             .map(|profile| ProfileInfo {
                 name: profile.name.clone(),
                 mod_count: profile.mods.len(),
+                id: profile.id,
             })
             .collect(),
-        active_index: game.active_profile_index,
+        active_id: game.active_profile_id,
     }
 }
 
 #[tauri::command]
 pub fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     manager.active_game_mut().set_active_profile(index)?;
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }
@@ -209,45 +210,41 @@ pub fn is_mod_installed(uuid: Uuid, app: AppHandle) -> Result<bool> {
 
 #[tauri::command]
 pub fn create_profile(name: String, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
-    manager.active_game_mut().create_profile(name)?;
-    manager.save(&prefs)?;
+    manager.active_game_mut().create_profile(name, app.db())?;
+    manager.save(app.db())?;
 
     Ok(())
 }
 
 #[tauri::command]
 pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     manager.active_game_mut().delete_profile(index, false)?;
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }
 
 #[tauri::command]
 pub fn rename_profile(name: String, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     manager.active_profile_mut().rename(name)?;
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }
 
 #[tauri::command]
 pub fn duplicate_profile(name: String, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     let game = manager.active_game_mut();
-    game.duplicate_profile(name, game.active_profile_index)?;
-    manager.save(&prefs)?;
+    game.duplicate_profile(name, game.active_profile_id, app.db())?;
+    manager.save(app.db())?;
 
     Ok(())
 }
@@ -270,20 +267,13 @@ fn mod_action_command<F>(app: AppHandle, action: F) -> Result<ActionResult>
 where
     F: FnOnce(&mut Profile, &Thunderstore) -> eyre::Result<ActionResult>,
 {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
 
     let response = action(manager.active_profile_mut(), &thunderstore)?;
 
     if let ActionResult::Done = response {
-        manager.save(&prefs)?;
-
-        app.db()
-            .save_manager(&manager)
-            .context("failed to write to database")?;
-
-        info!("wrote manager to database");
+        manager.save(app.db())?;
     }
 
     Ok(response)
@@ -291,7 +281,6 @@ where
 
 #[tauri::command]
 pub fn force_remove_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
@@ -299,14 +288,13 @@ pub fn force_remove_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
         profile.force_remove_mod(package_uuid)?;
     }
 
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }
 
 #[tauri::command]
 pub fn set_all_mods_state(enable: bool, app: AppHandle) -> Result<usize> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
@@ -323,14 +311,13 @@ pub fn set_all_mods_state(enable: bool, app: AppHandle) -> Result<usize> {
         profile.force_toggle_mod(uuid)?;
     }
 
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(count)
 }
 
 #[tauri::command]
 pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
@@ -347,14 +334,13 @@ pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
         profile.force_remove_mod(uuid)?;
     }
 
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(len)
 }
 
 #[tauri::command]
 pub fn force_toggle_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
@@ -362,7 +348,7 @@ pub fn force_toggle_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
         profile.force_toggle_mod(package_uuid)?;
     }
 
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }

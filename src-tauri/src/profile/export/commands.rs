@@ -60,11 +60,10 @@ pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
 
 #[tauri::command]
 pub fn set_pack_args(args: ModpackArgs, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     manager.active_profile_mut().modpack = Some(args);
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }

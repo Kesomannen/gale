@@ -19,7 +19,6 @@ pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: AppHandle
 
 #[tauri::command]
 pub fn ignore_update(version_uuid: Uuid, app: AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     manager
@@ -27,7 +26,7 @@ pub fn ignore_update(version_uuid: Uuid, app: AppHandle) -> Result<()> {
         .ignored_updates
         .insert(version_uuid);
 
-    manager.save(&prefs)?;
+    manager.save(app.db())?;
 
     Ok(())
 }

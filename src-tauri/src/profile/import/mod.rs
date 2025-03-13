@@ -123,7 +123,7 @@ async fn import_data(
                 .context("failed to delete existing profile")?;
         }
 
-        let profile = game.create_profile(data.name)?;
+        let profile = game.create_profile(data.name, app.db())?;
         profile.ignored_updates.extend(data.ignored_updates);
         profile.path.clone()
     };

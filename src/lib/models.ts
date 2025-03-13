@@ -60,13 +60,14 @@ export type ConfigFile = { relativePath: string; displayName: string | null } & 
 );
 
 export type ProfileInfo = {
+	id: number;
 	name: string;
 	modCount: number;
 };
 
 export type ProfilesInfo = {
 	profiles: ProfileInfo[];
-	activeIndex: number;
+	activeId: number;
 };
 
 export type GameInfo = {

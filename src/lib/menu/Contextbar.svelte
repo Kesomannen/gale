@@ -5,7 +5,7 @@
 	import NewProfilePopup from '$lib/menu/NewProfilePopup.svelte';
 
 	import {
-		activeProfileIndex,
+		activeProfileId,
 		activeGame,
 		activeProfile,
 		profiles,
@@ -111,7 +111,7 @@
 			{#each profiles as profile, i}
 				<DropdownMenu.Item
 					class="group flex cursor-default items-center rounded-md py-1 pr-1 pl-3 text-left hover:bg-slate-700
-						{i == activeProfileIndex
+						{i == activeProfileId
 						? 'font-medium text-slate-300 hover:text-slate-200'
 						: 'text-slate-400 hover:text-slate-300'}"
 					on:click={() => {
@@ -125,7 +125,7 @@
 
 					<Icon
 						icon="mdi:check"
-						class="text-accent-500 mx-2 text-lg {i !== activeProfileIndex && 'invisible'}"
+						class="text-accent-500 mx-2 text-lg {i !== activeProfileId && 'invisible'}"
 					/>
 
 					<div class="mr-1 rounded-sm bg-slate-700 px-1.5 py-0.5 text-xs group-hover:bg-slate-600">
