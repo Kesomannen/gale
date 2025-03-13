@@ -1,25 +1,48 @@
-use std::{path::PathBuf, process::Command};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use eyre::{bail, ensure, OptionExt, Result};
-use log::info;
+use log::{info, warn};
 
 use crate::{
     game::{Game, Platform},
     prefs::Prefs,
 };
 
-pub fn launch_command(platform: Platform, game: Game, prefs: &Prefs) -> Result<Option<Command>> {
+use super::linux;
+
+pub fn launch_command(
+    game_dir: &Path,
+    platform: Platform,
+    game: Game,
+    prefs: &Prefs,
+) -> Result<Option<Command>> {
     match platform {
-        Platform::Steam => steam_command(game, prefs).map(Some),
+        Platform::Steam => steam_command(game_dir, game, prefs).map(Some),
         Platform::EpicGames => epic_command(game).map(Some),
         _ => Ok(None),
     }
 }
 
-fn steam_command(game: Game, prefs: &Prefs) -> Result<Command> {
+fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> {
     let Some(steam) = &game.platforms.steam else {
         bail!("{} is not available on Steam", game.name)
     };
+
+    {
+        if let Some(proxy_dll) = game.mod_loader.proxy_dll() {
+            if linux::is_proton(game_dir).unwrap_or_else(|err| {
+                warn!("failed to determine if game uses proton: {:#}", err);
+                false
+            }) {
+                linux::ensure_wine_override(steam.id, proxy_dll, prefs).unwrap_or_else(|err| {
+                    warn!("failed to ensure wine dll override: {:#}", err);
+                });
+            }
+        }
+    }
 
     let steam_path = prefs
         .steam_exe_path

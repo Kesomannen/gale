@@ -10,7 +10,10 @@ use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
     BorrowedMod, Thunderstore,
 };
-use crate::profile::{LocalMod, ModManager, Profile};
+use crate::{
+    profile::{LocalMod, ModManager, Profile},
+    util,
+};
 
 pub fn setup(app: &AppHandle) {
     app.manage(Mutex::new(QueryState::default()));
@@ -147,7 +150,7 @@ impl Queryable for BorrowedMod<'_> {
             let order = match args.sort_by {
                 SortBy::Newest => a.date_created.cmp(&b.date_created),
                 SortBy::Name => a.name().cmp(b.name()),
-                SortBy::Author => a.ident.cmp(&b.ident),
+                SortBy::Author => util::cmp_ignore_case_utf8(&a.ident, &b.ident),
                 SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
                 SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
                 SortBy::Rating => a.rating_score.cmp(&b.rating_score),
