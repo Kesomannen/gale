@@ -29,6 +29,9 @@ pub fn init() -> Result<Db> {
     conn.pragma_update(None, "journal_mode", "WAL")
         .context("failed to set journal mode")?;
 
+    conn.pragma_update(None, "synchronous", "normal")
+        .context("failed to set synchronous mode")?;
+
     run_migrations(&mut conn).context("failed to run migrations")?;
 
     Ok(Db(Mutex::new(conn)))
