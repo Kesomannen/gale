@@ -6,6 +6,7 @@ use std::{
 
 use eyre::{Context, Result};
 use rusqlite::{params, types::Type as SqliteType};
+use rusqlite_migration::{Migrations, M};
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
@@ -22,43 +23,20 @@ pub struct Db(Mutex<rusqlite::Connection>);
 pub fn init() -> Result<Db> {
     let path = util::path::default_app_data_dir().join("data.sqlite3");
 
-    let conn = rusqlite::Connection::open(path)?;
-    create_tables(&conn).context("failed to create schema")?;
+    let mut conn = rusqlite::Connection::open(path)?;
+
+    conn.pragma_update(None, "journal_mode", "WAL")
+        .context("failed to set journal mode")?;
+
+    run_migrations(&mut conn).context("failed to run migrations")?;
 
     Ok(Db(Mutex::new(conn)))
 }
 
-fn create_tables(conn: &rusqlite::Connection) -> Result<()> {
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS manager (
-            id INTEGER PRIMARY KEY NOT NULL,
-            active_game_slug TEXT
-        )",
-        (),
-    )?;
+fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
+    let migrations = Migrations::new(vec![M::up(include_str!("./migrations/1_initial.sql"))]);
 
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS managed_games (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            slug TEXT NOT NULL,
-            favorite BOOLEAN NOT NULL DEFAULT FALSE,
-            active_profile_id INT NOT NULL
-        )",
-        (),
-    )?;
-
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS profiles (
-            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            name TEXT NOT NULL,
-            path TEXT NOT NULL,
-            game_slug TEXT NOT NULL,
-            mods JSON NOT NULL,
-            modpack JSON,
-            ignored_updates JSON
-        )",
-        (),
-    )?;
+    migrations.to_latest(conn)?;
 
     Ok(())
 }
@@ -70,7 +48,7 @@ where
 {
     let string = row.get::<_, String>(idx)?;
     serde_json::from_str(&string).map_err(|err| {
-        rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(err))
+        rusqlite::Error::FromSqlConversionFailure(0, SqliteType::Text, Box::new(err))
     })
 }
 
