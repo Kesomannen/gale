@@ -257,7 +257,8 @@ impl Default for Prefs {
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep("prefs.json")
                 .keep("telementary.json")
-                .keep("latest.log"),
+                .keep("latest.log")
+                .keep("data.sqlite3"),
 
             send_telemetry: true,
             fetch_mods_automatically: true,
@@ -296,10 +297,12 @@ impl Prefs {
                     anyhow!("failed to read settings: {} (at {})\n\nThe file might be corrupted or too old to run with your version of Gale.", err, path.display())
                 })?;
 
-                prefs
-                    .data_dir
-                    .keep_files
-                    .extend(&["prefs.json", "telementary.json", "latest.log"]);
+                prefs.data_dir.keep_files.extend(&[
+                    "prefs.json",
+                    "telementary.json",
+                    "latest.log",
+                    "data.sqlite3",
+                ]);
 
                 let window = app.get_webview_window("main").unwrap();
                 window.zoom(prefs.zoom_factor as f64).ok();
