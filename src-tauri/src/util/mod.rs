@@ -9,7 +9,7 @@ pub mod path;
 pub mod window;
 pub mod zip;
 
-pub fn cmp_ignore_case_utf8(a: impl AsRef<str>, b: impl AsRef<str>) -> Ordering {
+pub fn cmp_ignore_case(a: impl AsRef<str>, b: impl AsRef<str>) -> Ordering {
     a.as_ref()
         .chars()
         .flat_map(char::to_lowercase)
