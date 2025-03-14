@@ -5,8 +5,9 @@ use std::{
 };
 
 use eyre::{Context, Result};
+use include_dir::include_dir;
 use rusqlite::{params, types::Type as SqliteType};
-use rusqlite_migration::{Migrations, M};
+use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
@@ -23,7 +24,7 @@ pub struct Db(Mutex<rusqlite::Connection>);
 pub fn init() -> Result<Db> {
     let path = util::path::default_app_data_dir().join("data.sqlite3");
 
-    let mut conn = rusqlite::Connection::open(path)?;
+    let mut conn = rusqlite::Connection::open(path).context("failed to connect")?;
 
     conn.pragma_update(None, "journal_mode", "WAL")
         .context("failed to set journal mode")?;
@@ -33,8 +34,10 @@ pub fn init() -> Result<Db> {
     Ok(Db(Mutex::new(conn)))
 }
 
+static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migrations");
+
 fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
-    let migrations = Migrations::new(vec![M::up(include_str!("./migrations/1_initial.sql"))]);
+    let migrations = Migrations::from_directory(&MIGRATIONS_DIR)?;
 
     migrations.to_latest(conn)?;
 
