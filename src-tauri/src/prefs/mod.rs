@@ -277,6 +277,8 @@ impl Prefs {
         let window = app.get_webview_window("main").unwrap();
         window.zoom(self.zoom_factor as f64).ok();
 
+        self.save(app.db())?;
+
         Ok(())
     }
 
