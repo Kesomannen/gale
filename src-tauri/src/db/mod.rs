@@ -19,11 +19,14 @@ use crate::{
 
 mod migrate;
 
+pub const FILE_NAME: &str = "data.sqlite3";
+
 pub struct Db(Mutex<rusqlite::Connection>);
 
-pub fn init() -> Result<Db> {
-    let path = util::path::default_app_data_dir().join("data.sqlite3");
+pub fn init() -> Result<(Db, bool)> {
+    let path = util::path::default_app_data_dir().join(FILE_NAME);
 
+    let existed = path.exists();
     let mut conn = rusqlite::Connection::open(path).context("failed to connect")?;
 
     conn.pragma_update(None, "journal_mode", "WAL")
@@ -34,7 +37,7 @@ pub fn init() -> Result<Db> {
 
     run_migrations(&mut conn).context("failed to run migrations")?;
 
-    Ok(Db(Mutex::new(conn)))
+    Ok((Db(Mutex::new(conn)), existed))
 }
 
 static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migrations");
@@ -131,9 +134,10 @@ impl Db {
         Ok(res)
     }
 
-    pub fn read(&self, prefs: &Prefs) -> Result<SaveData> {
-        if migrate::should_migrate(prefs) {
-            return migrate::migrate(prefs);
+    pub fn read(&self) -> Result<(SaveData, Prefs, bool)> {
+        if migrate::should_migrate() {
+            let (data, prefs) = migrate::migrate()?;
+            return Ok((data, prefs, true));
         }
 
         let conn = self.conn();
@@ -182,11 +186,22 @@ impl Db {
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
 
-        Ok(SaveData {
-            manager,
-            games,
-            profiles,
-        })
+        let prefs = conn
+            .prepare("SELECT data FROM prefs")?
+            .query_map((), |row| map_json_row(row, 0))?
+            .next()
+            .transpose()?
+            .unwrap_or_default();
+
+        Ok((
+            SaveData {
+                manager,
+                games,
+                profiles,
+            },
+            prefs,
+            false,
+        ))
     }
 
     pub fn save_all(&self, manager: &ModManager) -> Result<()> {
@@ -275,5 +290,16 @@ impl Db {
         }
 
         Ok(())
+    }
+
+    pub fn save_prefs(&self, prefs: &Prefs) -> Result<()> {
+        self.with_transaction(|tx| {
+            let json = serde_json::to_string(prefs).context("failed to serialize to json")?;
+
+            tx.prepare("INSERT OR REPLACE INTO prefs (id, data) VALUES (1, ?)")?
+                .execute([json])?;
+
+            Ok(())
+        })
     }
 }

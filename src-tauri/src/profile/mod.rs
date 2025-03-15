@@ -33,10 +33,10 @@ pub mod update;
 mod actions;
 mod query;
 
-pub fn setup(prefs: &Prefs, db: &Db, app: &AppHandle) -> Result<ModManager> {
+pub fn setup(data: db::SaveData, prefs: &Prefs, db: &Db, app: &AppHandle) -> Result<ModManager> {
     actions::setup(app)?;
 
-    ModManager::create(prefs, db)
+    ModManager::create(data, prefs, db)
 }
 
 /// The main state of the app.
@@ -95,10 +95,10 @@ pub enum ProfileModKind {
 #[serde(rename_all = "camelCase")]
 pub struct ThunderstoreMod {
     #[serde(rename = "fullName")]
-    ident: VersionIdent,
+    pub ident: VersionIdent,
 
     #[serde(flatten)]
-    id: ModId,
+    pub id: ModId,
 }
 
 impl ProfileMod {
@@ -418,16 +418,16 @@ impl ManagedGame {
 }
 
 impl ModManager {
-    pub fn create(prefs: &Prefs, db: &Db) -> Result<Self> {
+    pub fn create(data: db::SaveData, prefs: &Prefs, db: &Db) -> Result<Self> {
         const DEFAULT_GAME_SLUG: &str = "among-us";
-
-        let path = prefs.data_dir.to_path_buf();
 
         let db::SaveData {
             manager,
             games,
             profiles,
-        } = db.read(prefs)?;
+        } = data;
+
+        let path = prefs.data_dir.to_path_buf();
 
         let mut games = games
             .into_iter()

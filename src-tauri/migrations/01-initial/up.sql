@@ -19,3 +19,8 @@ CREATE TABLE profiles (
     modpack JSON,
     ignored_updates JSON
 );
+
+CREATE TABLE prefs (
+    id INTEGER PRIMARY KEY NOT NULL,
+    data JSON NOT NULL
+);

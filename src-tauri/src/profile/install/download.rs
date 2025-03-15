@@ -79,7 +79,7 @@ impl<'a> Installer<'a> {
             && self
                 .app
                 .app_state()
-                .cancel_install_flag()
+                .cancel_install_flag
                 .load(Ordering::Relaxed)
     }
 
@@ -241,7 +241,7 @@ impl<'a> Installer<'a> {
     pub async fn install_all(&mut self, mods: Vec<ModInstall>) -> Result<()> {
         self.app
             .app_state()
-            .cancel_install_flag()
+            .cancel_install_flag
             .store(false, Ordering::Relaxed);
 
         self.total_mods = mods.len();

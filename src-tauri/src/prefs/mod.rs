@@ -5,19 +5,20 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use eyre::{anyhow, bail, ensure, Context, Result};
+use eyre::{bail, ensure, Context, Result};
 use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 use crate::{
+    db::{self, Db},
     game::{self, Platform},
     profile::launch::LaunchMode,
     state::ManagerExt,
     util::{
         self,
         error::IoResultExt,
-        fs::{JsonStyle, Overwrite, PathExt, UseLinks},
+        fs::{Overwrite, PathExt, UseLinks},
         window::WindowExt,
     },
 };
@@ -179,14 +180,10 @@ impl From<PathBuf> for DirPref {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Prefs {
-    #[serde(skip)]
-    pub is_first_run: bool,
-
     pub steam_exe_path: Option<PathBuf>,
     pub steam_library_dir: Option<PathBuf>,
     pub data_dir: DirPref,
 
-    #[serde(alias = "sendTelementary")] // old typo (oops)
     pub send_telemetry: bool,
     pub fetch_mods_automatically: bool,
     pub zoom_factor: f32,
@@ -250,15 +247,13 @@ impl Default for Prefs {
             .and_then(|path| path.exists_or_none());
 
         Self {
-            is_first_run: false,
-
             steam_exe_path,
             steam_library_dir,
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep("prefs.json")
                 .keep("telementary.json")
                 .keep("latest.log")
-                .keep("data.sqlite3"),
+                .keep(db::FILE_NAME),
 
             send_telemetry: true,
             fetch_mods_automatically: true,
@@ -271,56 +266,22 @@ impl Default for Prefs {
 }
 
 impl Prefs {
-    pub fn create(app: &AppHandle) -> Result<Self> {
-        let path = Self::path();
-        fs::create_dir_all(path.parent().unwrap())
-            .context("failed to create settings directory")?;
+    pub fn init(&mut self, app: &AppHandle) -> Result<()> {
+        self.data_dir.keep_files.extend(&[
+            "prefs.json",
+            "telementary.json",
+            "latest.log",
+            db::FILE_NAME,
+        ]);
 
-        info!("loading settings from {}", path.display());
+        let window = app.get_webview_window("main").unwrap();
+        window.zoom(self.zoom_factor as f64).ok();
 
-        let is_first_run = !path.exists();
-        let prefs = match is_first_run {
-            true => {
-                info!("no settings file found, creating new default");
-
-                let prefs = Prefs {
-                    is_first_run,
-                    ..Default::default()
-                };
-
-                prefs.save().context("failed to write initial settings")?;
-
-                prefs
-            }
-            false => {
-                let mut prefs: Prefs = util::fs::read_json(&path).map_err(|err| {
-                    anyhow!("failed to read settings: {} (at {})\n\nThe file might be corrupted or too old to run with your version of Gale.", err, path.display())
-                })?;
-
-                prefs.data_dir.keep_files.extend(&[
-                    "prefs.json",
-                    "telementary.json",
-                    "latest.log",
-                    "data.sqlite3",
-                ]);
-
-                let window = app.get_webview_window("main").unwrap();
-                window.zoom(prefs.zoom_factor as f64).ok();
-
-                prefs
-            }
-        };
-
-        Ok(prefs)
+        Ok(())
     }
 
-    fn path() -> PathBuf {
-        util::path::default_app_config_dir().join("prefs.json")
-    }
-
-    fn save(&self) -> Result<()> {
-        util::fs::write_json(Self::path(), self, JsonStyle::Pretty)
-            .context("failed to save settings")
+    fn save(&self, db: &Db) -> Result<()> {
+        db.save_prefs(self)
     }
 
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
@@ -379,7 +340,7 @@ impl Prefs {
         self.send_telemetry = value.send_telemetry;
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 
-        self.save().context("failed write to settings file")
+        self.save(app.db()).context("failed save prefs")
     }
 
     fn validate_game_prefs(&mut self) -> Result<()> {

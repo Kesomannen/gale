@@ -26,7 +26,7 @@ pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
 #[command]
 pub fn cancel_install(app: AppHandle) -> Result<()> {
     app.app_state()
-        .cancel_install_flag()
+        .cancel_install_flag
         .store(true, Ordering::Relaxed);
 
     Ok(())

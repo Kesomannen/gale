@@ -22,14 +22,7 @@ pub fn set_prefs(value: Prefs, app: AppHandle) -> Result<()> {
 
 #[command]
 pub fn is_first_run(app: AppHandle) -> Result<bool> {
-    let mut prefs = app.lock_prefs();
-    match prefs.is_first_run {
-        true => {
-            prefs.is_first_run = false;
-            Ok(true)
-        }
-        false => Ok(false),
-    }
+    Ok(app.app_state().is_first_run)
 }
 
 #[derive(Deserialize)]
@@ -49,14 +42,12 @@ pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
     .clamp(0.5, 1.5);
 
     window
-        .webview_windows()
-        .values()
-        .next()
+        .get_webview_window("main")
         .unwrap()
         .zoom(prefs.zoom_factor as f64)
         .map_err(|err| anyhow!(err))?;
 
-    prefs.save()?;
+    prefs.save(app.db())?;
 
     Ok(())
 }

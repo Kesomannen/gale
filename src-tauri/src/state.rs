@@ -11,19 +11,16 @@ use crate::{
 };
 
 pub struct AppState {
-    http: reqwest::Client,
+    pub http: reqwest::Client,
     prefs: Mutex<Prefs>,
     manager: Mutex<ModManager>,
     thunderstore: Mutex<Thunderstore>,
-    db: Db,
-    cancel_install_flag: AtomicBool,
+    pub db: Db,
+    pub cancel_install_flag: AtomicBool,
+    pub is_first_run: bool,
 }
 
 impl AppState {
-    pub fn http(&self) -> &reqwest::Client {
-        &self.http
-    }
-
     pub fn lock_prefs(&self) -> MutexGuard<'_, Prefs> {
         self.prefs.lock().unwrap()
     }
@@ -35,14 +32,6 @@ impl AppState {
     pub fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.thunderstore.lock().unwrap()
     }
-
-    pub fn db(&self) -> &Db {
-        &self.db
-    }
-
-    pub fn cancel_install_flag(&self) -> &AtomicBool {
-        &self.cancel_install_flag
-    }
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {
@@ -51,11 +40,13 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         .build()
         .context("failed to init http client")?;
 
-    let prefs = Prefs::create(app).context("failed to init prefs")?;
+    let (db, db_existed) = db::init().context("failed to init database")?;
 
-    let db = db::init().context("failed to init database")?;
+    let (data, mut prefs, migrated) = db.read()?;
 
-    let manager = profile::setup(&prefs, &db, app).context("failed to init profiles")?;
+    prefs.init(app).context("failed to init prefs")?;
+
+    let manager = profile::setup(data, &prefs, &db, app).context("failed to init profiles")?;
     let thunderstore = Thunderstore::default();
 
     let state = AppState {
@@ -65,6 +56,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         manager: Mutex::new(manager),
         thunderstore: Mutex::new(thunderstore),
         cancel_install_flag: AtomicBool::new(false),
+        is_first_run: !db_existed && !migrated,
     };
 
     app.manage(state);
@@ -78,7 +70,7 @@ pub trait ManagerExt<R> {
     fn app_state(&self) -> &AppState;
 
     fn http(&self) -> &reqwest::Client {
-        self.app_state().http()
+        &self.app_state().http
     }
 
     fn lock_prefs(&self) -> MutexGuard<'_, Prefs> {
@@ -94,7 +86,7 @@ pub trait ManagerExt<R> {
     }
 
     fn db(&self) -> &Db {
-        self.app_state().db()
+        &self.app_state().db
     }
 }
 
