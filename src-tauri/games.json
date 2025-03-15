@@ -634,6 +634,19 @@
 		}
 	},
 	{
+		"name": "DUSK",
+		"slug": "dusk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 519860,
+				"dirName": "Dusk"
+			}
+		}
+	},
+	{
 		"name": "Deep Rock Galactic: Survivor",
 		"slug": "deep-rock-galactic-survivor",
 		"modLoader": {
@@ -643,6 +656,18 @@
 			"steam": {
 				"id": 2321470,
 				"dirName": "Deep Rock Survivor"
+			}
+		}
+	},
+	{
+		"name": "Disco Elysium",
+		"slug": "disco-elysium",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 632470
 			}
 		}
 	},
@@ -970,6 +995,19 @@
 		}
 	},
 	{
+		"name": "Monster Train 2",
+		"slug": "monster-train-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3296150,
+				"dirName": "Monster Train 2 Demo"
+			}
+		}
+	},
+	{
 		"name": "Muck",
 		"modLoader": {
 			"name": "BepInEx"
@@ -977,6 +1015,19 @@
 		"platforms": {
 			"steam": {
 				"id": 1625450
+			}
+		}
+	},
+	{
+		"name": "My Dream Setup",
+		"slug": "my-dream-setup",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2200780,
+				"dirName": "My dream setup/MDS"
 			}
 		}
 	},
@@ -1033,6 +1084,19 @@
 		"platforms": {
 			"steam": {
 				"id": 1809540
+			}
+		}
+	},
+	{
+		"name": "Odd Remedy",
+		"slug": "odd-remedy",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1745680,
+				"dirName": "OddRemedy"
 			}
 		}
 	},
@@ -1784,6 +1848,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1620340
+			}
+		}
+	},
+	{
+		"name": "Zort",
+		"slug": "zort",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3121110
 			}
 		}
 	}
