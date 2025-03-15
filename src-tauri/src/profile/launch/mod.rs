@@ -22,6 +22,7 @@ use crate::{
     },
 };
 
+mod linux;
 mod mod_loader;
 mod platform;
 
@@ -72,7 +73,7 @@ impl ManagedGame {
 
         let mut command = match (&launch_mode, platform) {
             (LaunchMode::Launcher, Some(platform)) => {
-                platform::launch_command(platform, self.game, prefs).transpose()
+                platform::launch_command(game_dir, platform, self.game, prefs).transpose()
             }
             _ => None,
         }
