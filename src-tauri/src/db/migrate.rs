@@ -30,9 +30,6 @@ pub fn migrate() -> Result<(SaveData, Prefs)> {
     let prefs: legacy::Prefs = util::fs::read_json(&prefs_path).context("failed to read prefs")?;
     let prefs = Prefs::from(prefs);
 
-    fs::rename(&prefs_path, prefs_path.with_extension("old"))
-        .context("failed to rename prefs file")?;
-
     let manifest_path = prefs.data_dir.join("manager.json");
     let manager_data: legacy::ManagerSaveData = util::fs::read_json(&manifest_path)?;
 
@@ -94,6 +91,9 @@ pub fn migrate() -> Result<(SaveData, Prefs)> {
             active_profile_id,
         });
     }
+
+    fs::rename(&prefs_path, prefs_path.with_extension("old"))
+        .context("failed to rename prefs file")?;
 
     Ok((
         SaveData {

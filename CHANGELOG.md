@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- New data store solution based on SQLite, instead of various json files
+  - Your data will automatically be migrated after updating
+  - The legacy json files will remain on your filesystem, but won't be updated or read by Gale anymore
+
+### Fixed
+
+- Alphabetical and author sort mods separating upper and lowercase letters
+- Hopefully fixed linux launch issues related to Wine
+
 ## 1.4.3 (2025-03-11)
 
 ### Fixed
