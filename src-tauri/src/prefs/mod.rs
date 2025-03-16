@@ -227,7 +227,8 @@ fn default_steam_exe_path() -> PathBuf {
     }
 }
 
-fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
+// made public so we can use this in platform.rs to auto-get platform specific default paths
+pub fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
         exe_path.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))

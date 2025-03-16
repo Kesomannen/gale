@@ -1,14 +1,18 @@
 use std::{
+    borrow::Cow,
+    fs,
     path::{Path, PathBuf},
     process::Command,
 };
 
 use eyre::{bail, ensure, OptionExt, Result};
+use keyvalues_serde::{from_vdf, parser::Vdf};
 use log::{info, warn};
 
 use crate::{
-    game::{Game, Platform},
-    prefs::Prefs,
+    config::steam_vdf::LibraryFolders,
+    game::{Game, Platform, Steam},
+    prefs::{default_steam_library_dir, Prefs},
 };
 
 use super::linux;
@@ -90,16 +94,77 @@ pub fn game_dir(platform: Option<Platform>, game: Game, prefs: &Prefs) -> Result
     }
 }
 
+fn steam_get_library_dir_from_vdf(steam: &Steam, prefs: &Prefs) -> Result<PathBuf> {
+    // we should always base this off the .exe location, since this should have the config folder
+    let Some(mut base_path) = default_steam_library_dir(prefs.steam_exe_path.as_deref()) else {
+        bail!("no steam exe set, bailing");
+    };
+
+    base_path.push("config");
+    base_path.push("libraryfolders.vdf");
+
+    info!("Trying to get config automatically from {:?}", base_path);
+
+    let file_contents = fs::read_to_string(&base_path);
+
+    let Ok(library_contents) = file_contents else {
+        bail!("failed to get config libraryfolders.vdf's contents")
+    };
+
+    let Ok(mut vdf) = Vdf::parse(&library_contents) else {
+        bail!("failed to parse libraryfolders.vdf");
+    };
+
+    let Some(obj) = vdf.value.get_mut_obj() else {
+        bail!("invalid vdf data");
+    };
+
+    let mut index = 0;
+    while let Some(mut library) = obj.remove(index.to_string().as_str()) {
+        obj.entry(Cow::from("libraries"))
+            .or_insert(Vec::new())
+            .push(library.pop().unwrap());
+
+        index += 1;
+    }
+
+    let deserialized = match from_vdf::<LibraryFolders>(vdf) {
+        Ok(v) => v,
+        Err(e) => bail!("Failed to get convert vdf to a valid structure, got error: {}", e)
+    };
+
+    for library in deserialized.libraries {
+        if let Some(_) = library.apps.get(&(steam.id as u64)) {
+            return Ok(library.path);
+        }
+    }
+
+    bail!("couldn't find matching app id for library_dir")
+}
+
 fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     let Some(steam) = &game.platforms.steam else {
         bail!("{} is not available on Steam", game.name)
     };
 
-    let mut path = prefs
-        .steam_library_dir
-        .as_ref()
-        .ok_or_eyre("steam library directory not set")?
-        .to_path_buf();
+    let auto_dir = steam_get_library_dir_from_vdf(&steam, &prefs);
+
+    if let Err(e) = &auto_dir {
+        eprintln!("Failed to automatically get games library dir from vdf, reason: {}", e)
+    }
+
+    let mut path = {
+        if let Ok(path) = auto_dir {
+            info!("got auto dir {:?}", path);
+            path
+        } else {
+            prefs
+                .steam_library_dir
+                .as_ref()
+                .ok_or_eyre("steam library directory not set")?
+                .to_path_buf()
+        }
+    };
 
     if !path.ends_with("common") {
         if !path.ends_with("steamapps") {

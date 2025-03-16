@@ -22,6 +22,7 @@ mod bepinex;
 pub mod commands;
 mod frontend;
 mod gd_weave;
+pub mod steam_vdf;
 
 #[derive(Debug, Default)]
 pub struct ConfigCache(Vec<AnyFile>);
