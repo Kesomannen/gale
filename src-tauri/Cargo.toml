@@ -26,7 +26,7 @@ tauri-plugin-os = "2"
 tauri-plugin-process = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-clipboard-manager = "2"
-tauri-plugin-http = "2"
+tauri-plugin-http = "~2.0.0"
 tauri-plugin-single-instance = "2"
 tauri-plugin-cli = "2"
 

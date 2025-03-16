@@ -49,9 +49,7 @@
 	<Contextbar />
 
 	<div class="relative flex grow overflow-hidden">
-		<nav
-			class="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-slate-600 bg-slate-900 p-2"
-		>
+		<nav class="flex shrink-0 flex-col gap-1 border-r border-slate-600 bg-slate-900 p-3">
 			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
