@@ -1,30 +1,28 @@
-use std::sync::Mutex;
-
 use eyre::{OptionExt, Result};
 use log::info;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 
 use super::{InstallOptions, ModInstall};
 use crate::{
     logger,
+    state::ManagerExt,
     thunderstore::{ModId, Thunderstore},
 };
 
-pub fn handle(url: &str, handle: &AppHandle) {
+pub fn handle(url: &str, app: &AppHandle) {
     let mod_id = {
-        let thunderstore = handle.state::<Mutex<Thunderstore>>();
-        let thunderstore = thunderstore.lock().unwrap();
+        let thunderstore = app.lock_thunderstore();
 
         match resolve_url(url, &thunderstore) {
             Ok(mod_id) => mod_id,
             Err(err) => {
-                logger::log_webview_err("Failed to resolve deep link", err, handle);
+                logger::log_webview_err("Failed to resolve deep link", err, app);
                 return;
             }
         }
     };
 
-    let handle = handle.clone();
+    let handle = app.clone();
     tauri::async_runtime::spawn(async move {
         super::install_with_deps(
             vec![ModInstall::new(mod_id)],

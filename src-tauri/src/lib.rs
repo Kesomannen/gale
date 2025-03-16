@@ -1,8 +1,7 @@
 use std::time::Instant;
 
 use ::log::error;
-use eyre::Context;
-use log::{debug, info, warn};
+use log::{info, warn};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -15,26 +14,15 @@ extern crate webkit2gtk;
 
 mod cli;
 mod config;
+mod db;
 mod game;
 mod logger;
 mod prefs;
 mod profile;
+mod state;
 mod telemetry;
 mod thunderstore;
 mod util;
-
-#[derive(Debug)]
-pub struct NetworkClient(reqwest::Client);
-
-impl NetworkClient {
-    fn create() -> Result<Self, reqwest::Error> {
-        let client = reqwest::Client::builder()
-            .user_agent("Kesomannen-gale")
-            .build()?;
-
-        Ok(Self(client))
-    }
-}
 
 fn setup(app: &AppHandle) -> eyre::Result<()> {
     let start = Instant::now();
@@ -45,21 +33,9 @@ fn setup(app: &AppHandle) -> eyre::Result<()> {
         std::env::consts::OS
     );
 
-    app.manage(NetworkClient::create()?);
-
-    prefs::setup(app).context("failed to initialize settings")?;
-    let prefs_done = Instant::now();
-    profile::setup(app).context("failed to initialize mod manager")?;
-    let manager_done = Instant::now();
-    thunderstore::setup(app);
+    state::setup(app)?;
 
     info!("setup done in {:?}", start.elapsed());
-    debug!(
-        "prefs: {:?} | manager {:?} | thunderstore {:?}",
-        prefs_done - start,
-        manager_done - prefs_done,
-        manager_done.elapsed()
-    );
 
     Ok(())
 }

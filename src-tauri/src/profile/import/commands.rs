@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use eyre::anyhow;
-use tauri::AppHandle;
+use tauri::{command, AppHandle};
 use uuid::Uuid;
 
 use crate::{profile::install::InstallOptions, thunderstore, util::cmd::Result};
@@ -11,14 +11,14 @@ use super::{
     ImportData,
 };
 
-#[tauri::command]
+#[command]
 pub async fn import_data(data: ImportData, import_all: bool, app: AppHandle) -> Result<()> {
     super::import_data(data, InstallOptions::default(), import_all, &app).await?;
 
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub async fn import_code(key: &str, app: AppHandle) -> Result<ImportData> {
     let key = Uuid::parse_str(key).map_err(|_| anyhow!("invalid code format"))?;
 
@@ -29,7 +29,7 @@ pub async fn import_code(key: &str, app: AppHandle) -> Result<ImportData> {
     Ok(data)
 }
 
-#[tauri::command]
+#[command]
 pub async fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
     thunderstore::wait_for_fetch(&app).await;
 
@@ -38,7 +38,7 @@ pub async fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
     Ok(data)
 }
 
-#[tauri::command]
+#[command]
 pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
     thunderstore::wait_for_fetch(&app).await;
 
@@ -47,7 +47,7 @@ pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[tauri::command]
+#[command]
 pub fn get_r2modman_info(
     path: Option<PathBuf>,
     app: AppHandle,
@@ -57,7 +57,7 @@ pub fn get_r2modman_info(
     Ok(info)
 }
 
-#[tauri::command]
+#[command]
 pub async fn import_r2modman(path: PathBuf, include: Vec<bool>, app: AppHandle) -> Result<()> {
     r2modman::import(path, &include, &app).await?;
 

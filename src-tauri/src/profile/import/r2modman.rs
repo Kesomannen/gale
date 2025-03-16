@@ -1,13 +1,12 @@
 use std::{
     fs::{self},
     path::PathBuf,
-    sync::Mutex,
 };
 
 use eyre::{bail, Context, Result};
 use log::{info, warn};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
 use super::ImportData;
 use crate::{
@@ -15,9 +14,9 @@ use crate::{
     profile::{
         export::{ImportSource, R2Mod},
         install::InstallOptions,
-        ModManager,
     },
-    thunderstore::{self, Thunderstore},
+    state::ManagerExt,
+    thunderstore::{self},
     util::{self, error::IoResultExt, fs::PathExt},
 };
 
@@ -79,8 +78,7 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
                 app,
             );
 
-            let manager = app.state::<Mutex<ModManager>>();
-            let mut manager = manager.lock().unwrap();
+            let mut manager = app.lock_manager();
 
             let game = manager.active_game_mut();
 
@@ -96,8 +94,7 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
 }
 
 fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
-    let manager = app.state::<Mutex<ModManager>>();
-    let manager = manager.lock().unwrap();
+    let manager = app.lock_manager();
 
     let game = &manager.active_game;
 
@@ -144,11 +141,8 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
 }
 
 fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
-    let manager = app.state::<Mutex<ModManager>>();
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-
-    let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
+    let mut manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
 
     let name = util::fs::file_name_owned(&profile_dir);
 

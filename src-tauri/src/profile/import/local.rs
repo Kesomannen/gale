@@ -2,11 +2,10 @@ use std::{
     fs,
     io::{Cursor, Read},
     path::{Path, PathBuf},
-    sync::Mutex,
 };
 
 use eyre::{bail, ensure, Context, Result};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use uuid::Uuid;
 use zip::ZipArchive;
 
@@ -15,8 +14,9 @@ use crate::{
     prefs::Prefs,
     profile::{
         install::{self, InstallOptions},
-        LocalMod, ModManager, Profile, ProfileMod,
+        LocalMod, Profile, ProfileMod,
     },
+    state::ManagerExt,
     thunderstore::PackageManifest,
     util::{self, fs::PathExt},
 };
@@ -42,11 +42,8 @@ pub async fn import_local_mod(
         .context("failed to install dependencies")?;
     }
 
-    let manager = app.state::<Mutex<ModManager>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+    let prefs = app.lock_prefs();
+    let mut manager = app.lock_manager();
 
     let mod_loader = manager.active_mod_loader();
     let profile = manager.active_profile_mut();
@@ -87,7 +84,7 @@ pub async fn import_local_mod(
 
     profile.mods.push(ProfileMod::new_local(local_mod));
 
-    manager.save(&prefs)?;
+    profile.save(app.db())?;
 
     Ok(())
 }

@@ -2,7 +2,6 @@ use std::{
     fs::{self, File},
     io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
-    sync::Mutex,
 };
 
 use base64::{prelude::BASE64_STANDARD, Engine};
@@ -10,7 +9,7 @@ use eyre::{anyhow, Context, Result};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use tempfile::tempdir;
 use uuid::Uuid;
 
@@ -18,11 +17,10 @@ use crate::{
     profile::{
         export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
         install::{self, InstallOptions, ModInstall},
-        ModManager,
     },
+    state::ManagerExt,
     thunderstore::Thunderstore,
     util::{self, error::IoResultExt},
-    NetworkClient,
 };
 
 pub mod commands;
@@ -87,8 +85,7 @@ impl ImportData {
 }
 
 fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> {
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-    let thunderstore = thunderstore.lock().unwrap();
+    let thunderstore = app.lock_thunderstore();
 
     let temp_dir = tempdir().context("failed to create temporary directory")?;
     util::zip::extract(source, temp_dir.path())?;
@@ -118,8 +115,7 @@ async fn import_data(
     app: &AppHandle,
 ) -> Result<()> {
     let path = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let mut manager = manager.lock().unwrap();
+        let mut manager = app.lock_manager();
 
         let game = manager.active_game_mut();
         if let Some(index) = game.profiles.iter().position(|p| p.name == data.name) {
@@ -127,10 +123,8 @@ async fn import_data(
                 .context("failed to delete existing profile")?;
         }
 
-        let profile = game.create_profile(data.name)?;
-
+        let profile = game.create_profile(data.name, app.db())?;
         profile.ignored_updates.extend(data.ignored_updates);
-
         profile.path.clone()
     };
 
@@ -181,10 +175,8 @@ pub fn import_config(
 }
 
 async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
-    let client = app.state::<NetworkClient>();
-    let client = &client.0;
-
-    let response = client
+    let response = app
+        .http()
         .get(format!(
             "https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"
         ))
