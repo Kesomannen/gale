@@ -17,7 +17,7 @@
 	$: type = file.type;
 	$: isSelected = selectedSection && file.type === 'ok' && file.sections.includes(selectedSection);
 
-	$: textColor = type === 'ok' ? 'slate-200' : type === 'err' ? 'red-400' : 'slate-400';
+	$: textColor = type === 'ok' ? 'primary-200' : type === 'err' ? 'red-400' : 'primary-400';
 	$: icon = type === 'ok' ? 'mdi:chevron-down' : type === 'err' ? 'mdi:error' : 'mdi:help';
 
 	$: shownSections =
@@ -27,9 +27,9 @@
 <Collapsible.Root bind:open>
 	{#if type !== 'ok' || shownSections.length > 0}
 		<Collapsible.Trigger
-			class="group flex w-full items-center overflow-hidden py-0.5 pl-2 pr-1 text-{textColor} {isSelected
-				? 'bg-slate-600 font-semibold'
-				: 'hover:bg-slate-600'}"
+			class="group flex w-full items-center overflow-hidden py-0.5 pr-1 pl-2 text-{textColor} {isSelected
+				? 'bg-primary-600 font-semibold'
+				: 'hover:bg-primary-600'}"
 			on:click={() => type !== 'ok' && onFileClicked(file)}
 		>
 			<Icon
@@ -45,7 +45,7 @@
 			</div>
 
 			<Button.Root
-				class="ml-auto hidden shrink-0 rounded-sm p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
+				class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 ml-auto hidden shrink-0 rounded-sm p-1 group-hover:flex"
 				on:click={(evt) => {
 					evt.stopPropagation();
 					invokeCommand('open_config_file', { file: file.relativePath });
@@ -55,7 +55,7 @@
 			</Button.Root>
 
 			<Button.Root
-				class="hidden shrink-0 rounded-sm p-1 text-slate-400 hover:bg-slate-500 hover:text-slate-200 group-hover:flex"
+				class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 hidden shrink-0 rounded-sm p-1 group-hover:flex"
 				on:click={async (evt) => {
 					evt.stopPropagation();
 					await invokeCommand('delete_config_file', { file: file.relativePath });
@@ -74,9 +74,9 @@
 		>
 			{#each shownSections as section}
 				<Button.Root
-					class="truncate py-0.5 pl-9 pr-2 text-left text-sm {selectedSection === section
-						? 'bg-slate-600 font-semibold text-slate-200'
-						: 'text-slate-300 hover:bg-slate-600'}"
+					class="truncate py-0.5 pr-2 pl-9 text-left text-sm {selectedSection === section
+						? 'bg-primary-600 text-primary-200 font-semibold'
+						: 'text-primary-300 hover:bg-primary-600'}"
 					on:click={() => onSectionClicked(file, section)}
 				>
 					{section.name.length > 0 ? section.name : '<Nameless section>'}

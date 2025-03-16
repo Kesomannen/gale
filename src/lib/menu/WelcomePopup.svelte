@@ -11,7 +11,6 @@
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 	import Icon from '@iconify/svelte';
 	import { invoke } from '@tauri-apps/api/core';
-	import AccentColorPref from '$lib/prefs/AccentColorPref.svelte';
 
 	export let open = false;
 
@@ -56,7 +55,7 @@
 </script>
 
 <Popup title="Welcome to Gale!" canClose={stage === 'end'} bind:open>
-	<div class="text-slate-300">
+	<div class="text-primary-300">
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
 			<GameSelection onSelect={onSelectGame} />
@@ -70,10 +69,10 @@
 			<ImportR2Flow bind:importData bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
-				<BigButton color="slate" class="mr-auto" on:click={() => (stage = 'gameSelect')}
+				<BigButton color="primary" class="mr-auto" on:click={() => (stage = 'gameSelect')}
 					>Back</BigButton
 				>
-				<BigButton color="slate" on:click={() => (stage = 'settings')}>Skip</BigButton>
+				<BigButton color="primary" on:click={() => (stage = 'settings')}>Skip</BigButton>
 				<BigButton color="accent" on:click={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
@@ -108,7 +107,7 @@
 
 			<div class="mt-3 flex justify-between">
 				<BigButton
-					color="slate"
+					color="primary"
 					on:click={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
 					>Back</BigButton
 				>

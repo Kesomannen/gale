@@ -11,7 +11,7 @@
 
 	$: stateClasses = value
 		? 'bg-accent-700 hover:bg-accent-600'
-		: 'bg-slate-800 hover:bg-slate-700 border border-slate-500';
+		: 'bg-primary-800 hover:bg-primary-700 border border-primary-500';
 </script>
 
 <Checkbox.Root

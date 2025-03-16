@@ -64,22 +64,22 @@
 >
 	<slot name="trigger" text={label} {open}>
 		<Select.Trigger
-			class="group flex items-center gap-2 overflow-hidden rounded-lg border border-transparent bg-slate-900 py-1 pr-2 pl-3 enabled:hover:border-slate-500 disabled:cursor-not-allowed {className}"
+			class="group bg-primary-900 enabled:hover:border-primary-500 flex items-center gap-2 overflow-hidden rounded-lg border border-transparent py-1 pr-2 pl-3 disabled:cursor-not-allowed {className}"
 		>
 			{#if icon}
-				<Icon class="shrink-0 text-lg text-slate-400" {icon} />
+				<Icon class="text-primary-400 shrink-0 text-lg" {icon} />
 			{/if}
 
 			<div
-				class="shrink grow truncate text-left text-slate-300 group-disabled:text-slate-400"
-				class:text-slate-300={overrideLabel || label}
-				class:text-slate-400={!overrideLabel && !label}
+				class="text-primary-300 group-disabled:text-primary-400 shrink grow truncate text-left"
+				class:text-primary-300={overrideLabel || label}
+				class:text-primary-400={!overrideLabel && !label}
 			>
 				{overrideLabel ?? label ?? placeholder}
 			</div>
 
 			<Icon
-				class="shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out group-disabled:text-slate-500 {open
+				class="text-primary-400 group-disabled:text-primary-500 shrink-0 origin-center transform text-lg transition-all duration-100 ease-out {open
 					? 'rotate-180'
 					: 'rotate-0'}"
 				icon="mdi:chevron-down"
@@ -87,7 +87,7 @@
 		</Select.Trigger>
 	</slot>
 	<Select.Content
-		class="flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800 p-1 shadow-xl"
+		class="border-primary-600 bg-primary-800 flex max-h-96 flex-col gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
 		{...dropTransition}
 		{avoidCollisions}
 	>
@@ -95,7 +95,7 @@
 			<slot name="item" {item}>
 				<Select.Item
 					value={item}
-					class="flex cursor-default items-center rounded-md px-3 py-1 text-left text-slate-400 hover:bg-slate-700 hover:text-slate-200"
+					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 flex cursor-default items-center rounded-md px-3 py-1 text-left"
 				>
 					{getLabel(item)}
 

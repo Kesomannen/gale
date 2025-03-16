@@ -86,7 +86,7 @@
 </script>
 
 <div class="flex grow overflow-hidden">
-	<div class="flex w-[60%] grow flex-col overflow-hidden pl-3 pt-3">
+	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
 		<div class="mb-1.5 flex flex-wrap gap-1.5 pr-3">
 			<div class="relative flex-grow-3">
 				<SearchBar bind:value={$queryArgs.searchTerm} placeholder="Search for mods..." />
@@ -149,7 +149,7 @@
 		<slot name="banner" />
 
 		{#if mods.length === 0}
-			<div class="mt-4 text-center text-slate-300">
+			<div class="text-primary-300 mt-4 text-center">
 				<slot name="placeholder" />
 			</div>
 		{:else}

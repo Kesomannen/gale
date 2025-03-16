@@ -71,7 +71,7 @@
 />
 
 <div
-	class="group h-5 grow rounded-full bg-slate-900 py-1 pr-2 pl-1"
+	class="group bg-primary-900 h-5 grow rounded-full py-1 pr-2 pl-1"
 	role="slider"
 	aria-valuemin={range.start}
 	aria-valuemax={range.end}
@@ -93,16 +93,16 @@
 	}}
 >
 	<div
-		class="relative h-full min-w-1 rounded-l-full group-hover:bg-slate-600"
+		class="group-hover:bg-primary-600 relative h-full min-w-1 rounded-l-full"
 		style="width: {fillPercent}%;"
-		class:bg-slate-700={!isDragging}
-		class:bg-slate-600={isDragging}
+		class:bg-primary-700={!isDragging}
+		class:bg-primary-600={isDragging}
 		bind:this={fill}
 	>
 		<div
 			class="absolute right-[-0.5rem] h-3 w-3 rounded-full"
-			class:bg-slate-400={!isDragging}
-			class:bg-slate-300={isDragging}
+			class:bg-primary-400={!isDragging}
+			class:bg-primary-300={isDragging}
 			bind:this={handle}
 			draggable="false"
 		/>
@@ -128,7 +128,7 @@
 
 		inputString = content.value.toString();
 	}}
-	class="focus:ring-accent-400 ml-3 w-1/6 min-w-0 shrink rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 hover:border-slate-500 hover:text-slate-200 focus:border-transparent focus:ring-2 focus:outline-hidden"
+	class="focus:ring-accent-400 bg-primary-900 text-primary-300 placeholder-primary-400 hover:border-primary-500 hover:text-primary-200 ml-3 w-1/6 min-w-0 shrink rounded-lg border border-transparent px-3 py-1 focus:border-transparent focus:ring-2 focus:outline-hidden"
 />
 <ResetConfigButton {entryId} {onReset} />
 

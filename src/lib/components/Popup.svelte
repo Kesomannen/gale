@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Button, Dialog } from 'bits-ui';
-	import { fade, fly, scale } from 'svelte/transition';
-	import { quadOut, quartIn, quartOut } from 'svelte/easing';
+	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { popupTransition } from '$lib/transitions';
@@ -54,12 +53,13 @@
 			{...popupTransition}
 		>
 			<div
-				class="dialog pointer-events-auto relative z-50 max-h-[85%] overflow-y-auto overflow-x-hidden rounded-xl border border-slate-600 bg-slate-800 p-6 shadow-xl"
-				class:large
+				class="w-[85%] {large
+					? 'max-w-[60rem]'
+					: 'max-w-[35rem]'} border-primary-600 bg-primary-800 pointer-events-auto relative z-50 max-h-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl"
 			>
 				{#if canClose}
 					<Button.Root
-						class="absolute right-5 top-5 rounded-md p-0.5 text-3xl text-slate-400 hover:bg-red-600/80 hover:text-red-100"
+						class="text-primary-400 absolute top-5 right-5 rounded-md p-0.5 text-3xl hover:bg-red-600/80 hover:text-red-100"
 						on:click={close}
 					>
 						<Icon icon="mdi:close" />
@@ -67,7 +67,7 @@
 				{/if}
 
 				{#if title}
-					<Dialog.Title class="w-full break-words pr-10 text-2xl font-bold text-white"
+					<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-white"
 						>{title}</Dialog.Title
 					>
 				{/if}
@@ -77,14 +77,3 @@
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>
-
-<style lang="postcss">
-	.dialog {
-		width: 85%;
-		max-width: 35rem;
-	}
-
-	.dialog.large {
-		max-width: 60rem;
-	}
-</style>

@@ -14,8 +14,8 @@
 	<a
 		href={to}
 		class="relative rounded-lg p-2 text-2xl {active
-			? 'text-accent-500 bg-slate-800'
-			: 'text-slate-500 hover:bg-slate-800 hover:text-slate-400'}"
+			? 'text-accent-500 bg-primary-800'
+			: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400'}"
 	>
 		<Icon {icon} />
 	</a>

@@ -11,11 +11,11 @@
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
-	import AccentColorPref from '$lib/prefs/AccentColorPref.svelte';
 	import LargePrefsHeading from '$lib/prefs/LargePrefsHeading.svelte';
 	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
+	import ColorPref from '$lib/prefs/ColorPref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -100,7 +100,8 @@
 
 		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
 
-		<AccentColorPref />
+		<ColorPref category="primary" fallback="slate" />
+		<ColorPref category="accent" fallback="green" />
 
 		<ZoomLevelPref
 			value={prefs.zoomFactor}

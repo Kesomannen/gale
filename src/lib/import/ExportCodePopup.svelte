@@ -24,7 +24,7 @@
 </script>
 
 <Popup title="Export as code" bind:open={isOpen}>
-	<Dialog.Description class="flex-center mb-2 flex text-slate-400">
+	<Dialog.Description class="flex-center text-primary-400 mb-2 flex">
 		{#await codePromise}
 			<Icon icon="mdi:loading" class="mr-2 animate-spin text-lg" />
 			Exporting {$activeProfile?.name} as code...
@@ -34,7 +34,7 @@
 	</Dialog.Description>
 
 	{#await codePromise then code}
-		<code class="rounded-sm bg-slate-900 px-3 py-1 text-lg text-slate-400">
+		<code class="bg-primary-900 text-primary-400 rounded-sm px-3 py-1 text-lg">
 			{code}
 		</code>
 	{/await}

@@ -10,7 +10,7 @@
 </script>
 
 <Button.Root
-	class="{className} inline-flex items-center overflow-hidden rounded-lg font-{fontWeight} px-4 py-2 text-white bg-{color}-700 enabled:hover:bg-{color}-600 disabled:opactiy-70 text-nowrap disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
+	class="{className} inline-flex items-center overflow-hidden rounded-lg font-{fontWeight} px-4 py-2 text-white bg-{color}-700 enabled:hover:bg-{color}-600 disabled:opactiy-70 disabled:bg-primary-700 disabled:text-primary-400 text-nowrap disabled:cursor-not-allowed"
 	on:click
 	bind:disabled
 >

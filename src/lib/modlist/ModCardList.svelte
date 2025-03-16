@@ -12,13 +12,13 @@
 	$: names.sort((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
 </script>
 
-<div class="list grid gap-3 overflow-y-auto {className}">
+<div class="grid gap-3 overflow-y-auto {className}">
 	{#each names as fullName}
 		<ModCard {fullName} {showVersion} />
 	{/each}
 </div>
 
-<style lang="postcss">
+<style>
 	.list {
 		grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
 	}

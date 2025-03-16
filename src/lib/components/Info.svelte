@@ -3,7 +3,7 @@
 	import Tooltip from './Tooltip.svelte';
 </script>
 
-<Tooltip class="cursor-help px-2 py-1 text-slate-400" openDelay={50}>
+<Tooltip class="text-primary-400 cursor-help px-2 py-1" openDelay={50}>
 	<Icon icon="mdi:question-mark-circle" />
 
 	<svelte:fragment slot="tooltip">

@@ -23,14 +23,14 @@
 	</Info>
 
 	<Button.Root
-		class="group flex grow basis-0 items-center truncate rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-right hover:border-slate-500"
+		class="group bg-primary-900 hover:border-primary-500 flex grow basis-0 items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
 		on:click
 	>
 		<div class="mr-2 rounded-sm">
-			<Icon {icon} class="align-middle text-slate-300" />
+			<Icon {icon} class="text-primary-300 align-middle" />
 		</div>
 
-		<div class="truncate text-slate-300" style="direction: rtl;">
+		<div class="text-primary-300 truncate" style="direction: rtl;">
 			&#x200E;
 			{hasValue ? value : 'Not set'}
 		</div>

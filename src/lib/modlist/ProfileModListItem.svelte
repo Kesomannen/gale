@@ -28,10 +28,10 @@
 
 	$: descriptionClasses =
 		mod.enabled === false
-			? 'text-slate-500 line-through'
+			? 'text-primary-500 line-through'
 			: isSelected
-				? 'text-slate-300'
-				: 'text-slate-400 group-hover:text-slate-300';
+				? 'text-primary-300'
+				: 'text-primary-400 group-hover:text-primary-300';
 
 	$: if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
 		contextMenuOpen = false;
@@ -51,8 +51,8 @@
 	<ContextMenu.Trigger class="contents">
 		<button
 			class="group flex w-full items-center rounded-lg border p-2 {isSelected
-				? 'border-slate-500 bg-slate-700'
-				: 'border-transparent hover:bg-slate-700'}"
+				? 'border-primary-500 bg-primary-700'
+				: 'hover:bg-primary-700 border-transparent'}"
 			data-uuid={mod.uuid}
 			data-index={index}
 			draggable={reorderable}
@@ -66,7 +66,7 @@
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div
 						class="shrink truncate font-medium {mod.enabled === false
-							? 'text-slate-300 line-through'
+							? 'text-primary-300 line-through'
 							: 'text-white'}"
 					>
 						{mod.name.replace(/_/g, ' ')}
@@ -75,7 +75,7 @@
 						{mod.version ?? '?.?.?'}
 					</div>
 					{#if mod.isPinned}
-						<Icon class="shrink-0 text-slate-400" icon="mdi:pin" />
+						<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
 					{/if}
 					{#if mod.isDeprecated}
 						<Icon class="shrink-0 text-red-500" icon="mdi:error" />
@@ -95,7 +95,7 @@
 			{#if reorderable}
 				<Icon
 					icon="material-symbols:drag-indicator"
-					class="mr-4 shrink-0 cursor-move text-2xl text-slate-400"
+					class="text-primary-400 mr-4 shrink-0 cursor-move text-2xl"
 				/>
 			{/if}
 
@@ -106,17 +106,17 @@
 				<Switch.Root
 					checked={mod.enabled ?? true}
 					onCheckedChange={(newState) => dispatch('toggle', newState)}
-					class="group data-[state=checked]:bg-accent-700 data-[state=checked]:hover:bg-accent-600 mr-1 flex h-6 w-12 shrink-0 rounded-full bg-slate-600 px-1 py-1 hover:bg-slate-500"
+					class="group data-[state=checked]:bg-accent-700 data-[state=checked]:hover:bg-accent-600 bg-primary-600 hover:bg-primary-500 mr-1 flex h-6 w-12 shrink-0 rounded-full px-1 py-1"
 				>
 					<Switch.Thumb
-						class="data-[state=checked]:bg-accent-200 pointer-events-none h-full w-4 rounded-full bg-slate-300 transition-transform duration-75 ease-out data-[state=checked]:translate-x-6"
+						class="data-[state=checked]:bg-accent-200 data-[state=checked]:tranprimary-x-6 bg-primary-300 pointer-events-none h-full w-4 rounded-full transition-transform duration-75 ease-out"
 					/>
 				</Switch.Root>
 			</div>
 		</button>
 	</ContextMenu.Trigger>
 	<ContextMenu.Content
-		class="flex flex-col gap-0.5 rounded-lg border border-slate-600 bg-slate-800 p-1 shadow-lg"
+		class="border-primary-600 bg-primary-800 flex flex-col gap-0.5 rounded-lg border p-1 shadow-lg"
 		{...dropTransition}
 	>
 		<ModContextMenuItems {mod} {contextItems} type="context" />

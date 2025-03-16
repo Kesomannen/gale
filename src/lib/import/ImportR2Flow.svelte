@@ -82,15 +82,15 @@
 		class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60"
 		transition:fade={{ duration: 50 }}
 	>
-		<Icon icon="mdi:loading" class="animate-spin text-4xl text-slate-300" />
-		<div class="text-slate-300">{loadingText}</div>
+		<Icon icon="mdi:loading" class="text-primary-300 animate-spin text-4xl" />
+		<div class="text-primary-300">{loadingText}</div>
 	</div>
 {/if}
 
 {#if importData === undefined}
-	<div class="text-slate-300">Loading...</div>
+	<div class="text-primary-300">Loading...</div>
 {:else if importData === null}
-	<div class="mt-2 flex w-full items-center gap-2 text-slate-300">
+	<div class="text-primary-300 mt-2 flex w-full items-center gap-2">
 		{#if path === null}
 			<Icon icon="mdi:warning" />
 			No installations found, please specify the path above.

@@ -27,17 +27,17 @@
 	</Info>
 
 	<Button.Root
-		class="group relative flex grow items-center truncate rounded-lg border border-transparent  bg-slate-900 px-3 py-1 text-right hover:border-slate-500"
+		class="group bg-primary-900 hover:border-primary-500 relative flex grow items-center truncate rounded-lg  border border-transparent px-3 py-1 text-right"
 		on:click={() => ($apiKeyPopupOpen = true)}
 	>
 		<div class="mr-2 rounded-sm">
 			<Icon
 				icon={hasToken ? 'mdi:key' : 'mdi:key-remove'}
-				class="align-middle text-slate-300 group-hover:text-slate-200"
+				class="text-primary-300 group-hover:text-primary-200 align-middle"
 			/>
 		</div>
 
-		<div class="truncate text-slate-300 group-hover:text-slate-200">
+		<div class="text-primary-300 group-hover:text-primary-200 truncate">
 			{hasToken ? 'Click to override token' : 'Not set'}
 		</div>
 

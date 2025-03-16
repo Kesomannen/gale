@@ -10,14 +10,14 @@
 
 <input
 	type="text"
-	class="w-full rounded-lg px-10 py-1.5 bg-slate-{brightness} valid:focus:ring-accent-400 truncate border border-transparent text-slate-300 placeholder-slate-400 invalid:ring-red-500 hover:border-slate-500 focus:ring-2 focus:outline-hidden text-{size}"
+	class="w-full rounded-lg px-10 py-1.5 bg-primary-{brightness} valid:focus:ring-accent-400 text-primary-300 placeholder-primary-400 hover:border-primary-500 truncate border border-transparent invalid:ring-red-500 focus:ring-2 focus:outline-hidden text-{size}"
 	bind:value
 	on:keydown
 	{placeholder}
 />
-<Icon class="absolute top-2 left-2.5 text-2xl text-slate-400" icon="mdi:magnify" />
+<Icon class="text-primary-400 absolute top-2 left-2.5 text-2xl" icon="mdi:magnify" />
 <Button.Root
-	class="absolute top-[0.4rem] right-1.5 rounded-md p-1 text-xl text-slate-400 hover:bg-slate-800 hover:text-slate-300"
+	class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute top-[0.4rem] right-1.5 rounded-md p-1 text-xl"
 	on:click={() => (value = '')}
 >
 	<Icon icon="mdi:close" />

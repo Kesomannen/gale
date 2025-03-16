@@ -1,10 +1,229 @@
-@import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto+Mono&display=swap');
 
-@config '../tailwind.config.js';
+@import 'tailwindcss';
 
 @layer base {
 	button:not(:disabled),
 	[role='button']:not(:disabled) {
 		cursor: pointer;
+	}
+}
+
+@theme {
+	--font-sans: 'Nunito Sans', 'sans-serif';
+	--font-mono: 'Roboto Mono', 'monospace';
+
+	--color-primary-50: var(--color-gray-50);
+	--color-primary-100: var(--color-gray-100);
+	--color-primary-200: var(--color-gray-200);
+	--color-primary-300: var(--color-gray-300);
+	--color-primary-400: var(--color-gray-400);
+	--color-primary-500: var(--color-gray-500);
+	--color-primary-600: var(--color-gray-600);
+	--color-primary-700: var(--color-gray-700);
+	--color-primary-800: var(--color-gray-800);
+	--color-primary-900: var(--color-gray-900);
+	--color-primary-950: var(--color-gray-950);
+
+	--color-accent-50: var(--color-green-50);
+	--color-accent-100: var(--color-green-100);
+	--color-accent-200: var(--color-green-200);
+	--color-accent-300: var(--color-green-300);
+	--color-accent-400: var(--color-green-400);
+	--color-accent-500: var(--color-green-500);
+	--color-accent-600: var(--color-green-600);
+	--color-accent-700: var(--color-green-700);
+	--color-accent-800: var(--color-green-800);
+	--color-accent-900: var(--color-green-900);
+	--color-accent-950: var(--color-green-950);
+}
+
+@layer components {
+	body {
+		overflow: hidden;
+		position: fixed;
+		width: 100vw;
+		height: 100vh;
+	}
+
+	main {
+		height: 100vh;
+	}
+
+	* {
+		scrollbar-color: var(--color-primary-500) var(--color-primary-800);
+	}
+
+	.light-scrollbar {
+		scrollbar-color: var(--color-primary-400) var(--color-primary-700);
+	}
+
+	.markdown {
+		color: var(--color-primary-100);
+
+		h1,
+		h2 {
+			border-bottom: 1px solid var(--color-primary-500);
+			padding: --spacing(4) 0 --spacing(1) 0;
+			margin-bottom: --spacing(3);
+		}
+
+		h1 {
+			font-weight: var(--font-weight-bold);
+			font-size: var(--text-3xl);
+			color: var(--color-white);
+		}
+
+		h2 {
+			font-weight: var(--font-weight-semibold);
+			font-size: var(--text-2xl);
+			color: var(--color-primary-100);
+		}
+
+		h3 {
+			font-weight: var(--font-weight-semibold);
+			font-size: var(--text-xl);
+			padding: --spacing(2) 0 --spacing(1) 0;
+		}
+
+		h4 {
+			font-weight: var(--font-weight-medium);
+			font-size: var(--text-lg);
+			padding: --spacing(1) 0 --spacing(0.5) 0;
+		}
+
+		a {
+			color: var(--color--accent-400);
+			&:hover {
+				color: var(--color--accent-300);
+				text-decoration-line: underline;
+			}
+		}
+
+		p {
+			margin: --spacing(3) 0;
+		}
+
+		li {
+			margin: --spacing(1) 0 --spacing(1) --spacing(8);
+			list-style-type: disc;
+			padding-left: calc(var(--spacing) * 0.5);
+		}
+
+		pre {
+			background-color: var(--color-primary-900);
+			color: var(text-primary-300);
+			margin: --spacing(2) 0;
+			overflow-x: auto;
+			border-radius: 0.25rem;
+			padding: --spacing(2);
+		}
+
+		pre .hljs {
+			padding: 0;
+		}
+
+		code {
+			background-color: var(--color-primary-900);
+		}
+
+		img {
+			margin: --spacing(2) 0;
+		}
+
+		table {
+			border-color: var(--color-primary-950);
+			border-width: 2px;
+			overflow-x: auto;
+			border-collapse: collapse;
+			max-width: 100%;
+		}
+
+		th {
+			border-color: var(--color-primary-950);
+			padding: --spacing(1) --spacing(3);
+			text-align: left;
+			font-weight: var(--font-weight-semibold);
+		}
+
+		tr {
+			border-bottom: 1px solid var(--color-primary-900);
+		}
+
+		tr:nth-child(2n) {
+			background-color: var(--color-primary-900);
+		}
+
+		td {
+			padding: --spacing(1) --spacing(2);
+			text-align: left;
+		}
+
+		hr {
+			border-color: var(--color-primary-500);
+			margin: --spacing(4) 0;
+		}
+
+		blockquote {
+			border-left: 4px solid var(--color-primary-600);
+			color: var(--text-primary-400);
+			margin: --spacing(3) 0;
+			padding-left: --spacing(3);
+		}
+
+		summary {
+			cursor: pointer;
+		}
+	}
+
+	.menu-item {
+		display: flex;
+		flex-shrink: 0;
+		cursor: default;
+		align-items: center;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		border-radius: var(--radius-sm);
+		padding: --spacing(1) --spacing(3);
+		text-align: left;
+	}
+
+	.dropdown-menu-item {
+		color: var(--color-primary-300);
+
+		&:hover {
+			color: var(--color-primary-100);
+			background-color: var(--color-primary-600);
+		}
+	}
+
+	.context-menu-item {
+		color: var(--color-primary-400);
+
+		&:hover {
+			color: var(--color-primary-200);
+			background-color: var(--color-primary-700);
+		}
+	}
+
+	.sub-menu {
+		display: flex;
+		flex-direction: column;
+		max-height: --spacing(80);
+		gap: --spacing(0.5);
+		overflow-y: auto;
+		border-radius: var(--radius-lg);
+		border-width: 1px;
+		border-style: solid;
+		padding: --spacing(1);
+		box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+			var(--tw-ring-shadow), var(--tw-shadow);
+	}
+
+	code {
+		background-color: var(--color-primary-900);
+		padding: 0 --spacing(1);
+		font-size: var(--text-sm);
 	}
 }

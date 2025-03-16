@@ -131,7 +131,7 @@
 		</TabsMenu>
 
 		<details>
-			<summary class="mt-2 cursor-pointer text-slate-300"
+			<summary class="text-primary-300 mt-2 cursor-pointer"
 				>{data.modNames.length} mods to install</summary
 			>
 
@@ -139,7 +139,7 @@
 		</details>
 
 		<details>
-			<summary class="mt-1 cursor-pointer text-slate-300">Advanced options</summary>
+			<summary class="text-primary-300 mt-1 cursor-pointer">Advanced options</summary>
 
 			<div class="mt-1 flex items-center">
 				<Label>Import all files</Label>
@@ -153,9 +153,9 @@
 			</div>
 		</details>
 
-		<div class="mt-2 flex w-full items-center justify-end gap-2 text-slate-400">
+		<div class="text-primary-400 mt-2 flex w-full items-center justify-end gap-2">
 			<BigButton
-				color="slate"
+				color="primary"
 				on:click={() => {
 					open = false;
 					data = null;

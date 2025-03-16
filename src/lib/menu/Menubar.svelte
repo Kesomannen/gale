@@ -200,7 +200,7 @@
 	});
 </script>
 
-<header data-tauri-drag-region class="flex h-8 shrink-0 bg-slate-800">
+<header data-tauri-drag-region class="bg-primary-800 flex h-8 shrink-0">
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />
 		<MenubarMenu label="File">
@@ -279,14 +279,14 @@
 		</MenubarMenu>
 	</Menubar.Root>
 
-	<Button.Root class="group ml-auto px-3 py-1.5 hover:bg-slate-700" on:click={appWindow.minimize}>
-		<Icon icon="mdi:minimize" class="text-slate-500 group-hover:text-white" />
+	<Button.Root class="group hover:bg-primary-700 ml-auto px-3 py-1.5" on:click={appWindow.minimize}>
+		<Icon icon="mdi:minimize" class="text-primary-500 group-hover:text-white" />
 	</Button.Root>
-	<Button.Root class="group px-3 py-1.5 hover:bg-slate-700" on:click={appWindow.toggleMaximize}>
-		<Icon icon="mdi:maximize" class="text-slate-500 group-hover:text-white" />
+	<Button.Root class="group hover:bg-primary-700 px-3 py-1.5" on:click={appWindow.toggleMaximize}>
+		<Icon icon="mdi:maximize" class="text-primary-500 group-hover:text-white" />
 	</Button.Root>
 	<Button.Root class="group px-3 py-1.5 hover:bg-red-700" on:click={appWindow.close}>
-		<Icon icon="mdi:close" class="text-slate-500 group-hover:text-white" />
+		<Icon icon="mdi:close" class="text-primary-500 group-hover:text-white" />
 	</Button.Root>
 </header>
 
@@ -295,7 +295,7 @@
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
-	<p class="mb-1 text-slate-300">
+	<p class="text-primary-300 mb-1">
 		{profileOperation == 'duplicate'
 			? 'Enter a name for the duplicated profile:'
 			: 'Enter a new name for the profile:'}
@@ -309,7 +309,7 @@
 	/>
 	<div class="mt-2 ml-auto flex justify-end gap-2">
 		{#if !profileOperationInProgress}
-			<BigButton color="slate" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
+			<BigButton color="primary" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
 		{/if}
 		<BigButton
 			color="accent"

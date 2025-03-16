@@ -277,7 +277,7 @@
 			{:else}
 				<span class="text-lg">No matching mods found in profile</span>
 				<br />
-				<span class="text-slate-400">Try to adjust your search query/filters</span>
+				<span class="text-primary-400">Try to adjust your search query/filters</span>
 			{/if}
 		{/if}
 	</svelte:fragment>
@@ -296,7 +296,7 @@
 </ModList>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
-	<div class="mt-4 text-center text-slate-300">
+	<div class="text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
 			No dependants found 😢
 		{:else}

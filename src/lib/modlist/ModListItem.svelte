@@ -13,14 +13,14 @@
 	}>();
 
 	$: descriptionClasses = isSelected
-		? 'text-slate-300'
-		: 'text-slate-400 group-hover:text-slate-300';
+		? 'text-primary-300'
+		: 'text-primary-400 group-hover:text-primary-300';
 </script>
 
 <button
 	class="group flex w-full rounded-lg border p-2 {isSelected
-		? 'border-slate-500 bg-slate-700'
-		: 'border-transparent hover:bg-slate-700'}"
+		? 'border-primary-500 bg-primary-700'
+		: 'hover:bg-primary-700 border-transparent'}"
 	on:click
 >
 	<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
@@ -30,7 +30,7 @@
 				{mod.name.replace(/_/g, ' ')}
 			</div>
 			{#if mod.isPinned}
-				<Icon class="shrink-0 text-slate-400" icon="mdi:pin" />
+				<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
 			{/if}
 			{#if mod.isDeprecated}
 				<Icon class="shrink-0 text-red-500" icon="mdi:error" />

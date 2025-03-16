@@ -1,24 +1,28 @@
 <script lang="ts">
 	import Dropdown from '$lib/components/Dropdown.svelte';
-	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
-	import { colors, getAccentColor, setAccentColor } from '$lib/theme';
+	import { colorValues, getColor, setColor, type Color, type ColorCategory } from '$lib/theme';
 	import { capitalize } from '$lib/util';
 
-	let value = getAccentColor();
+	export let category: ColorCategory;
+	export let fallback: Color;
+
+	let value = getColor(category, fallback);
+
+	const colorNames = Object.keys(colorValues) as Color[];
 </script>
 
 <div class="flex items-center">
-	<Label>Accent color</Label>
+	<Label>{capitalize(category)} color</Label>
 
 	<Dropdown
 		class="grow"
 		selected={value}
-		items={colors}
+		items={colorNames}
 		getLabel={capitalize}
 		onSelectedChange={(newValue) => {
 			value = newValue;
-			setAccentColor(value);
+			setColor(category, value);
 		}}
 		multiple={false}
 	/>

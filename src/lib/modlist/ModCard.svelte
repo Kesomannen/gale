@@ -30,7 +30,7 @@
 			</a>
 
 			{#if showVersion && version !== null}
-				<span class=" shrink-0 text-slate-400">
+				<span class=" text-primary-400 shrink-0">
 					{version}
 				</span>
 			{/if}
@@ -38,7 +38,7 @@
 
 		{#if author !== null}
 			<a
-				class="truncate text-slate-400 hover:underline"
+				class="text-primary-400 truncate hover:underline"
 				href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/"
 				target="_blank"
 			>

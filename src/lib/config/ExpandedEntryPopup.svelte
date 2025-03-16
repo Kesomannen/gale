@@ -82,11 +82,11 @@
 			</Tabs.Content>
 
 			<Tabs.Content value="list" class="pt-1">
-				<div class="flex flex-col gap-1 text-slate-300">
+				<div class="text-primary-300 flex flex-col gap-1">
 					{#each items as element, i}
 						<div class="flex gap-1">
 							<Button.Root
-								class="rounded-lg p-1.5 text-xl text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+								class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 rounded-lg p-1.5 text-xl"
 								on:click={() => {
 									items.splice(i, 1);
 									updateListContent();

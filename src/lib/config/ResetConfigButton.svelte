@@ -39,7 +39,7 @@
 </script>
 
 <Button.Root
-	class="ml-1 rounded-lg p-1.5 text-xl text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+	class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 ml-1 rounded-lg p-1.5 text-xl"
 	on:click={onClick}
 >
 	<Icon icon="mdi:refresh" />

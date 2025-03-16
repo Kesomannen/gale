@@ -15,29 +15,24 @@
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
-	import { refreshAccentColor } from '$lib/theme';
 	import { clearToast, toasts } from '$lib/toast';
+	import { refreshColor } from '$lib/theme';
 
 	let status: string | null = null;
 	let unlisten: UnlistenFn | undefined;
 
 	onMount(async () => {
-		refreshAccentColor();
+		refreshColor('accent', 'green');
+		refreshColor('primary', 'slate');
 
 		unlisten = await listen<string | null>('status_update', (evt) => {
 			status = evt.payload;
 		});
 	});
-
-	onDestroy(() => {
-		if (unlisten) {
-			unlisten();
-		}
-	});
 </script>
 
 <main
-	class="relative flex flex-col overflow-hidden bg-slate-800"
+	class="bg-primary-800 relative flex flex-col overflow-hidden"
 	on:contextmenu={(evt) => {
 		// hide context menu in release builds
 		if (window.location.hostname === 'tauri.localhost') {
@@ -49,7 +44,7 @@
 	<Contextbar />
 
 	<div class="relative flex grow overflow-hidden">
-		<nav class="flex shrink-0 flex-col gap-1 border-r border-slate-600 bg-slate-900 p-3">
+		<nav class="border-primary-600 bg-primary-900 flex shrink-0 flex-col gap-1 border-r p-2.5">
 			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
 			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
@@ -62,7 +57,7 @@
 
 	{#if status !== null}
 		<div
-			class="flex w-full items-center border-t border-slate-600 px-3 py-1 text-sm text-slate-400"
+			class="border-primary-600 text-primary-400 flex w-full items-center border-t px-3 py-1 text-sm"
 			transition:slide={{ duration: 200, easing: expoOut }}
 		>
 			<Icon icon="mdi:loading" class="animate-spin" />
@@ -97,7 +92,7 @@
 						class="rounded-xs p-1 hover:bg-red-500"
 						on:click={() => writeText('`' + toast.name + ' - ' + toast.message + '`')}
 					>
-						<Icon icon="mdi:clipboard-text" class="text-lg text-slate-100" />
+						<Icon icon="mdi:clipboard-text" class="text-primary-100 text-lg" />
 					</Button.Root>
 				{/if}
 
@@ -107,7 +102,7 @@
 						: 'hover:bg-accent-500'}"
 					on:click={() => clearToast(i)}
 				>
-					<Icon icon="mdi:close" class="text-lg text-slate-100" />
+					<Icon icon="mdi:close" class="text-primary-100 text-lg" />
 				</Button.Root>
 			</div>
 		{/each}
@@ -116,22 +111,3 @@
 
 <InstallProgressPopup />
 <WelcomePopup />
-
-<style lang="postcss">
-	@reference 'tailwindcss';
-
-	:global(body) {
-		overflow: hidden;
-		position: fixed;
-		width: 100vw;
-		height: 100vh;
-	}
-
-	main {
-		height: 100vh;
-	}
-
-	:global(div) {
-		scrollbar-color: var(--color-slate-500) var(--color-slate-800);
-	}
-</style>

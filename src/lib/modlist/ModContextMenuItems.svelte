@@ -35,7 +35,7 @@
 						<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent
-						class="sub-menu dropdown-sub-menu border-slate-500 bg-slate-700"
+						class="sub-menu light-scrollbar border-primary-500 bg-primary-700"
 						{...dropTransition}
 					>
 						<svelte:self {mod} {type} contextItems={children(mod)} />
@@ -64,34 +64,13 @@
 
 					<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 				</ContextMenu.SubTrigger>
-				<ContextMenu.SubContent class="sub-menu border-slate-600 bg-slate-800" {...dropTransition}>
+				<ContextMenu.SubContent
+					class="sub-menu border-primary-600 bg-primary-800"
+					{...dropTransition}
+				>
 					<svelte:self {mod} {type} contextItems={children(mod)} />
 				</ContextMenu.SubContent>
 			</ContextMenu.Sub>
 		{/if}
 	{/if}
 {/each}
-
-<style lang="postcss">
-	@reference 'tailwindcss';
-
-	:global(.menu-item) {
-		@apply flex shrink-0 cursor-default items-center truncate rounded-sm py-1 pl-3 text-left;
-	}
-
-	:global(.dropdown-menu-item) {
-		@apply text-slate-300 hover:bg-slate-600 hover:text-slate-100;
-	}
-
-	:global(.context-menu-item) {
-		@apply text-slate-400 hover:bg-slate-700 hover:text-slate-200;
-	}
-
-	:global(.sub-menu) {
-		@apply flex max-h-80 flex-col gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-lg;
-	}
-
-	:global(.dropdown-sub-menu) {
-		scrollbar-color: var(--color-slate-400) var(--color-slate-700);
-	}
-</style>

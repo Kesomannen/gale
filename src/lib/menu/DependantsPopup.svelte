@@ -56,7 +56,7 @@
 	/>
 
 	<svelte:fragment slot="buttons">
-		<BigButton on:click={executeOne} color="slate" class="truncate">
+		<BigButton on:click={executeOne} color="primary" class="truncate">
 			{verb}
 			{name} only
 		</BigButton>
