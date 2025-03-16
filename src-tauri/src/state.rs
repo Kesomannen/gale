@@ -44,7 +44,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 
     let (data, mut prefs, migrated) = db.read()?;
 
-    prefs.init(app).context("failed to init prefs")?;
+    prefs.init(&db, app).context("failed to init prefs")?;
 
     let manager = profile::setup(data, &prefs, &db, app).context("failed to init profiles")?;
     let thunderstore = Thunderstore::default();

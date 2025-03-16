@@ -266,7 +266,7 @@ impl Default for Prefs {
 }
 
 impl Prefs {
-    pub fn init(&mut self, app: &AppHandle) -> Result<()> {
+    pub fn init(&mut self, db: &Db, app: &AppHandle) -> Result<()> {
         self.data_dir.keep_files.extend(&[
             "prefs.json",
             "telementary.json",
@@ -277,7 +277,7 @@ impl Prefs {
         let window = app.get_webview_window("main").unwrap();
         window.zoom(self.zoom_factor as f64).ok();
 
-        self.save(app.db())?;
+        self.save(db)?;
 
         Ok(())
     }
