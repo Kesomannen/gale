@@ -54,6 +54,10 @@
 		if (path === null) return;
 		await invokeCommand('import_local_mod', { path });
 		await refreshProfiles();
+
+		pushInfoToast({
+			message: 'Imported local mod into profile.'
+		});
 	}
 
 	async function importFile() {

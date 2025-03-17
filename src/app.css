@@ -10,8 +10,8 @@
 }
 
 @theme {
-	--font-sans: 'Nunito Sans', 'sans-serif';
-	--font-mono: 'Roboto Mono', 'monospace';
+	--font-sans: 'Nunito Sans', sans-serif;
+	--font-mono: 'Roboto Mono', monospace;
 
 	--color-primary-50: var(--color-gray-50);
 	--color-primary-100: var(--color-gray-100);
@@ -117,10 +117,11 @@
 			overflow-x: auto;
 			border-radius: 0.25rem;
 			padding: --spacing(2);
-		}
 
-		pre .hljs {
-			padding: 0;
+			.hljs {
+				padding: 0;
+				background-color: var(--color-primary-900) !important;
+			}
 		}
 
 		code {

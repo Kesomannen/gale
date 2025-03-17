@@ -288,8 +288,6 @@ export const colorValues = {
 } as const;
 
 export type Color = keyof typeof colorValues;
-export type Shade = keyof (typeof colorValues)[Color];
-export type ColorValue = (typeof colorValues)[Color][Shade];
 
 export type ColorCategory = 'accent' | 'primary';
 
