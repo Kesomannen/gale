@@ -109,7 +109,6 @@ impl From<legacy::Prefs> for Prefs {
     fn from(legacy: legacy::Prefs) -> Self {
         Prefs {
             steam_exe_path: legacy.steam_exe_path,
-            steam_library_dir: legacy.steam_library_dir,
             data_dir: legacy.data_dir.into(),
             send_telemetry: legacy.send_telemetry,
             fetch_mods_automatically: legacy.fetch_mods_automatically,

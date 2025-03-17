@@ -255,7 +255,6 @@ export type MarkdownResponse = {
 
 export type Prefs = {
 	steamExePath: string | null;
-	steamLibraryDir: string | null;
 	dataDir: string;
 	cacheDir: string;
 	sendTelemetry: boolean;

@@ -181,7 +181,6 @@ impl From<PathBuf> for DirPref {
 #[serde(default, rename_all = "camelCase")]
 pub struct Prefs {
     pub steam_exe_path: Option<PathBuf>,
-    pub steam_library_dir: Option<PathBuf>,
     pub data_dir: DirPref,
 
     pub send_telemetry: bool,
@@ -216,8 +215,8 @@ fn default_steam_exe_path() -> PathBuf {
     #[cfg(target_os = "windows")]
     {
         match read_steam_registry() {
-            Ok(path) => path.join("Steam.exe"),
-            _ => r"C:\Program Files (x86)\Steam\Steam.exe".into(),
+            Ok(path) => path.join("steam.exe"),
+            _ => r"C:\Program Files (x86)\Steam\steam.exe".into(),
         }
     }
 
@@ -227,29 +226,12 @@ fn default_steam_exe_path() -> PathBuf {
     }
 }
 
-// made public so we can use this in platform.rs to auto-get platform specific default paths
-pub fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
-    #[cfg(target_os = "windows")]
-    {
-        exe_path.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        dirs_next::data_dir().map(|data_dir| data_dir.join("Steam"))
-    }
-}
-
 impl Default for Prefs {
     fn default() -> Self {
         let steam_exe_path = default_steam_exe_path().exists_or_none();
 
-        let steam_library_dir = default_steam_library_dir(steam_exe_path.as_deref())
-            .and_then(|path| path.exists_or_none());
-
         Self {
             steam_exe_path,
-            steam_library_dir,
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep("prefs.json")
                 .keep("telementary.json")
@@ -301,8 +283,6 @@ impl Prefs {
                 "Steam executable path is invalid. Maybe you entered the game's location instead?",
             );
         }
-
-        self.steam_library_dir = value.steam_library_dir;
 
         self.game_prefs = value.game_prefs;
         self.validate_game_prefs()?;

@@ -88,16 +88,6 @@
 			location, use the <b>Override location</b> option further down.
 		</PathPref>
 
-		<PathPref
-			label="Steam library"
-			type="dir"
-			value={prefs.steamLibraryDir ?? null}
-			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
-		>
-			Path to your default Steam game library. Used to automatically find the location of Steam
-			games.
-		</PathPref>
-
 		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
 
 		<ColorPref category="primary" fallback="slate" />
