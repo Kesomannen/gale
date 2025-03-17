@@ -160,7 +160,7 @@ impl Db {
             })?
             .next()
             .transpose()?
-            .unwrap_or_else(|| ManagerData {
+            .unwrap_or(ManagerData {
                 id: 1,
                 active_game_slug: None,
             });
@@ -223,7 +223,7 @@ impl Db {
     }
 
     pub fn save_manager(&self, manager: &ModManager) -> Result<()> {
-        self.with_transaction(|tx| self._save_manager(&tx, manager))
+        self.with_transaction(|tx| self._save_manager(tx, manager))
     }
 
     fn _save_manager(&self, tx: &rusqlite::Transaction, manager: &ModManager) -> Result<()> {
@@ -263,7 +263,7 @@ impl Db {
     }
 
     pub fn save_profile(&self, profile: &Profile) -> Result<()> {
-        self.with_transaction(|tx| self.save_profiles(&tx, iter::once(profile)))
+        self.with_transaction(|tx| self.save_profiles(tx, iter::once(profile)))
     }
 
     fn save_profiles<'a>(
@@ -282,7 +282,7 @@ impl Db {
             let modpack = profile
                 .modpack
                 .as_ref()
-                .map(|modpack| serde_json::to_string(modpack))
+                .map(serde_json::to_string)
                 .transpose()?;
             let ignored_updates = serde_json::to_string(&profile.ignored_updates)?;
 

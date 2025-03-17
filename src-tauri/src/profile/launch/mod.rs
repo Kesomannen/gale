@@ -22,6 +22,7 @@ use crate::{
     },
 };
 
+#[cfg(target_os = "linux")]
 mod linux;
 mod mod_loader;
 mod platform;

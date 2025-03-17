@@ -8,15 +8,13 @@ use std::{
 
 use eyre::{bail, ensure, Context, OptionExt, Result};
 use keyvalues_serde::parser::Vdf;
-use log::{debug, info, warn};
+use log::{debug, info};
 use serde::Deserialize;
 
 use crate::{
     game::{Game, Platform},
     prefs::Prefs,
 };
-
-use super::linux;
 
 pub fn launch_command(
     game_dir: &Path,
@@ -31,23 +29,24 @@ pub fn launch_command(
     }
 }
 
+#[allow(unused_variables)] // allow unused game_dir on windows
 fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> {
     let Some(steam) = &game.platforms.steam else {
         bail!("{} is not available on Steam", game.name)
     };
 
-    {
-        if let Some(proxy_dll) = game.mod_loader.proxy_dll() {
-            if linux::is_proton(game_dir).unwrap_or_else(|err| {
-                warn!("failed to determine if game uses proton: {:#}", err);
-                false
-            }) {
-                linux::ensure_wine_override(steam.id as u64, proxy_dll, prefs).unwrap_or_else(
-                    |err| {
-                        warn!("failed to ensure wine dll override: {:#}", err);
-                    },
-                );
-            }
+    #[cfg(target_os = "linux")]
+    if let Some(proxy_dll) = game.mod_loader.proxy_dll() {
+        use super::linux;
+        use log::warn;
+
+        if linux::is_proton(game_dir).unwrap_or_else(|err| {
+            warn!("failed to determine if game uses proton: {:#}", err);
+            false
+        }) {
+            linux::ensure_wine_override(steam.id, proxy_dll, prefs).unwrap_or_else(|err| {
+                warn!("failed to ensure wine dll override: {:#}", err);
+            });
         }
     }
 

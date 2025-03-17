@@ -35,7 +35,7 @@ mod ident;
 pub use ident::*;
 
 pub fn start(app: &AppHandle) {
-    query::setup(&app);
+    query::setup(app);
     app.lock_thunderstore()
         .switch_game(app.lock_manager().active_game, app.clone());
 }
