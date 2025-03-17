@@ -7,8 +7,6 @@
 
 The modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [Svelte](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/M4M81C2KSZ)
-
 ## Features
 
 - A performant and responsive UI
