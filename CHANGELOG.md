@@ -13,11 +13,17 @@
 - New data store solution based on SQLite, instead of various json files
   - Your data will automatically be migrated after updating
   - The legacy json files will remain on your filesystem, but won't be updated or read by Gale anymore
+- Primary color setting
+- Automatic steam library detection by reading steam's `libraryfolders.vdf` file
 
 ### Fixed
 
 - Alphabetical and author sort mods separating upper and lowercase letters
 - Hopefully fixed linux launch issues related to Wine
+
+### Removed
+
+- Steam library setting as it's now redudant
 
 ## 1.4.3 (2025-03-11)
 
