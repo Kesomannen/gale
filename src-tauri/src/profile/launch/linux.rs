@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use eyre::{ContextCompat, Result};
+use eyre::{Context, Result};
 
 use crate::{prefs::Prefs, util::error::IoResultExt};
 
@@ -16,21 +16,11 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
         .is_some())
 }
 
-pub fn ensure_wine_override(steam_id: u32, proxy_dll: &str, prefs: &Prefs) -> Result<()> {
-    let mut user_reg_path = prefs
-        .steam_library_dir
-        .clone()
-        .context("steam library setting not set")?;
+pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, prefs: &Prefs) -> Result<()> {
+    let mut user_reg_path = super::platform::steam_library_dir(steam_id, prefs)
+        .context("failed to find steam library location")?;
 
-    if user_reg_path.ends_with("common") {
-        user_reg_path.pop();
-    }
-
-    if !user_reg_path.ends_with("steamapps") {
-        user_reg_path.push("steamapps");
-    }
-
-    user_reg_path.push("compatdata");
+    user_reg_path.push("steamapps/compatdata");
     user_reg_path.push(steam_id.to_string());
     user_reg_path.push("pfx/user.reg");
 

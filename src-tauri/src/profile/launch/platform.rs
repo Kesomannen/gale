@@ -1,10 +1,15 @@
 use std::{
+    borrow::Cow,
+    collections::HashMap,
+    fs,
     path::{Path, PathBuf},
     process::Command,
 };
 
-use eyre::{bail, ensure, OptionExt, Result};
-use log::{info, warn};
+use eyre::{bail, ensure, Context, OptionExt, Result};
+use keyvalues_serde::parser::Vdf;
+use log::{debug, info, warn};
+use serde::Deserialize;
 
 use crate::{
     game::{Game, Platform},
@@ -37,9 +42,11 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
                 warn!("failed to determine if game uses proton: {:#}", err);
                 false
             }) {
-                linux::ensure_wine_override(steam.id, proxy_dll, prefs).unwrap_or_else(|err| {
-                    warn!("failed to ensure wine dll override: {:#}", err);
-                });
+                linux::ensure_wine_override(steam.id as u64, proxy_dll, prefs).unwrap_or_else(
+                    |err| {
+                        warn!("failed to ensure wine dll override: {:#}", err);
+                    },
+                );
             }
         }
     }
@@ -95,29 +102,77 @@ fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
         bail!("{} is not available on Steam", game.name)
     };
 
-    let mut path = prefs
-        .steam_library_dir
-        .as_ref()
-        .ok_or_eyre("steam library directory not set")?
-        .to_path_buf();
+    let mut path = steam_library_dir(steam.id as u64, &prefs)
+        .context("failed to find steam library location")?;
 
-    if !path.ends_with("common") {
-        if !path.ends_with("steamapps") {
-            path.push("steamapps");
-        }
-
-        path.push("common");
-    }
+    path.push("steamapps");
+    path.push("common");
+    path.push(steam.dir_name.unwrap_or(game.name));
 
     info!(
-        "using {} path from steam library at {}",
+        "using {} path from steam library (at {})",
         game.slug,
         path.display()
     );
 
-    path.push(steam.dir_name.unwrap_or(game.name));
-
     Ok(path)
+}
+
+pub fn steam_library_dir(steam_id: u64, prefs: &Prefs) -> Result<PathBuf> {
+    #[derive(Deserialize, Debug)]
+    struct LibraryFolders {
+        libraries: Vec<Library>,
+    }
+
+    #[derive(Deserialize, Debug)]
+    struct Library {
+        path: PathBuf,
+        apps: HashMap<u64, u64>,
+    }
+
+    // we should always base this off the .exe location, since this should have the config folder
+    let mut path = default_steam_library_dir(prefs.steam_exe_path.as_deref())
+        .ok_or_eyre("steam exe path is not set")?;
+
+    path.push("config");
+    path.push("libraryfolders.vdf");
+
+    let file_contents = fs::read_to_string(&path).context("failed to read libraryfolders.vdf")?;
+    let mut vdf = Vdf::parse(&file_contents).context("failed to parse libraryfolders.vdf")?;
+
+    debug!("read vdf: {:?}", vdf);
+
+    let obj = vdf.value.get_mut_obj().unwrap();
+
+    let mut index = 0;
+    while let Some(mut library) = obj.remove(index.to_string().as_str()) {
+        obj.entry(Cow::from("libraries"))
+            .or_insert(Vec::new())
+            .push(library.pop().unwrap());
+
+        index += 1;
+    }
+
+    let folders: LibraryFolders = keyvalues_serde::from_vdf(vdf)?;
+
+    folders
+        .libraries
+        .into_iter()
+        .find(|lib| lib.apps.contains_key(&steam_id))
+        .map(|lib| lib.path)
+        .ok_or_eyre("could not find in libraries")
+}
+
+pub fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
+    #[cfg(target_os = "windows")]
+    {
+        exe_path.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        dirs_next::data_dir().map(|data_dir| data_dir.join("Steam"))
+    }
 }
 
 #[cfg(windows)]

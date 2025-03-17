@@ -93,15 +93,6 @@
 					>
 						The folder where mods and profiles are stored.
 					</PathPref>
-
-					<PathPref
-						label="Steam library location"
-						type="dir"
-						value={prefs.steamLibraryDir}
-						set={set((value, prefs) => (prefs.steamLibraryDir = value))}
-					>
-						Path to your default Steam game library.
-					</PathPref>
 				{/if}
 			</div>
 

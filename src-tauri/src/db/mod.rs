@@ -6,6 +6,7 @@ use std::{
 
 use eyre::{Context, Result};
 use include_dir::include_dir;
+use log::info;
 use rusqlite::{params, types::Type as SqliteType};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
@@ -27,6 +28,13 @@ pub fn init() -> Result<(Db, bool)> {
     let path = util::path::default_app_data_dir().join(FILE_NAME);
 
     let existed = path.exists();
+
+    info!(
+        "connecting to database at {} (exists: {})",
+        path.display(),
+        existed
+    );
+
     let mut conn = rusqlite::Connection::open(path).context("failed to connect")?;
 
     conn.pragma_update(None, "journal_mode", "WAL")
