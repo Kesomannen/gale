@@ -48,6 +48,10 @@
 			<Icon icon="mdi:discord" class="text-xl text-white" />
 			<Link href="https://discord.gg/sfuWXRfeTt">Discord</Link>
 		</div>
+		<div class="mt-1 flex items-center gap-2">
+			<Icon icon="mdi:heart" class="text-xl text-white" />
+			<Link href="https://ko-fi.com/kesomannen">Donate</Link>
+		</div>
 		<div class="mt-3 flex items-center gap-2">
 			<BigButton
 				on:click={() => refreshUpdate().then(() => (checkedUpdate = true))}

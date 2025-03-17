@@ -15,6 +15,7 @@
   - The legacy json files will remain on your filesystem, but won't be updated or read by Gale anymore
 - Primary color setting
 - Automatic steam library detection by reading steam's `libraryfolders.vdf` file
+- Donation link to About menu
 
 ### Fixed
 
