@@ -11,6 +11,8 @@ use tauri::{command, AppHandle, Emitter};
 
 use crate::util::{self, fs::PathExt};
 
+pub const FILE_NAME: &str = "latest.log";
+
 #[derive(Serialize, Clone)]
 struct WebviewError<'a> {
     name: &'a str,
@@ -35,7 +37,7 @@ pub fn log_webview_err(name: &str, error: eyre::Error, handle: &AppHandle) {
 }
 
 fn log_path() -> PathBuf {
-    util::path::default_app_data_dir().join("latest.log")
+    util::path::default_app_data_dir().join(FILE_NAME)
 }
 
 pub fn setup() -> Result<()> {

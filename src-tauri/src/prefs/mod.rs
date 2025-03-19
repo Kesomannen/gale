@@ -13,6 +13,7 @@ use tauri::{AppHandle, Manager};
 use crate::{
     db::{self, Db},
     game::{self, Platform},
+    logger,
     profile::launch::LaunchMode,
     state::ManagerExt,
     util::{
@@ -211,19 +212,29 @@ fn read_steam_registry() -> Result<PathBuf> {
     Ok(PathBuf::from(path))
 }
 
+#[cfg(target_os = "windows")]
 fn default_steam_exe_path() -> PathBuf {
-    #[cfg(target_os = "windows")]
-    {
-        match read_steam_registry() {
-            Ok(path) => path.join("steam.exe"),
-            _ => r"C:\Program Files (x86)\Steam\steam.exe".into(),
+    match read_steam_registry() {
+        Ok(path) => {
+            info!(
+                "read steam installation path from registry: {}",
+                path.display()
+            );
+            path.join("steam.exe")
+        }
+        Err(err) => {
+            warn!(
+                "failed to read steam installation path from registry: {:#}, using default",
+                err
+            );
+            r"C:\Program Files (x86)\Steam\steam.exe".into()
         }
     }
+}
 
-    #[cfg(target_os = "linux")]
-    {
-        "/usr/bin/steam".into()
-    }
+#[cfg(target_os = "linux")]
+fn default_steam_exe_path() -> PathBuf {
+    "/usr/bin/steam".into()
 }
 
 impl Default for Prefs {
@@ -233,9 +244,8 @@ impl Default for Prefs {
         Self {
             steam_exe_path,
             data_dir: DirPref::new(util::path::default_app_data_dir())
-                .keep("prefs.json")
                 .keep("telementary.json")
-                .keep("latest.log")
+                .keep(logger::FILE_NAME)
                 .keep(db::FILE_NAME),
 
             send_telemetry: true,

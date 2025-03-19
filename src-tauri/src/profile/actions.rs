@@ -280,7 +280,9 @@ impl ManagedGame {
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
 
-        self.active_profile_id = self.profiles[0].id;
+        if !self.profiles.is_empty() {
+            self.active_profile_id = self.profiles[0].id;
+        }
 
         Ok(())
     }

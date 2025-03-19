@@ -24,3 +24,8 @@ CREATE TABLE prefs (
     id INTEGER PRIMARY KEY NOT NULL,
     data JSON NOT NULL
 );
+
+CREATE TABLE telemetry (
+    id BLOB PRIMARY KEY NOT NULL,
+    user_id UUID NOT NULL
+);

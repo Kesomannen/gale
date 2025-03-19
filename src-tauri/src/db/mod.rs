@@ -7,7 +7,7 @@ use std::{
 use eyre::{Context, Result};
 use include_dir::include_dir;
 use log::info;
-use rusqlite::{params, types::Type as SqliteType};
+use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
@@ -142,9 +142,35 @@ impl Db {
         Ok(res)
     }
 
+    pub fn user_id(&self) -> Result<Option<Uuid>> {
+        let conn = self.conn();
+
+        let res = conn
+            .prepare("SELECT user_id FROM telemetry")?
+            .query_row((), |row| row.get(0))
+            .optional()?;
+
+        Ok(res)
+    }
+
+    pub fn save_user_id(&self, id: Uuid) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.prepare("INSERT OR REPLACE INTO telemetry (id, user_id) VALUES (?, ?)")?
+                .execute(params![1, id])?;
+
+            Ok(())
+        })
+    }
+
     pub fn read(&self) -> Result<(SaveData, Prefs, bool)> {
         if migrate::should_migrate() {
-            let (data, prefs) = migrate::migrate()?;
+            let (data, prefs, user_id) =
+                migrate::migrate().context("failed to migrate legacy save data")?;
+
+            if let Some(user_id) = user_id {
+                self.save_user_id(user_id).ok();
+            }
+
             return Ok((data, prefs, true));
         }
 

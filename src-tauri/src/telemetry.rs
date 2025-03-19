@@ -1,14 +1,10 @@
-use eyre::{Context, Result};
-use log::{debug, error, info};
-use serde::{Deserialize, Serialize};
+use eyre::Result;
+use log::{debug, error, info, warn};
 use serde_json::json;
 use tauri::AppHandle;
 use uuid::Uuid;
 
-use crate::{
-    state::ManagerExt,
-    util::{self, fs::JsonStyle},
-};
+use crate::state::ManagerExt;
 
 const PROJECT_URL: &str = "https://phpkxfkbquscgqvhtuuv.supabase.co";
 const ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBocGt4ZmticXVzY2dxdmh0dXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyODAzNDgsImV4cCI6MjA1Mjg1NjM0OH0._eOEhNdG5dIpLnArUcTiicwuxv-hYQlZSSqc06-Aj0k";
@@ -21,8 +17,19 @@ pub async fn send_app_start_event(app: AppHandle) {
 
     debug!("sending app_start telemetry event");
 
-    let data = match read_save_data() {
-        Ok(data) => data,
+    let user_id = match app.db().user_id() {
+        Ok(Some(user_id)) => {
+            debug!("user_id: {:?}", user_id);
+            user_id
+        }
+        Ok(None) => {
+            info!("user id does not exist, creating new");
+            let user_id = Uuid::new_v4();
+            app.db().save_user_id(user_id).unwrap_or_else(|err| {
+                warn!("failed to save user id to database: {:#}", err);
+            });
+            user_id
+        }
         Err(err) => {
             error!("failed to read telemetry save data: {:#}", err);
             return;
@@ -33,7 +40,7 @@ pub async fn send_app_start_event(app: AppHandle) {
 
     let payload = json!({
         "kind": "app_start",
-        "user_id": data.user_id
+        "user_id": user_id
     });
 
     match send_request(url, payload, app.http()).await {
@@ -56,32 +63,4 @@ async fn send_request(
         .error_for_status()?;
 
     Ok(())
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct SaveData {
-    user_id: Uuid,
-}
-
-fn read_save_data() -> Result<SaveData> {
-    let path = util::path::default_app_data_dir().join("telementary.json"); // old typo -- oops
-
-    if path.exists() {
-        util::fs::read_json(path).context("failed to read save file")
-    } else {
-        let data = SaveData {
-            user_id: Uuid::new_v4(),
-        };
-
-        info!(
-            "telemetry save data does not exist, creating new user with id {}",
-            data.user_id
-        );
-
-        util::fs::write_json(path, &data, JsonStyle::Pretty)
-            .context("failed to write save file")?;
-
-        Ok(data)
-    }
 }

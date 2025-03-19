@@ -3,6 +3,7 @@ use std::fs;
 use eyre::{Context, Result};
 use itertools::Itertools;
 use log::info;
+use uuid::Uuid;
 
 use crate::{
     game::{self, Platform},
@@ -15,7 +16,7 @@ use crate::{
     util,
 };
 
-use super::{ManagerData, SaveData};
+use super::{ManagedGameData, ManagerData, ProfileData, SaveData};
 
 pub fn should_migrate() -> bool {
     util::path::default_app_config_dir()
@@ -23,15 +24,27 @@ pub fn should_migrate() -> bool {
         .exists()
 }
 
-pub fn migrate() -> Result<(SaveData, Prefs)> {
+pub fn migrate() -> Result<(SaveData, Prefs, Option<Uuid>)> {
     info!("migrating legacy save data");
 
     let prefs_path = util::path::default_app_config_dir().join("prefs.json");
-    let prefs: legacy::Prefs = util::fs::read_json(&prefs_path).context("failed to read prefs")?;
-    let prefs = Prefs::from(prefs);
+    let prefs = util::fs::read_json::<legacy::Prefs>(&prefs_path)
+        .map(Prefs::from)
+        .context("failed to read prefs.json")?;
 
+    let manager_data = read_manager_data(&prefs)?;
+    let user_id = read_user_id().map(|data| data.user_id).ok();
+
+    fs::rename(&prefs_path, prefs_path.with_extension("old"))
+        .context("failed to rename prefs.json")?;
+
+    Ok((manager_data, prefs, user_id))
+}
+
+fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
     let manifest_path = prefs.data_dir.join("manager.json");
-    let manager_data: legacy::ManagerSaveData = util::fs::read_json(&manifest_path)?;
+    let manager_data: legacy::ManagerSaveData =
+        util::fs::read_json(&manifest_path).context("failed to read manager.json")?;
 
     let manager = ManagerData {
         id: 1,
@@ -43,7 +56,8 @@ pub fn migrate() -> Result<(SaveData, Prefs)> {
 
     let game_dirs = prefs
         .data_dir
-        .read_dir()?
+        .read_dir()
+        .context("failed to read data dir")?
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
         .filter_map(|entry| {
@@ -51,13 +65,15 @@ pub fn migrate() -> Result<(SaveData, Prefs)> {
         });
 
     for (game, path) in game_dirs {
-        let data: legacy::ManagedGameSaveData = util::fs::read_json(path.join("game.json"))?;
+        let data: legacy::ManagedGameSaveData = util::fs::read_json(path.join("game.json"))
+            .with_context(|| format!("failed to read game.json for {}", game.slug))?;
 
         let mut active_profile_id: i64 = 1;
 
         let profile_dirs = path
             .join("profiles")
-            .read_dir()?
+            .read_dir()
+            .with_context(|| format!("failed to read profile dir for {}", game.slug))?
             .filter_map(Result::ok)
             .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
             .map(|entry| entry.path());
@@ -65,11 +81,13 @@ pub fn migrate() -> Result<(SaveData, Prefs)> {
         for (index, path) in profile_dirs.enumerate() {
             let name = util::fs::file_name_owned(&path);
             let profile_data: legacy::ProfileSaveData =
-                util::fs::read_json(path.join("profile.json"))?;
+                util::fs::read_json(path.join("profile.json")).with_context(|| {
+                    format!("failed to read profile.json for {} ({})", name, game.slug)
+                })?;
 
             let id = (profiles.len() + 1) as i64;
 
-            profiles.push(super::ProfileData {
+            profiles.push(ProfileData {
                 id,
                 name,
                 path: path.to_string_lossy().into_owned(),
@@ -84,7 +102,7 @@ pub fn migrate() -> Result<(SaveData, Prefs)> {
             }
         }
 
-        games.push(super::ManagedGameData {
+        games.push(ManagedGameData {
             id: (games.len() + 1) as i64,
             slug: game.slug.to_string(),
             favorite: data.favorite,
@@ -92,17 +110,16 @@ pub fn migrate() -> Result<(SaveData, Prefs)> {
         });
     }
 
-    fs::rename(&prefs_path, prefs_path.with_extension("old"))
-        .context("failed to rename prefs file")?;
+    Ok(SaveData {
+        manager,
+        games,
+        profiles,
+    })
+}
 
-    Ok((
-        SaveData {
-            manager,
-            games,
-            profiles,
-        },
-        prefs,
-    ))
+fn read_user_id() -> Result<legacy::TelemetryData> {
+    let path = util::path::default_app_config_dir().join("telementary.json");
+    util::fs::read_json(path)
 }
 
 impl From<legacy::Prefs> for Prefs {
@@ -384,5 +401,11 @@ mod legacy {
         Oculus,
         Origin,
         XboxStore,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TelemetryData {
+        pub user_id: Uuid,
     }
 }

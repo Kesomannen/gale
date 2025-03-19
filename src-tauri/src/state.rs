@@ -1,7 +1,7 @@
 use std::sync::{atomic::AtomicBool, Mutex, MutexGuard};
 
 use eyre::{Context, Result};
-use tauri::{AppHandle, Manager};
+use tauri::{command, AppHandle, Manager};
 
 use crate::{
     db::{self, Db},
@@ -98,4 +98,9 @@ where
     fn app_state(&self) -> &AppState {
         self.state::<AppState>().inner()
     }
+}
+
+#[command]
+pub fn is_first_run(app: AppHandle) -> bool {
+    app.app_state().is_first_run
 }

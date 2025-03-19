@@ -28,9 +28,10 @@ fn setup(app: &AppHandle) -> eyre::Result<()> {
     let start = Instant::now();
 
     info!(
-        "gale v{} running on {}",
+        "gale v{} running on {} (webview version {})",
         env!("CARGO_PKG_VERSION"),
-        std::env::consts::OS
+        std::env::consts::OS,
+        wry::webview_version().unwrap_or("unknown".to_owned())
     );
 
     state::setup(app)?;
@@ -49,6 +50,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             logger::open_gale_log,
             logger::log_err,
+            state::is_first_run,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::set_thunderstore_token,
@@ -57,7 +59,6 @@ pub fn run() {
             thunderstore::commands::trigger_mod_fetch,
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
-            prefs::commands::is_first_run,
             prefs::commands::zoom_window,
             profile::commands::get_game_info,
             profile::commands::favorite_game,

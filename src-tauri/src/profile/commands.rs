@@ -116,9 +116,9 @@ pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
             .profiles
             .iter()
             .map(|profile| ProfileInfo {
+                id: profile.id,
                 name: profile.name.clone(),
                 mod_count: profile.mods.len(),
-                id: profile.id,
             })
             .collect(),
         active_id: game.active_profile_id,

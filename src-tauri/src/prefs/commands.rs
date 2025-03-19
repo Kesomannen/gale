@@ -20,11 +20,6 @@ pub fn set_prefs(value: Prefs, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[command]
-pub fn is_first_run(app: AppHandle) -> Result<bool> {
-    Ok(app.app_state().is_first_run)
-}
-
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub enum Zoom {

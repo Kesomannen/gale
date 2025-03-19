@@ -6,9 +6,9 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, ensure, ContextCompat, OptionExt, Result};
+use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
-use log::{debug, info};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -390,11 +390,6 @@ impl ManagedGame {
 
         self.active_profile_id = self.profiles[index].id;
 
-        info!(
-            "set active profile for game {} to {} (index {})",
-            self.game.slug, self.profiles[index].name, index
-        );
-
         Ok(())
     }
 
@@ -447,15 +442,26 @@ impl ModManager {
             .collect::<HashMap<_, _>>();
 
         for saved_profile in profiles {
+            let path = PathBuf::from(saved_profile.path);
+
+            if !path.exists() {
+                warn!(
+                    "profile {} at {} does not exist",
+                    saved_profile.name,
+                    path.display()
+                );
+                continue;
+            }
+
             let game = game::from_slug(&saved_profile.game_slug).unwrap();
 
             let profile = Profile {
+                path,
+                game,
                 id: saved_profile.id,
                 name: saved_profile.name,
-                path: saved_profile.path.into(),
                 mods: saved_profile.mods,
                 modpack: saved_profile.modpack,
-                game,
                 ignored_updates: saved_profile.ignored_updates.unwrap_or_default(),
                 config_cache: ConfigCache::default(),
                 linked_config: HashMap::new(),
@@ -511,8 +517,6 @@ impl ModManager {
             thunderstore.switch_game(game, app.clone());
         }
 
-        info!("set active game to {}", game.slug);
-
         Ok(())
     }
 
@@ -524,15 +528,13 @@ impl ModManager {
     ) -> Result<&'a mut ManagedGame> {
         const DEFAULT_PROFILE_NAME: &str = "Default";
 
-        if self.games.contains_key(game) {
-            debug!("{} is already managed", game.slug);
-        } else {
+        if !self.games.contains_key(game) {
             info!("managing new game: {}", game.slug);
-            let path = prefs.data_dir.join(&*game.slug);
 
+            let path = prefs.data_dir.join(&*game.slug);
             let id = self.games.values().map(|game| game.id).max().unwrap_or(0) + 1;
 
-            let mut managed_game = ManagedGame {
+            let managed_game = ManagedGame {
                 id,
                 game,
                 path,
@@ -540,16 +542,27 @@ impl ModManager {
                 favorite: false,
                 active_profile_id: 0,
             };
-            let profile_id = managed_game
-                .create_profile(DEFAULT_PROFILE_NAME.to_owned(), db)?
-                .id;
-
-            managed_game.active_profile_id = profile_id;
 
             self.games.insert(game, managed_game);
         }
 
-        Ok(self.games.get_mut(game).unwrap())
+        let managed = self.games.get_mut(game).unwrap();
+
+        if managed.profiles.is_empty() {
+            info!("creating default profile for {}", game.slug);
+
+            let default_profile = managed
+                .create_profile(DEFAULT_PROFILE_NAME.to_owned(), db)
+                .context("failed to create default profile")?;
+
+            managed.active_profile_id = default_profile.id;
+        } else if managed.find_profile(managed.active_profile_id).is_err() {
+            warn!("active profile was out of bounds, adjusting...");
+
+            managed.active_profile_id = managed.profiles[0].id;
+        }
+
+        Ok(managed)
     }
 
     fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
