@@ -30,8 +30,8 @@ tauri-plugin-http = "~2.0.0"
 tauri-plugin-single-instance = "2"
 tauri-plugin-cli = "2"
 
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
 
 tokio = { version = "1", features = ["full"] }
 
@@ -40,8 +40,8 @@ thiserror = "1"
 justerror = "1"
 
 futures-util = { version = "0.3", features = ["io"] }
-indexmap = { version = "2.2", features = ["serde"] }
-open = "5.1"
+indexmap = { version = "2", features = ["serde"] }
+open = "5"
 itertools = "0.13"
 zip = { version = "2", features = ["deflate"] }
 uuid = { version = "1", features = ["serde"] }

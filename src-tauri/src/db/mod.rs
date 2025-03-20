@@ -178,14 +178,13 @@ impl Db {
 
         let manager = conn
             .prepare("SELECT id, active_game_slug FROM manager")?
-            .query_map((), |row| {
+            .query_row((), |row| {
                 Ok(ManagerData {
                     id: row.get(0)?,
                     active_game_slug: row.get(1)?,
                 })
-            })?
-            .next()
-            .transpose()?
+            })
+            .optional()?
             .unwrap_or(ManagerData {
                 id: 1,
                 active_game_slug: None,
@@ -215,16 +214,15 @@ impl Db {
                     game_slug: row.get(3)?,
                     mods: map_json_row(row, 4)?,
                     modpack: map_json_option_row(row, 5)?,
-                    ignored_updates: map_json_row(row, 6)?,
+                    ignored_updates: map_json_option_row(row, 6)?,
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
 
         let prefs = conn
             .prepare("SELECT data FROM prefs")?
-            .query_map((), |row| map_json_row(row, 0))?
-            .next()
-            .transpose()?
+            .query_row((), |row| map_json_row(row, 0))
+            .optional()?
             .unwrap_or_default();
 
         Ok((
