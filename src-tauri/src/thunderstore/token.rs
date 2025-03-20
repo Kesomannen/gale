@@ -1,14 +1,21 @@
+use std::sync::LazyLock;
+
 use eyre::Result;
 use keyring::Entry;
 use log::info;
 
-lazy_static! {
-    static ref ENTRY: keyring::Entry =
-        Entry::new("thunderstore", "api_token").expect("failed to create keyring entry");
+static ENTRY: LazyLock<keyring::Result<Entry>> =
+    LazyLock::new(|| Entry::new("thunderstore", "api_token"));
+
+fn entry() -> Result<&'static keyring::Entry> {
+    match &*ENTRY {
+        Ok(entry) => Ok(entry),
+        Err(err) => Err(err.into()),
+    }
 }
 
 pub fn get() -> Result<Option<String>> {
-    match ENTRY.get_password() {
+    match entry()?.get_password() {
         Ok(token) => Ok(Some(token)),
         Err(keyring::Error::NoEntry) => Ok(None),
         Err(err) => Err(err.into()),
@@ -17,13 +24,13 @@ pub fn get() -> Result<Option<String>> {
 
 pub fn set(token: &str) -> Result<()> {
     info!("setting thunderstore token");
-    ENTRY.set_password(token)?;
+    entry()?.set_password(token)?;
     Ok(())
 }
 
 pub fn clear() -> Result<()> {
     info!("clearing thunderstore token");
-    match ENTRY.delete_credential() {
+    match entry()?.delete_credential() {
         Ok(()) => Ok(()),
         Err(keyring::Error::NoEntry) => Ok(()),
         Err(err) => Err(err.into()),

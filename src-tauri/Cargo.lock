@@ -1702,7 +1702,6 @@ dependencies = [
  "justerror",
  "keyring",
  "keyvalues-serde",
- "lazy_static",
  "log",
  "open",
  "rayon",
@@ -1737,7 +1736,6 @@ dependencies = [
  "walkdir",
  "webkit2gtk",
  "winreg",
- "wry",
  "zip",
 ]
 

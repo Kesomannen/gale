@@ -6,9 +6,6 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
 
-#[macro_use]
-extern crate lazy_static;
-
 #[cfg(target_os = "linux")]
 extern crate webkit2gtk;
 
@@ -28,10 +25,9 @@ fn setup(app: &AppHandle) -> eyre::Result<()> {
     let start = Instant::now();
 
     info!(
-        "gale v{} running on {} (webview version {})",
+        "gale v{} running on {}",
         env!("CARGO_PKG_VERSION"),
         std::env::consts::OS,
-        wry::webview_version().unwrap_or("unknown".to_owned())
     );
 
     state::setup(app)?;

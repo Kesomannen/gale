@@ -1,5 +1,8 @@
 use core::str;
-use std::time::{Duration, Instant};
+use std::{
+    sync::LazyLock,
+    time::{Duration, Instant},
+};
 
 use eyre::Result;
 use indexmap::IndexMap;
@@ -66,12 +69,12 @@ fn read_and_insert_cache(app: &AppHandle) {
 
 const EXCLUDED_PACKAGES_STR: &str = include_str!("../../excluded_packages.txt");
 
-lazy_static! {
-    static ref EXCLUDED_PACKAGES: Vec<&'static str> = EXCLUDED_PACKAGES_STR
+static EXCLUDED_PACKAGES: LazyLock<Vec<&'static str>> = LazyLock::new(|| {
+    EXCLUDED_PACKAGES_STR
         .split('\n')
         .map(|line| line.trim())
-        .collect();
-}
+        .collect()
+});
 
 pub(super) async fn fetch_packages(
     game: Game,

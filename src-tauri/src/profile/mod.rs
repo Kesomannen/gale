@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
-use log::{info, warn};
+use log::{info, trace, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -40,6 +40,7 @@ pub fn setup(data: db::SaveData, prefs: &Prefs, db: &Db, app: &AppHandle) -> Res
 }
 
 /// The main state of the app.
+#[derive(Debug)]
 pub struct ModManager {
     /// Holds all the currently managed games.
     ///
@@ -50,6 +51,7 @@ pub struct ModManager {
 }
 
 /// Stores profiles and other state for one game.
+#[derive(Debug)]
 pub struct ManagedGame {
     pub id: i64,
     pub game: Game,
@@ -59,6 +61,7 @@ pub struct ManagedGame {
     pub active_profile_id: i64,
 }
 
+#[derive(Debug)]
 pub struct Profile {
     pub id: i64,
     pub name: String,
@@ -71,7 +74,7 @@ pub struct Profile {
     pub modpack: Option<ModpackArgs>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileMod {
     pub enabled: bool,
@@ -83,7 +86,7 @@ pub struct ProfileMod {
     pub kind: ProfileModKind,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum ProfileModKind {
     Thunderstore(ThunderstoreMod),
@@ -91,7 +94,7 @@ pub enum ProfileModKind {
     Local(Box<LocalMod>),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ThunderstoreMod {
     #[serde(rename = "fullName")]
@@ -477,6 +480,8 @@ impl ModManager {
 
         let mut manager = Self { games, active_game };
 
+        trace!("{:#?}", manager.games[active_game]);
+
         manager.ensure_game(manager.active_game, prefs, db)?;
         manager.save_all(db)?;
 
@@ -577,10 +582,6 @@ impl ModManager {
     }
 
     pub fn save_all(&self, db: &Db) -> Result<()> {
-        db.save_all(self)
-    }
-
-    pub fn save(&self, db: &Db) -> Result<()> {
         db.save_all(self)
     }
 
