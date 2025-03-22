@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
-use log::{info, trace, warn};
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -449,7 +449,7 @@ impl ModManager {
 
             if !path.exists() {
                 warn!(
-                    "profile {} at {} does not exist",
+                    "profile {} at {} does not exist anymore",
                     saved_profile.name,
                     path.display()
                 );
@@ -479,8 +479,6 @@ impl ModManager {
             .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
 
         let mut manager = Self { games, active_game };
-
-        trace!("{:#?}", manager.games[active_game]);
 
         manager.ensure_game(manager.active_game, prefs, db)?;
         manager.save_all(db)?;
