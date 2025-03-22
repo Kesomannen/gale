@@ -20,11 +20,11 @@
 ### Fixed
 
 - Alphabetical and author sort mods separating upper and lowercase letters
-- Hopefully fixed linux launch issues related to Wine
+- Hopefully fixed linux launch issues related to Wine/Proton/Whiskey
 
 ### Removed
 
-- Steam library setting as it's now redudant
+- Steam library setting as it's now redundant
 
 ## 1.4.3 (2025-03-11)
 
