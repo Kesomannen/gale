@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.5.1 (2025-03-23)
+## Unreleased
+
+### Fixed
+
+- Weird behaviour with deleted profiles coming back
+
+## 1.5.1 (2025-03-22)
 
 ### Fixed
 

@@ -119,7 +119,7 @@ async fn import_data(
 
         let game = manager.active_game_mut();
         if let Some(index) = game.profiles.iter().position(|p| p.name == data.name) {
-            game.delete_profile(index, true)
+            game.delete_profile(index, true, app.db())
                 .context("failed to delete existing profile")?;
         }
 

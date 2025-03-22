@@ -453,6 +453,9 @@ impl ModManager {
                     saved_profile.name,
                     path.display()
                 );
+                if let Err(err) = db.delete_profile(saved_profile.id) {
+                    warn!("failed to delete missing profile from database: {:#}", err);
+                }
                 continue;
             }
 

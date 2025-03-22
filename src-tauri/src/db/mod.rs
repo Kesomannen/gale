@@ -236,6 +236,15 @@ impl Db {
         ))
     }
 
+    pub fn delete_profile(&self, id: i64) -> Result<()> {
+        self.with_transaction(|tx| {
+            tx.prepare("DELETE FROM profiles WHERE id = ?")?
+                .execute([id])?;
+
+            Ok(())
+        })
+    }
+
     pub fn save_all(&self, manager: &ModManager) -> Result<()> {
         self.with_transaction(|tx| {
             self._save_manager(tx, manager)?;

@@ -224,7 +224,7 @@ pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     let game = manager.active_game_mut();
-    game.delete_profile(index, false)?;
+    game.delete_profile(index, false, app.db())?;
     game.save(app.db())?;
 
     Ok(())

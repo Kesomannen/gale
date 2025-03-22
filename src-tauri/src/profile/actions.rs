@@ -269,13 +269,14 @@ impl ManagedGame {
         Ok(self.active_profile_mut())
     }
 
-    pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool) -> Result<()> {
+    pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool, db: &Db) -> Result<()> {
         ensure!(
             allow_delete_last || self.profiles.len() > 1,
             "cannot delete last profile"
         );
 
         let profile = self.profile_at(index)?;
+        let id = profile.id;
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
@@ -283,6 +284,8 @@ impl ManagedGame {
         if !self.profiles.is_empty() {
             self.active_profile_id = self.profiles[0].id;
         }
+
+        db.delete_profile(id)?;
 
         Ok(())
     }
