@@ -44,7 +44,7 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
             warn!("failed to determine if game uses proton: {:#}", err);
             false
         }) {
-            linux::ensure_wine_override(steam.id, proxy_dll, prefs).unwrap_or_else(|err| {
+            linux::ensure_wine_override(steam.id as u64, proxy_dll, prefs).unwrap_or_else(|err| {
                 warn!("failed to ensure wine dll override: {:#}", err);
             });
         }
