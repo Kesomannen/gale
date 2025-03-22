@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1 (2025-03-23)
+
+### Fixed
+
+- "Invalid signature" error when updating
+- Mod installation state not updating when switching profiles
+
 ## 1.5.0 (2025-03-22)
 
 ### Added

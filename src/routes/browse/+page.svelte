@@ -10,9 +10,7 @@
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { fly } from 'svelte/transition';
-	import BigButton from '$lib/components/BigButton.svelte';
-	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import { modQuery, activeGame } from '$lib/stores';
+	import { modQuery, activeGame, activeProfile } from '$lib/stores';
 	import ModListItem from '$lib/modlist/ModListItem.svelte';
 
 	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
@@ -58,7 +56,7 @@
 
 	$: if (maxCount > 0) {
 		$modQuery;
-		$activeGame;
+		$activeProfile;
 		refresh();
 	}
 

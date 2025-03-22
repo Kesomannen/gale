@@ -1,14 +1,16 @@
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
-    path::PathBuf,
+    path::{Path, PathBuf},
+    time::Duration,
 };
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
-use log::{info, warn};
+use log::{error, info, warn};
+use notify_debouncer_mini::{notify::RecursiveMode, DebounceEventResult};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -48,6 +50,9 @@ pub struct ModManager {
     /// which the user has selected at least once.
     pub games: HashMap<Game, ManagedGame>,
     pub active_game: Game,
+    debouncer: notify_debouncer_mini::Debouncer<
+        notify_debouncer_mini::notify::ReadDirectoryChangesWatcher,
+    >,
 }
 
 /// Stores profiles and other state for one game.
@@ -478,7 +483,25 @@ impl ModManager {
             .and_then(|slug| game::from_slug(&slug))
             .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
 
-        let mut manager = Self { games, active_game };
+        let mut debouncer = notify_debouncer_mini::new_debouncer(
+            Duration::from_secs(2),
+            |res: DebounceEventResult| match res {
+                Ok(events) => events
+                    .iter()
+                    .for_each(|evt| info!("event {:?} for {:?}", evt.kind, evt.path)),
+                Err(err) => error!("{:#}", err),
+            },
+        )?;
+
+        debouncer
+            .watcher()
+            .watch(&prefs.data_dir, RecursiveMode::Recursive)?;
+
+        let mut manager = Self {
+            games,
+            active_game,
+            debouncer,
+        };
 
         manager.ensure_game(manager.active_game, prefs, db)?;
         manager.save_all(db)?;
