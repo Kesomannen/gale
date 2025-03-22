@@ -15,7 +15,9 @@
 	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
-	import ColorPref from '$lib/prefs/ColorPref.svelte';
+	//import ColorPref from '$lib/prefs/ColorPref.svelte';
+	import InputField from '$lib/components/InputField.svelte';
+	import { setColor } from '$lib/theme';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -90,8 +92,10 @@
 
 		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
 
-		<ColorPref category="primary" fallback="slate" />
-		<ColorPref category="accent" fallback="green" />
+		<!--<ColorPref category="primary" fallback="slate" />-->
+		<!--<ColorPref category="accent" fallback="green" />-->
+
+		<InputField on:submit={({ detail }) => setColor(detail, 'primary')} />
 
 		<ZoomLevelPref
 			value={prefs.zoomFactor}
