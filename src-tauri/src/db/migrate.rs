@@ -2,7 +2,7 @@ use std::fs;
 
 use eyre::{Context, Result};
 use itertools::Itertools;
-use log::info;
+use log::{info, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -80,8 +80,18 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
 
         for (index, path) in profile_dirs.enumerate() {
             let name = util::fs::file_name_owned(&path);
-            let profile_data: legacy::ProfileSaveData =
-                util::fs::read_json(path.join("profile.json")).with_context(|| {
+            let manifest_path = path.join("profile.json");
+
+            if !manifest_path.exists() {
+                warn!(
+                    "profile {} ({}) contains no manifest, skipping",
+                    name, game.slug
+                );
+                continue;
+            }
+
+            let profile_data: legacy::ProfileSaveData = util::fs::read_json(manifest_path)
+                .with_context(|| {
                     format!("failed to read profile.json for {} ({})", name, game.slug)
                 })?;
 
