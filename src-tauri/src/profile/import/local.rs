@@ -29,17 +29,20 @@ pub async fn import_local_mod(
     let (mut local_mod, kind) = read_local_mod(&path)?;
 
     if let Some(deps) = &local_mod.dependencies {
-        install::install_with_mods(options, app, |manager, thunderstore| {
+        let mods = {
+            let manager = app.lock_manager();
             let profile = manager.active_profile();
 
-            Ok(thunderstore
+            app.lock_thunderstore()
                 .dependencies(deps)
                 .filter(|dep| !profile.has_mod(dep.package.uuid))
                 .map(|borrowed| borrowed.into())
-                .collect::<Vec<_>>())
-        })
-        .await
-        .context("failed to install dependencies")?;
+                .collect::<Vec<_>>()
+        };
+
+        install::install_mods(mods, options, app)
+            .await
+            .context("failed to install dependencies")?;
     }
 
     let prefs = app.lock_prefs();

@@ -146,30 +146,9 @@ pub async fn install_mods(
     options: InstallOptions,
     app: &AppHandle,
 ) -> Result<()> {
-    let mut installer = download::Installer::create(options, app.http(), app)?;
-    installer.install_all(mods).await
-}
-
-/// Downloads and installs mods returned by a closure on the active profile.
-///
-/// Note that this does not check for duplicates, so make sure
-/// none of `mods` are already installed!
-pub async fn install_with_mods<F>(
-    options: InstallOptions,
-    app: &tauri::AppHandle,
-    mods: F,
-) -> Result<()>
-where
-    F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<ModInstall>>,
-{
-    let mods = {
-        let manager = app.lock_manager();
-        let thunderstore = app.lock_thunderstore();
-
-        mods(&manager, &thunderstore)?
-    };
-
-    install_mods(mods, options, app).await
+    download::Installer::create(options, app)?
+        .install_all(mods)
+        .await
 }
 
 /// Downloads and installs mods and their missing dependencies on the active profile.
@@ -181,7 +160,9 @@ pub async fn install_with_deps(
     allow_multiple: bool,
     app: &tauri::AppHandle,
 ) -> Result<()> {
-    install_with_mods(options, app, move |manager, thunderstore| {
+    let mods = {
+        let manager = app.lock_manager();
+        let thunderstore = app.lock_thunderstore();
         let profile = manager.active_profile();
 
         if !allow_multiple && mods.len() == 1 && profile.has_mod(mods[0].uuid()) {
@@ -191,11 +172,11 @@ pub async fn install_with_deps(
         let mods = mods
             .into_iter()
             .map(|install| {
-                let borrowed = install.id.borrow(thunderstore)?;
+                let borrowed = install.id.borrow(&thunderstore)?;
 
                 Ok(iter::once(install).chain(
                     profile
-                        .missing_deps(borrowed.dependencies(), thunderstore)
+                        .missing_deps(borrowed.dependencies(), &thunderstore)
                         .map(ModInstall::from),
                 ))
             })
@@ -203,13 +184,13 @@ pub async fn install_with_deps(
             .collect::<Result<Vec<_>>>()
             .context("failed to resolve dependencies")?;
 
-        Ok(mods
-            .into_iter()
+        mods.into_iter()
             .unique_by(|install| install.uuid())
             .rev() // install dependencies first
-            .collect())
-    })
-    .await
+            .collect()
+    };
+
+    install_mods(mods, options, app).await
 }
 
 /// Gets the number of bytes to download the given mod and its

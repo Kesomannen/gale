@@ -36,7 +36,6 @@ pub struct Installer<'a> {
     completed_bytes: u64,
 
     app: &'a AppHandle,
-    client: &'a reqwest::Client,
 }
 
 enum InstallMethod {
@@ -56,16 +55,11 @@ enum InstallError {
 type InstallResult<T> = std::result::Result<T, InstallError>;
 
 impl<'a> Installer<'a> {
-    pub fn create(
-        options: InstallOptions,
-        client: &'a reqwest::Client,
-        app: &'a AppHandle,
-    ) -> Result<Self> {
+    pub fn create(options: InstallOptions, app: &'a AppHandle) -> Result<Self> {
         Ok(Self {
             options,
             index: 0,
             app,
-            client,
             total_mods: 0,
             total_bytes: 0,
             completed_bytes: 0,
@@ -150,7 +144,8 @@ impl<'a> Installer<'a> {
         });
 
         let mut stream = self
-            .client
+            .app
+            .http()
             .get(url)
             .send()
             .await
@@ -159,7 +154,7 @@ impl<'a> Installer<'a> {
             .bytes_stream();
 
         let mut last_update = Instant::now();
-        let mut response = Vec::new();
+        let mut response = Vec::with_capacity(file_size as usize);
 
         while let Some(item) = stream.next().await {
             let item = item.map_err(|err| InstallError::Error(err.into()))?;
