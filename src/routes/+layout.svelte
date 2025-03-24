@@ -22,8 +22,8 @@
 	let unlisten: UnlistenFn | undefined;
 
 	onMount(async () => {
-		refreshColor('accent', 'green');
-		refreshColor('primary', 'slate');
+		refreshColor('accent');
+		refreshColor('primary');
 
 		unlisten = await listen<string | null>('status_update', (evt) => {
 			status = evt.payload;

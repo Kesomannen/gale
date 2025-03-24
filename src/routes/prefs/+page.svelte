@@ -15,6 +15,9 @@
 	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
+	//import ColorPref from '$lib/prefs/ColorPref.svelte';
+	import InputField from '$lib/components/InputField.svelte';
+	import { setColor } from '$lib/theme';
 	import ColorPref from '$lib/prefs/ColorPref.svelte';
 
 	let prefs: Prefs | null = null;
@@ -90,8 +93,8 @@
 
 		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
 
-		<ColorPref category="primary" fallback="slate" />
-		<ColorPref category="accent" fallback="green" />
+		<ColorPref category="primary" />
+		<ColorPref category="accent" />
 
 		<ZoomLevelPref
 			value={prefs.zoomFactor}

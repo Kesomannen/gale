@@ -1,4 +1,6 @@
-export const colorValues = {
+import getPalette from 'tailwindcss-palette-generator';
+
+export const defaultColors = {
 	red: {
 		50: 'oklch(0.971 0.013 17.38)',
 		100: 'oklch(0.936 0.032 17.717)',
@@ -287,24 +289,62 @@ export const colorValues = {
 	}
 } as const;
 
-export type Color = keyof typeof colorValues;
-
+export type DefaultColor = keyof typeof defaultColors;
 export type ColorCategory = 'accent' | 'primary';
 
+export type Color =
+	| {
+			type: 'default';
+			name: DefaultColor;
+	  }
+	| {
+			type: 'custom';
+			hex: string;
+	  };
+
 const root = document.querySelector(':root') as HTMLElement;
+const fallbacks: Record<ColorCategory, Color> = {
+	accent: { type: 'default', name: 'green' },
+	primary: { type: 'default', name: 'slate' }
+};
 
 export function setColor(category: ColorCategory, color: Color) {
-	for (const [shade, value] of Object.entries(colorValues[color])) {
+	console.log('setting color');
+	let shades: { [shade: string]: string };
+
+	if (color.type === 'default') {
+		shades = defaultColors[color.name];
+	} else {
+		let palette = getPalette({
+			color: color.hex,
+			name: 'main'
+		});
+
+		shades = palette['main'];
+	}
+
+	for (const [shade, value] of Object.entries(shades)) {
 		root.style.setProperty(`--color-${category}-${shade}`, value);
 	}
 
-	localStorage.setItem(category + 'Color', color);
+	localStorage.setItem(category + 'Color', JSON.stringify(color));
 }
 
-export function getColor(category: ColorCategory, fallback: Color) {
-	return (localStorage.getItem(category + 'Color') as Color | null) ?? fallback;
+export function getColor(category: ColorCategory): Color {
+	let json = localStorage.getItem(category + 'Color');
+
+	if (json === null) {
+		return fallbacks[category];
+	}
+
+	try {
+		return JSON.parse(json) as Color;
+	} catch (e) {
+		console.error('Failed to parse saved color', e);
+		return fallbacks[category];
+	}
 }
 
-export function refreshColor(category: ColorCategory, fallback: Color) {
-	setColor(category, getColor(category, fallback));
+export function refreshColor(category: ColorCategory) {
+	setColor(category, getColor(category));
 }
