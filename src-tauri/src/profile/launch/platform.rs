@@ -159,7 +159,7 @@ pub fn steam_library_dir(steam_id: u64, prefs: &Prefs) -> Result<PathBuf> {
         .into_iter()
         .find(|lib| lib.apps.contains_key(&steam_id))
         .map(|lib| lib.path)
-        .ok_or_eyre("could not find in libraries")
+        .ok_or_eyre("game is not installed")
 }
 
 pub fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {

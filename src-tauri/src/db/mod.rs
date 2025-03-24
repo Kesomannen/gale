@@ -21,6 +21,8 @@ use crate::{
 mod migrate;
 
 pub const FILE_NAME: &str = "data.sqlite3";
+pub const SHM_FILE_NAME: &str = "data.sqlite3-shm";
+pub const WAL_FILE_NAME: &str = "data.sqlite3-wal";
 
 pub struct Db(Mutex<rusqlite::Connection>);
 

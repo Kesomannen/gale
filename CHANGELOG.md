@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 (2025-03-24)
+
+### Fixed
+
+- Moving data folder from default location causing errors
+
 ## 1.5.2 (2025-03-22)
 
 ### Fixed

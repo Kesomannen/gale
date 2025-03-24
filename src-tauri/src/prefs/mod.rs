@@ -245,7 +245,9 @@ impl Default for Prefs {
             steam_exe_path,
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep(logger::FILE_NAME)
-                .keep(db::FILE_NAME),
+                .keep(db::FILE_NAME)
+                .keep(db::SHM_FILE_NAME)
+                .keep(db::WAL_FILE_NAME),
 
             send_telemetry: true,
             fetch_mods_automatically: true,
@@ -259,9 +261,12 @@ impl Default for Prefs {
 
 impl Prefs {
     pub fn init(&mut self, db: &Db, app: &AppHandle) -> Result<()> {
-        self.data_dir
-            .keep_files
-            .extend(&[logger::FILE_NAME, db::FILE_NAME]);
+        self.data_dir.keep_files.extend(&[
+            logger::FILE_NAME,
+            db::FILE_NAME,
+            db::SHM_FILE_NAME,
+            db::WAL_FILE_NAME,
+        ]);
 
         let window = app.get_webview_window("main").unwrap();
         window.zoom(self.zoom_factor as f64).ok();
