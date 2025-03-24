@@ -1,15 +1,39 @@
 <script lang="ts">
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
-	import { colorValues, getColor, setColor, type Color, type ColorCategory } from '$lib/theme';
+	import {
+		defaultColors,
+		getColor,
+		setColor,
+		type DefaultColor,
+		type ColorCategory
+	} from '$lib/theme';
 	import { capitalize } from '$lib/util';
 
 	export let category: ColorCategory;
-	export let fallback: Color;
 
-	let value = getColor(category, fallback);
+	let value = getColor(category);
+	let customColor = value.type === 'custom' ? value.hex : '#6b7280';
 
-	const colorNames = Object.keys(colorValues) as Color[];
+	let options = ['custom', ...Object.keys(defaultColors)];
+	let selected = value.type === 'custom' ? 'custom' : value.name;
+
+	$: if (value.type === 'custom') {
+		changeCustomColor(customColor);
+	}
+
+	function onDropdownChange(newValue: string) {
+		if (newValue === 'custom') {
+			value = { type: 'custom', hex: customColor };
+		} else {
+			value = { type: 'default', name: newValue as DefaultColor };
+			setColor(category, value);
+		}
+	}
+
+	function changeCustomColor(hex: string) {
+		setColor(category, { type: 'custom', hex });
+	}
 </script>
 
 <div class="flex items-center">
@@ -17,13 +41,14 @@
 
 	<Dropdown
 		class="grow"
-		selected={value}
-		items={colorNames}
+		{selected}
+		items={options}
 		getLabel={capitalize}
-		onSelectedChange={(newValue) => {
-			value = newValue;
-			setColor(category, value);
-		}}
+		onSelectedChange={onDropdownChange}
 		multiple={false}
 	/>
+
+	{#if value.type === 'custom'}
+		<input type="color" bind:value={customColor} class="ml-1 h-full grow" />
+	{/if}
 </div>

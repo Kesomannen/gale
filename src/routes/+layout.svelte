@@ -16,14 +16,14 @@
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 	import { clearToast, toasts } from '$lib/toast';
-	//import { refreshColor } from '$lib/theme';
+	import { refreshColor } from '$lib/theme';
 
 	let status: string | null = null;
 	let unlisten: UnlistenFn | undefined;
 
 	onMount(async () => {
-		//refreshColor('accent', 'green');
-		//refreshColor('primary', 'slate');
+		refreshColor('accent');
+		refreshColor('primary');
 
 		unlisten = await listen<string | null>('status_update', (evt) => {
 			status = evt.payload;

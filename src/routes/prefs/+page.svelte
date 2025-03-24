@@ -18,6 +18,7 @@
 	//import ColorPref from '$lib/prefs/ColorPref.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import { setColor } from '$lib/theme';
+	import ColorPref from '$lib/prefs/ColorPref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -92,10 +93,8 @@
 
 		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
 
-		<!--<ColorPref category="primary" fallback="slate" />-->
-		<!--<ColorPref category="accent" fallback="green" />-->
-
-		<InputField on:submit={({ detail }) => setColor(detail, 'primary')} />
+		<ColorPref category="primary" />
+		<ColorPref category="accent" />
 
 		<ZoomLevelPref
 			value={prefs.zoomFactor}
