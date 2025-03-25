@@ -6,6 +6,8 @@
 
 - Custom theme colors
 - Ability to create profiles at any path
+- File association for `.r2z` profile files
+- Ability to select a target profile when using the `Install with Mod Manager` button
 
 ## 1.5.3 (2025-03-24)
 

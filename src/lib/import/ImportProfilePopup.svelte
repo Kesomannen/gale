@@ -18,6 +18,8 @@
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Info from '$lib/components/Info.svelte';
+	import { onMount } from 'svelte';
+	import { listen } from '@tauri-apps/api/event';
 
 	export let open: boolean;
 	export let data: ImportData | null;
@@ -37,6 +39,16 @@
 	}
 
 	$: nameAvailable = mode === 'overwrite' || isAvailable(name);
+
+	onMount(() => {
+		listen<ImportData>('import_profile', (evt) => {
+			data = evt.payload;
+			name = data.name;
+			mode = isAvailable(name) ? 'new' : 'overwrite';
+
+			open = true;
+		});
+	});
 
 	async function getKeyFromClipboard() {
 		key = (await readText()) ?? '';
@@ -83,7 +95,21 @@
 		importAll = false;
 	}}
 >
-	{#if data !== null}
+	{#if data === null}
+		<div class="mt-1 flex gap-2">
+			<div class="grow">
+				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
+			</div>
+
+			<BigButton on:click={submitKey} disabled={loading}>
+				{#if loading}
+					<Icon icon="mdi:loading" class="animate-spin" />
+				{:else}
+					Import
+				{/if}
+			</BigButton>
+		</div>
+	{:else}
 		<TabsMenu
 			bind:value={mode}
 			options={[
@@ -162,20 +188,6 @@
 				}}>Cancel</BigButton
 			>
 			<BigButton disabled={!nameAvailable || loading} on:click={importData}>Import</BigButton>
-		</div>
-	{:else}
-		<div class="mt-1 flex gap-2">
-			<div class="grow">
-				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
-			</div>
-
-			<BigButton on:click={submitKey} disabled={loading}>
-				{#if loading}
-					<Icon icon="mdi:loading" class="animate-spin" />
-				{:else}
-					Import
-				{/if}
-			</BigButton>
 		</div>
 	{/if}
 </Popup>

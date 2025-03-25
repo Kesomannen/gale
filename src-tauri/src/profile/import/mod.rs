@@ -31,19 +31,13 @@ pub use local::import_local_mod;
 
 use super::export::{IncludeExtensions, IncludeGenerated};
 
-pub async fn import_file_from_link(url: String, app: &AppHandle) -> Result<()> {
-    let data = import_file_from_path(url.into(), app)?;
-    import_data(data, InstallOptions::default(), false, app).await?;
-    Ok(())
-}
-
-fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
+pub fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
     import_file(file, app)
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
     name: String,

@@ -21,19 +21,18 @@ struct WebviewError<'a> {
 
 /// Emits an error to the webview, causing it to show an error toast and
 /// log the message properly to the log file/terminal.
-pub fn log_webview_err(name: &str, error: eyre::Error, handle: &AppHandle) {
-    handle
-        .emit(
-            "error",
-            WebviewError {
-                name,
-                message: format!("{:#}", error),
-            },
-        )
-        .unwrap_or_else(|err| {
-            log::warn!("failed to log error to webview:");
-            log::error!("{:#}", err)
-        })
+pub fn log_webview_err(name: &str, error: eyre::Error, app: &AppHandle) {
+    app.emit(
+        "error",
+        WebviewError {
+            name,
+            message: format!("{:#}", error),
+        },
+    )
+    .unwrap_or_else(|err| {
+        log::warn!("failed to log error to webview:");
+        log::error!("{:#}", err)
+    })
 }
 
 fn log_path() -> PathBuf {

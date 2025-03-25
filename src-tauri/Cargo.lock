@@ -5657,6 +5657,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tauri",
+ "tauri-plugin-deep-link",
  "thiserror 2.0.12",
  "tracing",
  "windows-sys 0.59.0",

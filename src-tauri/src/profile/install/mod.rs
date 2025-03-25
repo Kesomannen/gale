@@ -17,7 +17,6 @@ use crate::{
 
 mod cache;
 pub mod commands;
-pub mod deep_link;
 mod download;
 mod fs;
 mod installers;

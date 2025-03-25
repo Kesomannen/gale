@@ -15,6 +15,8 @@
 		"targets": "all",
 		"externalBin": [],
 		"createUpdaterArtifacts": true,
+		"shortDescription": "A lightweight mod manager for Thunderstore",
+		"longDescription": "",
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",
@@ -25,23 +27,24 @@
 		"windows": {
 			"certificateThumbprint": null,
 			"digestAlgorithm": "sha256",
-			"timestampUrl": ""
+			"timestampUrl": "",
+			"wix": {
+				"bannerPath": "../images/installer/banner.png",
+				"dialogImagePath": "../images/installer/dialog.png"
+			}
 		},
-		"longDescription": "",
-		"macOS": {
-			"entitlements": null,
-			"exceptionDomain": "",
-			"frameworks": [],
-			"providerShortName": null,
-			"signingIdentity": null
-		},
-		"resources": [],
-		"shortDescription": "",
 		"linux": {
 			"deb": {
 				"depends": []
 			}
-		}
+		},
+		"resources": [],
+		"fileAssociations": [
+			{
+				"ext": ["r2z"],
+				"mimeType": "application/octet-stream"
+			}
+		]
 	},
 	"plugins": {
 		"updater": {

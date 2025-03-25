@@ -130,7 +130,7 @@ impl Profile {
                 let (data, uuid) = match queryable.kind {
                     QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
                     QueryableProfileModKind::Thunderstore(remote) => {
-                        (remote.into_frontend(self), remote.package.uuid)
+                        (remote.into_frontend(Some(self)), remote.package.uuid)
                     }
                 };
 
