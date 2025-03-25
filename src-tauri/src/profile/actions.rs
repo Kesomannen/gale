@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     fs,
+    path::PathBuf,
 };
 
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
@@ -233,21 +234,46 @@ fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
 }
 
 impl ManagedGame {
-    pub fn create_profile(&mut self, name: String, db: &Db) -> Result<&mut Profile> {
+    pub fn create_profile(
+        &mut self,
+        name: String,
+        override_path: Option<PathBuf>,
+        db: &Db,
+    ) -> Result<&mut Profile> {
         ensure!(
             Profile::is_valid_name(&name),
             "profile name '{}' is invalid",
             name
         );
 
-        let mut path = self.path.join("profiles");
-        path.push(&name);
-
         ensure!(
-            !path.exists(),
-            "profile with name '{}' already exists",
+            !self.profiles.iter().any(|profile| profile.name == name),
+            "profile with name {} already exists",
             name
         );
+
+        let path = match override_path {
+            Some(path) => {
+                ensure!(
+                    path.read_dir()?.next().is_none(),
+                    "profile directory is not empty"
+                );
+
+                path
+            }
+            None => {
+                let mut path = self.path.join("profiles");
+                path.push(&name);
+
+                ensure!(
+                    !path.exists(),
+                    "profile at {} already exists",
+                    path.display()
+                );
+
+                path
+            }
+        };
 
         fs::create_dir_all(&path).fs_context("creating profile directory", &path)?;
 
@@ -291,7 +317,7 @@ impl ManagedGame {
     }
 
     pub fn duplicate_profile(&mut self, duplicate_name: String, id: i64, db: &Db) -> Result<()> {
-        self.create_profile(duplicate_name, db)?;
+        self.create_profile(duplicate_name, None, db)?;
 
         let old_profile = self.find_profile(id)?;
         let new_profile = self.active_profile();

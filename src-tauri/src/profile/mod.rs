@@ -558,7 +558,7 @@ impl ModManager {
             info!("creating default profile for {}", game.slug);
 
             let default_profile = managed
-                .create_profile(DEFAULT_PROFILE_NAME.to_owned(), db)
+                .create_profile(DEFAULT_PROFILE_NAME.to_owned(), None, db)
                 .context("failed to create default profile")?;
 
             managed.active_profile_id = default_profile.id;

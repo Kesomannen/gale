@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use eyre::{Context, OptionExt};
 use itertools::Itertools;
 use log::warn;
@@ -210,10 +212,12 @@ pub fn is_mod_installed(uuid: Uuid, app: AppHandle) -> Result<bool> {
 }
 
 #[command]
-pub fn create_profile(name: String, app: AppHandle) -> Result<()> {
+pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    manager.active_game_mut().create_profile(name, app.db())?;
+    manager
+        .active_game_mut()
+        .create_profile(name, override_path, app.db())?;
     manager.save_all(app.db())?;
 
     Ok(())

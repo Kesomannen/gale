@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Custom theme colors
+- Ability to create profiles at any path
+
 ## 1.5.3 (2025-03-24)
 
 ### Fixed
