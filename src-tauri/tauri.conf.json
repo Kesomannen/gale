@@ -27,11 +27,7 @@
 		"windows": {
 			"certificateThumbprint": null,
 			"digestAlgorithm": "sha256",
-			"timestampUrl": "",
-			"wix": {
-				"bannerPath": "../images/installer/banner.png",
-				"dialogImagePath": "../images/installer/dialog.png"
-			}
+			"timestampUrl": ""
 		},
 		"linux": {
 			"deb": {
