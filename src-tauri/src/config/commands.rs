@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use eyre::{eyre, Context};
+use log::trace;
 use tauri::{command, AppHandle};
 
 use super::{frontend, AnyFileKind};
@@ -12,6 +13,11 @@ pub fn get_config_files(app: AppHandle) -> Result<Vec<frontend::File>> {
     let profile = manager.active_profile_mut();
 
     profile.refresh_config();
+
+    trace!(
+        "{}",
+        serde_json::to_string_pretty(&profile.config_cache.to_frontend())?
+    );
 
     Ok(profile.config_cache.to_frontend())
 }

@@ -41,7 +41,7 @@ export type ConfigFileData = {
 };
 
 export type ConfigNum = {
-	value: number;
+	value: number | null;
 	range: ConfigRange | null;
 };
 

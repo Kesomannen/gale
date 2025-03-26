@@ -184,7 +184,8 @@ impl ConfigCache {
                     .to_string_lossy(),
             },
         }
-        .replace(['_', '-', ' '], "");
+        .replace(['-', ' '], "")
+        .replace('_', " ");
 
         let file = AnyFile {
             display_name,
