@@ -9,6 +9,10 @@
 - File association for `.r2z` profile files
 - Ability to select a target profile when using the `Install with Mod Manager` button
 
+### Fixed
+
+- Underscores being removed in config file names
+
 ## 1.5.3 (2025-03-24)
 
 ### Fixed
