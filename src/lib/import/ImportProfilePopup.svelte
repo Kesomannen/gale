@@ -21,18 +21,14 @@
 	import { onMount } from 'svelte';
 	import { listen } from '@tauri-apps/api/event';
 
-	export let open: boolean;
-	export let data: ImportData | null;
+	let open: boolean;
+	let data: ImportData | null;
 
 	let key: string;
 	let name: string;
 	let loading: boolean;
 	let importAll: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
-
-	$: if (open) {
-		getKeyFromClipboard();
-	}
 
 	$: if (mode === 'overwrite' && isAvailable(name)) {
 		name = profiles[0].name;
@@ -58,8 +54,7 @@
 		loading = true;
 		try {
 			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
-			name = data.name;
-			mode = isAvailable(name) ? 'new' : 'overwrite';
+			openFor(data);
 		} finally {
 			loading = false;
 		}
@@ -84,6 +79,21 @@
 
 	function isAvailable(name: string) {
 		return !profiles.some((profile) => profile.name === name);
+	}
+
+	export function openFor(importData: ImportData) {
+		data = importData;
+		name = data.name;
+		mode = isAvailable(name) ? 'new' : 'overwrite';
+
+		open = true;
+	}
+
+	export function openForCode() {
+		data = null;
+		getKeyFromClipboard();
+
+		open = true;
 	}
 </script>
 

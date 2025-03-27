@@ -5,7 +5,7 @@ use std::{
 };
 
 use base64::{prelude::BASE64_STANDARD, Engine};
-use eyre::{anyhow, Context, Result};
+use eyre::{eyre, Context, Result};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -179,7 +179,7 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
         .error_for_status()
         .map_err(|err| match err.status() {
             Some(status) if status == StatusCode::NOT_FOUND => {
-                anyhow!("profile code is expired or invalid")
+                eyre!("profile code is expired or invalid")
             }
             _ => err.into(),
         })?
@@ -187,13 +187,15 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
         .await?;
 
     match response.strip_prefix(PROFILE_DATA_PREFIX) {
-        Some(data) => {
-            let bytes = BASE64_STANDARD
-                .decode(data)
-                .context("failed to decode base64 data")?;
-
-            import_file(Cursor::new(bytes), app)
-        }
-        None => Err(anyhow!("invalid profile data")),
+        Some(str) => import_base64(str, app),
+        None => Err(eyre!("invalid profile data")),
     }
+}
+
+fn import_base64(base64: &str, app: &AppHandle) -> Result<ImportData> {
+    let bytes = BASE64_STANDARD
+        .decode(base64)
+        .context("failed to decode base64 data")?;
+
+    import_file(Cursor::new(bytes), app)
 }

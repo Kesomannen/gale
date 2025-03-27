@@ -18,7 +18,7 @@
 	import NewProfilePopup from './NewProfilePopup.svelte';
 	import MenubarSeparator from './MenubarSeparator.svelte';
 
-	import { capitalize, shortenFileSize } from '$lib/util';
+	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ImportData } from '$lib/models';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
@@ -31,10 +31,9 @@
 
 	let importR2Open = false;
 	let newProfileOpen = false;
-	let exportCodePopup: ExportCodePopup;
 
-	let importProfileOpen = false;
-	let importProfileData: ImportData | null = null;
+	let exportCodePopup: ExportCodePopup;
+	let importProfilePopup: ImportProfilePopup;
 
 	let profileOperation: 'rename' | 'duplicate' = 'rename';
 	let profileOperationName = '';
@@ -60,7 +59,7 @@
 		});
 	}
 
-	async function importFile() {
+	async function browseImportFile() {
 		let path = await open({
 			title: 'Select the file to import',
 			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
@@ -68,9 +67,7 @@
 
 		if (path === null) return;
 		let data = await invokeCommand<ImportData>('import_file', { path });
-
-		importProfileData = data;
-		importProfileOpen = true;
+		importProfilePopup.openFor(data);
 	}
 
 	async function exportFile() {
@@ -181,6 +178,34 @@
 		});
 	}
 
+	async function handleFileDrop(evt: DragEvent) {
+		evt.preventDefault();
+		if (evt.dataTransfer === null) return;
+
+		let file: File | null;
+		if (evt.dataTransfer.items) {
+			let files = [...evt.dataTransfer.items].filter((item) => item.kind == 'file');
+			if (files.length === 0) return;
+			file = files[0].getAsFile();
+		} else {
+			file = [...evt.dataTransfer.items][0];
+		}
+
+		if (file === null) return;
+		if (!file.name.endsWith('.r2z')) {
+			pushToast({
+				type: 'error',
+				name: 'Failed to import file',
+				message: 'Profile must have the .r2z extension.'
+			});
+			return;
+		}
+
+		let base64 = await fileToBase64(file);
+		let data = await invokeCommand<ImportData>('import_base64', { base64 });
+		importProfilePopup.openFor(data);
+	}
+
 	const hotkeys: { [key: string]: () => void } = {
 		'+': () => zoom({ delta: 0.25 }),
 		'-': () => zoom({ delta: -0.25 }),
@@ -203,6 +228,18 @@
 		};
 	});
 </script>
+
+<svelte:body
+	on:dragenter={(evt) => evt.preventDefault()}
+	on:dragover={(evt) => evt.preventDefault()}
+	on:drop={handleFileDrop}
+	on:contextmenu={(evt) => {
+		// hide context menu in release builds
+		if (window.location.hostname === 'tauri.localhost') {
+			evt.preventDefault();
+		}
+	}}
+/>
 
 <header data-tauri-drag-region class="bg-primary-800 flex h-8 shrink-0">
 	<Menubar.Root class="flex items-center py-1">
@@ -244,8 +281,8 @@
 			<MenubarItem on:click={uninstallDisabledMods} text="Uninstall disabled mods" />
 		</MenubarMenu>
 		<MenubarMenu label="Import">
-			<MenubarItem on:click={() => (importProfileOpen = true)} text="...profile from code" />
-			<MenubarItem on:click={importFile} text="...profile from file" />
+			<MenubarItem on:click={() => importProfilePopup.openForCode()} text="...profile from code" />
+			<MenubarItem on:click={browseImportFile} text="...profile from file" />
 			<MenubarItem on:click={importLocalMod} text="...local mod" />
 			<MenubarItem on:click={() => (importR2Open = true)} text="...profiles from r2modman" />
 		</MenubarMenu>
@@ -334,4 +371,4 @@
 <ImportR2Popup bind:open={importR2Open} />
 <NewProfilePopup bind:open={newProfileOpen} />
 <ExportCodePopup bind:this={exportCodePopup} />
-<ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
+<ImportProfilePopup bind:this={importProfilePopup} />

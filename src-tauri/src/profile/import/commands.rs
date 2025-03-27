@@ -39,6 +39,15 @@ pub async fn import_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
 }
 
 #[command]
+pub async fn import_base64(base64: String, app: AppHandle) -> Result<ImportData> {
+    thunderstore::wait_for_fetch(&app).await;
+
+    let data = super::import_base64(&base64, &app)?;
+
+    Ok(data)
+}
+
+#[command]
 pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
     thunderstore::wait_for_fetch(&app).await;
 

@@ -49,7 +49,14 @@ impl Profile {
             return Ok(None); // local mods can't be updated
         };
 
-        let current = ts_mod.id.borrow(thunderstore)?.version;
+        let Ok(current) = ts_mod
+            .id
+            .borrow(thunderstore)
+            .map(|borrowed| borrowed.version)
+        else {
+            return Ok(None); // ignore missing mods
+        };
+
         let package = thunderstore.get_package(uuid)?;
 
         if current.parsed_version() >= package.latest().parsed_version() {

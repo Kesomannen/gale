@@ -182,19 +182,19 @@
 	let reorderPrevIndex: number;
 
 	function onDragStart(evt: DragEvent) {
-		if (!reorderable || evt.dataTransfer === null) return;
+		if (!isDragApplicable(evt)) return;
 
 		let element = evt.currentTarget as HTMLElement;
 
 		reorderUuid = element.dataset.uuid!;
 		reorderPrevIndex = parseInt(element.dataset.index!);
 
-		evt.dataTransfer.effectAllowed = 'move';
-		evt.dataTransfer.setData('text/html', element.outerHTML);
+		evt.dataTransfer!.effectAllowed = 'move';
+		evt.dataTransfer!.setData('text/html', element.outerHTML);
 	}
 
 	async function onDragOver(evt: DragEvent) {
-		if (!reorderable) return;
+		if (!isDragApplicable(evt)) return;
 
 		let target = evt.currentTarget as HTMLElement;
 		let newIndex = parseInt(target.dataset.index!);
@@ -218,9 +218,14 @@
 	}
 
 	async function onDragEnd(evt: DragEvent) {
-		if (!reorderable) return;
-
+		if (!isDragApplicable(evt)) return;
 		await emit('finish_reorder');
+	}
+
+	function isDragApplicable(evt: DragEvent) {
+		if (!reorderable || evt.dataTransfer === null) return false;
+		let items = [...evt.dataTransfer.items];
+		return items.length === 0 || items[0].kind !== 'file';
 	}
 </script>
 
@@ -258,7 +263,7 @@
 						unknownMods.forEach(uninstall);
 					}}
 				>
-					Uninstall them?
+					Uninstall {unknownMods.length === 1 ? 'it' : 'them'}?
 				</Button.Root>
 			</div>
 		{/if}

@@ -19,24 +19,6 @@
 	});
 </script>
 
-<svelte:body
-	on:dragenter={(e) => {
-		e.preventDefault();
-	}}
-	on:drop={(e) => {
-		e.preventDefault();
-	}}
-	on:dragover={(e) => {
-		e.preventDefault();
-	}}
-	on:contextmenu={(evt) => {
-		// hide context menu in release builds
-		if (window.location.hostname === 'tauri.localhost') {
-			evt.preventDefault();
-		}
-	}}
-/>
-
 <main class="bg-primary-800 relative flex flex-col overflow-hidden">
 	<Menubar />
 	<Contextbar />

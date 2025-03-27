@@ -110,6 +110,7 @@ pub fn run() {
             profile::import::commands::import_data,
             profile::import::commands::import_code,
             profile::import::commands::import_file,
+            profile::import::commands::import_base64,
             profile::import::commands::import_local_mod,
             profile::import::commands::get_r2modman_info,
             profile::import::commands::import_r2modman,

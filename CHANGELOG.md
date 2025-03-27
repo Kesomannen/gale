@@ -1,18 +1,20 @@
 # Changelog
 
-## Unreleased
+## 1.5.4 (2025-03-27)
 
 ### Added
 
+- New logo!
 - Custom theme colors
 - Ability to create profiles at any path
 - File association for `.r2z` profile files
+- Drag and drop functionality for `.r2z` files
 - Ability to select a target profile when using the `Install with Mod Manager` button
 
 ### Fixed
 
-- Dropping a file causing the app to freeze
-- Underscores being removed in config file names
+- Underscores being removed from config file names
+  - They are now replaced with spaces
 
 ## 1.5.3 (2025-03-24)
 
