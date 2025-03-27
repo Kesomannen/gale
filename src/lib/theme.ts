@@ -309,7 +309,6 @@ const fallbacks: Record<ColorCategory, Color> = {
 };
 
 export function setColor(category: ColorCategory, color: Color) {
-	console.log('setting color');
 	let shades: { [shade: string]: string };
 
 	if (color.type === 'default') {

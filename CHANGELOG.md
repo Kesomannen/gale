@@ -11,6 +11,7 @@
 
 ### Fixed
 
+- Dropping a file causing the app to freeze
 - Underscores being removed in config file names
 
 ## 1.5.3 (2025-03-24)
