@@ -1298,6 +1298,18 @@
 		}
 	},
 	{
+		"name": "Schedule I",
+		"slug": "schedule-i",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3164500
+			}
+		}
+	},
+	{
 		"name": "STRAFTAT",
 		"slug": "straftat",
 		"modLoader": {
