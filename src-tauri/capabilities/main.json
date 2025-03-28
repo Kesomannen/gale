@@ -30,13 +30,9 @@
 				},
 				{
 					"url": "https://raw.githubusercontent.com/Kesomannen/gale/master/*"
-				},
-				{
-					"url": "https://www.tints.dev/api/*"
 				}
 			],
 			"deny": []
-		},
-		"cli:default"
+		}
 	]
 }

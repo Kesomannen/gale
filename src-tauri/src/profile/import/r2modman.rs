@@ -11,10 +11,7 @@ use tauri::{AppHandle, Emitter};
 use super::ImportData;
 use crate::{
     logger,
-    profile::{
-        export::{ImportSource, R2Mod},
-        install::InstallOptions,
-    },
+    profile::{export::R2Mod, install::InstallOptions},
     state::ManagerExt,
     thunderstore::{self},
     util::{self, error::IoResultExt, fs::PathExt},
@@ -169,11 +166,11 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
 
     ImportData::create_r2(
         name,
+        None,
         mods,
         Vec::new(),
         profile_dir,
         false,
-        ImportSource::R2,
         &thunderstore,
     )
     .map(Some)

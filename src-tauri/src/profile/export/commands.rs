@@ -33,6 +33,7 @@ pub async fn export_code(app: AppHandle) -> Result<Uuid> {
 pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
+    let game = manager.active_game().game;
     let profile = manager.active_profile();
 
     let mut path = dir;
@@ -41,7 +42,7 @@ pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
 
     let file = fs::File::create(&path).map_err(|err| anyhow!(err))?;
     let writer = BufWriter::new(file);
-    super::export_zip(manager.active_profile(), writer)?;
+    super::export_zip(manager.active_profile(), writer, game)?;
 
     open::that(path.parent().unwrap()).ok();
 

@@ -15,7 +15,7 @@ use uuid::Uuid;
 
 use crate::{
     profile::{
-        export::{self, ImportSource, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
+        export::{self, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
         install::{self, InstallOptions, ModInstall},
     },
     state::ManagerExt,
@@ -41,22 +41,22 @@ pub fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportDat
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
     name: String,
+    game: Option<String>,
     mod_names: Vec<String>,
     mods: Vec<ModInstall>,
     path: PathBuf,
     delete_after_import: bool,
     ignored_updates: Vec<Uuid>,
-    source: ImportSource,
 }
 
 impl ImportData {
     pub fn create_r2(
         name: String,
+        game: Option<String>,
         mods: Vec<R2Mod>,
         ignored_updates: Vec<Uuid>,
         path: PathBuf,
         delete_after_import: bool,
-        source: ImportSource,
         thunderstore: &Thunderstore,
     ) -> Result<Self> {
         let mod_names = mods.iter().map(|r2| r2.ident()).collect();
@@ -68,12 +68,12 @@ impl ImportData {
 
         Ok(Self {
             name,
+            game,
             mod_names,
             mods,
             path,
             delete_after_import,
             ignored_updates,
-            source,
         })
     }
 }
@@ -93,11 +93,11 @@ fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> 
 
     ImportData::create_r2(
         manifest.profile_name,
+        manifest.game_slug,
         manifest.mods,
         manifest.ignored_updates,
         temp_dir.into_path(),
         true,
-        manifest.source,
         &thunderstore,
     )
 }

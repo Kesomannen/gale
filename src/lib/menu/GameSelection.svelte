@@ -5,8 +5,6 @@
 	import { Button } from 'bits-ui';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from '../components/Link.svelte';
-	import { ModLoader } from '$lib/models';
-	import Tooltip from '../components/Tooltip.svelte';
 	import { titleCase } from '$lib/util';
 
 	export let onSelect: () => void;
@@ -56,7 +54,7 @@
 						? ' border-primary-500 bg-primary-700'
 						: 'hover:bg-primary-700 border-transparent'}"
 					on:click={() => {
-						setActiveGame(game);
+						setActiveGame(game.slug);
 						onSelect();
 					}}
 				>

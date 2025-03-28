@@ -10,7 +10,7 @@
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import InputField from '$lib/components/InputField.svelte';
-	import { profiles, refreshProfiles } from '$lib/stores';
+	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
@@ -54,7 +54,7 @@
 		loading = true;
 		try {
 			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
-			openFor(data);
+			await openFor(data);
 		} finally {
 			loading = false;
 		}
@@ -81,8 +81,13 @@
 		return !profiles.some((profile) => profile.name === name);
 	}
 
-	export function openFor(importData: ImportData) {
+	export async function openFor(importData: ImportData) {
 		data = importData;
+
+		if (data.game !== null && $activeGame?.slug !== data.game) {
+			await setActiveGame(data.game);
+		}
+
 		name = data.name;
 		mode = isAvailable(name) ? 'new' : 'overwrite';
 

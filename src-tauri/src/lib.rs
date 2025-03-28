@@ -2,7 +2,7 @@ use std::{env, time::Instant};
 
 use itertools::Itertools;
 use log::{error, info};
-use tauri::App;
+use tauri::{App, AppHandle};
 use tauri_plugin_dialog::DialogExt;
 
 #[cfg(target_os = "linux")]
@@ -40,9 +40,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         return Err(err.into());
     }
 
-    cli::run(app).unwrap_or_else(|err| {
-        error!("failed to run CLI: {:#}", err);
-    });
+    cli::run_from_args(app.handle());
 
     let args = env::args().collect_vec();
     if args.len() > 1 {
@@ -55,6 +53,12 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     info!("setup done in {:?}", start.elapsed());
 
     Ok(())
+}
+
+fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
+    if !deep_link::handle(app, args.clone()) {
+        cli::run(app, args.clone());
+    }
 }
 
 pub fn run() {
@@ -138,10 +142,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
-        .plugin(tauri_plugin_cli::init())
-        .plugin(tauri_plugin_single_instance::init(|app, args, _| {
-            deep_link::handle(app, args)
-        }))
+        .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .setup(setup)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

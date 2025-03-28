@@ -54,33 +54,6 @@
 				"schemes": ["ror2mm"]
 			},
 			"mobile": []
-		},
-		"cli": {
-			"description": "",
-			"args": [
-				{
-					"name": "game",
-					"short": "g",
-					"takesValue": true
-				},
-				{
-					"name": "profile",
-					"short": "p",
-					"takesValue": true
-				},
-				{
-					"name": "install",
-					"short": "i",
-					"takesValue": true
-				},
-				{
-					"name": "launch",
-					"short": "l"
-				},
-				{
-					"name": "no-gui"
-				}
-			]
 		}
 	},
 	"app": {
