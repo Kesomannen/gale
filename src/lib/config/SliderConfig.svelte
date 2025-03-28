@@ -9,9 +9,7 @@
 	let range = content.range as ConfigRange;
 	let type = entryId.entry.value.type as 'int' | 'float';
 
-	$: value = content.value ?? 0;
-
-	$: fillPercent = clamp(((value - range.start) / (range.end - range.start)) * 100, 0, 100);
+	$: fillPercent = clamp(((content.value - range.start) / (range.end - range.start)) * 100, 0, 100);
 	$: decimals = type === 'int' ? 0 : 1;
 
 	let element: HTMLDivElement;
@@ -19,11 +17,11 @@
 	let handle: HTMLDivElement;
 
 	let isDragging = false;
-	let inputString = value.toString();
+	let inputString = content.value.toString();
 
 	function onReset(newValue: ConfigValue) {
 		content = newValue.content as ConfigNum;
-		inputString = value.toString();
+		inputString = content.value.toString();
 	}
 
 	function submitValue() {
@@ -82,12 +80,12 @@
 	bind:this={element}
 	on:keydown={(e) => {
 		if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-			content.value = Math.max(range.start, value - 1);
+			content.value = Math.max(range.start, content.value - 1);
 		} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-			content.value = Math.min(range.end, value + 1);
+			content.value = Math.min(range.end, content.value + 1);
 		}
 
-		inputString = value.toFixed(decimals);
+		inputString = content.value.toFixed(decimals);
 	}}
 	on:mousedown={(evt) => {
 		isDragging = true;
@@ -128,7 +126,7 @@
 			submitValue();
 		}
 
-		inputString = value.toString();
+		inputString = content.value.toString();
 	}}
 	class="focus:ring-accent-400 bg-primary-900 text-primary-300 placeholder-primary-400 hover:border-primary-500 hover:text-primary-200 ml-3 w-1/6 min-w-0 shrink rounded-lg border border-transparent px-3 py-1 focus:border-transparent focus:ring-2 focus:outline-hidden"
 />

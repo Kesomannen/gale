@@ -41,7 +41,7 @@ export type ConfigFileData = {
 };
 
 export type ConfigNum = {
-	value: number | null;
+	value: number;
 	range: ConfigRange | null;
 };
 
@@ -240,6 +240,7 @@ export type ProfileQuery = {
 
 export type ImportData = {
 	name: string;
+	game: string | null;
 	modNames: string[];
 };
 
