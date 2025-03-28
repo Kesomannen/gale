@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.5 (2025-03-28)
+
+### Fixed
+
+- Some config files freezing the app when opened
+
 ## 1.5.4 (2025-03-27)
 
 ### Added
