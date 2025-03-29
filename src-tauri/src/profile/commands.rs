@@ -403,3 +403,90 @@ pub fn open_game_log(app: AppHandle) -> Result<()> {
 
     Ok(())
 }
+
+#[command]
+pub fn create_desktop_shortcut(game_name: &str, game_display_name: String, profile_name: String, _app: AppHandle) -> Result<()> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        use std::path::Path;
+        use std::os::windows::process::CommandExt;
+
+        const NO_WINDOW: u32 = 0x08000000;
+
+        let desktop_path = dirs_next::desktop_dir().ok_or_eyre("Could not find desktop directory")?;
+        let shortcut_path = desktop_path.join(format!("Gale - {} - {}.lnk", game_display_name, profile_name));
+
+        if Path::new(&shortcut_path).exists() {
+            return Err(eyre::eyre!("Shortcut already exists").into());
+        }
+
+        let exe_path = std::env::current_exe().context("Failed to get current executable path")?;
+
+        // powershell seemed like the simplesy way to do that
+        let command = format!(
+            "$ws = New-Object -ComObject WScript.Shell; \
+             $shortcut = $ws.CreateShortcut('{}'); \
+             $shortcut.TargetPath = '{}'; \
+             $shortcut.Arguments = '--game {} --profile \"{}\" --launch --no-gui'; \
+             $shortcut.Save()",
+            shortcut_path.to_string_lossy().replace("\\", "\\\\"),
+            exe_path.to_string_lossy().replace("\\", "\\\\"),
+            game_name,
+            profile_name
+        );
+
+        let result = Command::new("powershell")
+            .creation_flags(NO_WINDOW)
+            .arg("-Command")
+            .arg(&command)
+            .status()
+            .context("Failed to execute PowerShell command")?;
+
+        if !result.success() {
+            return Err(eyre::eyre!("PowerShell failed to create shortcut").into());
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        // TODO for now (i dont have a mac to test)
+        return Err(eyre::eyre!("Shortcut creation not yet implemented for macOS, sorry!").into());
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::path::Path;
+        
+        let desktop_path = dirs_next::desktop_dir().ok_or_eyre("Could not find desktop directory")?;
+        let shortcut_path = desktop_path.join(format!("gale-{}-{}.desktop", game_display_name, profile_name));
+        
+        if Path::new(&shortcut_path).exists() {
+            return Err(eyre::eyre!("Shortcut already exists").into());
+        }
+        
+        let exe_path = std::env::current_exe().context("Failed to get current executable path")?;
+        
+        let desktop_content = format!(
+            "[Desktop Entry]\n\
+             Type=Application\n\
+             Name=Gale - {} - {}\n\
+             Exec=\"{}\" --game {} --profile \"{}\" --launch --no-gui\n\
+             Icon=gale\n\
+             Terminal=false\n\
+             Categories=Game;",
+            game_display_name, profile_name,
+            exe_path.to_string_lossy(),
+            game_name,
+            profile_name
+        );
+        
+        std::fs::write(&shortcut_path, desktop_content)
+            .context("Failed to write desktop file")?;
+        
+        std::fs::set_permissions(&shortcut_path, std::os::unix::fs::PermissionsExt::from_mode(0o755))
+            .context("Failed to set permissions on desktop file")?;
+    }
+
+    Ok(())
+}
