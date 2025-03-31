@@ -12,12 +12,24 @@
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 	import { refreshColor } from '$lib/theme';
 	import InstallModPopup from '$lib/modlist/InstallModPopup.svelte';
+	import { fileToBase64 } from '$lib/util';
+	import { invokeCommand } from '$lib/invoke';
+	import type { ImportData } from '$lib/models';
 
 	onMount(() => {
 		refreshColor('accent');
 		refreshColor('primary');
 	});
 </script>
+
+<svelte:body
+	on:contextmenu={(evt) => {
+		// hide context menu in release builds
+		if (window.location.hostname === 'tauri.localhost') {
+			evt.preventDefault();
+		}
+	}}
+/>
 
 <main class="bg-primary-800 relative flex flex-col overflow-hidden">
 	<Menubar />

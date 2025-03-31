@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Local mod drag and drop
+
+### Fixed
+
+- Compatibiltiy with r2 stuff
+
 ## 1.5.5 (2025-03-28)
 
 ### Fixed

@@ -123,7 +123,7 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
 
     let name = data.name.clone();
 
-    super::import_data(
+    super::import_profile(
         data,
         InstallOptions::default()
             .can_cancel(false)

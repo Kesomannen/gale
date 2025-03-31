@@ -27,14 +27,14 @@ pub mod commands;
 mod local;
 mod r2modman;
 
-pub use local::import_local_mod;
+pub use local::{import_local_mod, import_local_mod_base64};
 
 use super::export::{IncludeExtensions, IncludeGenerated};
 
 pub fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
-    import_file(file, app)
+    read_file(file, app)
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -78,7 +78,7 @@ impl ImportData {
     }
 }
 
-fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> {
+fn read_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> {
     let thunderstore = app.lock_thunderstore();
 
     let temp_dir = tempdir().context("failed to create temporary directory")?;
@@ -102,7 +102,7 @@ fn import_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> 
     )
 }
 
-async fn import_data(
+async fn import_profile(
     data: ImportData,
     options: InstallOptions,
     import_all: bool,
@@ -168,7 +168,7 @@ pub fn import_config(
     Ok(())
 }
 
-async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
+async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     let response = app
         .http()
         .get(format!(
@@ -187,15 +187,15 @@ async fn import_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
         .await?;
 
     match response.strip_prefix(PROFILE_DATA_PREFIX) {
-        Some(str) => import_base64(str, app),
+        Some(str) => read_base64(str, app),
         None => Err(eyre!("invalid profile data")),
     }
 }
 
-fn import_base64(base64: &str, app: &AppHandle) -> Result<ImportData> {
+fn read_base64(base64: &str, app: &AppHandle) -> Result<ImportData> {
     let bytes = BASE64_STANDARD
         .decode(base64)
         .context("failed to decode base64 data")?;
 
-    import_file(Cursor::new(bytes), app)
+    read_file(Cursor::new(bytes), app)
 }

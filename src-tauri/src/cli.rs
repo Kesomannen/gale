@@ -27,16 +27,19 @@ pub fn run(app: &App) -> Result<()> {
                 manager
                     .set_active_game(game, app.handle())
                     .context("failed to set game")?;
+
+                manager.save_all(app.db())?;
             }
 
             if let Some(Value::String(profile)) = matches.args.get("profile").map(|arg| &arg.value)
             {
                 let game = manager.active_game_mut();
-
                 let index = game.profile_index(profile).ok_or_eyre("unknown profile")?;
 
                 game.set_active_profile(index)
                     .context("failed to set profile")?;
+
+                game.save(app.db())?;
             }
 
             let handle = match matches.args.get("install").map(|arg| &arg.value) {
@@ -76,6 +79,7 @@ pub fn run(app: &App) -> Result<()> {
 async fn install_local_mod(path: PathBuf, handle: tauri::AppHandle) {
     profile::import::import_local_mod(
         path,
+        None,
         &handle,
         InstallOptions::default().on_progress(Box::new(|progress, _| {
             info!(

@@ -1,11 +1,13 @@
 use std::{
     fs,
-    io::{Cursor, Read},
+    io::{Cursor, Read, Write},
     path::{Path, PathBuf},
 };
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use eyre::{bail, ensure, Context, Result};
 use tauri::AppHandle;
+use tempfile::NamedTempFile;
 use uuid::Uuid;
 use zip::ZipArchive;
 
@@ -21,12 +23,32 @@ use crate::{
     util::{self, fs::PathExt},
 };
 
-pub async fn import_local_mod(
-    path: PathBuf,
+pub async fn import_local_mod_base64(
+    base64: String,
     app: &AppHandle,
     options: InstallOptions,
 ) -> Result<()> {
-    let (mut local_mod, kind) = read_local_mod(&path)?;
+    let data = BASE64_STANDARD.decode(base64)?;
+
+    let mut file = NamedTempFile::new().context("failed to create temp file")?;
+    file.write_all(&data).context("failed to write temp file")?;
+
+    import_local_mod(
+        file.path().to_owned(),
+        Some(LocalModKind::Zip),
+        app,
+        options,
+    )
+    .await
+}
+
+pub async fn import_local_mod(
+    path: PathBuf,
+    override_kind: Option<LocalModKind>,
+    app: &AppHandle,
+    options: InstallOptions,
+) -> Result<()> {
+    let (mut local_mod, kind) = read_local_mod(&path, override_kind)?;
 
     if let Some(deps) = &local_mod.dependencies {
         let mods = {
@@ -93,17 +115,21 @@ pub async fn import_local_mod(
 }
 
 #[derive(PartialEq, Eq)]
-enum LocalModKind {
+pub enum LocalModKind {
     Zip,
     Dll,
 }
 
-fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
+fn read_local_mod(
+    path: &Path,
+    override_kind: Option<LocalModKind>,
+) -> Result<(LocalMod, LocalModKind)> {
     ensure!(path.is_file(), "path is not a file");
 
-    let kind = match path.extension().and_then(|ext| ext.to_str()) {
-        Some("dll") => LocalModKind::Dll,
-        Some("zip") => LocalModKind::Zip,
+    let kind = match (override_kind, path.extension().and_then(|ext| ext.to_str())) {
+        (Some(kind), _) => kind,
+        (_, Some("dll")) => LocalModKind::Dll,
+        (_, Some("zip")) => LocalModKind::Zip,
         _ => bail!("unsupported file type"),
     };
 
