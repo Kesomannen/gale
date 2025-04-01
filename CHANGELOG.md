@@ -1,14 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.5.6 (2025-04-01)
 
 ### Added
 
 - Local mod drag and drop
+- Support for Schedule I
 
 ### Fixed
 
-- Compatibiltiy with r2 stuff
+- Compatibility with r2modman on subdirs with differing cases
 
 ## 1.5.5 (2025-03-28)
 
