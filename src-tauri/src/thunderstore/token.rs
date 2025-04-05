@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use eyre::Result;
 use keyring::Entry;
-use log::info;
+use tracing::info;
 
 static ENTRY: LazyLock<keyring::Result<Entry>> =
     LazyLock::new(|| Entry::new("thunderstore", "api_token"));

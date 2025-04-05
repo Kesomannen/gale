@@ -6,8 +6,8 @@ use std::{
 
 use eyre::Result;
 use indexmap::IndexMap;
-use log::{info, warn};
 use tauri::{AppHandle, Emitter};
+use tracing::{debug, info, warn};
 
 use crate::{game::Game, logger, state::ManagerExt, thunderstore::PackageListing};
 
@@ -84,7 +84,7 @@ pub(super) async fn fetch_packages(
     const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
     const INSERT_EVERY: usize = 1000;
 
-    info!(
+    debug!(
         "fetching packages for {}, write_directly: {}",
         game.slug, write_directly
     );
@@ -160,7 +160,7 @@ pub(super) async fn fetch_packages(
     state.packages_fetched = true;
     state.is_fetching = false;
 
-    info!(
+    debug!(
         "fetched {} packages for {} in {:?}",
         state.packages.len(),
         game.slug,

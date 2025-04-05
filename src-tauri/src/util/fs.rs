@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::warn;
+use tracing::warn;
 use serde::{de::DeserializeOwned, Serialize};
 use walkdir::WalkDir;
 use zip::ZipArchive;

@@ -115,8 +115,8 @@ pub async fn update_mods(
                     .check_update(uuid, respect_ignored, &thunderstore)
                     .transpose()
             })
-            .map_ok(|update| update.into())
-            .collect::<Result<Vec<ModInstall>>>()?
+            .map_ok(|update| ModInstall::from(update))
+            .collect::<Result<Vec<_>>>()?
     };
 
     _update_mods(installs, app).await

@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{bail, ensure, eyre, OptionExt, Result};
-use log::{info, warn};
+use tracing::{info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;

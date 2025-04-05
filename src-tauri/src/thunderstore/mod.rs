@@ -8,10 +8,10 @@ use std::{
 
 use eyre::{eyre, Context, Result};
 use indexmap::IndexMap;
-use log::{debug, info};
 use query::QueryModsArgs;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use crate::{
@@ -190,10 +190,7 @@ impl Thunderstore {
 
     /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
     pub fn switch_game(&mut self, game: Game, app: AppHandle) {
-        info!("switching thunderstore registry to game {}", game.slug);
-
         if let Some(handle) = self.fetch_loop_handle.take() {
-            info!("aborting ongoing fetch");
             handle.abort();
         }
 
@@ -275,7 +272,7 @@ pub fn read_cache(manager: &ModManager) -> Result<Option<Vec<PackageListing>>> {
     let result: Vec<PackageListing> =
         util::fs::read_json(path).context("failed to deserialize cache")?;
 
-    info!(
+    debug!(
         "read {} packages from cache in {:?}",
         result.len(),
         start.elapsed()

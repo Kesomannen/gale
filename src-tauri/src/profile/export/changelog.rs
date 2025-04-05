@@ -6,7 +6,7 @@ use std::{
 
 use eyre::{bail, Context, Result};
 use itertools::Itertools;
-use log::warn;
+use tracing::warn;
 
 use super::modpack::ModpackArgs;
 use crate::{

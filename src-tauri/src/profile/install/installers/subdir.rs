@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use log::warn;
+use tracing::warn;
 use serde::{Deserialize, Serialize};
 
 use super::{PackageInstaller, PackageZip};

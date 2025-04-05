@@ -1,7 +1,7 @@
 use std::{collections::HashSet, fs, path::PathBuf};
 
 use eyre::{Context, Result};
-use log::info;
+use tracing::info;
 use tauri::AppHandle;
 
 use crate::{prefs::Prefs, state::ManagerExt, thunderstore::VersionIdent, util};

@@ -8,7 +8,7 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use log::debug;
+use tracing::debug;
 use rayon::prelude::*;
 use walkdir::WalkDir;
 

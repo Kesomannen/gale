@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
-use log::{info, warn};
+use tracing::{info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;

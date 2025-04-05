@@ -2,8 +2,8 @@ use std::{path::PathBuf, process};
 
 use clap::Parser;
 use eyre::{Context, OptionExt, Result};
-use log::{debug, error, info};
 use tauri::AppHandle;
+use tracing::{debug, error, info};
 
 use crate::{
     game::{self},
@@ -11,13 +11,13 @@ use crate::{
     state::ManagerExt,
 };
 
-pub fn run_from_args(app: &AppHandle) {
+pub fn run(app: &AppHandle) {
     Cli::parse().run(app).unwrap_or_else(|err| {
         error!("failed to run cli: {:#}", err);
     })
 }
 
-pub fn run(app: &AppHandle, args: Vec<String>) {
+pub fn run_from(app: &AppHandle, args: Vec<String>) {
     Cli::parse_from(args).run(app).unwrap_or_else(|err| {
         error!("failed to run cli: {:#}", err);
     })
@@ -64,15 +64,19 @@ impl Cli {
             debug!("set active game to {}", slug);
         }
 
-        if let Some(name) = profile {
+        if let Some(name) = &profile {
             let game = manager.active_game_mut();
 
-            let index = game.profile_index(&name).ok_or_eyre("unknown profile")?;
+            let index = game.profile_index(name).ok_or_eyre("unknown profile")?;
 
             game.set_active_profile(index)
                 .context("failed to set profile")?;
 
             debug!("set profile index to {}", index);
+        }
+
+        if game.is_some() || profile.is_some() {
+            manager.save_all(app.db())?;
         }
 
         if let Some(path) = install {

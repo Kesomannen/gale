@@ -8,7 +8,7 @@ use std::{
 
 use eyre::{bail, ensure, Context, OptionExt, Result};
 use keyvalues_serde::parser::Vdf;
-use log::{debug, info};
+use tracing::{debug, info};
 use serde::Deserialize;
 
 use crate::{
@@ -38,7 +38,7 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
     #[cfg(target_os = "linux")]
     if let Some(proxy_dll) = game.mod_loader.proxy_dll() {
         use super::linux;
-        use log::warn;
+        use tracing::warn;
 
         if linux::is_proton(game_dir).unwrap_or_else(|err| {
             warn!("failed to determine if game uses proton: {:#}", err);

@@ -2,7 +2,7 @@ use std::fs;
 
 use eyre::{Context, Result};
 use itertools::Itertools;
-use log::{info, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{

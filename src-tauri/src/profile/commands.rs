@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use eyre::{Context, OptionExt};
 use itertools::Itertools;
-use log::warn;
+use tracing::warn;
 use serde::Serialize;
 use tauri::{command, AppHandle};
 use uuid::Uuid;

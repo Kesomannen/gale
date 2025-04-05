@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
-use log::warn;
+use tracing::warn;
 
 use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
 use crate::thunderstore::{

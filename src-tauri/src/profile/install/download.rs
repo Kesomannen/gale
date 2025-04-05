@@ -10,7 +10,7 @@ use chrono::Utc;
 use core::str;
 use eyre::{Context, Result};
 use futures_util::StreamExt;
-use log::warn;
+use tracing::warn;
 use tauri::{AppHandle, Emitter};
 use thiserror::Error;
 use zip::ZipArchive;

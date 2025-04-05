@@ -1,9 +1,10 @@
 use std::{env, time::Instant};
 
 use itertools::Itertools;
-use log::{error, info};
 use tauri::{App, AppHandle};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
+use tracing::{error, info, warn};
 
 #[cfg(target_os = "linux")]
 extern crate webkit2gtk;
@@ -40,7 +41,11 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         return Err(err.into());
     }
 
-    cli::run_from_args(app.handle());
+    cli::run(app.handle());
+
+    if let Err(err) = app.deep_link().register("ror2mm") {
+        warn!("failed to register deep link protocol: {:#}", err);
+    }
 
     let args = env::args().collect_vec();
     if args.len() > 1 {
@@ -57,7 +62,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
 fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
     if !deep_link::handle(app, args.clone()) {
-        cli::run(app, args.clone());
+        cli::run_from(app, args.clone());
     }
 }
 

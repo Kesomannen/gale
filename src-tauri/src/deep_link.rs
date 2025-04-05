@@ -1,5 +1,5 @@
 use eyre::{OptionExt, Result};
-use log::{debug, warn};
+use tracing::{debug, warn};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{

@@ -1,5 +1,5 @@
 use eyre::Result;
-use log::{debug, error, info, warn};
+use tracing::{debug, error, info, warn};
 use serde_json::json;
 use tauri::AppHandle;
 use uuid::Uuid;

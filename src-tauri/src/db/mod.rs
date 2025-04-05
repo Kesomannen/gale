@@ -6,7 +6,7 @@ use std::{
 
 use eyre::{Context, Result};
 use include_dir::include_dir;
-use log::info;
+use tracing::info;
 use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;

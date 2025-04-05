@@ -4,7 +4,7 @@ use std::{
 };
 
 use eyre::{bail, Context, Result};
-use log::{info, warn};
+use tracing::{info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 

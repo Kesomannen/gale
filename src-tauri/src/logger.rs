@@ -4,10 +4,10 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use log::LevelFilter;
 use serde::Serialize;
-use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 use tauri::{command, AppHandle, Emitter};
+use tracing::{level_filters::LevelFilter, Level};
+use tracing_subscriber::{prelude::*, Registry};
 
 use crate::util::{self, fs::PathExt};
 
@@ -30,8 +30,8 @@ pub fn log_webview_err(name: &str, error: eyre::Error, app: &AppHandle) {
         },
     )
     .unwrap_or_else(|err| {
-        log::warn!("failed to log error to webview:");
-        log::error!("{:#}", err)
+        tracing::warn!("failed to log error to webview:");
+        tracing::error!("{:#}", err)
     })
 }
 
@@ -44,20 +44,17 @@ pub fn setup() -> Result<()> {
     fs::create_dir_all(path.parent().unwrap()).context("failed to create log directory")?;
     let log_file = File::create(path).context("failed to create log file")?;
 
-    let filter = match cfg!(debug_assertions) {
-        true => LevelFilter::Trace,
-        false => LevelFilter::Info,
-    };
+    let subscriber = Registry::default()
+        .with(tracing_subscriber::fmt::layer().with_ansi(true))
+        .with(
+            tracing_subscriber::fmt::layer()
+                .compact()
+                .with_ansi(false)
+                .with_writer(log_file)
+                .with_filter(LevelFilter::from_level(Level::INFO)),
+        );
 
-    CombinedLogger::init(vec![
-        TermLogger::new(
-            filter,
-            Config::default(),
-            TerminalMode::Mixed,
-            ColorChoice::Auto,
-        ),
-        WriteLogger::new(filter, Config::default(), log_file),
-    ])?;
+    tracing::subscriber::set_global_default(subscriber).context("failed to register subscriber")?;
 
     Ok(())
 }
@@ -75,5 +72,5 @@ pub fn open_gale_log() -> util::cmd::Result<()> {
 
 #[command]
 pub fn log_err(msg: String) {
-    log::error!("{}", msg);
+    tracing::error!("{}", msg);
 }

@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{Context, Result};
-use log::warn;
+use tracing::warn;
 use walkdir::WalkDir;
 use zip::ZipArchive;
 

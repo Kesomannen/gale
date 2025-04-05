@@ -6,7 +6,7 @@ use std::{
 
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
-use log::info;
+use tracing::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
 use uuid::Uuid;

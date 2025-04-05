@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{bail, ensure, Context, Result};
-use log::{debug, info, warn};
+use tracing::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 

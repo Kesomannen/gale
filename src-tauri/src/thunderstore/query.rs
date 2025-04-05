@@ -2,7 +2,7 @@ use std::{cmp::Ordering, collections::HashSet, time::Duration};
 
 use eyre::Result;
 use itertools::Itertools;
-use log::info;
+use tracing::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
 
