@@ -121,6 +121,7 @@ impl Cli {
 async fn install_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     profile::import::import_local_mod(
         path,
+        None,
         app,
         InstallOptions::default().on_progress(Box::new(|progress, _| {
             info!(

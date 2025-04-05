@@ -3,7 +3,8 @@ use log::{debug, warn};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
-    logger, profile,
+    logger,
+    profile::{self},
     state::ManagerExt,
     thunderstore::{BorrowedMod, IntoFrontendMod, Thunderstore},
 };

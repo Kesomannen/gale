@@ -66,7 +66,7 @@
 		});
 
 		if (path === null) return;
-		let data = await invokeCommand<ImportData>('import_file', { path });
+		let data = await invokeCommand<ImportData>('read_profile_file', { path });
 		importProfilePopup.openFor(data);
 	}
 
@@ -192,18 +192,19 @@
 		}
 
 		if (file === null) return;
-		if (!file.name.endsWith('.r2z')) {
-			pushToast({
-				type: 'error',
-				name: 'Failed to import file',
-				message: 'Profile must have the .r2z extension.'
-			});
-			return;
-		}
-
 		let base64 = await fileToBase64(file);
-		let data = await invokeCommand<ImportData>('import_base64', { base64 });
-		importProfilePopup.openFor(data);
+
+		if (file.name.endsWith('.r2z')) {
+			let data = await invokeCommand<ImportData>('read_profile_base64', { base64 });
+			importProfilePopup.openFor(data);
+		} else if (file.name.endsWith('.zip')) {
+			await invokeCommand('import_local_mod_base64', { base64 });
+			await refreshProfiles();
+
+			pushInfoToast({
+				message: 'Imported local mod into profile.'
+			});
+		}
 	}
 
 	const hotkeys: { [key: string]: () => void } = {
@@ -233,12 +234,6 @@
 	on:dragenter={(evt) => evt.preventDefault()}
 	on:dragover={(evt) => evt.preventDefault()}
 	on:drop={handleFileDrop}
-	on:contextmenu={(evt) => {
-		// hide context menu in release builds
-		if (window.location.hostname === 'tauri.localhost') {
-			evt.preventDefault();
-		}
-	}}
 />
 
 <header data-tauri-drag-region class="bg-primary-800 flex h-8 shrink-0">

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.6 (2025-04-01)
+
+### Added
+
+- Local mod drag and drop
+- Support for Schedule I
+
+### Fixed
+
+- Compatibility with r2modman on subdirs with differing cases
+
+## 1.5.5 (2025-03-28)
+
+### Fixed
+
+- Some config files freezing the app when opened
+
 ## 1.5.4 (2025-03-27)
 
 ### Added

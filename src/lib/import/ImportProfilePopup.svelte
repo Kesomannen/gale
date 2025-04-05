@@ -53,7 +53,7 @@
 	async function submitKey() {
 		loading = true;
 		try {
-			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
+			data = await invokeCommand<ImportData>('read_profile_code', { key: key.trim() });
 			await openFor(data);
 		} finally {
 			loading = false;
@@ -71,7 +71,7 @@
 			if (!confirmed) return;
 		}
 
-		invokeCommand('import_data', { data, importAll }).then(refreshProfiles);
+		invokeCommand('import_profile', { data, importAll }).then(refreshProfiles);
 		data = null;
 		importAll = false;
 		open = false;

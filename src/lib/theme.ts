@@ -320,6 +320,8 @@ export function setColor(category: ColorCategory, color: Color) {
 		});
 
 		shades = palette['main'];
+
+		console.log(shades);
 	}
 
 	for (const [shade, value] of Object.entries(shades)) {
