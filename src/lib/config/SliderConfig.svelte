@@ -128,7 +128,7 @@
 
 		inputString = content.value.toString();
 	}}
-	class="focus:ring-accent-400 bg-primary-900 text-primary-300 placeholder-primary-400 hover:border-primary-500 hover:text-primary-200 ml-3 w-1/6 min-w-0 shrink rounded-lg border border-transparent px-3 py-1 focus:border-transparent focus:ring-2 focus:outline-hidden"
+	class="focus:ring-accent-500 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 hover:ring-1 focus:ring-2 focus:outline-hidden"
 />
 <ResetConfigButton {entryId} {onReset} />
 

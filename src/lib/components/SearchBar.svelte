@@ -10,7 +10,7 @@
 
 <input
 	type="text"
-	class="w-full rounded-lg px-10 py-1.5 bg-primary-{brightness} valid:focus:ring-accent-400 text-primary-300 placeholder-primary-400 hover:border-primary-500 truncate border border-transparent invalid:ring-red-500 focus:ring-2 focus:outline-hidden text-{size}"
+	class="w-full rounded-lg px-10 py-1.5 bg-primary-{brightness} valid:focus:ring-accent-500 text-primary-300 placeholder-primary-400 hover:ring-primary-500 truncate invalid:ring-red-500 hover:ring-1 focus:ring-2 focus:outline-hidden text-{size}"
 	bind:value
 	on:keydown
 	{placeholder}
