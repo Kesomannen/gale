@@ -6,10 +6,11 @@ use std::{
 
 use eyre::{Context, Result};
 use include_dir::include_dir;
-use tracing::info;
 use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
+use tracing::info;
+use tracing::{debug, info, trace};
 use uuid::Uuid;
 
 use crate::{
@@ -45,9 +46,15 @@ pub fn init() -> Result<(Db, bool)> {
     conn.pragma_update(None, "synchronous", "normal")
         .context("failed to set synchronous mode")?;
 
+    conn.trace(Some(trace_stmt));
+
     run_migrations(&mut conn).context("failed to run migrations")?;
 
     Ok((Db(Mutex::new(conn)), existed))
+}
+
+fn trace_stmt(stmt: &str) {
+    trace!("{stmt}");
 }
 
 static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migrations");
