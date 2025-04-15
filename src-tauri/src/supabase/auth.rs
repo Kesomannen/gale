@@ -1,39 +1,21 @@
-use std::{collections::HashMap, fmt::Display, sync::Mutex, time::Duration};
+use std::{collections::HashMap, fmt::Display, time::Duration};
 
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use chrono::{DateTime, Utc};
 use eyre::{eyre, Context, OptionExt, Result};
-use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tauri::{AppHandle, Manager};
 use tauri_plugin_oauth::OauthConfig;
 use tokio::sync::mpsc;
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
-use crate::util::{self, fs::JsonStyle};
-
-pub fn setup(app: &AppHandle) -> Result<()> {
-    let auth_state = AuthState::read().unwrap_or_else(|_| {
-        warn!("failed to read auth state, using default");
-        AuthState::default()
-    });
-
-    app.manage(Mutex::new(auth_state));
-
-    Ok(())
-}
-
-#[derive(Debug, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase", transparent)]
-pub struct AuthState {
-    #[serde(rename = "auth")]
-    inner: Option<AuthStateInner>,
-}
+use crate::state::ManagerExt;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct AuthStateInner {
+pub struct AuthState {
     user: User,
     access_token: String,
     token_expiry: i64,
@@ -50,20 +32,6 @@ pub struct User {
 }
 
 impl AuthState {
-    fn read() -> Result<Self> {
-        let path = util::path::default_app_data_dir().join("auth.json");
-        util::fs::read_json(path)
-    }
-
-    fn set(&mut self, inner: Option<AuthStateInner>) -> Result<()> {
-        self.inner = inner;
-
-        let path = util::path::default_app_data_dir().join("auth.json");
-        util::fs::write_json(path, self, JsonStyle::Pretty).context("failed to write to file")
-    }
-}
-
-impl AuthStateInner {
     fn from_jwt(access_token: String, refresh_token: String) -> Result<Self> {
         let JwtPayload {
             exp,
@@ -103,7 +71,7 @@ impl Display for OAuthProvider {
     }
 }
 
-pub async fn login_with_oauth(provider: OAuthProvider, app: AppHandle) -> Result<User> {
+pub async fn login_with_oauth(provider: OAuthProvider, app: &AppHandle) -> Result<User> {
     let url = format!(
         "{}/auth/v1/authorize?provider={}&scopes=identify",
         super::PROJECT_URL,
@@ -117,25 +85,14 @@ pub async fn login_with_oauth(provider: OAuthProvider, app: AppHandle) -> Result
 
     app.get_window("main").unwrap().set_focus().ok();
 
-    let state =
-        AuthStateInner::from_jwt(access_token, refresh_token).context("failed to save state")?;
+    let state = AuthState::from_jwt(access_token, refresh_token).context("failed to save state")?;
     let user = state.user.clone();
 
     info!("logged in as {} with {}", user.name, provider);
 
-    let auth_state = app.state::<Mutex<AuthState>>();
-    let mut auth_state = auth_state.lock().unwrap();
-
-    auth_state.set(Some(state))?;
+    *app.lock_auth() = Some(state);
 
     Ok(user)
-}
-
-pub async fn logout(app: AppHandle) -> Result<()> {
-    let state = app.state::<Mutex<AuthState>>();
-    let mut state = state.lock().unwrap();
-
-    state.set(None)
 }
 
 async fn run_oauth_server() -> Result<(String, String)> {
@@ -215,14 +172,7 @@ fn decode_jwt(token: &str) -> Result<JwtPayload> {
 }
 
 pub fn user_info(app: &AppHandle) -> Option<User> {
-    let state = app.state::<Mutex<AuthState>>();
-    let user = state
-        .lock()
-        .unwrap()
-        .inner
-        .as_ref()
-        .map(|inner| inner.user.clone());
-    user
+    app.lock_auth().as_ref().map(|state| state.user.clone())
 }
 
 #[derive(Debug, Deserialize)]
@@ -232,22 +182,20 @@ struct TokenResponse {
 }
 
 pub async fn access_token(app: &AppHandle) -> Option<String> {
-    let state = app.state::<Mutex<AuthState>>();
-
     let refresh_token = {
-        let state = state.lock().unwrap();
-        let inner = state.inner.as_ref()?;
+        let auth = app.lock_auth();
+        let state = auth.as_ref()?;
 
-        let Some(expiry) = DateTime::from_timestamp(inner.token_expiry, 0) else {
+        let Some(expiry) = DateTime::from_timestamp(state.token_expiry, 0) else {
             warn!("token expiry date is invalid");
             return None;
         };
 
         if Utc::now() < expiry {
-            return Some(inner.access_token.clone());
+            return Some(state.access_token.clone());
         }
 
-        inner.refresh_token.clone()
+        state.refresh_token.clone()
     };
 
     match request_token(refresh_token, app).await {
@@ -272,14 +220,9 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
         .json()
         .await?;
 
-    let state = AuthStateInner::from_jwt(response.access_token.clone(), response.refresh_token)?;
+    let state = AuthState::from_jwt(response.access_token.clone(), response.refresh_token)?;
 
-    let auth_state = app.state::<Mutex<AuthState>>();
-    let mut auth_state = auth_state.lock().unwrap();
-
-    auth_state
-        .set(Some(state))
-        .context("failed to save state")?;
+    *app.lock_auth() = Some(state);
 
     Ok(response.access_token)
 }

@@ -6,9 +6,9 @@ use std::{
 
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
-use tracing::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
+use tracing::info;
 use uuid::Uuid;
 
 use super::{
@@ -289,6 +289,7 @@ impl ManagedGame {
             config_cache: ConfigCache::default(),
             linked_config: HashMap::new(),
             modpack: None,
+            sync_data: None,
         });
 
         self.active_profile_id = id;

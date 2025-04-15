@@ -1,0 +1,4 @@
+CREATE TABLE auth (
+    id INTEGER PRIMARY KEY NOT NULL,
+    data JSON
+);

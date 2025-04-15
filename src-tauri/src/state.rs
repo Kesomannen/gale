@@ -7,15 +7,17 @@ use crate::{
     db::{self, Db},
     prefs::Prefs,
     profile::{self, ModManager},
+    supabase::auth::AuthState,
     thunderstore::{self, Thunderstore},
 };
 
 pub struct AppState {
     pub http: reqwest::Client,
-    prefs: Mutex<Prefs>,
-    manager: Mutex<ModManager>,
-    thunderstore: Mutex<Thunderstore>,
+    pub prefs: Mutex<Prefs>,
+    pub manager: Mutex<ModManager>,
+    pub thunderstore: Mutex<Thunderstore>,
     pub db: Db,
+    pub auth: Mutex<Option<AuthState>>,
     pub cancel_install_flag: AtomicBool,
     pub is_first_run: bool,
 }
@@ -32,6 +34,10 @@ impl AppState {
     pub fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.thunderstore.lock().unwrap()
     }
+
+    pub fn lock_auth(&self) -> MutexGuard<'_, Option<AuthState>> {
+        self.auth.lock().unwrap()
+    }
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {
@@ -42,7 +48,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
 
     let (db, db_existed) = db::init().context("failed to init database")?;
 
-    let (data, mut prefs, migrated) = db.read()?;
+    let (data, mut prefs, auth, migrated) = db.read()?;
 
     prefs.init(&db, app).context("failed to init prefs")?;
 
@@ -55,6 +61,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         prefs: Mutex::new(prefs),
         manager: Mutex::new(manager),
         thunderstore: Mutex::new(thunderstore),
+        auth: Mutex::new(auth),
         cancel_install_flag: AtomicBool::new(false),
         is_first_run: !db_existed && !migrated,
     };
@@ -83,6 +90,10 @@ pub trait ManagerExt<R> {
 
     fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.app_state().lock_thunderstore()
+    }
+
+    fn lock_auth(&self) -> MutexGuard<'_, Option<AuthState>> {
+        self.app_state().lock_auth()
     }
 
     fn db(&self) -> &Db {

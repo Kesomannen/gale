@@ -1,18 +1,16 @@
 use std::{borrow::Cow, collections::HashMap, fmt::Display};
 
-use eyre::{Context, OptionExt, Result};
+use eyre::{OptionExt, Result};
 use reqwest::Body;
 use serde::{de::DeserializeOwned, Serialize};
 use tauri::{
     http::{HeaderMap, HeaderValue},
-    AppHandle, Manager,
+    AppHandle,
 };
 
-use crate::NetworkClient;
+use crate::state::ManagerExt;
 
-mod auth;
-pub use auth::{login_with_oauth, logout, user_info, OAuthProvider};
-
+pub mod auth;
 pub mod commands;
 
 const PROJECT_URL: &str = "https://phpkxfkbquscgqvhtuuv.supabase.co";
@@ -78,11 +76,10 @@ impl RequestBuilder {
     }
 
     pub async fn send_raw_no_auth(self, app: &AppHandle) -> Result<reqwest::Response> {
-        let client = &app.state::<NetworkClient>().0;
-
+        let http = app.http();
         let url = format!("{}{}", PROJECT_URL, self.path);
 
-        let mut request = client
+        let mut request = http
             .request(self.method, url)
             .header("Prefer", "return=representation")
             .header("apikey", ANON_KEY)
@@ -135,10 +132,4 @@ impl RequestBuilder {
             .await?
             .ok_or_eyre("expected at least one result, got zero")
     }
-}
-
-pub fn setup(app: &AppHandle) -> Result<()> {
-    auth::setup(app).context("failed to initialze auth")?;
-
-    Ok(())
 }

@@ -473,6 +473,7 @@ impl ModManager {
                 ignored_updates: saved_profile.ignored_updates.unwrap_or_default(),
                 config_cache: ConfigCache::default(),
                 linked_config: HashMap::new(),
+                sync_data: saved_profile.sync_data,
             };
 
             games.get_mut(game).unwrap().profiles.push(profile);

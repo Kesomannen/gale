@@ -1,18 +1,14 @@
-use std::{io::Cursor, sync::Mutex, time::Duration};
+use std::io::Cursor;
 
 use chrono::{DateTime, Utc};
 use eyre::{bail, Context, ContextCompat, OptionExt, Result};
-use log::debug;
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
+use tracing::debug;
 use uuid::Uuid;
 
-use crate::{
-    prefs::Prefs,
-    profile::{install::InstallOptions, ModManager},
-    supabase,
-};
+use crate::{profile::install::InstallOptions, state::ManagerExt, supabase};
 
 pub mod commands;
 
@@ -73,19 +69,19 @@ pub struct UploadResponse {
 }
 
 async fn create_profile(app: &AppHandle) -> Result<Uuid> {
-    let manager = app.state::<Mutex<ModManager>>();
-
     let (name, bytes) = {
-        let manager = manager.lock().unwrap();
-        let profile = manager.active_profile();
+        let manager = app.lock_manager();
+        let game = manager.active_game();
+        let profile = game.active_profile();
 
         let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(&profile, &mut bytes).context("failed to export profile")?;
+        super::export::export_zip(&profile, &mut bytes, game.game)
+            .context("failed to export profile")?;
 
         (profile.name.clone(), bytes.into_inner())
     };
 
-    let Some(user) = supabase::user_info(app) else {
+    let Some(user) = supabase::auth::user_info(app) else {
         bail!("not logged in");
     };
 
@@ -106,25 +102,22 @@ async fn create_profile(app: &AppHandle) -> Result<Uuid> {
 
     debug!("uploaded profile: {:?}", response);
 
-    let mut manager = manager.lock().unwrap();
-    let profile = manager.active_profile_mut();
+    {
+        let mut manager = app.lock_manager();
+        let profile = manager.active_profile_mut();
 
-    profile.sync_data = Some(sync_profile.into());
-
-    let prefs = app.state::<Mutex<Prefs>>();
-    let prefs = prefs.lock().unwrap();
-
-    manager.save(&prefs)?;
+        profile.sync_data = Some(sync_profile.into());
+        profile.save(app.db())?;
+    }
 
     Ok(id)
 }
 
 async fn push_profile(app: &AppHandle) -> Result<()> {
-    let manager = app.state::<Mutex<ModManager>>();
-
     let (id, bytes) = {
-        let manager = manager.lock().unwrap();
-        let profile = manager.active_profile();
+        let manager = app.lock_manager();
+        let game = manager.active_game();
+        let profile = game.active_profile();
 
         let id = profile
             .sync_data
@@ -133,7 +126,8 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
             .ok_or_eyre("profile is not synced")?;
 
         let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(&profile, &mut bytes).context("failed to export profile")?;
+        super::export::export_zip(&profile, &mut bytes, game.game)
+            .context("failed to export profile")?;
 
         (id, bytes.into_inner())
     };
@@ -154,17 +148,14 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
     debug!("uploaded profile: {:?}", response);
 
     {
-        let mut manager = manager.lock().unwrap();
+        let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
         let sync_data = profile.sync_data.as_mut().unwrap();
 
         sync_data.last_synced = updated_at;
         sync_data.last_updated_by_owner = updated_at;
 
-        let prefs = app.state::<Mutex<Prefs>>();
-        let prefs = prefs.lock().unwrap();
-
-        manager.save(&prefs)?;
+        profile.save(&app.db())?;
     };
 
     Ok(())
@@ -191,10 +182,8 @@ async fn clone_profile(id: Uuid, app: &AppHandle) -> Result<()> {
 }
 
 async fn pull_profile(app: &AppHandle) -> Result<()> {
-    let manager = app.state::<Mutex<ModManager>>();
-
     let (name, id, last_synced) = {
-        let mut manager = manager.lock().unwrap();
+        let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
         match &profile.sync_data {
@@ -213,13 +202,11 @@ async fn pull_profile(app: &AppHandle) -> Result<()> {
 }
 
 async fn fetch_profile(app: &AppHandle) -> Result<()> {
-    let manager = app.state::<Mutex<ModManager>>();
-
     let id = {
-        let manager = manager.lock().unwrap();
-        let profile = manager.active_profile();
+        let manager = app.lock_manager();
 
-        profile
+        manager
+            .active_profile()
             .sync_data
             .as_ref()
             .map(|data| data.id)
@@ -230,8 +217,7 @@ async fn fetch_profile(app: &AppHandle) -> Result<()> {
         .await
         .map(|profile| profile.updated_at)?;
 
-    let mut manager = manager.lock().unwrap();
-    manager
+    app.lock_manager()
         .active_profile_mut()
         .sync_data
         .as_mut()
@@ -256,29 +242,31 @@ async fn download_and_import_file(
         .context("error while downloading profile")?;
 
     let mut data =
-        super::import::import_file(Cursor::new(bytes), app).context("failed to import profile")?;
+        super::import::read_file(Cursor::new(bytes), app).context("failed to import profile")?;
 
     data.name = name.clone();
 
-    super::import::import_data(data, InstallOptions::default(), false, app)
+    super::import::import_profile(data, InstallOptions::default(), false, app)
         .await
         .context("failed to import profile")?;
 
     // import_data deletes and recreates the profile, so we need to set sync_data again
-    let manager = app.state::<Mutex<ModManager>>();
-    let mut manager = manager.lock().unwrap();
+    {
+        let mut manager = app.lock_manager();
 
-    let game = manager.active_game_mut();
-    let index = game.profile_index(&name).context("profile not found")?;
+        let game = manager.active_game_mut();
+        let index = game.profile_index(&name).context("profile not found")?;
+        let profile = &mut game.profiles[index];
 
-    let mut sync_data: ProfileData = sync_profile.into();
-    sync_data.last_synced = Utc::now();
-    game.profiles[index].sync_data = Some(sync_data);
+        let mut sync_data: ProfileData = sync_profile.into();
+        sync_data.last_synced = Utc::now();
+        profile.sync_data = Some(sync_data);
 
-    let prefs = app.state::<Mutex<Prefs>>();
-    let prefs = prefs.lock().unwrap();
+        profile.save(app.db())?;
+        game.save(app.db())?;
+    }
 
-    manager.save(&prefs)
+    Ok(())
 }
 
 async fn get_profile(id: Uuid, app: &AppHandle) -> Result<SyncProfile> {

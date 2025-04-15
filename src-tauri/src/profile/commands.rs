@@ -10,6 +10,7 @@ use uuid::Uuid;
 use super::{actions::ActionResult, Dependant, Profile};
 use crate::{
     game::{self, Game, Platform},
+    profile::{self},
     state::ManagerExt,
     thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
     util::cmd::Result,
@@ -106,7 +107,7 @@ pub struct ProfileInfo {
     id: i64,
     name: String,
     mod_count: usize,
-    sync: Option<sync::ProfileData>,
+    sync: Option<profile::sync::ProfileData>,
 }
 
 #[command]

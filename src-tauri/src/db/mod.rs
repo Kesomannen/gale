@@ -6,15 +6,16 @@ use std::{
 
 use eyre::{Context, Result};
 use include_dir::include_dir;
-use tracing::info;
 use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::{
     prefs::Prefs,
     profile::{self, ManagedGame, ModManager, Profile},
+    supabase::auth::AuthState,
     util,
 };
 
@@ -103,6 +104,7 @@ pub struct ProfileData {
     pub mods: Vec<profile::ProfileMod>,
     pub modpack: Option<profile::export::modpack::ModpackArgs>,
     pub ignored_updates: Option<HashSet<Uuid>>,
+    pub sync_data: Option<profile::sync::ProfileData>,
 }
 
 pub struct SaveData {
@@ -164,7 +166,18 @@ impl Db {
         })
     }
 
-    pub fn read(&self) -> Result<(SaveData, Prefs, bool)> {
+    pub fn save_auth(&self, auth: Option<&AuthState>) -> Result<()> {
+        self.with_transaction(|tx| {
+            let json = auth.map(serde_json::to_string).transpose()?;
+
+            tx.prepare("INSERT OR REPLACE INTO auth (id, data) VALUES (?, ?)")?
+                .execute(params![1, json])?;
+
+            Ok(())
+        })
+    }
+
+    pub fn read(&self) -> Result<(SaveData, Prefs, Option<AuthState>, bool)> {
         if migrate::should_migrate() {
             let (data, prefs, user_id) =
                 migrate::migrate().context("failed to migrate legacy save data")?;
@@ -173,7 +186,7 @@ impl Db {
                 self.save_user_id(user_id).ok();
             }
 
-            return Ok((data, prefs, true));
+            return Ok((data, prefs, None, true));
         }
 
         let conn = self.conn();
@@ -206,7 +219,7 @@ impl Db {
 
         let profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates FROM profiles",
+                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data FROM profiles",
             )?
             .query_map((), |row| {
                 Ok(ProfileData {
@@ -217,6 +230,7 @@ impl Db {
                     mods: map_json_row(row, 4)?,
                     modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_option_row(row, 6)?,
+                    sync_data: map_json_option_row(row, 7)?
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
@@ -227,6 +241,11 @@ impl Db {
             .optional()?
             .unwrap_or_default();
 
+        let auth_state = conn
+            .prepare("SELECT data FROM auth")?
+            .query_row((), |row| map_json_row(row, 0))
+            .optional()?;
+
         Ok((
             SaveData {
                 manager,
@@ -234,6 +253,7 @@ impl Db {
                 profiles,
             },
             prefs,
+            auth_state,
             false,
         ))
     }
