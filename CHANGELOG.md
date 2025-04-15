@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.8 (2025-04-15)
+
+### Fixed
+
+- Mod fetching causing a crash in some communities
+
 ## 1.5.7 (2025-04-15)
 
 ### Added
