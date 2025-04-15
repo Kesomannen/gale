@@ -119,7 +119,7 @@ pub(super) async fn fetch_packages(
         byte_buffer.clear();
 
         // hacky solution to find the end of every package but what can you do
-        while let Some(index) = str_buffer.find("}]}") {
+        while let Some(index) = str_buffer.find("}]},") {
             let (json, _) = str_buffer.split_at(index + 3);
 
             match serde_json::from_str::<PackageListing>(json) {
