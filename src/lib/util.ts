@@ -137,3 +137,7 @@ export function fileToBase64(file: File): Promise<string> {
 		reader.onerror = (error) => reject(error);
 	});
 }
+
+export function isValidHex(str: string) {
+	return /^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(str);
+}

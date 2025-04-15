@@ -11,6 +11,6 @@ where
     E: std::error::Error + Send + Sync + 'static,
 {
     fn fs_context(self, op: &str, path: &Path) -> eyre::Result<T> {
-        self.with_context(|| format!("error while {} (at {})", op, path.display()))
+        self.with_context(|| format!("error {} (at {})", op, path.display()))
     }
 }

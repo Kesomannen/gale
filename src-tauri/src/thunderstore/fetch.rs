@@ -85,8 +85,9 @@ pub(super) async fn fetch_packages(
     const INSERT_EVERY: usize = 1000;
 
     debug!(
-        "fetching packages for {}, write_directly: {}",
-        game.slug, write_directly
+        write_directly,
+        game = game.slug.to_string(),
+        "fetching packages"
     );
 
     let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.slug);

@@ -314,14 +314,13 @@ export function setColor(category: ColorCategory, color: Color) {
 	if (color.type === 'default') {
 		shades = defaultColors[color.name];
 	} else {
+		console.log(color.hex);
 		let palette = getPalette({
 			color: color.hex,
 			name: 'main'
 		});
 
 		shades = palette['main'];
-
-		console.log(shades);
 	}
 
 	for (const [shade, value] of Object.entries(shades)) {

@@ -1,7 +1,7 @@
 use eyre::Result;
-use tracing::{debug, error, info, warn};
 use serde_json::json;
 use tauri::AppHandle;
+use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
 use crate::state::ManagerExt;
@@ -15,19 +15,17 @@ pub async fn send_app_start_event(app: AppHandle) {
         return;
     }
 
-    debug!("sending app_start telemetry event");
-
     let user_id = match app.db().user_id() {
-        Ok(Some(user_id)) => {
-            debug!("user_id: {:?}", user_id);
-            user_id
-        }
+        Ok(Some(user_id)) => user_id,
         Ok(None) => {
             info!("user id does not exist, creating new");
+
             let user_id = Uuid::new_v4();
+
             app.db().save_user_id(user_id).unwrap_or_else(|err| {
                 warn!("failed to save user id to database: {:#}", err);
             });
+
             user_id
         }
         Err(err) => {
@@ -35,6 +33,11 @@ pub async fn send_app_start_event(app: AppHandle) {
             return;
         }
     };
+
+    debug!(
+        user_id = user_id.to_string(),
+        "sending app_start telemetry event"
+    );
 
     let url = format!("{}/rest/v1/rpc/send_event", PROJECT_URL);
 

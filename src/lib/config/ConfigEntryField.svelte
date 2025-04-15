@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { sentenceCase } from '$lib/util';
-	import Tooltip from '$lib/components/Tooltip.svelte';
+	import { isValidHex, sentenceCase } from '$lib/util';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import StringConfig from './StringConfig.svelte';
 	import EnumConfig from './EnumConfig.svelte';
@@ -10,6 +9,7 @@
 	import NumberInputConfig from './NumberInputConfig.svelte';
 	import { isNum } from '$lib/config';
 	import Info from '$lib/components/Info.svelte';
+	import ColorConfig from './ColorConfig.svelte';
 
 	export let entryId: ConfigEntryId;
 
@@ -86,7 +86,11 @@
 	</Info>
 
 	{#if value.type === 'string'}
-		<StringConfig {entryId} />
+		{#if isValidHex(value.content)}
+			<ColorConfig {entryId} />
+		{:else}
+			<StringConfig {entryId} />
+		{/if}
 	{:else if value.type === 'enum'}
 		<EnumConfig {entryId} />
 	{:else if value.type === 'flags'}

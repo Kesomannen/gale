@@ -1,4 +1,4 @@
-use std::{env, time::Instant};
+use std::env;
 
 use itertools::Itertools;
 use tauri::{App, AppHandle};
@@ -23,8 +23,6 @@ mod thunderstore;
 mod util;
 
 fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
-    let start = Instant::now();
-
     info!(
         "gale v{} running on {}",
         env!("CARGO_PKG_VERSION"),
@@ -32,7 +30,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     );
 
     if let Err(err) = state::setup(app.handle()) {
-        error!("failed to start app: {:#}", err);
+        error!("setup error: {:#}", err);
 
         app.dialog()
             .message(format!("Failed to launch Gale: {:#}", err))
@@ -55,7 +53,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle().to_owned();
     tauri::async_runtime::spawn(async move { telemetry::send_app_start_event(handle).await });
 
-    info!("setup done in {:?}", start.elapsed());
+    info!("setup done");
 
     Ok(())
 }

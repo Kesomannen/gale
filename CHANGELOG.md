@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Game information to exports, which lets Gale automatically select the correct game when importing profiles
+- Added mod icon to details menu
+- Color option editor for config hex codes
+
+### Fixed
+
+- Reworked CLI system to fix various bugs
+- Minor UI tweaks
+
 ## 1.5.6 (2025-04-01)
 
 ### Added

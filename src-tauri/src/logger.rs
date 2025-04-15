@@ -45,7 +45,11 @@ pub fn setup() -> Result<()> {
     let log_file = File::create(path).context("failed to create log file")?;
 
     let subscriber = Registry::default()
-        .with(tracing_subscriber::fmt::layer().with_ansi(true))
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_ansi(true)
+                .with_filter(LevelFilter::from_level(Level::DEBUG)),
+        )
         .with(
             tracing_subscriber::fmt::layer()
                 .compact()

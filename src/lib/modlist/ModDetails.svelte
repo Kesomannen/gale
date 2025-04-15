@@ -7,7 +7,13 @@
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 
 	import type { MarkdownResponse, Mod, ModContextItem } from '$lib/models';
-	import { communityUrl, shortenFileSize, shortenNum, timeSince } from '$lib/util';
+	import {
+		communityUrl,
+		shortenFileSize,
+		shortenNum,
+		thunderstoreIconUrl,
+		timeSince
+	} from '$lib/util';
 
 	import { Button, DropdownMenu } from 'bits-ui';
 
@@ -73,24 +79,34 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<a
-		class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
-		href={communityUrl(mod.author + '/' + mod.name)}
-		target="_blank">{mod.name.replace(/_/g, ' ')}</a
-	>
+	<div class="flex flex-wrap gap-4 xl:items-center">
+		<img
+			src={thunderstoreIconUrl(`${mod.author}-${mod.name}-${mod.version}`)}
+			class="max-h-30 max-w-30 rounded-lg"
+			alt=""
+		/>
 
-	{#if mod.author}
-		<div class="text-primary-300 text-xl xl:text-2xl">
-			By
-			<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
-				{mod.author}
-			</a>
+		<div>
+			<a
+				class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
+				href={communityUrl(`${mod.author}/${mod.name}`)}
+				target="_blank">{mod.name.replace(/_/g, ' ')}</a
+			>
+
+			{#if mod.author}
+				<div class="text-primary-300 text-xl xl:text-2xl">
+					By
+					<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
+						{mod.author}
+					</a>
+				</div>
+			{/if}
+
+			{#if mod.version}
+				<div class="text-primary-300 text-xl xl:text-2xl">v{mod.version}</div>
+			{/if}
 		</div>
-	{/if}
-
-	{#if mod.version}
-		<div class="text-primary-300 text-xl xl:text-2xl">v{mod.version}</div>
-	{/if}
+	</div>
 
 	<div class="flex flex-wrap gap-1">
 		{#if mod.isDeprecated}
@@ -109,7 +125,7 @@
 	</div>
 
 	{#if mod.categories}
-		<div class="my-2 flex flex-wrap gap-1">
+		<div class="mt-4 mb-1 flex flex-wrap gap-1">
 			{#each mod.categories as category}
 				<div class="bg-primary-600 text-primary-200 rounded-full px-4 py-1">
 					{category}
@@ -118,7 +134,7 @@
 		</div>
 	{/if}
 
-	<div class="my-1 flex items-center gap-1.5 text-lg">
+	<div class="mt-1 flex items-center gap-1.5 text-lg">
 		{#if mod.rating !== null}
 			<Icon class="shrink-0 text-yellow-400" icon="mdi:star" />
 			<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
@@ -132,7 +148,7 @@
 	</div>
 
 	{#if mod.lastUpdated !== null}
-		<div class="text-primary-400 text-lg">
+		<div class="text-primary-400 mt-1 text-lg">
 			Last updated {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}
