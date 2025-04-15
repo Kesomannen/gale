@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::{debug, warn};
+use tracing::{debug, warn};
 use zip::ZipArchive;
 
 use crate::util;

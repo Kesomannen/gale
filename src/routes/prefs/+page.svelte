@@ -11,11 +11,14 @@
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
-	import AccentColorPref from '$lib/prefs/AccentColorPref.svelte';
-	import LargeHeading from '$lib/prefs/LargeHeading.svelte';
-	import SmallHeading from '$lib/prefs/SmallHeading.svelte';
+	import LargePrefsHeading from '$lib/prefs/LargePrefsHeading.svelte';
+	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
+	//import ColorPref from '$lib/prefs/ColorPref.svelte';
+	import InputField from '$lib/components/InputField.svelte';
+	import { setColor } from '$lib/theme';
+	import ColorPref from '$lib/prefs/ColorPref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -88,19 +91,10 @@
 			location, use the <b>Override location</b> option further down.
 		</PathPref>
 
-		<PathPref
-			label="Steam library"
-			type="dir"
-			value={prefs.steamLibraryDir ?? null}
-			set={set((value, prefs) => (prefs.steamLibraryDir = value))}
-		>
-			Path to your default Steam game library. Used to automatically find the location of Steam
-			games.
-		</PathPref>
+		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
 
-		<SmallHeading>Appearance</SmallHeading>
-
-		<AccentColorPref />
+		<ColorPref category="primary" />
+		<ColorPref category="accent" />
 
 		<ZoomLevelPref
 			value={prefs.zoomFactor}

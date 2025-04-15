@@ -3,20 +3,21 @@ use std::{
     iter::FusedIterator,
     path::PathBuf,
     str::{self},
-    sync::Mutex,
     time::Instant,
 };
 
 use eyre::{eyre, Context, Result};
 use indexmap::IndexMap;
-use log::{debug, info};
+use query::QueryModsArgs;
 use serde::{Deserialize, Serialize};
-use tauri::{async_runtime::JoinHandle, AppHandle, Manager};
+use tauri::{async_runtime::JoinHandle, AppHandle};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use crate::{
     game::Game,
     profile::ModManager,
+    state::ManagerExt,
     util::{self, fs::JsonStyle},
 };
 
@@ -33,16 +34,10 @@ pub use models::*;
 mod ident;
 pub use ident::*;
 
-pub fn setup(app: &AppHandle) {
-    let manager = app.state::<Mutex<ModManager>>();
-    let manager = manager.lock().unwrap();
-
-    let mut thunderstore = Thunderstore::default();
-    thunderstore.switch_game(manager.active_game, app.clone());
-
-    app.manage(Mutex::new(thunderstore));
-
+pub fn start(app: &AppHandle) {
     query::setup(app);
+    app.lock_thunderstore()
+        .switch_game(app.lock_manager().active_game, app.clone());
 }
 
 /// A pair of a package and one of its versions.
@@ -120,6 +115,7 @@ pub struct Thunderstore {
     // IndexMap is not used for ordering here, but for fast iteration,
     // since we iterate over all mods when resolving identifiers and querying.
     packages: IndexMap<Uuid, PackageListing>,
+    current_query: Option<QueryModsArgs>,
 }
 
 impl Thunderstore {
@@ -194,10 +190,7 @@ impl Thunderstore {
 
     /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
     pub fn switch_game(&mut self, game: Game, app: AppHandle) {
-        info!("switching thunderstore registry to game {}", game.slug);
-
         if let Some(handle) = self.fetch_loop_handle.take() {
-            info!("aborting ongoing fetch");
             handle.abort();
         }
 
@@ -205,7 +198,7 @@ impl Thunderstore {
         self.packages_fetched = false;
         self.packages = IndexMap::new();
 
-        let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(app, game));
+        let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(game, app));
         self.fetch_loop_handle = Some(load_mods_handle);
     }
 }
@@ -279,7 +272,7 @@ pub fn read_cache(manager: &ModManager) -> Result<Option<Vec<PackageListing>>> {
     let result: Vec<PackageListing> =
         util::fs::read_json(path).context("failed to deserialize cache")?;
 
-    info!(
+    debug!(
         "read {} packages from cache in {:?}",
         result.len(),
         start.elapsed()

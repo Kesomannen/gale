@@ -2,29 +2,25 @@ use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
     path::PathBuf,
-    sync::Mutex,
 };
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, ensure, Context, OptionExt, Result};
+use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
-use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Listener, Manager};
+use tauri::AppHandle;
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{
     config::ConfigCache,
+    db::{self, Db},
     game::{self, Game, ModLoader},
-    logger,
     prefs::Prefs,
+    state::ManagerExt,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
-    util::{
-        self,
-        error::IoResultExt,
-        fs::{JsonStyle, PathExt},
-    },
+    util::fs::PathExt,
 };
 
 pub mod commands;
@@ -38,35 +34,14 @@ pub mod update;
 mod actions;
 mod query;
 
-pub fn setup(app: &AppHandle) -> Result<()> {
-    {
-        let prefs = app.state::<Mutex<Prefs>>();
-        let prefs = prefs.lock().unwrap();
+pub fn setup(data: db::SaveData, prefs: &Prefs, db: &Db, app: &AppHandle) -> Result<ModManager> {
+    actions::setup(app)?;
 
-        let manager = ModManager::create(&prefs)?;
-        app.manage(Mutex::new(manager));
-    }
-
-    install::setup(app).context("failed to initialize downloader")?;
-
-    let handle = app.to_owned();
-    app.listen("reorder_mod", move |event| {
-        if let Err(err) = actions::handle_reorder_event(event, &handle) {
-            logger::log_webview_err("Failed to reorder mod", err, &handle);
-        }
-    });
-
-    let handle = app.to_owned();
-    app.listen("finish_reorder", move |_| {
-        if let Err(err) = actions::handle_finish_reorder_event(&handle) {
-            logger::log_webview_err("Failed to finish reordering", err, &handle);
-        }
-    });
-
-    Ok(())
+    ModManager::create(data, prefs, db)
 }
 
 /// The main state of the app.
+#[derive(Debug)]
 pub struct ModManager {
     /// Holds all the currently managed games.
     ///
@@ -76,31 +51,20 @@ pub struct ModManager {
     pub active_game: Game,
 }
 
-/// Persistent data for ModManager
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ManagerSaveData {
-    active_game: String,
-}
-
 /// Stores profiles and other state for one game.
+#[derive(Debug)]
 pub struct ManagedGame {
+    pub id: i64,
     pub game: Game,
-    pub profiles: Vec<Profile>,
     pub path: PathBuf,
+    pub profiles: Vec<Profile>,
     pub favorite: bool,
-    pub active_profile_index: usize,
+    pub active_profile_id: i64,
 }
 
-/// Persistent data for ManagerGame
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ManagedGameSaveData {
-    favorite: bool,
-    active_profile_index: usize,
-}
-
+#[derive(Debug)]
 pub struct Profile {
+    pub id: i64,
     pub name: String,
     pub path: PathBuf,
     pub mods: Vec<ProfileMod>,
@@ -112,23 +76,7 @@ pub struct Profile {
     pub sync_data: Option<sync::ProfileData>,
 }
 
-/// Persistent data for Profile
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProfileSaveData {
-    mods: Vec<ProfileMod>,
-
-    #[serde(default)]
-    modpack: Option<ModpackArgs>,
-
-    #[serde(default)]
-    ignored_updates: HashSet<Uuid>,
-
-    #[serde(default)]
-    sync_data: Option<sync::ProfileData>,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileMod {
     pub enabled: bool,
@@ -140,7 +88,7 @@ pub struct ProfileMod {
     pub kind: ProfileModKind,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum ProfileModKind {
     Thunderstore(ThunderstoreMod),
@@ -148,14 +96,14 @@ pub enum ProfileModKind {
     Local(Box<LocalMod>),
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ThunderstoreMod {
     #[serde(rename = "fullName")]
-    ident: VersionIdent,
+    pub ident: VersionIdent,
 
     #[serde(flatten)]
-    id: ModId,
+    pub id: ModId,
 }
 
 impl ProfileMod {
@@ -272,20 +220,6 @@ impl ProfileModKind {
 }
 
 impl Profile {
-    fn new(name: String, path: PathBuf, game: Game) -> Self {
-        Self {
-            name,
-            path,
-            game,
-            mods: Vec::new(),
-            ignored_updates: HashSet::new(),
-            config_cache: ConfigCache::default(),
-            linked_config: HashMap::new(),
-            modpack: None,
-            sync_data: None,
-        }
-    }
-
     fn is_valid_name(name: &str) -> bool {
         const FORBIDDEN: &[char] = &['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
 
@@ -364,50 +298,8 @@ impl Profile {
             .ok_or_eyre("no log file found")
     }
 
-    fn load(mut path: PathBuf, game: Game) -> Result<Option<Self>> {
-        path.push("profile.json");
-
-        if !path.exists() {
-            warn!(
-                "profile directory at {} does not contain a manifest, skipping",
-                path.display()
-            );
-            return Ok(None);
-        }
-
-        let manifest: ProfileSaveData =
-            util::fs::read_json(&path).context("failed to read profile manifest")?;
-
-        path.pop();
-
-        let name = util::fs::file_name_owned(&path);
-
-        let profile = Self {
-            modpack: manifest.modpack,
-            mods: manifest.mods,
-            ignored_updates: manifest.ignored_updates,
-            sync_data: manifest.sync_data,
-            ..Self::new(name, path, game)
-        };
-
-        Ok(Some(profile))
-    }
-
-    fn save_data(&self) -> ProfileSaveData {
-        ProfileSaveData {
-            modpack: self.modpack.clone(),
-            mods: self.mods.clone(),
-            ignored_updates: self.ignored_updates.clone(),
-            sync_data: self.sync_data.clone(),
-        }
-    }
-
-    fn save_to(&self, path: &mut PathBuf) -> Result<()> {
-        path.push("profile.json");
-        util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
-        path.pop();
-
-        Ok(())
+    pub fn save(&self, db: &Db) -> Result<()> {
+        db.save_profile(self)
     }
 }
 
@@ -464,16 +356,6 @@ impl From<&ProfileMod> for Dependant {
 }
 
 impl ManagedGame {
-    fn new(path: PathBuf, game: Game) -> Self {
-        Self {
-            game,
-            path,
-            profiles: Vec::new(),
-            favorite: false,
-            active_profile_index: 0,
-        }
-    }
-
     pub fn profile_index(&self, name: &str) -> Option<usize> {
         self.profiles
             .iter()
@@ -486,12 +368,22 @@ impl ManagedGame {
             .ok_or_else(|| anyhow!("profile index {} is out of bounds", index))
     }
 
+    fn find_profile(&self, id: i64) -> Result<&Profile> {
+        self.profiles
+            .iter()
+            .find(|profile| profile.id == id)
+            .with_context(|| format!("profile with id {} not found", id))
+    }
+
     fn active_profile(&self) -> &Profile {
-        &self.profiles[self.active_profile_index]
+        self.find_profile(self.active_profile_id).unwrap()
     }
 
     fn active_profile_mut(&mut self) -> &mut Profile {
-        &mut self.profiles[self.active_profile_index]
+        self.profiles
+            .iter_mut()
+            .find(|profile| profile.id == self.active_profile_id)
+            .expect("active profile not found")
     }
 
     pub fn set_active_profile(&mut self, index: usize) -> Result<()> {
@@ -501,12 +393,7 @@ impl ManagedGame {
             index
         );
 
-        self.active_profile_index = index;
-
-        info!(
-            "set active profile for game {} to {} (index {})",
-            self.game.slug, self.profiles[index].name, index
-        );
+        self.active_profile_id = self.profiles[index].id;
 
         Ok(())
     }
@@ -525,142 +412,81 @@ impl ManagedGame {
         })
     }
 
-    fn load(mut path: PathBuf) -> Result<Option<(Game, Self)>> {
-        let file_name = util::fs::file_name_owned(&path);
-
-        let Some(game) = game::from_slug(&file_name) else {
-            info!(
-                "directory '{}' does not match any game, skipping",
-                file_name
-            );
-            return Ok(None);
-        };
-
-        path.push("game.json");
-
-        let data = util::fs::read_json::<ManagedGameSaveData>(&path)
-            .context("failed to read game save data")?;
-
-        path.pop();
-
-        path.push("profiles");
-
-        let mut profiles = Vec::new();
-
-        for entry in path
-            .read_dir()
-            .context("failed to read profiles directory")?
-        {
-            let path = entry.context("failed to read profile directory")?.path();
-
-            if path.is_dir() {
-                let result = Profile::load(path.clone(), game).with_context(|| {
-                    format!(
-                        "failed to load profile {}",
-                        path.file_name().unwrap().to_string_lossy()
-                    )
-                })?;
-
-                if let Some(profile) = result {
-                    profiles.push(profile);
-                }
-            }
-        }
-
-        profiles.sort_by(|a, b| a.name.cmp(&b.name));
-
-        path.pop();
-
-        let active_profile_index = data
-            .active_profile_index
-            .min(profiles.len().saturating_sub(1));
-
-        let result = Self {
-            game,
-            profiles,
-            path,
-            active_profile_index,
-            favorite: data.favorite,
-        };
-
-        Ok(Some((game, result)))
-    }
-
-    fn save_data(&self) -> ManagedGameSaveData {
-        ManagedGameSaveData {
-            favorite: self.favorite,
-            active_profile_index: self.active_profile_index,
-        }
-    }
-
-    fn save_to(&self, path: &mut PathBuf) -> Result<()> {
-        path.push("game.json");
-        util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
-        path.pop();
-
-        path.push("profiles");
-
-        for profile in &self.profiles {
-            path.push(&profile.name);
-            profile.save_to(path)?;
-            path.pop();
-        }
-
-        path.pop();
-
-        Ok(())
+    pub fn save(&self, db: &Db) -> Result<()> {
+        db.save_game(self)
     }
 }
 
 impl ModManager {
-    pub fn create(prefs: &Prefs) -> Result<Self> {
+    pub fn create(data: db::SaveData, prefs: &Prefs, db: &Db) -> Result<Self> {
         const DEFAULT_GAME_SLUG: &str = "among-us";
 
-        let path = prefs.data_dir.join("manager.json");
-        let save = match path.exists_or_none() {
-            Some(path) => util::fs::read_json(path).context("failed to read manager save data")?,
-            None => ManagerSaveData {
-                active_game: DEFAULT_GAME_SLUG.to_owned(),
-            },
-        };
+        let db::SaveData {
+            manager,
+            games,
+            profiles,
+        } = data;
 
-        let mut games = HashMap::new();
+        let path = prefs.data_dir.to_path_buf();
 
-        for entry in prefs
-            .data_dir
-            .read_dir()
-            .fs_context("reading data directory", &prefs.data_dir)?
-        {
-            let path = entry.context("failed to read data directory entry")?.path();
+        let mut games = games
+            .into_iter()
+            .map(|saved_game| {
+                let game = game::from_slug(&saved_game.slug).unwrap();
+                let managed_game = ManagedGame {
+                    id: saved_game.id,
+                    game,
+                    profiles: Vec::new(),
+                    favorite: saved_game.favorite,
+                    active_profile_id: saved_game.active_profile_id,
+                    path: path.join(&*game.slug),
+                };
 
-            if !path.is_dir() {
+                (game, managed_game)
+            })
+            .collect::<HashMap<_, _>>();
+
+        for saved_profile in profiles {
+            let path = PathBuf::from(saved_profile.path);
+
+            if !path.exists() {
+                warn!(
+                    "profile {} at {} does not exist anymore",
+                    saved_profile.name,
+                    path.display()
+                );
+                if let Err(err) = db.delete_profile(saved_profile.id) {
+                    warn!("failed to delete missing profile from database: {:#}", err);
+                }
                 continue;
             }
 
-            let result = ManagedGame::load(path.clone()).with_context(|| {
-                format!(
-                    "failed to load game {}",
-                    path.file_name().unwrap().to_string_lossy()
-                )
-            })?;
+            let game = game::from_slug(&saved_profile.game_slug).unwrap();
 
-            if let Some((game, manager_game)) = result {
-                debug!(
-                    "loaded game {} with {} profiles",
-                    game.slug,
-                    manager_game.profiles.len()
-                );
-                games.insert(game, manager_game);
-            }
+            let profile = Profile {
+                path,
+                game,
+                id: saved_profile.id,
+                name: saved_profile.name,
+                mods: saved_profile.mods,
+                modpack: saved_profile.modpack,
+                ignored_updates: saved_profile.ignored_updates.unwrap_or_default(),
+                config_cache: ConfigCache::default(),
+                linked_config: HashMap::new(),
+            };
+
+            games.get_mut(game).unwrap().profiles.push(profile);
         }
 
-        let active_game = game::from_slug(&save.active_game)
+        let active_game = manager
+            .active_game_slug
+            .and_then(|slug| game::from_slug(&slug))
             .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
 
         let mut manager = Self { games, active_game };
 
-        manager.ensure_game(manager.active_game, prefs)?;
-        manager.save(prefs)?;
+        manager.ensure_game(manager.active_game, prefs, db)?;
+        manager.save_all(db)?;
 
         Ok(manager)
     }
@@ -689,41 +515,62 @@ impl ModManager {
         self.active_game_mut().active_profile_mut()
     }
 
-    pub fn set_active_game(
-        &mut self,
-        game: Game,
-        thunderstore: &mut Thunderstore,
-        prefs: &Prefs,
-        app: AppHandle,
-    ) -> Result<()> {
-        self.ensure_game(game, prefs)?;
+    pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<()> {
+        self.ensure_game(game, &app.lock_prefs(), app.db())?;
 
         if self.active_game != game {
             self.active_game = game;
-            thunderstore.switch_game(game, app);
-        }
 
-        info!("set active game to {}", game.slug);
+            let mut thunderstore = app.lock_thunderstore();
+            thunderstore.switch_game(game, app.clone());
+        }
 
         Ok(())
     }
 
-    fn ensure_game<'a>(&'a mut self, game: Game, prefs: &Prefs) -> Result<&'a mut ManagedGame> {
+    fn ensure_game<'a>(
+        &'a mut self,
+        game: Game,
+        prefs: &Prefs,
+        db: &Db,
+    ) -> Result<&'a mut ManagedGame> {
         const DEFAULT_PROFILE_NAME: &str = "Default";
 
-        if self.games.contains_key(game) {
-            debug!("{} is already managed", game.slug);
-        } else {
+        if !self.games.contains_key(game) {
             info!("managing new game: {}", game.slug);
-            let path = prefs.data_dir.join(&*game.slug);
 
-            let mut managed_game = ManagedGame::new(path, game);
-            managed_game.create_profile(DEFAULT_PROFILE_NAME.to_owned())?;
+            let path = prefs.data_dir.join(&*game.slug);
+            let id = self.games.values().map(|game| game.id).max().unwrap_or(0) + 1;
+
+            let managed_game = ManagedGame {
+                id,
+                game,
+                path,
+                profiles: Vec::new(),
+                favorite: false,
+                active_profile_id: 0,
+            };
 
             self.games.insert(game, managed_game);
         }
 
-        Ok(self.games.get_mut(game).unwrap())
+        let managed = self.games.get_mut(game).unwrap();
+
+        if managed.profiles.is_empty() {
+            info!("creating default profile for {}", game.slug);
+
+            let default_profile = managed
+                .create_profile(DEFAULT_PROFILE_NAME.to_owned(), None, db)
+                .context("failed to create default profile")?;
+
+            managed.active_profile_id = default_profile.id;
+        } else if managed.find_profile(managed.active_profile_id).is_err() {
+            warn!("active profile was out of bounds, adjusting...");
+
+            managed.active_profile_id = managed.profiles[0].id;
+        }
+
+        Ok(managed)
     }
 
     fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
@@ -737,25 +584,15 @@ impl ModManager {
         thunderstore::write_cache(&packages, self)
     }
 
-    fn save_data(&self) -> ManagerSaveData {
-        ManagerSaveData {
-            active_game: self.active_game.slug.to_string(),
-        }
+    pub fn save_all(&self, db: &Db) -> Result<()> {
+        db.save_all(self)
     }
 
-    fn save(&self, prefs: &Prefs) -> Result<()> {
-        let mut path = prefs.data_dir.get().to_path_buf();
+    pub fn save_active_game(&self, db: &Db) -> Result<()> {
+        self.active_game().save(db)
+    }
 
-        path.push("manager.json");
-        util::fs::write_json(&path, &self.save_data(), JsonStyle::Pretty)?;
-        path.pop();
-
-        for (game, managed_game) in &self.games {
-            path.push(&*game.slug);
-            managed_game.save_to(&mut path)?;
-            path.pop();
-        }
-
-        Ok(())
+    pub fn save_active_profile(&self, db: &Db) -> Result<()> {
+        self.active_profile().save(db)
     }
 }

@@ -25,7 +25,7 @@
 	<img src="logo.png" alt="Logo" class="float-right size-20" />
 	<div>
 		<h3 class="text-xl font-semibold text-white">Gale</h3>
-		<p class="text-slate-300">
+		<p class="text-primary-300">
 			Version {version}
 			<br />
 			GNU General Public License v3.0
@@ -48,11 +48,15 @@
 			<Icon icon="mdi:discord" class="text-xl text-white" />
 			<Link href="https://discord.gg/sfuWXRfeTt">Discord</Link>
 		</div>
+		<div class="mt-1 flex items-center gap-2">
+			<Icon icon="mdi:heart" class="text-xl text-white" />
+			<Link href="https://ko-fi.com/kesomannen">Donate</Link>
+		</div>
 		<div class="mt-3 flex items-center gap-2">
 			<BigButton
 				on:click={() => refreshUpdate().then(() => (checkedUpdate = true))}
 				disabled={$isChecking}
-				color="slate"
+				color="primary"
 				class="mr-2"
 			>
 				<Icon icon="mdi:refresh" class="mr-2" />
@@ -60,14 +64,14 @@
 			>
 
 			{#if $isChecking}
-				<Icon icon="mdi:loading" class="animate-spin text-xl text-slate-400" />
-				<span class="text-slate-400">Checking for updates...</span>
+				<Icon icon="mdi:loading" class="text-primary-400 animate-spin text-xl" />
+				<span class="text-primary-400">Checking for updates...</span>
 			{:else if checkedUpdate}
 				{#if $nextUpdate === null}
-					<Icon icon="mdi:check" class="text-xl text-slate-300" />
-					<span class="text-slate-300">You are running the latest version</span>
+					<Icon icon="mdi:check" class="text-primary-300 text-xl" />
+					<span class="text-primary-300">You are running the latest version</span>
 				{:else}
-					<Icon icon="mdi:arrow-up-circle" class="inline text-xl text-accent-400" />
+					<Icon icon="mdi:arrow-up-circle" class="text-accent-400 inline text-xl" />
 					<span class="text-accent-400">New version available: {$nextUpdate?.version}</span>
 				{/if}
 			{/if}

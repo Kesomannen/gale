@@ -25,5 +25,5 @@
 		}
 	}}
 	on:change={() => dispatch('change', value)}
-	class="{className} valid:focus:ring-accent-500 disabled:cursor-not-alloweddisabled:text-slate-400 min-w-0 grow rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 invalid:ring-2 invalid:ring-red-500 focus:border-transparent focus:ring-2 focus:outline-hidden enabled:hover:border-slate-500 text-{size} placeholder:text-{size}"
+	class="{className} valid:focus:ring-accent-500 disabled:text-primary-400 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 min-w-0 grow rounded-lg px-3 py-1 invalid:ring-2 invalid:ring-red-500 hover:ring-1 focus:ring-2 focus:outline-hidden disabled:cursor-not-allowed text-{size} placeholder:text-{size}"
 />

@@ -1,12 +1,13 @@
 use std::{
     fs,
-    io::{Cursor, Read},
+    io::{Cursor, Read, Write},
     path::{Path, PathBuf},
-    sync::Mutex,
 };
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use eyre::{bail, ensure, Context, Result};
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
+use tempfile::NamedTempFile;
 use uuid::Uuid;
 use zip::ZipArchive;
 
@@ -15,38 +16,59 @@ use crate::{
     prefs::Prefs,
     profile::{
         install::{self, InstallOptions},
-        LocalMod, ModManager, Profile, ProfileMod,
+        LocalMod, Profile, ProfileMod,
     },
+    state::ManagerExt,
     thunderstore::PackageManifest,
     util::{self, fs::PathExt},
 };
 
-pub async fn import_local_mod(
-    path: PathBuf,
+pub async fn import_local_mod_base64(
+    base64: String,
     app: &AppHandle,
     options: InstallOptions,
 ) -> Result<()> {
-    let (mut local_mod, kind) = read_local_mod(&path)?;
+    let data = BASE64_STANDARD.decode(base64)?;
+
+    let mut file = NamedTempFile::new().context("failed to create temp file")?;
+    file.write_all(&data).context("failed to write temp file")?;
+
+    import_local_mod(
+        file.path().to_owned(),
+        Some(LocalModKind::Zip),
+        app,
+        options,
+    )
+    .await
+}
+
+pub async fn import_local_mod(
+    path: PathBuf,
+    override_kind: Option<LocalModKind>,
+    app: &AppHandle,
+    options: InstallOptions,
+) -> Result<()> {
+    let (mut local_mod, kind) = read_local_mod(&path, override_kind)?;
 
     if let Some(deps) = &local_mod.dependencies {
-        install::install_with_mods(options, app, |manager, thunderstore| {
+        let mods = {
+            let manager = app.lock_manager();
             let profile = manager.active_profile();
 
-            Ok(thunderstore
+            app.lock_thunderstore()
                 .dependencies(deps)
                 .filter(|dep| !profile.has_mod(dep.package.uuid))
                 .map(|borrowed| borrowed.into())
-                .collect::<Vec<_>>())
-        })
-        .await
-        .context("failed to install dependencies")?;
+                .collect::<Vec<_>>()
+        };
+
+        install::install_mods(mods, options, app)
+            .await
+            .context("failed to install dependencies")?;
     }
 
-    let manager = app.state::<Mutex<ModManager>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    let mut manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
+    let prefs = app.lock_prefs();
+    let mut manager = app.lock_manager();
 
     let mod_loader = manager.active_mod_loader();
     let profile = manager.active_profile_mut();
@@ -87,23 +109,27 @@ pub async fn import_local_mod(
 
     profile.mods.push(ProfileMod::new_local(local_mod));
 
-    manager.save(&prefs)?;
+    profile.save(app.db())?;
 
     Ok(())
 }
 
 #[derive(PartialEq, Eq)]
-enum LocalModKind {
+pub enum LocalModKind {
     Zip,
     Dll,
 }
 
-fn read_local_mod(path: &Path) -> Result<(LocalMod, LocalModKind)> {
+fn read_local_mod(
+    path: &Path,
+    override_kind: Option<LocalModKind>,
+) -> Result<(LocalMod, LocalModKind)> {
     ensure!(path.is_file(), "path is not a file");
 
-    let kind = match path.extension().and_then(|ext| ext.to_str()) {
-        Some("dll") => LocalModKind::Dll,
-        Some("zip") => LocalModKind::Zip,
+    let kind = match (override_kind, path.extension().and_then(|ext| ext.to_str())) {
+        (Some(kind), _) => kind,
+        (_, Some("dll")) => LocalModKind::Dll,
+        (_, Some("zip")) => LocalModKind::Zip,
         _ => bail!("unsupported file type"),
     };
 

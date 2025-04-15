@@ -1,89 +1,132 @@
-use std::{path::PathBuf, sync::Mutex};
+use std::{path::PathBuf, process};
 
-use eyre::{anyhow, Context, OptionExt, Result};
-use log::{error, info};
-use serde_json::Value;
-use tauri::{App, Manager};
-use tauri_plugin_cli::CliExt;
+use clap::Parser;
+use eyre::{Context, OptionExt, Result};
+use tauri::AppHandle;
+use tracing::{debug, error, info};
 
 use crate::{
     game::{self},
-    prefs::Prefs,
     profile::{self, install::InstallOptions, ModManager},
-    thunderstore::Thunderstore,
+    state::ManagerExt,
 };
 
-pub fn run(app: &App) -> Result<()> {
-    match app.cli().matches() {
-        Ok(matches) => {
-            if matches.args.is_empty() {
-                return Ok(());
-            }
+pub fn run(app: &AppHandle) {
+    Cli::parse().run(app).unwrap_or_else(|err| {
+        error!("failed to run cli: {:#}", err);
+    })
+}
 
-            let manager = app.state::<Mutex<ModManager>>();
-            let thunderstore = app.state::<Mutex<Thunderstore>>();
-            let prefs = app.state::<Mutex<Prefs>>();
+pub fn run_from(app: &AppHandle, args: Vec<String>) {
+    Cli::parse_from(args).run(app).unwrap_or_else(|err| {
+        error!("failed to run cli: {:#}", err);
+    })
+}
 
-            let mut manager = manager.lock().unwrap();
-            let mut thunderstore = thunderstore.lock().unwrap();
-            let prefs = prefs.lock().unwrap();
+#[derive(Debug, Parser)]
+#[command(version)]
+struct Cli {
+    #[arg(short, long, value_name = "SLUG")]
+    game: Option<String>,
 
-            if let Some(Value::String(slug)) = matches.args.get("game").map(|arg| &arg.value) {
-                let game = game::from_slug(slug).ok_or_eyre("unknown game id")?;
+    #[arg(short, long, value_name = "NAME")]
+    profile: Option<String>,
 
-                manager
-                    .set_active_game(game, &mut thunderstore, &prefs, app.handle().clone())
-                    .context("failed to set game")?;
-            }
+    #[arg(short, long, value_name = "PATH")]
+    install: Option<PathBuf>,
 
-            if let Some(Value::String(profile)) = matches.args.get("profile").map(|arg| &arg.value)
-            {
-                let game = manager.active_game_mut();
+    #[arg(short, long)]
+    launch: bool,
 
-                let index = game.profile_index(profile).ok_or_eyre("unknown profile")?;
+    #[arg(long)]
+    no_gui: bool,
+}
 
-                game.set_active_profile(index)
-                    .context("failed to set profile")?;
-            }
+impl Cli {
+    fn run(self, app: &AppHandle) -> Result<()> {
+        let mut manager = app.lock_manager();
 
-            let handle = match matches.args.get("install").map(|arg| &arg.value) {
-                Some(Value::String(path)) => {
-                    let path = PathBuf::from(path);
-                    let handle = app.handle().to_owned();
+        let Cli {
+            game,
+            profile,
+            install,
+            launch,
+            no_gui,
+        } = self;
 
-                    Some(tauri::async_runtime::spawn(install_local_mod(path, handle)))
+        if let Some(slug) = &game {
+            let game = game::from_slug(slug).ok_or_eyre("unknown game slug")?;
+
+            manager
+                .set_active_game(game, app)
+                .context("failed to set game")?;
+
+            debug!("set active game to {}", slug);
+        }
+
+        if let Some(name) = &profile {
+            let game = manager.active_game_mut();
+
+            let index = game.profile_index(name).ok_or_eyre("unknown profile")?;
+
+            game.set_active_profile(index)
+                .context("failed to set profile")?;
+
+            debug!("set profile index to {}", index);
+        }
+
+        if game.is_some() || profile.is_some() {
+            manager.save_all(app.db())?;
+        }
+
+        if let Some(path) = install {
+            drop(manager);
+
+            let handle = app.to_owned();
+            tauri::async_runtime::spawn(async move {
+                if let Err(err) = install_local_mod(path, &handle).await {
+                    error!("failed to install mod from cli: {:#}", err)
                 }
-                _ => None,
-            };
 
-            if let Some(Value::Bool(true)) = matches.args.get("launch").map(|arg| &arg.value) {
+                let manager = handle.lock_manager();
+                if let Err(err) = handle_launch_and_no_gui(launch, no_gui, &manager, &handle) {
+                    error!("{:#}", err);
+                }
+            });
+        } else {
+            handle_launch_and_no_gui(launch, no_gui, &manager, app)?;
+        }
+
+        debug!("cli finished");
+        return Ok(());
+
+        fn handle_launch_and_no_gui(
+            launch: bool,
+            no_gui: bool,
+            manager: &ModManager,
+            app: &AppHandle,
+        ) -> Result<()> {
+            if launch {
                 manager
                     .active_game()
-                    .launch(&prefs, app.handle().to_owned())
+                    .launch(&app.lock_prefs(), app)
                     .context("failed to launch game")?;
             }
 
-            if let Some(Value::Bool(true)) = matches.args.get("no-gui").map(|arg| &arg.value) {
-                if let Some(handle) = handle {
-                    tauri::async_runtime::spawn(async move {
-                        handle.await.ok();
-                        std::process::exit(0);
-                    });
-                } else {
-                    std::process::exit(0);
-                }
+            if no_gui {
+                process::exit(0);
             }
 
             Ok(())
         }
-        Err(err) => Err(anyhow!(err)),
     }
 }
 
-async fn install_local_mod(path: PathBuf, handle: tauri::AppHandle) {
+async fn install_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
     profile::import::import_local_mod(
         path,
-        &handle,
+        None,
+        app,
         InstallOptions::default().on_progress(Box::new(|progress, _| {
             info!(
                 "{} {} ({}%)",
@@ -94,5 +137,4 @@ async fn install_local_mod(path: PathBuf, handle: tauri::AppHandle) {
         })),
     )
     .await
-    .unwrap_or_else(|err| error!("failed to install mod from cli: {:#}", err));
 }

@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import type { Mod, ConfigEntry, Dependant, ProfileInfo } from './models';
+import type { Mod, ConfigEntry, Dependant } from './models';
 import { activeGame } from './stores';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
@@ -126,8 +126,18 @@ export function getListSeparator({ description }: ConfigEntry): ListSeparator {
 	return { type: 'default', char: ',' };
 }
 
-export function syncProfileOutOfDate(profile: ProfileInfo | null) {
-	if (profile === null || profile.sync === null) return false;
+export function fileToBase64(file: File): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.readAsDataURL(file);
+		reader.onload = () => {
+			const result = reader.result as string;
+			resolve(result.split(',')[1]); // Extract only the Base64 part
+		};
+		reader.onerror = (error) => reject(error);
+	});
+}
 
-	return new Date(profile.sync.lastUpdatedByOwner) > new Date(profile.sync.lastSynced);
+export function isValidHex(str: string) {
+	return /^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(str);
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { sentenceCase } from '$lib/util';
+	import { isValidHex, sentenceCase } from '$lib/util';
 	import type { ConfigEntryId, ConfigValue } from '$lib/models';
 	import StringConfig from './StringConfig.svelte';
 	import EnumConfig from './EnumConfig.svelte';
@@ -9,6 +9,7 @@
 	import NumberInputConfig from './NumberInputConfig.svelte';
 	import { isNum } from '$lib/config';
 	import Info from '$lib/components/Info.svelte';
+	import ColorConfig from './ColorConfig.svelte';
 
 	export let entryId: ConfigEntryId;
 	export let locked: boolean;
@@ -53,15 +54,15 @@
 </script>
 
 <!-- odd:bg-[#1b2433] -->
-<div class="flex items-center py-0.5 pr-4 pl-6 text-slate-300">
-	<div class="w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left text-slate-300">
+<div class="text-primary-300 flex items-center py-0.5 pr-4 pl-6">
+	<div class="text-primary-300 w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left">
 		{sentenceCase(entry.name)}
 	</div>
 
 	<Info>
 		<h4>
 			<span class="text-lg font-semibold text-white">{entry.name}</span>
-			<span class="ml-1 text-slate-400"> ({typeName})</span>
+			<span class="text-primary-400 ml-1"> ({typeName})</span>
 		</h4>
 
 		{#if entry.description !== null}
@@ -72,7 +73,7 @@
 
 		{#if entry.default}
 			<p class="break-words">
-				<span class="font-medium text-slate-100">Default: </span>
+				<span class="text-primary-100 font-medium">Default: </span>
 				{valueToString(entry.default)}
 			</p>
 		{/if}
@@ -86,7 +87,11 @@
 	</Info>
 
 	{#if value.type === 'string'}
-		<StringConfig {entryId} {locked} />
+		{#if isValidHex(value.content)}
+			<ColorConfig {entryId} />
+		{:else}
+			<StringConfig {entryId} />
+		{/if}
 	{:else if value.type === 'enum'}
 		<EnumConfig {entryId} {locked} />
 	{:else if value.type === 'flags'}

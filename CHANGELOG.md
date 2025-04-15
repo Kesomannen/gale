@@ -1,5 +1,96 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Game information to exports, which lets Gale automatically select the correct game when importing profiles
+- Added mod icon to details menu
+- Color option editor for config hex codes
+
+### Fixed
+
+- Reworked CLI system to fix various bugs
+- Minor UI tweaks
+
+## 1.5.6 (2025-04-01)
+
+### Added
+
+- Local mod drag and drop
+- Support for Schedule I
+
+### Fixed
+
+- Compatibility with r2modman on subdirs with differing cases
+
+## 1.5.5 (2025-03-28)
+
+### Fixed
+
+- Some config files freezing the app when opened
+
+## 1.5.4 (2025-03-27)
+
+### Added
+
+- New logo!
+- Custom theme colors
+- Ability to create profiles at any path
+- File association for `.r2z` profile files
+- Drag and drop functionality for `.r2z` files
+- Ability to select a target profile when using the `Install with Mod Manager` button
+
+### Fixed
+
+- Underscores being removed from config file names
+  - They are now replaced with spaces
+
+## 1.5.3 (2025-03-24)
+
+### Fixed
+
+- Moving data folder from default location causing errors
+
+## 1.5.2 (2025-03-22)
+
+### Fixed
+
+- Weird behaviour with deleted profiles coming back
+
+## 1.5.1 (2025-03-22)
+
+### Fixed
+
+- "Invalid signature" error when updating
+- Mod installation state not updating when switching profiles
+
+## 1.5.0 (2025-03-22)
+
+### Added
+
+- Support for 5 new games:
+  - Odd Remedy
+  - My Dream Setup
+  - Monster Train 2
+  - Disco Elysium
+  - Zort
+- New data store solution based on SQLite, instead of various json files
+  - Your data will automatically be migrated after updating
+  - The legacy json files will remain on your filesystem, but won't be updated or read by Gale anymore
+- Primary color setting
+- Automatic steam library detection by reading steam's `libraryfolders.vdf` file
+- Donation link to About menu
+
+### Fixed
+
+- Alphabetical and author sort mods separating upper and lowercase letters
+- Hopefully fixed linux launch issues related to Wine/Proton/Whiskey
+
+### Removed
+
+- Steam library setting as it's now redundant
+
 ## 1.4.3 (2025-03-11)
 
 ### Fixed

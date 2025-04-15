@@ -1,6 +1,6 @@
 import { writable, type Writable } from 'svelte/store';
 
-const errorDuration = 10000;
+const errorDuration = 8000;
 const infoDuration = 3000;
 const maxCount = 5;
 
@@ -30,6 +30,7 @@ export function pushToast(toast: Toast) {
 
 	setTimeout(
 		() => {
+			console.log('clearing toast');
 			toasts.update((toasts) => {
 				toasts.shift();
 				return toasts;

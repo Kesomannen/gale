@@ -7,7 +7,6 @@
 
 	export let entryId: ConfigEntryId;
 	export let onReset: (value: ConfigValue) => void;
-	export let locked: boolean;
 
 	function shouldConfirm(value: ConfigValue) {
 		switch (value.type) {
@@ -40,9 +39,8 @@
 </script>
 
 <Button.Root
-	class="ml-1 rounded-lg p-1.5 text-xl text-slate-400 enabled:hover:bg-slate-700 enabled:hover:text-slate-300 disabled:cursor-not-allowed"
+	class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 ml-1 rounded-lg p-1.5 text-xl"
 	on:click={onClick}
-	disabled={locked}
 >
 	<Icon icon="mdi:refresh" />
 </Button.Root>

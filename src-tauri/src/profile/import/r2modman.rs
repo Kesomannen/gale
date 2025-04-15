@@ -1,23 +1,19 @@
 use std::{
     fs::{self},
     path::PathBuf,
-    sync::Mutex,
 };
 
 use eyre::{bail, Context, Result};
-use log::{info, warn};
+use tracing::{info, warn};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
 use super::ImportData;
 use crate::{
     logger,
-    profile::{
-        export::{ImportSource, R2Mod},
-        install::InstallOptions,
-        ModManager,
-    },
-    thunderstore::{self, Thunderstore},
+    profile::{export::R2Mod, install::InstallOptions},
+    state::ManagerExt,
+    thunderstore::{self},
     util::{self, error::IoResultExt, fs::PathExt},
 };
 
@@ -79,15 +75,15 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
                 app,
             );
 
-            let manager = app.state::<Mutex<ModManager>>();
-            let mut manager = manager.lock().unwrap();
+            let mut manager = app.lock_manager();
 
             let game = manager.active_game_mut();
 
             if let Some(index) = game.profile_index(&name) {
-                game.delete_profile(index, true).unwrap_or_else(|_| {
-                    warn!("failed to delete possibly corrupted profile '{}'", name)
-                });
+                game.delete_profile(index, true, app.db())
+                    .unwrap_or_else(|_| {
+                        warn!("failed to delete possibly corrupted profile '{}'", name)
+                    });
             }
         };
     }
@@ -96,8 +92,7 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
 }
 
 fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Item = PathBuf>> {
-    let manager = app.state::<Mutex<ModManager>>();
-    let manager = manager.lock().unwrap();
+    let manager = app.lock_manager();
 
     let game = &manager.active_game;
 
@@ -125,7 +120,7 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
 
     let name = data.name.clone();
 
-    super::import_data(
+    super::import_profile(
         data,
         InstallOptions::default()
             .can_cancel(false)
@@ -144,11 +139,8 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
 }
 
 fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
-    let manager = app.state::<Mutex<ModManager>>();
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-
-    let mut manager = manager.lock().unwrap();
-    let thunderstore = thunderstore.lock().unwrap();
+    let mut manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
 
     let name = util::fs::file_name_owned(&profile_dir);
 
@@ -168,17 +160,17 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
 
         manager
             .active_game_mut()
-            .delete_profile(index, true)
+            .delete_profile(index, true, app.db())
             .context("failed to delete existing profile")?;
     }
 
     ImportData::create_r2(
         name,
+        None,
         mods,
         Vec::new(),
         profile_dir,
         false,
-        ImportSource::R2,
         &thunderstore,
     )
     .map(Some)

@@ -37,11 +37,11 @@
 </div>
 
 {#if value !== null}
-	<div class="mt-1 flex flex-col gap-1 pl-[35%] text-slate-300">
+	<div class="text-primary-300 mt-1 flex flex-col gap-1 pl-[35%]">
 		{#each value as argument, i}
 			<div class="flex gap-1">
 				<Button.Root
-					class="rounded-lg p-1.5 text-xl text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+					class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 rounded-lg p-1.5 text-xl"
 					on:click={() => {
 						if (value === null) return;
 						value = value.filter((_, index) => index !== i);
@@ -75,11 +75,3 @@
 		/>
 	</div>
 {/if}
-
-<style lang="postcss">
-	@reference 'tailwindcss';
-
-	code {
-		@apply bg-slate-900 px-1 text-sm;
-	}
-</style>

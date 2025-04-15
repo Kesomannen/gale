@@ -2,7 +2,7 @@ use std::{
     fs,
     io::Cursor,
     path::Path,
-    sync::Mutex,
+    sync::atomic::Ordering,
     time::{Duration, Instant},
 };
 
@@ -10,23 +10,18 @@ use chrono::Utc;
 use core::str;
 use eyre::{Context, Result};
 use futures_util::StreamExt;
-use log::warn;
-use tauri::{AppHandle, Emitter, Manager};
+use tracing::warn;
+use tauri::{AppHandle, Emitter};
 use thiserror::Error;
 use zip::ZipArchive;
 
 use super::{cache, InstallOptions, InstallProgress, InstallTask, ModInstall};
 use crate::{
-    prefs::Prefs,
     profile::{ModManager, ProfileMod, ProfileModKind, ThunderstoreMod},
+    state::ManagerExt,
     thunderstore::Thunderstore,
-    util::{cmd::StateMutex, error::IoResultExt},
+    util::error::IoResultExt,
 };
-
-#[derive(Default)]
-pub struct InstallState {
-    pub cancelled: bool,
-}
 
 const DOWNLOAD_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
 
@@ -41,12 +36,6 @@ pub struct Installer<'a> {
     completed_bytes: u64,
 
     app: &'a AppHandle,
-    client: &'a reqwest::Client,
-
-    thunderstore: StateMutex<'a, Thunderstore>,
-    manager: StateMutex<'a, ModManager>,
-    prefs: StateMutex<'a, Prefs>,
-    install_state: StateMutex<'a, InstallState>,
 }
 
 enum InstallMethod {
@@ -66,35 +55,26 @@ enum InstallError {
 type InstallResult<T> = std::result::Result<T, InstallError>;
 
 impl<'a> Installer<'a> {
-    pub fn create(
-        options: InstallOptions,
-        client: &'a reqwest::Client,
-        app: &'a AppHandle,
-    ) -> Result<Self> {
-        let manager = app.state::<Mutex<ModManager>>();
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-        let prefs = app.state::<Mutex<Prefs>>();
-        let install_state = app.state::<Mutex<InstallState>>();
-
+    pub fn create(options: InstallOptions, app: &'a AppHandle) -> Result<Self> {
         Ok(Self {
             options,
             index: 0,
             app,
-            client,
             total_mods: 0,
             total_bytes: 0,
             completed_bytes: 0,
             current_name: String::new(),
-            manager,
-            thunderstore,
-            prefs,
-            install_state,
             start_time: Instant::now(),
         })
     }
 
     fn is_cancelled(&self) -> bool {
-        self.options.can_cancel && self.install_state.lock().unwrap().cancelled
+        self.options.can_cancel
+            && self
+                .app
+                .app_state()
+                .cancel_install_flag
+                .load(Ordering::Relaxed)
     }
 
     fn check_cancel(&self) -> InstallResult<()> {
@@ -127,9 +107,9 @@ impl<'a> Installer<'a> {
     }
 
     fn try_cache_install(&mut self, data: &ModInstall) -> Result<InstallMethod> {
-        let mut manager = self.manager.lock().unwrap();
-        let thunderstore = self.thunderstore.lock().unwrap();
-        let prefs = self.prefs.lock().unwrap();
+        let prefs = self.app.lock_prefs();
+        let mut manager = self.app.lock_manager();
+        let thunderstore = self.app.lock_thunderstore();
 
         let version = data.id.borrow(&thunderstore)?.version;
         let cache_path = cache::path(&version.ident, &prefs);
@@ -146,7 +126,7 @@ impl<'a> Installer<'a> {
             cache_install(data, &cache_path, &mut manager, &thunderstore)?;
 
             self.completed_bytes += version.file_size;
-            manager.save(&prefs)?;
+            manager.active_profile().save(self.app.db())?;
 
             Ok(InstallMethod::Cached)
         } else {
@@ -164,7 +144,8 @@ impl<'a> Installer<'a> {
         });
 
         let mut stream = self
-            .client
+            .app
+            .http()
             .get(url)
             .send()
             .await
@@ -173,7 +154,7 @@ impl<'a> Installer<'a> {
             .bytes_stream();
 
         let mut last_update = Instant::now();
-        let mut response = Vec::new();
+        let mut response = Vec::with_capacity(file_size as usize);
 
         while let Some(item) = stream.next().await {
             let item = item.map_err(|err| InstallError::Error(err.into()))?;
@@ -197,9 +178,9 @@ impl<'a> Installer<'a> {
     }
 
     fn install_from_download(&mut self, data: Vec<u8>, install: &ModInstall) -> InstallResult<()> {
-        let mut manager = self.manager.lock().unwrap();
-        let thunderstore = self.thunderstore.lock().unwrap();
-        let prefs = self.prefs.lock().unwrap();
+        let prefs = self.app.lock_prefs();
+        let mut manager = self.app.lock_manager();
+        let thunderstore = self.app.lock_thunderstore();
 
         let version = install.id.borrow(&thunderstore)?.version;
         let cache_path = cache::path(&version.ident, &prefs);
@@ -238,7 +219,7 @@ impl<'a> Installer<'a> {
 
         cache_install(install, &cache_path, &mut manager, &thunderstore)?;
 
-        manager.save(&prefs)?;
+        manager.active_profile().save(self.app.db())?;
 
         Ok(())
     }
@@ -253,7 +234,10 @@ impl<'a> Installer<'a> {
     }
 
     pub async fn install_all(&mut self, mods: Vec<ModInstall>) -> Result<()> {
-        self.install_state.lock().unwrap().cancelled = false;
+        self.app
+            .app_state()
+            .cancel_install_flag
+            .store(false, Ordering::Relaxed);
 
         self.total_mods = mods.len();
         self.count_total_bytes(&mods)?;
@@ -267,7 +251,7 @@ impl<'a> Installer<'a> {
                 Err(InstallError::Cancelled) => {
                     self.update(InstallTask::Error);
 
-                    let mut manager = self.manager.lock().unwrap();
+                    let mut manager = self.app.lock_manager();
 
                     let profile = manager.active_profile_mut();
 
@@ -282,7 +266,7 @@ impl<'a> Installer<'a> {
                 Err(InstallError::Error(err)) => {
                     self.update(InstallTask::Error);
 
-                    let thunderstore = self.thunderstore.lock().unwrap();
+                    let thunderstore = self.app.lock_thunderstore();
 
                     let borrowed = data.id.borrow(&thunderstore)?;
                     let name = &borrowed.package.ident;
@@ -294,8 +278,8 @@ impl<'a> Installer<'a> {
 
         self.update(InstallTask::Done);
 
-        let manager = self.manager.lock().unwrap();
-        let thunderstore = self.thunderstore.lock().unwrap();
+        let manager = self.app.lock_manager();
+        let thunderstore = self.app.lock_thunderstore();
 
         manager.cache_mods(&thunderstore).ok();
 
@@ -303,7 +287,7 @@ impl<'a> Installer<'a> {
     }
 
     fn count_total_bytes(&mut self, mods: &Vec<ModInstall>) -> Result<()> {
-        let thunderstore = self.thunderstore.lock().unwrap();
+        let thunderstore = self.app.lock_thunderstore();
         for install in mods {
             let borrowed = install.id.borrow(&thunderstore)?;
             self.total_bytes += borrowed.version.file_size;

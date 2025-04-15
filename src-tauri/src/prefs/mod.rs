@@ -3,34 +3,28 @@ use std::{
     fs,
     ops::Deref,
     path::{Path, PathBuf},
-    sync::Mutex,
 };
 
-use eyre::{anyhow, bail, ensure, Context, Result};
-use log::{debug, info, warn};
+use eyre::{bail, ensure, Context, Result};
+use tracing::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 use crate::{
+    db::{self, Db},
     game::{self, Platform},
-    profile::{launch::LaunchMode, ModManager},
+    logger,
+    profile::launch::LaunchMode,
+    state::ManagerExt,
     util::{
         self,
         error::IoResultExt,
-        fs::{JsonStyle, Overwrite, PathExt, UseLinks},
+        fs::{Overwrite, PathExt, UseLinks},
         window::WindowExt,
     },
 };
 
 pub mod commands;
-
-pub fn setup(app: &AppHandle) -> Result<()> {
-    let prefs = Prefs::create(app)?;
-
-    app.manage(Mutex::new(prefs));
-
-    Ok(())
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug, Eq)]
 #[serde(transparent)]
@@ -187,17 +181,12 @@ impl From<PathBuf> for DirPref {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Prefs {
-    #[serde(skip)]
-    is_first_run: bool,
-
     pub steam_exe_path: Option<PathBuf>,
-    pub steam_library_dir: Option<PathBuf>,
     pub data_dir: DirPref,
 
-    #[serde(alias = "sendTelementary")] // old typo (oops)
-    send_telemetry: bool,
-    fetch_mods_automatically: bool,
-    zoom_factor: f32,
+    pub send_telemetry: bool,
+    pub fetch_mods_automatically: bool,
+    pub zoom_factor: f32,
 
     pub game_prefs: HashMap<String, GamePrefs>,
 }
@@ -223,49 +212,42 @@ fn read_steam_registry() -> Result<PathBuf> {
     Ok(PathBuf::from(path))
 }
 
+#[cfg(target_os = "windows")]
 fn default_steam_exe_path() -> PathBuf {
-    #[cfg(target_os = "windows")]
-    {
-        match read_steam_registry() {
-            Ok(path) => path.join("Steam.exe"),
-            _ => r"C:\Program Files (x86)\Steam\Steam.exe".into(),
+    match read_steam_registry() {
+        Ok(path) => {
+            info!(
+                "read steam installation path from registry: {}",
+                path.display()
+            );
+            path.join("steam.exe")
         }
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        "/usr/bin/steam".into()
+        Err(err) => {
+            warn!(
+                "failed to read steam installation path from registry: {:#}, using default",
+                err
+            );
+            r"C:\Program Files (x86)\Steam\steam.exe".into()
+        }
     }
 }
 
-fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
-    #[cfg(target_os = "windows")]
-    {
-        exe_path.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
-    }
-
-    #[cfg(target_os = "linux")]
-    {
-        dirs_next::data_dir().map(|data_dir| data_dir.join("Steam"))
-    }
+#[cfg(target_os = "linux")]
+fn default_steam_exe_path() -> PathBuf {
+    "/usr/bin/steam".into()
 }
 
 impl Default for Prefs {
     fn default() -> Self {
         let steam_exe_path = default_steam_exe_path().exists_or_none();
 
-        let steam_library_dir = default_steam_library_dir(steam_exe_path.as_deref())
-            .and_then(|path| path.exists_or_none());
-
         Self {
-            is_first_run: false,
-
             steam_exe_path,
-            steam_library_dir,
             data_dir: DirPref::new(util::path::default_app_data_dir())
-                .keep("prefs.json")
-                .keep("telementary.json")
-                .keep("latest.log"),
+                .keep(logger::FILE_NAME)
+                .keep(db::FILE_NAME)
+                .keep(db::SHM_FILE_NAME)
+                .keep(db::WAL_FILE_NAME),
 
             send_telemetry: true,
             fetch_mods_automatically: true,
@@ -278,54 +260,24 @@ impl Default for Prefs {
 }
 
 impl Prefs {
-    fn path() -> PathBuf {
-        util::path::default_app_config_dir().join("prefs.json")
+    pub fn init(&mut self, db: &Db, app: &AppHandle) -> Result<()> {
+        self.data_dir.keep_files.extend(&[
+            logger::FILE_NAME,
+            db::FILE_NAME,
+            db::SHM_FILE_NAME,
+            db::WAL_FILE_NAME,
+        ]);
+
+        let window = app.get_webview_window("main").unwrap();
+        window.zoom(self.zoom_factor as f64).ok();
+
+        self.save(db)?;
+
+        Ok(())
     }
 
-    pub fn create(app: &AppHandle) -> Result<Self> {
-        let path = Self::path();
-        fs::create_dir_all(path.parent().unwrap())
-            .context("failed to create settings directory")?;
-
-        info!("loading settings from {}", path.display());
-
-        let is_first_run = !path.exists();
-        let prefs = match is_first_run {
-            true => {
-                info!("no settings file found, creating new default");
-
-                let prefs = Prefs {
-                    is_first_run,
-                    ..Default::default()
-                };
-
-                prefs.save().context("failed to write initial settings")?;
-
-                prefs
-            }
-            false => {
-                let mut prefs: Prefs = util::fs::read_json(&path).map_err(|err| {
-                    anyhow!("failed to read settings: {} (at {})\n\nThe file might be corrupted or too old to run with your version of Gale.", err, path.display())
-                })?;
-
-                prefs
-                    .data_dir
-                    .keep_files
-                    .extend(&["prefs.json", "telementary.json", "latest.log"]);
-
-                let window = app.get_webview_window("main").unwrap();
-                window.zoom(prefs.zoom_factor as f64).ok();
-
-                prefs
-            }
-        };
-
-        Ok(prefs)
-    }
-
-    fn save(&self) -> Result<()> {
-        util::fs::write_json(Self::path(), self, JsonStyle::Pretty)
-            .context("failed to save settings")
+    fn save(&self, db: &Db) -> Result<()> {
+        db.save_prefs(self)
     }
 
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
@@ -343,15 +295,12 @@ impl Prefs {
             );
         }
 
-        self.steam_library_dir = value.steam_library_dir;
-
         self.game_prefs = value.game_prefs;
         self.validate_game_prefs()?;
 
         if self.data_dir != value.data_dir {
             // move profile paths
-            let manager = app.state::<Mutex<ModManager>>();
-            let mut manager = manager.lock().unwrap();
+            let mut manager = app.lock_manager();
 
             let mut path = value.data_dir.to_path_buf();
             for (key, game) in &mut manager.games {
@@ -368,6 +317,8 @@ impl Prefs {
                 path.pop();
                 path.pop();
             }
+
+            manager.save_all(app.db())?;
         }
 
         self.data_dir.set(value.data_dir.value)?;
@@ -383,7 +334,7 @@ impl Prefs {
         self.send_telemetry = value.send_telemetry;
         self.fetch_mods_automatically = value.fetch_mods_automatically;
 
-        self.save().context("failed write to settings file")
+        self.save(app.db()).context("failed save prefs")
     }
 
     fn validate_game_prefs(&mut self) -> Result<()> {

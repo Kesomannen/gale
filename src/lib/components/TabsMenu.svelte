@@ -6,11 +6,11 @@
 </script>
 
 <Tabs.Root bind:value>
-	<Tabs.List class="my-1 flex gap-1 rounded-xl bg-slate-900 p-1 text-slate-300">
+	<Tabs.List class="bg-primary-900 text-primary-300 my-1 flex gap-1 rounded-xl p-1">
 		{#each options as option}
 			<Tabs.Trigger
 				value={option.value}
-				class="grow rounded-lg px-2 py-0.5 hover:bg-slate-800 hover:text-slate-100 data-[state=active]:bg-slate-700 data-[state=active]:font-semibold data-[state=active]:text-slate-100"
+				class="hover:bg-primary-800 hover:text-primary-100 data-[state=active]:bg-primary-700 data-[state=active]:text-primary-100 grow rounded-lg px-2 py-0.5 data-[state=active]:font-semibold"
 			>
 				{option.label}
 			</Tabs.Trigger>

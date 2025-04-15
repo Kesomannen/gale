@@ -238,7 +238,7 @@ pub struct PackageSubmissionMetadata {
     pub community_categories: HashMap<String, Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum FrontendModKind {
     Local,
@@ -246,7 +246,7 @@ pub enum FrontendModKind {
     Remote,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FrontendMod {
     pub name: String,
@@ -264,6 +264,7 @@ pub struct FrontendMod {
     pub is_deprecated: bool,
     pub contains_nsfw: bool,
     pub uuid: Uuid,
+    pub version_uuid: Uuid,
     pub is_installed: bool,
     pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,
@@ -272,7 +273,7 @@ pub struct FrontendMod {
     pub kind: FrontendModKind,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FrontendVersion {
     pub name: semver::Version,
@@ -289,5 +290,5 @@ pub struct FrontendProfileMod {
 }
 
 pub trait IntoFrontendMod {
-    fn into_frontend(self, profile: &Profile) -> FrontendMod;
+    fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod;
 }

@@ -4,7 +4,6 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
 	export let entryId: ConfigEntryId;
-	export let locked: boolean;
 
 	let content = entryId.entry.value.content as ConfigNum;
 	let range = content.range as ConfigRange;
@@ -54,8 +53,66 @@
 	function clamp(value: number, min: number, max: number) {
 		return Math.max(min, Math.min(max, value));
 	}
+</script>
 
-	function onInputFieldChanged() {
+<svelte:window
+	on:mousemove={(evt) => {
+		if (isDragging) {
+			calculateNewValue(evt.clientX);
+		}
+	}}
+	on:mouseup={(evt) => {
+		if (isDragging) {
+			isDragging = false;
+			calculateNewValue(evt.clientX);
+			submitValue();
+		}
+	}}
+/>
+
+<div
+	class="group bg-primary-900 h-5 grow rounded-full py-1 pr-2 pl-1"
+	role="slider"
+	aria-valuemin={range.start}
+	aria-valuemax={range.end}
+	aria-valuenow={content.value}
+	tabindex="0"
+	bind:this={element}
+	on:keydown={(e) => {
+		if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+			content.value = Math.max(range.start, content.value - 1);
+		} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+			content.value = Math.min(range.end, content.value + 1);
+		}
+
+		inputString = content.value.toFixed(decimals);
+	}}
+	on:mousedown={(evt) => {
+		isDragging = true;
+		calculateNewValue(evt.clientX);
+	}}
+>
+	<div
+		class="group-hover:bg-primary-600 relative h-full min-w-1 rounded-l-full"
+		style="width: {fillPercent}%;"
+		class:bg-primary-700={!isDragging}
+		class:bg-primary-600={isDragging}
+		bind:this={fill}
+	>
+		<div
+			class="absolute right-[-0.5rem] h-3 w-3 rounded-full"
+			class:bg-primary-400={!isDragging}
+			class:bg-primary-300={isDragging}
+			bind:this={handle}
+			draggable="false"
+		/>
+	</div>
+</div>
+
+<input
+	type="number"
+	bind:value={inputString}
+	on:change={() => {
 		let newValue = parseFloat(inputString);
 
 		if (!isNaN(newValue)) {
@@ -70,76 +127,10 @@
 		}
 
 		inputString = content.value.toString();
-	}
-</script>
-
-<svelte:window
-	on:mousemove={(evt) => {
-		if (locked || isDragging) return;
-
-		calculateNewValue(evt.clientX);
 	}}
-	on:mouseup={(evt) => {
-		if (locked || !isDragging) return;
-
-		isDragging = false;
-		calculateNewValue(evt.clientX);
-		submitValue();
-	}}
+	class="focus:ring-accent-500 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 hover:ring-1 focus:ring-2 focus:outline-hidden"
 />
-
-<div
-	class="group h-5 grow rounded-full bg-slate-900 py-1 pr-2 pl-1"
-	role="slider"
-	aria-valuemin={range.start}
-	aria-valuemax={range.end}
-	aria-valuenow={content.value}
-	aria-disabled={locked}
-	tabindex="0"
-	bind:this={element}
-	on:keydown={(e) => {
-		if (locked) return;
-
-		if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-			content.value = Math.max(range.start, content.value - 1);
-		} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-			content.value = Math.min(range.end, content.value + 1);
-		}
-
-		inputString = content.value.toFixed(decimals);
-	}}
-	on:mousedown={(evt) => {
-		if (locked) return;
-
-		isDragging = true;
-		calculateNewValue(evt.clientX);
-	}}
->
-	<div
-		class="relative h-full min-w-1 rounded-l-full group-hover:bg-slate-600"
-		style="width: {fillPercent}%;"
-		class:bg-slate-700={!isDragging}
-		class:bg-slate-600={isDragging}
-		bind:this={fill}
-	>
-		<div
-			class="absolute right-[-0.5rem] h-3 w-3 rounded-full"
-			class:bg-slate-400={!isDragging}
-			class:bg-slate-300={isDragging}
-			bind:this={handle}
-			draggable="false"
-		/>
-	</div>
-</div>
-
-<input
-	type="number"
-	disabled={locked}
-	bind:value={inputString}
-	on:change={() => onInputFieldChanged}
-	class="focus:ring-accent-400 ml-3 w-1/6 min-w-0 shrink rounded-lg border border-transparent bg-slate-900 px-3 py-1 text-slate-300 placeholder-slate-400 hover:border-slate-500 hover:text-slate-200 focus:border-transparent focus:ring-2 focus:outline-hidden"
-/>
-<ResetConfigButton {entryId} {onReset} {locked} />
+<ResetConfigButton {entryId} {onReset} />
 
 <style>
 	input[type='number']::-webkit-inner-spin-button,

@@ -1,26 +1,23 @@
-use std::{cmp::Ordering, collections::HashSet, sync::Mutex, time::Duration};
+use std::{cmp::Ordering, collections::HashSet, time::Duration};
 
 use eyre::Result;
 use itertools::Itertools;
-use log::info;
+use tracing::info;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 
 use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
-    BorrowedMod, Thunderstore,
+    BorrowedMod,
 };
-use crate::profile::{LocalMod, ModManager, Profile};
+use crate::{
+    profile::{LocalMod, Profile},
+    state::ManagerExt,
+    util,
+};
 
 pub fn setup(app: &AppHandle) {
-    app.manage(Mutex::new(QueryState::default()));
-
     tauri::async_runtime::spawn(query_loop(app.clone()));
-}
-
-#[derive(Default)]
-pub struct QueryState {
-    pub current_query: Option<QueryModsArgs>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -62,17 +59,12 @@ pub struct QueryModsArgs {
 pub async fn query_loop(app: AppHandle) -> Result<()> {
     const INTERVAL: Duration = Duration::from_millis(500);
 
-    let thunderstore = app.state::<Mutex<Thunderstore>>();
-    let query_state = app.state::<Mutex<QueryState>>();
-    let manager = app.state::<Mutex<ModManager>>();
-
     loop {
         {
-            let mut state = query_state.lock().unwrap();
+            let mut thunderstore = app.lock_thunderstore();
 
-            if let Some(args) = &state.current_query {
-                let thunderstore = thunderstore.lock().unwrap();
-                let manager = manager.lock().unwrap();
+            if let Some(args) = &thunderstore.current_query {
+                let manager = app.lock_manager();
 
                 let mods =
                     query_frontend_mods(args, thunderstore.latest(), manager.active_profile());
@@ -80,7 +72,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
 
                 if thunderstore.packages_fetched {
                     info!("all packages fetched, pausing query loop");
-                    state.current_query = None;
+                    thunderstore.current_query = None;
                 }
             }
         };
@@ -146,8 +138,8 @@ impl Queryable for BorrowedMod<'_> {
         b.is_pinned.cmp(&a.is_pinned).then_with(|| {
             let order = match args.sort_by {
                 SortBy::Newest => a.date_created.cmp(&b.date_created),
-                SortBy::Name => a.name().cmp(b.name()),
-                SortBy::Author => a.ident.cmp(&b.ident),
+                SortBy::Name => util::cmp_ignore_case(a.name(), b.name()),
+                SortBy::Author => util::cmp_ignore_case(&a.ident, &b.ident),
                 SortBy::LastUpdated => a.date_updated.cmp(&b.date_updated),
                 SortBy::Downloads => a.total_downloads().cmp(&b.total_downloads()),
                 SortBy::Rating => a.rating_score.cmp(&b.rating_score),
@@ -165,7 +157,7 @@ impl Queryable for BorrowedMod<'_> {
 }
 
 impl IntoFrontendMod for BorrowedMod<'_> {
-    fn into_frontend(self, profile: &Profile) -> FrontendMod {
+    fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod {
         let pkg = self.package;
         let vers = pkg.get_version(self.version.uuid).unwrap();
         FrontendMod {
@@ -187,7 +179,10 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             is_deprecated: pkg.is_deprecated,
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid,
-            is_installed: profile.has_mod(pkg.uuid),
+            version_uuid: vers.uuid,
+            is_installed: profile
+                .map(|profile| profile.has_mod(pkg.uuid))
+                .unwrap_or(false),
             last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions
@@ -242,7 +237,7 @@ where
     I: Iterator<Item = T>,
 {
     query_mods(args, mods)
-        .map(|m| m.into_frontend(profile))
+        .map(|m| m.into_frontend(Some(profile)))
         .collect()
 }
 

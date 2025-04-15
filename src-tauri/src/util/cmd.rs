@@ -1,7 +1,6 @@
 use std::{
     fmt::{self, Display},
     result::Result as StdResult,
-    sync::Mutex,
 };
 
 use serde::Serialize;
@@ -34,5 +33,3 @@ where
 }
 
 pub type Result<T> = StdResult<T, CommandError>;
-
-pub type StateMutex<'r, S> = tauri::State<'r, Mutex<S>>;

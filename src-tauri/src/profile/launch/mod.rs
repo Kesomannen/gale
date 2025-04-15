@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{bail, ensure, eyre, OptionExt, Result};
-use log::{info, warn};
+use tracing::{info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
@@ -22,6 +22,8 @@ use crate::{
     },
 };
 
+#[cfg(target_os = "linux")]
+mod linux;
 mod mod_loader;
 mod platform;
 
@@ -38,7 +40,7 @@ pub enum LaunchMode {
 }
 
 impl ManagedGame {
-    pub fn launch(&self, prefs: &Prefs, app: AppHandle) -> Result<()> {
+    pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
         let game_dir = game_dir(self.game, prefs)?;
         if let Err(err) = self.link_files(&game_dir) {
             warn!("failed to link files: {:#}", err);
@@ -72,7 +74,7 @@ impl ManagedGame {
 
         let mut command = match (&launch_mode, platform) {
             (LaunchMode::Launcher, Some(platform)) => {
-                platform::launch_command(platform, self.game, prefs).transpose()
+                platform::launch_command(game_dir, platform, self.game, prefs).transpose()
             }
             _ => None,
         }
@@ -134,7 +136,7 @@ impl ManagedGame {
     }
 }
 
-fn do_launch(mut command: Command, app: AppHandle, mode: LaunchMode) -> Result<()> {
+fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<()> {
     match mode {
         LaunchMode::Launcher | LaunchMode::Direct { instances: 1, .. } => {
             command.spawn()?;
@@ -144,12 +146,13 @@ fn do_launch(mut command: Command, app: AppHandle, mode: LaunchMode) -> Result<(
             instances,
             interval_secs,
         } => {
+            let app = app.clone();
             tauri::async_runtime::spawn(async move {
                 for i in 0..instances {
                     if let Err(err) = command.spawn() {
                         log_webview_err(
                             "Failed to launch game",
-                            eyre!("launch command {i} failed: {}", err),
+                            eyre!("Launch command {} failed: {}.", i, err),
                             &app,
                         );
                     }

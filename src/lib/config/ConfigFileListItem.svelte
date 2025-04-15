@@ -7,20 +7,17 @@
 	import { slide } from 'svelte/transition';
 
 	export let file: ConfigFile;
-	export let selectedSection: ConfigSection | null;
+	export let selectedSection: ConfigSection | undefined;
 	export let onDeleted: () => void;
 	export let onFileClicked: (file: ConfigFile) => void;
 	export let onSectionClicked: (file: ConfigFileData, section: ConfigSection) => void;
 
-	export let locked: boolean;
-
 	let open = false;
 
 	$: type = file.type;
-	$: isSelected =
-		selectedSection !== null && file.type === 'ok' && file.sections.includes(selectedSection);
+	$: isSelected = selectedSection && file.type === 'ok' && file.sections.includes(selectedSection);
 
-	$: textColor = type === 'ok' ? 'slate-200' : type === 'err' ? 'red-400' : 'slate-400';
+	$: textColor = type === 'ok' ? 'primary-200' : type === 'err' ? 'red-400' : 'primary-400';
 	$: icon = type === 'ok' ? 'mdi:chevron-down' : type === 'err' ? 'mdi:error' : 'mdi:help';
 
 	$: shownSections =
@@ -31,8 +28,8 @@
 	{#if type !== 'ok' || shownSections.length > 0}
 		<Collapsible.Trigger
 			class="group flex w-full items-center overflow-hidden py-0.5 pr-1 pl-2 text-{textColor} {isSelected
-				? 'bg-slate-600 font-semibold'
-				: 'hover:bg-slate-600'}"
+				? 'bg-primary-600 font-semibold'
+				: 'hover:bg-primary-600'}"
 			on:click={() => type !== 'ok' && onFileClicked(file)}
 		>
 			<Icon
@@ -47,28 +44,26 @@
 				{file.displayName ?? file.relativePath}
 			</div>
 
-			{#if !locked}
-				<Button.Root
-					class="ml-auto hidden shrink-0 rounded-sm p-1 text-slate-400 group-hover:flex hover:bg-slate-500 hover:text-slate-200"
-					on:click={(evt) => {
-						evt.stopPropagation();
-						invokeCommand('open_config_file', { file: file.relativePath });
-					}}
-				>
-					<Icon icon="mdi:open-in-new" />
-				</Button.Root>
+			<Button.Root
+				class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 ml-auto hidden shrink-0 rounded-sm p-1 group-hover:flex"
+				on:click={(evt) => {
+					evt.stopPropagation();
+					invokeCommand('open_config_file', { file: file.relativePath });
+				}}
+			>
+				<Icon icon="mdi:open-in-new" />
+			</Button.Root>
 
-				<Button.Root
-					class="hidden shrink-0 rounded-sm p-1 text-slate-400 group-hover:flex hover:bg-slate-500 hover:text-slate-200"
-					on:click={async (evt) => {
-						evt.stopPropagation();
-						await invokeCommand('delete_config_file', { file: file.relativePath });
-						onDeleted();
-					}}
-				>
-					<Icon icon="mdi:delete" />
-				</Button.Root>
-			{/if}
+			<Button.Root
+				class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 hidden shrink-0 rounded-sm p-1 group-hover:flex"
+				on:click={async (evt) => {
+					evt.stopPropagation();
+					await invokeCommand('delete_config_file', { file: file.relativePath });
+					onDeleted();
+				}}
+			>
+				<Icon icon="mdi:delete" />
+			</Button.Root>
 		</Collapsible.Trigger>
 	{/if}
 	{#if file.type === 'ok' && shownSections.length > 0}
@@ -80,8 +75,8 @@
 			{#each shownSections as section}
 				<Button.Root
 					class="truncate py-0.5 pr-2 pl-9 text-left text-sm {selectedSection === section
-						? 'bg-slate-600 font-semibold text-slate-200'
-						: 'text-slate-300 hover:bg-slate-600'}"
+						? 'bg-primary-600 text-primary-200 font-semibold'
+						: 'text-primary-300 hover:bg-primary-600'}"
 					on:click={() => onSectionClicked(file, section)}
 				>
 					{section.name.length > 0 ? section.name : '<Nameless section>'}

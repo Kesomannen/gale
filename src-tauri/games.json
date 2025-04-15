@@ -1,87 +1,5 @@
 [
 	{
-		"name": "BONEWORKS",
-		"r2dirName": "BONEWORKS",
-		"popular": true,
-		"modLoader": {
-			"name": "MelonLoader",
-			"subdirs": [
-				{
-					"name": "Plugins",
-					"target": "Plugins",
-					"mode": "track",
-					"extension": ".plugin.dll"
-				},
-				{
-					"name": "UserData",
-					"target": "UserData",
-					"mode": "track"
-				},
-				{
-					"name": "CustomItems",
-					"target": "UserData/CustomItems",
-					"mode": "track",
-					"extension": ".melon"
-				},
-				{
-					"name": "CustomMaps",
-					"target": "UserData/CustomMaps",
-					"mode": "track",
-					"extension": ".bcm,.cma"
-				},
-				{
-					"name": "PlayerModels",
-					"target": "UserData/PlayerModels",
-					"mode": "track",
-					"extension": ".body"
-				},
-				{
-					"name": "CustomLoadScreens",
-					"target": "UserData/CustomLoadScreens",
-					"mode": "track",
-					"extension": ".load"
-				},
-				{
-					"name": "Music",
-					"target": "UserData/Music",
-					"mode": "track",
-					"extension": ".wav"
-				},
-				{
-					"name": "Food",
-					"target": "UserData/Food",
-					"mode": "track",
-					"extension": ".food"
-				},
-				{
-					"name": "Scoreworks",
-					"target": "UserData/Scoreworks",
-					"mode": "track",
-					"extension": ".sw"
-				},
-				{
-					"name": "CustomSkins",
-					"target": "UserData/CustomSkins",
-					"mode": "track",
-					"extension": ".png"
-				},
-				{
-					"name": "Grenades",
-					"target": "UserData/Grenades",
-					"mode": "track",
-					"extension": ".grenade"
-				}
-			]
-		},
-		"platforms": {
-			"steam": {
-				"id": 823500,
-				"dirName": "BONEWORKS/BONEWORKS"
-			},
-			"oculus": {}
-		}
-	},
-	{
 		"name": "Content Warning",
 		"popular": true,
 		"modLoader": {
@@ -151,6 +69,20 @@
 		}
 	},
 	{
+		"name": "R.E.P.O.",
+		"slug": "repo",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3241660,
+				"dirName": "REPO"
+			}
+		}
+	},
+	{
 		"name": "Risk of Rain 2",
 		"slug": "riskofrain2",
 		"r2dirName": "RiskOfRain2",
@@ -202,18 +134,6 @@
 			},
 			"xboxStore": {
 				"identifier": "CoffeeStainStudios.Valheim"
-			}
-		}
-	},
-	{
-		"name": "WEBFISHING",
-		"popular": true,
-		"modLoader": {
-			"name": "GDWeave"
-		},
-		"platforms": {
-			"steam": {
-				"id": 3146520
 			}
 		}
 	},
@@ -467,6 +387,87 @@
 		}
 	},
 	{
+		"name": "BONEWORKS",
+		"r2dirName": "BONEWORKS",
+		"modLoader": {
+			"name": "MelonLoader",
+			"subdirs": [
+				{
+					"name": "Plugins",
+					"target": "Plugins",
+					"mode": "track",
+					"extension": ".plugin.dll"
+				},
+				{
+					"name": "UserData",
+					"target": "UserData",
+					"mode": "track"
+				},
+				{
+					"name": "CustomItems",
+					"target": "UserData/CustomItems",
+					"mode": "track",
+					"extension": ".melon"
+				},
+				{
+					"name": "CustomMaps",
+					"target": "UserData/CustomMaps",
+					"mode": "track",
+					"extension": ".bcm,.cma"
+				},
+				{
+					"name": "PlayerModels",
+					"target": "UserData/PlayerModels",
+					"mode": "track",
+					"extension": ".body"
+				},
+				{
+					"name": "CustomLoadScreens",
+					"target": "UserData/CustomLoadScreens",
+					"mode": "track",
+					"extension": ".load"
+				},
+				{
+					"name": "Music",
+					"target": "UserData/Music",
+					"mode": "track",
+					"extension": ".wav"
+				},
+				{
+					"name": "Food",
+					"target": "UserData/Food",
+					"mode": "track",
+					"extension": ".food"
+				},
+				{
+					"name": "Scoreworks",
+					"target": "UserData/Scoreworks",
+					"mode": "track",
+					"extension": ".sw"
+				},
+				{
+					"name": "CustomSkins",
+					"target": "UserData/CustomSkins",
+					"mode": "track",
+					"extension": ".png"
+				},
+				{
+					"name": "Grenades",
+					"target": "UserData/Grenades",
+					"mode": "track",
+					"extension": ".grenade"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 823500,
+				"dirName": "BONEWORKS/BONEWORKS"
+			},
+			"oculus": {}
+		}
+	},
+	{
 		"name": "Back to the Dawn",
 		"modLoader": {
 			"name": "BepInEx"
@@ -633,6 +634,19 @@
 		}
 	},
 	{
+		"name": "DUSK",
+		"slug": "dusk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 519860,
+				"dirName": "Dusk"
+			}
+		}
+	},
+	{
 		"name": "Deep Rock Galactic: Survivor",
 		"slug": "deep-rock-galactic-survivor",
 		"modLoader": {
@@ -642,6 +656,18 @@
 			"steam": {
 				"id": 2321470,
 				"dirName": "Deep Rock Survivor"
+			}
+		}
+	},
+	{
+		"name": "Disco Elysium",
+		"slug": "disco-elysium",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 632470
 			}
 		}
 	},
@@ -969,6 +995,19 @@
 		}
 	},
 	{
+		"name": "Monster Train 2",
+		"slug": "monster-train-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3296150,
+				"dirName": "Monster Train 2 Demo"
+			}
+		}
+	},
+	{
 		"name": "Muck",
 		"modLoader": {
 			"name": "BepInEx"
@@ -976,6 +1015,19 @@
 		"platforms": {
 			"steam": {
 				"id": 1625450
+			}
+		}
+	},
+	{
+		"name": "My Dream Setup",
+		"slug": "my-dream-setup",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2200780,
+				"dirName": "My dream setup/MDS"
 			}
 		}
 	},
@@ -1032,6 +1084,19 @@
 		"platforms": {
 			"steam": {
 				"id": 1809540
+			}
+		}
+	},
+	{
+		"name": "Odd Remedy",
+		"slug": "odd-remedy",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1745680,
+				"dirName": "OddRemedy"
 			}
 		}
 	},
@@ -1152,19 +1217,6 @@
 		}
 	},
 	{
-		"name": "R.E.P.O.",
-		"slug": "repo",
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 3241660,
-				"dirName": "REPO"
-			}
-		}
-	},
-	{
 		"name": "ROUNDS",
 		"modLoader": {
 			"name": "BepInEx"
@@ -1242,6 +1294,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1843760
+			}
+		}
+	},
+	{
+		"name": "Schedule I",
+		"slug": "schedule-i",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3164500
 			}
 		}
 	},
@@ -1720,6 +1784,17 @@
 		}
 	},
 	{
+		"name": "WEBFISHING",
+		"modLoader": {
+			"name": "GDWeave"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3146520
+			}
+		}
+	},
+	{
 		"name": "We Love Katamari REROLL+ Royal Reverie",
 		"slug": "we-love-katamari-reroll-royal-reverie",
 		"modLoader": {
@@ -1785,6 +1860,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1620340
+			}
+		}
+	},
+	{
+		"name": "Zort",
+		"slug": "zort",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3121110
 			}
 		}
 	}

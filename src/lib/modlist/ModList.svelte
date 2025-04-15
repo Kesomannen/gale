@@ -151,7 +151,7 @@
 		<slot name="banner" />
 
 		{#if mods.length === 0}
-			<div class="mt-4 text-center text-slate-300">
+			<div class="text-primary-300 mt-4 text-center">
 				<slot name="placeholder" />
 			</div>
 		{:else}

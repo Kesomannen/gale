@@ -1,14 +1,12 @@
-use std::sync::Mutex;
-
 use chrono::{DateTime, Utc};
 use eyre::Context;
 use itertools::Itertools;
-use tauri::Manager;
 use uuid::Uuid;
 
 use super::install::{InstallOptions, ModInstall};
 use crate::{
-    profile::{install, ModManager, Profile, Result},
+    profile::{install, Profile, Result},
+    state::ManagerExt,
     thunderstore::{ModId, PackageListing, PackageVersion, Thunderstore},
 };
 
@@ -51,7 +49,14 @@ impl Profile {
             return Ok(None); // local mods can't be updated
         };
 
-        let current = ts_mod.id.borrow(thunderstore)?.version;
+        let Ok(current) = ts_mod
+            .id
+            .borrow(thunderstore)
+            .map(|borrowed| borrowed.version)
+        else {
+            return Ok(None); // ignore missing mods
+        };
+
         let package = thunderstore.get_package(uuid)?;
 
         if current.parsed_version() >= package.latest().parsed_version() {
@@ -75,8 +80,7 @@ impl Profile {
 
 pub async fn change_version(mod_ref: ModId, app: &tauri::AppHandle) -> Result<()> {
     let install = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let manager = manager.lock().unwrap();
+        let manager = app.lock_manager();
 
         let profile = manager.active_profile();
 
@@ -99,11 +103,8 @@ pub async fn update_mods(
     app: &tauri::AppHandle,
 ) -> Result<()> {
     let installs = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-
-        let mut manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
+        let mut manager = app.lock_manager();
+        let thunderstore = app.lock_thunderstore();
 
         let profile = manager.active_profile_mut();
 
@@ -114,8 +115,8 @@ pub async fn update_mods(
                     .check_update(uuid, respect_ignored, &thunderstore)
                     .transpose()
             })
-            .map_ok(|update| update.into())
-            .collect::<Result<Vec<ModInstall>>>()?
+            .map_ok(|update| ModInstall::from(update))
+            .collect::<Result<Vec<_>>>()?
     };
 
     _update_mods(installs, app).await

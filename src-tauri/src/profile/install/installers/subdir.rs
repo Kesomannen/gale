@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use log::warn;
+use tracing::warn;
 use serde::{Deserialize, Serialize};
 
 use super::{PackageInstaller, PackageZip};
@@ -139,7 +139,7 @@ impl<'a> SubdirInstaller<'a> {
 
     fn match_subdir(&self, name: &str) -> Option<&Subdir> {
         self.subdirs().find(|subdir| {
-            subdir.name == name
+            util::cmp_ignore_case(subdir.name, name).is_eq()
                 || subdir
                     .extension
                     .is_some_and(|ext| ext.split(',').any(|ext| name.ends_with(ext)))

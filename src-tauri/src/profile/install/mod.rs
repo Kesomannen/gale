@@ -1,34 +1,26 @@
-use std::{iter, sync::Mutex};
+use std::iter;
 
 use chrono::{DateTime, Utc};
-use download::InstallState;
 use eyre::{bail, Context, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
-use tauri::{AppHandle, Manager};
+use tauri::AppHandle;
 use uuid::Uuid;
 
 use super::{ModManager, Profile};
 use crate::{
     prefs::Prefs,
+    state::ManagerExt,
     thunderstore::{BorrowedMod, ModId, Thunderstore},
-    NetworkClient,
 };
 
 mod cache;
 pub mod commands;
-pub mod deep_link;
 mod download;
 mod fs;
 mod installers;
 pub use installers::*;
-
-pub fn setup(handle: &AppHandle) -> Result<()> {
-    handle.manage(Mutex::new(InstallState::default()));
-
-    Ok(())
-}
 
 #[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -153,34 +145,9 @@ pub async fn install_mods(
     options: InstallOptions,
     app: &AppHandle,
 ) -> Result<()> {
-    let client = app.state::<NetworkClient>();
-    let mut installer = download::Installer::create(options, &client.0, app)?;
-    installer.install_all(mods).await
-}
-
-/// Downloads and installs mods returned by a closure on the active profile.
-///
-/// Note that this does not check for duplicates, so make sure
-/// none of `mods` are already installed!
-pub async fn install_with_mods<F>(
-    options: InstallOptions,
-    app: &tauri::AppHandle,
-    mods: F,
-) -> Result<()>
-where
-    F: FnOnce(&ModManager, &Thunderstore) -> Result<Vec<ModInstall>>,
-{
-    let mods = {
-        let manager = app.state::<Mutex<ModManager>>();
-        let thunderstore = app.state::<Mutex<Thunderstore>>();
-
-        let manager = manager.lock().unwrap();
-        let thunderstore = thunderstore.lock().unwrap();
-
-        mods(&manager, &thunderstore)?
-    };
-
-    install_mods(mods, options, app).await
+    download::Installer::create(options, app)?
+        .install_all(mods)
+        .await
 }
 
 /// Downloads and installs mods and their missing dependencies on the active profile.
@@ -192,7 +159,9 @@ pub async fn install_with_deps(
     allow_multiple: bool,
     app: &tauri::AppHandle,
 ) -> Result<()> {
-    install_with_mods(options, app, move |manager, thunderstore| {
+    let mods = {
+        let manager = app.lock_manager();
+        let thunderstore = app.lock_thunderstore();
         let profile = manager.active_profile();
 
         if !allow_multiple && mods.len() == 1 && profile.has_mod(mods[0].uuid()) {
@@ -202,11 +171,11 @@ pub async fn install_with_deps(
         let mods = mods
             .into_iter()
             .map(|install| {
-                let borrowed = install.id.borrow(thunderstore)?;
+                let borrowed = install.id.borrow(&thunderstore)?;
 
                 Ok(iter::once(install).chain(
                     profile
-                        .missing_deps(borrowed.dependencies(), thunderstore)
+                        .missing_deps(borrowed.dependencies(), &thunderstore)
                         .map(ModInstall::from),
                 ))
             })
@@ -214,13 +183,13 @@ pub async fn install_with_deps(
             .collect::<Result<Vec<_>>>()
             .context("failed to resolve dependencies")?;
 
-        Ok(mods
-            .into_iter()
+        mods.into_iter()
             .unique_by(|install| install.uuid())
             .rev() // install dependencies first
-            .collect())
-    })
-    .await
+            .collect()
+    };
+
+    install_mods(mods, options, app).await
 }
 
 /// Gets the number of bytes to download the given mod and its

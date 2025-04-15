@@ -2,6 +2,7 @@ use std::{
     borrow::Cow,
     hash::{self, Hash},
     path::PathBuf,
+    sync::LazyLock,
 };
 
 use heck::{ToKebabCase, ToPascalCase};
@@ -16,9 +17,8 @@ use crate::profile::install::{
 
 const GAMES_JSON: &str = include_str!("../games.json");
 
-lazy_static! {
-    static ref GAMES: Vec<GameData<'static>> = serde_json::from_str(GAMES_JSON).unwrap();
-}
+static GAMES: LazyLock<Vec<GameData<'static>>> =
+    LazyLock::new(|| serde_json::from_str(GAMES_JSON).unwrap());
 
 pub type Game = &'static GameData<'static>;
 

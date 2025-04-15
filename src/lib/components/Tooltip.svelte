@@ -26,12 +26,12 @@
 		<slot />
 	</Tooltip.Trigger>
 	<Tooltip.Content
-		class="max-w-lg cursor-help rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-slate-300 shadow-lg"
+		class="border-primary-600 bg-primary-800 text-primary-300 max-w-lg cursor-help rounded-lg border px-4 py-2 shadow-lg"
 		{...dropTransitionTo(distance)}
 		{sideOffset}
 		{side}
 	>
-		<Tooltip.Arrow class="rounded-[2px] border-t border-l border-slate-600" />
+		<Tooltip.Arrow class="border-primary-600 rounded-[2px] border-t border-l" />
 		<slot name="tooltip">
 			{text}
 		</slot>

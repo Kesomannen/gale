@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use log::warn;
+use tracing::warn;
 use serde::{de::DeserializeOwned, Serialize};
 use walkdir::WalkDir;
 use zip::ZipArchive;
@@ -95,8 +95,8 @@ pub fn get_directory_size(path: impl AsRef<Path>) -> u64 {
 }
 
 pub fn read_json<T: DeserializeOwned>(path: impl AsRef<Path>) -> eyre::Result<T> {
-    let reader = File::open(path).map(BufReader::new)?;
-    let result = serde_json::from_reader(reader)?;
+    let string = fs::read_to_string(path)?;
+    let result = serde_json::from_str(&string)?;
 
     Ok(result)
 }

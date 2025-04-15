@@ -1,10 +1,14 @@
-use std::{fs, sync::Mutex};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    path::PathBuf,
+};
 
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
-use log::info;
+use tracing::info;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Listener};
 use uuid::Uuid;
 
 use super::{
@@ -14,8 +18,10 @@ use super::{
     Dependant, ManagedGame, Profile, ProfileMod,
 };
 use crate::{
-    prefs::Prefs,
-    profile::ModManager,
+    config::ConfigCache,
+    db::Db,
+    logger,
+    state::ManagerExt,
     thunderstore::Thunderstore,
     util::{
         self,
@@ -23,6 +29,24 @@ use crate::{
         fs::{Overwrite, UseLinks},
     },
 };
+
+pub fn setup(app: &AppHandle) -> Result<()> {
+    let handle = app.to_owned();
+    app.listen("reorder_mod", move |event| {
+        if let Err(err) = handle_reorder_event(event, &handle) {
+            logger::log_webview_err("Failed to reorder mod", err, &handle);
+        }
+    });
+
+    let handle = app.to_owned();
+    app.listen("finish_reorder", move |_| {
+        if let Err(err) = handle_finish_reorder_event(&handle) {
+            logger::log_webview_err("Failed to finish reordering", err, &handle);
+        }
+    });
+
+    Ok(())
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
@@ -189,7 +213,7 @@ impl Profile {
     }
 }
 
-pub fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
+fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Payload {
@@ -199,70 +223,103 @@ pub fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> 
 
     let Payload { uuid, delta } = serde_json::from_str(event.payload())?;
 
-    let manager = app.state::<Mutex<ModManager>>();
-    let mut manager = manager.lock().unwrap();
-
+    let mut manager = app.lock_manager();
     manager.active_profile_mut().reorder_mod(uuid, delta)?;
 
     Ok(())
 }
 
-pub fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
-    let manager = app.state::<Mutex<ModManager>>();
-    let prefs = app.state::<Mutex<Prefs>>();
-
-    let manager = manager.lock().unwrap();
-    let prefs = prefs.lock().unwrap();
-
-    manager.save(&prefs)
+fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
+    app.lock_manager().save_active_profile(app.db())
 }
 
 impl ManagedGame {
-    pub fn create_profile(&mut self, name: String) -> Result<&mut Profile> {
+    pub fn create_profile(
+        &mut self,
+        name: String,
+        override_path: Option<PathBuf>,
+        db: &Db,
+    ) -> Result<&mut Profile> {
         ensure!(
             Profile::is_valid_name(&name),
             "profile name '{}' is invalid",
             name
         );
 
-        let mut path = self.path.join("profiles");
-        path.push(&name);
-
         ensure!(
-            !path.exists(),
-            "profile with name '{}' already exists",
+            !self.profiles.iter().any(|profile| profile.name == name),
+            "profile with name {} already exists",
             name
         );
 
+        let path = match override_path {
+            Some(path) => {
+                ensure!(
+                    path.read_dir()?.next().is_none(),
+                    "profile directory is not empty"
+                );
+
+                path
+            }
+            None => {
+                let mut path = self.path.join("profiles");
+                path.push(&name);
+
+                ensure!(
+                    !path.exists(),
+                    "profile at {} already exists",
+                    path.display()
+                );
+
+                path
+            }
+        };
+
         fs::create_dir_all(&path).fs_context("creating profile directory", &path)?;
 
-        self.profiles.push(Profile::new(name, path, self.game));
+        let id = db.next_profile_id()?;
 
-        let index = self.profiles.len() - 1;
-        self.active_profile_index = index;
-        Ok(&mut self.profiles[index])
+        self.profiles.push(Profile {
+            id,
+            name,
+            path,
+            mods: Vec::new(),
+            game: self.game,
+            ignored_updates: HashSet::new(),
+            config_cache: ConfigCache::default(),
+            linked_config: HashMap::new(),
+            modpack: None,
+        });
+
+        self.active_profile_id = id;
+        Ok(self.active_profile_mut())
     }
 
-    pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool) -> Result<()> {
+    pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool, db: &Db) -> Result<()> {
         ensure!(
             allow_delete_last || self.profiles.len() > 1,
             "cannot delete last profile"
         );
 
         let profile = self.profile_at(index)?;
+        let id = profile.id;
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
 
-        self.active_profile_index = 0;
+        if !self.profiles.is_empty() {
+            self.active_profile_id = self.profiles[0].id;
+        }
+
+        db.delete_profile(id)?;
 
         Ok(())
     }
 
-    pub fn duplicate_profile(&mut self, duplicate_name: String, index: usize) -> Result<()> {
-        self.create_profile(duplicate_name)?;
+    pub fn duplicate_profile(&mut self, duplicate_name: String, id: i64, db: &Db) -> Result<()> {
+        self.create_profile(duplicate_name, None, db)?;
 
-        let old_profile = self.profile_at(index)?;
+        let old_profile = self.find_profile(id)?;
         let new_profile = self.active_profile();
 
         // Make sure generated files and configs are properly copied

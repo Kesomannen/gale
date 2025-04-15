@@ -6,14 +6,14 @@
 </script>
 
 <Menubar.Item
-	class="group mx-1 flex cursor-default items-center justify-between rounded py-1 pl-4 text-left hover:bg-slate-700 {key
+	class="group hover:bg-primary-700 mx-1 flex cursor-default items-center justify-between rounded py-1 pl-4 text-left {key
 		? 'pr-4'
 		: 'pr-10'}"
 	on:click
 >
-	<span class="text-slate-400 group-hover:text-slate-300">{text}</span>
+	<span class="text-primary-400 group-hover:text-primary-300">{text}</span>
 
 	{#if key}
-		<span class="pl-6 font-mono text-sm text-slate-400 group-hover:text-slate-300">{key}</span>
+		<span class="text-primary-400 group-hover:text-primary-300 pl-6 font-mono text-sm">{key}</span>
 	{/if}
 </Menubar.Item>

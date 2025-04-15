@@ -10,7 +10,7 @@
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import InputField from '$lib/components/InputField.svelte';
-	import { profiles, refreshProfiles } from '$lib/stores';
+	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
@@ -18,9 +18,11 @@
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Info from '$lib/components/Info.svelte';
+	import { onMount } from 'svelte';
+	import { listen } from '@tauri-apps/api/event';
 
-	export let open: boolean;
-	export let data: ImportData | null;
+	let open: boolean;
+	let data: ImportData | null;
 
 	let key: string;
 	let name: string;
@@ -28,15 +30,21 @@
 	let importAll: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
 
-	$: if (open) {
-		getKeyFromClipboard();
-	}
-
 	$: if (mode === 'overwrite' && isAvailable(name)) {
 		name = profiles[0].name;
 	}
 
 	$: nameAvailable = mode === 'overwrite' || isAvailable(name);
+
+	onMount(() => {
+		listen<ImportData>('import_profile', (evt) => {
+			data = evt.payload;
+			name = data.name;
+			mode = isAvailable(name) ? 'new' : 'overwrite';
+
+			open = true;
+		});
+	});
 
 	async function getKeyFromClipboard() {
 		key = (await readText()) ?? '';
@@ -45,9 +53,8 @@
 	async function submitKey() {
 		loading = true;
 		try {
-			data = await invokeCommand<ImportData>('import_code', { key: key.trim() });
-			name = data.name;
-			mode = isAvailable(name) ? 'new' : 'overwrite';
+			data = await invokeCommand<ImportData>('read_profile_code', { key: key.trim() });
+			await openFor(data);
 		} finally {
 			loading = false;
 		}
@@ -64,7 +71,7 @@
 			if (!confirmed) return;
 		}
 
-		invokeCommand('import_data', { data, importAll }).then(refreshProfiles);
+		invokeCommand('import_profile', { data, importAll }).then(refreshProfiles);
 		data = null;
 		importAll = false;
 		open = false;
@@ -72,6 +79,26 @@
 
 	function isAvailable(name: string) {
 		return !profiles.some((profile) => profile.name === name);
+	}
+
+	export async function openFor(importData: ImportData) {
+		data = importData;
+
+		if (data.game !== null && $activeGame?.slug !== data.game) {
+			await setActiveGame(data.game);
+		}
+
+		name = data.name;
+		mode = isAvailable(name) ? 'new' : 'overwrite';
+
+		open = true;
+	}
+
+	export function openForCode() {
+		data = null;
+		getKeyFromClipboard();
+
+		open = true;
 	}
 </script>
 
@@ -83,7 +110,21 @@
 		importAll = false;
 	}}
 >
-	{#if data !== null}
+	{#if data === null}
+		<div class="mt-1 flex gap-2">
+			<div class="grow">
+				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
+			</div>
+
+			<BigButton on:click={submitKey} disabled={loading}>
+				{#if loading}
+					<Icon icon="mdi:loading" class="animate-spin" />
+				{:else}
+					Import
+				{/if}
+			</BigButton>
+		</div>
+	{:else}
 		<TabsMenu
 			bind:value={mode}
 			options={[
@@ -131,7 +172,7 @@
 		</TabsMenu>
 
 		<details>
-			<summary class="mt-2 cursor-pointer text-slate-300"
+			<summary class="text-primary-300 mt-2 cursor-pointer"
 				>{data.modNames.length} mods to install</summary
 			>
 
@@ -139,7 +180,7 @@
 		</details>
 
 		<details>
-			<summary class="mt-1 cursor-pointer text-slate-300">Advanced options</summary>
+			<summary class="text-primary-300 mt-1 cursor-pointer">Advanced options</summary>
 
 			<div class="mt-1 flex items-center">
 				<Label>Import all files</Label>
@@ -153,29 +194,15 @@
 			</div>
 		</details>
 
-		<div class="mt-2 flex w-full items-center justify-end gap-2 text-slate-400">
+		<div class="text-primary-400 mt-2 flex w-full items-center justify-end gap-2">
 			<BigButton
-				color="slate"
+				color="primary"
 				on:click={() => {
 					open = false;
 					data = null;
 				}}>Cancel</BigButton
 			>
 			<BigButton disabled={!nameAvailable || loading} on:click={importData}>Import</BigButton>
-		</div>
-	{:else}
-		<div class="mt-1 flex gap-2">
-			<div class="grow">
-				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
-			</div>
-
-			<BigButton on:click={submitKey} disabled={loading}>
-				{#if loading}
-					<Icon icon="mdi:loading" class="animate-spin" />
-				{:else}
-					Import
-				{/if}
-			</BigButton>
 		</div>
 	{/if}
 </Popup>

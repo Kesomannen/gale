@@ -5,7 +5,7 @@ use std::{
 };
 
 use eyre::{bail, Context, OptionExt, Result};
-use log::{info, warn};
+use tracing::{info, warn};
 
 use crate::{
     game::{ModLoader, ModLoaderKind},

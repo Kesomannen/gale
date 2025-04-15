@@ -22,7 +22,7 @@
 </script>
 
 <Popup bind:open title="Import profiles from other manager" canClose={!loading}>
-	<div class="mb-2 text-slate-300">
+	<div class="text-primary-300 mb-2">
 		<p>
 			This will import profiles <b>for the current game</b> from r2modman or Thunderstore Mod Manager.
 		</p>
@@ -34,7 +34,7 @@
 	<ImportR2Flow bind:this={importFlow} bind:loading bind:importData />
 
 	<div class="mt-3 mr-0.5 flex w-full justify-end gap-2">
-		<BigButton color="slate" on:click={() => (open = false)}>Cancel</BigButton>
+		<BigButton color="primary" on:click={() => (open = false)}>Cancel</BigButton>
 		<BigButton color="accent" on:click={doImport}>Import</BigButton>
 	</div>
 </Popup>

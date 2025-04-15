@@ -8,14 +8,16 @@ use std::{
 use base64::{prelude::BASE64_STANDARD, Engine};
 use eyre::{anyhow, Context};
 use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
 use uuid::Uuid;
 use walkdir::WalkDir;
 use zip::{write::SimpleFileOptions, ZipWriter};
 
-use super::{install::ModInstall, ModManager, Profile, Result};
+use super::{install::ModInstall, Profile, Result};
 use crate::{
+    game::Game,
+    state::ManagerExt,
     thunderstore::{LegacyProfileCreateResponse, ModId, Thunderstore},
-    util::cmd::StateMutex,
 };
 
 mod changelog;
@@ -28,17 +30,9 @@ pub struct LegacyProfileManifest {
     pub profile_name: String,
     pub mods: Vec<R2Mod>,
     #[serde(default)]
-    pub source: ImportSource,
+    pub game_slug: Option<String>,
     #[serde(default)]
     pub ignored_updates: Vec<Uuid>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
-#[serde(rename_all = "camelCase")]
-pub enum ImportSource {
-    Gale,
-    #[default]
-    R2,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -105,7 +99,7 @@ impl From<semver::Version> for R2Version {
 
 pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
-pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result<()> {
+pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Game) -> Result<()> {
     let mut zip = ZipWriter::new(writer);
 
     let mods = profile
@@ -130,7 +124,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result
     let manifest = LegacyProfileManifest {
         profile_name: profile.name.clone(),
         ignored_updates: profile.ignored_updates.iter().cloned().collect(),
-        source: ImportSource::Gale,
+        game_slug: Some(game.slug.to_string()),
         mods,
     };
 
@@ -142,18 +136,16 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek) -> Result
     Ok(())
 }
 
-async fn export_code(
-    client: &reqwest::Client,
-    manager: StateMutex<'_, ModManager>,
-) -> Result<Uuid> {
+async fn export_code(app: &AppHandle) -> Result<Uuid> {
     let base64 = {
-        let mut manager = manager.lock().unwrap();
+        let mut manager = app.lock_manager();
 
+        let game = manager.active_game().game;
         let profile = manager.active_profile_mut();
         profile.refresh_config();
 
         let mut data = Cursor::new(Vec::new());
-        export_zip(profile, &mut data)?;
+        export_zip(profile, &mut data, game)?;
 
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
@@ -163,7 +155,8 @@ async fn export_code(
 
     const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
 
-    let response = client
+    let response = app
+        .http()
         .post(URL)
         .header("Content-Type", "application/octet-stream")
         .body(base64)

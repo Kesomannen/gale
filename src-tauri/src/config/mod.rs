@@ -8,7 +8,7 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use log::debug;
+use tracing::debug;
 use rayon::prelude::*;
 use walkdir::WalkDir;
 
@@ -184,7 +184,8 @@ impl ConfigCache {
                     .to_string_lossy(),
             },
         }
-        .replace(['_', '-', ' '], "");
+        .replace('-', "")
+        .replace('_', " ");
 
         let file = AnyFile {
             display_name,

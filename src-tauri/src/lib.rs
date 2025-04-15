@@ -1,71 +1,68 @@
-use std::time::Instant;
+use std::env;
 
-use ::log::error;
-use eyre::Context;
-use log::{debug, info, warn};
-use tauri::{AppHandle, Manager};
+use itertools::Itertools;
+use tauri::{App, AppHandle};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
-
-#[macro_use]
-extern crate lazy_static;
+use tracing::{error, info, warn};
 
 #[cfg(target_os = "linux")]
 extern crate webkit2gtk;
 
 mod cli;
 mod config;
+mod db;
+mod deep_link;
 mod game;
 mod logger;
 mod prefs;
 mod profile;
+mod state;
 mod supabase;
 mod telemetry;
 mod thunderstore;
 mod util;
 
-#[derive(Debug)]
-pub struct NetworkClient(reqwest::Client);
-
-impl NetworkClient {
-    fn create() -> Result<Self, reqwest::Error> {
-        let client = reqwest::Client::builder()
-            .user_agent("Kesomannen-gale")
-            .build()?;
-
-        Ok(Self(client))
-    }
-}
-
-fn setup(app: &AppHandle) -> eyre::Result<()> {
-    let start = Instant::now();
-
+fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     info!(
         "gale v{} running on {}",
         env!("CARGO_PKG_VERSION"),
-        std::env::consts::OS
+        std::env::consts::OS,
     );
 
-    app.manage(NetworkClient::create()?);
+    if let Err(err) = state::setup(app.handle()) {
+        error!("setup error: {:#}", err);
 
-    supabase::setup(app).context("failed to initialize supabase")?;
-    let supabase_done = Instant::now();
-    prefs::setup(app).context("failed to initialize settings")?;
-    let prefs_done = Instant::now();
-    profile::setup(app).context("failed to initialize mod manager")?;
-    let manager_done = Instant::now();
-    thunderstore::setup(app);
+        app.dialog()
+            .message(format!("Failed to launch Gale: {:#}", err))
+            .blocking_show();
 
-    info!("setup done in {:?}", start.elapsed());
-    debug!(
-        "supabase: {:?} | prefs: {:?} | manager {:?} | thunderstore {:?}",
-        supabase_done - start,
-        prefs_done - supabase_done,
-        manager_done - prefs_done,
-        manager_done.elapsed()
-    );
+        return Err(err.into());
+    }
+
+    cli::run(app.handle());
+
+    if let Err(err) = app.deep_link().register("ror2mm") {
+        warn!("failed to register deep link protocol: {:#}", err);
+    }
+
+    let args = env::args().collect_vec();
+    if args.len() > 1 {
+        deep_link::handle(app.handle(), args);
+    }
+
+    let handle = app.handle().to_owned();
+    tauri::async_runtime::spawn(async move { telemetry::send_app_start_event(handle).await });
+
+    info!("setup done");
 
     Ok(())
+}
+
+fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
+    if !deep_link::handle(app, args.clone()) {
+        cli::run_from(app, args.clone());
+    }
 }
 
 pub fn run() {
@@ -77,6 +74,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             logger::open_gale_log,
             logger::log_err,
+            state::is_first_run,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::set_thunderstore_token,
@@ -85,7 +83,6 @@ pub fn run() {
             thunderstore::commands::trigger_mod_fetch,
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
-            prefs::commands::is_first_run,
             prefs::commands::zoom_window,
             profile::commands::get_game_info,
             profile::commands::favorite_game,
@@ -118,10 +115,12 @@ pub fn run() {
             profile::update::commands::change_mod_version,
             profile::update::commands::update_mods,
             profile::update::commands::ignore_update,
-            profile::import::commands::import_data,
-            profile::import::commands::import_code,
-            profile::import::commands::import_file,
+            profile::import::commands::import_profile,
+            profile::import::commands::read_profile_code,
+            profile::import::commands::read_profile_file,
+            profile::import::commands::read_profile_base64,
             profile::import::commands::import_local_mod,
+            profile::import::commands::import_local_mod_base64,
             profile::import::commands::get_r2modman_info,
             profile::import::commands::import_r2modman,
             profile::export::commands::export_code,
@@ -156,62 +155,9 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
-        .plugin(tauri_plugin_cli::init())
-        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            info!("received deep link: {:?}", args);
-
-            app.get_window("main")
-                .expect("app should have main window")
-                .set_focus()
-                .ok();
-
-            let Some(url) = args.into_iter().nth(1) else {
-                warn!("deep link has too few arguments");
-                return;
-            };
-
-            if url.starts_with("ror2mm://") {
-                profile::install::deep_link::handle(&url, app);
-            } else if url.ends_with("r2z") {
-                let app = app.to_owned();
-                tauri::async_runtime::spawn(async move {
-                    profile::import::import_file_from_deep_link(url, &app)
-                        .await
-                        .unwrap_or_else(|err| {
-                            logger::log_webview_err("Failed to import profile file", err, &app);
-                        })
-                });
-            } else {
-                warn!("unknown deep link protocol");
-            }
-        }))
-        .setup(|app| {
-            let handle = app.handle().clone();
-
-            if let Err(err) = setup(&handle) {
-                error!("failed to start app: {:#}", err);
-
-                app.dialog()
-                    .message(format!("Failed to launch Gale: {:#}", err))
-                    .blocking_show();
-
-                return Err(err.into());
-            }
-
-            app.deep_link().register("ror2mm").unwrap_or_else(|err| {
-                error!("failed to register deep link: {:#}", err);
-            });
-
-            cli::run(app).unwrap_or_else(|err| {
-                error!("failed to run CLI: {:#}", err);
-            });
-
-            tauri::async_runtime::spawn(
-                async move { telemetry::send_app_start_event(handle).await },
-            );
-
-            Ok(())
-        })
+        // TODO .plugin(tauri_plugin_oauth::Builder)
+        .plugin(tauri_plugin_single_instance::init(handle_single_instance))
+        .setup(setup)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -21,7 +21,7 @@
 </script>
 
 {#if metadata}
-	<div class="mb-1 px-4 font-medium text-slate-400">
+	<div class="text-primary-400 mb-1 px-4 font-medium">
 		Created by {metadata.modName}
 		{metadata.modVersion}
 	</div>

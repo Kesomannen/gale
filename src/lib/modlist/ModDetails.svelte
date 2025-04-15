@@ -7,7 +7,13 @@
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 
 	import type { MarkdownResponse, Mod, ModContextItem } from '$lib/models';
-	import { communityUrl, shortenFileSize, shortenNum, timeSince } from '$lib/util';
+	import {
+		communityUrl,
+		shortenFileSize,
+		shortenNum,
+		thunderstoreIconUrl,
+		timeSince
+	} from '$lib/util';
 
 	import { Button, DropdownMenu } from 'bits-ui';
 
@@ -60,38 +66,48 @@
 </script>
 
 <div
-	class="relative flex w-[40%] min-w-72 flex-col border-l border-slate-600 bg-slate-700 px-6 pt-6 pb-4 text-white"
+	class="border-primary-600 bg-primary-700 relative flex w-[40%] min-w-72 flex-col border-l px-6 pt-6 pb-4 text-white"
 >
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class="absolute right-2 mt-0.5 rounded-full p-1 hover:bg-slate-600">
-			<Icon class="text-2xl text-slate-200" icon="mdi:dots-vertical" />
+		<DropdownMenu.Trigger class="hover:bg-primary-600 absolute right-2 mt-0.5 rounded-full p-1">
+			<Icon class="text-primary-200 text-2xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
-			class="flex flex-col gap-0.5 rounded-lg border border-slate-500 bg-slate-700 p-1 shadow-xl"
+			class="border-primary-500 bg-primary-700 flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl"
 			{...dropTransition}
 		>
 			<ModContextMenuItems {mod} {locked} contextItems={allContextItems} type="details" />
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<a
-		class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
-		href={communityUrl(mod.author + '/' + mod.name)}
-		target="_blank">{mod.name.replace(/_/g, ' ')}</a
-	>
+	<div class="flex flex-wrap gap-4 xl:items-center">
+		<img
+			src={thunderstoreIconUrl(`${mod.author}-${mod.name}-${mod.version}`)}
+			class="max-h-30 max-w-30 rounded-lg"
+			alt=""
+		/>
 
-	{#if mod.author}
-		<div class="text-xl text-slate-300 xl:text-2xl">
-			By
-			<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
-				{mod.author}
-			</a>
+		<div>
+			<a
+				class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
+				href={communityUrl(`${mod.author}/${mod.name}`)}
+				target="_blank">{mod.name.replace(/_/g, ' ')}</a
+			>
+
+			{#if mod.author}
+				<div class="text-primary-300 text-xl xl:text-2xl">
+					By
+					<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
+						{mod.author}
+					</a>
+				</div>
+			{/if}
+
+			{#if mod.version}
+				<div class="text-primary-300 text-xl xl:text-2xl">v{mod.version}</div>
+			{/if}
 		</div>
-	{/if}
-
-	{#if mod.version}
-		<div class="text-xl text-slate-300 xl:text-2xl">v{mod.version}</div>
-	{/if}
+	</div>
 
 	<div class="flex flex-wrap gap-1">
 		{#if mod.isDeprecated}
@@ -110,16 +126,16 @@
 	</div>
 
 	{#if mod.categories}
-		<div class="my-2 flex flex-wrap gap-1">
+		<div class="mt-4 mb-1 flex flex-wrap gap-1">
 			{#each mod.categories as category}
-				<div class="rounded-full bg-slate-600 px-4 py-1 text-slate-200">
+				<div class="bg-primary-600 text-primary-200 rounded-full px-4 py-1">
 					{category}
 				</div>
 			{/each}
 		</div>
 	{/if}
 
-	<div class="my-1 flex items-center gap-1.5 text-lg">
+	<div class="mt-1 flex items-center gap-1.5 text-lg">
 		{#if mod.rating !== null}
 			<Icon class="shrink-0 text-yellow-400" icon="mdi:star" />
 			<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
@@ -128,31 +144,31 @@
 			<Icon class="shrink-0 text-green-400" icon="mdi:download" />
 			<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
 		{/if}
-		<Icon class="shrink-0 text-slate-400" icon="mdi:weight" />
-		<span class="text-slate-400">{shortenFileSize(mod.fileSize)}</span>
+		<Icon class="text-primary-400 shrink-0" icon="mdi:weight" />
+		<span class="text-primary-400">{shortenFileSize(mod.fileSize)}</span>
 	</div>
 
 	{#if mod.lastUpdated !== null}
-		<div class="text-lg text-slate-400">
+		<div class="text-primary-400 mt-1 text-lg">
 			Last updated {timeSince(new Date(mod.lastUpdated))} ago
 		</div>
 	{/if}
 
 	{#if mod.description !== null}
-		<p class="mt-2 shrink overflow-hidden text-xl text-slate-300 lg:hidden">
+		<p class="text-primary-300 mt-2 shrink overflow-hidden text-xl lg:hidden">
 			{mod.description}
 		</p>
 	{/if}
 
 	{#await readmePromise}
 		<div class="hidden h-full w-full items-center justify-center lg:flex">
-			<Icon class="animate-spin text-5xl text-slate-300" icon="mdi:loading" />
+			<Icon class="text-primary-300 animate-spin text-5xl" icon="mdi:loading" />
 		</div>
 	{:then readme}
 		{#if readme}
-			<Markdown source={readme} class="readme hidden lg:block" />
+			<Markdown source={readme} class="light-scrollbar hidden lg:block" />
 		{:else}
-			<p class="mt-3 hidden shrink overflow-hidden text-xl text-slate-300 lg:block">
+			<p class="text-primary-300 mt-3 hidden shrink overflow-hidden text-xl lg:block">
 				{mod.description ?? ''}
 			</p>
 		{/if}
@@ -171,7 +187,7 @@
 
 	{#if mod.type === 'remote'}
 		<Button.Root
-			class="group flex items-center rounded-md bg-slate-600 py-1 pr-1.5 pl-3 text-white hover:bg-slate-500"
+			class="group bg-primary-600 hover:bg-primary-500 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
 			on:mouseenter={changelog.fetchMarkdown}
 			on:click={() => (changelogOpen = true)}
 		>
@@ -180,7 +196,7 @@
 		</Button.Root>
 
 		<Button.Root
-			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pr-1.5 pl-3 text-white hover:bg-slate-500"
+			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
 			on:mouseenter={readme.fetchMarkdown}
 			on:click={() => (readmeOpen = true)}
 		>
@@ -191,12 +207,12 @@
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		<Button.Root
-			class="group mt-1 flex items-center rounded-md bg-slate-600 py-1 pr-1 pl-3 text-white hover:bg-slate-500"
+			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1 pl-3 text-white"
 			on:click={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />
 			Dependencies
-			<div class="ml-auto rounded-md bg-slate-500 px-3 py-0.5 text-sm group-hover:bg-slate-400">
+			<div class="bg-primary-500 group-hover:bg-primary-400 ml-auto rounded-md px-3 py-0.5 text-sm">
 				{mod.dependencies.length}
 			</div>
 		</Button.Root>
@@ -223,11 +239,3 @@
 	useLatest={true}
 	path="changelog"
 />
-
-<style lang="postcss">
-	@reference 'tailwindcss';
-
-	:global(.readme) {
-		scrollbar-color: var(--color-slate-400) theme(--color-slate-700);
-	}
-</style>

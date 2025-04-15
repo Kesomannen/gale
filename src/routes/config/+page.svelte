@@ -68,15 +68,15 @@
 
 <div class="flex grow overflow-hidden">
 	<div
-		class="file-list w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r border-slate-600 bg-slate-700"
+		class="light-scrollbar border-primary-600 bg-primary-700 w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r"
 	>
-		{#if files === null}
-			<div class="flex h-full w-full items-center justify-center text-lg text-slate-300">
+		{#if files === undefined}
+			<div class="text-primary-300 flex h-full w-full items-center justify-center text-lg">
 				<Icon icon="mdi:loading" class="mr-4 animate-spin" />
 				Loading config...
 			</div>
 		{:else if files.length === 0}
-			<div class="flex h-full items-center justify-center text-lg text-slate-300">
+			<div class="text-primary-300 flex h-full items-center justify-center text-lg">
 				No config files found
 			</div>
 		{:else}
@@ -111,7 +111,7 @@
 			<div class="shrink-0 truncate px-4 text-2xl font-bold text-white">
 				{selectedFile.relativePath}
 				{#if selectedSection}
-					<span class="text-slate-400">/</span>
+					<span class="text-primary-400">/</span>
 					{selectedSection.name.length > 0 ? selectedSection.name : '<Nameless section>'}
 				{/if}
 			</div>
@@ -123,26 +123,28 @@
 					locked={$activeProfileLocked}
 				/>
 			{:else if selectedFile.type === 'unsupported'}
-				<div class="mb-1 px-4 text-slate-400">
+				<div class="text-primary-400 mb-1 px-4">
 					This file is in an unsupported format. Please open it in an external program to make
 					changes.
 				</div>
 				<BigButton
 					class="mx-4"
-					color="slate"
+					color="primary"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
 					<Icon icon="mdi:open-in-new" class="mr-2" />
 					Open in external program
 				</BigButton>
 			{:else if selectedFile.type === 'err'}
-				<div class="mb-1 px-4 text-slate-400">An error occured while reading this config file:</div>
-				<code class="mx-4 mb-1 flex rounded-sm bg-slate-900 p-4 text-red-500">
+				<div class="text-primary-400 mb-1 px-4">
+					An error occured while reading this config file:
+				</div>
+				<code class="bg-primary-900 mx-4 mb-1 flex rounded-sm p-4 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
 				<BigButton
 					class="mx-4"
-					color="slate"
+					color="primary"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
 					<Icon icon="mdi:open-in-new" class="mr-2" />
@@ -150,7 +152,7 @@
 				</BigButton>
 			{/if}
 		{:else}
-			<div class="flex h-full w-full items-center justify-center text-lg text-slate-400">
+			<div class="text-primary-400 flex h-full w-full items-center justify-center text-lg">
 				Select a config file to start editing
 			</div>
 		{/if}
@@ -158,11 +160,3 @@
 </div>
 
 <ExpandedEntryPopup />
-
-<style lang="postcss">
-	@reference 'tailwindcss';
-
-	.file-list {
-		scrollbar-color: var(--color-slate-400) var(--color-slate-700);
-	}
-</style>

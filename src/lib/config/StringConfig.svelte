@@ -10,7 +10,6 @@
 	import { getListSeparator } from '$lib/util';
 
 	export let entryId: ConfigEntryId;
-	export let locked: boolean;
 
 	let content = entryId.entry.value.content as string;
 	let listSeparator = getListSeparator(entryId.entry);
@@ -28,29 +27,27 @@
 	}
 
 	$: showExpandButton =
-		!locked &&
-		(content.length > 100 ||
-			listSeparator.type === 'custom' ||
-			content.includes('\n') ||
-			content.includes(listSeparator.char));
+		content.length > 100 ||
+		listSeparator.type === 'custom' ||
+		content.includes('\n') ||
+		content.includes(listSeparator.char);
 </script>
 
 <div class="relative grow">
 	<InputField
 		bind:value={content}
 		on:change={submit}
-		disabled={locked}
 		spellcheck="false"
 		class="w-full {showExpandButton && 'pr-8'}"
 	/>
 
 	{#if showExpandButton}
 		<Button.Root
-			class="absolute top-1 right-1 rounded-lg bg-slate-900 p-1 text-lg text-slate-400 hover:bg-slate-800"
+			class="bg-primary-900 text-primary-400 hover:bg-primary-800 absolute top-1 right-1 rounded-lg p-1 text-lg"
 			on:click={() => ($expandedEntry = entryId)}
 		>
 			<Icon icon="mdi:arrow-expand" />
 		</Button.Root>
 	{/if}
 </div>
-<ResetConfigButton {entryId} {locked} {onReset} />
+<ResetConfigButton {entryId} {onReset} />

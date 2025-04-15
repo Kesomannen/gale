@@ -60,6 +60,7 @@ export type ConfigFile = { relativePath: string; displayName: string | null } & 
 );
 
 export type ProfileInfo = {
+	id: number;
 	name: string;
 	modCount: number;
 	sync: ProfileSyncInfo | null;
@@ -74,7 +75,7 @@ export type ProfileSyncInfo = {
 
 export type ProfilesInfo = {
 	profiles: ProfileInfo[];
-	activeIndex: number;
+	activeId: number;
 };
 
 export type GameInfo = {
@@ -107,6 +108,7 @@ export type Mod = {
 	isInstalled: boolean | undefined;
 	containsNsfw: boolean;
 	uuid: string;
+	versionUuid: string;
 	lastUpdated: string | null;
 	versions: {
 		name: string;
@@ -253,6 +255,7 @@ export type ProfileQuery = {
 
 export type ImportData = {
 	name: string;
+	game: string | null;
 	modNames: string[];
 };
 
@@ -269,7 +272,6 @@ export type MarkdownResponse = {
 
 export type Prefs = {
 	steamExePath: string | null;
-	steamLibraryDir: string | null;
 	dataDir: string;
 	cacheDir: string;
 	sendTelemetry: boolean;

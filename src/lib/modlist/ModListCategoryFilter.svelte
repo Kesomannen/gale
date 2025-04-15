@@ -21,21 +21,21 @@
 	<Select.Trigger
 		let:open
 		slot="trigger"
-		class="flex flex-grow-3 basis-0 items-center overflow-hidden rounded-lg border border-transparent bg-slate-900 px-3 py-1.5 hover:border-slate-500"
+		class="bg-primary-900 hover:border-primary-500 flex flex-grow-3 basis-0 items-center overflow-hidden rounded-lg border border-transparent px-3 py-1.5"
 	>
-		<Icon class="mr-2 shrink-0 text-lg text-slate-400" {icon} />
+		<Icon class="text-primary-400 mr-2 shrink-0 text-lg" {icon} />
 		{#if selected.length === 0}
-			<span class="truncate text-slate-300">{label}</span>
+			<span class="text-primary-300 truncate">{label}</span>
 		{:else}
 			<div class="mr-2 flex flex-wrap gap-1">
 				{#each selected as category}
 					<div
-						class="overflow-hidden rounded-lg bg-slate-800 py-0.5 pr-0.5 pl-2 text-sm text-slate-200"
+						class="bg-primary-800 text-primary-200 overflow-hidden rounded-lg py-0.5 pr-0.5 pl-2 text-sm"
 					>
 						<span class="truncate overflow-hidden">{category}</span>
 
 						<Button.Root
-							class="ml-0.5 rounded-lg px-1.5 hover:bg-slate-700"
+							class="hover:bg-primary-700 ml-0.5 rounded-lg px-1.5"
 							on:click={(evt) => {
 								evt.stopPropagation();
 								selected = selected.filter((cat) => cat !== category);
@@ -48,7 +48,7 @@
 			</div>
 		{/if}
 		<Icon
-			class="ml-auto shrink-0 origin-center transform text-lg text-slate-400 transition-all duration-100 ease-out {open
+			class="text-primary-400 ml-auto shrink-0 origin-center transform text-lg transition-all duration-100 ease-out {open
 				? 'rotate-180'
 				: 'rotate-0'}"
 			icon="mdi:chevron-down"

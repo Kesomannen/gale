@@ -18,7 +18,7 @@
 	import NewProfilePopup from './NewProfilePopup.svelte';
 	import MenubarSeparator from './MenubarSeparator.svelte';
 
-	import { capitalize, shortenFileSize } from '$lib/util';
+	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ImportData } from '$lib/models';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
@@ -31,10 +31,9 @@
 
 	let importR2Open = false;
 	let newProfileOpen = false;
-	let exportCodePopup: ExportCodePopup;
 
-	let importProfileOpen = false;
-	let importProfileData: ImportData | null = null;
+	let exportCodePopup: ExportCodePopup;
+	let importProfilePopup: ImportProfilePopup;
 
 	let profileOperation: 'rename' | 'duplicate' = 'rename';
 	let profileOperationName = '';
@@ -54,19 +53,21 @@
 		if (path === null) return;
 		await invokeCommand('import_local_mod', { path });
 		await refreshProfiles();
+
+		pushInfoToast({
+			message: 'Imported local mod into profile.'
+		});
 	}
 
-	async function importFile() {
+	async function browseImportFile() {
 		let path = await open({
 			title: 'Select the file to import',
 			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
 		});
 
 		if (path === null) return;
-		let data = await invokeCommand<ImportData>('import_file', { path });
-
-		importProfileData = data;
-		importProfileOpen = true;
+		let data = await invokeCommand<ImportData>('read_profile_file', { path });
+		importProfilePopup.openFor(data);
 	}
 
 	async function exportFile() {
@@ -177,6 +178,35 @@
 		});
 	}
 
+	async function handleFileDrop(evt: DragEvent) {
+		evt.preventDefault();
+		if (evt.dataTransfer === null) return;
+
+		let file: File | null;
+		if (evt.dataTransfer.items) {
+			let files = [...evt.dataTransfer.items].filter((item) => item.kind == 'file');
+			if (files.length === 0) return;
+			file = files[0].getAsFile();
+		} else {
+			file = [...evt.dataTransfer.items][0];
+		}
+
+		if (file === null) return;
+		let base64 = await fileToBase64(file);
+
+		if (file.name.endsWith('.r2z')) {
+			let data = await invokeCommand<ImportData>('read_profile_base64', { base64 });
+			importProfilePopup.openFor(data);
+		} else if (file.name.endsWith('.zip')) {
+			await invokeCommand('import_local_mod_base64', { base64 });
+			await refreshProfiles();
+
+			pushInfoToast({
+				message: 'Imported local mod into profile.'
+			});
+		}
+	}
+
 	const hotkeys: { [key: string]: () => void } = {
 		'+': () => zoom({ delta: 0.25 }),
 		'-': () => zoom({ delta: -0.25 }),
@@ -200,7 +230,13 @@
 	});
 </script>
 
-<header data-tauri-drag-region class="flex h-8 shrink-0 bg-slate-800">
+<svelte:body
+	on:dragenter={(evt) => evt.preventDefault()}
+	on:dragover={(evt) => evt.preventDefault()}
+	on:drop={handleFileDrop}
+/>
+
+<header data-tauri-drag-region class="bg-primary-800 flex h-8 shrink-0">
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />
 		<MenubarMenu label="File">
@@ -240,8 +276,8 @@
 			<MenubarItem on:click={uninstallDisabledMods} text="Uninstall disabled mods" />
 		</MenubarMenu>
 		<MenubarMenu label="Import">
-			<MenubarItem on:click={() => (importProfileOpen = true)} text="...profile from code" />
-			<MenubarItem on:click={importFile} text="...profile from file" />
+			<MenubarItem on:click={() => importProfilePopup.openForCode()} text="...profile from code" />
+			<MenubarItem on:click={browseImportFile} text="...profile from file" />
 			<MenubarItem on:click={importLocalMod} text="...local mod" />
 			<MenubarItem on:click={() => (importR2Open = true)} text="...profiles from r2modman" />
 		</MenubarMenu>
@@ -279,14 +315,14 @@
 		</MenubarMenu>
 	</Menubar.Root>
 
-	<Button.Root class="group ml-auto px-3 py-1.5 hover:bg-slate-700" on:click={appWindow.minimize}>
-		<Icon icon="mdi:minimize" class="text-slate-500 group-hover:text-white" />
+	<Button.Root class="group hover:bg-primary-700 ml-auto px-3 py-1.5" on:click={appWindow.minimize}>
+		<Icon icon="mdi:minimize" class="text-primary-500 group-hover:text-white" />
 	</Button.Root>
-	<Button.Root class="group px-3 py-1.5 hover:bg-slate-700" on:click={appWindow.toggleMaximize}>
-		<Icon icon="mdi:maximize" class="text-slate-500 group-hover:text-white" />
+	<Button.Root class="group hover:bg-primary-700 px-3 py-1.5" on:click={appWindow.toggleMaximize}>
+		<Icon icon="mdi:maximize" class="text-primary-500 group-hover:text-white" />
 	</Button.Root>
 	<Button.Root class="group px-3 py-1.5 hover:bg-red-700" on:click={appWindow.close}>
-		<Icon icon="mdi:close" class="text-slate-500 group-hover:text-white" />
+		<Icon icon="mdi:close" class="text-primary-500 group-hover:text-white" />
 	</Button.Root>
 </header>
 
@@ -295,7 +331,7 @@
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
-	<p class="mb-1 text-slate-300">
+	<p class="text-primary-300 mb-1">
 		{profileOperation == 'duplicate'
 			? 'Enter a name for the duplicated profile:'
 			: 'Enter a new name for the profile:'}
@@ -309,7 +345,7 @@
 	/>
 	<div class="mt-2 ml-auto flex justify-end gap-2">
 		{#if !profileOperationInProgress}
-			<BigButton color="slate" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
+			<BigButton color="primary" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
 		{/if}
 		<BigButton
 			color="accent"
@@ -330,4 +366,4 @@
 <ImportR2Popup bind:open={importR2Open} />
 <NewProfilePopup bind:open={newProfileOpen} />
 <ExportCodePopup bind:this={exportCodePopup} />
-<ImportProfilePopup bind:open={importProfileOpen} bind:data={importProfileData} />
+<ImportProfilePopup bind:this={importProfilePopup} />

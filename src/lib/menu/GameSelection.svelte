@@ -5,8 +5,6 @@
 	import { Button } from 'bits-ui';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from '../components/Link.svelte';
-	import { ModLoader } from '$lib/models';
-	import Tooltip from '../components/Tooltip.svelte';
 	import { titleCase } from '$lib/util';
 
 	export let onSelect: () => void;
@@ -51,12 +49,12 @@
 		{#if shownGames.length > 0}
 			{#each shownGames as game}
 				<Button.Root
-					class="group mr-2 flex items-center rounded-lg border p-1.5 hover:bg-slate-700 {$activeGame?.slug ===
+					class="group hover:bg-primary-700 mr-2 flex items-center rounded-lg border p-1.5 {$activeGame?.slug ===
 					game.slug
-						? ' border-slate-500 bg-slate-700'
-						: 'border-transparent hover:bg-slate-700'}"
+						? ' border-primary-500 bg-primary-700'
+						: 'hover:bg-primary-700 border-transparent'}"
 					on:click={() => {
-						setActiveGame(game);
+						setActiveGame(game.slug);
 						onSelect();
 					}}
 				>
@@ -67,7 +65,7 @@
 							{game.name}
 						</div>
 
-						<div class="text-slate-400">
+						<div class="text-primary-400">
 							<span>{game.modLoader} </span>
 
 							<!--
@@ -82,7 +80,7 @@
 							-->
 
 							{#if game.platforms.length > 0}
-								<span class="mx-1 text-slate-500">|</span>
+								<span class="text-primary-500 mx-1">|</span>
 
 								<span class="mr-1">{game.platforms.map(titleCase).join(', ')}</span>
 							{/if}
@@ -90,7 +88,7 @@
 					</div>
 
 					<Button.Root
-						class="mr-1 rounded p-1.5 hover:bg-slate-600 {game.favorite
+						class="hover:bg-primary-600 mr-1 rounded p-1.5 {game.favorite
 							? 'block'
 							: 'hidden group-hover:block'}"
 						on:click={(evt) => {
@@ -108,8 +106,8 @@
 				</Button.Root>
 			{/each}
 		{:else}
-			<div class="mt-4 text-center text-slate-300">No games found 😢</div>
-			<div class="max-w-[35rem] text-sm text-slate-400">
+			<div class="text-primary-300 mt-4 text-center">No games found 😢</div>
+			<div class="text-primary-400 max-w-[35rem] text-sm">
 				Your game missing? If the game is new on Thunderstore there's a chance we have yet to add
 				it. If you can find it on
 				<Link href="https://thunderstore.io">thunderstore.io</Link>

@@ -10,7 +10,7 @@ use eyre::{anyhow, bail, ensure, eyre, Context, OptionExt, Result};
 use futures_util::future::try_join_all;
 use image::{imageops::FilterType, ImageFormat};
 use itertools::Itertools;
-use log::{debug, info, trace};
+use tracing::{debug, info, trace};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::Url;
