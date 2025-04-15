@@ -1,17 +1,19 @@
 # Changelog
 
-## Unreleased
+## 1.5.7 (2025-04-15)
 
 ### Added
 
-- Game information to exports, which lets Gale automatically select the correct game when importing profiles
 - Added mod icon to details menu
 - Color option editor for config hex codes
+- Game information to profile exports, which lets Gale automatically select the correct game when importing profiles
 
 ### Fixed
 
-- Reworked CLI system to fix various bugs
 - Minor UI tweaks
+- Update R.E.P.O. logo
+- Reworked CLI system to fix various bugs
+- Some packages not being fetched from small communities
 
 ## 1.5.6 (2025-04-01)
 
