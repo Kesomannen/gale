@@ -9,8 +9,7 @@ use include_dir::include_dir;
 use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
-use tracing::info;
-use tracing::{debug, info, trace};
+use tracing::{info, trace};
 use uuid::Uuid;
 
 use crate::{
