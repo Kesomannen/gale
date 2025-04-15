@@ -95,7 +95,7 @@
 
 			{#if mod.author}
 				<div class="text-primary-300 text-xl xl:text-2xl">
-					By
+					by
 					<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
 						{mod.author}
 					</a>
