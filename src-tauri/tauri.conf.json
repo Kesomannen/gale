@@ -1,6 +1,6 @@
 {
 	"productName": "Gale",
-	"version": "1.5.8",
+	"version": "1.5.9",
 	"identifier": "com.kesomannen.gale",
 	"build": {
 		"beforeBuildCommand": "npm run build",

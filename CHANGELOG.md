@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.5.9 (2025-04-22)
 
 ### Added
 
+- Create desktop shortcut option to profile menu
 - Support for 8 games:
   - Pulsar: Lost Colony
   - Songs of Conquest
@@ -16,6 +17,9 @@
 ### Fixed
 
 - Punctuation being stripped from config option names
+- Gale being registered as a file handler for all file types
+- Passing `--no-gui` to a running instance causing the app to crash
+- Profile dropdown not being sorted by name
 
 ## 1.5.8 (2025-04-15)
 

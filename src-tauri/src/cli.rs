@@ -12,13 +12,13 @@ use crate::{
 };
 
 pub fn run(app: &AppHandle) {
-    Cli::parse().run(app).unwrap_or_else(|err| {
+    Cli::parse().run(true, app).unwrap_or_else(|err| {
         error!("failed to run cli: {:#}", err);
     })
 }
 
 pub fn run_from(app: &AppHandle, args: Vec<String>) {
-    Cli::parse_from(args).run(app).unwrap_or_else(|err| {
+    Cli::parse_from(args).run(false, app).unwrap_or_else(|err| {
         error!("failed to run cli: {:#}", err);
     })
 }
@@ -43,7 +43,7 @@ struct Cli {
 }
 
 impl Cli {
-    fn run(self, app: &AppHandle) -> Result<()> {
+    fn run(self, from_args: bool, app: &AppHandle) -> Result<()> {
         let mut manager = app.lock_manager();
 
         let Cli {
@@ -89,12 +89,14 @@ impl Cli {
                 }
 
                 let manager = handle.lock_manager();
-                if let Err(err) = handle_launch_and_no_gui(launch, no_gui, &manager, &handle) {
+                if let Err(err) =
+                    handle_launch_and_no_gui(launch, no_gui, from_args, &manager, &handle)
+                {
                     error!("{:#}", err);
                 }
             });
         } else {
-            handle_launch_and_no_gui(launch, no_gui, &manager, app)?;
+            handle_launch_and_no_gui(launch, no_gui, from_args, &manager, app)?;
         }
 
         debug!("cli finished");
@@ -103,6 +105,7 @@ impl Cli {
         fn handle_launch_and_no_gui(
             launch: bool,
             no_gui: bool,
+            from_args: bool,
             manager: &ModManager,
             app: &AppHandle,
         ) -> Result<()> {
@@ -113,7 +116,7 @@ impl Cli {
                     .context("failed to launch game")?;
             }
 
-            if no_gui {
+            if no_gui && from_args {
                 process::exit(0);
             }
 

@@ -210,7 +210,7 @@ impl Db {
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
 
-        let profiles = conn
+        let mut profiles = conn
             .prepare(
                 "SELECT id, name, path, game_slug, mods, modpack, ignored_updates FROM profiles",
             )?
@@ -226,6 +226,8 @@ impl Db {
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
+
+        profiles.sort_by(|a, b| a.name.cmp(&b.name));
 
         let prefs = conn
             .prepare("SELECT data FROM prefs")?
