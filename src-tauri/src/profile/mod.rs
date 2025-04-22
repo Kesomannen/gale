@@ -8,9 +8,9 @@ use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
-use tracing::{info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -584,6 +584,10 @@ impl ModManager {
 
     pub fn save_all(&self, db: &Db) -> Result<()> {
         db.save_all(self)
+    }
+
+    pub fn save(&self, db: &Db) -> Result<()> {
+        db.save_manager(self)
     }
 
     pub fn save_active_game(&self, db: &Db) -> Result<()> {

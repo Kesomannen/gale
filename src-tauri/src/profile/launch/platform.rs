@@ -8,8 +8,8 @@ use std::{
 
 use eyre::{bail, ensure, Context, OptionExt, Result};
 use keyvalues_serde::parser::Vdf;
-use tracing::{debug, info};
 use serde::Deserialize;
+use tracing::{debug, info};
 
 use crate::{
     game::{Game, Platform},
@@ -101,7 +101,7 @@ fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
         bail!("{} is not available on Steam", game.name)
     };
 
-    let mut path = steam_library_dir(steam.id as u64, &prefs)
+    let mut path = find_steam_library_for_game(steam.id as u64, &prefs)
         .context("failed to find steam library location")?;
 
     path.push("steamapps");
@@ -117,7 +117,7 @@ fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     Ok(path)
 }
 
-pub fn steam_library_dir(steam_id: u64, prefs: &Prefs) -> Result<PathBuf> {
+pub fn find_steam_library_for_game(game_id: u64, prefs: &Prefs) -> Result<PathBuf> {
     #[derive(Deserialize, Debug)]
     struct LibraryFolders {
         libraries: Vec<Library>,
@@ -157,7 +157,7 @@ pub fn steam_library_dir(steam_id: u64, prefs: &Prefs) -> Result<PathBuf> {
     folders
         .libraries
         .into_iter()
-        .find(|lib| lib.apps.contains_key(&steam_id))
+        .find(|lib| lib.apps.contains_key(&game_id))
         .map(|lib| lib.path)
         .ok_or_eyre("game is not installed")
 }

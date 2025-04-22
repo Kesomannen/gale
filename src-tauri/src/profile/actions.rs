@@ -6,9 +6,9 @@ use std::{
 
 use eyre::{anyhow, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
-use tracing::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
+use tracing::info;
 use uuid::Uuid;
 
 use super::{
@@ -316,7 +316,12 @@ impl ManagedGame {
         Ok(())
     }
 
-    pub fn duplicate_profile(&mut self, duplicate_name: String, id: i64, db: &Db) -> Result<()> {
+    pub fn duplicate_profile(
+        &mut self,
+        duplicate_name: String,
+        id: i64,
+        db: &Db,
+    ) -> Result<&mut Profile> {
         self.create_profile(duplicate_name, None, db)?;
 
         let old_profile = self.find_profile(id)?;
@@ -347,6 +352,6 @@ impl ManagedGame {
         new_profile.mods = mods;
         new_profile.ignored_updates = ignored_updates;
 
-        Ok(())
+        Ok(new_profile)
     }
 }
