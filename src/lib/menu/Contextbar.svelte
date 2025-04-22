@@ -41,19 +41,6 @@
 		});
 	}
 
-	function createShortcut(profileName: string) {
-		invokeCommand('create_desktop_shortcut', { 
-			gameName: $activeGame?.slug, 
-			gameDisplayName: $activeGame?.name,
-			profileName 
-		})
-			.then(() => {
-				pushInfoToast({
-					message: `Created desktop shortcut for ${profileName}.`
-				});
-			})
-	}
-
 	function launchGame(vanilla: boolean) {
 		invokeCommand('launch_game', { vanilla });
 		launchGamePopupOpen = true;
@@ -146,17 +133,6 @@
 					>
 						{profile.modCount}
 					</div>
-
-					<Button.Root
-						class="text-primary-400 rounded-sm p-1 hover:bg-blue-600 hover:text-blue-200"
-						on:click={(evt) => {
-							evt.stopPropagation();
-							createShortcut(profile.name);
-							profilesOpen = false;
-						}}
-					>
-						<Icon icon="mdi:link-plus" />
-					</Button.Root>
 
 					<Button.Root
 						class="text-primary-400 rounded-sm p-1 hover:bg-red-600 hover:text-red-200"

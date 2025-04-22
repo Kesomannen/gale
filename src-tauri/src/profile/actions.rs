@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{anyhow, ensure, Context, OptionExt, Result};
+use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 use log::info;
 use serde::{Deserialize, Serialize};
@@ -346,6 +346,89 @@ impl ManagedGame {
         let new_profile = self.active_profile_mut();
         new_profile.mods = mods;
         new_profile.ignored_updates = ignored_updates;
+
+        Ok(())
+    }
+
+    pub fn create_desktop_shortcut(&self) -> Result<()> {
+        let profile = self.active_profile();
+
+        let desktop_path =
+            dirs_next::desktop_dir().ok_or_eyre("could not find desktop directory")?;
+
+        #[cfg(target_os = "windows")]
+        let shortcut_path =
+            desktop_path.join(format!("Gale - {} - {}.lnk", self.game.name, profile.name));
+
+        #[cfg(target_os = "linux")]
+        let shortcut_path =
+            desktop_path.join(format!("gale-{}-{}.desktop", self.game.name, profile.name));
+
+        if shortcut_path.exists() {
+            bail!("shortcut already exists");
+        }
+
+        let exe_path = std::env::current_exe().context("failed to get current executable path")?;
+
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            use std::process::Command;
+
+            const NO_WINDOW: u32 = 0x08000000;
+
+            let command = format!(
+                "$ws = New-Object -ComObject WScript.Shell; \
+                 $shortcut = $ws.CreateShortcut('{}'); \
+                 $shortcut.TargetPath = '{}'; \
+                 $shortcut.Arguments = '--game {} --profile \"{}\" --launch --no-gui'; \
+                 $shortcut.Save()",
+                shortcut_path.to_string_lossy().replace("\\", "\\\\"),
+                exe_path.to_string_lossy().replace("\\", "\\\\"),
+                self.game.slug,
+                profile.name
+            );
+
+            let result = Command::new("powershell")
+                .creation_flags(NO_WINDOW)
+                .arg("-Command")
+                .arg(&command)
+                .status()
+                .context("failed to execute PowerShell command")?;
+
+            if !result.success() {
+                bail!("PowerShell failed to create shortcut");
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            use std::path::Path;
+
+            let desktop_content = format!(
+                "[Desktop Entry]\n\
+                 Type=Application\n\
+                 Name=Gale - {} - {}\n\
+                 Exec=\"{}\" --game {} --profile \"{}\" --launch --no-gui\n\
+                 Icon=gale\n\
+                 Terminal=false\n\
+                 Categories=Game;",
+                self.game.slug,
+                profile.name,
+                exe_path.to_string_lossy(),
+                game_name,
+                profile.name
+            );
+
+            std::fs::write(&shortcut_path, desktop_content)
+                .context("Failed to write desktop file")?;
+
+            std::fs::set_permissions(
+                &shortcut_path,
+                std::os::unix::fs::PermissionsExt::from_mode(0o755),
+            )
+            .context("Failed to set permissions on desktop file")?;
+        }
 
         Ok(())
     }
