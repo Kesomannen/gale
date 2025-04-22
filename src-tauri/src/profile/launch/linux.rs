@@ -17,7 +17,7 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
 }
 
 pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, prefs: &Prefs) -> Result<()> {
-    let mut user_reg_path = super::platform::steam_library_dir(steam_id, prefs)
+    let mut user_reg_path = super::platform::find_steam_library_for_game(steam_id, prefs)
         .context("failed to find steam library location")?;
 
     user_reg_path.push("steamapps/compatdata");

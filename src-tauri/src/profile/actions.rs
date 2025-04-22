@@ -408,8 +408,6 @@ impl ManagedGame {
 
         #[cfg(target_os = "linux")]
         {
-            use std::path::Path;
-
             let desktop_content = format!(
                 "[Desktop Entry]\n\
                  Type=Application\n\
@@ -421,7 +419,7 @@ impl ManagedGame {
                 self.game.slug,
                 profile.name,
                 exe_path.to_string_lossy(),
-                game_name,
+                self.game.slug,
                 profile.name
             );
 
