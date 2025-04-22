@@ -406,3 +406,12 @@ pub fn open_game_log(app: AppHandle) -> Result<()> {
 
     Ok(())
 }
+
+#[command]
+pub fn create_desktop_shortcut(app: AppHandle) -> Result<()> {
+    let manager = app.lock_manager();
+
+    manager.active_game().create_desktop_shortcut()?;
+
+    Ok(())
+}
