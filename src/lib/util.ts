@@ -32,9 +32,8 @@ export function shortenNum(value: number): string {
 
 export function sentenceCase(str: string): string {
 	const textcase = String(str)
-		.replace(/^[^A-Za-z0-9]*|[^A-Za-z0-9]*$/g, '')
-		.replace(/([a-z])([A-Z])/g, (m, a, b) => `${a}_${b.toLowerCase()}`)
-		.replace(/[^A-Za-z0-9]+|_+/g, ' ')
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.replace(/[_\s]+/g, ' ')
 		.toLowerCase();
 
 	return textcase.charAt(0).toUpperCase() + textcase.slice(1);

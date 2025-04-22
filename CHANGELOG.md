@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for 8 games:
+  - Pulsar: Lost Colony
+  - Songs of Conquest
+  - White Knuckle
+  - Human Fall Flat
+  - Magicite
+  - ENA: Dream BBQ
+  - ASKA
+
+### Fixed
+
+- Punctuation being stripped from config option names
+
 ## 1.5.8 (2025-04-15)
 
 ### Fixed
