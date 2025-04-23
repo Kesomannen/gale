@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.10 (2025-04-23)
+
+### Fixed
+
+- "Invalid signature" error when updating
+
 ## 1.5.9 (2025-04-22)
 
 ### Added
