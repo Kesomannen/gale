@@ -128,6 +128,10 @@ impl ModInstall {
     pub fn uuid(&self) -> Uuid {
         self.id.package_uuid
     }
+
+    pub fn enabled(&self) -> bool {
+        self.enabled
+    }
 }
 
 impl From<BorrowedMod<'_>> for ModInstall {
