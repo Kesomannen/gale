@@ -9,7 +9,7 @@
 	export { className as class };
 
 	// sort by name, not author
-	$: names.sort((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
+	$: names.toSorted((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
 </script>
 
 <div class="grid gap-3 overflow-y-auto {className}">

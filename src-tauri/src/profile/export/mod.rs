@@ -17,7 +17,7 @@ use super::{install::ModInstall, Profile, Result};
 use crate::{
     game::Game,
     state::ManagerExt,
-    thunderstore::{LegacyProfileCreateResponse, ModId, Thunderstore},
+    thunderstore::{LegacyProfileCreateResponse, ModId, Thunderstore, VersionIdent},
 };
 
 mod changelog;
@@ -65,11 +65,12 @@ impl R2Mod {
         Ok(ModInstall::new(id).with_state(self.enabled))
     }
 
-    pub fn ident(&self) -> String {
-        format!(
+    pub fn ident(&self) -> VersionIdent {
+        VersionIdent::try_from(format!(
             "{}-{}.{}.{}",
             self.full_name, self.version.major, self.version.minor, self.version.patch
-        )
+        ))
+        .unwrap()
     }
 }
 

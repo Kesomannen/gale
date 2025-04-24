@@ -1,4 +1,5 @@
 use std::{
+    collections::{HashMap, HashSet},
     fs::{self, File},
     io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
@@ -11,6 +12,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::{
@@ -19,7 +21,7 @@ use crate::{
         install::{self, InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::Thunderstore,
+    thunderstore::{Thunderstore, VersionIdent},
     util::{self, error::IoResultExt},
 };
 
@@ -42,7 +44,7 @@ pub fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportDat
 pub struct ImportData {
     name: String,
     game: Option<String>,
-    mod_names: Vec<String>,
+    mod_names: Vec<VersionIdent>,
     mods: Vec<ModInstall>,
     path: PathBuf,
     delete_after_import: bool,
@@ -108,40 +110,90 @@ async fn import_profile(
     import_all: bool,
     app: &AppHandle,
 ) -> Result<()> {
-    let path = {
+    let (path, to_install) = {
         let mut manager = app.lock_manager();
         let game = manager.active_game_mut();
 
-        if let Some(index) = game.profiles.iter().position(|p| p.name == data.name) {
-            game.delete_profile(index, true, app.db())
-                .context("failed to delete existing profile")?;
-        }
+        let (profile, to_install) = if let Some(index) = game.profile_index(&data.name) {
+            game.set_active_profile(index)?;
 
-        let profile = game.create_profile(data.name, None, app.db())?;
+            let profile = &mut game.profiles[index];
+            let to_install = incremental_update(data.mods, &data.mod_names, profile)?;
+            (profile, to_install)
+        } else {
+            (game.create_profile(data.name, None, app.db())?, data.mods)
+        };
+
         profile.ignored_updates.extend(data.ignored_updates);
-        profile.path.clone()
+        (profile.path.clone(), to_install)
     };
 
-    install::install_mods(data.mods, options, app)
+    install::install_mods(to_install, options, app)
         .await
         .context("error while importing mods")?;
 
-    let includes = export::find_config(
-        &data.path,
-        if import_all {
-            IncludeExtensions::All
-        } else {
-            IncludeExtensions::Default
-        },
-        IncludeGenerated::No,
-    );
-    import_config(&path, &data.path, includes).context("failed to import config")?;
+    /*
+        let includes = export::find_config(
+            &data.path,
+            if import_all {
+                IncludeExtensions::All
+            } else {
+                IncludeExtensions::Default
+            },
+            IncludeGenerated::No,
+        );
+        import_config(&path, &data.path, includes).context("failed to import config")?;
+    */
 
     if data.delete_after_import {
         fs::remove_dir_all(&data.path).ok();
     }
 
     Ok(())
+}
+
+fn incremental_update(
+    mods: Vec<ModInstall>,
+    mod_names: &[VersionIdent],
+    profile: &mut super::Profile,
+) -> Result<Vec<ModInstall>> {
+    let old: HashMap<_, _> = profile
+        .thunderstore_mods()
+        .map(|(ts_mod, enabled)| (ts_mod.ident.clone(), (ts_mod.id.package_uuid, enabled)))
+        .collect();
+
+    let mut new: HashMap<_, _> = mod_names
+        .iter()
+        .zip(mods)
+        .map(|(ident, install)| (ident, install))
+        .collect();
+
+    let old_keys: HashSet<_> = old.keys().collect();
+    let new_keys: HashSet<_> = new.keys().map(|key| *key).collect();
+    let to_remove = old_keys.difference(&new_keys);
+
+    for ident in to_remove {
+        info!("removing {}", ident);
+        let (uuid, _) = old.get(&ident).unwrap();
+        profile.force_remove_mod(*uuid)?;
+    }
+
+    let to_toggle = old_keys
+        .intersection(&new_keys)
+        .filter(|k| old.get(k).unwrap().1 != new.get(*k).unwrap().enabled());
+
+    for ident in to_toggle {
+        info!("toggling {}", ident);
+        let (uuid, _) = old.get(&ident).unwrap();
+        profile.force_toggle_mod(*uuid)?;
+    }
+
+    let to_install = new_keys
+        .difference(&old_keys)
+        .map(|key| new.remove(key).unwrap())
+        .collect_vec();
+
+    Ok(to_install)
 }
 
 pub fn import_config(

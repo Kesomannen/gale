@@ -10,9 +10,9 @@ use chrono::Utc;
 use core::str;
 use eyre::{Context, Result};
 use futures_util::StreamExt;
-use tracing::warn;
 use tauri::{AppHandle, Emitter};
 use thiserror::Error;
+use tracing::{info, warn};
 use zip::ZipArchive;
 
 use super::{cache, InstallOptions, InstallProgress, InstallTask, ModInstall};
@@ -115,6 +115,8 @@ impl<'a> Installer<'a> {
         let cache_path = cache::path(&version.ident, &prefs);
 
         self.current_name = version.name().to_owned();
+
+        info!("installing {}", version.ident);
 
         if cache_path.exists() {
             self.update(InstallTask::Installing);
