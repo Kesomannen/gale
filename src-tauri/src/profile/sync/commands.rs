@@ -1,12 +1,11 @@
 use tauri::AppHandle;
-use uuid::Uuid;
 
 use crate::{state::ManagerExt, util::cmd::Result};
 
 use super::auth;
 
 #[tauri::command]
-pub async fn create_sync_profile(app: AppHandle) -> Result<Uuid> {
+pub async fn create_sync_profile(app: AppHandle) -> Result<String> {
     let id = super::create_profile(&app).await?;
 
     Ok(id)
@@ -20,7 +19,7 @@ pub async fn push_sync_profile(app: AppHandle) -> Result<()> {
 }
 
 #[tauri::command]
-pub async fn clone_sync_profile(id: Uuid, app: AppHandle) -> Result<()> {
+pub async fn clone_sync_profile(id: String, app: AppHandle) -> Result<()> {
     super::clone_profile(id, &app).await?;
 
     Ok(())

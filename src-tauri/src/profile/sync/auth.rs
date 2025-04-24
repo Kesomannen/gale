@@ -23,7 +23,6 @@ pub struct AuthState {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    pub id: i32,
     pub discord_id: i64,
     pub name: String,
     pub display_name: String,
@@ -31,21 +30,14 @@ pub struct User {
 }
 
 impl AuthState {
-    fn from_jwt(access_token: String, refresh_token: String) -> Result<Self> {
-        let JwtPayload { exp, sub, user } =
-            decode_jwt(&access_token).context("failed to decode jwt")?;
+    fn from_tokens(access_token: String, refresh_token: String) -> Result<Self> {
+        let JwtPayload { exp, user } = decode_jwt(&access_token).context("failed to decode jwt")?;
 
         Ok(Self {
             access_token,
             refresh_token,
             token_expiry: exp,
-            user: User {
-                id: sub,
-                discord_id: user.discord_id,
-                name: user.name,
-                display_name: user.display_name,
-                avatar: user.avatar,
-            },
+            user,
         })
     }
 }
@@ -62,7 +54,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
 
     app.get_window("main").unwrap().set_focus().ok();
 
-    let state = AuthState::from_jwt(access_token, refresh_token).context("failed to save state")?;
+    let state = AuthState::from_tokens(access_token, refresh_token)?;
     let user = state.user.clone();
 
     info!("logged in as {}", user.name);
@@ -93,8 +85,6 @@ async fn run_oauth_server() -> Result<(String, String)> {
         url = rx.recv() => {
             tauri_plugin_oauth::cancel(port).ok();
 
-            dbg!(&url);
-
             let url = url.expect("url sender was dropped too early!");
             let url = Url::parse(&url).expect("invalid url");
             let query: HashMap<_, _> = url.query_pairs().collect();
@@ -115,16 +105,9 @@ async fn run_oauth_server() -> Result<(String, String)> {
 #[derive(Debug, Deserialize)]
 struct JwtPayload {
     exp: i64,
-    sub: i32,
-    user: JwtUser,
-}
 
-#[derive(Debug, Deserialize)]
-struct JwtUser {
-    name: String,
-    display_name: String,
-    avatar: String,
-    discord_id: i64,
+    #[serde(flatten)]
+    user: User,
 }
 
 fn decode_jwt(token: &str) -> Result<JwtPayload> {
@@ -184,7 +167,7 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
 
     let response: TokenResponse = app
         .http()
-        .get(format!("{}/token", API_URL))
+        .get(format!("{}/auth/token", API_URL))
         .json(&GrantTokenRequest { refresh_token })
         .send()
         .await?
@@ -192,7 +175,7 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
         .json()
         .await?;
 
-    let state = AuthState::from_jwt(response.access_token.clone(), response.refresh_token)?;
+    let state = AuthState::from_tokens(response.access_token.clone(), response.refresh_token)?;
 
     let mut auth = app.lock_auth();
     *auth = Some(state);

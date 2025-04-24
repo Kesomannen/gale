@@ -5,7 +5,6 @@ use eyre::{bail, Context, ContextCompat, OptionExt, Result};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
-use uuid::Uuid;
 
 use crate::{profile::install::InstallOptions, state::ManagerExt};
 
@@ -27,7 +26,7 @@ async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CreateSyncProfileResponse {
-    id: Uuid,
+    id: String,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
@@ -35,7 +34,7 @@ struct CreateSyncProfileResponse {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SyncProfileMetadata {
-    id: Uuid,
+    id: String,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
     owner: auth::User,
@@ -45,7 +44,7 @@ struct SyncProfileMetadata {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncProfileData {
-    id: Uuid,
+    id: String,
     owner: auth::User,
     synced_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
@@ -62,7 +61,7 @@ impl From<SyncProfileMetadata> for SyncProfileData {
     }
 }
 
-async fn create_profile(app: &AppHandle) -> Result<Uuid> {
+async fn create_profile(app: &AppHandle) -> Result<String> {
     let Some(user) = auth::user_info(app) else {
         bail!("not logged in");
     };
@@ -95,7 +94,7 @@ async fn create_profile(app: &AppHandle) -> Result<Uuid> {
         let profile = manager.active_profile_mut();
 
         profile.sync_profile = Some(SyncProfileData {
-            id,
+            id: id.clone(),
             owner: user,
             synced_at: response.updated_at,
             updated_at: response.updated_at,
@@ -116,7 +115,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
         let id = profile
             .sync_profile
             .as_ref()
-            .map(|data| data.id)
+            .map(|data| data.id.clone())
             .ok_or_eyre("profile is not synced")?;
 
         let mut bytes = Cursor::new(Vec::new());
@@ -149,7 +148,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-async fn clone_profile(id: Uuid, app: &AppHandle) -> Result<()> {
+async fn clone_profile(id: String, app: &AppHandle) -> Result<()> {
     let metadata = get_profile_meta(id, app).await?;
 
     let name = format!("{} (client)", metadata.manifest.profile_name);
@@ -162,7 +161,7 @@ async fn pull_profile(app: &AppHandle) -> Result<()> {
         let profile = manager.active_profile_mut();
 
         match &profile.sync_profile {
-            Some(data) => (profile.name.clone(), data.id, data.synced_at),
+            Some(data) => (profile.name.clone(), data.id.clone(), data.synced_at),
             None => bail!("profile is not synced"),
         }
     };
@@ -184,7 +183,7 @@ async fn fetch_profile(app: &AppHandle) -> Result<()> {
             .active_profile()
             .sync_profile
             .as_ref()
-            .map(|data| data.id)
+            .map(|data| data.id.clone())
             .ok_or_eyre("profile is not synced")?
     };
 
@@ -242,7 +241,7 @@ async fn download_and_import_file(
     Ok(())
 }
 
-async fn get_profile_meta(id: Uuid, app: &AppHandle) -> Result<SyncProfileMetadata> {
+async fn get_profile_meta(id: String, app: &AppHandle) -> Result<SyncProfileMetadata> {
     let res = request(Method::GET, format!("/profile/{id}/meta"), app)
         .await
         .send()

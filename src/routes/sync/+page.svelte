@@ -17,7 +17,7 @@
 	let newId = '';
 
 	$: syncInfo = $activeProfile?.sync ?? null;
-	$: isOwner = syncInfo?.owner.id == $user?.id;
+	$: isOwner = syncInfo?.owner.discordId == $user?.discordId;
 	$: outOfDate = syncInfo !== null && new Date(syncInfo.updatedAt) > new Date(syncInfo.syncedAt);
 
 	async function onLoginClicked() {
@@ -196,7 +196,11 @@
 	<div class="mt-4 text-slate-300">
 		<div class="flex items-center">
 			{#if $user !== null}
-				<img src={$user.avatar} alt="" class="mr-2 size-8 rounded-full shadow-lg" />
+				<img
+					src={`https://cdn.discordapp.com/avatars/${$user.discordId}/${$user.avatar}.png`}
+					alt=""
+					class="mr-2 size-8 rounded-full shadow-lg"
+				/>
 				Logged in as {$user.displayName ?? $user.name}
 			{/if}
 		</div>

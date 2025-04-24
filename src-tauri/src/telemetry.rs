@@ -46,9 +46,11 @@ pub async fn send_app_start_event(app: AppHandle) {
     let response = app
         .http()
         .post(format!("{}/rest/v1/rpc/send_event", PROJECT_URL))
+        .header("apikey", ANON_KEY)
         .json(&payload)
         .send()
-        .await;
+        .await
+        .map(|res| res.error_for_status());
 
     match response {
         Ok(_) => debug!("successfully sent telemetry"),

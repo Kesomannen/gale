@@ -250,8 +250,9 @@ impl Db {
 
         let auth_state = conn
             .prepare("SELECT data FROM auth")?
-            .query_row((), |row| map_json_row(row, 0))
-            .optional()?;
+            .query_row((), |row| map_json_option_row(row, 0))
+            .optional()?
+            .flatten();
 
         Ok((
             SaveData {
@@ -335,8 +336,8 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
@@ -347,6 +348,11 @@ impl Db {
                 .map(serde_json::to_string)
                 .transpose()?;
             let ignored_updates = serde_json::to_string(&profile.ignored_updates)?;
+            let sync_data = profile
+                .sync_profile
+                .as_ref()
+                .map(serde_json::to_string)
+                .transpose()?;
 
             stmt.execute(params![
                 profile.id,
@@ -355,7 +361,8 @@ impl Db {
                 profile.game.slug,
                 mods,
                 modpack,
-                ignored_updates
+                ignored_updates,
+                sync_data
             ])?;
         }
 
