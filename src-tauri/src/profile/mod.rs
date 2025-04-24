@@ -73,7 +73,7 @@ pub struct Profile {
     pub config_cache: ConfigCache,
     pub linked_config: HashMap<Uuid, PathBuf>,
     pub modpack: Option<ModpackArgs>,
-    pub sync_data: Option<sync::ProfileData>,
+    pub sync_profile: Option<sync::SyncProfileData>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -473,7 +473,7 @@ impl ModManager {
                 ignored_updates: saved_profile.ignored_updates.unwrap_or_default(),
                 config_cache: ConfigCache::default(),
                 linked_config: HashMap::new(),
-                sync_data: saved_profile.sync_data,
+                sync_profile: saved_profile.sync_data,
             };
 
             games.get_mut(game).unwrap().profiles.push(profile);

@@ -16,16 +16,15 @@
 
 	let newId = '';
 
-	$: syncData = $activeProfile?.sync ?? null;
-	$: isOwner = syncData?.ownerId == $user?.id;
-	$: outOfDate =
-		syncData !== null && new Date(syncData.lastUpdatedByOwner) > new Date(syncData.lastSynced);
+	$: syncInfo = $activeProfile?.sync ?? null;
+	$: isOwner = syncInfo?.owner.id == $user?.id;
+	$: outOfDate = syncInfo !== null && new Date(syncInfo.updatedAt) > new Date(syncInfo.syncedAt);
 
 	async function onLoginClicked() {
 		loginLoading = true;
 		try {
 			if ($user === null) {
-				await login('discord');
+				await login();
 			} else {
 				await logout();
 			}
@@ -79,7 +78,7 @@
 <div class="mx-auto flex w-full max-w-4xl flex-col overflow-y-auto px-6 pt-2 pb-6">
 	<div class="mt-2 rounded-lg bg-slate-700 px-6 py-4">
 		<div
-			class="flex items-center gap-2 {syncData === null
+			class="flex items-center gap-2 {syncInfo === null
 				? 'text-slate-100'
 				: outOfDate
 					? 'text-yellow-400'
@@ -88,7 +87,7 @@
 			<Icon
 				icon={loading
 					? 'mdi:loading'
-					: syncData === null
+					: syncInfo === null
 						? 'mdi:cloud-cancel'
 						: outOfDate
 							? 'mdi:cloud-refresh'
@@ -97,7 +96,7 @@
 			/>
 
 			<div class="text-2xl font-bold">
-				{#if syncData === null}
+				{#if syncInfo === null}
 					{#if loading}
 						Connecting...
 					{:else}
@@ -112,7 +111,7 @@
 				{/if}
 			</div>
 
-			{#if syncData === null}
+			{#if syncInfo === null}
 				{#if $user === null}
 					<div class="ml-auto text-slate-300">
 						You must to be logged in to create a synced profile.
@@ -126,19 +125,19 @@
 			{/if}
 		</div>
 
-		{#if syncData !== null}
+		{#if syncInfo !== null}
 			<div class="mt-2 flex items-center gap-1">
 				<Tooltip text="Copy id to clipboard">
 					<Button.Root
 						class="rounded bg-slate-800 px-3 py-0.5 font-mono text-lg text-slate-300"
 						on:click={async () => {
-							await writeText(syncData.id);
+							await writeText(syncInfo.id);
 							pushInfoToast({
 								message: 'Copied profile id to clipboard.'
 							});
 						}}
 					>
-						{syncData.id}
+						{syncInfo.id}
 					</Button.Root>
 				</Tooltip>
 			</div>
@@ -153,11 +152,11 @@
 				</div>
 
 				<div>
-					Last synced: {new Date(syncData.lastSynced).toLocaleString()}
+					Last synced: {new Date(syncInfo.syncedAt).toLocaleString()}
 				</div>
 
 				<div>
-					Last updated: {new Date(syncData.lastUpdatedByOwner).toLocaleString()}
+					Last updated: {new Date(syncInfo.updatedAt).toLocaleString()}
 				</div>
 			</div>
 
@@ -173,14 +172,14 @@
 					<BigButton
 						on:click={push}
 						disabled={loading || $user === null}
-						color={outOfDate ? 'slate' : 'accent'}
+						color={outOfDate ? 'primary' : 'accent'}
 					>
 						<Icon icon="mdi:cloud-upload" class="mr-2 text-lg" />
 						Push update
 					</BigButton>
 				{/if}
 
-				<BigButton on:click={fetch} disabled={loading} color="slate">
+				<BigButton on:click={fetch} disabled={loading} color="primary">
 					<Icon icon="mdi:cloud-sync" class="mr-2 text-lg" />
 					Refresh
 				</BigButton>
@@ -197,12 +196,12 @@
 	<div class="mt-4 text-slate-300">
 		<div class="flex items-center">
 			{#if $user !== null}
-				<img src={$user.avatarUrl} alt="" class="mr-2 size-8 rounded-full shadow-lg" />
+				<img src={$user.avatar} alt="" class="mr-2 size-8 rounded-full shadow-lg" />
 				Logged in as {$user.displayName ?? $user.name}
 			{/if}
 		</div>
 
-		<BigButton on:click={onLoginClicked} disabled={loginLoading} color="slate" class="mt-2">
+		<BigButton on:click={onLoginClicked} disabled={loginLoading} color="primary" class="mt-2">
 			<Icon
 				icon={loginLoading ? 'mdi:loading' : $user === null ? 'mdi:discord' : 'mdi:logout'}
 				class="mr-2 {loginLoading && 'animate-spin'}"

@@ -93,7 +93,7 @@ pub(super) fn read_file(source: impl Read + Seek, app: &AppHandle) -> Result<Imp
 
     ImportData::create_r2(
         manifest.profile_name,
-        manifest.game_slug,
+        manifest.community,
         manifest.mods,
         manifest.ignored_updates,
         temp_dir.into_path(),

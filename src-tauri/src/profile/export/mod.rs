@@ -30,7 +30,7 @@ pub struct LegacyProfileManifest {
     pub profile_name: String,
     pub mods: Vec<R2Mod>,
     #[serde(default)]
-    pub game_slug: Option<String>,
+    pub community: Option<String>,
     #[serde(default)]
     pub ignored_updates: Vec<Uuid>,
 }
@@ -124,7 +124,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     let manifest = LegacyProfileManifest {
         profile_name: profile.name.clone(),
         ignored_updates: profile.ignored_updates.iter().cloned().collect(),
-        game_slug: Some(game.slug.to_string()),
+        community: Some(game.slug.to_string()),
         mods,
     };
 

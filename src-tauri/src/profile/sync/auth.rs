@@ -1,17 +1,15 @@
-use std::{collections::HashMap, fmt::Display, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use chrono::{DateTime, Utc};
-use eyre::{eyre, Context, OptionExt, Result};
+use eyre::{eyre, Context, ContextCompat, OptionExt, Result};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Url};
 use tauri_plugin_oauth::OauthConfig;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, warn};
-use uuid::Uuid;
 
-use crate::state::ManagerExt;
+use crate::{profile::sync::API_URL, state::ManagerExt};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -25,19 +23,17 @@ pub struct AuthState {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    pub id: Uuid,
+    pub id: i32,
+    pub discord_id: i64,
     pub name: String,
-    pub display_name: Option<String>,
-    pub avatar_url: String,
+    pub display_name: String,
+    pub avatar: String,
 }
 
 impl AuthState {
     fn from_jwt(access_token: String, refresh_token: String) -> Result<Self> {
-        let JwtPayload {
-            exp,
-            sub,
-            user_metadata,
-        } = decode_jwt(&access_token).context("failed to decode jwt")?;
+        let JwtPayload { exp, sub, user } =
+            decode_jwt(&access_token).context("failed to decode jwt")?;
 
         Ok(Self {
             access_token,
@@ -45,9 +41,10 @@ impl AuthState {
             token_expiry: exp,
             user: User {
                 id: sub,
-                name: user_metadata.full_name,
-                display_name: user_metadata.custom_claims.global_name,
-                avatar_url: user_metadata.avatar_url,
+                discord_id: user.discord_id,
+                name: user.name,
+                display_name: user.display_name,
+                avatar: user.avatar,
             },
         })
     }
@@ -55,28 +52,8 @@ impl AuthState {
 
 const OAUTH_TIMEOUT: Duration = Duration::from_secs(60);
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum OAuthProvider {
-    Discord,
-    Github,
-}
-
-impl Display for OAuthProvider {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            OAuthProvider::Discord => write!(f, "discord"),
-            OAuthProvider::Github => write!(f, "github"),
-        }
-    }
-}
-
-pub async fn login_with_oauth(provider: OAuthProvider, app: &AppHandle) -> Result<User> {
-    let url = format!(
-        "{}/auth/v1/authorize?provider={}&scopes=identify",
-        super::PROJECT_URL,
-        provider
-    );
+pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
+    let url = format!("{}/auth/login", API_URL);
     open::that(url).context("failed to open url in browser")?;
 
     let (access_token, refresh_token) = run_oauth_server()
@@ -88,7 +65,7 @@ pub async fn login_with_oauth(provider: OAuthProvider, app: &AppHandle) -> Resul
     let state = AuthState::from_jwt(access_token, refresh_token).context("failed to save state")?;
     let user = state.user.clone();
 
-    info!("logged in as {} with {}", user.name, provider);
+    info!("logged in as {}", user.name);
 
     *app.lock_auth() = Some(state);
 
@@ -116,22 +93,16 @@ async fn run_oauth_server() -> Result<(String, String)> {
         url = rx.recv() => {
             tauri_plugin_oauth::cancel(port).ok();
 
+            dbg!(&url);
+
             let url = url.expect("url sender was dropped too early!");
+            let url = Url::parse(&url).expect("invalid url");
+            let query: HashMap<_, _> = url.query_pairs().collect();
 
-            let tokens = url.split_once("#").and_then(|(_, fragment)| {
-                let params = fragment
-                    .split("&")
-                    .filter_map(|param| param.split_once("="))
-                    .collect::<HashMap<&str, &str>>();
+            let access_token = query.get("access_token").context("access_token parameter missing")?.clone();
+            let refresh_token = query.get("refresh_token").context("refresh_token parameter missing")?.clone();
 
-                let access_token = params.get("access_token")?.to_string();
-                let refresh_token = params.get("refresh_token")?.to_string();
-
-                Some((access_token, refresh_token))
-            })
-            .ok_or_eyre("invalid callback url format")?;
-
-            Ok(tokens)
+            Ok((access_token.into_owned(), refresh_token.into_owned()))
         }
         _ = tokio::time::sleep(OAUTH_TIMEOUT) => {
             tauri_plugin_oauth::cancel(port).ok();
@@ -144,21 +115,16 @@ async fn run_oauth_server() -> Result<(String, String)> {
 #[derive(Debug, Deserialize)]
 struct JwtPayload {
     exp: i64,
-    sub: Uuid,
-    user_metadata: UserMetadata,
+    sub: i32,
+    user: JwtUser,
 }
 
 #[derive(Debug, Deserialize)]
-struct UserMetadata {
-    full_name: String,
-    avatar_url: String,
-    custom_claims: CustomClaims,
-}
-
-#[derive(Debug, Deserialize)]
-struct CustomClaims {
-    #[serde(default)]
-    global_name: Option<String>,
+struct JwtUser {
+    name: String,
+    display_name: String,
+    avatar: String,
+    discord_id: i64,
 }
 
 fn decode_jwt(token: &str) -> Result<JwtPayload> {
@@ -207,22 +173,30 @@ pub async fn access_token(app: &AppHandle) -> Option<String> {
     }
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GrantTokenRequest {
+    refresh_token: String,
+}
+
 async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String> {
     debug!("refreshing access token");
 
-    let response: TokenResponse = super::auth_request(reqwest::Method::POST, "/token")
-        .query("grant_type", "refresh_token")
-        .json_body(json!({
-            "refresh_token": refresh_token
-        }))
-        .send_raw_no_auth(app)
+    let response: TokenResponse = app
+        .http()
+        .get(format!("{}/token", API_URL))
+        .json(&GrantTokenRequest { refresh_token })
+        .send()
         .await?
+        .error_for_status()?
         .json()
         .await?;
 
     let state = AuthState::from_jwt(response.access_token.clone(), response.refresh_token)?;
 
-    *app.lock_auth() = Some(state);
+    let mut auth = app.lock_auth();
+    *auth = Some(state);
+    app.db().save_auth(auth.as_ref())?;
 
     Ok(response.access_token)
 }

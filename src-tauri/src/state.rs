@@ -6,8 +6,8 @@ use tauri::{command, AppHandle, Manager};
 use crate::{
     db::{self, Db},
     prefs::Prefs,
+    profile::sync::auth::AuthState,
     profile::{self, ModManager},
-    supabase::auth::AuthState,
     thunderstore::{self, Thunderstore},
 };
 

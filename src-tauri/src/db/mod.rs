@@ -14,8 +14,7 @@ use uuid::Uuid;
 
 use crate::{
     prefs::Prefs,
-    profile::{self, ManagedGame, ModManager, Profile},
-    supabase::auth::AuthState,
+    profile::{self, sync::auth::AuthState, ManagedGame, ModManager, Profile},
     util,
 };
 
@@ -104,7 +103,7 @@ pub struct ProfileData {
     pub mods: Vec<profile::ProfileMod>,
     pub modpack: Option<profile::export::modpack::ModpackArgs>,
     pub ignored_updates: Option<HashSet<Uuid>>,
-    pub sync_data: Option<profile::sync::ProfileData>,
+    pub sync_data: Option<profile::sync::SyncProfileData>,
 }
 
 pub struct SaveData {

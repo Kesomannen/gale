@@ -1,75 +1,73 @@
-use std::io::Cursor;
+use std::{fmt::Display, io::Cursor};
 
 use chrono::{DateTime, Utc};
 use eyre::{bail, Context, ContextCompat, OptionExt, Result};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
-use tracing::debug;
 use uuid::Uuid;
 
-use crate::{profile::install::InstallOptions, state::ManagerExt, supabase};
+use crate::{profile::install::InstallOptions, state::ManagerExt};
 
+use super::export;
+
+pub mod auth;
 pub mod commands;
 
+const API_URL: &str = "http://localhost:8800/api";
+
+async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
+    let mut req = app.http().request(method, format!("{}{}", API_URL, path));
+    if let Some(token) = auth::access_token(app).await {
+        req = req.bearer_auth(token);
+    }
+    req
+}
+
 #[derive(Debug, Deserialize)]
-struct SyncProfile {
+#[serde(rename_all = "camelCase")]
+struct CreateSyncProfileResponse {
     id: Uuid,
-    user_id: Uuid,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
-    name: String,
 }
 
-#[derive(Debug, Serialize)]
-struct NewSyncProfile {
-    user_id: Uuid,
-    name: String,
-}
-
-#[derive(Debug, Serialize)]
-struct UpdateSyncProfile {
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SyncProfileMetadata {
+    id: Uuid,
+    created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
+    owner: auth::User,
+    manifest: export::LegacyProfileManifest,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ProfileData {
+pub struct SyncProfileData {
     id: Uuid,
-    #[serde(default)]
-    owner_id: Uuid,
-    last_synced: DateTime<Utc>,
-    #[serde(default)]
-    last_updated_by_owner: DateTime<Utc>,
+    owner: auth::User,
+    synced_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
 }
 
-impl From<SyncProfile> for ProfileData {
-    fn from(value: SyncProfile) -> Self {
-        let SyncProfile {
-            id,
-            user_id,
-            updated_at,
-            ..
-        } = value;
-
-        Self {
-            id,
-            owner_id: user_id,
-            last_synced: updated_at,
-            last_updated_by_owner: updated_at,
+impl From<SyncProfileMetadata> for SyncProfileData {
+    fn from(value: SyncProfileMetadata) -> Self {
+        SyncProfileData {
+            id: value.id,
+            owner: value.owner,
+            synced_at: value.updated_at,
+            updated_at: value.updated_at,
         }
     }
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "PascalCase")]
-pub struct UploadResponse {
-    id: Uuid,
-    key: String,
-}
-
 async fn create_profile(app: &AppHandle) -> Result<Uuid> {
-    let (name, bytes) = {
+    let Some(user) = auth::user_info(app) else {
+        bail!("not logged in");
+    };
+
+    let bytes = {
         let manager = app.lock_manager();
         let game = manager.active_game();
         let profile = game.active_profile();
@@ -78,35 +76,31 @@ async fn create_profile(app: &AppHandle) -> Result<Uuid> {
         super::export::export_zip(&profile, &mut bytes, game.game)
             .context("failed to export profile")?;
 
-        (profile.name.clone(), bytes.into_inner())
+        bytes.into_inner()
     };
 
-    let Some(user) = supabase::auth::user_info(app) else {
-        bail!("not logged in");
-    };
-
-    let sync_profile: SyncProfile = supabase::request(Method::POST, "/rest/v1/profile")
-        .json_body(NewSyncProfile {
-            name,
-            user_id: user.id,
-        })
-        .send_single(app)
+    let response: CreateSyncProfileResponse = request(Method::POST, "/profile", app)
         .await
-        .context("failed to create profile in database")?;
+        .body(bytes)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
 
-    let id = sync_profile.id.clone();
-
-    let response = upload_file(sync_profile.id, bytes, Method::POST, app)
-        .await
-        .context("failed to upload profile")?;
-
-    debug!("uploaded profile: {:?}", response);
+    let id = response.id.clone();
 
     {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
-        profile.sync_data = Some(sync_profile.into());
+        profile.sync_profile = Some(SyncProfileData {
+            id,
+            owner: user,
+            synced_at: response.updated_at,
+            updated_at: response.updated_at,
+        });
+
         profile.save(app.db())?;
     }
 
@@ -120,7 +114,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
         let profile = game.active_profile();
 
         let id = profile
-            .sync_data
+            .sync_profile
             .as_ref()
             .map(|data| data.id)
             .ok_or_eyre("profile is not synced")?;
@@ -132,28 +126,22 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
         (id, bytes.into_inner())
     };
 
-    let updated_at = Utc::now();
-
-    let _: SyncProfile = supabase::request(Method::PATCH, "/rest/v1/profile")
-        .query("id", format!("eq.{id}"))
-        .json_body(UpdateSyncProfile { updated_at })
-        .send_single(app)
+    let response: CreateSyncProfileResponse = request(Method::PUT, format!("/profile/{id}"), app)
         .await
-        .context("failed to update profile in database")?;
-
-    let response = upload_file(id, bytes, Method::PUT, app)
-        .await
-        .context("failed to upload profile")?;
-
-    debug!("uploaded profile: {:?}", response);
+        .body(bytes)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
 
     {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
-        let sync_data = profile.sync_data.as_mut().unwrap();
+        let sync_data = profile.sync_profile.as_mut().unwrap();
 
-        sync_data.last_synced = updated_at;
-        sync_data.last_updated_by_owner = updated_at;
+        sync_data.synced_at = response.updated_at;
+        sync_data.updated_at = response.updated_at;
 
         profile.save(&app.db())?;
     };
@@ -161,24 +149,11 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-async fn upload_file(
-    id: Uuid,
-    bytes: Vec<u8>,
-    method: Method,
-    app: &AppHandle,
-) -> Result<UploadResponse> {
-    supabase::request(method, format!("/storage/v1/object/profile/{}", id))
-        .binary_body(bytes)
-        .send(app)
-        .await
-        .context("failed to upload file")
-}
-
 async fn clone_profile(id: Uuid, app: &AppHandle) -> Result<()> {
-    let sync_profile = get_profile(id, app).await?;
+    let metadata = get_profile_meta(id, app).await?;
 
-    let name = format!("{} (client)", sync_profile.name);
-    download_and_import_file(name, sync_profile, app).await
+    let name = format!("{} (client)", metadata.manifest.profile_name);
+    download_and_import_file(name, metadata.into(), app).await
 }
 
 async fn pull_profile(app: &AppHandle) -> Result<()> {
@@ -186,16 +161,16 @@ async fn pull_profile(app: &AppHandle) -> Result<()> {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
-        match &profile.sync_data {
-            Some(data) => (profile.name.clone(), data.id, data.last_synced),
+        match &profile.sync_profile {
+            Some(data) => (profile.name.clone(), data.id, data.synced_at),
             None => bail!("profile is not synced"),
         }
     };
 
-    let sync_profile = get_profile(id, app).await?;
+    let metadata = get_profile_meta(id, app).await?;
 
-    if last_synced < sync_profile.updated_at {
-        download_and_import_file(name, sync_profile, app).await?;
+    if last_synced < metadata.updated_at {
+        download_and_import_file(name, metadata.into(), app).await?;
     }
 
     Ok(())
@@ -207,39 +182,39 @@ async fn fetch_profile(app: &AppHandle) -> Result<()> {
 
         manager
             .active_profile()
-            .sync_data
+            .sync_profile
             .as_ref()
             .map(|data| data.id)
             .ok_or_eyre("profile is not synced")?
     };
 
-    let updated_at = get_profile(id, app)
+    let updated_at = get_profile_meta(id, app)
         .await
         .map(|profile| profile.updated_at)?;
 
     app.lock_manager()
         .active_profile_mut()
-        .sync_data
+        .sync_profile
         .as_mut()
         .unwrap()
-        .last_updated_by_owner = updated_at;
+        .updated_at = updated_at;
 
     Ok(())
 }
 
 async fn download_and_import_file(
     name: String,
-    sync_profile: SyncProfile,
+    sync_profile: SyncProfileData,
     app: &AppHandle,
 ) -> Result<()> {
-    let path = format!("/object/profile/{}", sync_profile.id);
-    let bytes = supabase::storage_request(Method::GET, path)
-        .send_raw(app)
+    let path = format!("/profile/{}", sync_profile.id);
+    let bytes = request(Method::GET, path, app)
         .await
-        .context("failed to download profile")?
+        .send()
+        .await?
+        .error_for_status()?
         .bytes()
-        .await
-        .context("error while downloading profile")?;
+        .await?;
 
     let mut data =
         super::import::read_file(Cursor::new(bytes), app).context("failed to import profile")?;
@@ -250,17 +225,15 @@ async fn download_and_import_file(
         .await
         .context("failed to import profile")?;
 
-    // import_data deletes and recreates the profile, so we need to set sync_data again
     {
+        // import_data deletes and recreates the profile, so we need to set sync_data again
         let mut manager = app.lock_manager();
 
         let game = manager.active_game_mut();
         let index = game.profile_index(&name).context("profile not found")?;
         let profile = &mut game.profiles[index];
 
-        let mut sync_data: ProfileData = sync_profile.into();
-        sync_data.last_synced = Utc::now();
-        profile.sync_data = Some(sync_data);
+        profile.sync_profile = Some(sync_profile);
 
         profile.save(app.db())?;
         game.save(app.db())?;
@@ -269,12 +242,14 @@ async fn download_and_import_file(
     Ok(())
 }
 
-async fn get_profile(id: Uuid, app: &AppHandle) -> Result<SyncProfile> {
-    supabase::db_request(Method::GET, "/profile")
-        .query("select", "*")
-        .query("id", format!("eq.{}", id))
-        .send_optional(app)
+async fn get_profile_meta(id: Uuid, app: &AppHandle) -> Result<SyncProfileMetadata> {
+    let res = request(Method::GET, format!("/profile/{id}/meta"), app)
         .await
-        .context("failed to query database")?
-        .ok_or_eyre("profile not found")
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
+    Ok(res)
 }

@@ -63,14 +63,22 @@ export type ProfileInfo = {
 	id: number;
 	name: string;
 	modCount: number;
-	sync: ProfileSyncInfo | null;
+	sync: SyncProfileInfo | null;
 };
 
-export type ProfileSyncInfo = {
+export type SyncProfileInfo = {
 	id: string;
-	ownerId: string;
-	lastSynced: string;
-	lastUpdatedByOwner: string;
+	owner: SyncUser;
+	syncedAt: string;
+	updatedAt: string;
+};
+
+export type SyncUser = {
+	id: number;
+	discordId: number;
+	name: string;
+	displayName: string;
+	avatar: string;
 };
 
 export type ProfilesInfo = {
@@ -82,13 +90,6 @@ export type GameInfo = {
 	active: Game;
 	all: Game[];
 	favorites: string[];
-};
-
-export type UserInfo = {
-	id: string;
-	name: String;
-	displayName: string | null;
-	avatarUrl: string;
 };
 
 export type Mod = {

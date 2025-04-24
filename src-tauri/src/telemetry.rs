@@ -1,10 +1,12 @@
-use reqwest::Method;
 use serde_json::json;
 use tauri::AppHandle;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
-use crate::{state::ManagerExt, supabase};
+use crate::state::ManagerExt;
+
+const PROJECT_URL: &str = "https://phpkxfkbquscgqvhtuuv.supabase.co";
+const ANON_KEY: &str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBocGt4ZmticXVzY2dxdmh0dXV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyODAzNDgsImV4cCI6MjA1Mjg1NjM0OH0._eOEhNdG5dIpLnArUcTiicwuxv-hYQlZSSqc06-Aj0k";
 
 pub async fn send_app_start_event(app: AppHandle) {
     if !app.lock_prefs().send_telemetry() {
@@ -41,9 +43,11 @@ pub async fn send_app_start_event(app: AppHandle) {
         "user_id": user_id
     });
 
-    let response = supabase::request(Method::POST, "/rest/v1/rpc/send_event")
-        .json_body(payload)
-        .send_raw(&app)
+    let response = app
+        .http()
+        .post(format!("{}/rest/v1/rpc/send_event", PROJECT_URL))
+        .json(&payload)
+        .send()
         .await;
 
     match response {

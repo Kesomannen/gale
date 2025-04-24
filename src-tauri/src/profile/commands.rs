@@ -107,7 +107,7 @@ pub struct ProfileInfo {
     id: i64,
     name: String,
     mod_count: usize,
-    sync: Option<profile::sync::ProfileData>,
+    sync: Option<profile::sync::SyncProfileData>,
 }
 
 #[command]
@@ -123,7 +123,7 @@ pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
                 id: profile.id,
                 name: profile.name.clone(),
                 mod_count: profile.mods.len(),
-                sync: profile.sync_data.clone(),
+                sync: profile.sync_profile.clone(),
             })
             .collect(),
         active_id: game.active_profile_id,

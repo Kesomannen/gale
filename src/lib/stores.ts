@@ -3,14 +3,14 @@ import { invokeCommand } from './invoke';
 import {
 	SortBy,
 	SortOrder,
-	type UserInfo,
 	type FiltersResponse,
 	type Game,
 	type GameInfo,
 	type PackageCategory,
 	type ProfileInfo,
 	type ProfilesInfo,
-	type QueryModsArgs
+	type QueryModsArgs,
+	type SyncUser
 } from './models';
 import { fetch } from '@tauri-apps/plugin-http';
 
@@ -22,14 +22,14 @@ export let activeProfileId: number = 0;
 export let profiles: ProfileInfo[] = [];
 export let activeProfile = writable<ProfileInfo | null>(null);
 
-export let user = writable<UserInfo | null>(null);
+export let user = writable<SyncUser | null>(null);
 
 export let activeProfileLocked = derived([activeProfile, user], ([activeProfile, user]) => {
 	if (activeProfile === null) return false;
 	if (activeProfile.sync === null) return false;
 	if (user === null) return true;
 
-	return activeProfile.sync.ownerId != user.id;
+	return activeProfile.sync.owner.id != user.id;
 });
 
 const defaultModQuery = () => ({
@@ -155,12 +155,12 @@ export async function setActiveProfile(index: number) {
 }
 
 export async function refreshUser() {
-	let info = await invokeCommand<UserInfo | null>('get_user');
+	let info = await invokeCommand<SyncUser | null>('get_user');
 	user.set(info);
 }
 
-export async function login(provider: 'discord' | 'github') {
-	let info = await invokeCommand<UserInfo>('login', { provider });
+export async function login() {
+	let info = await invokeCommand<SyncUser>('login');
 	user.set(info);
 }
 

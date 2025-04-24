@@ -289,7 +289,7 @@ impl ManagedGame {
             config_cache: ConfigCache::default(),
             linked_config: HashMap::new(),
             modpack: None,
-            sync_data: None,
+            sync_profile: None,
         });
 
         self.active_profile_id = id;
