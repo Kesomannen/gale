@@ -166,6 +166,18 @@
 		}
 	},
 	{
+		"name": "ASKA",
+		"slug": "aska",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1898300
+			}
+		}
+	},
+	{
 		"name": "ATLYSS",
 		"modLoader": {
 			"name": "BepInEx"
@@ -699,6 +711,19 @@
 		}
 	},
 	{
+		"name": "ENA: Dream BBQ",
+		"slug": "ena-dream-bbq",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2134320,
+				"dirName": "ENA-4-DreamBBQ"
+			}
+		}
+	},
+	{
 		"name": "Enter the Gungeon",
 		"modLoader": {
 			"name": "BepInEx"
@@ -768,6 +793,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1085510
+			}
+		}
+	},
+	{
+		"name": "Gatekeeper",
+		"slug": "gatekeeper",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2106670
 			}
 		}
 	},
@@ -890,6 +927,19 @@
 		}
 	},
 	{
+		"name": "Human Fall Flat",
+		"slug": "human-fall-flat",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 477160,
+				"dirName": "Human"
+			}
+		}
+	},
+	{
 		"name": "I Am Your Beast",
 		"slug": "i-am-your-beast",
 		"modLoader": {
@@ -945,6 +995,18 @@
 		"platforms": {
 			"steam": {
 				"id": 2596100
+			}
+		}
+	},
+	{
+		"name": "Magicite",
+		"slug": "magicite",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 268750
 			}
 		}
 	},
@@ -1217,6 +1279,19 @@
 		}
 	},
 	{
+		"name": "Pulsar: Lost Colony",
+		"slug": "pulsar-lost-colony",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 252870,
+				"dirName": "PULSARLostColony"
+			}
+		}
+	},
+	{
 		"name": "ROUNDS",
 		"modLoader": {
 			"name": "BepInEx"
@@ -1298,18 +1373,6 @@
 		}
 	},
 	{
-		"name": "Schedule I",
-		"slug": "schedule-i",
-		"modLoader": {
-			"name": "MelonLoader"
-		},
-		"platforms": {
-			"steam": {
-				"id": 3164500
-			}
-		}
-	},
-	{
 		"name": "STRAFTAT",
 		"slug": "straftat",
 		"modLoader": {
@@ -1341,6 +1404,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1764530
+			}
+		}
+	},
+	{
+		"name": "Schedule I",
+		"slug": "schedule-i",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3164500
 			}
 		}
 	},
@@ -1412,6 +1487,19 @@
 			"steam": {
 				"id": 2765860,
 				"dirName": "Slipstream Rogue Space"
+			}
+		}
+	},
+	{
+		"name": "Songs of Conquest",
+		"slug": "songs-of-conquest",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 867210,
+				"dirName": "SongsOfConquest"
 			}
 		}
 	},
@@ -1815,6 +1903,19 @@
 		"platforms": {
 			"steam": {
 				"id": 597220
+			}
+		}
+	},
+	{
+		"name": "White Knuckle",
+		"slug": "white-knuckle",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3195790,
+				"dirName": "White Knuckle Demo"
 			}
 		}
 	},

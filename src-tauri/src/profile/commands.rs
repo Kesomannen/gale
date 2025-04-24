@@ -89,7 +89,7 @@ pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
     let game = game::from_slug(slug).ok_or_eyre("unknown game")?;
 
     manager.set_active_game(game, &app)?;
-    manager.save_all(app.db())?;
+    manager.save(app.db())?;
 
     Ok(())
 }
@@ -217,11 +217,12 @@ pub fn is_mod_installed(uuid: Uuid, app: AppHandle) -> Result<bool> {
 #[command]
 pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
+    let game = manager.active_game_mut();
 
-    manager
-        .active_game_mut()
-        .create_profile(name, override_path, app.db())?;
-    manager.save_all(app.db())?;
+    let profile = game.create_profile(name, override_path, app.db())?;
+
+    profile.save(app.db())?;
+    game.save(app.db())?;
 
     Ok(())
 }
@@ -251,10 +252,12 @@ pub fn rename_profile(name: String, app: AppHandle) -> Result<()> {
 #[command]
 pub fn duplicate_profile(name: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
-
     let game = manager.active_game_mut();
-    game.duplicate_profile(name, game.active_profile_id, app.db())?;
-    manager.save_all(app.db())?;
+
+    let profile = game.duplicate_profile(name, game.active_profile_id, app.db())?;
+
+    profile.save(app.db())?;
+    game.save(app.db())?;
 
     Ok(())
 }
@@ -403,6 +406,15 @@ pub fn open_game_log(app: AppHandle) -> Result<()> {
 
     let path = manager.active_profile().log_path()?;
     open::that_detached(path).context("failed to open log file")?;
+
+    Ok(())
+}
+
+#[command]
+pub fn create_desktop_shortcut(app: AppHandle) -> Result<()> {
+    let manager = app.lock_manager();
+
+    manager.active_game().create_desktop_shortcut()?;
 
     Ok(())
 }

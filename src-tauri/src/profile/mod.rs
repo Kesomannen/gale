@@ -589,6 +589,10 @@ impl ModManager {
         db.save_all(self)
     }
 
+    pub fn save(&self, db: &Db) -> Result<()> {
+        db.save_manager(self)
+    }
+
     pub fn save_active_game(&self, db: &Db) -> Result<()> {
         self.active_game().save(db)
     }

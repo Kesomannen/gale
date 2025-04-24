@@ -1,6 +1,6 @@
 {
 	"productName": "Gale",
-	"version": "1.5.6",
+	"version": "1.5.10",
 	"identifier": "com.kesomannen.gale",
 	"build": {
 		"beforeBuildCommand": "npm run build",
@@ -38,7 +38,7 @@
 		"fileAssociations": [
 			{
 				"ext": ["r2z"],
-				"mimeType": "application/octet-stream"
+				"mimeType": "application/zip"
 			}
 		]
 	},

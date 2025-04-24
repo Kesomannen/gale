@@ -1,17 +1,52 @@
 # Changelog
 
-## Unreleased
-
-### Added
-
-- Game information to exports, which lets Gale automatically select the correct game when importing profiles
-- Added mod icon to details menu
-- Color option editor for config hex codes
+## 1.5.10 (2025-04-23)
 
 ### Fixed
 
-- Reworked CLI system to fix various bugs
+- "Invalid signature" error when updating
+
+## 1.5.9 (2025-04-22)
+
+### Added
+
+- Create desktop shortcut option to profile menu
+- Support for 8 games:
+  - Pulsar: Lost Colony
+  - Songs of Conquest
+  - White Knuckle
+  - Human Fall Flat
+  - Magicite
+  - ENA: Dream BBQ
+  - ASKA
+
+### Fixed
+
+- Punctuation being stripped from config option names
+- Gale being registered as a file handler for all file types
+- Passing `--no-gui` to a running instance causing the app to crash
+- Profile dropdown not being sorted by name
+
+## 1.5.8 (2025-04-15)
+
+### Fixed
+
+- Mod fetching causing a crash in some communities
+
+## 1.5.7 (2025-04-15)
+
+### Added
+
+- Added mod icon to details menu
+- Color option editor for config hex codes
+- Game information to profile exports, which lets Gale automatically select the correct game when importing profiles
+
+### Fixed
+
 - Minor UI tweaks
+- Update R.E.P.O. logo
+- Reworked CLI system to fix various bugs
+- Some packages not being fetched from small communities
 
 ## 1.5.6 (2025-04-01)
 

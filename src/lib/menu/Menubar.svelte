@@ -123,6 +123,14 @@
 		profileOperationOpen = false;
 	}
 
+	async function createDesktopShotcut() {
+		await invokeCommand('create_desktop_shortcut');
+
+		pushInfoToast({
+			message: `Created desktop shortcut for ${$activeProfile?.name}.`
+		});
+	}
+
 	async function uninstallDisabledMods() {
 		let confirmed = await confirm('Are you sure you want to uninstall all disabled mods?');
 		if (!confirmed) return;
@@ -274,6 +282,8 @@
 			<MenubarItem on:click={() => setAllModsState(true)} text="Enable all mods" />
 			<MenubarItem on:click={() => setAllModsState(false)} text="Disable all mods" />
 			<MenubarItem on:click={uninstallDisabledMods} text="Uninstall disabled mods" />
+			<MenubarSeparator />
+			<MenubarItem on:click={createDesktopShotcut} text="Create desktop shortcut" />
 		</MenubarMenu>
 		<MenubarMenu label="Import">
 			<MenubarItem on:click={() => importProfilePopup.openForCode()} text="...profile from code" />

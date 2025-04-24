@@ -110,8 +110,8 @@ pub(super) async fn import_profile(
 ) -> Result<()> {
     let path = {
         let mut manager = app.lock_manager();
-
         let game = manager.active_game_mut();
+
         if let Some(index) = game.profile_index(&data.name) {
             game.delete_profile(index, true, app.db())
                 .context("failed to delete existing profile")?;

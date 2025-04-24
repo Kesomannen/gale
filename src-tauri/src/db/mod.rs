@@ -9,7 +9,7 @@ use include_dir::include_dir;
 use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
-use tracing::info;
+use tracing::{info, trace};
 use uuid::Uuid;
 
 use crate::{
@@ -45,9 +45,15 @@ pub fn init() -> Result<(Db, bool)> {
     conn.pragma_update(None, "synchronous", "normal")
         .context("failed to set synchronous mode")?;
 
+    conn.trace(Some(trace_stmt));
+
     run_migrations(&mut conn).context("failed to run migrations")?;
 
     Ok((Db(Mutex::new(conn)), existed))
+}
+
+fn trace_stmt(stmt: &str) {
+    trace!("{stmt}");
 }
 
 static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migrations");
@@ -216,7 +222,7 @@ impl Db {
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
 
-        let profiles = conn
+        let mut profiles = conn
             .prepare(
                 "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data FROM profiles",
             )?
@@ -233,6 +239,8 @@ impl Db {
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
+
+        profiles.sort_by(|a, b| a.name.cmp(&b.name));
 
         let prefs = conn
             .prepare("SELECT data FROM prefs")?
