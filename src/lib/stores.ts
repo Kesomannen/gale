@@ -29,7 +29,7 @@ export let activeProfileLocked = derived([activeProfile, user], ([activeProfile,
 	if (activeProfile.sync === null) return false;
 	if (user === null) return true;
 
-	return activeProfile.sync.owner.id != user.id;
+	return activeProfile.sync.owner.discordId != user.discordId;
 });
 
 const defaultModQuery = () => ({
