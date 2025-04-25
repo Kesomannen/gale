@@ -121,6 +121,14 @@
 			Whether to send anonymous usage metrics when the app starts.
 		</TogglePref>
 
+		<TogglePref
+			label="Pull before launch"
+			value={prefs.pullBeforeLaunch}
+			set={set((value, prefs) => (prefs.pullBeforeLaunch = value))}
+		>
+			Whether to send anonymous usage metrics when the app starts.
+		</TogglePref>
+
 		<LargeHeading>
 			{$activeGame?.name} settings
 		</LargeHeading>

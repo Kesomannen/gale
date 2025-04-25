@@ -276,6 +276,7 @@ export type Prefs = {
 	cacheDir: string;
 	sendTelemetry: boolean;
 	fetchModsAutomatically: boolean;
+	pullBeforeLaunch: boolean;
 	zoomFactor: number;
 	gamePrefs: Map<string, GamePrefs>;
 };

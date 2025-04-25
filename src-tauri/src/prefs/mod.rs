@@ -6,9 +6,9 @@ use std::{
 };
 
 use eyre::{bail, ensure, Context, Result};
-use tracing::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
+use tracing::{debug, info, warn};
 
 use crate::{
     db::{self, Db},
@@ -187,6 +187,7 @@ pub struct Prefs {
     pub send_telemetry: bool,
     pub fetch_mods_automatically: bool,
     pub zoom_factor: f32,
+    pub pull_before_launch: bool,
 
     pub game_prefs: HashMap<String, GamePrefs>,
 }
@@ -251,6 +252,7 @@ impl Default for Prefs {
 
             send_telemetry: true,
             fetch_mods_automatically: true,
+            pull_before_launch: true,
 
             zoom_factor: 1.0,
 
@@ -333,6 +335,7 @@ impl Prefs {
 
         self.send_telemetry = value.send_telemetry;
         self.fetch_mods_automatically = value.fetch_mods_automatically;
+        self.pull_before_launch = value.pull_before_launch;
 
         self.save(app.db()).context("failed save prefs")
     }
@@ -384,5 +387,9 @@ impl Prefs {
 
     pub fn send_telemetry(&self) -> bool {
         self.send_telemetry
+    }
+
+    pub fn pull_profile_before_launch(&self) -> bool {
+        self.pull_before_launch
     }
 }
