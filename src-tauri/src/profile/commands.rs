@@ -88,7 +88,7 @@ pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
     let game = game::from_slug(slug).ok_or_eyre("unknown game")?;
 
     manager.set_active_game(game, &app)?;
-    manager.save(app.db())?;
+    manager.save_all(app.db())?;
 
     Ok(())
 }
