@@ -146,6 +146,7 @@ impl From<legacy::Prefs> for Prefs {
                 .into_iter()
                 .map(|(key, value)| (key, value.into()))
                 .collect(),
+            ..Default::default()
         }
     }
 }

@@ -116,8 +116,6 @@ impl<'a> Installer<'a> {
 
         self.current_name = version.name().to_owned();
 
-        info!("installing {}", version.ident);
-
         if cache_path.exists() {
             self.update(InstallTask::Installing);
 

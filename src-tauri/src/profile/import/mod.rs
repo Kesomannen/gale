@@ -17,7 +17,7 @@ use uuid::Uuid;
 
 use crate::{
     profile::{
-        export::{self, LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
+        export::{LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
         install::{self, InstallOptions, ModInstall},
     },
     state::ManagerExt,
@@ -30,8 +30,6 @@ mod local;
 mod r2modman;
 
 pub use local::{import_local_mod, import_local_mod_base64};
-
-use super::export::{IncludeExtensions, IncludeGenerated};
 
 pub fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
@@ -173,7 +171,6 @@ fn incremental_update(
     let to_remove = old_keys.difference(&new_keys);
 
     for ident in to_remove {
-        info!("removing {}", ident);
         let (uuid, _) = old.get(&ident).unwrap();
         profile.force_remove_mod(*uuid)?;
     }
@@ -183,7 +180,6 @@ fn incremental_update(
         .filter(|k| old.get(k).unwrap().1 != new.get(*k).unwrap().enabled());
 
     for ident in to_toggle {
-        info!("toggling {}", ident);
         let (uuid, _) = old.get(&ident).unwrap();
         profile.force_toggle_mod(*uuid)?;
     }

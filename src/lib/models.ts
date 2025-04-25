@@ -74,7 +74,7 @@ export type SyncProfileInfo = {
 };
 
 export type SyncUser = {
-	discordId: number;
+	discordId: string;
 	name: string;
 	displayName: string;
 	avatar: string;

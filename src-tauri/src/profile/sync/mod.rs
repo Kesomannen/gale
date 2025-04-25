@@ -172,7 +172,7 @@ async fn pull_profile(app: &AppHandle) -> Result<()> {
         download_and_import_file(name, metadata.into(), app).await?;
     }
 
-    Ok(true)
+    Ok(())
 }
 
 async fn fetch_profile(app: &AppHandle) -> Result<()> {

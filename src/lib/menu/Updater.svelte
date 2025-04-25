@@ -72,17 +72,16 @@
 	}
 </script>
 
-{#if $nextUpdate != null}
+{#if $nextUpdate !== null}
 	<Button.Root
-		class="bg-accent-600 enabled:hover:bg-accent-500 text-primary-100 my-auto mr-1.5 ml-auto flex 
-            items-center rounded-md px-2.5 py-1 font-semibold"
+		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 my-auto mr-2 ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm font-semibold"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
 		{#if loading}
-			<Icon icon="mdi:loading" class="mr-1 animate-spin" />
+			<Icon icon="mdi:loading" class="animate-spin" />
 		{:else}
-			<Icon icon="mdi:arrow-up-circle" class="mr-1" />
+			<Icon icon="mdi:arrow-up-circle" />
 		{/if}
 		<span class="text-sm">{loading ? 'Downloading update...' : 'Update available'}</span>
 	</Button.Root>

@@ -125,6 +125,7 @@ pub fn user_info(app: &AppHandle) -> Option<User> {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct TokenResponse {
     access_token: String,
     refresh_token: String,
@@ -167,7 +168,7 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
 
     let response: TokenResponse = app
         .http()
-        .get(format!("{}/auth/token", API_URL))
+        .post(format!("{}/auth/token", API_URL))
         .json(&GrantTokenRequest { refresh_token })
         .send()
         .await?
