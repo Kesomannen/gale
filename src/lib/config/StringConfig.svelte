@@ -10,6 +10,7 @@
 	import { getListSeparator } from '$lib/util';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
 
 	let content = entryId.entry.value.content as string;
 	let listSeparator = getListSeparator(entryId.entry);
@@ -38,10 +39,11 @@
 		bind:value={content}
 		on:change={submit}
 		spellcheck="false"
+		disabled={locked}
 		class="w-full {showExpandButton && 'pr-8'}"
 	/>
 
-	{#if showExpandButton}
+	{#if showExpandButton && !locked}
 		<Button.Root
 			class="bg-primary-900 text-primary-400 hover:bg-primary-800 absolute top-1 right-1 rounded-lg p-1 text-lg"
 			on:click={() => ($expandedEntry = entryId)}
@@ -50,4 +52,4 @@
 		</Button.Root>
 	{/if}
 </div>
-<ResetConfigButton {entryId} {onReset} />
+<ResetConfigButton {entryId} {locked} {onReset} />

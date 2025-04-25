@@ -11,13 +11,10 @@
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
-	import LargePrefsHeading from '$lib/prefs/LargePrefsHeading.svelte';
-	import SmallPrefsHeading from '$lib/prefs/SmallPrefsHeading.svelte';
+	import LargeHeading from '$lib/prefs/LargeHeading.svelte';
+	import SmallHeading from '$lib/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
-	//import ColorPref from '$lib/prefs/ColorPref.svelte';
-	import InputField from '$lib/components/InputField.svelte';
-	import { setColor } from '$lib/theme';
 	import ColorPref from '$lib/prefs/ColorPref.svelte';
 
 	let prefs: Prefs | null = null;
@@ -91,7 +88,7 @@
 			location, use the <b>Override location</b> option further down.
 		</PathPref>
 
-		<SmallPrefsHeading>Appearance</SmallPrefsHeading>
+		<SmallHeading>Appearance</SmallHeading>
 
 		<ColorPref category="primary" />
 		<ColorPref category="accent" />

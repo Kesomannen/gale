@@ -4,6 +4,7 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
 
 	let content = entryId.entry.value.content as ConfigNum;
 	let range = content.range as ConfigRange;
@@ -76,6 +77,7 @@
 	aria-valuemin={range.start}
 	aria-valuemax={range.end}
 	aria-valuenow={content.value}
+	aria-disabled={locked}
 	tabindex="0"
 	bind:this={element}
 	on:keydown={(e) => {
@@ -111,6 +113,7 @@
 
 <input
 	type="number"
+	disabled={locked}
 	bind:value={inputString}
 	on:change={() => {
 		let newValue = parseFloat(inputString);
@@ -130,7 +133,7 @@
 	}}
 	class="focus:ring-accent-500 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 hover:ring-1 focus:ring-2 focus:outline-hidden"
 />
-<ResetConfigButton {entryId} {onReset} />
+<ResetConfigButton {entryId} {locked} {onReset} />
 
 <style>
 	input[type='number']::-webkit-inner-spin-button,

@@ -6,6 +6,8 @@
 	import { Button } from 'bits-ui';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
+
 	export let onReset: (value: ConfigValue) => void;
 
 	function shouldConfirm(value: ConfigValue) {
@@ -39,7 +41,8 @@
 </script>
 
 <Button.Root
-	class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 ml-1 rounded-lg p-1.5 text-xl"
+	class="text-primary-400 disabled:text-primary-500 enabled:hover:bg-primary-700 enabled:hover:text-primary-300 ml-1 rounded-lg p-1.5 text-xl disabled:cursor-not-allowed"
+	disabled={locked}
 	on:click={onClick}
 >
 	<Icon icon="mdi:refresh" />

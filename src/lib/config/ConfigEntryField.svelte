@@ -88,9 +88,9 @@
 
 	{#if value.type === 'string'}
 		{#if isValidHex(value.content)}
-			<ColorConfig {entryId} />
+			<ColorConfig {entryId} {locked} />
 		{:else}
-			<StringConfig {entryId} />
+			<StringConfig {entryId} {locked} />
 		{/if}
 	{:else if value.type === 'enum'}
 		<EnumConfig {entryId} {locked} />

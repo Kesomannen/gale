@@ -10,7 +10,7 @@
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { fly } from 'svelte/transition';
-	import { modQuery, activeGame, activeProfile } from '$lib/stores';
+	import { modQuery, activeProfileLocked, activeProfile } from '$lib/stores';
 	import ModListItem from '$lib/modlist/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
@@ -147,23 +147,22 @@
 						on:click={() => {
 							if (!selectedMod) return;
 
-								install({
-									packageUuid: selectedMod.uuid,
-									versionUuid: version.uuid
-								});
-							}}
-						>
-							{version.name}
-						</DropdownMenu.Item>
-					{/each}
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-		{/if}
+							install({
+								packageUuid: selectedMod.uuid,
+								versionUuid: version.uuid
+							});
+						}}
+					>
+						{version.name}
+					</DropdownMenu.Item>
+				{/each}
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 	</div>
 
 	<svelte:fragment slot="banner">
 		{#if $activeProfileLocked}
-			<ProfileLockedBanner />
+			<ProfileLockedBanner class="mr-4 mb-1" />
 		{/if}
 	</svelte:fragment>
 

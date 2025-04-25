@@ -5,6 +5,7 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
 	export let entryId: ConfigEntryId;
+	export let locked: boolean;
 
 	// we don't use hashtags in cfg files, since they are turned into comments
 	// but the color input works with the # prefix, so we have to separate them
@@ -26,5 +27,5 @@
 	}
 </script>
 
-<input type="color" class="grow" bind:value={hexCode} on:change={submit} />
-<ResetConfigButton {entryId} {onReset} />
+<input type="color" class="grow" disabled={locked} bind:value={hexCode} on:change={submit} />
+<ResetConfigButton {entryId} {onReset} {locked} />

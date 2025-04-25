@@ -7,10 +7,11 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { activeProfile, activeProfileIndex, activeProfileLocked } from '$lib/stores';
+	import { activeProfile, activeProfileLocked } from '$lib/stores';
 	import { page } from '$app/stores';
 	import BigButton from '$lib/components/BigButton.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
+	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
 	let files: ConfigFile[] | null;
 
@@ -70,7 +71,7 @@
 	<div
 		class="light-scrollbar border-primary-600 bg-primary-700 w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r"
 	>
-		{#if files === undefined}
+		{#if files === null}
 			<div class="text-primary-300 flex h-full w-full items-center justify-center text-lg">
 				<Icon icon="mdi:loading" class="mr-4 animate-spin" />
 				Loading config...
@@ -106,7 +107,11 @@
 		{/if}
 	</div>
 
-	<div class="max-w-4xl grow overflow-y-auto py-4">
+	<div class="flex max-w-4xl grow flex-col overflow-y-auto py-4">
+		{#if $activeProfileLocked}
+			<ProfileLockedBanner class="mx-4 mb-4" />
+		{/if}
+
 		{#if selectedFile !== null}
 			<div class="shrink-0 truncate px-4 text-2xl font-bold text-white">
 				{selectedFile.relativePath}
@@ -152,7 +157,7 @@
 				</BigButton>
 			{/if}
 		{:else}
-			<div class="text-primary-400 flex h-full w-full items-center justify-center text-lg">
+			<div class="text-primary-400 flex w-full grow items-center justify-center text-lg">
 				Select a config file to start editing
 			</div>
 		{/if}

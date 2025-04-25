@@ -7,7 +7,9 @@
 	import { slide } from 'svelte/transition';
 
 	export let file: ConfigFile;
-	export let selectedSection: ConfigSection | undefined;
+	export let selectedSection: ConfigSection | null;
+	export let locked: boolean;
+
 	export let onDeleted: () => void;
 	export let onFileClicked: (file: ConfigFile) => void;
 	export let onSectionClicked: (file: ConfigFileData, section: ConfigSection) => void;
@@ -54,16 +56,18 @@
 				<Icon icon="mdi:open-in-new" />
 			</Button.Root>
 
-			<Button.Root
-				class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 hidden shrink-0 rounded-sm p-1 group-hover:flex"
-				on:click={async (evt) => {
-					evt.stopPropagation();
-					await invokeCommand('delete_config_file', { file: file.relativePath });
-					onDeleted();
-				}}
-			>
-				<Icon icon="mdi:delete" />
-			</Button.Root>
+			{#if !locked}
+				<Button.Root
+					class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 hidden shrink-0 rounded-sm p-1 group-hover:flex"
+					on:click={async (evt) => {
+						evt.stopPropagation();
+						await invokeCommand('delete_config_file', { file: file.relativePath });
+						onDeleted();
+					}}
+				>
+					<Icon icon="mdi:delete" />
+				</Button.Root>
+			{/if}
 		</Collapsible.Trigger>
 	{/if}
 	{#if file.type === 'ok' && shownSections.length > 0}

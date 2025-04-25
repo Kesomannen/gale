@@ -255,7 +255,7 @@
 
 	<svelte:fragment slot="banner">
 		{#if $activeProfileLocked}
-			<ProfileLockedBanner />
+			<ProfileLockedBanner class="mr-4 mb-1" />
 		{:else}
 			<UpdateAllBanner {updates} />
 		{/if}

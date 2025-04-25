@@ -119,6 +119,10 @@
 						profilesOpen = false;
 					}}
 				>
+					{#if profile.sync !== null}
+						<Icon icon="mdi:cloud" class="mr-2" />
+					{/if}
+
 					<span class="mr-3 grow">
 						{profile.name}
 					</span>
