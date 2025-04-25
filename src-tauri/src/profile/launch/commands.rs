@@ -2,10 +2,14 @@ use eyre::Context;
 use itertools::Itertools;
 use tauri::{command, AppHandle};
 
-use crate::{state::ManagerExt, util::cmd::Result};
+use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
 
 #[command]
-pub fn launch_game(app: AppHandle) -> Result<()> {
+pub async fn launch_game(app: AppHandle) -> Result<()> {
+    if app.lock_prefs().pull_before_launch {
+        sync::pull_profile(false, &app).await?;
+    }
+
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 

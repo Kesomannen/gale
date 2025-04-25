@@ -1,8 +1,8 @@
 use std::{fmt::Display, io::Cursor};
 
 use chrono::{DateTime, Utc};
-use eyre::{bail, Context, ContextCompat, OptionExt, Result};
-use reqwest::Method;
+use eyre::{bail, eyre, Context, ContextCompat, OptionExt, Result};
+use reqwest::{Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
@@ -149,56 +149,45 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
 }
 
 async fn clone_profile(id: String, app: &AppHandle) -> Result<()> {
-    let metadata = get_profile_meta(id, app).await?;
+    let metadata = get_profile_meta(id, app)
+        .await?
+        .ok_or_eyre("profile not found")?;
 
     let name = format!("{} (client)", metadata.manifest.profile_name);
     download_and_import_file(name, metadata.into(), app).await
 }
 
-async fn pull_profile(app: &AppHandle) -> Result<()> {
-    let (name, id, last_synced) = {
+pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
+    let (id, name, synced_at) = {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
         match &profile.sync_profile {
-            Some(data) => (profile.name.clone(), data.id.clone(), data.synced_at),
+            Some(data) => (data.id.clone(), profile.name.clone(), data.synced_at),
             None => bail!("profile is not synced"),
         }
     };
 
     let metadata = get_profile_meta(id, app).await?;
 
-    if last_synced < metadata.updated_at {
-        download_and_import_file(name, metadata.into(), app).await?;
+    match metadata {
+        Some(metadata) if !dry_run && metadata.updated_at > synced_at => {
+            download_and_import_file(name, metadata.into(), app).await
+        }
+        _ => {
+            let mut manager = app.lock_manager();
+            let profile = manager.active_profile_mut();
+
+            let synced_at = profile.sync_profile.take().unwrap().synced_at;
+
+            profile.sync_profile = metadata.map(|metadata| SyncProfileData {
+                synced_at,
+                ..metadata.into()
+            });
+
+            Ok(())
+        }
     }
-
-    Ok(())
-}
-
-async fn fetch_profile(app: &AppHandle) -> Result<()> {
-    let id = {
-        let manager = app.lock_manager();
-
-        manager
-            .active_profile()
-            .sync_profile
-            .as_ref()
-            .map(|data| data.id.clone())
-            .ok_or_eyre("profile is not synced")?
-    };
-
-    let updated_at = get_profile_meta(id, app)
-        .await
-        .map(|profile| profile.updated_at)?;
-
-    app.lock_manager()
-        .active_profile_mut()
-        .sync_profile
-        .as_mut()
-        .unwrap()
-        .updated_at = updated_at;
-
-    Ok(())
 }
 
 async fn download_and_import_file(
@@ -241,14 +230,19 @@ async fn download_and_import_file(
     Ok(())
 }
 
-async fn get_profile_meta(id: String, app: &AppHandle) -> Result<SyncProfileMetadata> {
+async fn get_profile_meta(id: String, app: &AppHandle) -> Result<Option<SyncProfileMetadata>> {
     let res = request(Method::GET, format!("/profile/{id}/meta"), app)
         .await
         .send()
         .await?
-        .error_for_status()?
-        .json()
-        .await?;
+        .error_for_status();
 
-    Ok(res)
+    match res {
+        Ok(res) => {
+            let res = res.json().await?;
+            Ok(Some(res))
+        }
+        Err(err) if err.status() == Some(StatusCode::NOT_FOUND) => Ok(None),
+        Err(err) => Err(eyre!(err)),
+    }
 }

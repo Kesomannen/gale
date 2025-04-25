@@ -23,7 +23,7 @@ pub struct AuthState {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
-    pub discord_id: i64,
+    pub discord_id: String,
     pub name: String,
     pub display_name: String,
     pub avatar: String,

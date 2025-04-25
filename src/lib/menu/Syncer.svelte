@@ -16,6 +16,7 @@
 	let loading = false;
 
 	$: syncInfo = $activeProfile?.sync ?? null;
+	$: isOwner = syncInfo?.owner.discordId == $user?.discordId;
 	$: state = (
 		syncInfo === null
 			? 'off'
@@ -96,7 +97,11 @@
 
 <Popup bind:open={popupOpen} title="Profile sync">
 	{#if syncInfo !== null}
-		<div class="mt-2 flex items-center gap-1">
+		{#if isOwner}
+			<div class="text-primary-300">You are the owner of this profile.</div>
+		{/if}
+
+		<div class="flex items-center gap-1">
 			<Tooltip text="Copy to clipboard">
 				<Button.Root
 					class="rounded-md bg-slate-900 px-4 py-1 font-mono text-lg text-slate-300"
@@ -127,11 +132,13 @@
 				</BigButton>
 			{/if}
 		</div>
-	{:else}
+	{:else if $user !== null}
 		<BigButton on:click={connect} disabled={loading} color="accent" class="mt-2">
 			<Icon icon="mdi:cloud-upload" class="mr-2 text-lg" />
 			Connect
 		</BigButton>
+	{:else}
+		<div class="text-primary-300">You must be logged in to create a synced profile.</div>
 	{/if}
 
 	<div class="mt-4 flex items-center text-slate-300">
@@ -139,13 +146,13 @@
 			<img
 				src={`https://cdn.discordapp.com/avatars/${$user.discordId}/${$user.avatar}.png`}
 				alt=""
-				class="mr-2 size-8 rounded-full shadow-lg"
+				class="mr-2 size-10 rounded-full shadow-lg"
 			/>
 		{/if}
 
 		<BigButton on:click={onLoginClicked} disabled={loginLoading} color="primary">
 			<Icon
-				icon={loginLoading ? 'mdi:loading' : $user === null ? 'mdi:discord' : 'mdi:logout'}
+				icon={loginLoading ? 'mdi:loading' : $user === null ? 'ic:baseline-discord' : 'mdi:logout'}
 				class="mr-2 {loginLoading && 'animate-spin'}"
 			/>
 

@@ -20,7 +20,7 @@
 	import Updater from './Updater.svelte';
 	import { dropTransition } from '$lib/transitions';
 	import { pushInfoToast } from '$lib/toast';
-	import SyncButton from './SyncButton.svelte';
+	import Syncer from './Syncer.svelte';
 
 	let launchGamePopupOpen = false;
 	let newProfilePopupOpen = false;
@@ -162,7 +162,7 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<SyncButton />
+	<Syncer />
 
 	<Updater />
 </div>

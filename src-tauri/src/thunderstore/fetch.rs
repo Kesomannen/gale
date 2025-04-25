@@ -19,7 +19,7 @@ pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
     let mut is_first = true;
 
     loop {
-        let fetch_automatically = app.lock_prefs().fetch_mods_automatically();
+        let fetch_automatically = app.lock_prefs().fetch_mods_automatically;
 
         // always fetch once, even if the setting is turned off
         if !fetch_automatically && !is_first {

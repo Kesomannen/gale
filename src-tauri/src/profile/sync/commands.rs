@@ -27,14 +27,14 @@ pub async fn clone_sync_profile(id: String, app: AppHandle) -> Result<()> {
 
 #[tauri::command]
 pub async fn pull_sync_profile(app: AppHandle) -> Result<()> {
-    super::pull_profile(&app).await?;
+    super::pull_profile(false, &app).await?;
 
     Ok(())
 }
 
 #[tauri::command]
 pub async fn fetch_sync_profile(app: AppHandle) -> Result<()> {
-    super::fetch_profile(&app).await?;
+    super::pull_profile(true, &app).await?;
 
     Ok(())
 }

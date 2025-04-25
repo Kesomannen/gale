@@ -380,16 +380,4 @@ impl Prefs {
     pub fn cache_dir(&self) -> PathBuf {
         self.data_dir.join("cache")
     }
-
-    pub fn fetch_mods_automatically(&self) -> bool {
-        self.fetch_mods_automatically
-    }
-
-    pub fn send_telemetry(&self) -> bool {
-        self.send_telemetry
-    }
-
-    pub fn pull_profile_before_launch(&self) -> bool {
-        self.pull_before_launch
-    }
 }

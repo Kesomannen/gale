@@ -38,7 +38,6 @@
 			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
 			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
-			<NavbarLink to="/sync" icon="mdi:cloud-sync" tooltip="Profile sync (beta)" />
 			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
 		</nav>
 

@@ -74,7 +74,7 @@
 
 {#if $nextUpdate !== null}
 	<Button.Root
-		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 my-auto mr-2 ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm font-semibold"
+		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 my-auto mr-2 ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
 		disabled={loading}
 		on:click={() => (popupOpen = true)}
 	>
