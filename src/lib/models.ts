@@ -80,6 +80,14 @@ export type SyncUser = {
 	avatar: string;
 };
 
+export type SyncImportData = {
+	id: string;
+	created_at: string;
+	updated_at: string;
+	owner: SyncUser;
+	manifest: ProfileManifest;
+};
+
 export type ProfilesInfo = {
 	profiles: ProfileInfo[];
 	activeId: number;
@@ -253,10 +261,29 @@ export type ProfileQuery = {
 	updates: AvailableUpdate[];
 };
 
+export type AnyImportData = ({ type: 'normal' } & ImportData) | ({ type: 'sync' } & SyncImportData);
+
 export type ImportData = {
+	manifest: ProfileManifest;
+	path: string;
+	deleteAfterImport: boolean;
+};
+
+type ProfileManifest = {
+	profileName: string;
+	mods: ProfileManifestMod[];
+	community: string | null;
+	ignoredUpdates: string[];
+};
+
+type ProfileManifestMod = {
 	name: string;
-	game: string | null;
-	modNames: string[];
+	enabled: string;
+	version: {
+		major: number;
+		minor: number;
+		patch: number;
+	};
 };
 
 export type R2ImportData = {

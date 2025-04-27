@@ -1,19 +1,17 @@
 use std::{fmt::Display, io::Cursor};
 
 use chrono::{DateTime, Utc};
-use eyre::{bail, eyre, Context, ContextCompat, OptionExt, Result};
+use eyre::{bail, eyre, Context, OptionExt, Result};
 use reqwest::{Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
 use crate::{profile::install::InstallOptions, state::ManagerExt};
 
-use super::export;
-
 pub mod auth;
 pub mod commands;
 
-const API_URL: &str = "http://localhost:8800/api";
+const API_URL: &str = "https://gale.kesomannen.com/api";
 
 async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
     let mut req = app.http().request(method, format!("{}{}", API_URL, path));
@@ -31,14 +29,14 @@ struct CreateSyncProfileResponse {
     updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct SyncProfileMetadata {
+pub struct SyncProfileMetadata {
     id: String,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
     owner: auth::User,
-    manifest: export::LegacyProfileManifest,
+    manifest: super::export::ProfileManifest,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -148,27 +146,62 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-async fn clone_profile(id: String, app: &AppHandle) -> Result<()> {
-    let metadata = get_profile_meta(id, app)
-        .await?
-        .ok_or_eyre("profile not found")?;
+async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
+    let (id, is_owner) = {
+        let mut manager = app.lock_manager();
+        let profile = manager.active_profile_mut();
 
-    let name = format!("{} (client)", metadata.manifest.profile_name);
+        let (id, owner_discord_id) = profile
+            .sync_profile
+            .as_ref()
+            .map(|info| (info.id.clone(), &info.owner.discord_id))
+            .ok_or_eyre("profile is not synced")?;
+
+        let is_owner =
+            auth::user_info(app).is_some_and(|user| user.discord_id == *owner_discord_id);
+
+        (id, is_owner)
+    };
+
+    if is_owner && delete {
+        delete_profile(&id, app).await?;
+    }
+
+    {
+        let mut manager = app.lock_manager();
+        let profile = manager.active_profile_mut();
+
+        profile.sync_profile = None;
+
+        profile.save(app.db())?;
+    }
+
+    Ok(())
+}
+
+async fn clone_profile(id: &str, name: String, app: &AppHandle) -> Result<()> {
+    let metadata = read_profile(id, app).await?;
+
     download_and_import_file(name, metadata.into(), app).await
 }
 
 pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
-    let (id, name, synced_at) = {
+    let (id, profile_id, name, synced_at) = {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
         match &profile.sync_profile {
-            Some(data) => (data.id.clone(), profile.name.clone(), data.synced_at),
-            None => bail!("profile is not synced"),
+            Some(data) => (
+                data.id.clone(),
+                profile.id,
+                profile.name.clone(),
+                data.synced_at,
+            ),
+            None => return Ok(()),
         }
     };
 
-    let metadata = get_profile_meta(id, app).await?;
+    let metadata = get_profile_meta(&id, app).await?;
 
     match metadata {
         Some(metadata) if !dry_run && metadata.updated_at > synced_at => {
@@ -176,7 +209,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
         }
         _ => {
             let mut manager = app.lock_manager();
-            let profile = manager.active_profile_mut();
+            let profile = manager.active_game_mut().find_profile_mut(profile_id)?;
 
             let synced_at = profile.sync_profile.take().unwrap().synced_at;
 
@@ -184,6 +217,8 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
                 synced_at,
                 ..metadata.into()
             });
+
+            profile.save(app.db())?;
 
             Ok(())
         }
@@ -205,20 +240,17 @@ async fn download_and_import_file(
         .await?;
 
     let mut data =
-        super::import::read_file(Cursor::new(bytes), app).context("failed to import profile")?;
+        super::import::read_file(Cursor::new(bytes)).context("failed to import profile")?;
 
-    data.name = name.clone();
+    data.manifest.name = name.clone();
 
-    super::import::import_profile(data, InstallOptions::default(), false, app)
+    let index = super::import::import_profile(data, InstallOptions::default(), false, app)
         .await
         .context("failed to import profile")?;
 
     {
-        // import_data deletes and recreates the profile, so we need to set sync_data again
         let mut manager = app.lock_manager();
-
         let game = manager.active_game_mut();
-        let index = game.profile_index(&name).context("profile not found")?;
         let profile = &mut game.profiles[index];
 
         profile.sync_profile = Some(sync_profile);
@@ -230,7 +262,17 @@ async fn download_and_import_file(
     Ok(())
 }
 
-async fn get_profile_meta(id: String, app: &AppHandle) -> Result<Option<SyncProfileMetadata>> {
+async fn delete_profile(id: &str, app: &AppHandle) -> Result<()> {
+    request(Method::DELETE, format!("/profile/{id}"), app)
+        .await
+        .send()
+        .await?
+        .error_for_status()?;
+
+    Ok(())
+}
+
+async fn get_profile_meta(id: &str, app: &AppHandle) -> Result<Option<SyncProfileMetadata>> {
     let res = request(Method::GET, format!("/profile/{id}/meta"), app)
         .await
         .send()
@@ -245,4 +287,10 @@ async fn get_profile_meta(id: String, app: &AppHandle) -> Result<Option<SyncProf
         Err(err) if err.status() == Some(StatusCode::NOT_FOUND) => Ok(None),
         Err(err) => Err(eyre!(err)),
     }
+}
+
+async fn read_profile(id: &str, app: &AppHandle) -> Result<SyncProfileMetadata> {
+    get_profile_meta(id, app)
+        .await?
+        .ok_or_eyre("profile not found")
 }

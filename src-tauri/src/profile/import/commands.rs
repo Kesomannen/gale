@@ -22,27 +22,21 @@ pub async fn import_profile(data: ImportData, import_all: bool, app: AppHandle) 
 pub async fn read_profile_code(key: &str, app: AppHandle) -> Result<ImportData> {
     let key = Uuid::parse_str(key).map_err(|_| anyhow!("invalid code format"))?;
 
-    thunderstore::wait_for_fetch(&app).await;
-
     let data = super::read_code(key, &app).await?;
 
     Ok(data)
 }
 
 #[command]
-pub async fn read_profile_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
-    thunderstore::wait_for_fetch(&app).await;
-
-    let data = super::import_file_from_path(path, &app)?;
+pub async fn read_profile_file(path: PathBuf) -> Result<ImportData> {
+    let data = super::import_file_from_path(path)?;
 
     Ok(data)
 }
 
 #[command]
-pub async fn read_profile_base64(base64: String, app: AppHandle) -> Result<ImportData> {
-    thunderstore::wait_for_fetch(&app).await;
-
-    let data = super::read_base64(&base64, &app)?;
+pub async fn read_profile_base64(base64: String) -> Result<ImportData> {
+    let data = super::read_base64(&base64)?;
 
     Ok(data)
 }

@@ -1,7 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
-    io::{BufReader, Cursor, Read, Seek},
+    io::{self, BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
 };
 
@@ -12,16 +12,16 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::info;
+use tracing::debug;
 use uuid::Uuid;
 
 use crate::{
     profile::{
-        export::{LegacyProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
+        export::{ProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
         install::{self, InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::{Thunderstore, VersionIdent},
+    thunderstore::VersionIdent,
     util::{self, error::IoResultExt},
 };
 
@@ -31,56 +31,23 @@ mod r2modman;
 
 pub use local::{import_local_mod, import_local_mod_base64};
 
-pub fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
-    let file = File::open(&path).fs_context("opening file", &path)?;
-
-    read_file(file, app)
-}
+use super::export::{self, IncludeExtensions, IncludeGenerated};
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
-    pub name: String,
-    game: Option<String>,
-    mod_names: Vec<VersionIdent>,
-    mods: Vec<ModInstall>,
-    path: PathBuf,
-    delete_after_import: bool,
-    ignored_updates: Vec<Uuid>,
+    pub manifest: ProfileManifest,
+    pub path: PathBuf,
+    pub delete_after_import: bool,
 }
 
-impl ImportData {
-    pub fn create_r2(
-        name: String,
-        game: Option<String>,
-        mods: Vec<R2Mod>,
-        ignored_updates: Vec<Uuid>,
-        path: PathBuf,
-        delete_after_import: bool,
-        thunderstore: &Thunderstore,
-    ) -> Result<Self> {
-        let mod_names = mods.iter().map(|r2| r2.ident()).collect();
-        let mods = mods
-            .into_iter()
-            .map(|r2| r2.into_install(thunderstore))
-            .filter_map(Result::ok)
-            .collect_vec();
+pub fn import_file_from_path(path: PathBuf) -> Result<ImportData> {
+    let file = File::open(&path).fs_context("opening file", &path)?;
 
-        Ok(Self {
-            name,
-            game,
-            mod_names,
-            mods,
-            path,
-            delete_after_import,
-            ignored_updates,
-        })
-    }
+    read_file(file)
 }
 
-pub(super) fn read_file(source: impl Read + Seek, app: &AppHandle) -> Result<ImportData> {
-    let thunderstore = app.lock_thunderstore();
-
+pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
     let temp_dir = tempdir().context("failed to create temporary directory")?;
     util::zip::extract(source, temp_dir.path())?;
 
@@ -88,18 +55,46 @@ pub(super) fn read_file(source: impl Read + Seek, app: &AppHandle) -> Result<Imp
         .map(BufReader::new)
         .context("failed to open profile manifest")?;
 
-    let manifest: LegacyProfileManifest =
+    let manifest: ProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
 
-    ImportData::create_r2(
-        manifest.profile_name,
-        manifest.community,
-        manifest.mods,
-        manifest.ignored_updates,
-        temp_dir.into_path(),
-        true,
-        &thunderstore,
-    )
+    Ok(ImportData {
+        manifest,
+        path: temp_dir.into_path(),
+        delete_after_import: true,
+    })
+}
+
+fn read_base64(base64: &str) -> Result<ImportData> {
+    let bytes = BASE64_STANDARD
+        .decode(base64)
+        .context("failed to decode base64 data")?;
+
+    read_file(Cursor::new(bytes))
+}
+
+async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
+    let response = app
+        .http()
+        .get(format!(
+            "https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"
+        ))
+        .send()
+        .await?
+        .error_for_status()
+        .map_err(|err| match err.status() {
+            Some(status) if status == StatusCode::NOT_FOUND => {
+                eyre!("profile code is expired or invalid")
+            }
+            _ => err.into(),
+        })?
+        .text()
+        .await?;
+
+    match response.strip_prefix(PROFILE_DATA_PREFIX) {
+        Some(str) => read_base64(str),
+        None => Err(eyre!("invalid profile data")),
+    }
 }
 
 pub(super) async fn import_profile(
@@ -107,51 +102,100 @@ pub(super) async fn import_profile(
     options: InstallOptions,
     import_all: bool,
     app: &AppHandle,
-) -> Result<()> {
-    let (path, to_install) = {
+) -> Result<usize> {
+    let ImportData {
+        manifest:
+            ProfileManifest {
+                name,
+                mods,
+                ignored_updates,
+                ..
+            },
+        path,
+        delete_after_import,
+    } = data;
+
+    let (index, profile_path, to_install) = {
+        let (names, installs) = resolve_mods(mods, app)?;
+
         let mut manager = app.lock_manager();
         let game = manager.active_game_mut();
 
-        let (profile, to_install) = if let Some(index) = game.profile_index(&data.name) {
+        let (index, profile, to_install) = if let Some(index) = game.profile_index(&name) {
             game.set_active_profile(index)?;
 
             let profile = &mut game.profiles[index];
-            let to_install = incremental_update(data.mods, &data.mod_names, profile)?;
-            (profile, to_install)
+            let to_install = incremental_update(installs, &names, profile)?;
+
+            (index, profile, to_install)
         } else {
-            (game.create_profile(data.name, None, app.db())?, data.mods)
+            let index = game.profiles.len();
+            let profile = game.create_profile(name, None, app.db())?;
+
+            (index, profile, installs)
         };
 
-        profile.ignored_updates = data.ignored_updates.into_iter().collect();
-        (profile.path.clone(), to_install)
+        profile.ignored_updates = ignored_updates.into_iter().collect();
+        (index, profile.path.clone(), to_install)
     };
 
     install::install_mods(to_install, options, app)
         .await
         .context("error while importing mods")?;
 
-    /*
-        let includes = export::find_config(
-            &data.path,
-            if import_all {
-                IncludeExtensions::All
-            } else {
-                IncludeExtensions::Default
-            },
-            IncludeGenerated::No,
-        );
-        import_config(&path, &data.path, includes).context("failed to import config")?;
-    */
+    import_config(
+        &profile_path,
+        &path,
+        if import_all {
+            IncludeExtensions::All
+        } else {
+            IncludeExtensions::Default
+        },
+        IncludeGenerated::No,
+    )
+    .context("failed to import config")?;
 
-    if data.delete_after_import {
-        fs::remove_dir_all(&data.path).ok();
+    if delete_after_import {
+        fs::remove_dir_all(path).ok();
     }
 
-    Ok(())
+    Ok(index)
+}
+
+fn resolve_mods(mods: Vec<R2Mod>, app: &AppHandle) -> Result<(Vec<VersionIdent>, Vec<ModInstall>)> {
+    let thunderstore = app.lock_thunderstore();
+
+    let mut names = Vec::with_capacity(mods.len());
+    let mut installs = Vec::with_capacity(mods.len());
+
+    for r2_mod in mods {
+        names.push(r2_mod.ident());
+
+        let install = r2_mod.into_install(&thunderstore)?;
+        installs.push(install);
+    }
+
+    Ok((names, installs))
+}
+
+fn file_checksum(path: &Path) -> io::Result<blake3::Hash> {
+    let mut file = File::open(path)?;
+    let mut hasher = blake3::Hasher::new();
+    let mut buffer = [0u8; 4096];
+
+    loop {
+        let n = file.read(&mut buffer)?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buffer[..n]);
+    }
+
+    Ok(hasher.finalize())
 }
 
 fn incremental_update(
-    mods: Vec<ModInstall>,
+    installs: Vec<ModInstall>,
     mod_names: &[VersionIdent],
     profile: &mut super::Profile,
 ) -> Result<Vec<ModInstall>> {
@@ -162,7 +206,7 @@ fn incremental_update(
 
     let mut new: HashMap<_, _> = mod_names
         .iter()
-        .zip(mods)
+        .zip(installs)
         .map(|(ident, install)| (ident, install))
         .collect();
 
@@ -193,57 +237,39 @@ fn incremental_update(
 }
 
 pub fn import_config(
-    target: &Path,
-    source: &Path,
-    files: impl Iterator<Item = PathBuf>,
+    dest: &Path,
+    src: &Path,
+    extensions: IncludeExtensions,
+    generated: IncludeGenerated,
 ) -> Result<()> {
-    for file in files {
-        let source = source.join(&file);
+    let source_files = export::find_config(&src, extensions, generated);
+    let existing_files = export::find_config(&dest, extensions, generated);
 
-        let target = match file.starts_with("config") {
-            true => target.join("BepInEx").join(file),
-            false => target.join(file),
+    for file in source_files {
+        let src_path = src.join(&file);
+        let dest_path = dest.join(&file);
+
+        let need_copy = if dest_path.exists() {
+            file_checksum(&src_path)? != file_checksum(&dest_path)?
+        } else {
+            true
         };
 
-        let parent = target.parent().unwrap();
-        if !parent.exists() {
-            fs::create_dir_all(parent)?;
+        if need_copy {
+            debug!("copy {}", file.display());
+            fs::create_dir_all(dest_path.parent().unwrap())?;
+            fs::copy(src_path, dest_path)?;
         }
+    }
 
-        fs::copy(&source, &target)?;
+    if extensions != IncludeExtensions::All {
+        for file in existing_files {
+            if !src.join(&file).exists() {
+                debug!("remove {}", file.display());
+                fs::remove_file(dest.join(&file))?;
+            }
+        }
     }
 
     Ok(())
-}
-
-async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
-    let response = app
-        .http()
-        .get(format!(
-            "https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"
-        ))
-        .send()
-        .await?
-        .error_for_status()
-        .map_err(|err| match err.status() {
-            Some(status) if status == StatusCode::NOT_FOUND => {
-                eyre!("profile code is expired or invalid")
-            }
-            _ => err.into(),
-        })?
-        .text()
-        .await?;
-
-    match response.strip_prefix(PROFILE_DATA_PREFIX) {
-        Some(str) => read_base64(str, app),
-        None => Err(eyre!("invalid profile data")),
-    }
-}
-
-fn read_base64(base64: &str, app: &AppHandle) -> Result<ImportData> {
-    let bytes = BASE64_STANDARD
-        .decode(base64)
-        .context("failed to decode base64 data")?;
-
-    read_file(Cursor::new(bytes), app)
 }

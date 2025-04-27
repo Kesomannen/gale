@@ -12,7 +12,7 @@ use eyre::{Context, Result};
 use futures_util::StreamExt;
 use tauri::{AppHandle, Emitter};
 use thiserror::Error;
-use tracing::{info, warn};
+use tracing::warn;
 use zip::ZipArchive;
 
 use super::{cache, InstallOptions, InstallProgress, InstallTask, ModInstall};

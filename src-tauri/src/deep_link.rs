@@ -1,6 +1,6 @@
 use eyre::{OptionExt, Result};
-use tracing::{debug, warn};
 use tauri::{AppHandle, Emitter, Manager};
+use tracing::{debug, warn};
 
 use crate::{
     logger,
@@ -36,7 +36,7 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
         app.emit("install_mod", frontend_mod).ok();
         true
     } else if url.ends_with("r2z") {
-        let import_data = match profile::import::import_file_from_path(url.into(), app) {
+        let import_data = match profile::import::import_file_from_path(url.into()) {
             Ok(data) => data,
             Err(err) => {
                 logger::log_webview_err("Failed to import profile from file", err, app);

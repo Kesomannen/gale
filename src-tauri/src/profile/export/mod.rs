@@ -6,7 +6,7 @@ use std::{
 };
 
 use base64::{prelude::BASE64_STANDARD, Engine};
-use eyre::{anyhow, Context};
+use eyre::{eyre, Context};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -17,28 +17,29 @@ use super::{install::ModInstall, Profile, Result};
 use crate::{
     game::Game,
     state::ManagerExt,
-    thunderstore::{LegacyProfileCreateResponse, ModId, Thunderstore, VersionIdent},
+    thunderstore::{LegacyProfileCreateResponse, ModId, PackageIdent, Thunderstore, VersionIdent},
 };
 
 mod changelog;
 pub mod commands;
 pub mod modpack;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct LegacyProfileManifest {
-    pub profile_name: String,
+pub struct ProfileManifest {
+    #[serde(rename = "profileName")]
+    pub name: String,
     pub mods: Vec<R2Mod>,
-    #[serde(default)]
-    pub community: Option<String>,
+    #[serde(default, rename = "community")]
+    pub game: Option<String>,
     #[serde(default)]
     pub ignored_updates: Vec<Uuid>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct R2Mod {
     #[serde(rename = "name")]
-    pub full_name: String,
+    pub full_name: PackageIdent,
     #[serde(alias = "versionNumber")]
     pub version: R2Version,
     pub enabled: bool,
@@ -46,11 +47,11 @@ pub struct R2Mod {
 
 impl R2Mod {
     pub fn into_install(self, thunderstore: &Thunderstore) -> Result<ModInstall> {
-        let package = thunderstore.find_package(&self.full_name)?;
+        let package = thunderstore.find_package(self.full_name.as_str())?;
 
         let version = self.version.to_string();
         let version = package.get_version_with_num(&version).ok_or_else(|| {
-            anyhow!(
+            eyre!(
                 "failed to find version {} for package {}",
                 version,
                 self.full_name
@@ -66,15 +67,11 @@ impl R2Mod {
     }
 
     pub fn ident(&self) -> VersionIdent {
-        VersionIdent::try_from(format!(
-            "{}-{}.{}.{}",
-            self.full_name, self.version.major, self.version.minor, self.version.patch
-        ))
-        .unwrap()
+        self.full_name.with_version(&self.version)
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct R2Version {
     pub major: u64,
@@ -106,12 +103,12 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     let mods = profile
         .thunderstore_mods()
         .map(|(ts_mod, enabled)| {
-            let full_name = ts_mod.ident.full_name().to_string();
+            let full_name = ts_mod.ident.without_version();
             let version = ts_mod
                 .ident
                 .version()
                 .parse::<semver::Version>()
-                .unwrap()
+                .expect("thunderstore version was not a semver")
                 .into();
 
             R2Mod {
@@ -122,17 +119,25 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
         })
         .collect();
 
-    let manifest = LegacyProfileManifest {
-        profile_name: profile.name.clone(),
+    let manifest = ProfileManifest {
+        name: profile.name.clone(),
         ignored_updates: profile.ignored_updates.iter().cloned().collect(),
-        community: Some(game.slug.to_string()),
+        game: Some(game.slug.to_string()),
         mods,
     };
 
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
     serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
-    write_config(find_default_config(&profile.path), &profile.path, &mut zip)?;
+    write_config(
+        find_config(
+            &profile.path,
+            IncludeExtensions::Default,
+            IncludeGenerated::No,
+        ),
+        &profile.path,
+        &mut zip,
+    )?;
 
     Ok(())
 }
@@ -199,6 +204,7 @@ const GENERATED_FILES: &[&str] = &[
     "_state",
 ];
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IncludeExtensions {
     /// All extensions.
     All,
@@ -206,6 +212,7 @@ pub enum IncludeExtensions {
     Default,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IncludeGenerated {
     /// Include every file (as long as they fit [`IncludeExtensions`]).
     Yes,
@@ -235,10 +242,4 @@ pub fn find_config(
                     .extension()
                     .is_some_and(|ext| COMMON_EXTENSIONS.iter().any(|inc| *inc == ext))
         })
-}
-
-/// Alias for [`find_config`] with [`IncludeExtensions`] and [`IncludeGenerated`] set
-/// to their default values.
-pub fn find_default_config(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
-    find_config(root, IncludeExtensions::Default, IncludeGenerated::No)
 }

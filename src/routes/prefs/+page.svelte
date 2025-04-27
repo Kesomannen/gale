@@ -126,7 +126,7 @@
 			value={prefs.pullBeforeLaunch}
 			set={set((value, prefs) => (prefs.pullBeforeLaunch = value))}
 		>
-			Whether to send anonymous usage metrics when the app starts.
+			Whether to pull updates from synced profiles before launching.
 		</TogglePref>
 
 		<LargeHeading>

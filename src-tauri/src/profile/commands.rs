@@ -131,12 +131,16 @@ pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
 }
 
 #[command]
-pub fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
-    let mut manager = app.lock_manager();
+pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
+    {
+        let mut manager = app.lock_manager();
 
-    let game = manager.active_game_mut();
-    game.set_active_profile(index)?;
-    game.save(app.db())?;
+        let game = manager.active_game_mut();
+        game.set_active_profile(index)?;
+        game.save(app.db())?;
+    }
+
+    super::sync::pull_profile(true, &app).await?;
 
     Ok(())
 }

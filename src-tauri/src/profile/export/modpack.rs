@@ -10,14 +10,16 @@ use eyre::{anyhow, bail, ensure, eyre, Context, OptionExt, Result};
 use futures_util::future::try_join_all;
 use image::{imageops::FilterType, ImageFormat};
 use itertools::Itertools;
-use tracing::{debug, info, trace};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::Url;
+use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{write::SimpleFileOptions, ZipWriter};
 
 use crate::{game::Game, profile::Profile, thunderstore::*};
+
+use super::{IncludeExtensions, IncludeGenerated};
 
 pub fn refresh_args(profile: &mut Profile) {
     if profile.modpack.is_none() {
@@ -35,7 +37,11 @@ pub fn refresh_args(profile: &mut Profile) {
     // remove deleted files
     includes.retain(|file, _| profile.path.join(file).exists());
 
-    for path in super::find_default_config(&profile.path) {
+    for path in super::find_config(
+        &profile.path,
+        IncludeExtensions::Default,
+        IncludeGenerated::No,
+    ) {
         includes.entry(path).or_insert(true);
     }
 }

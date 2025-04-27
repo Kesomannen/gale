@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import type { Mod, ConfigEntry, Dependant } from './models';
+import type { Mod, ConfigEntry, Dependant, SyncUser } from './models';
 import { activeGame } from './stores';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
@@ -139,4 +139,8 @@ export function fileToBase64(file: File): Promise<string> {
 
 export function isValidHex(str: string) {
 	return /^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(str);
+}
+
+export function discordAvatarUrl(user: SyncUser) {
+	return `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`;
 }

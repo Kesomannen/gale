@@ -4,18 +4,22 @@ use std::{
 };
 
 use eyre::{bail, Context, Result};
-use tracing::{info, warn};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
+use tracing::{info, warn};
 
-use super::ImportData;
 use crate::{
     logger,
-    profile::{export::R2Mod, install::InstallOptions},
+    profile::{
+        export::{ProfileManifest, R2Mod},
+        install::InstallOptions,
+    },
     state::ManagerExt,
     thunderstore::{self},
     util::{self, error::IoResultExt, fs::PathExt},
 };
+
+use super::ImportData;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -115,10 +119,13 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
 }
 
 async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
-    info!("importing profile '{}'", data.name);
-    emit_update(&format!("Importing profile '{}'... 0%", data.name), app);
+    info!("importing profile '{}'", data.manifest.name);
+    emit_update(
+        &format!("Importing profile '{}'... 0%", data.manifest.name),
+        app,
+    );
 
-    let name = data.name.clone();
+    let name = data.manifest.name.clone();
 
     super::import_profile(
         data,
@@ -135,12 +142,13 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
         false,
         app,
     )
-    .await
+    .await?;
+
+    Ok(())
 }
 
 fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
     let mut manager = app.lock_manager();
-    let thunderstore = app.lock_thunderstore();
 
     let name = util::fs::file_name_owned(&profile_dir);
 
@@ -164,16 +172,18 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
             .context("failed to delete existing profile")?;
     }
 
-    ImportData::create_r2(
-        name,
-        None,
-        mods,
-        Vec::new(),
-        profile_dir,
-        false,
-        &thunderstore,
-    )
-    .map(Some)
+    let import = ImportData {
+        manifest: ProfileManifest {
+            name,
+            mods,
+            game: None,
+            ignored_updates: Vec::new(),
+        },
+        path: profile_dir,
+        delete_after_import: false,
+    };
+
+    Ok(Some(import))
 }
 
 fn find_path() -> Option<PathBuf> {

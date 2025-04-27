@@ -8,11 +8,11 @@ use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
-use tracing::info;
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use super::{
-    export::{self, IncludeExtensions, IncludeGenerated},
+    export::{IncludeExtensions, IncludeGenerated},
     import,
     install::PackageInstaller,
     Dependant, ManagedGame, Profile, ProfileMod,
@@ -279,6 +279,13 @@ impl ManagedGame {
 
         let id = db.next_profile_id()?;
 
+        debug!(
+            name,
+            id,
+            path = path.display().to_string(),
+            "created profile",
+        );
+
         self.profiles.push(Profile {
             id,
             name,
@@ -330,13 +337,13 @@ impl ManagedGame {
 
         // Make sure generated files and configs are properly copied
         // and not linked between the two profiles.
-        let config_files = export::find_config(
+        import::import_config(
+            &new_profile.path,
             &old_profile.path,
             IncludeExtensions::Default,
             IncludeGenerated::Yes,
-        );
-        import::import_config(&new_profile.path, &old_profile.path, config_files)
-            .context("failed to copy config files")?;
+        )
+        .context("failed to copy config files")?;
 
         util::fs::copy_dir(
             &old_profile.path,

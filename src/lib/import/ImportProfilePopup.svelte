@@ -5,7 +5,7 @@
 	import { Tabs } from 'bits-ui';
 
 	import { invokeCommand } from '$lib/invoke';
-	import type { ImportData } from '$lib/models';
+	import type { AnyImportData, ImportData, SyncImportData as SyncImportData } from '$lib/models';
 	import Icon from '@iconify/svelte';
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -18,11 +18,15 @@
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Info from '$lib/components/Info.svelte';
-	import { onMount } from 'svelte';
-	import { listen } from '@tauri-apps/api/event';
+	import { onDestroy, onMount } from 'svelte';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+	import { discordAvatarUrl } from '$lib/util';
+
+	const uuidRegex =
+		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
 
 	let open: boolean;
-	let data: ImportData | null;
+	let data: AnyImportData | null;
 
 	let key: string;
 	let name: string;
@@ -30,20 +34,28 @@
 	let importAll: boolean;
 	let mode: 'new' | 'overwrite' = 'new';
 
+	let unlistenFn: UnlistenFn | undefined;
+
+	$: mods = data?.manifest.mods ?? [];
+
 	$: if (mode === 'overwrite' && isAvailable(name)) {
 		name = profiles[0].name;
 	}
 
 	$: nameAvailable = mode === 'overwrite' || isAvailable(name);
 
-	onMount(() => {
-		listen<ImportData>('import_profile', (evt) => {
-			data = evt.payload;
-			name = data.name;
+	onMount(async () => {
+		unlistenFn = await listen<ImportData>('import_profile', (evt) => {
+			data = { type: 'normal', ...evt.payload };
+			name = data.manifest.profileName;
 			mode = isAvailable(name) ? 'new' : 'overwrite';
 
 			open = true;
 		});
+	});
+
+	onDestroy(() => {
+		unlistenFn?.();
 	});
 
 	async function getKeyFromClipboard() {
@@ -52,8 +64,24 @@
 
 	async function submitKey() {
 		loading = true;
+
+		let type = uuidRegex.test(key.trim()) ? 'normal' : 'sync';
+
 		try {
-			data = await invokeCommand<ImportData>('read_profile_code', { key: key.trim() });
+			if (type === 'normal') {
+				data = {
+					type: 'normal',
+					...(await invokeCommand<ImportData>('read_profile_code', { key: key.trim() }))
+				};
+			} else {
+				data = {
+					type: 'sync',
+					...(await invokeCommand<SyncImportData>('read_sync_profile', { id: key.trim() }))
+				};
+			}
+
+			console.log(data);
+
 			await openFor(data);
 		} finally {
 			loading = false;
@@ -63,15 +91,19 @@
 	async function importData() {
 		if (!data) return;
 
-		data.name = name;
-
 		if (mode === 'overwrite') {
-			let confirmed = await confirm(`Are you sure you want to override ${data.name}?`);
-
+			let confirmed = await confirm(`Are you sure you want to override ${name}?`);
 			if (!confirmed) return;
 		}
 
-		invokeCommand('import_profile', { data, importAll }).then(refreshProfiles);
+		if (data.type === 'normal') {
+			data.manifest.profileName = name;
+
+			invokeCommand('import_profile', { data, importAll }).then(refreshProfiles);
+		} else {
+			invokeCommand('clone_sync_profile', { name, id: data.id });
+		}
+
 		data = null;
 		importAll = false;
 		open = false;
@@ -81,14 +113,14 @@
 		return !profiles.some((profile) => profile.name === name);
 	}
 
-	export async function openFor(importData: ImportData) {
+	export async function openFor(importData: AnyImportData) {
 		data = importData;
 
-		if (data.game !== null && $activeGame?.slug !== data.game) {
-			await setActiveGame(data.game);
+		if (data.manifest.community !== null && $activeGame?.slug !== data.manifest.community) {
+			await setActiveGame(data.manifest.community);
 		}
 
-		name = data.name;
+		name = data.manifest.profileName;
 		mode = isAvailable(name) ? 'new' : 'overwrite';
 
 		open = true;
@@ -172,11 +204,14 @@
 		</TabsMenu>
 
 		<details>
-			<summary class="text-primary-300 mt-2 cursor-pointer"
-				>{data.modNames.length} mods to install</summary
-			>
+			<summary class="text-primary-300 mt-2 cursor-pointer">{mods.length} mods to install</summary>
 
-			<ModCardList names={data.modNames} class="mt-2 max-h-[50vh] shrink grow" />
+			<ModCardList
+				names={mods.map(
+					(mod) => `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`
+				)}
+				class="mt-2 max-h-[50vh] shrink grow"
+			/>
 		</details>
 
 		<details>
@@ -194,7 +229,20 @@
 			</div>
 		</details>
 
-		<div class="text-primary-400 mt-2 flex w-full items-center justify-end gap-2">
+		{#if data.type === 'sync'}
+			<div class="mt-2 flex items-center">
+				<img
+					src={discordAvatarUrl(data.owner)}
+					alt=""
+					class="mr-2 size-10 rounded-full shadow-lg"
+				/>
+				<div class="text-primary-300">
+					Owned by {data.owner.displayName}
+				</div>
+			</div>
+		{/if}
+
+		<div class="mt-2 flex w-full items-center justify-end gap-2">
 			<BigButton
 				color="primary"
 				on:click={() => {

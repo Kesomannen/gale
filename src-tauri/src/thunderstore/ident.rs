@@ -59,6 +59,15 @@ impl VersionIdent {
         VersionIdentPath(self)
     }
 
+    pub fn without_version(&self) -> PackageIdent {
+        let repr = self.repr[..self.version_start as usize - 1].to_string();
+
+        PackageIdent {
+            repr,
+            name_start: self.name_start,
+        }
+    }
+
     #[inline]
     pub fn into_string(self) -> String {
         self.repr
@@ -228,6 +237,16 @@ impl PackageIdent {
         PackageIdentPath(self)
     }
 
+    pub fn with_version(&self, version: impl Display) -> VersionIdent {
+        let repr = format!("{}-{}", self.repr, version);
+
+        VersionIdent {
+            repr,
+            name_start: self.name_start,
+            version_start: self.repr.len() as u32 + 1,
+        }
+    }
+
     #[inline]
     pub fn into_string(self) -> String {
         self.repr
@@ -316,23 +335,6 @@ impl FromStr for PackageIdent {
 impl From<(&str, &str)> for PackageIdent {
     fn from((owner, name): (&str, &str)) -> Self {
         Self::new(owner, name)
-    }
-}
-
-impl From<VersionIdent> for PackageIdent {
-    /// Converts a VersionIdent to a PackageIdent, discarding the version.
-    ///
-    /// This shrinks the existing string, which may or may not reallocate
-    /// depending on the allocator.
-    fn from(id: VersionIdent) -> Self {
-        let version_start = id.version_start;
-        let name_start = id.name_start;
-
-        let mut repr = id.into_string();
-        repr.truncate(version_start as usize - 1);
-        repr.shrink_to_fit();
-
-        Self { repr, name_start }
     }
 }
 
