@@ -133,7 +133,7 @@
 					changes.
 				</div>
 				<BigButton
-					class="mx-4"
+					class="mx-4 max-w-max"
 					color="primary"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>
@@ -148,7 +148,7 @@
 					{capitalize(selectedFile.error)}
 				</code>
 				<BigButton
-					class="mx-4"
+					class="mx-4 max-w-max"
 					color="primary"
 					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
 				>

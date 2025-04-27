@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
+	import Link from '$lib/components/Link.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -184,9 +185,17 @@
 
 			{#if $user === null}
 				Login with Discord
+
+				<Icon icon="mdi:beta" class="ml-2 rounded bg-red-700 p-0.5 text-xl" />
 			{:else}
 				Log out
 			{/if}
 		</BigButton>
 	</div>
+
+	<a
+		href=""
+		target="_blank"
+		class="text-primary-400 mt-4 block text-sm hover:text-green-300 hover:underline">What's this?</a
+	>
 </Popup>

@@ -12,7 +12,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::debug;
+use tracing::{debug, trace};
 use uuid::Uuid;
 
 use crate::{
@@ -242,12 +242,30 @@ pub fn import_config(
     extensions: IncludeExtensions,
     generated: IncludeGenerated,
 ) -> Result<()> {
-    let source_files = export::find_config(&src, extensions, generated);
     let existing_files = export::find_config(&dest, extensions, generated);
+    let source_files = export::find_config(&src, extensions, generated);
+
+    if extensions != IncludeExtensions::All {
+        for file in existing_files {
+            let exists = src.join(&file).exists()
+                || file
+                    .strip_prefix("BepInEx/config")
+                    .is_ok_and(|suffix| src.join("config").join(suffix).exists());
+
+            if !exists {
+                trace!("remove {}", file.display());
+                fs::remove_file(dest.join(&file))?;
+            }
+        }
+    }
 
     for file in source_files {
         let src_path = src.join(&file);
-        let dest_path = dest.join(&file);
+        let dest_path = if file.starts_with("config") {
+            dest.join("BepInEx").join(&file)
+        } else {
+            dest.join(&file)
+        };
 
         let need_copy = if dest_path.exists() {
             file_checksum(&src_path)? != file_checksum(&dest_path)?
@@ -256,18 +274,9 @@ pub fn import_config(
         };
 
         if need_copy {
-            debug!("copy {}", file.display());
+            trace!("copy {}", file.display());
             fs::create_dir_all(dest_path.parent().unwrap())?;
             fs::copy(src_path, dest_path)?;
-        }
-    }
-
-    if extensions != IncludeExtensions::All {
-        for file in existing_files {
-            if !src.join(&file).exists() {
-                debug!("remove {}", file.display());
-                fs::remove_file(dest.join(&file))?;
-            }
         }
     }
 
