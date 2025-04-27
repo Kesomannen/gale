@@ -17,7 +17,7 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
         return false;
     };
 
-    app.get_window("main")
+    app.get_webview_window("main")
         .expect("app should have main window")
         .set_focus()
         .ok();
