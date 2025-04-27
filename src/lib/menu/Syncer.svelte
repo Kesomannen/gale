@@ -186,7 +186,7 @@
 			{#if $user === null}
 				Login with Discord
 
-				<Icon icon="mdi:beta" class="ml-2 rounded bg-red-700 p-0.5 text-xl" />
+				<Icon icon="mdi:beta" class="ml-2 rounded bg-red-600 p-0.5 text-xl" />
 			{:else}
 				Log out
 			{/if}
