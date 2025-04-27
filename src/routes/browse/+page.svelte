@@ -112,9 +112,11 @@
 		<Button.Root
 			class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed"
 			on:click={() => install(activeModRef)}
-			disabled={selectedMod?.isInstalled}
+			disabled={selectedMod?.isInstalled || $activeProfileLocked}
 		>
-			{#if selectedMod?.isInstalled}
+			{#if $activeProfileLocked}
+				Profile locked
+			{:else if selectedMod?.isInstalled}
 				Already installed
 			{:else}
 				<Icon icon="mdi:download" class="align-middle text-xl" />
@@ -127,7 +129,7 @@
 		<DropdownMenu.Root bind:open={versionsDropdownOpen}>
 			<DropdownMenu.Trigger
 				class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed"
-				disabled={selectedMod?.isInstalled}
+				disabled={selectedMod?.isInstalled || $activeProfileLocked}
 			>
 				<Icon
 					icon="mdi:chevron-down"

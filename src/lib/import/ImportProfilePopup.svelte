@@ -21,6 +21,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { discordAvatarUrl } from '$lib/util';
+	import { pushInfoToast } from '$lib/toast';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -96,17 +97,20 @@
 			if (!confirmed) return;
 		}
 
+		open = false;
+
 		if (data.type === 'normal') {
 			data.manifest.profileName = name;
 
-			invokeCommand('import_profile', { data, importAll }).then(refreshProfiles);
+			await invokeCommand('import_profile', { data, importAll }).then(refreshProfiles);
 		} else {
-			invokeCommand('clone_sync_profile', { name, id: data.id });
+			await invokeCommand('clone_sync_profile', { name, id: data.id });
 		}
 
 		data = null;
 		importAll = false;
-		open = false;
+
+		pushInfoToast({ message: `Imported profile ${name}.` });
 	}
 
 	function isAvailable(name: string) {
