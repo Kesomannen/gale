@@ -8,8 +8,8 @@
 
 ### Fixed
 
-- Window not being resizeable on Linux
-- Hopefully fixed most errors with Gale crashing on startup
+- Window not being resizable on Linux
+- Hopefully fixed most issues with Gale crashing on startup
 
 ## 1.5.10 (2025-04-23)
 
