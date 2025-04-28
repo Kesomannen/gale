@@ -1699,7 +1699,7 @@ dependencies = [
 
 [[package]]
 name = "gale"
-version = "1.5.10"
+version = "1.5.11"
 dependencies = [
  "base64 0.22.1",
  "bytes",

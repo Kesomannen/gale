@@ -166,6 +166,19 @@
 		}
 	},
 	{
+		"name": "ANEURISM IV",
+		"slug": "aneurism-iv",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2773280,
+				"dirName": "ANEURISMIV"
+			}
+		}
+	},
+	{
 		"name": "ASKA",
 		"slug": "aska",
 		"modLoader": {
@@ -984,6 +997,19 @@
 			"steam": {
 				"id": 553310,
 				"dirName": "LLBlaze"
+			}
+		}
+	},
+	{
+		"name": "Lost Skies",
+		"slug": "lost-skies",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1931180,
+				"dirName": "LostSkies"
 			}
 		}
 	},
