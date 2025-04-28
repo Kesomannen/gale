@@ -1,7 +1,7 @@
 use std::{path::PathBuf, process};
 
 use clap::Parser;
-use eyre::{Context, OptionExt, Result};
+use eyre::{eyre, Context, OptionExt, Result};
 use tauri::AppHandle;
 use tracing::{debug, error, info};
 
@@ -11,16 +11,13 @@ use crate::{
     state::ManagerExt,
 };
 
-pub fn run(app: &AppHandle) {
-    Cli::parse().run(true, app).unwrap_or_else(|err| {
-        error!("failed to run cli: {:#}", err);
-    })
-}
-
-pub fn run_from(app: &AppHandle, args: Vec<String>) {
-    Cli::parse_from(args).run(false, app).unwrap_or_else(|err| {
-        error!("failed to run cli: {:#}", err);
-    })
+pub fn run(args: Vec<String>, app: &AppHandle) {
+    Cli::try_parse_from(args)
+        .map_err(|err| eyre!(err))
+        .and_then(|cli| cli.run(true, app))
+        .unwrap_or_else(|err| {
+            error!("failed to run cli: {:#}", err);
+        })
 }
 
 #[derive(Debug, Parser)]

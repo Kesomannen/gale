@@ -33,7 +33,7 @@ pub async fn read_profile_code(key: &str, app: AppHandle) -> Result<ImportData> 
 pub async fn read_profile_file(path: PathBuf, app: AppHandle) -> Result<ImportData> {
     thunderstore::wait_for_fetch(&app).await;
 
-    let data = super::import_file_from_path(path, &app)?;
+    let data = super::read_file_at_path(path, &app)?;
 
     Ok(data)
 }

@@ -31,7 +31,7 @@ pub use local::{import_local_mod, import_local_mod_base64};
 
 use super::export::{IncludeExtensions, IncludeGenerated};
 
-pub fn import_file_from_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
+pub fn read_file_at_path(path: PathBuf, app: &AppHandle) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
     read_file(file, app)
