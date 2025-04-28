@@ -6,10 +6,10 @@ use std::{
 };
 
 use eyre::{bail, ensure, eyre, OptionExt, Result};
-use tracing::{info, warn};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
+use tracing::{info, warn};
 
 use super::ManagedGame;
 use crate::{
@@ -88,11 +88,9 @@ impl ManagedGame {
             command.args(custom_args);
         }
 
-        if self.game.server {
-            command.arg("--server");
-        }
-
-        command.args(["--gale-profile", &profile.name]);
+        //if self.game.server {
+        //    command.arg("--server");
+        //}
 
         Ok((launch_mode, command))
     }

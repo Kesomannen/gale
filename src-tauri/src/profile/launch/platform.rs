@@ -170,7 +170,13 @@ pub fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
 
     #[cfg(target_os = "linux")]
     {
-        dirs_next::data_dir().map(|data_dir| data_dir.join("Steam"))
+        [
+            dirs_next::data_dir().map(|data_dir| data_dir.join("Steam")),
+            dirs_next::home_dir().map(|home_dir| home_dir.join(".steam/steam")),
+        ]
+        .into_iter()
+        .filter_map(|opt| opt)
+        .find(|path| path.exists())
     }
 }
 
