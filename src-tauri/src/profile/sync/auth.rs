@@ -52,7 +52,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
         .await
         .context("failed to run OAuth callback server")?;
 
-    app.get_window("main").unwrap().set_focus().ok();
+    app.get_webview_window("main").unwrap().set_focus().ok();
 
     let state = AuthState::from_tokens(access_token, refresh_token)?;
     let user = state.user.clone();
