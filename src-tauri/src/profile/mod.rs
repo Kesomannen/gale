@@ -1,12 +1,12 @@
 use std::{
     borrow::Cow,
     collections::{HashMap, HashSet},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, ensure, Context, ContextCompat, OptionExt, Result};
+use eyre::{anyhow, bail, ensure, eyre, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -434,24 +434,21 @@ impl ModManager {
             profiles,
         } = data;
 
+        let active_game = manager
+            .active_game_slug
+            .and_then(|slug| game::from_slug(&slug))
+            .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
+
+        let mut manager = Self {
+            games: HashMap::new(),
+            active_game,
+        };
+
         let path = prefs.data_dir.to_path_buf();
 
-        let mut games = games
-            .into_iter()
-            .map(|saved_game| {
-                let game = game::from_slug(&saved_game.slug).unwrap();
-                let managed_game = ManagedGame {
-                    id: saved_game.id,
-                    game,
-                    profiles: Vec::new(),
-                    favorite: saved_game.favorite,
-                    active_profile_id: saved_game.active_profile_id,
-                    path: path.join(&*game.slug),
-                };
-
-                (game, managed_game)
-            })
-            .collect::<HashMap<_, _>>();
+        for saved_game in games {
+            manager.add_saved_game(&path, saved_game);
+        }
 
         for saved_profile in profiles {
             let path = PathBuf::from(saved_profile.path);
@@ -468,7 +465,13 @@ impl ModManager {
                 continue;
             }
 
-            let game = game::from_slug(&saved_profile.game_slug).unwrap();
+            let game = game::from_slug(&saved_profile.game_slug).ok_or_else(|| {
+                eyre!(
+                    "profile {} is in unknown game: {}",
+                    saved_profile.name,
+                    saved_profile.game_slug
+                )
+            })?;
 
             let profile = Profile {
                 path,
@@ -483,17 +486,13 @@ impl ModManager {
                 sync_profile: saved_profile.sync_data,
             };
 
-            games.get_mut(game).unwrap().profiles.push(profile);
+            manager
+                .ensure_game(game, false, prefs, db)?
+                .profiles
+                .push(profile);
         }
 
-        let active_game = manager
-            .active_game_slug
-            .and_then(|slug| game::from_slug(&slug))
-            .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
-
-        let mut manager = Self { games, active_game };
-
-        manager.ensure_game(manager.active_game, prefs, db)?;
+        manager.ensure_game(manager.active_game, true, prefs, db)?;
         manager.save_all(db)?;
 
         Ok(manager)
@@ -524,7 +523,7 @@ impl ModManager {
     }
 
     pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<()> {
-        self.ensure_game(game, &app.lock_prefs(), app.db())?;
+        self.ensure_game(game, true, &app.lock_prefs(), app.db())?;
 
         if self.active_game != game {
             self.active_game = game;
@@ -539,46 +538,60 @@ impl ModManager {
     fn ensure_game<'a>(
         &'a mut self,
         game: Game,
+        ensure_active_profile: bool,
         prefs: &Prefs,
         db: &Db,
     ) -> Result<&'a mut ManagedGame> {
-        const DEFAULT_PROFILE_NAME: &str = "Default";
-
         if !self.games.contains_key(game) {
-            info!("managing new game: {}", game.slug);
-
-            let path = prefs.data_dir.join(&*game.slug);
-            let id = self.games.values().map(|game| game.id).max().unwrap_or(0) + 1;
-
-            let managed_game = ManagedGame {
-                id,
-                game,
-                path,
-                profiles: Vec::new(),
-                favorite: false,
-                active_profile_id: 0,
-            };
-
-            self.games.insert(game, managed_game);
+            self.manage_game(game, prefs, db)?;
         }
 
-        let managed = self.games.get_mut(game).unwrap();
+        let managed = self
+            .games
+            .get_mut(game)
+            .expect("newly managed game not found");
 
-        if managed.profiles.is_empty() {
-            info!("creating default profile for {}", game.slug);
-
-            let default_profile = managed
-                .create_profile(DEFAULT_PROFILE_NAME.to_owned(), None, db)
-                .context("failed to create default profile")?;
-
-            managed.active_profile_id = default_profile.id;
-        } else if managed.find_profile(managed.active_profile_id).is_err() {
-            warn!("active profile was out of bounds, adjusting...");
-
-            managed.active_profile_id = managed.profiles[0].id;
+        if ensure_active_profile && managed.find_profile(managed.active_profile_id).is_err() {
+            if managed.profiles.is_empty() {
+                bail!("game {} has no profiles", game.slug);
+            } else {
+                warn!("active profile was out of bounds, adjusting...");
+                managed.active_profile_id = managed.profiles[0].id;
+            }
         }
 
         Ok(managed)
+    }
+
+    fn manage_game<'a>(&'a mut self, game: Game, prefs: &Prefs, db: &Db) -> Result<()> {
+        const DEFAULT_PROFILE_NAME: &str = "Default";
+
+        info!("managing new game: {}", game.slug);
+
+        let path = prefs.data_dir.join(&*game.slug);
+        let id = self.games.values().map(|game| game.id).max().unwrap_or(0) + 1;
+
+        let mut managed = ManagedGame {
+            id,
+            game,
+            path,
+            profiles: Vec::new(),
+            favorite: false,
+            active_profile_id: 0,
+        };
+
+        info!("creating default profile for {}", game.slug);
+
+        match managed.create_profile(DEFAULT_PROFILE_NAME.to_owned(), None, db) {
+            Ok(profile) => managed.active_profile_id = profile.id,
+            Err(err) => warn!(
+                "failed to create default profile for {}: {:#}",
+                game.slug, err
+            ),
+        }
+
+        self.games.insert(game, managed);
+        Ok(())
     }
 
     fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
@@ -590,6 +603,20 @@ impl ModManager {
             .collect_vec();
 
         thunderstore::write_cache(&packages, self)
+    }
+
+    fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) {
+        let game = game::from_slug(&saved_game.slug).unwrap();
+        let managed_game = ManagedGame {
+            id: saved_game.id,
+            game,
+            profiles: Vec::new(),
+            favorite: saved_game.favorite,
+            active_profile_id: saved_game.active_profile_id,
+            path: base_path.join(&*game.slug),
+        };
+
+        self.games.insert(game, managed_game);
     }
 
     pub fn save_all(&self, db: &Db) -> Result<()> {

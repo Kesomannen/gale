@@ -265,6 +265,9 @@ impl ManagedGame {
                 let mut path = self.path.join("profiles");
                 path.push(&name);
 
+                // if the directory is empty, remove and replace it
+                fs::remove_dir(&path).ok();
+
                 ensure!(
                     !path.exists(),
                     "profile at {} already exists",

@@ -12,7 +12,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::{debug, trace};
+use tracing::trace;
 use uuid::Uuid;
 
 use crate::{
@@ -32,6 +32,12 @@ mod r2modman;
 pub use local::{import_local_mod, import_local_mod_base64};
 
 use super::export::{self, IncludeExtensions, IncludeGenerated};
+
+pub fn read_file_at_path(path: PathBuf) -> Result<ImportData> {
+    let file = File::open(&path).fs_context("opening file", &path)?;
+
+    read_file(file)
+}
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]

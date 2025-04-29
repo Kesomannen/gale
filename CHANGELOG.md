@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.11 (2025-04-28)
+
+### Added
+
+- Support for Lost Skies and ANEURISM IV
+
+### Fixed
+
+- Window not being resizable on Linux
+- Hopefully fixed most issues with Gale crashing on startup
+
 ## 1.5.10 (2025-04-23)
 
 ### Fixed

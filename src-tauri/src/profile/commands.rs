@@ -74,7 +74,7 @@ pub fn favorite_game(slug: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     let game = game::from_slug(&slug).ok_or_eyre("unknown game")?;
-    let managed_game = manager.ensure_game(game, &prefs, app.db())?;
+    let managed_game = manager.ensure_game(game, false, &prefs, app.db())?;
     managed_game.favorite = !managed_game.favorite;
 
     managed_game.save(app.db())?;

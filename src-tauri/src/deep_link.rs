@@ -1,6 +1,6 @@
 use eyre::{OptionExt, Result};
 use tauri::{AppHandle, Emitter, Manager};
-use tracing::{debug, warn};
+use tracing::{info, warn};
 
 use crate::{
     logger,
@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
-    debug!("received deep link: {:?}", args);
+    info!("received deep link: {:?}", args);
 
     let Some(url) = args.into_iter().nth(1) else {
         warn!("deep link has too few arguments");
@@ -36,7 +36,7 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
         app.emit("install_mod", frontend_mod).ok();
         true
     } else if url.ends_with("r2z") {
-        let import_data = match profile::import::import_file_from_path(url.into()) {
+        let import_data = match profile::import::read_file_at_path(url.into(), app) {
             Ok(data) => data,
             Err(err) => {
                 logger::log_webview_err("Failed to import profile from file", err, app);

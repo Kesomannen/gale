@@ -39,15 +39,16 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         return Err(err.into());
     }
 
-    cli::run(app.handle());
-
     if let Err(err) = app.deep_link().register("ror2mm") {
         warn!("failed to register deep link protocol: {:#}", err);
     }
 
     let args = env::args().collect_vec();
-    if args.len() > 1 {
-        deep_link::handle(app.handle(), args);
+    info!("args: {:?}", args);
+    if !args.is_empty() {
+        if !deep_link::handle(app.handle(), args.clone()) {
+            cli::run(args, app.handle())
+        }
     }
 
     let handle = app.handle().to_owned();
@@ -60,7 +61,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
 fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
     if !deep_link::handle(app, args.clone()) {
-        cli::run_from(app, args.clone());
+        cli::run(args, app);
     }
 }
 
