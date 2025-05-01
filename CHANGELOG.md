@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for Labyrinthine
+
+### Fixed
+
+- Steam directory name for Lost Skies
+- More issues with Gale not launching due to missing profiles
+
 ## 1.5.11 (2025-04-28)
 
 ### Added

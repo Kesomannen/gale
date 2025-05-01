@@ -976,6 +976,18 @@
 		}
 	},
 	{
+		"name": "Labyrinthine",
+		"slug": "labyrinthine",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1302240
+			}
+		}
+	},
+	{
 		"name": "Last Train Outta' Wormtown",
 		"slug": "last-train-outta-wormtown",
 		"modLoader": {
