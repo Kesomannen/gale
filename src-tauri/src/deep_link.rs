@@ -1,6 +1,6 @@
 use eyre::{OptionExt, Result};
 use tauri::{AppHandle, Emitter, Manager};
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 use crate::{
     logger,
@@ -13,7 +13,7 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
     info!("received deep link: {:?}", args);
 
     let Some(url) = args.into_iter().nth(1) else {
-        warn!("deep link has too few arguments");
+        debug!("deep link has too few arguments");
         return false;
     };
 

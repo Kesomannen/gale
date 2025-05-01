@@ -6,7 +6,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, bail, ensure, eyre, ContextCompat, OptionExt, Result};
+use eyre::{anyhow, bail, ensure, eyre, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -528,7 +528,7 @@ impl ModManager {
     fn ensure_game<'a>(
         &'a mut self,
         game: Game,
-        ensure_active_profile: bool,
+        verify_profiles: bool,
         prefs: &Prefs,
         db: &Db,
     ) -> Result<&'a mut ManagedGame> {
@@ -541,11 +541,14 @@ impl ModManager {
             .get_mut(game)
             .expect("newly managed game not found");
 
-        if ensure_active_profile && managed.find_profile(managed.active_profile_id).is_err() {
+        if verify_profiles && managed.find_profile(managed.active_profile_id).is_err() {
             if managed.profiles.is_empty() {
-                bail!("game {} has no profiles", game.slug);
+                warn!("game {} has no profiles.", game.slug);
+                managed.create_default_profile(db).with_context(|| {
+                    format!("failed to create default profile for {}", game.slug)
+                })?;
             } else {
-                warn!("active profile was out of bounds, adjusting...");
+                warn!("active profile was out of bounds");
                 managed.active_profile_id = managed.profiles[0].id;
             }
         }
@@ -554,8 +557,6 @@ impl ModManager {
     }
 
     fn manage_game<'a>(&'a mut self, game: Game, prefs: &Prefs, db: &Db) -> Result<()> {
-        const DEFAULT_PROFILE_NAME: &str = "Default";
-
         info!("managing new game: {}", game.slug);
 
         let path = prefs.data_dir.join(&*game.slug);
@@ -570,14 +571,11 @@ impl ModManager {
             active_profile_id: 0,
         };
 
-        info!("creating default profile for {}", game.slug);
-
-        match managed.create_profile(DEFAULT_PROFILE_NAME.to_owned(), None, db) {
-            Ok(profile) => managed.active_profile_id = profile.id,
-            Err(err) => warn!(
+        if let Err(err) = managed.create_default_profile(db) {
+            warn!(
                 "failed to create default profile for {}: {:#}",
                 game.slug, err
-            ),
+            )
         }
 
         self.games.insert(game, managed);
