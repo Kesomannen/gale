@@ -30,10 +30,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     );
 
     if let Err(err) = state::setup(app.handle()) {
-        error!("setup error: {:#}", err);
+        error!("setup error: {:?}", err);
 
         app.dialog()
-            .message(format!("Failed to launch Gale: {:#}", err))
+            .message(format!("Failed to launch Gale: {:?}", err))
             .blocking_show();
 
         return Err(err.into());

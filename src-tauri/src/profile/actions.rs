@@ -270,7 +270,7 @@ impl ManagedGame {
 
                 ensure!(
                     !path.exists(),
-                    "profile at {} already exists",
+                    "profile already exists at {}",
                     path.display()
                 );
 
