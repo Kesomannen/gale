@@ -543,7 +543,7 @@ impl ModManager {
 
         if verify_profiles && managed.find_profile(managed.active_profile_id).is_err() {
             if managed.profiles.is_empty() {
-                warn!("game {} has no profiles.", game.slug);
+                warn!("game {} has no profiles", game.slug);
                 managed.create_default_profile(db).with_context(|| {
                     format!("failed to create default profile for {}", game.slug)
                 })?;
