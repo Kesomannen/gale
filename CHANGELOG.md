@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.12 (2025-05-01)
 
 ### Added
 
@@ -9,7 +9,7 @@
 ### Fixed
 
 - Steam directory name for Lost Skies
-- More issues with Gale not launching due to missing profiles
+- More setup errors related to missing profiles
 
 ## 1.5.11 (2025-04-28)
 
