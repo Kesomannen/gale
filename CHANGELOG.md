@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.12 (2025-05-01)
+
+### Added
+
+- Support for Labyrinthine
+
+### Fixed
+
+- Steam directory name for Lost Skies
+- More setup errors related to missing profiles
+
 ## 1.5.11 (2025-04-28)
 
 ### Added

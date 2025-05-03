@@ -270,7 +270,7 @@ impl ManagedGame {
 
                 ensure!(
                     !path.exists(),
-                    "profile at {} already exists",
+                    "profile already exists at {}",
                     path.display()
                 );
 
@@ -304,6 +304,20 @@ impl ManagedGame {
 
         self.active_profile_id = id;
         Ok(self.active_profile_mut())
+    }
+
+    pub fn create_default_profile<'a>(&'a mut self, db: &Db) -> Result<()> {
+        info!("creating default profile for {}", self.game.slug);
+
+        let res = self.create_profile("Default".to_owned(), None, db);
+
+        match res.map(|profile| profile.id) {
+            Ok(id) => {
+                self.active_profile_id = id;
+                Ok(())
+            }
+            Err(err) => Err(err),
+        }
     }
 
     pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool, db: &Db) -> Result<()> {
