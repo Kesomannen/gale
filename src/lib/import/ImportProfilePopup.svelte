@@ -102,7 +102,7 @@
 		if (data.type === 'normal') {
 			data.manifest.profileName = name;
 
-			await invokeCommand('import_profile', { data, importAll }).then(refreshProfiles);
+			await invokeCommand('import_profile', { data, importAll });
 		} else {
 			await invokeCommand('clone_sync_profile', { name, id: data.id });
 		}
@@ -110,6 +110,7 @@
 		data = null;
 		importAll = false;
 
+		await refreshProfiles();
 		pushInfoToast({ message: `Imported profile ${name}.` });
 	}
 
