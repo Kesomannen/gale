@@ -83,7 +83,7 @@ impl Profile {
 
     pub fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
         if self.get_mod(uuid)?.enabled {
-            if let Some(dependants) = self.check_dependants(uuid, thunderstore) {
+            if let Some(dependants) = self.check_dependants(uuid, true, thunderstore) {
                 return Ok(ActionResult::Confirm { dependants });
             }
         }
@@ -106,7 +106,7 @@ impl Profile {
 
     pub fn toggle_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
         let dependants = match self.get_mod(uuid)?.enabled {
-            true => self.check_dependants(uuid, thunderstore),
+            true => self.check_dependants(uuid, false, thunderstore),
             false => self.check_dependencies(uuid, thunderstore),
         };
 
@@ -131,12 +131,16 @@ impl Profile {
         Ok(())
     }
 
-    fn check_dependants(&self, uuid: Uuid, thunderstore: &Thunderstore) -> Option<Vec<Dependant>> {
+    fn check_dependants(
+        &self,
+        uuid: Uuid,
+        include_disabled: bool,
+        thunderstore: &Thunderstore,
+    ) -> Option<Vec<Dependant>> {
         let dependants = self
             .dependants(uuid, thunderstore)
             .filter(|profile_mod| {
-                // ignore disabled mods and modpacks
-                profile_mod.enabled
+                (include_disabled || profile_mod.enabled)
                     && profile_mod
                         .as_thunderstore()
                         .and_then(|(ts_mod, _)| {
