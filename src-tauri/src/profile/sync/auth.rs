@@ -5,8 +5,6 @@ use chrono::{DateTime, Utc};
 use eyre::{eyre, Context, ContextCompat, OptionExt, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, Url};
-use tauri_plugin_oauth::OauthConfig;
-use tokio::sync::mpsc;
 use tracing::{debug, error, info, warn};
 
 use crate::{profile::sync::API_URL, state::ManagerExt};
@@ -48,58 +46,46 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
     let url = format!("{}/auth/login", API_URL);
     open::that(url).context("failed to open url in browser")?;
 
-    let (access_token, refresh_token) = run_oauth_server()
-        .await
-        .context("failed to run OAuth callback server")?;
-
-    app.get_webview_window("main").unwrap().set_focus().ok();
-
-    let state = AuthState::from_tokens(access_token, refresh_token)?;
-    let user = state.user.clone();
-
-    info!("logged in as {}", user.name);
-
-    *app.lock_auth() = Some(state);
-
-    Ok(user)
-}
-
-async fn run_oauth_server() -> Result<(String, String)> {
-    let (tx, mut rx) = mpsc::channel(1);
-    let port = tauri_plugin_oauth::start_with_config(
-        OauthConfig {
-            ports: Some(vec![22942]),
-            response: None,
-        },
-        move |url| {
-            if let Err(url) = tx.blocking_send(url) {
-                warn!(
-                    "got OAuth callback but channel was already closed (url: {})",
-                    url.0
-                );
-            }
-        },
-    )?;
+    let mut channel = app.app_state().auth_callback_channel.subscribe();
 
     tokio::select! {
-        url = rx.recv() => {
-            tauri_plugin_oauth::cancel(port).ok();
+        url = channel.recv() => {
+         let url = url?;
+         let url = Url::parse(&url).context("invalid url")?;
+         let query: HashMap<_, _> = url.query_pairs().collect();
 
-            let url = url.expect("url sender was dropped too early!");
-            let url = Url::parse(&url).expect("invalid url");
-            let query: HashMap<_, _> = url.query_pairs().collect();
+         let access_token = query
+             .get("access_token")
+             .context("access_token parameter missing")?
+             .clone()
+             .into_owned();
+         let refresh_token = query
+             .get("refresh_token")
+             .context("refresh_token parameter missing")?
+             .clone()
+             .into_owned();
 
-            let access_token = query.get("access_token").context("access_token parameter missing")?.clone();
-            let refresh_token = query.get("refresh_token").context("refresh_token parameter missing")?.clone();
+         app.get_webview_window("main").unwrap().set_focus().ok();
 
-            Ok((access_token.into_owned(), refresh_token.into_owned()))
+         let state = AuthState::from_tokens(access_token, refresh_token)?;
+         let user = state.user.clone();
+
+         info!("logged in as {}", user.name);
+
+         *app.lock_auth() = Some(state);
+
+         Ok(user)
         }
         _ = tokio::time::sleep(OAUTH_TIMEOUT) => {
-            tauri_plugin_oauth::cancel(port).ok();
-
-            Err(eyre!("timed out"))
+            Err(eyre!("auth callback timed out"))
         }
     }
+}
+
+pub async fn handle_callback(url: String, app: &AppHandle) -> Result<()> {
+    app.app_state().auth_callback_channel.send(url)?;
+
+    Ok(())
 }
 
 #[derive(Debug, Deserialize)]

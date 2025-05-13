@@ -40,7 +40,11 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if let Err(err) = app.deep_link().register("ror2mm") {
-        warn!("failed to register deep link protocol: {:#}", err);
+        warn!("failed to register ror2mm deep link protocol: {:#}", err);
+    }
+
+    if let Err(err) = app.deep_link().register("gale") {
+        warn!("failed to register gale deep link protocol: {:#}", err);
     }
 
     let args = env::args().collect_vec();

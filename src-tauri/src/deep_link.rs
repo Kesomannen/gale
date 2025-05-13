@@ -35,6 +35,15 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
         let frontend_mod = borrowed_mod.into_frontend(None);
         app.emit("install_mod", frontend_mod).ok();
         true
+    } else if url.starts_with("gale://auth/callback") {
+        let handle = app.to_owned();
+        tauri::async_runtime::spawn(async move {
+            if let Err(err) = profile::sync::auth::handle_callback(url, &handle).await {
+                warn!("failed to handle auth callback: {:#}", err);
+            }
+        });
+
+        true
     } else if url.ends_with("r2z") {
         let import_data = match profile::import::read_file_at_path(url.into()) {
             Ok(data) => data,

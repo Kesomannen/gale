@@ -2,6 +2,7 @@ use std::sync::{atomic::AtomicBool, Mutex, MutexGuard};
 
 use eyre::{Context, Result};
 use tauri::{command, AppHandle, Manager};
+use tokio::sync::broadcast;
 
 use crate::{
     db::{self, Db},
@@ -18,6 +19,7 @@ pub struct AppState {
     pub thunderstore: Mutex<Thunderstore>,
     pub db: Db,
     pub auth: Mutex<Option<AuthState>>,
+    pub auth_callback_channel: broadcast::Sender<String>,
     pub cancel_install_flag: AtomicBool,
     pub is_first_run: bool,
 }
@@ -62,6 +64,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         manager: Mutex::new(manager),
         thunderstore: Mutex::new(thunderstore),
         auth: Mutex::new(auth),
+        auth_callback_channel: broadcast::channel(1).0,
         cancel_install_flag: AtomicBool::new(false),
         is_first_run: !db_existed && !migrated,
     };
