@@ -59,6 +59,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
              .context("access_token parameter missing")?
              .clone()
              .into_owned();
+
          let refresh_token = query
              .get("refresh_token")
              .context("refresh_token parameter missing")?

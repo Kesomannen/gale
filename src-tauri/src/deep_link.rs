@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
-    info!("received deep link: {:?}", args);
+    info!("received deep link with {} arguments", args.len());
 
     let Some(url) = args.into_iter().nth(1) else {
         debug!("deep link has too few arguments");

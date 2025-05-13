@@ -193,7 +193,7 @@
 		</BigButton>
 	</div>
 
-	<p class="text-primary-300 mt-2 text-sm">
+	<p class="text-primary-400 mt-2 text-sm">
 		Login is currently only available for select users.
 		<br />
 		However, anyone can download synced profiles (without logging in).
