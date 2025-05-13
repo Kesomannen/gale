@@ -26,6 +26,7 @@ async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest
 #[serde(rename_all = "camelCase")]
 struct CreateSyncProfileResponse {
     id: String,
+    #[allow(unused)]
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
@@ -71,7 +72,7 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
         let profile = game.active_profile();
 
         let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(&profile, &mut bytes, game.game)
+        super::export::export_zip(profile, &mut bytes, game.game)
             .context("failed to export profile")?;
 
         bytes.into_inner()
@@ -118,7 +119,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
             .ok_or_eyre("profile is not synced")?;
 
         let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(&profile, &mut bytes, game.game)
+        super::export::export_zip(profile, &mut bytes, game.game)
             .context("failed to export profile")?;
 
         (id, bytes.into_inner())
@@ -141,7 +142,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
         sync_data.synced_at = response.updated_at;
         sync_data.updated_at = response.updated_at;
 
-        profile.save(&app.db())?;
+        profile.save(app.db())?;
     };
 
     Ok(())

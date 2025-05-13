@@ -300,7 +300,7 @@ impl Db {
     }
 
     pub fn save_game(&self, game: &ManagedGame) -> Result<()> {
-        self.with_transaction(|tx| self.save_games(&tx, iter::once(game)))
+        self.with_transaction(|tx| self.save_games(tx, iter::once(game)))
     }
 
     fn save_games<'a>(

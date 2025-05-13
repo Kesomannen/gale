@@ -210,18 +210,14 @@ fn incremental_update(
         .map(|(ts_mod, enabled)| (ts_mod.ident.clone(), (ts_mod.id.package_uuid, enabled)))
         .collect();
 
-    let mut new: HashMap<_, _> = mod_names
-        .iter()
-        .zip(installs)
-        .map(|(ident, install)| (ident, install))
-        .collect();
+    let mut new: HashMap<_, _> = mod_names.iter().zip(installs).collect();
 
     let old_keys: HashSet<_> = old.keys().collect();
-    let new_keys: HashSet<_> = new.keys().map(|key| *key).collect();
+    let new_keys: HashSet<_> = new.keys().copied().collect();
     let to_remove = old_keys.difference(&new_keys);
 
     for ident in to_remove {
-        let (uuid, _) = old.get(&ident).unwrap();
+        let (uuid, _) = old.get(ident).unwrap();
         profile.force_remove_mod(*uuid)?;
     }
 
@@ -230,7 +226,7 @@ fn incremental_update(
         .filter(|k| old.get(k).unwrap().1 != new.get(*k).unwrap().enabled());
 
     for ident in to_toggle {
-        let (uuid, _) = old.get(&ident).unwrap();
+        let (uuid, _) = old.get(ident).unwrap();
         profile.force_toggle_mod(*uuid)?;
     }
 
@@ -248,8 +244,8 @@ pub fn import_config(
     extensions: IncludeExtensions,
     generated: IncludeGenerated,
 ) -> Result<()> {
-    let existing_files = export::find_config(&dest, extensions, generated);
-    let source_files = export::find_config(&src, extensions, generated);
+    let existing_files = export::find_config(dest, extensions, generated);
+    let source_files = export::find_config(src, extensions, generated);
 
     if extensions != IncludeExtensions::All {
         for file in existing_files {

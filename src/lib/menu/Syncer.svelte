@@ -74,7 +74,7 @@
 	}
 
 	async function fetch() {
-		await wrapCommand('fetch_sync_profile');
+		await wrapCommand('fetch_sync_profile', 'Refresh synced profile status.');
 	}
 
 	async function disconnect() {
@@ -193,9 +193,9 @@
 		</BigButton>
 	</div>
 
-	<p class="text-primary-400 mt-2 text-sm">
-		Login is currently only available for select users.
-		<br />
-		However, anyone can download synced profiles (without logging in).
-	</p>
+	<a
+		target="_blank"
+		class="text-primary-400 hover:text-accent-400 mt-4 block text-sm hover:underline"
+		href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
+	>
 </Popup>

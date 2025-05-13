@@ -6,7 +6,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, bail, ensure, eyre, Context, ContextCompat, OptionExt, Result};
+use eyre::{anyhow, ensure, eyre, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -566,7 +566,7 @@ impl ModManager {
         Ok(managed)
     }
 
-    fn manage_game<'a>(&'a mut self, game: Game, prefs: &Prefs, db: &Db) -> Result<()> {
+    fn manage_game(&mut self, game: Game, prefs: &Prefs, db: &Db) -> Result<()> {
         info!("managing new game: {}", game.slug);
 
         let path = prefs.data_dir.join(&*game.slug);

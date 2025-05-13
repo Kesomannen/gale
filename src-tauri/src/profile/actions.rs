@@ -310,7 +310,7 @@ impl ManagedGame {
         Ok(self.active_profile_mut())
     }
 
-    pub fn create_default_profile<'a>(&'a mut self, db: &Db) -> Result<()> {
+    pub fn create_default_profile(&mut self, db: &Db) -> Result<()> {
         info!("creating default profile for {}", self.game.slug);
 
         let res = self.create_profile("Default".to_owned(), None, db);

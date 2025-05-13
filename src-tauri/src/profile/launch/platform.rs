@@ -101,7 +101,7 @@ fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
         bail!("{} is not available on Steam", game.name)
     };
 
-    let mut path = find_steam_library_for_game(steam.id as u64, &prefs)
+    let mut path = find_steam_library_for_game(steam.id as u64, prefs)
         .context("failed to find steam library location")?;
 
     path.push("steamapps");
