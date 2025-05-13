@@ -5,6 +5,7 @@
 ### Added
 
 - Beta profile sync feature
+  - Read more on [the wiki](https://github.com/Kesomannen/gale/wiki/Profile-sync)
 
 ### Fixed
 
