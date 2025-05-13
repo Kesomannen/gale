@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Beta profile sync feature
+
+### Fixed
+
+- Improved performance of profile imports by only performing the necessary operations
+- No warning being shown when a dependency of a disabled mod is uninstalled
+
 ## 1.5.12 (2025-05-01)
 
 ### Added

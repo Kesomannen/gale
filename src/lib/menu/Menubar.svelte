@@ -67,7 +67,7 @@
 
 		if (path === null) return;
 		let data = await invokeCommand<ImportData>('read_profile_file', { path });
-		importProfilePopup.openFor(data);
+		importProfilePopup.openFor({ type: 'normal', ...data });
 	}
 
 	async function exportFile() {
@@ -204,7 +204,7 @@
 
 		if (file.name.endsWith('.r2z')) {
 			let data = await invokeCommand<ImportData>('read_profile_base64', { base64 });
-			importProfilePopup.openFor(data);
+			importProfilePopup.openFor({ type: 'normal', ...data });
 		} else if (file.name.endsWith('.zip')) {
 			await invokeCommand('import_local_mod_base64', { base64 });
 			await refreshProfiles();

@@ -6,9 +6,9 @@ use std::{
 
 use eyre::{anyhow, Context};
 use itertools::Itertools;
-use tracing::{debug, warn};
 use tauri::{command, AppHandle};
 use tauri_plugin_clipboard_manager::ClipboardExt;
+use tracing::{debug, warn};
 use uuid::Uuid;
 
 use super::{
