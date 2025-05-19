@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::Duration};
 
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use chrono::{DateTime, Utc};
-use eyre::{eyre, Context, ContextCompat, OptionExt, Result};
+use eyre::{eyre, Context, OptionExt, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, Url};
 use tracing::{debug, error, info, warn};
@@ -56,13 +56,13 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
 
          let access_token = query
              .get("access_token")
-             .context("access_token parameter missing")?
+             .ok_or_eyre("access_token parameter is missing")?
              .clone()
              .into_owned();
 
          let refresh_token = query
              .get("refresh_token")
-             .context("refresh_token parameter missing")?
+             .ok_or_eyre("refresh_token parameter is missing")?
              .clone()
              .into_owned();
 
