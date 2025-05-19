@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Profile sync status not being refreshed on launch
+- Some config fields being shown as a color picker instead of a number input
+
 ## 1.6.0 (2025-05-14)
 
 ### Added

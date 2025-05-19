@@ -32,17 +32,17 @@
 		off: {
 			icon: 'mdi:cloud-off',
 			label: 'Sync off',
-			classes: 'bg-primary-800 text-primary-400 hover:bg-primary-700'
+			classes: 'text-primary-400'
 		},
 		synced: {
 			icon: 'mdi:cloud-check-variant',
 			label: 'Up to date',
-			classes: 'bg-primary-800 text-accent-400 hover:bg-primary-700'
+			classes: 'text-accent-400'
 		},
 		outdated: {
 			icon: 'mdi:cloud-refresh-variant',
 			label: 'Outdated',
-			classes: 'bg-primary-800 text-yellow-400 hover:bg-primary-700'
+			classes: 'text-yellow-400'
 		}
 	}[state];
 
@@ -73,7 +73,7 @@
 		popupOpen = false;
 	}
 
-	async function fetch() {
+	async function refresh() {
 		await wrapCommand('fetch_sync_profile', 'Refresh synced profile status.');
 	}
 
@@ -100,7 +100,7 @@
 </script>
 
 <Button.Root
-	class="{style.classes} mx-2 my-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
+	class="{style.classes} bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
 	on:click={() => (popupOpen = true)}
 >
 	<Icon icon={style.icon} />
@@ -153,7 +153,7 @@
 				</BigButton>
 			{/if}
 
-			<BigButton on:click={fetch} disabled={loading} color="primary">
+			<BigButton on:click={refresh} disabled={loading} color="primary">
 				<Icon icon="mdi:cloud-refresh" class="mr-2 text-lg" />
 				Refresh
 			</BigButton>

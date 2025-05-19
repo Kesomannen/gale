@@ -152,6 +152,12 @@ export async function refreshProfiles() {
 export async function setActiveProfile(index: number) {
 	await invokeCommand('set_active_profile', { index });
 	await refreshProfiles();
+
+	const sync = get(activeProfile)?.sync;
+	if (!sync) return;
+
+	await invokeCommand('fetch_sync_profile');
+	await refreshProfiles();
 }
 
 export async function refreshUser() {

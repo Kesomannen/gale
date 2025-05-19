@@ -138,7 +138,7 @@ export function fileToBase64(file: File): Promise<string> {
 }
 
 export function isValidHex(str: string) {
-	return /^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(str);
+	return /^([0-9A-Fa-f]{6})$/.test(str);
 }
 
 export function discordAvatarUrl(user: SyncUser) {
