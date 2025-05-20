@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Profile imports now ignore missing mods instead of failing
+
 ### Fixed
 
 - Profile sync status not being refreshed on launch
