@@ -12,7 +12,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::trace;
+use tracing::{trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -175,10 +175,13 @@ fn resolve_mods(mods: Vec<R2Mod>, app: &AppHandle) -> Result<(Vec<VersionIdent>,
     let mut installs = Vec::with_capacity(mods.len());
 
     for r2_mod in mods {
-        names.push(r2_mod.ident());
-
-        let install = r2_mod.into_install(&thunderstore)?;
-        installs.push(install);
+        let name = r2_mod.ident();
+        if let Ok(install) = r2_mod.into_install(&thunderstore) {
+            names.push(name);
+            installs.push(install);
+        } else {
+            warn!("failed to resolve mod from import: {}", name);
+        }
     }
 
     Ok((names, installs))

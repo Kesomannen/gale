@@ -4,7 +4,11 @@ use eyre::anyhow;
 use tauri::{command, AppHandle};
 use uuid::Uuid;
 
-use crate::{profile::install::InstallOptions, thunderstore, util::cmd::Result};
+use crate::{
+    profile::install::InstallOptions,
+    thunderstore::{self},
+    util::cmd::Result,
+};
 
 use super::{
     r2modman::{self, ProfileImportData},
