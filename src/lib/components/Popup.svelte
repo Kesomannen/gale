@@ -59,7 +59,7 @@
 			>
 				{#if canClose}
 					<Button.Root
-						class="text-primary-400 absolute top-5 right-5 rounded-md p-0.5 text-3xl hover:bg-red-600/80 hover:text-red-100"
+						class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
 						on:click={close}
 					>
 						<Icon icon="mdi:close" />

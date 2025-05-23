@@ -50,6 +50,23 @@ pub struct SyncProfileData {
     updated_at: DateTime<Utc>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct FullUserInfo {
+    #[serde(flatten)]
+    user: auth::User,
+    profiles: Option<Vec<ListedSyncProfile>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ListedSyncProfile {
+    id: String,
+    name: String,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>,
+}
+
 impl From<SyncProfileMetadata> for SyncProfileData {
     fn from(value: SyncProfileMetadata) -> Self {
         SyncProfileData {
@@ -295,4 +312,16 @@ async fn read_profile(id: &str, app: &AppHandle) -> Result<SyncProfileMetadata> 
     get_profile_meta(id, app)
         .await?
         .ok_or_eyre("profile not found")
+}
+
+async fn get_owned_profiles(app: &AppHandle) -> Result<Vec<ListedSyncProfile>> {
+    let user: FullUserInfo = request(Method::GET, "/user/me", app)
+        .await
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
+    Ok(user.profiles.unwrap_or_default())
 }

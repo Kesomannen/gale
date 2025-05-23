@@ -1,12 +1,12 @@
 <script lang="ts">
 	import BigButton from '$lib/components/BigButton.svelte';
-	import Link from '$lib/components/Link.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
+	import type { ListedSyncProfile } from '$lib/models';
 	import { activeProfile, login, logout, refreshProfiles, user } from '$lib/stores';
 	import { pushInfoToast } from '$lib/toast';
-	import { discordAvatarUrl } from '$lib/util';
+	import { discordAvatarUrl, timeSince } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
@@ -14,9 +14,12 @@
 
 	type State = 'off' | 'synced' | 'outdated';
 
-	let popupOpen = false;
+	let mainPopupOpen = false;
 	let loginLoading = false;
 	let loading = false;
+
+	let profilesPopupOpen = false;
+	let ownedProfiles: ListedSyncProfile[] | null = null;
 
 	$: syncInfo = $activeProfile?.sync ?? null;
 	$: isOwner = syncInfo?.owner.discordId == $user?.discordId;
@@ -65,12 +68,12 @@
 
 	async function push() {
 		await wrapCommand('push_sync_profile', 'Pushed update to synced profile.');
-		popupOpen = false;
+		mainPopupOpen = false;
 	}
 
 	async function pull() {
 		await wrapCommand('pull_sync_profile', 'Pulled changes from synced profile.');
-		popupOpen = false;
+		mainPopupOpen = false;
 	}
 
 	async function refresh() {
@@ -81,7 +84,19 @@
 		let del = isOwner && (await ask('Do you also want to delete the profile from the database?'));
 
 		await wrapCommand('disconnect_sync_profile', 'Disconnected synced profile.', { delete: del });
-		popupOpen = false;
+		mainPopupOpen = false;
+	}
+
+	async function showOwnedProfiles() {
+		loading = true;
+		try {
+			ownedProfiles = await invokeCommand<ListedSyncProfile[]>('get_owned_sync_profiles');
+
+			mainPopupOpen = false;
+			profilesPopupOpen = true;
+		} finally {
+			loading = false;
+		}
 	}
 
 	async function wrapCommand(command: string, message?: string, args?: any) {
@@ -101,13 +116,13 @@
 
 <Button.Root
 	class="{style.classes} bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
-	on:click={() => (popupOpen = true)}
+	on:click={() => (mainPopupOpen = true)}
 >
 	<Icon icon={style.icon} />
 	<div>{style.label}</div>
 </Button.Root>
 
-<Popup bind:open={popupOpen} title="Profile sync">
+<Popup bind:open={mainPopupOpen} title="Profile sync">
 	{#if syncInfo !== null}
 		{#if !isOwner}
 			<div class="text-primary-300 mt-2 flex items-center">
@@ -191,6 +206,8 @@
 				Log out
 			{/if}
 		</BigButton>
+
+		<BigButton on:click={showOwnedProfiles}>Show owned profiles</BigButton>
 	</div>
 
 	<a
@@ -198,4 +215,52 @@
 		class="text-primary-400 hover:text-accent-400 mt-4 block text-sm hover:underline"
 		href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
 	>
+</Popup>
+
+<Popup
+	bind:open={profilesPopupOpen}
+	onClose={() => (mainPopupOpen = true)}
+	title="Owned sync profiles"
+>
+	{#if ownedProfiles !== null}
+		<div class="mt-2 flex flex-col">
+			{#each ownedProfiles as profile (profile.id)}
+				<div
+					class="group text-primary-300 hover:bg-primary-700 flex items-center gap-1 rounded-lg rounded-md px-4 py-2"
+				>
+					<div>
+						<div>
+							<span class="font-medium text-white">{profile.name}</span>
+
+							<span class="text-primary-300 bg-primary-900 ml-1 rounded px-2 py-0.5 font-mono">
+								{profile.id}
+							</span>
+						</div>
+
+						<div>
+							Last updated {timeSince(new Date(profile.updatedAt))} ago
+						</div>
+					</div>
+
+					<Button.Root
+						class="text-primary-400 hover:bg-accent-600 hover:text-accent-200 ml-auto rounded p-1 text-lg"
+						on:click={(evt) => {
+							evt.stopPropagation();
+						}}
+					>
+						<Icon icon="mdi:download" />
+					</Button.Root>
+
+					<Button.Root
+						class="text-primary-400 rounded p-1 text-lg hover:bg-red-600 hover:text-red-200"
+						on:click={(evt) => {
+							evt.stopPropagation();
+						}}
+					>
+						<Icon icon="mdi:delete" />
+					</Button.Root>
+				</div>
+			{/each}
+		</div>
+	{/if}
 </Popup>

@@ -2,7 +2,7 @@ use tauri::{command, AppHandle};
 
 use crate::{state::ManagerExt, util::cmd::Result};
 
-use super::{auth, SyncProfileMetadata};
+use super::{auth, ListedSyncProfile, SyncProfileMetadata};
 
 #[command]
 pub async fn read_sync_profile(id: String, app: AppHandle) -> Result<SyncProfileMetadata> {
@@ -51,6 +51,13 @@ pub async fn fetch_sync_profile(app: AppHandle) -> Result<()> {
     super::pull_profile(true, &app).await?;
 
     Ok(())
+}
+
+#[command]
+pub async fn get_owned_sync_profiles(app: AppHandle) -> Result<Vec<ListedSyncProfile>> {
+    let results = super::get_owned_profiles(&app).await?;
+
+    Ok(results)
 }
 
 #[command]

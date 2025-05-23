@@ -73,6 +73,13 @@ export type SyncProfileInfo = {
 	updatedAt: string;
 };
 
+export type ListedSyncProfile = {
+	id: String;
+	name: String;
+	createdAt: string;
+	updatedAt: string;
+};
+
 export type SyncUser = {
 	discordId: string;
 	name: string;
