@@ -2,6 +2,7 @@
 	import { invokeCommand } from '$lib/invoke';
 	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/models';
 	import Icon from '@iconify/svelte';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { Button, Collapsible } from 'bits-ui';
 	import { quadOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
@@ -24,6 +25,15 @@
 
 	$: shownSections =
 		file.type === 'ok' ? file.sections.filter((section) => section.entries.length > 0) : [];
+
+	async function deleteFile(evt: Event) {
+		evt.stopPropagation();
+		let confirmed = await confirm(`Are you sure you want to delete ${file.displayName}?`);
+		if (!confirmed) return;
+
+		await invokeCommand('delete_config_file', { file: file.relativePath });
+		onDeleted();
+	}
 </script>
 
 <Collapsible.Root bind:open>
@@ -59,11 +69,7 @@
 			{#if !locked}
 				<Button.Root
 					class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 hidden shrink-0 rounded-sm p-1 group-hover:flex"
-					on:click={async (evt) => {
-						evt.stopPropagation();
-						await invokeCommand('delete_config_file', { file: file.relativePath });
-						onDeleted();
-					}}
+					on:click={deleteFile}
 				>
 					<Icon icon="mdi:delete" />
 				</Button.Root>

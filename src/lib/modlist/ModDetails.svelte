@@ -69,7 +69,9 @@
 	class="border-primary-600 bg-primary-700 relative flex w-[40%] min-w-72 flex-col border-l px-6 pt-6 pb-4 text-white"
 >
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class="hover:bg-primary-600 absolute right-2 mt-0.5 rounded-full p-1">
+		<DropdownMenu.Trigger
+			class="bg-primary-700 hover:bg-primary-600 absolute right-2 mt-0.5 rounded-full p-1"
+		>
 			<Icon class="text-primary-200 text-2xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
@@ -80,101 +82,101 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 
-	<div class="flex flex-wrap gap-4 xl:items-center">
-		<img
-			src={thunderstoreIconUrl(`${mod.author}-${mod.name}-${mod.version}`)}
-			class="max-h-30 max-w-30 rounded-lg"
-			alt=""
-		/>
+	<div class="light-scrollbar grow overflow-x-hidden overflow-y-auto pb-2">
+		<div class="flex flex-wrap gap-4 xl:items-center">
+			<img
+				src={thunderstoreIconUrl(`${mod.author}-${mod.name}-${mod.version}`)}
+				class="max-h-30 max-w-30 rounded-lg"
+				alt=""
+			/>
 
-		<div>
-			<a
-				class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
-				href={communityUrl(`${mod.author}/${mod.name}`)}
-				target="_blank">{mod.name.replace(/_/g, ' ')}</a
-			>
+			<div>
+				<a
+					class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
+					href={communityUrl(`${mod.author}/${mod.name}`)}
+					target="_blank">{mod.name.replace(/_/g, ' ')}</a
+				>
 
-			{#if mod.author}
-				<div class="text-primary-300 text-xl xl:text-2xl">
-					by
-					<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
-						{mod.author}
-					</a>
+				{#if mod.author}
+					<div class="text-primary-300 text-xl xl:text-2xl">
+						by
+						<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
+							{mod.author}
+						</a>
+					</div>
+				{/if}
+
+				{#if mod.version}
+					<div class="text-primary-300 text-xl xl:text-2xl">v{mod.version}</div>
+				{/if}
+			</div>
+		</div>
+
+		<div class="flex flex-wrap gap-1">
+			{#if mod.isDeprecated}
+				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
+					<Icon class="mr-1 text-xl" icon="mdi:error" />
+					Deprecated
 				</div>
 			{/if}
 
-			{#if mod.version}
-				<div class="text-primary-300 text-xl xl:text-2xl">v{mod.version}</div>
+			{#if mod.containsNsfw}
+				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
+					<Icon class="mr-1 text-xl" icon="material-symbols:explicit" />
+					Contains NSFW
+				</div>
 			{/if}
 		</div>
-	</div>
 
-	<div class="flex flex-wrap gap-1">
-		{#if mod.isDeprecated}
-			<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
-				<Icon class="mr-1 text-xl" icon="mdi:error" />
-				Deprecated
+		{#if mod.categories}
+			<div class="mt-4 mb-1 flex flex-wrap gap-1">
+				{#each mod.categories as category}
+					<div class="bg-primary-600 text-primary-200 rounded-full px-4 py-1">
+						{category}
+					</div>
+				{/each}
 			</div>
 		{/if}
 
-		{#if mod.containsNsfw}
-			<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
-				<Icon class="mr-1 text-xl" icon="material-symbols:explicit" />
-				Contains NSFW
+		<div class="mt-1 flex items-center gap-1.5 text-lg">
+			{#if mod.rating !== null}
+				<Icon class="shrink-0 text-yellow-400" icon="mdi:star" />
+				<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
+			{/if}
+			{#if mod.downloads !== null}
+				<Icon class="shrink-0 text-green-400" icon="mdi:download" />
+				<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
+			{/if}
+			<Icon class="text-primary-400 shrink-0" icon="mdi:weight" />
+			<span class="text-primary-400">{shortenFileSize(mod.fileSize)}</span>
+		</div>
+
+		{#if mod.lastUpdated !== null}
+			<div class="text-primary-400 mt-1 text-lg">
+				Last updated {timeSince(new Date(mod.lastUpdated))} ago
 			</div>
 		{/if}
-	</div>
 
-	{#if mod.categories}
-		<div class="mt-4 mb-1 flex flex-wrap gap-1">
-			{#each mod.categories as category}
-				<div class="bg-primary-600 text-primary-200 rounded-full px-4 py-1">
-					{category}
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	<div class="mt-1 flex items-center gap-1.5 text-lg">
-		{#if mod.rating !== null}
-			<Icon class="shrink-0 text-yellow-400" icon="mdi:star" />
-			<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
-		{/if}
-		{#if mod.downloads !== null}
-			<Icon class="shrink-0 text-green-400" icon="mdi:download" />
-			<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
-		{/if}
-		<Icon class="text-primary-400 shrink-0" icon="mdi:weight" />
-		<span class="text-primary-400">{shortenFileSize(mod.fileSize)}</span>
-	</div>
-
-	{#if mod.lastUpdated !== null}
-		<div class="text-primary-400 mt-1 text-lg">
-			Last updated {timeSince(new Date(mod.lastUpdated))} ago
-		</div>
-	{/if}
-
-	{#if mod.description !== null}
-		<p class="text-primary-300 mt-2 shrink overflow-hidden text-xl lg:hidden">
-			{mod.description}
-		</p>
-	{/if}
-
-	{#await readmePromise}
-		<div class="hidden h-full w-full items-center justify-center lg:flex">
-			<Icon class="text-primary-300 animate-spin text-5xl" icon="mdi:loading" />
-		</div>
-	{:then readme}
-		{#if readme}
-			<Markdown source={readme} class="light-scrollbar hidden lg:block" />
-		{:else}
-			<p class="text-primary-300 mt-3 hidden shrink overflow-hidden text-xl lg:block">
-				{mod.description ?? ''}
+		{#if mod.description !== null}
+			<p class="text-primary-300 mt-2 text-xl lg:hidden">
+				{mod.description}
 			</p>
 		{/if}
-	{/await}
 
-	<div class="grow" />
+		{#await readmePromise}
+			<div class="hidden h-full w-full items-center justify-center lg:flex">
+				<Icon class="text-primary-300 animate-spin text-5xl" icon="mdi:loading" />
+			</div>
+		{:then readme}
+			{#if readme}
+				<Markdown source={readme} class="hidden lg:block" />
+			{:else}
+				<p class="text-primary-300 mt-3 hidden shrink overflow-hidden text-xl lg:block">
+					{mod.description ?? ''}
+				</p>
+			{/if}
+		{/await}
+	</div>
 
 	{#if mod.configFile}
 		<div

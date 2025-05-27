@@ -1,6 +1,17 @@
 # Changelog
 
-## 1.6.1 (2025-04-20)
+## Unreleased
+
+### Added
+
+- Confirmation dialog for config file deletion
+
+### Fixed
+
+- Made the mod details menu scrollable when the description overflows
+- Some packages not being fetched from small communities
+
+## 1.6.1 (2025-05-20)
 
 ### Changed
 
