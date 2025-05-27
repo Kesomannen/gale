@@ -48,7 +48,7 @@ pub fn setup() -> Result<()> {
         .with(
             tracing_subscriber::fmt::layer()
                 .with_ansi(true)
-                .with_filter(LevelFilter::from_level(Level::INFO)),
+                .with_filter(LevelFilter::from_level(Level::DEBUG)),
         )
         .with(
             tracing_subscriber::fmt::layer()

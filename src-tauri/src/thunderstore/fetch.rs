@@ -8,6 +8,7 @@ use eyre::Result;
 use indexmap::IndexMap;
 use tauri::{AppHandle, Emitter};
 use tracing::{debug, info, warn};
+use uuid::Uuid;
 
 use crate::{game::Game, logger, state::ManagerExt, thunderstore::PackageListing};
 
@@ -122,15 +123,7 @@ pub(super) async fn fetch_packages(
         while let Some(index) = str_buffer.find("}]},") {
             let (json, _) = str_buffer.split_at(index + 3);
 
-            match serde_json::from_str::<PackageListing>(json) {
-                Ok(package) => {
-                    if !EXCLUDED_PACKAGES.contains(&package.full_name()) {
-                        package_buffer.insert(package.uuid, package);
-                        package_count += 1;
-                    }
-                }
-                Err(err) => warn!("failed to deserialize package: {}", err),
-            }
+            insert_package(&mut package_count, &mut package_buffer, json);
 
             str_buffer.replace_range(..index + 4, "");
         }
@@ -148,6 +141,13 @@ pub(super) async fn fetch_packages(
 
         i += 1;
     }
+
+    // handle the remaining response (without the closing square brace)
+    insert_package(
+        &mut package_count,
+        &mut package_buffer,
+        &str_buffer[..str_buffer.len() - 1],
+    );
 
     let mut state = app.lock_thunderstore();
     if write_directly {
@@ -178,6 +178,18 @@ pub(super) async fn fetch_packages(
             Some(format!("Fetching mods from Thunderstore... {}", mods)),
         )
         .ok();
+    }
+}
+
+fn insert_package(count: &mut usize, buffer: &mut IndexMap<Uuid, PackageListing>, json: &str) {
+    match serde_json::from_str::<PackageListing>(json) {
+        Ok(package) => {
+            if !EXCLUDED_PACKAGES.contains(&package.full_name()) {
+                buffer.insert(package.uuid, package);
+                *count += 1;
+            }
+        }
+        Err(err) => warn!("failed to deserialize package: {}", err),
     }
 }
 

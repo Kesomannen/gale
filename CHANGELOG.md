@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Made the mod details menu scrollable when the description overflows
+- Some packages not being fetched from small communities
+
 ## 1.6.1 (2025-04-20)
 
 ### Changed

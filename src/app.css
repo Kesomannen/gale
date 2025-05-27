@@ -92,9 +92,9 @@
 		}
 
 		a {
-			color: var(--color--accent-400);
+			color: var(--color-accent-400);
 			&:hover {
-				color: var(--color--accent-300);
+				color: var(--color-accent-300);
 				text-decoration-line: underline;
 			}
 		}
