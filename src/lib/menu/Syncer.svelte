@@ -130,6 +130,15 @@
 />
 
 <Popup bind:open={mainPopupOpen} title="Profile sync">
+	<div
+		class="text-primary-400 text-primary-400 hover:text-accent-400 flex max-w-max items-center gap-1 hover:underline"
+	>
+		<Icon icon="mdi:help-circle" inline />
+
+		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
+		>
+	</div>
+
 	{#if syncInfo !== null}
 		{#if !isOwner}
 			<div class="text-primary-300 mt-2 flex items-center">
@@ -190,8 +199,6 @@
 			<Icon icon="mdi:cloud-plus" class="mr-2 text-lg" />
 			Connect
 		</BigButton>
-	{:else}
-		<div class="text-primary-300">You must be logged in to create a synced profile.</div>
 	{/if}
 
 	<div class="mt-4 flex items-center gap-2 text-slate-300">
@@ -216,10 +223,4 @@
 			Show owned profiles</BigButton
 		>
 	</div>
-
-	<a
-		target="_blank"
-		class="text-primary-400 hover:text-accent-400 mt-4 block text-sm hover:underline"
-		href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
-	>
 </Popup>
