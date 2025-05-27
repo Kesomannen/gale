@@ -76,6 +76,7 @@ export type SyncProfileInfo = {
 export type ListedSyncProfile = {
 	id: String;
 	name: String;
+	community: string;
 	createdAt: string;
 	updatedAt: string;
 };

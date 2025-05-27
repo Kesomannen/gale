@@ -11,6 +11,7 @@
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
 	import { Button } from 'bits-ui';
+	import OwnedSyncProfilesPopup from './OwnedSyncProfilesPopup.svelte';
 
 	type State = 'off' | 'synced' | 'outdated';
 
@@ -19,7 +20,7 @@
 	let loading = false;
 
 	let profilesPopupOpen = false;
-	let ownedProfiles: ListedSyncProfile[] | null = null;
+	let profiles: ListedSyncProfile[] = [];
 
 	$: syncInfo = $activeProfile?.sync ?? null;
 	$: isOwner = syncInfo?.owner.discordId == $user?.discordId;
@@ -90,7 +91,7 @@
 	async function showOwnedProfiles() {
 		loading = true;
 		try {
-			ownedProfiles = await invokeCommand<ListedSyncProfile[]>('get_owned_sync_profiles');
+			profiles = await invokeCommand<ListedSyncProfile[]>('get_owned_sync_profiles');
 
 			mainPopupOpen = false;
 			profilesPopupOpen = true;
@@ -121,6 +122,12 @@
 	<Icon icon={style.icon} />
 	<div>{style.label}</div>
 </Button.Root>
+
+<OwnedSyncProfilesPopup
+	bind:open={profilesPopupOpen}
+	{profiles}
+	onClose={() => (mainPopupOpen = true)}
+/>
 
 <Popup bind:open={mainPopupOpen} title="Profile sync">
 	{#if syncInfo !== null}
@@ -187,9 +194,9 @@
 		<div class="text-primary-300">You must be logged in to create a synced profile.</div>
 	{/if}
 
-	<div class="mt-4 flex items-center text-slate-300">
+	<div class="mt-4 flex items-center gap-2 text-slate-300">
 		{#if $user !== null}
-			<img src={discordAvatarUrl($user)} alt="" class="mr-2 size-10 rounded-full shadow-lg" />
+			<img src={discordAvatarUrl($user)} alt="" class="size-10 rounded-full shadow-lg" />
 		{/if}
 
 		<BigButton on:click={onLoginClicked} disabled={loginLoading} color="primary">
@@ -199,15 +206,15 @@
 			/>
 
 			{#if $user === null}
-				Login with Discord
-
-				<Icon icon="mdi:beta" class="ml-2 rounded bg-red-600 p-0.5 text-xl" />
+				Sign in with Discord
 			{:else}
-				Log out
+				Sign out
 			{/if}
 		</BigButton>
 
-		<BigButton on:click={showOwnedProfiles}>Show owned profiles</BigButton>
+		<BigButton on:click={showOwnedProfiles} disabled={loading} color="primary">
+			Show owned profiles</BigButton
+		>
 	</div>
 
 	<a
@@ -215,52 +222,4 @@
 		class="text-primary-400 hover:text-accent-400 mt-4 block text-sm hover:underline"
 		href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
 	>
-</Popup>
-
-<Popup
-	bind:open={profilesPopupOpen}
-	onClose={() => (mainPopupOpen = true)}
-	title="Owned sync profiles"
->
-	{#if ownedProfiles !== null}
-		<div class="mt-2 flex flex-col">
-			{#each ownedProfiles as profile (profile.id)}
-				<div
-					class="group text-primary-300 hover:bg-primary-700 flex items-center gap-1 rounded-lg rounded-md px-4 py-2"
-				>
-					<div>
-						<div>
-							<span class="font-medium text-white">{profile.name}</span>
-
-							<span class="text-primary-300 bg-primary-900 ml-1 rounded px-2 py-0.5 font-mono">
-								{profile.id}
-							</span>
-						</div>
-
-						<div>
-							Last updated {timeSince(new Date(profile.updatedAt))} ago
-						</div>
-					</div>
-
-					<Button.Root
-						class="text-primary-400 hover:bg-accent-600 hover:text-accent-200 ml-auto rounded p-1 text-lg"
-						on:click={(evt) => {
-							evt.stopPropagation();
-						}}
-					>
-						<Icon icon="mdi:download" />
-					</Button.Root>
-
-					<Button.Root
-						class="text-primary-400 rounded p-1 text-lg hover:bg-red-600 hover:text-red-200"
-						on:click={(evt) => {
-							evt.stopPropagation();
-						}}
-					>
-						<Icon icon="mdi:delete" />
-					</Button.Root>
-				</div>
-			{/each}
-		</div>
-	{/if}
 </Popup>

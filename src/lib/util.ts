@@ -72,7 +72,7 @@ export function timeSince(date: Date): string {
 	if (interval > 1) {
 		return interval + ' minutes';
 	}
-	return Math.floor(seconds) + ' seconds';
+	return 'A moment';
 }
 
 export function isOutdated(mod: Mod): boolean {

@@ -137,6 +137,7 @@ pub fn run() {
             profile::sync::commands::read_sync_profile,
             profile::sync::commands::create_sync_profile,
             profile::sync::commands::disconnect_sync_profile,
+            profile::sync::commands::delete_sync_profile,
             profile::sync::commands::push_sync_profile,
             profile::sync::commands::clone_sync_profile,
             profile::sync::commands::pull_sync_profile,

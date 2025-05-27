@@ -40,6 +40,13 @@ pub async fn disconnect_sync_profile(delete: bool, app: AppHandle) -> Result<()>
 }
 
 #[command]
+pub async fn delete_sync_profile(id: String, app: AppHandle) -> Result<()> {
+    super::delete_profile(&id, &app).await?;
+
+    Ok(())
+}
+
+#[command]
 pub async fn pull_sync_profile(app: AppHandle) -> Result<()> {
     super::pull_profile(false, &app).await?;
 

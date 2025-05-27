@@ -27,7 +27,7 @@
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { open as shellOpen } from '@tauri-apps/plugin-shell';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-	import { pushInfoToast, pushToast } from '$lib/toast';
+	import { pushInfoToast } from '$lib/toast';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
