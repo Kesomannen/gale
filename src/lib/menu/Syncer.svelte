@@ -130,15 +130,6 @@
 />
 
 <Popup bind:open={mainPopupOpen} title="Profile sync">
-	<div
-		class="text-primary-400 text-primary-400 hover:text-accent-400 flex max-w-max items-center gap-1 hover:underline"
-	>
-		<Icon icon="mdi:help-circle" inline />
-
-		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
-		>
-	</div>
-
 	{#if syncInfo !== null}
 		{#if !isOwner}
 			<div class="text-primary-300 mt-2 flex items-center">
@@ -219,8 +210,19 @@
 			{/if}
 		</BigButton>
 
-		<BigButton on:click={showOwnedProfiles} disabled={loading} color="primary">
-			Show owned profiles</BigButton
+		{#if $user !== null}
+			<BigButton on:click={showOwnedProfiles} disabled={loading} color="primary">
+				Show owned profiles</BigButton
+			>
+		{/if}
+	</div>
+
+	<div
+		class="text-primary-400 text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
+	>
+		<Icon icon="mdi:help-circle" inline />
+
+		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
 		>
 	</div>
 </Popup>
