@@ -1,10 +1,16 @@
 # Changelog
 
-## Unreleased
+## 1.7.0 (2025-05-28)
 
 ### Added
 
+- List of owned sync profiles
 - Confirmation dialog for config file deletion
+- Cache for mod readmes and changelogs
+
+### Changed
+
+- Minor UI tweaks
 
 ### Fixed
 
