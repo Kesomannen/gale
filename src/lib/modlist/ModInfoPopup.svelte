@@ -1,26 +1,28 @@
 <script lang="ts">
 	import Markdown from '$lib/components/Markdown.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import type { MarkdownResponse, Mod } from '$lib/models';
+	import { invokeCommand } from '$lib/invoke';
+	import type { Mod } from '$lib/models';
 	import Icon from '@iconify/svelte';
-	import { fetch } from '@tauri-apps/plugin-http';
 
 	export let open = false;
 	export let useLatest = false;
 	export let mod: Mod;
-	export let path: string;
+	export let kind: 'readme' | 'changelog';
 
-	let promise: Promise<MarkdownResponse> | null = null;
+	let promise: Promise<string | null> | null = null;
 	let currentMod: Mod | null = null;
 
 	export async function fetchMarkdown() {
 		if (currentMod === mod) return;
 		currentMod = mod;
 
-		let version = useLatest ? mod.versions[0].name : mod.version;
+		let modRef = {
+			packageUuid: mod.uuid,
+			versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid
+		};
 
-		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${version}/${path}/`;
-		promise = fetch(url).then((res) => res.json()) as Promise<MarkdownResponse>;
+		promise = invokeCommand('get_markdown', { modRef, kind });
 	}
 </script>
 
@@ -29,23 +31,16 @@
 		<Icon class="text-primary-300 animate-spin text-4xl" icon="mdi:loading" />
 	{:then value}
 		{#if value !== null}
-			{#if value.markdown}
-				<Markdown source={value.markdown} />
-			{:else}
-				<div class="text-primary-300 flex items-center justify-center gap-2">
-					No {path} found 😥
-				</div>
-			{/if}
+			<Markdown source={value} />
 		{:else}
-			<div class="flex items-center justify-center gap-2 text-red-400">
-				<Icon class="text-lg" icon="mdi:alert-circle-outline" />
-				Failed to load {path}
+			<div class="text-primary-300 flex items-center justify-center gap-2">
+				No {kind} found
 			</div>
 		{/if}
 	{:catch error}
 		<div class="flex items-center justify-center gap-2 text-red-400">
 			<Icon class="text-lg" icon="mdi:alert-circle-outline" />
-			Failed to load {path}: {error}
+			Failed to load {kind}: {error}
 		</div>
 	{/await}
 </Popup>

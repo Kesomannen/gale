@@ -600,7 +600,7 @@ impl ModManager {
             .unique()
             .collect_vec();
 
-        thunderstore::write_cache(&packages, self)
+        thunderstore::cache::write_packages(&packages, self)
     }
 
     fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) {

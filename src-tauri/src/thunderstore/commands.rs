@@ -2,8 +2,10 @@ use eyre::anyhow;
 use tauri::{command, AppHandle};
 
 use super::{
+    cache::MarkdownCache,
     models::FrontendMod,
     query::{self, QueryModsArgs},
+    ModId,
 };
 use crate::{logger, state::ManagerExt, util::cmd::Result};
 
@@ -47,6 +49,16 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
     });
 
     Ok(())
+}
+
+#[command]
+pub async fn get_markdown(
+    mod_ref: ModId,
+    kind: MarkdownCache,
+    app: AppHandle,
+) -> Result<Option<String>> {
+    let content = super::cache::get_markdown(kind, mod_ref, &app).await?;
+    Ok(content)
 }
 
 #[command]

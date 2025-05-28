@@ -6,7 +6,7 @@
 	import ModCardList from './ModCardList.svelte';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 
-	import type { MarkdownResponse, Mod, ModContextItem } from '$lib/models';
+	import { ModType, type Mod, type ModContextItem } from '$lib/models';
 	import {
 		communityUrl,
 		shortenFileSize,
@@ -17,11 +17,10 @@
 
 	import { Button, DropdownMenu } from 'bits-ui';
 
-	import { fetch } from '@tauri-apps/plugin-http';
-
 	import Icon from '@iconify/svelte';
 	import { dropTransition } from '$lib/transitions';
 	import { createEventDispatcher } from 'svelte';
+	import { invokeCommand } from '$lib/invoke';
 
 	export let mod: Mod;
 	export let contextItems: ModContextItem[] = [];
@@ -48,20 +47,23 @@
 
 	let readmePromise: Promise<string | null>;
 
-	async function extractReadme(response: Response) {
-		let res = (await response.json()) as MarkdownResponse;
+	function formatReadme(readme: string | null) {
+		if (readme === null) return null;
 
-		if (!res.markdown) return null;
-
-		return res.markdown
+		return readme
 			.split('\n')
 			.filter((line) => !line.startsWith('# '))
 			.join('\n');
 	}
 
-	$: {
-		let url = `https://thunderstore.io/api/experimental/package/${mod.author}/${mod.name}/${mod.version}/readme/`;
-		readmePromise = fetch(url).then(extractReadme);
+	$: if (mod.type === ModType.Remote) {
+		readmePromise = invokeCommand<string>('get_markdown', {
+			kind: 'readme',
+			modRef: {
+				packageUuid: mod.uuid,
+				versionUuid: mod.versionUuid
+			}
+		}).then(formatReadme);
 	}
 </script>
 
@@ -163,19 +165,18 @@
 			</p>
 		{/if}
 
-		{#await readmePromise}
-			<div class="hidden h-full w-full items-center justify-center lg:flex">
-				<Icon class="text-primary-300 animate-spin text-5xl" icon="mdi:loading" />
-			</div>
-		{:then readme}
-			{#if readme}
-				<Markdown source={readme} class="hidden lg:block" />
-			{:else}
-				<p class="text-primary-300 mt-3 hidden shrink overflow-hidden text-xl lg:block">
-					{mod.description ?? ''}
-				</p>
-			{/if}
-		{/await}
+		<div class="hidden lg:block">
+			{#await readmePromise}
+				<div role="status" class="animate-pulse">
+					<div class="bg-primary-600 mt-4 h-8 w-80 rounded-xl"></div>
+					<div class="bg-primary-600 mt-6 h-3 max-w-[500px] rounded-full"></div>
+					<div class="bg-primary-600 mt-2.5 h-3 max-w-[460px] rounded-full"></div>
+					<div class="bg-primary-600 mt-2.5 mb-4 h-3 max-w-[400px] rounded-full"></div>
+				</div>
+			{:then readme}
+				<Markdown source={readme ?? 'No readme found'} />
+			{/await}
+		</div>
 	</div>
 
 	{#if mod.configFile}
@@ -233,11 +234,11 @@
 	{/if}
 </Popup>
 
-<ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} path="readme" />
+<ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} kind="readme" />
 <ModInfoPopup
 	bind:this={changelog}
 	bind:open={changelogOpen}
 	{mod}
 	useLatest={true}
-	path="changelog"
+	kind="changelog"
 />

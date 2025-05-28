@@ -1,26 +1,19 @@
 use std::{
     collections::{HashSet, VecDeque},
     iter::FusedIterator,
-    path::PathBuf,
     str::{self},
-    time::Instant,
 };
 
-use eyre::{eyre, Context, Result};
+use eyre::{eyre, Result};
 use indexmap::IndexMap;
 use query::QueryModsArgs;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle};
-use tracing::{debug, info};
 use uuid::Uuid;
 
-use crate::{
-    game::Game,
-    profile::ModManager,
-    state::ManagerExt,
-    util::{self, fs::JsonStyle},
-};
+use crate::{game::Game, state::ManagerExt};
 
+pub mod cache;
 pub mod commands;
 pub mod query;
 pub mod token;
@@ -258,49 +251,4 @@ impl Thunderstore {
             thunderstore: self,
         }
     }
-}
-
-pub fn read_cache(manager: &ModManager) -> Result<Option<Vec<PackageListing>>> {
-    let start = Instant::now();
-    let path = cache_path(manager);
-
-    if !path.exists() {
-        info!("no cache file found at {}", path.display());
-        return Ok(None);
-    }
-
-    let result: Vec<PackageListing> =
-        util::fs::read_json(path).context("failed to deserialize cache")?;
-
-    debug!(
-        "read {} packages from cache in {:?}",
-        result.len(),
-        start.elapsed()
-    );
-
-    Ok(Some(result))
-}
-
-pub fn write_cache(packages: &[&PackageListing], manager: &ModManager) -> Result<()> {
-    if packages.is_empty() {
-        info!("no packages to write to cache");
-        return Ok(());
-    }
-
-    let start = Instant::now();
-
-    util::fs::write_json(cache_path(manager), packages, JsonStyle::Compact)
-        .context("failed to write mod cache")?;
-
-    debug!(
-        "wrote {} packages to cache in {:?}",
-        packages.len(),
-        start.elapsed()
-    );
-
-    Ok(())
-}
-
-fn cache_path(manager: &ModManager) -> PathBuf {
-    manager.active_game().path.join("thunderstore_cache.json")
 }

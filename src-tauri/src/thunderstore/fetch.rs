@@ -55,7 +55,7 @@ pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
 }
 
 fn read_and_insert_cache(app: &AppHandle) {
-    match super::read_cache(&app.lock_manager()) {
+    match super::cache::get_packages(app) {
         Ok(Some(mods)) => {
             let mut thunderstore = app.lock_thunderstore();
 

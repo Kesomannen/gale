@@ -1,6 +1,7 @@
 use std::env;
 
 use itertools::Itertools;
+use state::ManagerExt;
 use tauri::{App, AppHandle};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -55,6 +56,17 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle().to_owned();
     tauri::async_runtime::spawn(async move { telemetry::send_app_start_event(handle).await });
 
+    let handle = app.handle().to_owned();
+    tauri::async_runtime::spawn(async move {
+        tokio::task::spawn_blocking(move || {
+            handle
+                .db()
+                .evict_outdated_cache()
+                .unwrap_or_else(|err| warn!("failed to evict outdated cache: {err:#}"))
+        })
+        .await
+    });
+
     info!("setup done");
 
     Ok(())
@@ -78,6 +90,7 @@ pub fn run() {
             state::is_first_run,
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
+            thunderstore::commands::get_markdown,
             thunderstore::commands::set_thunderstore_token,
             thunderstore::commands::has_thunderstore_token,
             thunderstore::commands::clear_thunderstore_token,

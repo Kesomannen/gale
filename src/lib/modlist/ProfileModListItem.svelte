@@ -27,7 +27,7 @@
 
 	let contextMenuOpen: boolean;
 
-	$: authorClasses =
+	$: descriptionClasses =
 		mod.enabled === false
 			? 'text-primary-500 line-through'
 			: isSelected
@@ -72,7 +72,7 @@
 					>
 						{mod.name.replace(/_/g, ' ')}
 					</div>
-					<div class="px-1 {authorClasses}">
+					<div class="px-1 {descriptionClasses}">
 						{mod.version ?? '?.?.?'}
 					</div>
 					{#if mod.isPinned}
@@ -86,9 +86,9 @@
 					{/if}
 				</div>
 
-				{#if mod.author}
-					<div class={authorClasses}>
-						{mod.author}
+				{#if mod.description}
+					<div class="{descriptionClasses} truncate">
+						{mod.description}
 					</div>
 				{/if}
 			</div>

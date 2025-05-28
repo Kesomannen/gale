@@ -300,11 +300,6 @@ export type R2ImportData = {
 	include: boolean[];
 };
 
-export type MarkdownResponse = {
-	markdown: string | null;
-	detail?: string;
-};
-
 export type Prefs = {
 	steamExePath: string | null;
 	dataDir: string;

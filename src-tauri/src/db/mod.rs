@@ -18,6 +18,7 @@ use crate::{
     util,
 };
 
+pub mod cache;
 mod migrate;
 
 pub const FILE_NAME: &str = "data.sqlite3";
