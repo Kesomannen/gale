@@ -140,7 +140,7 @@
 			</div>
 		{/if}
 
-		<div class="mt-1 flex items-center gap-1.5 text-lg">
+		<div class="mt-2 flex items-center gap-1.5 text-lg">
 			{#if mod.rating !== null}
 				<Icon class="shrink-0 text-yellow-400" icon="mdi:star" />
 				<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
