@@ -7,7 +7,7 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
 	import { profiles as allProfiles } from '$lib/stores';
-	import { pushInfoToast, pushToast } from '$lib/toast';
+	import { pushInfoToast } from '$lib/toast';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
 	export let open: boolean;
@@ -44,6 +44,10 @@
 
 <Popup bind:open {onClose} title="Owned sync profiles">
 	<div class="mt-2 flex max-h-80 flex-col overflow-y-auto">
+		{#if sortedProfiles.length === 0}
+			<div class="text-primary-200 w-full text-center text-lg">No profiles found</div>
+		{/if}
+
 		{#each sortedProfiles as profile (profile.id)}
 			<div
 				class="group text-primary-400 hover:bg-primary-700 flex items-center gap-1 rounded-lg px-4 py-2"

@@ -10,8 +10,9 @@
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
-	import { Button } from 'bits-ui';
+	import { Button, DropdownMenu } from 'bits-ui';
 	import OwnedSyncProfilesPopup from './OwnedSyncProfilesPopup.svelte';
+	import { dropTransition } from '$lib/transitions';
 
 	type State = 'off' | 'synced' | 'outdated';
 
@@ -49,6 +50,19 @@
 			classes: 'text-yellow-400'
 		}
 	}[state];
+
+	const dropdownItems = [
+		{
+			icon: 'mdi:database-eye',
+			label: 'Show owned profiles',
+			onClick: showOwnedProfiles
+		},
+		{
+			icon: 'mdi:logout',
+			label: 'Sign out',
+			onClick: onLoginClicked
+		}
+	];
 
 	async function onLoginClicked() {
 		loginLoading = true;
@@ -192,28 +206,37 @@
 		</BigButton>
 	{/if}
 
-	<div class="mt-4 flex items-center gap-2 text-slate-300">
-		{#if $user !== null}
-			<img src={discordAvatarUrl($user)} alt="" class="size-10 rounded-full shadow-lg" />
-		{/if}
+	<div class="mt-4 flex items-center gap-1 text-slate-300">
+		{#if $user === null}
+			<BigButton on:click={onLoginClicked} disabled={loginLoading} color="primary">
+				<Icon
+					icon={loginLoading ? 'mdi:loading' : 'ic:baseline-discord'}
+					class="mr-2 {loginLoading && 'animate-spin'}"
+				/>
 
-		<BigButton on:click={onLoginClicked} disabled={loginLoading} color="primary">
-			<Icon
-				icon={loginLoading ? 'mdi:loading' : $user === null ? 'ic:baseline-discord' : 'mdi:logout'}
-				class="mr-2 {loginLoading && 'animate-spin'}"
-			/>
-
-			{#if $user === null}
 				Sign in with Discord
-			{:else}
-				Sign out
-			{/if}
-		</BigButton>
+			</BigButton>
+		{:else}
+			<img src={discordAvatarUrl($user)} alt="" class="size-10 rounded-full shadow-lg" />
 
-		{#if $user !== null}
-			<BigButton on:click={showOwnedProfiles} disabled={loading} color="primary">
-				Show owned profiles</BigButton
-			>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">
+					<Icon class="text-2xl" icon="mdi:dots-vertical" />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content
+					class="border-primary-600 bg-primary-800 flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl"
+					side="bottom"
+					{...dropTransition}
+				>
+					{#each dropdownItems as item}
+						<DropdownMenu.Item class="menu-item context-menu-item pr-6" on:click={item.onClick}>
+							<Icon icon={item.icon} class="mr-1.5 text-lg" />
+
+							{item.label}
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		{/if}
 	</div>
 
