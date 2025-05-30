@@ -1,6 +1,7 @@
 use std::{
     fs::{self, File},
     path::PathBuf,
+    sync::Mutex,
 };
 
 use eyre::{Context, OptionExt, Result};
@@ -54,7 +55,7 @@ pub fn setup() -> Result<()> {
             tracing_subscriber::fmt::layer()
                 .compact()
                 .with_ansi(false)
-                .with_writer(log_file)
+                .with_writer(Mutex::new(log_file))
                 .with_filter(LevelFilter::from_level(Level::INFO)),
         );
 

@@ -71,6 +71,12 @@ impl Profile {
             name
         );
 
+        debug!(
+            from = self.path.display().to_string(),
+            to = new_path.display().to_string(),
+            "renaming profile directory",
+        );
+
         fs::rename(&self.path, &new_path).fs_context("renaming profile directory", &self.path)?;
 
         info!("renamed profile: {} -> {}", self.name, name);

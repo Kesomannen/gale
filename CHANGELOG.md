@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.1 (2025-05-30)
+
+### Fixed
+
+- Non UTF-8 content being written to the log file
+- Updated Monster Train 2 to the full release
+
 ## 1.7.0 (2025-05-28)
 
 ### Added
