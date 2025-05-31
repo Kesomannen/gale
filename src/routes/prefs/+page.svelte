@@ -76,18 +76,6 @@
 			The folder where mods and profiles are stored. Changing this will move the existing data.
 		</PathPref>
 
-		<PathPref
-			label="Steam executable"
-			type="file"
-			value={prefs.steamExePath ?? null}
-			set={set((value, prefs) => (prefs.steamExePath = value))}
-		>
-			Path to the Steam executable (steam.exe on Windows). Used for launching games via Steam.
-			<br />
-			This is <b>not</b> the location of the game's exe. If you want to manually set the game's
-			location, use the <b>Override location</b> option further down.
-		</PathPref>
-
 		<SmallHeading>Appearance</SmallHeading>
 
 		<ColorPref category="primary" />

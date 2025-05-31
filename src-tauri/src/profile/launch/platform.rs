@@ -6,10 +6,11 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, Context, OptionExt, Result};
+use eyre::{bail, Context, OptionExt, Result};
 use keyvalues_serde::parser::Vdf;
 use serde::Deserialize;
 use tracing::{debug, info};
+use which::which;
 
 use crate::{
     game::{Game, Platform},
@@ -44,23 +45,14 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
             warn!("failed to determine if game uses proton: {:#}", err);
             false
         }) {
-            linux::ensure_wine_override(steam.id as u64, proxy_dll, prefs).unwrap_or_else(|err| {
+            linux::ensure_wine_override(steam.id as u64, proxy_dll).unwrap_or_else(|err| {
                 warn!("failed to ensure wine dll override: {:#}", err);
             });
         }
     }
 
-    let steam_path = prefs
-        .steam_exe_path
-        .as_ref()
-        .ok_or_eyre("steam executable path not set")?;
 
-    ensure!(
-        steam_path.exists(),
-        "steam executable not found at {}",
-        steam_path.display()
-    );
-
+    let steam_path = which("steam").context("failed to find steam binary")?;
     let mut command = Command::new(steam_path);
     command.arg("-applaunch").arg(steam.id.to_string());
 
@@ -85,9 +77,9 @@ fn epic_command(game: Game) -> Result<Command> {
         .ok_or_eyre("open returned no commands to try")
 }
 
-pub fn game_dir(platform: Option<Platform>, game: Game, prefs: &Prefs) -> Result<PathBuf> {
+pub fn game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf> {
     match platform {
-        Some(Platform::Steam) => steam_game_dir(game, prefs),
+        Some(Platform::Steam) => steam_game_dir(game),
         #[cfg(windows)]
         Some(Platform::XboxStore) => xbox_game_dir(game),
         #[cfg(windows)]
@@ -96,12 +88,12 @@ pub fn game_dir(platform: Option<Platform>, game: Game, prefs: &Prefs) -> Result
     }
 }
 
-fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
+fn steam_game_dir(game: Game) -> Result<PathBuf> {
     let Some(steam) = &game.platforms.steam else {
         bail!("{} is not available on Steam", game.name)
     };
 
-    let mut path = find_steam_library_for_game(steam.id as u64, prefs)
+    let mut path = find_steam_library_for_game(steam.id as u64)
         .context("failed to find steam library location")?;
 
     path.push("steamapps");
@@ -117,7 +109,7 @@ fn steam_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     Ok(path)
 }
 
-pub fn find_steam_library_for_game(game_id: u64, prefs: &Prefs) -> Result<PathBuf> {
+pub fn find_steam_library_for_game(game_id: u64) -> Result<PathBuf> {
     #[derive(Deserialize, Debug)]
     struct LibraryFolders {
         libraries: Vec<Library>,
@@ -130,7 +122,7 @@ pub fn find_steam_library_for_game(game_id: u64, prefs: &Prefs) -> Result<PathBu
     }
 
     // we should always base this off the .exe location, since this should have the config folder
-    let mut path = default_steam_library_dir(prefs.steam_exe_path.as_deref())
+    let mut path = default_steam_library_dir()
         .ok_or_eyre("steam exe path is not set")?;
 
     path.push("config");
@@ -139,7 +131,7 @@ pub fn find_steam_library_for_game(game_id: u64, prefs: &Prefs) -> Result<PathBu
     let file_contents = fs::read_to_string(&path).context("failed to read libraryfolders.vdf")?;
     let mut vdf = Vdf::parse(&file_contents).context("failed to parse libraryfolders.vdf")?;
 
-    debug!("read vdf: {:?}", vdf);
+    debug!("read vdf from {}: {:?}", path.display(), vdf);
 
     let obj = vdf.value.get_mut_obj().unwrap();
 
@@ -162,10 +154,11 @@ pub fn find_steam_library_for_game(game_id: u64, prefs: &Prefs) -> Result<PathBu
         .ok_or_eyre("game is not installed")
 }
 
-pub fn default_steam_library_dir(exe_path: Option<&Path>) -> Option<PathBuf> {
+#[allow(unused_variables)]
+pub fn default_steam_library_dir() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
-        exe_path.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
+        which("steam").ok()?.and_then(|exe| exe.parent().map(|path| path.to_path_buf()))
     }
 
     #[cfg(target_os = "linux")]

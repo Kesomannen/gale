@@ -178,7 +178,7 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
             .and_then(|prefs| prefs.platform)
             .or_else(|| game.platforms.iter().next());
 
-        platform::game_dir(platform, game, prefs)?
+        platform::game_dir(platform, game)?
     };
 
     ensure!(

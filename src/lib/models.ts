@@ -301,7 +301,6 @@ export type R2ImportData = {
 };
 
 export type Prefs = {
-	steamExePath: string | null;
 	dataDir: string;
 	cacheDir: string;
 	sendTelemetry: boolean;

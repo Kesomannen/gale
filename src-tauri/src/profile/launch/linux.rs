@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use eyre::{Context, Result};
 
-use crate::{prefs::Prefs, util::error::IoResultExt};
+use crate::{util::error::IoResultExt};
 
 pub fn is_proton(game_dir: &Path) -> Result<bool> {
     if game_dir.join(".forceproton").exists() {
@@ -16,8 +16,8 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
         .is_some())
 }
 
-pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, prefs: &Prefs) -> Result<()> {
-    let mut user_reg_path = super::platform::find_steam_library_for_game(steam_id, prefs)
+pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str) -> Result<()> {
+    let mut user_reg_path = super::platform::find_steam_library_for_game(steam_id)
         .context("failed to find steam library location")?;
 
     user_reg_path.push("steamapps/compatdata");

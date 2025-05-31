@@ -19,7 +19,7 @@ use crate::{
     util::{
         self,
         error::IoResultExt,
-        fs::{Overwrite, PathExt, UseLinks},
+        fs::{Overwrite, UseLinks},
         window::WindowExt,
     },
 };
@@ -181,7 +181,6 @@ impl From<PathBuf> for DirPref {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Prefs {
-    pub steam_exe_path: Option<PathBuf>,
     pub data_dir: DirPref,
 
     pub send_telemetry: bool,
@@ -201,49 +200,9 @@ pub struct GamePrefs {
     pub platform: Option<Platform>,
 }
 
-#[cfg(target_os = "windows")]
-fn read_steam_registry() -> Result<PathBuf> {
-    use winreg::enums::*;
-    use winreg::RegKey;
-
-    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
-
-    let path: String = key.get_value("InstallPath")?;
-    Ok(PathBuf::from(path))
-}
-
-#[cfg(target_os = "windows")]
-fn default_steam_exe_path() -> PathBuf {
-    match read_steam_registry() {
-        Ok(path) => {
-            info!(
-                "read steam installation path from registry: {}",
-                path.display()
-            );
-            path.join("steam.exe")
-        }
-        Err(err) => {
-            warn!(
-                "failed to read steam installation path from registry: {:#}, using default",
-                err
-            );
-            r"C:\Program Files (x86)\Steam\steam.exe".into()
-        }
-    }
-}
-
-#[cfg(target_os = "linux")]
-fn default_steam_exe_path() -> PathBuf {
-    "/usr/bin/steam".into()
-}
-
 impl Default for Prefs {
     fn default() -> Self {
-        let steam_exe_path = default_steam_exe_path().exists_or_none();
-
         Self {
-            steam_exe_path,
             data_dir: DirPref::new(util::path::default_app_data_dir())
                 .keep(logger::FILE_NAME)
                 .keep(db::FILE_NAME)
@@ -283,20 +242,6 @@ impl Prefs {
     }
 
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
-        // prevent the user from setting the steam exe to the game's exe, for example
-        let is_valid_steam_exe = value.steam_exe_path.as_ref().is_some_and(|path| {
-            path.file_name()
-                .is_some_and(|name| name.to_string_lossy().to_lowercase().contains("steam"))
-        });
-
-        if is_valid_steam_exe {
-            self.steam_exe_path = value.steam_exe_path;
-        } else {
-            bail!(
-                "Steam executable path is invalid. Maybe you entered the game's location instead?",
-            );
-        }
-
         self.game_prefs = value.game_prefs;
         self.validate_game_prefs()?;
 
