@@ -9,7 +9,6 @@
 }
 
 @theme {
-	--font-sans: 'Nunito Sans', sans-serif;
 	--font-mono: 'Roboto Mono', monospace;
 
 	--color-primary-50: var(--color-slate-50);

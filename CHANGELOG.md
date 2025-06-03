@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Font family setting
+- Better automatic path detection for steam executables and games
+
+### Changed
+
+- Small UI changes
+
+### Removed
+
+- Steam executable setting as it's now redundant
+
 ## 1.7.1 (2025-05-30)
 
 ### Fixed

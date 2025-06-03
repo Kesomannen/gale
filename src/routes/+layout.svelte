@@ -10,10 +10,11 @@
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
-	import { refreshColor } from '$lib/theme';
+	import { refreshColor, refreshFont } from '$lib/theme';
 	import InstallModPopup from '$lib/modlist/InstallModPopup.svelte';
 
 	onMount(() => {
+		refreshFont();
 		refreshColor('accent');
 		refreshColor('primary');
 	});

@@ -348,3 +348,18 @@ export function getColor(category: ColorCategory): Color {
 export function refreshColor(category: ColorCategory) {
 	setColor(category, getColor(category));
 }
+
+const defaultFont = 'Nunito Sans';
+
+export function setFont(fontFamily: string) {
+	root.style.fontFamily = `'${fontFamily}', '${defaultFont}', sans-serif`;
+	localStorage.setItem('font', fontFamily);
+}
+
+export function getFont() {
+	return localStorage.getItem('font') ?? defaultFont;
+}
+
+export function refreshFont() {
+	setFont(getFont());
+}

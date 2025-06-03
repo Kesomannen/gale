@@ -16,6 +16,7 @@
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 	import { platform } from '@tauri-apps/plugin-os';
 	import ColorPref from '$lib/prefs/ColorPref.svelte';
+	import FontPref from '$lib/prefs/FontPref.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -78,13 +79,15 @@
 
 		<SmallHeading>Appearance</SmallHeading>
 
-		<ColorPref category="primary" />
-		<ColorPref category="accent" />
-
 		<ZoomLevelPref
 			value={prefs.zoomFactor}
 			set={set((value, prefs) => (prefs.zoomFactor = value))}
 		/>
+
+		<ColorPref category="primary" />
+		<ColorPref category="accent" />
+
+		<FontPref />
 
 		<SmallHeading>Miscellaneous</SmallHeading>
 

@@ -161,7 +161,7 @@
 		<div class="mt-2 flex items-center gap-1">
 			<Tooltip text="Copy to clipboard">
 				<Button.Root
-					class="rounded-md bg-slate-900 px-4 py-1 font-mono text-lg text-slate-300"
+					class="rounded-md bg-primary-900 px-4 py-1 font-mono text-lg text-primary-300"
 					on:click={async () => {
 						await writeText(syncInfo.id);
 						pushInfoToast({
@@ -206,7 +206,7 @@
 		</BigButton>
 	{/if}
 
-	<div class="mt-4 flex items-center gap-1 text-slate-300">
+	<div class="mt-4 flex items-center gap-1 text-primary-300">
 		{#if $user === null}
 			<BigButton on:click={onLoginClicked} disabled={loginLoading} color="primary">
 				<Icon

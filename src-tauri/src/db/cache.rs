@@ -57,7 +57,7 @@ impl Db {
         let conn = self.conn();
 
         conn.prepare(&format!(
-            "INSERT INTO {} (version_id, content) VALUES ($1, $2)",
+            "INSERT OR REPLACE INTO {} (version_id, content) VALUES ($1, $2)",
             table
         ))?
         .execute(params![id, content])?;
