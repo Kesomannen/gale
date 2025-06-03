@@ -6,6 +6,7 @@
 
 - Font family setting
 - Better automatic path detection for steam executables and games
+- Support for Painting VR and DEPO : Death Epileptic Pixel Origins
 
 ### Changed
 

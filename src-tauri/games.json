@@ -648,6 +648,19 @@
 		}
 	},
 	{
+		"name": "DEPO : Death Epileptic Pixel Origins",
+		"slug": "depo",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1091320,
+				"dirName": "DEPO"
+			}
+		}
+	},
+	{
 		"name": "DREDGE",
 		"modLoader": {
 			"name": "BepInEx"
@@ -1222,6 +1235,19 @@
 			},
 			"epicGames": {
 				"identifier": "Viola"
+			}
+		}
+	},
+	{
+		"name": "Painting VR",
+		"slug": "painting-vr",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1905940,
+				"dirName": "PaintingVr"
 			}
 		}
 	},
@@ -1951,8 +1977,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3195790,
-				"dirName": "White Knuckle Demo"
+				"id": 3195790
 			}
 		}
 	},
