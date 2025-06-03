@@ -7,7 +7,7 @@
 </script>
 
 <div class="flex items-center">
-	<Label>Font Family</Label>
+	<Label>Font family</Label>
 
 	<InputField bind:value={value} on:change={() => setFont(value)} />
 </div>
