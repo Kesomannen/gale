@@ -1,8 +1,10 @@
 use std::{fs, path::Path};
 
-use eyre::{Context, Result};
+use eyre::Result;
+use itertools::Itertools;
+use tracing::{debug, info, trace};
 
-use crate::{util::error::IoResultExt};
+use crate::util::error::IoResultExt;
 
 pub fn is_proton(game_dir: &Path) -> Result<bool> {
     if game_dir.join(".forceproton").exists() {
@@ -16,15 +18,18 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
         .is_some())
 }
 
-pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str) -> Result<()> {
-    let mut user_reg_path = super::platform::find_steam_library_for_game(steam_id)
-        .context("failed to find steam library location")?;
+pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> Result<()> {
+    let wine_reg_path = game_dir
+        .parent() // common
+        .unwrap()
+        .parent() // steamapps
+        .unwrap()
+        .join("compatdata")
+        .join(steam_id.to_string())
+        .join("pfx")
+        .join("user.reg");
 
-    user_reg_path.push("steamapps/compatdata");
-    user_reg_path.push(steam_id.to_string());
-    user_reg_path.push("pfx/user.reg");
-
-    let text = fs::read_to_string(&user_reg_path).fs_context("reading user.reg", &user_reg_path)?;
+    let text = fs::read_to_string(&wine_reg_path).fs_context("reading wine registry", &wine_reg_path)?;
     let new_text = reg_add_in_section(
         &text,
         r#"[Software\\Wine\\DllOverrides]"#,
@@ -32,18 +37,18 @@ pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str) -> Result<()> {
         "native,builtin",
     );
 
-    if text != new_text {
-        let backup_path = user_reg_path.parent().unwrap().join("user.reg.bak");
-        fs::copy(&user_reg_path, &backup_path).fs_context("backing up user.reg", &backup_path)?;
-
-        fs::write(&user_reg_path, new_text).fs_context("writing user.reg", &user_reg_path)?;
+    if text == new_text {
+        debug!("wine registry is unchanged");
+    } else {
+        info!("writing to wine registry");
+        fs::write(&wine_reg_path, new_text).fs_context("writing wine registry", &wine_reg_path)?;
     }
 
     Ok(())
 }
 
 fn reg_add_in_section(reg: &str, section: &str, key: &str, value: &str) -> String {
-    let mut lines: Vec<&str> = reg.split('\n').collect();
+    let mut lines = reg.lines().collect_vec();
 
     let mut begin = 0;
     for (i, line) in lines.iter().enumerate() {
@@ -53,18 +58,27 @@ fn reg_add_in_section(reg: &str, section: &str, key: &str, value: &str) -> Strin
         }
     }
 
+    trace!("section begins at line {}", begin);
+
     let mut end = begin;
     while end < lines.len() && !lines[end].is_empty() {
         end += 1;
     }
 
+    trace!("section ends at line {}", end);
+
     for i in begin..end {
         if lines[i].starts_with(&format!("\"{}\"", key)) {
+            debug!("found existing key in wine registry, replacing it");
+
             let line = format!("\"{}\"=\"{}\"", key, value);
             lines[i] = &line;
+
             return lines.join("\n");
         }
     }
+
+    debug!("adding key to wine registry");
 
     let line = format!("\"{}\"=\"{}\"", key, value);
     lines.insert(end, &line);

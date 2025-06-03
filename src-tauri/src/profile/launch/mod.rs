@@ -88,9 +88,11 @@ impl ManagedGame {
             command.args(custom_args);
         }
 
-        //if self.game.server {
-        //    command.arg("--server");
-        //}
+        /*
+        if let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
+            command.env("WINEDLLOVERRIDES", format!("{}=n,b", proxy_dll));
+        }
+        */
 
         Ok((launch_mode, command))
     }

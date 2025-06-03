@@ -40,7 +40,7 @@ const defaultModQuery = () => ({
 	includeDeprecated: false,
 	includeEnabled: false,
 	includeDisabled: false,
-	sortBy: SortBy.LastUpdated,
+	sortBy: SortBy.Rating,
 	sortOrder: SortOrder.Descending
 });
 

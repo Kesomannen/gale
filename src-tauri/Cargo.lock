@@ -1367,7 +1367,7 @@ dependencies = [
  "rustc_version",
  "toml",
  "vswhom",
- "winreg",
+ "winreg 0.52.0",
 ]
 
 [[package]]
@@ -1741,9 +1741,9 @@ dependencies = [
  "itertools 0.13.0",
  "justerror",
  "keyring",
- "keyvalues-serde",
  "open",
  "rayon",
+ "regashii",
  "reqwest",
  "rusqlite",
  "rusqlite_migration",
@@ -1751,6 +1751,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "steamlocate",
  "strum",
  "strum_macros",
  "tauri",
@@ -1775,7 +1776,7 @@ dependencies = [
  "walkdir",
  "webkit2gtk",
  "which",
- "winreg",
+ "winreg 0.52.0",
  "zip",
 ]
 
@@ -2198,6 +2199,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest",
+]
+
+[[package]]
+name = "home"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "589533453244b0995c858700322199b2becb13b627df2851f64a2775d024abcf"
+dependencies = [
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4483,6 +4493,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "regashii"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e09a62e9c71f2e75cfce6dfdf007c2a40168d5bd762d1f7ef6ed60144f37f67"
+dependencies = [
+ "nom",
+ "regex",
+ "thiserror 1.0.69",
+ "utf16string",
+]
+
+[[package]]
 name = "regex"
 version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5180,6 +5202,20 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "steamlocate"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a13160bc6ea5cd80cde195ad4a4c629701db2bf397b62c139aa9e739016d2499"
+dependencies = [
+ "crc",
+ "home",
+ "keyvalues-parser",
+ "keyvalues-serde",
+ "serde",
+ "winreg 0.55.0",
+]
 
 [[package]]
 name = "string_cache"
@@ -6395,6 +6431,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8232dd3cdaed5356e0f716d285e4b40b932ac434100fe9b7e0e8e935b9e6246"
 
 [[package]]
+name = "utf16string"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b62a1e85e12d5d712bf47a85f426b73d303e2d00a90de5f3004df3596e9d216"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
 name = "utf8_iter"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7355,6 +7400,16 @@ checksum = "a277a57398d4bfa075df44f501a17cfdf8542d224f0d36095a2adc7aee4ef0a5"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "winreg"
+version = "0.55.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb5a765337c50e9ec252c2069be9bf91c7df47afb103b642ba3a53bf8101be97"
+dependencies = [
+ "cfg-if",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
