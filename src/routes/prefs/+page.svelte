@@ -5,18 +5,23 @@
 	import TogglePref from '$lib/prefs/TogglePref.svelte';
 	import ApiKeyPref from '$lib/prefs/ApiKeyPref.svelte';
 	import ApiKeyPopup from '$lib/prefs/ApiKeyPopup.svelte';
+	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
+	import LargeHeading from '$lib/prefs/LargeHeading.svelte';
+	import SmallHeading from '$lib/prefs/SmallHeading.svelte';
+	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 
 	import { activeGame } from '$lib/stores';
 	import { type Prefs, type GamePrefs, Platform } from '$lib/models';
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
-	import LargeHeading from '$lib/prefs/LargeHeading.svelte';
-	import SmallHeading from '$lib/prefs/SmallHeading.svelte';
-	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
+
 	import { platform } from '@tauri-apps/plugin-os';
 	import ColorPref from '$lib/prefs/ColorPref.svelte';
-	import FontPref from '$lib/prefs/FontPref.svelte';
+
+	import Label from '$lib/components/Label.svelte';
+	import InputField from '$lib/components/InputField.svelte';
+	import { getFont, useNativeMenu, setFont } from '$lib/theme';
+	import Checkbox from '$lib/components/Checkbox.svelte';
 
 	let prefs: Prefs | null = null;
 	let gamePrefs: GamePrefs | null = null;
@@ -87,7 +92,21 @@
 		<ColorPref category="primary" />
 		<ColorPref category="accent" />
 
-		<FontPref />
+		<div class="flex items-center">
+			<Label>Font family</Label>
+
+			<InputField
+				value={getFont()}
+				on:change={({ detail }) => setFont(detail)}
+				placeholder="Nunito Sans"
+			/>
+		</div>
+
+		<div class="flex items-center">
+			<Label>Use native menubar</Label>
+
+			<Checkbox value={$useNativeMenu} onValueChanged={(value) => ($useNativeMenu = value)} />
+		</div>
 
 		<SmallHeading>Miscellaneous</SmallHeading>
 

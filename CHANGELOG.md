@@ -5,12 +5,13 @@
 ### Added
 
 - Font family setting
+- Option to use the native menubar
 - Better automatic path detection for steam executables and games
 - Support for Painting VR and DEPO : Death Epileptic Pixel Origins
 
 ### Changed
 
-- Small UI changes
+- UI changes
 
 ### Removed
 

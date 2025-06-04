@@ -39,6 +39,7 @@
 			<NavbarLink to="/browse" icon="mdi:store-search" label="Browse" />
 			<NavbarLink to="/config" icon="mdi:file-cog" label="Config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" label="Modpack" />
+			<div class="grow"></div>
 			<NavbarLink to="/prefs" icon="mdi:settings" label="Settings" />
 		</nav>
 

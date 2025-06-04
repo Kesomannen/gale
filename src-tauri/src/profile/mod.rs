@@ -9,7 +9,7 @@ use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, eyre, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tracing::{info, warn};
 use uuid::Uuid;
 
@@ -393,16 +393,17 @@ impl ManagedGame {
             .expect("active profile not found")
     }
 
-    pub fn set_active_profile(&mut self, index: usize) -> Result<()> {
+    pub fn set_active_profile(&mut self, index: usize) -> Result<&mut Profile> {
         ensure!(
             index < self.profiles.len(),
             "profile index {} is out of bounds",
             index
         );
 
-        self.active_profile_id = self.profiles[index].id;
+        let profile = &mut self.profiles[index];
+        self.active_profile_id = profile.id;
 
-        Ok(())
+        Ok(profile)
     }
 
     /// Returns an iterator over all installed thunderstore mods across all of the game's profiles.
@@ -417,6 +418,16 @@ impl ManagedGame {
                 .thunderstore_mods()
                 .filter_map(|(ts_mod, _)| ts_mod.id.borrow(thunderstore).ok())
         })
+    }
+
+    pub fn update_window_title(&self, app: &AppHandle) -> Result<()> {
+        let title = format!("{} | {} - Gale", self.active_profile().name, self.game.name);
+        app.get_webview_window("main")
+            .unwrap()
+            .set_title(&title)
+            .ok();
+
+        Ok(())
     }
 
     pub fn save(&self, db: &Db) -> Result<()> {
@@ -522,7 +533,7 @@ impl ModManager {
         self.active_game_mut().active_profile_mut()
     }
 
-    pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<()> {
+    pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<&ManagedGame> {
         self.ensure_game(game, true, &app.lock_prefs(), app.db())?;
 
         if self.active_game != game {
@@ -532,7 +543,7 @@ impl ModManager {
             thunderstore.switch_game(game, app.clone());
         }
 
-        Ok(())
+        Ok(self.active_game())
     }
 
     fn ensure_game<'a>(

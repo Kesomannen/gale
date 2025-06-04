@@ -42,8 +42,8 @@
 		});
 	}
 
-	function launchGame(vanilla: boolean) {
-		invokeCommand('launch_game', { vanilla });
+	function launchGame() {
+		invokeCommand('launch_game');
 		launchGamePopupOpen = true;
 	}
 </script>
@@ -54,7 +54,7 @@
 	>
 		<Button.Root
 			class="flex h-full cursor-default items-center font-semibold"
-			on:click={() => launchGame(false)}
+			on:click={launchGame}
 		>
 			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
 			Launch game
@@ -65,17 +65,13 @@
 		on:click={() => (gamesOpen = !gamesOpen)}
 		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 cursor-default items-center justify-between border-r pr-4 pl-2 font-semibold"
 	>
-		{#if $activeGame}
-			<img
-				src="games/{$activeGame.slug}.webp"
-				class="mr-2 max-h-8 max-w-8 rounded-sm"
-				alt={$activeGame.name}
-			/>
+		<img
+			src="games/{$activeGame?.slug}.webp"
+			class="mr-2 max-h-8 max-w-8 rounded-sm"
+			alt={$activeGame?.name}
+		/>
 
-			{$activeGame.name}
-		{:else}
-			Loading...
-		{/if}
+		{$activeGame?.name}
 
 		<Icon
 			icon="mdi:menu"

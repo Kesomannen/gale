@@ -1,3 +1,4 @@
+import { writable } from 'svelte/store';
 import getPalette from 'tailwindcss-palette-generator';
 
 export const defaultColors = {
@@ -363,3 +364,5 @@ export function getFont() {
 export function refreshFont() {
 	setFont(getFont());
 }
+
+export const useNativeMenu = writable((localStorage.getItem('useNativeMenu') as boolean | null) ?? false);

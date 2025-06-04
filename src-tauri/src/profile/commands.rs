@@ -88,7 +88,9 @@ pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
 
     let game = game::from_slug(slug).ok_or_eyre("unknown game")?;
 
-    manager.set_active_game(game, &app)?;
+    let managed_game = manager.set_active_game(game, &app)?;
+    managed_game.update_window_title(&app)?;
+
     manager.save_all(app.db())?;
 
     Ok(())
@@ -137,6 +139,7 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
     let game = manager.active_game_mut();
     game.set_active_profile(index)?;
     game.save(app.db())?;
+    game.update_window_title(&app)?;
 
     Ok(())
 }

@@ -72,6 +72,10 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     app.manage(state);
 
     thunderstore::start(app);
+    app.lock_manager()
+        .active_game()
+        .update_window_title(app)
+        .ok();
 
     Ok(())
 }

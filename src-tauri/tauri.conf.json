@@ -59,7 +59,7 @@
 	"app": {
 		"windows": [
 			{
-				"decorations": false,
+				"decorations": true,
 				"fullscreen": false,
 				"transparent": true,
 				"resizable": true,

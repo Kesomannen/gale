@@ -19,15 +19,17 @@
 	import MenubarSeparator from './MenubarSeparator.svelte';
 
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
+	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ImportData } from '$lib/models';
-	import { activeProfile, refreshProfiles } from '$lib/stores';
+	import { useNativeMenu } from '$lib/theme';
 
 	import { confirm, open } from '@tauri-apps/plugin-dialog';
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { open as shellOpen } from '@tauri-apps/plugin-shell';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { pushInfoToast } from '$lib/toast';
+	import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/menu';
 
 	let importR2Open = false;
 	let newProfileOpen = false;
@@ -41,6 +43,168 @@
 	let profileOperationInProgress = false;
 
 	let aboutOpen = false;
+
+	let menu: Menu | null = null;
+
+	const submenus = [
+		{
+			text: 'File',
+			items: [
+				{
+					text: 'Open profile folder',
+					onclick: () => invokeCommand('open_profile_dir')
+				},
+				{
+					text: 'Open game folder',
+					onclick: () => invokeCommand('open_game_dir')
+				},
+				'',
+				{
+					text: 'Open game log',
+					onclick: () => invokeCommand('open_game_log')
+				},
+				{
+					text: 'Open Gale log',
+					onclick: () => invokeCommand('open_gale_log')
+				},
+				'',
+				{
+					text: 'Clear mod cache',
+					onclick: () => clearModCache(false)
+				},
+				{
+					text: 'Clear unused mod cache',
+					onclick: () => clearModCache(true)
+				},
+				{
+					text: 'Fetch mods',
+					onclick: () => invokeCommand('trigger_mod_fetch')
+				}
+			]
+		},
+		{
+			text: 'Profile',
+			items: [
+				{
+					text: 'Create new profile',
+					accelerator: 'Ctrl+N',
+					onclick: () => (newProfileOpen = true)
+				},
+				{
+					text: 'Rename profile',
+					accelerator: 'F2',
+					onclick: () => openProfileOperation('rename')
+				},
+				{
+					text: 'Duplicate profile',
+					accelerator: 'Ctrl+D',
+					onclick: () => openProfileOperation('duplicate')
+				},
+				'',
+				{
+					text: 'Copy mod list',
+					onclick: copyModList
+				},
+				{
+					text: 'Copy debug info',
+					onclick: copyDebugInfo
+				},
+				{
+					text: 'Copy launch arguments',
+					onclick: copyLaunchArgs
+				},
+				'',
+				{
+					text: 'Enable all mods',
+					onclick: () => setAllModsState(true)
+				},
+				{
+					text: 'Disable all mods',
+					onclick: () => setAllModsState(false)
+				},
+				{
+					text: 'Uninstall disabled mods',
+					onclick: uninstallDisabledMods
+				},
+				'',
+				{
+					text: 'Create desktop shortcut',
+					onclick: createDesktopShotcut
+				}
+			]
+		},
+		{
+			text: 'Import',
+			items: [
+				{
+					text: '...profile from code',
+					onclick: () => importProfilePopup.openForCode()
+				},
+				{
+					text: '...profile from file',
+					onclick: browseImportFile
+				},
+				{
+					text: '...local mod',
+					onclick: importLocalMod
+				},
+				{
+					text: '...profiles from r2modman',
+					onclick: () => (importR2Open = true)
+				}
+			]
+		},
+		{
+			text: 'Export',
+			items: [
+				{
+					text: '...profile as code',
+					onclick: () => exportCodePopup.open()
+				},
+				{
+					text: '...profile as file',
+					onclick: exportFile
+				}
+			]
+		},
+		{
+			text: 'Window',
+			items: [
+				{
+					text: 'Zoom in',
+					accelerator: 'Ctrl++',
+					onclick: () => invokeCommand('zoom_window', { value: { delta: 0.25 } })
+				},
+				{
+					text: 'Zoom out',
+					accelerator: 'Ctrl+-',
+					onclick: () => invokeCommand('zoom_window', { value: { delta: -0.25 } })
+				},
+				{
+					text: 'Reset zoom',
+					accelerator: 'Ctrl+0',
+					onclick: () => invokeCommand('zoom_window', { value: { factor: 1 } })
+				}
+			]
+		},
+		{
+			text: 'Help',
+			items: [
+				{
+					text: 'Report a bug',
+					onclick: () => shellOpen('https://github.com/Kesomannen/ModManager/issues/')
+				},
+				{
+					text: 'Join discord server',
+					onclick: () => shellOpen('https://discord.gg/sfuWXRfeTt')
+				},
+				{
+					text: 'About Gale',
+					onclick: () => (aboutOpen = true)
+				}
+			]
+		}
+	];
 
 	const appWindow = getCurrentWindow();
 
@@ -215,6 +379,18 @@
 		}
 	}
 
+	$: if (menu != null) {
+		appWindow.setDecorations($useNativeMenu);
+
+		if ($useNativeMenu) {
+			menu.setAsAppMenu();
+		} else {
+			Menu.new().then((menu) => menu.setAsAppMenu());
+		}
+
+		localStorage.setItem('useNativeMenu', $useNativeMenu.toString());
+	}
+
 	const hotkeys: { [key: string]: () => void } = {
 		'+': () => zoom({ delta: 0.25 }),
 		'-': () => zoom({ delta: -0.25 }),
@@ -223,8 +399,10 @@
 		d: () => openProfileOperation('duplicate')
 	};
 
-	onMount(() => {
+	onMount(async () => {
 		document.onkeydown = ({ key, ctrlKey }) => {
+			if ($useNativeMenu) return;
+
 			if (key === 'F2') {
 				openProfileOperation('rename');
 				return;
@@ -232,9 +410,38 @@
 
 			if (!ctrlKey) return;
 
-			const hotkey = hotkeys[key];
+			let hotkey = hotkeys[key];
 			if (hotkey !== undefined) hotkey();
 		};
+
+		let separator = await PredefinedMenuItem.new({
+			item: 'Separator'
+		});
+
+		let nativeMenus = await Promise.all(
+			submenus.map(
+				async (menu) =>
+					await Submenu.new({
+						text: menu.text,
+						items: await Promise.all(
+							menu.items.map(async (item) =>
+								typeof item === 'string'
+									? separator
+									: await MenuItem.new({
+											action: item.onclick,
+											...item
+										})
+							)
+						)
+					})
+			)
+		);
+
+		menu = await Menu.new({
+			items: nativeMenus
+		});
+
+		console.log(submenus);
 	});
 </script>
 
@@ -244,85 +451,24 @@
 	on:drop={handleFileDrop}
 />
 
-<header data-tauri-drag-region class="bg-primary-800 flex h-8 shrink-0">
+<header
+	data-tauri-drag-region
+	class="bg-primary-800 flex h-8 shrink-0"
+	class:hidden={$useNativeMenu}
+>
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />
-		<MenubarMenu label="File">
-			<MenubarItem on:click={() => invokeCommand('open_profile_dir')} text="Open profile folder" />
-			<MenubarItem on:click={() => invokeCommand('open_game_dir')} text="Open game folder" />
-			<MenubarSeparator />
-			<MenubarItem on:click={() => invokeCommand('open_game_log')} text="Open game log" />
-			<MenubarItem on:click={() => invokeCommand('open_gale_log')} text="Open Gale log" />
-			<MenubarSeparator />
-			<MenubarItem on:click={() => clearModCache(false)} text="Clear mod cache" />
-			<MenubarItem on:click={() => clearModCache(true)} text="Clear unused mod cache" />
-			<MenubarItem on:click={() => invokeCommand('trigger_mod_fetch')} text="Fetch mods" />
-		</MenubarMenu>
-		<MenubarMenu label="Profile">
-			<MenubarItem
-				on:click={() => (newProfileOpen = true)}
-				text="Create new profile"
-				key="Ctrl N"
-			/>
-			<MenubarItem
-				on:click={() => openProfileOperation('rename')}
-				text="Rename active profile"
-				key="F2"
-			/>
-			<MenubarItem
-				on:click={() => openProfileOperation('duplicate')}
-				text="Duplicate active profile"
-				key="Ctrl D"
-			/>
-			<MenubarSeparator />
-			<MenubarItem on:click={copyModList} text="Copy mod list" />
-			<MenubarItem on:click={copyDebugInfo} text="Copy debug info" />
-			<MenubarItem on:click={copyLaunchArgs} text="Copy launch arguments" />
-			<MenubarSeparator />
-			<MenubarItem on:click={() => setAllModsState(true)} text="Enable all mods" />
-			<MenubarItem on:click={() => setAllModsState(false)} text="Disable all mods" />
-			<MenubarItem on:click={uninstallDisabledMods} text="Uninstall disabled mods" />
-			<MenubarSeparator />
-			<MenubarItem on:click={createDesktopShotcut} text="Create desktop shortcut" />
-		</MenubarMenu>
-		<MenubarMenu label="Import">
-			<MenubarItem on:click={() => importProfilePopup.openForCode()} text="...profile from code" />
-			<MenubarItem on:click={browseImportFile} text="...profile from file" />
-			<MenubarItem on:click={importLocalMod} text="...local mod" />
-			<MenubarItem on:click={() => (importR2Open = true)} text="...profiles from r2modman" />
-		</MenubarMenu>
-		<MenubarMenu label="Export">
-			<MenubarItem on:click={() => exportCodePopup.open()} text="...profile as code" />
-			<MenubarItem on:click={exportFile} text="...profile as file" />
-		</MenubarMenu>
-		<MenubarMenu label="Window">
-			<MenubarItem
-				on:click={() => invokeCommand('zoom_window', { value: { delta: 0.25 } })}
-				text="Zoom in"
-				key="Ctrl +"
-			/>
-			<MenubarItem
-				on:click={() => invokeCommand('zoom_window', { value: { delta: -0.25 } })}
-				text="Zoom out"
-				key="Ctrl -"
-			/>
-			<MenubarItem
-				on:click={() => invokeCommand('zoom_window', { value: { factor: 1 } })}
-				text="Reset zoom"
-				key="Ctrl 0"
-			/>
-		</MenubarMenu>
-		<MenubarMenu label="Help">
-			<MenubarItem
-				on:click={() => shellOpen('https://github.com/Kesomannen/ModManager/issues/')}
-				text="Report a bug"
-			/>
-			<MenubarItem
-				on:click={() => shellOpen('https://discord.gg/sfuWXRfeTt')}
-				text="Join discord server"
-			/>
-			<MenubarItem on:click={() => (aboutOpen = true)} text="About Gale" />
-		</MenubarMenu>
+		{#each submenus as submenu}
+			<MenubarMenu label={submenu.text}>
+				{#each submenu.items as item}
+					{#if typeof item === 'string'}
+						<MenubarSeparator />
+					{:else}
+						<MenubarItem on:click={item.onclick} text={item.text} />
+					{/if}
+				{/each}
+			</MenubarMenu>
+		{/each}
 	</Menubar.Root>
 
 	<Button.Root class="group hover:bg-primary-700 ml-auto px-3 py-1.5" on:click={appWindow.minimize}>
