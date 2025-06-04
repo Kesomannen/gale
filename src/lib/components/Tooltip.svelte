@@ -6,6 +6,7 @@
 	export let side: 'top' | 'right' | 'bottom' | 'left' = 'top';
 	export let sideOffset: number = 0;
 	export let openDelay: number = 150;
+	export let disabled = false;
 
 	let triggerClass: string = '';
 
@@ -22,7 +23,7 @@
 </script>
 
 <Tooltip.Root {openDelay}>
-	<Tooltip.Trigger class={triggerClass}>
+	<Tooltip.Trigger class={triggerClass} {disabled}>
 		<slot />
 	</Tooltip.Trigger>
 	<Tooltip.Content

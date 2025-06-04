@@ -9,5 +9,5 @@
 <div class="flex items-center">
 	<Label>Font family</Label>
 
-	<InputField bind:value={value} on:change={() => setFont(value)} />
+	<InputField bind:value={value} on:change={() => setFont(value)} placeholder="Nunito Sans" />
 </div>

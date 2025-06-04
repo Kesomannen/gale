@@ -59,9 +59,9 @@
 	"app": {
 		"windows": [
 			{
-				"decorations": true,
+				"decorations": false,
 				"fullscreen": false,
-				"transparent": false,
+				"transparent": true,
 				"resizable": true,
 				"title": "Gale",
 				"width": 900,

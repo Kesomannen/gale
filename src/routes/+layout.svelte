@@ -34,12 +34,12 @@
 	<Contextbar />
 
 	<div class="relative flex grow overflow-hidden">
-		<nav class="border-primary-600 bg-primary-900 flex shrink-0 flex-col gap-1 border-r p-2.5">
-			<NavbarLink to="/" icon="mdi:account-circle" tooltip="Manage profile" />
-			<NavbarLink to="/browse" icon="mdi:store-search" tooltip="Browse Thunderstore mods" />
-			<NavbarLink to="/config" icon="mdi:file-cog" tooltip="Edit mod config" />
-			<NavbarLink to="/modpack" icon="mdi:package-variant" tooltip="Export modpack" />
-			<NavbarLink to="/prefs" icon="mdi:settings" tooltip="Edit manager settings" />
+		<nav class="border-primary-600 bg-primary-900 flex shrink-0 flex-col gap-1 border-r p-3">
+			<NavbarLink to="/" icon="mdi:account-circle" label="Profile" />
+			<NavbarLink to="/browse" icon="mdi:store-search" label="Browse" />
+			<NavbarLink to="/config" icon="mdi:file-cog" label="Config" />
+			<NavbarLink to="/modpack" icon="mdi:package-variant" label="Modpack" />
+			<NavbarLink to="/prefs" icon="mdi:settings" label="Settings" />
 		</nav>
 
 		<slot />

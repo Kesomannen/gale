@@ -1,22 +1,20 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
-	import Tooltip from '$lib/components/Tooltip.svelte';
 
 	export let to: string;
 	export let icon: string;
-	export let tooltip: string;
+	export let label: string;
 
 	$: active = $page.url.pathname === to;
 </script>
 
-<Tooltip side="right" sideOffset={3} text={tooltip} class="flex">
-	<a
-		href={to}
-		class="relative rounded-lg p-2 text-2xl {active
-			? 'text-accent-500 bg-primary-800'
-			: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400'}"
-	>
-		<Icon {icon} />
-	</a>
-</Tooltip>
+<a
+	href={to}
+	class="relative flex items-center gap-2 rounded-md p-2 {active
+		? 'text-accent-400 bg-primary-800'
+		: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400'}"
+>
+	<Icon class="text-2xl" {icon} />
+	<span class="hidden lg:block {active ? 'font-semibold' : 'font-medium'}">{label}</span>
+</a>
