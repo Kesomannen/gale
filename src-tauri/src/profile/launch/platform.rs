@@ -80,7 +80,7 @@ fn find_steam_binary() -> Result<PathBuf> {
 
     ensure!(
         path.exists(),
-        "failed to find Steam installation, is it installed?"
+        "failed to find Steam installation, is it not installed?"
     );
 
     Ok(path)

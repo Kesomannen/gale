@@ -365,4 +365,4 @@ export function refreshFont() {
 	setFont(getFont());
 }
 
-export const useNativeMenu = writable((localStorage.getItem('useNativeMenu') as boolean | null) ?? false);
+export const useNativeMenu = writable(JSON.parse(localStorage.getItem('useNativeMenu') ?? 'false') as boolean | null ?? false);
