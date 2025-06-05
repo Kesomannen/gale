@@ -3,7 +3,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, Context, OptionExt, Result};
+use eyre::{bail, ensure, Context, OptionExt, Result};
 use tracing::info;
 use which::which;
 
@@ -48,11 +48,54 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
         }
     }
 
-    let steam_path = which("steam").context("failed to find steam binary")?;
-    let mut command = Command::new(steam_path);
+    let mut command = Command::new(find_steam_binary()?);
     command.arg("-applaunch").arg(steam.id.to_string());
 
     Ok(command)
+}
+
+fn find_steam_binary() -> Result<PathBuf> {
+    let path = which("steam").unwrap_or_else(|_| {
+        #[cfg(target_os = "windows")]
+        match read_steam_registry() {
+            Ok(path) => {
+                info!(
+                    "read steam installation path from registry: {}",
+                    path.display()
+                );
+                path.join("steam.exe")
+            }
+            Err(err) => {
+                warn!(
+                    "failed to read steam installation path from registry: {:#}, using default",
+                    err
+                );
+                r"C:\Program Files (x86)\Steam\steam.exe".into()
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        "/usr/bin/steam".into()
+    });
+
+    ensure!(
+        path.exists(),
+        "failed to find Steam installation, is it installed?"
+    );
+
+    Ok(path)
+}
+
+#[cfg(target_os = "windows")]
+fn read_steam_registry() -> Result<PathBuf> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
+
+    let path: String = key.get_value("InstallPath")?;
+    Ok(PathBuf::from(path))
 }
 
 fn epic_command(game: Game) -> Result<Command> {

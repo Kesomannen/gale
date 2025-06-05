@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1 (2025-05-05)
+
+### Fixed
+
+- Steam binary not being found in most cases
+
 ## 1.8.0 (2025-05-05)
 
 ### Added
