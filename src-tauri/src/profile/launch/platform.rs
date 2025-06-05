@@ -4,7 +4,7 @@ use std::{
 };
 
 use eyre::{bail, Context, OptionExt, Result};
-use tracing::{info};
+use tracing::info;
 use which::which;
 
 use crate::{
@@ -40,12 +40,13 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
             warn!("failed to determine if game uses proton: {:#}", err);
             false
         }) {
-            linux::ensure_wine_override(steam.id as u64, proxy_dll, game_dir).unwrap_or_else(|err| {
-                warn!("failed to ensure wine dll override: {:#}", err);
-            });
+            linux::ensure_wine_override(steam.id as u64, proxy_dll, game_dir).unwrap_or_else(
+                |err| {
+                    warn!("failed to ensure wine dll override: {:#}", err);
+                },
+            );
         }
     }
-
 
     let steam_path = which("steam").context("failed to find steam binary")?;
     let mut command = Command::new(steam_path);
@@ -89,7 +90,9 @@ fn steam_game_dir(game: Game) -> Result<PathBuf> {
     };
 
     let steam_dir = steamlocate::SteamDir::locate().context("failed to find steam install")?;
-    let (app, lib) = steam_dir.find_app(steam.id)?.ok_or_eyre("failed to find app in steam registry")?;
+    let (app, lib) = steam_dir
+        .find_app(steam.id)?
+        .ok_or_eyre("failed to find app in steam registry")?;
 
     Ok(lib.resolve_app_dir(&app))
 }
@@ -98,7 +101,7 @@ fn steam_game_dir(game: Game) -> Result<PathBuf> {
 fn xbox_game_dir(game: Game) -> Result<PathBuf> {
     use std::process::Command;
 
-    use eyre::Context;
+    use eyre::{ensure, Context};
 
     let Some(xbox) = &game.platforms.xbox_store else {
         bail!("{} is not available on Xbox Store", game.name)
