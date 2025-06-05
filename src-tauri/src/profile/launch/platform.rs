@@ -4,7 +4,7 @@ use std::{
 };
 
 use eyre::{bail, ensure, Context, OptionExt, Result};
-use tracing::info;
+use tracing::{info, warn};
 use which::which;
 
 use crate::{
