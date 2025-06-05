@@ -11,7 +11,8 @@
 
 ### Changed
 
-- UI changes
+- Default sort mode from `Last updated` to `Rating`
+- Navbar tweaks
 
 ### Removed
 

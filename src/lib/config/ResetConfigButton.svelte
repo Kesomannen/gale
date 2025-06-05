@@ -13,9 +13,7 @@
 	function shouldConfirm(value: ConfigValue) {
 		switch (value.type) {
 			case 'string':
-				return true;
 			case 'float':
-				return true;
 			case 'int':
 				return true;
 			default:
