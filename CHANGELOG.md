@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.2 (2025-05-06)
+
+### Removed
+
+- Labels on navbar icons (for now)
+
+### Fixed
+
+- Native menubar not being saved or properly applied on Windows
+
 ## 1.8.1 (2025-05-05)
 
 ### Fixed

@@ -16,5 +16,5 @@
 		: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400'}"
 >
 	<Icon class="text-2xl" {icon} />
-	<span class="hidden lg:block {active ? 'font-semibold' : 'font-medium'}">{label}</span>
+	<!--<span class="hidden lg:block {active ? 'font-semibold' : 'font-medium'}">{label}</span>-->
 </a>
