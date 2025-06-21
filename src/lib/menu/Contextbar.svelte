@@ -63,7 +63,7 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 cursor-default items-center justify-between border-r pr-4 pl-2 font-semibold"
+		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 cursor-pointer items-center border-r pr-4 pl-2 font-semibold"
 	>
 		<img
 			src="games/{$activeGame?.slug}.webp"
@@ -71,11 +71,13 @@
 			alt={$activeGame?.name}
 		/>
 
-		{$activeGame?.name}
+		<span class="mr-auto">{$activeGame?.name}</span>
 
 		<Icon
-			icon="mdi:menu"
-			class="text-primary-300 group-hover:text-primary-200 ml-6 shrink-0 text-xl transition-all"
+			icon="mdi:expand-more"
+			class="text-primary-300 group-hover:text-primary-200 ml-6 shrink-0 origin-center transform text-xl transition-all {gamesOpen
+				? 'rotate-180'
+				: 'rotate-0'}"
 		/>
 	</Button.Root>
 
