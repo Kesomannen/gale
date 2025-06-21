@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.3 (2025-06-21)
+
+### Added
+
+- Support for PEAK
+
 ## 1.8.2 (2025-05-06)
 
 ### Removed
