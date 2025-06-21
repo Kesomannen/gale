@@ -1296,6 +1296,18 @@
 			}
 		}
 	},
+		{
+		"name": "PEAK",
+		"slug": "peak",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3527290
+			}
+		}
+	},
 	{
 		"name": "Peaks of Yore",
 		"slug": "peaks-of-yore",
