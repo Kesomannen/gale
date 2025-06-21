@@ -27,6 +27,7 @@
 
 	let gamesOpen = false;
 	let profilesOpen = false;
+	let gameButtonHover = false;
 
 	function deleteProfile(index: number) {
 		confirm(`Are you sure you want to delete ${profiles[index].name}?`).then(async (result) => {
@@ -63,15 +64,31 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
+		on:mouseenter={() => (gameButtonHover = true)}
+		on:mouseleave={() => (gameButtonHover = false)}
 		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 cursor-pointer items-center border-r pr-4 pl-2 font-semibold"
 	>
 		<img
 			src="games/{$activeGame?.slug}.webp"
-			class="mr-2 max-h-8 max-w-8 rounded-sm"
+			class="mr-2 max-h-8 max-w-8 rounded-sm transition-opacity"
 			alt={$activeGame?.name}
+			class:opacity-0={gameButtonHover}
 		/>
 
-		<span class="mr-auto">{$activeGame?.name}</span>
+		<span class="mr-auto grid items-center">
+			<span
+				class="col-start-1 row-start-1 transition-opacity duration-450"
+				class:opacity-0={gameButtonHover}
+			>
+				{$activeGame?.name}
+			</span>
+			<span
+				class="col-start-1 row-start-1 transition-opacity duration-450"
+				class:opacity-0={!gameButtonHover}
+			>
+				Games list
+			</span>
+		</span>
 
 		<Icon
 			icon="mdi:expand-more"
