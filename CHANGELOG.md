@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Window title not changing when creating or renaming profiles
+
 ## 1.8.2 (2025-05-06)
 
 ### Removed
@@ -8,7 +14,7 @@
 
 ### Fixed
 
-- Native menubar not being saved or properly applied on Windows
+- Native menubar setting not being saved or properly applied on Windows
 
 ## 1.8.1 (2025-05-05)
 

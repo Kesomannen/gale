@@ -227,16 +227,20 @@ pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHand
     profile.save(app.db())?;
     game.save(app.db())?;
 
+    game.update_window_title(&app)?;
+
     Ok(())
 }
 
 #[command]
 pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
-
     let game = manager.active_game_mut();
+
     game.delete_profile(index, false, app.db())?;
     game.save(app.db())?;
+
+    game.update_window_title(&app)?;
 
     Ok(())
 }
@@ -244,10 +248,14 @@ pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
 #[command]
 pub fn rename_profile(name: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
+    let game = manager.active_game_mut();
 
-    let profile = manager.active_profile_mut();
+    let profile = game.active_profile_mut();
+
     profile.rename(name)?;
     profile.save(app.db())?;
+
+    game.update_window_title(&app)?;
 
     Ok(())
 }
@@ -261,6 +269,8 @@ pub fn duplicate_profile(name: String, app: AppHandle) -> Result<()> {
 
     profile.save(app.db())?;
     game.save(app.db())?;
+
+    game.update_window_title(&app)?;
 
     Ok(())
 }

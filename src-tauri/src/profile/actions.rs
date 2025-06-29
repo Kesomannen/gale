@@ -312,8 +312,7 @@ impl ManagedGame {
             sync_profile: None,
         });
 
-        self.active_profile_id = id;
-        Ok(self.active_profile_mut())
+        self.set_active_profile(self.profiles.len() - 1)
     }
 
     pub fn create_default_profile(&mut self, db: &Db) -> Result<()> {

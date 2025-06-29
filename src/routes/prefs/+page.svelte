@@ -102,7 +102,7 @@
 			/>
 		</div>
 
-		<div class="flex items-center">
+		<div class="my-1 flex items-center">
 			<Label>Use native menubar</Label>
 
 			<Checkbox value={$useNativeMenu} onValueChanged={(value) => ($useNativeMenu = value)} />
