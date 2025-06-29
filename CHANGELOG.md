@@ -6,7 +6,13 @@
 
 - Window title not changing when creating or renaming profiles
 
-## 1.8.2 (2025-05-06)
+## 1.8.3 (2025-06-21)
+
+### Added
+
+- Support for PEAK
+
+## 1.8.2 (2025-06-06)
 
 ### Removed
 
@@ -16,13 +22,13 @@
 
 - Native menubar setting not being saved or properly applied on Windows
 
-## 1.8.1 (2025-05-05)
+## 1.8.1 (2025-06-05)
 
 ### Fixed
 
 - Steam binary not being found in most cases
 
-## 1.8.0 (2025-05-05)
+## 1.8.0 (2025-06-05)
 
 ### Added
 
