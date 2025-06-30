@@ -52,10 +52,7 @@
 	<div
 		class="text-accent-400 hover:text-accent-400 border-primary-600 hover:bg-primary-800 shrink-0 border-r pr-8 pl-6"
 	>
-		<Button.Root
-			class="flex h-full cursor-default items-center font-semibold"
-			on:click={launchGame}
-		>
+		<Button.Root class="flex h-full items-center font-semibold" on:click={launchGame}>
 			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
 			Launch game
 		</Button.Root>
@@ -63,7 +60,7 @@
 
 	<Button.Root
 		on:click={() => (gamesOpen = !gamesOpen)}
-		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 cursor-default items-center justify-between border-r pr-4 pl-2 font-semibold"
+		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 items-center justify-between border-r pr-4 pl-2 font-semibold"
 	>
 		<img
 			src="games/{$activeGame?.slug}.webp"
@@ -81,8 +78,7 @@
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
-			class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex min-w-40 shrink cursor-default 
-						items-center border-r pr-4 pl-6"
+			class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex min-w-40 shrink items-center border-r pr-4 pl-6"
 		>
 			<span class="mr-auto shrink truncate font-semibold">
 				{$activeProfile?.name}
