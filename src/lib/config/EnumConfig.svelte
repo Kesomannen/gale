@@ -4,11 +4,15 @@
 	import { setConfigEntry } from '$lib/config';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
-	export let entryId: ConfigEntryId;
-	export let locked: boolean;
+	type Props = {
+		entryId: ConfigEntryId;
+		locked: boolean;
+	};
 
-	let content = entryId.entry.value.content as { index: number; options: string[] };
-	let selected = content.options[content.index];
+	let { entryId, locked }: Props = $props();
+
+	let content = $state(entryId.entry.value.content as { index: number; options: string[] });
+	let selected = $state(content.options[content.index]);
 
 	function onReset(newValue: ConfigValue) {
 		content = newValue.content as { index: number; options: string[] };

@@ -1,15 +1,20 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import ModCard from './ModCard.svelte';
 
-	export let names: string[];
-	export let showVersion = true;
+	type Props = {
+		names: string[];
+		showVersion?: boolean;
+		class?: string;
+	};
 
-	let className = '';
-
-	export { className as class };
+	let { names, showVersion = true, class: className = '' }: Props = $props();
 
 	// sort by name, not author
-	$: names.toSorted((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
+	run(() => {
+		names.toSorted((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
+	});
 </script>
 
 <div class="grid gap-3 overflow-y-auto {className}">

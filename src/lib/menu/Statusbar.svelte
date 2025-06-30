@@ -5,7 +5,7 @@
 	import { expoOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
 
-	let status: string | null = null;
+	let status: string | null = $state(null);
 
 	onMount(() => {
 		listen<string | null>('status_update', (evt) => {

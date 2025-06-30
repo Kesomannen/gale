@@ -5,10 +5,13 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { Button } from 'bits-ui';
 
-	export let entryId: ConfigEntryId;
-	export let locked: boolean;
+	type Props = {
+		entryId: ConfigEntryId;
+		locked: boolean;
+		onReset: (value: ConfigValue) => void;
+	};
 
-	export let onReset: (value: ConfigValue) => void;
+	let { entryId = $bindable(), locked, onReset }: Props = $props();
 
 	function shouldConfirm(value: ConfigValue) {
 		switch (value.type) {

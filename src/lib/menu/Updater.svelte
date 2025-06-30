@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	import { check, type Update } from '@tauri-apps/plugin-updater';
 	import { writable } from 'svelte/store';
 
@@ -16,18 +16,18 @@
 </script>
 
 <script lang="ts">
-	import BigButton from '$lib/components/BigButton.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import Icon from '@iconify/svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { relaunch } from '@tauri-apps/plugin-process';
-	import { Button, Dialog } from 'bits-ui';
+	import { Button as BitsButton, Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { pushToast } from '$lib/toast';
 
-	let popupOpen = false;
-	let loading = false;
+	let popupOpen = $state(false);
+	let loading = $state(false);
 
 	onMount(() => {
 		refreshUpdate();
@@ -73,10 +73,10 @@
 </script>
 
 {#if $nextUpdate !== null}
-	<Button.Root
+	<BitsButton.Root
 		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 my-auto mr-2 ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
 		disabled={loading}
-		on:click={() => (popupOpen = true)}
+		onclick={() => (popupOpen = true)}
 	>
 		{#if loading}
 			<Icon icon="mdi:loading" class="animate-spin" />
@@ -84,7 +84,7 @@
 			<Icon icon="mdi:arrow-up-circle" />
 		{/if}
 		<span class="text-sm">{loading ? 'Downloading update...' : 'Update available'}</span>
-	</Button.Root>
+	</BitsButton.Root>
 {/if}
 
 <ConfirmPopup title="App update available" bind:open={popupOpen}>
@@ -101,7 +101,7 @@
 		<p class="mt-1">Would you like to install it?</p>
 	</Dialog.Description>
 
-	<svelte:fragment slot="buttons">
-		<BigButton color="accent" fontWeight="semibold" on:click={update}>Install</BigButton>
-	</svelte:fragment>
+	{#snippet buttons()}
+		<Button color="accent" fontWeight="semibold" onclick={update}>Install</Button>
+	{/snippet}
 </ConfirmPopup>

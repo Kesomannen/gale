@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	import { writable } from 'svelte/store';
 
 	const threshold = writable(0);
@@ -9,6 +9,8 @@
 </script>
 
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import type { AvailableUpdate } from '$lib/models';
@@ -17,18 +19,24 @@
 	import ModCard from './ModCard.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
 
-	export let updates: AvailableUpdate[];
+	type Props = {
+		updates: AvailableUpdate[];
+	};
 
-	let popupOpen = false;
-	let include: Map<AvailableUpdate, boolean> = new Map();
+	let { updates = $bindable() }: Props = $props();
 
-	$: shownUpdates = updates.filter((update) => !update.ignore);
-	$: if (popupOpen && shownUpdates.length === 0) {
-		popupOpen = false;
-	}
+	let popupOpen = $state(false);
+	let include: Map<AvailableUpdate, boolean> = $state(new Map());
+
+	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
+	run(() => {
+		if (popupOpen && shownUpdates.length === 0) {
+			popupOpen = false;
+		}
+	});
 
 	async function updateAll() {
 		let uuids = shownUpdates
@@ -72,36 +80,37 @@
 		items={shownUpdates}
 		class="mt-1"
 		maxHeight="sm"
-		let:item={update}
 		get={(update, _) => include.get(update) ?? true}
 		set={(update, _, value) => {
 			include.set(update, value);
 			include = include; // force reactivity
 		}}
 	>
-		<ModCard fullName={update.fullName} showVersion={false} />
+		{#snippet children({ item: update })}
+			<ModCard fullName={update.fullName} showVersion={false} />
 
-		<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
-		<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
-		<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
+			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
+			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
+			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
-		<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
-			<Button.Root
-				class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
-				on:click={() => {
-					update.ignore = true;
-					updates = updates; // force reactivity
+			<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
+				<Button.Root
+					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
+					on:click={() => {
+						update.ignore = true;
+						updates = updates; // force reactivity
 
-					include.delete(update);
-					include = include; // force reactivity
+						include.delete(update);
+						include = include; // force reactivity
 
-					invokeCommand('ignore_update', { versionUuid: update.versionUuid });
-				}}><Icon icon="mdi:notifications-off" /></Button.Root
-			>
-		</Tooltip>
+						invokeCommand('ignore_update', { versionUuid: update.versionUuid });
+					}}><Icon icon="mdi:notifications-off" /></Button.Root
+				>
+			</Tooltip>
+		{/snippet}
 	</Checklist>
 
-	<svelte:fragment slot="buttons">
+	{#snippet buttons()}
 		<BigButton color="accent" on:click={updateAll}>Update mods</BigButton>
-	</svelte:fragment>
+	{/snippet}
 </ConfirmPopup>

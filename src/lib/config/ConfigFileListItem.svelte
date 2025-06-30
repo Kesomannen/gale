@@ -7,24 +7,35 @@
 	import { quadOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
 
-	export let file: ConfigFile;
-	export let selectedSection: ConfigSection | null;
-	export let locked: boolean;
+	type Props = {
+		file: ConfigFile;
+		selectedSection: ConfigSection | null;
+		locked: boolean;
+		onDeleted: () => void;
+		onFileClicked: (file: ConfigFile) => void;
+		onSectionClicked: (file: ConfigFileData, section: ConfigSection) => void;
+	};
 
-	export let onDeleted: () => void;
-	export let onFileClicked: (file: ConfigFile) => void;
-	export let onSectionClicked: (file: ConfigFileData, section: ConfigSection) => void;
+	let { file, selectedSection, locked, onDeleted, onFileClicked, onSectionClicked }: Props =
+		$props();
 
-	let open = false;
+	let open = $state(false);
 
-	$: type = file.type;
-	$: isSelected = selectedSection && file.type === 'ok' && file.sections.includes(selectedSection);
+	let type = $derived(file.type);
+	let isSelected = $derived(
+		selectedSection && file.type === 'ok' && file.sections.includes(selectedSection)
+	);
 
-	$: textColor = type === 'ok' ? 'primary-200' : type === 'err' ? 'red-400' : 'primary-400';
-	$: icon = type === 'ok' ? 'mdi:chevron-down' : type === 'err' ? 'mdi:error' : 'mdi:help';
+	let textColor = $derived(
+		type === 'ok' ? 'primary-200' : type === 'err' ? 'red-400' : 'primary-400'
+	);
+	let icon = $derived(
+		type === 'ok' ? 'mdi:chevron-down' : type === 'err' ? 'mdi:error' : 'mdi:help'
+	);
 
-	$: shownSections =
-		file.type === 'ok' ? file.sections.filter((section) => section.entries.length > 0) : [];
+	let shownSections = $derived(
+		file.type === 'ok' ? file.sections.filter((section) => section.entries.length > 0) : []
+	);
 
 	async function deleteFile(evt: Event) {
 		evt.stopPropagation();

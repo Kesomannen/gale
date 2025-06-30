@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import InputField from '$lib/components/InputField.svelte';
 	import FormField from '$lib/components/FormField.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import PathField from '$lib/components/PathField.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
@@ -25,45 +27,23 @@
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
 
-	let name: string;
-	let author: string;
-	let selectedCategories: PackageCategory[] = [];
-	let nsfw: boolean;
-	let description: string;
-	let readme: string;
-	let changelog: string;
-	let versionNumber: string;
-	let iconPath: string;
-	let websiteUrl: string;
-	let includeDisabled: boolean;
-	let includeFiles = new Map<string, boolean>();
+	let name: string = $state();
+	let author: string = $state();
+	let selectedCategories: PackageCategory[] = $state([]);
+	let nsfw: boolean = $state();
+	let description: string = $state();
+	let readme: string = $state();
+	let changelog: string = $state();
+	let versionNumber: string = $state();
+	let iconPath: string = $state();
+	let websiteUrl: string = $state();
+	let includeDisabled: boolean = $state();
+	let includeFiles = $state(new Map<string, boolean>());
 
-	let donePopupOpen = false;
-	let loading: string | null = null;
+	let donePopupOpen = $state(false);
+	let loading: string | null = $state(null);
 
-	let includedFileCount = 0;
-
-	$: {
-		$activeProfile;
-		refresh();
-	}
-
-	// some communities don't have a specific modpack category
-	$: modpackCategoryExists = $categories.some((category) => category.slug === 'modpacks');
-
-	// make sure the modpacks category is always selected if it exists
-	$: if (
-		modpackCategoryExists &&
-		selectedCategories &&
-		!selectedCategories.some((category) => category?.slug === 'modpacks')
-	) {
-		selectedCategories = [
-			$categories.find((category) => category.slug === 'modpacks')!,
-			...selectedCategories
-		];
-	}
-
-	$: includedFileCount = countIncludedFiles(includeFiles);
+	let includedFileCount = $state(0);
 
 	function countIncludedFiles(includeFiles?: Map<string, boolean>) {
 		if (!includeFiles) return 0;
@@ -186,6 +166,30 @@
 			categories: selectedCategories.map(({ slug }) => slug)
 		};
 	}
+	run(() => {
+		$activeProfile;
+		refresh();
+	});
+	// some communities don't have a specific modpack category
+	let modpackCategoryExists = $derived(
+		$categories.some((category) => category.slug === 'modpacks')
+	);
+	// make sure the modpacks category is always selected if it exists
+	run(() => {
+		if (
+			modpackCategoryExists &&
+			selectedCategories &&
+			!selectedCategories.some((category) => category?.slug === 'modpacks')
+		) {
+			selectedCategories = [
+				$categories.find((category) => category.slug === 'modpacks')!,
+				...selectedCategories
+			];
+		}
+	});
+	run(() => {
+		includedFileCount = countIncludedFiles(includeFiles);
+	});
 </script>
 
 <div class="relative mx-auto flex w-full max-w-4xl flex-col gap-1.5 overflow-y-auto px-6 py-4">
@@ -251,38 +255,38 @@
 			multiple={true}
 			getLabel={(category) => category.name}
 		>
-			<Select.Trigger
-				let:open
-				slot="trigger"
-				class="bg-primary-900 hover:border-primary-500 flex w-full items-center overflow-hidden rounded-lg border border-transparent py-1 pr-3 pl-1"
-			>
-				{#if selectedCategories.length === 0}
-					<span class="text-primary-400 truncate pl-2">Select categories...</span>
-				{:else}
-					<div class="flex flex-wrap gap-1">
-						{#each selectedCategories as category}
-							<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
-								<span class="truncate overflow-hidden">{category.name}</span>
+			{#snippet trigger({ open })}
+				<Select.Trigger
+					class="bg-primary-900 hover:border-primary-500 flex w-full items-center overflow-hidden rounded-lg border border-transparent py-1 pr-3 pl-1"
+				>
+					{#if selectedCategories.length === 0}
+						<span class="text-primary-400 truncate pl-2">Select categories...</span>
+					{:else}
+						<div class="flex flex-wrap gap-1">
+							{#each selectedCategories as category}
+								<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
+									<span class="truncate overflow-hidden">{category.name}</span>
 
-								<Button.Root
-									class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
-									on:click={(evt) => {
-										evt.stopPropagation();
-										selectedCategories = selectedCategories.filter((c) => c !== category);
-									}}
-								>
-									x
-								</Button.Root>
-							</div>
-						{/each}
-					</div>
-				{/if}
-				<Icon
-					class="text-primary-400 ml-auto shrink-0 origin-center transform text-xl transition-all
-                duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
-					icon="mdi:chevron-down"
-				/>
-			</Select.Trigger>
+									<Button.Root
+										class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
+										on:click={(evt) => {
+											evt.stopPropagation();
+											selectedCategories = selectedCategories.filter((c) => c !== category);
+										}}
+									>
+										x
+									</Button.Root>
+								</div>
+							{/each}
+						</div>
+					{/if}
+					<Icon
+						class="text-primary-400 ml-auto shrink-0 origin-center transform text-xl transition-all
+	                duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
+						icon="mdi:chevron-down"
+					/>
+				</Select.Trigger>
+			{/snippet}
 		</Dropdown>
 	</FormField>
 
@@ -337,7 +341,7 @@
 		<details class="mt-1">
 			<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
 			<Markdown class="mt-1 px-4" source={readme} />
-			<div class="bg-primary-500 mt-4 h-[2px]" />
+			<div class="bg-primary-500 mt-4 h-[2px]"></div>
 		</details>
 	</FormField>
 
@@ -360,7 +364,7 @@
 		<details class="mt-1">
 			<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
 			<Markdown class="mt-1 px-4" source={changelog} />
-			<div class="bg-primary-500 mt-4 h-[2px]" />
+			<div class="bg-primary-500 mt-4 h-[2px]"></div>
 		</details>
 	</FormField>
 

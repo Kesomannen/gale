@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import {
@@ -10,17 +12,17 @@
 	} from '$lib/theme';
 	import { capitalize } from '$lib/util';
 
-	export let category: ColorCategory;
+	type Props = {
+		category: ColorCategory;
+	};
 
-	let value = getColor(category);
-	let customColor = value.type === 'custom' ? value.hex : '#6b7280';
+	let { category }: Props = $props();
+
+	let value = $state(getColor(category));
+	let customColor = $state(value.type === 'custom' ? value.hex : '#6b7280');
 
 	let options = ['custom', ...Object.keys(defaultColors)];
 	let selected = value.type === 'custom' ? 'custom' : value.name;
-
-	$: if (value.type === 'custom') {
-		changeCustomColor(customColor);
-	}
 
 	function onDropdownChange(newValue: string) {
 		if (newValue === 'custom') {
@@ -34,6 +36,11 @@
 	function changeCustomColor(hex: string) {
 		setColor(category, { type: 'custom', hex });
 	}
+	run(() => {
+		if (value.type === 'custom') {
+			changeCustomColor(customColor);
+		}
+	});
 </script>
 
 <div class="flex items-center">

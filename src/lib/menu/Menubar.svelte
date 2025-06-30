@@ -1,12 +1,14 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
-	import { Button, Menubar } from 'bits-ui';
+	import { Button as BitsButton, Menubar } from 'bits-ui';
 
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
 
 	import InputField from '$lib/components/InputField.svelte';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 
 	import ImportR2Popup from '$lib/import/ImportR2Popup.svelte';
@@ -31,20 +33,20 @@
 	import { pushInfoToast } from '$lib/toast';
 	import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/menu';
 
-	let importR2Open = false;
-	let newProfileOpen = false;
+	let importR2Open = $state(false);
+	let newProfileOpen = $state(false);
 
 	let exportCodePopup: ExportCodePopup;
 	let importProfilePopup: ImportProfilePopup;
 
-	let profileOperation: 'rename' | 'duplicate' = 'rename';
-	let profileOperationName = '';
-	let profileOperationOpen = false;
-	let profileOperationInProgress = false;
+	let profileOperation: 'rename' | 'duplicate' = $state('rename');
+	let profileOperationName = $state('');
+	let profileOperationOpen = $state(false);
+	let profileOperationInProgress = $state(false);
 
-	let aboutOpen = false;
+	let aboutOpen = $state(false);
 
-	let menu: Menu | null = null;
+	let menu: Menu | null = $state(null);
 
 	const submenus = [
 		{
@@ -379,17 +381,19 @@
 		}
 	}
 
-	$: if (menu != null) {
-		appWindow.setDecorations($useNativeMenu);
+	run(() => {
+		if (menu != null) {
+			appWindow.setDecorations($useNativeMenu);
 
-		if ($useNativeMenu) {
-			menu.setAsAppMenu();
-		} else {
-			Menu.new().then((menu) => menu.setAsAppMenu());
+			if ($useNativeMenu) {
+				menu.setAsAppMenu();
+			} else {
+				Menu.new().then((menu) => menu.setAsAppMenu());
+			}
+
+			localStorage.setItem('useNativeMenu', $useNativeMenu.toString());
 		}
-
-		localStorage.setItem('useNativeMenu', $useNativeMenu.toString());
-	}
+	});
 
 	const hotkeys: { [key: string]: () => void } = {
 		'+': () => zoom({ delta: 0.25 }),
@@ -440,21 +444,19 @@
 		menu = await Menu.new({
 			items: nativeMenus
 		});
-
-		console.log(submenus);
 	});
 </script>
 
 <svelte:body
-	on:dragenter={(evt) => evt.preventDefault()}
-	on:dragover={(evt) => evt.preventDefault()}
-	on:drop={handleFileDrop}
+	ondragenter={(evt) => evt.preventDefault()}
+	ondragover={(evt) => evt.preventDefault()}
+	ondrop={handleFileDrop}
 />
 
 <header
 	data-tauri-drag-region
 	class="bg-primary-800 flex h-8 shrink-0"
-	class:hidden={$useNativeMenu}
+	class:hidden={$useNativeMenu && false}
 >
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />
@@ -464,22 +466,28 @@
 					{#if typeof item === 'string'}
 						<MenubarSeparator />
 					{:else}
-						<MenubarItem on:click={item.onclick} text={item.text} />
+						<MenubarItem onclick={item.onclick} text={item.text} />
 					{/if}
 				{/each}
 			</MenubarMenu>
 		{/each}
 	</Menubar.Root>
 
-	<Button.Root class="group hover:bg-primary-700 ml-auto px-3 py-1.5" on:click={appWindow.minimize}>
+	<BitsButton.Root
+		class="group hover:bg-primary-700 ml-auto px-3 py-1.5"
+		onclick={appWindow.minimize}
+	>
 		<Icon icon="mdi:minimize" class="text-primary-500 group-hover:text-white" />
-	</Button.Root>
-	<Button.Root class="group hover:bg-primary-700 px-3 py-1.5" on:click={appWindow.toggleMaximize}>
+	</BitsButton.Root>
+	<BitsButton.Root
+		class="group hover:bg-primary-700 px-3 py-1.5"
+		onclick={appWindow.toggleMaximize}
+	>
 		<Icon icon="mdi:maximize" class="text-primary-500 group-hover:text-white" />
-	</Button.Root>
-	<Button.Root class="group px-3 py-1.5 hover:bg-red-700" on:click={appWindow.close}>
+	</BitsButton.Root>
+	<BitsButton.Root class="group px-3 py-1.5 hover:bg-red-700" onclick={appWindow.close}>
 		<Icon icon="mdi:close" class="text-primary-500 group-hover:text-white" />
-	</Button.Root>
+	</BitsButton.Root>
 </header>
 
 <Popup
@@ -497,24 +505,24 @@
 		placeholder="Enter name..."
 		size="lg"
 		class="w-full"
-		on:submit={doProfileOperation}
+		onsubmit={doProfileOperation}
 	/>
 	<div class="mt-2 ml-auto flex justify-end gap-2">
 		{#if !profileOperationInProgress}
-			<BigButton color="primary" on:click={() => (profileOperationOpen = false)}>Cancel</BigButton>
+			<Button color="primary" onclick={() => (profileOperationOpen = false)}>Cancel</Button>
 		{/if}
-		<BigButton
+		<Button
 			color="accent"
 			fontWeight="medium"
 			disabled={profileOperationInProgress}
-			on:click={doProfileOperation}
+			onclick={doProfileOperation}
 		>
 			{#if profileOperationInProgress}
 				<Icon icon="mdi:loading" class="my-1 animate-spin text-lg" />
 			{:else}
 				{capitalize(profileOperation)}
 			{/if}
-		</BigButton>
+		</Button>
 	</div>
 </Popup>
 

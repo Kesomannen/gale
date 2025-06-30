@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { activeGame, games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
@@ -7,12 +9,14 @@
 	import Link from '../components/Link.svelte';
 	import { titleCase } from '$lib/util';
 
-	export let onSelect: () => void;
+	type Props = {
+		onSelect: () => void;
+	};
 
-	let shownGames = games;
-	let searchTerm = '';
+	let { onSelect }: Props = $props();
 
-	$: refresh(searchTerm);
+	let shownGames = $state(games);
+	let searchTerm = $state('');
 
 	function refresh(searchTerm: string) {
 		let lowerSearch = searchTerm.toLowerCase();
@@ -38,6 +42,9 @@
 
 		shownGames = newGames;
 	}
+	run(() => {
+		refresh(searchTerm);
+	});
 </script>
 
 <div class="mt-1">
@@ -53,7 +60,7 @@
 					game.slug
 						? ' border-primary-500 bg-primary-700'
 						: 'hover:bg-primary-700 border-transparent'}"
-					on:click={() => {
+					onclick={() => {
 						setActiveGame(game.slug);
 						onSelect();
 					}}
@@ -68,17 +75,6 @@
 						<div class="text-primary-400">
 							<span>{game.modLoader} </span>
 
-							<!--
-							{#if game.modLoader !== ModLoader.BepInEx}
-								<Tooltip
-									class="inline-flex rounded-sm bg-red-600 p-0.5 text-sm text-white"
-									text="Experimental support. Here be dragons!"
-								>
-									<Icon icon="mdi:beta" />
-								</Tooltip>
-							{/if}
-							-->
-
 							{#if game.platforms.length > 0}
 								<span class="text-primary-500 mx-1">|</span>
 
@@ -91,7 +87,7 @@
 						class="hover:bg-primary-600 mr-1 rounded p-1.5 {game.favorite
 							? 'block'
 							: 'hidden group-hover:block'}"
-						on:click={(evt) => {
+						onclick={(evt) => {
 							evt.stopPropagation();
 							game.favorite = !game.favorite;
 							refresh(searchTerm);

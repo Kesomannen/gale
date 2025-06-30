@@ -4,12 +4,16 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 
-	export let entryId: ConfigEntryId;
-	export let locked: boolean;
+	type Props = {
+		entryId: ConfigEntryId;
+		locked: boolean;
+	};
+
+	let { entryId, locked }: Props = $props();
 
 	let value = entryId.entry.value;
-	let content = value.content as { indicies: number[]; options: string[] };
-	let selected = content.indicies.map((index) => content.options[index]);
+	let content = $state(value.content as { indicies: number[]; options: string[] });
+	let selected = $state(content.indicies.map((index) => content.options[index]));
 
 	function onReset(newValue: ConfigValue) {
 		content = newValue.content as { indicies: number[]; options: string[] };

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
 	import {
@@ -70,40 +72,25 @@
 		}
 	];
 
-	let mods: Mod[] = [];
-	let totalModCount = 0;
-	let unknownMods: Dependant[] = [];
-	let updates: AvailableUpdate[] = [];
+	let mods: Mod[] = $state([]);
+	let totalModCount = $state(0);
+	let unknownMods: Dependant[] = $state([]);
+	let updates: AvailableUpdate[] = $state([]);
 
 	let modList: ModList;
-	let maxCount: number;
-	let selectedMod: Mod | null = null;
+	let maxCount: number = $state(0);
+	let selectedMod: Mod | null = $state(null);
 
 	let removeDependants: DependantsPopup;
 	let disableDependants: DependantsPopup;
 	let enableDependencies: DependantsPopup;
 
-	let dependantsOpen = false;
-	let dependants: string[];
+	let dependantsOpen = $state(false);
+	let dependants: string[] = $state([]);
 
-	let activeMod: Mod | null = null;
+	let activeMod: Mod | null = $state(null);
 
-	$: if (maxCount > 0) {
-		$activeProfile;
-		$profileQuery;
-		refresh();
-	}
-
-	$: reorderable =
-		$profileQuery.sortBy === SortBy.Custom &&
-		$profileQuery.searchTerm === '' &&
-		$profileQuery.excludeCategories.length === 0 &&
-		$profileQuery.includeCategories.length === 0 &&
-		$profileQuery.includeDeprecated &&
-		$profileQuery.includeNsfw &&
-		$profileQuery.includeDisabled;
-
-	let hasRefreshed = false;
+	let hasRefreshed = $state(false);
 	let refreshing = false;
 
 	async function refresh() {
@@ -229,6 +216,22 @@
 		let items = [...evt.dataTransfer.items];
 		return items.length === 0 || items[0].kind !== 'file';
 	}
+	run(() => {
+		if (maxCount > 0) {
+			$activeProfile;
+			$profileQuery;
+			refresh();
+		}
+	});
+	let reorderable = $derived(
+		$profileQuery.sortBy === SortBy.Custom &&
+			$profileQuery.searchTerm === '' &&
+			$profileQuery.excludeCategories.length === 0 &&
+			$profileQuery.includeCategories.length === 0 &&
+			$profileQuery.includeDeprecated &&
+			$profileQuery.includeNsfw &&
+			$profileQuery.includeDisabled
+	);
 </script>
 
 <ModList
@@ -241,19 +244,19 @@
 	bind:maxCount
 	bind:selected={selectedMod}
 >
-	<svelte:fragment slot="details">
+	{#snippet details()}
 		{#if selectedMod && isOutdated(selectedMod) && !$activeProfileLocked}
 			<Button.Root
 				class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
-				on:click={() => updateMod(selectedMod)}
+				onclick={() => updateMod(selectedMod)}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
 				Update to {selectedMod?.versions[0].name}
 			</Button.Root>
 		{/if}
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="banner">
+	{#snippet banner()}
 		{#if $activeProfileLocked}
 			<ProfileLockedBanner class="mr-4 mb-1" />
 		{:else}
@@ -268,7 +271,7 @@
 					.join(', ')}.
 				<Button.Root
 					class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
-					on:click={() => {
+					onclick={() => {
 						unknownMods.forEach(uninstall);
 					}}
 				>
@@ -276,9 +279,9 @@
 				</Button.Root>
 			</div>
 		{/if}
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="placeholder">
+	{#snippet placeholder()}
 		{#if hasRefreshed}
 			{#if totalModCount === 0}
 				<span class="text-lg">No mods installed</span>
@@ -292,20 +295,20 @@
 				<span class="text-primary-400">Try to adjust your search query/filters</span>
 			{/if}
 		{/if}
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="item" let:data>
+	{#snippet item({ data })}
 		<ProfileModListItem
 			{...data}
 			{reorderable}
 			locked={$activeProfileLocked}
-			on:dragstart={onDragStart}
-			on:dragover={onDragOver}
-			on:dragend={onDragEnd}
-			on:toggle={({ detail: newState }) => toggleMod(data.mod, newState)}
-			on:click={() => modList.selectMod(data.mod)}
+			ondragstart={onDragStart}
+			ondragover={onDragOver}
+			ondragend={onDragEnd}
+			ontoggle={(newState) => toggleMod(data.mod, newState)}
+			onclick={() => modList.selectMod(data.mod)}
 		/>
-	</svelte:fragment>
+	{/snippet}
 </ModList>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>

@@ -6,12 +6,16 @@
 	import Icon from '@iconify/svelte';
 	import { sentenceCase } from '$lib/util';
 
-	export let label: string;
-	export let type: 'dir' | 'file';
-	export let canClear: boolean = false;
+	type Props = {
+		label: string;
+		type: 'dir' | 'file';
+		canClear?: boolean;
+		value: string | null;
+		set: (value: string | null) => Promise<void>;
+		children?: import('svelte').Snippet;
+	};
 
-	export let value: string | null;
-	export let set: (value: string | null) => Promise<void>;
+	let { label, type, canClear = false, value = $bindable(), set, children }: Props = $props();
 
 	function browse() {
 		open({
@@ -27,9 +31,9 @@
 </script>
 
 <PathField {label} {value} on:click={browse} icon={type === 'file' ? 'mdi:file' : 'mdi:folder'}>
-	<slot />
+	{@render children?.()}
 
-	<svelte:fragment slot="field">
+	{#snippet field()}
 		{#if canClear}
 			<Button.Root
 				class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute right-2 rounded-sm p-1 text-lg"
@@ -42,5 +46,5 @@
 				<Icon icon="mdi:close" />
 			</Button.Root>
 		{/if}
-	</svelte:fragment>
+	{/snippet}
 </PathField>

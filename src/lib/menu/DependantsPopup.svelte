@@ -1,22 +1,34 @@
 <script lang="ts">
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { Dependant, Mod } from '$lib/models';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 
-	export let title: string;
-	export let verb: string;
-	export let description: string;
-	export let commandName: string;
-	export let positive: boolean = false;
-	export let onExecute: () => void;
-	export let onCancel: () => void;
+	type Props = {
+		title: string;
+		verb: string;
+		description: string;
+		commandName: string;
+		positive?: boolean;
+		onExecute: () => void;
+		onCancel: () => void;
+	};
 
-	let name: string;
+	let {
+		title,
+		verb,
+		description,
+		commandName,
+		positive = false,
+		onExecute,
+		onCancel
+	}: Props = $props();
+
+	let name: string = $state('');
 	let uuid: string;
-	let open: boolean;
-	let dependants: Dependant[];
+	let open: boolean = $state(false);
+	let dependants: Dependant[] = $state([]);
 
 	export function openFor(_mod: Dependant | Mod, _dependants: Dependant[]) {
 		if ('fullName' in _mod) {
@@ -55,13 +67,13 @@
 		showVersion={false}
 	/>
 
-	<svelte:fragment slot="buttons">
-		<BigButton on:click={executeOne} color="primary" class="truncate">
+	{#snippet buttons()}
+		<BigButton onclick={executeOne} color="primary" class="truncate">
 			{verb}
 			{name} only
 		</BigButton>
-		<BigButton on:click={executeAll} color={positive ? 'accent' : 'red'}>
+		<BigButton onclick={executeAll} color={positive ? 'accent' : 'red'}>
 			{verb} all
 		</BigButton>
-	</svelte:fragment>
+	{/snippet}
 </ConfirmPopup>

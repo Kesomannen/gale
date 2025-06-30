@@ -1,21 +1,27 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import { apiKeyPopupOpen } from './ApiKeyPopup.svelte';
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
+	type Props = {
+		field?: import('svelte').Snippet;
+	};
 
-	let hasToken = false;
+	let { field }: Props = $props();
 
-	$: {
-		$apiKeyPopupOpen;
-		refresh();
-	}
+	let hasToken = $state(false);
 
 	async function refresh() {
 		hasToken = await invokeCommand('has_thunderstore_token');
 	}
+	run(() => {
+		$apiKeyPopupOpen;
+		refresh();
+	});
 </script>
 
 <div class="flex items-center">
@@ -41,6 +47,6 @@
 			{hasToken ? 'Click to override token' : 'Not set'}
 		</div>
 
-		<slot name="field" />
+		{@render field?.()}
 	</Button.Root>
 </div>

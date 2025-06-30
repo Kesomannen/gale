@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import ModDetails from '$lib/modlist/ModDetails.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
@@ -31,37 +33,56 @@
 		}
 	];
 
-	export let sortOptions: SortBy[];
+	type Props = {
+		sortOptions: SortBy[];
+		mods?: Mod[];
+		maxCount?: number;
+		queryArgs: Writable<QueryModsArgs>;
+		selected: Mod | null;
+		contextItems?: ModContextItem[];
+		locked: boolean;
+		banner?: import('svelte').Snippet;
+		placeholder?: import('svelte').Snippet;
+		item?: import('svelte').Snippet<[any]>;
+		details?: import('svelte').Snippet;
+	};
 
-	export let mods: Mod[] = [];
-	export let maxCount = 20;
-	export let queryArgs: Writable<QueryModsArgs>;
+	let {
+		sortOptions,
+		mods = $bindable([]),
+		maxCount = $bindable(20),
+		queryArgs,
+		selected = $bindable(),
+		contextItems = [],
+		locked,
+		banner,
+		placeholder,
+		item,
+		details
+	}: Props = $props();
 
-	export let selected: Mod | null;
-	export let contextItems: ModContextItem[] = [];
+	let allContextItems = $derived([...contextItems, ...defaultContextItems]);
 
-	export let locked: boolean;
-
-	$: allContextItems = [...contextItems, ...defaultContextItems];
-
-	let listStart = 0;
-	let listEnd = 0;
+	let listStart = $state(0);
+	let listEnd = $state(0);
 	let virtualList: VirtualList<Mod>;
 
-	$: if (listEnd > mods.length - 2 && mods.length === maxCount) {
-		maxCount += 20;
-		console.log('increasing max count');
-	}
+	run(() => {
+		if (listEnd > mods.length - 2 && mods.length === maxCount) {
+			maxCount += 20;
+			console.log('increasing max count');
+		}
+	});
 
-	$: {
+	run(() => {
 		$queryArgs;
 		virtualList?.scrollTo(0);
-	}
+	});
 
-	$: {
+	run(() => {
 		$activeGame;
 		selected = null;
-	}
+	});
 
 	export function selectMod(mod: Mod) {
 		if (selected === null || selected.uuid !== mod.uuid) {
@@ -148,11 +169,11 @@
 			/>
 		</div>
 
-		<slot name="banner" />
+		{@render banner?.()}
 
 		{#if mods.length === 0}
 			<div class="text-primary-300 mt-4 text-center">
-				<slot name="placeholder" />
+				{@render placeholder?.()}
 			</div>
 		{:else}
 			<VirtualList
@@ -161,18 +182,17 @@
 				bind:this={virtualList}
 				bind:start={listStart}
 				bind:end={listEnd}
-				let:item={mod}
-				let:index
 			>
-				<slot
-					name="item"
-					data={{
-						mod,
-						index,
-						contextItems: allContextItems,
-						isSelected: selected?.uuid === mod.uuid
-					}}
-				/>
+				{#snippet children({ item: mod, index })}
+					{@render item?.({
+						data: {
+							mod,
+							index,
+							contextItems: allContextItems,
+							isSelected: selected?.uuid === mod.uuid
+						}
+					})}
+				{/snippet}
 			</VirtualList>
 		{/if}
 	</div>
@@ -184,7 +204,7 @@
 			contextItems={allContextItems}
 			on:close={() => (selected = null)}
 		>
-			<slot name="details" />
+			{@render details?.()}
 		</ModDetails>
 	{/if}
 </div>

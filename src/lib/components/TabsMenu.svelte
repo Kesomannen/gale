@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { Tabs } from 'bits-ui';
 
-	export let value: string;
-	export let options: { value: string; label: string }[];
+	type Props = {
+		value: string;
+		options: { value: string; label: string }[];
+		children?: import('svelte').Snippet;
+	};
+
+	let { value = $bindable(), options, children }: Props = $props();
 </script>
 
 <Tabs.Root bind:value>
@@ -17,5 +22,5 @@
 		{/each}
 	</Tabs.List>
 
-	<slot />
+	{@render children?.()}
 </Tabs.Root>

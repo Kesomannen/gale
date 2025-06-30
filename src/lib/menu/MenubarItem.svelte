@@ -1,15 +1,20 @@
 <script lang="ts">
 	import { Menubar } from 'bits-ui';
 
-	export let text: string;
-	export let key: string | undefined = undefined;
+	type Props = {
+		text: string;
+		key?: string | undefined;
+		onclick: () => void;
+	};
+
+	let { text, key = undefined, onclick }: Props = $props();
 </script>
 
 <Menubar.Item
 	class="group hover:bg-primary-700 mx-1 flex cursor-default items-center justify-between rounded py-1 pl-4 text-left {key
 		? 'pr-4'
 		: 'pr-10'}"
-	on:click
+	{onclick}
 >
 	<span class="text-primary-400 group-hover:text-primary-300">{text}</span>
 

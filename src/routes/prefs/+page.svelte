@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import PathPref from '$lib/prefs/PathPref.svelte';
 	import LaunchModePref from '$lib/prefs/LaunchModePref.svelte';
 	import ZoomLevelPref from '$lib/prefs/ZoomFactorPref.svelte';
@@ -23,22 +25,26 @@
 	import { getFont, useNativeMenu, setFont } from '$lib/theme';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 
-	let prefs: Prefs | null = null;
-	let gamePrefs: GamePrefs | null = null;
+	let prefs: Prefs | null = $state(null);
+	let gamePrefs: GamePrefs | null = $state(null);
 
-	$: gameSlug = $activeGame?.slug ?? '';
-	$: gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
-		launchMode: { type: 'launcher' },
-		dirOverride: null,
-		customArgs: null,
-		platform: null
-	};
+	let gameSlug = $derived($activeGame?.slug ?? '');
+	run(() => {
+		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
+			launchMode: { type: 'launcher' },
+			dirOverride: null,
+			customArgs: null,
+			platform: null
+		};
+	});
 
-	$: platforms = $activeGame?.platforms ?? [];
-	$: needsDirectory = !platforms.some(
-		(p) =>
-			p === Platform.Steam ||
-			(platform() === 'windows' && (p === Platform.EpicGames || p === Platform.XboxStore))
+	let platforms = $derived($activeGame?.platforms ?? []);
+	let needsDirectory = $derived(
+		!platforms.some(
+			(p) =>
+				p === Platform.Steam ||
+				(platform() === 'windows' && (p === Platform.EpicGames || p === Platform.XboxStore))
+		)
 	);
 
 	onMount(async () => {
@@ -97,7 +103,7 @@
 
 			<InputField
 				value={getFont()}
-				on:change={({ detail }) => setFont(detail)}
+				onchange={(value) => setFont(value)}
 				placeholder="Nunito Sans"
 			/>
 		</div>

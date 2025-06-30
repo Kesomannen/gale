@@ -1,30 +1,42 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
 	import Popup from './Popup.svelte';
-	import BigButton from './BigButton.svelte';
+	import Button from './Button.svelte';
 
-	export let title = '';
-	export let description = '';
-	export let open = false;
+	type Props = {
+		title?: string;
+		description?: string;
+		open?: boolean;
+		onCancel?: () => void;
+		children?: import('svelte').Snippet;
+		buttons?: import('svelte').Snippet;
+	};
 
-	export let onCancel: () => void = () => {};
+	let {
+		title = '',
+		description = '',
+		open = $bindable(false),
+		onCancel = () => {},
+		children,
+		buttons
+	}: Props = $props();
 </script>
 
 <Popup {title} onClose={onCancel} bind:open>
 	<Dialog.Description class="text-primary-300">
-		<slot>
+		{#if children}{@render children()}{:else}
 			{description}
-		</slot>
+		{/if}
 	</Dialog.Description>
 
 	<div class="mt-3 ml-auto flex justify-end gap-2 overflow-hidden">
-		<BigButton
+		<Button
 			color="primary"
-			on:click={() => {
+			onclick={() => {
 				onCancel();
 				open = false;
-			}}>Cancel</BigButton
+			}}>Cancel</Button
 		>
-		<slot name="buttons" />
+		{@render buttons?.()}
 	</div>
 </Popup>

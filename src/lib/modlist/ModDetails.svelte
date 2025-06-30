@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import Popup from '$lib/components/Popup.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 
@@ -22,30 +24,35 @@
 	import { createEventDispatcher } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 
-	export let mod: Mod;
-	export let contextItems: ModContextItem[] = [];
-	export let locked: boolean;
+	type Props = {
+		mod: Mod;
+		contextItems?: ModContextItem[];
+		locked: boolean;
+		children?: import('svelte').Snippet;
+	};
+
+	let { mod, contextItems = [], locked, children }: Props = $props();
 
 	const dispatch = createEventDispatcher<{ close: void }>();
 
-	let dependenciesOpen = false;
+	let dependenciesOpen = $state(false);
 
-	let readmeOpen = false;
-	let readme: ModInfoPopup;
+	let readmeOpen = $state(false);
+	let readme: ModInfoPopup = $state();
 
-	let changelogOpen = false;
-	let changelog: ModInfoPopup;
+	let changelogOpen = $state(false);
+	let changelog: ModInfoPopup = $state();
 
-	$: allContextItems = [
+	let allContextItems = $derived([
 		...contextItems,
 		{
 			label: 'Close',
 			icon: 'mdi:close',
 			onclick: () => dispatch('close')
 		}
-	];
+	]);
 
-	let readmePromise: Promise<string | null>;
+	let readmePromise: Promise<string | null> = $state();
 
 	function formatReadme(readme: string | null) {
 		if (readme === null) return null;
@@ -56,15 +63,17 @@
 			.join('\n');
 	}
 
-	$: if (mod.type === ModType.Remote) {
-		readmePromise = invokeCommand<string>('get_markdown', {
-			kind: 'readme',
-			modRef: {
-				packageUuid: mod.uuid,
-				versionUuid: mod.versionUuid
-			}
-		}).then(formatReadme);
-	}
+	run(() => {
+		if (mod.type === ModType.Remote) {
+			readmePromise = invokeCommand<string>('get_markdown', {
+				kind: 'readme',
+				modRef: {
+					packageUuid: mod.uuid,
+					versionUuid: mod.versionUuid
+				}
+			}).then(formatReadme);
+		}
+	});
 </script>
 
 <div
@@ -221,7 +230,7 @@
 		</Button.Root>
 	{/if}
 
-	<slot />
+	{@render children?.()}
 </div>
 
 <Popup

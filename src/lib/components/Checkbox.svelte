@@ -2,17 +2,25 @@
 	import Icon from '@iconify/svelte';
 	import { Checkbox } from 'bits-ui';
 
-	export let value = false;
-	export let disabled = false;
-	export let onValueChanged: (newValue: boolean) => void = () => {};
+	type Props = {
+		value?: boolean;
+		disabled?: boolean;
+		onValueChanged?: (newValue: boolean) => void;
+		class?: string;
+	};
 
-	let className = '';
+	let {
+		value = $bindable(false),
+		disabled = false,
+		onValueChanged = () => {},
+		class: className = ''
+	}: Props = $props();
 
-	export { className as class };
-
-	$: stateClasses = value
-		? 'bg-accent-700 hover:bg-accent-600'
-		: 'bg-primary-800 hover:bg-primary-700 border border-primary-500';
+	let stateClasses = $derived(
+		value
+			? 'bg-accent-700 hover:bg-accent-600'
+			: 'bg-primary-800 hover:bg-primary-700 border border-primary-500'
+	);
 </script>
 
 <Checkbox.Root

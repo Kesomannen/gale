@@ -1,9 +1,9 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	export const apiKeyPopupOpen = writable(false);
 </script>
 
 <script lang="ts">
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import Link from '$lib/components/Link.svelte';
@@ -12,7 +12,7 @@
 
 	import { writable } from 'svelte/store';
 
-	let token: string;
+	let token: string = $state();
 
 	async function submit() {
 		if (token.length == 0) {
@@ -80,7 +80,7 @@
 		>
 	</details>
 
-	<svelte:fragment slot="buttons">
+	{#snippet buttons()}
 		<BigButton color="accent" fontWeight="medium" on:click={submit}>Submit</BigButton>
-	</svelte:fragment>
+	{/snippet}
 </ConfirmPopup>

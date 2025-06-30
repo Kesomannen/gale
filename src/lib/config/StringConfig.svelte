@@ -9,10 +9,14 @@
 	import { expandedEntry } from './ExpandedEntryPopup.svelte';
 	import { getListSeparator } from '$lib/util';
 
-	export let entryId: ConfigEntryId;
-	export let locked: boolean;
+	type Props = {
+		entryId: ConfigEntryId;
+		locked: boolean;
+	};
 
-	let content = entryId.entry.value.content as string;
+	let { entryId, locked }: Props = $props();
+
+	let content = $state(entryId.entry.value.content as string);
 	let listSeparator = getListSeparator(entryId.entry);
 
 	async function onReset(value: ConfigValue) {
@@ -27,11 +31,12 @@
 		});
 	}
 
-	$: showExpandButton =
+	let showExpandButton = $derived(
 		content.length > 100 ||
-		listSeparator.type === 'custom' ||
-		content.includes('\n') ||
-		content.includes(listSeparator.char);
+			listSeparator.type === 'custom' ||
+			content.includes('\n') ||
+			content.includes(listSeparator.char)
+	);
 </script>
 
 <div class="relative grow">

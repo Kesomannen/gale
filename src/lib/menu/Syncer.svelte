@@ -1,5 +1,7 @@
+<!-- @migration-task Error while migrating Svelte code: can't migrate `let mainPopupOpen = false;` to `$state` because there's a variable named state.
+     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -16,40 +18,42 @@
 
 	type State = 'off' | 'synced' | 'outdated';
 
-	let mainPopupOpen = false;
-	let loginLoading = false;
-	let loading = false;
+	let mainPopupOpen = $state(false);
+	let loginLoading = $state(false);
+	let loading = $state(false);
 
-	let profilesPopupOpen = false;
-	let profiles: ListedSyncProfile[] = [];
+	let profilesPopupOpen = $state(false);
+	let profiles: ListedSyncProfile[] = $state([]);
 
-	$: syncInfo = $activeProfile?.sync ?? null;
-	$: isOwner = syncInfo?.owner.discordId == $user?.discordId;
-	$: state = (
-		syncInfo === null
+	let syncInfo = $derived($activeProfile?.sync ?? null);
+	let isOwner = $derived(syncInfo?.owner.discordId == $user?.discordId);
+	let syncState = $derived(
+		(syncInfo === null
 			? 'off'
 			: new Date(syncInfo.updatedAt) > new Date(syncInfo.syncedAt)
 				? 'outdated'
-				: 'synced'
-	) as State;
+				: 'synced') as State
+	);
 
-	$: style = {
-		off: {
-			icon: 'mdi:cloud-off',
-			label: 'Sync off',
-			classes: 'text-primary-400'
-		},
-		synced: {
-			icon: 'mdi:cloud-check-variant',
-			label: 'Up to date',
-			classes: 'text-accent-400'
-		},
-		outdated: {
-			icon: 'mdi:cloud-refresh-variant',
-			label: 'Outdated',
-			classes: 'text-yellow-400'
-		}
-	}[state];
+	let style = $derived(
+		{
+			off: {
+				icon: 'mdi:cloud-off',
+				label: 'Sync off',
+				classes: 'text-primary-400'
+			},
+			synced: {
+				icon: 'mdi:cloud-check-variant',
+				label: 'Up to date',
+				classes: 'text-accent-400'
+			},
+			outdated: {
+				icon: 'mdi:cloud-refresh-variant',
+				label: 'Outdated',
+				classes: 'text-yellow-400'
+			}
+		}[syncState]
+	);
 
 	const dropdownItems = [
 		{
@@ -131,7 +135,7 @@
 
 <Button.Root
 	class="{style.classes} bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
-	on:click={() => (mainPopupOpen = true)}
+	onclick={() => (mainPopupOpen = true)}
 >
 	<Icon icon={style.icon} />
 	<div>{style.label}</div>
@@ -161,8 +165,8 @@
 		<div class="mt-2 flex items-center gap-1">
 			<Tooltip text="Copy to clipboard">
 				<Button.Root
-					class="rounded-md bg-primary-900 px-4 py-1 font-mono text-lg text-primary-300"
-					on:click={async () => {
+					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
+					onclick={async () => {
 						await writeText(syncInfo.id);
 						pushInfoToast({
 							message: 'Copied profile code to clipboard.'
@@ -175,40 +179,40 @@
 		</div>
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">
-			{#if state === 'outdated'}
-				<BigButton on:click={pull} disabled={loading}>
+			{#if syncState === 'outdated'}
+				<BigButton onclick={pull} disabled={loading}>
 					<Icon icon="mdi:cloud-download" class="mr-2 text-lg" />
 					Pull update
 				</BigButton>
 			{/if}
 
 			{#if isOwner}
-				<BigButton on:click={push} disabled={loading || $user === null} color="accent">
+				<BigButton onclick={push} disabled={loading || $user === null} color="accent">
 					<Icon icon="mdi:cloud-upload" class="mr-2 text-lg" />
 					Push update
 				</BigButton>
 			{/if}
 
-			<BigButton on:click={refresh} disabled={loading} color="primary">
+			<BigButton onclick={refresh} disabled={loading} color="primary">
 				<Icon icon="mdi:cloud-refresh" class="mr-2 text-lg" />
 				Refresh
 			</BigButton>
 
-			<BigButton on:click={disconnect} disabled={loading} color="primary">
+			<BigButton onclick={disconnect} disabled={loading} color="primary">
 				<Icon icon="mdi:cloud-remove" class="mr-2 text-lg" />
 				Disconnect
 			</BigButton>
 		</div>
 	{:else if $user !== null}
-		<BigButton on:click={connect} disabled={loading} color="accent" class="mt-2">
+		<BigButton onclick={connect} disabled={loading} color="accent" class="mt-2">
 			<Icon icon="mdi:cloud-plus" class="mr-2 text-lg" />
 			Connect
 		</BigButton>
 	{/if}
 
-	<div class="mt-4 flex items-center gap-1 text-primary-300">
+	<div class="text-primary-300 mt-4 flex items-center gap-1">
 		{#if $user === null}
-			<BigButton on:click={onLoginClicked} disabled={loginLoading} color="primary">
+			<BigButton onclick={onLoginClicked} disabled={loginLoading} color="primary">
 				<Icon
 					icon={loginLoading ? 'mdi:loading' : 'ic:baseline-discord'}
 					class="mr-2 {loginLoading && 'animate-spin'}"
@@ -229,7 +233,7 @@
 					{...dropTransition}
 				>
 					{#each dropdownItems as item}
-						<DropdownMenu.Item class="menu-item context-menu-item pr-6" on:click={item.onClick}>
+						<DropdownMenu.Item class="menu-item context-menu-item pr-6" onclick={item.onClick}>
 							<Icon icon={item.icon} class="mr-1.5 text-lg" />
 
 							{item.label}
@@ -241,7 +245,7 @@
 	</div>
 
 	<div
-		class="text-primary-400 text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
+		class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
 	>
 		<Icon icon="mdi:help-circle" inline />
 

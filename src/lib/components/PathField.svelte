@@ -3,12 +3,27 @@
 	import { Button } from 'bits-ui';
 	import Label from './Label.svelte';
 	import Info from './Info.svelte';
+	import type { Snippet } from 'svelte';
 
-	export let label: string | null = null;
-	export let value: string | null;
-	export let icon: string = 'mdi:folder';
+	type Props = {
+		label?: string | null;
+		value: string | null;
+		icon?: string;
+		onclick?: () => void;
+		children?: Snippet;
+		field?: Snippet;
+	};
 
-	$: hasValue = value && value.length > 0;
+	let {
+		label = null,
+		value = $bindable(),
+		icon = 'mdi:folder',
+		onclick,
+		children,
+		field
+	}: Props = $props();
+
+	let hasValue = $derived(value && value.length > 0);
 </script>
 
 <div class="relative flex items-center">
@@ -19,12 +34,12 @@
 	{/if}
 
 	<Info>
-		<slot />
+		{@render children?.()}
 	</Info>
 
 	<Button.Root
 		class="group bg-primary-900 hover:border-primary-500 flex grow basis-0 items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
-		on:click
+		{onclick}
 	>
 		<div class="mr-2 rounded-sm">
 			<Icon {icon} class="text-primary-300 align-middle" />
@@ -35,6 +50,6 @@
 			{hasValue ? value : 'Not set'}
 		</div>
 
-		<slot name="field" />
+		{@render field?.()}
 	</Button.Root>
 </div>

@@ -4,10 +4,14 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 
-	export let entryId: ConfigEntryId;
-	export let locked: boolean;
+	type Props = {
+		entryId: ConfigEntryId;
+		locked: boolean;
+	};
 
-	let content = entryId.entry.value.content as boolean;
+	let { entryId, locked }: Props = $props();
+
+	let content = $state(entryId.entry.value.content as boolean);
 
 	function onReset(newValue: ConfigValue) {
 		content = newValue.content as boolean;

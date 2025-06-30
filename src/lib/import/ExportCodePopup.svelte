@@ -6,9 +6,8 @@
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { Dialog } from 'bits-ui';
 
-	let isOpen = false;
-
-	let codePromise: Promise<string>;
+	let isOpen = $state(false);
+	let codePromise: Promise<string> | null = $state(null);
 
 	export async function open() {
 		codePromise = invokeCommand('export_code');

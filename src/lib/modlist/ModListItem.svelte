@@ -1,28 +1,35 @@
 <script lang="ts">
+	import { createBubbler } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { Button } from 'bits-ui';
 	import type { Mod } from '../models';
 	import Icon from '@iconify/svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { iconSrc } from '$lib/util';
 
-	export let mod: Mod;
-	export let isSelected: boolean;
-	export let locked: boolean;
+	type Props = {
+		mod: Mod;
+		isSelected: boolean;
+		locked: boolean;
+	};
+
+	let { mod, isSelected, locked }: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		install: void;
 	}>();
 
-	$: descriptionClasses = isSelected
-		? 'text-primary-300'
-		: 'text-primary-400 group-hover:text-primary-300';
+	let descriptionClasses = $derived(
+		isSelected ? 'text-primary-300' : 'text-primary-400 group-hover:text-primary-300'
+	);
 </script>
 
 <button
 	class="group flex w-full rounded-lg border p-2 {isSelected
 		? 'border-primary-500 bg-primary-700'
 		: 'hover:bg-primary-700 border-transparent'}"
-	on:click
+	onclick={bubble('click')}
 >
 	<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
 	<div class="shrink grow overflow-hidden pl-3 text-left">

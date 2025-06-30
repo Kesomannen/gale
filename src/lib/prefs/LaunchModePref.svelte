@@ -8,11 +8,15 @@
 	import { activeGame } from '$lib/stores';
 	import Info from '$lib/components/Info.svelte';
 
-	export let value: LaunchMode;
-	export let set: (value: LaunchMode) => Promise<void>;
+	type Props = {
+		value: LaunchMode;
+		set: (value: LaunchMode) => Promise<void>;
+	};
 
-	let instances = value.content?.instances ?? 1;
-	let intervalSecs = value.content?.intervalSecs ?? 10;
+	let { value = $bindable(), set }: Props = $props();
+
+	let instances = $state(value.content?.instances ?? 1);
+	let intervalSecs = $state(value.content?.intervalSecs ?? 10);
 
 	async function onSelectedChange(newValue: string) {
 		value.type = newValue as 'launcher' | 'direct';
@@ -29,7 +33,7 @@
 		await set(value);
 	}
 
-	$: platforms = $activeGame?.platforms ?? [];
+	let platforms = $derived($activeGame?.platforms ?? []);
 </script>
 
 <div class="flex items-center">

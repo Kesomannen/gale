@@ -10,9 +10,9 @@
 	import { Dialog, Progress } from 'bits-ui';
 	import { onMount } from 'svelte';
 
-	let open = false;
+	let open = $state(false);
 
-	let progress: InstallProgress = {
+	let progress: InstallProgress = $state({
 		durationSecs: 0,
 		totalProgress: 0,
 		installedMods: 0,
@@ -22,13 +22,13 @@
 		task: {
 			kind: 'installing'
 		}
-	};
+	});
 
-	$: currentName = progress.currentName.replace('_', ' ');
-	$: estimatedTimeLeft =
-		progress.durationSecs > 1
+	let currentName = $derived(progress.currentName.replace('_', ' '));
+	let estimatedTimeLeft =
+		$derived(progress.durationSecs > 1
 			? formatTime(progress.durationSecs * (1 / progress.totalProgress - 1))
-			: '---';
+			: '---');
 
 	onMount(() => {
 		listen<InstallProgress>('install_progress', (event) => {
@@ -95,6 +95,6 @@
 		<div
 			class="bg-accent-600 absolute top-0 left-0 h-full rounded-l-full transition-all"
 			style="width: {progress.totalProgress * 100}%"
-		/>
+		></div>
 	</Progress.Root>
 </Popup>

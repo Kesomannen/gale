@@ -1,42 +1,63 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	import { writable } from 'svelte/store';
 
 	export let activeContextMenu = writable<string | null>(null);
 </script>
 
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Mod, ModContextItem } from '../models';
 	import Icon from '@iconify/svelte';
 	import { iconSrc, isOutdated } from '$lib/util';
 	import { Switch, ContextMenu } from 'bits-ui';
-	import { createEventDispatcher } from 'svelte';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 	import { dropTransition } from '$lib/transitions';
+	import type { DragEventHandler, MouseEventHandler } from 'svelte/elements';
 
-	export let mod: Mod;
-	export let index: number;
-	export let isSelected: boolean;
-	export let contextItems: ModContextItem[];
+	type Props = {
+		mod: Mod;
+		index: number;
+		isSelected: boolean;
+		contextItems: ModContextItem[];
+		reorderable: boolean;
+		locked: boolean;
+		ontoggle?: (newState: boolean) => void;
+		onclick?: MouseEventHandler<HTMLButtonElement>;
+		ondragstart?: DragEventHandler<HTMLButtonElement>;
+		ondragover?: DragEventHandler<HTMLButtonElement>;
+		ondragend?: DragEventHandler<HTMLButtonElement>;
+	};
 
-	export let reorderable: boolean;
-	export let locked: boolean;
+	let {
+		mod,
+		index,
+		isSelected,
+		contextItems,
+		reorderable,
+		locked,
+		ontoggle,
+		onclick,
+		ondragstart,
+		ondragover,
+		ondragend
+	}: Props = $props();
 
-	const dispatch = createEventDispatcher<{
-		toggle: boolean;
-	}>();
+	let contextMenuOpen: boolean = $state(false);
 
-	let contextMenuOpen: boolean;
-
-	$: descriptionClasses =
+	let descriptionClasses = $derived(
 		mod.enabled === false
 			? 'text-primary-500 line-through'
 			: isSelected
 				? 'text-primary-300'
-				: 'text-primary-400 group-hover:text-primary-300';
+				: 'text-primary-400 group-hover:text-primary-300'
+	);
 
-	$: if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
-		contextMenuOpen = false;
-	}
+	run(() => {
+		if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
+			contextMenuOpen = false;
+		}
+	});
 </script>
 
 <ContextMenu.Root
@@ -57,10 +78,10 @@
 			data-uuid={mod.uuid}
 			data-index={index}
 			draggable={reorderable}
-			on:click
-			on:dragstart
-			on:dragover
-			on:dragend
+			{onclick}
+			{ondragstart}
+			{ondragover}
+			{ondragend}
 		>
 			<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
 			<div class="shrink grow overflow-hidden pr-2 pl-3 text-left">
@@ -101,13 +122,13 @@
 			{/if}
 
 			<!-- make sure click events don't propagate and cause the mod to be selected -->
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<div class="contents" on:click={(evt) => evt.stopPropagation()}>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="contents" onclick={(evt) => evt.stopPropagation()}>
 				<Switch.Root
 					disabled={locked}
 					checked={mod.enabled ?? true}
-					onCheckedChange={(newState) => dispatch('toggle', newState)}
+					onCheckedChange={ontoggle}
 					class="group data-[state=checked]:bg-accent-700 data-[state=checked]:hover:bg-accent-600 bg-primary-600 hover:bg-primary-500 mr-1 flex h-6 w-12 shrink-0 rounded-full px-1 py-1"
 				>
 					<Switch.Thumb

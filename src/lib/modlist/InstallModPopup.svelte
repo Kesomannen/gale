@@ -1,5 +1,5 @@
 <script lang="ts">
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -8,10 +8,10 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
 
-	let open = false;
-	let mod: Mod | null = null;
+	let open = $state(false);
+	let mod: Mod | null = $state(null);
 
-	let profileName: string;
+	let profileName: string = $state();
 
 	onMount(() => {
 		listen<Mod>('install_mod', (evt) => {
@@ -51,7 +51,7 @@
 		bind:selected={profileName}
 	/>
 
-	<svelte:fragment slot="buttons">
+	{#snippet buttons()}
 		<BigButton on:click={install}>Install</BigButton>
-	</svelte:fragment>
+	{/snippet}
 </ConfirmPopup>

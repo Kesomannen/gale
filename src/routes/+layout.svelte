@@ -6,12 +6,18 @@
 	import Statusbar from '$lib/menu/Statusbar.svelte';
 	import Toasts from '$lib/menu/Toasts.svelte';
 
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import NavbarLink from '$lib/menu/NavbarLink.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
 	import { refreshColor, refreshFont } from '$lib/theme';
 	import InstallModPopup from '$lib/modlist/InstallModPopup.svelte';
+
+	type Props = {
+		children?: Snippet;
+	};
+
+	let { children }: Props = $props();
 
 	onMount(() => {
 		refreshFont();
@@ -21,7 +27,7 @@
 </script>
 
 <svelte:body
-	on:contextmenu={(evt) => {
+	oncontextmenu={(evt) => {
 		// hide context menu in release builds
 		if (window.location.hostname === 'tauri.localhost') {
 			evt.preventDefault();
@@ -39,17 +45,20 @@
 			<NavbarLink to="/browse" icon="mdi:store-search" label="Browse" />
 			<NavbarLink to="/config" icon="mdi:file-cog" label="Config" />
 			<NavbarLink to="/modpack" icon="mdi:package-variant" label="Modpack" />
-			<div class="grow"></div>
 			<NavbarLink to="/prefs" icon="mdi:settings" label="Settings" />
 		</nav>
 
-		<slot />
+		{@render children?.()}
 	</div>
 
+	<!--
 	<Statusbar />
 	<Toasts />
+	-->
 </main>
 
+<!---
 <InstallModPopup />
 <InstallProgressPopup />
 <WelcomePopup />
+-->

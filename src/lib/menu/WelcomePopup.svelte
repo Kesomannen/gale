@@ -1,7 +1,7 @@
 <script lang="ts">
 	import GameSelection from '$lib/menu/GameSelection.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
 
 	import type { Prefs, R2ImportData } from '$lib/models';
@@ -12,14 +12,18 @@
 	import Icon from '@iconify/svelte';
 	import { invoke } from '@tauri-apps/api/core';
 
-	export let open = false;
+	type Props = {
+		open?: boolean;
+	};
 
-	let stage: 'gameSelect' | 'importProfiles' | 'settings' | 'end' = 'gameSelect';
+	let { open = $bindable(false) }: Props = $props();
 
-	let importFlow: ImportR2Flow;
-	let importData: R2ImportData | null | undefined;
+	let stage: 'gameSelect' | 'importProfiles' | 'settings' | 'end' = $state('gameSelect');
 
-	let prefs: Prefs | null = null;
+	let importFlow: ImportR2Flow = $state();
+	let importData: R2ImportData | null | undefined = $state();
+
+	let prefs: Prefs | null = $state(null);
 
 	onMount(async () => {
 		if (await invokeCommand<boolean>('is_first_run')) {

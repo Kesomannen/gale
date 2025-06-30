@@ -10,12 +10,16 @@
 	import { pushInfoToast } from '$lib/toast';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	export let open: boolean;
-	export let onClose: () => void;
-	export let profiles: ListedSyncProfile[];
+	type Props = {
+		open: boolean;
+		onClose: () => void;
+		profiles: ListedSyncProfile[];
+	};
 
-	$: sortedProfiles = profiles.toSorted(
-		(a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+	let { open = $bindable(), onClose, profiles = $bindable() }: Props = $props();
+
+	let sortedProfiles = $derived(
+		profiles.toSorted((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 	);
 
 	async function importProfile(profile: ListedSyncProfile) {
@@ -76,7 +80,7 @@
 				{#if !allProfiles.some((other) => other.sync?.id === profile.id)}
 					<Button.Root
 						class="text-primary-400 hover:bg-accent-600 hover:text-accent-200  rounded p-1 text-lg"
-						on:click={() => importProfile(profile)}
+						onclick={() => importProfile(profile)}
 					>
 						<Icon icon="mdi:download" />
 					</Button.Root>
@@ -84,7 +88,7 @@
 
 				<Button.Root
 					class="text-primary-400 rounded p-1 text-lg hover:bg-red-600 hover:text-red-200"
-					on:click={() => deleteProfile(profile)}
+					onclick={() => deleteProfile(profile)}
 				>
 					<Icon icon="mdi:delete" />
 				</Button.Root>

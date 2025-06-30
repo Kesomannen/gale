@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import ConfigFileListItem from '$lib/config/ConfigFileListItem.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ConfigSection, ConfigFile } from '$lib/models';
@@ -9,26 +11,16 @@
 	import Icon from '@iconify/svelte';
 	import { activeProfile, activeProfileLocked } from '$lib/stores';
 	import { page } from '$app/stores';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import BigButton from '$lib/components/Button.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
-	let files: ConfigFile[] | null;
+	let files: ConfigFile[] | null = $state();
 
-	let searchTerm = '';
+	let searchTerm = $state('');
 
-	let selectedFile: ConfigFile | null;
-	let selectedSection: ConfigSection | null;
-
-	$: {
-		$activeProfile;
-		files = null;
-		selectedFile = null;
-		selectedSection = null;
-		refresh();
-	}
-
-	$: shownFiles = sortAndFilterFiles(searchTerm, files ?? []);
+	let selectedFile: ConfigFile | null = $state();
+	let selectedSection: ConfigSection | null = $state();
 
 	function sortAndFilterFiles(searchTerm: string, files: ConfigFile[]) {
 		if (searchTerm.length > 0) {
@@ -65,6 +57,14 @@
 		searchTerm = selectedFile.relativePath;
 		$page.url.searchParams.delete('file');
 	}
+	run(() => {
+		$activeProfile;
+		files = null;
+		selectedFile = null;
+		selectedSection = null;
+		refresh();
+	});
+	let shownFiles = $derived(sortAndFilterFiles(searchTerm, files ?? []));
 </script>
 
 <div class="flex grow overflow-hidden">

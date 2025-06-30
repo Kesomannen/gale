@@ -6,10 +6,14 @@
 	import Icon from '@iconify/svelte';
 	import { Button } from 'bits-ui';
 
-	export let value: string[] | null;
-	export let set: (value: string[] | null) => Promise<void>;
+	type Props = {
+		value: string[] | null;
+		set: (value: string[] | null) => Promise<void>;
+	};
 
-	let newArg = '';
+	let { value = $bindable(), set }: Props = $props();
+
+	let newArg = $state('');
 </script>
 
 <div class="mt-1 flex items-center">

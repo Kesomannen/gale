@@ -1,15 +1,19 @@
 <script lang="ts">
 	import { activeGame } from '$lib/stores';
 
-	export let fullName: string;
-	export let showVersion = true;
+	type Props = {
+		fullName: string;
+		showVersion?: boolean;
+	};
 
-	$: split = fullName.split('-');
+	let { fullName, showVersion = true }: Props = $props();
+
+	let split = $derived(fullName.split('-'));
 
 	// kind of hacky, but we assume we either have (1) just a name, (2) name and version, or (3) all three
-	$: author = split.length === 3 ? split[0] : null;
-	$: name = split.length === 3 ? split[1] : split[0];
-	$: version = split.length >= 2 ? (split.length === 3 ? split[2] : split[1]) : null;
+	let author = $derived(split.length === 3 ? split[0] : null);
+	let name = $derived(split.length === 3 ? split[1] : split[0]);
+	let version = $derived(split.length >= 2 ? (split.length === 3 ? split[2] : split[1]) : null);
 </script>
 
 <div class="flex overflow-hidden">

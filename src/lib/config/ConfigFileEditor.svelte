@@ -2,22 +2,23 @@
 	import type { ConfigEntry, ConfigFileData, ConfigSection } from '$lib/models';
 	import ConfigEntryField from './ConfigEntryField.svelte';
 
-	export let file: ConfigFileData;
-	export let section: ConfigSection | null;
+	type Props = {
+		file: ConfigFileData;
+		section: ConfigSection | null;
+		locked: boolean;
+	};
 
-	export let locked: boolean;
+	let { file, section, locked }: Props = $props();
 
 	let search = '';
-
-	$: ({ metadata } = file);
-
-	$: shownEntries = section === null ? [] : filterEntries(section.entries, search);
 
 	function filterEntries(entries: ConfigEntry[], search: string) {
 		return entries.filter((entry) => {
 			return entry.name.toLowerCase().includes(search.toLowerCase());
 		});
 	}
+	let { metadata } = $derived(file);
+	let shownEntries = $derived(section === null ? [] : filterEntries(section.entries, search));
 </script>
 
 {#if metadata}

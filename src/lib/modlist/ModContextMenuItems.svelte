@@ -1,13 +1,18 @@
 <script lang="ts">
+	import ModContextMenuItems from './ModContextMenuItems.svelte';
 	import type { Mod, ModContextItem } from '$lib/models';
 	import { ContextMenu, DropdownMenu } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 	import { dropTransition } from '$lib/transitions';
 
-	export let mod: Mod;
-	export let contextItems: ModContextItem[];
-	export let type: 'details' | 'context';
-	export let locked: boolean;
+	type Props = {
+		mod: Mod;
+		contextItems: ModContextItem[];
+		type: 'details' | 'context';
+		locked: boolean;
+	};
+
+	let { mod, contextItems, type, locked }: Props = $props();
 </script>
 
 {#each contextItems as { icon, label, onclick, showFor, children }}
@@ -39,7 +44,7 @@
 						class="sub-menu light-scrollbar border-primary-500 bg-primary-700"
 						{...dropTransition}
 					>
-						<svelte:self {mod} {type} contextItems={children(mod)} />
+						<ModContextMenuItems {mod} {type} contextItems={children(mod)} />
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
 			{/if}
@@ -69,7 +74,7 @@
 					class="sub-menu border-primary-600 bg-primary-800"
 					{...dropTransition}
 				>
-					<svelte:self {mod} {type} contextItems={children(mod)} />
+					<ModContextMenuItems {mod} {type} contextItems={children(mod)} />
 				</ContextMenu.SubContent>
 			</ContextMenu.Sub>
 		{/if}

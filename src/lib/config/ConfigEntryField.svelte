@@ -11,13 +11,12 @@
 	import Info from '$lib/components/Info.svelte';
 	import ColorConfig from './ColorConfig.svelte';
 
-	export let entryId: ConfigEntryId;
-	export let locked: boolean;
+	type Props = {
+		entryId: ConfigEntryId;
+		locked: boolean;
+	};
 
-	$: ({ entry } = entryId);
-	$: ({ value } = entry);
-
-	$: typeName = getTypeName(value);
+	let { entryId, locked }: Props = $props();
 
 	function valueToString(val: ConfigValue) {
 		switch (val.type) {
@@ -51,6 +50,9 @@
 				return 'Flags';
 		}
 	}
+	let { entry } = $derived(entryId);
+	let { value } = $derived(entry);
+	let typeName = $derived(getTypeName(value));
 </script>
 
 <!-- odd:bg-[#1b2433] -->

@@ -1,5 +1,12 @@
 <script lang="ts">
-	export let href: string;
+	import type { Snippet } from 'svelte';
+
+	type Props = {
+		href: string;
+		children?: Snippet;
+	};
+
+	let { href, children }: Props = $props();
 </script>
 
 <a
@@ -8,5 +15,5 @@
 	rel="noopener noreferrer"
 	class="text-accent-400 hover:text-accent-300 hover:underline"
 >
-	<slot />
+	{@render children?.()}
 </a>

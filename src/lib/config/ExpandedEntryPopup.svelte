@@ -1,8 +1,10 @@
-<script context="module" lang="ts">
+<script module lang="ts">
 	export let expandedEntry = writable<ConfigEntryId | null>(null);
 </script>
 
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import InputField from '$lib/components/InputField.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
@@ -14,15 +16,11 @@
 	import { Button, Tabs } from 'bits-ui';
 	import { writable } from 'svelte/store';
 
-	let mode: 'text' | 'list' = 'text';
-	let newElement = '';
-	let separator: ListSeparator = { type: 'default', char: ',' };
+	let mode: 'text' | 'list' = $state('text');
+	let newElement = $state('');
+	let separator: ListSeparator = $state({ type: 'default', char: ',' });
 
-	$: open = $expandedEntry !== null;
-	$: if (open) reset();
 
-	$: content = ($expandedEntry?.entry.value.content as string) ?? '';
-	$: items = content.split(separator.char);
 
 	async function updateListContent() {
 		content = items.join(separator.char);
@@ -49,6 +47,12 @@
 		content = $expandedEntry.entry.value.content as string;
 		separator = getListSeparator($expandedEntry.entry);
 	}
+	let open = $derived($expandedEntry !== null);
+	run(() => {
+		if (open) reset();
+	});
+	let content = $derived(($expandedEntry?.entry.value.content as string) ?? '');
+	let items = $derived(content.split(separator.char));
 </script>
 
 <Popup

@@ -7,10 +7,14 @@
 	import { activeGame } from '$lib/stores';
 	import Info from '$lib/components/Info.svelte';
 
-	export let value: Platform | null;
-	export let set: (value: Platform) => Promise<void>;
+	type Props = {
+		value: Platform | null;
+		set: (value: Platform) => Promise<void>;
+	};
 
-	$: platforms = $activeGame?.platforms ?? [];
+	let { value = $bindable(), set }: Props = $props();
+
+	let platforms = $derived($activeGame?.platforms ?? []);
 </script>
 
 <div class="flex items-center">

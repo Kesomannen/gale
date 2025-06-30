@@ -1,17 +1,27 @@
 <script lang="ts" generics="T">
 	import Checkbox from './Checkbox.svelte';
 
-	let className = '';
+	type Props = {
+		class?: string;
+		title: string;
+		items: T[];
+		maxHeight?: 'none' | 'sm';
+		get: (item: T, index: number) => boolean;
+		set: (item: T, index: number, value: boolean) => void;
+		getLabel?: (item: T, index: number) => string;
+		children?: import('svelte').Snippet<[any]>;
+	};
 
-	export let title: string;
-	export let items: T[];
-	export let maxHeight: 'none' | 'sm' = 'none';
-
-	export let get: (item: T, index: number) => boolean;
-	export let set: (item: T, index: number, value: boolean) => void;
-	export let getLabel: (item: T, index: number) => string = (item, _) => item as unknown as string;
-
-	export { className as class };
+	let {
+		class: className = '',
+		title,
+		items,
+		maxHeight = 'none',
+		get,
+		set,
+		getLabel = (item, _) => item as unknown as string,
+		children
+	}: Props = $props();
 </script>
 
 <div class="border-primary-900 relative overflow-hidden rounded-lg border-2 {className}">
@@ -37,9 +47,9 @@
 					onValueChanged={(newValue) => set(item, i, newValue)}
 				/>
 
-				<slot {item} index={i}>
+				{#if children}{@render children({ item, index: i })}{:else}
 					{getLabel(item, i)}
-				</slot>
+				{/if}
 			</div>
 		{/each}
 	</div>

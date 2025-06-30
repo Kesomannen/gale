@@ -10,9 +10,12 @@
 	import xml from 'highlight.js/lib/languages/xml';
 	import rehypeHighlight from 'rehype-highlight';
 
-	export let source: string;
+	type Props = {
+		source: string;
+		class?: string;
+	};
 
-	let className = '';
+	let { source, class: className = '' }: Props = $props();
 
 	const plugins: Plugin[] = [
 		gfmPlugin(),
@@ -23,8 +26,6 @@
 		},
 		{ renderer: { a: MarkdownLink } }
 	];
-
-	export { className as class };
 </script>
 
 <div class="markdown overflow-x-hidden {className}">

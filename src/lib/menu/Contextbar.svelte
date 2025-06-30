@@ -22,11 +22,11 @@
 	import { pushInfoToast } from '$lib/toast';
 	import Syncer from './Syncer.svelte';
 
-	let launchGamePopupOpen = false;
-	let newProfilePopupOpen = false;
+	let launchGamePopupOpen = $state(false);
+	let newProfilePopupOpen = $state(false);
 
-	let gamesOpen = false;
-	let profilesOpen = false;
+	let gamesOpen = $state(false);
+	let profilesOpen = $state(false);
 
 	function deleteProfile(index: number) {
 		confirm(`Are you sure you want to delete ${profiles[index].name}?`).then(async (result) => {
@@ -52,14 +52,14 @@
 	<div
 		class="text-accent-400 hover:text-accent-400 border-primary-600 hover:bg-primary-800 shrink-0 border-r pr-8 pl-6"
 	>
-		<Button.Root class="flex h-full items-center font-semibold" on:click={launchGame}>
+		<Button.Root class="flex h-full items-center font-semibold" onclick={launchGame}>
 			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
 			Launch game
 		</Button.Root>
 	</div>
 
 	<Button.Root
-		on:click={() => (gamesOpen = !gamesOpen)}
+		onclick={() => (gamesOpen = !gamesOpen)}
 		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 items-center justify-between border-r pr-4 pl-2 font-semibold"
 	>
 		<img
@@ -107,7 +107,7 @@
 						{profile.id == activeProfileId
 						? 'text-primary-300 hover:text-primary-200 font-medium'
 						: 'text-primary-400 hover:text-primary-300'}"
-					on:click={() => {
+					onclick={() => {
 						setActiveProfile(index);
 						profilesOpen = false;
 					}}
@@ -133,7 +133,7 @@
 
 					<Button.Root
 						class="text-primary-400 rounded-sm p-1 hover:bg-red-600 hover:text-red-200"
-						on:click={(evt) => {
+						onclick={(evt) => {
 							evt.stopPropagation();
 							deleteProfile(index);
 							profilesOpen = false;
@@ -146,7 +146,7 @@
 
 			<DropdownMenu.Item
 				class="bg-accent-700 hover:bg-accent-600 flex cursor-default items-center justify-center rounded-sm py-1 text-white"
-				on:click={() => (newProfilePopupOpen = true)}
+				onclick={() => (newProfilePopupOpen = true)}
 			>
 				<Icon icon="mdi:plus" class="mr-1 text-lg" />
 				New profile

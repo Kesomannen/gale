@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { refreshProfiles } from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import Label from '$lib/components/Label.svelte';
@@ -9,13 +11,19 @@
 	import PathField from '$lib/components/PathField.svelte';
 	import { open as openDialog } from '@tauri-apps/plugin-dialog';
 
-	export let open = false;
+	type Props = {
+		open?: boolean;
+	};
 
-	let name: string;
-	let override = false;
-	let path: string | null;
+	let { open = $bindable(false) }: Props = $props();
 
-	$: if (open) name = '';
+	let name: string = $state('');
+	let override = $state(false);
+	let path: string | null = $state(null);
+
+	run(() => {
+		if (open) name = '';
+	});
 
 	async function createProfile() {
 		await invokeCommand('create_profile', { name, overridePath: override ? path : null });
@@ -36,7 +44,7 @@
 	<InputField
 		placeholder="Enter name..."
 		class="mt-1 w-full"
-		on:submit={createProfile}
+		onsubmit={createProfile}
 		bind:value={name}
 	/>
 
@@ -46,12 +54,12 @@
 	</div>
 
 	{#if override}
-		<PathField label="Custom path" bind:value={path} on:click={browse}
+		<PathField label="Custom path" bind:value={path} onclick={browse}
 			>The path of the profile.</PathField
 		>
 	{/if}
 
-	<svelte:fragment slot="buttons">
-		<BigButton on:click={createProfile}>Create</BigButton>
-	</svelte:fragment>
+	{#snippet buttons()}
+		<Button onclick={createProfile}>Create</Button>
+	{/snippet}
 </ConfirmPopup>

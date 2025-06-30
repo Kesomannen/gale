@@ -5,12 +5,16 @@
 	import type { Mod } from '$lib/models';
 	import Icon from '@iconify/svelte';
 
-	export let open = false;
-	export let useLatest = false;
-	export let mod: Mod;
-	export let kind: 'readme' | 'changelog';
+	type Props = {
+		open?: boolean;
+		useLatest?: boolean;
+		mod: Mod;
+		kind: 'readme' | 'changelog';
+	};
 
-	let promise: Promise<string | null> | null = null;
+	let { open = $bindable(false), useLatest = false, mod, kind }: Props = $props();
+
+	let promise: Promise<string | null> | null = $state(null);
 	let currentMod: Mod | null = null;
 
 	export async function fetchMarkdown() {

@@ -3,22 +3,23 @@
 	import type { ConfigValue, ConfigNum, ConfigEntryId, ConfigRange } from '$lib/models';
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
-	export let entryId: ConfigEntryId;
-	export let locked: boolean;
+	type Props = {
+		entryId: ConfigEntryId;
+		locked: boolean;
+	};
 
-	let content = entryId.entry.value.content as ConfigNum;
+	let { entryId, locked }: Props = $props();
+
+	let content = $state(entryId.entry.value.content as ConfigNum);
 	let range = content.range as ConfigRange;
 	let type = entryId.entry.value.type as 'int' | 'float';
 
-	$: fillPercent = clamp(((content.value - range.start) / (range.end - range.start)) * 100, 0, 100);
-	$: decimals = type === 'int' ? 0 : 1;
+	let element: HTMLDivElement = $state();
+	let fill: HTMLDivElement = $state();
+	let handle: HTMLDivElement = $state();
 
-	let element: HTMLDivElement;
-	let fill: HTMLDivElement;
-	let handle: HTMLDivElement;
-
-	let isDragging = false;
-	let inputString = content.value.toString();
+	let isDragging = $state(false);
+	let inputString = $state(content.value.toString());
 
 	function onReset(newValue: ConfigValue) {
 		content = newValue.content as ConfigNum;
@@ -54,15 +55,19 @@
 	function clamp(value: number, min: number, max: number) {
 		return Math.max(min, Math.min(max, value));
 	}
+	let fillPercent = $derived(
+		clamp(((content.value - range.start) / (range.end - range.start)) * 100, 0, 100)
+	);
+	let decimals = $derived(type === 'int' ? 0 : 1);
 </script>
 
 <svelte:window
-	on:mousemove={(evt) => {
+	onmousemove={(evt) => {
 		if (isDragging) {
 			calculateNewValue(evt.clientX);
 		}
 	}}
-	on:mouseup={(evt) => {
+	onmouseup={(evt) => {
 		if (isDragging) {
 			isDragging = false;
 			calculateNewValue(evt.clientX);
@@ -80,7 +85,7 @@
 	aria-disabled={locked}
 	tabindex="0"
 	bind:this={element}
-	on:keydown={(e) => {
+	onkeydown={(e) => {
 		if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
 			content.value = Math.max(range.start, content.value - 1);
 		} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
@@ -89,7 +94,7 @@
 
 		inputString = content.value.toFixed(decimals);
 	}}
-	on:mousedown={(evt) => {
+	onmousedown={(evt) => {
 		isDragging = true;
 		calculateNewValue(evt.clientX);
 	}}
@@ -107,7 +112,7 @@
 			class:bg-primary-300={isDragging}
 			bind:this={handle}
 			draggable="false"
-		/>
+		></div>
 	</div>
 </div>
 
@@ -115,7 +120,7 @@
 	type="number"
 	disabled={locked}
 	bind:value={inputString}
-	on:change={() => {
+	onchange={() => {
 		let newValue = parseFloat(inputString);
 
 		if (!isNaN(newValue)) {

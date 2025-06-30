@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { Menubar } from 'bits-ui';
+	import type { Snippet } from 'svelte';
 
-	export let label: string;
+	type Props = {
+		label: string;
+		children?: Snippet;
+	};
+
+	let { label, children }: Props = $props();
 </script>
 
 <Menubar.Menu>
@@ -13,6 +19,6 @@
 	<Menubar.Content
 		class="border-primary-600 bg-primary-800 mt-0.5 flex flex-col gap-0.5 rounded-lg border py-1 shadow-xl"
 	>
-		<slot />
+		{@render children?.()}
 	</Menubar.Content>
 </Menubar.Menu>

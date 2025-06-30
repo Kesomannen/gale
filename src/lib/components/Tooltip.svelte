@@ -2,13 +2,27 @@
 	import { dropTransitionTo } from '$lib/transitions';
 	import { Tooltip } from 'bits-ui';
 
-	export let text: string = '[No text provided]';
-	export let side: 'top' | 'right' | 'bottom' | 'left' = 'top';
-	export let sideOffset: number = 0;
-	export let openDelay: number = 150;
-	export let disabled = false;
+	type Props = {
+		text?: string;
+		side?: 'top' | 'right' | 'bottom' | 'left';
+		sideOffset?: number;
+		openDelay?: number;
+		disabled?: boolean;
+		class?: string;
+		children?: import('svelte').Snippet;
+		tooltip?: import('svelte').Snippet;
+	};
 
-	let triggerClass: string = '';
+	let {
+		text = '[No text provided]',
+		side = 'top',
+		sideOffset = 0,
+		openDelay = 150,
+		disabled = false,
+		class: triggerClass = '',
+		children,
+		tooltip
+	}: Props = $props();
 
 	const distances = {
 		top: { x: 0, y: 7 },
@@ -17,14 +31,12 @@
 		left: { x: 7, y: 0 }
 	};
 
-	$: distance = distances[side];
-
-	export { triggerClass as class };
+	let distance = $derived(distances[side]);
 </script>
 
 <Tooltip.Root {openDelay}>
 	<Tooltip.Trigger class={triggerClass} {disabled}>
-		<slot />
+		{@render children?.()}
 	</Tooltip.Trigger>
 	<Tooltip.Content
 		class="border-primary-600 bg-primary-800 text-primary-300 max-w-lg cursor-help rounded-lg border px-4 py-2 shadow-lg"
@@ -33,8 +45,8 @@
 		{side}
 	>
 		<Tooltip.Arrow class="border-primary-600 rounded-[2px] border-t border-l" />
-		<slot name="tooltip">
+		{#if tooltip}{@render tooltip()}{:else}
 			{text}
-		</slot>
+		{/if}
 	</Tooltip.Content>
 </Tooltip.Root>

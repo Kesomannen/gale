@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import Popup from '$lib/components/Popup.svelte';
 	import TabsMenu from '$lib/components/TabsMenu.svelte';
 
@@ -11,7 +13,7 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import InputField from '$lib/components/InputField.svelte';
 	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import Dropdown from '$lib/components/Dropdown.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
@@ -26,24 +28,16 @@
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
 
-	let open: boolean;
-	let data: AnyImportData | null;
+	let open: boolean = $state(false);
+	let data: AnyImportData | null = $state(null);
 
-	let key: string;
-	let name: string;
-	let loading: boolean;
-	let importAll: boolean;
-	let mode: 'new' | 'overwrite' = 'new';
+	let key: string = $state('');
+	let name: string = $state('');
+	let loading: boolean = $state(false);
+	let importAll: boolean = $state(false);
+	let mode: 'new' | 'overwrite' = $state('new');
 
 	let unlistenFn: UnlistenFn | undefined;
-
-	$: mods = data?.manifest.mods ?? [];
-
-	$: if (mode === 'overwrite' && isAvailable(name)) {
-		name = profiles[0].name;
-	}
-
-	$: nameAvailable = mode === 'overwrite' || isAvailable(name);
 
 	onMount(async () => {
 		unlistenFn = await listen<ImportData>('import_profile', (evt) => {
@@ -137,6 +131,15 @@
 
 		open = true;
 	}
+
+	let mods = $derived(data?.manifest.mods ?? []);
+	let nameAvailable = $derived(mode === 'overwrite' || isAvailable(name));
+
+	run(() => {
+		if (mode === 'overwrite' && isAvailable(name)) {
+			name = profiles[0].name;
+		}
+	});
 </script>
 
 <Popup
@@ -153,13 +156,13 @@
 				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
 			</div>
 
-			<BigButton on:click={submitKey} disabled={loading}>
+			<Button onclick={submitKey} disabled={loading}>
 				{#if loading}
 					<Icon icon="mdi:loading" class="animate-spin" />
 				{:else}
 					Import
 				{/if}
-			</BigButton>
+			</Button>
 		</div>
 	{:else}
 		<TabsMenu
@@ -182,9 +185,11 @@
 							<Tooltip class="absolute right-2 bottom-0 h-full cursor-text text-xl text-red-500">
 								<Icon icon="mdi:error" />
 
-								<div slot="tooltip">
-									Profile {name} already exists!
-								</div>
+								{#snippet tooltip()}
+									<div>
+										Profile {name} already exists!
+									</div>
+								{/snippet}
 							</Tooltip>
 						{/if}
 					</div>
@@ -248,14 +253,14 @@
 		{/if}
 
 		<div class="mt-2 flex w-full items-center justify-end gap-2">
-			<BigButton
+			<Button
 				color="primary"
-				on:click={() => {
+				onclick={() => {
 					open = false;
 					data = null;
-				}}>Cancel</BigButton
+				}}>Cancel</Button
 			>
-			<BigButton disabled={!nameAvailable || loading} on:click={importData}>Import</BigButton>
+			<Button disabled={!nameAvailable || loading} onclick={importData}>Import</Button>
 		</div>
 	{/if}
 </Popup>

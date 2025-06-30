@@ -1,18 +1,26 @@
 <script lang="ts">
-	import BigButton from '$lib/components/BigButton.svelte';
+	import { run } from 'svelte/legacy';
+
+	import Button from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import type { R2ImportData } from '$lib/models';
 	import ImportR2Flow from './ImportR2Flow.svelte';
 
-	export let open: boolean;
+	type Props = {
+		open: boolean;
+	};
 
-	let loading = false;
+	let { open = $bindable() }: Props = $props();
+
+	let loading = $state(false);
 	let importFlow: ImportR2Flow;
-	let importData: R2ImportData;
+	let importData: R2ImportData | null = $state(null);
 
-	$: if (open && importFlow) {
-		importFlow.refresh(null);
-	}
+	run(() => {
+		if (open && importFlow) {
+			importFlow.refresh(null);
+		}
+	});
 
 	async function doImport() {
 		if (await importFlow.doImport()) {
@@ -34,7 +42,7 @@
 	<ImportR2Flow bind:this={importFlow} bind:loading bind:importData />
 
 	<div class="mt-3 mr-0.5 flex w-full justify-end gap-2">
-		<BigButton color="primary" on:click={() => (open = false)}>Cancel</BigButton>
-		<BigButton color="accent" on:click={doImport}>Import</BigButton>
+		<Button color="primary" onclick={() => (open = false)}>Cancel</Button>
+		<Button color="accent" onclick={doImport}>Import</Button>
 	</div>
 </Popup>

@@ -4,11 +4,15 @@
 	import Label from '$lib/components/Label.svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	export let label: string;
-	export let disableMessage: string | null = null;
+	type Props = {
+		label: string;
+		disableMessage?: string | null;
+		value: boolean;
+		set: (value: boolean) => Promise<void>;
+		children?: import('svelte').Snippet;
+	};
 
-	export let value: boolean;
-	export let set: (value: boolean) => Promise<void>;
+	let { label, disableMessage = null, value = $bindable(), set, children }: Props = $props();
 
 	async function onValueChanged(newValue: boolean) {
 		if (!newValue && disableMessage) {
@@ -30,7 +34,7 @@
 	</Label>
 
 	<Info>
-		<slot />
+		{@render children?.()}
 	</Info>
 
 	<Checkbox bind:value {onValueChanged} />

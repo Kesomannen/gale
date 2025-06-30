@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { invokeCommand } from '$lib/invoke';
 	import type { R2ImportData } from '$lib/models';
 	import { refreshProfiles } from '$lib/stores';
@@ -10,24 +12,27 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { capitalize } from '$lib/util';
 
-	export let importData: R2ImportData | null | undefined = undefined;
+	let path: string | null = $state(null);
+	let error = $state('');
 
-	let path: string | null = null;
-	let error = '';
+	type Props = {
+		importData?: R2ImportData | null | undefined;
+		loading?: boolean;
+	};
 
-	export let loading = false;
-	let loadingText = '';
+	let { importData = $bindable(undefined), loading = $bindable(false) }: Props = $props();
+	let loadingText = $state('');
 
-	$: profiles = importData?.profiles ?? [];
-	$: include = importData?.include ?? [];
+	let profiles = $derived(importData?.profiles ?? []);
+	let include = $derived(importData?.include ?? []);
 
-	$: {
+	run(() => {
 		path = importData?.path ?? null;
 
 		if (importData) {
 			importData.include = importData.profiles.map(() => true);
 		}
-	}
+	});
 
 	export async function refresh(newPath: string | null) {
 		console.log('refreshing path', newPath);

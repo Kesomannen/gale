@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import Popup from '$lib/components/Popup.svelte';
 	import Link from '$lib/components/Link.svelte';
 
@@ -6,14 +8,20 @@
 	import { getVersion } from '@tauri-apps/api/app';
 	import { onMount } from 'svelte';
 	import { isChecking, nextUpdate, refreshUpdate } from './Updater.svelte';
-	import BigButton from '$lib/components/BigButton.svelte';
+	import Button from '$lib/components/Button.svelte';
 
-	export let open = false;
+	type Props = {
+		open?: boolean;
+	};
 
-	let version = '';
-	let checkedUpdate = false;
+	let { open = $bindable(false) }: Props = $props();
 
-	$: if (open) checkedUpdate = false;
+	let version = $state('');
+	let checkedUpdate = $state(false);
+
+	run(() => {
+		if (open) checkedUpdate = false;
+	});
 
 	onMount(async () => {
 		version = await getVersion();
@@ -21,7 +29,7 @@
 </script>
 
 <Popup bind:open title="About">
-	<div class="h-3" />
+	<div class="h-3"></div>
 	<img src="logo.png" alt="Logo" class="float-right size-20" />
 	<div>
 		<h3 class="text-xl font-semibold text-white">Gale</h3>
@@ -53,14 +61,14 @@
 			<Link href="https://ko-fi.com/kesomannen">Donate</Link>
 		</div>
 		<div class="mt-3 flex items-center gap-2">
-			<BigButton
-				on:click={() => refreshUpdate().then(() => (checkedUpdate = true))}
+			<Button
+				onclick={() => refreshUpdate().then(() => (checkedUpdate = true))}
 				disabled={$isChecking}
 				color="primary"
 				class="mr-2"
 			>
 				<Icon icon="mdi:refresh" class="mr-2" />
-				Check for updates</BigButton
+				Check for updates</Button
 			>
 
 			{#if $isChecking}

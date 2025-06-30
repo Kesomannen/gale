@@ -1,3 +1,4 @@
+<!-- @migration-task Error while migrating Svelte code: This migration would change the name of a slot (item to item_1) making the component unusable -->
 <script lang="ts" generics="T, Multiple extends boolean = false">
 	import { dropTransition } from '$lib/transitions';
 

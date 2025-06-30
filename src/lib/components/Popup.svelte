@@ -5,12 +5,25 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { popupTransition } from '$lib/transitions';
 
-	export let open: boolean;
-	export let title: string | null = null;
-	export let confirmClose: { message: string } | null = null;
-	export let canClose: boolean = true;
-	export let large: boolean = false;
-	export let onClose: () => void = () => {};
+	type Props = {
+		open: boolean;
+		title?: string | null;
+		confirmClose?: { message: string } | null;
+		canClose?: boolean;
+		large?: boolean;
+		onClose?: () => void;
+		children?: import('svelte').Snippet;
+	};
+
+	let {
+		open = $bindable(),
+		title = null,
+		confirmClose = null,
+		canClose = true,
+		large = false,
+		onClose = () => {},
+		children
+	}: Props = $props();
 
 	async function close(evt: UIEvent) {
 		if (!canClose) {
@@ -31,10 +44,13 @@
 	}
 </script>
 
-<Dialog.Root
-	bind:open
+<!--
 	closeOnEscape={canClose && confirmClose === null}
 	closeOnOutsideClick={canClose && confirmClose === null}
+-->
+
+<Dialog.Root
+	bind:open
 	onOpenChange={(open) => {
 		if (!open) {
 			onClose();
@@ -42,12 +58,7 @@
 	}}
 >
 	<Dialog.Portal>
-		<Dialog.Overlay
-			data-tauri-drag-region
-			class="fixed inset-0 z-0 rounded-lg bg-black/60"
-			transition={fade}
-			transitionConfig={{ duration: 100 }}
-		/>
+		<Dialog.Overlay data-tauri-drag-region class="fixed inset-0 z-0 rounded-lg bg-black/60" />
 		<Dialog.Content
 			class="pointer-events-none fixed inset-0 flex items-center justify-center"
 			{...popupTransition}
@@ -60,7 +71,7 @@
 				{#if canClose}
 					<Button.Root
 						class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
-						on:click={close}
+						onclick={close}
 					>
 						<Icon icon="mdi:close" />
 					</Button.Root>
@@ -72,7 +83,7 @@
 					>
 				{/if}
 
-				<slot />
+				{@render children?.()}
 			</div>
 		</Dialog.Content>
 	</Dialog.Portal>

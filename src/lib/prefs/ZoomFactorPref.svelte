@@ -3,8 +3,12 @@
 	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
 
-	export let value: number;
-	export let set: (newValue: number) => void;
+	type Props = {
+		value: number;
+		set: (newValue: number) => void;
+	};
+
+	let { value = $bindable(), set }: Props = $props();
 </script>
 
 <div class="flex items-center">
