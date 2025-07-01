@@ -1,19 +1,16 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import type { HTMLAnchorAttributes } from 'svelte/elements';
 
-	type Props = {
-		href: string;
-		children?: Snippet;
-	};
+	type Props = Omit<HTMLAnchorAttributes, 'target' | 'rel'>;
 
-	let { href, children }: Props = $props();
+	let { class: classProp, children, ...props }: Props = $props();
 </script>
 
 <a
-	{href}
 	target="_blank"
 	rel="noopener noreferrer"
-	class="text-accent-400 hover:text-accent-300 hover:underline"
+	class={[classProp, 'text-accent-400 hover:text-accent-300 cursor-pointer hover:underline']}
+	{...props}
 >
 	{@render children?.()}
 </a>

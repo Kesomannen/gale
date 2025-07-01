@@ -1,24 +1,18 @@
 <script lang="ts">
-	import { createBubbler } from 'svelte/legacy';
-
-	const bubble = createBubbler();
-	import { Button } from 'bits-ui';
-	import type { Mod } from '../models';
+	import type { Mod } from '../types';
 	import Icon from '@iconify/svelte';
-	import { createEventDispatcher } from 'svelte';
 	import { iconSrc } from '$lib/util';
+	import type { MouseEventHandler } from 'svelte/elements';
 
 	type Props = {
 		mod: Mod;
 		isSelected: boolean;
 		locked: boolean;
+		onclick?: MouseEventHandler<HTMLButtonElement>;
+		oninstall?: () => void;
 	};
 
-	let { mod, isSelected, locked }: Props = $props();
-
-	const dispatch = createEventDispatcher<{
-		install: void;
-	}>();
+	let { mod, isSelected, locked, onclick, oninstall }: Props = $props();
 
 	let descriptionClasses = $derived(
 		isSelected ? 'text-primary-300' : 'text-primary-400 group-hover:text-primary-300'
@@ -29,7 +23,7 @@
 	class="group flex w-full rounded-lg border p-2 {isSelected
 		? 'border-primary-500 bg-primary-700'
 		: 'hover:bg-primary-700 border-transparent'}"
-	onclick={bubble('click')}
+	{onclick}
 >
 	<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
 	<div class="shrink grow overflow-hidden pl-3 text-left">
@@ -56,14 +50,16 @@
 	</div>
 
 	{#if !mod.isInstalled && !locked}
-		<Button.Root
+		<!-- svelte-ignore node_invalid_placement_ssr -->
+		<!-- we're not using ssr -->
+		<button
 			class="bg-accent-600 hover:bg-accent-500 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
-			on:click={(evt) => {
-				dispatch('install');
+			onclick={(evt) => {
 				evt.stopPropagation();
+				oninstall?.();
 			}}
 		>
 			<Icon icon="mdi:download" />
-		</Button.Root>
+		</button>
 	{/if}
 </button>

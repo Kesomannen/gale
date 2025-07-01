@@ -1,8 +1,9 @@
 <script lang="ts">
+	import Select from '$lib/components/Select.svelte';
 	import { setConfigEntry } from '$lib/config';
-	import type { ConfigEntryId, ConfigValue } from '$lib/models';
+	import type { ConfigEntryId, ConfigValue } from '$lib/types';
+	import { selectItems } from '$lib/util';
 	import ResetConfigButton from './ResetConfigButton.svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -13,14 +14,14 @@
 
 	let value = entryId.entry.value;
 	let content = $state(value.content as { indicies: number[]; options: string[] });
-	let selected = $state(content.indicies.map((index) => content.options[index]));
+	let selected = $derived(content.indicies.map((index) => content.options[index]));
 
 	function onReset(newValue: ConfigValue) {
 		content = newValue.content as { indicies: number[]; options: string[] };
 		selected = content.indicies.map((index) => content.options[index]);
 	}
 
-	function onSelectedChange(newValues: string[]) {
+	function onValueChange(newValues: string[]) {
 		content.indicies = newValues.map((value) => content.options.indexOf(value));
 		setConfigEntry(entryId, {
 			type: 'flags',
@@ -29,13 +30,13 @@
 	}
 </script>
 
-<Dropdown
-	placeholder="Select values"
-	items={content.options}
+<Select
+	type="multiple"
+	triggerClass="grow overflow-hidden"
+	placeholder="Select flags"
+	items={selectItems(content.options)}
 	disabled={locked}
-	multiple
-	{onSelectedChange}
-	class="grow overflow-hidden"
-	bind:selected
+	{onValueChange}
+	bind:value={selected}
 />
 <ResetConfigButton {entryId} {onReset} {locked} />

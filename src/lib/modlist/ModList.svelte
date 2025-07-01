@@ -2,21 +2,22 @@
 	import { run } from 'svelte/legacy';
 
 	import ModDetails from '$lib/modlist/ModDetails.svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import VirtualList from '$lib/components/VirtualList.svelte';
 	import { open } from '@tauri-apps/plugin-shell';
-	import { sentenceCase } from '$lib/util';
+	import { selectItems, sentenceCase } from '$lib/util';
 	import {
-		SortBy,
+		type SortBy,
 		type Mod,
 		type QueryModsArgs,
-		SortOrder,
+		type SortOrder,
 		type ModContextItem
-	} from '$lib/models';
+	} from '$lib/types';
 	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
 	import { activeGame } from '$lib/stores';
+	import Select from '$lib/components/Select.svelte';
+	import type { Snippet } from 'svelte';
 
 	const defaultContextItems: ModContextItem[] = [
 		{
@@ -41,10 +42,12 @@
 		selected: Mod | null;
 		contextItems?: ModContextItem[];
 		locked: boolean;
-		banner?: import('svelte').Snippet;
-		placeholder?: import('svelte').Snippet;
-		item?: import('svelte').Snippet<[any]>;
-		details?: import('svelte').Snippet;
+		banner?: Snippet;
+		placeholder?: Snippet;
+		item?: Snippet<
+			[{ mod: Mod; index: number; contextItems: ModContextItem[]; isSelected: boolean }]
+		>;
+		details?: Snippet;
 	};
 
 	let {
@@ -70,7 +73,6 @@
 	run(() => {
 		if (listEnd > mods.length - 2 && mods.length === maxCount) {
 			maxCount += 20;
-			console.log('increasing max count');
 		}
 	});
 
@@ -116,24 +118,22 @@
 			</div>
 
 			<div class="flex grow gap-1.5">
-				<Dropdown
-					class="grow basis-0 py-1.5"
-					icon={$queryArgs.sortOrder === SortOrder.Descending
+				<Select
+					icon={$queryArgs.sortOrder === 'descending'
 						? 'mdi:sort-descending'
 						: 'mdi:sort-ascending'}
-					items={[SortOrder.Descending, SortOrder.Ascending]}
-					bind:selected={$queryArgs.sortOrder}
-					getLabel={sentenceCase}
-					multiple={false}
+					triggerClass="grow basis-0 py-1.5"
+					items={selectItems(['descending', 'ascending'], sentenceCase)}
+					bind:value={$queryArgs.sortOrder}
+					type="single"
 				/>
 
-				<Dropdown
-					class="grow basis-0 py-1.5"
-					items={sortOptions}
-					bind:selected={$queryArgs.sortBy}
-					getLabel={sentenceCase}
+				<Select
 					icon="mdi:sort"
-					multiple={false}
+					triggerClass="grow basis-0 py-1.5"
+					items={selectItems(sortOptions, sentenceCase)}
+					bind:value={$queryArgs.sortBy}
+					type="single"
 				/>
 			</div>
 		</div>
@@ -153,19 +153,19 @@
 				bind:excluded={$queryArgs.includeCategories}
 			/>
 
-			<Dropdown
-				overrideLabel="Include"
+			<Select
+				label="Include"
 				icon="mdi:filter"
-				class="min-w-36 grow basis-0 py-1.5"
-				items={['Deprecated', 'NSFW', 'Enabled', 'Disabled']}
-				selected={getSelectedIncludes()}
-				onSelectedChange={(items) => {
+				triggerClass="min-w-36 grow basis-0 py-1.5"
+				items={selectItems(['Deprecated', 'NSFW', 'Enabled', 'Disabled'])}
+				onValueChange={(items) => {
 					$queryArgs.includeEnabled = items.includes('Enabled');
 					$queryArgs.includeDeprecated = items.includes('Deprecated');
 					$queryArgs.includeNsfw = items.includes('NSFW');
 					$queryArgs.includeDisabled = items.includes('Disabled');
 				}}
-				multiple
+				value={getSelectedIncludes()}
+				type="multiple"
 			/>
 		</div>
 
@@ -185,12 +185,10 @@
 			>
 				{#snippet children({ item: mod, index })}
 					{@render item?.({
-						data: {
-							mod,
-							index,
-							contextItems: allContextItems,
-							isSelected: selected?.uuid === mod.uuid
-						}
+						mod,
+						index,
+						contextItems: allContextItems,
+						isSelected: selected?.uuid === mod.uuid
 					})}
 				{/snippet}
 			</VirtualList>
@@ -202,7 +200,7 @@
 			{locked}
 			mod={selected}
 			contextItems={allContextItems}
-			on:close={() => (selected = null)}
+			onclose={() => (selected = null)}
 		>
 			{@render details?.()}
 		</ModDetails>

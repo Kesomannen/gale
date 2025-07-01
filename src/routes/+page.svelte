@@ -3,39 +3,36 @@
 
 	import { invokeCommand } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
-	import {
-		type Mod,
-		type ModActionResponse,
-		type ProfileQuery,
-		type AvailableUpdate,
-		SortBy,
-		type Dependant,
-		SortOrder,
-		type ModContextItem
-	} from '$lib/models';
+	import type {
+		Mod,
+		ModActionResponse,
+		ProfileQuery,
+		AvailableUpdate,
+		Dependant,
+		ModContextItem,
+		SortBy
+	} from '$lib/types';
 	import ModList from '$lib/modlist/ModList.svelte';
 	import { activeProfile, activeProfileLocked, profileQuery, refreshProfiles } from '$lib/stores';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 	import ProfileModListItem from '$lib/modlist/ProfileModListItem.svelte';
 	import UpdateAllBanner from '$lib/modlist/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
-	import Link from '$lib/components/Link.svelte';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
-	const sortOptions = [
-		SortBy.Custom,
-		SortBy.InstallDate,
-		SortBy.LastUpdated,
-		SortBy.Newest,
-		SortBy.DiskSpace,
-		SortBy.Name,
-		SortBy.Author,
-		SortBy.Rating,
-		SortBy.Downloads
+	const sortOptions: SortBy[] = [
+		'custom',
+		'installDate',
+		'lastUpdated',
+		'newest',
+		'diskSpace',
+		'name',
+		'author',
+		'rating',
+		'downloads'
 	];
 
 	const contextItems: ModContextItem[] = [
@@ -163,14 +160,15 @@
 
 		await refresh();
 
-		selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
-		console.log(selectedMod);
+		if (selectedMod !== null) {
+			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
+		}
 	}
 
 	let reorderUuid: string;
 	let reorderPrevIndex: number;
 
-	function onDragStart(evt: DragEvent) {
+	function ondragstart(evt: DragEvent) {
 		if (!isDragApplicable(evt)) return;
 
 		let element = evt.currentTarget as HTMLElement;
@@ -182,7 +180,7 @@
 		evt.dataTransfer!.setData('text/html', element.outerHTML);
 	}
 
-	async function onDragOver(evt: DragEvent) {
+	async function ondragover(evt: DragEvent) {
 		if (!isDragApplicable(evt)) return;
 
 		let target = evt.currentTarget as HTMLElement;
@@ -199,14 +197,14 @@
 
 		reorderPrevIndex = newIndex;
 
-		if ($profileQuery.sortOrder === SortOrder.Descending) {
+		if ($profileQuery.sortOrder === 'descending') {
 			delta *= -1; // list is reversed
 		}
 
 		await emit('reorder_mod', { uuid: reorderUuid, delta });
 	}
 
-	async function onDragEnd(evt: DragEvent) {
+	async function ondragend(evt: DragEvent) {
 		if (!isDragApplicable(evt)) return;
 		await emit('finish_reorder');
 	}
@@ -224,7 +222,7 @@
 		}
 	});
 	let reorderable = $derived(
-		$profileQuery.sortBy === SortBy.Custom &&
+		$profileQuery.sortBy === 'custom' &&
 			$profileQuery.searchTerm === '' &&
 			$profileQuery.excludeCategories.length === 0 &&
 			$profileQuery.includeCategories.length === 0 &&
@@ -246,13 +244,13 @@
 >
 	{#snippet details()}
 		{#if selectedMod && isOutdated(selectedMod) && !$activeProfileLocked}
-			<Button.Root
+			<button
 				class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
 				onclick={() => updateMod(selectedMod)}
 			>
 				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
 				Update to {selectedMod?.versions[0].name}
-			</Button.Root>
+			</button>
 		{/if}
 	{/snippet}
 
@@ -269,14 +267,14 @@
 				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
 					.map((mod) => mod.fullName)
 					.join(', ')}.
-				<Button.Root
+				<button
 					class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
 					onclick={() => {
 						unknownMods.forEach(uninstall);
 					}}
 				>
 					Uninstall {unknownMods.length === 1 ? 'it' : 'them'}?
-				</Button.Root>
+				</button>
 			</div>
 		{/if}
 	{/snippet}
@@ -297,16 +295,16 @@
 		{/if}
 	{/snippet}
 
-	{#snippet item({ data })}
+	{#snippet item(props)}
 		<ProfileModListItem
-			{...data}
+			{...props}
 			{reorderable}
 			locked={$activeProfileLocked}
-			ondragstart={onDragStart}
-			ondragover={onDragOver}
-			ondragend={onDragEnd}
-			ontoggle={(newState) => toggleMod(data.mod, newState)}
-			onclick={() => modList.selectMod(data.mod)}
+			{ondragstart}
+			{ondragover}
+			{ondragend}
+			ontoggle={(newState) => toggleMod(props.mod, newState)}
+			onclick={() => modList.selectMod(props.mod)}
 		/>
 	{/snippet}
 </ModList>
@@ -314,7 +312,7 @@
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
 	<div class="text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
-			No dependants found 😢
+			No dependants found
 		{:else}
 			<ModCardList names={dependants} showVersion={false} />
 		{/if}

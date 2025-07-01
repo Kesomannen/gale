@@ -23,9 +23,9 @@
 	{placeholder}
 />
 <Icon class="text-primary-400 absolute top-2 left-2.5 text-2xl" icon="mdi:magnify" />
-<Button.Root
+<button
 	class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute top-[0.4rem] right-1.5 rounded-md p-1 text-xl"
 	onclick={() => (value = '')}
 >
 	<Icon icon="mdi:close" />
-</Button.Root>
+</button>

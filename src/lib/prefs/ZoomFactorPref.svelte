@@ -1,7 +1,12 @@
 <script lang="ts">
-	import Dropdown from '$lib/components/Dropdown.svelte';
-	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
+	import Select from '$lib/components/Select.svelte';
+
+	const options = [0.5, 0.75, 1, 1.25, 1.5];
+	const items = options.map((option) => ({
+		label: option * 100 + '%',
+		value: option.toFixed(2)
+	}));
 
 	type Props = {
 		value: number;
@@ -14,15 +19,14 @@
 <div class="flex items-center">
 	<Label>Zoom factor</Label>
 
-	<Dropdown
-		class="grow"
-		items={[0.5, 0.75, 1, 1.25, 1.5]}
-		selected={value}
-		onSelectedChange={(newValue) => {
-			value = newValue;
-			set(newValue);
+	<Select
+		type="single"
+		triggerClass="grow"
+		{items}
+		value={value.toFixed(2)}
+		onValueChange={(newValue) => {
+			value = parseFloat(newValue);
+			set(value);
 		}}
-		getLabel={(percentage) => percentage * 100 + '%'}
-		multiple={false}
 	/>
 </div>

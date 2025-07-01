@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigEntryId, ConfigValue } from '$lib/models';
+	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { Button } from 'bits-ui';
@@ -24,7 +24,7 @@
 		}
 	}
 
-	async function onClick() {
+	async function onclick() {
 		if (shouldConfirm(entryId.entry.value)) {
 			let confirmed = await confirm(`Are you sure you want to reset ${entryId.entry.name}?`);
 			if (!confirmed) return;
@@ -41,10 +41,10 @@
 	}
 </script>
 
-<Button.Root
+<button
 	class="text-primary-400 disabled:text-primary-500 enabled:hover:bg-primary-700 enabled:hover:text-primary-300 ml-1 rounded-lg p-1.5 text-xl disabled:cursor-not-allowed"
 	disabled={locked}
-	on:click={onClick}
+	{onclick}
 >
 	<Icon icon="mdi:refresh" />
-</Button.Root>
+</button>

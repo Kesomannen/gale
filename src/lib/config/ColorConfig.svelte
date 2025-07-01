@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setConfigEntry } from '$lib/config';
-	import type { ConfigEntryId, ConfigValue } from '$lib/models';
+	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 
 	import ResetConfigButton from './ResetConfigButton.svelte';
 

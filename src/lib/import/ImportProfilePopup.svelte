@@ -7,7 +7,7 @@
 	import { Tabs } from 'bits-ui';
 
 	import { invokeCommand } from '$lib/invoke';
-	import type { AnyImportData, ImportData, SyncImportData as SyncImportData } from '$lib/models';
+	import type { AnyImportData, ImportData, SyncImportData as SyncImportData } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -15,15 +15,15 @@
 	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores';
 	import Button from '$lib/components/Button.svelte';
 	import Label from '$lib/components/Label.svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 	import Info from '$lib/components/Info.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { discordAvatarUrl } from '$lib/util';
+	import { discordAvatarUrl, selectItems } from '$lib/util';
 	import { pushInfoToast } from '$lib/toast';
+	import Select from '$lib/components/Select.svelte';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -145,7 +145,7 @@
 <Popup
 	title="Import profile"
 	bind:open
-	onClose={() => {
+	onclose={() => {
 		data = null;
 		importAll = false;
 	}}
@@ -202,12 +202,12 @@
 
 					<Info>Which existing profile to overwrite with the imported one.</Info>
 
-					<Dropdown
-						class="grow"
-						items={profiles.map((profile) => profile.name)}
+					<Select
+						triggerClass="grow"
+						items={selectItems(profiles.map((profile) => profile.name))}
+						type="single"
 						avoidCollisions={false}
-						multiple={false}
-						bind:selected={name}
+						bind:value={name}
 					/>
 				</div>
 			</Tabs.Content>
@@ -235,7 +235,7 @@
 						>Only enable this for trusted profiles!</b
 					>
 				</Info>
-				<Checkbox bind:value={importAll} />
+				<Checkbox bind:checked={importAll} />
 			</div>
 		</details>
 

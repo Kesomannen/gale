@@ -66,7 +66,7 @@ pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
 
     Ok(ImportData {
         manifest,
-        path: temp_dir.into_path(),
+        path: temp_dir.keep(),
         delete_after_import: true,
     })
 }

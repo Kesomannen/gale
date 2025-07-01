@@ -8,7 +8,7 @@
 	import ModCardList from './ModCardList.svelte';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
 
-	import { ModType, type Mod, type ModContextItem } from '$lib/models';
+	import { ModType, type Mod, type ModContextItem } from '$lib/types';
 	import {
 		communityUrl,
 		shortenFileSize,
@@ -20,39 +20,37 @@
 	import { Button, DropdownMenu } from 'bits-ui';
 
 	import Icon from '@iconify/svelte';
-	import { dropTransition } from '$lib/transitions';
-	import { createEventDispatcher } from 'svelte';
+	import { type Snippet } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 
 	type Props = {
 		mod: Mod;
 		contextItems?: ModContextItem[];
 		locked: boolean;
-		children?: import('svelte').Snippet;
+		onclose: () => void;
+		children?: Snippet;
 	};
 
-	let { mod, contextItems = [], locked, children }: Props = $props();
-
-	const dispatch = createEventDispatcher<{ close: void }>();
+	let { mod, contextItems = [], locked, onclose, children }: Props = $props();
 
 	let dependenciesOpen = $state(false);
 
 	let readmeOpen = $state(false);
-	let readme: ModInfoPopup = $state();
+	let readme: ModInfoPopup;
 
 	let changelogOpen = $state(false);
-	let changelog: ModInfoPopup = $state();
+	let changelog: ModInfoPopup;
 
 	let allContextItems = $derived([
 		...contextItems,
 		{
 			label: 'Close',
 			icon: 'mdi:close',
-			onclick: () => dispatch('close')
+			onclick: onclose
 		}
 	]);
 
-	let readmePromise: Promise<string | null> = $state();
+	let readmePromise: Promise<string | null> | null = $state(null);
 
 	function formatReadme(readme: string | null) {
 		if (readme === null) return null;
@@ -87,7 +85,6 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
 			class="border-primary-500 bg-primary-700 flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl"
-			{...dropTransition}
 		>
 			<ModContextMenuItems {mod} {locked} contextItems={allContextItems} type="details" />
 		</DropdownMenu.Content>
@@ -198,36 +195,36 @@
 	{/if}
 
 	{#if mod.type === 'remote'}
-		<Button.Root
+		<button
 			class="group bg-primary-600 hover:bg-primary-500 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
-			on:mouseenter={changelog.fetchMarkdown}
-			on:click={() => (changelogOpen = true)}
+			onmouseenter={() => changelog.fetchMarkdown()}
+			onclick={() => (changelogOpen = true)}
 		>
 			<Icon icon="mdi:file-document" class="mr-2 text-lg" />
 			Changelog
-		</Button.Root>
+		</button>
 
-		<Button.Root
+		<button
 			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
-			on:mouseenter={readme.fetchMarkdown}
-			on:click={() => (readmeOpen = true)}
+			onmouseenter={() => readme.fetchMarkdown()}
+			onclick={() => (readmeOpen = true)}
 		>
 			<Icon icon="mdi:info" class="mr-2 text-lg" />
 			Details
-		</Button.Root>
+		</button>
 	{/if}
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
-		<Button.Root
+		<button
 			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1 pl-3 text-white"
-			on:click={() => (dependenciesOpen = true)}
+			onclick={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />
 			Dependencies
 			<div class="bg-primary-500 group-hover:bg-primary-400 ml-auto rounded-md px-3 py-0.5 text-sm">
 				{mod.dependencies.length}
 			</div>
-		</Button.Root>
+		</button>
 	{/if}
 
 	{@render children?.()}

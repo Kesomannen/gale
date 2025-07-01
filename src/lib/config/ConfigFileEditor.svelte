@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ConfigEntry, ConfigFileData, ConfigSection } from '$lib/models';
+	import type { ConfigEntry, ConfigFileData, ConfigSection } from '$lib/types';
 	import ConfigEntryField from './ConfigEntryField.svelte';
 
 	type Props = {

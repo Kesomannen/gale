@@ -22,7 +22,7 @@
 	}: Props = $props();
 </script>
 
-<Popup {title} onClose={onCancel} bind:open>
+<Popup {title} onclose={onCancel} bind:open>
 	<Dialog.Description class="text-primary-300">
 		{#if children}{@render children()}{:else}
 			{description}

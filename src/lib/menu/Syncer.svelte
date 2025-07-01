@@ -5,7 +5,7 @@
 	import Popup from '$lib/components/Popup.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { ListedSyncProfile } from '$lib/models';
+	import type { ListedSyncProfile } from '$lib/types';
 	import { activeProfile, login, logout, refreshProfiles, user } from '$lib/stores';
 	import { pushInfoToast } from '$lib/toast';
 	import { discordAvatarUrl, timeSince } from '$lib/util';
@@ -14,7 +14,6 @@
 	import { ask } from '@tauri-apps/plugin-dialog';
 	import { Button, DropdownMenu } from 'bits-ui';
 	import OwnedSyncProfilesPopup from './OwnedSyncProfilesPopup.svelte';
-	import { dropTransition } from '$lib/transitions';
 
 	type State = 'off' | 'synced' | 'outdated';
 
@@ -133,13 +132,13 @@
 	}
 </script>
 
-<Button.Root
+<button
 	class="{style.classes} bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
 	onclick={() => (mainPopupOpen = true)}
 >
 	<Icon icon={style.icon} />
 	<div>{style.label}</div>
-</Button.Root>
+</button>
 
 <OwnedSyncProfilesPopup
 	bind:open={profilesPopupOpen}
@@ -164,7 +163,7 @@
 
 		<div class="mt-2 flex items-center gap-1">
 			<Tooltip text="Copy to clipboard">
-				<Button.Root
+				<button
 					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
 					onclick={async () => {
 						await writeText(syncInfo.id);
@@ -174,7 +173,7 @@
 					}}
 				>
 					{syncInfo.id}
-				</Button.Root>
+				</button>
 			</Tooltip>
 		</div>
 
@@ -230,7 +229,6 @@
 				<DropdownMenu.Content
 					class="border-primary-600 bg-primary-800 flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl"
 					side="bottom"
-					{...dropTransition}
 				>
 					{#each dropdownItems as item}
 						<DropdownMenu.Item class="menu-item context-menu-item pr-6" onclick={item.onClick}>

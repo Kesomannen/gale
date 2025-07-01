@@ -6,9 +6,10 @@
 	import { invokeCommand } from '$lib/invoke';
 	import { apiKeyPopupOpen } from './ApiKeyPopup.svelte';
 	import Icon from '@iconify/svelte';
-	import { Button } from 'bits-ui';
+	import type { Snippet } from 'svelte';
+
 	type Props = {
-		field?: import('svelte').Snippet;
+		field?: Snippet;
 	};
 
 	let { field }: Props = $props();
@@ -32,8 +33,8 @@
 		to view the token again.
 	</Info>
 
-	<Button.Root
-		class="group bg-primary-900 hover:border-primary-500 relative flex grow items-center truncate rounded-lg  border border-transparent px-3 py-1 text-right"
+	<button
+		class="group bg-primary-900 hover:border-primary-500 relative flex grow items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
 		on:click={() => ($apiKeyPopupOpen = true)}
 	>
 		<div class="mr-2 rounded-sm">
@@ -48,5 +49,5 @@
 		</div>
 
 		{@render field?.()}
-	</Button.Root>
+	</button>
 </div>

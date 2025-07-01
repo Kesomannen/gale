@@ -2,7 +2,7 @@
 	import BigButton from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { Dependant, Mod } from '$lib/models';
+	import type { Dependant, Mod } from '$lib/types';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
 
 	type Props = {

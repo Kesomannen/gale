@@ -14,8 +14,7 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
     Ok(game_dir
         .read_dir()?
         .filter_map(Result::ok)
-        .find(|entry| entry.path().extension().is_some_and(|ext| ext == "exe"))
-        .is_some())
+        .any(|entry| entry.path().extension().is_some_and(|ext| ext == "exe")))
 }
 
 pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> Result<()> {
@@ -29,7 +28,8 @@ pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> 
         .join("pfx")
         .join("user.reg");
 
-    let text = fs::read_to_string(&wine_reg_path).fs_context("reading wine registry", &wine_reg_path)?;
+    let text =
+        fs::read_to_string(&wine_reg_path).fs_context("reading wine registry", &wine_reg_path)?;
     let new_text = reg_add_in_section(
         &text,
         r#"[Software\\Wine\\DllOverrides]"#,

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setConfigEntry } from '$lib/config';
-	import type { ConfigEntryId, ConfigValue } from '$lib/models';
+	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
 
@@ -24,6 +24,6 @@
 </script>
 
 <div class="flex grow items-center">
-	<Checkbox bind:value={content} {onValueChanged} disabled={locked} />
+	<Checkbox bind:checked={content} onCheckedChange={onValueChanged} disabled={locked} />
 </div>
 <ResetConfigButton {entryId} {locked} {onReset} />

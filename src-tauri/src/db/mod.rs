@@ -14,7 +14,7 @@ use uuid::Uuid;
 
 use crate::{
     prefs::Prefs,
-    profile::{self, sync::auth::AuthState, ManagedGame, ModManager, Profile},
+    profile::{self, sync::auth::AuthCredentials, ManagedGame, ModManager, Profile},
     util,
 };
 
@@ -172,7 +172,7 @@ impl Db {
         })
     }
 
-    pub fn save_auth(&self, auth: Option<&AuthState>) -> Result<()> {
+    pub fn save_auth(&self, auth: Option<&AuthCredentials>) -> Result<()> {
         self.with_transaction(|tx| {
             let json = auth.map(serde_json::to_string).transpose()?;
 
@@ -183,7 +183,7 @@ impl Db {
         })
     }
 
-    pub fn read(&self) -> Result<(SaveData, Prefs, Option<AuthState>, bool)> {
+    pub fn read(&self) -> Result<(SaveData, Prefs, Option<AuthCredentials>, bool)> {
         if migrate::should_migrate() {
             let (data, prefs, user_id) =
                 migrate::migrate().context("failed to migrate legacy save data")?;

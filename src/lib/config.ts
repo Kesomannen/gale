@@ -1,5 +1,5 @@
 import { invokeCommand } from './invoke';
-import type { ConfigEntryId, ConfigValue } from './models';
+import type { ConfigEntryId, ConfigValue } from './types';
 
 export function isNum(value: ConfigValue) {
 	return value.type === 'int' || value.type === 'float';

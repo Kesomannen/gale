@@ -13,7 +13,7 @@
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 
 	import { activeGame } from '$lib/stores';
-	import { type Prefs, type GamePrefs, Platform } from '$lib/models';
+	import type { Prefs, GamePrefs, Platform } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { invokeCommand } from '$lib/invoke';
 
@@ -41,9 +41,7 @@
 	let platforms = $derived($activeGame?.platforms ?? []);
 	let needsDirectory = $derived(
 		!platforms.some(
-			(p) =>
-				p === Platform.Steam ||
-				(platform() === 'windows' && (p === Platform.EpicGames || p === Platform.XboxStore))
+			(p) => p === 'steam' || (platform() === 'windows' && (p === 'epicGames' || p === 'xboxStore'))
 		)
 	);
 
@@ -59,9 +57,9 @@
 			prefs.gamePrefs.set(gameSlug, gamePrefs!);
 			try {
 				await invokeCommand('set_prefs', { value: prefs });
-			} catch (e) {
+			} catch (error) {
 				await refresh();
-				throw e;
+				throw error;
 			}
 		};
 	}
@@ -83,7 +81,7 @@
 			label="Gale data folder"
 			type="dir"
 			value={prefs.dataDir}
-			set={set((value, prefs) => (prefs.dataDir = value))}
+			set={set((value, prefs) => (prefs.dataDir = value as string))}
 		>
 			The folder where mods and profiles are stored. Changing this will move the existing data.
 		</PathPref>
@@ -111,7 +109,13 @@
 		<div class="my-1 flex items-center">
 			<Label>Use native menubar</Label>
 
-			<Checkbox value={$useNativeMenu} onValueChanged={(value) => ($useNativeMenu = value)} />
+			<Checkbox
+				checked={$useNativeMenu}
+				onCheckedChange={(value) => {
+					console.log('checked');
+					$useNativeMenu = value;
+				}}
+			/>
 		</div>
 
 		<SmallHeading>Miscellaneous</SmallHeading>
@@ -152,7 +156,10 @@
 		<SmallHeading>Locations</SmallHeading>
 
 		{#if platforms.length > 0}
-			<PlatformPref value={gamePrefs.platform} set={set((value) => (gamePrefs.platform = value))} />
+			<PlatformPref
+				value={gamePrefs.platform}
+				set={set((value) => (gamePrefs!.platform = value))}
+			/>
 		{/if}
 
 		<PathPref
@@ -160,7 +167,7 @@
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride}
-			set={set((value) => (gamePrefs.dirOverride = value))}
+			set={set((value) => (gamePrefs!.dirOverride = value))}
 		>
 			{#if needsDirectory}
 				The location of the {$activeGame?.name} folder.
@@ -174,12 +181,12 @@
 
 		<LaunchModePref
 			value={gamePrefs.launchMode}
-			set={set((value) => (gamePrefs.launchMode = value))}
+			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}
-			set={set((value) => (gamePrefs.customArgs = value))}
+			set={set((value) => (gamePrefs!.customArgs = value))}
 		/>
 	{/if}
 </div>

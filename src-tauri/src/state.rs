@@ -7,7 +7,7 @@ use tokio::sync::broadcast;
 use crate::{
     db::{self, Db},
     prefs::Prefs,
-    profile::sync::auth::AuthState,
+    profile::sync::auth::AuthCredentials,
     profile::{self, ModManager},
     thunderstore::{self, Thunderstore},
 };
@@ -18,7 +18,7 @@ pub struct AppState {
     pub manager: Mutex<ModManager>,
     pub thunderstore: Mutex<Thunderstore>,
     pub db: Db,
-    pub auth: Mutex<Option<AuthState>>,
+    pub auth: Mutex<Option<AuthCredentials>>,
     pub auth_callback_channel: broadcast::Sender<String>,
     pub cancel_install_flag: AtomicBool,
     pub is_first_run: bool,
@@ -37,7 +37,7 @@ impl AppState {
         self.thunderstore.lock().unwrap()
     }
 
-    pub fn lock_auth(&self) -> MutexGuard<'_, Option<AuthState>> {
+    pub fn lock_auth(&self) -> MutexGuard<'_, Option<AuthCredentials>> {
         self.auth.lock().unwrap()
     }
 }
@@ -99,7 +99,7 @@ pub trait ManagerExt<R> {
         self.app_state().lock_thunderstore()
     }
 
-    fn lock_auth(&self) -> MutexGuard<'_, Option<AuthState>> {
+    fn lock_auth(&self) -> MutexGuard<'_, Option<AuthCredentials>> {
         self.app_state().lock_auth()
     }
 

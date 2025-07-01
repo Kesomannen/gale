@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import type { Mod, ConfigEntry, Dependant, SyncUser } from './models';
+import type { Mod, ConfigEntry, Dependant, SyncUser } from './types';
 import { activeGame } from './stores';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
@@ -143,4 +143,16 @@ export function isValidHex(str: string) {
 
 export function discordAvatarUrl(user: SyncUser) {
 	return `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`;
+}
+
+export function selectItems(
+	items: string[], 
+	getLabel: (item: string) => string = (value) => value as string
+) {
+	return items.map(item => ({ value: item, label: getLabel(item)}))
+}
+
+export function emptyOrUndefined(str: string) {
+	if (str.length === 0) return undefined;
+	return str;
 }

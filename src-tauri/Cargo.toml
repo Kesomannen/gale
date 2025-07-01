@@ -26,7 +26,7 @@ tauri-plugin-os = "2"
 tauri-plugin-process = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-clipboard-manager = "2"
-tauri-plugin-http = "~2.0.0"
+tauri-plugin-http = "2"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 
 serde_json = "1"
@@ -43,7 +43,7 @@ indexmap = { version = "2", features = ["serde"] }
 open = "5"
 itertools = "0.13"
 zip = { version = "2", features = ["deflate"] }
-uuid = { version = "1", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
 reqwest = { version = "0.12", features = ["json", "stream", "gzip"] }
 walkdir = "2"
 image = "0.25"

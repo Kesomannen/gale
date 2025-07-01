@@ -4,7 +4,7 @@
 	import BigButton from '$lib/components/Button.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
 
-	import type { Prefs, R2ImportData } from '$lib/models';
+	import type { Prefs, R2ImportData } from '$lib/types';
 
 	import { invokeCommand } from '$lib/invoke';
 	import { onMount } from 'svelte';
@@ -20,7 +20,7 @@
 
 	let stage: 'gameSelect' | 'importProfiles' | 'settings' | 'end' = $state('gameSelect');
 
-	let importFlow: ImportR2Flow = $state();
+	let importFlow: ImportR2Flow;
 	let importData: R2ImportData | null | undefined = $state();
 
 	let prefs: Prefs | null = $state(null);
@@ -62,7 +62,7 @@
 	<div class="text-primary-300">
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
-			<GameSelection onSelect={onSelectGame} />
+			<GameSelection onselect={onSelectGame} />
 		{:else if stage === 'importProfiles'}
 			<p>You can automatically transfer profiles from another mod manager to Gale.</p>
 
@@ -73,11 +73,11 @@
 			<ImportR2Flow bind:importData bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
-				<BigButton color="primary" class="mr-auto" on:click={() => (stage = 'gameSelect')}
+				<BigButton color="primary" class="mr-auto" onclick={() => (stage = 'gameSelect')}
 					>Back</BigButton
 				>
-				<BigButton color="primary" on:click={() => (stage = 'settings')}>Skip</BigButton>
-				<BigButton color="accent" on:click={importProfiles}>Import</BigButton>
+				<BigButton color="primary" onclick={() => (stage = 'settings')}>Skip</BigButton>
+				<BigButton color="accent" onclick={importProfiles}>Import</BigButton>
 			</div>
 		{:else if stage === 'settings'}
 			<p>
@@ -93,7 +93,7 @@
 						label="Gale data folder"
 						type="dir"
 						value={prefs.dataDir}
-						set={set((value, prefs) => (prefs.dataDir = value))}
+						set={set((value, prefs) => (prefs.dataDir = value as string))}
 					>
 						The folder where mods and profiles are stored.
 					</PathPref>
@@ -103,10 +103,10 @@
 			<div class="mt-3 flex justify-between">
 				<BigButton
 					color="primary"
-					on:click={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
+					onclick={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
 					>Back</BigButton
 				>
-				<BigButton color="accent" on:click={() => (stage = 'end')}>Next</BigButton>
+				<BigButton color="accent" onclick={() => (stage = 'end')}>Next</BigButton>
 			</div>
 		{:else if stage === 'end'}
 			<p>That's it, you're all set up to start modding!</p>

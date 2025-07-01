@@ -4,16 +4,15 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { activeGame, games, setActiveGame } from '$lib/stores';
 	import Icon from '@iconify/svelte';
-	import { Button } from 'bits-ui';
 	import { invokeCommand } from '$lib/invoke';
 	import Link from '../components/Link.svelte';
 	import { titleCase } from '$lib/util';
 
 	type Props = {
-		onSelect: () => void;
+		onselect: () => void;
 	};
 
-	let { onSelect }: Props = $props();
+	let { onselect }: Props = $props();
 
 	let shownGames = $state(games);
 	let searchTerm = $state('');
@@ -53,17 +52,22 @@
 	</div>
 
 	<div class="mt-1 flex h-80 flex-col overflow-y-scroll">
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		{#if shownGames.length > 0}
 			{#each shownGames as game}
-				<Button.Root
-					class="group hover:bg-primary-700 mr-2 flex items-center rounded-lg border p-1.5 {$activeGame?.slug ===
-					game.slug
-						? ' border-primary-500 bg-primary-700'
-						: 'hover:bg-primary-700 border-transparent'}"
+				<div
+					class={[
+						$activeGame?.slug === game.slug
+							? ' border-primary-500 bg-primary-700'
+							: 'hover:bg-primary-700 border-transparent',
+						'group hover:bg-primary-700 mr-2 flex cursor-pointer items-center rounded-lg border p-1.5 '
+					]}
 					onclick={() => {
 						setActiveGame(game.slug);
-						onSelect();
+						onselect();
 					}}
+					role="button"
+					tabindex="0"
 				>
 					<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-12 rounded-sm" />
 
@@ -83,7 +87,7 @@
 						</div>
 					</div>
 
-					<Button.Root
+					<button
 						class="hover:bg-primary-600 mr-1 rounded p-1.5 {game.favorite
 							? 'block'
 							: 'hidden group-hover:block'}"
@@ -98,8 +102,8 @@
 							icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'}
 							class="text-accent-500 text-xl"
 						/>
-					</Button.Root>
-				</Button.Root>
+					</button>
+				</div>
 			{/each}
 		{:else}
 			<div class="text-primary-300 mt-4 text-center">No games found</div>

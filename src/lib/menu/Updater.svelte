@@ -10,6 +10,8 @@
 		let update = await check();
 		isChecking.set(false);
 
+		console.log(update);
+
 		if (update === null || !update.available) return;
 		nextUpdate.set(update);
 	}
@@ -22,7 +24,7 @@
 	import { message } from '@tauri-apps/plugin-dialog';
 	import { platform } from '@tauri-apps/plugin-os';
 	import { relaunch } from '@tauri-apps/plugin-process';
-	import { Button as BitsButton, Dialog } from 'bits-ui';
+	import { Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { pushToast } from '$lib/toast';
 
@@ -30,6 +32,7 @@
 	let loading = $state(false);
 
 	onMount(() => {
+		console.log('hello');
 		refreshUpdate();
 	});
 
@@ -38,12 +41,12 @@
 
 		try {
 			await $nextUpdate.downloadAndInstall();
-		} catch (e) {
+		} catch (error) {
 			let message: string;
-			if (typeof e === 'string') {
-				message = e;
-			} else if (e instanceof Error) {
-				message = e.message;
+			if (typeof error === 'string') {
+				message = error;
+			} else if (error instanceof Error) {
+				message = error.message;
 			} else {
 				message = 'Unknown error';
 			}
@@ -65,7 +68,7 @@
 		loading = false;
 
 		if (platform() !== 'windows') {
-			// on other platforms installUpdate() relaunches the app itself
+			// on other platforms installUpdate() doesn't relaunch the app itself
 			await message('Gale will now restart in order to apply the update.');
 			await relaunch();
 		}
@@ -73,7 +76,7 @@
 </script>
 
 {#if $nextUpdate !== null}
-	<BitsButton.Root
+	<button
 		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 my-auto mr-2 ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
 		disabled={loading}
 		onclick={() => (popupOpen = true)}
@@ -84,7 +87,7 @@
 			<Icon icon="mdi:arrow-up-circle" />
 		{/if}
 		<span class="text-sm">{loading ? 'Downloading update...' : 'Update available'}</span>
-	</BitsButton.Root>
+	</button>
 {/if}
 
 <ConfirmPopup title="App update available" bind:open={popupOpen}>
@@ -102,6 +105,6 @@
 	</Dialog.Description>
 
 	{#snippet buttons()}
-		<Button color="accent" fontWeight="semibold" onclick={update}>Install</Button>
+		<Button color="accent" onclick={update}>Install</Button>
 	{/snippet}
 </ConfirmPopup>

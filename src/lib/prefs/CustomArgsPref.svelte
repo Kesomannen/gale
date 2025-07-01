@@ -33,8 +33,8 @@
 	</Info>
 
 	<Checkbox
-		value={value !== null}
-		onValueChanged={(newValue) => {
+		checked={value !== null}
+		onCheckedChange={(newValue) => {
 			set(newValue ? [] : null);
 		}}
 	/>
@@ -44,7 +44,7 @@
 	<div class="text-primary-300 mt-1 flex flex-col gap-1 pl-[35%]">
 		{#each value as argument, i}
 			<div class="flex gap-1">
-				<Button.Root
+				<button
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 rounded-lg p-1.5 text-xl"
 					on:click={() => {
 						if (value === null) return;
@@ -53,7 +53,7 @@
 					}}
 				>
 					<Icon icon="mdi:remove" />
-				</Button.Root>
+				</button>
 				<InputField
 					class="grow"
 					value={argument}

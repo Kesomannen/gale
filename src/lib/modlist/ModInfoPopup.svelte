@@ -2,7 +2,7 @@
 	import Markdown from '$lib/components/Markdown.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { Mod } from '$lib/models';
+	import type { Mod } from '$lib/types';
 	import Icon from '@iconify/svelte';
 
 	type Props = {

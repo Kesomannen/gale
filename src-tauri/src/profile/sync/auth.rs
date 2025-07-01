@@ -11,7 +11,7 @@ use crate::{profile::sync::API_URL, state::ManagerExt};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AuthState {
+pub struct AuthCredentials {
     user: User,
     access_token: String,
     token_expiry: i64,
@@ -27,7 +27,7 @@ pub struct User {
     pub avatar: String,
 }
 
-impl AuthState {
+impl AuthCredentials {
     fn from_tokens(access_token: String, refresh_token: String) -> Result<Self> {
         let JwtPayload { exp, user } = decode_jwt(&access_token).context("failed to decode jwt")?;
 
@@ -68,7 +68,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
 
          app.get_webview_window("main").unwrap().set_focus().ok();
 
-         let state = AuthState::from_tokens(access_token, refresh_token)?;
+         let state = AuthCredentials::from_tokens(access_token, refresh_token)?;
          let user = state.user.clone();
 
          info!("logged in as {}", user.name);
@@ -121,18 +121,18 @@ struct TokenResponse {
 pub async fn access_token(app: &AppHandle) -> Option<String> {
     let refresh_token = {
         let auth = app.lock_auth();
-        let state = auth.as_ref()?;
+        let creds = auth.as_ref()?;
 
-        let Some(expiry) = DateTime::from_timestamp(state.token_expiry, 0) else {
+        let Some(expiry) = DateTime::from_timestamp(creds.token_expiry, 0) else {
             warn!("token expiry date is invalid");
             return None;
         };
 
         if Utc::now() < expiry {
-            return Some(state.access_token.clone());
+            return Some(creds.access_token.clone());
         }
 
-        state.refresh_token.clone()
+        creds.refresh_token.clone()
     };
 
     match request_token(refresh_token, app).await {
@@ -163,11 +163,12 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
         .json()
         .await?;
 
-    let state = AuthState::from_tokens(response.access_token.clone(), response.refresh_token)?;
+    let creds =
+        AuthCredentials::from_tokens(response.access_token.clone(), response.refresh_token)?;
 
-    let mut auth = app.lock_auth();
-    *auth = Some(state);
-    app.db().save_auth(auth.as_ref())?;
+    let mut state = app.lock_auth();
+    *state = Some(creds);
+    app.db().save_auth(state.as_ref())?;
 
     Ok(response.access_token)
 }

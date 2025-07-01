@@ -1,9 +1,8 @@
 <script lang="ts">
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
-	import type { Mod, ModContextItem } from '$lib/models';
+	import type { Mod, ModContextItem } from '$lib/types';
 	import { ContextMenu, DropdownMenu } from 'bits-ui';
 	import Icon from '@iconify/svelte';
-	import { dropTransition } from '$lib/transitions';
 
 	type Props = {
 		mod: Mod;
@@ -19,7 +18,7 @@
 	{#if showFor === undefined || showFor(mod, locked)}
 		{#if type === 'details'}
 			{#if children === undefined}
-				<DropdownMenu.Item class="menu-item dropdown-menu-item pr-6" on:click={() => onclick(mod)}>
+				<DropdownMenu.Item class="menu-item dropdown-menu-item pr-6" onclick={() => onclick(mod)}>
 					{#if icon !== undefined}
 						<Icon class="mr-1.5 text-lg" {icon} />
 					{/if}
@@ -30,7 +29,7 @@
 				<DropdownMenu.Sub>
 					<DropdownMenu.SubTrigger
 						class="menu-item dropdown-menu-item pr-2"
-						on:click={() => onclick(mod)}
+						onclick={() => onclick(mod)}
 					>
 						{#if icon !== undefined}
 							<Icon class="mr-1.5 text-lg" {icon} />
@@ -42,14 +41,13 @@
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent
 						class="sub-menu light-scrollbar border-primary-500 bg-primary-700"
-						{...dropTransition}
 					>
-						<ModContextMenuItems {mod} {type} contextItems={children(mod)} />
+						<ModContextMenuItems {locked} {mod} {type} contextItems={children(mod)} />
 					</DropdownMenu.SubContent>
 				</DropdownMenu.Sub>
 			{/if}
 		{:else if children === undefined}
-			<ContextMenu.Item class="menu-item context-menu-item pr-6" on:click={() => onclick(mod)}>
+			<ContextMenu.Item class="menu-item context-menu-item pr-6" onclick={() => onclick(mod)}>
 				{#if icon !== undefined}
 					<Icon class="mr-1.5 text-lg" {icon} />
 				{/if}
@@ -60,7 +58,7 @@
 			<ContextMenu.Sub>
 				<ContextMenu.SubTrigger
 					class="menu-item context-menu-item pr-2"
-					on:click={() => onclick(mod)}
+					onclick={() => onclick(mod)}
 				>
 					{#if icon !== undefined}
 						<Icon class="mr-1.5 text-lg" {icon} />
@@ -70,11 +68,8 @@
 
 					<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 				</ContextMenu.SubTrigger>
-				<ContextMenu.SubContent
-					class="sub-menu border-primary-600 bg-primary-800"
-					{...dropTransition}
-				>
-					<ModContextMenuItems {mod} {type} contextItems={children(mod)} />
+				<ContextMenu.SubContent class="sub-menu border-primary-600 bg-primary-800">
+					<ModContextMenuItems {locked} {mod} {type} contextItems={children(mod)} />
 				</ContextMenu.SubContent>
 			</ContextMenu.Sub>
 		{/if}

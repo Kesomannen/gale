@@ -54,7 +54,7 @@ pub fn extract(src: impl Read + Seek, target: &Path) -> io::Result<()> {
 #[cfg(unix)]
 fn set_unix_mode(file: &zip::read::ZipFile, path: &Path) -> io::Result<()> {
     if let Some(mode) = file.unix_mode() {
-        fs::set_permissions(&path, PermissionsExt::from_mode(mode))?
+        fs::set_permissions(path, PermissionsExt::from_mode(mode))?
     }
     Ok(())
 }

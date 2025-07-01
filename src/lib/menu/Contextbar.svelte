@@ -15,10 +15,9 @@
 	import { invokeCommand } from '$lib/invoke';
 
 	import Icon from '@iconify/svelte';
-	import { Button, Dialog, DropdownMenu } from 'bits-ui';
+	import { Dialog, DropdownMenu } from 'bits-ui';
 	import GameSelection from '$lib/menu/GameSelection.svelte';
 	import Updater from './Updater.svelte';
-	import { dropTransition } from '$lib/transitions';
 	import { pushInfoToast } from '$lib/toast';
 	import Syncer from './Syncer.svelte';
 
@@ -52,13 +51,13 @@
 	<div
 		class="text-accent-400 hover:text-accent-400 border-primary-600 hover:bg-primary-800 shrink-0 border-r pr-8 pl-6"
 	>
-		<Button.Root class="flex h-full items-center font-semibold" onclick={launchGame}>
+		<button class="flex h-full items-center font-semibold" onclick={launchGame}>
 			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
 			Launch game
-		</Button.Root>
+		</button>
 	</div>
 
-	<Button.Root
+	<button
 		onclick={() => (gamesOpen = !gamesOpen)}
 		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 items-center justify-between border-r pr-4 pl-2 font-semibold"
 	>
@@ -72,9 +71,9 @@
 
 		<Icon
 			icon="mdi:menu"
-			class="text-primary-300 group-hover:text-primary-200 ml-6 shrink-0 text-xl transition-all"
+			class="text-primary-300 group-hover:text-primary-200 ml-6 shrink-0 text-xl"
 		/>
-	</Button.Root>
+	</button>
 
 	<DropdownMenu.Root bind:open={profilesOpen}>
 		<DropdownMenu.Trigger
@@ -92,21 +91,23 @@
 
 			<Icon
 				icon="mdi:expand-more"
-				class="shrink-0 origin-center transform text-xl transition-all {profilesOpen
-					? 'rotate-180'
-					: 'rotate-0'}"
+				class={[
+					profilesOpen ? 'rotate-180' : 'rotate-0',
+					'shrink-0 origin-center transform text-xl transition-all'
+				]}
 			/>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content
 			class="border-primary-600 bg-primary-800 flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border p-1 shadow-xl"
-			{...dropTransition}
 		>
 			{#each profiles as profile, index}
 				<DropdownMenu.Item
-					class="group hover:bg-primary-700 flex cursor-default items-center rounded-md py-1 pr-1 pl-3 text-left
-						{profile.id == activeProfileId
-						? 'text-primary-300 hover:text-primary-200 font-medium'
-						: 'text-primary-400 hover:text-primary-300'}"
+					class={[
+						profile.id == activeProfileId
+							? 'text-primary-300 hover:text-primary-200 font-medium'
+							: 'text-primary-400 hover:text-primary-300',
+						'group hover:bg-primary-700 flex cursor-default items-center rounded-md py-1 pr-1 pl-3 text-left'
+					]}
 					onclick={() => {
 						setActiveProfile(index);
 						profilesOpen = false;
@@ -131,7 +132,7 @@
 						{profile.modCount}
 					</div>
 
-					<Button.Root
+					<button
 						class="text-primary-400 rounded-sm p-1 hover:bg-red-600 hover:text-red-200"
 						onclick={(evt) => {
 							evt.stopPropagation();
@@ -140,7 +141,7 @@
 						}}
 					>
 						<Icon icon="mdi:delete" />
-					</Button.Root>
+					</button>
 				</DropdownMenu.Item>
 			{/each}
 
@@ -155,7 +156,6 @@
 	</DropdownMenu.Root>
 
 	<Syncer />
-
 	<Updater />
 </div>
 
@@ -166,7 +166,7 @@
 </Popup>
 
 <Popup title="Select game to mod" bind:open={gamesOpen}>
-	<GameSelection onSelect={() => (gamesOpen = false)} />
+	<GameSelection onselect={() => (gamesOpen = false)} />
 </Popup>
 
 <NewProfilePopup bind:open={newProfilePopupOpen} />

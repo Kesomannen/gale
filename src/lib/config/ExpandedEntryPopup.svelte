@@ -10,7 +10,7 @@
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
 	import TabsMenu from '$lib/components/TabsMenu.svelte';
 	import { setConfigEntry } from '$lib/config';
-	import type { ConfigEntryId } from '$lib/models';
+	import type { ConfigEntryId } from '$lib/types';
 	import { getListSeparator, type ListSeparator } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Button, Tabs } from 'bits-ui';
@@ -19,8 +19,6 @@
 	let mode: 'text' | 'list' = $state('text');
 	let newElement = $state('');
 	let separator: ListSeparator = $state({ type: 'default', char: ',' });
-
-
 
 	async function updateListContent() {
 		content = items.join(separator.char);
@@ -58,7 +56,7 @@
 <Popup
 	large
 	title="Edit {$expandedEntry?.entry.name}"
-	onClose={() => ($expandedEntry = null)}
+	onclose={() => ($expandedEntry = null)}
 	{open}
 >
 	{#if $expandedEntry !== null && $expandedEntry.entry.value.type === 'string'}
@@ -89,20 +87,20 @@
 				<div class="text-primary-300 flex flex-col gap-1">
 					{#each items as element, i}
 						<div class="flex gap-1">
-							<Button.Root
+							<button
 								class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 rounded-lg p-1.5 text-xl"
-								on:click={() => {
+								onclick={() => {
 									items.splice(i, 1);
 									updateListContent();
 								}}
 							>
 								<Icon icon="mdi:remove" />
-							</Button.Root>
+							</button>
 							<InputField
 								class="grow"
 								value={element}
-								on:change={({ detail }) => {
-									items[i] = detail;
+								onchange={(value) => {
+									items[i] = value;
 									updateListContent();
 								}}
 							/>
@@ -113,7 +111,7 @@
 						class="mt-1 w-full pr-9"
 						placeholder="Enter new value..."
 						bind:value={newElement}
-						on:change={() => {
+						onchange={() => {
 							if (newElement.length === 0) return;
 
 							items.push(newElement);

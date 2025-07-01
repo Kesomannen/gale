@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Label from '$lib/components/Label.svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
 
-	import type { Platform } from '$lib/models';
-	import { titleCase } from '$lib/util';
+	import type { Platform } from '$lib/types';
+	import { selectItems, titleCase } from '$lib/util';
 	import { activeGame } from '$lib/stores';
 	import Info from '$lib/components/Info.svelte';
+	import Select from '$lib/components/Select.svelte';
 
 	type Props = {
 		value: Platform | null;
@@ -22,15 +22,14 @@
 
 	<Info>The platform where your game is installed.</Info>
 
-	<Dropdown
-		class="grow"
-		items={platforms}
-		getLabel={titleCase}
-		selected={value ?? platforms[0]}
+	<Select
+		type="single"
+		triggerClass="grow"
+		items={selectItems(platforms, titleCase)}
+		value={value ?? platforms[0]}
 		disabled={platforms.length === 1}
-		multiple={false}
-		onSelectedChange={(newValue) => {
-			value = newValue;
+		onValueChange={(newValue) => {
+			value = newValue as Platform;
 			set(value);
 		}}
 	/>

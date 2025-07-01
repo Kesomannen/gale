@@ -7,12 +7,11 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import type { Mod, ModContextItem } from '../models';
+	import type { Mod, ModContextItem } from '../types';
 	import Icon from '@iconify/svelte';
 	import { iconSrc, isOutdated } from '$lib/util';
 	import { Switch, ContextMenu } from 'bits-ui';
 	import ModContextMenuItems from './ModContextMenuItems.svelte';
-	import { dropTransition } from '$lib/transitions';
 	import type { DragEventHandler, MouseEventHandler } from 'svelte/elements';
 
 	type Props = {
@@ -140,7 +139,6 @@
 	</ContextMenu.Trigger>
 	<ContextMenu.Content
 		class="border-primary-600 bg-primary-800 flex flex-col gap-0.5 rounded-lg border p-1 shadow-lg"
-		{...dropTransition}
 	>
 		<ModContextMenuItems {mod} {contextItems} {locked} type="context" />
 	</ContextMenu.Content>

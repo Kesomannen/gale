@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { Button } from 'bits-ui';
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	type Props = {
-		disabled?: boolean;
 		color?: 'accent' | 'primary' | 'red';
 		fontWeight?: 'normal' | 'medium' | 'semibold';
 		class?: string;
@@ -12,15 +10,15 @@
 	} & HTMLButtonAttributes;
 
 	let {
-		disabled = $bindable(false),
+		disabled,
 		color = 'accent',
 		fontWeight = 'normal',
-		class: className = '',
+		class: classProp = '',
 		children,
 		...props
 	}: Props = $props();
 
-	let fontClass = $derived(
+	let fontClasses = $derived(
 		{
 			normal: 'font-normal',
 			medium: 'font-medium',
@@ -28,7 +26,7 @@
 		}[fontWeight]
 	);
 
-	let colorClass = $derived(
+	let colorClasses = $derived(
 		{
 			accent: 'enabled:hover:bg-accent-600 bg-accent-700',
 			primary: 'enabled:hover:bg-primary-600 bg-primary-700',
@@ -37,10 +35,14 @@
 	);
 </script>
 
-<Button.Root
-	class="{className} {fontClass} {colorClass} disabled:opactiy-70 disabled:bg-primary-700 disabled:text-primary-400 inline-flex items-center overflow-hidden rounded-lg px-4 py-2 text-nowrap text-white disabled:cursor-not-allowed"
-	bind:disabled
+<button
+	class={[
+		classProp,
+		fontClasses,
+		colorClasses,
+		'disabled:opactiy-70 disabled:bg-primary-700 disabled:text-primary-400 inline-flex items-center overflow-hidden rounded-lg px-4 py-2 text-nowrap text-white disabled:cursor-not-allowed'
+	]}
 	{...props}
 >
 	{@render children?.()}
-</Button.Root>
+</button>

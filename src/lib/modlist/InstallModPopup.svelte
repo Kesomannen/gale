@@ -1,17 +1,18 @@
 <script lang="ts">
-	import BigButton from '$lib/components/Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
+	import Select from '$lib/components/Select.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { Mod } from '$lib/models';
+	import type { Mod } from '$lib/types';
 	import { activeProfile, profiles, setActiveProfile } from '$lib/stores';
+	import { selectItems } from '$lib/util';
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
 
 	let open = $state(false);
 	let mod: Mod | null = $state(null);
 
-	let profileName: string = $state();
+	let profileName: string = $state('');
 
 	onMount(() => {
 		listen<Mod>('install_mod', (evt) => {
@@ -43,15 +44,15 @@
 <ConfirmPopup bind:open title="Install {mod?.name}">
 	<p class="text-primary-300">Choose a profile to install the mod to:</p>
 
-	<Dropdown
-		class="w-full"
-		items={profiles.map((profile) => profile.name)}
+	<Select
+		triggerClass="w-full"
+		items={selectItems(profiles.map((profile) => profile.name))}
 		avoidCollisions={false}
-		multiple={false}
-		bind:selected={profileName}
+		type="single"
+		bind:value={profileName}
 	/>
 
 	{#snippet buttons()}
-		<BigButton on:click={install}>Install</BigButton>
+		<Button onclick={install}>Install</Button>
 	{/snippet}
 </ConfirmPopup>

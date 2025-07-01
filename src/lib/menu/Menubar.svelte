@@ -3,7 +3,7 @@
 
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
-	import { Button as BitsButton, Menubar } from 'bits-ui';
+	import { Menubar } from 'bits-ui';
 
 	import MenubarItem from '$lib/menu/MenubarItem.svelte';
 
@@ -23,7 +23,7 @@
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
 	import { activeProfile, refreshProfiles } from '$lib/stores';
 	import { invokeCommand } from '$lib/invoke';
-	import type { ImportData } from '$lib/models';
+	import type { ImportData } from '$lib/types';
 	import { useNativeMenu } from '$lib/theme';
 
 	import { confirm, open } from '@tauri-apps/plugin-dialog';
@@ -473,21 +473,15 @@
 		{/each}
 	</Menubar.Root>
 
-	<BitsButton.Root
-		class="group hover:bg-primary-700 ml-auto px-3 py-1.5"
-		onclick={appWindow.minimize}
-	>
+	<button class="group hover:bg-primary-700 ml-auto px-3 py-1.5" onclick={appWindow.minimize}>
 		<Icon icon="mdi:minimize" class="text-primary-500 group-hover:text-white" />
-	</BitsButton.Root>
-	<BitsButton.Root
-		class="group hover:bg-primary-700 px-3 py-1.5"
-		onclick={appWindow.toggleMaximize}
-	>
+	</button>
+	<button class="group hover:bg-primary-700 px-3 py-1.5" onclick={appWindow.toggleMaximize}>
 		<Icon icon="mdi:maximize" class="text-primary-500 group-hover:text-white" />
-	</BitsButton.Root>
-	<BitsButton.Root class="group px-3 py-1.5 hover:bg-red-700" onclick={appWindow.close}>
+	</button>
+	<button class="group px-3 py-1.5 hover:bg-red-700" onclick={appWindow.close}>
 		<Icon icon="mdi:close" class="text-primary-500 group-hover:text-white" />
-	</BitsButton.Root>
+	</button>
 </header>
 
 <Popup

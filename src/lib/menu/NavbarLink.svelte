@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	type Props = {
 		to: string;
@@ -10,7 +10,7 @@
 
 	let { to, icon }: Props = $props();
 
-	let active = $derived($page.url.pathname === to);
+	let active = $derived(page.url.pathname === to);
 </script>
 
 <a

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setConfigEntry } from '$lib/config';
-	import type { ConfigEntryId, ConfigValue } from '$lib/models';
+	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import { Button } from 'bits-ui';
 
 	import ResetConfigButton from './ResetConfigButton.svelte';
@@ -42,19 +42,19 @@
 <div class="relative grow">
 	<InputField
 		bind:value={content}
-		on:change={submit}
+		onchange={submit}
 		spellcheck="false"
 		disabled={locked}
 		class="w-full {showExpandButton && 'pr-8'}"
 	/>
 
 	{#if showExpandButton && !locked}
-		<Button.Root
+		<button
 			class="bg-primary-900 text-primary-400 hover:bg-primary-800 absolute top-1 right-1 rounded-lg p-1 text-lg"
-			on:click={() => ($expandedEntry = entryId)}
+			onclick={() => ($expandedEntry = entryId)}
 		>
 			<Icon icon="mdi:arrow-expand" />
-		</Button.Root>
+		</button>
 	{/if}
 </div>
 <ResetConfigButton {entryId} {locked} {onReset} />

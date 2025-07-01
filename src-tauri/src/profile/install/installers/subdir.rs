@@ -6,8 +6,8 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use tracing::warn;
 use serde::{Deserialize, Serialize};
+use tracing::warn;
 
 use super::{PackageInstaller, PackageZip};
 use crate::{
@@ -154,7 +154,7 @@ impl<'a> SubdirInstaller<'a> {
         use std::path::Component;
 
         if let Some(str) = relative_path.to_str() {
-            if self.ignored_files.iter().any(|file| *file == str) {
+            if self.ignored_files.contains(&str) {
                 return Ok(None);
             }
         }

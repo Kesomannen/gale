@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { ListedSyncProfile } from '$lib/models';
+	import type { ListedSyncProfile } from '$lib/types';
 	import { games, refreshProfiles } from '$lib/stores';
 	import { timeSince } from '$lib/util';
 	import Icon from '@iconify/svelte';
@@ -46,7 +46,7 @@
 	}
 </script>
 
-<Popup bind:open {onClose} title="Owned sync profiles">
+<Popup bind:open onclose={onClose} title="Owned sync profiles">
 	<div class="mt-2 flex max-h-80 flex-col overflow-y-auto">
 		{#if sortedProfiles.length === 0}
 			<div class="text-primary-200 w-full text-center text-lg">No profiles found</div>
@@ -78,20 +78,20 @@
 				</div>
 
 				{#if !allProfiles.some((other) => other.sync?.id === profile.id)}
-					<Button.Root
-						class="text-primary-400 hover:bg-accent-600 hover:text-accent-200  rounded p-1 text-lg"
+					<button
+						class="text-primary-400 hover:bg-accent-600 hover:text-accent-200 rounded p-1 text-lg"
 						onclick={() => importProfile(profile)}
 					>
 						<Icon icon="mdi:download" />
-					</Button.Root>
+					</button>
 				{/if}
 
-				<Button.Root
+				<button
 					class="text-primary-400 rounded p-1 text-lg hover:bg-red-600 hover:text-red-200"
 					onclick={() => deleteProfile(profile)}
 				>
 					<Icon icon="mdi:delete" />
-				</Button.Root>
+				</button>
 			</div>
 		{/each}
 	</div>

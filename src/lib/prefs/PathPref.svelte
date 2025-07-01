@@ -2,9 +2,9 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 
 	import PathField from '$lib/components/PathField.svelte';
-	import { Button } from 'bits-ui';
 	import Icon from '@iconify/svelte';
 	import { sentenceCase } from '$lib/util';
+	import type { Snippet } from 'svelte';
 
 	type Props = {
 		label: string;
@@ -12,7 +12,7 @@
 		canClear?: boolean;
 		value: string | null;
 		set: (value: string | null) => Promise<void>;
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	};
 
 	let { label, type, canClear = false, value = $bindable(), set, children }: Props = $props();
@@ -30,21 +30,21 @@
 	}
 </script>
 
-<PathField {label} {value} on:click={browse} icon={type === 'file' ? 'mdi:file' : 'mdi:folder'}>
+<PathField {label} {value} onclick={browse} icon={type === 'file' ? 'mdi:file' : 'mdi:folder'}>
 	{@render children?.()}
 
 	{#snippet field()}
-		{#if canClear}
-			<Button.Root
+		{#if canClear === true}
+			<button
 				class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute right-2 rounded-sm p-1 text-lg"
-				on:click={(evt) => {
+				onclick={(evt) => {
 					evt.stopPropagation();
 					value = null;
 					set(null);
 				}}
 			>
 				<Icon icon="mdi:close" />
-			</Button.Root>
+			</button>
 		{/if}
 	{/snippet}
 </PathField>

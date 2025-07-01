@@ -1,17 +1,15 @@
 import { derived, get, writable } from 'svelte/store';
 import { invokeCommand } from './invoke';
-import {
-	SortBy,
-	SortOrder,
-	type FiltersResponse,
-	type Game,
-	type GameInfo,
-	type PackageCategory,
-	type ProfileInfo,
-	type ProfilesInfo,
-	type QueryModsArgs,
-	type SyncUser
-} from './models';
+import type {
+	FiltersResponse,
+	Game,
+	GameInfo,
+	PackageCategory,
+	ProfileInfo,
+	ProfilesInfo,
+	QueryModsArgs,
+	SyncUser
+} from './types';
 import { fetch } from '@tauri-apps/plugin-http';
 
 export let games: Game[] = [];
@@ -32,7 +30,7 @@ export let activeProfileLocked = derived([activeProfile, user], ([activeProfile,
 	return activeProfile.sync.owner.discordId != user.discordId;
 });
 
-const defaultModQuery = () => ({
+const defaultModQuery: () => QueryModsArgs = () => ({
 	searchTerm: '',
 	includeCategories: [],
 	excludeCategories: [],
@@ -40,11 +38,11 @@ const defaultModQuery = () => ({
 	includeDeprecated: false,
 	includeEnabled: false,
 	includeDisabled: false,
-	sortBy: SortBy.Rating,
-	sortOrder: SortOrder.Descending
+	sortBy: 'rating',
+	sortOrder: 'descending'
 });
 
-const defaultProfileQuery = () => ({
+const defaultProfileQuery: () => QueryModsArgs = () => ({
 	searchTerm: '',
 	includeCategories: [],
 	excludeCategories: [],
@@ -52,8 +50,8 @@ const defaultProfileQuery = () => ({
 	includeDeprecated: true,
 	includeEnabled: true,
 	includeDisabled: true,
-	sortBy: SortBy.Custom,
-	sortOrder: SortOrder.Descending
+	sortBy: 'custom',
+	sortOrder: 'descending'
 });
 
 export let modQuery = createQueryStore('modQuery', defaultModQuery);

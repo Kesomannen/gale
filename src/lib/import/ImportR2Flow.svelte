@@ -2,7 +2,7 @@
 	import { run } from 'svelte/legacy';
 
 	import { invokeCommand } from '$lib/invoke';
-	import type { R2ImportData } from '$lib/models';
+	import type { R2ImportData } from '$lib/types';
 	import { refreshProfiles } from '$lib/stores';
 	import Icon from '@iconify/svelte';
 	import { listen } from '@tauri-apps/api/event';

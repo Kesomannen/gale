@@ -12,7 +12,7 @@
 	let {
 		value = $bindable(''),
 		size = 'md',
-		class: className = '',
+		class: classProp = '',
 		onsubmit,
 		onchange,
 		...props
@@ -30,5 +30,10 @@
 	}}
 	{...props}
 	onchange={() => onchange?.(value)}
-	class="{className} valid:focus:ring-accent-500 disabled:text-primary-400 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 min-w-0 grow rounded-lg px-3 py-1 invalid:ring-2 invalid:ring-red-500 hover:ring-1 focus:ring-2 focus:outline-hidden disabled:cursor-not-allowed text-{size} placeholder:text-{size}"
+	class={[
+		classProp,
+		`text-${size}`,
+		`placeholder:text-${size}`,
+		'valid:focus:ring-accent-500 disabled:text-primary-400 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 min-w-0 grow rounded-lg px-3 py-1 invalid:ring-2 invalid:ring-red-500 hover:ring-1 focus:ring-2 focus:outline-hidden disabled:cursor-not-allowed'
+	]}
 />

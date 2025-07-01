@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/models';
+	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
-	import { Button, Collapsible } from 'bits-ui';
-	import { quadOut } from 'svelte/easing';
-	import { slide } from 'svelte/transition';
+	import { Collapsible } from 'bits-ui';
 
 	type Props = {
 		file: ConfigFile;
@@ -50,16 +48,19 @@
 <Collapsible.Root bind:open>
 	{#if type !== 'ok' || shownSections.length > 0}
 		<Collapsible.Trigger
-			class="group flex w-full items-center overflow-hidden py-0.5 pr-1 pl-2 text-{textColor} {isSelected
-				? 'bg-primary-600 font-semibold'
-				: 'hover:bg-primary-600'}"
-			on:click={() => type !== 'ok' && onFileClicked(file)}
+			class={[
+				isSelected ? 'bg-primary-600 font-semibold' : 'hover:bg-primary-600',
+				`text-${textColor}`,
+				'group flex w-full items-center overflow-hidden py-0.5 pr-1 pl-2'
+			]}
+			onclick={() => type !== 'ok' && onFileClicked(file)}
 		>
 			<Icon
 				{icon}
-				class="mr-1 shrink-0 text-lg transition-all {open && type === 'ok'
-					? 'rotate-180'
-					: 'rotate-0'}"
+				class={[
+					open && type === 'ok' ? 'rotate-180' : 'rotate-0',
+					'mr-1 shrink-0 text-lg transition-all'
+				]}
 			/>
 
 			<div class="mr-1 shrink truncate" style="direction: rtl;">
@@ -67,41 +68,40 @@
 				{file.displayName ?? file.relativePath}
 			</div>
 
-			<Button.Root
+			<button
 				class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 ml-auto hidden shrink-0 rounded-sm p-1 group-hover:flex"
-				on:click={(evt) => {
+				onclick={(evt) => {
 					evt.stopPropagation();
 					invokeCommand('open_config_file', { file: file.relativePath });
 				}}
 			>
 				<Icon icon="mdi:open-in-new" />
-			</Button.Root>
+			</button>
 
 			{#if !locked}
-				<Button.Root
+				<button
 					class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 hidden shrink-0 rounded-sm p-1 group-hover:flex"
-					on:click={deleteFile}
+					onclick={deleteFile}
 				>
 					<Icon icon="mdi:delete" />
-				</Button.Root>
+				</button>
 			{/if}
 		</Collapsible.Trigger>
 	{/if}
 	{#if file.type === 'ok' && shownSections.length > 0}
-		<Collapsible.Content
-			class="mb-1 flex flex-col"
-			transition={slide}
-			transitionConfig={{ duration: 100, easing: quadOut }}
-		>
+		<Collapsible.Content class="mb-1 flex flex-col">
 			{#each shownSections as section}
-				<Button.Root
-					class="truncate py-0.5 pr-2 pl-9 text-left text-sm {selectedSection === section
-						? 'bg-primary-600 text-primary-200 font-semibold'
-						: 'text-primary-300 hover:bg-primary-600'}"
-					on:click={() => onSectionClicked(file, section)}
+				<button
+					class={[
+						selectedSection === section
+							? 'bg-primary-600 text-primary-200 font-semibold'
+							: 'text-primary-300 hover:bg-primary-600',
+						'truncate py-0.5 pr-2 pl-9 text-left text-sm'
+					]}
+					onclick={() => onSectionClicked(file, section)}
 				>
 					{section.name.length > 0 ? section.name : '<Nameless section>'}
-				</Button.Root>
+				</button>
 			{/each}
 		</Collapsible.Content>
 	{/if}

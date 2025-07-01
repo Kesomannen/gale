@@ -141,22 +141,20 @@ export enum ModType {
 	Remote = 'remote'
 }
 
-export enum SortBy {
-	Newest = 'newest',
-	Name = 'name',
-	Author = 'author',
-	LastUpdated = 'lastUpdated',
-	Downloads = 'downloads',
-	Rating = 'rating',
-	InstallDate = 'installDate',
-	Custom = 'custom',
-	DiskSpace = 'diskSpace'
-}
+export type SortBy =
+	| 'newest'
+	| 'name'
+	| 'author'
+	| 'lastUpdated'
+	| 'downloads'
+	| 'rating'
+	| 'installDate'
+	| 'custom'
+	| 'diskSpace';
 
-export enum SortOrder {
-	Ascending = 'ascending',
-	Descending = 'descending'
-}
+export type SortOrder =
+	| 'ascending'
+	| 'descending';
 
 export type QueryModsArgs = {
 	searchTerm: string;
@@ -317,13 +315,12 @@ export type GamePrefs = {
 	platform: Platform | null;
 };
 
-export enum Platform {
-	Steam = 'steam',
-	EpicGames = 'epicGames',
-	Oculus = 'oculus',
-	Origin = 'origin',
-	XboxStore = 'xboxStore'
-}
+export type Platform =
+	| 'steam'
+	| 'epicGames'
+	| 'oculus'
+	| 'origin'
+	| 'xboxStore';
 
 export type ModContextItem = {
 	label: string;

@@ -7,37 +7,37 @@
 	import BigButton from '$lib/components/Button.svelte';
 	import PathField from '$lib/components/PathField.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Link from '$lib/components/Link.svelte';
+	import Select from '$lib/components/Select.svelte';
 	import ApiKeyPopup, { apiKeyPopupOpen } from '$lib/prefs/ApiKeyPopup.svelte';
 
 	import { invokeCommand } from '$lib/invoke';
-	import type { ModpackArgs, PackageCategory } from '$lib/models';
+	import type { ModpackArgs, PackageCategory } from '$lib/types';
 	import { activeProfile, activeGame, categories } from '$lib/stores';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 
-	import { Button, Dialog, Select } from 'bits-ui';
+	import { Button, Dialog } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
+	import { selectItems } from '$lib/util';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
 
-	let name: string = $state();
-	let author: string = $state();
-	let selectedCategories: PackageCategory[] = $state([]);
-	let nsfw: boolean = $state();
-	let description: string = $state();
-	let readme: string = $state();
-	let changelog: string = $state();
-	let versionNumber: string = $state();
-	let iconPath: string = $state();
-	let websiteUrl: string = $state();
-	let includeDisabled: boolean = $state();
+	let name: string = $state('');
+	let author: string = $state('');
+	let selectedCategories: string[] = $state([]);
+	let nsfw: boolean = $state(false);
+	let description: string = $state('');
+	let readme: string = $state('');
+	let changelog: string = $state('');
+	let versionNumber: string = $state('');
+	let iconPath: string = $state('');
+	let websiteUrl: string = $state('');
+	let includeDisabled: boolean = $state(false);
 	let includeFiles = $state(new Map<string, boolean>());
 
 	let donePopupOpen = $state(false);
@@ -64,9 +64,7 @@
 		author = args.author;
 		nsfw = args.nsfw;
 		description = args.description;
-		selectedCategories = args.categories.map(
-			(selected) => $categories.find((category) => category.slug === selected)!
-		);
+		selectedCategories = args.categories;
 		changelog = args.changelog;
 		readme = args.readme;
 		versionNumber = args.versionNumber;
@@ -163,7 +161,7 @@
 			websiteUrl,
 			includeDisabled,
 			includeFileMap: includeFiles,
-			categories: selectedCategories.map(({ slug }) => slug)
+			categories: selectedCategories
 		};
 	}
 	run(() => {
@@ -179,12 +177,9 @@
 		if (
 			modpackCategoryExists &&
 			selectedCategories &&
-			!selectedCategories.some((category) => category?.slug === 'modpacks')
+			!selectedCategories.some((category) => category === 'modpacks')
 		) {
-			selectedCategories = [
-				$categories.find((category) => category.slug === 'modpacks')!,
-				...selectedCategories
-			];
+			selectedCategories = ['modpacks', ...selectedCategories];
 		}
 	});
 	run(() => {
@@ -209,7 +204,7 @@
 		required={true}
 	>
 		<InputField
-			on:change={saveArgs}
+			onchange={saveArgs}
 			bind:value={name}
 			placeholder="Enter name..."
 			required={true}
@@ -224,7 +219,7 @@
 		required={true}
 	>
 		<InputField
-			on:change={saveArgs}
+			onchange={saveArgs}
 			bind:value={author}
 			placeholder="Enter author..."
 			required={true}
@@ -234,7 +229,7 @@
 
 	<FormField label="Description" description="A short description of the modpack." required={true}>
 		<InputField
-			on:change={saveArgs}
+			onchange={saveArgs}
 			bind:value={description}
 			placeholder="Enter description..."
 			required={true}
@@ -247,47 +242,39 @@
 		label="Categories"
 		description="The categories that the modpack belongs to. 'Modpacks' is always included."
 	>
-		<Dropdown
-			avoidCollisions={false}
-			items={$categories}
-			bind:selected={selectedCategories}
-			onSelectedChange={saveArgs}
-			multiple={true}
-			getLabel={(category) => category.name}
+		<Select
+			items={$categories.map((category) => ({
+				label: category.name,
+				value: category.slug
+			}))}
+			bind:value={selectedCategories}
+			onValueChange={saveArgs}
+			type="multiple"
 		>
-			{#snippet trigger({ open })}
-				<Select.Trigger
-					class="bg-primary-900 hover:border-primary-500 flex w-full items-center overflow-hidden rounded-lg border border-transparent py-1 pr-3 pl-1"
-				>
-					{#if selectedCategories.length === 0}
-						<span class="text-primary-400 truncate pl-2">Select categories...</span>
-					{:else}
-						<div class="flex flex-wrap gap-1">
-							{#each selectedCategories as category}
-								<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
-									<span class="truncate overflow-hidden">{category.name}</span>
+			{#snippet label()}
+				{#if selectedCategories.length === 0}
+					<span class="text-primary-400 truncate pl-2">Select categories...</span>
+				{:else}
+					<div class="flex flex-wrap gap-1">
+						{#each selectedCategories as category}
+							<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
+								<span class="truncate overflow-hidden">{category}</span>
 
-									<Button.Root
-										class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
-										on:click={(evt) => {
-											evt.stopPropagation();
-											selectedCategories = selectedCategories.filter((c) => c !== category);
-										}}
-									>
-										x
-									</Button.Root>
-								</div>
-							{/each}
-						</div>
-					{/if}
-					<Icon
-						class="text-primary-400 ml-auto shrink-0 origin-center transform text-xl transition-all
-	                duration-100 ease-out {open ? 'rotate-180' : 'rotate-0'}"
-						icon="mdi:chevron-down"
-					/>
-				</Select.Trigger>
+								<button
+									class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
+									onclick={(evt) => {
+										evt.stopPropagation();
+										selectedCategories = selectedCategories.filter((cat) => cat !== category);
+									}}
+								>
+									x
+								</button>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			{/snippet}
-		</Dropdown>
+		</Select>
 	</FormField>
 
 	<FormField
@@ -297,7 +284,7 @@
 		required={true}
 	>
 		<InputField
-			on:change={saveArgs}
+			onchange={saveArgs}
 			bind:value={versionNumber}
 			placeholder="Enter version number..."
 			required={true}
@@ -308,7 +295,7 @@
 
 	<FormField label="Website" description="The URL of a website of your choosing. Optional.">
 		<InputField
-			on:change={saveArgs}
+			onchange={saveArgs}
 			bind:value={websiteUrl}
 			placeholder="Enter website URL..."
 			pattern={URL_PATTERN}
@@ -322,13 +309,12 @@
                  it's recommended to be a square image to avoid stretching or squishing."
 		required={true}
 	>
-		<PathField icon="mdi:file-image" on:click={browseIcon} value={iconPath} />
+		<PathField icon="mdi:file-image" onclick={browseIcon} value={iconPath} />
 	</FormField>
 
 	<FormField
 		label="Readme"
-		description="A longer description of the modpack, which supports markdown formatting 
-                 (similarly to Discord messages)."
+		description="A longer description of the modpack, which supports markdown formatting (similarly to Discord messages)."
 		required={true}
 	>
 		<ResizableInputField
@@ -356,10 +342,10 @@
 			mono={true}
 		/>
 
-		<BigButton color="primary" on:click={() => generateChangelog(false)}
+		<BigButton color="primary" onclick={() => generateChangelog(false)}
 			>Generate for {versionNumber}</BigButton
 		>
-		<BigButton color="primary" on:click={() => generateChangelog(true)}>Generate all</BigButton>
+		<BigButton color="primary" onclick={() => generateChangelog(true)}>Generate all</BigButton>
 
 		<details class="mt-1">
 			<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
@@ -393,18 +379,18 @@
 	<div class="text-primary-200 mt-1 flex items-center text-lg font-medium">
 		<span class="max-w-96 grow">Contains NSFW content</span>
 
-		<Checkbox onValueChanged={saveArgs} bind:value={nsfw} />
+		<Checkbox onCheckedChange={saveArgs} bind:checked={nsfw} />
 	</div>
 
 	<div class="text-primary-200 flex items-center text-lg font-medium">
 		<span class="max-w-96 grow">Include disabled mods</span>
 
-		<Checkbox onValueChanged={saveArgs} bind:value={includeDisabled} />
+		<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 	</div>
 
 	<div class="mt-3 flex justify-end gap-2">
-		<BigButton color="primary" on:click={exportToFile}>Export to file</BigButton>
-		<BigButton color="accent" on:click={uploadToThunderstore}>Publish on Thunderstore</BigButton>
+		<BigButton color="primary" onclick={exportToFile}>Export to file</BigButton>
+		<BigButton color="accent" onclick={uploadToThunderstore}>Publish on Thunderstore</BigButton>
 	</div>
 </div>
 

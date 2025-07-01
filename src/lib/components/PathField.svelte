@@ -37,7 +37,7 @@
 		{@render children?.()}
 	</Info>
 
-	<Button.Root
+	<button
 		class="group bg-primary-900 hover:border-primary-500 flex grow basis-0 items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
 		{onclick}
 	>
@@ -51,5 +51,5 @@
 		</div>
 
 		{@render field?.()}
-	</Button.Root>
+	</button>
 </div>

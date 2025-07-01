@@ -3,39 +3,36 @@
 	import { Checkbox } from 'bits-ui';
 
 	type Props = {
-		value?: boolean;
+		checked?: boolean;
 		disabled?: boolean;
-		onValueChanged?: (newValue: boolean) => void;
+		onCheckedChange?: (newValue: boolean) => void;
 		class?: string;
 	};
 
 	let {
-		value = $bindable(false),
+		checked = $bindable(false),
 		disabled = false,
-		onValueChanged = () => {},
-		class: className = ''
+		onCheckedChange,
+		class: classProp = ''
 	}: Props = $props();
 
 	let stateClasses = $derived(
-		value
+		checked
 			? 'bg-accent-700 hover:bg-accent-600'
 			: 'bg-primary-800 hover:bg-primary-700 border border-primary-500'
 	);
 </script>
 
-<Checkbox.Root
-	{disabled}
-	bind:checked={value}
-	onCheckedChange={(value) => {
-		if (value === 'indeterminate') return;
-		onValueChanged(value);
-	}}
->
-	<Checkbox.Indicator
-		class="{stateClasses} {className} size-6 rounded-md p-1 disabled:cursor-not-allowed"
+<Checkbox.Root {disabled} bind:checked {onCheckedChange}>
+	<div
+		class={[
+			classProp,
+			stateClasses,
+			'size-6 cursor-pointer rounded-md p-1 disabled:cursor-not-allowed'
+		]}
 	>
-		{#if value}
+		{#if checked}
 			<Icon class="h-full w-full font-bold text-white" icon="mdi:check" />
 		{/if}
-	</Checkbox.Indicator>
+	</div>
 </Checkbox.Root>

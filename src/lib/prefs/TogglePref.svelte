@@ -37,5 +37,5 @@
 		{@render children?.()}
 	</Info>
 
-	<Checkbox bind:value {onValueChanged} />
+	<Checkbox bind:checked={value} onCheckedChange={onValueChanged} />
 </div>

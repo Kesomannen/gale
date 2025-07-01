@@ -3,14 +3,14 @@
 
 	import ConfigFileListItem from '$lib/config/ConfigFileListItem.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { ConfigSection, ConfigFile } from '$lib/models';
+	import type { ConfigSection, ConfigFile } from '$lib/types';
 	import { capitalize } from '$lib/util';
 	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { activeProfile, activeProfileLocked } from '$lib/stores';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import BigButton from '$lib/components/Button.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
@@ -44,7 +44,7 @@
 	async function refresh() {
 		files = await invokeCommand<ConfigFile[]>('get_config_files');
 
-		let searchParam = $page.url.searchParams.get('file');
+		let searchParam = page.url.searchParams.get('file');
 		if (searchParam === null) return;
 
 		selectedFile = files.find((file) => file.relativePath === searchParam) ?? null;
@@ -55,7 +55,7 @@
 		}
 
 		searchTerm = selectedFile.relativePath;
-		$page.url.searchParams.delete('file');
+		page.url.searchParams.delete('file');
 	}
 	run(() => {
 		$activeProfile;

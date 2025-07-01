@@ -103,7 +103,7 @@ pub struct Thunderstore {
     /// Whether packages have been succesfully fetched at least one since
     /// the last call to [`Thunderstore::switch_game`].
     packages_fetched: bool,
-    /// Whether a [`fetch_mods`] task i currently running.
+    /// Whether a [`fetch_mods`] task is currently running.
     is_fetching: bool,
     // IndexMap is not used for ordering here, but for fast iteration,
     // since we iterate over all mods when resolving identifiers and querying.

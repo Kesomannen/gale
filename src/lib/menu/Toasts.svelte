@@ -30,20 +30,20 @@
 			</div>
 
 			{#if toast.type === 'error'}
-				<Button.Root
+				<button
 					class="rounded-xs p-1 hover:bg-red-500"
-					on:click={() => writeText('`' + toast.name + ' - ' + toast.message + '`')}
+					onclick={() => writeText('`' + toast.name + ' - ' + toast.message + '`')}
 				>
 					<Icon icon="mdi:clipboard-text" class="text-primary-100 text-lg" />
-				</Button.Root>
+				</button>
 			{/if}
 
-			<Button.Root
+			<button
 				class="rounded-md p-1 {toast.type === 'error' ? 'hover:bg-red-500' : 'hover:bg-accent-500'}"
-				on:click={() => clearToast(i)}
+				onclick={() => clearToast(i)}
 			>
 				<Icon icon="mdi:close" class="text-primary-100 text-lg" />
-			</Button.Root>
+			</button>
 		</div>
 	{/each}
 </div>

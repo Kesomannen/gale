@@ -50,7 +50,7 @@
 
 	<div class="mt-2 mb-1 flex items-center">
 		<Label>Use custom path</Label>
-		<Checkbox bind:value={override} />
+		<Checkbox bind:checked={override} />
 	</div>
 
 	{#if override}

@@ -3,7 +3,7 @@
 
 	import Button from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import type { R2ImportData } from '$lib/models';
+	import type { R2ImportData } from '$lib/types';
 	import ImportR2Flow from './ImportR2Flow.svelte';
 
 	type Props = {

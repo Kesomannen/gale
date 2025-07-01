@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { setConfigEntry } from '$lib/config';
-	import type { ConfigValue, ConfigNum, ConfigEntryId, ConfigRange } from '$lib/models';
+	import type { ConfigValue, ConfigNum, ConfigEntryId, ConfigRange } from '$lib/types';
 	import ResetConfigButton from './ResetConfigButton.svelte';
 
 	type Props = {
@@ -11,14 +11,15 @@
 	let { entryId, locked }: Props = $props();
 
 	let content = $state(entryId.entry.value.content as ConfigNum);
-	let range = content.range as ConfigRange;
+	let range = $derived(content.range as ConfigRange);
 	let type = entryId.entry.value.type as 'int' | 'float';
 
-	let element: HTMLDivElement = $state();
-	let fill: HTMLDivElement = $state();
-	let handle: HTMLDivElement = $state();
+	let element: HTMLDivElement;
+	let fill: HTMLDivElement;
+	let handle: HTMLDivElement;
 
 	let isDragging = $state(false);
+	// svelte-ignore state_referenced_locally
 	let inputString = $state(content.value.toString());
 
 	function onReset(newValue: ConfigValue) {

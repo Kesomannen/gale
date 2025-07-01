@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { Button, Dialog } from 'bits-ui';
-	import { fade } from 'svelte/transition';
+	import { Dialog } from 'bits-ui';
+	import { fade, fly } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
-	import { popupTransition } from '$lib/transitions';
+
+	import { quadIn, quadOut } from 'svelte/easing';
 
 	type Props = {
 		open: boolean;
@@ -11,7 +12,7 @@
 		confirmClose?: { message: string } | null;
 		canClose?: boolean;
 		large?: boolean;
-		onClose?: () => void;
+		onclose?: () => void;
 		children?: import('svelte').Snippet;
 	};
 
@@ -21,7 +22,7 @@
 		confirmClose = null,
 		canClose = true,
 		large = false,
-		onClose = () => {},
+		onclose,
 		children
 	}: Props = $props();
 
@@ -34,57 +35,68 @@
 		if (confirmClose) {
 			evt.preventDefault();
 			let result = await confirm(confirmClose.message);
-			if (!result) {
-				return;
-			}
+			if (!result) return;
 		}
 
 		open = false;
-		onClose();
+		onclose?.();
 	}
 </script>
-
-<!--
-	closeOnEscape={canClose && confirmClose === null}
-	closeOnOutsideClick={canClose && confirmClose === null}
--->
 
 <Dialog.Root
 	bind:open
 	onOpenChange={(open) => {
-		if (!open) {
-			onClose();
-		}
+		if (!open) onclose?.();
 	}}
 >
 	<Dialog.Portal>
-		<Dialog.Overlay data-tauri-drag-region class="fixed inset-0 z-0 rounded-lg bg-black/60" />
+		<Dialog.Overlay data-tauri-drag-region forceMount class="pointer-events-none">
+			{#snippet child({ props, open })}
+				{#if open}
+					<div
+						{...props}
+						transition:fade={{ duration: 100 }}
+						class="fixed inset-0 z-0 rounded-lg bg-black/60"
+					></div>
+				{/if}
+			{/snippet}
+		</Dialog.Overlay>
 		<Dialog.Content
-			class="pointer-events-none fixed inset-0 flex items-center justify-center"
-			{...popupTransition}
+			forceMount
+			interactOutsideBehavior={canClose && confirmClose === null ? 'close' : 'ignore'}
+			class="pointer-events-none"
 		>
-			<div
-				class="w-[85%] {large
-					? 'max-w-[60rem]'
-					: 'max-w-[35rem]'} border-primary-600 bg-primary-800 pointer-events-auto relative z-50 max-h-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl"
-			>
-				{#if canClose}
-					<Button.Root
-						class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
-						onclick={close}
+			{#if open}
+				<div
+					class="pointer-events-none fixed inset-0 flex items-center justify-center"
+					in:fly={{ duration: 150, easing: quadOut, y: 5 }}
+					out:fly={{ duration: 50, easing: quadIn, y: 5 }}
+				>
+					<div
+						class={[
+							large ? 'max-w-[60rem]' : 'max-w-[35rem]',
+							'border-primary-600 bg-primary-800 pointer-events-auto relative z-50 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
+						]}
 					>
-						<Icon icon="mdi:close" />
-					</Button.Root>
-				{/if}
+						{#if canClose}
+							<button
+								class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
+								onclick={close}
+							>
+								<Icon icon="mdi:close" />
+							</button>
+						{/if}
 
-				{#if title}
-					<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-white"
-						>{title}</Dialog.Title
-					>
-				{/if}
+						{#if title}
+							<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-white"
+								>{title}</Dialog.Title
+							>
+						{/if}
 
-				{@render children?.()}
-			</div>
+						{@render children?.()}
+					</div>
+				</div>
+			{/if}
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>

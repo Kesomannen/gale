@@ -1,5 +1,6 @@
 <script lang="ts" generics="T">
 	import Checkbox from './Checkbox.svelte';
+	import type { Snippet } from 'svelte';
 
 	type Props = {
 		class?: string;
@@ -9,27 +10,27 @@
 		get: (item: T, index: number) => boolean;
 		set: (item: T, index: number, value: boolean) => void;
 		getLabel?: (item: T, index: number) => string;
-		children?: import('svelte').Snippet<[any]>;
+		item?: Snippet<[{ item: T; index: number }]>;
 	};
 
 	let {
-		class: className = '',
+		class: classProp = '',
 		title,
 		items,
 		maxHeight = 'none',
 		get,
 		set,
 		getLabel = (item, _) => item as unknown as string,
-		children
+		item: itemSnippet
 	}: Props = $props();
 </script>
 
-<div class="border-primary-900 relative overflow-hidden rounded-lg border-2 {className}">
+<div class={clsx(classProp, 'border-primary-900 relative overflow-hidden rounded-lg border-2')}>
 	<div class="bg-primary-950 text-primary-300 flex w-full items-center px-3 py-2 font-bold">
 		<Checkbox
 			class="mr-3"
-			value={items.every((item, i) => get(item, i))}
-			onValueChanged={(newValue) => items.forEach((item, i) => set(item, i, newValue))}
+			checked={items.every((item, i) => get(item, i))}
+			onCheckedChange={(newValue) => items.forEach((item, i) => set(item, i, newValue))}
 		/>
 		{title}
 	</div>
@@ -43,11 +44,11 @@
 			<div class="text-primary-300 even:bg-primary-900 flex items-center px-3 py-1.5">
 				<Checkbox
 					class="mr-3"
-					value={get(item, i)}
-					onValueChanged={(newValue) => set(item, i, newValue)}
+					checked={get(item, i)}
+					onCheckedChange={(newValue) => set(item, i, newValue)}
 				/>
 
-				{#if children}{@render children({ item, index: i })}{:else}
+				{#if itemSnippet}{@render itemSnippet({ item, index: i })}{:else}
 					{getLabel(item, i)}
 				{/if}
 			</div>

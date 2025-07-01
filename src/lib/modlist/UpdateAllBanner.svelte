@@ -13,9 +13,8 @@
 
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import type { AvailableUpdate } from '$lib/models';
+	import type { AvailableUpdate } from '$lib/types';
 	import Icon from '@iconify/svelte';
-	import { Button } from 'bits-ui';
 	import ModCard from './ModCard.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
@@ -26,7 +25,7 @@
 		updates: AvailableUpdate[];
 	};
 
-	let { updates = $bindable() }: Props = $props();
+	let { updates }: Props = $props();
 
 	let popupOpen = $state(false);
 	let include: Map<AvailableUpdate, boolean> = $state(new Map());
@@ -37,6 +36,8 @@
 			popupOpen = false;
 		}
 	});
+
+	$inspect(shownUpdates);
 
 	async function updateAll() {
 		let uuids = shownUpdates
@@ -56,19 +57,19 @@
 		There {shownUpdates.length === 1 ? 'is' : 'are'}
 		<b class="mx-1">{shownUpdates.length}</b>
 		{shownUpdates.length === 1 ? ' update' : ' updates'} available.
-		<Button.Root
+		<button
 			class="hover:text-accent-200 ml-1 font-semibold text-white hover:underline"
-			on:click={() => (popupOpen = true)}
+			onclick={() => (popupOpen = true)}
 		>
 			Update all?
-		</Button.Root>
+		</button>
 
-		<Button.Root
+		<button
 			class="hover:bg-accent-600 ml-auto rounded-md p-1 text-xl"
-			on:click={() => ($threshold = shownUpdates.length)}
+			onclick={() => ($threshold = shownUpdates.length)}
 		>
 			<Icon icon="mdi:close" />
-		</Button.Root>
+		</button>
 	</div>
 {/if}
 
@@ -86,7 +87,7 @@
 			include = include; // force reactivity
 		}}
 	>
-		{#snippet children({ item: update })}
+		{#snippet item({ item: update })}
 			<ModCard fullName={update.fullName} showVersion={false} />
 
 			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
@@ -94,9 +95,9 @@
 			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
 			<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
-				<Button.Root
+				<button
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
-					on:click={() => {
+					onclick={() => {
 						update.ignore = true;
 						updates = updates; // force reactivity
 
@@ -104,13 +105,13 @@
 						include = include; // force reactivity
 
 						invokeCommand('ignore_update', { versionUuid: update.versionUuid });
-					}}><Icon icon="mdi:notifications-off" /></Button.Root
+					}}><Icon icon="mdi:notifications-off" /></button
 				>
 			</Tooltip>
 		{/snippet}
 	</Checklist>
 
 	{#snippet buttons()}
-		<BigButton color="accent" on:click={updateAll}>Update mods</BigButton>
+		<BigButton color="accent" onclick={updateAll}>Update mods</BigButton>
 	{/snippet}
 </ConfirmPopup>

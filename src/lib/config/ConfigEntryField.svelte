@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isValidHex, sentenceCase } from '$lib/util';
-	import type { ConfigEntryId, ConfigValue } from '$lib/models';
+	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import StringConfig from './StringConfig.svelte';
 	import EnumConfig from './EnumConfig.svelte';
 	import FlagsConfig from './FlagsConfig.svelte';

@@ -2,7 +2,7 @@
 	import { run } from 'svelte/legacy';
 
 	import { invokeCommand } from '$lib/invoke';
-	import { SortBy, type Mod } from '$lib/models';
+	import type { SortBy, Mod } from '$lib/types';
 	import { shortenFileSize } from '$lib/util';
 
 	import ModList from '$lib/modlist/ModList.svelte';
@@ -16,17 +16,16 @@
 	import ModListItem from '$lib/modlist/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
-	const sortOptions = [SortBy.LastUpdated, SortBy.Newest, SortBy.Rating, SortBy.Downloads];
+	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 
 	let mods: Mod[] = $state([]);
 
-	let modList: ModList = $state();
-	let maxCount: number = $state();
+	let modList: ModList;
+	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
 	let selectedDownloadSize: number | null = $state(null);
 
 	let versionsDropdownOpen = $state(false);
-
 
 	let unlistenFromQuery: UnlistenFn | undefined;
 
@@ -44,8 +43,6 @@
 			invokeCommand('stop_querying_thunderstore');
 		};
 	});
-
-
 
 	let hasRefreshed = $state(false);
 	let refreshing = false;
@@ -83,12 +80,16 @@
 			modList.selectMod(mod);
 		}
 	}
-	let activeModRef = $derived(selectedMod
-		? {
-				packageUuid: selectedMod.uuid,
-				versionUuid: selectedMod.versions[0].uuid
-			}
-		: undefined);
+
+	let activeModRef = $derived(
+		selectedMod
+			? {
+					packageUuid: selectedMod.uuid,
+					versionUuid: selectedMod.versions[0].uuid
+				}
+			: undefined
+	);
+
 	run(() => {
 		if (selectedMod) {
 			invokeCommand<number>('get_download_size', { modRef: activeModRef }).then(
@@ -96,6 +97,7 @@
 			);
 		}
 	});
+
 	run(() => {
 		if (maxCount > 0) {
 			$modQuery;
@@ -115,10 +117,10 @@
 	bind:selected={selectedMod}
 >
 	{#snippet details()}
-		<div  class="mt-2 flex text-lg text-white">
-			<Button.Root
+		<div class="mt-2 flex text-lg text-white">
+			<button
 				class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed"
-				on:click={() => install(activeModRef)}
+				onclick={() => install(activeModRef)}
 				disabled={selectedMod?.isInstalled || $activeProfileLocked}
 			>
 				{#if $activeProfileLocked}
@@ -132,7 +134,7 @@
 						({shortenFileSize(selectedDownloadSize)})
 					{/if}
 				{/if}
-			</Button.Root>
+			</button>
 			<DropdownMenu.Root bind:open={versionsDropdownOpen}>
 				<DropdownMenu.Trigger
 					class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed"
@@ -147,13 +149,11 @@
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content
 					class="border-primary-500 bg-primary-700 flex max-h-72 w-48 flex-col gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
-					transition={fly}
-					transitionConfig={{ duration: 100 }}
 				>
 					{#each selectedMod?.versions ?? [] as version}
 						<DropdownMenu.Item
 							class="text-primary-300 hover:bg-primary-600 hover:text-primary-100 flex shrink-0 cursor-default items-center truncate rounded-md px-3 py-1 text-left"
-							on:click={() => {
+							onclick={() => {
 								if (!selectedMod) return;
 
 								install({
@@ -171,32 +171,26 @@
 	{/snippet}
 
 	{#snippet banner()}
-	
-			{#if $activeProfileLocked}
-				<ProfileLockedBanner class="mr-4 mb-1" />
-			{/if}
-		
+		{#if $activeProfileLocked}
+			<ProfileLockedBanner class="mr-4 mb-1" />
+		{/if}
 	{/snippet}
 
 	{#snippet placeholder()}
-	
-			{#if hasRefreshed}
-				<span class="text-lg">No matching mods found</span>
-				<br />
-				<span class="text-primary-400">Try to adjust your search query/filters</span>
-			{/if}
-		
+		{#if hasRefreshed}
+			<span class="text-lg">No matching mods found</span>
+			<br />
+			<span class="text-primary-400">Try to adjust your search query/filters</span>
+		{/if}
 	{/snippet}
 
-	{#snippet item({ data: { mod, isSelected } })}
-	
-			<ModListItem
-				{mod}
-				{isSelected}
-				locked={$activeProfileLocked}
-				on:install={() => installLatest(mod)}
-				on:click={(evt) => onModClicked(evt, mod)}
-			/>
-		
+	{#snippet item({ mod, isSelected })}
+		<ModListItem
+			{mod}
+			{isSelected}
+			locked={$activeProfileLocked}
+			oninstall={() => installLatest(mod)}
+			onclick={(evt) => onModClicked(evt, mod)}
+		/>
 	{/snippet}
 </ModList>

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import Dropdown from '$lib/components/Dropdown.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import {
 		defaultColors,
@@ -10,7 +9,8 @@
 		type DefaultColor,
 		type ColorCategory
 	} from '$lib/theme';
-	import { capitalize } from '$lib/util';
+	import { capitalize, selectItems } from '$lib/util';
+	import Select from '$lib/components/Select.svelte';
 
 	type Props = {
 		category: ColorCategory;
@@ -46,13 +46,12 @@
 <div class="flex items-center">
 	<Label>{capitalize(category)} color</Label>
 
-	<Dropdown
-		class="grow"
-		{selected}
-		items={options}
-		getLabel={capitalize}
-		onSelectedChange={onDropdownChange}
-		multiple={false}
+	<Select
+		type="single"
+		triggerClass="grow"
+		value={selected}
+		items={selectItems(options, capitalize)}
+		onValueChange={onDropdownChange}
 	/>
 
 	{#if value.type === 'custom'}

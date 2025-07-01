@@ -105,10 +105,10 @@ impl ManagedGame {
             .path
             .read_dir()?
             .filter_map(|entry| entry.ok())
-            .filter(|entry| {
-                return entry.file_type().is_ok_and(|ty| ty.is_file())
-                    || entry.file_name() == "dotnet"; // bepinex il2cpp libraries
-            })
+            .filter(|entry| 
+                // dotnet is bepinex il2cpp libraries
+                entry.file_type().is_ok_and(|ty| ty.is_file()) || entry.file_name() == "dotnet"
+            )
             .filter(|entry| {
                 let name = entry.file_name();
                 EXCLUDES.iter().all(|exclude| name != *exclude)

@@ -15,7 +15,7 @@
 		class?: string;
 	};
 
-	let { source, class: className = '' }: Props = $props();
+	let { source, class: classProp = '' }: Props = $props();
 
 	const plugins: Plugin[] = [
 		gfmPlugin(),
@@ -28,6 +28,6 @@
 	];
 </script>
 
-<div class="markdown overflow-x-hidden {className}">
+<div class={[classProp, 'markdown overflow-x-hidden']}>
 	<Markdown md={source} {plugins} />
 </div>

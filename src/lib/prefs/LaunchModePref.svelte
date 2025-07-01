@@ -1,12 +1,12 @@
 <script lang="ts">
 	import Label from '$lib/components/Label.svelte';
-	import Dropdown from '$lib/components/Dropdown.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 
-	import type { LaunchMode } from '$lib/models';
-	import { sentenceCase } from '$lib/util';
+	import type { LaunchMode } from '$lib/types';
+	import { selectItems, sentenceCase } from '$lib/util';
 	import { activeGame } from '$lib/stores';
 	import Info from '$lib/components/Info.svelte';
+	import Select from '$lib/components/Select.svelte';
 
 	type Props = {
 		value: LaunchMode;
@@ -18,7 +18,7 @@
 	let instances = $state(value.content?.instances ?? 1);
 	let intervalSecs = $state(value.content?.intervalSecs ?? 10);
 
-	async function onSelectedChange(newValue: string) {
+	async function onValueChange(newValue: string) {
 		value.type = newValue as 'launcher' | 'direct';
 		await submit();
 	}
@@ -51,14 +51,13 @@
 		</p>
 	</Info>
 
-	<Dropdown
-		class="grow"
-		items={['launcher', 'direct']}
-		getLabel={sentenceCase}
-		selected={value?.type ?? 'direct'}
-		multiple={false}
+	<Select
+		type="single"
+		triggerClass="grow"
+		items={selectItems(['launcher', 'direct'], sentenceCase)}
+		value={value?.type ?? 'direct'}
 		disabled={platforms.length === 0}
-		{onSelectedChange}
+		{onValueChange}
 	/>
 </div>
 
@@ -72,8 +71,8 @@
 	<InputField
 		disabled={value.type !== 'direct'}
 		value={instances.toString()}
-		on:change={({ detail }) => {
-			instances = parseInt(detail);
+		onchange={(value) => {
+			instances = parseInt(value);
 			submit();
 		}}
 	/>
@@ -90,8 +89,8 @@
 	<InputField
 		disabled={value.type !== 'direct' || instances <= 1}
 		value={intervalSecs.toString()}
-		on:change={({ detail }) => {
-			intervalSecs = parseInt(detail);
+		onchange={(value) => {
+			intervalSecs = parseInt(value);
 			submit();
 		}}
 	/>

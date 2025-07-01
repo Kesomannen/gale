@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
 	import { invokeCommand } from '$lib/invoke';
-	import type { InstallProgress } from '$lib/models';
+	import type { InstallProgress } from '$lib/types';
 	import { refreshProfiles } from '$lib/stores';
 	import { formatTime, shortenFileSize } from '$lib/util';
 
@@ -25,10 +25,11 @@
 	});
 
 	let currentName = $derived(progress.currentName.replace('_', ' '));
-	let estimatedTimeLeft =
-		$derived(progress.durationSecs > 1
+	let estimatedTimeLeft = $derived(
+		progress.durationSecs > 1
 			? formatTime(progress.durationSecs * (1 / progress.totalProgress - 1))
-			: '---');
+			: '---'
+	);
 
 	onMount(() => {
 		listen<InstallProgress>('install_progress', (event) => {
@@ -60,7 +61,7 @@
 	bind:open
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
-	onClose={() => invokeCommand('cancel_install')}
+	onclose={() => invokeCommand('cancel_install')}
 	confirmClose={{
 		message: 'Are you sure you want to abort the installation?'
 	}}
