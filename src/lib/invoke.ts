@@ -1,7 +1,7 @@
 import { invoke as tauriInvoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { sentenceCase } from './util';
 import { pushToast } from './toast';
+import { toSentenceCase } from 'js-convert-case';
 
 type Error = {
 	name: string;
@@ -20,7 +20,7 @@ export async function invoke<T>(cmd: string, args?: any): Promise<T> {
 		return await tauriInvoke<T>(cmd, args);
 	} catch (error: any) {
 		let errStr = error as string;
-		let name = `Failed to ${sentenceCase(cmd).toLowerCase()}`;
+		let name = `Failed to ${toSentenceCase(cmd).toLowerCase()}`;
 		let message = errStr[0].toUpperCase() + errStr.slice(1);
 
 		if (!['.', '?', '!'].includes(message[-1])) {

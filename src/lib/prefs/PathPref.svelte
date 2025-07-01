@@ -3,8 +3,8 @@
 
 	import PathField from '$lib/components/PathField.svelte';
 	import Icon from '@iconify/svelte';
-	import { sentenceCase } from '$lib/util';
 	import type { Snippet } from 'svelte';
+	import { toSentenceCase } from 'js-convert-case';
 
 	type Props = {
 		label: string;
@@ -20,7 +20,7 @@
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			title: 'Select ' + sentenceCase(label),
+			title: 'Select ' + toSentenceCase(label),
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;

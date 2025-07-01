@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isValidHex, sentenceCase } from '$lib/util';
+	import { isValidHex } from '$lib/util';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import StringConfig from './StringConfig.svelte';
 	import EnumConfig from './EnumConfig.svelte';
@@ -10,6 +10,7 @@
 	import { isNum } from '$lib/config';
 	import Info from '$lib/components/Info.svelte';
 	import ColorConfig from './ColorConfig.svelte';
+	import { toSentenceCase } from 'js-convert-case';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -50,6 +51,7 @@
 				return 'Flags';
 		}
 	}
+
 	let { entry } = $derived(entryId);
 	let { value } = $derived(entry);
 	let typeName = $derived(getTypeName(value));
@@ -58,7 +60,7 @@
 <!-- odd:bg-[#1b2433] -->
 <div class="text-primary-300 flex items-center py-0.5 pr-4 pl-6">
 	<div class="text-primary-300 w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left">
-		{sentenceCase(entry.name)}
+		{toSentenceCase(entry.name)}
 	</div>
 
 	<Info>

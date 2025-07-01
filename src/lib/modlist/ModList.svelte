@@ -3,19 +3,14 @@
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import VirtualList from '$lib/components/VirtualList.svelte';
 	import { open } from '@tauri-apps/plugin-shell';
-	import { selectItems, sentenceCase } from '$lib/util';
-	import {
-		type SortBy,
-		type Mod,
-		type QueryModsArgs,
-		type SortOrder,
-		type ModContextItem
-	} from '$lib/types';
+	import { selectItems } from '$lib/util';
+	import { type SortBy, type Mod, type QueryModsArgs, type ModContextItem } from '$lib/types';
 	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
 	import { activeGame } from '$lib/stores.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import type { Snippet } from 'svelte';
+	import { toSentenceCase } from 'js-convert-case';
 
 	const defaultContextItems: ModContextItem[] = [
 		{
@@ -121,7 +116,7 @@
 						? 'mdi:sort-descending'
 						: 'mdi:sort-ascending'}
 					triggerClass="grow basis-0 py-1.5"
-					items={selectItems(['descending', 'ascending'], sentenceCase)}
+					items={selectItems(['descending', 'ascending'], toSentenceCase)}
 					bind:value={$queryArgs.sortOrder}
 					type="single"
 				/>
@@ -129,7 +124,7 @@
 				<Select
 					icon="mdi:sort"
 					triggerClass="grow basis-0 py-1.5"
-					items={selectItems(sortOptions, sentenceCase)}
+					items={selectItems(sortOptions, toSentenceCase)}
 					bind:value={$queryArgs.sortBy}
 					type="single"
 				/>

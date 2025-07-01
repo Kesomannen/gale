@@ -2,8 +2,8 @@
 	import { invoke } from '$lib/invoke';
 	import { activeGame, setActiveGame } from '$lib/stores.svelte';
 	import type { Game } from '$lib/types';
-	import { titleCase } from '$lib/util';
 	import Icon from '@iconify/svelte';
+	import { toHeaderCase } from 'js-convert-case';
 
 	type Props = { game: Game; onselect?: () => void; onfavorite?: (favorite: boolean) => void };
 
@@ -38,7 +38,7 @@
 			{#if game.platforms.length > 0}
 				<span class="text-primary-500 mx-1">|</span>
 
-				<span class="mr-1">{game.platforms.map(titleCase).join(', ')}</span>
+				<span class="mr-1">{game.platforms.map(toHeaderCase).join(', ')}</span>
 			{/if}
 		</div>
 	</div>

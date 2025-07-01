@@ -43,6 +43,7 @@
 		"@tauri-apps/plugin-updater": "^2.0.0",
 		"bits-ui": "=2.8.0",
 		"highlight.js": "^11.11.1",
+		"js-convert-case": "^4.2.0",
 		"rehype-highlight": "^7.0.0",
 		"rehype-raw": "^7.0.0",
 		"svelte-exmarkdown": "^3.0.5"

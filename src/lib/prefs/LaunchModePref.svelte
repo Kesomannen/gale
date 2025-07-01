@@ -3,10 +3,11 @@
 	import InputField from '$lib/components/InputField.svelte';
 
 	import type { LaunchMode } from '$lib/types';
-	import { selectItems, sentenceCase } from '$lib/util';
+	import { selectItems } from '$lib/util';
 	import { activeGame } from '$lib/stores.svelte';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
+	import { toSentenceCase } from 'js-convert-case';
 
 	type Props = {
 		value: LaunchMode;
@@ -54,7 +55,7 @@
 	<Select
 		type="single"
 		triggerClass="grow"
-		items={selectItems(['launcher', 'direct'], sentenceCase)}
+		items={selectItems(['launcher', 'direct'], toSentenceCase)}
 		value={value?.type ?? 'direct'}
 		disabled={platforms.length === 0}
 		{onValueChange}

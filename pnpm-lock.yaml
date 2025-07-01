@@ -41,6 +41,9 @@ importers:
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
+      js-convert-case:
+        specifier: ^4.2.0
+        version: 4.2.0
       rehype-highlight:
         specifier: ^7.0.0
         version: 7.0.2
@@ -726,6 +729,9 @@ packages:
   jiti@2.4.2:
     resolution: {integrity: sha512-rg9zJN+G4n2nfJl5MW3BMygZX56zKPNVEYYqq7adpmMh4Jn2QNEwhvQlFy6jPVdcod7txZtKHWnyZiA3a0zP7A==}
     hasBin: true
+
+  js-convert-case@4.2.0:
+    resolution: {integrity: sha512-i4mHCxiBNj6ajjMnZnC70qAOMA8gb+YgYipy2VR7a+Q5EBgEQ2/SgSAUBdNEyObk++B4AIUiFWeDEX2ggOd8cQ==}
 
   kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
@@ -1783,6 +1789,8 @@ snapshots:
       '@types/estree': 1.0.8
 
   jiti@2.4.2: {}
+
+  js-convert-case@4.2.0: {}
 
   kleur@4.1.5: {}
 

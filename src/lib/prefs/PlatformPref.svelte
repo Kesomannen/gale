@@ -2,10 +2,11 @@
 	import Label from '$lib/components/Label.svelte';
 
 	import type { Platform } from '$lib/types';
-	import { selectItems, titleCase } from '$lib/util';
+	import { selectItems } from '$lib/util';
 	import { activeGame } from '$lib/stores.svelte';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
+	import { toHeaderCase } from 'js-convert-case';
 
 	type Props = {
 		value: Platform | null;
@@ -25,7 +26,7 @@
 	<Select
 		type="single"
 		triggerClass="grow"
-		items={selectItems(platforms, titleCase)}
+		items={selectItems(platforms, toHeaderCase)}
 		value={value ?? platforms[0]}
 		disabled={platforms.length === 1}
 		onValueChange={(newValue) => {
