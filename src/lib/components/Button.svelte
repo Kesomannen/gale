@@ -1,48 +1,47 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import Icon from '@iconify/svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	type Props = {
 		color?: 'accent' | 'primary' | 'red';
-		fontWeight?: 'normal' | 'medium' | 'semibold';
-		class?: string;
-		children?: Snippet;
+		icon?: string;
+		loading?: boolean;
 	} & HTMLButtonAttributes;
 
 	let {
-		disabled,
+		disabled: disabledProp,
 		color = 'accent',
-		fontWeight = 'normal',
-		class: classProp = '',
+		icon,
+		loading = false,
+		class: classProp,
 		children,
-		...props
+		...restProps
 	}: Props = $props();
 
-	let fontClasses = $derived(
+	let typeClass = $derived(
 		{
-			normal: 'font-normal',
-			medium: 'font-medium',
-			semibold: 'font-semibold'
-		}[fontWeight]
-	);
-
-	let colorClasses = $derived(
-		{
-			accent: 'enabled:hover:bg-accent-600 bg-accent-700',
-			primary: 'enabled:hover:bg-primary-600 bg-primary-700',
-			red: 'enabled:hover:bg-red-600 bg-red-700'
+			accent: 'enabled:hover:bg-accent-600 bg-accent-700 font-medium text-white',
+			primary: 'enabled:hover:bg-primary-600 bg-primary-700 text-primary-200',
+			red: 'enabled:hover:bg-red-600 bg-red-700 text-white'
 		}[color]
 	);
+
+	let disabled = $derived(disabledProp || loading);
+	let renderedIcon = $derived(loading ? 'mdi:loading' : icon);
 </script>
 
 <button
 	class={[
 		classProp,
-		fontClasses,
-		colorClasses,
-		'disabled:opactiy-70 disabled:bg-primary-700 disabled:text-primary-400 inline-flex items-center overflow-hidden rounded-lg px-4 py-2 text-nowrap text-white disabled:cursor-not-allowed'
+		typeClass,
+		'disabled:opactiy-70 disabled:bg-primary-700 disabled:text-primary-400 inline-flex items-center overflow-hidden rounded-lg px-4 py-2 text-nowrap disabled:cursor-not-allowed'
 	]}
-	{...props}
+	{disabled}
+	{...restProps}
 >
+	{#if renderedIcon}
+		<Icon icon={renderedIcon} class="mr-2 text-lg {loading && 'animate-spin'}" />
+	{/if}
+
 	{@render children?.()}
 </button>

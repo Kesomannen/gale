@@ -26,12 +26,14 @@
 </script>
 
 <ConfirmPopup title="Set thunderstore API token" bind:open={$apiKeyPopupOpen}>
-	<p>
-		Enter your Thunderstore API token below, or leave blank to clear the current one. This token is
-		used to publish modpacks to Thunderstore, and will be stored securely on your computer.
+	<p>Enter your Thunderstore API token below, or leave blank to clear the current one.</p>
+
+	<p class="mt-2">
+		This token is used to publish modpacks to Thunderstore, and will be stored securely on your
+		computer.
 	</p>
 
-	<p class="mt-2 mb-3">
+	<p class="mt-2 mb-1">
 		Once set, you will <b>not</b> be able to view the token again.
 	</p>
 
@@ -42,9 +44,11 @@
 		bind:value={token}
 	/>
 
-	<Link class="text-sm" href="https://example.com">Unsure how to get your API token?</Link>
+	<Link class="mt-2 block text-sm" href="https://example.com"
+		>Unsure how to get your API token?</Link
+	>
 
 	{#snippet buttons()}
-		<BigButton color="accent" fontWeight="medium" onclick={submit}>Submit</BigButton>
+		<BigButton color="accent" onclick={submit}>Submit</BigButton>
 	{/snippet}
 </ConfirmPopup>

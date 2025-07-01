@@ -49,7 +49,7 @@
 	);
 </script>
 
-<Select.Root bind:value={value as never} {...restProps}>
+<Select.Root bind:value={value as never} bind:open {...restProps}>
 	<Select.Trigger
 		class={[
 			triggerClass,
@@ -73,11 +73,11 @@
 			</div>
 		{/if}
 
+		<!-- can't use a class array here because of bug in iconify Icon -->
 		<Icon
-			class={[
-				open ? 'rotate-180' : 'rotate-0',
-				'text-primary-400 group-disabled:text-primary-500 ml-auto shrink-0 origin-center transform text-lg transition-all duration-100 ease-out'
-			]}
+			class="text-primary-400 group-disabled:text-primary-500 ml-auto shrink-0 origin-center transform text-lg transition-transform duration-100 ease-out {open
+				? 'rotate-180'
+				: 'rotate-0'}"
 			icon="mdi:chevron-down"
 		/>
 	</Select.Trigger>

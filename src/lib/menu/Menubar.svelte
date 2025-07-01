@@ -456,7 +456,7 @@
 <header
 	data-tauri-drag-region
 	class="bg-primary-800 flex h-8 shrink-0"
-	class:hidden={$useNativeMenu && false}
+	class:hidden={$useNativeMenu}
 >
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />
@@ -473,15 +473,15 @@
 		{/each}
 	</Menubar.Root>
 
-	<button class="group hover:bg-primary-700 ml-auto px-3 py-1.5" onclick={appWindow.minimize}>
-		<Icon icon="mdi:minimize" class="text-primary-500 group-hover:text-white" />
-	</button>
-	<button class="group hover:bg-primary-700 px-3 py-1.5" onclick={appWindow.toggleMaximize}>
-		<Icon icon="mdi:maximize" class="text-primary-500 group-hover:text-white" />
-	</button>
-	<button class="group px-3 py-1.5 hover:bg-red-700" onclick={appWindow.close}>
-		<Icon icon="mdi:close" class="text-primary-500 group-hover:text-white" />
-	</button>
+	{#snippet button(className: string, icon: string, onclick: () => void)}
+		<button class={[className, 'group hover:bg-primary-700 px-3 py-1.5']} {onclick}>
+			<Icon {icon} class="text-primary-500 group-hover:text-white" />
+		</button>
+	{/snippet}
+
+	{@render button('hover:bg-primary-700 ml-auto', 'mdi:minimize', appWindow.minimize)}
+	{@render button('hover:bg-primary-700', 'mdi:maximize', appWindow.toggleMaximize)}
+	{@render button('hover:bg-red-700', 'mdi:close', appWindow.close)}
 </header>
 
 <Popup
@@ -494,6 +494,7 @@
 			? 'Enter a name for the duplicated profile:'
 			: 'Enter a new name for the profile:'}
 	</p>
+
 	<InputField
 		bind:value={profileOperationName}
 		placeholder="Enter name..."
@@ -501,16 +502,13 @@
 		class="w-full"
 		onsubmit={doProfileOperation}
 	/>
+
 	<div class="mt-2 ml-auto flex justify-end gap-2">
 		{#if !profileOperationInProgress}
 			<Button color="primary" onclick={() => (profileOperationOpen = false)}>Cancel</Button>
 		{/if}
-		<Button
-			color="accent"
-			fontWeight="medium"
-			disabled={profileOperationInProgress}
-			onclick={doProfileOperation}
-		>
+
+		<Button color="accent" disabled={profileOperationInProgress} onclick={doProfileOperation}>
 			{#if profileOperationInProgress}
 				<Icon icon="mdi:loading" class="my-1 animate-spin text-lg" />
 			{:else}

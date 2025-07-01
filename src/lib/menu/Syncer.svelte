@@ -1,18 +1,18 @@
 <!-- @migration-task Error while migrating Svelte code: can't migrate `let mainPopupOpen = false;` to `$state` because there's a variable named state.
      Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
-	import BigButton from '$lib/components/Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	import { invokeCommand } from '$lib/invoke';
 	import type { ListedSyncProfile } from '$lib/types';
 	import { activeProfile, login, logout, refreshProfiles, user } from '$lib/stores';
 	import { pushInfoToast } from '$lib/toast';
-	import { discordAvatarUrl, timeSince } from '$lib/util';
+	import { discordAvatarUrl } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
-	import { Button, DropdownMenu } from 'bits-ui';
+	import { DropdownMenu } from 'bits-ui';
 	import OwnedSyncProfilesPopup from './OwnedSyncProfilesPopup.svelte';
 
 	type State = 'off' | 'synced' | 'outdated';
@@ -179,46 +179,43 @@
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">
 			{#if syncState === 'outdated'}
-				<BigButton onclick={pull} disabled={loading}>
-					<Icon icon="mdi:cloud-download" class="mr-2 text-lg" />
-					Pull update
-				</BigButton>
+				<Button onclick={pull} disabled={loading} icon="mdi:cloud-download">Pull update</Button>
 			{/if}
 
 			{#if isOwner}
-				<BigButton onclick={push} disabled={loading || $user === null} color="accent">
-					<Icon icon="mdi:cloud-upload" class="mr-2 text-lg" />
+				<Button
+					onclick={push}
+					{loading}
+					disabled={$user === null}
+					color="accent"
+					icon="mdi:cloud-upload"
+				>
 					Push update
-				</BigButton>
+				</Button>
 			{/if}
 
-			<BigButton onclick={refresh} disabled={loading} color="primary">
-				<Icon icon="mdi:cloud-refresh" class="mr-2 text-lg" />
-				Refresh
-			</BigButton>
+			<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh">Refresh</Button>
 
-			<BigButton onclick={disconnect} disabled={loading} color="primary">
-				<Icon icon="mdi:cloud-remove" class="mr-2 text-lg" />
+			<Button onclick={disconnect} {loading} color="primary" icon="mdi:cloud-remove">
 				Disconnect
-			</BigButton>
+			</Button>
 		</div>
 	{:else if $user !== null}
-		<BigButton onclick={connect} disabled={loading} color="accent" class="mt-2">
-			<Icon icon="mdi:cloud-plus" class="mr-2 text-lg" />
+		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
 			Connect
-		</BigButton>
+		</Button>
 	{/if}
 
 	<div class="text-primary-300 mt-4 flex items-center gap-1">
 		{#if $user === null}
-			<BigButton onclick={onLoginClicked} disabled={loginLoading} color="primary">
-				<Icon
-					icon={loginLoading ? 'mdi:loading' : 'ic:baseline-discord'}
-					class="mr-2 {loginLoading && 'animate-spin'}"
-				/>
-
+			<Button
+				onclick={onLoginClicked}
+				loading={loginLoading}
+				color="primary"
+				icon="ic:baseline-discord"
+			>
 				Sign in with Discord
-			</BigButton>
+			</Button>
 		{:else}
 			<img src={discordAvatarUrl($user)} alt="" class="size-10 rounded-full shadow-lg" />
 
