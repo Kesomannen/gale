@@ -13,7 +13,7 @@
 	import type { ConfigEntryId } from '$lib/types';
 	import { getListSeparator, type ListSeparator } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button, Tabs } from 'bits-ui';
+	import { Tabs } from 'bits-ui';
 	import { writable } from 'svelte/store';
 
 	let mode: 'text' | 'list' = $state('text');
@@ -45,12 +45,15 @@
 		content = $expandedEntry.entry.value.content as string;
 		separator = getListSeparator($expandedEntry.entry);
 	}
+
 	let open = $derived($expandedEntry !== null);
-	run(() => {
-		if (open) reset();
-	});
+
 	let content = $derived(($expandedEntry?.entry.value.content as string) ?? '');
 	let items = $derived(content.split(separator.char));
+
+	$effect(() => {
+		if (open) reset();
+	});
 </script>
 
 <Popup

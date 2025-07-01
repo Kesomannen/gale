@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Label from '$lib/components/Label.svelte';
 	import {
 		defaultColors,
@@ -36,7 +34,8 @@
 	function changeCustomColor(hex: string) {
 		setColor(category, { type: 'custom', hex });
 	}
-	run(() => {
+
+	$effect(() => {
 		if (value.type === 'custom') {
 			changeCustomColor(customColor);
 		}

@@ -14,12 +14,15 @@
 	import InstallModPopup from '$lib/modlist/InstallModPopup.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
+	import { games } from '$lib/stores.svelte';
 
 	type Props = {
 		children?: Snippet;
 	};
 
 	let { children }: Props = $props();
+
+	$inspect(games);
 
 	onMount(() => {
 		refreshFont();

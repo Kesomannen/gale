@@ -1,26 +1,24 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import ConfigFileListItem from '$lib/config/ConfigFileListItem.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { ConfigSection, ConfigFile } from '$lib/types';
 	import { capitalize } from '$lib/util';
 	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { activeProfile, activeProfileLocked } from '$lib/stores';
+	import { activeProfile, activeProfileLocked } from '$lib/stores.svelte';
 	import { page } from '$app/state';
-	import BigButton from '$lib/components/Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
-	let files: ConfigFile[] | null = $state();
+	let files: ConfigFile[] | null = $state(null);
 
 	let searchTerm = $state('');
 
-	let selectedFile: ConfigFile | null = $state();
-	let selectedSection: ConfigSection | null = $state();
+	let selectedFile: ConfigFile | null = $state(null);
+	let selectedSection: ConfigSection | null = $state(null);
 
 	function sortAndFilterFiles(searchTerm: string, files: ConfigFile[]) {
 		if (searchTerm.length > 0) {
@@ -42,7 +40,7 @@
 	}
 
 	async function refresh() {
-		files = await invokeCommand<ConfigFile[]>('get_config_files');
+		files = await invoke<ConfigFile[]>('get_config_files');
 
 		let searchParam = page.url.searchParams.get('file');
 		if (searchParam === null) return;
@@ -57,13 +55,15 @@
 		searchTerm = selectedFile.relativePath;
 		page.url.searchParams.delete('file');
 	}
-	run(() => {
+
+	$effect(() => {
 		$activeProfile;
 		files = null;
 		selectedFile = null;
 		selectedSection = null;
 		refresh();
 	});
+
 	let shownFiles = $derived(sortAndFilterFiles(searchTerm, files ?? []));
 </script>
 
@@ -132,14 +132,14 @@
 					This file is in an unsupported format. Please open it in an external program to make
 					changes.
 				</div>
-				<BigButton
+				<Button
 					class="mx-4 max-w-max"
 					color="primary"
-					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
+					onclick={() => invoke('open_config_file', { file: selectedFile?.relativePath })}
+					icon="mdi:open-in-new"
 				>
-					<Icon icon="mdi:open-in-new" class="mr-2" />
 					Open in external program
-				</BigButton>
+				</Button>
 			{:else if selectedFile.type === 'err'}
 				<div class="text-primary-400 mb-1 px-4">
 					An error occured while reading this config file:
@@ -147,14 +147,14 @@
 				<code class="bg-primary-900 mx-4 mb-1 flex rounded-sm p-4 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
-				<BigButton
+				<Button
 					class="mx-4 max-w-max"
 					color="primary"
-					on:click={() => invokeCommand('open_config_file', { file: selectedFile?.relativePath })}
+					onclick={() => invoke('open_config_file', { file: selectedFile?.relativePath })}
+					icon="icon=mdi:open-in-new"
 				>
-					<Icon icon="mdi:open-in-new" class="mr-2" />
 					Open in external program
-				</BigButton>
+				</Button>
 			{/if}
 		{:else}
 			<div class="text-primary-400 flex w-full grow items-center justify-center text-lg">

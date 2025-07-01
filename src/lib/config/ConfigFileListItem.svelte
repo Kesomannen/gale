@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -40,7 +40,7 @@
 		let confirmed = await confirm(`Are you sure you want to delete ${file.displayName}?`);
 		if (!confirmed) return;
 
-		await invokeCommand('delete_config_file', { file: file.relativePath });
+		await invoke('delete_config_file', { file: file.relativePath });
 		onDeleted();
 	}
 </script>
@@ -62,7 +62,6 @@
 					'mr-1 shrink-0 text-lg transition-all'
 				]}
 			/>
-
 			<div class="mr-1 shrink truncate" style="direction: rtl;">
 				&#x200E;
 				{file.displayName ?? file.relativePath}
@@ -72,7 +71,7 @@
 				class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 ml-auto hidden shrink-0 rounded-sm p-1 group-hover:flex"
 				onclick={(evt) => {
 					evt.stopPropagation();
-					invokeCommand('open_config_file', { file: file.relativePath });
+					invoke('open_config_file', { file: file.relativePath });
 				}}
 			>
 				<Icon icon="mdi:open-in-new" />

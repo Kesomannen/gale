@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
+	import { refreshProfiles } from '$lib/stores.svelte';
 	import type { InstallProgress } from '$lib/types';
-	import { refreshProfiles } from '$lib/stores';
 	import { formatTime, shortenFileSize } from '$lib/util';
 
 	import { listen } from '@tauri-apps/api/event';
@@ -61,7 +61,7 @@
 	bind:open
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
-	onclose={() => invokeCommand('cancel_install')}
+	onclose={() => invoke('cancel_install')}
 	confirmClose={{
 		message: 'Are you sure you want to abort the installation?'
 	}}

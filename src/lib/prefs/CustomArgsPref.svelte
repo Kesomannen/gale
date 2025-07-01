@@ -4,7 +4,6 @@
 	import InputField from '$lib/components/InputField.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import Icon from '@iconify/svelte';
-	import { Button } from 'bits-ui';
 
 	type Props = {
 		value: string[] | null;
@@ -46,7 +45,7 @@
 			<div class="flex gap-1">
 				<button
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 rounded-lg p-1.5 text-xl"
-					on:click={() => {
+					onclick={() => {
 						if (value === null) return;
 						value = value.filter((_, index) => index !== i);
 						set(value);
@@ -57,9 +56,9 @@
 				<InputField
 					class="grow"
 					value={argument}
-					on:change={({ detail }) => {
+					onchange={(newValue) => {
 						if (value === null) return;
-						value[i] = detail;
+						value[i] = newValue;
 						set(value);
 					}}
 				/>
@@ -69,7 +68,7 @@
 		<InputField
 			placeholder="Enter new argument..."
 			bind:value={newArg}
-			on:change={() => {
+			onchange={() => {
 				if (newArg.length === 0 || value === null) return;
 
 				value = [...value, newArg];

@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
-	import { refreshProfiles } from '$lib/stores';
-	import { invokeCommand } from '$lib/invoke';
+	import { refreshProfiles } from '$lib/stores.svelte';
+	import { invoke } from '$lib/invoke';
 	import Button from '$lib/components/Button.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
@@ -21,12 +19,12 @@
 	let override = $state(false);
 	let path: string | null = $state(null);
 
-	run(() => {
+	$effect(() => {
 		if (open) name = '';
 	});
 
 	async function createProfile() {
-		await invokeCommand('create_profile', { name, overridePath: override ? path : null });
+		await invoke('create_profile', { name, overridePath: override ? path : null });
 		refreshProfiles();
 		open = false;
 	}

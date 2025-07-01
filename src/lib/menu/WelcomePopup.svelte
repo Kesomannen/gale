@@ -5,12 +5,10 @@
 	import PathPref from '$lib/prefs/PathPref.svelte';
 
 	import type { Prefs, R2ImportData } from '$lib/types';
-
-	import { invokeCommand } from '$lib/invoke';
-	import { onMount } from 'svelte';
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 	import Icon from '@iconify/svelte';
-	import { invoke } from '@tauri-apps/api/core';
+	import { invoke } from '$lib/invoke';
+	import { onMount } from 'svelte';
 
 	type Props = {
 		open?: boolean;
@@ -26,9 +24,9 @@
 	let prefs: Prefs | null = $state(null);
 
 	onMount(async () => {
-		if (await invokeCommand<boolean>('is_first_run')) {
+		if (await invoke<boolean>('is_first_run')) {
 			open = true;
-			prefs = await invokeCommand('get_prefs');
+			prefs = await invoke('get_prefs');
 		}
 	});
 
@@ -53,7 +51,7 @@
 			if (prefs === null) return;
 
 			update(value, prefs);
-			await invokeCommand('set_prefs', { value: prefs });
+			await invoke('set_prefs', { value: prefs });
 		};
 	}
 </script>

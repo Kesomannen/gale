@@ -1,12 +1,10 @@
-<!-- @migration-task Error while migrating Svelte code: can't migrate `let mainPopupOpen = false;` to `$state` because there's a variable named state.
-     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
 	import Button from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { ListedSyncProfile } from '$lib/types';
-	import { activeProfile, login, logout, refreshProfiles, user } from '$lib/stores';
+	import { activeProfile, login, logout, refreshProfiles, user } from '$lib/stores.svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import { discordAvatarUrl } from '$lib/util';
 	import Icon from '@iconify/svelte';
@@ -108,7 +106,7 @@
 	async function showOwnedProfiles() {
 		loading = true;
 		try {
-			profiles = await invokeCommand<ListedSyncProfile[]>('get_owned_sync_profiles');
+			profiles = await invoke<ListedSyncProfile[]>('get_owned_sync_profiles');
 
 			mainPopupOpen = false;
 			profilesPopupOpen = true;
@@ -120,7 +118,7 @@
 	async function wrapCommand(command: string, message?: string, args?: any) {
 		loading = true;
 		try {
-			await invokeCommand(command, args);
+			await invoke(command, args);
 			await refreshProfiles();
 
 			if (message) {

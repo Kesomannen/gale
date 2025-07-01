@@ -2,7 +2,6 @@
 	import { clearToast, toasts } from '$lib/toast';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-	import { Button } from 'bits-ui';
 	import { expoOut } from 'svelte/easing';
 	import { fade, slide } from 'svelte/transition';
 </script>

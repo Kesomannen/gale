@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
-	import { invokeCommand } from '$lib/invoke';
 	import type { R2ImportData } from '$lib/types';
-	import { refreshProfiles } from '$lib/stores';
+	import { refreshProfiles } from '$lib/stores.svelte';
 	import Icon from '@iconify/svelte';
 	import { listen } from '@tauri-apps/api/event';
 	import { fade } from 'svelte/transition';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
-	import { invoke } from '@tauri-apps/api/core';
 	import { capitalize } from '$lib/util';
+	import { invoke } from '$lib/invoke';
 
 	let path: string | null = $state(null);
 	let error = $state('');
@@ -26,7 +23,7 @@
 	let profiles = $derived(importData?.profiles ?? []);
 	let include = $derived(importData?.include ?? []);
 
-	run(() => {
+	$effect(() => {
 		path = importData?.path ?? null;
 
 		if (importData) {
@@ -64,7 +61,7 @@
 		let success = false;
 
 		try {
-			await invokeCommand('import_r2modman', importData);
+			await invoke('import_r2modman', importData);
 			refreshProfiles();
 
 			success = true;

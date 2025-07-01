@@ -4,7 +4,7 @@
 
 	import type { LaunchMode } from '$lib/types';
 	import { selectItems, sentenceCase } from '$lib/util';
-	import { activeGame } from '$lib/stores';
+	import { activeGame } from '$lib/stores.svelte';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 

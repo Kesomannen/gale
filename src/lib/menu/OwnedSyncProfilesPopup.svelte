@@ -1,12 +1,10 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { ListedSyncProfile } from '$lib/types';
-	import { games, refreshProfiles } from '$lib/stores';
+	import { games, refreshProfiles, profiles as allProfiles } from '$lib/stores.svelte';
 	import { timeSince } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import { Button } from 'bits-ui';
-	import { profiles as allProfiles } from '$lib/stores';
 	import { pushInfoToast } from '$lib/toast';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
@@ -24,7 +22,7 @@
 
 	async function importProfile(profile: ListedSyncProfile) {
 		open = false;
-		await invokeCommand('clone_sync_profile', { name: profile.name, id: profile.id });
+		await invoke('clone_sync_profile', { name: profile.name, id: profile.id });
 		await refreshProfiles();
 	}
 
@@ -34,7 +32,7 @@
 		);
 		if (!confirmed) return;
 
-		await invokeCommand('delete_sync_profile', { id: profile.id });
+		await invoke('delete_sync_profile', { id: profile.id });
 
 		let index = profiles.indexOf(profile);
 		profiles.splice(index, 1);
@@ -66,7 +64,7 @@
 					</div>
 
 					<div>
-						<span>{games.find((game) => game.slug === profile.community)?.name}</span>
+						<span>{games.list.find((game) => game.slug === profile.community)?.name}</span>
 
 						<span class="text-primary-500 mx-1">|</span>
 

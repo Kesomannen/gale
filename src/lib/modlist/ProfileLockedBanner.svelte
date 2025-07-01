@@ -5,11 +5,14 @@
 		class?: string;
 	};
 
-	let { class: className = '' }: Props = $props();
+	let { class: classProp }: Props = $props();
 </script>
 
 <div
-	class="{className} bg-primary-700 text-primary-300 flex items-center rounded-lg py-1.5 pr-1 pl-3"
+	class={[
+		classProp,
+		'bg-primary-700 text-primary-300 flex items-center rounded-lg py-1.5 pr-1 pl-3'
+	]}
 >
 	<Icon icon="mdi:lock" class="mr-2 text-xl" />
 	Profile is locked

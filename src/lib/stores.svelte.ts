@@ -1,5 +1,5 @@
 import { derived, get, writable } from 'svelte/store';
-import { invokeCommand } from './invoke';
+import { invoke } from './invoke';
 import type {
 	FiltersResponse,
 	Game,
@@ -12,7 +12,10 @@ import type {
 } from './types';
 import { fetch } from '@tauri-apps/plugin-http';
 
-export let games: Game[] = [];
+export let games: { list: Game[] } = $state({
+	list: []
+});
+
 export let categories = writable<PackageCategory[]>([]);
 export let activeGame = writable<Game | null>(null);
 
@@ -101,12 +104,15 @@ function createQueryStore(key: string, getDefault: () => QueryModsArgs) {
 }
 
 export async function refreshGames() {
-	const info: GameInfo = await invokeCommand('get_game_info');
-	games = info.all;
+	console.log('refreshing games...');
 
-	for (let game of games) {
+	const info: GameInfo = await invoke('get_game_info');
+	
+	for (let game of info.all) {
 		game.favorite = info.favorites.includes(game.slug);
 	}
+
+	games.list = info.all;
 
 	activeGame.set(info.active);
 	refreshCategories();
@@ -114,7 +120,7 @@ export async function refreshGames() {
 }
 
 export async function setActiveGame(slug: string) {
-	await invokeCommand('set_active_game', { slug });
+	await invoke('set_active_game', { slug });
 	await refreshGames();
 }
 
@@ -140,7 +146,7 @@ export async function refreshCategories() {
 }
 
 export async function refreshProfiles() {
-	let info = await invokeCommand<ProfilesInfo>('get_profile_info');
+	let info = await invoke<ProfilesInfo>('get_profile_info');
 
 	activeProfileId = info.activeId;
 	profiles = info.profiles;
@@ -148,27 +154,27 @@ export async function refreshProfiles() {
 }
 
 export async function setActiveProfile(index: number) {
-	await invokeCommand('set_active_profile', { index });
+	await invoke('set_active_profile', { index });
 	await refreshProfiles();
 
 	const sync = get(activeProfile)?.sync;
 	if (!sync) return;
 
-	await invokeCommand('fetch_sync_profile');
+	await invoke('fetch_sync_profile');
 	await refreshProfiles();
 }
 
 export async function refreshUser() {
-	let info = await invokeCommand<SyncUser | null>('get_user');
+	let info = await invoke<SyncUser | null>('get_user');
 	user.set(info);
 }
 
 export async function login() {
-	let info = await invokeCommand<SyncUser>('login');
+	let info = await invoke<SyncUser>('login');
 	user.set(info);
 }
 
 export async function logout() {
-	await invokeCommand('logout');
+	await invoke('logout');
 	user.set(null);
 }

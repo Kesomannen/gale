@@ -9,17 +9,15 @@
 </script>
 
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import type { AvailableUpdate } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import ModCard from './ModCard.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import BigButton from '$lib/components/Button.svelte';
-	import { activeProfile, refreshProfiles } from '$lib/stores';
+	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -31,13 +29,12 @@
 	let include: Map<AvailableUpdate, boolean> = $state(new Map());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
-	run(() => {
+
+	$effect(() => {
 		if (popupOpen && shownUpdates.length === 0) {
 			popupOpen = false;
 		}
 	});
-
-	$inspect(shownUpdates);
 
 	async function updateAll() {
 		let uuids = shownUpdates
@@ -46,7 +43,7 @@
 
 		popupOpen = false;
 
-		await invokeCommand('update_mods', { uuids, respectIgnored: true });
+		await invoke('update_mods', { uuids, respectIgnored: true });
 		await refreshProfiles();
 	}
 </script>
@@ -104,7 +101,7 @@
 						include.delete(update);
 						include = include; // force reactivity
 
-						invokeCommand('ignore_update', { versionUuid: update.versionUuid });
+						invoke('ignore_update', { versionUuid: update.versionUuid });
 					}}><Icon icon="mdi:notifications-off" /></button
 				>
 			</Tooltip>

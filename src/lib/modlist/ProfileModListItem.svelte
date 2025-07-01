@@ -5,8 +5,6 @@
 </script>
 
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import type { Mod, ModContextItem } from '../types';
 	import Icon from '@iconify/svelte';
 	import { iconSrc, isOutdated } from '$lib/util';
@@ -52,7 +50,7 @@
 				: 'text-primary-400 group-hover:text-primary-300'
 	);
 
-	run(() => {
+	$effect(() => {
 		if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
 			contextMenuOpen = false;
 		}

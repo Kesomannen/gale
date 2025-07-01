@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Select from '$lib/components/Select.svelte';
-	import { categories } from '$lib/stores';
+	import { categories } from '$lib/stores.svelte';
 
 	type Props = {
 		selected: string[];

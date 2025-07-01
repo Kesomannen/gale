@@ -7,7 +7,7 @@
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import Link from '$lib/components/Link.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 
 	import { writable } from 'svelte/store';
 
@@ -15,9 +15,9 @@
 
 	async function submit() {
 		if (token.length == 0) {
-			await invokeCommand('clear_thunderstore_token');
+			await invoke('clear_thunderstore_token');
 		} else {
-			await invokeCommand('set_thunderstore_token', { token });
+			await invoke('set_thunderstore_token', { token });
 			token = '';
 		}
 

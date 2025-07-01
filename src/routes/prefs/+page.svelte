@@ -12,10 +12,10 @@
 	import SmallHeading from '$lib/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
 
-	import { activeGame } from '$lib/stores';
+	import { activeGame } from '$lib/stores.svelte';
 	import type { Prefs, GamePrefs, Platform } from '$lib/types';
 	import { onMount } from 'svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 
 	import { platform } from '@tauri-apps/plugin-os';
 	import ColorPref from '$lib/prefs/ColorPref.svelte';
@@ -56,7 +56,7 @@
 			update(value, prefs);
 			prefs.gamePrefs.set(gameSlug, gamePrefs!);
 			try {
-				await invokeCommand('set_prefs', { value: prefs });
+				await invoke('set_prefs', { value: prefs });
 			} catch (error) {
 				await refresh();
 				throw error;
@@ -65,7 +65,7 @@
 	}
 
 	async function refresh() {
-		let newPrefs = await invokeCommand<Prefs>('get_prefs');
+		let newPrefs = await invoke<Prefs>('get_prefs');
 		newPrefs.gamePrefs = new Map(Object.entries(newPrefs.gamePrefs));
 		prefs = newPrefs;
 	}

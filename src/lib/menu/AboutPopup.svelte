@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Popup from '$lib/components/Popup.svelte';
 	import Link from '$lib/components/Link.svelte';
 
@@ -19,7 +17,7 @@
 	let version = $state('');
 	let checkedUpdate = $state(false);
 
-	run(() => {
+	$effect(() => {
 		if (open) checkedUpdate = false;
 	});
 

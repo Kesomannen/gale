@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke as tauriInvoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { sentenceCase } from './util';
 import { pushToast } from './toast';
@@ -15,15 +15,15 @@ listen<Error>('error', (evt) =>
 	})
 );
 
-export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
+export async function invoke<T>(cmd: string, args?: any): Promise<T> {
 	try {
-		return await invoke<T>(cmd, args);
+		return await tauriInvoke<T>(cmd, args);
 	} catch (error: any) {
 		let errStr = error as string;
 		let name = `Failed to ${sentenceCase(cmd).toLowerCase()}`;
 		let message = errStr[0].toUpperCase() + errStr.slice(1);
 
-		if (!message.endsWith('.') && !message.endsWith('?') && !message.endsWith('!')) {
+		if (!['.', '?', '!'].includes(message[-1])) {
 			message += '.';
 		}
 
@@ -34,7 +34,7 @@ export async function invokeCommand<T>(cmd: string, args?: any): Promise<T> {
 
 function pushError(error: Error) {
 	let msg = `${error.name}: ${error.message}`;
-	invoke('log_err', { msg });
+	tauriInvoke('log_err', { msg });
 
 	pushToast({
 		type: 'error',

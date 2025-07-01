@@ -1,18 +1,15 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Popup from '$lib/components/Popup.svelte';
 	import TabsMenu from '$lib/components/TabsMenu.svelte';
 
 	import { Tabs } from 'bits-ui';
 
-	import { invokeCommand } from '$lib/invoke';
 	import type { AnyImportData, ImportData, SyncImportData as SyncImportData } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import InputField from '$lib/components/InputField.svelte';
-	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores';
+	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores.svelte';
 	import Button from '$lib/components/Button.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
@@ -24,6 +21,7 @@
 	import { discordAvatarUrl, selectItems } from '$lib/util';
 	import { pushInfoToast } from '$lib/toast';
 	import Select from '$lib/components/Select.svelte';
+	import { invoke } from '$lib/invoke';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -66,12 +64,12 @@
 			if (type === 'normal') {
 				data = {
 					type: 'normal',
-					...(await invokeCommand<ImportData>('read_profile_code', { key: key.trim() }))
+					...(await invoke<ImportData>('read_profile_code', { key: key.trim() }))
 				};
 			} else {
 				data = {
 					type: 'sync',
-					...(await invokeCommand<SyncImportData>('read_sync_profile', { id: key.trim() }))
+					...(await invoke<SyncImportData>('read_sync_profile', { id: key.trim() }))
 				};
 			}
 
@@ -96,9 +94,9 @@
 		if (data.type === 'normal') {
 			data.manifest.profileName = name;
 
-			await invokeCommand('import_profile', { data, importAll });
+			await invoke('import_profile', { data, importAll });
 		} else {
-			await invokeCommand('clone_sync_profile', { name, id: data.id });
+			await invoke('clone_sync_profile', { name, id: data.id });
 		}
 
 		data = null;
@@ -121,7 +119,6 @@
 
 		name = data.manifest.profileName;
 		mode = isAvailable(name) ? 'new' : 'overwrite';
-
 		open = true;
 	}
 
@@ -135,7 +132,7 @@
 	let mods = $derived(data?.manifest.mods ?? []);
 	let nameAvailable = $derived(mode === 'overwrite' || isAvailable(name));
 
-	run(() => {
+	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
 			name = profiles[0].name;
 		}
@@ -151,18 +148,12 @@
 	}}
 >
 	{#if data === null}
-		<div class="mt-1 flex gap-2">
+		<div class="mt-1 flex items-center gap-2">
 			<div class="grow">
 				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
 			</div>
 
-			<Button onclick={submitKey} disabled={loading}>
-				{#if loading}
-					<Icon icon="mdi:loading" class="animate-spin" />
-				{:else}
-					Import
-				{/if}
-			</Button>
+			<Button onclick={submitKey} {loading} icon="mdi:import">Import</Button>
 		</div>
 	{:else}
 		<TabsMenu
@@ -182,14 +173,11 @@
 						<InputField bind:value={name} class="w-full" />
 
 						{#if !nameAvailable}
-							<Tooltip class="absolute right-2 bottom-0 h-full cursor-text text-xl text-red-500">
+							<Tooltip
+								class="absolute right-2 bottom-0 h-full cursor-default text-xl text-red-500"
+								text="Profile {name} already exists!"
+							>
 								<Icon icon="mdi:error" />
-
-								{#snippet tooltip()}
-									<div>
-										Profile {name} already exists!
-									</div>
-								{/snippet}
 							</Tooltip>
 						{/if}
 					</div>
@@ -260,7 +248,7 @@
 					data = null;
 				}}>Cancel</Button
 			>
-			<Button disabled={!nameAvailable || loading} onclick={importData}>Import</Button>
+			<Button disabled={!nameAvailable} {loading} onclick={importData}>Import</Button>
 		</div>
 	{/if}
 </Popup>

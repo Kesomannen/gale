@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import ModCard from './ModCard.svelte';
 
 	type Props = {
@@ -12,7 +10,7 @@
 	let { names, showVersion = true, class: className = '' }: Props = $props();
 
 	// sort by name, not author
-	run(() => {
+	$effect(() => {
 		names.toSorted((a, b) => a.split('-')[1].localeCompare(b.split('-')[1]));
 	});
 </script>

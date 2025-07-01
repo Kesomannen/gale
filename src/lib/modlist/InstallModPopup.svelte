@@ -2,9 +2,9 @@
 	import Button from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import Select from '$lib/components/Select.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { Mod } from '$lib/types';
-	import { activeProfile, profiles, setActiveProfile } from '$lib/stores';
+	import { activeProfile, profiles, setActiveProfile } from '$lib/stores.svelte';
 	import { selectItems } from '$lib/util';
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
@@ -32,7 +32,7 @@
 		open = false;
 
 		await setActiveProfile(profileIndex);
-		await invokeCommand('install_mod', {
+		await invoke('install_mod', {
 			modRef: {
 				packageUuid: mod.uuid,
 				versionUuid: mod.versionUuid

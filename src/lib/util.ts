@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import type { Mod, ConfigEntry, Dependant, SyncUser } from './types';
-import { activeGame } from './stores';
+import { activeGame } from './stores.svelte';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
 export function shortenFileSize(size: number): string {

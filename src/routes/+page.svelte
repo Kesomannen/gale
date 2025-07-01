@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
 	import type {
 		Mod,
@@ -13,7 +11,12 @@
 		SortBy
 	} from '$lib/types';
 	import ModList from '$lib/modlist/ModList.svelte';
-	import { activeProfile, activeProfileLocked, profileQuery, refreshProfiles } from '$lib/stores';
+	import {
+		activeProfile,
+		activeProfileLocked,
+		profileQuery,
+		refreshProfiles
+	} from '$lib/stores.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Popup from '$lib/components/Popup.svelte';
@@ -65,7 +68,7 @@
 		{
 			label: 'Open folder',
 			icon: 'mdi:folder',
-			onclick: (mod) => invokeCommand('open_mod_dir', { uuid: mod.uuid })
+			onclick: (mod) => invoke('open_mod_dir', { uuid: mod.uuid })
 		}
 	];
 
@@ -94,7 +97,7 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		let result = await invokeCommand<ProfileQuery>('query_profile', {
+		let result = await invoke<ProfileQuery>('query_profile', {
 			args: { ...$profileQuery, maxCount }
 		});
 
@@ -108,7 +111,7 @@
 	}
 
 	async function toggleMod(mod: Mod, newState: boolean) {
-		let response = await invokeCommand<ModActionResponse>('toggle_mod', {
+		let response = await invoke<ModActionResponse>('toggle_mod', {
 			uuid: mod.uuid
 		});
 
@@ -125,7 +128,7 @@
 	}
 
 	async function uninstall(mod: Dependant) {
-		let response = await invokeCommand<ModActionResponse>('remove_mod', { uuid: mod.uuid });
+		let response = await invoke<ModActionResponse>('remove_mod', { uuid: mod.uuid });
 
 		if (response.type == 'done') {
 			selectedMod = null;
@@ -136,7 +139,7 @@
 	}
 
 	async function openDependants(mod: Mod) {
-		dependants = await invokeCommand<string[]>('get_dependants', {
+		dependants = await invoke<string[]>('get_dependants', {
 			uuid: mod.uuid
 		});
 
@@ -148,9 +151,9 @@
 		if (mod === null) return;
 
 		if (versionUuid === undefined) {
-			await invokeCommand('update_mods', { uuids: [mod.uuid], respectIgnored: false });
+			await invoke('update_mods', { uuids: [mod.uuid], respectIgnored: false });
 		} else {
-			await invokeCommand('change_mod_version', {
+			await invoke('change_mod_version', {
 				modRef: {
 					packageUuid: mod.uuid,
 					versionUuid: versionUuid
@@ -214,13 +217,15 @@
 		let items = [...evt.dataTransfer.items];
 		return items.length === 0 || items[0].kind !== 'file';
 	}
-	run(() => {
+
+	$effect(() => {
 		if (maxCount > 0) {
 			$activeProfile;
 			$profileQuery;
 			refresh();
 		}
 	});
+
 	let reorderable = $derived(
 		$profileQuery.sortBy === 'custom' &&
 			$profileQuery.searchTerm === '' &&

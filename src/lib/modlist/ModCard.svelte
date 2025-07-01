@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { activeGame } from '$lib/stores';
+	import { activeGame } from '$lib/stores.svelte';
 
 	type Props = {
 		fullName: string;

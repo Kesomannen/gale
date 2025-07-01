@@ -10,8 +10,6 @@
 		let update = await check();
 		isChecking.set(false);
 
-		console.log(update);
-
 		if (update === null || !update.available) return;
 		nextUpdate.set(update);
 	}
@@ -32,7 +30,6 @@
 	let loading = $state(false);
 
 	onMount(() => {
-		console.log('hello');
 		refreshUpdate();
 	});
 

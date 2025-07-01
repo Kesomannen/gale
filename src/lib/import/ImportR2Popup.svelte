@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Button from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import type { R2ImportData } from '$lib/types';
@@ -16,7 +14,7 @@
 	let importFlow: ImportR2Flow;
 	let importData: R2ImportData | null = $state(null);
 
-	run(() => {
+	$effect(() => {
 		if (open && importFlow) {
 			importFlow.refresh(null);
 		}

@@ -3,7 +3,7 @@
 
 	import type { Platform } from '$lib/types';
 	import { selectItems, titleCase } from '$lib/util';
-	import { activeGame } from '$lib/stores';
+	import { activeGame } from '$lib/stores.svelte';
 	import Info from '$lib/components/Info.svelte';
 	import Select from '$lib/components/Select.svelte';
 

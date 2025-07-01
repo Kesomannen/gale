@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
-	import { Button } from 'bits-ui';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -30,7 +29,7 @@
 			if (!confirmed) return;
 		}
 
-		let result = await invokeCommand<ConfigValue>('reset_config_entry', {
+		let result = await invoke<ConfigValue>('reset_config_entry', {
 			file: entryId.file.relativePath,
 			section: entryId.section.name,
 			entry: entryId.entry.name

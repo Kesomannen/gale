@@ -3,13 +3,14 @@
 	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
+	import type { Snippet } from 'svelte';
 
 	type Props = {
 		label: string;
 		disableMessage?: string | null;
 		value: boolean;
 		set: (value: boolean) => Promise<void>;
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	};
 
 	let { label, disableMessage = null, value = $bindable(), set, children }: Props = $props();

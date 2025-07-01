@@ -21,8 +21,8 @@
 	import MenubarSeparator from './MenubarSeparator.svelte';
 
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
-	import { activeProfile, refreshProfiles } from '$lib/stores';
-	import { invokeCommand } from '$lib/invoke';
+	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
+	import { invoke } from '$lib/invoke';
 	import type { ImportData } from '$lib/types';
 	import { useNativeMenu } from '$lib/theme';
 
@@ -54,20 +54,20 @@
 			items: [
 				{
 					text: 'Open profile folder',
-					onclick: () => invokeCommand('open_profile_dir')
+					onclick: () => invoke('open_profile_dir')
 				},
 				{
 					text: 'Open game folder',
-					onclick: () => invokeCommand('open_game_dir')
+					onclick: () => invoke('open_game_dir')
 				},
 				'',
 				{
 					text: 'Open game log',
-					onclick: () => invokeCommand('open_game_log')
+					onclick: () => invoke('open_game_log')
 				},
 				{
 					text: 'Open Gale log',
-					onclick: () => invokeCommand('open_gale_log')
+					onclick: () => invoke('open_gale_log')
 				},
 				'',
 				{
@@ -80,7 +80,7 @@
 				},
 				{
 					text: 'Fetch mods',
-					onclick: () => invokeCommand('trigger_mod_fetch')
+					onclick: () => invoke('trigger_mod_fetch')
 				}
 			]
 		},
@@ -175,17 +175,17 @@
 				{
 					text: 'Zoom in',
 					accelerator: 'Ctrl++',
-					onclick: () => invokeCommand('zoom_window', { value: { delta: 0.25 } })
+					onclick: () => invoke('zoom_window', { value: { delta: 0.25 } })
 				},
 				{
 					text: 'Zoom out',
 					accelerator: 'Ctrl+-',
-					onclick: () => invokeCommand('zoom_window', { value: { delta: -0.25 } })
+					onclick: () => invoke('zoom_window', { value: { delta: -0.25 } })
 				},
 				{
 					text: 'Reset zoom',
 					accelerator: 'Ctrl+0',
-					onclick: () => invokeCommand('zoom_window', { value: { factor: 1 } })
+					onclick: () => invoke('zoom_window', { value: { factor: 1 } })
 				}
 			]
 		},
@@ -217,7 +217,7 @@
 		});
 
 		if (path === null) return;
-		await invokeCommand('import_local_mod', { path });
+		await invoke('import_local_mod', { path });
 		await refreshProfiles();
 
 		pushInfoToast({
@@ -232,7 +232,7 @@
 		});
 
 		if (path === null) return;
-		let data = await invokeCommand<ImportData>('read_profile_file', { path });
+		let data = await invoke<ImportData>('read_profile_file', { path });
 		importProfilePopup.openFor({ type: 'normal', ...data });
 	}
 
@@ -243,11 +243,11 @@
 		});
 
 		if (dir === null) return;
-		invokeCommand('export_file', { dir });
+		invoke('export_file', { dir });
 	}
 
 	async function setAllModsState(enable: boolean) {
-		let count = await invokeCommand<number>('set_all_mods_state', { enable });
+		let count = await invoke<number>('set_all_mods_state', { enable });
 
 		pushInfoToast({
 			message: `${enable ? 'Enabled' : 'Disabled'} ${count} mods.`
@@ -269,12 +269,12 @@
 
 		try {
 			if (profileOperation == 'rename') {
-				await invokeCommand('rename_profile', { name: profileOperationName });
+				await invoke('rename_profile', { name: profileOperationName });
 				pushInfoToast({
 					message: `Renamed profile to ${profileOperationName}.`
 				});
 			} else if (profileOperation == 'duplicate') {
-				await invokeCommand('duplicate_profile', { name: profileOperationName });
+				await invoke('duplicate_profile', { name: profileOperationName });
 				pushInfoToast({
 					message: `Duplicated profile to ${profileOperationName}.`
 				});
@@ -290,7 +290,7 @@
 	}
 
 	async function createDesktopShotcut() {
-		await invokeCommand('create_desktop_shortcut');
+		await invoke('create_desktop_shortcut');
 
 		pushInfoToast({
 			message: `Created desktop shortcut for ${$activeProfile?.name}.`
@@ -301,7 +301,7 @@
 		let confirmed = await confirm('Are you sure you want to uninstall all disabled mods?');
 		if (!confirmed) return;
 
-		let count = await invokeCommand<number>('remove_disabled_mods');
+		let count = await invoke<number>('remove_disabled_mods');
 
 		pushInfoToast({
 			message: `Uninstalled ${count} disabled mods.`
@@ -311,11 +311,11 @@
 	}
 
 	async function zoom(value: { delta: number } | { factor: number }) {
-		await invokeCommand('zoom_window', { value });
+		await invoke('zoom_window', { value });
 	}
 
 	async function copyLaunchArgs() {
-		let str = await invokeCommand<string>('get_launch_args');
+		let str = await invoke<string>('get_launch_args');
 		await writeText(str);
 
 		pushInfoToast({
@@ -332,21 +332,21 @@
 			if (!result) return;
 		}
 
-		let size = await invokeCommand<number>('clear_download_cache', { soft });
+		let size = await invoke<number>('clear_download_cache', { soft });
 		pushInfoToast({
 			message: `Deleted${soft ? ' unused' : ''} mod cache (cleared ${shortenFileSize(size)}).`
 		});
 	}
 
 	async function copyModList() {
-		await invokeCommand('copy_dependency_strings');
+		await invoke('copy_dependency_strings');
 		pushInfoToast({
 			message: 'Copied mod list to clipboard.'
 		});
 	}
 
 	async function copyDebugInfo() {
-		await invokeCommand('copy_debug_info');
+		await invoke('copy_debug_info');
 		pushInfoToast({
 			message: 'Copied debug info to clipboard.'
 		});
@@ -369,10 +369,10 @@
 		let base64 = await fileToBase64(file);
 
 		if (file.name.endsWith('.r2z')) {
-			let data = await invokeCommand<ImportData>('read_profile_base64', { base64 });
+			let data = await invoke<ImportData>('read_profile_base64', { base64 });
 			importProfilePopup.openFor({ type: 'normal', ...data });
 		} else if (file.name.endsWith('.zip')) {
-			await invokeCommand('import_local_mod_base64', { base64 });
+			await invoke('import_local_mod_base64', { base64 });
 			await refreshProfiles();
 
 			pushInfoToast({

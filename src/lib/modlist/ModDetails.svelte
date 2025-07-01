@@ -17,11 +17,11 @@
 		timeSince
 	} from '$lib/util';
 
-	import { Button, DropdownMenu } from 'bits-ui';
+	import { DropdownMenu } from 'bits-ui';
 
 	import Icon from '@iconify/svelte';
 	import { type Snippet } from 'svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 
 	type Props = {
 		mod: Mod;
@@ -61,9 +61,9 @@
 			.join('\n');
 	}
 
-	run(() => {
+	$effect(() => {
 		if (mod.type === ModType.Remote) {
-			readmePromise = invokeCommand<string>('get_markdown', {
+			readmePromise = invoke<string>('get_markdown', {
 				kind: 'readme',
 				modRef: {
 					packageUuid: mod.uuid,

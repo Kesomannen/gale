@@ -11,9 +11,8 @@
 		profiles,
 		refreshProfiles,
 		setActiveProfile
-	} from '$lib/stores';
-	import { invokeCommand } from '$lib/invoke';
-
+	} from '$lib/stores.svelte';
+	import { invoke } from '$lib/invoke';
 	import Icon from '@iconify/svelte';
 	import { Dialog, DropdownMenu } from 'bits-ui';
 	import GameSelection from '$lib/menu/GameSelection.svelte';
@@ -30,7 +29,7 @@
 	function deleteProfile(index: number) {
 		confirm(`Are you sure you want to delete ${profiles[index].name}?`).then(async (result) => {
 			if (result) {
-				await invokeCommand('delete_profile', { index });
+				await invoke('delete_profile', { index });
 
 				pushInfoToast({
 					message: `Deleted profile ${profiles[index].name}.`
@@ -42,7 +41,7 @@
 	}
 
 	function launchGame() {
-		invokeCommand('launch_game');
+		invoke('launch_game');
 		launchGamePopupOpen = true;
 	}
 </script>

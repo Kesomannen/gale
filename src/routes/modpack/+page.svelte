@@ -11,18 +11,17 @@
 	import Select from '$lib/components/Select.svelte';
 	import ApiKeyPopup, { apiKeyPopupOpen } from '$lib/prefs/ApiKeyPopup.svelte';
 
-	import { invokeCommand } from '$lib/invoke';
-	import type { ModpackArgs, PackageCategory } from '$lib/types';
-	import { activeProfile, activeGame, categories } from '$lib/stores';
+	import { invoke } from '$lib/invoke';
+	import type { ModpackArgs } from '$lib/types';
+	import { activeProfile, activeGame, categories } from '$lib/stores.svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 
-	import { Button, Dialog } from 'bits-ui';
+	import { Dialog } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
-	import { selectItems } from '$lib/util';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -58,7 +57,7 @@
 	async function refresh() {
 		loading = 'Loading...';
 
-		let args = await invokeCommand<ModpackArgs>('get_pack_args');
+		let args = await invoke<ModpackArgs>('get_pack_args');
 
 		name = args.name;
 		author = args.author;
@@ -89,7 +88,7 @@
 	}
 
 	async function generateChangelog(all: boolean) {
-		changelog = await invokeCommand('generate_changelog', { args: args(), all });
+		changelog = await invoke('generate_changelog', { args: args(), all });
 		saveArgs();
 	}
 
@@ -104,14 +103,14 @@
 
 		loading = 'Exporting modpack to file...';
 		try {
-			await invokeCommand('export_pack', { args: args(), dir });
+			await invoke('export_pack', { args: args(), dir });
 		} finally {
 			loading = null;
 		}
 	}
 
 	async function uploadToThunderstore() {
-		let hasToken = await invokeCommand('has_thunderstore_token');
+		let hasToken = await invoke('has_thunderstore_token');
 
 		if (!hasToken) {
 			$apiKeyPopupOpen = true;
@@ -127,14 +126,14 @@
 				return () => clearInterval(interval);
 			});
 
-			hasToken = await invokeCommand('has_thunderstore_token');
+			hasToken = await invoke('has_thunderstore_token');
 
 			if (!hasToken) return;
 		}
 
 		loading = 'Uploading modpack to Thunderstore...';
 		try {
-			await invokeCommand('upload_pack', { args: args() });
+			await invoke('upload_pack', { args: args() });
 			donePopupOpen = true;
 		} finally {
 			loading = null;
@@ -144,7 +143,7 @@
 	function saveArgs() {
 		// wait a tick to ensure the variables are updated
 		setTimeout(() => {
-			invokeCommand('set_pack_args', { args: args() });
+			invoke('set_pack_args', { args: args() });
 		});
 	}
 

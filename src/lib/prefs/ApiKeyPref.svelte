@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import { apiKeyPopupOpen } from './ApiKeyPopup.svelte';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
@@ -17,9 +15,10 @@
 	let hasToken = $state(false);
 
 	async function refresh() {
-		hasToken = await invokeCommand('has_thunderstore_token');
+		hasToken = await invoke('has_thunderstore_token');
 	}
-	run(() => {
+
+	$effect(() => {
 		$apiKeyPopupOpen;
 		refresh();
 	});
@@ -35,7 +34,7 @@
 
 	<button
 		class="group bg-primary-900 hover:border-primary-500 relative flex grow items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
-		on:click={() => ($apiKeyPopupOpen = true)}
+		onclick={() => ($apiKeyPopupOpen = true)}
 	>
 		<div class="mr-2 rounded-sm">
 			<Icon

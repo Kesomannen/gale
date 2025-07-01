@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import ModDetails from '$lib/modlist/ModDetails.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import VirtualList from '$lib/components/VirtualList.svelte';
@@ -15,7 +13,7 @@
 	} from '$lib/types';
 	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
-	import { activeGame } from '$lib/stores';
+	import { activeGame } from '$lib/stores.svelte';
 	import Select from '$lib/components/Select.svelte';
 	import type { Snippet } from 'svelte';
 
@@ -70,18 +68,18 @@
 	let listEnd = $state(0);
 	let virtualList: VirtualList<Mod>;
 
-	run(() => {
+	$effect(() => {
 		if (listEnd > mods.length - 2 && mods.length === maxCount) {
 			maxCount += 20;
 		}
 	});
 
-	run(() => {
+	$effect(() => {
 		$queryArgs;
 		virtualList?.scrollTo(0);
 	});
 
-	run(() => {
+	$effect(() => {
 		$activeGame;
 		selected = null;
 	});

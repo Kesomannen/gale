@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Markdown from '$lib/components/Markdown.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { Mod } from '$lib/types';
 	import Icon from '@iconify/svelte';
 
@@ -26,7 +26,7 @@
 			versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid
 		};
 
-		promise = invokeCommand('get_markdown', { modRef, kind });
+		promise = invoke('get_markdown', { modRef, kind });
 	}
 </script>
 

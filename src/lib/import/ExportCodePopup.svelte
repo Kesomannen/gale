@@ -1,16 +1,16 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
-	import { invokeCommand } from '$lib/invoke';
-	import { activeProfile, refreshProfiles } from '$lib/stores';
-	import Icon from '@iconify/svelte';
-	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { Dialog } from 'bits-ui';
+	import { invoke } from '$lib/invoke';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+	import { activeProfile } from '$lib/stores.svelte';
+	import Spinner from '$lib/components/Spinner.svelte';
 
 	let isOpen = $state(false);
 	let codePromise: Promise<string> | null = $state(null);
 
 	export async function open() {
-		codePromise = invokeCommand('export_code');
+		codePromise = invoke('export_code');
 		isOpen = true;
 
 		try {
@@ -23,9 +23,9 @@
 </script>
 
 <Popup title="Export as code" bind:open={isOpen}>
-	<Dialog.Description class="flex-center text-primary-400 mb-2 flex">
+	<Dialog.Description class="flex-center text-primary-400 mb-1 flex">
 		{#await codePromise}
-			<Icon icon="mdi:loading" class="mr-2 animate-spin text-lg" />
+			<Spinner class="text-lg" />
 			Exporting {$activeProfile?.name} as code...
 		{:then}
 			Export complete! The code has been copied to your clipboard:

@@ -1,18 +1,15 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
-	import { invokeCommand } from '$lib/invoke';
+	import { invoke } from '$lib/invoke';
 	import type { SortBy, Mod } from '$lib/types';
 	import { shortenFileSize } from '$lib/util';
 
 	import ModList from '$lib/modlist/ModList.svelte';
 
 	import Icon from '@iconify/svelte';
-	import { Button, DropdownMenu } from 'bits-ui';
+	import { DropdownMenu } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { fly } from 'svelte/transition';
-	import { modQuery, activeProfileLocked, activeProfile } from '$lib/stores';
+	import { modQuery, activeProfileLocked, activeProfile } from '$lib/stores.svelte';
 	import ModListItem from '$lib/modlist/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 
@@ -40,7 +37,7 @@
 			if (unlistenFromQuery !== undefined) {
 				unlistenFromQuery();
 			}
-			invokeCommand('stop_querying_thunderstore');
+			invoke('stop_querying_thunderstore');
 		};
 	});
 
@@ -51,7 +48,7 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		mods = await invokeCommand<Mod[]>('query_thunderstore', { args: { ...$modQuery, maxCount } });
+		mods = await invoke<Mod[]>('query_thunderstore', { args: { ...$modQuery, maxCount } });
 		if (selectedMod !== null) {
 			// isInstalled might have changed
 			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
@@ -69,7 +66,7 @@
 	}
 
 	async function install(modRef?: { packageUuid: string; versionUuid: string }) {
-		await invokeCommand('install_mod', { modRef });
+		await invoke('install_mod', { modRef });
 		await refresh();
 	}
 
@@ -90,15 +87,15 @@
 			: undefined
 	);
 
-	run(() => {
+	$effect(() => {
 		if (selectedMod) {
-			invokeCommand<number>('get_download_size', { modRef: activeModRef }).then(
+			invoke<number>('get_download_size', { modRef: activeModRef }).then(
 				(size) => (selectedDownloadSize = size)
 			);
 		}
 	});
 
-	run(() => {
+	$effect(() => {
 		if (maxCount > 0) {
 			$modQuery;
 			$activeProfile;

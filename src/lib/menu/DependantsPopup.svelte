@@ -1,9 +1,9 @@
 <script lang="ts">
-	import BigButton from '$lib/components/Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
-	import { invokeCommand } from '$lib/invoke';
-	import type { Dependant, Mod } from '$lib/types';
+	import { invoke } from '$lib/invoke';
 	import ModCardList from '$lib/modlist/ModCardList.svelte';
+	import type { Dependant, Mod } from '$lib/types';
 
 	type Props = {
 		title: string;
@@ -51,7 +51,7 @@
 	}
 
 	async function execute(uuids: string[]) {
-		await invokeCommand('force_' + commandName + 's', { uuids });
+		await invoke('force_' + commandName + 's', { uuids });
 		open = false;
 		dependants = [];
 		onExecute();
@@ -68,12 +68,13 @@
 	/>
 
 	{#snippet buttons()}
-		<BigButton onclick={executeOne} color="primary" class="truncate">
+		<Button onclick={executeOne} color="primary" class="truncate">
 			{verb}
 			{name} only
-		</BigButton>
-		<BigButton onclick={executeAll} color={positive ? 'accent' : 'red'}>
+		</Button>
+
+		<Button onclick={executeAll} color={positive ? 'accent' : 'red'}>
 			{verb} all
-		</BigButton>
+		</Button>
 	{/snippet}
 </ConfirmPopup>
