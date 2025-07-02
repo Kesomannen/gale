@@ -53,42 +53,44 @@
 	);
 </script>
 
-<Content forceMount>
-	{#snippet child({ wrapperProps, props, open })}
-		<div {...wrapperProps}>
-			{#if open}
-				<div
-					{...props}
-					class={[commonContentClass, contentClass, isSub && submenuClass, classProp]}
-					in:fly={dropIn}
-					out:fade={dropOut}
-				>
-					{#each items as { icon, label, onclick, children }}
-						{#if children}
-							<Sub>
-								<SubTrigger class={[commonItemClass, itemClass, 'pr-2']} {onclick}>
+{#if items.length > 0}
+	<Content forceMount>
+		{#snippet child({ wrapperProps, props, open })}
+			<div {...wrapperProps}>
+				{#if open}
+					<div
+						{...props}
+						class={[commonContentClass, contentClass, isSub && submenuClass, classProp]}
+						in:fly={dropIn}
+						out:fade={dropOut}
+					>
+						{#each items as { icon, label, onclick, children }}
+							{#if children}
+								<Sub>
+									<SubTrigger class={[commonItemClass, itemClass, 'pr-2']} {onclick}>
+										{#if icon}
+											<Icon class="mr-1.5 text-lg" {icon} />
+										{/if}
+
+										{label}
+
+										<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
+									</SubTrigger>
+									<ContextMenuContent {type} {style} isSub={true} items={children} />
+								</Sub>
+							{:else}
+								<Item class={[commonItemClass, itemClass, 'pr-6']} {onclick}>
 									{#if icon}
 										<Icon class="mr-1.5 text-lg" {icon} />
 									{/if}
 
 									{label}
-
-									<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
-								</SubTrigger>
-								<ContextMenuContent {type} {style} isSub={true} items={children} />
-							</Sub>
-						{:else}
-							<Item class={[commonItemClass, itemClass, 'pr-6']} {onclick}>
-								{#if icon}
-									<Icon class="mr-1.5 text-lg" {icon} />
-								{/if}
-
-								{label}
-							</Item>
-						{/if}
-					{/each}
-				</div>
-			{/if}
-		</div>
-	{/snippet}
-</Content>
+								</Item>
+							{/if}
+						{/each}
+					</div>
+				{/if}
+			</div>
+		{/snippet}
+	</Content>
+{/if}

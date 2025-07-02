@@ -15,7 +15,7 @@ listen<Error>('error', (evt) =>
 	})
 );
 
-export async function invoke<T>(cmd: string, args?: any): Promise<T> {
+export async function invoke<T = void>(cmd: string, args?: any): Promise<T> {
 	try {
 		return await tauriInvoke<T>(cmd, args);
 	} catch (error: any) {

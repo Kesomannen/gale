@@ -1,9 +1,3 @@
-<script lang="ts" module>
-	import { writable } from 'svelte/store';
-
-	export let activeContextMenu = writable<string | null>(null);
-</script>
-
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../types';
 	import Icon from '@iconify/svelte';
@@ -11,6 +5,7 @@
 	import { Switch, ContextMenu } from 'bits-ui';
 	import type { DragEventHandler, MouseEventHandler } from 'svelte/elements';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
+	import { activeContextMenu } from '$lib/context';
 
 	type Props = {
 		mod: Mod;

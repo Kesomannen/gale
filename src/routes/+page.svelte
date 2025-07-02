@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import DependantsPopup from '$lib/menu/DependantsPopup.svelte';
 	import type {
 		Mod,
@@ -72,7 +72,7 @@
 		{
 			label: 'Open folder',
 			icon: 'mdi:folder',
-			onclick: (mod) => invoke('open_mod_dir', { uuid: mod.uuid })
+			onclick: (mod) => api.profile.openModDir(mod.uuid)
 		},
 		...defaultContextItems
 	];
@@ -102,9 +102,7 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		let result = await invoke<ProfileQuery>('query_profile', {
-			args: { ...$profileQuery, maxCount }
-		});
+		let result = await api.profile.query({ ...$profileQuery, maxCount });
 
 		mods = result.mods;
 		totalModCount = result.totalModCount;
@@ -116,9 +114,7 @@
 	}
 
 	async function toggleMod(mod: Mod, newState: boolean) {
-		let response = await invoke<ModActionResponse>('toggle_mod', {
-			uuid: mod.uuid
-		});
+		let response = await api.profile.toggleMod(mod.uuid);
 
 		if (response.type == 'done') {
 			refresh();
@@ -133,7 +129,7 @@
 	}
 
 	async function uninstall(mod: Dependant) {
-		let response = await invoke<ModActionResponse>('remove_mod', { uuid: mod.uuid });
+		let response = await api.profile.removeMod(mod.uuid);
 
 		if (response.type == 'done') {
 			selectedMod = null;
@@ -144,9 +140,7 @@
 	}
 
 	async function openDependants(mod: Mod) {
-		dependants = await invoke<string[]>('get_dependants', {
-			uuid: mod.uuid
-		});
+		dependants = await api.profile.getDependants(mod.uuid);
 
 		activeMod = mod;
 		dependantsOpen = true;
@@ -156,13 +150,11 @@
 		if (mod === null) return;
 
 		if (versionUuid === undefined) {
-			await invoke('update_mods', { uuids: [mod.uuid], respectIgnored: false });
+			await api.profile.update.mods([mod.uuid], false);
 		} else {
-			await invoke('change_mod_version', {
-				modRef: {
-					packageUuid: mod.uuid,
-					versionUuid: versionUuid
-				}
+			await api.profile.update.changeModVersion({
+				packageUuid: mod.uuid,
+				versionUuid: versionUuid
 			});
 		}
 

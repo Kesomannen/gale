@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -29,11 +29,7 @@
 			if (!confirmed) return;
 		}
 
-		let result = await invoke<ConfigValue>('reset_config_entry', {
-			file: entryId.file.relativePath,
-			section: entryId.section.name,
-			entry: entryId.entry.name
-		});
+		let result = await api.config.resetEntry(entryId);
 
 		entryId.entry.value = result;
 		onReset(result);

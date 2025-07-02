@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { selectItems } from '$lib/util';
-	import { type SortBy, type QueryModsArgs } from '$lib/types';
+	import { type SortBy, type QueryModsArgsWithoutMax } from '$lib/types';
 	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
 	import Select from '$lib/components/Select.svelte';
@@ -9,7 +9,7 @@
 
 	type Props = {
 		sortOptions: SortBy[];
-		queryArgs: Writable<QueryModsArgs>;
+		queryArgs: Writable<QueryModsArgsWithoutMax>;
 	};
 
 	let { sortOptions, queryArgs }: Props = $props();

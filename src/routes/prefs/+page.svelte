@@ -15,7 +15,7 @@
 	import { activeGame } from '$lib/stores.svelte';
 	import type { Prefs, GamePrefs, Platform } from '$lib/types';
 	import { onMount } from 'svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 
 	import { platform } from '@tauri-apps/plugin-os';
 	import ColorPref from '$lib/prefs/ColorPref.svelte';
@@ -56,7 +56,7 @@
 			update(value, prefs);
 			prefs.gamePrefs.set(gameSlug, gamePrefs!);
 			try {
-				await invoke('set_prefs', { value: prefs });
+				await api.prefs.set(prefs);
 			} catch (error) {
 				await refresh();
 				throw error;
@@ -65,7 +65,7 @@
 	}
 
 	async function refresh() {
-		let newPrefs = await invoke<Prefs>('get_prefs');
+		let newPrefs = await api.prefs.get();
 		newPrefs.gamePrefs = new Map(Object.entries(newPrefs.gamePrefs));
 		prefs = newPrefs;
 	}

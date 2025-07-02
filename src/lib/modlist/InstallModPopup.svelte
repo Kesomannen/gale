@@ -2,7 +2,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
 	import Select from '$lib/components/Select.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { Mod } from '$lib/types';
 	import { activeProfile, profiles, setActiveProfile } from '$lib/stores.svelte';
 	import { selectItems } from '$lib/util';
@@ -32,11 +32,9 @@
 		open = false;
 
 		await setActiveProfile(profileIndex);
-		await invoke('install_mod', {
-			modRef: {
-				packageUuid: mod.uuid,
-				versionUuid: mod.versionUuid
-			}
+		await api.profile.install.mod({
+			packageUuid: mod.uuid,
+			versionUuid: mod.versionUuid
 		});
 	}
 </script>

@@ -15,7 +15,7 @@
 	import Icon from '@iconify/svelte';
 	import ModCard from './ModCard.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import BigButton from '$lib/components/Button.svelte';
 	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
 
@@ -43,7 +43,7 @@
 
 		popupOpen = false;
 
-		await invoke('update_mods', { uuids, respectIgnored: true });
+		await api.profile.update.mods(uuids, true);
 		await refreshProfiles();
 	}
 </script>
@@ -101,7 +101,7 @@
 						include.delete(update);
 						include = include; // force reactivity
 
-						invoke('ignore_update', { versionUuid: update.versionUuid });
+						api.profile.update.ignore(update.versionUuid);
 					}}><Icon icon="mdi:notifications-off" /></button
 				>
 			</Tooltip>

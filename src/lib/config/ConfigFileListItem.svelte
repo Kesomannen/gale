@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -42,12 +42,12 @@
 		let confirmed = await confirm(`Are you sure you want to delete ${file.displayName}?`);
 		if (!confirmed) return;
 
-		await invoke('delete_config_file', { file: file.relativePath });
+		await api.config.deleteFile(file);
 		onDeleteClicked();
 	}
 
 	async function openFile() {
-		await invoke('open_config_file', { file: file.relativePath });
+		await api.config.openFile(file);
 	}
 </script>
 

@@ -1,12 +1,9 @@
 <script lang="ts">
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { SortBy, Mod, ModId } from '$lib/types';
-	import { shortenFileSize } from '$lib/util';
 
 	import ModList from '$lib/modlist/ModList.svelte';
 
-	import Icon from '@iconify/svelte';
-	import { DropdownMenu } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { modQuery, activeProfileLocked, activeProfile } from '$lib/stores.svelte';
@@ -37,7 +34,7 @@
 
 		return () => {
 			unlistenFromQuery?.();
-			invoke('stop_querying_thunderstore');
+			api.thunderstore.stopQuerying();
 		};
 	});
 
@@ -48,7 +45,7 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		mods = await invoke<Mod[]>('query_thunderstore', { args: { ...$modQuery, maxCount } });
+		mods = await api.thunderstore.query({ ...$modQuery, maxCount });
 		if (selectedMod) {
 			// isInstalled might have changed
 			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
@@ -66,7 +63,7 @@
 	}
 
 	async function install(id: ModId) {
-		await invoke('install_mod', { modRef: id });
+		await api.profile.install.mod(id);
 		await refresh();
 	}
 
@@ -116,6 +113,7 @@
 				<ModListItem
 					{mod}
 					{isSelected}
+					{contextItems}
 					locked={$activeProfileLocked}
 					oninstall={() => installLatest(mod)}
 					onclick={(evt) => onModClicked(evt, mod)}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import { activeGame, setActiveGame } from '$lib/stores.svelte';
 	import type { Game } from '$lib/types';
 	import Icon from '@iconify/svelte';
@@ -51,7 +51,7 @@
 		onclick={(evt) => {
 			evt.stopPropagation();
 			onfavorite?.(!game.favorite);
-			invoke('favorite_game', { slug: game.slug });
+			api.profile.favoriteGame(game.slug);
 		}}
 	>
 		<Icon icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'} class="text-accent-500 text-xl" />

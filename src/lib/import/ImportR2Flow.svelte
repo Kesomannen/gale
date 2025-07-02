@@ -7,7 +7,7 @@
 	import Checklist from '$lib/components/Checklist.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
 	import { capitalize } from '$lib/util';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 
 	let path: string | null = $state(null);
 	let error = $state('');
@@ -38,7 +38,7 @@
 		path = newPath;
 
 		try {
-			importData = await invoke<R2ImportData | null>('get_r2modman_info', { path: newPath });
+			importData = await api.profile.import.getR2modmanInfo(newPath);
 		} catch (e) {
 			importData = null;
 			error = e as string;
@@ -61,7 +61,7 @@
 		let success = false;
 
 		try {
-			await invoke('import_r2modman', importData);
+			await api.profile.import.r2modman();
 			refreshProfiles();
 
 			success = true;

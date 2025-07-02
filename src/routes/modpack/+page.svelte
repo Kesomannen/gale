@@ -11,7 +11,7 @@
 	import Select from '$lib/components/Select.svelte';
 	import ApiKeyPopup, { apiKeyPopupOpen } from '$lib/prefs/ApiKeyPopup.svelte';
 
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { ModpackArgs } from '$lib/types';
 	import { activeProfile, activeGame, categories } from '$lib/stores.svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
@@ -57,7 +57,7 @@
 	async function refresh() {
 		loading = 'Loading...';
 
-		let args = await invoke<ModpackArgs>('get_pack_args');
+		let args = await api.profile.export.getPackArgs();
 
 		name = args.name;
 		author = args.author;
@@ -88,7 +88,7 @@
 	}
 
 	async function generateChangelog(all: boolean) {
-		changelog = await invoke('generate_changelog', { args: args(), all });
+		changelog = await api.profile.export.generateChangelog(args(), all);
 		saveArgs();
 	}
 
@@ -103,14 +103,14 @@
 
 		loading = 'Exporting modpack to file...';
 		try {
-			await invoke('export_pack', { args: args(), dir });
+			await api.profile.export.exportPack(dir, args());
 		} finally {
 			loading = null;
 		}
 	}
 
 	async function uploadToThunderstore() {
-		let hasToken = await invoke('has_thunderstore_token');
+		let hasToken = await api.thunderstore.hasToken();
 
 		if (!hasToken) {
 			$apiKeyPopupOpen = true;
@@ -126,14 +126,14 @@
 				return () => clearInterval(interval);
 			});
 
-			hasToken = await invoke('has_thunderstore_token');
+			hasToken = await api.thunderstore.hasToken();
 
 			if (!hasToken) return;
 		}
 
 		loading = 'Uploading modpack to Thunderstore...';
 		try {
-			await invoke('upload_pack', { args: args() });
+			await api.profile.export.uploadPack(args());
 			donePopupOpen = true;
 		} finally {
 			loading = null;
@@ -143,7 +143,7 @@
 	function saveArgs() {
 		// wait a tick to ensure the variables are updated
 		setTimeout(() => {
-			invoke('set_pack_args', { args: args() });
+			api.profile.export.setPackArgs(args());
 		});
 	}
 

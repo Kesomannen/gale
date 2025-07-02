@@ -2,7 +2,7 @@
 	import Button from '$lib/components/Button.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
 	import { activeProfile, login, logout, refreshProfiles, user } from '$lib/stores.svelte';
 	import { pushInfoToast } from '$lib/toast';
@@ -80,34 +80,34 @@
 	}
 
 	async function connect() {
-		await wrapCommand('create_sync_profile', 'Created synced profile.');
+		await wrapCommand(api.profile.sync.create, 'Created synced profile.');
 	}
 
 	async function push() {
-		await wrapCommand('push_sync_profile', 'Pushed update to synced profile.');
+		await wrapCommand(api.profile.sync.push, 'Pushed update to synced profile.');
 		mainPopupOpen = false;
 	}
 
 	async function pull() {
-		await wrapCommand('pull_sync_profile', 'Pulled changes from synced profile.');
+		await wrapCommand(api.profile.sync.pull, 'Pulled changes from synced profile.');
 		mainPopupOpen = false;
 	}
 
 	async function refresh() {
-		await wrapCommand('fetch_sync_profile', 'Refresh synced profile status.');
+		await wrapCommand(api.profile.sync.fetch, 'Refresh synced profile status.');
 	}
 
 	async function disconnect() {
 		let del = isOwner && (await ask('Do you also want to delete the profile from the database?'));
 
-		await wrapCommand('disconnect_sync_profile', 'Disconnected synced profile.', { delete: del });
+		await wrapCommand(() => api.profile.sync.disconnect(del), 'Disconnected synced profile.');
 		mainPopupOpen = false;
 	}
 
 	async function showOwnedProfiles() {
 		loading = true;
 		try {
-			profiles = await invoke<ListedSyncProfile[]>('get_owned_sync_profiles');
+			profiles = await api.profile.sync.getOwned();
 
 			mainPopupOpen = false;
 			profilesPopupOpen = true;
@@ -116,10 +116,10 @@
 		}
 	}
 
-	async function wrapCommand(command: string, message?: string, args?: any) {
+	async function wrapCommand(command: () => Promise<any>, message?: string) {
 		loading = true;
 		try {
-			await invoke(command, args);
+			await command();
 			await refreshProfiles();
 
 			if (message) {

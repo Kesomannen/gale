@@ -1,3 +1,4 @@
+import { writable } from 'svelte/store';
 import type { ModContextItem } from './types';
 
 function openIfNotNull(url: string | null) {
@@ -18,3 +19,5 @@ export const defaultContextItems: ModContextItem[] = [
 		showFor: (mod) => mod.donateUrl !== null
 	}
 ];
+
+export let activeContextMenu = writable<string | null>(null);

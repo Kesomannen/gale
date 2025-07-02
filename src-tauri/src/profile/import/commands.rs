@@ -11,7 +11,7 @@ use crate::{
 };
 
 use super::{
-    r2modman::{self, ProfileImportData},
+    r2modman::{self},
     ImportData,
 };
 
@@ -74,7 +74,7 @@ pub async fn import_local_mod_base64(base64: String, app: AppHandle) -> Result<(
 pub fn get_r2modman_info(
     path: Option<PathBuf>,
     app: AppHandle,
-) -> Result<Option<ProfileImportData>> {
+) -> Result<Option<r2modman::ProfileImportData>> {
     let info = r2modman::gather_info(path, &app)?;
 
     Ok(info)

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { ConfigSection, ConfigFile } from '$lib/types';
 	import { capitalize } from '$lib/util';
 	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
@@ -45,7 +45,7 @@
 				<Button
 					class="mx-4 max-w-max"
 					color="primary"
-					onclick={() => invoke('open_config_file', { file: selectedFile?.relativePath })}
+					onclick={() => api.config.openFile(selectedFile!)}
 					icon="mdi:open-in-new"
 				>
 					Open in external program
@@ -60,7 +60,7 @@
 				<Button
 					class="mx-4 max-w-max"
 					color="primary"
-					onclick={() => invoke('open_config_file', { file: selectedFile?.relativePath })}
+					onclick={() => api.config.openFile(selectedFile!)}
 					icon="icon=mdi:open-in-new"
 				>
 					Open in external program

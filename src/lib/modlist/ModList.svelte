@@ -1,6 +1,6 @@
 <script lang="ts">
 	import VirtualList from '$lib/components/VirtualList.svelte';
-	import { type SortBy, type Mod, type QueryModsArgs } from '$lib/types';
+	import { type SortBy, type Mod, type QueryModsArgsWithoutMax } from '$lib/types';
 	import type { Writable } from 'svelte/store';
 	import { activeGame } from '$lib/stores.svelte';
 	import type { Snippet } from 'svelte';
@@ -8,7 +8,7 @@
 	type Props = {
 		mods: Mod[];
 		maxCount: number;
-		queryArgs: Writable<QueryModsArgs>;
+		queryArgs: Writable<QueryModsArgsWithoutMax>;
 		selected: Mod | null;
 		placeholder?: Snippet;
 		item: Snippet<[{ mod: Mod; index: number; isSelected: boolean }]>;

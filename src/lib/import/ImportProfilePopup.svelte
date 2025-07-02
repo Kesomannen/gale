@@ -21,7 +21,7 @@
 	import { discordAvatarUrl, selectItems } from '$lib/util';
 	import { pushInfoToast } from '$lib/toast';
 	import Select from '$lib/components/Select.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -64,12 +64,12 @@
 			if (type === 'normal') {
 				data = {
 					type: 'normal',
-					...(await invoke<ImportData>('read_profile_code', { key: key.trim() }))
+					...(await api.profile.import.readCode(key.trim()))
 				};
 			} else {
 				data = {
 					type: 'sync',
-					...(await invoke<SyncImportData>('read_sync_profile', { id: key.trim() }))
+					...(await api.profile.sync.read(key.trim()))
 				};
 			}
 
@@ -94,9 +94,9 @@
 		if (data.type === 'normal') {
 			data.manifest.profileName = name;
 
-			await invoke('import_profile', { data, importAll });
+			await api.profile.import.profile(data, importAll);
 		} else {
-			await invoke('clone_sync_profile', { name, id: data.id });
+			await api.profile.sync.clone(name, data.id);
 		}
 
 		data = null;

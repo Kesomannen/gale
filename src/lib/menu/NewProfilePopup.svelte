@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { refreshProfiles } from '$lib/stores.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import Button from '$lib/components/Button.svelte';
 	import InputField from '$lib/components/InputField.svelte';
 	import ConfirmPopup from '$lib/components/ConfirmPopup.svelte';
@@ -24,7 +24,7 @@
 	});
 
 	async function createProfile() {
-		await invoke('create_profile', { name, overridePath: override ? path : null });
+		await api.profile.create(name, override ? path : null);
 		refreshProfiles();
 		open = false;
 	}

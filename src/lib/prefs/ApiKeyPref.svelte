@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Info from '$lib/components/Info.svelte';
 	import Label from '$lib/components/Label.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import { apiKeyPopupOpen } from './ApiKeyPopup.svelte';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
@@ -15,7 +15,7 @@
 	let hasToken = $state(false);
 
 	async function refresh() {
-		hasToken = await invoke('has_thunderstore_token');
+		hasToken = await api.thunderstore.hasToken();
 	}
 
 	$effect(() => {

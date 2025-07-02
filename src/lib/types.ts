@@ -74,8 +74,8 @@ export type SyncProfileInfo = {
 };
 
 export type ListedSyncProfile = {
-	id: String;
-	name: String;
+	id: string;
+	name: string;
 	community: string;
 	createdAt: string;
 	updatedAt: string;
@@ -164,7 +164,10 @@ export type QueryModsArgs = {
 	includeEnabled: boolean;
 	sortBy: SortBy;
 	sortOrder: SortOrder;
+	maxCount: number;
 };
+
+export type QueryModsArgsWithoutMax = Omit<QueryModsArgs, 'maxCount'>;
 
 export type ConfigEntryId = {
 	file: { relativePath: string };
@@ -334,3 +337,7 @@ export type ModContextItem = {
 	onclick: (mod: Mod) => void;
 	children?: (mod: Mod) => ModContextItem[];
 };
+
+export type Zoom = { factor: number } | { delta: number };
+
+export type MarkdownCache = 'readme' | 'changelog';

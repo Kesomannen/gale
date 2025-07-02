@@ -22,8 +22,7 @@
 
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
 	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
-	import { invoke } from '$lib/invoke';
-	import type { ImportData } from '$lib/types';
+	import * as api from '$lib/api';
 	import { useNativeMenu } from '$lib/theme';
 
 	import { confirm, open } from '@tauri-apps/plugin-dialog';
@@ -54,20 +53,20 @@
 			items: [
 				{
 					text: 'Open profile folder',
-					onclick: () => invoke('open_profile_dir')
+					onclick: api.profile.openDir
 				},
 				{
 					text: 'Open game folder',
-					onclick: () => invoke('open_game_dir')
+					onclick: api.profile.launch.openGameDir
 				},
 				'',
 				{
 					text: 'Open game log',
-					onclick: () => invoke('open_game_log')
+					onclick: api.profile.openGameLog
 				},
 				{
 					text: 'Open Gale log',
-					onclick: () => invoke('open_gale_log')
+					onclick: api.logger.openGaleLog
 				},
 				'',
 				{
@@ -80,7 +79,7 @@
 				},
 				{
 					text: 'Fetch mods',
-					onclick: () => invoke('trigger_mod_fetch')
+					onclick: api.thunderstore.triggerModFetch
 				}
 			]
 		},
@@ -175,17 +174,17 @@
 				{
 					text: 'Zoom in',
 					accelerator: 'Ctrl++',
-					onclick: () => invoke('zoom_window', { value: { delta: 0.25 } })
+					onclick: () => api.prefs.zoomWindow({ delta: 0.25 })
 				},
 				{
 					text: 'Zoom out',
 					accelerator: 'Ctrl+-',
-					onclick: () => invoke('zoom_window', { value: { delta: -0.25 } })
+					onclick: () => api.prefs.zoomWindow({ delta: -0.25 })
 				},
 				{
 					text: 'Reset zoom',
 					accelerator: 'Ctrl+0',
-					onclick: () => invoke('zoom_window', { value: { factor: 1 } })
+					onclick: () => api.prefs.zoomWindow({ factor: 1 })
 				}
 			]
 		},
@@ -217,7 +216,7 @@
 		});
 
 		if (path === null) return;
-		await invoke('import_local_mod', { path });
+		await api.profile.import.localMod(path);
 		await refreshProfiles();
 
 		pushInfoToast({
@@ -232,7 +231,7 @@
 		});
 
 		if (path === null) return;
-		let data = await invoke<ImportData>('read_profile_file', { path });
+		let data = await api.profile.import.readFile(path);
 		importProfilePopup.openFor({ type: 'normal', ...data });
 	}
 
@@ -243,11 +242,11 @@
 		});
 
 		if (dir === null) return;
-		invoke('export_file', { dir });
+		api.profile.export.file(dir);
 	}
 
 	async function setAllModsState(enable: boolean) {
-		let count = await invoke<number>('set_all_mods_state', { enable });
+		let count = await api.profile.setAllModsState(enable);
 
 		pushInfoToast({
 			message: `${enable ? 'Enabled' : 'Disabled'} ${count} mods.`
@@ -269,12 +268,12 @@
 
 		try {
 			if (profileOperation == 'rename') {
-				await invoke('rename_profile', { name: profileOperationName });
+				await api.profile.rename(profileOperationName);
 				pushInfoToast({
 					message: `Renamed profile to ${profileOperationName}.`
 				});
 			} else if (profileOperation == 'duplicate') {
-				await invoke('duplicate_profile', { name: profileOperationName });
+				await api.profile.duplicate(profileOperationName);
 				pushInfoToast({
 					message: `Duplicated profile to ${profileOperationName}.`
 				});
@@ -290,7 +289,7 @@
 	}
 
 	async function createDesktopShotcut() {
-		await invoke('create_desktop_shortcut');
+		await api.profile.createDesktopShortcut();
 
 		pushInfoToast({
 			message: `Created desktop shortcut for ${$activeProfile?.name}.`
@@ -301,7 +300,7 @@
 		let confirmed = await confirm('Are you sure you want to uninstall all disabled mods?');
 		if (!confirmed) return;
 
-		let count = await invoke<number>('remove_disabled_mods');
+		let count = await api.profile.removeDisabledMods();
 
 		pushInfoToast({
 			message: `Uninstalled ${count} disabled mods.`
@@ -310,12 +309,8 @@
 		await refreshProfiles();
 	}
 
-	async function zoom(value: { delta: number } | { factor: number }) {
-		await invoke('zoom_window', { value });
-	}
-
 	async function copyLaunchArgs() {
-		let str = await invoke<string>('get_launch_args');
+		let str = await api.profile.launch.getArgs();
 		await writeText(str);
 
 		pushInfoToast({
@@ -332,21 +327,21 @@
 			if (!result) return;
 		}
 
-		let size = await invoke<number>('clear_download_cache', { soft });
+		let size = await api.profile.install.clearDownloadCache(soft);
 		pushInfoToast({
 			message: `Deleted${soft ? ' unused' : ''} mod cache (cleared ${shortenFileSize(size)}).`
 		});
 	}
 
 	async function copyModList() {
-		await invoke('copy_dependency_strings');
+		await api.profile.export.copyDependencyStrings();
 		pushInfoToast({
 			message: 'Copied mod list to clipboard.'
 		});
 	}
 
 	async function copyDebugInfo() {
-		await invoke('copy_debug_info');
+		await api.profile.export.copyDebugInfo();
 		pushInfoToast({
 			message: 'Copied debug info to clipboard.'
 		});
@@ -369,10 +364,10 @@
 		let base64 = await fileToBase64(file);
 
 		if (file.name.endsWith('.r2z')) {
-			let data = await invoke<ImportData>('read_profile_base64', { base64 });
+			let data = await api.profile.import.readBase64(base64);
 			importProfilePopup.openFor({ type: 'normal', ...data });
 		} else if (file.name.endsWith('.zip')) {
-			await invoke('import_local_mod_base64', { base64 });
+			await api.profile.import.localModBase64(base64);
 			await refreshProfiles();
 
 			pushInfoToast({
@@ -396,9 +391,9 @@
 	});
 
 	const hotkeys: { [key: string]: () => void } = {
-		'+': () => zoom({ delta: 0.25 }),
-		'-': () => zoom({ delta: -0.25 }),
-		'0': () => zoom({ factor: 1 }),
+		'+': () => api.prefs.zoomWindow({ delta: 0.25 }),
+		'-': () => api.prefs.zoomWindow({ delta: -0.25 }),
+		'0': () => api.prefs.zoomWindow({ factor: 1 }),
 		n: () => (newProfileOpen = true),
 		d: () => openProfileOperation('duplicate')
 	};

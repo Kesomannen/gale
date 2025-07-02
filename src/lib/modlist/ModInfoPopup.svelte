@@ -1,9 +1,9 @@
 <script lang="ts">
 	import Markdown from '$lib/components/Markdown.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import { invoke } from '$lib/invoke';
 	import type { Mod } from '$lib/types';
 	import Icon from '@iconify/svelte';
+	import * as api from '$lib/api';
 
 	type Props = {
 		open?: boolean;
@@ -26,7 +26,7 @@
 			versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid
 		};
 
-		promise = invoke('get_markdown', { modRef, kind });
+		promise = api.thunderstore.getMarkdown(modRef, kind);
 	}
 </script>
 

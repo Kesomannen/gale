@@ -19,7 +19,7 @@
 
 	import Icon from '@iconify/svelte';
 	import { type Snippet } from 'svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 
 	type Props = {
 		mod: Mod;
@@ -61,13 +61,15 @@
 
 	$effect(() => {
 		if (mod.type === ModType.Remote) {
-			readmePromise = invoke<string>('get_markdown', {
-				kind: 'readme',
-				modRef: {
-					packageUuid: mod.uuid,
-					versionUuid: mod.versionUuid
-				}
-			}).then(formatReadme);
+			readmePromise = api.thunderstore
+				.getMarkdown(
+					{
+						packageUuid: mod.uuid,
+						versionUuid: mod.versionUuid
+					},
+					'readme'
+				)
+				.then(formatReadme);
 		}
 	});
 </script>

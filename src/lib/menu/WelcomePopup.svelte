@@ -7,7 +7,7 @@
 	import type { Prefs, R2ImportData } from '$lib/types';
 	import ImportR2Flow from '$lib/import/ImportR2Flow.svelte';
 	import Icon from '@iconify/svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import { onMount } from 'svelte';
 
 	type Props = {
@@ -18,21 +18,21 @@
 
 	let stage: 'gameSelect' | 'importProfiles' | 'settings' | 'end' = $state('gameSelect');
 
-	let importFlow: ImportR2Flow;
+	let importFlow: ImportR2Flow | null = $state(null);
 	let importData: R2ImportData | null | undefined = $state();
 
 	let prefs: Prefs | null = $state(null);
 
 	onMount(async () => {
-		if (await invoke<boolean>('is_first_run')) {
+		if (await api.state.isFirstRun()) {
 			open = true;
-			prefs = await invoke('get_prefs');
+			prefs = await api.prefs.get();
 		}
 	});
 
 	async function onSelectGame() {
 		try {
-			importData = await invoke('get_r2modman_info');
+			importData = await api.profile.import.getR2modmanInfo(null);
 		} catch {
 			importData = null;
 		}
@@ -41,7 +41,7 @@
 	}
 
 	async function importProfiles() {
-		if (await importFlow.doImport()) {
+		if (await importFlow?.doImport()) {
 			stage = 'settings';
 		}
 	}
@@ -51,7 +51,7 @@
 			if (prefs === null) return;
 
 			update(value, prefs);
-			await invoke('set_prefs', { value: prefs });
+			await api.prefs.set(prefs);
 		};
 	}
 </script>

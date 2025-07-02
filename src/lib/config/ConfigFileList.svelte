@@ -1,19 +1,13 @@
 <script lang="ts">
+	import * as api from '$lib/api';
+
 	import ConfigFileListItem from '$lib/config/ConfigFileListItem.svelte';
-	import { invoke } from '$lib/invoke';
 	import type { ConfigSection, ConfigFile } from '$lib/types';
-	import { capitalize } from '$lib/util';
-	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 
-	import Icon from '@iconify/svelte';
 	import { activeProfile, activeProfileLocked } from '$lib/stores.svelte';
 	import { page } from '$app/state';
-	import Button from '$lib/components/Button.svelte';
-	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
-	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import { onMount } from 'svelte';
 
 	type Props = {
 		selectedFile: ConfigFile | null;
@@ -59,7 +53,7 @@
 	}
 
 	async function refresh() {
-		files = await invoke<ConfigFile[]>('get_config_files');
+		files = await api.config.getFiles();
 
 		let searchParam = page.url.searchParams.get('file');
 		if (searchParam === null) return;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
 	import { Dialog } from 'bits-ui';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { activeProfile } from '$lib/stores.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -10,7 +10,7 @@
 	let codePromise: Promise<string> | null = $state(null);
 
 	export async function open() {
-		codePromise = invoke('export_code');
+		codePromise = api.profile.export.code();
 		isOpen = true;
 
 		try {

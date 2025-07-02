@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
 	import { games, refreshProfiles, profiles as allProfiles } from '$lib/stores.svelte';
 	import { timeSince } from '$lib/util';
@@ -22,7 +22,7 @@
 
 	async function importProfile(profile: ListedSyncProfile) {
 		open = false;
-		await invoke('clone_sync_profile', { name: profile.name, id: profile.id });
+		await api.profile.sync.clone(profile.id, profile.name);
 		await refreshProfiles();
 	}
 
@@ -32,7 +32,7 @@
 		);
 		if (!confirmed) return;
 
-		await invoke('delete_sync_profile', { id: profile.id });
+		await api.profile.sync.deleteProfile(profile.id);
 
 		let index = profiles.indexOf(profile);
 		profiles.splice(index, 1);

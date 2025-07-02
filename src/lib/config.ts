@@ -1,4 +1,4 @@
-import { invoke } from './invoke';
+import * as api from '$lib/api';
 import type { ConfigEntryId, ConfigValue } from './types';
 
 export function isNum(value: ConfigValue) {
@@ -8,12 +8,7 @@ export function isNum(value: ConfigValue) {
 export async function setConfigEntry(id: ConfigEntryId, value: ConfigValue) {
 	if (isNum(value) && value.content.value === null) return;
 
-	await invoke('set_config_entry', {
-		file: id.file.relativePath,
-		section: id.section.name,
-		entry: id.entry.name,
-		value
-	});
+	await api.config.setEntry(id, value);
 
 	id.entry.value = value;
 }

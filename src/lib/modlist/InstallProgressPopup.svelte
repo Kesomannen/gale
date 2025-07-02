@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Popup from '$lib/components/Popup.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import { refreshProfiles } from '$lib/stores.svelte';
 	import type { InstallProgress } from '$lib/types';
 	import { formatTime, shortenFileSize } from '$lib/util';
@@ -61,7 +61,7 @@
 	bind:open
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
-	onclose={() => invoke('cancel_install')}
+	onclose={() => api.profile.install.cancel()}
 	confirmClose={{
 		message: 'Are you sure you want to abort the installation?'
 	}}

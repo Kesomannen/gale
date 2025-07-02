@@ -1,5 +1,5 @@
+import * as api from '$lib/api';
 import { derived, get, writable } from 'svelte/store';
-import { invoke } from './invoke';
 import type {
 	FiltersResponse,
 	Game,
@@ -8,6 +8,7 @@ import type {
 	ProfileInfo,
 	ProfilesInfo,
 	QueryModsArgs,
+	QueryModsArgsWithoutMax,
 	SyncUser
 } from './types';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -33,7 +34,7 @@ export let activeProfileLocked = derived([activeProfile, user], ([activeProfile,
 	return activeProfile.sync.owner.discordId != user.discordId;
 });
 
-const defaultModQuery: () => QueryModsArgs = () => ({
+const defaultModQuery: () => QueryModsArgsWithoutMax = () => ({
 	searchTerm: '',
 	includeCategories: [],
 	excludeCategories: [],
@@ -45,7 +46,7 @@ const defaultModQuery: () => QueryModsArgs = () => ({
 	sortOrder: 'descending'
 });
 
-const defaultProfileQuery: () => QueryModsArgs = () => ({
+const defaultProfileQuery: () => QueryModsArgsWithoutMax = () => ({
 	searchTerm: '',
 	includeCategories: [],
 	excludeCategories: [],
@@ -79,7 +80,7 @@ activeGame.subscribe((value) => {
 refreshGames();
 refreshUser();
 
-function loadQuery(key: string, getDefault: () => QueryModsArgs) {
+function loadQuery(key: string, getDefault: () => QueryModsArgsWithoutMax) {
 	let json = localStorage.getItem(key);
 	if (json) {
 		try {
@@ -95,8 +96,8 @@ function loadQuery(key: string, getDefault: () => QueryModsArgs) {
 	return getDefault();
 }
 
-function createQueryStore(key: string, getDefault: () => QueryModsArgs) {
-	let store = writable<QueryModsArgs>(loadQuery(key, getDefault));
+function createQueryStore(key: string, getDefault: () => QueryModsArgsWithoutMax) {
+	let store = writable<QueryModsArgsWithoutMax>(loadQuery(key, getDefault));
 	store.subscribe((value) => {
 		localStorage.setItem(key, JSON.stringify(value));
 	});
@@ -106,8 +107,8 @@ function createQueryStore(key: string, getDefault: () => QueryModsArgs) {
 export async function refreshGames() {
 	console.log('refreshing games...');
 
-	const info: GameInfo = await invoke('get_game_info');
-	
+	const info: GameInfo = await api.profile.getGameInfo();
+
 	for (let game of info.all) {
 		game.favorite = info.favorites.includes(game.slug);
 	}
@@ -120,7 +121,7 @@ export async function refreshGames() {
 }
 
 export async function setActiveGame(slug: string) {
-	await invoke('set_active_game', { slug });
+	await api.profile.setActiveGame(slug);
 	await refreshGames();
 }
 
@@ -146,7 +147,7 @@ export async function refreshCategories() {
 }
 
 export async function refreshProfiles() {
-	let info = await invoke<ProfilesInfo>('get_profile_info');
+	let info = await api.profile.getInfo();
 
 	activeProfileId = info.activeId;
 	profiles = info.profiles;
@@ -154,27 +155,27 @@ export async function refreshProfiles() {
 }
 
 export async function setActiveProfile(index: number) {
-	await invoke('set_active_profile', { index });
+	await api.profile.setActive(index);
 	await refreshProfiles();
 
 	const sync = get(activeProfile)?.sync;
 	if (!sync) return;
 
-	await invoke('fetch_sync_profile');
+	await api.profile.sync.fetch();
 	await refreshProfiles();
 }
 
 export async function refreshUser() {
-	let info = await invoke<SyncUser | null>('get_user');
+	let info = await api.profile.sync.getUser();
 	user.set(info);
 }
 
 export async function login() {
-	let info = await invoke<SyncUser>('login');
+	let info = await api.profile.sync.login();
 	user.set(info);
 }
 
 export async function logout() {
-	await invoke('logout');
+	await api.profile.sync.logout();
 	user.set(null);
 }

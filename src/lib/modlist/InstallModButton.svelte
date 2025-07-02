@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ContextMenuContent from '$lib/components/ContextMenuContent.svelte';
-	import { invoke } from '$lib/invoke';
+	import * as api from '$lib/api';
 	import type { ContextItem, Mod, ModId } from '$lib/types';
 	import { shortenFileSize } from '$lib/util';
 	import Icon from '@iconify/svelte';
@@ -37,7 +37,7 @@
 	);
 
 	$effect(() => {
-		invoke<number>('get_download_size', { modRef: modId }).then((size) => (downloadSize = size));
+		api.profile.install.getDownloadSize(modId).then((size) => (downloadSize = size));
 	});
 </script>
 
