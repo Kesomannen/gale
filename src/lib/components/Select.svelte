@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { dropIn, dropOut } from '$lib/transitions';
 	import { emptyOrUndefined } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Select, type WithoutChildren } from 'bits-ui';
 
 	import type { Snippet } from 'svelte';
+	import { fade, fly } from 'svelte/transition';
 
 	type Props = WithoutChildren<Select.RootProps> & {
 		placeholder?: string;
@@ -82,26 +84,36 @@
 		/>
 	</Select.Trigger>
 	<Select.Portal>
-		<Select.Content
-			{avoidCollisions}
-			class="border-primary-600 bg-primary-800 flex max-h-96 w-full gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
-		>
-			<Select.Viewport>
-				{#each items as item, i (i + item.value)}
-					<Select.Item
-						{...item}
-						class="hover:bg-primary-700 hover:text-primary-200 flex w-full cursor-default items-center rounded-md px-3 py-1"
-					>
-						{#snippet children({ selected })}
-							<span class="text-primary-400">{item.label}</span>
+		<Select.Content forceMount {avoidCollisions}>
+			{#snippet child({ wrapperProps, props, open })}
+				<div {...wrapperProps}>
+					{#if open}
+						<div
+							{...props}
+							class="border-primary-600 bg-primary-800 flex max-h-96 w-full gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
+							in:fly={dropIn}
+							out:fade={dropOut}
+						>
+							<Select.Viewport>
+								{#each items as item, i (i + item.value)}
+									<Select.Item
+										{...item}
+										class="hover:bg-primary-700 hover:text-primary-200 flex w-full cursor-default items-center rounded-md px-3 py-1"
+									>
+										{#snippet children({ selected })}
+											<span class="text-primary-400">{item.label}</span>
 
-							{#if selected}
-								<Icon icon="mdi:check" class="text-accent-400 ml-auto text-lg" />
-							{/if}
-						{/snippet}
-					</Select.Item>
-				{/each}
-			</Select.Viewport>
+											{#if selected}
+												<Icon icon="mdi:check" class="text-accent-400 ml-auto text-lg" />
+											{/if}
+										{/snippet}
+									</Select.Item>
+								{/each}
+							</Select.Viewport>
+						</div>
+					{/if}
+				</div>
+			{/snippet}
 		</Select.Content>
 	</Select.Portal>
 </Select.Root>

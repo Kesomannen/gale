@@ -9,8 +9,8 @@
 	import Icon from '@iconify/svelte';
 	import { iconSrc, isOutdated } from '$lib/util';
 	import { Switch, ContextMenu } from 'bits-ui';
-	import ModContextMenuItems from './ModContextMenuItems.svelte';
 	import type { DragEventHandler, MouseEventHandler } from 'svelte/elements';
+	import ModContextMenuContent from './ModContextMenuContent.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -135,9 +135,5 @@
 			</div>
 		</button>
 	</ContextMenu.Trigger>
-	<ContextMenu.Content
-		class="border-primary-600 bg-primary-800 flex flex-col gap-0.5 rounded-lg border p-1 shadow-lg"
-	>
-		<ModContextMenuItems {mod} {contextItems} {locked} type="context" />
-	</ContextMenu.Content>
+	<ModContextMenuContent type="context" style="dark" {locked} {mod} items={contextItems} />
 </ContextMenu.Root>

@@ -12,6 +12,7 @@
 	import { ask } from '@tauri-apps/plugin-dialog';
 	import { DropdownMenu } from 'bits-ui';
 	import OwnedSyncProfilesPopup from './OwnedSyncProfilesPopup.svelte';
+	import ContextMenuContent from '$lib/components/ContextMenuContent.svelte';
 
 	type State = 'off' | 'synced' | 'outdated';
 
@@ -56,12 +57,12 @@
 		{
 			icon: 'mdi:database-eye',
 			label: 'Show owned profiles',
-			onClick: showOwnedProfiles
+			onclick: showOwnedProfiles
 		},
 		{
 			icon: 'mdi:logout',
 			label: 'Sign out',
-			onClick: onLoginClicked
+			onclick: onLoginClicked
 		}
 	];
 
@@ -221,18 +222,7 @@
 				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">
 					<Icon class="text-2xl" icon="mdi:dots-vertical" />
 				</DropdownMenu.Trigger>
-				<DropdownMenu.Content
-					class="border-primary-600 bg-primary-800 flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl"
-					side="bottom"
-				>
-					{#each dropdownItems as item}
-						<DropdownMenu.Item class="menu-item context-menu-item pr-6" onclick={item.onClick}>
-							<Icon icon={item.icon} class="mr-1.5 text-lg" />
-
-							{item.label}
-						</DropdownMenu.Item>
-					{/each}
-				</DropdownMenu.Content>
+				<ContextMenuContent type="dropdown" style="dark" items={dropdownItems} />
 			</DropdownMenu.Root>
 		{/if}
 	</div>

@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import Popup from '$lib/components/Popup.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 
 	import ModInfoPopup from './ModInfoPopup.svelte';
 	import ModCardList from './ModCardList.svelte';
-	import ModContextMenuItems from './ModContextMenuItems.svelte';
+	import ModContextMenuContent from './ModContextMenuContent.svelte';
 
 	import { ModType, type Mod, type ModContextItem } from '$lib/types';
 	import {
@@ -83,11 +81,7 @@
 		>
 			<Icon class="text-primary-200 text-2xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
-		<DropdownMenu.Content
-			class="border-primary-500 bg-primary-700 flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl"
-		>
-			<ModContextMenuItems {mod} {locked} contextItems={allContextItems} type="details" />
-		</DropdownMenu.Content>
+		<ModContextMenuContent style="light" {mod} {locked} items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
 
 	<div class="light-scrollbar grow overflow-x-hidden overflow-y-auto pb-2">
