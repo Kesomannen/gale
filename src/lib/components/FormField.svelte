@@ -1,9 +1,11 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	type Props = {
 		label: any;
 		description: any;
 		required?: boolean;
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	};
 
 	let { label, description, required = false, children }: Props = $props();

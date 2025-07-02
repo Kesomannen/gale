@@ -3,8 +3,6 @@
 </script>
 
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import InputField from '$lib/components/InputField.svelte';
 	import Popup from '$lib/components/Popup.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
@@ -79,8 +77,8 @@
 			<Tabs.Content value="text" class="pt-1">
 				<ResizableInputField
 					value={content}
-					on:change={(evt) => {
-						content = evt.target?.value;
+					onchange={(evt) => {
+						content = evt.currentTarget.value;
 						submitValue();
 					}}
 				/>

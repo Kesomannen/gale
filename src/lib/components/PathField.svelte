@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { Button } from 'bits-ui';
 	import Label from './Label.svelte';
 	import Info from './Info.svelte';
 	import type { Snippet } from 'svelte';

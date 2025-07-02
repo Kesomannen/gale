@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { Tabs } from 'bits-ui';
+	import type { Snippet } from 'svelte';
 
 	type Props = {
 		value: string;
 		options: { value: string; label: string }[];
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	};
 
 	let { value = $bindable(), options, children }: Props = $props();

@@ -2,14 +2,15 @@
 	import { Dialog } from 'bits-ui';
 	import Popup from './Popup.svelte';
 	import Button from './Button.svelte';
+	import type { Snippet } from 'svelte';
 
 	type Props = {
 		title?: string;
 		description?: string;
 		open?: boolean;
 		onCancel?: () => void;
-		children?: import('svelte').Snippet;
-		buttons?: import('svelte').Snippet;
+		children?: Snippet;
+		buttons?: Snippet;
 	};
 
 	let {

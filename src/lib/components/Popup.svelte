@@ -4,7 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	import { expoOut, quadIn, quadOut } from 'svelte/easing';
+	import { expoOut, quadIn } from 'svelte/easing';
 
 	type Props = {
 		open: boolean;

@@ -1,19 +1,20 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { Checkbox } from 'bits-ui';
+	import type { ClassValue } from 'clsx';
 
 	type Props = {
 		checked?: boolean;
 		disabled?: boolean;
 		onCheckedChange?: (newValue: boolean) => void;
-		class?: string;
+		class?: ClassValue;
 	};
 
 	let {
 		checked = $bindable(false),
 		disabled = false,
 		onCheckedChange,
-		class: classProp = ''
+		class: classProp
 	}: Props = $props();
 
 	let stateClasses = $derived(

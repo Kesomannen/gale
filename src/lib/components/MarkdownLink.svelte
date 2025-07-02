@@ -1,15 +1,9 @@
 <script lang="ts">
-	type Props = {
-		href?: string;
-		children?: import('svelte').Snippet;
-	};
+	import type { HTMLAnchorAttributes } from 'svelte/elements';
 
-	let { href = '', children }: Props = $props();
-	export const raw = false;
-	export const title = '';
-	export const text = '';
+	let { children, target, ...props }: HTMLAnchorAttributes = $props();
 </script>
 
-<a {href} target="_blank">
+<a {...props} target="_blank">
 	{@render children?.()}
 </a>

@@ -9,13 +9,14 @@
 	import json from 'highlight.js/lib/languages/json';
 	import xml from 'highlight.js/lib/languages/xml';
 	import rehypeHighlight from 'rehype-highlight';
+	import type { ClassValue } from 'clsx';
 
 	type Props = {
 		source: string;
-		class?: string;
+		class?: ClassValue;
 	};
 
-	let { source, class: classProp = '' }: Props = $props();
+	let { source, class: classProp }: Props = $props();
 
 	const plugins: Plugin[] = [
 		gfmPlugin(),

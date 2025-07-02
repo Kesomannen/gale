@@ -1,9 +1,10 @@
 <script lang="ts" generics="T">
+	import type { ClassValue } from 'clsx';
 	import Checkbox from './Checkbox.svelte';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
-		class?: string;
+		class?: ClassValue;
 		title: string;
 		items: T[];
 		maxHeight?: 'none' | 'sm';
@@ -14,7 +15,7 @@
 	};
 
 	let {
-		class: classProp = '',
+		class: classProp,
 		title,
 		items,
 		maxHeight = 'none',
