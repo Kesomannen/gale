@@ -25,6 +25,10 @@
 	import UpdateAllBanner from '$lib/modlist/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
 	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
+	import { defaultContextItems } from '$lib/context';
+	import ModDetails from '$lib/modlist/ModDetails.svelte';
+	import ModListFilters from '$lib/modlist/ModListFilters.svelte';
+	import UnknownModsBanner from '$lib/modlist/UnknownModsBanner.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -69,7 +73,8 @@
 			label: 'Open folder',
 			icon: 'mdi:folder',
 			onclick: (mod) => invoke('open_mod_dir', { uuid: mod.uuid })
-		}
+		},
+		...defaultContextItems
 	];
 
 	let mods: Mod[] = $state([]);
@@ -78,7 +83,7 @@
 	let updates: AvailableUpdate[] = $state([]);
 
 	let modList: ModList;
-	let maxCount: number = $state(0);
+	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
 
 	let removeDependants: DependantsPopup;
@@ -235,84 +240,79 @@
 			$profileQuery.includeNsfw &&
 			$profileQuery.includeDisabled
 	);
+
+	let locked = $derived($activeProfileLocked);
 </script>
 
-<ModList
-	{sortOptions}
-	{contextItems}
-	queryArgs={profileQuery}
-	locked={$activeProfileLocked}
-	bind:this={modList}
-	bind:mods
-	bind:maxCount
-	bind:selected={selectedMod}
->
-	{#snippet details()}
-		{#if selectedMod && isOutdated(selectedMod) && !$activeProfileLocked}
-			<button
-				class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
-				onclick={() => updateMod(selectedMod)}
-			>
-				<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
-				Update to {selectedMod?.versions[0].name}
-			</button>
-		{/if}
-	{/snippet}
+<div class="flex grow overflow-hidden">
+	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
+		<ModListFilters {sortOptions} queryArgs={profileQuery} />
 
-	{#snippet banner()}
-		{#if $activeProfileLocked}
+		{#if locked}
 			<ProfileLockedBanner class="mr-4 mb-1" />
 		{:else}
 			<UpdateAllBanner {updates} />
 		{/if}
 
 		{#if unknownMods.length > 0}
-			<div class="mr-3 mb-1 flex items-center rounded-lg bg-red-600 py-1.5 pr-1 pl-3 text-red-100">
-				<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
-				The following {unknownMods.length === 1 ? 'mod' : 'mods'} could not be found: {unknownMods
-					.map((mod) => mod.fullName)
-					.join(', ')}.
+			<UnknownModsBanner mods={unknownMods} {uninstall} />
+		{/if}
+
+		<ModList
+			{mods}
+			queryArgs={profileQuery}
+			bind:this={modList}
+			bind:maxCount
+			bind:selected={selectedMod}
+		>
+			{#snippet placeholder()}
+				{#if hasRefreshed}
+					{#if totalModCount === 0}
+						<span class="text-lg">No mods installed</span>
+						<br />
+						<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
+							>Click to browse Thunderstore</a
+						>
+					{:else}
+						<span class="text-lg">No matching mods found in profile</span>
+						<br />
+						<span class="text-primary-400">Try to adjust your search query/filters</span>
+					{/if}
+				{/if}
+			{/snippet}
+
+			{#snippet item({ mod, index, isSelected })}
+				<ProfileModListItem
+					{mod}
+					{index}
+					{isSelected}
+					{contextItems}
+					{reorderable}
+					{locked}
+					{ondragstart}
+					{ondragover}
+					{ondragend}
+					ontoggle={(newState) => toggleMod(mod, newState)}
+					onclick={() => modList.selectMod(mod)}
+				/>
+			{/snippet}
+		</ModList>
+	</div>
+
+	{#if selectedMod}
+		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
+			{#if selectedMod && isOutdated(selectedMod) && !locked}
 				<button
-					class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
-					onclick={() => {
-						unknownMods.forEach(uninstall);
-					}}
+					class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
+					onclick={() => updateMod(selectedMod)}
 				>
-					Uninstall {unknownMods.length === 1 ? 'it' : 'them'}?
+					<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
+					Update to {selectedMod?.versions[0].name}
 				</button>
-			</div>
-		{/if}
-	{/snippet}
-
-	{#snippet placeholder()}
-		{#if hasRefreshed}
-			{#if totalModCount === 0}
-				<span class="text-lg">No mods installed</span>
-				<br />
-				<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
-					>Click to browse Thunderstore</a
-				>
-			{:else}
-				<span class="text-lg">No matching mods found in profile</span>
-				<br />
-				<span class="text-primary-400">Try to adjust your search query/filters</span>
 			{/if}
-		{/if}
-	{/snippet}
-
-	{#snippet item(props)}
-		<ProfileModListItem
-			{...props}
-			{reorderable}
-			locked={$activeProfileLocked}
-			{ondragstart}
-			{ondragover}
-			{ondragend}
-			ontoggle={(newState) => toggleMod(props.mod, newState)}
-			onclick={() => modList.selectMod(props.mod)}
-		/>
-	{/snippet}
-</ModList>
+		</ModDetails>
+	{/if}
+</div>
 
 <Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
 	<div class="text-primary-300 mt-4 text-center">

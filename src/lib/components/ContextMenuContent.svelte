@@ -5,15 +5,17 @@
 	import Icon from '@iconify/svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { dropIn, dropOut } from '$lib/transitions';
+	import type { ClassValue } from 'clsx';
 
 	type Props = {
 		items: ContextItem[];
 		type: 'dropdown' | 'context';
 		style: 'dark' | 'light';
 		isSub?: boolean;
+		class?: ClassValue;
 	};
 
-	let { items, type, style, isSub = false }: Props = $props();
+	let { items, type, style, isSub = false, class: classProp }: Props = $props();
 
 	const commonContentClass = 'flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl';
 	const commonItemClass =
@@ -57,7 +59,7 @@
 			{#if open}
 				<div
 					{...props}
-					class={[commonContentClass, contentClass, isSub && submenuClass]}
+					class={[commonContentClass, contentClass, isSub && submenuClass, classProp]}
 					in:fly={dropIn}
 					out:fade={dropOut}
 				>

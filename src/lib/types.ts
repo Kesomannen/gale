@@ -152,9 +152,7 @@ export type SortBy =
 	| 'custom'
 	| 'diskSpace';
 
-export type SortOrder =
-	| 'ascending'
-	| 'descending';
+export type SortOrder = 'ascending' | 'descending';
 
 export type QueryModsArgs = {
 	searchTerm: string;
@@ -177,6 +175,11 @@ export type ConfigEntryId = {
 export type Dependant = {
 	fullName: string;
 	uuid: string;
+};
+
+export type ModId = {
+	packageUuid: string;
+	versionUuid: string;
 };
 
 export type ModActionResponse =
@@ -315,13 +318,7 @@ export type GamePrefs = {
 	platform: Platform | null;
 };
 
-export type Platform =
-	| 'steam'
-	| 'epicGames'
-	| 'oculus'
-	| 'origin'
-	| 'xboxStore';
-
+export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';
 
 export type ContextItem = {
 	label: string;
