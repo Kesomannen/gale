@@ -10,21 +10,21 @@
 
 	let { file, section, locked }: Props = $props();
 
-	let search = '';
+	let search = $state('');
 
 	function filterEntries(entries: ConfigEntry[], search: string) {
 		return entries.filter((entry) => {
 			return entry.name.toLowerCase().includes(search.toLowerCase());
 		});
 	}
-	let { metadata } = $derived(file);
+
 	let shownEntries = $derived(section === null ? [] : filterEntries(section.entries, search));
 </script>
 
-{#if metadata}
+{#if file.metadata}
 	<div class="text-primary-400 mb-1 px-4 font-medium">
-		Created by {metadata.modName}
-		{metadata.modVersion}
+		Created by {file.metadata.modName}
+		{file.metadata.modVersion}
 	</div>
 {/if}
 

@@ -14,7 +14,6 @@
 	import InstallModPopup from '$lib/modlist/InstallModPopup.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
-	import { games } from '$lib/stores.svelte';
 
 	type Props = {
 		children?: Snippet;
@@ -22,12 +21,15 @@
 
 	let { children }: Props = $props();
 
-	$inspect(games);
-
 	onMount(() => {
 		refreshFont();
 		refreshColor('accent');
 		refreshColor('primary');
+
+		// workaround for https://github.com/huntabyte/bits-ui/issues/1639
+		setTimeout(() => {
+			document.body.style.pointerEvents = 'auto';
+		});
 	});
 </script>
 

@@ -69,7 +69,7 @@
 			<span class="text-primary-400 ml-1"> ({typeName})</span>
 		</h4>
 
-		{#if entry.description !== null}
+		{#if entry.description}
 			<p class="mb-1">
 				{entry.description}
 			</p>

@@ -34,7 +34,7 @@
 	{@render children?.()}
 
 	{#snippet field()}
-		{#if canClear === true}
+		{#if canClear}
 			<button
 				class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute right-2 rounded-sm p-1 text-lg"
 				onclick={(evt) => {

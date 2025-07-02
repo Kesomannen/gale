@@ -8,5 +8,5 @@ export function dropInTo({ x, y }: { x?: number; y?: number }) {
 };
 
 export function dropOutFrom({}: { x?: number; y?: number }) {
-	return { duration: 100 };
+	return { duration: 50 };
 }

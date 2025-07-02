@@ -56,9 +56,11 @@
 	function clamp(value: number, min: number, max: number) {
 		return Math.max(min, Math.min(max, value));
 	}
+
 	let fillPercent = $derived(
 		clamp(((content.value - range.start) / (range.end - range.start)) * 100, 0, 100)
 	);
+
 	let decimals = $derived(type === 'int' ? 0 : 1);
 </script>
 
@@ -139,6 +141,7 @@
 	}}
 	class="focus:ring-accent-500 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 hover:ring-1 focus:ring-2 focus:outline-hidden"
 />
+
 <ResetConfigButton {entryId} {locked} {onReset} />
 
 <style>

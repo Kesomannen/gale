@@ -4,7 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	import { quadIn, quadOut } from 'svelte/easing';
+	import { expoOut, quadIn, quadOut } from 'svelte/easing';
 
 	type Props = {
 		open: boolean;
@@ -55,7 +55,7 @@
 				{#if open}
 					<div
 						{...props}
-						transition:fade={{ duration: 100 }}
+						transition:fade={{ duration: 80 }}
 						class="fixed inset-0 z-0 rounded-lg bg-black/60"
 					></div>
 				{/if}
@@ -69,7 +69,7 @@
 			{#if open}
 				<div
 					class="pointer-events-none fixed inset-0 flex items-center justify-center"
-					in:fly={{ duration: 150, easing: quadOut, y: 5 }}
+					in:fly={{ duration: 200, easing: expoOut, y: 8 }}
 					out:fly={{ duration: 50, easing: quadIn, y: 5 }}
 				>
 					<div
