@@ -17,7 +17,7 @@
 		{label}
 	</Menubar.Trigger>
 	<Menubar.Content
-		class="border-primary-600 bg-primary-800 mt-0.5 flex flex-col gap-0.5 rounded-lg border py-1 shadow-xl"
+		class="border-primary-600 bg-primary-800 z-50 mt-0.5 flex flex-col gap-0.5 rounded-lg border py-1 shadow-xl"
 	>
 		{@render children?.()}
 	</Menubar.Content>

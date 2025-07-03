@@ -1,7 +1,7 @@
 <script lang="ts">
-	import GameSelection from '$lib/menu/GameSelection.svelte';
+	import GameSelect from '$lib/menu/GameSelect.svelte';
 	import Popup from '$lib/components/Popup.svelte';
-	import BigButton from '$lib/components/Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import PathPref from '$lib/prefs/PathPref.svelte';
 
 	import type { Prefs, R2ImportData } from '$lib/types';
@@ -60,7 +60,7 @@
 	<div class="text-primary-300">
 		{#if stage === 'gameSelect'}
 			To get started, select a game to mod:
-			<GameSelection onselect={onSelectGame} />
+			<GameSelect onselect={onSelectGame} />
 		{:else if stage === 'importProfiles'}
 			<p>You can automatically transfer profiles from another mod manager to Gale.</p>
 
@@ -71,11 +71,9 @@
 			<ImportR2Flow bind:importData bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
-				<BigButton color="primary" class="mr-auto" onclick={() => (stage = 'gameSelect')}
-					>Back</BigButton
-				>
-				<BigButton color="primary" onclick={() => (stage = 'settings')}>Skip</BigButton>
-				<BigButton color="accent" onclick={importProfiles}>Import</BigButton>
+				<Button color="primary" class="mr-auto" onclick={() => (stage = 'gameSelect')}>Back</Button>
+				<Button color="primary" onclick={() => (stage = 'settings')}>Skip</Button>
+				<Button color="accent" onclick={importProfiles}>Import</Button>
 			</div>
 		{:else if stage === 'settings'}
 			<p>
@@ -99,12 +97,12 @@
 			</div>
 
 			<div class="mt-3 flex justify-between">
-				<BigButton
+				<Button
 					color="primary"
 					onclick={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
-					>Back</BigButton
+					>Back</Button
 				>
-				<BigButton color="accent" onclick={() => (stage = 'end')}>Next</BigButton>
+				<Button color="accent" onclick={() => (stage = 'end')}>Next</Button>
 			</div>
 		{:else if stage === 'end'}
 			<p>That's it, you're all set up to start modding!</p>
