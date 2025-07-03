@@ -1,14 +1,17 @@
 use core::str;
 use std::{
+    io::Read,
     sync::LazyLock,
     time::{Duration, Instant},
 };
 
-use eyre::Result;
+use bytes::Bytes;
+use eyre::{Context, Result};
+use flate2::read::GzDecoder;
 use indexmap::IndexMap;
 use tauri::{AppHandle, Emitter};
-use tracing::{debug, info, warn};
-use uuid::Uuid;
+use tokio::sync::mpsc;
+use tracing::{debug, error, info, warn};
 
 use crate::{game::Game, logger, state::ManagerExt, thunderstore::PackageListing};
 
@@ -82,84 +85,75 @@ pub(super) async fn fetch_packages(
     write_directly: bool,
     app: &AppHandle,
 ) -> Result<()> {
-    const UPDATE_INTERVAL: Duration = Duration::from_millis(250);
-    const INSERT_EVERY: usize = 1000;
+    let start_time = Instant::now();
 
-    debug!(
-        write_directly,
-        game = game.slug.to_string(),
-        "fetching packages"
+    let listing_url = format!(
+        "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
+        game.slug
     );
 
-    let url = format!("https://thunderstore.io/c/{}/api/v1/package/", game.slug);
-    let mut response = app.http().get(url).send().await?.error_for_status()?;
+    let bytes = app
+        .http()
+        .get(listing_url)
+        .send()
+        .await?
+        .error_for_status()?
+        .bytes()
+        .await?;
 
-    let mut i = 0;
+    let urls: Vec<String> = serde_json::from_reader(GzDecoder::new(&bytes[..]))?;
+
     let mut package_count = 0;
-
-    let mut byte_buffer = Vec::new();
-    let mut str_buffer = String::new();
     let mut package_buffer = IndexMap::new();
 
-    let start_time = Instant::now();
-    let mut last_update = Instant::now();
+    let (tx, mut rx) = mpsc::channel(urls.len());
 
-    // response is just one long JSON array
-    while let Some(chunk) = response.chunk().await? {
-        byte_buffer.extend_from_slice(&chunk);
-        let Ok(chunk) = str::from_utf8(&byte_buffer) else {
-            continue;
+    let handle = app.to_owned();
+    tokio::spawn(async move {
+        if let Err(err) = request_chunks(tx, urls, handle).await {
+            error!("failed to request package listing chunks: {:#}", err);
+        }
+    });
+
+    while let Some(chunk) = rx.recv().await {
+        let mut text = String::new();
+        let mut decoder = GzDecoder::new(&chunk[..]);
+        decoder.read_to_string(&mut text)?;
+
+        let packages: Vec<PackageListing> = serde_json::from_str(&text)?;
+
+        let packages = packages
+            .into_iter()
+            .filter(|package| {
+                !EXCLUDED_PACKAGES
+                    .iter()
+                    .any(|excluded| package.full_name() == *excluded)
+            })
+            .map(|package| (package.uuid, package));
+
+        if write_directly {
+            let mut state = app.lock_thunderstore();
+            let prev_count = state.packages.len();
+            state.packages.extend(packages);
+
+            package_count += state.packages.len() - prev_count;
+        } else {
+            package_buffer.extend(packages);
+
+            package_count = package_buffer.len();
         };
 
-        if i == 0 {
-            str_buffer.extend(chunk.chars().skip(1)); // remove leading [
-        } else {
-            str_buffer.push_str(chunk);
-        }
-
-        byte_buffer.clear();
-
-        // hacky solution to find the end of every package but what can you do
-        while let Some(index) = str_buffer.find("}]},") {
-            let (json, _) = str_buffer.split_at(index + 3);
-
-            insert_package(&mut package_count, &mut package_buffer, json);
-
-            str_buffer.replace_range(..index + 4, "");
-        }
-
-        // do this in bigger chunks to not have to lock the state too often
-        if write_directly && package_buffer.len() >= INSERT_EVERY {
-            let mut state = app.lock_thunderstore();
-            state.packages.extend(package_buffer.drain(..));
-        }
-
-        if last_update.elapsed() >= UPDATE_INTERVAL {
-            emit_update(package_count, app);
-            last_update = Instant::now();
-        }
-
-        i += 1;
+        emit_update(package_count, app);
     }
-
-    // handle the remaining response (without the closing square brace)
-    insert_package(
-        &mut package_count,
-        &mut package_buffer,
-        &str_buffer[..str_buffer.len() - 1],
-    );
 
     let mut state = app.lock_thunderstore();
-    if write_directly {
-        // add any remaining packages
-        state.packages.extend(package_buffer.into_iter());
-    } else {
-        // remove all packages and replace them with the new ones
-        state.packages = package_buffer;
-    }
 
     state.packages_fetched = true;
     state.is_fetching = false;
+
+    if !write_directly {
+        state.packages = package_buffer;
+    }
 
     debug!(
         "fetched {} packages for {} in {:?}",
@@ -179,17 +173,20 @@ pub(super) async fn fetch_packages(
         )
         .ok();
     }
-}
 
-fn insert_package(count: &mut usize, buffer: &mut IndexMap<Uuid, PackageListing>, json: &str) {
-    match serde_json::from_str::<PackageListing>(json) {
-        Ok(package) => {
-            if !EXCLUDED_PACKAGES.contains(&package.full_name()) {
-                buffer.insert(package.uuid, package);
-                *count += 1;
-            }
+    async fn request_chunks(
+        tx: mpsc::Sender<Bytes>,
+        urls: Vec<String>,
+        app: AppHandle,
+    ) -> Result<()> {
+        for url in urls {
+            let bytes = app.http().get(url).send().await?.bytes().await?;
+            tx.send(bytes)
+                .await
+                .context("chunk channel closed too early")?;
         }
-        Err(err) => warn!("failed to deserialize package: {}", err),
+
+        Ok(())
     }
 }
 

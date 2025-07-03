@@ -1,6 +1,6 @@
 [package]
 name = "gale"
-version = "1.8.3"
+version = "1.8.4"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"
@@ -73,6 +73,7 @@ blake3 = "1.8.2"
 which = { version = "7.0.3", features = ["tracing"] }
 steamlocate = "2.0.1"
 regashii = "0.4.0"
+flate2 = "1.1.2"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

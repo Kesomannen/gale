@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.8.4 (2025-07-03)
 
 ### Fixed
 
+- Mod updates being delayed for 8-10 hours
 - Window title not changing when creating or renaming profiles
 
 ## 1.8.3 (2025-06-21)
