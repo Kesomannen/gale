@@ -53,7 +53,7 @@
 </script>
 
 {#if mods.length === 0}
-	<div class="text-primary-300 mt-4 text-center">
+	<div class="text-primary-300 text-center">
 		{@render placeholder?.()}
 	</div>
 {:else}

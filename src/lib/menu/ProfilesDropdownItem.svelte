@@ -35,7 +35,7 @@
 		isActive
 			? 'text-primary-300 hover:text-primary-200 font-medium'
 			: 'text-primary-400 hover:text-primary-300',
-		'group hover:bg-primary-700 flex cursor-default items-center rounded-md py-1 pr-1 pl-3 text-left'
+		'group hover:bg-primary-700 flex cursor-default items-center rounded-sm py-1 pr-1 pl-3 text-left'
 	]}
 	onclick={() => setActiveProfile(index)}
 >
