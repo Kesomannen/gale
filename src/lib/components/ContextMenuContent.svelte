@@ -76,7 +76,7 @@
 
 										<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 									</SubTrigger>
-									<ContextMenuContent {type} {style} isSub={true} items={children} />
+									<ContextMenuContent {type} {style} isSub items={children} />
 								</Sub>
 							{:else}
 								<Item class={[commonItemClass, itemClass, 'pr-6']} {onclick}>

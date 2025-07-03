@@ -14,6 +14,7 @@
 	import InstallModPopup from '$lib/modlist/InstallModPopup.svelte';
 	import InstallProgressPopup from '$lib/modlist/InstallProgressPopup.svelte';
 	import WelcomePopup from '$lib/menu/WelcomePopup.svelte';
+	import Navbar from '$lib/menu/Navbar.svelte';
 
 	type Props = {
 		children?: Snippet;
@@ -48,13 +49,7 @@
 		<Contextbar />
 
 		<div class="relative flex grow overflow-hidden">
-			<nav class="border-primary-600 bg-primary-900 flex shrink-0 flex-col gap-1 border-r p-3">
-				<NavbarLink to="/" icon="mdi:account-circle" label="Profile" />
-				<NavbarLink to="/browse" icon="mdi:store-search" label="Browse" />
-				<NavbarLink to="/config" icon="mdi:file-cog" label="Config" />
-				<NavbarLink to="/modpack" icon="mdi:package-variant" label="Modpack" />
-				<NavbarLink to="/prefs" icon="mdi:settings" label="Settings" />
-			</nav>
+			<Navbar />
 
 			{@render children?.()}
 		</div>

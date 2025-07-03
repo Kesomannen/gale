@@ -79,13 +79,14 @@
 			<div class="shrink grow overflow-hidden pr-2 pl-3 text-left">
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div
-						class="shrink truncate font-medium {mod.enabled === false
-							? 'text-primary-300 line-through'
-							: 'text-white'}"
+						class={[
+							mod.enabled === false ? 'text-primary-300 line-through' : 'text-white',
+							'shrink truncate font-medium'
+						]}
 					>
 						{mod.name.replace(/_/g, ' ')}
 					</div>
-					<div class="px-1 {descriptionClasses}">
+					<div class={[descriptionClasses, 'px-1']}>
 						{mod.version ?? '?.?.?'}
 					</div>
 					{#if mod.isPinned}

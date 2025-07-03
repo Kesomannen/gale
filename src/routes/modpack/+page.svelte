@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import InputField from '$lib/components/InputField.svelte';
 	import FormField from '$lib/components/FormField.svelte';
 	import Checkbox from '$lib/components/Checkbox.svelte';
-	import BigButton from '$lib/components/Button.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import PathField from '$lib/components/PathField.svelte';
 	import Markdown from '$lib/components/Markdown.svelte';
 	import Link from '$lib/components/Link.svelte';
@@ -15,13 +13,13 @@
 	import type { ModpackArgs } from '$lib/types';
 	import { activeProfile, activeGame, categories } from '$lib/stores.svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { fade } from 'svelte/transition';
-	import Icon from '@iconify/svelte';
 
 	import { Dialog } from 'bits-ui';
 	import Popup from '$lib/components/Popup.svelte';
 	import Checklist from '$lib/components/Checklist.svelte';
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
+	import { toHeaderCase } from 'js-convert-case';
+	import Spinner from '$lib/components/Spinner.svelte';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -163,16 +161,19 @@
 			categories: selectedCategories
 		};
 	}
-	run(() => {
+
+	$effect(() => {
 		$activeProfile;
 		refresh();
 	});
+
 	// some communities don't have a specific modpack category
 	let modpackCategoryExists = $derived(
 		$categories.some((category) => category.slug === 'modpacks')
 	);
+
 	// make sure the modpacks category is always selected if it exists
-	run(() => {
+	$effect(() => {
 		if (
 			modpackCategoryExists &&
 			selectedCategories &&
@@ -181,216 +182,219 @@
 			selectedCategories = ['modpacks', ...selectedCategories];
 		}
 	});
-	run(() => {
+
+	$effect(() => {
 		includedFileCount = countIncludedFiles(includeFiles);
 	});
 </script>
 
 <div class="relative mx-auto flex w-full max-w-4xl flex-col gap-1.5 overflow-y-auto px-6 py-4">
 	{#if loading}
-		<div
-			class="text-primary-200 fixed inset-0 flex items-center justify-center bg-black/40 text-lg"
-			transition:fade={{ duration: 50 }}
-		>
-			<Icon icon="mdi:loading" class="mr-4 animate-spin" />
+		<div class="text-primary-200 absolute inset-0 flex items-center justify-center gap-2 text-lg">
+			<Spinner />
 			{loading}
 		</div>
-	{/if}
-
-	<FormField
-		label="Name"
-		description="The name of the modpack, as shown on Thunderstore. Make sure this stays consistent between updates. Cannot contain spaces or hyphens."
-		required={true}
-	>
-		<InputField
-			onchange={saveArgs}
-			bind:value={name}
-			placeholder="Enter name..."
+	{:else}
+		<FormField
+			label="Name"
+			description="The name of the modpack, as shown on Thunderstore. Make sure this stays consistent between updates. Cannot contain spaces or hyphens."
 			required={true}
-			pattern="^[a-zA-Z0-9_]+$"
-			class="w-full"
-		/>
-	</FormField>
-
-	<FormField
-		label="Author"
-		description="The name of the Thunderstore team connected to your API token."
-		required={true}
-	>
-		<InputField
-			onchange={saveArgs}
-			bind:value={author}
-			placeholder="Enter author..."
-			required={true}
-			class="w-full"
-		/>
-	</FormField>
-
-	<FormField label="Description" description="A short description of the modpack." required={true}>
-		<InputField
-			onchange={saveArgs}
-			bind:value={description}
-			placeholder="Enter description..."
-			required={true}
-			maxlength={250}
-			class="w-full"
-		/>
-	</FormField>
-
-	<FormField
-		label="Categories"
-		description="The categories that the modpack belongs to. 'Modpacks' is always included."
-	>
-		<Select
-			items={$categories.map((category) => ({
-				label: category.name,
-				value: category.slug
-			}))}
-			bind:value={selectedCategories}
-			onValueChange={saveArgs}
-			type="multiple"
 		>
-			{#snippet label()}
-				{#if selectedCategories.length === 0}
-					<span class="text-primary-400 truncate pl-2">Select categories...</span>
-				{:else}
-					<div class="flex flex-wrap gap-1">
-						{#each selectedCategories as category}
-							<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
-								<span class="truncate overflow-hidden">{category}</span>
+			<InputField
+				onchange={saveArgs}
+				bind:value={name}
+				placeholder="Enter name..."
+				required={true}
+				pattern="^[a-zA-Z0-9_]+$"
+				class="w-full"
+			/>
+		</FormField>
 
-								<button
-									class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
-									onclick={(evt) => {
-										evt.stopPropagation();
-										selectedCategories = selectedCategories.filter((cat) => cat !== category);
-									}}
-								>
-									x
-								</button>
-							</div>
-						{/each}
-					</div>
-				{/if}
-			{/snippet}
-		</Select>
-	</FormField>
+		<FormField
+			label="Author"
+			description="The name of the Thunderstore team connected to your API token."
+			required={true}
+		>
+			<InputField
+				onchange={saveArgs}
+				bind:value={author}
+				placeholder="Enter author..."
+				required={true}
+				class="w-full"
+			/>
+		</FormField>
 
-	<FormField
-		label="Version"
-		description="The version number of the modpack, in the format of X.Y.Z.
+		<FormField
+			label="Description"
+			description="A short description of the modpack."
+			required={true}
+		>
+			<InputField
+				onchange={saveArgs}
+				bind:value={description}
+				placeholder="Enter description..."
+				required={true}
+				maxlength={250}
+				class="w-full"
+			/>
+		</FormField>
+
+		<FormField
+			label="Categories"
+			description="The categories that the modpack belongs to. 'Modpacks' is always included."
+		>
+			<Select
+				items={$categories.map((category) => ({
+					label: category.name,
+					value: category.slug
+				}))}
+				bind:value={selectedCategories}
+				onValueChange={saveArgs}
+				type="multiple"
+				triggerClass="w-full"
+			>
+				{#snippet label()}
+					{#if selectedCategories.length === 0}
+						<span class="text-primary-400 truncate pl-2">Select categories...</span>
+					{:else}
+						<div class="flex flex-wrap gap-1">
+							{#each selectedCategories as category}
+								<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
+									<span class="truncate overflow-hidden">{toHeaderCase(category)}</span>
+
+									<button
+										class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
+										onclick={(evt) => {
+											evt.stopPropagation();
+											selectedCategories = selectedCategories.filter((cat) => cat !== category);
+										}}
+									>
+										x
+									</button>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				{/snippet}
+			</Select>
+		</FormField>
+
+		<FormField
+			label="Version"
+			description="The version number of the modpack, in the format of X.Y.Z.
 			           You cannot publish with the same version number twice."
-		required={true}
-	>
-		<InputField
-			onchange={saveArgs}
-			bind:value={versionNumber}
-			placeholder="Enter version number..."
 			required={true}
-			pattern="^\d+\.\d+\.\d+$"
-			class="w-full"
-		/>
-	</FormField>
-
-	<FormField label="Website" description="The URL of a website of your choosing. Optional.">
-		<InputField
-			onchange={saveArgs}
-			bind:value={websiteUrl}
-			placeholder="Enter website URL..."
-			pattern={URL_PATTERN}
-			class="w-full"
-		/>
-	</FormField>
-
-	<FormField
-		label="Icon"
-		description="Path to the icon of the modpack. This is automatically resized to 256x256 pixels, so
-                 it's recommended to be a square image to avoid stretching or squishing."
-		required={true}
-	>
-		<PathField icon="mdi:file-image" onclick={browseIcon} value={iconPath} />
-	</FormField>
-
-	<FormField
-		label="Readme"
-		description="A longer description of the modpack, which supports markdown formatting (similarly to Discord messages)."
-		required={true}
-	>
-		<ResizableInputField
-			on:change={saveArgs}
-			bind:value={readme}
-			placeholder="Enter readme..."
-			mono={true}
-		/>
-
-		<details class="mt-1">
-			<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
-			<Markdown class="mt-1 px-4" source={readme} />
-			<div class="bg-primary-500 mt-4 h-[2px]"></div>
-		</details>
-	</FormField>
-
-	<FormField
-		label="Changelog"
-		description="A list of changes in the modpack, also supports markdown formatting. Leave empty to omit."
-	>
-		<ResizableInputField
-			on:change={saveArgs}
-			bind:value={changelog}
-			placeholder="Enter changelog..."
-			mono={true}
-		/>
-
-		<BigButton color="primary" onclick={() => generateChangelog(false)}
-			>Generate for {versionNumber}</BigButton
 		>
-		<BigButton color="primary" onclick={() => generateChangelog(true)}>Generate all</BigButton>
+			<InputField
+				onchange={saveArgs}
+				bind:value={versionNumber}
+				placeholder="Enter version number..."
+				required={true}
+				pattern="^\d+\.\d+\.\d+$"
+				class="w-full"
+			/>
+		</FormField>
 
-		<details class="mt-1">
-			<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
-			<Markdown class="mt-1 px-4" source={changelog} />
-			<div class="bg-primary-500 mt-4 h-[2px]"></div>
-		</details>
-	</FormField>
+		<FormField label="Website" description="The URL of a website of your choosing. Optional.">
+			<InputField
+				onchange={saveArgs}
+				bind:value={websiteUrl}
+				placeholder="Enter website URL..."
+				pattern={URL_PATTERN}
+				class="w-full"
+			/>
+		</FormField>
 
-	<FormField
-		label="Include files ({includedFileCount}/{includeFiles?.size})"
-		description="Choose which config files to include in the modpack."
-	>
-		<details>
-			{#if includeFiles}
-				<summary class="text-primary-300 cursor-pointer text-sm">Show list</summary>
-				<Checklist
-					class="mt-1"
-					title="Include all"
-					items={Array.from(includeFiles.keys()).sort()}
-					getLabel={(item) => item}
-					get={(item) => includeFiles.get(item) ?? false}
-					set={(item, _, value) => {
-						includeFiles.set(item, value);
-						includeFiles = includeFiles;
-					}}
-				/>
-			{/if}
-		</details>
-	</FormField>
+		<FormField
+			label="Icon"
+			description="Path to the icon of the modpack. This is automatically resized to 256x256 pixels, so
+                 it's recommended to be a square image to avoid stretching or squishing."
+			required={true}
+		>
+			<PathField icon="mdi:file-image" onclick={browseIcon} value={iconPath} />
+		</FormField>
 
-	<div class="text-primary-200 mt-1 flex items-center text-lg font-medium">
-		<span class="max-w-96 grow">Contains NSFW content</span>
+		<FormField
+			label="Readme"
+			description="A longer description of the modpack, which supports markdown formatting (similarly to Discord messages)."
+			required={true}
+		>
+			<ResizableInputField
+				onchange={saveArgs}
+				bind:value={readme}
+				placeholder="Enter readme..."
+				mono={true}
+			/>
 
-		<Checkbox onCheckedChange={saveArgs} bind:checked={nsfw} />
-	</div>
+			<details class="mt-1">
+				<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
+				<Markdown class="mt-1 px-4" source={readme} />
+				<div class="bg-primary-500 mt-4 h-[2px]"></div>
+			</details>
+		</FormField>
 
-	<div class="text-primary-200 flex items-center text-lg font-medium">
-		<span class="max-w-96 grow">Include disabled mods</span>
+		<FormField
+			label="Changelog"
+			description="A list of changes in the modpack, also supports markdown formatting. Leave empty to omit."
+		>
+			<ResizableInputField
+				onchange={saveArgs}
+				bind:value={changelog}
+				placeholder="Enter changelog..."
+				mono={true}
+			/>
 
-		<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
-	</div>
+			<Button color="primary" onclick={() => generateChangelog(false)}
+				>Generate for {versionNumber}</Button
+			>
+			<Button color="primary" onclick={() => generateChangelog(true)}>Generate all</Button>
 
-	<div class="mt-3 flex justify-end gap-2">
-		<BigButton color="primary" onclick={exportToFile}>Export to file</BigButton>
-		<BigButton color="accent" onclick={uploadToThunderstore}>Publish on Thunderstore</BigButton>
-	</div>
+			<details class="mt-1">
+				<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
+				<Markdown class="mt-1 px-4" source={changelog} />
+				<div class="bg-primary-500 mt-4 h-[2px]"></div>
+			</details>
+		</FormField>
+
+		<FormField
+			label="Include files ({includedFileCount}/{includeFiles?.size})"
+			description="Choose which config files to include in the modpack."
+		>
+			<details>
+				{#if includeFiles}
+					<summary class="text-primary-300 cursor-pointer text-sm">Show list</summary>
+					<Checklist
+						class="mt-1"
+						title="Include all"
+						items={Array.from(includeFiles.keys()).sort()}
+						getLabel={(item) => item}
+						get={(item) => includeFiles.get(item) ?? false}
+						set={(item, _, value) => {
+							includeFiles.set(item, value);
+							includeFiles = includeFiles;
+						}}
+					/>
+				{/if}
+			</details>
+		</FormField>
+
+		<div class="text-primary-200 mt-1 flex items-center text-lg font-medium">
+			<span class="max-w-96 grow">Contains NSFW content</span>
+
+			<Checkbox onCheckedChange={saveArgs} bind:checked={nsfw} />
+		</div>
+
+		<div class="text-primary-200 flex items-center text-lg font-medium">
+			<span class="max-w-96 grow">Include disabled mods</span>
+
+			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
+		</div>
+
+		<div class="mt-3 flex justify-end gap-2">
+			<Button color="primary" onclick={exportToFile}>Export to file</Button>
+			<Button color="accent" onclick={uploadToThunderstore}>Publish on Thunderstore</Button>
+		</div>
+	{/if}
 </div>
 
 <ApiKeyPopup />

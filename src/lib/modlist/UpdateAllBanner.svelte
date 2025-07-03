@@ -18,6 +18,7 @@
 	import * as api from '$lib/api';
 	import BigButton from '$lib/components/Button.svelte';
 	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -26,7 +27,7 @@
 	let { updates }: Props = $props();
 
 	let popupOpen = $state(false);
-	let include: Map<AvailableUpdate, boolean> = $state(new Map());
+	let include: SvelteMap<AvailableUpdate, boolean> = $state(new SvelteMap());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
 
@@ -96,10 +97,7 @@
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
 					onclick={() => {
 						update.ignore = true;
-						updates = updates; // force reactivity
-
 						include.delete(update);
-						include = include; // force reactivity
 
 						api.profile.update.ignore(update.versionUuid);
 					}}><Icon icon="mdi:notifications-off" /></button

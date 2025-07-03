@@ -10,4 +10,4 @@
 	let { class: classProp }: Props = $props();
 </script>
 
-<Icon icon="mdi:loading" class={clsx([classProp, 'animate-spin'])} />
+<Icon icon="mdi:loading" class={clsx(classProp, 'animate-spin')} />

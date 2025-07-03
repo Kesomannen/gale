@@ -270,12 +270,6 @@
 						<br />
 						<span class="text-primary-400">Try to adjust your search query/filters</span>
 					{/if}
-				{:else}
-					<div class="mt-2 space-y-2">
-						{#each Array.from({ length: 3 }) as _, i (i)}
-							<div class="bg-primary-700 h-14 w-full animate-pulse rounded-lg"></div>
-						{/each}
-					</div>
 				{/if}
 			{/snippet}
 
