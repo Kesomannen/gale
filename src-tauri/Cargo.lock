@@ -1708,7 +1708,7 @@ dependencies = [
 
 [[package]]
 name = "gale"
-version = "1.8.3"
+version = "1.8.4"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -1717,6 +1717,7 @@ dependencies = [
  "clap",
  "dirs-next",
  "eyre",
+ "flate2",
  "futures-util",
  "heck 0.5.0",
  "image",
