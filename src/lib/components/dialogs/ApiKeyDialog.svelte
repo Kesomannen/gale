@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-	import BigButton from '$lib/components/ui/Button.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import Link from '$lib/components/ui/Link.svelte';
@@ -49,6 +49,6 @@
 	>
 
 	{#snippet buttons()}
-		<BigButton color="accent" onclick={submit}>Submit</BigButton>
+		<Button color="accent" onclick={submit}>Submit</Button>
 	{/snippet}
 </ConfirmDialog>

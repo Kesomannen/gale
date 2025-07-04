@@ -30,7 +30,6 @@ export function pushToast(toast: Toast) {
 
 	setTimeout(
 		() => {
-			console.log('clearing toast');
 			toasts.update((toasts) => {
 				toasts.shift();
 				return toasts;
