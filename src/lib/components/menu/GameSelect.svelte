@@ -1,5 +1,5 @@
 <script lang="ts">
-	import GameListItem from './GameListItem.svelte';
+	import GameSelectItem from './GameSelectItem.svelte';
 
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 	import { games } from '$lib/stores.svelte';
@@ -52,7 +52,7 @@
 	<div class="mt-1 flex h-80 flex-col overflow-y-scroll">
 		{#if shownGames.length > 0}
 			{#each shownGames as game}
-				<GameListItem
+				<GameSelectItem
 					{game}
 					{onselect}
 					onfavorite={(favorite) => {

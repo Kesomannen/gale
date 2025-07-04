@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import type { R2ImportData } from '$lib/types';
-	import ImportR2Flow from '../import/ImportR2Flow.svelte';
+	import ImportR2Flow from '../ui/ImportR2Flow.svelte';
 
 	type Props = {
 		open: boolean;

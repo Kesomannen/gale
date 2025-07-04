@@ -5,7 +5,7 @@
 	import PathPref from '$lib/components/prefs/PathPref.svelte';
 
 	import type { Prefs, R2ImportData } from '$lib/types';
-	import ImportR2Flow from '$lib/components/import/ImportR2Flow.svelte';
+	import ImportR2Flow from '$lib/components/ui/ImportR2Flow.svelte';
 	import Icon from '@iconify/svelte';
 	import * as api from '$lib/api';
 	import { onMount } from 'svelte';
