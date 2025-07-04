@@ -25,7 +25,7 @@
 
 	let listStart = $state(0);
 	let listEnd = $state(0);
-	let virtualList: VirtualList<Mod> | null = $state(null);
+	let virtualList: VirtualList<Mod, string> | null = $state(null);
 
 	$effect(() => {
 		if (listEnd > mods.length - 2 && mods.length === maxCount) {
@@ -60,6 +60,7 @@
 	<VirtualList
 		itemHeight={66}
 		items={mods}
+		rowId={(mod) => mod.uuid}
 		bind:this={virtualList}
 		bind:start={listStart}
 		bind:end={listEnd}

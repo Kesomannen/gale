@@ -5,7 +5,7 @@
 	import Icon from '@iconify/svelte';
 	import { getVersion } from '@tauri-apps/api/app';
 	import { onMount } from 'svelte';
-	import { isChecking, nextUpdate, refreshUpdate } from '../menu/Updater.svelte';
+	import { isChecking, nextUpdate, refreshUpdate } from '../toolbar/Updater.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	type Props = {

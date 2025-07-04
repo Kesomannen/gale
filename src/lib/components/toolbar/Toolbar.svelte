@@ -4,7 +4,7 @@
 	import { activeGame } from '$lib/stores.svelte';
 	import * as api from '$lib/api';
 	import Icon from '@iconify/svelte';
-	import GameSelect from '$lib/components/menu/GameSelect.svelte';
+	import GameSelect from '$lib/components/toolbar/GameSelect.svelte';
 	import Updater from './Updater.svelte';
 	import Syncer from './Syncer.svelte';
 	import ProfilesDropdown from './ProfilesDropdown.svelte';

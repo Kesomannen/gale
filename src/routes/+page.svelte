@@ -252,15 +252,13 @@
 			{#snippet placeholder()}
 				{#if hasRefreshed}
 					{#if totalModCount === 0}
-						<span class="text-lg">No mods installed</span>
-						<br />
+						<div class="mt-4 text-lg">No mods installed</div>
 						<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
 							>Click to browse Thunderstore</a
 						>
 					{:else}
-						<span class="text-lg">No matching mods found in profile</span>
-						<br />
-						<span class="text-primary-400">Try to adjust your search query/filters</span>
+						<div class="mt-4 text-lg">No matching mods found in profile</div>
+						<div class="text-primary-400">Try to adjust your search query/filters</div>
 					{/if}
 				{/if}
 			{/snippet}

@@ -1,9 +1,9 @@
-<script lang="ts" generics="T">
+<script lang="ts" generics="T, Key = number">
 	import { run } from 'svelte/legacy';
 
 	// (c) 2018 Rich Harris
 	// https://github.com/sveltejs/svelte-virtual-list/blob/master/LICENSE
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, type Snippet } from 'svelte';
 
 	type Props = {
 		// props
@@ -13,7 +13,8 @@
 		// read-only, but visible to consumers via bind:start
 		start?: number;
 		end?: number;
-		children?: import('svelte').Snippet<[any]>;
+		rowId?: (data: T) => Key;
+		children?: Snippet<[{ item: T; index: number }]>;
 	};
 
 	let {
@@ -22,6 +23,7 @@
 		itemHeight = undefined,
 		start = $bindable(0),
 		end = $bindable(0),
+		rowId,
 		children
 	}: Props = $props();
 
@@ -36,7 +38,7 @@
 			return { index: i + start, data };
 		})
 	);
-	let mounted: boolean = $state();
+	let mounted: boolean = $state(false);
 
 	let top = $state(0);
 	let bottom = $state(0);
@@ -164,7 +166,7 @@
 		bind:this={contents}
 		style="padding-top: {top}px; padding-bottom: {bottom}px;"
 	>
-		{#each visible as row (row.index)}
+		{#each visible as row (rowId?.(row.data) ?? row.index)}
 			<svelte-virtual-list-row>
 				{#if children}{@render children({ item: row.data, index: row.index })}{:else}Missing
 					template{/if}

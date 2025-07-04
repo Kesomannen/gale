@@ -103,9 +103,8 @@
 		>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
-					<span class="text-lg">No matching mods found</span>
-					<br />
-					<span class="text-primary-400">Try to adjust your search query/filters</span>
+					<div class="mt-4 text-lg">No matching mods found</div>
+					<div class="text-primary-400">Try to adjust your search query/filters</div>
 				{/if}
 			{/snippet}
 

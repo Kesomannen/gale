@@ -30,30 +30,39 @@ export function shortenNum(value: number): string {
 	return (value / Math.pow(1000, i)).toFixed(1) + ['', 'k', 'M', 'G', 'T'][i];
 }
 
-export function timeSince(date: Date): string {
-	var seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-	var interval = Math.floor(seconds / 31536000);
+export function timeSince(date: Date | string): string {
+	let seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
 
-	if (interval > 1) {
-		return interval + ' years';
+	let [interval, str] = (() => {
+		let interval = Math.floor(seconds / (60 * 60 * 24 * 365.25));
+		if (interval >= 1) return [interval, 'year'];
+
+		interval = Math.floor(seconds / (60 * 60 * 24 * 30));
+		if (interval >= 1) return [interval, 'month'];
+
+		interval = Math.floor(seconds / (60 * 60 * 24 * 7));
+		if (interval >= 1) return [interval, 'week'];
+
+		interval = Math.floor(seconds / (60 * 60 * 24));
+		if (interval >= 1) return [interval, 'day'];
+
+		interval = Math.floor(seconds / (60 * 60));
+		if (interval >= 1) return [interval, 'hour'];
+
+		interval = Math.floor(seconds / 60);
+		if (interval >= 1) return [interval, 'second'];
+
+		return [null, null];
+	})();
+
+	switch (interval) {
+		case null:
+			return 'a moment';
+		case 1:
+			return `a ${str}`;
+		default:
+			return `${interval} ${str}s`;
 	}
-	interval = Math.floor(seconds / 2592000);
-	if (interval > 1) {
-		return interval + ' months';
-	}
-	interval = Math.floor(seconds / 86400);
-	if (interval > 1) {
-		return interval + ' days';
-	}
-	interval = Math.floor(seconds / 3600);
-	if (interval > 1) {
-		return interval + ' hours';
-	}
-	interval = Math.floor(seconds / 60);
-	if (interval > 1) {
-		return interval + ' minutes';
-	}
-	return 'A moment';
 }
 
 export function isOutdated(mod: Mod): boolean {
@@ -127,10 +136,10 @@ export function discordAvatarUrl(user: SyncUser) {
 }
 
 export function selectItems(
-	items: string[], 
+	items: string[],
 	getLabel: (item: string) => string = (value) => value as string
 ) {
-	return items.map(item => ({ value: item, label: getLabel(item)}))
+	return items.map((item) => ({ value: item, label: getLabel(item) }));
 }
 
 export function emptyOrUndefined(str: string) {

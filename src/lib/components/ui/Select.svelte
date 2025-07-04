@@ -69,7 +69,7 @@
 			<div
 				class={[
 					label || selectedLabel ? 'text-primary-300' : 'text-primary-400',
-					' group-disabled:text-primary-400 shrink grow truncate text-left'
+					'group-disabled:text-primary-400 shrink grow truncate text-left'
 				]}
 			>
 				{label ?? selectedLabel ?? placeholder}

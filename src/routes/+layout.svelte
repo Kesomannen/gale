@@ -4,16 +4,16 @@
 	import { Tooltip } from 'bits-ui';
 
 	import Menubar from '$lib/components/menubar/Menubar.svelte';
-	import Toolbar from '$lib/components/menu/Toolbar.svelte';
-	import Statusbar from '$lib/components/menu/Statusbar.svelte';
-	import Toasts from '$lib/components/menu/Toasts.svelte';
+	import Toolbar from '$lib/components/toolbar/Toolbar.svelte';
+	import Statusbar from '$lib/components/misc/Statusbar.svelte';
+	import Toasts from '$lib/components/misc/Toasts.svelte';
 
 	import { onMount, type Snippet } from 'svelte';
 	import { refreshColor, refreshFont } from '$lib/theme';
 	import InstallModDialog from '$lib/components/dialogs/InstallModDialog.svelte';
 	import InstallProgressDialog from '$lib/components/dialogs/InstallProgressDialog.svelte';
 	import WelcomeDialog from '$lib/components/dialogs/WelcomeDialog.svelte';
-	import Navbar from '$lib/components/menu/Navbar.svelte';
+	import Navbar from '$lib/components/misc/Navbar.svelte';
 
 	type Props = {
 		children?: Snippet;

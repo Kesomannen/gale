@@ -19,7 +19,7 @@
 	);
 </script>
 
-<Select {items} type="multiple" bind:value={selected} {icon} triggerClass="w-full h-full">
+<Select {items} type="multiple" bind:value={selected} {icon} triggerClass="w-full py-1.5">
 	{#snippet label()}
 		{#if selected.length === 0}
 			<span class="text-primary-300 truncate">{text}</span>

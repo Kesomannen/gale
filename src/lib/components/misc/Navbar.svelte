@@ -43,6 +43,8 @@
 		class="group absolute top-0 -right-1.5 bottom-0 w-3 cursor-col-resize"
 		aria-label="resize"
 	>
-		<div class="group-hover:bg-accent-500 mx-auto h-full w-[2px]"></div></button
+		<div
+			class="bg-accent-500/0 group-hover:bg-accent-500 mx-auto h-full w-[2px] transition-colors delay-75 duration-150"
+		></div></button
 	>
 </nav>

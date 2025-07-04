@@ -3,7 +3,7 @@
 	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
 	import { games, refreshProfiles, profiles as allProfiles } from '$lib/stores.svelte';
-	import { timeSince } from '$lib/util';
+	import { capitalize, timeSince } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -69,7 +69,7 @@
 
 						<span>
 							<Icon icon="mdi:clock-outline" class="mb-0.5 inline text-sm" />
-							{timeSince(new Date(profile.updatedAt))} ago</span
+							{capitalize(timeSince(profile.updatedAt))} ago</span
 						>
 					</div>
 				</div>
