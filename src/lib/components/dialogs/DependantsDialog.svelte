@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { invoke } from '$lib/invoke';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
 	import type { Dependant, Mod } from '$lib/types';
@@ -58,7 +58,7 @@
 	}
 </script>
 
-<ConfirmPopup {title} {onCancel} bind:open>
+<ConfirmDialog {title} {onCancel} bind:open>
 	{description.replaceAll('%s', name)}
 
 	<ModCardList
@@ -77,4 +77,4 @@
 			{verb} all
 		</Button>
 	{/snippet}
-</ConfirmPopup>
+</ConfirmDialog>

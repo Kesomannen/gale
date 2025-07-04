@@ -4,7 +4,7 @@
 
 <script lang="ts">
 	import BigButton from '$lib/components/ui/Button.svelte';
-	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import Link from '$lib/components/ui/Link.svelte';
 	import * as api from '$lib/api';
@@ -25,7 +25,7 @@
 	}
 </script>
 
-<ConfirmPopup title="Set thunderstore API token" bind:open={$apiKeyDialogOpen}>
+<ConfirmDialog title="Set thunderstore API token" bind:open={$apiKeyDialogOpen}>
 	<p>Enter your Thunderstore API token below, or leave blank to clear the current one.</p>
 
 	<p class="mt-2">
@@ -51,4 +51,4 @@
 	{#snippet buttons()}
 		<BigButton color="accent" onclick={submit}>Submit</BigButton>
 	{/snippet}
-</ConfirmPopup>
+</ConfirmDialog>

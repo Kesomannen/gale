@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import * as api from '$lib/api';
 	import type { Mod } from '$lib/types';
@@ -39,7 +39,7 @@
 	}
 </script>
 
-<ConfirmPopup bind:open title="Install {mod?.name}">
+<ConfirmDialog bind:open title="Install {mod?.name}">
 	<p class="text-primary-300">Choose a profile to install the mod to:</p>
 
 	<Select
@@ -53,4 +53,4 @@
 	{#snippet buttons()}
 		<Button icon="mdi:download" onclick={install}>Install</Button>
 	{/snippet}
-</ConfirmPopup>
+</ConfirmDialog>

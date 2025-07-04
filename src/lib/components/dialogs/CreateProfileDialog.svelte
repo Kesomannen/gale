@@ -3,7 +3,7 @@
 	import * as api from '$lib/api';
 	import Button from '$lib/components/ui/Button.svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
-	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import PathField from '$lib/components/ui/PathField.svelte';
@@ -36,7 +36,7 @@
 	}
 </script>
 
-<ConfirmPopup title="Create new profile" bind:open>
+<ConfirmDialog title="Create new profile" bind:open>
 	Choose a name for the new profile
 
 	<InputField
@@ -60,4 +60,4 @@
 	{#snippet buttons()}
 		<Button onclick={createProfile} icon="mdi:plus">Create</Button>
 	{/snippet}
-</ConfirmPopup>
+</ConfirmDialog>

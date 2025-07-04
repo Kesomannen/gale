@@ -10,7 +10,7 @@
 
 <script lang="ts">
 	import Checklist from '$lib/components/ui/Checklist.svelte';
-	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import type { AvailableUpdate } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import ModCard from '../ui/ModCard.svelte';
@@ -71,7 +71,7 @@
 	</div>
 {/if}
 
-<ConfirmPopup title="Confirm update" bind:open={popupOpen}>
+<ConfirmDialog title="Confirm update" bind:open={popupOpen}>
 	Select which mods to update:
 
 	<Checklist
@@ -109,4 +109,4 @@
 	{#snippet buttons()}
 		<Button color="accent" onclick={updateAll}>Update mods</Button>
 	{/snippet}
-</ConfirmPopup>
+</ConfirmDialog>

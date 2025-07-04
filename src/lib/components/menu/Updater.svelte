@@ -17,7 +17,7 @@
 
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import Icon from '@iconify/svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
 	import { platform } from '@tauri-apps/plugin-os';
@@ -87,7 +87,7 @@
 	</button>
 {/if}
 
-<ConfirmPopup title="App update available" bind:open={popupOpen}>
+<ConfirmDialog title="App update available" bind:open={popupOpen}>
 	<Dialog.Description class="text-primary-300">
 		<p>
 			{#if nextUpdate}
@@ -104,4 +104,4 @@
 	{#snippet buttons()}
 		<Button color="accent" onclick={update}>Install</Button>
 	{/snippet}
-</ConfirmPopup>
+</ConfirmDialog>
