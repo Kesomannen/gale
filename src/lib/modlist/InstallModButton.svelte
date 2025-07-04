@@ -6,6 +6,7 @@
 	import Icon from '@iconify/svelte';
 	import { DropdownMenu } from 'bits-ui';
 	import clsx from 'clsx';
+	import DropdownArrow from '$lib/components/DropdownArrow.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -65,13 +66,7 @@
 			class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed"
 			disabled={mod.isInstalled || locked}
 		>
-			<Icon
-				icon="mdi:chevron-down"
-				class={clsx([
-					versionsOpen ? 'rotate-180' : 'rotate-0',
-					'origin-center transform align-middle text-xl transition-transform'
-				])}
-			/>
+			<DropdownArrow bind:open={versionsOpen} class="text-white" />
 		</DropdownMenu.Trigger>
 		<ContextMenuContent
 			type="dropdown"

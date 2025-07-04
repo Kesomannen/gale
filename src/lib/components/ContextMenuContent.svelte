@@ -11,11 +11,11 @@
 		items: ContextItem[];
 		type: 'dropdown' | 'context';
 		style: 'dark' | 'light';
-		isSub?: boolean;
+		sub?: boolean;
 		class?: ClassValue;
 	};
 
-	let { items, type, style, isSub = false, class: classProp }: Props = $props();
+	let { items, type, style, sub = false, class: classProp }: Props = $props();
 
 	const commonContentClass = 'flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl';
 	const commonItemClass =
@@ -38,13 +38,13 @@
 	let { Content, Item, Sub, SubTrigger } = $derived(
 		{
 			dropdown: {
-				Content: isSub ? DropdownMenu.SubContent : DropdownMenu.Content,
+				Content: sub ? DropdownMenu.SubContent : DropdownMenu.Content,
 				Item: DropdownMenu.Item,
 				Sub: DropdownMenu.Sub,
 				SubTrigger: DropdownMenu.SubTrigger
 			},
 			context: {
-				Content: isSub ? ContextMenu.SubContent : ContextMenu.Content,
+				Content: sub ? ContextMenu.SubContent : ContextMenu.Content,
 				Item: ContextMenu.Item,
 				Sub: ContextMenu.Sub,
 				SubTrigger: ContextMenu.SubTrigger
@@ -60,7 +60,7 @@
 				{#if open}
 					<div
 						{...props}
-						class={[commonContentClass, contentClass, isSub && submenuClass, classProp]}
+						class={[commonContentClass, contentClass, sub && submenuClass, classProp]}
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
@@ -76,7 +76,7 @@
 
 										<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 									</SubTrigger>
-									<ContextMenuContent {type} {style} isSub items={children} />
+									<ContextMenuContent {type} {style} sub items={children} />
 								</Sub>
 							{:else}
 								<Item class={[commonItemClass, itemClass, 'pr-6']} {onclick}>

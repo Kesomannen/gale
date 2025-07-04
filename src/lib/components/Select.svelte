@@ -6,6 +6,7 @@
 
 	import type { Snippet } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import DropdownArrow from './DropdownArrow.svelte';
 
 	type Props = WithoutChildren<Select.RootProps> & {
 		placeholder?: string;
@@ -75,13 +76,7 @@
 			</div>
 		{/if}
 
-		<!-- can't use a class array here because of bug in iconify Icon -->
-		<Icon
-			class="text-primary-400 group-disabled:text-primary-500 ml-auto shrink-0 origin-center transform text-lg transition-transform duration-100 ease-out {open
-				? 'rotate-180'
-				: 'rotate-0'}"
-			icon="mdi:chevron-down"
-		/>
+		<DropdownArrow bind:open class="text-primary-400 group-disabled:text-primary-500 ml-auto" />
 	</Select.Trigger>
 	<Select.Portal>
 		<Select.Content forceMount {avoidCollisions}>
@@ -90,7 +85,7 @@
 					{#if open}
 						<div
 							{...props}
-							class="border-primary-600 bg-primary-800 flex max-h-96 w-full gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
+							class="border-primary-600 bg-primary-800 flex max-h-96 w-[var(--bits-select-anchor-width)] gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
 							in:fly={dropIn}
 							out:fade={dropOut}
 						>

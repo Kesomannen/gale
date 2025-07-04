@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { store } from '$lib/store.svelte';
+	import { PersistedState } from 'runed';
 	import NavbarLink from './NavbarLink.svelte';
 
 	const links = [
@@ -30,18 +30,16 @@
 		}
 	];
 
-	let expanded = $state(store.get('expandNavbar', true));
-
-	$effect(() => store.set('expandNavbar', expanded));
+	let expanded = new PersistedState('expandNavbar', false);
 </script>
 
 <nav class="border-primary-600 bg-primary-900 relative flex shrink-0 flex-col gap-1 border-r p-3">
 	{#each links as link (link.to)}
-		<NavbarLink {...link} {expanded} />
+		<NavbarLink {...link} expanded={expanded.current} />
 	{/each}
 
 	<button
-		onclick={() => (expanded = !expanded)}
+		onclick={() => (expanded.current = !expanded.current)}
 		class="group absolute top-0 -right-1.5 bottom-0 w-3 cursor-col-resize"
 		aria-label="resize"
 	>

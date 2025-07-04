@@ -64,8 +64,8 @@
 				disabled={$isChecking}
 				color="primary"
 				class="mr-2"
+				icon="mdi:refresh"
 			>
-				<Icon icon="mdi:refresh" class="mr-2" />
 				Check for updates</Button
 			>
 

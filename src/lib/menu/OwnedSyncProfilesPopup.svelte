@@ -7,6 +7,7 @@
 	import Icon from '@iconify/svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import { confirm } from '@tauri-apps/plugin-dialog';
+	import IconButton from '$lib/components/IconButton.svelte';
 
 	type Props = {
 		open: boolean;
@@ -36,8 +37,6 @@
 
 		let index = profiles.indexOf(profile);
 		profiles.splice(index, 1);
-		// force reactivity
-		profiles = profiles;
 
 		await pushInfoToast({ message: 'Deleted sync profile from database.' });
 		await refreshProfiles();
@@ -76,20 +75,22 @@
 				</div>
 
 				{#if !allProfiles.some((other) => other.sync?.id === profile.id)}
-					<button
-						class="text-primary-400 hover:bg-accent-600 hover:text-accent-200 rounded p-1 text-lg"
+					<IconButton
+						label="Import"
+						icon="mdi:download"
+						color="accent"
+						class="text-lg"
 						onclick={() => importProfile(profile)}
-					>
-						<Icon icon="mdi:download" />
-					</button>
+					/>
 				{/if}
 
-				<button
-					class="text-primary-400 rounded p-1 text-lg hover:bg-red-600 hover:text-red-200"
+				<IconButton
+					label="Delete"
+					icon="mdi:delete"
+					color="red"
+					class="text-lg"
 					onclick={() => deleteProfile(profile)}
-				>
-					<Icon icon="mdi:delete" />
-				</button>
+				/>
 			</div>
 		{/each}
 	</div>

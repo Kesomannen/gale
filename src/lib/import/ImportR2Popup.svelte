@@ -41,6 +41,6 @@
 
 	<div class="mt-3 mr-0.5 flex w-full justify-end gap-2">
 		<Button color="primary" onclick={() => (open = false)}>Cancel</Button>
-		<Button color="accent" onclick={doImport}>Import</Button>
+		<Button color="accent" onclick={doImport} icon="mdi:import">Import</Button>
 	</div>
 </Popup>

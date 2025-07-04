@@ -503,12 +503,13 @@
 			<Button color="primary" onclick={() => (profileOperationOpen = false)}>Cancel</Button>
 		{/if}
 
-		<Button color="accent" disabled={profileOperationInProgress} onclick={doProfileOperation}>
-			{#if profileOperationInProgress}
-				<Icon icon="mdi:loading" class="my-1 animate-spin text-lg" />
-			{:else}
-				{capitalize(profileOperation)}
-			{/if}
+		<Button
+			color="accent"
+			loading={profileOperationInProgress}
+			onclick={doProfileOperation}
+			icon="mdi:edit"
+		>
+			{capitalize(profileOperation)}
 		</Button>
 	</div>
 </Popup>

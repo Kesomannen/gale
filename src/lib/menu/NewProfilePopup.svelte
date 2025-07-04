@@ -58,6 +58,6 @@
 	{/if}
 
 	{#snippet buttons()}
-		<Button onclick={createProfile}>Create</Button>
+		<Button onclick={createProfile} icon="mdi:plus">Create</Button>
 	{/snippet}
 </ConfirmPopup>

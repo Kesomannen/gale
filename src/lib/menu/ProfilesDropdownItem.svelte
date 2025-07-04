@@ -6,6 +6,7 @@
 	import clsx from 'clsx';
 	import * as api from '$lib/api';
 	import { pushInfoToast } from '$lib/toast';
+	import IconButton from '$lib/components/IconButton.svelte';
 
 	type Props = {
 		index: number;
@@ -53,13 +54,13 @@
 		{profile.modCount}
 	</div>
 
-	<button
-		class="text-primary-400 rounded-sm p-1 hover:bg-red-600 hover:text-red-200"
+	<IconButton
+		label="Delete profile"
+		icon="mdi:delete"
+		color="red"
 		onclick={(evt) => {
 			evt.stopPropagation();
 			deleteProfile();
 		}}
-	>
-		<Icon icon="mdi:delete" />
-	</button>
+	/>
 </DropdownMenu.Item>

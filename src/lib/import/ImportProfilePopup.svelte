@@ -4,7 +4,7 @@
 
 	import { Tabs } from 'bits-ui';
 
-	import type { AnyImportData, ImportData, SyncImportData as SyncImportData } from '$lib/types';
+	import type { AnyImportData, ImportData, SyncImportData } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -248,7 +248,9 @@
 					data = null;
 				}}>Cancel</Button
 			>
-			<Button disabled={!nameAvailable} {loading} onclick={importData}>Import</Button>
+			<Button disabled={!nameAvailable} {loading} onclick={importData} icon="mdi:import"
+				>Import</Button
+			>
 		</div>
 	{/if}
 </Popup>

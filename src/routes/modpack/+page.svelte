@@ -20,6 +20,7 @@
 	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
 	import { toHeaderCase } from 'js-convert-case';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -35,14 +36,14 @@
 	let iconPath: string = $state('');
 	let websiteUrl: string = $state('');
 	let includeDisabled: boolean = $state(false);
-	let includeFiles = $state(new Map<string, boolean>());
+	let includeFiles = $state(new SvelteMap<string, boolean>());
 
 	let donePopupOpen = $state(false);
 	let loading: string | null = $state(null);
 
 	let includedFileCount = $state(0);
 
-	function countIncludedFiles(includeFiles?: Map<string, boolean>) {
+	function countIncludedFiles(includeFiles?: SvelteMap<string, boolean>) {
 		if (!includeFiles) return 0;
 
 		let count = 0;
@@ -68,7 +69,7 @@
 		iconPath = args.iconPath;
 		websiteUrl = args.websiteUrl;
 		includeDisabled = args.includeDisabled;
-		includeFiles = new Map(Object.entries(args.includeFileMap));
+		includeFiles = new SvelteMap(Object.entries(args.includeFileMap));
 
 		loading = null;
 	}
@@ -213,29 +214,25 @@
 		<FormField
 			label="Author"
 			description="The name of the Thunderstore team connected to your API token."
-			required={true}
+			required
 		>
 			<InputField
 				onchange={saveArgs}
 				bind:value={author}
 				placeholder="Enter author..."
-				required={true}
 				class="w-full"
+				required
 			/>
 		</FormField>
 
-		<FormField
-			label="Description"
-			description="A short description of the modpack."
-			required={true}
-		>
+		<FormField label="Description" description="A short description of the modpack." required>
 			<InputField
 				onchange={saveArgs}
 				bind:value={description}
 				placeholder="Enter description..."
-				required={true}
 				maxlength={250}
 				class="w-full"
+				required
 			/>
 		</FormField>
 
@@ -283,7 +280,7 @@
 			label="Version"
 			description="The version number of the modpack, in the format of X.Y.Z.
 			           You cannot publish with the same version number twice."
-			required={true}
+			required
 		>
 			<InputField
 				onchange={saveArgs}
@@ -309,7 +306,7 @@
 			label="Icon"
 			description="Path to the icon of the modpack. This is automatically resized to 256x256 pixels, so
                  it's recommended to be a square image to avoid stretching or squishing."
-			required={true}
+			required
 		>
 			<PathField icon="mdi:file-image" onclick={browseIcon} value={iconPath} />
 		</FormField>
@@ -317,7 +314,7 @@
 		<FormField
 			label="Readme"
 			description="A longer description of the modpack, which supports markdown formatting (similarly to Discord messages)."
-			required={true}
+			required
 		>
 			<ResizableInputField
 				onchange={saveArgs}

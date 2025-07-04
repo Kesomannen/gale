@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -58,7 +59,7 @@
 			class={[
 				colorClasses,
 				isSelected ? 'bg-primary-600 font-semibold' : 'hover:bg-primary-600',
-				'group flex w-full items-center overflow-hidden py-0.5 pr-1 pl-2'
+				'group flex w-full items-center overflow-hidden px-2 py-0.5'
 			]}
 		>
 			<Icon
@@ -74,10 +75,26 @@
 				{file.displayName ?? file.relativePath}
 			</div>
 
-			{@render button('mdi:open-in-new', openFile)}
+			<IconButton
+				label="Open in external program"
+				icon="mdi:open-in-new"
+				class="hidden group-hover:block group-focus:block"
+				onclick={(evt) => {
+					evt.preventDefault();
+					openFile();
+				}}
+			/>
 
 			{#if !locked}
-				{@render button('mdi:delete', deleteFile)}
+				<IconButton
+					label="Trash file"
+					icon="mdi:delete"
+					class="hidden group-hover:block group-focus:block"
+					onclick={(evt) => {
+						evt.preventDefault();
+						deleteFile();
+					}}
+				/>
 			{/if}
 		</Collapsible.Trigger>
 	{/if}
@@ -109,15 +126,3 @@
 		</Collapsible.Content>
 	{/if}
 </Collapsible.Root>
-
-{#snippet button(icon: string, onclick: () => void)}
-	<button
-		class="text-primary-400 hover:bg-primary-500 hover:text-primary-200 hidden shrink-0 rounded-sm p-1 group-hover:flex"
-		onclick={(evt) => {
-			evt.stopPropagation();
-			onclick();
-		}}
-	>
-		<Icon {icon} />
-	</button>
-{/snippet}

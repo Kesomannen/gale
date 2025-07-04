@@ -50,14 +50,11 @@
 			{#if open}
 				<div {...wrapperProps}>
 					<div
-						class="border-primary-600 bg-primary-800 text-primary-300 max-w-lg rounded-lg border px-4 py-2 shadow-lg"
+						class="border-primary-600 bg-primary-800 text-primary-300 relative max-w-lg rounded-lg border px-4 py-2 shadow-lg"
 						{...props}
 						in:fly={dropInTo(distance)}
 						out:fade={dropOutFrom(distance)}
 					>
-						<Tooltip.Arrow
-							class="border-primary-600 bg-primary-800 rounded-[2px] border-t border-l"
-						/>
 						{#if tooltip}{@render tooltip()}{:else}
 							{text}
 						{/if}
