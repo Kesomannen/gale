@@ -11,10 +11,10 @@
 >
 	{#each $toasts as toast, i}
 		<div
-			class="flex items-start overflow-hidden rounded-md p-1.5 xl:p-2 xl:text-lg {toast.type ===
-			'error'
-				? 'bg-red-600'
-				: 'bg-accent-600'}"
+			class={[
+				toast.type === 'error' ? 'bg-red-600' : 'bg-accent-600',
+				'flex items-start overflow-hidden rounded-md p-1.5 xl:p-2 xl:text-lg'
+			]}
 			in:slide={{ duration: 150, easing: expoOut }}
 			out:fade={{ duration: 100 }}
 		>

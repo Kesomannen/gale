@@ -504,7 +504,7 @@
 			color="accent"
 			loading={profileOperationInProgress}
 			onclick={doProfileOperation}
-			icon="mdi:edit"
+			icon={profileOperation === 'duplicate' ? 'mdi:content-duplicate' : 'mdi:edit'}
 		>
 			{capitalize(profileOperation)}
 		</Button>
