@@ -2,13 +2,13 @@
 	import * as api from '$lib/api';
 	import type { ConfigSection, ConfigFile } from '$lib/types';
 	import { capitalize } from '$lib/util';
-	import ExpandedEntryPopup from '$lib/config/ExpandedEntryPopup.svelte';
+	import ExpandedEntryPopup from '$lib/components/config/ExpandedEntryPopup.svelte';
 
 	import { activeProfileLocked } from '$lib/stores.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import ConfigFileEditor from '$lib/config/ConfigFileEditor.svelte';
-	import ProfileLockedBanner from '$lib/modlist/ProfileLockedBanner.svelte';
-	import ConfigFileList from '$lib/config/ConfigFileList.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import ConfigFileEditor from '$lib/components/config/ConfigFileEditor.svelte';
+	import ProfileLockedBanner from '$lib/components/modlist/ProfileLockedBanner.svelte';
+	import ConfigFileList from '$lib/components/config/ConfigFileList.svelte';
 
 	let selectedFile: ConfigFile | null = $state(null);
 	let selectedSection: ConfigSection | null = $state(null);

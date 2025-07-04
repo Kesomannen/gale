@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import PathPref from '$lib/prefs/PathPref.svelte';
-	import LaunchModePref from '$lib/prefs/LaunchModePref.svelte';
-	import ZoomLevelPref from '$lib/prefs/ZoomFactorPref.svelte';
-	import TogglePref from '$lib/prefs/TogglePref.svelte';
-	import ApiKeyPref from '$lib/prefs/ApiKeyPref.svelte';
-	import ApiKeyPopup from '$lib/prefs/ApiKeyPopup.svelte';
-	import CustomArgsPref from '$lib/prefs/CustomArgsPref.svelte';
-	import LargeHeading from '$lib/prefs/LargeHeading.svelte';
-	import SmallHeading from '$lib/prefs/SmallHeading.svelte';
-	import PlatformPref from '$lib/prefs/PlatformPref.svelte';
+	import PathPref from '$lib/components/prefs/PathPref.svelte';
+	import LaunchModePref from '$lib/components/prefs/LaunchModePref.svelte';
+	import ZoomLevelPref from '$lib/components/prefs/ZoomFactorPref.svelte';
+	import TogglePref from '$lib/components/prefs/TogglePref.svelte';
+	import ApiKeyPref from '$lib/components/prefs/ApiKeyPref.svelte';
+	import ApiKeyPopup from '$lib/components/prefs/ApiKeyPopup.svelte';
+	import CustomArgsPref from '$lib/components/prefs/CustomArgsPref.svelte';
+	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
+	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
+	import PlatformPref from '$lib/components/prefs/PlatformPref.svelte';
 
 	import { activeGame } from '$lib/stores.svelte';
 	import type { Prefs, GamePrefs, Platform } from '$lib/types';
@@ -18,12 +18,12 @@
 	import * as api from '$lib/api';
 
 	import { platform } from '@tauri-apps/plugin-os';
-	import ColorPref from '$lib/prefs/ColorPref.svelte';
+	import ColorPref from '$lib/components/prefs/ColorPref.svelte';
 
-	import Label from '$lib/components/Label.svelte';
-	import InputField from '$lib/components/InputField.svelte';
+	import Label from '$lib/components/ui/Label.svelte';
+	import InputField from '$lib/components/ui/InputField.svelte';
 	import { getFont, useNativeMenu, setFont } from '$lib/theme';
-	import Checkbox from '$lib/components/Checkbox.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);

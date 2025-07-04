@@ -1,13 +1,13 @@
 <script lang="ts">
-	import InputField from '$lib/components/InputField.svelte';
-	import FormField from '$lib/components/FormField.svelte';
-	import Checkbox from '$lib/components/Checkbox.svelte';
-	import Button from '$lib/components/Button.svelte';
-	import PathField from '$lib/components/PathField.svelte';
-	import Markdown from '$lib/components/Markdown.svelte';
-	import Link from '$lib/components/Link.svelte';
-	import Select from '$lib/components/Select.svelte';
-	import ApiKeyPopup, { apiKeyPopupOpen } from '$lib/prefs/ApiKeyPopup.svelte';
+	import InputField from '$lib/components/ui/InputField.svelte';
+	import FormField from '$lib/components/ui/FormField.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import PathField from '$lib/components/ui/PathField.svelte';
+	import Markdown from '$lib/components/ui/Markdown.svelte';
+	import Link from '$lib/components/ui/Link.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import ApiKeyPopup, { apiKeyPopupOpen } from '$lib/components/prefs/ApiKeyPopup.svelte';
 
 	import * as api from '$lib/api';
 	import type { ModpackArgs } from '$lib/types';
@@ -15,11 +15,11 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 
 	import { Dialog } from 'bits-ui';
-	import Popup from '$lib/components/Popup.svelte';
-	import Checklist from '$lib/components/Checklist.svelte';
-	import ResizableInputField from '$lib/components/ResizableInputField.svelte';
+	import Popup from '$lib/components/ui/Popup.svelte';
+	import Checklist from '$lib/components/ui/Checklist.svelte';
+	import ResizableInputField from '$lib/components/ui/ResizableInputField.svelte';
 	import { toHeaderCase } from 'js-convert-case';
-	import Spinner from '$lib/components/Spinner.svelte';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 
 	const URL_PATTERN =
