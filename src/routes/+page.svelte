@@ -1,15 +1,7 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import DependantsPopup from '$lib/components/menu/DependantsPopup.svelte';
-	import type {
-		Mod,
-		ModActionResponse,
-		ProfileQuery,
-		AvailableUpdate,
-		Dependant,
-		ModContextItem,
-		SortBy
-	} from '$lib/types';
+	import DependantsDialog from '$lib/components/dialogs/DependantsDialog.svelte';
+	import type { Mod, AvailableUpdate, Dependant, ModContextItem, SortBy } from '$lib/types';
 	import ModList from '$lib/components/modlist/ModList.svelte';
 	import {
 		activeProfile,
@@ -19,8 +11,8 @@
 	} from '$lib/stores.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
-	import Popup from '$lib/components/ui/Popup.svelte';
-	import ModCardList from '$lib/components/modlist/ModCardList.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import ModCardList from '$lib/components/ui/ModCardList.svelte';
 	import ProfileModListItem from '$lib/components/modlist/ProfileModListItem.svelte';
 	import UpdateAllBanner from '$lib/components/modlist/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
@@ -86,9 +78,9 @@
 	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
 
-	let removeDependants: DependantsPopup;
-	let disableDependants: DependantsPopup;
-	let enableDependencies: DependantsPopup;
+	let removeDependants: DependantsDialog;
+	let disableDependants: DependantsDialog;
+	let enableDependencies: DependantsDialog;
 
 	let dependantsOpen = $state(false);
 	let dependants: string[] = $state([]);
@@ -306,7 +298,7 @@
 	{/if}
 </div>
 
-<Popup title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
+<Dialog title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
 	<div class="text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
 			No dependants found
@@ -314,9 +306,9 @@
 			<ModCardList names={dependants} showVersion={false} />
 		{/if}
 	</div>
-</Popup>
+</Dialog>
 
-<DependantsPopup
+<DependantsDialog
 	bind:this={removeDependants}
 	title="Confirm uninstallation"
 	verb="Uninstall"
@@ -329,7 +321,7 @@
 	onCancel={refresh}
 />
 
-<DependantsPopup
+<DependantsDialog
 	bind:this={disableDependants}
 	title="Confirm disabling"
 	verb="Disable"
@@ -339,7 +331,7 @@
 	onCancel={refresh}
 />
 
-<DependantsPopup
+<DependantsDialog
 	bind:this={enableDependencies}
 	title="Confirm enabling"
 	verb="Enable"

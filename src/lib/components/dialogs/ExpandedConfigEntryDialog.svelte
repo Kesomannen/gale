@@ -4,7 +4,7 @@
 
 <script lang="ts">
 	import InputField from '$lib/components/ui/InputField.svelte';
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ResizableInputField from '$lib/components/ui/ResizableInputField.svelte';
 	import TabsMenu from '$lib/components/ui/TabsMenu.svelte';
 	import { setConfigEntry } from '$lib/config';
@@ -54,7 +54,7 @@
 	});
 </script>
 
-<Popup
+<Dialog
 	large
 	title="Edit {$expandedEntry?.entry.name}"
 	onclose={() => ($expandedEntry = null)}
@@ -124,4 +124,4 @@
 			</Tabs.Content>
 		</TabsMenu>
 	{/if}
-</Popup>
+</Dialog>

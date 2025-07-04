@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import TabsMenu from '$lib/components/ui/TabsMenu.svelte';
 
 	import { Tabs } from 'bits-ui';
@@ -12,7 +12,7 @@
 	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
-	import ModCardList from '$lib/components/modlist/ModCardList.svelte';
+	import ModCardList from '$lib/components/ui/ModCardList.svelte';
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import Info from '$lib/components/ui/Info.svelte';
@@ -139,7 +139,7 @@
 	});
 </script>
 
-<Popup
+<Dialog
 	title="Import profile"
 	bind:open
 	onclose={() => {
@@ -253,4 +253,4 @@
 			>
 		</div>
 	{/if}
-</Popup>
+</Dialog>

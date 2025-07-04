@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Link from '$lib/components/ui/Link.svelte';
 
 	import Icon from '@iconify/svelte';
 	import { getVersion } from '@tauri-apps/api/app';
 	import { onMount } from 'svelte';
-	import { isChecking, nextUpdate, refreshUpdate } from './Updater.svelte';
+	import { isChecking, nextUpdate, refreshUpdate } from '../menu/Updater.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	type Props = {
@@ -26,7 +26,7 @@
 	});
 </script>
 
-<Popup bind:open title="About">
+<Dialog bind:open title="About">
 	<div class="h-3"></div>
 	<img src="logo.png" alt="Logo" class="float-right size-20" />
 	<div>
@@ -83,4 +83,4 @@
 			{/if}
 		</div>
 	</div>
-</Popup>
+</Dialog>

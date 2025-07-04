@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { Dialog } from 'bits-ui';
-	import Popup from './Popup.svelte';
+	import Dialog from './Dialog.svelte';
 	import Button from './Button.svelte';
 	import type { Snippet } from 'svelte';
 
@@ -23,12 +22,12 @@
 	}: Props = $props();
 </script>
 
-<Popup {title} onclose={onCancel} bind:open>
-	<Dialog.Description class="text-primary-300">
+<Dialog {title} onclose={onCancel} bind:open>
+	<p class="text-primary-300">
 		{#if children}{@render children()}{:else}
 			{description}
 		{/if}
-	</Dialog.Description>
+	</p>
 
 	<div class="mt-3 ml-auto flex justify-end gap-2 overflow-hidden">
 		<Button
@@ -40,4 +39,4 @@
 		>
 		{@render buttons?.()}
 	</div>
-</Popup>
+</Dialog>

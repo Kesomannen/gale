@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import * as api from '$lib/api';
 	import { refreshProfiles } from '$lib/stores.svelte';
 	import type { InstallProgress } from '$lib/types';
@@ -7,7 +7,7 @@
 
 	import { listen } from '@tauri-apps/api/event';
 
-	import { Dialog, Progress } from 'bits-ui';
+	import { Progress } from 'bits-ui';
 	import { onMount } from 'svelte';
 
 	let open = $state(false);
@@ -57,7 +57,7 @@
 	});
 </script>
 
-<Popup
+<Dialog
 	bind:open
 	title="Installing mods ({progress.installedMods}/{progress.totalMods})"
 	canClose={progress.canCancel}
@@ -66,7 +66,7 @@
 		message: 'Are you sure you want to abort the installation?'
 	}}
 >
-	<Dialog.Description class="text-primary-400">
+	<div class="text-primary-400">
 		{#if progress.task.kind == 'done'}
 			Done!
 		{:else}
@@ -86,7 +86,7 @@
 				Estimated time remaining: {estimatedTimeLeft}
 			</div>
 		{/if}
-	</Dialog.Description>
+	</div>
 
 	<Progress.Root
 		value={progress.totalProgress}
@@ -98,4 +98,4 @@
 			style="width: {progress.totalProgress * 100}%"
 		></div>
 	</Progress.Root>
-</Popup>
+</Dialog>

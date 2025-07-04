@@ -2,7 +2,7 @@
 	import * as api from '$lib/api';
 	import type { ConfigSection, ConfigFile } from '$lib/types';
 	import { capitalize } from '$lib/util';
-	import ExpandedEntryPopup from '$lib/components/config/ExpandedEntryPopup.svelte';
+	import ExpandedConfigEntryDialog from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 
 	import { activeProfileLocked } from '$lib/stores.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -74,4 +74,4 @@
 	</div>
 </div>
 
-<ExpandedEntryPopup />
+<ExpandedConfigEntryDialog />

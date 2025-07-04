@@ -1,23 +1,20 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { Menubar } from 'bits-ui';
 
-	import MenubarItem from '$lib/components/menu/MenubarItem.svelte';
-
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 
-	import ImportR2Popup from '$lib/components/import/ImportR2Popup.svelte';
-	import ExportCodePopup from '$lib/components/import/ExportCodePopup.svelte';
-	import ImportProfilePopup from '$lib/components/import/ImportProfilePopup.svelte';
+	import ImportR2Dialog from '$lib/components/dialogs/ImportR2Dialog.svelte';
+	import ExportCodeDialog from '$lib/components/dialogs/ExportCodeDialog.svelte';
+	import ImportProfileDialog from '$lib/components/dialogs/ImportProfileDialog.svelte';
+	import AboutDialog from '$lib/components/dialogs/AboutDialog.svelte';
+	import CreateProfileDialog from '$lib/components/dialogs/CreateProfileDialog.svelte';
 
-	import AboutPopup from './AboutPopup.svelte';
+	import MenubarItem from './MenubarItem.svelte';
 	import MenubarMenu from './MenubarMenu.svelte';
-	import NewProfilePopup from './NewProfilePopup.svelte';
 	import MenubarSeparator from './MenubarSeparator.svelte';
 
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
@@ -35,8 +32,8 @@
 	let importR2Open = $state(false);
 	let newProfileOpen = $state(false);
 
-	let exportCodePopup: ExportCodePopup;
-	let importProfilePopup: ImportProfilePopup;
+	let exportCodePopup: ExportCodeDialog;
+	let importProfilePopup: ImportProfileDialog;
 
 	let profileOperation: 'rename' | 'duplicate' = $state('rename');
 	let profileOperationName = $state('');
@@ -376,7 +373,7 @@
 		}
 	}
 
-	run(() => {
+	$effect(() => {
 		if (menu != null) {
 			appWindow.setDecorations($useNativeMenu);
 
@@ -479,7 +476,7 @@
 	{@render button('hover:bg-red-700', 'mdi:close', appWindow.close)}
 </header>
 
-<Popup
+<Dialog
 	title="{capitalize(profileOperation)} profile"
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
@@ -512,10 +509,10 @@
 			{capitalize(profileOperation)}
 		</Button>
 	</div>
-</Popup>
+</Dialog>
 
-<AboutPopup bind:open={aboutOpen} />
-<ImportR2Popup bind:open={importR2Open} />
-<NewProfilePopup bind:open={newProfileOpen} />
-<ExportCodePopup bind:this={exportCodePopup} />
-<ImportProfilePopup bind:this={importProfilePopup} />
+<AboutDialog bind:open={aboutOpen} />
+<ImportR2Dialog bind:open={importR2Open} />
+<CreateProfileDialog bind:open={newProfileOpen} />
+<ExportCodeDialog bind:this={exportCodePopup} />
+<ImportProfileDialog bind:this={importProfilePopup} />

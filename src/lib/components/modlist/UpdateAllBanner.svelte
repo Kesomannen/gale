@@ -13,10 +13,10 @@
 	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
 	import type { AvailableUpdate } from '$lib/types';
 	import Icon from '@iconify/svelte';
-	import ModCard from './ModCard.svelte';
+	import ModCard from '../ui/ModCard.svelte';
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
 	import * as api from '$lib/api';
-	import BigButton from '$lib/components/ui/Button.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 
@@ -107,6 +107,6 @@
 	</Checklist>
 
 	{#snippet buttons()}
-		<BigButton color="accent" onclick={updateAll}>Update mods</BigButton>
+		<Button color="accent" onclick={updateAll}>Update mods</Button>
 	{/snippet}
 </ConfirmPopup>

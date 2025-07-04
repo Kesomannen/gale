@@ -4,7 +4,7 @@
 	import { DropdownMenu } from 'bits-ui';
 	import clsx from 'clsx';
 	import ProfilesDropdownItem from './ProfilesDropdownItem.svelte';
-	import NewProfilePopup from '$lib/components/menu/NewProfilePopup.svelte';
+	import CreateProfileDialog from '$lib/components/dialogs/CreateProfileDialog.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { dropIn, dropOut } from '$lib/transitions';
 
@@ -62,4 +62,4 @@
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<NewProfilePopup bind:open={newProfilePopupOpen} />
+<CreateProfileDialog bind:open={newProfilePopupOpen} />

@@ -2,7 +2,7 @@
 	import Info from '$lib/components/ui/Info.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import * as api from '$lib/api';
-	import { apiKeyPopupOpen } from './ApiKeyPopup.svelte';
+	import { apiKeyDialogOpen } from '$lib/components/dialogs/ApiKeyDialog.svelte';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
 
@@ -19,7 +19,7 @@
 	}
 
 	$effect(() => {
-		$apiKeyPopupOpen;
+		$apiKeyDialogOpen;
 		refresh();
 	});
 </script>
@@ -34,7 +34,7 @@
 
 	<button
 		class="group bg-primary-900 hover:border-primary-500 relative flex grow items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
-		onclick={() => ($apiKeyPopupOpen = true)}
+		onclick={() => ($apiKeyDialogOpen = true)}
 	>
 		<div class="mr-2 rounded-sm">
 			<Icon

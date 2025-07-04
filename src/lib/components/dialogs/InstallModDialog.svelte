@@ -51,6 +51,6 @@
 	/>
 
 	{#snippet buttons()}
-		<Button onclick={install}>Install</Button>
+		<Button icon="mdi:download" onclick={install}>Install</Button>
 	{/snippet}
 </ConfirmPopup>

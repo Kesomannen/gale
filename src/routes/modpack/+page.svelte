@@ -7,15 +7,14 @@
 	import Markdown from '$lib/components/ui/Markdown.svelte';
 	import Link from '$lib/components/ui/Link.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import ApiKeyPopup, { apiKeyPopupOpen } from '$lib/components/prefs/ApiKeyPopup.svelte';
+	import ApiKeyDialog, { apiKeyDialogOpen } from '$lib/components/dialogs/ApiKeyDialog.svelte';
 
 	import * as api from '$lib/api';
 	import type { ModpackArgs } from '$lib/types';
 	import { activeProfile, activeGame, categories } from '$lib/stores.svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 
-	import { Dialog } from 'bits-ui';
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Checklist from '$lib/components/ui/Checklist.svelte';
 	import ResizableInputField from '$lib/components/ui/ResizableInputField.svelte';
 	import { toHeaderCase } from 'js-convert-case';
@@ -112,11 +111,11 @@
 		let hasToken = await api.thunderstore.hasToken();
 
 		if (!hasToken) {
-			$apiKeyPopupOpen = true;
+			$apiKeyDialogOpen = true;
 
 			await new Promise<void>((resolve) => {
 				const interval = setInterval(() => {
-					if (!$apiKeyPopupOpen) {
+					if (!$apiKeyDialogOpen) {
 						clearInterval(interval);
 						resolve();
 					}
@@ -394,20 +393,20 @@
 	{/if}
 </div>
 
-<ApiKeyPopup />
+<ApiKeyDialog />
 
-<Popup bind:open={donePopupOpen} title="Modpack upload complete">
-	<Dialog.Description class="text-primary-300">
+<Dialog bind:open={donePopupOpen} title="Modpack upload complete">
+	<p class="text-primary-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!
 		<Link href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/{name}"
 			>Click here to view its page on the website</Link
 		>.
-	</Dialog.Description>
+	</p>
 
 	<div class="text-primary-400 mt-2 text-sm">
 		The changes may take up to an hour to appear in Gale and other mod managers.
 		<br />
 		To publish a new update, increment the version number and publish the modpack again.
 	</div>
-</Popup>
+</Dialog>

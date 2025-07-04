@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
 	import { games, refreshProfiles, profiles as allProfiles } from '$lib/stores.svelte';
@@ -43,7 +43,7 @@
 	}
 </script>
 
-<Popup bind:open onclose={onClose} title="Owned sync profiles">
+<Dialog bind:open onclose={onClose} title="Owned sync profiles">
 	<div class="mt-2 flex max-h-80 flex-col overflow-y-auto">
 		{#if sortedProfiles.length === 0}
 			<div class="text-primary-200 w-full text-center text-lg">No profiles found</div>
@@ -94,4 +94,4 @@
 			</div>
 		{/each}
 	</div>
-</Popup>
+</Dialog>

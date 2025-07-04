@@ -1,10 +1,9 @@
 <script lang="ts">
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 
 	import { activeGame } from '$lib/stores.svelte';
 	import * as api from '$lib/api';
 	import Icon from '@iconify/svelte';
-	import { Dialog } from 'bits-ui';
 	import GameSelect from '$lib/components/menu/GameSelect.svelte';
 	import Updater from './Updater.svelte';
 	import Syncer from './Syncer.svelte';
@@ -52,12 +51,12 @@
 	<Updater />
 </div>
 
-<Popup title="Launching {$activeGame?.name}..." bind:open={launchGamePopupOpen}>
-	<Dialog.Description class="text-primary-400">
+<Dialog title="Launching {$activeGame?.name}..." bind:open={launchGamePopupOpen}>
+	<p class="text-primary-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
-	</Dialog.Description>
-</Popup>
+	</p>
+</Dialog>
 
-<Popup title="Select game to mod" bind:open={gamesOpen}>
+<Dialog title="Select game to mod" bind:open={gamesOpen}>
 	<GameSelect onselect={() => (gamesOpen = false)} />
-</Popup>
+</Dialog>

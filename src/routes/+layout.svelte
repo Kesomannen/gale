@@ -3,17 +3,16 @@
 
 	import { Tooltip } from 'bits-ui';
 
-	import Menubar from '$lib/components/menu/Menubar.svelte';
-	import Contextbar from '$lib/components/menu/Contextbar.svelte';
+	import Menubar from '$lib/components/menubar/Menubar.svelte';
+	import Toolbar from '$lib/components/menu/Toolbar.svelte';
 	import Statusbar from '$lib/components/menu/Statusbar.svelte';
 	import Toasts from '$lib/components/menu/Toasts.svelte';
 
 	import { onMount, type Snippet } from 'svelte';
-	import NavbarLink from '$lib/components/menu/NavbarLink.svelte';
 	import { refreshColor, refreshFont } from '$lib/theme';
-	import InstallModPopup from '$lib/components/modlist/InstallModPopup.svelte';
-	import InstallProgressPopup from '$lib/components/modlist/InstallProgressPopup.svelte';
-	import WelcomePopup from '$lib/components/menu/WelcomePopup.svelte';
+	import InstallModDialog from '$lib/components/dialogs/InstallModDialog.svelte';
+	import InstallProgressDialog from '$lib/components/dialogs/InstallProgressDialog.svelte';
+	import WelcomeDialog from '$lib/components/dialogs/WelcomeDialog.svelte';
 	import Navbar from '$lib/components/menu/Navbar.svelte';
 
 	type Props = {
@@ -46,7 +45,7 @@
 <Tooltip.Provider>
 	<main class="bg-primary-800 relative flex flex-col overflow-hidden">
 		<Menubar />
-		<Contextbar />
+		<Toolbar />
 
 		<div class="relative flex grow overflow-hidden">
 			<Navbar />
@@ -58,7 +57,7 @@
 		<Toasts />
 	</main>
 
-	<InstallModPopup />
-	<InstallProgressPopup />
-	<WelcomePopup />
+	<InstallModDialog />
+	<InstallProgressDialog />
+	<WelcomeDialog />
 </Tooltip.Provider>

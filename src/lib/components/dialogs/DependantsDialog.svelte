@@ -2,7 +2,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmPopup from '$lib/components/ui/ConfirmPopup.svelte';
 	import { invoke } from '$lib/invoke';
-	import ModCardList from '$lib/components/modlist/ModCardList.svelte';
+	import ModCardList from '$lib/components/ui/ModCardList.svelte';
 	import type { Dependant, Mod } from '$lib/types';
 
 	type Props = {

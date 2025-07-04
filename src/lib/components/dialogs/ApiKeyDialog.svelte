@@ -1,5 +1,5 @@
 <script module lang="ts">
-	export const apiKeyPopupOpen = writable(false);
+	export const apiKeyDialogOpen = writable(false);
 </script>
 
 <script lang="ts">
@@ -21,11 +21,11 @@
 			token = '';
 		}
 
-		$apiKeyPopupOpen = false;
+		$apiKeyDialogOpen = false;
 	}
 </script>
 
-<ConfirmPopup title="Set thunderstore API token" bind:open={$apiKeyPopupOpen}>
+<ConfirmPopup title="Set thunderstore API token" bind:open={$apiKeyDialogOpen}>
 	<p>Enter your Thunderstore API token below, or leave blank to clear the current one.</p>
 
 	<p class="mt-2">

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Markdown from '$lib/components/ui/Markdown.svelte';
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import type { Mod } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import * as api from '$lib/api';
@@ -30,7 +30,7 @@
 	}
 </script>
 
-<Popup large bind:open>
+<Dialog large bind:open>
 	{#await promise}
 		<Icon class="text-primary-300 animate-spin text-4xl" icon="mdi:loading" />
 	{:then value}
@@ -47,4 +47,4 @@
 			Failed to load {kind}: {error}
 		</div>
 	{/await}
-</Popup>
+</Dialog>

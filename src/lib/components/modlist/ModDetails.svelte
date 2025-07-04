@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Markdown from '$lib/components/ui/Markdown.svelte';
 
-	import ModInfoPopup from './ModInfoPopup.svelte';
-	import ModCardList from './ModCardList.svelte';
+	import ModInfoDialog from '../dialogs/ModInfoDialog.svelte';
+	import ModCardList from '../ui/ModCardList.svelte';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
 
 	import { ModType, type Mod, type ModContextItem } from '$lib/types';
@@ -34,10 +34,10 @@
 	let dependenciesOpen = $state(false);
 
 	let readmeOpen = $state(false);
-	let readme: ModInfoPopup;
+	let readme: ModInfoDialog;
 
 	let changelogOpen = $state(false);
-	let changelog: ModInfoPopup;
+	let changelog: ModInfoDialog;
 
 	let allContextItems = $derived([
 		...contextItems,
@@ -226,7 +226,7 @@
 	{@render children?.()}
 </div>
 
-<Popup
+<Dialog
 	large={(mod.dependencies?.length ?? 0) > 10}
 	title="Dependencies of {mod.name}"
 	bind:open={dependenciesOpen}
@@ -234,10 +234,10 @@
 	{#if mod.dependencies}
 		<ModCardList names={mod.dependencies} class="mt-4" />
 	{/if}
-</Popup>
+</Dialog>
 
-<ModInfoPopup bind:this={readme} bind:open={readmeOpen} {mod} kind="readme" />
-<ModInfoPopup
+<ModInfoDialog bind:this={readme} bind:open={readmeOpen} {mod} kind="readme" />
+<ModInfoDialog
 	bind:this={changelog}
 	bind:open={changelogOpen}
 	{mod}

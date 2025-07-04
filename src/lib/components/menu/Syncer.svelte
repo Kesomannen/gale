@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import Popup from '$lib/components/ui/Popup.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
 	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
@@ -11,7 +11,7 @@
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
 	import { DropdownMenu } from 'bits-ui';
-	import OwnedSyncProfilesPopup from './OwnedSyncProfilesPopup.svelte';
+	import OwnedSyncProfilesDialog from '../dialogs/OwnedSyncProfilesDialog.svelte';
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
 
 	type State = 'off' | 'synced' | 'outdated';
@@ -139,13 +139,13 @@
 	<div>{style.label}</div>
 </button>
 
-<OwnedSyncProfilesPopup
+<OwnedSyncProfilesDialog
 	bind:open={profilesPopupOpen}
 	{profiles}
 	onClose={() => (mainPopupOpen = true)}
 />
 
-<Popup bind:open={mainPopupOpen} title="Profile sync">
+<Dialog bind:open={mainPopupOpen} title="Profile sync">
 	{#if syncInfo !== null}
 		{#if !isOwner}
 			<div class="text-primary-300 mt-2 flex items-center">
@@ -235,4 +235,4 @@
 		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
 		>
 	</div>
-</Popup>
+</Dialog>

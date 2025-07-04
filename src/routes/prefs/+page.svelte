@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import PathPref from '$lib/components/prefs/PathPref.svelte';
 	import LaunchModePref from '$lib/components/prefs/LaunchModePref.svelte';
 	import ZoomLevelPref from '$lib/components/prefs/ZoomFactorPref.svelte';
 	import TogglePref from '$lib/components/prefs/TogglePref.svelte';
 	import ApiKeyPref from '$lib/components/prefs/ApiKeyPref.svelte';
-	import ApiKeyPopup from '$lib/components/prefs/ApiKeyPopup.svelte';
+	import ApiKeyDialog from '$lib/components/dialogs/ApiKeyDialog.svelte';
 	import CustomArgsPref from '$lib/components/prefs/CustomArgsPref.svelte';
 	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
 	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
@@ -29,7 +27,8 @@
 	let gamePrefs: GamePrefs | null = $state(null);
 
 	let gameSlug = $derived($activeGame?.slug ?? '');
-	run(() => {
+
+	$effect(() => {
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
@@ -191,4 +190,4 @@
 	{/if}
 </div>
 
-<ApiKeyPopup />
+<ApiKeyDialog />

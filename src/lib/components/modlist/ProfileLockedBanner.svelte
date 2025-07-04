@@ -1,8 +1,9 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import type { ClassValue } from 'clsx';
 
 	type Props = {
-		class?: string;
+		class?: ClassValue;
 	};
 
 	let { class: classProp }: Props = $props();

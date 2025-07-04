@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { setConfigEntry } from '$lib/config';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
-	import { Button } from 'bits-ui';
 
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Icon from '@iconify/svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
-	import { expandedEntry } from './ExpandedEntryPopup.svelte';
+	import { expandedEntry } from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 	import { getListSeparator } from '$lib/util';
 
 	type Props = {
