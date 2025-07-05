@@ -71,8 +71,6 @@
 					: { type: 'default', name: value as DefaultColor },
 				'mr-2'
 			)}
-
-			<span class="text-primary-400">{label}</span>
 		{/snippet}
 	</Select>
 

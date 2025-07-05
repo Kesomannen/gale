@@ -5,36 +5,31 @@
 	const links = [
 		{
 			to: '/',
-			icon: 'mdi:account-circle-outline',
-			activeIcon: 'mdi:account-circle',
+			icon: 'mdi:account-circle',
 			label: 'Profile',
 			tooltip: 'Manage profile'
 		},
 		{
 			to: '/browse',
-			icon: 'mdi:store-search-outline',
-			activeIcon: 'mdi:store-search',
+			icon: 'mdi:store-search',
 			label: 'Get mods',
 			tooltip: 'Install mods'
 		},
 		{
 			to: '/config',
-			icon: 'mdi:file-cog-outline',
-			activeIcon: 'mdi:file-cog',
+			icon: 'mdi:file-cog',
 			label: 'Config',
 			tooltip: 'Edit mod config'
 		},
 		{
 			to: '/modpack',
-			icon: 'mdi:package-variant-closed',
-			activeIcon: 'mdi-package-variant',
+			icon: 'mdi-package-variant',
 			label: 'Modpack',
 			tooltip: 'Export modpack'
 		},
 		{
 			to: '/prefs',
-			icon: 'mdi:cog-outline',
-			activeIcon: 'mdi:cog',
+			icon: 'mdi:cog',
 			label: 'Settings',
 			tooltip: 'Edit manager settings'
 		}

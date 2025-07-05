@@ -6,13 +6,12 @@
 	type Props = {
 		to: string;
 		icon: string;
-		activeIcon: string;
 		label: string;
 		tooltip: string;
 		expanded: boolean;
 	};
 
-	let { to, icon, activeIcon, label, tooltip, expanded }: Props = $props();
+	let { to, icon, label, tooltip, expanded }: Props = $props();
 
 	let active = $derived(page.url.pathname === to);
 </script>
@@ -24,10 +23,10 @@
 			active
 				? 'text-accent-400 bg-primary-800 font-semibold'
 				: 'text-primary-600 hover:bg-primary-800 hover:text-primary-400',
-			'relative flex items-center gap-2 rounded-md p-2.5'
+			'relative flex items-center gap-2 rounded-lg p-2.5'
 		]}
 	>
-		<Icon class="text-[1.75rem]" icon={active ? activeIcon : icon} />
+		<Icon class="text-[1.75rem]" {icon} />
 
 		{#if expanded}
 			<span>{label}</span>

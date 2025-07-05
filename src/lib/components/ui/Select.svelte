@@ -95,14 +95,20 @@
 								{#each items as item, i (i + item.value)}
 									<Select.Item
 										{...item}
-										class="hover:bg-primary-700 hover:text-primary-200 flex w-full cursor-default items-center rounded-md px-3 py-1"
+										class="hover:bg-primary-700 hover:text-primary-200 group flex w-full cursor-default items-center rounded-md px-3 py-1"
 									>
 										{#snippet children({ selected })}
 											{#if itemSnippet}
 												{@render itemSnippet({ ...item, selected })}
-											{:else}
-												<span class="text-primary-400">{item.label}</span>
 											{/if}
+
+											<span
+												class={[
+													selected
+														? 'text-primary-300'
+														: 'text-primary-400 group-hover:text-primary-300'
+												]}>{item.label}</span
+											>
 
 											{#if selected}
 												<Icon icon="mdi:check" class="text-accent-400 ml-auto text-lg" />

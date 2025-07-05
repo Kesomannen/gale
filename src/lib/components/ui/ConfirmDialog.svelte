@@ -16,7 +16,7 @@
 		title = '',
 		description = '',
 		open = $bindable(false),
-		onCancel = () => {},
+		onCancel,
 		children,
 		buttons
 	}: Props = $props();
@@ -33,7 +33,7 @@
 		<Button
 			color="primary"
 			onclick={() => {
-				onCancel();
+				onCancel?.();
 				open = false;
 			}}>Cancel</Button
 		>
