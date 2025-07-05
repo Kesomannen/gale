@@ -24,7 +24,7 @@
 		text = '',
 		side = 'top',
 		sideOffset = 0,
-		delayDuration = 150,
+		delayDuration = 200,
 		disabled = false,
 		class: triggerClass = '',
 		children,
@@ -33,10 +33,10 @@
 
 	let distance = $derived(
 		{
-			top: { x: 0, y: 7 },
-			right: { x: -7, y: 0 },
-			bottom: { x: 0, y: -7 },
-			left: { x: 7, y: 0 }
+			top: { x: 0, y: 5 },
+			right: { x: -5, y: 0 },
+			bottom: { x: 0, y: -5 },
+			left: { x: 5, y: 0 }
 		}[side]
 	);
 </script>
@@ -50,7 +50,7 @@
 			{#if open}
 				<div {...wrapperProps}>
 					<div
-						class="border-primary-600 bg-primary-800 text-primary-300 relative max-w-lg rounded-lg border px-4 py-2 shadow-lg"
+						class="border-primary-600 bg-primary-800 text-primary-300 relative z-50 max-w-lg rounded-lg border px-4 py-2 shadow-md"
 						{...props}
 						in:fly={dropInTo(distance)}
 						out:fade={dropOutFrom(distance)}

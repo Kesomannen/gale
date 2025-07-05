@@ -32,8 +32,8 @@
 	let importR2Open = $state(false);
 	let newProfileOpen = $state(false);
 
-	let exportCodePopup: ExportCodeDialog;
-	let importProfilePopup: ImportProfileDialog;
+	let exportCodeDialog: ExportCodeDialog;
+	let importProfileDialog: ImportProfileDialog;
 
 	let profileOperation: 'rename' | 'duplicate' = $state('rename');
 	let profileOperationName = $state('');
@@ -136,7 +136,7 @@
 			items: [
 				{
 					text: '...profile from code',
-					onclick: () => importProfilePopup.openForCode()
+					onclick: () => importProfileDialog.openForCode()
 				},
 				{
 					text: '...profile from file',
@@ -157,7 +157,7 @@
 			items: [
 				{
 					text: '...profile as code',
-					onclick: () => exportCodePopup.open()
+					onclick: () => exportCodeDialog.open()
 				},
 				{
 					text: '...profile as file',
@@ -229,7 +229,7 @@
 
 		if (path === null) return;
 		let data = await api.profile.import.readFile(path);
-		importProfilePopup.openFor({ type: 'normal', ...data });
+		importProfileDialog.openFor({ type: 'normal', ...data });
 	}
 
 	async function exportFile() {
@@ -362,7 +362,7 @@
 
 		if (file.name.endsWith('.r2z')) {
 			let data = await api.profile.import.readBase64(base64);
-			importProfilePopup.openFor({ type: 'normal', ...data });
+			importProfileDialog.openFor({ type: 'normal', ...data });
 		} else if (file.name.endsWith('.zip')) {
 			await api.profile.import.localModBase64(base64);
 			await refreshProfiles();
@@ -514,5 +514,5 @@
 <AboutDialog bind:open={aboutOpen} />
 <ImportR2Dialog bind:open={importR2Open} />
 <CreateProfileDialog bind:open={newProfileOpen} />
-<ExportCodeDialog bind:this={exportCodePopup} />
-<ImportProfileDialog bind:this={importProfilePopup} />
+<ExportCodeDialog bind:this={exportCodeDialog} />
+<ImportProfileDialog bind:this={importProfileDialog} />

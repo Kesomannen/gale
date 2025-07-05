@@ -7,6 +7,7 @@
 	import * as api from '$lib/api';
 	import { pushInfoToast } from '$lib/toast';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 
 	type Props = {
 		index: number;
@@ -18,7 +19,7 @@
 	let isActive = $derived(profile.id === $activeProfile?.id);
 
 	async function deleteProfile() {
-		let confirmed = confirm(`Are you sure you want to delete ${profile.name}?`);
+		let confirmed = await confirm(`Are you sure you want to delete ${profile.name}?`);
 		if (!confirmed) return;
 
 		await api.profile.deleteProfile(index);
@@ -59,6 +60,7 @@
 		icon="mdi:delete"
 		color="red"
 		onclick={(evt) => {
+			evt.preventDefault();
 			evt.stopPropagation();
 			deleteProfile();
 		}}

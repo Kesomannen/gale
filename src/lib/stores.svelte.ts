@@ -21,7 +21,7 @@ export let categories = writable<PackageCategory[]>([]);
 export let activeGame = writable<Game | null>(null);
 
 export let activeProfileId: number = 0;
-export let profiles: ProfileInfo[] = [];
+export let profiles = writable<ProfileInfo[]>([]);
 export let activeProfile = writable<ProfileInfo | null>(null);
 
 export let user = writable<SyncUser | null>(null);
@@ -150,8 +150,8 @@ export async function refreshProfiles() {
 	let info = await api.profile.getInfo();
 
 	activeProfileId = info.activeId;
-	profiles = info.profiles;
-	activeProfile.set(profiles.find((profile) => profile.id === activeProfileId) ?? null);
+	profiles.set(info.profiles);
+	activeProfile.set(info.profiles.find((profile) => profile.id === activeProfileId) ?? null);
 }
 
 export async function setActiveProfile(index: number) {

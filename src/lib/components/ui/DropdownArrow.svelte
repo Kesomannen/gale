@@ -7,7 +7,7 @@
 		class?: ClassValue;
 	};
 
-	let { open = $bindable(false), class: classProp }: Props = $props();
+	let { open, class: classProp }: Props = $props();
 </script>
 
 <Icon
@@ -15,6 +15,6 @@
 	class={clsx(
 		classProp,
 		open ? 'rotate-180' : 'rotate-0',
-		'shrink-0 origin-center transform text-lg transition-transform duration-100 ease-out'
+		'shrink-0 origin-center transform text-lg transition-transform duration-100'
 	)}
 />

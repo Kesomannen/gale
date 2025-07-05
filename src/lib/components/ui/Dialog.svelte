@@ -5,6 +5,7 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
 	import { expoOut, quadIn } from 'svelte/easing';
+	import type { Snippet } from 'svelte';
 
 	type Props = {
 		open: boolean;
@@ -13,7 +14,7 @@
 		canClose?: boolean;
 		large?: boolean;
 		onclose?: () => void;
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	};
 
 	let {

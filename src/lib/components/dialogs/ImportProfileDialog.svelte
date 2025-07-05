@@ -89,8 +89,6 @@
 			if (!confirmed) return;
 		}
 
-		open = false;
-
 		if (data.type === 'normal') {
 			data.manifest.profileName = name;
 
@@ -103,11 +101,13 @@
 		importAll = false;
 
 		await refreshProfiles();
+		open = false;
+
 		pushInfoToast({ message: `Imported profile ${name}.` });
 	}
 
 	function isAvailable(name: string) {
-		return !profiles.some((profile) => profile.name === name);
+		return !$profiles.some((profile) => profile.name === name);
 	}
 
 	export async function openFor(importData: AnyImportData) {
@@ -134,7 +134,7 @@
 
 	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
-			name = profiles[0].name;
+			name = $profiles[0].name;
 		}
 	});
 </script>
@@ -192,7 +192,7 @@
 
 					<Select
 						triggerClass="grow"
-						items={selectItems(profiles.map((profile) => profile.name))}
+						items={selectItems($profiles.map((profile) => profile.name))}
 						type="single"
 						avoidCollisions={false}
 						bind:value={name}

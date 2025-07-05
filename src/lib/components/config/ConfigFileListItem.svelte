@@ -66,7 +66,7 @@
 				{icon}
 				class={clsx([
 					open && file.type === 'ok' ? 'rotate-180' : 'rotate-0',
-					'mr-1 shrink-0 text-lg transition-all'
+					'mr-1 shrink-0 text-lg'
 				])}
 			/>
 
@@ -102,11 +102,7 @@
 		<Collapsible.Content forceMount>
 			{#snippet child({ props, open })}
 				{#if open}
-					<div
-						{...props}
-						class="mb-1 flex flex-col"
-						transition:slide={{ duration: 100, easing: quadOut }}
-					>
+					<div {...props} class="mb-1 flex flex-col">
 						{#each shownSections as section}
 							<button
 								onclick={() => onSectionClicked(file, section)}

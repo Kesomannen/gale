@@ -66,7 +66,7 @@
 			class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed"
 			disabled={mod.isInstalled || locked}
 		>
-			<DropdownArrow bind:open={versionsOpen} class="text-white" />
+			<DropdownArrow open={versionsOpen} class="text-white" />
 		</DropdownMenu.Trigger>
 		<ContextMenuContent
 			type="dropdown"

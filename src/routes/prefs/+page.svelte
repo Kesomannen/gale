@@ -87,13 +87,17 @@
 
 		<SmallHeading>Appearance</SmallHeading>
 
+		<ColorPref category="primary" default="slate">
+			The main color of the interface, including backgrounds and text.</ColorPref
+		>
+		<ColorPref category="accent" default="green">
+			The color of highlighted elements, such as buttons and checkboxes</ColorPref
+		>
+
 		<ZoomLevelPref
 			value={prefs.zoomFactor}
 			set={set((value, prefs) => (prefs.zoomFactor = value))}
 		/>
-
-		<ColorPref category="primary" />
-		<ColorPref category="accent" />
 
 		<div class="flex items-center">
 			<Label>Font family</Label>

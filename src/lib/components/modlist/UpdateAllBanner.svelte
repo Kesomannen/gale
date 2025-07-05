@@ -80,10 +80,7 @@
 		class="mt-1"
 		maxHeight="sm"
 		get={(update, _) => include.get(update) ?? true}
-		set={(update, _, value) => {
-			include.set(update, value);
-			include = include; // force reactivity
-		}}
+		set={(update, _, value) => include.set(update, value)}
 	>
 		{#snippet item({ item: update })}
 			<ModCard fullName={update.fullName} showVersion={false} />

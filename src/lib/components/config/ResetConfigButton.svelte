@@ -1,8 +1,8 @@
 <script lang="ts">
 	import * as api from '$lib/api';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
-	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
+	import ResetButton from '$lib/components/ui/ResetButton.svelte';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -16,7 +16,6 @@
 		switch (value.type) {
 			case 'string':
 			case 'float':
-			case 'int':
 				return true;
 			default:
 				return false;
@@ -36,10 +35,4 @@
 	}
 </script>
 
-<button
-	class="text-primary-400 disabled:text-primary-500 enabled:hover:bg-primary-700 enabled:hover:text-primary-300 ml-1 rounded-lg p-1.5 text-xl disabled:cursor-not-allowed"
-	disabled={locked}
-	{onclick}
->
-	<Icon icon="mdi:refresh" />
-</button>
+<ResetButton disabled={locked} {onclick} class="ml-1" />

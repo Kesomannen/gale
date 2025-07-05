@@ -7,6 +7,7 @@
 	import CreateProfileDialog from '$lib/components/dialogs/CreateProfileDialog.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { dropIn, dropOut } from '$lib/transitions';
+	import DropdownArrow from '../ui/DropdownArrow.svelte';
 
 	let open = $state(false);
 	let newProfilePopupOpen = $state(false);
@@ -26,13 +27,7 @@
 			{$activeProfile?.modCount}
 		</div>
 
-		<Icon
-			icon="mdi:expand-more"
-			class={clsx([
-				open ? 'rotate-180' : 'rotate-0',
-				'shrink-0 origin-center transform text-lg transition-all'
-			])}
-		/>
+		<DropdownArrow {open} />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content forceMount>
 		{#snippet child({ wrapperProps, props, open })}
@@ -44,12 +39,12 @@
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
-						{#each profiles as profile, index}
+						{#each $profiles as profile, index}
 							<ProfilesDropdownItem {profile} {index} />
 						{/each}
 
 						<DropdownMenu.Item
-							class="bg-accent-700 hover:bg-accent-600 flex cursor-default items-center justify-center rounded-sm py-1 text-white"
+							class="bg-accent-700 hover:bg-accent-600 flex items-center justify-center rounded-sm py-1 text-white"
 							onclick={() => (newProfilePopupOpen = true)}
 						>
 							<Icon icon="mdi:plus" class="mr-1 text-lg" />

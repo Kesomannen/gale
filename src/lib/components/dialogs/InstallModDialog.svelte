@@ -17,7 +17,7 @@
 	onMount(() => {
 		listen<Mod>('install_mod', (evt) => {
 			mod = evt.payload;
-			profileName = $activeProfile?.name ?? profiles[0].name;
+			profileName = $activeProfile?.name ?? $profiles[0].name;
 
 			open = true;
 		});
@@ -26,7 +26,7 @@
 	async function install() {
 		if (mod === null) return;
 
-		let profileIndex = profiles.findIndex((profile) => profile.name === profileName);
+		let profileIndex = $profiles.findIndex((profile) => profile.name === profileName);
 		if (profileIndex === -1) return;
 
 		open = false;
@@ -44,7 +44,7 @@
 
 	<Select
 		triggerClass="w-full"
-		items={selectItems(profiles.map((profile) => profile.name))}
+		items={selectItems($profiles.map((profile) => profile.name))}
 		avoidCollisions={false}
 		type="single"
 		bind:value={profileName}

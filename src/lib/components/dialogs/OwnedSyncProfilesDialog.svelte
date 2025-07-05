@@ -74,7 +74,7 @@
 					</div>
 				</div>
 
-				{#if !allProfiles.some((other) => other.sync?.id === profile.id)}
+				{#if !$allProfiles.some((other) => other.sync?.id === profile.id)}
 					<IconButton
 						label="Import"
 						icon="mdi:download"

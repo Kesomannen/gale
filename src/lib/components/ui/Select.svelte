@@ -14,13 +14,14 @@
 		triggerClass?: string;
 		icon?: string;
 		avoidCollisions?: boolean;
+		item?: Snippet<[{ label: string; value: string; selected: boolean }]>;
 	} & (
 			| {
 					label?: never;
 			  }
 			| {
 					placeholder?: never;
-					label: Snippet;
+					label: Snippet<[{ defaultLabel: string | null }]>;
 			  }
 			| {
 					placeholder?: never;
@@ -37,6 +38,7 @@
 		icon,
 		avoidCollisions,
 		label,
+		item: itemSnippet,
 		...restProps
 	}: Props = $props();
 
@@ -64,7 +66,7 @@
 		{/if}
 
 		{#if label && typeof label !== 'string'}
-			{@render label()}
+			{@render label({ defaultLabel: selectedLabel ?? null })}
 		{:else}
 			<div
 				class={[
@@ -76,7 +78,7 @@
 			</div>
 		{/if}
 
-		<DropdownArrow bind:open class="text-primary-400 group-disabled:text-primary-500 ml-auto" />
+		<DropdownArrow {open} class="text-primary-400 group-disabled:text-primary-500 ml-auto" />
 	</Select.Trigger>
 	<Select.Portal>
 		<Select.Content forceMount {avoidCollisions}>
@@ -96,7 +98,11 @@
 										class="hover:bg-primary-700 hover:text-primary-200 flex w-full cursor-default items-center rounded-md px-3 py-1"
 									>
 										{#snippet children({ selected })}
-											<span class="text-primary-400">{item.label}</span>
+											{#if itemSnippet}
+												{@render itemSnippet({ ...item, selected })}
+											{:else}
+												<span class="text-primary-400">{item.label}</span>
+											{/if}
 
 											{#if selected}
 												<Icon icon="mdi:check" class="text-accent-400 ml-auto text-lg" />

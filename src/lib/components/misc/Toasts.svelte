@@ -12,7 +12,7 @@
 	{#each $toasts as toast, i}
 		<div
 			class={[
-				toast.type === 'error' ? 'bg-red-600' : 'bg-accent-600',
+				toast.type === 'error' ? 'bg-red-600' : 'bg-accent-700',
 				'flex items-start overflow-hidden rounded-md p-1.5 xl:p-2 xl:text-lg'
 			]}
 			in:slide={{ duration: 150, easing: expoOut }}
