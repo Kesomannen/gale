@@ -6,8 +6,6 @@
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { Collapsible } from 'bits-ui';
 	import clsx from 'clsx';
-	import { quadOut } from 'svelte/easing';
-	import { slide } from 'svelte/transition';
 
 	type Props = {
 		file: ConfigFile;
@@ -108,7 +106,7 @@
 								onclick={() => onSectionClicked(file, section)}
 								class={[
 									selectedSection === section
-										? 'bg-primary-600 text-primary-200 font-semibold'
+										? 'bg-primary-600 text-primary-200 font-medium'
 										: 'text-primary-300 hover:bg-primary-600',
 									'truncate py-0.5 pr-2 pl-9 text-left text-sm'
 								]}

@@ -106,6 +106,7 @@
 	}
 
 	async function toggleMod(mod: Mod, newState: boolean) {
+		mod.enabled = !mod.enabled;
 		let response = await api.profile.toggleMod(mod.uuid);
 
 		if (response.type == 'done') {
