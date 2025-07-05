@@ -164,6 +164,9 @@ pub(super) async fn fetch_packages(
 
     app.emit("status_update", None::<String>).ok();
 
+    let handle = app.to_owned();
+    tauri::async_runtime::spawn(super::search::test(handle));
+
     return Ok(());
 
     fn emit_update(mods: usize, app: &AppHandle) {

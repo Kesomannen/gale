@@ -16,6 +16,7 @@ use crate::{game::Game, state::ManagerExt};
 pub mod cache;
 pub mod commands;
 pub mod query;
+mod search;
 pub mod token;
 
 mod fetch;

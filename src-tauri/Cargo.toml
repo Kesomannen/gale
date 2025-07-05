@@ -74,6 +74,7 @@ which = { version = "7.0.3", features = ["tracing"] }
 steamlocate = "2.0.1"
 regashii = "0.4.0"
 flate2 = "1.1.2"
+tantivy = "0.24.0"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"
