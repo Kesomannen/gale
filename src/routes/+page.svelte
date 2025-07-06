@@ -3,12 +3,7 @@
 	import DependantsDialog from '$lib/components/dialogs/DependantsDialog.svelte';
 	import type { Mod, AvailableUpdate, Dependant, ModContextItem, SortBy } from '$lib/types';
 	import ModList from '$lib/components/mod-list/ModList.svelte';
-	import {
-		activeProfile,
-		activeProfileLocked,
-		profileQuery,
-		refreshProfiles
-	} from '$lib/stores.svelte';
+	import { profileQuery } from '$lib/stores.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -21,6 +16,7 @@
 	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
 	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
 	import UnknownModsBanner from '$lib/components/mod-list/UnknownModsBanner.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -126,7 +122,7 @@
 
 		if (response.type == 'done') {
 			selectedMod = null;
-			await refreshProfiles();
+			await profiles.refresh();
 		} else {
 			removeDependants.openFor(mod, response.dependants);
 		}
@@ -210,7 +206,7 @@
 
 	$effect(() => {
 		if (maxCount > 0) {
-			$activeProfile;
+			profiles.active;
 			$profileQuery;
 			refresh();
 		}
@@ -226,7 +222,7 @@
 			$profileQuery.includeDisabled
 	);
 
-	let locked = $derived($activeProfileLocked);
+	let locked = $derived(profiles.activeLocked);
 </script>
 
 <div class="flex grow overflow-hidden">
@@ -314,7 +310,7 @@
 	description="The following mods depend on %s and will likely not work if it is uninstalled:"
 	commandName="remove_mod"
 	onExecute={() => {
-		refreshProfiles();
+		profiles.refresh();
 		selectedMod = null;
 	}}
 	onCancel={refresh}
@@ -326,7 +322,7 @@
 	verb="Disable"
 	description="The following mods depend on %s and will likely not work if it is disabled:"
 	commandName="toggle_mod"
-	onExecute={refreshProfiles}
+	onExecute={profiles.refresh}
 	onCancel={refresh}
 />
 
@@ -336,7 +332,7 @@
 	verb="Enable"
 	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled:"
 	commandName="toggle_mod"
-	onExecute={refreshProfiles}
+	onExecute={profiles.refresh}
 	onCancel={refresh}
 	positive
 />

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 
-	import { activeGame } from '$lib/stores.svelte';
 	import * as api from '$lib/api';
 	import Icon from '@iconify/svelte';
 	import GameSelect from '$lib/components/toolbar/GameSelect.svelte';
 	import Updater from './Updater.svelte';
 	import Syncer from './Syncer.svelte';
 	import ProfilesDropdown from './ProfilesDropdown.svelte';
+	import games from '$lib/state/game.svelte';
 
 	let launchGamePopupOpen = $state(false);
 	let gamesOpen = $state(false);
@@ -33,12 +33,12 @@
 		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 items-center justify-between border-r pr-4 pl-2 font-semibold"
 	>
 		<img
-			src="games/{$activeGame?.slug}.webp"
+			src="games/{games.active?.slug}.webp"
 			class="mr-2 max-h-8 max-w-8 rounded-sm"
-			alt={$activeGame?.name}
+			alt={games.active?.name}
 		/>
 
-		{$activeGame?.name}
+		{games.active?.name}
 
 		<Icon
 			icon="mdi:menu"
@@ -51,7 +51,7 @@
 	<Updater />
 </div>
 
-<Dialog title="Launching {$activeGame?.name}..." bind:open={launchGamePopupOpen}>
+<Dialog title="Launching {games.active?.name}..." bind:open={launchGamePopupOpen}>
 	<p class="text-primary-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
 	</p>

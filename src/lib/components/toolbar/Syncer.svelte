@@ -4,7 +4,6 @@
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
 	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
-	import { activeProfile, login, logout, refreshProfiles, user } from '$lib/stores.svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import { discordAvatarUrl } from '$lib/util';
 	import Icon from '@iconify/svelte';
@@ -13,6 +12,8 @@
 	import { DropdownMenu } from 'bits-ui';
 	import OwnedSyncProfilesDialog from '../dialogs/OwnedSyncProfilesDialog.svelte';
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
+	import profiles from '$lib/state/profile.svelte';
+	import user from '$lib/state/user.svelte';
 
 	type State = 'off' | 'synced' | 'outdated';
 
@@ -21,10 +22,10 @@
 	let loading = $state(false);
 
 	let profilesPopupOpen = $state(false);
-	let profiles: ListedSyncProfile[] = $state([]);
+	let syncProfiles: ListedSyncProfile[] = $state([]);
 
-	let syncInfo = $derived($activeProfile?.sync ?? null);
-	let isOwner = $derived(syncInfo?.owner.discordId == $user?.discordId);
+	let syncInfo = $derived(profiles.active?.sync ?? null);
+	let isOwner = $derived(syncInfo?.owner.discordId == user.value?.discordId);
 	let syncState = $derived(
 		(syncInfo === null
 			? 'off'
@@ -69,10 +70,10 @@
 	async function onLoginClicked() {
 		loginLoading = true;
 		try {
-			if ($user === null) {
-				await login();
+			if (user.value === null) {
+				await user.login();
 			} else {
-				await logout();
+				await user.logout();
 			}
 		} finally {
 			loginLoading = false;
@@ -107,7 +108,7 @@
 	async function showOwnedProfiles() {
 		loading = true;
 		try {
-			profiles = await api.profile.sync.getOwned();
+			syncProfiles = await api.profile.sync.getOwned();
 
 			mainPopupOpen = false;
 			profilesPopupOpen = true;
@@ -120,7 +121,7 @@
 		loading = true;
 		try {
 			await command();
-			await refreshProfiles();
+			await profiles.refresh();
 
 			if (message) {
 				pushInfoToast({ message });
@@ -141,7 +142,7 @@
 
 <OwnedSyncProfilesDialog
 	bind:open={profilesPopupOpen}
-	{profiles}
+	profiles={syncProfiles}
 	onClose={() => (mainPopupOpen = true)}
 />
 
@@ -185,7 +186,7 @@
 				<Button
 					onclick={push}
 					{loading}
-					disabled={$user === null}
+					disabled={user.value === null}
 					color="accent"
 					icon="mdi:cloud-upload"
 				>
@@ -199,14 +200,14 @@
 				Disconnect
 			</Button>
 		</div>
-	{:else if $user !== null}
+	{:else if user.value !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
 			Connect
 		</Button>
 	{/if}
 
 	<div class="text-primary-300 mt-4 flex items-center gap-1">
-		{#if $user === null}
+		{#if user.value === null}
 			<Button
 				onclick={onLoginClicked}
 				loading={loginLoading}
@@ -216,7 +217,7 @@
 				Sign in with Discord
 			</Button>
 		{:else}
-			<img src={discordAvatarUrl($user)} alt="" class="size-10 rounded-full shadow-lg" />
+			<img src={discordAvatarUrl(user.value)} alt="" class="size-10 rounded-full shadow-lg" />
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">

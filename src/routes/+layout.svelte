@@ -14,6 +14,7 @@
 	import InstallProgressDialog from '$lib/components/dialogs/InstallProgressDialog.svelte';
 	import WelcomeDialog from '$lib/components/dialogs/WelcomeDialog.svelte';
 	import Navbar from '$lib/components/misc/Navbar.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	type Props = {
 		children?: Snippet;
@@ -22,6 +23,8 @@
 	let { children }: Props = $props();
 
 	onMount(() => {
+		console.log('on mount');
+
 		refreshFont();
 		refreshColor('accent');
 		refreshColor('primary');
@@ -42,6 +45,7 @@
 	}}
 />
 
+<!--
 <Tooltip.Provider>
 	<main class="bg-primary-800 relative flex flex-col overflow-hidden">
 		<Menubar />
@@ -61,3 +65,4 @@
 	<InstallProgressDialog />
 	<WelcomeDialog />
 </Tooltip.Provider>
+-->

@@ -2,12 +2,13 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
-	import { games, refreshProfiles, profiles as allProfiles } from '$lib/stores.svelte';
 	import { capitalize, timeSince } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import games from '$lib/state/game.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	type Props = {
 		open: boolean;
@@ -15,16 +16,18 @@
 		profiles: ListedSyncProfile[];
 	};
 
-	let { open = $bindable(), onClose, profiles = $bindable() }: Props = $props();
+	let { open = $bindable(), onClose, profiles: syncProfiles = $bindable() }: Props = $props();
 
 	let sortedProfiles = $derived(
-		profiles.toSorted((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+		syncProfiles.toSorted(
+			(a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+		)
 	);
 
 	async function importProfile(profile: ListedSyncProfile) {
 		open = false;
 		await api.profile.sync.clone(profile.id, profile.name);
-		await refreshProfiles();
+		await profiles.refresh();
 	}
 
 	async function deleteProfile(profile: ListedSyncProfile) {
@@ -35,11 +38,11 @@
 
 		await api.profile.sync.deleteProfile(profile.id);
 
-		let index = profiles.indexOf(profile);
-		profiles.splice(index, 1);
+		let index = syncProfiles.indexOf(profile);
+		syncProfiles.splice(index, 1);
 
 		await pushInfoToast({ message: 'Deleted sync profile from database.' });
-		await refreshProfiles();
+		await profiles.refresh();
 	}
 </script>
 
@@ -74,7 +77,7 @@
 					</div>
 				</div>
 
-				{#if !$allProfiles.some((other) => other.sync?.id === profile.id)}
+				{#if !profiles.list.some((other) => other.sync?.id === profile.id)}
 					<IconButton
 						label="Import"
 						icon="mdi:download"

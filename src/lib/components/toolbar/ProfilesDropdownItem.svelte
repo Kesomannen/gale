@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { activeProfile, refreshProfiles, setActiveProfile } from '$lib/stores.svelte';
 	import type { ProfileInfo } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { DropdownMenu } from 'bits-ui';
@@ -8,6 +7,7 @@
 	import { pushInfoToast } from '$lib/toast';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
+	import profiles from '$lib/state/profile.svelte';
 
 	type Props = {
 		index: number;
@@ -16,7 +16,7 @@
 
 	let { index, profile }: Props = $props();
 
-	let isActive = $derived(profile.id === $activeProfile?.id);
+	let isActive = $derived(profile.id === profiles.active?.id);
 
 	async function deleteProfile() {
 		let confirmed = await confirm(`Are you sure you want to delete ${profile.name}?`);
@@ -28,7 +28,7 @@
 			message: `Deleted profile ${profile.name}.`
 		});
 
-		refreshProfiles();
+		profiles.refresh();
 	}
 </script>
 
@@ -39,7 +39,7 @@
 			: 'text-primary-400 hover:text-primary-300',
 		'group hover:bg-primary-700 flex cursor-default items-center rounded-sm py-1 pr-1 pl-3 text-left'
 	]}
-	onclick={() => setActiveProfile(index)}
+	onclick={() => profiles.setActive(index)}
 >
 	{#if profile.sync !== null}
 		<Icon icon="mdi:cloud" class="mr-2" />

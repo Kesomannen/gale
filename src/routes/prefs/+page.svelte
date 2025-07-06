@@ -10,7 +10,6 @@
 	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/components/prefs/PlatformPref.svelte';
 
-	import { activeGame } from '$lib/stores.svelte';
 	import type { Prefs, GamePrefs, Platform } from '$lib/types';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
@@ -22,11 +21,12 @@
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import { getFont, useNativeMenu, setFont } from '$lib/theme';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
+	import games from '$lib/state/game.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
 
-	let gameSlug = $derived($activeGame?.slug ?? '');
+	let gameSlug = $derived(games.active?.slug ?? '');
 
 	$effect(() => {
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
@@ -37,7 +37,7 @@
 		};
 	});
 
-	let platforms = $derived($activeGame?.platforms ?? []);
+	let platforms = $derived(games.active?.platforms ?? []);
 	let needsDirectory = $derived(
 		!platforms.some(
 			(p) => p === 'steam' || (platform() === 'windows' && (p === 'epicGames' || p === 'xboxStore'))
@@ -153,7 +153,7 @@
 		</TogglePref>
 
 		<LargeHeading>
-			{$activeGame?.name} settings
+			{games.active?.name} settings
 		</LargeHeading>
 
 		<SmallHeading>Locations</SmallHeading>
@@ -173,9 +173,9 @@
 			set={set((value) => (gamePrefs!.dirOverride = value))}
 		>
 			{#if needsDirectory}
-				The location of the {$activeGame?.name} folder.
+				The location of the {games.active?.name} folder.
 			{:else}
-				Overrides the location of the {$activeGame?.name} folder. If unset, Gale will try to find it
+				Overrides the location of the {games.active?.name} folder. If unset, Gale will try to find it
 				via the specified platform instead.
 			{/if}
 		</PathPref>

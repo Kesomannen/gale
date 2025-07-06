@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Select from '$lib/components/ui/Select.svelte';
-	import { categories } from '$lib/stores.svelte';
+	import games from '$lib/state/game.svelte';
 
 	type Props = {
 		selected: string[];
@@ -12,7 +12,7 @@
 	let { selected = $bindable(), excluded = $bindable(), icon, label: text }: Props = $props();
 
 	let items = $derived(
-		$categories
+		games.categories
 			.map((category) => ({ value: category.name, label: category.name }))
 			.filter((category) => !excluded.includes(category.value))
 			.toSorted()

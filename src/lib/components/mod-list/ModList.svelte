@@ -1,9 +1,9 @@
 <script lang="ts">
 	import VirtualList from '$lib/components/ui/VirtualList.svelte';
-	import { type SortBy, type Mod, type QueryModsArgsWithoutMax } from '$lib/types';
+	import type { Mod, QueryModsArgsWithoutMax } from '$lib/types';
 	import type { Writable } from 'svelte/store';
-	import { activeGame } from '$lib/stores.svelte';
 	import type { Snippet } from 'svelte';
+	import games from '$lib/state/game.svelte';
 
 	type Props = {
 		mods: Mod[];
@@ -39,7 +39,7 @@
 	});
 
 	$effect(() => {
-		$activeGame;
+		games.active;
 		selected = null;
 	});
 

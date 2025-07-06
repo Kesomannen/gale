@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import { activeGame, setActiveGame } from '$lib/stores.svelte';
+	import games from '$lib/state/game.svelte';
 	import type { Game } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { toHeaderCase } from 'js-convert-case';
@@ -13,13 +13,13 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	class={[
-		$activeGame?.slug === game.slug
+		games.active?.slug === game.slug
 			? ' border-primary-500 bg-primary-700'
 			: 'hover:bg-primary-700 border-transparent',
 		'group hover:bg-primary-700 mr-2 flex cursor-pointer items-center rounded-lg border p-1.5 '
 	]}
 	onclick={() => {
-		setActiveGame(game.slug);
+		games.setActive(game.slug);
 		onselect?.();
 	}}
 	role="button"

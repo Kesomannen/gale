@@ -6,13 +6,14 @@
 
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { modQuery, activeProfileLocked, activeProfile } from '$lib/stores.svelte';
+	import { modQuery } from '$lib/stores.svelte';
 	import ModListItem from '$lib/components/mod-list/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
 	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
 	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
 	import { defaultContextItems } from '$lib/context';
 	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems = [...defaultContextItems];
@@ -78,12 +79,12 @@
 	$effect(() => {
 		if (maxCount > 0) {
 			$modQuery;
-			$activeProfile;
+			profiles.active;
 			refresh();
 		}
 	});
 
-	let locked = $derived($activeProfileLocked);
+	let locked = $derived(profiles.activeLocked);
 </script>
 
 <div class="flex grow overflow-hidden">
@@ -113,7 +114,7 @@
 					{mod}
 					{isSelected}
 					{contextItems}
-					locked={$activeProfileLocked}
+					locked={profiles.activeLocked}
 					oninstall={() => installLatest(mod)}
 					onclick={(evt) => onModClicked(evt, mod)}
 				/>

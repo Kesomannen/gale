@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { activeGame } from '$lib/stores.svelte';
+	import games from '$lib/state/game.svelte';
 
 	type Props = {
 		fullName: string;
@@ -26,7 +26,7 @@
 		<div class="flex gap-2">
 			<a
 				class="shrink truncate font-medium text-white hover:underline"
-				href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/{name}/"
+				href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}/"
 				target="_blank"
 				rel="noopener noreferrer"
 			>
@@ -43,7 +43,7 @@
 		{#if author !== null}
 			<a
 				class="text-primary-400 truncate hover:underline"
-				href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/"
+				href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/"
 				target="_blank"
 			>
 				{author}

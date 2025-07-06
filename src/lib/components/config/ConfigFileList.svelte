@@ -5,9 +5,9 @@
 	import type { ConfigSection, ConfigFile } from '$lib/types';
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 
-	import { activeProfile, activeProfileLocked } from '$lib/stores.svelte';
 	import { page } from '$app/state';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	type Props = {
 		selectedFile: ConfigFile | null;
@@ -21,7 +21,7 @@
 	let searchTerm = $state('');
 
 	$effect(() => {
-		$activeProfile;
+		profiles.active;
 
 		files = null;
 		selectedFile = null;
@@ -91,7 +91,7 @@
 			<ConfigFileListItem
 				{file}
 				{selectedSection}
-				locked={$activeProfileLocked}
+				locked={profiles.activeLocked}
 				onFileClicked={(file) => {
 					selectedFile = file;
 					selectedSection = null;

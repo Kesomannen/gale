@@ -3,7 +3,8 @@
 
 	const threshold = writable(0);
 
-	activeProfile.subscribe(() => {
+	$effect(() => {
+		profiles.active;
 		threshold.set(0);
 	});
 </script>
@@ -17,8 +18,8 @@
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
 	import * as api from '$lib/api';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import profiles from '$lib/state/profile.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -45,7 +46,7 @@
 		popupOpen = false;
 
 		await api.profile.update.mods(uuids, true);
-		await refreshProfiles();
+		await profiles.refresh();
 	}
 </script>
 

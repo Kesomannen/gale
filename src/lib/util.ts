@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
-import type { Mod, ConfigEntry, Dependant, SyncUser } from './types';
-import { activeGame } from './stores.svelte';
+import type { Mod, ConfigEntry, SyncUser } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import games from './state/game.svelte';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -74,7 +74,7 @@ export function isOutdated(mod: Mod): boolean {
 }
 
 export function communityUrl(path: string) {
-	return `https://thunderstore.io/c/${get(activeGame)?.slug}/p/${path}/`;
+	return `https://thunderstore.io/c/${games.active?.slug}/p/${path}/`;
 }
 
 export function iconSrc(mod: Mod) {
@@ -84,7 +84,7 @@ export function iconSrc(mod: Mod) {
 	} else if (mod.icon !== null) {
 		return convertFileSrc(mod.icon);
 	} else {
-		return `games/${get(activeGame)?.slug}.webp`;
+		return `games/${games.active?.slug}.webp`;
 	}
 }
 

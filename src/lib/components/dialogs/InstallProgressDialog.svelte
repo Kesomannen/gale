@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import * as api from '$lib/api';
-	import { refreshProfiles } from '$lib/stores.svelte';
 	import type { InstallProgress } from '$lib/types';
 	import { formatTime, shortenFileSize } from '$lib/util';
 
@@ -9,6 +8,7 @@
 
 	import { Progress } from 'bits-ui';
 	import { onMount } from 'svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	let open = $state(false);
 
@@ -39,7 +39,7 @@
 				case 'done':
 					progress.totalProgress = 1;
 					progress.installedMods = progress.totalMods;
-					refreshProfiles();
+					profiles.refresh();
 					setTimeout(() => {
 						open = false;
 					}, 250);

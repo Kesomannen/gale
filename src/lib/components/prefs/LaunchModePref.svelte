@@ -4,10 +4,10 @@
 
 	import type { LaunchMode } from '$lib/types';
 	import { selectItems } from '$lib/util';
-	import { activeGame } from '$lib/stores.svelte';
 	import Info from '$lib/components/ui/Info.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toSentenceCase } from 'js-convert-case';
+	import games from '$lib/state/game.svelte';
 
 	type Props = {
 		value: LaunchMode;
@@ -34,7 +34,7 @@
 		await set(value);
 	}
 
-	let platforms = $derived($activeGame?.platforms ?? []);
+	let platforms = $derived(games.active?.platforms ?? []);
 </script>
 
 <div class="flex items-center">

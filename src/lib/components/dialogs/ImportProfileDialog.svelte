@@ -9,7 +9,6 @@
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import InputField from '$lib/components/ui/InputField.svelte';
-	import { activeGame, profiles, refreshProfiles, setActiveGame } from '$lib/stores.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
@@ -22,6 +21,8 @@
 	import { pushInfoToast } from '$lib/toast';
 	import Select from '$lib/components/ui/Select.svelte';
 	import * as api from '$lib/api';
+	import profiles from '$lib/state/profile.svelte';
+	import games from '$lib/state/game.svelte';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -100,21 +101,21 @@
 		data = null;
 		importAll = false;
 
-		await refreshProfiles();
+		await profiles.refresh();
 		open = false;
 
 		pushInfoToast({ message: `Imported profile ${name}.` });
 	}
 
 	function isAvailable(name: string) {
-		return !$profiles.some((profile) => profile.name === name);
+		return !profiles.list.some((profile) => profile.name === name);
 	}
 
 	export async function openFor(importData: AnyImportData) {
 		data = importData;
 
-		if (data.manifest.community !== null && $activeGame?.slug !== data.manifest.community) {
-			await setActiveGame(data.manifest.community);
+		if (data.manifest.community !== null && games.active?.slug !== data.manifest.community) {
+			await games.setActive(data.manifest.community);
 		}
 
 		name = data.manifest.profileName;
@@ -134,7 +135,7 @@
 
 	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
-			name = $profiles[0].name;
+			name = profiles.list[0].name;
 		}
 	});
 </script>
@@ -192,7 +193,7 @@
 
 					<Select
 						triggerClass="grow"
-						items={selectItems($profiles.map((profile) => profile.name))}
+						items={selectItems(profiles.list.map((profile) => profile.name))}
 						type="single"
 						avoidCollisions={false}
 						bind:value={name}

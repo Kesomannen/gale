@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { refreshProfiles } from '$lib/stores.svelte';
 	import * as api from '$lib/api';
 	import Button from '$lib/components/ui/Button.svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
@@ -8,6 +7,7 @@
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import PathField from '$lib/components/ui/PathField.svelte';
 	import { open as openDialog } from '@tauri-apps/plugin-dialog';
+	import profiles from '$lib/state/profile.svelte';
 
 	type Props = {
 		open?: boolean;
@@ -25,7 +25,7 @@
 
 	async function createProfile() {
 		await api.profile.create(name, override ? path : null);
-		refreshProfiles();
+		await profiles.refresh();
 		open = false;
 	}
 

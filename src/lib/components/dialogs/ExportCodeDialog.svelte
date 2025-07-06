@@ -2,8 +2,8 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import * as api from '$lib/api';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-	import { activeProfile } from '$lib/stores.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	let isOpen = $state(false);
 	let codePromise: Promise<string> | null = $state(null);
@@ -25,7 +25,7 @@
 	<p class="flex-center text-primary-400 mb-1 flex">
 		{#await codePromise}
 			<Spinner class="text-lg" />
-			Exporting {$activeProfile?.name} as code...
+			Exporting {profiles.active?.name} as code...
 		{:then}
 			Export complete! The code has been copied to your clipboard:
 		{/await}

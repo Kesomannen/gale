@@ -18,7 +18,6 @@
 	import MenubarSeparator from './MenubarSeparator.svelte';
 
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
-	import { activeProfile, refreshProfiles } from '$lib/stores.svelte';
 	import * as api from '$lib/api';
 	import { useNativeMenu } from '$lib/theme';
 
@@ -28,6 +27,7 @@
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { pushInfoToast } from '$lib/toast';
 	import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/menu';
+	import profiles from '$lib/state/profile.svelte';
 
 	let importR2Open = $state(false);
 	let newProfileOpen = $state(false);
@@ -214,7 +214,7 @@
 
 		if (path === null) return;
 		await api.profile.import.localMod(path);
-		await refreshProfiles();
+		await profiles.refresh();
 
 		pushInfoToast({
 			message: 'Imported local mod into profile.'
@@ -244,17 +244,16 @@
 
 	async function setAllModsState(enable: boolean) {
 		let count = await api.profile.setAllModsState(enable);
+		await profiles.refresh();
 
 		pushInfoToast({
 			message: `${enable ? 'Enabled' : 'Disabled'} ${count} mods.`
 		});
-
-		activeProfile.update((profile) => profile);
 	}
 
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
 		profileOperation = operation;
-		profileOperationName = $activeProfile?.name ?? 'Unknown';
+		profileOperationName = profiles.active?.name ?? 'Unknown';
 		profileOperationOpen = true;
 	}
 
@@ -280,7 +279,7 @@
 			throw e;
 		}
 
-		await refreshProfiles();
+		await profiles.refresh();
 		profileOperationInProgress = false;
 		profileOperationOpen = false;
 	}
@@ -289,7 +288,7 @@
 		await api.profile.createDesktopShortcut();
 
 		pushInfoToast({
-			message: `Created desktop shortcut for ${$activeProfile?.name}.`
+			message: `Created desktop shortcut for ${profiles.active?.name}.`
 		});
 	}
 
@@ -303,7 +302,7 @@
 			message: `Uninstalled ${count} disabled mods.`
 		});
 
-		await refreshProfiles();
+		await profiles.refresh();
 	}
 
 	async function copyLaunchArgs() {
@@ -365,7 +364,7 @@
 			importProfileDialog.openFor({ type: 'normal', ...data });
 		} else if (file.name.endsWith('.zip')) {
 			await api.profile.import.localModBase64(base64);
-			await refreshProfiles();
+			await profiles.refresh();
 
 			pushInfoToast({
 				message: 'Imported local mod into profile.'

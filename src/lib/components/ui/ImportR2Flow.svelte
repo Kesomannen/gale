@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { R2ImportData } from '$lib/types';
-	import { refreshProfiles } from '$lib/stores.svelte';
 	import Icon from '@iconify/svelte';
 	import { listen } from '@tauri-apps/api/event';
 	import { fade } from 'svelte/transition';
@@ -8,6 +7,7 @@
 	import PathPref from '$lib/components/prefs/PathPref.svelte';
 	import { capitalize } from '$lib/util';
 	import * as api from '$lib/api';
+	import { default as profileState } from '$lib/state/profile.svelte';
 
 	let path: string | null = $state(null);
 	let error = $state('');
@@ -60,7 +60,7 @@
 
 		try {
 			await api.profile.import.r2modman(importData.path, include);
-			refreshProfiles();
+			profileState.refresh();
 
 			success = true;
 		} finally {

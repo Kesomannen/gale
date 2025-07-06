@@ -3,7 +3,7 @@
 
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 	import Link from '$lib/components/ui/Link.svelte';
-	import { games } from '$lib/stores.svelte';
+	import games from '$lib/state/game.svelte';
 
 	type Props = {
 		onselect: () => void;

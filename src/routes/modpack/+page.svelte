@@ -11,7 +11,6 @@
 
 	import * as api from '$lib/api';
 	import type { ModpackArgs } from '$lib/types';
-	import { activeProfile, activeGame, categories } from '$lib/stores.svelte';
 	import { open } from '@tauri-apps/plugin-dialog';
 
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -20,6 +19,8 @@
 	import { toHeaderCase } from 'js-convert-case';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import profiles from '$lib/state/profile.svelte';
+	import games from '$lib/state/game.svelte';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -163,13 +164,13 @@
 	}
 
 	$effect(() => {
-		$activeProfile;
+		profiles.active;
 		refresh();
 	});
 
 	// some communities don't have a specific modpack category
 	let modpackCategoryExists = $derived(
-		$categories.some((category) => category.slug === 'modpacks')
+		games.categories.some((category) => category.slug === 'modpacks')
 	);
 
 	// make sure the modpacks category is always selected if it exists
@@ -240,7 +241,7 @@
 			description="The categories that the modpack belongs to. 'Modpacks' is always included."
 		>
 			<Select
-				items={$categories.map((category) => ({
+				items={games.categories.map((category) => ({
 					label: category.name,
 					value: category.slug
 				}))}
@@ -399,7 +400,7 @@
 	<p class="text-primary-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!
-		<Link href="https://thunderstore.io/c/{$activeGame?.slug}/p/{author}/{name}"
+		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}"
 			>Click here to view its page on the website</Link
 		>.
 	</p>

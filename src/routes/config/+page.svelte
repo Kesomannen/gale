@@ -4,11 +4,11 @@
 	import { capitalize } from '$lib/util';
 	import ExpandedConfigEntryDialog from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 
-	import { activeProfileLocked } from '$lib/stores.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfigFileEditor from '$lib/components/config/ConfigFileEditor.svelte';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
 	import ConfigFileList from '$lib/components/config/ConfigFileList.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	let selectedFile: ConfigFile | null = $state(null);
 	let selectedSection: ConfigSection | null = $state(null);
@@ -18,7 +18,7 @@
 	<ConfigFileList bind:selectedFile bind:selectedSection />
 
 	<div class="flex max-w-4xl grow flex-col overflow-y-auto py-4">
-		{#if $activeProfileLocked}
+		{#if profiles.activeLocked}
 			<ProfileLockedBanner class="mx-4 mb-4" />
 		{/if}
 
@@ -35,7 +35,7 @@
 				<ConfigFileEditor
 					file={selectedFile}
 					section={selectedSection}
-					locked={$activeProfileLocked}
+					locked={profiles.activeLocked}
 				/>
 			{:else if selectedFile.type === 'unsupported'}
 				<div class="text-primary-400 mb-1 px-4">

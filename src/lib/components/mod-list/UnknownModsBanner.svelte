@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Dependant, Mod } from '$lib/types';
+	import type { Dependant } from '$lib/types';
 	import Icon from '@iconify/svelte';
 
 	type Props = {
