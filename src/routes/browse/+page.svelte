@@ -2,17 +2,17 @@
 	import * as api from '$lib/api';
 	import type { SortBy, Mod, ModId } from '$lib/types';
 
-	import ModList from '$lib/components/modlist/ModList.svelte';
+	import ModList from '$lib/components/mod-list/ModList.svelte';
 
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { modQuery, activeProfileLocked, activeProfile } from '$lib/stores.svelte';
-	import ModListItem from '$lib/components/modlist/ModListItem.svelte';
-	import ProfileLockedBanner from '$lib/components/modlist/ProfileLockedBanner.svelte';
-	import ModDetails from '$lib/components/modlist/ModDetails.svelte';
-	import ModListFilters from '$lib/components/modlist/ModListFilters.svelte';
+	import ModListItem from '$lib/components/mod-list/ModListItem.svelte';
+	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
+	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
+	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
 	import { defaultContextItems } from '$lib/context';
-	import InstallModButton from '$lib/components/modlist/InstallModButton.svelte';
+	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems = [...defaultContextItems];

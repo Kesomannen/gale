@@ -7,7 +7,7 @@
 	import { activeProfileLocked } from '$lib/stores.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfigFileEditor from '$lib/components/config/ConfigFileEditor.svelte';
-	import ProfileLockedBanner from '$lib/components/modlist/ProfileLockedBanner.svelte';
+	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
 	import ConfigFileList from '$lib/components/config/ConfigFileList.svelte';
 
 	let selectedFile: ConfigFile | null = $state(null);

@@ -2,7 +2,7 @@
 	import * as api from '$lib/api';
 	import DependantsDialog from '$lib/components/dialogs/DependantsDialog.svelte';
 	import type { Mod, AvailableUpdate, Dependant, ModContextItem, SortBy } from '$lib/types';
-	import ModList from '$lib/components/modlist/ModList.svelte';
+	import ModList from '$lib/components/mod-list/ModList.svelte';
 	import {
 		activeProfile,
 		activeProfileLocked,
@@ -13,14 +13,14 @@
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
-	import ProfileModListItem from '$lib/components/modlist/ProfileModListItem.svelte';
-	import UpdateAllBanner from '$lib/components/modlist/UpdateAllBanner.svelte';
+	import ProfileModListItem from '$lib/components/mod-list/ProfileModListItem.svelte';
+	import UpdateAllBanner from '$lib/components/mod-list/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
-	import ProfileLockedBanner from '$lib/components/modlist/ProfileLockedBanner.svelte';
+	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
 	import { defaultContextItems } from '$lib/context';
-	import ModDetails from '$lib/components/modlist/ModDetails.svelte';
-	import ModListFilters from '$lib/components/modlist/ModListFilters.svelte';
-	import UnknownModsBanner from '$lib/components/modlist/UnknownModsBanner.svelte';
+	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
+	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
+	import UnknownModsBanner from '$lib/components/mod-list/UnknownModsBanner.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',

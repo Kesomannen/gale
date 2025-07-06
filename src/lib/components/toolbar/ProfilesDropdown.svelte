@@ -35,7 +35,7 @@
 				{#if open}
 					<div
 						{...props}
-						class="border-primary-600 bg-primary-800 z-50 flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border p-1 shadow-lg"
+						class="border-primary-600 bg-primary-800 z-30 flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border p-1 shadow-lg"
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
@@ -44,7 +44,7 @@
 						{/each}
 
 						<DropdownMenu.Item
-							class="bg-accent-700 hover:bg-accent-600 flex items-center justify-center rounded-sm py-1 text-white"
+							class="bg-accent-700 hover:bg-accent-600 flex cursor-pointer items-center justify-center rounded-sm py-1 text-white"
 							onclick={() => (newProfilePopupOpen = true)}
 						>
 							<Icon icon="mdi:plus" class="mr-1 text-lg" />

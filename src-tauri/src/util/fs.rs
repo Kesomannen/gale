@@ -1,12 +1,12 @@
 use std::{
     ffi::OsStr,
     fs::{self, File},
-    io::{BufReader, BufWriter},
+    io::{self, BufReader, BufWriter, Read},
     path::{Path, PathBuf},
 };
 
-use tracing::warn;
 use serde::{de::DeserializeOwned, Serialize};
+use tracing::warn;
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
@@ -190,4 +190,20 @@ impl PathExt for PathBuf {
             None => self.set_extension(extension.as_ref()),
         };
     }
+}
+
+pub fn checksum(path: &Path) -> io::Result<blake3::Hash> {
+    let mut file = File::open(path)?;
+    let mut hasher = blake3::Hasher::new();
+    let mut buffer = [0u8; 4096];
+
+    loop {
+        let n = file.read(&mut buffer)?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buffer[..n]);
+    }
+
+    Ok(hasher.finalize())
 }

@@ -1,7 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     fs::{self, File},
-    io::{self, BufReader, Cursor, Read, Seek},
+    io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
 };
 
@@ -187,22 +187,6 @@ fn resolve_mods(mods: Vec<R2Mod>, app: &AppHandle) -> Result<(Vec<VersionIdent>,
     Ok((names, installs))
 }
 
-fn file_checksum(path: &Path) -> io::Result<blake3::Hash> {
-    let mut file = File::open(path)?;
-    let mut hasher = blake3::Hasher::new();
-    let mut buffer = [0u8; 4096];
-
-    loop {
-        let n = file.read(&mut buffer)?;
-        if n == 0 {
-            break;
-        }
-        hasher.update(&buffer[..n]);
-    }
-
-    Ok(hasher.finalize())
-}
-
 fn incremental_update(
     installs: Vec<ModInstall>,
     mod_names: &[VersionIdent],
@@ -273,7 +257,7 @@ pub fn import_config(
         };
 
         let need_copy = if dest_path.exists() {
-            file_checksum(&src_path)? != file_checksum(&dest_path)?
+            util::fs::checksum(&src_path)? != util::fs::checksum(&dest_path)?
         } else {
             true
         };
