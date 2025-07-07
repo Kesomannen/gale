@@ -390,8 +390,10 @@
 		</div>
 
 		<div class="mt-3 flex justify-end gap-2">
-			<Button color="primary" onclick={exportToFile}>Export to file</Button>
-			<Button color="accent" onclick={uploadToThunderstore}>Publish on Thunderstore</Button>
+			<Button color="primary" icon="mdi:export" onclick={exportToFile}>Export to file</Button>
+			<Button color="accent" icon="mdi:upload" onclick={uploadToThunderstore}
+				>Publish on Thunderstore</Button
+			>
 		</div>
 	{/if}
 </div>
