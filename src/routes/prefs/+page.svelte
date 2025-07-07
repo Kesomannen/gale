@@ -18,13 +18,16 @@
 	import ColorPref from '$lib/components/prefs/ColorPref.svelte';
 
 	import Label from '$lib/components/ui/Label.svelte';
-	import InputField from '$lib/components/ui/InputField.svelte';
 	import { getFont, useNativeMenu, setFont } from '$lib/theme';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import { selectItems } from '$lib/util';
+	import ResetButton from '$lib/components/ui/ResetButton.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
+	let fonts: string[] = $state([]);
 
 	let gameSlug = $derived(games.active?.slug ?? '');
 
@@ -45,6 +48,7 @@
 	);
 
 	onMount(async () => {
+		api.prefs.getSystemFonts().then((values) => (fonts = values));
 		await refresh();
 	});
 
@@ -94,20 +98,34 @@
 			The color of highlighted elements, such as buttons and checkboxes</ColorPref
 		>
 
-		<ZoomLevelPref
-			value={prefs.zoomFactor}
-			set={set((value, prefs) => (prefs.zoomFactor = value))}
-		/>
-
 		<div class="flex items-center">
 			<Label>Font family</Label>
 
+			<!--
 			<InputField
 				value={getFont()}
 				onchange={(value) => setFont(value)}
 				placeholder="Nunito Sans"
 			/>
+			-->
+
+			<Select
+				items={selectItems(fonts)}
+				type="single"
+				triggerClass="grow"
+				placeholder="Nunito Sans (default)"
+				value={getFont()}
+				onValueChange={(value) => setFont(value)}
+				loop
+			/>
+
+			<ResetButton onclick={() => setFont('Nunito Sans')} class="ml-1" />
 		</div>
+
+		<ZoomLevelPref
+			value={prefs.zoomFactor}
+			set={set((value, prefs) => (prefs.zoomFactor = value))}
+		/>
 
 		<div class="my-1 flex items-center">
 			<Label>Use native menubar</Label>

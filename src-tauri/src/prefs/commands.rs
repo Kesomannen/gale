@@ -1,4 +1,5 @@
 use eyre::anyhow;
+use font_kit::source::SystemSource;
 use serde::Deserialize;
 use tauri::{command, AppHandle, Manager, Window};
 
@@ -45,4 +46,11 @@ pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
     prefs.save(app.db())?;
 
     Ok(())
+}
+
+#[command]
+pub fn get_system_fonts() -> Result<Vec<String>> {
+    let fonts = SystemSource::new().all_families().unwrap();
+
+    Ok(fonts)
 }
