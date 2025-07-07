@@ -22,6 +22,4 @@ const user = new UserState();
 
 user.refresh();
 
-console.log('user.svelte.ts');
-
 export default user;

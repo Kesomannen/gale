@@ -17,11 +17,11 @@
 
 	type State = 'off' | 'synced' | 'outdated';
 
-	let mainPopupOpen = $state(false);
+	let mainDialogOpen = $state(false);
 	let loginLoading = $state(false);
 	let loading = $state(false);
 
-	let profilesPopupOpen = $state(false);
+	let profilesDialogOpen = $state(false);
 	let syncProfiles: ListedSyncProfile[] = $state([]);
 
 	let syncInfo = $derived(profiles.active?.sync ?? null);
@@ -86,12 +86,12 @@
 
 	async function push() {
 		await wrapCommand(api.profile.sync.push, 'Pushed update to synced profile.');
-		mainPopupOpen = false;
+		mainDialogOpen = false;
 	}
 
 	async function pull() {
 		await wrapCommand(api.profile.sync.pull, 'Pulled changes from synced profile.');
-		mainPopupOpen = false;
+		mainDialogOpen = false;
 	}
 
 	async function refresh() {
@@ -102,7 +102,7 @@
 		let del = isOwner && (await ask('Do you also want to delete the profile from the database?'));
 
 		await wrapCommand(() => api.profile.sync.disconnect(del), 'Disconnected synced profile.');
-		mainPopupOpen = false;
+		mainDialogOpen = false;
 	}
 
 	async function showOwnedProfiles() {
@@ -110,8 +110,8 @@
 		try {
 			syncProfiles = await api.profile.sync.getOwned();
 
-			mainPopupOpen = false;
-			profilesPopupOpen = true;
+			mainDialogOpen = false;
+			profilesDialogOpen = true;
 		} finally {
 			loading = false;
 		}
@@ -134,19 +134,19 @@
 
 <button
 	class="{style.classes} bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
-	onclick={() => (mainPopupOpen = true)}
+	onclick={() => (mainDialogOpen = true)}
 >
 	<Icon icon={style.icon} />
 	<div>{style.label}</div>
 </button>
 
 <OwnedSyncProfilesDialog
-	bind:open={profilesPopupOpen}
+	bind:open={profilesDialogOpen}
 	profiles={syncProfiles}
-	onClose={() => (mainPopupOpen = true)}
+	onClose={() => (mainDialogOpen = true)}
 />
 
-<Dialog bind:open={mainPopupOpen} title="Profile sync">
+<Dialog bind:open={mainDialogOpen} title="Profile sync">
 	{#if syncInfo !== null}
 		{#if !isOwner}
 			<div class="text-primary-300 mt-2 flex items-center">

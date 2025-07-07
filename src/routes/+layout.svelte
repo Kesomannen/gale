@@ -15,6 +15,7 @@
 	import WelcomeDialog from '$lib/components/dialogs/WelcomeDialog.svelte';
 	import Navbar from '$lib/components/misc/Navbar.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { updateBanner } from '$lib/state/misc.svelte';
 
 	type Props = {
 		children?: Snippet;
@@ -23,8 +24,6 @@
 	let { children }: Props = $props();
 
 	onMount(() => {
-		console.log('on mount');
-
 		refreshFont();
 		refreshColor('accent');
 		refreshColor('primary');
@@ -32,6 +31,11 @@
 		// workaround for https://github.com/huntabyte/bits-ui/issues/1639
 		setTimeout(() => {
 			document.body.style.pointerEvents = 'auto';
+		});
+
+		$effect(() => {
+			profiles.active;
+			updateBanner.threshold = 0;
 		});
 	});
 </script>
@@ -45,7 +49,6 @@
 	}}
 />
 
-<!--
 <Tooltip.Provider>
 	<main class="bg-primary-800 relative flex flex-col overflow-hidden">
 		<Menubar />
@@ -65,4 +68,3 @@
 	<InstallProgressDialog />
 	<WelcomeDialog />
 </Tooltip.Provider>
--->

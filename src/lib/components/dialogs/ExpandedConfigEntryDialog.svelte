@@ -1,18 +1,13 @@
-<script module lang="ts">
-	export let expandedEntry = writable<ConfigEntryId | null>(null);
-</script>
-
 <script lang="ts">
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ResizableInputField from '$lib/components/ui/ResizableInputField.svelte';
 	import TabsMenu from '$lib/components/ui/TabsMenu.svelte';
 	import { setConfigEntry } from '$lib/config';
-	import type { ConfigEntryId } from '$lib/types';
 	import { getListSeparator, type ListSeparator } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { Tabs } from 'bits-ui';
-	import { writable } from 'svelte/store';
+	import { config } from '$lib/state/misc.svelte';
 
 	let mode: 'text' | 'list' = $state('text');
 	let newElement = $state('');
@@ -24,29 +19,29 @@
 	}
 
 	async function submitValue() {
-		if ($expandedEntry === null) return;
+		if (!config.expandedEntry) return;
 
-		await setConfigEntry($expandedEntry, {
+		await setConfigEntry(config.expandedEntry, {
 			type: 'string',
 			content
 		});
 
-		$expandedEntry.entry.value.content = content;
+		config.expandedEntry.entry.value.content = content;
 	}
 
 	function reset() {
-		if ($expandedEntry === null) return;
+		if (!config.expandedEntry) return;
 
 		mode = 'text';
 		newElement = '';
 
-		content = $expandedEntry.entry.value.content as string;
-		separator = getListSeparator($expandedEntry.entry);
+		content = config.expandedEntry.entry.value.content as string;
+		separator = getListSeparator(config.expandedEntry.entry);
 	}
 
-	let open = $derived($expandedEntry !== null);
+	let open = $derived(config.expandedEntry !== null);
 
-	let content = $derived(($expandedEntry?.entry.value.content as string) ?? '');
+	let content = $derived((config.expandedEntry?.entry.value.content as string) ?? '');
 	let items = $derived(content.split(separator.char));
 
 	$effect(() => {
@@ -56,11 +51,11 @@
 
 <Dialog
 	large
-	title="Edit {$expandedEntry?.entry.name}"
-	onclose={() => ($expandedEntry = null)}
+	title="Edit {config.expandedEntry?.entry.name}"
+	onclose={() => (config.expandedEntry = null)}
 	{open}
 >
-	{#if $expandedEntry !== null && $expandedEntry.entry.value.type === 'string'}
+	{#if config.expandedEntry && config.expandedEntry.entry.value.type === 'string'}
 		<TabsMenu
 			bind:value={mode}
 			options={[

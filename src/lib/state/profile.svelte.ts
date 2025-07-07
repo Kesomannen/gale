@@ -17,14 +17,10 @@ class ProfilesState {
 	});
 
 	refresh = async () => {
-		console.log('refreshing profiles');
-
 		const info = await api.profile.getInfo();
 
 		this.list = info.profiles;
 		this.active = info.profiles.find((profile) => profile.id === info.activeId) ?? null;
-
-		console.log($state.snapshot(this.list), $state.snapshot(this.active));
 	};
 
 	setActive = async (index: number) => {
@@ -40,7 +36,4 @@ class ProfilesState {
 }
 
 const profiles = new ProfilesState();
-
-console.log('profile.svelte.ts');
-
 export default profiles;

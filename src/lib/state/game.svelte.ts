@@ -10,8 +10,6 @@ class GamesState {
 	categories: PackageCategory[] = $state([]);
 
 	refresh = async () => {
-		console.log('refreshing games');
-
 		const info: GameInfo = await api.profile.getGameInfo();
 
 		for (let game of info.all) {
@@ -57,7 +55,5 @@ class GamesState {
 const games = new GamesState();
 
 games.refresh();
-
-console.log('game.svelte.ts');
 
 export default games;

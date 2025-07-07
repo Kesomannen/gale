@@ -7,7 +7,7 @@
 	import Markdown from '$lib/components/ui/Markdown.svelte';
 	import Link from '$lib/components/ui/Link.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import ApiKeyDialog, { apiKeyDialogOpen } from '$lib/components/dialogs/ApiKeyDialog.svelte';
+	import ApiKeyDialog from '$lib/components/dialogs/ApiKeyDialog.svelte';
 
 	import * as api from '$lib/api';
 	import type { ModpackArgs } from '$lib/types';
@@ -21,6 +21,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import profiles from '$lib/state/profile.svelte';
 	import games from '$lib/state/game.svelte';
+	import { apiKeyDialog } from '$lib/state/misc.svelte';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -38,7 +39,7 @@
 	let includeDisabled: boolean = $state(false);
 	let includeFiles = $state(new SvelteMap<string, boolean>());
 
-	let donePopupOpen = $state(false);
+	let doneDialogOpen = $state(false);
 	let loading: string | null = $state(null);
 
 	let includedFileCount = $state(0);
@@ -112,11 +113,12 @@
 		let hasToken = await api.thunderstore.hasToken();
 
 		if (!hasToken) {
-			$apiKeyDialogOpen = true;
+			apiKeyDialog.open = true;
 
+			// wait until api key has been set
 			await new Promise<void>((resolve) => {
 				const interval = setInterval(() => {
-					if (!$apiKeyDialogOpen) {
+					if (!apiKeyDialog.open) {
 						clearInterval(interval);
 						resolve();
 					}
@@ -133,7 +135,7 @@
 		loading = 'Uploading modpack to Thunderstore...';
 		try {
 			await api.profile.export.uploadPack(args());
-			donePopupOpen = true;
+			doneDialogOpen = true;
 		} finally {
 			loading = null;
 		}
@@ -396,7 +398,7 @@
 
 <ApiKeyDialog />
 
-<Dialog bind:open={donePopupOpen} title="Modpack upload complete">
+<Dialog bind:open={doneDialogOpen} title="Modpack upload complete">
 	<p class="text-primary-300">
 		{name}
 		{versionNumber} has successfully been published on Thunderstore!

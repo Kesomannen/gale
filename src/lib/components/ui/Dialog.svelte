@@ -4,7 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	import { expoOut, quadIn } from 'svelte/easing';
+	import { expoOut, linear, quadIn, sineIn } from 'svelte/easing';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
@@ -71,7 +71,7 @@
 				<div
 					class="pointer-events-none fixed inset-0 flex items-center justify-center"
 					in:fly={{ duration: 200, easing: expoOut, y: 8 }}
-					out:fly={{ duration: 50, easing: quadIn, y: 5 }}
+					out:fly={{ duration: 50, easing: linear, y: 5 }}
 				>
 					<div
 						class={[

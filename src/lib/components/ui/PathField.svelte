@@ -37,7 +37,7 @@
 	</Info>
 
 	<button
-		class="group bg-primary-900 hover:border-primary-500 flex grow basis-0 items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
+		class="group bg-primary-900 hover:border-primary-500 flex grow basis-0 items-center truncate rounded-lg border border-transparent py-1 pr-1 pl-3 text-right"
 		{onclick}
 	>
 		<div class="mr-2 rounded-sm">

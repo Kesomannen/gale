@@ -113,10 +113,9 @@
 			<Label>Use native menubar</Label>
 
 			<Checkbox
-				checked={$useNativeMenu}
+				checked={useNativeMenu.current}
 				onCheckedChange={(value) => {
-					console.log('checked');
-					$useNativeMenu = value;
+					useNativeMenu.current = value;
 				}}
 			/>
 		</div>

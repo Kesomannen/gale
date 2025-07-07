@@ -5,8 +5,8 @@
 	import ResetConfigButton from './ResetConfigButton.svelte';
 	import Icon from '@iconify/svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
-	import { expandedEntry } from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 	import { getListSeparator } from '$lib/util';
+	import { config } from '$lib/state/misc.svelte';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -50,7 +50,7 @@
 	{#if showExpandButton && !locked}
 		<button
 			class="bg-primary-900 text-primary-400 hover:bg-primary-800 absolute top-1 right-1 rounded-lg p-1 text-lg"
-			onclick={() => ($expandedEntry = entryId)}
+			onclick={() => (config.expandedEntry = entryId)}
 		>
 			<Icon icon="mdi:arrow-expand" />
 		</button>

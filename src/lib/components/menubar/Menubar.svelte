@@ -373,16 +373,14 @@
 	}
 
 	$effect(() => {
-		if (menu != null) {
-			appWindow.setDecorations($useNativeMenu);
+		if (menu) {
+			appWindow.setDecorations(useNativeMenu.current);
 
-			if ($useNativeMenu) {
+			if (useNativeMenu.current) {
 				menu.setAsAppMenu();
 			} else {
 				Menu.new().then((menu) => menu.setAsAppMenu());
 			}
-
-			localStorage.setItem('useNativeMenu', $useNativeMenu.toString());
 		}
 	});
 
@@ -396,7 +394,7 @@
 
 	onMount(async () => {
 		document.onkeydown = ({ key, ctrlKey }) => {
-			if ($useNativeMenu) return;
+			if (useNativeMenu.current) return;
 
 			if (key === 'F2') {
 				openProfileOperation('rename');
@@ -447,7 +445,7 @@
 <header
 	data-tauri-drag-region
 	class="bg-primary-800 flex h-8 shrink-0"
-	class:hidden={$useNativeMenu}
+	class:hidden={useNativeMenu.current}
 >
 	<Menubar.Root class="flex items-center py-1">
 		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />

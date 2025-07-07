@@ -32,6 +32,7 @@
 	<div class="mt-3 ml-auto flex justify-end gap-2 overflow-hidden">
 		<Button
 			color="primary"
+			icon="mdi:close"
 			onclick={() => {
 				onCancel?.();
 				open = false;

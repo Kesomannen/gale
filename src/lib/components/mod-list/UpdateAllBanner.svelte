@@ -1,14 +1,3 @@
-<script lang="ts" module>
-	import { writable } from 'svelte/store';
-
-	const threshold = writable(0);
-
-	$effect(() => {
-		profiles.active;
-		threshold.set(0);
-	});
-</script>
-
 <script lang="ts">
 	import Checklist from '$lib/components/ui/Checklist.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -20,6 +9,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import profiles from '$lib/state/profile.svelte';
+	import { updateBanner } from '$lib/state/misc.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -27,14 +17,14 @@
 
 	let { updates }: Props = $props();
 
-	let popupOpen = $state(false);
+	let dialogOpen = $state(false);
 	let include: SvelteMap<AvailableUpdate, boolean> = $state(new SvelteMap());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
 
 	$effect(() => {
-		if (popupOpen && shownUpdates.length === 0) {
-			popupOpen = false;
+		if (dialogOpen && shownUpdates.length === 0) {
+			dialogOpen = false;
 		}
 	});
 
@@ -43,14 +33,14 @@
 			.filter((update) => include.get(update) ?? true)
 			.map((update) => update.packageUuid);
 
-		popupOpen = false;
+		dialogOpen = false;
 
 		await api.profile.update.mods(uuids, true);
 		await profiles.refresh();
 	}
 </script>
 
-{#if shownUpdates.length > $threshold}
+{#if shownUpdates.length > updateBanner.threshold}
 	<div class="bg-accent-700 text-accent-100 mr-3 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
 		<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
 		There {shownUpdates.length === 1 ? 'is' : 'are'}
@@ -58,21 +48,21 @@
 		{shownUpdates.length === 1 ? ' update' : ' updates'} available.
 		<button
 			class="hover:text-accent-200 ml-1 font-semibold text-white hover:underline"
-			onclick={() => (popupOpen = true)}
+			onclick={() => (dialogOpen = true)}
 		>
 			Update all?
 		</button>
 
 		<button
 			class="hover:bg-accent-600 ml-auto rounded-md p-1 text-xl"
-			onclick={() => ($threshold = shownUpdates.length)}
+			onclick={() => (updateBanner.threshold = shownUpdates.length)}
 		>
 			<Icon icon="mdi:close" />
 		</button>
 	</div>
 {/if}
 
-<ConfirmDialog title="Confirm update" bind:open={popupOpen}>
+<ConfirmDialog title="Confirm update" bind:open={dialogOpen}>
 	Select which mods to update:
 
 	<Checklist
@@ -105,6 +95,6 @@
 	</Checklist>
 
 	{#snippet buttons()}
-		<Button color="accent" onclick={updateAll}>Update mods</Button>
+		<Button color="accent" icon="mdi:download" onclick={updateAll}>Update mods</Button>
 	{/snippet}
 </ConfirmDialog>

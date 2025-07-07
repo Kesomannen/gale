@@ -6,17 +6,15 @@
 	type Props = {
 		to: string;
 		icon: string;
-		label: string;
 		tooltip: string;
-		expanded: boolean;
 	};
 
-	let { to, icon, label, tooltip, expanded }: Props = $props();
+	let { to, icon, tooltip }: Props = $props();
 
 	let active = $derived(page.url.pathname === to);
 </script>
 
-{#snippet link()}
+<Tooltip text={tooltip} side="right">
 	<a
 		href={to}
 		class={[
@@ -27,17 +25,5 @@
 		]}
 	>
 		<Icon class="text-[1.75rem]" {icon} />
-
-		{#if expanded}
-			<span>{label}</span>
-		{/if}
 	</a>
-{/snippet}
-
-{#if expanded}
-	{@render link()}
-{:else}
-	<Tooltip text={tooltip} side="right">
-		{@render link()}
-	</Tooltip>
-{/if}
+</Tooltip>

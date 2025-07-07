@@ -9,7 +9,7 @@
 	import profiles from '$lib/state/profile.svelte';
 
 	let open = $state(false);
-	let newProfilePopupOpen = $state(false);
+	let createDialogOpen = $state(false);
 </script>
 
 <DropdownMenu.Root bind:open>
@@ -44,7 +44,7 @@
 
 						<DropdownMenu.Item
 							class="bg-accent-700 hover:bg-accent-600 flex cursor-pointer items-center justify-center rounded-sm py-1 text-white"
-							onclick={() => (newProfilePopupOpen = true)}
+							onclick={() => (createDialogOpen = true)}
 						>
 							<Icon icon="mdi:plus" class="mr-1 text-lg" />
 							New profile
@@ -56,4 +56,4 @@
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<CreateProfileDialog bind:open={newProfilePopupOpen} />
+<CreateProfileDialog bind:open={createDialogOpen} />

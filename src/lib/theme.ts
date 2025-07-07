@@ -1,3 +1,4 @@
+import { PersistedState } from 'runed';
 import { writable } from 'svelte/store';
 import getPalette from 'tailwindcss-palette-generator';
 
@@ -365,6 +366,4 @@ export function refreshFont() {
 	setFont(getFont());
 }
 
-export const useNativeMenu = writable(
-	(JSON.parse(localStorage.getItem('useNativeMenu') ?? 'false') as boolean | null) ?? false
-);
+export const useNativeMenu = new PersistedState('useNativeMenu', false);

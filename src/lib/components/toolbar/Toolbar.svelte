@@ -9,12 +9,12 @@
 	import ProfilesDropdown from './ProfilesDropdown.svelte';
 	import games from '$lib/state/game.svelte';
 
-	let launchGamePopupOpen = $state(false);
+	let launchDialogOpen = $state(false);
 	let gamesOpen = $state(false);
 
 	function launchGame() {
 		api.profile.launch.launchGame();
-		launchGamePopupOpen = true;
+		launchDialogOpen = true;
 	}
 </script>
 
@@ -51,7 +51,7 @@
 	<Updater />
 </div>
 
-<Dialog title="Launching {games.active?.name}..." bind:open={launchGamePopupOpen}>
+<Dialog title="Launching {games.active?.name}..." bind:open={launchDialogOpen}>
 	<p class="text-primary-400">
 		If the game is taking a while to start, it's probably because Steam is starting up.
 	</p>

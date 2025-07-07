@@ -5,8 +5,8 @@
 	import Icon from '@iconify/svelte';
 	import { getVersion } from '@tauri-apps/api/app';
 	import { onMount } from 'svelte';
-	import { isChecking, nextUpdate, refreshUpdate } from '../toolbar/Updater.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import updates from '$lib/state/update.svelte';
 
 	type Props = {
 		open?: boolean;
@@ -60,8 +60,8 @@
 		</div>
 		<div class="mt-3 flex items-center gap-2">
 			<Button
-				onclick={() => refreshUpdate().then(() => (checkedUpdate = true))}
-				disabled={$isChecking}
+				onclick={() => updates.refresh().then(() => (checkedUpdate = true))}
+				loading={updates.isChecking}
 				color="primary"
 				class="mr-2"
 				icon="mdi:refresh"
@@ -69,16 +69,13 @@
 				Check for updates</Button
 			>
 
-			{#if $isChecking}
-				<Icon icon="mdi:loading" class="text-primary-400 animate-spin text-xl" />
-				<span class="text-primary-400">Checking for updates...</span>
-			{:else if checkedUpdate}
-				{#if $nextUpdate === null}
+			{#if !updates.isChecking && checkedUpdate}
+				{#if updates.next}
+					<Icon icon="mdi:arrow-up-circle" class="text-accent-400 inline text-xl" />
+					<span class="text-accent-400">New version available: {updates.next.version}</span>
+				{:else}
 					<Icon icon="mdi:check" class="text-primary-300 text-xl" />
 					<span class="text-primary-300">You are running the latest version</span>
-				{:else}
-					<Icon icon="mdi:arrow-up-circle" class="text-accent-400 inline text-xl" />
-					<span class="text-accent-400">New version available: {$nextUpdate?.version}</span>
 				{/if}
 			{/if}
 		</div>

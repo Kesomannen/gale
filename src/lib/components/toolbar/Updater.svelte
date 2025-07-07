@@ -1,20 +1,3 @@
-<script module lang="ts">
-	import { check, type Update } from '@tauri-apps/plugin-updater';
-	import { writable } from 'svelte/store';
-
-	export let nextUpdate = writable<Update | null>(null);
-	export let isChecking = writable(false);
-
-	export async function refreshUpdate() {
-		isChecking.set(true);
-		let update = await check();
-		isChecking.set(false);
-
-		if (update === null || !update.available) return;
-		nextUpdate.set(update);
-	}
-</script>
-
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
@@ -25,19 +8,20 @@
 	import { Dialog } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { pushToast } from '$lib/toast';
+	import updates from '$lib/state/update.svelte';
 
-	let popupOpen = $state(false);
+	let dialogOpen = $state(false);
 	let loading = $state(false);
 
 	onMount(() => {
-		refreshUpdate();
+		updates.refresh();
 	});
 
 	async function installUpdate() {
-		if ($nextUpdate === null) return;
+		if (!updates.next) return;
 
 		try {
-			await $nextUpdate.downloadAndInstall();
+			await updates.next.downloadAndInstall();
 		} catch (error) {
 			let message: string;
 			if (typeof error === 'string') {
@@ -55,11 +39,11 @@
 			});
 		}
 
-		$nextUpdate = null;
+		updates.next = null;
 	}
 
 	async function update() {
-		popupOpen = false;
+		dialogOpen = false;
 		loading = true;
 		await installUpdate();
 		loading = false;
@@ -72,11 +56,11 @@
 	}
 </script>
 
-{#if $nextUpdate !== null}
+{#if updates.next}
 	<button
 		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 my-auto mr-2 ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
 		disabled={loading}
-		onclick={() => (popupOpen = true)}
+		onclick={() => (dialogOpen = true)}
 	>
 		{#if loading}
 			<Icon icon="mdi:loading" class="animate-spin" />
@@ -87,11 +71,12 @@
 	</button>
 {/if}
 
-<ConfirmDialog title="App update available" bind:open={popupOpen}>
+<ConfirmDialog title="App update available" bind:open={dialogOpen}>
 	<Dialog.Description class="text-primary-300">
 		<p>
-			{#if nextUpdate}
-				Version {$nextUpdate?.version} of Gale is available - you have {$nextUpdate?.currentVersion}.
+			{#if updates.next}
+				Version {updates.next.version} of Gale is available - you have {updates.next
+					.currentVersion}.
 			{:else}
 				There is an update available for Gale.
 			{/if}

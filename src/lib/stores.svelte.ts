@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
 import type { QueryModsArgsWithoutMax } from './types';
-import games from '$lib/state/game.svelte';
 
 const defaultModQuery: () => QueryModsArgsWithoutMax = () => ({
 	searchTerm: '',
@@ -29,6 +28,7 @@ const defaultProfileQuery: () => QueryModsArgsWithoutMax = () => ({
 export let modQuery = createQueryStore('modQuery', defaultModQuery);
 export let profileQuery = createQueryStore('profileQuery', defaultProfileQuery);
 
+/*
 let isFirst = true;
 
 $effect(() => {
@@ -45,6 +45,7 @@ $effect(() => {
 	modQuery.set(defaultModQuery());
 	profileQuery.set(defaultProfileQuery());
 });
+*/
 
 function loadQuery(key: string, getDefault: () => QueryModsArgsWithoutMax) {
 	let json = localStorage.getItem(key);
