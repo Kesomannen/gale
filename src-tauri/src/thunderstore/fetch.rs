@@ -87,14 +87,14 @@ pub(super) async fn fetch_packages(
 ) -> Result<()> {
     let start_time = Instant::now();
 
-    let listing_url = format!(
+    let index_url = format!(
         "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
         game.slug
     );
 
     let bytes = app
         .http()
-        .get(listing_url)
+        .get(index_url)
         .send()
         .await?
         .error_for_status()?
@@ -110,7 +110,7 @@ pub(super) async fn fetch_packages(
 
     let handle = app.to_owned();
     tokio::spawn(async move {
-        if let Err(err) = request_chunks(tx, urls, handle).await {
+        if let Err(err) = fetch_chunks(tx, urls, handle).await {
             error!("failed to request package listing chunks: {:#}", err);
         }
     });
@@ -174,7 +174,7 @@ pub(super) async fn fetch_packages(
         .ok();
     }
 
-    async fn request_chunks(
+    async fn fetch_chunks(
         tx: mpsc::Sender<Bytes>,
         urls: Vec<String>,
         app: AppHandle,
