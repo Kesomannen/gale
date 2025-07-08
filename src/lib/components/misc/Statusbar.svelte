@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { expoOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
+	import Spinner from '../ui/Spinner.svelte';
 
 	let status: string | null = $state(null);
 
@@ -19,7 +20,7 @@
 		class="border-primary-600 text-primary-400 flex w-full items-center border-t px-3 py-1 text-sm"
 		transition:slide={{ duration: 200, easing: expoOut }}
 	>
-		<Icon icon="mdi:loading" class="animate-spin" />
+		<Spinner />
 		<span class="ml-2">{status}</span>
 	</div>
 {/if}

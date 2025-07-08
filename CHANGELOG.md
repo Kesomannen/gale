@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Various UI changes
+
 ## 1.8.4 (2025-07-03)
 
 ### Fixed
