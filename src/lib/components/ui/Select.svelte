@@ -58,7 +58,7 @@
 	<Select.Trigger
 		class={[
 			triggerClass,
-			'group bg-primary-900 enabled:hover:border-primary-500 flex items-center gap-2 overflow-hidden rounded-lg border border-transparent py-1 pr-2 pl-3 disabled:cursor-not-allowed'
+			'group bg-primary-900 enabled:hover:border-primary-500 flex items-center gap-2 overflow-hidden rounded-lg border border-transparent py-1 pr-2 pl-3'
 		]}
 	>
 		{#if icon}

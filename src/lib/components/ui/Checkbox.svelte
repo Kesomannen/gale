@@ -19,17 +19,17 @@
 
 	let stateClasses = $derived(
 		checked
-			? 'bg-accent-700 hover:bg-accent-600'
-			: 'bg-primary-800 hover:bg-primary-700 border border-primary-500'
+			? [!disabled && 'hover:bg-accent-600', 'bg-accent-700']
+			: [!disabled && 'hover:bg-primary-700', 'bg-primary-800 border border-primary-500']
 	);
 </script>
 
-<Checkbox.Root {disabled} bind:checked {onCheckedChange}>
+<Checkbox.Root {disabled} bind:checked {onCheckedChange} class="group">
 	<div
 		class={[
 			classProp,
 			stateClasses,
-			'size-6 cursor-pointer rounded-md p-1 disabled:cursor-not-allowed'
+			'size-6 cursor-pointer rounded-md p-1 group-data-[disabled]:cursor-default'
 		]}
 	>
 		{#if checked}

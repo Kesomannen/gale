@@ -15,8 +15,6 @@
 	let type = entryId.entry.value.type as 'int' | 'float';
 
 	let element: HTMLDivElement;
-	let fill: HTMLDivElement;
-	let handle: HTMLDivElement;
 
 	let isDragging = $state(false);
 	// svelte-ignore state_referenced_locally
@@ -89,6 +87,8 @@
 	tabindex="0"
 	bind:this={element}
 	onkeydown={(e) => {
+		if (locked) return;
+
 		if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
 			content.value = Math.max(range.start, content.value - 1);
 		} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
@@ -98,22 +98,22 @@
 		inputString = content.value.toFixed(decimals);
 	}}
 	onmousedown={(evt) => {
+		if (locked) return;
+
 		isDragging = true;
 		calculateNewValue(evt.clientX);
 	}}
 >
 	<div
-		class="group-hover:bg-primary-600 relative h-full min-w-1 rounded-l-full"
+		class={[!locked && 'group-hover:bg-primary-600', 'relative h-full min-w-1 rounded-l-full']}
 		style="width: {fillPercent}%;"
 		class:bg-primary-700={!isDragging}
 		class:bg-primary-600={isDragging}
-		bind:this={fill}
 	>
 		<div
 			class="absolute right-[-0.5rem] h-3 w-3 rounded-full"
 			class:bg-primary-400={!isDragging}
 			class:bg-primary-300={isDragging}
-			bind:this={handle}
 			draggable="false"
 		></div>
 	</div>
@@ -124,6 +124,7 @@
 	disabled={locked}
 	bind:value={inputString}
 	onchange={() => {
+		if (locked) return;
 		let newValue = parseFloat(inputString);
 
 		if (!isNaN(newValue)) {
@@ -139,7 +140,7 @@
 
 		inputString = content.value.toString();
 	}}
-	class="focus:ring-accent-500 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 hover:ring-1 focus:ring-2 focus:outline-hidden"
+	class="focus:ring-accent-500 bg-primary-900 text-primary-300 placeholder-primary-400 enabled:hover:ring-primary-500 disabled:text-primary-400 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 focus:ring-2 focus:outline-hidden enabled:hover:ring-1"
 />
 
 <ResetConfigButton {entryId} {locked} {onReset} />

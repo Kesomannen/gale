@@ -34,6 +34,6 @@
 		classProp,
 		`text-${size}`,
 		`placeholder:text-${size}`,
-		'valid:focus:ring-accent-500 disabled:text-primary-400 bg-primary-900 text-primary-300 placeholder-primary-400 hover:ring-primary-500 min-w-0 grow rounded-lg px-3 py-1 invalid:ring-1 invalid:ring-red-500 hover:ring-1 invalid:hover:ring-2 invalid:hover:ring-red-500 focus:ring-2 focus:outline-hidden disabled:cursor-not-allowed'
+		'valid:focus:ring-accent-500 disabled:text-primary-400 bg-primary-900 text-primary-300 placeholder-primary-400 enabled:hover:ring-primary-500 min-w-0 grow rounded-lg px-3 py-1 invalid:ring-1 invalid:ring-red-500 invalid:hover:ring-2 invalid:hover:ring-red-500 focus:ring-2 focus:outline-hidden enabled:hover:ring-1 disabled:cursor-not-allowed'
 	]}
 />
