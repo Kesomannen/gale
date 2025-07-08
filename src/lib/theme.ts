@@ -1,3 +1,4 @@
+import { platform } from '@tauri-apps/plugin-os';
 import { PersistedState } from 'runed';
 import getPalette from 'tailwindcss-palette-generator';
 
@@ -364,4 +365,4 @@ export function refreshFont() {
 	setFont(getFont());
 }
 
-export const useNativeMenu = new PersistedState('useNativeMenu', false);
+export const useNativeMenu = new PersistedState('useNativeMenu', platform() === 'windows' ? false : true);
