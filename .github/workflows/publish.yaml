@@ -9,6 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        node-version: [20]
         include:
           - platform: 'ubuntu-22.04'
             args: ''
@@ -19,10 +20,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: setup node
+      - name: install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+        
+      - name: install frontend dependencies
+        run: pnpm install
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
