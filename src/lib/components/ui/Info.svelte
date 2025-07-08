@@ -10,7 +10,7 @@
 	let { children }: Props = $props();
 </script>
 
-<Tooltip class="text-primary-400 cursor-help px-2 py-1" delayDuration={100}>
+<Tooltip class="text-primary-400 cursor-help px-2 py-1" delayDuration={200}>
 	<Icon icon="mdi:question-mark-circle" />
 
 	{#snippet tooltip()}

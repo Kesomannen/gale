@@ -97,14 +97,14 @@
 										{...item}
 										class="hover:bg-primary-700 hover:text-primary-200 group flex w-full cursor-default items-center rounded-md px-3 py-1"
 									>
-										{#snippet children({ selected })}
+										{#snippet children({ selected, highlighted })}
 											{#if itemSnippet}
 												{@render itemSnippet({ ...item, selected })}
 											{/if}
 
 											<span
 												class={[
-													selected
+													selected || highlighted
 														? 'text-primary-300'
 														: 'text-primary-400 group-hover:text-primary-300'
 												]}>{item.label}</span

@@ -1,5 +1,4 @@
 import { PersistedState } from 'runed';
-import { writable } from 'svelte/store';
 import getPalette from 'tailwindcss-palette-generator';
 
 export const defaultColors = {
@@ -296,13 +295,13 @@ export type ColorCategory = 'accent' | 'primary';
 
 export type Color =
 	| {
-			type: 'default';
-			name: DefaultColor;
-	  }
+		type: 'default';
+		name: DefaultColor;
+	}
 	| {
-			type: 'custom';
-			hex: string;
-	  };
+		type: 'custom';
+		hex: string;
+	};
 
 const root = document.querySelector(':root') as HTMLElement;
 const fallbacks: Record<ColorCategory, Color> = {
@@ -316,7 +315,6 @@ export function setColor(category: ColorCategory, color: Color) {
 	if (color.type === 'default') {
 		shades = defaultColors[color.name];
 	} else {
-		console.log(color.hex);
 		let palette = getPalette({
 			color: color.hex,
 			name: 'main'
