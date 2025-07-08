@@ -12,9 +12,13 @@
 	let launchDialogOpen = $state(false);
 	let gamesOpen = $state(false);
 
-	function launchGame() {
-		api.profile.launch.launchGame();
+	async function launchGame() {
 		launchDialogOpen = true;
+		try {
+			await api.profile.launch.launchGame();
+		} catch {
+			launchDialogOpen = false;
+		}
 	}
 </script>
 
@@ -53,7 +57,7 @@
 
 <Dialog title="Launching {games.active?.name}..." bind:open={launchDialogOpen}>
 	<p class="text-primary-400">
-		If the game is taking a while to start, it's probably because Steam is starting up.
+		This might take a few minutes depending on the size of your profile.
 	</p>
 </Dialog>
 

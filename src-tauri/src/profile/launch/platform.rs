@@ -135,7 +135,7 @@ fn steam_game_dir(game: Game) -> Result<PathBuf> {
     let steam_dir = steamlocate::SteamDir::locate().context("failed to find steam install")?;
     let (app, lib) = steam_dir
         .find_app(steam.id)?
-        .ok_or_eyre("failed to find app in steam registry")?;
+        .ok_or_eyre("could not find app in steam library, is the game not installed?")?;
 
     Ok(lib.resolve_app_dir(&app))
 }

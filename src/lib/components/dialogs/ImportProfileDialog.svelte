@@ -90,19 +90,20 @@
 			if (!confirmed) return;
 		}
 
+		open = false;
+
 		if (data.type === 'normal') {
 			data.manifest.profileName = name;
 
 			await api.profile.import.profile(data, importAll);
 		} else {
-			await api.profile.sync.clone(name, data.id);
+			await api.profile.sync.clone(data.id, name);
 		}
 
 		data = null;
 		importAll = false;
 
 		await profiles.refresh();
-		open = false;
 
 		pushInfoToast({ message: `Imported profile ${name}.` });
 	}
