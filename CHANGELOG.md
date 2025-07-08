@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Support for 4 games:
+  - 9 Kings
+  - Return of the Obra Dinn
+  - Guilty as Sock!
+  - PIGFACE
+
 ### Changed
 
 - Various UI changes

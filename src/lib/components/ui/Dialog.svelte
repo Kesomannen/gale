@@ -79,6 +79,14 @@
 							'border-primary-600 bg-primary-800 pointer-events-auto relative z-50 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
 						]}
 					>
+						{#if title}
+							<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-white"
+								>{title}</Dialog.Title
+							>
+						{/if}
+
+						{@render children?.()}
+
 						{#if canClose}
 							<button
 								class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
@@ -87,14 +95,6 @@
 								<Icon icon="mdi:close" />
 							</button>
 						{/if}
-
-						{#if title}
-							<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-white"
-								>{title}</Dialog.Title
-							>
-						{/if}
-
-						{@render children?.()}
 					</div>
 				</div>
 			{/if}
