@@ -9,7 +9,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20]
         include:
           - platform: 'ubuntu-22.04'
             args: ''
@@ -25,10 +24,10 @@ jobs:
         with:
           version: 10
 
-      - name: use Node.js ${{ matrix.node-version }}
+      - name: use Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: 'pnpm'
         
       - name: install frontend dependencies
