@@ -1,10 +1,11 @@
 use std::{cmp::Ordering, collections::HashSet, time::Duration};
 
 use eyre::Result;
+use internment::Intern;
 use itertools::Itertools;
-use tracing::info;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter};
+use tracing::info;
 
 use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
@@ -46,8 +47,8 @@ pub enum SortOrder {
 pub struct QueryModsArgs {
     pub max_count: usize,
     pub search_term: Option<String>,
-    pub include_categories: HashSet<String>,
-    pub exclude_categories: HashSet<String>,
+    pub include_categories: HashSet<Intern<String>>,
+    pub exclude_categories: HashSet<Intern<String>>,
     pub include_nsfw: bool,
     pub include_deprecated: bool,
     pub include_disabled: bool,
@@ -162,16 +163,21 @@ impl IntoFrontendMod for BorrowedMod<'_> {
         let vers = pkg.get_version(self.version.uuid).unwrap();
         FrontendMod {
             name: pkg.name().to_owned(),
-            description: Some(vers.description.clone()),
+            description: Some(vers.description.to_string()),
             version: Some(vers.parsed_version()),
-            categories: Some(pkg.categories.iter().cloned().collect()),
+            categories: Some(
+                pkg.categories
+                    .iter()
+                    .map(|intern| intern.to_string())
+                    .collect(),
+            ),
             author: Some(pkg.owner().to_owned()),
             rating: Some(pkg.rating_score),
             downloads: Some(pkg.total_downloads()),
             file_size: vers.file_size,
             website_url: match vers.website_url.is_empty() {
                 true => None,
-                false => Some(vers.website_url.clone()),
+                false => Some(vers.website_url.to_string()),
             },
             donate_url: pkg.donation_link.clone(),
             dependencies: Some(vers.dependencies.clone()),

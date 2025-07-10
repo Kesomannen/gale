@@ -5,6 +5,7 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
+use internment::Intern;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -15,7 +16,7 @@ use crate::{game::Game, profile::Profile};
 pub struct PackageListing {
     #[serde(rename = "full_name")]
     pub ident: PackageIdent,
-    pub categories: HashSet<String>,
+    pub categories: HashSet<Intern<String>>,
     pub date_created: DateTime<Utc>,
     pub date_updated: DateTime<Utc>,
     pub donation_link: Option<String>,
@@ -47,7 +48,7 @@ impl PackageListing {
     }
 
     pub fn is_modpack(&self) -> bool {
-        self.categories.contains("Modpacks")
+        self.categories.iter().any(|str| **str == "Modpacks")
     }
 
     pub fn get_version(&self, uuid: Uuid) -> Option<&PackageVersion> {
@@ -98,13 +99,13 @@ pub struct PackageVersion {
     pub ident: VersionIdent,
     pub date_created: DateTime<Utc>,
     pub dependencies: Vec<VersionIdent>,
-    pub description: String,
+    pub description: Intern<String>,
     pub downloads: u32,
     pub file_size: u64,
     pub is_active: bool,
     #[serde(rename = "uuid4")]
     pub uuid: Uuid,
-    pub website_url: String,
+    pub website_url: Intern<String>,
 }
 
 impl PackageVersion {

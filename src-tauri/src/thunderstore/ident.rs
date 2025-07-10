@@ -5,15 +5,16 @@ use std::{
     str::FromStr,
 };
 
+use internment::Intern;
 use serde::{Deserialize, Serialize};
 
 /// A unique identifier for a specific version of a package.
 ///
 /// Often formatted as `owner-name-version`, also known as a dependency string.
 #[derive(Eq, Clone, Serialize, Deserialize)]
-#[serde(into = "String", try_from = "String")]
+#[serde(into = "Intern<String>", try_from = "Intern<String>")]
 pub struct VersionIdent {
-    repr: String,
+    repr: Intern<String>,
     name_start: u32,
     version_start: u32,
 }
@@ -23,7 +24,7 @@ impl VersionIdent {
     ///
     /// This allocates a new string.
     pub fn new(owner: &str, name: &str, version: &str) -> Self {
-        let repr = format!("{}-{}-{}", owner, name, version);
+        let repr = format!("{}-{}-{}", owner, name, version).into();
 
         let name_start = owner.len() as u32 + 1;
         let version_start = name_start + name.len() as u32 + 1;
@@ -69,7 +70,7 @@ impl VersionIdent {
     }
 
     #[inline]
-    pub fn into_string(self) -> String {
+    pub fn into_string(self) -> Intern<String> {
         self.repr
     }
 
@@ -109,7 +110,7 @@ impl AsRef<str> for VersionIdent {
     }
 }
 
-impl From<VersionIdent> for String {
+impl From<VersionIdent> for Intern<String> {
     fn from(id: VersionIdent) -> Self {
         id.into_string()
     }
@@ -136,13 +137,13 @@ impl Display for ParseError {
     }
 }
 
-impl TryFrom<String> for VersionIdent {
+impl TryFrom<Intern<String>> for VersionIdent {
     type Error = ParseError;
 
     /// Parses a string into a `VersionIdent`.
     ///
     /// This does not allocate or copy memory.
-    fn try_from(value: String) -> Result<Self, ParseError> {
+    fn try_from(value: Intern<String>) -> Result<Self, ParseError> {
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
         let version_start = indices.next_back().ok_or(ParseError)? as u32 + 1;
@@ -160,7 +161,7 @@ impl FromStr for VersionIdent {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, ParseError> {
-        s.to_string().try_into()
+        Intern::new(s.to_string()).try_into()
     }
 }
 
@@ -238,7 +239,7 @@ impl PackageIdent {
     }
 
     pub fn with_version(&self, version: impl Display) -> VersionIdent {
-        let repr = format!("{}-{}", self.repr, version);
+        let repr = format!("{}-{}", self.repr, version).into();
 
         VersionIdent {
             repr,

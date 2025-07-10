@@ -6,6 +6,7 @@
 
 - Scrolling upwards being slower on Linux
 - Discord login on accounts without a profile picture
+- Decreased RAM usage significantly on large games
 
 ## 1.8.5 (2025-07-08)
 

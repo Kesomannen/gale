@@ -75,6 +75,7 @@ steamlocate = "2"
 regashii = "0.4"
 flate2 = "1"
 font-kit = "0.14"
+internment = { version = "0.8.6", features = ["serde"] }
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"
