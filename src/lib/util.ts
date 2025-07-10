@@ -131,8 +131,8 @@ export function isValidHex(str: string) {
 	return /^([0-9A-Fa-f]{6})$/.test(str);
 }
 
-export function discordAvatarUrl(user: SyncUser) {
-	return `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`;
+export function discordAvatarUrl(discordId: string, avatar: string) {
+	return `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.png`;
 }
 
 export function selectItems(

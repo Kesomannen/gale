@@ -2,10 +2,10 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Tooltip from '$lib/components/ui/Tooltip.svelte';
+	import SyncAvatar from '$lib/components/ui/SyncAvatar.svelte';
 	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
 	import { pushInfoToast } from '$lib/toast';
-	import { discordAvatarUrl } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
@@ -150,11 +150,7 @@
 	{#if syncInfo !== null}
 		{#if !isOwner}
 			<div class="text-primary-300 mt-2 flex items-center">
-				<img
-					src={discordAvatarUrl(syncInfo.owner)}
-					alt=""
-					class="mr-2 size-10 rounded-full shadow-lg"
-				/>
+				<SyncAvatar user={syncInfo.owner} />
 				<div>
 					Owned by {syncInfo.owner.displayName}
 				</div>
@@ -217,7 +213,7 @@
 				Sign in with Discord
 			</Button>
 		{:else}
-			<img src={discordAvatarUrl(user.value)} alt="" class="size-10 rounded-full shadow-lg" />
+			<SyncAvatar user={user.value} />
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">

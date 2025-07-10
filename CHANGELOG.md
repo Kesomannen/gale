@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Scrolling upwards being slower on Linux
+- Discord login on accounts without a profile picture
+
 ## 1.8.5 (2025-07-08)
 
 ### Added

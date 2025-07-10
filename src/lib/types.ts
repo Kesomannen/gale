@@ -4,19 +4,19 @@ export type ConfigValue =
 	| { type: 'int'; content: ConfigNum }
 	| { type: 'float'; content: ConfigNum }
 	| {
-			type: 'enum';
-			content: {
-				index: number;
-				options: string[];
-			};
-	  }
+		type: 'enum';
+		content: {
+			index: number;
+			options: string[];
+		};
+	}
 	| {
-			type: 'flags';
-			content: {
-				indicies: number[];
-				options: string[];
-			};
-	  };
+		type: 'flags';
+		content: {
+			indicies: number[];
+			options: string[];
+		};
+	};
 
 export type ConfigEntry = {
 	name: string;
@@ -54,9 +54,9 @@ export type ConfigFile = { relativePath: string; displayName: string | null } & 
 	| ({ type: 'ok' } & ConfigFileData)
 	| { type: 'unsupported' }
 	| {
-			type: 'err';
-			error: string;
-	  }
+		type: 'err';
+		error: string;
+	}
 );
 
 export type ProfileInfo = {
@@ -85,7 +85,7 @@ export type SyncUser = {
 	discordId: string;
 	name: string;
 	displayName: string;
-	avatar: string;
+	avatar: string | null;
 };
 
 export type SyncImportData = {
@@ -195,12 +195,12 @@ export type InstallTask =
 	| { kind: 'installing' }
 	| { kind: 'extracting' }
 	| {
-			kind: 'downloading';
-			payload: {
-				total: number;
-				downloaded: number;
-			};
-	  };
+		kind: 'downloading';
+		payload: {
+			total: number;
+			downloaded: number;
+		};
+	};
 
 export type InstallProgress = {
 	durationSecs: number;
