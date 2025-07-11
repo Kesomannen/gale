@@ -36,7 +36,7 @@ class GamesState {
 			}
 
 			const data = (await response.json()) as FiltersResponse;
-			this.categories = data.results;
+			this.categories = data.results.sort((a, b) => a.name.localeCompare(b.name));
 		} catch (err) {
 			pushToast({
 				type: 'error',

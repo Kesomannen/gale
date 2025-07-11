@@ -8,7 +8,7 @@
 	type Props = {
 		mods: Mod[];
 		maxCount: number;
-		queryArgs: Writable<QueryModsArgsWithoutMax>;
+		queryArgs: QueryModsArgsWithoutMax;
 		selected: Mod | null;
 		placeholder?: Snippet;
 		item: Snippet<[{ mod: Mod; index: number; isSelected: boolean }]>;
@@ -34,7 +34,7 @@
 	});
 
 	$effect(() => {
-		$queryArgs;
+		queryArgs;
 		virtualList?.scrollTo(0);
 	});
 

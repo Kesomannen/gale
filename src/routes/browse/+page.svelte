@@ -6,7 +6,6 @@
 
 	import { onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { modQuery } from '$lib/stores.svelte';
 	import ModListItem from '$lib/components/mod-list/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
 	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
@@ -14,6 +13,7 @@
 	import { defaultContextItems } from '$lib/context';
 	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { modQuery } from '$lib/state/misc.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems = [...defaultContextItems];
@@ -46,7 +46,7 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		mods = await api.thunderstore.query({ ...$modQuery, maxCount });
+		mods = await api.thunderstore.query({ ...modQuery.current, maxCount });
 		if (selectedMod) {
 			// isInstalled might have changed
 			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
@@ -78,7 +78,7 @@
 
 	$effect(() => {
 		if (maxCount > 0) {
-			$modQuery;
+			modQuery.current;
 			profiles.active;
 			refresh();
 		}
@@ -89,7 +89,7 @@
 
 <div class="flex grow overflow-hidden">
 	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
-		<ModListFilters {sortOptions} queryArgs={modQuery} />
+		<ModListFilters {sortOptions} queryArgs={modQuery.current} />
 
 		{#if locked}
 			<ProfileLockedBanner class="mr-4 mb-1" />
@@ -97,7 +97,7 @@
 
 		<ModList
 			{mods}
-			queryArgs={modQuery}
+			queryArgs={modQuery.current}
 			bind:this={modList}
 			bind:maxCount
 			bind:selected={selectedMod}

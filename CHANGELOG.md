@@ -4,9 +4,10 @@
 
 ### Fixed
 
-- Scrolling upwards being slower on Linux
+- Scrolling upwards being slower than downwards on Linux
 - Discord login on accounts without a profile picture
-- Decreased RAM usage significantly on large games
+- Significantly ecreased RAM usage on popular games
+- Categories not being sorted
 
 ## 1.8.5 (2025-07-08)
 

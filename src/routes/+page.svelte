@@ -3,7 +3,6 @@
 	import DependantsDialog from '$lib/components/dialogs/DependantsDialog.svelte';
 	import type { Mod, AvailableUpdate, Dependant, ModContextItem, SortBy } from '$lib/types';
 	import ModList from '$lib/components/mod-list/ModList.svelte';
-	import { profileQuery } from '$lib/stores.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -17,6 +16,7 @@
 	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
 	import UnknownModsBanner from '$lib/components/mod-list/UnknownModsBanner.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { profileQuery } from '$lib/state/misc.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -90,7 +90,7 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		let result = await api.profile.query({ ...$profileQuery, maxCount });
+		let result = await api.profile.query({ ...profileQuery.current, maxCount });
 
 		mods = result.mods;
 		totalModCount = result.totalModCount;
@@ -186,7 +186,7 @@
 
 		reorderPrevIndex = newIndex;
 
-		if ($profileQuery.sortOrder === 'descending') {
+		if (profileQuery.current.sortOrder === 'descending') {
 			delta *= -1; // list is reversed
 		}
 
@@ -207,19 +207,19 @@
 	$effect(() => {
 		if (maxCount > 0) {
 			profiles.active;
-			$profileQuery;
+			profileQuery.current;
 			refresh();
 		}
 	});
 
 	let reorderable = $derived(
-		$profileQuery.sortBy === 'custom' &&
-			$profileQuery.searchTerm === '' &&
-			$profileQuery.excludeCategories.length === 0 &&
-			$profileQuery.includeCategories.length === 0 &&
-			$profileQuery.includeDeprecated &&
-			$profileQuery.includeNsfw &&
-			$profileQuery.includeDisabled
+		profileQuery.current.sortBy === 'custom' &&
+			profileQuery.current.searchTerm === '' &&
+			profileQuery.current.excludeCategories.length === 0 &&
+			profileQuery.current.includeCategories.length === 0 &&
+			profileQuery.current.includeDeprecated &&
+			profileQuery.current.includeNsfw &&
+			profileQuery.current.includeDisabled
 	);
 
 	let locked = $derived(profiles.activeLocked);
@@ -227,7 +227,7 @@
 
 <div class="flex grow overflow-hidden">
 	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
-		<ModListFilters {sortOptions} queryArgs={profileQuery} />
+		<ModListFilters {sortOptions} queryArgs={profileQuery.current} />
 
 		{#if locked}
 			<ProfileLockedBanner class="mr-4 mb-1" />
@@ -241,7 +241,7 @@
 
 		<ModList
 			{mods}
-			queryArgs={profileQuery}
+			queryArgs={profileQuery.current}
 			bind:this={modList}
 			bind:maxCount
 			bind:selected={selectedMod}
