@@ -1,4 +1,4 @@
-use eyre::anyhow;
+use eyre::{anyhow, OptionExt};
 use tauri::{command, AppHandle};
 
 use super::{
@@ -7,20 +7,30 @@ use super::{
     query::{self, QueryModsArgs},
     ModId,
 };
-use crate::{logger, state::ManagerExt, util::cmd::Result};
+use crate::{
+    game::{self},
+    logger,
+    state::ManagerExt,
+    util::cmd::Result,
+};
 
 #[command]
-pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMod> {
+pub fn query_thunderstore(
+    args: QueryModsArgs,
+    profile_id: i64,
+    app: AppHandle,
+) -> Result<Vec<FrontendMod>> {
     let manager = app.lock_manager();
     let mut thunderstore = app.lock_thunderstore();
 
-    let result = query::query_frontend_mods(&args, thunderstore.latest(), manager.active_profile());
+    let mods =
+        query::query_frontend_mods(&args, thunderstore.latest(), manager.profile(profile_id)?);
 
     if !thunderstore.packages_fetched {
-        thunderstore.current_query = Some(args);
+        thunderstore.current_query = Some((profile_id, args));
     }
 
-    result
+    Ok(mods)
 }
 
 #[command]
@@ -29,7 +39,7 @@ pub fn stop_querying_thunderstore(app: AppHandle) {
 }
 
 #[command]
-pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
+pub fn trigger_mod_fetch(game_slug: String, app: AppHandle) -> Result<()> {
     let write_directly = {
         let state = app.lock_thunderstore();
 
@@ -40,7 +50,7 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
         !state.packages_fetched
     };
 
-    let game = app.lock_manager().active_game;
+    let game = game::from_slug(&game_slug).ok_or_eyre("game not found")?;
 
     tauri::async_runtime::spawn(async move {
         if let Err(err) = super::fetch::fetch_packages(game, write_directly, &app).await {

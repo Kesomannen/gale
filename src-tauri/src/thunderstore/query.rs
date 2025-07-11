@@ -64,11 +64,11 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
         {
             let mut thunderstore = app.lock_thunderstore();
 
-            if let Some(args) = &thunderstore.current_query {
+            if let Some((profile_id, args)) = &thunderstore.current_query {
                 let manager = app.lock_manager();
 
-                let mods =
-                    query_frontend_mods(args, thunderstore.latest(), manager.active_profile());
+                let profile = manager.profile(*profile_id)?;
+                let mods = query_frontend_mods(args, thunderstore.latest(), profile);
                 app.emit("mod_query_result", &mods)?;
 
                 if thunderstore.packages_fetched {

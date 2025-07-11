@@ -6,7 +6,8 @@ use tauri::AppHandle;
 use tracing::{debug, info};
 
 use crate::{
-    profile::ModManager,
+    game::Game,
+    profile::{ManagedGame, ModManager},
     state::ManagerExt,
     util::{self, fs::JsonStyle},
 };
@@ -72,9 +73,9 @@ pub async fn get_markdown(
     Ok(response.markdown)
 }
 
-pub fn get_packages(app: &AppHandle) -> Result<Option<Vec<PackageListing>>> {
+pub fn get_packages(game: Game, app: &AppHandle) -> Result<Option<Vec<PackageListing>>> {
     let start = Instant::now();
-    let path = cache_path(&app.lock_manager());
+    let path = cache_path(app.lock_manager().game(game));
 
     if !path.exists() {
         info!("no cache file found at {}", path.display());
@@ -93,7 +94,11 @@ pub fn get_packages(app: &AppHandle) -> Result<Option<Vec<PackageListing>>> {
     Ok(Some(result))
 }
 
-pub fn write_packages(packages: &[&PackageListing], manager: &ModManager) -> Result<()> {
+pub fn write_packages(
+    packages: &[&PackageListing],
+    game: Game,
+    manager: &ModManager,
+) -> Result<()> {
     if packages.is_empty() {
         info!("no packages to write to cache");
         return Ok(());
@@ -101,7 +106,7 @@ pub fn write_packages(packages: &[&PackageListing], manager: &ModManager) -> Res
 
     let start = Instant::now();
 
-    util::fs::write_json(cache_path(manager), packages, JsonStyle::Compact)
+    util::fs::write_json(cache_path(manager.game(game)), packages, JsonStyle::Compact)
         .context("failed to write mod cache")?;
 
     debug!(
@@ -113,6 +118,6 @@ pub fn write_packages(packages: &[&PackageListing], manager: &ModManager) -> Res
     Ok(())
 }
 
-fn cache_path(manager: &ModManager) -> PathBuf {
-    manager.active_game().path.join("thunderstore_cache.json")
+fn cache_path(game: &ManagedGame) -> PathBuf {
+    game.path.join("thunderstore_cache.json")
 }

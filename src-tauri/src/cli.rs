@@ -54,14 +54,17 @@ impl Cli {
         if let Some(slug) = &game {
             let game = game::from_slug(slug).ok_or_eyre("unknown game slug")?;
 
+            /*
             manager
                 .set_active_game(game, app)
                 .context("failed to set game")?;
+            */
 
             debug!("set active game to {}", slug);
         }
 
         if let Some(name) = &profile {
+            /*
             let game = manager.active_game_mut();
 
             let index = game.profile_index(name).ok_or_eyre("unknown profile")?;
@@ -70,6 +73,7 @@ impl Cli {
                 .context("failed to set profile")?;
 
             debug!("set profile index to {}", index);
+            */
         }
 
         if game.is_some() || profile.is_some() {
@@ -107,10 +111,12 @@ impl Cli {
             app: &AppHandle,
         ) -> Result<()> {
             if launch {
+                /*
                 manager
                     .active_game()
                     .launch(&app.lock_prefs(), app)
                     .context("failed to launch game")?;
+                */
             }
 
             if no_gui && from_args {

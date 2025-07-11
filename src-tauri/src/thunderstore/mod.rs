@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle};
 use uuid::Uuid;
 
-use crate::{game::Game, state::ManagerExt};
+use crate::game::Game;
 
 pub mod cache;
 pub mod commands;
@@ -29,8 +29,10 @@ pub use ident::*;
 
 pub fn start(app: &AppHandle) {
     query::setup(app);
+    /*
     app.lock_thunderstore()
         .switch_game(app.lock_manager().active_game, app.clone());
+    */
 }
 
 /// A pair of a package and one of its versions.
@@ -108,7 +110,7 @@ pub struct Thunderstore {
     // IndexMap is not used for ordering here, but for fast iteration,
     // since we iterate over all mods when resolving identifiers and querying.
     packages: IndexMap<Uuid, PackageListing>,
-    current_query: Option<QueryModsArgs>,
+    current_query: Option<(i64, QueryModsArgs)>,
 }
 
 impl Thunderstore {

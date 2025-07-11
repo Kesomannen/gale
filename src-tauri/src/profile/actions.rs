@@ -39,8 +39,8 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     });
 
     let handle = app.to_owned();
-    app.listen("finish_reorder", move |_| {
-        if let Err(err) = handle_finish_reorder_event(&handle) {
+    app.listen("finish_reorder", move |event| {
+        if let Err(err) = handle_finish_reorder_event(event, &handle) {
             logger::log_webview_err("Failed to finish reordering", err, &handle);
         }
     });
@@ -229,18 +229,32 @@ fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
     struct Payload {
         uuid: Uuid,
         delta: i32,
+        profile_id: i64,
     }
 
-    let Payload { uuid, delta } = serde_json::from_str(event.payload())?;
+    let Payload {
+        uuid,
+        delta,
+        profile_id,
+    } = serde_json::from_str(event.payload())?;
 
-    let mut manager = app.lock_manager();
-    manager.active_profile_mut().reorder_mod(uuid, delta)?;
+    app.lock_manager()
+        .profile_mut(profile_id)?
+        .reorder_mod(uuid, delta)?;
 
     Ok(())
 }
 
-fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
-    app.lock_manager().save_active_profile(app.db())
+fn handle_finish_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Payload {
+        profile_id: i64,
+    }
+
+    let Payload { profile_id } = serde_json::from_str(event.payload())?;
+
+    app.lock_manager().profile(profile_id)?.save(app.db())
 }
 
 impl ManagedGame {
@@ -299,6 +313,8 @@ impl ManagedGame {
             "created profile",
         );
 
+        let index = self.profiles.len();
+
         self.profiles.push(Profile {
             id,
             name,
@@ -312,7 +328,7 @@ impl ManagedGame {
             sync_profile: None,
         });
 
-        self.set_active_profile(self.profiles.len() - 1)
+        Ok(&mut self.profiles[index])
     }
 
     pub fn create_default_profile(&mut self, db: &Db) -> Result<()> {
@@ -322,27 +338,26 @@ impl ManagedGame {
 
         match res.map(|profile| profile.id) {
             Ok(id) => {
-                self.active_profile_id = id;
+                //self.active_profile_id = id;
                 Ok(())
             }
             Err(err) => Err(err),
         }
     }
 
-    pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool, db: &Db) -> Result<()> {
+    pub fn delete_profile(&mut self, id: i64, allow_delete_last: bool, db: &Db) -> Result<()> {
         ensure!(
             allow_delete_last || self.profiles.len() > 1,
             "cannot delete last profile"
         );
 
-        let profile = self.profile_at(index)?;
-        let id = profile.id;
+        let profile = self.profile(id)?;
 
         fs::remove_dir_all(&profile.path)?;
-        self.profiles.remove(index);
+        self.profiles.retain(|profile| profile.id != id);
 
         if !self.profiles.is_empty() {
-            self.active_profile_id = self.profiles[0].id;
+            //self.active_profile_id = self.profiles[0].id;
         }
 
         db.delete_profile(id)?;
@@ -356,10 +371,10 @@ impl ManagedGame {
         id: i64,
         db: &Db,
     ) -> Result<&mut Profile> {
-        self.create_profile(duplicate_name, None, db)?;
+        let new_profile_id = self.create_profile(duplicate_name, None, db)?.id;
 
-        let old_profile = self.find_profile(id)?;
-        let new_profile = self.active_profile();
+        let old_profile = self.profile(id)?;
+        let new_profile = self.profile(new_profile_id)?;
 
         // Make sure generated files and configs are properly copied
         // and not linked between the two profiles.
@@ -382,15 +397,15 @@ impl ManagedGame {
         let mods = old_profile.mods.clone();
         let ignored_updates = old_profile.ignored_updates.clone();
 
-        let new_profile = self.active_profile_mut();
+        let new_profile = self.profile_mut(new_profile_id)?;
         new_profile.mods = mods;
         new_profile.ignored_updates = ignored_updates;
 
         Ok(new_profile)
     }
 
-    pub fn create_desktop_shortcut(&self) -> Result<()> {
-        let profile = self.active_profile();
+    pub fn create_desktop_shortcut(&self, profile_id: i64) -> Result<()> {
+        let profile = self.profile(profile_id)?;
 
         let desktop_path =
             dirs_next::desktop_dir().ok_or_eyre("could not find desktop directory")?;

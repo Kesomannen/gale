@@ -18,7 +18,7 @@ use crate::{game::Game, logger, state::ManagerExt, thunderstore::PackageListing}
 pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
     const FETCH_INTERVAL: Duration = Duration::from_secs(60 * 15);
 
-    read_and_insert_cache(&app);
+    read_and_insert_cache(game, &app);
 
     let mut is_first = true;
 
@@ -57,8 +57,8 @@ pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
     }
 }
 
-fn read_and_insert_cache(app: &AppHandle) {
-    match super::cache::get_packages(app) {
+fn read_and_insert_cache(game: Game, app: &AppHandle) {
+    match super::cache::get_packages(game, app) {
         Ok(Some(mods)) => {
             let mut thunderstore = app.lock_thunderstore();
 

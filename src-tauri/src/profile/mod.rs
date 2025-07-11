@@ -48,7 +48,6 @@ pub struct ModManager {
     /// Note that this only contains entries for `Game`s
     /// which the user has selected at least once.
     pub games: HashMap<Game, ManagedGame>,
-    pub active_game: Game,
 }
 
 /// Stores profiles and other state for one game.
@@ -59,7 +58,6 @@ pub struct ManagedGame {
     pub path: PathBuf,
     pub profiles: Vec<Profile>,
     pub favorite: bool,
-    pub active_profile_id: i64,
 }
 
 #[derive(Debug)]
@@ -368,42 +366,22 @@ impl ManagedGame {
             .ok_or_else(|| anyhow!("profile index {} is out of bounds", index))
     }
 
-    fn find_profile(&self, id: i64) -> Result<&Profile> {
-        self.profiles
-            .iter()
-            .find(|profile| profile.id == id)
+    fn profile(&self, id: i64) -> Result<&Profile> {
+        self.profile_ok(id)
             .with_context(|| format!("profile with id {} not found", id))
     }
 
-    fn find_profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
-        self.profiles
-            .iter_mut()
-            .find(|profile| profile.id == id)
+    fn profile_ok(&self, id: i64) -> Option<&Profile> {
+        self.profiles.iter().find(|profile| profile.id == id)
+    }
+
+    fn profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
+        self.profile_mut_ok(id)
             .with_context(|| format!("profile with id {} not found", id))
     }
 
-    fn active_profile(&self) -> &Profile {
-        self.find_profile(self.active_profile_id).unwrap()
-    }
-
-    fn active_profile_mut(&mut self) -> &mut Profile {
-        self.profiles
-            .iter_mut()
-            .find(|profile| profile.id == self.active_profile_id)
-            .expect("active profile not found")
-    }
-
-    pub fn set_active_profile(&mut self, index: usize) -> Result<&mut Profile> {
-        ensure!(
-            index < self.profiles.len(),
-            "profile index {} is out of bounds",
-            index
-        );
-
-        let profile = &mut self.profiles[index];
-        self.active_profile_id = profile.id;
-
-        Ok(profile)
+    fn profile_mut_ok(&mut self, id: i64) -> Option<&mut Profile> {
+        self.profiles.iter_mut().find(|profile| profile.id == id)
     }
 
     /// Returns an iterator over all installed thunderstore mods across all of the game's profiles.
@@ -421,11 +399,13 @@ impl ManagedGame {
     }
 
     pub fn update_window_title(&self, app: &AppHandle) -> Result<()> {
+        /*
         let title = format!("{} | {} - Gale", self.active_profile().name, self.game.name);
         app.get_webview_window("main")
             .unwrap()
             .set_title(&title)
             .ok();
+        */
 
         Ok(())
     }
@@ -445,14 +425,8 @@ impl ModManager {
             profiles,
         } = data;
 
-        let active_game = manager
-            .active_game_slug
-            .and_then(|slug| game::from_slug(&slug))
-            .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
-
         let mut manager = Self {
             games: HashMap::new(),
-            active_game,
         };
 
         let path = prefs.data_dir.to_path_buf();
@@ -503,36 +477,47 @@ impl ModManager {
                 .push(profile);
         }
 
-        manager.ensure_game(manager.active_game, true, prefs, db)?;
+        //manager.ensure_game(manager.active_game, true, prefs, db)?;
         manager.save_all(db)?;
 
         Ok(manager)
     }
 
-    pub fn active_mod_loader(&self) -> &'static ModLoader<'static> {
-        &self.active_game.mod_loader
+    pub fn game(&self, game: Game) -> &ManagedGame {
+        self.games.get(&game).expect("game not found")
     }
 
-    pub fn active_game(&self) -> &ManagedGame {
+    pub fn game_mut(&mut self, game: Game) -> &mut ManagedGame {
+        self.games.get_mut(&game).expect("game not found")
+    }
+
+    pub fn game_by_slug(&self, slug: &str) -> Result<&ManagedGame> {
+        game::from_slug(slug)
+            .and_then(|game| self.games.get(&game))
+            .ok_or_else(|| eyre!("game with slug {} not found", slug))
+    }
+
+    pub fn game_by_slug_mut(&mut self, slug: &str) -> Result<&mut ManagedGame> {
+        game::from_slug(slug)
+            .and_then(|game| self.games.get_mut(&game))
+            .ok_or_else(|| eyre!("game with slug {} not found", slug))
+    }
+
+    pub fn profile(&self, id: i64) -> Result<&Profile> {
         self.games
-            .get(&self.active_game)
-            .expect("active game not found")
+            .values()
+            .find_map(|game| game.profile_ok(id))
+            .ok_or_else(|| eyre!("profile with id {} not found", id))
     }
 
-    pub fn active_game_mut(&mut self) -> &mut ManagedGame {
+    pub fn profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
         self.games
-            .get_mut(&self.active_game)
-            .expect("active game not found")
+            .values_mut()
+            .find_map(|game| game.profile_mut_ok(id))
+            .ok_or_else(|| eyre!("profile with id {} not found", id))
     }
 
-    pub fn active_profile(&self) -> &Profile {
-        self.active_game().active_profile()
-    }
-
-    pub fn active_profile_mut(&mut self) -> &mut Profile {
-        self.active_game_mut().active_profile_mut()
-    }
-
+    /*
     pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<&ManagedGame> {
         self.ensure_game(game, true, &app.lock_prefs(), app.db())?;
 
@@ -545,6 +530,7 @@ impl ModManager {
 
         Ok(self.active_game())
     }
+    */
 
     fn ensure_game<'a>(
         &'a mut self,
@@ -562,7 +548,8 @@ impl ModManager {
             .get_mut(game)
             .expect("newly managed game not found");
 
-        if verify_profiles && managed.find_profile(managed.active_profile_id).is_err() {
+        /*
+        if verify_profiles && managed.profile(managed.active_profile_id).is_err() {
             if managed.profiles.is_empty() {
                 warn!("game {} has no profiles", game.slug);
                 managed.create_default_profile(db).with_context(|| {
@@ -573,6 +560,7 @@ impl ModManager {
                 managed.active_profile_id = managed.profiles[0].id;
             }
         }
+        */
 
         Ok(managed)
     }
@@ -589,7 +577,6 @@ impl ModManager {
             path,
             profiles: Vec::new(),
             favorite: false,
-            active_profile_id: 0,
         };
 
         if let Err(err) = managed.create_default_profile(db) {
@@ -603,15 +590,15 @@ impl ModManager {
         Ok(())
     }
 
-    fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
+    fn cache_mods(&self, thunderstore: &Thunderstore, game: Game) -> Result<()> {
         let packages = self
-            .active_game()
+            .game(game)
             .installed_mods(thunderstore)
             .map(|borrowed| borrowed.package)
             .unique()
             .collect_vec();
 
-        thunderstore::cache::write_packages(&packages, self)
+        thunderstore::cache::write_packages(&packages, game, self)
     }
 
     fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) {
@@ -621,7 +608,6 @@ impl ModManager {
             game,
             profiles: Vec::new(),
             favorite: saved_game.favorite,
-            active_profile_id: saved_game.active_profile_id,
             path: base_path.join(&*game.slug),
         };
 
@@ -634,13 +620,5 @@ impl ModManager {
 
     pub fn save(&self, db: &Db) -> Result<()> {
         db.save_manager(self)
-    }
-
-    pub fn save_active_game(&self, db: &Db) -> Result<()> {
-        self.active_game().save(db)
-    }
-
-    pub fn save_active_profile(&self, db: &Db) -> Result<()> {
-        self.active_profile().save(db)
     }
 }

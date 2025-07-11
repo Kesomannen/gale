@@ -229,7 +229,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
         }
         _ => {
             let mut manager = app.lock_manager();
-            let profile = manager.active_game_mut().find_profile_mut(profile_id)?;
+            let profile = manager.active_game_mut().profile_mut(profile_id)?;
 
             let synced_at = profile.sync_profile.take().unwrap().synced_at;
 

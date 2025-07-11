@@ -44,7 +44,6 @@ impl From<Game> for FrontendGame {
 #[serde(rename_all = "camelCase")]
 pub struct GameInfo {
     all: Vec<FrontendGame>,
-    active: FrontendGame,
     favorites: Vec<&'static str>,
 }
 
@@ -63,7 +62,6 @@ pub fn get_game_info(app: AppHandle) -> GameInfo {
 
     GameInfo {
         all: game::all().map_into().collect(),
-        active: manager.active_game.into(),
         favorites,
     }
 }
@@ -82,25 +80,10 @@ pub fn favorite_game(slug: String, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
-#[command]
-pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
-    let mut manager = app.lock_manager();
-
-    let game = game::from_slug(slug).ok_or_eyre("unknown game")?;
-
-    let managed_game = manager.set_active_game(game, &app)?;
-    managed_game.update_window_title(&app)?;
-
-    manager.save_all(app.db())?;
-
-    Ok(())
-}
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfilesInfo {
     profiles: Vec<ProfileInfo>,
-    active_id: i64,
 }
 
 #[derive(Serialize)]
@@ -113,11 +96,11 @@ pub struct ProfileInfo {
 }
 
 #[command]
-pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
+pub fn get_profile_info(game_slug: String, app: AppHandle) -> Result<ProfilesInfo> {
     let manager = app.lock_manager();
-    let game = manager.active_game();
+    let game = manager.game_by_slug(&game_slug)?;
 
-    ProfilesInfo {
+    let info = ProfilesInfo {
         profiles: game
             .profiles
             .iter()
@@ -128,20 +111,9 @@ pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
                 sync: profile.sync_profile.clone(),
             })
             .collect(),
-        active_id: game.active_profile_id,
-    }
-}
+    };
 
-#[command]
-pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
-    let mut manager = app.lock_manager();
-
-    let game = manager.active_game_mut();
-    game.set_active_profile(index)?;
-    game.save(app.db())?;
-    game.update_window_title(&app)?;
-
-    Ok(())
+    Ok(info)
 }
 
 #[derive(Serialize)]
@@ -165,11 +137,11 @@ pub struct ProfileQuery {
 }
 
 #[command]
-pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery> {
+pub fn query_profile(args: QueryModsArgs, profile_id: i64, app: AppHandle) -> Result<ProfileQuery> {
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
 
-    let profile = manager.active_profile();
+    let profile = manager.profile(profile_id)?;
 
     let (mods, unknown_mods) = profile.query_mods(&args, &thunderstore);
     let total_mod_count = profile.mods.len();
@@ -189,8 +161,8 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
                 full_name: update.latest.ident.clone(),
                 package_uuid: update.package.uuid,
                 version_uuid: update.latest.uuid,
-                old: update.current.parsed_version().clone(),
-                new: update.latest.parsed_version().clone(),
+                old: update.current.parsed_version(),
+                new: update.latest.parsed_version(),
                 ignore,
             }
         })
@@ -209,18 +181,23 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
 }
 
 #[command]
-pub fn is_mod_installed(uuid: Uuid, app: AppHandle) -> Result<bool> {
+pub fn is_mod_installed(uuid: Uuid, profile_id: i64, app: AppHandle) -> Result<bool> {
     let manager = app.lock_manager();
 
-    let result = manager.active_profile().has_mod(uuid);
+    let result = manager.profile(profile_id)?.has_mod(uuid);
 
     Ok(result)
 }
 
 #[command]
-pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHandle) -> Result<()> {
+pub fn create_profile(
+    name: String,
+    override_path: Option<PathBuf>,
+    game_slug: String,
+    app: AppHandle,
+) -> Result<()> {
     let mut manager = app.lock_manager();
-    let game = manager.active_game_mut();
+    let game = manager.game_by_slug_mut(&game_slug)?;
 
     let profile = game.create_profile(name, override_path, app.db())?;
 
@@ -233,11 +210,11 @@ pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHand
 }
 
 #[command]
-pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
+pub fn delete_profile(id: i64, game_slug: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
-    let game = manager.active_game_mut();
+    let game = manager.game_by_slug_mut(&game_slug)?;
 
-    game.delete_profile(index, false, app.db())?;
+    game.delete_profile(id, false, app.db())?;
     game.save(app.db())?;
 
     game.update_window_title(&app)?;
