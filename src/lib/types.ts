@@ -1,22 +1,12 @@
+export type ConfigValueType<T extends string, C> = { type: T; content: C };
+
 export type ConfigValue =
-	| { type: 'bool'; content: boolean }
-	| { type: 'string'; content: string }
-	| { type: 'int'; content: ConfigNum }
-	| { type: 'float'; content: ConfigNum }
-	| {
-		type: 'enum';
-		content: {
-			index: number;
-			options: string[];
-		};
-	}
-	| {
-		type: 'flags';
-		content: {
-			indicies: number[];
-			options: string[];
-		};
-	};
+	| ConfigValueType<'bool', boolean>
+	| ConfigValueType<'string', string>
+	| ConfigValueType<'int', ConfigNum>
+	| ConfigValueType<'float', ConfigNum>
+	| ConfigValueType<'enum', { index: number; options: string[] }>
+	| ConfigValueType<'flags', { indicies: number[]; options: string[] }>;
 
 export type ConfigEntry = {
 	name: string;
@@ -34,11 +24,13 @@ export type ConfigFileData = {
 	displayName: string;
 	relativePath: string;
 	sections: ConfigSection[];
-	metadata: {
-		modName: string;
-		modVersion: string;
-	} | null;
+	metadata: ConfigFileMetadata | null;
 };
+
+export type ConfigFileMetadata = {
+	modName: string;
+	modVersion: string;
+}
 
 export type ConfigNum = {
 	value: number;
@@ -50,14 +42,13 @@ export type ConfigRange = {
 	end: number;
 };
 
+export type ConfigFileType<T extends string, C = {}> = { type: T } & C;
+
 export type ConfigFile = { relativePath: string; displayName: string | null } & (
-	| ({ type: 'ok' } & ConfigFileData)
-	| { type: 'unsupported' }
-	| {
-		type: 'err';
-		error: string;
-	}
-);
+	| ConfigFileType<'ok', ConfigFileData>
+	| ConfigFileType<'err', { error: string }>
+	| ConfigFileType<'unsupported'>
+)
 
 export type ProfileInfo = {
 	id: number;
@@ -126,15 +117,17 @@ export type Mod = {
 	uuid: string;
 	versionUuid: string;
 	lastUpdated: string | null;
-	versions: {
-		name: string;
-		uuid: string;
-	}[];
+	versions: ModVersion[];
 	type: ModType;
 	enabled?: boolean | null;
 	icon: string | null;
 	configFile: string | null;
 };
+
+export type ModVersion = {
+	name: string;
+	uuid: string;
+}
 
 export enum ModType {
 	Local = 'local',
