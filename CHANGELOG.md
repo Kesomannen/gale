@@ -8,7 +8,8 @@
 
 ### Changed
 
-- Minor UI changes
+- Minor UI changes 
+- Color config field now also supports hexcodes starting with a hashtag
 
 ### Fixed
 

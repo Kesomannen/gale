@@ -68,12 +68,12 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
 
          app.get_webview_window("main").unwrap().set_focus().ok();
 
-         let state = AuthCredentials::from_tokens(access_token, refresh_token)?;
-         let user = state.user.clone();
+         let creds = AuthCredentials::from_tokens(access_token, refresh_token)?;
+         let user = creds.user.clone();
 
          info!("logged in as {}", user.name);
 
-         *app.lock_auth() = Some(state);
+         *app.lock_auth() = Some(creds);
 
          Ok(user)
         }
