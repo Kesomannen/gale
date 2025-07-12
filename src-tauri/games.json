@@ -1067,6 +1067,18 @@
         }
     },
     {
+        "name": "Lost Skies Island Creator",
+        "slug": "lost-skies-ic",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2102670
+            }
+        }
+    },
+    {
         "name": "Lycans",
         "modLoader": {
             "name": "BepInEx"

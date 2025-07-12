@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Support for Lost Skies Island Creator
+
 ### Changed
 
 - Minor UI changes
