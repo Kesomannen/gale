@@ -23,6 +23,7 @@
 	import * as api from '$lib/api';
 	import profiles from '$lib/state/profile.svelte';
 	import games from '$lib/state/game.svelte';
+	import SyncAvatar from '../ui/SyncAvatar.svelte';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -73,8 +74,6 @@
 					...(await api.profile.sync.read(key.trim()))
 				};
 			}
-
-			console.log(data);
 
 			await openFor(data);
 		} finally {
@@ -231,11 +230,7 @@
 
 		{#if data.type === 'sync'}
 			<div class="mt-2 flex items-center">
-				<img
-					src={discordAvatarUrl(data.owner)}
-					alt=""
-					class="mr-2 size-10 rounded-full shadow-lg"
-				/>
+				<SyncAvatar user={data.owner} />
 				<div class="text-primary-300">
 					Owned by {data.owner.displayName}
 				</div>

@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import type { ModContextItem } from './types';
+import { open } from '@tauri-apps/plugin-shell';
 
 function openIfNotNull(url: string | null) {
 	if (url !== null) open(url);

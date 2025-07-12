@@ -191,6 +191,8 @@ impl Thunderstore {
         self.packages_fetched = false;
         self.packages = IndexMap::new();
 
+        self.read_and_insert_cache(game, &app.lock_prefs());
+
         let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(game, app));
         self.fetch_loop_handle = Some(load_mods_handle);
     }

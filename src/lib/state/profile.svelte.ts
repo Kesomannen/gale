@@ -4,9 +4,9 @@ import user from './user.svelte';
 
 class ProfilesState {
 	list: ProfileInfo[] = $state([]);
-	active: ProfileInfo | null = $state(null);
+	activeId: number | null = $state(null);
 
-	activeId = $derived(this.active?.id ?? null);
+	active: ProfileInfo | null = $derived(this.list.find(profile => profile.id === this.activeId) ?? null);
 
 	activeLocked = $derived.by(() => {
 		if (this.active === null) return false;
@@ -20,7 +20,7 @@ class ProfilesState {
 		const info = await api.profile.getInfo();
 
 		this.list = info.profiles;
-		this.active = info.profiles.find((profile) => profile.id === info.activeId) ?? null;
+		this.activeId = info.activeId;
 	};
 
 	setActive = async (index: number) => {

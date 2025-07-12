@@ -41,21 +41,19 @@
 		let index = syncProfiles.indexOf(profile);
 		syncProfiles.splice(index, 1);
 
-		await pushInfoToast({ message: 'Deleted sync profile from database.' });
+		pushInfoToast({ message: 'Deleted sync profile from database.' });
 		await profiles.refresh();
 	}
 </script>
 
 <Dialog bind:open onclose={onClose} title="Owned sync profiles">
-	<div class="mt-2 flex max-h-80 flex-col overflow-y-auto">
+	<div class="mt-4 flex max-h-80 flex-col space-y-4 overflow-y-auto px-2">
 		{#if sortedProfiles.length === 0}
 			<div class="text-primary-200 w-full text-center text-lg">No profiles found</div>
 		{/if}
 
 		{#each sortedProfiles as profile (profile.id)}
-			<div
-				class="group text-primary-400 hover:bg-primary-700 flex items-center gap-1 rounded-lg px-4 py-2"
-			>
+			<div class="group text-primary-400 flex items-center gap-1 rounded-lg">
 				<div class="mr-auto">
 					<div>
 						<span class="font-medium text-white">{profile.name}</span>
@@ -82,7 +80,6 @@
 						label="Import"
 						icon="mdi:download"
 						color="accent"
-						class="text-lg"
 						onclick={() => importProfile(profile)}
 					/>
 				{/if}
@@ -91,7 +88,6 @@
 					label="Delete"
 					icon="mdi:delete"
 					color="red"
-					class="text-lg"
 					onclick={() => deleteProfile(profile)}
 				/>
 			</div>

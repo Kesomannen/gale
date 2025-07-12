@@ -14,6 +14,8 @@
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import user from '$lib/state/user.svelte';
+	import Link from '../ui/Link.svelte';
+	import { PersistedState } from 'runed';
 
 	type State = 'off' | 'synced' | 'outdated';
 
@@ -67,6 +69,15 @@
 		}
 	];
 
+	const donationCloseDuration = 1000 * 60 * 60 * 24 * 7; // 1 week
+	let donationClosedAt = new PersistedState<string | null>('dontionClosedAt', null);
+
+	let showDonation = $derived(
+		syncInfo &&
+			(!donationClosedAt.current ||
+				Date.now() - new Date(donationClosedAt.current).getTime() > donationCloseDuration)
+	);
+
 	async function onLoginClicked() {
 		loginLoading = true;
 		try {
@@ -89,16 +100,14 @@
 
 	async function push() {
 		await wrapApiCall(api.profile.sync.push, 'Pushed update to synced profile.');
-		mainDialogOpen = false;
 	}
 
 	async function pull() {
 		await wrapApiCall(api.profile.sync.pull, 'Pulled changes from synced profile.');
-		mainDialogOpen = false;
 	}
 
 	async function refresh() {
-		await wrapApiCall(api.profile.sync.fetch, 'Refresh synced profile status.');
+		await wrapApiCall(api.profile.sync.fetch, 'Refreshed synced profile status.');
 	}
 
 	async function disconnect() {
@@ -150,9 +159,43 @@
 />
 
 <Dialog bind:open={mainDialogOpen} title="Profile sync">
-	{#if syncInfo !== null}
+	<div
+		class={[
+			!showDonation && 'hidden',
+			'bg-primary-900 relative my-2 overflow-hidden rounded-md py-4 pr-4 pl-6'
+		]}
+	>
+		<div class="bg-accent-600 absolute top-0 bottom-0 left-0 w-1"></div>
+
+		<div
+			class="text-lg font-semibold
+			 text-white"
+		>
+			Profile sync is run on donations!
+		</div>
+
+		<div class="text-primary-300">
+			If you like this feature, please consider supporting on <Link
+				href="https://ko-fi.com/kesomannen">Kofi</Link
+			>
+
+			<Icon class="mb-1 inline" icon="mdi:heart" />.
+		</div>
+
+		<button
+			class="text-primary-400 hover:text-accent-400 mt-2 flex items-center gap-1 text-sm hover:underline"
+			onclick={() => {
+				donationClosedAt.current = new Date().toISOString();
+			}}
+		>
+			<Icon icon="mdi:close" />
+			Remind me later
+		</button>
+	</div>
+
+	{#if syncInfo}
 		{#if !isOwner}
-			<div class="text-primary-300 mt-2 flex items-center">
+			<div class="text-primary-300 mt-2 flex items-center gap-2">
 				<SyncAvatar user={syncInfo.owner} />
 				<div>
 					Owned by {syncInfo.owner.displayName}

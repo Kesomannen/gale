@@ -458,7 +458,7 @@ impl ModManager {
         let path = prefs.data_dir.to_path_buf();
 
         for saved_game in games {
-            manager.add_saved_game(&path, saved_game);
+            manager.add_saved_game(&path, saved_game)?;
         }
 
         for saved_profile in profiles {
@@ -603,7 +603,7 @@ impl ModManager {
         Ok(())
     }
 
-    fn cache_mods(&self, thunderstore: &Thunderstore) -> Result<()> {
+    fn cache_mods(&self, thunderstore: &Thunderstore, prefs: &Prefs) -> Result<()> {
         let packages = self
             .active_game()
             .installed_mods(thunderstore)
@@ -611,11 +611,17 @@ impl ModManager {
             .unique()
             .collect_vec();
 
-        thunderstore::cache::write_packages(&packages, self)
+        thunderstore::cache::write_packages(&packages, self.active_game, prefs)
     }
 
-    fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) {
-        let game = game::from_slug(&saved_game.slug).unwrap();
+    fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) -> Result<()> {
+        let game = game::from_slug(&saved_game.slug).ok_or_else(|| {
+            eyre!(
+                "unknown game in save: {} (has Gale been downgraded?)",
+                saved_game.slug
+            )
+        })?;
+
         let managed_game = ManagedGame {
             id: saved_game.id,
             game,
@@ -626,6 +632,7 @@ impl ModManager {
         };
 
         self.games.insert(game, managed_game);
+        Ok(())
     }
 
     pub fn save_all(&self, db: &Db) -> Result<()> {

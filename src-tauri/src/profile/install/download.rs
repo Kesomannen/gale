@@ -278,10 +278,10 @@ impl<'a> Installer<'a> {
 
         self.update(InstallTask::Done);
 
-        let manager = self.app.lock_manager();
-        let thunderstore = self.app.lock_thunderstore();
-
-        manager.cache_mods(&thunderstore).ok();
+        self.app
+            .lock_manager()
+            .cache_mods(&self.app.lock_thunderstore(), &self.app.lock_prefs())
+            .ok();
 
         Ok(())
     }
