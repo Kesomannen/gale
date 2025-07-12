@@ -1,13 +1,14 @@
 <script lang="ts">
+	import type { ClassValue } from 'clsx';
 	import ModCard from './ModCard.svelte';
 
 	type Props = {
 		names: string[];
 		showVersion?: boolean;
-		class?: string;
+		class?: ClassValue;
 	};
 
-	let { names, showVersion = true, class: className = '' }: Props = $props();
+	let { names, showVersion = true, class: classProp }: Props = $props();
 
 	// sort by name, not author
 	$effect(() => {
@@ -15,7 +16,7 @@
 	});
 </script>
 
-<div class="grid gap-3 overflow-y-auto {className}">
+<div class={[classProp, 'grid gap-3 overflow-y-auto']}>
 	{#each names as fullName}
 		<ModCard {fullName} {showVersion} />
 	{/each}

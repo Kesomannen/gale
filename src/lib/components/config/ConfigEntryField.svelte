@@ -52,8 +52,8 @@
 		}
 	}
 
-	let { entry } = $derived(entryId);
-	let { value } = $derived(entry);
+	let entry = $derived(entryId.entry);
+	let value = $derived(entry.value);
 	let typeName = $derived(getTypeName(value));
 </script>
 

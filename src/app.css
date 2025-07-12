@@ -1,27 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
 @import 'tailwindcss';
 
 @layer base {
-	@font-face {
-		font-family: Nunito Sans;
-		src: url("/fonts/NunitoSans.ttf") format("truetype");
-	}
-
-	@font-face {
-		font-family: Nunito Sans;
-		src: url("/fonts/NunitoSans-Italic.ttf") format("truetype");
-		font-style: italic;
-	}
-
-	@font-face {
-		font-family: Roboto Mono;
-		src: url("/fonts/RobotoMono.ttf") format("truetype");
-	}
-
-	@font-face {
-		font-family: Roboto Mono;
-		src: url("/fonts/RobotoMono-Italic.ttf") format("truetype");
-		font-style: italic;
-	}
 
 	button:not(:disabled),
 	[role='button']:not(:disabled) {

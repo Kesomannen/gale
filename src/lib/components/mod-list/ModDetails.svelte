@@ -226,11 +226,7 @@
 	{@render children?.()}
 </div>
 
-<Dialog
-	large={(mod.dependencies?.length ?? 0) > 10}
-	title="Dependencies of {mod.name}"
-	bind:open={dependenciesOpen}
->
+<Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
 		<ModCardList names={mod.dependencies} class="mt-4" />
 	{/if}

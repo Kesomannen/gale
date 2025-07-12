@@ -24,7 +24,7 @@
 		text = '',
 		side = 'top',
 		sideOffset = 0,
-		delayDuration = 200,
+		delayDuration = 700,
 		disabled = false,
 		class: triggerClass = '',
 		children,
@@ -41,26 +41,28 @@
 	);
 </script>
 
-<Tooltip.Root {delayDuration}>
-	<Tooltip.Trigger class={triggerClass} {disabled}>
-		{@render children?.()}
-	</Tooltip.Trigger>
-	<Tooltip.Content forceMount {sideOffset} {side}>
-		{#snippet child({ wrapperProps, props, open })}
-			{#if open}
-				<div {...wrapperProps}>
-					<div
-						class="border-primary-600 bg-primary-800 text-primary-300 relative z-50 max-w-lg rounded-lg border px-4 py-2 shadow-md"
-						{...props}
-						in:fly={dropInTo(distance)}
-						out:fade={dropOutFrom(distance)}
-					>
-						{#if tooltip}{@render tooltip()}{:else}
-							{text}
-						{/if}
+<Tooltip.Provider disableCloseOnTriggerClick>
+	<Tooltip.Root {delayDuration}>
+		<Tooltip.Trigger class={triggerClass} {disabled}>
+			{@render children?.()}
+		</Tooltip.Trigger>
+		<Tooltip.Content forceMount {sideOffset} {side}>
+			{#snippet child({ wrapperProps, props, open })}
+				{#if open}
+					<div {...wrapperProps}>
+						<div
+							class="border-primary-600 bg-primary-800 text-primary-300 relative z-50 max-w-lg rounded-lg border px-4 py-2 shadow-md"
+							{...props}
+							in:fly={dropInTo(distance)}
+							out:fade={dropOutFrom(distance)}
+						>
+							{#if tooltip}{@render tooltip()}{:else}
+								{text}
+							{/if}
+						</div>
 					</div>
-				</div>
-			{/if}
-		{/snippet}
-	</Tooltip.Content>
-</Tooltip.Root>
+				{/if}
+			{/snippet}
+		</Tooltip.Content>
+	</Tooltip.Root>
+</Tooltip.Provider>
