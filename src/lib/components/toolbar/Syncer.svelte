@@ -71,7 +71,10 @@
 		loginLoading = true;
 		try {
 			if (user.value === null) {
-				await user.login();
+				let userInfo = await user.login();
+				pushInfoToast({
+					message: `Signed in with Discord as ${userInfo.displayName}.`
+				});
 			} else {
 				await user.logout();
 			}
@@ -81,27 +84,27 @@
 	}
 
 	async function connect() {
-		await wrapCommand(api.profile.sync.create, 'Created synced profile.');
+		await wrapApiCall(api.profile.sync.create, 'Created synced profile.');
 	}
 
 	async function push() {
-		await wrapCommand(api.profile.sync.push, 'Pushed update to synced profile.');
+		await wrapApiCall(api.profile.sync.push, 'Pushed update to synced profile.');
 		mainDialogOpen = false;
 	}
 
 	async function pull() {
-		await wrapCommand(api.profile.sync.pull, 'Pulled changes from synced profile.');
+		await wrapApiCall(api.profile.sync.pull, 'Pulled changes from synced profile.');
 		mainDialogOpen = false;
 	}
 
 	async function refresh() {
-		await wrapCommand(api.profile.sync.fetch, 'Refresh synced profile status.');
+		await wrapApiCall(api.profile.sync.fetch, 'Refresh synced profile status.');
 	}
 
 	async function disconnect() {
 		let del = isOwner && (await ask('Do you also want to delete the profile from the database?'));
 
-		await wrapCommand(() => api.profile.sync.disconnect(del), 'Disconnected synced profile.');
+		await wrapApiCall(() => api.profile.sync.disconnect(del), 'Disconnected synced profile.');
 		mainDialogOpen = false;
 	}
 
@@ -117,10 +120,10 @@
 		}
 	}
 
-	async function wrapCommand(command: () => Promise<any>, message?: string) {
+	async function wrapApiCall(call: () => Promise<any>, message?: string) {
 		loading = true;
 		try {
-			await command();
+			await call();
 			await profiles.refresh();
 
 			if (message) {

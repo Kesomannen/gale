@@ -13,6 +13,8 @@
 	let newElement = $state('');
 	let separator: ListSeparator = $state({ type: 'default', char: ',' });
 
+	let previousOpen = false;
+
 	async function updateListContent() {
 		content = items.join(separator.char);
 		await submitValue();
@@ -30,7 +32,8 @@
 	}
 
 	function reset() {
-		if (!config.expandedEntry) return;
+		if (!config.expandedEntry || previousOpen) return;
+		previousOpen = true;
 
 		mode = 'text';
 		newElement = '';
@@ -45,7 +48,11 @@
 	let items = $derived(content.split(separator.char));
 
 	$effect(() => {
-		if (open) reset();
+		if (open) {
+			reset();
+		} else {
+			previousOpen = false;
+		}
 	});
 </script>
 

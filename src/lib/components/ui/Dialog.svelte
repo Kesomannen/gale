@@ -51,7 +51,7 @@
 	}}
 >
 	<Dialog.Portal>
-		<Dialog.Overlay data-tauri-drag-region forceMount class="pointer-events-none">
+		<Dialog.Overlay forceMount class="pointer-events-none">
 			{#snippet child({ props, open })}
 				{#if open}
 					<div
@@ -76,7 +76,7 @@
 					<div
 						class={[
 							large ? 'max-w-[60rem]' : 'max-w-[35rem]',
-							'border-primary-600 bg-primary-800 pointer-events-auto relative z-50 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
+							'border-primary-600 bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
 						]}
 					>
 						{#if title}

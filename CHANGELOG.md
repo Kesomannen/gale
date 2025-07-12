@@ -2,12 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+- Minor UI changes
+
 ### Fixed
 
 - Scrolling upwards being slower than downwards on Linux
 - Discord login on accounts without a profile picture
-- Significantly ecreased RAM usage on popular games
+- Significantly reduced RAM usage on popular games
 - Categories not being sorted
+- Various issues with dialogs
 
 ## 1.8.5 (2025-07-08)
 

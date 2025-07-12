@@ -4,7 +4,7 @@ const errorDuration = 8000;
 const infoDuration = 3000;
 const maxCount = 5;
 
-type Toast = {
+export type Toast = {
 	type: 'error' | 'info';
 	name?: string;
 	message: string;

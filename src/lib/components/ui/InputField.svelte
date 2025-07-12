@@ -15,6 +15,8 @@
 		class: classProp = '',
 		onsubmit,
 		onchange,
+		spellcheck = false,
+		autocomplete = 'off',
 		...props
 	}: Props = $props();
 </script>
@@ -22,12 +24,13 @@
 <input
 	type="text"
 	bind:value
-	autocomplete="off"
 	onkeydown={(evt) => {
 		if (evt.key === 'Enter') {
 			onsubmit?.(value);
 		}
 	}}
+	{autocomplete}
+	{spellcheck}
 	{...props}
 	onchange={() => onchange?.(value)}
 	class={[

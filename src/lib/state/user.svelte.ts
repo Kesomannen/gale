@@ -9,7 +9,9 @@ class UserState {
 	};
 
 	login = async () => {
-		this.value = await api.profile.sync.login();
+		const user = await api.profile.sync.login();
+		this.value = user;
+		return user;
 	};
 
 	logout = async () => {
