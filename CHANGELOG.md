@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.6 (2025-07-12)
 
 ### Added
 
