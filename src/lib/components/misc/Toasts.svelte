@@ -16,7 +16,7 @@
 </script>
 
 <div class="absolute bottom-0 z-50 flex w-full flex-col items-end gap-1 p-2">
-	{#each $toasts as toast, i}
+	{#each $toasts as toast, i (toast.id)}
 		<div
 			class="bg-primary-800 border-primary-700 relative max-w-3xl overflow-hidden rounded-md border shadow-xl"
 			in:slide={{ duration: 150, easing: expoOut }}
@@ -31,7 +31,10 @@
 
 			<div class="flex items-center p-2">
 				<Icon
-					class={clsx(toast.type === 'error' ? 'text-red-600' : 'text-accent-600', 'mx-2 text-xl')}
+					class={clsx(
+						toast.type === 'error' ? 'text-red-600' : 'text-accent-600',
+						'mx-2 shrink-0 text-xl'
+					)}
 					icon={toast.type === 'error' ? 'mdi:error' : 'mdi:info-circle'}
 				/>
 

@@ -229,7 +229,17 @@
 		</details>
 
 		{#if data.type === 'sync'}
-			<div class="mt-2 flex items-center">
+			<Tooltip
+				text="This profile will receive automatic updates from its owner."
+				class="cursor-help"
+			>
+				<div class="text-primary-300 mt-2 flex items-center gap-2">
+					<Icon icon="mdi:info" />
+					<div>Synced profile</div>
+				</div>
+			</Tooltip>
+
+			<div class="mt-1 flex items-center gap-2">
 				<SyncAvatar user={data.owner} />
 				<div class="text-primary-300">
 					Owned by {data.owner.displayName}

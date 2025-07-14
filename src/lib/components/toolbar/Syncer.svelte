@@ -70,11 +70,12 @@
 	];
 
 	const donationCloseDuration = 1000 * 60 * 60 * 24 * 7; // 1 week
-	let donationClosedAt = new PersistedState<string | null>('dontionClosedAt', null);
+	let donationClosedAt = new PersistedState<string | null>('donationClosedAt', null);
 
 	let showDonation = $derived(
 		syncInfo &&
-			(!donationClosedAt.current ||
+			(true ||
+				!donationClosedAt.current ||
 				Date.now() - new Date(donationClosedAt.current).getTime() > donationCloseDuration)
 	);
 

@@ -26,7 +26,7 @@
 		sideOffset = 0,
 		delayDuration = 400,
 		disabled = false,
-		class: triggerClass = '',
+		class: triggerClass,
 		children,
 		tooltip
 	}: Props = $props();

@@ -10,7 +10,7 @@ export type Toast = {
 	message: string;
 };
 
-export const toasts: Writable<Toast[]> = writable([]);
+export const toasts: Writable<(Toast & { id: number })[]> = writable([]);
 
 export function pushInfoToast(toast: { name?: undefined; message: string }) {
 	pushToast({
@@ -19,9 +19,12 @@ export function pushInfoToast(toast: { name?: undefined; message: string }) {
 	});
 }
 
+let nextId = 0;
+
 export function pushToast(toast: Toast) {
 	toasts.update((toasts) => {
-		toasts.push(toast);
+		toasts.push({ ...toast, id: nextId });
+		nextId++;
 		if (toasts.length > maxCount) {
 			toasts.shift();
 		}
