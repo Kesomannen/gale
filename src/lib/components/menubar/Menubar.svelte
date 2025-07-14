@@ -25,7 +25,7 @@
 	import { getCurrentWindow } from '@tauri-apps/api/window';
 	import { open as shellOpen } from '@tauri-apps/plugin-shell';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-	import { pushInfoToast } from '$lib/toast';
+	import { pushInfoToast, pushToast } from '$lib/toast';
 	import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/menu';
 	import profiles from '$lib/state/profile.svelte';
 
@@ -363,6 +363,15 @@
 			let data = await api.profile.import.readBase64(base64);
 			importProfileDialog.openFor({ type: 'normal', ...data });
 		} else if (file.name.endsWith('.zip')) {
+			if (profiles.activeLocked) {
+				pushToast({
+					type: 'error',
+					name: 'Failed to import local mod',
+					message: 'Profile is locked.'
+				});
+				return;
+			}
+
 			await api.profile.import.localModBase64(base64);
 			await profiles.refresh();
 

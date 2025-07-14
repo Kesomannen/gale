@@ -25,11 +25,14 @@
 	});
 
 	let currentName = $derived(progress.currentName.replace('_', ' '));
-	let estimatedTimeLeft = $derived(
-		progress.durationSecs > 1
-			? formatTime(progress.durationSecs * (1 / progress.totalProgress - 1))
-			: '---'
-	);
+	let estimatedTimeLeft = $derived.by(() => {
+		if (progress.durationSecs < 1) return '---';
+
+		let estimatedSeconds = progress.durationSecs * (1 / progress.totalProgress - 1);
+		if (estimatedSeconds < 60) return 'less than a minute';
+
+		return formatTime(estimatedSeconds);
+	});
 
 	onMount(() => {
 		listen<InstallProgress>('install_progress', (event) => {
