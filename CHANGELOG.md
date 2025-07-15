@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Small UI tweaks
+
+### Fixed
+
+- Tooltips not appearing after changing a config or settings option
+- Being able to import local mods into locked profiles
+
 ## 1.8.6 (2025-07-12)
 
 ### Added
@@ -8,7 +19,7 @@
 
 ### Changed
 
-- Minor UI changes 
+- Minor UI changes
 - Color config field now also supports hexcodes starting with a hashtag
 
 ### Fixed
