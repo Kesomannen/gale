@@ -76,7 +76,7 @@
 			<IconButton
 				label="Open in external program"
 				icon="mdi:open-in-new"
-				class="hidden group-hover:block group-focus:block"
+				class="ml-2 hidden group-hover:block"
 				onclick={(evt) => {
 					evt.preventDefault();
 					openFile();
@@ -87,7 +87,7 @@
 				<IconButton
 					label="Trash file"
 					icon="mdi:delete"
-					class="hidden group-hover:block group-focus:block"
+					class="hidden group-hover:block"
 					onclick={(evt) => {
 						evt.preventDefault();
 						deleteFile();

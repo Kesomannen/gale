@@ -1,6 +1,6 @@
 import * as api from '$lib/api';
 import type { ProfileInfo } from '$lib/types';
-import user from './user.svelte';
+import auth from './auth.svelte';
 
 class ProfilesState {
 	list: ProfileInfo[] = $state([]);
@@ -11,9 +11,9 @@ class ProfilesState {
 	activeLocked = $derived.by(() => {
 		if (this.active === null) return false;
 		if (this.active.sync === null) return false;
-		if (user.value === null) return true;
+		if (auth.user === null) return true;
 
-		return this.active.sync.owner.discordId != user.value.discordId;
+		return this.active.sync.owner.discordId != auth.user.discordId;
 	});
 
 	refresh = async () => {

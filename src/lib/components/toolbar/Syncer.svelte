@@ -13,7 +13,7 @@
 	import OwnedSyncProfilesDialog from '../dialogs/OwnedSyncProfilesDialog.svelte';
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
 	import profiles from '$lib/state/profile.svelte';
-	import user from '$lib/state/user.svelte';
+	import auth from '$lib/state/auth.svelte';
 	import Link from '../ui/Link.svelte';
 	import { PersistedState } from 'runed';
 
@@ -27,7 +27,7 @@
 	let syncProfiles: ListedSyncProfile[] = $state([]);
 
 	let syncInfo = $derived(profiles.active?.sync ?? null);
-	let isOwner = $derived(syncInfo?.owner.discordId == user.value?.discordId);
+	let isOwner = $derived(syncInfo?.owner.discordId == auth.user?.discordId);
 	let syncState = $derived(
 		(syncInfo === null
 			? 'off'
@@ -74,21 +74,20 @@
 
 	let showDonation = $derived(
 		syncInfo &&
-			(true ||
-				!donationClosedAt.current ||
+			(!donationClosedAt.current ||
 				Date.now() - new Date(donationClosedAt.current).getTime() > donationCloseDuration)
 	);
 
 	async function onLoginClicked() {
 		loginLoading = true;
 		try {
-			if (user.value === null) {
-				let userInfo = await user.login();
+			if (auth.user === null) {
+				let userInfo = await auth.login();
 				pushInfoToast({
 					message: `Signed in with Discord as ${userInfo.displayName}.`
 				});
 			} else {
-				await user.logout();
+				await auth.logout();
 			}
 		} finally {
 			loginLoading = false;
@@ -229,7 +228,7 @@
 				<Button
 					onclick={push}
 					{loading}
-					disabled={user.value === null}
+					disabled={auth.user === null}
 					color="accent"
 					icon="mdi:cloud-upload"
 				>
@@ -243,14 +242,14 @@
 				Disconnect
 			</Button>
 		</div>
-	{:else if user.value !== null}
+	{:else if auth.user !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
 			Connect
 		</Button>
 	{/if}
 
 	<div class="text-primary-300 mt-4 flex items-center gap-1">
-		{#if user.value === null}
+		{#if auth.user === null}
 			<Button
 				onclick={onLoginClicked}
 				loading={loginLoading}
@@ -260,7 +259,7 @@
 				Sign in with Discord
 			</Button>
 		{:else}
-			<SyncAvatar user={user.value} />
+			<SyncAvatar user={auth.user} />
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">

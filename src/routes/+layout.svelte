@@ -49,7 +49,7 @@
 	}}
 />
 
-<Tooltip.Provider>
+<Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
 	<main class="bg-primary-800 relative flex flex-col overflow-hidden">
 		<Menubar />
 		<Toolbar />

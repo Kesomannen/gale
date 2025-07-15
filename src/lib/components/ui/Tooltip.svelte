@@ -47,8 +47,8 @@
 	</Tooltip.Trigger>
 	<Tooltip.Content forceMount {sideOffset} {side}>
 		{#snippet child({ wrapperProps, props, open })}
-			{#if open}
-				<div {...wrapperProps}>
+			<div {...wrapperProps}>
+				{#if open}
 					<div
 						class="border-primary-600 bg-primary-800 text-primary-300 relative z-50 max-w-lg rounded-lg border px-4 py-2 shadow-md"
 						{...props}
@@ -59,8 +59,8 @@
 							{text}
 						{/if}
 					</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		{/snippet}
 	</Tooltip.Content>
 </Tooltip.Root>

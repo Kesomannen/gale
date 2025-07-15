@@ -1,27 +1,27 @@
 import * as api from '$lib/api';
 import type { SyncUser } from '$lib/types';
 
-class UserState {
-	value: SyncUser | null = $state(null);
+class AuthState {
+	user: SyncUser | null = $state(null);
 
 	refresh = async () => {
-		this.value = await api.profile.sync.getUser();
+		this.user = await api.profile.sync.getUser();
 	};
 
 	login = async () => {
 		const user = await api.profile.sync.login();
-		this.value = user;
+		this.user = user;
 		return user;
 	};
 
 	logout = async () => {
 		await api.profile.sync.logout();
-		this.value = null;
+		this.user = null;
 	};
 }
 
-const user = new UserState();
+const auth = new AuthState();
 
-user.refresh();
+auth.refresh();
 
-export default user;
+export default auth;
