@@ -1,6 +1,7 @@
 use std::{
     fs::{self},
     path::PathBuf,
+    sync::Arc,
 };
 
 use eyre::{bail, Context, Result};
@@ -131,14 +132,14 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
         data,
         InstallOptions::default()
             .can_cancel(false)
-            .send_progress(false)
-            .on_progress(Box::new(move |progress, app| {
-                let percentage = (progress.total_progress * 100.0).round();
-                emit_update(
-                    &format!("Importing profile '{}'... {}%", name, percentage),
-                    app,
-                );
-            })),
+            .send_progress(false),
+        //.on_progress(Arc::new(move |progress, app| {
+        //    let percentage = (progress.total_progress * 100.0).round();
+        //    emit_update(
+        //        &format!("Importing profile '{}'... {}%", name, percentage),
+        //        app,
+        //    );
+        //})),
         false,
         app,
     )

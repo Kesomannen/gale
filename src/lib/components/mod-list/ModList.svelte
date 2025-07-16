@@ -1,7 +1,6 @@
 <script lang="ts">
 	import VirtualList from '$lib/components/ui/VirtualList.svelte';
 	import type { Mod, QueryModsArgsWithoutMax } from '$lib/types';
-	import type { Writable } from 'svelte/store';
 	import type { Snippet } from 'svelte';
 	import games from '$lib/state/game.svelte';
 

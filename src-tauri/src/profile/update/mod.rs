@@ -1,11 +1,14 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 use eyre::Context;
 use itertools::Itertools;
+use tauri::AppHandle;
 use uuid::Uuid;
 
 use super::install::{InstallOptions, ModInstall};
 use crate::{
-    profile::{install, Profile, Result},
+    profile::{Profile, Result},
     state::ManagerExt,
     thunderstore::{ModId, PackageListing, PackageVersion, Thunderstore},
 };
@@ -23,12 +26,7 @@ pub struct AvailableUpdate<'a> {
 
 impl From<AvailableUpdate<'_>> for ModInstall {
     fn from(value: AvailableUpdate<'_>) -> Self {
-        let latest_id = ModId {
-            package_uuid: value.package.uuid,
-            version_uuid: value.latest.uuid,
-        };
-
-        ModInstall::new(latest_id)
+        ModInstall::new((value.package, value.latest))
             .with_state(value.enabled)
             .with_index(value.index)
             .with_time(value.install_time)
@@ -78,37 +76,37 @@ impl Profile {
     }
 }
 
-pub async fn change_version(mod_ref: ModId, app: &tauri::AppHandle) -> Result<()> {
-    let install = {
+pub async fn change_version(mod_id: ModId, app: &AppHandle) -> Result<()> {
+    let (profile_id, install) = {
         let manager = app.lock_manager();
+        let thunderstore = app.lock_thunderstore();
 
         let profile = manager.active_profile();
 
-        let index = profile.index_of(mod_ref.package_uuid)?;
+        let index = profile.index_of(mod_id.package_uuid)?;
         let enabled = profile.mods[index].enabled;
         let install_time = profile.mods[index].install_time;
 
-        ModInstall::new(mod_ref)
-            .with_state(enabled)
-            .with_index(index)
-            .with_time(install_time)
+        (
+            profile.id,
+            ModInstall::from_id(mod_id, &thunderstore)?
+                .with_state(enabled)
+                .with_index(index)
+                .with_time(install_time),
+        )
     };
 
-    _update_mods(vec![install], app).await
+    install_updates(vec![install], profile_id, app).await
 }
 
-pub async fn update_mods(
-    uuids: Vec<Uuid>,
-    respect_ignored: bool,
-    app: &tauri::AppHandle,
-) -> Result<()> {
-    let installs = {
+pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: &AppHandle) -> Result<()> {
+    let (profile_id, installs) = {
         let mut manager = app.lock_manager();
         let thunderstore = app.lock_thunderstore();
 
         let profile = manager.active_profile_mut();
 
-        uuids
+        let installs = uuids
             .into_iter()
             .filter_map(|uuid| {
                 profile
@@ -116,30 +114,38 @@ pub async fn update_mods(
                     .transpose()
             })
             .map_ok(ModInstall::from)
-            .collect::<Result<Vec<_>>>()?
+            .collect::<Result<Vec<_>>>()?;
+
+        (profile.id, installs)
     };
 
-    _update_mods(installs, app).await
+    install_updates(installs, profile_id, app).await
 }
 
-async fn _update_mods(installs: Vec<ModInstall>, app: &tauri::AppHandle) -> Result<()> {
-    install::install_with_deps(
-        installs,
-        InstallOptions::default().before_install(Box::new(|install, manager, _| {
-            // remove the old version
-            let profile = manager.active_profile_mut();
+async fn install_updates(
+    installs: Vec<ModInstall>,
+    profile_id: i64,
+    app: &AppHandle,
+) -> Result<()> {
+    app.install_queue()
+        .push_with_deps(
+            installs,
+            profile_id,
+            InstallOptions::default().before_install(Arc::new(|install, manager, _| {
+                // remove the old version
+                let profile = manager.active_profile_mut();
 
-            // check since it could be a new dependency being installed, not an update itself
-            if profile.has_mod(install.uuid()) {
-                profile
-                    .force_remove_mod(install.uuid())
-                    .context("failed to remove existing version")?;
-            }
+                // check since it could be a new dependency being installed, not an update itself
+                if profile.has_mod(install.uuid()) {
+                    profile
+                        .force_remove_mod(install.uuid())
+                        .context("failed to remove existing version")?;
+                }
 
-            Ok(())
-        })),
-        true,
-        app,
-    )
-    .await
+                Ok(())
+            })),
+            true,
+            app,
+        )?
+        .await
 }

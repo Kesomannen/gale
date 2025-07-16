@@ -1,8 +1,7 @@
-use std::iter;
+use std::{iter, sync::Arc};
 
 use chrono::{DateTime, Utc};
-use eyre::{bail, Context, Result};
-use itertools::Itertools;
+use eyre::Result;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 use tauri::AppHandle;
@@ -11,49 +10,24 @@ use uuid::Uuid;
 use super::{ModManager, Profile};
 use crate::{
     prefs::Prefs,
-    state::ManagerExt,
-    thunderstore::{BorrowedMod, ModId, Thunderstore},
+    profile::{ProfileMod, ProfileModKind, ThunderstoreMod},
+    thunderstore::{BorrowedMod, ModId, Thunderstore, VersionIdent},
 };
 
 mod cache;
 pub mod commands;
-mod download;
 mod fs;
 mod installers;
 pub use installers::*;
+pub mod queue;
 
-#[derive(Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct InstallProgress<'a> {
-    /// The percentage of "completed" bytes, from 0 to 1.
-    pub total_progress: f32,
-    pub duration_secs: f32,
-    pub installed_mods: usize,
-    pub total_mods: usize,
-    pub current_name: &'a str,
-    pub can_cancel: bool,
-    pub task: InstallTask,
-}
-
-#[derive(Serialize, Debug, Clone, Display)]
-#[serde(rename_all = "camelCase", tag = "kind", content = "payload")]
-#[strum(serialize_all = "camelCase")]
-pub enum InstallTask {
-    Done,
-    Error,
-    Downloading { total: u64, downloaded: u64 },
-    Extracting,
-    Installing,
-}
-
-type ProgressHandler = Box<dyn Fn(&InstallProgress, &AppHandle) + 'static + Send>;
 type EventHandler =
-    Box<dyn Fn(&ModInstall, &mut ModManager, &Thunderstore) -> Result<()> + 'static + Send>;
+    Arc<dyn Fn(&ModInstall, &mut ModManager, &Thunderstore) -> Result<()> + 'static + Send + Sync>;
 
+#[derive(Clone)]
 pub struct InstallOptions {
     can_cancel: bool,
     send_progress: bool,
-    on_progress: Option<ProgressHandler>,
     before_install: Option<EventHandler>,
 }
 
@@ -62,7 +36,6 @@ impl Default for InstallOptions {
         Self {
             can_cancel: true,
             send_progress: true,
-            on_progress: None,
             before_install: None,
         }
     }
@@ -79,11 +52,6 @@ impl InstallOptions {
         self
     }
 
-    pub fn on_progress(mut self, on_progress: ProgressHandler) -> Self {
-        self.on_progress = Some(on_progress);
-        self
-    }
-
     pub fn before_install(mut self, before_install: EventHandler) -> Self {
         self.before_install = Some(before_install);
         self
@@ -94,19 +62,28 @@ impl InstallOptions {
 #[serde(rename_all = "camelCase")]
 pub struct ModInstall {
     id: ModId,
+    ident: VersionIdent,
+    file_size: u64,
     enabled: bool,
     index: Option<usize>,
     install_time: Option<DateTime<Utc>>,
 }
 
 impl ModInstall {
-    pub fn new(id: ModId) -> Self {
+    pub fn new<'a>(borrowed: impl Into<BorrowedMod<'a>>) -> Self {
+        let borrowed = borrowed.into();
         Self {
-            id,
+            id: borrowed.into(),
+            ident: borrowed.ident().to_owned(),
+            file_size: borrowed.version.file_size,
             enabled: true,
             index: None,
             install_time: None,
         }
+    }
+
+    pub fn from_id(mod_id: ModId, thunderstore: &Thunderstore) -> Result<Self> {
+        mod_id.borrow(thunderstore).map(Self::new)
     }
 
     pub fn with_state(mut self, enabled: bool) -> Self {
@@ -132,68 +109,46 @@ impl ModInstall {
     pub fn enabled(&self) -> bool {
         self.enabled
     }
+
+    fn insert_into(self, profile: &mut Profile) -> Result<()> {
+        let ModInstall {
+            id,
+            ident,
+            enabled,
+            index,
+            install_time,
+            ..
+        } = self;
+
+        let uuid = id.package_uuid;
+        let install_time = install_time.unwrap_or_else(Utc::now);
+
+        let profile_mod = ProfileMod::new_at(
+            install_time,
+            ProfileModKind::Thunderstore(ThunderstoreMod { ident, id }),
+        );
+
+        match index {
+            Some(index) if index < profile.mods.len() => {
+                profile.mods.insert(index, profile_mod);
+            }
+            _ => {
+                profile.mods.push(profile_mod);
+            }
+        };
+
+        if !enabled {
+            profile.force_toggle_mod(uuid)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl From<BorrowedMod<'_>> for ModInstall {
     fn from(borrowed_mod: BorrowedMod<'_>) -> Self {
-        Self::new(borrowed_mod.into())
+        Self::new(borrowed_mod)
     }
-}
-
-/// Downloads and install mods on the active profile.
-///
-/// Note that this does not check for duplicates, so make sure
-/// none of `mods` are already installed!
-pub async fn install_mods(
-    mods: Vec<ModInstall>,
-    options: InstallOptions,
-    app: &AppHandle,
-) -> Result<()> {
-    download::Installer::create(options, app)?
-        .install_all(mods)
-        .await
-}
-
-/// Downloads and installs mods and their missing dependencies on the active profile.
-///
-/// Dependencies are installed before each respective mod, sorted by descending depth.
-pub async fn install_with_deps(
-    mods: Vec<ModInstall>,
-    options: InstallOptions,
-    allow_multiple: bool,
-    app: &tauri::AppHandle,
-) -> Result<()> {
-    let mods = {
-        let manager = app.lock_manager();
-        let thunderstore = app.lock_thunderstore();
-        let profile = manager.active_profile();
-
-        if !allow_multiple && mods.len() == 1 && profile.has_mod(mods[0].uuid()) {
-            bail!("mod already installed");
-        }
-
-        let mods = mods
-            .into_iter()
-            .map(|install| {
-                let borrowed = install.id.borrow(&thunderstore)?;
-
-                Ok(iter::once(install).chain(
-                    profile
-                        .missing_deps(borrowed.dependencies(), &thunderstore)
-                        .map(ModInstall::from),
-                ))
-            })
-            .flatten_ok()
-            .collect::<Result<Vec<_>>>()
-            .context("failed to resolve dependencies")?;
-
-        mods.into_iter()
-            .unique_by(|install| install.uuid())
-            .rev() // install dependencies first
-            .collect()
-    };
-
-    install_mods(mods, options, app).await
 }
 
 /// Gets the number of bytes to download the given mod and its
@@ -203,11 +158,15 @@ fn total_download_size(
     profile: &Profile,
     prefs: &Prefs,
     thunderstore: &Thunderstore,
+    queue: &queue::Handle,
 ) -> u64 {
     profile
         .missing_deps(borrowed.dependencies(), thunderstore)
         .chain(iter::once(borrowed))
-        .filter(|borrowed| !cache::path(borrowed.ident(), prefs).exists())
+        .filter(|borrowed| {
+            !cache::path(borrowed.ident(), prefs).exists()
+                && !queue.has_mod(borrowed.package.uuid, profile.id)
+        })
         .map(|borrowed| borrowed.version.file_size)
         .sum()
 }

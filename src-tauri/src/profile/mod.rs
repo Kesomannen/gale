@@ -368,22 +368,26 @@ impl ManagedGame {
             .ok_or_else(|| anyhow!("profile index {} is out of bounds", index))
     }
 
-    fn find_profile(&self, id: i64) -> Result<&Profile> {
-        self.profiles
-            .iter()
-            .find(|profile| profile.id == id)
+    fn profile_ok(&self, id: i64) -> Option<&Profile> {
+        self.profiles.iter().find(|profile| profile.id == id)
+    }
+
+    fn profile(&self, id: i64) -> Result<&Profile> {
+        self.profile_ok(id)
             .with_context(|| format!("profile with id {} not found", id))
     }
 
-    fn find_profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
-        self.profiles
-            .iter_mut()
-            .find(|profile| profile.id == id)
+    fn profile_ok_mut(&mut self, id: i64) -> Option<&mut Profile> {
+        self.profiles.iter_mut().find(|profile| profile.id == id)
+    }
+
+    fn profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
+        self.profile_ok_mut(id)
             .with_context(|| format!("profile with id {} not found", id))
     }
 
     fn active_profile(&self) -> &Profile {
-        self.find_profile(self.active_profile_id).unwrap()
+        self.profile(self.active_profile_id).unwrap()
     }
 
     fn active_profile_mut(&mut self) -> &mut Profile {
@@ -533,6 +537,26 @@ impl ModManager {
         self.active_game_mut().active_profile_mut()
     }
 
+    pub fn profile_by_id(&self, id: i64) -> Result<(Game, &Profile)> {
+        self.games
+            .iter()
+            .find_map(|(game, managed_game)| {
+                managed_game.profile_ok(id).map(|profile| (*game, profile))
+            })
+            .ok_or_else(|| eyre!("profile with id {} not found", id))
+    }
+
+    pub fn profile_by_id_mut(&mut self, id: i64) -> Result<(Game, &mut Profile)> {
+        self.games
+            .iter_mut()
+            .find_map(|(game, managed_game)| {
+                managed_game
+                    .profile_ok_mut(id)
+                    .map(|profile| (*game, profile))
+            })
+            .ok_or_else(|| eyre!("profile with id {} not found", id))
+    }
+
     pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<&ManagedGame> {
         self.ensure_game(game, true, &app.lock_prefs(), app.db())?;
 
@@ -562,7 +586,7 @@ impl ModManager {
             .get_mut(game)
             .expect("newly managed game not found");
 
-        if verify_profiles && managed.find_profile(managed.active_profile_id).is_err() {
+        if verify_profiles && managed.profile(managed.active_profile_id).is_err() {
             if managed.profiles.is_empty() {
                 warn!("game {} has no profiles", game.slug);
                 managed.create_default_profile(db).with_context(|| {

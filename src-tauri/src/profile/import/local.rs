@@ -14,10 +14,7 @@ use zip::ZipArchive;
 use crate::{
     game::{ModLoader, ModLoaderKind},
     prefs::Prefs,
-    profile::{
-        install::{self, InstallOptions},
-        LocalMod, Profile, ProfileMod,
-    },
+    profile::{install::InstallOptions, LocalMod, Profile, ProfileMod},
     state::ManagerExt,
     thunderstore::PackageManifest,
     util::{self, fs::PathExt},
@@ -51,18 +48,22 @@ pub async fn import_local_mod(
     let (mut local_mod, kind) = read_local_mod(&path, override_kind)?;
 
     if let Some(deps) = &local_mod.dependencies {
-        let mods = {
+        let (profile_id, mods) = {
             let manager = app.lock_manager();
             let profile = manager.active_profile();
 
-            app.lock_thunderstore()
+            let mods = app
+                .lock_thunderstore()
                 .dependencies(deps)
                 .filter(|dep| !profile.has_mod(dep.package.uuid))
                 .map(|borrowed| borrowed.into())
-                .collect::<Vec<_>>()
+                .collect::<Vec<_>>();
+
+            (profile.id, mods)
         };
 
-        install::install_mods(mods, options, app)
+        app.install_queue()
+            .push_mods(mods, profile_id, options, app)
             .await
             .context("failed to install dependencies")?;
     }

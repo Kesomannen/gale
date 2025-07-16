@@ -8,6 +8,7 @@
 	import Syncer from './Syncer.svelte';
 	import ProfilesDropdown from './ProfilesDropdown.svelte';
 	import games from '$lib/state/game.svelte';
+	import InstallPopover from './InstallPopover.svelte';
 
 	let launchDialogOpen = $state(false);
 	let gamesOpen = $state(false);
@@ -52,6 +53,7 @@
 
 	<ProfilesDropdown />
 	<Syncer />
+	<InstallPopover />
 	<Updater />
 </div>
 

@@ -11,14 +11,19 @@ use crate::{
 use super::{InstallOptions, ModInstall};
 
 #[command]
-pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
-    super::install_with_deps(
-        vec![ModInstall::new(mod_ref)],
-        InstallOptions::default(),
-        false,
-        &app,
-    )
-    .await?;
+pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
+    let profile_id = app.lock_manager().active_profile().id;
+    let install = ModInstall::from_id(id, &app.lock_thunderstore())?;
+
+    app.install_queue()
+        .push_with_deps(
+            vec![install],
+            profile_id,
+            InstallOptions::default(),
+            false,
+            &app,
+        )?
+        .await?;
 
     Ok(())
 }
@@ -58,11 +63,15 @@ pub fn get_download_size(mod_ref: ModId, app: AppHandle) -> Result<u64> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
+    let queue = app.install_queue().handle();
 
-    Ok(super::total_download_size(
+    let size = super::total_download_size(
         mod_ref.borrow(&thunderstore)?,
         manager.active_profile(),
         &prefs,
         &thunderstore,
-    ))
+        &queue,
+    );
+
+    Ok(size)
 }

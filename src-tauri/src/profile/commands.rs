@@ -211,8 +211,9 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
 #[command]
 pub fn is_mod_installed(uuid: Uuid, app: AppHandle) -> Result<bool> {
     let manager = app.lock_manager();
+    let profile = manager.active_profile();
 
-    let result = manager.active_profile().has_mod(uuid);
+    let result = profile.has_mod(uuid) || app.install_queue().handle().has_mod(uuid, profile.id);
 
     Ok(result)
 }

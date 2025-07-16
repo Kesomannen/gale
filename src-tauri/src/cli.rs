@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process, time::Duration};
+use std::{path::PathBuf, process, sync::Arc, time::Duration};
 
 use clap::Parser;
 use eyre::{eyre, Context, OptionExt, Result};
@@ -139,18 +139,5 @@ impl Cli {
 }
 
 async fn install_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
-    profile::import::import_local_mod(
-        path,
-        None,
-        app,
-        InstallOptions::default().on_progress(Box::new(|progress, _| {
-            info!(
-                "{} {} ({}%)",
-                progress.task,
-                progress.current_name,
-                (progress.total_progress * 100.0).round()
-            )
-        })),
-    )
-    .await
+    profile::import::import_local_mod(path, None, app, InstallOptions::default()).await
 }

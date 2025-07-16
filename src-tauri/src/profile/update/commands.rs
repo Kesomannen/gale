@@ -4,8 +4,8 @@ use uuid::Uuid;
 use crate::{state::ManagerExt, thunderstore::ModId, util::cmd::Result};
 
 #[command]
-pub async fn change_mod_version(mod_ref: ModId, app: AppHandle) -> Result<()> {
-    super::change_version(mod_ref, &app).await?;
+pub async fn change_mod_version(id: ModId, app: AppHandle) -> Result<()> {
+    super::change_version(id, &app).await?;
 
     Ok(())
 }

@@ -18,7 +18,7 @@ use uuid::Uuid;
 use crate::{
     profile::{
         export::{ProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
-        install::{self, InstallOptions, ModInstall},
+        install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
     thunderstore::VersionIdent,
@@ -121,7 +121,7 @@ pub(super) async fn import_profile(
         delete_after_import,
     } = data;
 
-    let (index, profile_path, to_install) = {
+    let (index, profile_id, profile_path, to_install) = {
         let (names, installs) = resolve_mods(mods, app)?;
 
         let mut manager = app.lock_manager();
@@ -142,10 +142,11 @@ pub(super) async fn import_profile(
         };
 
         profile.ignored_updates = ignored_updates.into_iter().collect();
-        (index, profile.path.clone(), to_install)
+        (index, profile.id, profile.path.clone(), to_install)
     };
 
-    install::install_mods(to_install, options, app)
+    app.install_queue()
+        .push_mods(to_install, profile_id, options, app)
         .await
         .context("error while importing mods")?;
 

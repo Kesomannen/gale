@@ -205,6 +205,12 @@ export type InstallProgress = {
 	task: InstallTask;
 };
 
+export type InstallEvent =
+	| { type: 'show' }
+	| { type: 'hide' }
+	| { type: 'addCount', mods: number, bytes: number }
+	| { type: 'addProgress', mods: number, bytes: number };
+
 export type ModpackArgs = {
 	name: string;
 	description: string;
