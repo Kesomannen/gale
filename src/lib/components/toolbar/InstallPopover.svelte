@@ -41,7 +41,7 @@
 
 				case 'hide':
 					pushInfoToast({
-						message: `Installed ${totalMods} ${totalMods === 1 ? 'mod' : 'mods'} (${shortenFileSize(totalBytes)}).`
+						message: `Installed ${totalMods} ${totalMods === 1 ? 'mod' : 'mods'}.`
 					});
 
 					shownProgress.set(1, { duration: 100, easing: expoOut });
