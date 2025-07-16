@@ -50,7 +50,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
     let args = env::args().collect_vec();
     if !args.is_empty() && !deep_link::handle(app.handle(), args.clone()) {
-        cli::run(args, app.handle())
+        cli::run(args, app.handle());
     }
 
     let handle = app.handle().to_owned();

@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process};
+use std::{path::PathBuf, process, time::Duration};
 
 use clap::Parser;
 use eyre::{eyre, Context, OptionExt, Result};
@@ -7,16 +7,35 @@ use tracing::{debug, error, info};
 
 use crate::{
     game::{self},
+    logger,
     profile::{self, install::InstallOptions, ModManager},
     state::ManagerExt,
 };
 
 pub fn run(args: Vec<String>, app: &AppHandle) {
+    info!("running cli with args: {:?}", args);
+
+    let no_gui = args.iter().any(|arg| arg == "--no-gui");
+    if no_gui {
+        info!("found --no-gui flag, running in headless mode");
+    }
+
     Cli::try_parse_from(args)
         .map_err(|err| eyre!(err))
-        .and_then(|cli| cli.run(true, app))
+        .and_then(|cli| cli.run(app))
         .unwrap_or_else(|err| {
-            error!("failed to run cli: {:#}", err);
+            if no_gui {
+                error!("failed to run cli: {:#}", err);
+                process::exit(1);
+            } else {
+                let handle = app.to_owned();
+                tauri::async_runtime::spawn(async move {
+                    // janky but we need to wait for the webview to start
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+
+                    logger::log_webview_err("Failed to run cli", err, &handle);
+                });
+            }
         })
 }
 
@@ -40,7 +59,7 @@ struct Cli {
 }
 
 impl Cli {
-    fn run(self, from_args: bool, app: &AppHandle) -> Result<()> {
+    fn run(self, app: &AppHandle) -> Result<()> {
         let mut manager = app.lock_manager();
 
         let Cli {
@@ -86,14 +105,12 @@ impl Cli {
                 }
 
                 let manager = handle.lock_manager();
-                if let Err(err) =
-                    handle_launch_and_no_gui(launch, no_gui, from_args, &manager, &handle)
-                {
+                if let Err(err) = handle_launch_and_no_gui(launch, no_gui, &manager, &handle) {
                     error!("{:#}", err);
                 }
             });
         } else {
-            handle_launch_and_no_gui(launch, no_gui, from_args, &manager, app)?;
+            handle_launch_and_no_gui(launch, no_gui, &manager, app)?;
         }
 
         debug!("cli finished");
@@ -102,7 +119,6 @@ impl Cli {
         fn handle_launch_and_no_gui(
             launch: bool,
             no_gui: bool,
-            from_args: bool,
             manager: &ModManager,
             app: &AppHandle,
         ) -> Result<()> {
@@ -113,7 +129,7 @@ impl Cli {
                     .context("failed to launch game")?;
             }
 
-            if no_gui && from_args {
+            if no_gui {
                 process::exit(0);
             }
 
