@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use super::install::{InstallOptions, ModInstall};
 use crate::{
-    profile::{Profile, Result},
+    profile::{install::queue::InstallQueueHandle, Profile, Result},
     state::ManagerExt,
     thunderstore::{ModId, PackageListing, PackageVersion, Thunderstore},
 };
@@ -37,7 +37,12 @@ impl Profile {
         uuid: Uuid,
         respect_ignored: bool,
         thunderstore: &'a Thunderstore,
+        install_queue: &InstallQueueHandle,
     ) -> Result<Option<AvailableUpdate<'a>>> {
+        if install_queue.has_mod(uuid, self.id) {
+            return Ok(None); // a new version of this mod is installing or pending
+        }
+
         let index = self.index_of(uuid)?;
         let profile_mod = &self.mods[index];
 
@@ -101,6 +106,7 @@ pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: &AppHandl
     let (profile_id, installs) = {
         let mut manager = app.lock_manager();
         let thunderstore = app.lock_thunderstore();
+        let install_queue = app.install_queue().handle();
 
         let profile = manager.active_profile_mut();
 
@@ -108,7 +114,7 @@ pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: &AppHandl
             .into_iter()
             .filter_map(|uuid| {
                 profile
-                    .check_update(uuid, respect_ignored, &thunderstore)
+                    .check_update(uuid, respect_ignored, &thunderstore, &install_queue)
                     .transpose()
             })
             .map_ok(ModInstall::from)

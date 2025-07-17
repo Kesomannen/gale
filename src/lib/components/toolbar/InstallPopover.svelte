@@ -7,7 +7,7 @@
 	import Spinner from '../ui/Spinner.svelte';
 	import Icon from '@iconify/svelte';
 	import { fade, fly, scale } from 'svelte/transition';
-	import { expoOut, quadOut } from 'svelte/easing';
+	import { expoInOut, expoOut, quadOut } from 'svelte/easing';
 	import { pushInfoToast } from '$lib/toast';
 	import { shortenFileSize } from '$lib/util';
 	import { dropIn, dropOut } from '$lib/transitions';
@@ -53,12 +53,14 @@
 					break;
 
 				case 'hide':
+					/*
 					pushInfoToast({
 						message: `Installed ${totalMods} ${totalMods === 1 ? 'mod' : 'mods'}.`
 					});
+					*/
 
 					taskText = 'Finishing up...';
-					shownProgress.set(1, { duration: 100, easing: expoOut });
+					shownProgress.set(1, { duration: 250, easing: expoInOut });
 
 					setTimeout(() => {
 						open = false;
@@ -128,7 +130,7 @@
 				{#if open}
 					<div
 						{...props}
-						class="border-primary-600 bg-primary-800 z-30 w-80 rounded-lg border px-6 py-4 shadow-xl"
+						class="border-primary-600 bg-primary-800 z-10 w-80 rounded-lg border px-6 py-4 shadow-xl"
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>

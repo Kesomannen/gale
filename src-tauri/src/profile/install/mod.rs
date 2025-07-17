@@ -154,7 +154,7 @@ fn total_download_size(
     profile: &Profile,
     prefs: &Prefs,
     thunderstore: &Thunderstore,
-    queue: &queue::Handle,
+    queue: &queue::InstallQueueHandle,
 ) -> u64 {
     profile
         .missing_deps(borrowed.dependencies(), thunderstore)

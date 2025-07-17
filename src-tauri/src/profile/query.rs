@@ -5,10 +5,13 @@ use eyre::Result;
 use tracing::warn;
 
 use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
-use crate::thunderstore::{
-    self,
-    query::{QueryModsArgs, Queryable, SortBy, SortOrder},
-    BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
+use crate::{
+    profile::install::{self, queue::InstallQueueHandle},
+    thunderstore::{
+        self,
+        query::{QueryModsArgs, Queryable, SortBy, SortOrder},
+        BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
+    },
 };
 
 struct QueryableProfileMod<'a> {
@@ -115,7 +118,7 @@ impl Profile {
                     Ok(queryable) => Some(queryable),
                     Err(_) => {
                         warn!(
-                            "unknown mod: '{}' while querying {}",
+                            "unknown mod: {} while querying {}",
                             profile_mod.ident(),
                             self.name
                         );

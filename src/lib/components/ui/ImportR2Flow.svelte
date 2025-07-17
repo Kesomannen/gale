@@ -8,6 +8,7 @@
 	import { capitalize } from '$lib/util';
 	import * as api from '$lib/api';
 	import { default as profileState } from '$lib/state/profile.svelte';
+	import Spinner from './Spinner.svelte';
 
 	let path: string | null = $state(null);
 	let error = $state('');
@@ -18,7 +19,6 @@
 	};
 
 	let { importData = $bindable(undefined), loading = $bindable(false) }: Props = $props();
-	let loadingText = $state('');
 
 	let profiles = $derived(importData?.profiles ?? []);
 	let include = $derived(importData?.include ?? []);
@@ -32,8 +32,6 @@
 	});
 
 	export async function refresh(newPath: string | null) {
-		console.log('refreshing path', newPath);
-
 		error = '';
 		path = newPath;
 
@@ -52,10 +50,6 @@
 
 		loading = true;
 
-		let unlisten = await listen<string>('transfer_update', (evt) => {
-			loadingText = evt.payload;
-		});
-
 		let success = false;
 
 		try {
@@ -64,8 +58,6 @@
 
 			success = true;
 		} finally {
-			unlisten();
-
 			loading = false;
 		}
 
@@ -79,10 +71,10 @@
 
 {#if loading}
 	<div
-		class="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60"
+		class="text-primary-300 absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60 text-xl"
 		transition:fade={{ duration: 50 }}
 	>
-		<div class="text-primary-300">{loadingText}</div>
+		<Spinner />
 	</div>
 {/if}
 

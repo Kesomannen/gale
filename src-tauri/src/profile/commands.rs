@@ -168,6 +168,7 @@ pub struct ProfileQuery {
 pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery> {
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
+    let install_queue = app.install_queue().handle();
 
     let profile = manager.active_profile();
 
@@ -179,7 +180,7 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
         .iter()
         .filter_map(|profile_mod| {
             profile
-                .check_update(profile_mod.uuid(), false, &thunderstore)
+                .check_update(profile_mod.uuid(), false, &thunderstore, &install_queue)
                 .transpose()
         })
         .map_ok(|update| {

@@ -45,8 +45,8 @@ impl InstallQueue {
         Self::default()
     }
 
-    pub fn handle(&self) -> Handle {
-        Handle {
+    pub fn handle(&self) -> InstallQueueHandle {
+        InstallQueueHandle {
             state: self.state.lock().unwrap(),
             queue: self,
         }
@@ -75,12 +75,12 @@ impl InstallQueue {
     }
 }
 
-pub struct Handle<'a> {
+pub struct InstallQueueHandle<'a> {
     state: MutexGuard<'a, InstallQueueState>,
     queue: &'a InstallQueue,
 }
 
-impl<'a> Handle<'a> {
+impl<'a> InstallQueueHandle<'a> {
     pub fn has_profile(&self, profile_id: i64) -> bool {
         self.state
             .processing
