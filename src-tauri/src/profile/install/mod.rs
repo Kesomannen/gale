@@ -1,10 +1,8 @@
-use std::{iter, sync::Arc};
+use std::iter;
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
 use serde::{Deserialize, Serialize};
-use strum_macros::Display;
-use tauri::AppHandle;
 use uuid::Uuid;
 
 use super::{ModManager, Profile};
@@ -21,10 +19,8 @@ mod installers;
 pub use installers::*;
 pub mod queue;
 
-type EventHandler =
-    Arc<dyn Fn(&ModInstall, &mut ModManager, &Thunderstore) -> Result<()> + 'static + Send + Sync>;
+type EventHandler = Box<dyn Fn(&ModInstall, &mut ModManager) -> Result<()> + 'static + Send + Sync>;
 
-#[derive(Clone)]
 pub struct InstallOptions {
     can_cancel: bool,
     send_progress: bool,

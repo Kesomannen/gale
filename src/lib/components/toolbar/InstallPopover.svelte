@@ -1,6 +1,6 @@
 <script lang="ts">
 	import profiles from '$lib/state/profile.svelte';
-	import type { InstallEvent } from '$lib/types';
+	import type { InstallEvent, InstallTask } from '$lib/types';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { Popover, Progress } from 'bits-ui';
 	import { onDestroy, onMount } from 'svelte';
@@ -21,6 +21,19 @@
 
 	let completedMods = $state(0);
 	let completedBytes = $state(0);
+
+	let name: string | null = $state(null);
+	let task: InstallTask | null = $state(null);
+
+	let taskText = $derived(
+		task
+			? {
+					download: 'Downloading ',
+					extract: 'Extracting ',
+					install: 'Installing '
+				}[task] + name!.replace(/_/g, ' ')
+			: null
+	);
 
 	let progress = $derived(totalBytes === 0 ? 0 : completedBytes / totalBytes);
 	let shownProgress = new Tween(0);
@@ -44,6 +57,7 @@
 						message: `Installed ${totalMods} ${totalMods === 1 ? 'mod' : 'mods'}.`
 					});
 
+					taskText = 'Finishing up...';
 					shownProgress.set(1, { duration: 100, easing: expoOut });
 
 					setTimeout(() => {
@@ -55,16 +69,23 @@
 						completedMods = 0;
 						completedBytes = 0;
 
+						name = null;
+						task = null;
+
 						setTimeout(() => {
 							shown = false;
+
+							shownProgress.set(0, { delay: 50, duration: 0 });
 						}, 100);
-					}, 250);
+					}, 500);
 
 					break;
 
 				case 'addCount':
 					totalMods += event.payload.mods;
 					totalBytes += event.payload.bytes;
+
+					shownProgress.set(progress, { duration: 0 });
 
 					if (event.payload.mods > 0) {
 						open = true;
@@ -78,6 +99,11 @@
 					if (event.payload.mods > 0) {
 						profiles.refresh();
 					}
+					break;
+
+				case 'setTask':
+					name = event.payload.name;
+					task = event.payload.task;
 					break;
 			}
 		});
@@ -102,13 +128,19 @@
 				{#if open}
 					<div
 						{...props}
-						class="border-primary-600 bg-primary-800 z-30 w-80 rounded-lg border p-6 shadow-xl"
+						class="border-primary-600 bg-primary-800 z-30 w-80 rounded-lg border px-6 py-4 shadow-xl"
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
 						<div class="text-primary-300 font-semibold">
 							Installing mods... ({completedMods}/{totalMods})
 						</div>
+
+						{#if task && name}
+							<div class="text-primary-400 text-sm">
+								{taskText}
+							</div>
+						{/if}
 
 						<Progress.Root
 							value={shownProgress.current}

@@ -22,12 +22,19 @@ use crate::{
     logger,
     profile::install::{InstallOptions, ModInstall},
     state::ManagerExt,
+    thunderstore::VersionIdent,
     util::error::IoResultExt,
 };
 
 #[derive(Default)]
+struct InstallQueueState {
+    pending: VecDeque<InstallBatch>,
+    processing: Option<(i64, Vec<Uuid>)>,
+}
+
+#[derive(Default)]
 pub struct InstallQueue {
-    pending: Mutex<VecDeque<InstallRequest>>,
+    state: Mutex<InstallQueueState>,
     notify: tokio::sync::Notify,
 }
 
@@ -40,7 +47,7 @@ impl InstallQueue {
 
     pub fn handle(&self) -> Handle {
         Handle {
-            pending: self.pending.lock().unwrap(),
+            state: self.state.lock().unwrap(),
             queue: self,
         }
     }
@@ -69,19 +76,22 @@ impl InstallQueue {
 }
 
 pub struct Handle<'a> {
-    pending: MutexGuard<'a, VecDeque<InstallRequest>>,
+    state: MutexGuard<'a, InstallQueueState>,
     queue: &'a InstallQueue,
 }
 
 impl<'a> Handle<'a> {
     pub fn has_mod(&self, uuid: Uuid, profile_id: i64) -> bool {
-        self.pending
-            .iter()
-            .any(|request| request.install.uuid() == uuid && request.profile_id == profile_id)
-    }
-
-    fn has_request(&self, request: &InstallRequest) -> bool {
-        self.has_mod(request.install.uuid(), request.profile_id)
+        self.state
+            .processing
+            .as_ref()
+            .is_some_and(|(other_profile_id, other_uuids)| {
+                *other_profile_id == profile_id && other_uuids.contains(&uuid)
+            })
+            || self.state.pending.iter().any(|batch| {
+                batch.profile_id == profile_id
+                    && batch.mods.iter().any(|install| install.uuid() == uuid)
+            })
     }
 
     fn push_mods(
@@ -91,44 +101,37 @@ impl<'a> Handle<'a> {
         options: InstallOptions,
         app: &AppHandle,
     ) -> impl Future<Output = Result<()>> {
-        let requests = mods.into_iter().map(|install| InstallRequest {
-            install,
-            options: options.clone(),
-            profile_id,
-            on_complete: None,
-        });
-
-        let mut pushed_count = 0usize;
-        let mut pushed_bytes = 0;
-
-        for request in requests {
-            // skip mod if it's already queued
-            if self.has_request(&request) {
-                continue;
-            }
-
-            pushed_count += 1;
-            pushed_bytes += request.install.file_size;
-
-            self.pending.push_back(request);
-        }
-
         let (tx, rx) = oneshot::channel();
 
-        if pushed_count > 0 {
-            self.pending.iter_mut().last().unwrap().on_complete = Some(tx);
+        let mods = mods
+            .into_iter()
+            .filter(|install| !self.has_mod(install.uuid(), profile_id))
+            .collect_vec();
+
+        let mod_count = mods.len();
+        let bytes = mods.iter().map(|install| install.file_size).sum();
+
+        let batch = InstallBatch {
+            mods,
+            options,
+            profile_id,
+            on_complete: tx,
+        };
+
+        if mod_count > 0 {
+            self.state.pending.push_back(batch);
             self.queue.notify.notify_waiters();
 
             emit(
                 InstallEvent::AddCount {
-                    mods: pushed_count,
-                    bytes: pushed_bytes,
+                    mods: mod_count,
+                    bytes,
                 },
                 app,
             );
         } else {
             // complete the task immediately since there are no mods to install
-            tx.send(Ok(())).unwrap();
+            batch.complete(Ok(()), app);
         }
 
         async move {
@@ -181,38 +184,40 @@ impl<'a> Handle<'a> {
 
         Ok(self.push_mods(mods, profile_id, options, app))
     }
+
+    fn pop_next(&mut self) -> Option<InstallBatch> {
+        let next = self.state.pending.pop_front();
+        self.state.processing = next.as_ref().map(|batch| {
+            (
+                batch.profile_id,
+                batch.mods.iter().map(|install| install.uuid()).collect(),
+            )
+        });
+        next
+    }
 }
 
-pub struct InstallRequest {
-    install: ModInstall,
+pub struct InstallBatch {
+    mods: Vec<ModInstall>,
     options: InstallOptions,
     profile_id: i64,
-    on_complete: Option<oneshot::Sender<Result<()>>>,
+    on_complete: oneshot::Sender<Result<()>>,
 }
 
-impl InstallRequest {
+impl InstallBatch {
     fn complete(self, result: Result<()>, app: &AppHandle) {
         match result {
             Ok(()) => {
-                if let Some(tx) = self.on_complete {
-                    tx.send(Ok(())).ok();
-                }
+                self.on_complete.send(Ok(())).ok();
             }
             Err(err) => {
-                let err = if let Some(tx) = self.on_complete {
-                    match tx.send(Err(err)) {
-                        Ok(()) => return,
-                        Err(err) => err.unwrap_err(),
-                    }
-                } else {
-                    err
+                let err = match self.on_complete.send(Err(err)) {
+                    Ok(()) => return,
+                    Err(err) => err.unwrap_err(),
                 };
 
-                logger::log_webview_err(
-                    format!("Failed to install {}", self.install.ident),
-                    err,
-                    &app,
-                );
+                // in case the receiver has been dropped, show an error on the frontend
+                logger::log_webview_err(format!("Failed to install batch"), err, &app);
             }
         }
     }
@@ -224,13 +229,13 @@ async fn handle_queue(app: AppHandle) {
     loop {
         queue.notify.notified().await;
 
+        emit(InstallEvent::Show, &app);
+
         loop {
-            emit(InstallEvent::Show, &app);
+            let batch = queue.handle().pop_next();
 
-            let request = queue.handle().pending.pop_front();
-
-            match request {
-                Some(request) => handle_request(queue, request, &app).await,
+            match batch {
+                Some(batch) => handle_batch(batch, &app).await,
                 None => break,
             }
         }
@@ -243,85 +248,89 @@ async fn handle_queue(app: AppHandle) {
     }
 }
 
-async fn handle_request(queue: &InstallQueue, mut request: InstallRequest, app: &AppHandle) {
-    let result = handle_request_inner(&request, app).await;
+async fn handle_batch(batch: InstallBatch, app: &AppHandle) {
+    let mut result = Ok(());
 
-    if result.is_err() {
-        // keep popping request until we find one with an on_complete sender
-        let mut handle = queue.handle();
-        loop {
-            if request.on_complete.is_some() {
-                break;
-            }
+    for (i, install) in batch.mods.iter().enumerate() {
+        result = handle_install(&batch, i, app)
+            .await
+            .wrap_err_with(|| format!("failed to install {}", install.ident));
 
-            match handle.pending.pop_front() {
-                Some(next) => request = next,
-                None => break,
-            };
+        if result.is_err() {
+            break;
         }
     }
 
-    request.complete(result, app);
+    batch.complete(result, app);
 }
 
-async fn handle_request_inner(request: &InstallRequest, app: &AppHandle) -> Result<()> {
-    match try_cache_install(request, app)? {
-        InstallMethod::Cached => Ok(()),
-        InstallMethod::Download => {
-            let bytes = download(request, app).await?;
-            install_from_download(bytes, request, app)?;
+async fn handle_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Result<()> {
+    match try_cache_install(batch, index, app)? {
+        CacheStatus::Hit => Ok(()),
+        CacheStatus::Miss => {
+            let bytes = download(&batch.mods[index], app).await?;
+            install_from_download(bytes, batch, index, app)?;
 
             Ok(())
         }
     }
 }
 
-enum InstallMethod {
-    Cached,
-    Download,
+enum CacheStatus {
+    Hit,
+    Miss,
 }
 
-fn try_cache_install(request: &InstallRequest, app: &AppHandle) -> Result<InstallMethod> {
-    let prefs = app.lock_prefs();
-    let mut manager = app.lock_manager();
-    let thunderstore = app.lock_thunderstore();
+fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Result<CacheStatus> {
+    let install = &batch.mods[index];
 
-    let borrow = request.install.id.borrow(&thunderstore)?;
-    let cache_path = super::cache::path(&borrow.version.ident, &prefs);
+    let cache_path = super::cache::path(&install.ident, &app.lock_prefs());
 
-    if cache_path.exists() {
-        if let Some(callback) = &request.options.before_install {
-            callback(&request.install, &mut manager, &thunderstore)?;
-        }
-
-        let (game, profile) = manager.profile_by_id_mut(request.profile_id)?;
-        let package_name = borrow.ident().full_name();
-
-        let mut installer = game.mod_loader.installer_for(package_name);
-        installer.install(&cache_path, package_name, profile)?;
-
-        request.install.clone().insert_into(profile)?;
-
-        profile.save(app.db())?;
-
-        emit(
-            InstallEvent::AddProgress {
-                mods: 1,
-                bytes: request.install.file_size,
-            },
-            app,
-        );
-
-        Ok(InstallMethod::Cached)
-    } else {
-        Ok(InstallMethod::Download)
+    if !cache_path.exists() {
+        return Ok(CacheStatus::Miss);
     }
+
+    emit(
+        InstallEvent::set_task(&install.ident, InstallTask::Install),
+        app,
+    );
+
+    let mut manager = app.lock_manager();
+
+    if let Some(callback) = &batch.options.before_install {
+        callback(&install, &mut manager)?;
+    }
+
+    let (game, profile) = manager.profile_by_id_mut(batch.profile_id)?;
+    let package_name = install.ident.full_name();
+
+    let mut installer = game.mod_loader.installer_for(package_name);
+    installer.install(&cache_path, package_name, profile)?;
+
+    install.clone().insert_into(profile)?;
+
+    profile.save(app.db())?;
+
+    emit(
+        InstallEvent::AddProgress {
+            mods: 1,
+            bytes: install.file_size,
+        },
+        app,
+    );
+
+    Ok(CacheStatus::Hit)
 }
 
-async fn download(request: &InstallRequest, app: &AppHandle) -> Result<Vec<u8>> {
+async fn download(install: &ModInstall, app: &AppHandle) -> Result<Vec<u8>> {
+    emit(
+        InstallEvent::set_task(&install.ident, InstallTask::Download),
+        app,
+    );
+
     let url = format!(
         "https://thunderstore.io/package/download/{}/",
-        request.install.ident.path()
+        install.ident.path()
     );
 
     let mut stream = app
@@ -332,7 +341,7 @@ async fn download(request: &InstallRequest, app: &AppHandle) -> Result<Vec<u8>> 
         .and_then(|response| response.error_for_status())?
         .bytes_stream();
 
-    let mut response = Vec::with_capacity(request.install.file_size as usize);
+    let mut response = Vec::with_capacity(install.file_size as usize);
 
     const UPDATE_DELAY: Duration = Duration::from_millis(100);
     let mut last_update = Instant::now();
@@ -366,20 +375,30 @@ async fn download(request: &InstallRequest, app: &AppHandle) -> Result<Vec<u8>> 
     Ok(response)
 }
 
-fn install_from_download(data: Vec<u8>, request: &InstallRequest, app: &AppHandle) -> Result<()> {
-    let prefs = app.lock_prefs();
-    let mut manager = app.lock_manager();
-    let thunderstore = app.lock_thunderstore();
+fn install_from_download(
+    data: Vec<u8>,
+    batch: &InstallBatch,
+    index: usize,
+    app: &AppHandle,
+) -> Result<()> {
+    let manager = app.lock_manager();
 
-    let borrow = request.install.id.borrow(&thunderstore)?;
-    let cache_path = super::cache::path(&borrow.version.ident, &prefs);
-    let package_name = borrow.ident().full_name();
+    let install = &batch.mods[index];
 
-    let (game, _) = manager.profile_by_id_mut(request.profile_id)?;
+    let cache_path = super::cache::path(&install.ident, &app.lock_prefs());
+    let package_name = install.ident.full_name();
+
+    let (game, _) = manager.profile_by_id(batch.profile_id)?;
+    drop(manager);
 
     fs::create_dir_all(&cache_path).fs_context("creating mod cache dir", &cache_path)?;
 
     let mut installer = game.mod_loader.installer_for(package_name);
+
+    emit(
+        InstallEvent::set_task(&install.ident, InstallTask::Extract),
+        app,
+    );
 
     let archive = ZipArchive::new(Cursor::new(data)).context("failed to open archive")?;
 
@@ -390,20 +409,27 @@ fn install_from_download(data: Vec<u8>, request: &InstallRequest, app: &AppHandl
             fs::remove_dir_all(&cache_path).unwrap_or_else(|err| {
                 warn!(
                     "failed to clean up after failed extraction of {}: {:#}",
-                    request.install.ident, err
+                    install.ident, err
                 );
             });
         })
         .context("error while extracting")?;
 
-    if let Some(callback) = &request.options.before_install {
-        callback(&request.install, &mut manager, &thunderstore)?;
+    emit(
+        InstallEvent::set_task(&install.ident, InstallTask::Install),
+        app,
+    );
+
+    let mut manager = app.lock_manager();
+
+    if let Some(callback) = &batch.options.before_install {
+        callback(&install, &mut manager)?;
     }
 
-    let (_, profile) = manager.profile_by_id_mut(request.profile_id)?;
+    let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;
 
     installer.install(&cache_path, package_name, profile)?;
-    request.install.clone().insert_into(profile)?;
+    install.clone().insert_into(profile)?;
 
     profile.save(app.db())?;
 
@@ -414,7 +440,7 @@ fn install_from_download(data: Vec<u8>, request: &InstallRequest, app: &AppHandl
 
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase", tag = "type")]
-enum InstallEvent {
+enum InstallEvent<'a> {
     Show,
     Hide,
     #[serde(rename_all = "camelCase")]
@@ -427,6 +453,28 @@ enum InstallEvent {
         mods: usize,
         bytes: u64,
     },
+    #[serde(rename_all = "camelCase")]
+    SetTask {
+        name: &'a str,
+        task: InstallTask,
+    },
+}
+
+#[derive(Debug, Serialize, Clone, Copy)]
+#[serde(rename_all = "camelCase")]
+enum InstallTask {
+    Download,
+    Extract,
+    Install,
+}
+
+impl<'a> InstallEvent<'a> {
+    fn set_task(ident: &'a VersionIdent, task: InstallTask) -> Self {
+        Self::SetTask {
+            name: ident.name(),
+            task,
+        }
+    }
 }
 
 fn emit(event: InstallEvent, app: &AppHandle) {

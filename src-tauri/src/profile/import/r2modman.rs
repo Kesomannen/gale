@@ -1,7 +1,6 @@
 use std::{
     fs::{self},
     path::PathBuf,
-    sync::Arc,
 };
 
 use eyre::{bail, Context, Result};

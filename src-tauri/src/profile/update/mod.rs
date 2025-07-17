@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use chrono::{DateTime, Utc};
 use eyre::Context;
 use itertools::Itertools;
@@ -131,7 +129,7 @@ async fn install_updates(
         .push_with_deps(
             installs,
             profile_id,
-            InstallOptions::default().before_install(Arc::new(|install, manager, _| {
+            InstallOptions::default().before_install(Box::new(|install, manager| {
                 // remove the old version
                 let profile = manager.active_profile_mut();
 
