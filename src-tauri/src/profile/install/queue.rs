@@ -81,6 +81,18 @@ pub struct Handle<'a> {
 }
 
 impl<'a> Handle<'a> {
+    pub fn has_profile(&self, profile_id: i64) -> bool {
+        self.state
+            .processing
+            .as_ref()
+            .is_some_and(|(other_profile_id, _)| *other_profile_id == profile_id)
+            || self
+                .state
+                .pending
+                .iter()
+                .any(|batch| batch.profile_id == profile_id)
+    }
+
     pub fn has_mod(&self, uuid: Uuid, profile_id: i64) -> bool {
         self.state
             .processing

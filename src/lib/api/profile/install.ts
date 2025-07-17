@@ -7,3 +7,4 @@ export const clearDownloadCache = (soft: boolean) =>
 	invoke<number>('clear_download_cache', { soft });
 export const getDownloadSize = (modId: ModId) =>
 	invoke<number>('get_download_size', { modRef: modId });
+export const hasPendingInstallations = () => invoke<boolean>('has_pending_installations');

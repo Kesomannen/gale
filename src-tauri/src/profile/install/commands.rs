@@ -38,6 +38,15 @@ pub fn cancel_install(app: AppHandle) -> Result<()> {
 }
 
 #[command]
+pub fn has_pending_installations(app: AppHandle) -> Result<bool> {
+    let profile_id = app.lock_manager().active_profile().id;
+
+    let result = app.install_queue().handle().has_profile(profile_id);
+
+    Ok(result)
+}
+
+#[command]
 pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     if soft {
         let paths = super::cache::prepare_soft_clear(app)?;
