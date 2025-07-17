@@ -221,7 +221,7 @@
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">
 			{#if syncState === 'outdated'}
-				<Button onclick={pull} disabled={loading} icon="mdi:cloud-download">Pull update</Button>
+				<Button onclick={pull} {loading} icon="mdi:cloud-download">Pull update</Button>
 			{/if}
 
 			{#if isOwner}

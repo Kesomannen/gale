@@ -13,7 +13,7 @@ use futures_util::StreamExt;
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
-use tokio::sync::oneshot;
+use tokio::sync::{futures::Notified, oneshot, Notify};
 use tracing::warn;
 use uuid::Uuid;
 use zip::ZipArchive;
@@ -32,17 +32,25 @@ struct InstallQueueState {
     processing: Option<(i64, Vec<Uuid>)>,
 }
 
-#[derive(Default)]
 pub struct InstallQueue {
     state: Mutex<InstallQueueState>,
-    notify: tokio::sync::Notify,
+    notify_push: tokio::sync::Notify,
+    notify_empty: tokio::sync::Notify,
 }
 
 impl InstallQueue {
     pub fn new(app: AppHandle) -> Self {
         tauri::async_runtime::spawn(handle_queue(app));
 
-        Self::default()
+        Self {
+            state: Mutex::new(InstallQueueState::default()),
+            notify_push: Notify::new(),
+            notify_empty: Notify::new(),
+        }
+    }
+
+    pub fn wait_for_empty(&self) -> Notified {
+        self.notify_empty.notified()
     }
 
     pub fn handle(&self) -> InstallQueueHandle {
@@ -81,7 +89,11 @@ pub struct InstallQueueHandle<'a> {
 }
 
 impl<'a> InstallQueueHandle<'a> {
-    pub fn has_profile(&self, profile_id: i64) -> bool {
+    pub fn is_processing(&self) -> bool {
+        self.state.processing.is_some()
+    }
+
+    pub fn has_any_for_profile(&self, profile_id: i64) -> bool {
         self.state
             .processing
             .as_ref()
@@ -132,7 +144,7 @@ impl<'a> InstallQueueHandle<'a> {
 
         if mod_count > 0 {
             self.state.pending.push_back(batch);
-            self.queue.notify.notify_waiters();
+            self.queue.notify_push.notify_waiters();
 
             emit(
                 InstallEvent::AddCount {
@@ -239,7 +251,8 @@ async fn handle_queue(app: AppHandle) {
     let queue = app.install_queue();
 
     loop {
-        queue.notify.notified().await;
+        queue.notify_empty.notify_waiters();
+        queue.notify_push.notified().await;
 
         emit(InstallEvent::Show, &app);
 

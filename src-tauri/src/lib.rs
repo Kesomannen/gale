@@ -1,10 +1,11 @@
-use std::env;
+use std::{env, process};
 
 use itertools::Itertools;
 use state::ManagerExt;
-use tauri::{App, AppHandle};
+use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
+use tokio::sync::oneshot;
 use tracing::{error, info, warn};
 
 #[cfg(target_os = "linux")]
@@ -70,6 +71,62 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     info!("setup done");
 
     Ok(())
+}
+
+fn event_handler(app: &AppHandle, event: RunEvent) {
+    match event {
+        RunEvent::ExitRequested { api, .. } => {
+            if !app.install_queue().handle().is_processing() {
+                return;
+            }
+
+            api.prevent_exit();
+
+            let app = app.to_owned();
+            tauri::async_runtime::spawn(async move {
+                let install_queue = app.install_queue();
+
+                enum DialogDecision {
+                    Wait,
+                    Cancel,
+                }
+
+                let (dialog_tx, dialog_rx) = oneshot::channel();
+                let wait_for_empty = install_queue.wait_for_empty();
+
+                app.dialog()
+                    .message("Gale is busy installing mods.")
+                    .buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancelCustom(
+                        "Continue in background".to_string(),
+                        "Cancel".to_string(),
+                    ))
+                    .show(move |result| {
+                        dialog_tx
+                            .send(if result {
+                                DialogDecision::Wait
+                            } else {
+                                DialogDecision::Cancel
+                            })
+                            .ok();
+                    });
+
+                let decision = dialog_rx.await.expect("dialog channel closed too early");
+
+                match decision {
+                    DialogDecision::Wait => {
+                        info!("waiting for installations to complete before exiting");
+                        wait_for_empty.await;
+                    }
+                    DialogDecision::Cancel => {
+                        warn!("cancelling installations");
+                    }
+                }
+
+                process::exit(0);
+            });
+        }
+        _ => (),
+    }
 }
 
 fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
@@ -179,6 +236,7 @@ pub fn run() {
         // TODO .plugin(tauri_plugin_oauth::Builder)
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .setup(setup)
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(event_handler);
 }

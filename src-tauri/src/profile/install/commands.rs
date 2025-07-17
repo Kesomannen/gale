@@ -41,7 +41,7 @@ pub fn cancel_install(app: AppHandle) -> Result<()> {
 pub fn has_pending_installations(app: AppHandle) -> Result<bool> {
     let profile_id = app.lock_manager().active_profile().id;
 
-    let result = app.install_queue().handle().has_profile(profile_id);
+    let result = app.install_queue().handle().has_any_for_profile(profile_id);
 
     Ok(result)
 }

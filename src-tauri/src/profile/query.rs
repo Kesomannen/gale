@@ -5,13 +5,10 @@ use eyre::Result;
 use tracing::warn;
 
 use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
-use crate::{
-    profile::install::{self, queue::InstallQueueHandle},
-    thunderstore::{
-        self,
-        query::{QueryModsArgs, Queryable, SortBy, SortOrder},
-        BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
-    },
+use crate::thunderstore::{
+    self,
+    query::{QueryModsArgs, Queryable, SortBy, SortOrder},
+    BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
 };
 
 struct QueryableProfileMod<'a> {
