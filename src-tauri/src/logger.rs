@@ -1,5 +1,4 @@
 use std::{
-    fmt::Display,
     fs::{self, File},
     path::PathBuf,
     sync::Mutex,

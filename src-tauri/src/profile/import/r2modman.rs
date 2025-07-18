@@ -5,7 +5,7 @@ use std::{
 
 use eyre::{bail, Context, Result};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tracing::{info, warn};
 
 use crate::{
@@ -44,8 +44,6 @@ pub(super) fn gather_info(
 }
 
 pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> Result<()> {
-    emit_update("Fetching mods from Thunderstore...", app);
-
     thunderstore::wait_for_fetch(app).await;
 
     info!("importing r2modman profiles from {}", path.display());
@@ -83,7 +81,7 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
 
             let game = manager.active_game_mut();
 
-            if let Some(index) = game.profile_index(&name) {
+            if let Some(index) = game.find_profile_index(&name) {
                 game.delete_profile(index, true, app.db())
                     .unwrap_or_else(|_| {
                         warn!("failed to delete possibly corrupted profile '{}'", name)
@@ -120,25 +118,12 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
 
 async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
     info!("importing profile '{}'", data.manifest.name);
-    emit_update(
-        &format!("Importing profile '{}'... 0%", data.manifest.name),
-        app,
-    );
-
-    let name = data.manifest.name.clone();
 
     super::import_profile(
         data,
         InstallOptions::default()
             .can_cancel(false)
             .send_progress(false),
-        //.on_progress(Arc::new(move |progress, app| {
-        //    let percentage = (progress.total_progress * 100.0).round();
-        //    emit_update(
-        //        &format!("Importing profile '{}'... {}%", name, percentage),
-        //        app,
-        //    );
-        //})),
         false,
         app,
     )
@@ -163,7 +148,7 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
 
     profile_dir.pop();
 
-    if let Some(index) = manager.active_game().profile_index(&name) {
+    if let Some(index) = manager.active_game().find_profile_index(&name) {
         info!("deleting existing profile '{}'", name);
 
         manager
@@ -203,8 +188,4 @@ fn find_path() -> Option<PathBuf> {
                 .join("DataFolder")
                 .exists_or_none()
         })
-}
-
-fn emit_update(message: &str, app: &AppHandle) {
-    app.emit("transfer_update", message).ok();
 }

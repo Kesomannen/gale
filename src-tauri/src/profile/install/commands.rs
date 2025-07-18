@@ -1,5 +1,3 @@
-use std::sync::atomic::Ordering;
-
 use tauri::{command, AppHandle};
 
 use crate::{
@@ -8,14 +6,15 @@ use crate::{
     util::{self, cmd::Result},
 };
 
-use super::{InstallOptions, ModInstall};
+use super::{queue::InstallError, InstallOptions, ModInstall};
 
 #[command]
 pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
     let profile_id = app.lock_manager().active_profile().id;
     let install = ModInstall::from_id(id, &app.lock_thunderstore())?;
 
-    app.install_queue()
+    let result = app
+        .install_queue()
         .push_with_deps(
             vec![install],
             profile_id,
@@ -23,16 +22,18 @@ pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
             false,
             &app,
         )?
-        .await?;
+        .await;
 
-    Ok(())
+    match result {
+        Ok(()) => Ok(()),
+        Err(InstallError::Cancelled) => Ok(()),
+        Err(InstallError::Err(err)) => Err(err.into()),
+    }
 }
 
 #[command]
-pub fn cancel_install(app: AppHandle) -> Result<()> {
-    app.app_state()
-        .cancel_install_flag
-        .store(true, Ordering::Relaxed);
+pub fn cancel_all_installs(app: AppHandle) -> Result<()> {
+    app.app_state().install_queue.cancel_all();
 
     Ok(())
 }

@@ -8,12 +8,13 @@
 	import Icon from '@iconify/svelte';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { expoInOut, expoOut, quadOut } from 'svelte/easing';
-	import { pushInfoToast } from '$lib/toast';
-	import { shortenFileSize } from '$lib/util';
 	import { dropIn, dropOut } from '$lib/transitions';
 	import { Spring, Tween } from 'svelte/motion';
+	import IconButton from '../ui/IconButton.svelte';
+	import * as api from '$lib/api';
 
 	let shown = $state(false);
+	let showCancel = $state(false);
 	let open = $state(false);
 
 	let totalMods = $state(0);
@@ -50,6 +51,7 @@
 				case 'show':
 					shown = true;
 					open = true;
+					showCancel = true;
 					break;
 
 				case 'hide':
@@ -59,8 +61,17 @@
 					});
 					*/
 
-					taskText = 'Finishing up...';
-					shownProgress.set(1, { duration: 250, easing: expoInOut });
+					showCancel = false;
+
+					let hideDelay = 0;
+					if (event.payload.reason === 'done') {
+						hideDelay = 500;
+
+						taskText = 'Finishing up...';
+						shownProgress.set(1, { duration: 250, easing: expoInOut });
+					} else {
+						profiles.refresh();
+					}
 
 					setTimeout(() => {
 						open = false;
@@ -79,7 +90,7 @@
 
 							shownProgress.set(0, { delay: 50, duration: 0 });
 						}, 100);
-					}, 500);
+					}, hideDelay);
 
 					break;
 
@@ -114,6 +125,12 @@
 	onDestroy(() => {
 		unlisten?.();
 	});
+
+	async function cancel() {
+		open = false;
+		showCancel = false;
+		await api.profile.install.cancelAll();
+	}
 </script>
 
 <Popover.Root bind:open>
@@ -134,8 +151,11 @@
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
-						<div class="text-primary-300 font-semibold">
-							Installing mods... ({completedMods}/{totalMods})
+						<div class="text-primary-300 flex items-center justify-between font-semibold">
+							<div>Installing mods... ({completedMods}/{totalMods})</div>
+							{#if showCancel}
+								<IconButton label="Cancel" icon="mdi:cancel" color="red" onclick={cancel} />
+							{/if}
 						</div>
 
 						{#if task && name}

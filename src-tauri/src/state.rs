@@ -1,4 +1,4 @@
-use std::sync::{atomic::AtomicBool, Mutex, MutexGuard};
+use std::sync::{Mutex, MutexGuard};
 
 use eyre::{Context, Result};
 use tauri::{command, AppHandle, Manager};
@@ -20,7 +20,6 @@ pub struct AppState {
     pub auth: Mutex<Option<AuthCredentials>>,
     pub auth_callback_channel: broadcast::Sender<String>,
     pub install_queue: InstallQueue,
-    pub cancel_install_flag: AtomicBool,
     pub is_first_run: bool,
 }
 
@@ -66,7 +65,6 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         auth: Mutex::new(auth),
         auth_callback_channel: broadcast::channel(1).0,
         install_queue: InstallQueue::new(app.to_owned()),
-        cancel_install_flag: AtomicBool::new(false),
         is_first_run: !db_existed && !migrated,
     };
 

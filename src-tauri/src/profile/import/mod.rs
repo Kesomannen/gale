@@ -127,7 +127,7 @@ pub(super) async fn import_profile(
         let mut manager = app.lock_manager();
         let game = manager.active_game_mut();
 
-        let (index, profile, to_install) = if let Some(index) = game.profile_index(&name) {
+        let (index, profile, to_install) = if let Some(index) = game.find_profile_index(&name) {
             game.set_active_profile(index)?;
 
             let profile = &mut game.profiles[index];

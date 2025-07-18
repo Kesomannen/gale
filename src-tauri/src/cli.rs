@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process, sync::Arc, time::Duration};
+use std::{path::PathBuf, process, time::Duration};
 
 use clap::Parser;
 use eyre::{eyre, Context, OptionExt, Result};
@@ -83,7 +83,9 @@ impl Cli {
         if let Some(name) = &profile {
             let game = manager.active_game_mut();
 
-            let index = game.profile_index(name).ok_or_eyre("unknown profile")?;
+            let index = game
+                .find_profile_index(name)
+                .ok_or_eyre("unknown profile")?;
 
             game.set_active_profile(index)
                 .context("failed to set profile")?;

@@ -92,7 +92,8 @@ fn event_handler(app: &AppHandle, event: RunEvent) {
                 }
 
                 let (dialog_tx, dialog_rx) = oneshot::channel();
-                let wait_for_empty = install_queue.wait_for_empty();
+                // subscribe up here in case the installation finishes while the dialog is open
+                let wait_for_install = install_queue.wait_for_empty();
 
                 app.dialog()
                     .message("Gale is busy installing mods.")
@@ -115,13 +116,14 @@ fn event_handler(app: &AppHandle, event: RunEvent) {
                 match decision {
                     DialogDecision::Wait => {
                         info!("waiting for installations to complete before exiting");
-                        wait_for_empty.await;
                     }
                     DialogDecision::Cancel => {
                         warn!("cancelling installations");
+                        install_queue.cancel_all();
                     }
                 }
 
+                wait_for_install.await;
                 process::exit(0);
             });
         }
@@ -182,7 +184,7 @@ pub fn run() {
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,
             profile::install::commands::install_mod,
-            profile::install::commands::cancel_install,
+            profile::install::commands::cancel_all_installs,
             profile::install::commands::has_pending_installations,
             profile::install::commands::clear_download_cache,
             profile::install::commands::get_download_size,

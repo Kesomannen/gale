@@ -151,5 +151,7 @@ async fn install_updates(
             true,
             app,
         )?
-        .await
+        .await?;
+
+    Ok(())
 }

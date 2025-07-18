@@ -189,7 +189,7 @@ export type InstallTask =
 
 export type InstallEvent =
 	| { type: 'show' }
-	| { type: 'hide' }
+	| { type: 'hide', reason: 'done' | 'error' | 'cancelled' }
 	| { type: 'addCount', mods: number, bytes: number }
 	| { type: 'addProgress', mods: number, bytes: number }
 	| { type: 'setTask', name: string, task: InstallTask };

@@ -356,7 +356,7 @@ impl From<&ProfileMod> for Dependant {
 }
 
 impl ManagedGame {
-    pub fn profile_index(&self, name: &str) -> Option<usize> {
+    pub fn find_profile_index(&self, name: &str) -> Option<usize> {
         self.profiles
             .iter()
             .position(|profile| profile.name == name)
