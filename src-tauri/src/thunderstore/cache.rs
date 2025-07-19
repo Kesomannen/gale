@@ -41,7 +41,7 @@ pub async fn get_markdown(
     mod_ref: ModId,
     app: &AppHandle,
 ) -> Result<Option<String>> {
-    let table = format!("{}_cache", cache);
+    let table = format!("{cache}_cache");
     if let Some(cached) = app.db().get_cached(&table, mod_ref.version_uuid)? {
         return Ok(cached);
     }

@@ -18,7 +18,7 @@ impl Db {
 
         for table in CACHE_TABLES {
             let count = conn
-                .prepare(&format!("SELECT COUNT(*) FROM {}", table))?
+                .prepare(&format!("SELECT COUNT(*) FROM {table}"))?
                 .query_row((), |row| row.get::<_, i64>(0))?;
 
             if count < SIZE_THRESHOLD {
@@ -32,7 +32,7 @@ impl Db {
             info!("evicting outdated records in {}", table);
 
             let cutoff = (Utc::now() - MAX_AGE).naive_utc();
-            conn.prepare(&format!("DELETE FROM {} WHERE created_at < $1", table))?
+            conn.prepare(&format!("DELETE FROM {table} WHERE created_at < $1"))?
                 .execute(params![cutoff.to_string()])?;
         }
 
@@ -44,8 +44,7 @@ impl Db {
 
         let content = conn
             .prepare(&format!(
-                "SELECT content FROM {} WHERE version_id = $1",
-                table
+                "SELECT content FROM {table} WHERE version_id = $1"
             ))?
             .query_row(params![id], |row| row.get(0))
             .optional()?;
@@ -57,8 +56,7 @@ impl Db {
         let conn = self.conn();
 
         conn.prepare(&format!(
-            "INSERT OR REPLACE INTO {} (version_id, content) VALUES ($1, $2)",
-            table
+            "INSERT OR REPLACE INTO {table} (version_id, content) VALUES ($1, $2)"
         ))?
         .execute(params![id, content])?;
 

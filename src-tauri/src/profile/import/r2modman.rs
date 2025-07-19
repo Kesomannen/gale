@@ -63,7 +63,7 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
             Err(err) => {
                 logger::log_webview_err(
                     "Error while importing from r2modman",
-                    err.wrap_err(format!("Failed to prepare import of profile '{}'", name)),
+                    err.wrap_err(format!("Failed to prepare import of profile '{name}'")),
                     app,
                 );
                 continue;
@@ -73,7 +73,7 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
         if let Err(err) = import_profile(data, app).await {
             logger::log_webview_err(
                 "Error while importing from r2modman",
-                err.wrap_err(format!("Failed to import profile '{}'", name)),
+                err.wrap_err(format!("Failed to import profile '{name}'")),
                 app,
             );
 

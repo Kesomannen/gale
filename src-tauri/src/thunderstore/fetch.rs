@@ -153,7 +153,7 @@ pub(super) async fn fetch_packages(
     fn emit_update(mods: usize, app: &AppHandle) {
         app.emit(
             "status_update",
-            Some(format!("Fetching mods from Thunderstore... {}", mods)),
+            Some(format!("Fetching mods from Thunderstore... {mods}")),
         )
         .ok();
     }

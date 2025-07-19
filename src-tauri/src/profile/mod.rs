@@ -381,7 +381,7 @@ impl ManagedGame {
 
     fn profile(&self, id: i64) -> Result<&Profile> {
         self.profile_ok(id)
-            .with_context(|| format!("profile with id {} not found", id))
+            .with_context(|| format!("profile with id {id} not found"))
     }
 
     fn profile_ok_mut(&mut self, id: i64) -> Option<&mut Profile> {
@@ -390,7 +390,7 @@ impl ManagedGame {
 
     fn profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
         self.profile_ok_mut(id)
-            .with_context(|| format!("profile with id {} not found", id))
+            .with_context(|| format!("profile with id {id} not found"))
     }
 
     fn active_profile(&self) -> &Profile {

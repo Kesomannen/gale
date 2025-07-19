@@ -45,7 +45,7 @@ pub async fn send_app_start_event(app: AppHandle) {
 
     let response = app
         .http()
-        .post(format!("{}/rest/v1/rpc/send_event", PROJECT_URL))
+        .post(format!("{PROJECT_URL}/rest/v1/rpc/send_event"))
         .header("apikey", ANON_KEY)
         .json(&payload)
         .send()

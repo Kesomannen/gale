@@ -43,7 +43,7 @@ impl AuthCredentials {
 const OAUTH_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
-    let url = format!("{}/auth/login", API_URL);
+    let url = format!("{API_URL}/auth/login");
     open::that(url).context("failed to open url in browser")?;
 
     let mut channel = app.app_state().auth_callback_channel.subscribe();
@@ -155,7 +155,7 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
 
     let response: TokenResponse = app
         .http()
-        .post(format!("{}/auth/token", API_URL))
+        .post(format!("{API_URL}/auth/token"))
         .json(&GrantTokenRequest { refresh_token })
         .send()
         .await?

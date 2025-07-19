@@ -173,7 +173,7 @@ pub fn copy_debug_info(app: AppHandle) -> Result<()> {
             .join("\n"),
         match log {
             Ok(log) => log,
-            Err(err) => format!("failed to read log: {}", err),
+            Err(err) => format!("failed to read log: {err}"),
         }
     );
 

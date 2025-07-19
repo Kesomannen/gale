@@ -243,7 +243,7 @@ impl InstallBatch {
             Err(Err(InstallError::Cancelled)) => (),
             Err(Err(InstallError::Err(err))) => {
                 // if the receiver has been dropped (meaning the original caller doesn't care anymore), show to the frontend
-                logger::log_webview_err(format!("Failed to install batch"), err, &app);
+                logger::log_webview_err("Failed to install batch", err, app);
             }
         }
     }
@@ -388,7 +388,7 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
     let mut manager = app.lock_manager();
 
     if let Some(callback) = &batch.options.before_install {
-        callback(&install, &mut manager)?;
+        callback(install, &mut manager)?;
     }
 
     let (game, profile) = manager.profile_by_id_mut(batch.profile_id)?;
@@ -454,7 +454,7 @@ async fn download(
                     mods: 0,
                     bytes: response.len() as u64 - last_size_update,
                 },
-                &app,
+                app,
             );
             last_size_update = response.len() as u64;
 
@@ -524,7 +524,7 @@ fn install_from_download(
     let mut manager = app.lock_manager();
 
     if let Some(callback) = &batch.options.before_install {
-        callback(&install, &mut manager)?;
+        callback(install, &mut manager)?;
     }
 
     let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;

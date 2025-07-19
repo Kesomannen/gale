@@ -34,7 +34,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         error!("setup error: {:?}", err);
 
         app.dialog()
-            .message(format!("Failed to launch Gale: {:?}", err))
+            .message(format!("Failed to launch Gale: {err:?}"))
             .blocking_show();
 
         return Err(err.into());
@@ -73,17 +73,14 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn event_handler(app: &AppHandle, event: RunEvent) {
-    match event {
-        RunEvent::ExitRequested { api, .. } => {
-            if !app.install_queue().handle().is_processing() {
-                return;
-            }
-
-            api.prevent_exit();
-
-            tauri::async_runtime::spawn(profile::install::handle_exit(app.to_owned()));
+    if let RunEvent::ExitRequested { api, .. } = event {
+        if !app.install_queue().handle().is_processing() {
+            return;
         }
-        _ => (),
+
+        api.prevent_exit();
+
+        tauri::async_runtime::spawn(profile::install::handle_exit(app.to_owned()));
     }
 }
 
@@ -95,7 +92,7 @@ fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
 
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
-        eprintln!("failed to set up logger: {:#}", err);
+        eprintln!("failed to set up logger: {err:#}");
     });
 
     tauri::Builder::default()

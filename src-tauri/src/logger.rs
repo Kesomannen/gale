@@ -27,7 +27,7 @@ pub fn log_webview_err(name: impl AsRef<str>, error: eyre::Error, app: &AppHandl
         "error",
         WebviewError {
             name: name.as_ref(),
-            message: format!("{:#}", error),
+            message: format!("{error:#}"),
         },
     )
     .unwrap_or_else(|err| {

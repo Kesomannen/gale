@@ -11,7 +11,7 @@ pub fn default_app_data_dir() -> PathBuf {
 }
 
 fn app_dir(id: &str, base: Option<PathBuf>) -> PathBuf {
-    let mut path = base.unwrap_or_else(|| panic!("failed to resolve {} dir", id));
+    let mut path = base.unwrap_or_else(|| panic!("failed to resolve {id} dir"));
     path.push(APP_GUID);
     path
 }
