@@ -49,13 +49,7 @@ pub async fn read_profile_base64(base64: String) -> Result<ImportData> {
 pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
     thunderstore::wait_for_fetch(&app).await;
 
-    super::import_local_mod(
-        path,
-        None,
-        &app,
-        InstallOptions::default().can_cancel(false),
-    )
-    .await?;
+    super::import_local_mod(path, None, &app, InstallOptions::default().prevent_cancel()).await?;
 
     Ok(())
 }
@@ -64,7 +58,7 @@ pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
 pub async fn import_local_mod_base64(base64: String, app: AppHandle) -> Result<()> {
     thunderstore::wait_for_fetch(&app).await;
 
-    super::import_local_mod_base64(base64, &app, InstallOptions::default().can_cancel(false))
+    super::import_local_mod_base64(base64, &app, InstallOptions::default().prevent_cancel())
         .await?;
 
     Ok(())

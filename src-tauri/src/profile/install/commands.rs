@@ -1,34 +1,31 @@
 use tauri::{command, AppHandle};
 
 use crate::{
+    profile::install::InstallResultExt,
     state::ManagerExt,
     thunderstore::ModId,
     util::{self, cmd::Result},
 };
 
-use super::{queue::InstallError, InstallOptions, ModInstall};
+use super::{InstallOptions, ModInstall};
 
 #[command]
 pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
     let profile_id = app.lock_manager().active_profile().id;
-    let install = ModInstall::from_id(id, &app.lock_thunderstore())?;
+    let install = ModInstall::try_from_id(id, &app.lock_thunderstore())?;
 
-    let result = app
-        .install_queue()
-        .push_with_deps(
+    app.install_queue()
+        .install_with_deps(
             vec![install],
             profile_id,
             InstallOptions::default(),
             false,
             &app,
         )?
-        .await;
+        .await
+        .ignore_cancel()?;
 
-    match result {
-        Ok(()) => Ok(()),
-        Err(InstallError::Cancelled) => Ok(()),
-        Err(InstallError::Err(err)) => Err(err.into()),
-    }
+    Ok(())
 }
 
 #[command]

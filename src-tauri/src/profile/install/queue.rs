@@ -1,6 +1,5 @@
 use std::{
     collections::VecDeque,
-    fmt::Display,
     fs,
     future::Future,
     io::Cursor,
@@ -22,13 +21,9 @@ use tracing::warn;
 use uuid::Uuid;
 use zip::ZipArchive;
 
-use crate::{
-    logger,
-    profile::install::{InstallOptions, ModInstall},
-    state::ManagerExt,
-    thunderstore::VersionIdent,
-    util::error::IoResultExt,
-};
+use crate::{logger, state::ManagerExt, thunderstore::VersionIdent, util::error::IoResultExt};
+
+use super::{CancelBehavior, InstallError, InstallOptions, InstallResult, ModInstall};
 
 pub struct InstallQueue {
     state: Mutex<State>,
@@ -72,7 +67,7 @@ impl InstallQueue {
         }
     }
 
-    pub fn push_mods(
+    pub fn install(
         &self,
         mods: impl IntoIterator<Item = ModInstall>,
         profile_id: i64,
@@ -82,7 +77,7 @@ impl InstallQueue {
         self.handle().push_mods(mods, profile_id, options, app)
     }
 
-    pub fn push_with_deps(
+    pub fn install_with_deps(
         &self,
         mods: Vec<ModInstall>,
         profile_id: i64,
@@ -254,31 +249,6 @@ impl InstallBatch {
     }
 }
 
-pub type InstallResult<T> = std::result::Result<T, InstallError>;
-
-#[derive(Debug)]
-pub enum InstallError {
-    Cancelled,
-    Err(eyre::Report),
-}
-
-impl From<eyre::Report> for InstallError {
-    fn from(value: eyre::Report) -> Self {
-        Self::Err(value)
-    }
-}
-
-impl std::error::Error for InstallError {}
-
-impl Display for InstallError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            InstallError::Cancelled => f.pad("installation was cancelled"),
-            InstallError::Err(report) => report.fmt(f),
-        }
-    }
-}
-
 async fn handle_queue(app: AppHandle) {
     let queue = app.install_queue();
 
@@ -353,20 +323,30 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
 }
 
 fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result<()> {
-    let mut manager = app.lock_manager();
+    match batch.options.cancel_behavior {
+        CancelBehavior::Individual => Ok(()),
+        CancelBehavior::Prevent => {
+            warn!("rolling back batch with CancelBehavior::Prevent!");
 
-    let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;
+            Ok(())
+        }
+        CancelBehavior::Batch => {
+            let mut manager = app.lock_manager();
 
-    for installed in batch.mods.iter().take(count) {
-        profile
-            .force_remove_mod(installed.uuid())
-            .unwrap_or_else(|err| {
-                warn!("failed to delete mod after cancelled installation: {}", err);
-            });
+            let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;
+
+            for installed in batch.mods.iter().take(count) {
+                profile
+                    .force_remove_mod(installed.uuid())
+                    .unwrap_or_else(|err| {
+                        warn!("failed to delete mod after cancelled installation: {}", err);
+                    });
+            }
+
+            profile.save(app.db())?;
+            Ok(())
+        }
     }
-
-    profile.save(app.db())?;
-    Ok(())
 }
 
 async fn handle_install(
@@ -378,7 +358,7 @@ async fn handle_install(
     match try_cache_install(batch, index, app)? {
         CacheStatus::Hit => Ok(()),
         CacheStatus::Miss => {
-            let bytes = download(&batch.mods[index], cancel, app).await?;
+            let bytes = download(&batch.mods[index], cancel, &batch.options, app).await?;
             install_from_download(bytes, batch, index, cancel, app)?;
 
             Ok(())
@@ -435,6 +415,7 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
 async fn download(
     install: &ModInstall,
     cancel: &AtomicBool,
+    options: &InstallOptions,
     app: &AppHandle,
 ) -> InstallResult<Vec<u8>> {
     emit(
@@ -477,7 +458,7 @@ async fn download(
             );
             last_size_update = response.len() as u64;
 
-            check_cancel(cancel)?;
+            check_cancel(cancel, options)?;
         }
     }
 
@@ -533,7 +514,7 @@ fn install_from_download(
         })
         .context("error while extracting")?;
 
-    check_cancel(cancel)?;
+    check_cancel(cancel, &batch.options)?;
 
     emit(
         InstallEvent::set_task(&install.ident, InstallTask::Install),
@@ -612,9 +593,16 @@ fn emit(event: InstallEvent, app: &AppHandle) {
     app.emit("install_event", event).ok();
 }
 
-fn check_cancel(cancel: &AtomicBool) -> InstallResult<()> {
+fn check_cancel(cancel: &AtomicBool, options: &InstallOptions) -> InstallResult<()> {
     if cancel.load(Ordering::SeqCst) {
-        Err(InstallError::Cancelled)
+        if options.cancel_behavior == CancelBehavior::Prevent {
+            warn!("attempted to cancel uncancellable batch");
+            cancel.store(false, Ordering::SeqCst);
+
+            Ok(())
+        } else {
+            Err(InstallError::Cancelled)
+        }
     } else {
         Ok(())
     }

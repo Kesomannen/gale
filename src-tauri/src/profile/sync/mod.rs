@@ -264,19 +264,16 @@ async fn download_and_import_file(
 
     data.manifest.name = name.clone();
 
-    let index = super::import::import_profile(data, InstallOptions::default(), false, app)
+    let id = super::import::import_profile(data, InstallOptions::default(), false, app)
         .await
         .context("failed to import profile")?;
 
     {
         let mut manager = app.lock_manager();
-        let game = manager.active_game_mut();
-        let profile = &mut game.profiles[index];
+        let (_, profile) = manager.profile_by_id_mut(id)?;
 
         profile.sync_profile = Some(sync_profile);
-
         profile.save(app.db())?;
-        game.save(app.db())?;
     }
 
     Ok(())

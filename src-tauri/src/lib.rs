@@ -1,11 +1,10 @@
-use std::{env, process};
+use std::env;
 
 use itertools::Itertools;
 use state::ManagerExt;
 use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
-use tokio::sync::oneshot;
 use tracing::{error, info, warn};
 
 #[cfg(target_os = "linux")]
@@ -82,50 +81,7 @@ fn event_handler(app: &AppHandle, event: RunEvent) {
 
             api.prevent_exit();
 
-            let app = app.to_owned();
-            tauri::async_runtime::spawn(async move {
-                let install_queue = app.install_queue();
-
-                enum DialogDecision {
-                    Wait,
-                    Cancel,
-                }
-
-                let (dialog_tx, dialog_rx) = oneshot::channel();
-                // subscribe up here in case the installation finishes while the dialog is open
-                let wait_for_install = install_queue.wait_for_empty();
-
-                app.dialog()
-                    .message("Gale is busy installing mods.")
-                    .buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancelCustom(
-                        "Continue in background".to_string(),
-                        "Cancel".to_string(),
-                    ))
-                    .show(move |result| {
-                        dialog_tx
-                            .send(if result {
-                                DialogDecision::Wait
-                            } else {
-                                DialogDecision::Cancel
-                            })
-                            .ok();
-                    });
-
-                let decision = dialog_rx.await.expect("dialog channel closed too early");
-
-                match decision {
-                    DialogDecision::Wait => {
-                        info!("waiting for installations to complete before exiting");
-                    }
-                    DialogDecision::Cancel => {
-                        warn!("cancelling installations");
-                        install_queue.cancel_all();
-                    }
-                }
-
-                wait_for_install.await;
-                process::exit(0);
-            });
+            tauri::async_runtime::spawn(profile::install::handle_exit(app.to_owned()));
         }
         _ => (),
     }

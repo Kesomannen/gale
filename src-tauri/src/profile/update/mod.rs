@@ -6,7 +6,10 @@ use uuid::Uuid;
 
 use super::install::{InstallOptions, ModInstall};
 use crate::{
-    profile::{install::queue::InstallQueueHandle, Profile, Result},
+    profile::{
+        install::{queue::InstallQueueHandle, InstallResultExt},
+        Profile, Result,
+    },
     state::ManagerExt,
     thunderstore::{ModId, PackageListing, PackageVersion, Thunderstore},
 };
@@ -92,7 +95,7 @@ pub async fn change_version(mod_id: ModId, app: &AppHandle) -> Result<()> {
 
         (
             profile.id,
-            ModInstall::from_id(mod_id, &thunderstore)?
+            ModInstall::try_from_id(mod_id, &thunderstore)?
                 .with_state(enabled)
                 .with_index(index)
                 .with_time(install_time),
@@ -132,26 +135,27 @@ async fn install_updates(
     app: &AppHandle,
 ) -> Result<()> {
     app.install_queue()
-        .push_with_deps(
+        .install_with_deps(
             installs,
             profile_id,
-            InstallOptions::default().before_install(Box::new(|install, manager| {
-                // remove the old version
-                let profile = manager.active_profile_mut();
+            InstallOptions::default()
+                .cancel_individually()
+                .before_install(Box::new(|install, manager| {
+                    // remove the old version
+                    let profile = manager.active_profile_mut();
 
-                // check since it could be a new dependency being installed, not an update itself
-                if profile.has_mod(install.uuid()) {
-                    profile
-                        .force_remove_mod(install.uuid())
-                        .context("failed to remove existing version")?;
-                }
+                    // check since it could be a new dependency being installed, not an update itself
+                    if profile.has_mod(install.uuid()) {
+                        profile
+                            .force_remove_mod(install.uuid())
+                            .context("failed to remove existing version")?;
+                    }
 
-                Ok(())
-            })),
+                    Ok(())
+                })),
             true,
             app,
         )?
-        .await?;
-
-    Ok(())
+        .await
+        .ignore_cancel()
 }

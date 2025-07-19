@@ -17,7 +17,7 @@ use super::{install::ModInstall, Profile, Result};
 use crate::{
     game::Game,
     state::ManagerExt,
-    thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore, VersionIdent},
+    thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore},
 };
 
 mod changelog;
@@ -51,10 +51,6 @@ impl R2Mod {
         let borrowed_mod = thunderstore.find_ident(&version)?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
-    }
-
-    pub fn ident(&self) -> VersionIdent {
-        self.ident.with_version(&self.version)
     }
 }
 
@@ -90,7 +86,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     let mods = profile
         .thunderstore_mods()
         .map(|(ts_mod, enabled)| {
-            let full_name = ts_mod.ident.without_version();
+            let ident = ts_mod.ident.without_version();
             let version = ts_mod
                 .ident
                 .version()
@@ -99,7 +95,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
                 .into();
 
             R2Mod {
-                ident: full_name,
+                ident,
                 version,
                 enabled,
             }
@@ -135,7 +131,6 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
 
         let game = manager.active_game().game;
         let profile = manager.active_profile_mut();
-        profile.refresh_config();
 
         let mut data = Cursor::new(Vec::new());
         export_zip(profile, &mut data, game)?;

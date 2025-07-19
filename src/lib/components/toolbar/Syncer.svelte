@@ -16,6 +16,8 @@
 	import auth from '$lib/state/auth.svelte';
 	import Link from '../ui/Link.svelte';
 	import { PersistedState } from 'runed';
+	import IconButton from '../ui/IconButton.svelte';
+	import Spinner from '../ui/Spinner.svelte';
 
 	type State = 'off' | 'synced' | 'outdated';
 
@@ -142,13 +144,27 @@
 			loading = false;
 		}
 	}
+
+	async function copyCode() {
+		if (!syncInfo) return;
+
+		await writeText(syncInfo.id);
+		pushInfoToast({
+			message: 'Copied profile code to clipboard.'
+		});
+	}
 </script>
 
 <button
 	class="{style.classes} bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
 	onclick={() => (mainDialogOpen = true)}
 >
-	<Icon icon={style.icon} />
+	{#if loading}
+		<Spinner />
+	{:else}
+		<Icon icon={style.icon} />
+	{/if}
+
 	<div>{style.label}</div>
 </button>
 
@@ -203,20 +219,20 @@
 			</div>
 		{/if}
 
-		<div class="mt-2 flex items-center gap-1">
-			<Tooltip text="Copy to clipboard">
-				<button
-					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
-					onclick={async () => {
-						await writeText(syncInfo.id);
-						pushInfoToast({
-							message: 'Copied profile code to clipboard.'
-						});
-					}}
-				>
-					{syncInfo.id}
-				</button>
-			</Tooltip>
+		<div class="mt-2 flex items-center gap-2">
+			<button
+				class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
+				onclick={copyCode}
+			>
+				{syncInfo.id}
+			</button>
+
+			<IconButton
+				icon="mdi:clipboard-text"
+				label="Copy code to clipboard"
+				showTooltip
+				onclick={copyCode}
+			/>
 		</div>
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">

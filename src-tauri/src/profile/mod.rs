@@ -362,6 +362,13 @@ impl ManagedGame {
             .position(|profile| profile.name == name)
     }
 
+    pub fn index_of(&self, profile_id: i64) -> Result<usize> {
+        self.profiles
+            .iter()
+            .position(|profile| profile.id == profile_id)
+            .ok_or_else(|| eyre!("profile with id {} not found", profile_id))
+    }
+
     fn profile_at(&self, index: usize) -> Result<&Profile> {
         self.profiles
             .get(index)

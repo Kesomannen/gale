@@ -119,15 +119,7 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
 async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
     info!("importing profile '{}'", data.manifest.name);
 
-    super::import_profile(
-        data,
-        InstallOptions::default()
-            .can_cancel(false)
-            .send_progress(false),
-        false,
-        app,
-    )
-    .await?;
+    super::import_profile(data, InstallOptions::default().prevent_cancel(), false, app).await?;
 
     Ok(())
 }

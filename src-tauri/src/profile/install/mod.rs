@@ -1,14 +1,19 @@
-use std::iter;
+use std::{fmt::Display, iter, process};
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
 use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
+use tauri_plugin_dialog::DialogExt;
+use tokio::sync::oneshot;
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use super::{ModManager, Profile};
 use crate::{
     prefs::Prefs,
     profile::{ProfileMod, ProfileModKind, ThunderstoreMod},
+    state::ManagerExt,
     thunderstore::{BorrowedMod, ModId, Thunderstore, VersionIdent},
 };
 
@@ -19,36 +24,41 @@ mod installers;
 pub use installers::*;
 pub mod queue;
 
-type EventHandler = Box<dyn Fn(&ModInstall, &mut ModManager) -> Result<()> + 'static + Send + Sync>;
+type BeforeInstallHandler =
+    Box<dyn Fn(&ModInstall, &mut ModManager) -> Result<()> + 'static + Send + Sync>;
 
-pub struct InstallOptions {
-    can_cancel: bool,
-    send_progress: bool,
-    before_install: Option<EventHandler>,
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum CancelBehavior {
+    /// When installation is cancelled, rollback the already installed mods from this batch.
+    #[default]
+    Batch,
+    /// When installation is cancelled, don't rollback any already installed mods.
+    Individual,
+    /// (Attempt to) prevent this batch from being cancelled at all.
+    Prevent,
 }
 
-impl Default for InstallOptions {
-    fn default() -> Self {
-        Self {
-            can_cancel: true,
-            send_progress: true,
-            before_install: None,
-        }
-    }
+#[derive(Default)]
+pub struct InstallOptions {
+    cancel_behavior: CancelBehavior,
+    before_install: Option<BeforeInstallHandler>,
 }
 
 impl InstallOptions {
-    pub fn can_cancel(mut self, can_cancel: bool) -> Self {
-        self.can_cancel = can_cancel;
+    pub fn cancel_individually(self) -> Self {
+        self.cancel_behavior(CancelBehavior::Individual)
+    }
+
+    pub fn prevent_cancel(self) -> Self {
+        self.cancel_behavior(CancelBehavior::Prevent)
+    }
+
+    pub fn cancel_behavior(mut self, behavior: CancelBehavior) -> Self {
+        self.cancel_behavior = behavior;
         self
     }
 
-    pub fn send_progress(mut self, send_progress: bool) -> Self {
-        self.send_progress = send_progress;
-        self
-    }
-
-    pub fn before_install(mut self, before_install: EventHandler) -> Self {
+    pub fn before_install(mut self, before_install: BeforeInstallHandler) -> Self {
         self.before_install = Some(before_install);
         self
     }
@@ -61,7 +71,11 @@ pub struct ModInstall {
     ident: VersionIdent,
     file_size: u64,
     enabled: bool,
+    /// Where in the profile this should be installed.
     index: Option<usize>,
+    /// At which time this mod was originally installed.
+    ///
+    /// This is mainly used to retain the install date when updating mods.
     install_time: Option<DateTime<Utc>>,
 }
 
@@ -78,7 +92,7 @@ impl ModInstall {
         }
     }
 
-    pub fn from_id(mod_id: ModId, thunderstore: &Thunderstore) -> Result<Self> {
+    pub fn try_from_id(mod_id: ModId, thunderstore: &Thunderstore) -> Result<Self> {
         mod_id.borrow(thunderstore).map(Self::new)
     }
 
@@ -95,6 +109,10 @@ impl ModInstall {
     pub fn with_time(mut self, date: DateTime<Utc>) -> Self {
         self.install_time = Some(date);
         self
+    }
+
+    pub fn mod_id(&self) -> &ModId {
+        &self.id
     }
 
     /// The uuid the resulting `ProfileMod` will get after the mod is installed.
@@ -147,6 +165,46 @@ impl From<BorrowedMod<'_>> for ModInstall {
     }
 }
 
+pub type InstallResult<T> = std::result::Result<T, InstallError>;
+
+#[derive(Debug)]
+pub enum InstallError {
+    Cancelled,
+    Err(eyre::Report),
+}
+
+impl From<eyre::Report> for InstallError {
+    fn from(value: eyre::Report) -> Self {
+        Self::Err(value)
+    }
+}
+
+impl std::error::Error for InstallError {}
+
+impl Display for InstallError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InstallError::Cancelled => f.pad("installation was cancelled"),
+            InstallError::Err(report) => report.fmt(f),
+        }
+    }
+}
+
+pub trait InstallResultExt<T> {
+    /// Maps `Err(InstallError::Cancelled)` to `Ok(())`.
+    fn ignore_cancel(self) -> Result<()>;
+}
+
+impl<T> InstallResultExt<T> for InstallResult<T> {
+    fn ignore_cancel(self) -> Result<()> {
+        match self {
+            Ok(_) => Ok(()),
+            Err(InstallError::Cancelled) => Ok(()),
+            Err(InstallError::Err(err)) => Err(err),
+        }
+    }
+}
+
 /// Gets the number of bytes to download the given mod and its
 /// missing dependencies (ignoring already cached mods).
 fn total_download_size(
@@ -165,4 +223,48 @@ fn total_download_size(
         })
         .map(|borrowed| borrowed.version.file_size)
         .sum()
+}
+
+pub async fn handle_exit(app: AppHandle) {
+    let install_queue = app.install_queue();
+
+    enum DialogDecision {
+        Wait,
+        Cancel,
+    }
+
+    let (dialog_tx, dialog_rx) = oneshot::channel();
+    // subscribe up here in case the installation finishes while the dialog is open
+    let wait_for_install = install_queue.wait_for_empty();
+
+    app.dialog()
+        .message("Gale is busy installing mods.")
+        .buttons(tauri_plugin_dialog::MessageDialogButtons::OkCancelCustom(
+            "Continue in background".to_string(),
+            "Cancel".to_string(),
+        ))
+        .show(move |result| {
+            dialog_tx
+                .send(if result {
+                    DialogDecision::Wait
+                } else {
+                    DialogDecision::Cancel
+                })
+                .ok();
+        });
+
+    let decision = dialog_rx.await.expect("dialog channel closed too early");
+
+    match decision {
+        DialogDecision::Wait => {
+            info!("waiting for installations to complete before exiting");
+        }
+        DialogDecision::Cancel => {
+            warn!("cancelling installations");
+            install_queue.cancel_all();
+        }
+    }
+
+    wait_for_install.await;
+    process::exit(0);
 }

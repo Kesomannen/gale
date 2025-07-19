@@ -21,7 +21,7 @@ use crate::{
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::VersionIdent,
+    thunderstore::ModId,
     util::{self, error::IoResultExt},
 };
 
@@ -31,7 +31,10 @@ mod r2modman;
 
 pub use local::{import_local_mod, import_local_mod_base64};
 
-use super::export::{self, IncludeExtensions, IncludeGenerated};
+use super::{
+    export::{self, IncludeExtensions, IncludeGenerated},
+    Profile,
+};
 
 pub fn read_file_at_path(path: PathBuf) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
@@ -108,7 +111,7 @@ pub(super) async fn import_profile(
     options: InstallOptions,
     import_all: bool,
     app: &AppHandle,
-) -> Result<usize> {
+) -> Result<i64> {
     let ImportData {
         manifest:
             ProfileManifest {
@@ -117,111 +120,138 @@ pub(super) async fn import_profile(
                 ignored_updates,
                 ..
             },
-        path,
+        path: from_path,
         delete_after_import,
     } = data;
 
-    let (index, profile_id, profile_path, to_install) = {
-        let (names, installs) = resolve_mods(mods, app)?;
+    let (profile_id, profile_path, to_install) = {
+        let installs = resolve_mods(mods, app);
 
         let mut manager = app.lock_manager();
         let game = manager.active_game_mut();
 
-        let (index, profile, to_install) = if let Some(index) = game.find_profile_index(&name) {
-            game.set_active_profile(index)?;
+        let (profile, to_install) = match game.find_profile_index(&name) {
+            Some(profile_index) => {
+                // overwrite an existing profile
+                let profile = game.set_active_profile(profile_index)?;
+                let to_install = incremental_update(installs, profile)?.collect_vec();
 
-            let profile = &mut game.profiles[index];
-            let to_install = incremental_update(installs, &names, profile)?;
+                (profile, to_install)
+            }
+            None => {
+                let profile = game.create_profile(name, None, app.db())?;
 
-            (index, profile, to_install)
-        } else {
-            let index = game.profiles.len();
-            let profile = game.create_profile(name, None, app.db())?;
-
-            (index, profile, installs)
+                (profile, installs.collect_vec())
+            }
         };
 
         profile.ignored_updates = ignored_updates.into_iter().collect();
-        (index, profile.id, profile.path.clone(), to_install)
+
+        (profile.id, profile.path.clone(), to_install)
     };
 
-    app.install_queue()
-        .push_mods(to_install, profile_id, options, app)
-        .await
-        .context("error while importing mods")?;
-
-    import_config(
-        &profile_path,
-        &path,
-        if import_all {
-            IncludeExtensions::All
-        } else {
-            IncludeExtensions::Default
-        },
-        IncludeGenerated::No,
-    )
-    .context("failed to import config")?;
+    let result = app
+        .install_queue()
+        .install(to_install, profile_id, options, app)
+        .await;
 
     if delete_after_import {
-        fs::remove_dir_all(path).ok();
+        fs::remove_dir_all(&from_path).unwrap_or_else(|err| {
+            warn!("failed to remove source folder after import: {}", err);
+        });
     }
 
-    Ok(index)
-}
+    match result {
+        Ok(()) => {
+            import_config(
+                &profile_path,
+                &from_path,
+                if import_all {
+                    IncludeExtensions::All
+                } else {
+                    IncludeExtensions::Default
+                },
+                IncludeGenerated::No,
+            )
+            .context("error importing config")?;
 
-fn resolve_mods(mods: Vec<R2Mod>, app: &AppHandle) -> Result<(Vec<VersionIdent>, Vec<ModInstall>)> {
-    let thunderstore = app.lock_thunderstore();
+            Ok(profile_id)
+        }
+        Err(err) => {
+            cleanup_failed_profile(profile_id, app).unwrap_or_else(|err| {
+                warn!("failed to remove profile after failed import: {}", err);
+            });
 
-    let mut names = Vec::with_capacity(mods.len());
-    let mut installs = Vec::with_capacity(mods.len());
-
-    for r2_mod in mods {
-        let name = r2_mod.ident();
-        if let Ok(install) = r2_mod.into_install(&thunderstore) {
-            names.push(name);
-            installs.push(install);
-        } else {
-            warn!("failed to resolve mod from import: {}", name);
+            Err(err.into())
         }
     }
+}
 
-    Ok((names, installs))
+fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+
+    let (game, _) = manager.profile_by_id(profile_id)?;
+    let managed_game = manager.games.get_mut(game).expect("game was not present");
+    let index = managed_game.index_of(profile_id)?;
+
+    managed_game.delete_profile(index, false, app.db())
+}
+
+fn resolve_mods<T: IntoIterator<Item = R2Mod>>(
+    mods: T,
+    app: &AppHandle,
+) -> impl Iterator<Item = ModInstall> + use<'_, T> {
+    let thunderstore = app.lock_thunderstore();
+
+    mods.into_iter().filter_map(move |r2_mod| {
+        r2_mod
+            .into_install(&thunderstore)
+            .inspect_err(|err| warn!("failed to resolve mod from import: {}", err))
+            .ok()
+    })
 }
 
 fn incremental_update(
-    installs: Vec<ModInstall>,
-    mod_names: &[VersionIdent],
-    profile: &mut super::Profile,
-) -> Result<Vec<ModInstall>> {
-    let old: HashMap<_, _> = profile
+    installs: impl IntoIterator<Item = ModInstall>,
+    profile: &mut Profile,
+) -> Result<impl Iterator<Item = ModInstall>> {
+    let current_mods: HashMap<ModId, bool> = profile
         .thunderstore_mods()
-        .map(|(ts_mod, enabled)| (ts_mod.ident.clone(), (ts_mod.id.package_uuid, enabled)))
+        .map(|(ts_mod, enabled)| (ts_mod.id.clone(), enabled))
         .collect();
 
-    let mut new: HashMap<_, _> = mod_names.iter().zip(installs).collect();
+    let current_ids: HashSet<&ModId> = current_mods.keys().collect();
 
-    let old_keys: HashSet<_> = old.keys().collect();
-    let new_keys: HashSet<_> = new.keys().copied().collect();
-    let to_remove = old_keys.difference(&new_keys);
+    let mut new_mods: HashMap<ModId, ModInstall> = installs
+        .into_iter()
+        .map(|install| (install.mod_id().clone(), install))
+        .collect();
 
-    for ident in to_remove {
-        let (uuid, _) = old.get(ident).unwrap();
-        profile.force_remove_mod(*uuid)?;
+    let new_ids: HashSet<&ModId> = new_mods.keys().collect();
+
+    let to_remove = current_ids.difference(&new_ids);
+    for mod_id in to_remove {
+        profile.force_remove_mod(mod_id.package_uuid)?;
     }
 
-    let to_toggle = old_keys
-        .intersection(&new_keys)
-        .filter(|k| old.get(k).unwrap().1 != new.get(*k).unwrap().enabled());
-
-    for ident in to_toggle {
-        let (uuid, _) = old.get(ident).unwrap();
-        profile.force_toggle_mod(*uuid)?;
+    let to_toggle = current_ids
+        .intersection(&new_ids)
+        .filter(|id| *current_mods.get(*id).unwrap() != new_mods.get(id).unwrap().enabled());
+    for mod_id in to_toggle {
+        profile.force_toggle_mod(mod_id.package_uuid)?;
     }
 
-    let to_install = new_keys
-        .difference(&old_keys)
-        .map(|key| new.remove(key).unwrap())
-        .collect_vec();
+    // we have to clone and collect the ids because new_ids.difference() borrows new_mods,
+    // which prevents us from getting the ModInstalls back (since that requires mutably borrowing the map)
+
+    let ids_to_install: Vec<ModId> = new_ids
+        .difference(&current_ids)
+        .map(|id| (*id).clone())
+        .collect();
+
+    let to_install = ids_to_install
+        .into_iter()
+        .map(move |id| new_mods.remove(&id).unwrap());
 
     Ok(to_install)
 }

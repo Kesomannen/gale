@@ -63,7 +63,7 @@ pub async fn import_local_mod(
         };
 
         app.install_queue()
-            .push_mods(mods, profile_id, options, app)
+            .install(mods, profile_id, options, app)
             .await
             .context("failed to install dependencies")?;
     }
