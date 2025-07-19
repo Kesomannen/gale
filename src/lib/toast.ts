@@ -22,9 +22,11 @@ export function pushInfoToast(toast: { name?: undefined; message: string }) {
 let nextId = 0;
 
 export function pushToast(toast: Toast) {
+	let id = nextId;
+	nextId++;
+
 	toasts.update((toasts) => {
-		toasts.push({ ...toast, id: nextId });
-		nextId++;
+		toasts.push({ ...toast, id });
 		if (toasts.length > maxCount) {
 			toasts.shift();
 		}
@@ -34,7 +36,8 @@ export function pushToast(toast: Toast) {
 	setTimeout(
 		() => {
 			toasts.update((toasts) => {
-				toasts.shift();
+				let index = toasts.findIndex(toast => toast.id == id);
+				toasts.splice(index, 1);
 				return toasts;
 			});
 		},

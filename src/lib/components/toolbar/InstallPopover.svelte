@@ -26,6 +26,8 @@
 	let name: string | null = $state(null);
 	let task: InstallTask | null = $state(null);
 
+	let hideTimeout: number | null = $state(null);
+
 	let taskText = $derived(
 		task
 			? {
@@ -52,15 +54,14 @@
 					shown = true;
 					open = true;
 					showCancel = true;
+
+					if (hideTimeout) {
+						clearTimeout(hideTimeout);
+					}
+
 					break;
 
 				case 'hide':
-					/*
-					pushInfoToast({
-						message: `Installed ${totalMods} ${totalMods === 1 ? 'mod' : 'mods'}.`
-					});
-					*/
-
 					showCancel = false;
 
 					let hideDelay = 0;
@@ -73,7 +74,7 @@
 						profiles.refresh();
 					}
 
-					setTimeout(() => {
+					hideTimeout = setTimeout(() => {
 						open = false;
 
 						totalMods = 0;
@@ -85,10 +86,12 @@
 						name = null;
 						task = null;
 
-						setTimeout(() => {
+						hideTimeout = setTimeout(() => {
 							shown = false;
 
 							shownProgress.set(0, { delay: 50, duration: 0 });
+
+							hideTimeout = null;
 						}, 100);
 					}, hideDelay);
 
@@ -154,13 +157,7 @@
 						<div class="text-primary-300 flex items-center justify-between font-semibold">
 							<div>Installing mods... ({completedMods}/{totalMods})</div>
 							{#if showCancel}
-								<IconButton
-									label="Cancel"
-									icon="mdi:cancel"
-									color="red"
-									onclick={cancel}
-									showTooltip
-								/>
+								<IconButton label="Cancel" icon="mdi:cancel" color="red" onclick={cancel} />
 							{/if}
 						</div>
 
