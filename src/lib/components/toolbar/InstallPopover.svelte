@@ -154,7 +154,13 @@
 						<div class="text-primary-300 flex items-center justify-between font-semibold">
 							<div>Installing mods... ({completedMods}/{totalMods})</div>
 							{#if showCancel}
-								<IconButton label="Cancel" icon="mdi:cancel" color="red" onclick={cancel} />
+								<IconButton
+									label="Cancel"
+									icon="mdi:cancel"
+									color="red"
+									onclick={cancel}
+									showTooltip
+								/>
 							{/if}
 						</div>
 
