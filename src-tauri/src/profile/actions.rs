@@ -358,7 +358,7 @@ impl ManagedGame {
     ) -> Result<&mut Profile> {
         self.create_profile(duplicate_name, None, db)?;
 
-        let old_profile = self.find_profile(id)?;
+        let old_profile = self.profile(id)?;
         let new_profile = self.active_profile();
 
         // Make sure generated files and configs are properly copied

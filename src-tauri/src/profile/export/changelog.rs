@@ -35,7 +35,7 @@ pub(super) fn generate_all(
         .filter(|(_, version)| *version < current_version)
         .map(|(entry, version)| {
             let mods = util::fs::read_json::<Vec<ModId>>(entry.path())
-                .with_context(|| format!("failed to read snapshot for version {}", version))?;
+                .with_context(|| format!("failed to read snapshot for version {version}"))?;
 
             let mods = borrow_mods(mods, thunderstore);
 
@@ -270,7 +270,7 @@ fn generate_diff(old: &[BorrowedMod<'_>], new: &[BorrowedMod<'_>], game: Game) -
 }
 
 fn markdown_link(url: impl Display, text: impl Display) -> String {
-    format!("[{}]({})", text, url)
+    format!("[{text}]({url})")
 }
 
 fn package_link(package: &PackageListing, game: Game) -> String {
@@ -290,7 +290,7 @@ fn write_changelog_section<T, F>(
     F: FnMut(&T) -> String,
 {
     if let Some(item) = items.next() {
-        changelog.push_str(&format!("\n\n### {}", title));
+        changelog.push_str(&format!("\n\n### {title}"));
         changelog.push_str(&format!("\n\n- {}", text(&item)));
 
         for item in items {

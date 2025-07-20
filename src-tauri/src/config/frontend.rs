@@ -22,7 +22,7 @@ pub enum FileKind {
 impl FileKind {
     pub fn err(error: impl Display) -> Self {
         Self::Err {
-            error: format!("{:#}", error),
+            error: format!("{error:#}"),
         }
     }
 }

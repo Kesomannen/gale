@@ -6,7 +6,7 @@ use std::{
 };
 
 use base64::{prelude::BASE64_STANDARD, Engine};
-use eyre::{eyre, Context};
+use eyre::Context;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -17,7 +17,7 @@ use super::{install::ModInstall, Profile, Result};
 use crate::{
     game::Game,
     state::ManagerExt,
-    thunderstore::{LegacyProfileCreateResponse, ModId, PackageIdent, Thunderstore, VersionIdent},
+    thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore},
 };
 
 mod changelog;
@@ -39,7 +39,7 @@ pub struct ProfileManifest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct R2Mod {
     #[serde(rename = "name")]
-    pub full_name: PackageIdent,
+    pub ident: PackageIdent,
     #[serde(alias = "versionNumber")]
     pub version: R2Version,
     pub enabled: bool,
@@ -47,27 +47,10 @@ pub struct R2Mod {
 
 impl R2Mod {
     pub fn into_install(self, thunderstore: &Thunderstore) -> Result<ModInstall> {
-        let package = thunderstore.find_package(self.full_name.as_str())?;
+        let version = self.ident.with_version(self.version);
+        let borrowed_mod = thunderstore.find_ident(&version)?;
 
-        let version = self.version.to_string();
-        let version = package.get_version_with_num(&version).ok_or_else(|| {
-            eyre!(
-                "failed to find version {} for package {}",
-                version,
-                self.full_name
-            )
-        })?;
-
-        let id = ModId {
-            package_uuid: package.uuid,
-            version_uuid: version.uuid,
-        };
-
-        Ok(ModInstall::new(id).with_state(self.enabled))
-    }
-
-    pub fn ident(&self) -> VersionIdent {
-        self.full_name.with_version(&self.version)
+        Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
     }
 }
 
@@ -103,7 +86,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     let mods = profile
         .thunderstore_mods()
         .map(|(ts_mod, enabled)| {
-            let full_name = ts_mod.ident.without_version();
+            let ident = ts_mod.ident.without_version();
             let version = ts_mod
                 .ident
                 .version()
@@ -112,7 +95,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
                 .into();
 
             R2Mod {
-                full_name,
+                ident,
                 version,
                 enabled,
             }
@@ -148,7 +131,6 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
 
         let game = manager.active_game().game;
         let profile = manager.active_profile_mut();
-        profile.refresh_config();
 
         let mut data = Cursor::new(Vec::new());
         export_zip(profile, &mut data, game)?;

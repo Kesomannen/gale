@@ -83,7 +83,9 @@ impl Cli {
         if let Some(name) = &profile {
             let game = manager.active_game_mut();
 
-            let index = game.profile_index(name).ok_or_eyre("unknown profile")?;
+            let index = game
+                .find_profile_index(name)
+                .ok_or_eyre("unknown profile")?;
 
             game.set_active_profile(index)
                 .context("failed to set profile")?;
@@ -139,18 +141,5 @@ impl Cli {
 }
 
 async fn install_local_mod(path: PathBuf, app: &AppHandle) -> Result<()> {
-    profile::import::import_local_mod(
-        path,
-        None,
-        app,
-        InstallOptions::default().on_progress(Box::new(|progress, _| {
-            info!(
-                "{} {} ({}%)",
-                progress.task,
-                progress.current_name,
-                (progress.total_progress * 100.0).round()
-            )
-        })),
-    )
-    .await
+    profile::import::import_local_mod(path, None, app, InstallOptions::default()).await
 }

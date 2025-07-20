@@ -1,5 +1,6 @@
 use std::{
     collections::{HashSet, VecDeque},
+    hash::Hash,
     iter::FusedIterator,
     str::{self},
 };
@@ -72,7 +73,7 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
 /// without locking [`Thunderstore`] as well as (de)serialized.
 ///
 /// To convert it back into a [`BorrowedMod`], use [`ModId::borrow`].
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ModId {
     pub package_uuid: Uuid,
@@ -85,6 +86,18 @@ impl From<BorrowedMod<'_>> for ModId {
             package_uuid: borrowed.package.uuid,
             version_uuid: borrowed.version.uuid,
         }
+    }
+}
+
+impl PartialEq for ModId {
+    fn eq(&self, other: &Self) -> bool {
+        self.version_uuid == other.version_uuid
+    }
+}
+
+impl Hash for ModId {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.version_uuid.hash(state);
     }
 }
 

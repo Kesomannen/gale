@@ -183,27 +183,16 @@ export type ModActionResponse =
 	| { type: 'hasDependants'; dependants: Dependant[] };
 
 export type InstallTask =
-	| { kind: 'done' }
-	| { kind: 'error' }
-	| { kind: 'installing' }
-	| { kind: 'extracting' }
-	| {
-		kind: 'downloading';
-		payload: {
-			total: number;
-			downloaded: number;
-		};
-	};
+	| 'download'
+	| 'extract'
+	| 'install';
 
-export type InstallProgress = {
-	durationSecs: number;
-	totalProgress: number;
-	installedMods: number;
-	totalMods: number;
-	currentName: string;
-	canCancel: boolean;
-	task: InstallTask;
-};
+export type InstallEvent =
+	| { type: 'show' }
+	| { type: 'hide', reason: 'done' | 'error' | 'cancelled' }
+	| { type: 'addCount', mods: number, bytes: number }
+	| { type: 'addProgress', mods: number, bytes: number }
+	| { type: 'setTask', name: string, task: InstallTask };
 
 export type ModpackArgs = {
 	name: string;

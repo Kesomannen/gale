@@ -1,7 +1,6 @@
 <script lang="ts">
 	import VirtualList from '$lib/components/ui/VirtualList.svelte';
 	import type { Mod, QueryModsArgsWithoutMax } from '$lib/types';
-	import type { Writable } from 'svelte/store';
 	import type { Snippet } from 'svelte';
 	import games from '$lib/state/game.svelte';
 
@@ -28,7 +27,7 @@
 	let virtualList: VirtualList<Mod, string> | null = $state(null);
 
 	$effect(() => {
-		if (listEnd > mods.length - 2 && mods.length === maxCount) {
+		if (listEnd > mods.length - 4 && mods.length === maxCount) {
 			maxCount += 20;
 		}
 	});

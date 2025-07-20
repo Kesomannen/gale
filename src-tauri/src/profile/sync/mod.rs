@@ -15,7 +15,7 @@ const API_URL: &str = "https://gale.kesomannen.com/api";
 //const API_URL: &str = "http://localhost:8080/api"; // for local testing
 
 async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
-    let mut req = app.http().request(method, format!("{}{}", API_URL, path));
+    let mut req = app.http().request(method, format!("{API_URL}{path}"));
     if let Some(token) = auth::access_token(app).await {
         req = req.bearer_auth(token);
     }
@@ -229,7 +229,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
         }
         _ => {
             let mut manager = app.lock_manager();
-            let profile = manager.active_game_mut().find_profile_mut(profile_id)?;
+            let profile = manager.active_game_mut().profile_mut(profile_id)?;
 
             let synced_at = profile.sync_profile.take().unwrap().synced_at;
 
@@ -264,19 +264,16 @@ async fn download_and_import_file(
 
     data.manifest.name = name.clone();
 
-    let index = super::import::import_profile(data, InstallOptions::default(), false, app)
+    let id = super::import::import_profile(data, InstallOptions::default(), false, app)
         .await
         .context("failed to import profile")?;
 
     {
         let mut manager = app.lock_manager();
-        let game = manager.active_game_mut();
-        let profile = &mut game.profiles[index];
+        let (_, profile) = manager.profile_by_id_mut(id)?;
 
         profile.sync_profile = Some(sync_profile);
-
         profile.save(app.db())?;
-        game.save(app.db())?;
     }
 
     Ok(())

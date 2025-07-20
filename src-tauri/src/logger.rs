@@ -22,12 +22,12 @@ struct WebviewError<'a> {
 
 /// Emits an error to the webview, causing it to show an error toast and
 /// log the message properly to the log file/terminal.
-pub fn log_webview_err(name: &str, error: eyre::Error, app: &AppHandle) {
+pub fn log_webview_err(name: impl AsRef<str>, error: eyre::Error, app: &AppHandle) {
     app.emit(
         "error",
         WebviewError {
-            name,
-            message: format!("{:#}", error),
+            name: name.as_ref(),
+            message: format!("{error:#}"),
         },
     )
     .unwrap_or_else(|err| {

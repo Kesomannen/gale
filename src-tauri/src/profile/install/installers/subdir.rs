@@ -418,7 +418,7 @@ impl PackageInstaller for SubdirInstaller<'_> {
                     "failed to delete state file for {}: {:#}",
                     profile_mod.full_name(),
                     err
-                )
+                );
             }
 
             let mut profile_state = ProfileStateHandle::new(profile);

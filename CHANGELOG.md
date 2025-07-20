@@ -4,6 +4,7 @@
 
 ### Added
 
+- Installation queue for mods
 - Support for 4 games:
   - Word Play
   - Vellum

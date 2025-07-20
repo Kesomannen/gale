@@ -1,8 +1,7 @@
-use std::sync::atomic::Ordering;
-
 use tauri::{command, AppHandle};
 
 use crate::{
+    profile::install::InstallResultExt,
     state::ManagerExt,
     thunderstore::ModId,
     util::{self, cmd::Result},
@@ -11,25 +10,38 @@ use crate::{
 use super::{InstallOptions, ModInstall};
 
 #[command]
-pub async fn install_mod(mod_ref: ModId, app: AppHandle) -> Result<()> {
-    super::install_with_deps(
-        vec![ModInstall::new(mod_ref)],
-        InstallOptions::default(),
-        false,
-        &app,
-    )
-    .await?;
+pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
+    let profile_id = app.lock_manager().active_profile().id;
+    let install = ModInstall::try_from_id(id, &app.lock_thunderstore())?;
+
+    app.install_queue()
+        .install_with_deps(
+            vec![install],
+            profile_id,
+            InstallOptions::default(),
+            false,
+            &app,
+        )?
+        .await
+        .ignore_cancel()?;
 
     Ok(())
 }
 
 #[command]
-pub fn cancel_install(app: AppHandle) -> Result<()> {
-    app.app_state()
-        .cancel_install_flag
-        .store(true, Ordering::Relaxed);
+pub fn cancel_all_installs(app: AppHandle) -> Result<()> {
+    app.app_state().install_queue.cancel_all();
 
     Ok(())
+}
+
+#[command]
+pub fn has_pending_installations(app: AppHandle) -> Result<bool> {
+    let profile_id = app.lock_manager().active_profile().id;
+
+    let result = app.install_queue().handle().has_any_for_profile(profile_id);
+
+    Ok(result)
 }
 
 #[command]
@@ -58,11 +70,15 @@ pub fn get_download_size(mod_ref: ModId, app: AppHandle) -> Result<u64> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
+    let queue = app.install_queue().handle();
 
-    Ok(super::total_download_size(
+    let size = super::total_download_size(
         mod_ref.borrow(&thunderstore)?,
         manager.active_profile(),
         &prefs,
         &thunderstore,
-    ))
+        &queue,
+    );
+
+    Ok(size)
 }

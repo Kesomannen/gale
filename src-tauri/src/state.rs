@@ -1,4 +1,4 @@
-use std::sync::{atomic::AtomicBool, Mutex, MutexGuard};
+use std::sync::{Mutex, MutexGuard};
 
 use eyre::{Context, Result};
 use tauri::{command, AppHandle, Manager};
@@ -7,8 +7,7 @@ use tokio::sync::broadcast;
 use crate::{
     db::{self, Db},
     prefs::Prefs,
-    profile::sync::auth::AuthCredentials,
-    profile::{self, ModManager},
+    profile::{self, install::queue::InstallQueue, sync::auth::AuthCredentials, ModManager},
     thunderstore::{self, Thunderstore},
 };
 
@@ -20,7 +19,7 @@ pub struct AppState {
     pub db: Db,
     pub auth: Mutex<Option<AuthCredentials>>,
     pub auth_callback_channel: broadcast::Sender<String>,
-    pub cancel_install_flag: AtomicBool,
+    pub install_queue: InstallQueue,
     pub is_first_run: bool,
 }
 
@@ -65,7 +64,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         thunderstore: Mutex::new(thunderstore),
         auth: Mutex::new(auth),
         auth_callback_channel: broadcast::channel(1).0,
-        cancel_install_flag: AtomicBool::new(false),
+        install_queue: InstallQueue::new(app.to_owned()),
         is_first_run: !db_existed && !migrated,
     };
 
@@ -105,6 +104,10 @@ pub trait ManagerExt<R> {
 
     fn db(&self) -> &Db {
         &self.app_state().db
+    }
+
+    fn install_queue(&self) -> &InstallQueue {
+        &self.app_state().install_queue
     }
 }
 

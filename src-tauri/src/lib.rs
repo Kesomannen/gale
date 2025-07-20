@@ -2,7 +2,7 @@ use std::env;
 
 use itertools::Itertools;
 use state::ManagerExt;
-use tauri::{App, AppHandle};
+use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
 use tracing::{error, info, warn};
@@ -34,7 +34,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         error!("setup error: {:?}", err);
 
         app.dialog()
-            .message(format!("Failed to launch Gale: {:?}", err))
+            .message(format!("Failed to launch Gale: {err:?}"))
             .blocking_show();
 
         return Err(err.into());
@@ -72,6 +72,18 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn event_handler(app: &AppHandle, event: RunEvent) {
+    if let RunEvent::ExitRequested { api, .. } = event {
+        if !app.install_queue().handle().is_processing() {
+            return;
+        }
+
+        api.prevent_exit();
+
+        tauri::async_runtime::spawn(profile::install::handle_exit(app.to_owned()));
+    }
+}
+
 fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
     if !deep_link::handle(app, args.clone()) {
         cli::run(args, app);
@@ -80,7 +92,7 @@ fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
 
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
-        eprintln!("failed to set up logger: {:#}", err);
+        eprintln!("failed to set up logger: {err:#}");
     });
 
     tauri::Builder::default()
@@ -125,7 +137,8 @@ pub fn run() {
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,
             profile::install::commands::install_mod,
-            profile::install::commands::cancel_install,
+            profile::install::commands::cancel_all_installs,
+            profile::install::commands::has_pending_installations,
             profile::install::commands::clear_download_cache,
             profile::install::commands::get_download_size,
             profile::update::commands::change_mod_version,
@@ -178,6 +191,7 @@ pub fn run() {
         // TODO .plugin(tauri_plugin_oauth::Builder)
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .setup(setup)
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(event_handler);
 }

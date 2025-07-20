@@ -24,7 +24,7 @@ impl VersionIdent {
     ///
     /// This allocates a new string.
     pub fn new(owner: &str, name: &str, version: &str) -> Self {
-        let repr = format!("{}-{}-{}", owner, name, version).into();
+        let repr = format!("{owner}-{name}-{version}").into();
 
         let name_start = owner.len() as u32 + 1;
         let version_start = name_start + name.len() as u32 + 1;
@@ -185,7 +185,7 @@ where
         Self::new(
             owner.as_ref(),
             name.as_ref(),
-            &format!("{}.{}.{}", major, minor, patch),
+            &format!("{major}.{minor}.{patch}"),
         )
     }
 }
@@ -217,7 +217,7 @@ impl PackageIdent {
     ///
     /// This allocates a new string and copies the slices into it.
     pub fn new(owner: &str, name: &str) -> Self {
-        let repr = format!("{}-{}", owner, name);
+        let repr = format!("{owner}-{name}");
         let name_start = owner.len() as u32 + 1;
         Self { repr, name_start }
     }

@@ -97,7 +97,7 @@ impl<W: Write> Serializer<W> {
     fn write_entry(&mut self, entry: &Entry) -> io::Result<()> {
         if let Some(description) = &entry.description {
             for line in description.lines() {
-                writeln!(self, "## {}", line)?;
+                writeln!(self, "## {line}")?;
             }
         }
 
@@ -124,7 +124,7 @@ impl<W: Write> Serializer<W> {
         }
 
         if let Value::Flags { .. } = entry.value {
-            writeln!(self, "{}", FLAGS_MESSAGE)?;
+            writeln!(self, "{FLAGS_MESSAGE}")?;
         }
 
         match &entry.value {

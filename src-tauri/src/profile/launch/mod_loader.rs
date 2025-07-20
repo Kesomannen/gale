@@ -110,7 +110,7 @@ fn add_northstar_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
         .to_str()
         .ok_or_eyre("profile path is not valid UTF-8")?;
 
-    command.arg("-northstar").arg(format!("-profile={}", path));
+    command.arg("-northstar").arg(format!("-profile={path}"));
 
     Ok(())
 }
@@ -121,7 +121,7 @@ fn add_gd_weave_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
         .to_str()
         .ok_or_eyre("profile path is not valid UTF-8")?;
 
-    command.arg(format!("--gdweave-folder-override={}", path));
+    command.arg(format!("--gdweave-folder-override={path}"));
 
     Ok(())
 }

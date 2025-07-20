@@ -11,7 +11,6 @@
 	import { onMount, type Snippet } from 'svelte';
 	import { refreshColor, refreshFont } from '$lib/theme';
 	import InstallModDialog from '$lib/components/dialogs/InstallModDialog.svelte';
-	import InstallProgressDialog from '$lib/components/dialogs/InstallProgressDialog.svelte';
 	import WelcomeDialog from '$lib/components/dialogs/WelcomeDialog.svelte';
 	import Navbar from '$lib/components/misc/Navbar.svelte';
 	import profiles from '$lib/state/profile.svelte';
@@ -65,6 +64,5 @@
 	</main>
 
 	<InstallModDialog />
-	<InstallProgressDialog />
 	<WelcomeDialog />
 </Tooltip.Provider>

@@ -159,7 +159,7 @@ fn base_request(
     token: impl Display,
     client: &reqwest::Client,
 ) -> reqwest::RequestBuilder {
-    let url = format!("https://thunderstore.io/api/experimental/{}/", tail);
+    let url = format!("https://thunderstore.io/api/experimental/{tail}/");
 
     client.post(url).bearer_auth(token)
 }
@@ -278,7 +278,7 @@ async fn upload_chunk(
 async fn abort_upload(uuid: &Uuid, token: &str, client: reqwest::Client) -> Result<()> {
     info!("aborting upload");
 
-    base_request(format!("usermedia/{}/abort-upload", uuid), token, &client)
+    base_request(format!("usermedia/{uuid}/abort-upload"), token, &client)
         .json(&uuid)
         .send()
         .await?
@@ -295,7 +295,7 @@ async fn finish_upload(
 ) -> Result<()> {
     debug!("finishing upload");
 
-    base_request(format!("usermedia/{}/finish-upload", uuid), token, client)
+    base_request(format!("usermedia/{uuid}/finish-upload"), token, client)
         .json(&UserMediaFinishUploadParams { parts })
         .send()
         .await?

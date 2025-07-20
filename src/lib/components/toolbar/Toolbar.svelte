@@ -8,11 +8,18 @@
 	import Syncer from './Syncer.svelte';
 	import ProfilesDropdown from './ProfilesDropdown.svelte';
 	import games from '$lib/state/game.svelte';
+	import InstallPopover from './InstallPopover.svelte';
+	import { message } from '@tauri-apps/plugin-dialog';
 
 	let launchDialogOpen = $state(false);
 	let gamesOpen = $state(false);
 
 	async function launchGame() {
+		if (await api.profile.install.hasPendingInstallations()) {
+			await message('Please wait for mod installations to complete before launching.');
+			return;
+		}
+
 		launchDialogOpen = true;
 		try {
 			await api.profile.launch.launchGame();
@@ -52,6 +59,7 @@
 
 	<ProfilesDropdown />
 	<Syncer />
+	<InstallPopover />
 	<Updater />
 </div>
 

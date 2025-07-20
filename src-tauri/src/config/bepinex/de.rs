@@ -22,18 +22,18 @@ where
         let value = value
             .replace(',', ".")
             .parse()
-            .with_context(|| format!("failed to parse value '{}'", value))?;
+            .with_context(|| format!("failed to parse value '{value}'"))?;
 
         let range = match range {
             Some((min, max)) => {
                 let min = min
                     .replace(',', ".")
                     .parse()
-                    .with_context(|| format!("invalid minimum value '{}'", min))?;
+                    .with_context(|| format!("invalid minimum value '{min}'"))?;
                 let max = max
                     .replace(',', ".")
                     .parse()
-                    .with_context(|| format!("invalid maximum value '{}'", max))?;
+                    .with_context(|| format!("invalid maximum value '{max}'"))?;
 
                 Some(min..max)
             }

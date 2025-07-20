@@ -131,13 +131,6 @@ impl PackageVersion {
             .parse()
             .expect("thunderstore package has invalid version")
     }
-
-    pub fn download_url(&self) -> String {
-        format!(
-            "https://thunderstore.io/package/download/{}/",
-            self.ident.path()
-        )
-    }
 }
 
 impl PartialEq for PackageVersion {

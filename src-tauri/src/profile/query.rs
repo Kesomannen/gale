@@ -115,7 +115,7 @@ impl Profile {
                     Ok(queryable) => Some(queryable),
                     Err(_) => {
                         warn!(
-                            "unknown mod: '{}' while querying {}",
+                            "unknown mod: {} while querying {}",
                             profile_mod.ident(),
                             self.name
                         );
