@@ -1054,6 +1054,18 @@
         }
     },
     {
+        "name": "Logic World",
+        "slug": "logic-world",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1054340
+            }
+        }
+    },
+    {
         "name": "Lost Skies",
         "slug": "lost-skies",
         "modLoader": {
@@ -1180,6 +1192,18 @@
             "steam": {
                 "id": 2200780,
                 "dirName": "My dream setup/MDS"
+            }
+        }
+    },
+    {
+        "name": "Mycopunk",
+        "slug": "mycopunk",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3247750
             }
         }
     },
@@ -1984,6 +2008,18 @@
         }
     },
     {
+        "name": "Vellum",
+        "slug": "vellum",
+        "modLoader": {
+            "name": "MelonLoader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 917950
+            }
+        }
+    },
+    {
         "name": "Vertigo 2",
         "modLoader": {
             "name": "BepInEx"
@@ -2091,6 +2127,18 @@
         "platforms": {
             "steam": {
                 "id": 445980
+            }
+        }
+    },
+    {
+        "name": "Word Play",
+        "slug": "word-play",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3586660
             }
         }
     },

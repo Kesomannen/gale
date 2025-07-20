@@ -26,3 +26,4 @@ Pyoid-Hook_Line_and_Sinker
 GardenGals-Hatchery
 Kesomannen-GaleModManager
 CORE_API_TEAM-Example_Mod
+CandleOne-WebLoader
