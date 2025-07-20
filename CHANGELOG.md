@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Support for 4 games:
+  - Word Play
+  - Vellum
+  - Mycopunk
+  - Logic World
+
 ### Changed
 
 - Small UI tweaks
