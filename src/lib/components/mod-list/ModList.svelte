@@ -27,7 +27,7 @@
 	let virtualList: VirtualList<Mod, string> | null = $state(null);
 
 	$effect(() => {
-		if (listEnd > mods.length - 2 && mods.length === maxCount) {
+		if (listEnd > mods.length - 4 && mods.length === maxCount) {
 			maxCount += 20;
 		}
 	});

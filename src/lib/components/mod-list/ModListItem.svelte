@@ -6,6 +6,7 @@
 	import { ContextMenu } from 'bits-ui';
 	import { activeContextMenu } from '$lib/context';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
+	import Spinner from '../ui/Spinner.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -18,7 +19,8 @@
 
 	let { mod, isSelected, locked, contextItems, onclick, oninstall }: Props = $props();
 
-	let contextMenuOpen: boolean = $state(false);
+	let contextMenuOpen = $state(false);
+	let loading = $state(false);
 
 	let descriptionClasses = $derived(
 		isSelected ? 'text-primary-300' : 'text-primary-400 group-hover:text-primary-300'
@@ -76,13 +78,19 @@
 				<!-- svelte-ignore node_invalid_placement_ssr -->
 				<!-- we're not using ssr -->
 				<button
-					class="bg-accent-600 hover:bg-accent-500 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
+					class="bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
+					disabled={loading}
 					onclick={(evt) => {
 						evt.stopPropagation();
 						oninstall?.();
+						loading = true;
 					}}
 				>
-					<Icon icon="mdi:download" />
+					{#if loading}
+						<Spinner />
+					{:else}
+						<Icon icon="mdi:download" />
+					{/if}
 				</button>
 			{/if}
 		</button>
