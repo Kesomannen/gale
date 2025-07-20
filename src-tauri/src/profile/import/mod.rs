@@ -155,13 +155,7 @@ pub(super) async fn import_profile(
         .install(to_install, profile_id, options, app)
         .await;
 
-    if delete_after_import {
-        fs::remove_dir_all(&from_path).unwrap_or_else(|err| {
-            warn!("failed to remove source folder after import: {}", err);
-        });
-    }
-
-    match result {
+    let result = match result {
         Ok(()) => {
             import_config(
                 &profile_path,
@@ -184,7 +178,15 @@ pub(super) async fn import_profile(
 
             Err(err.into())
         }
+    };
+
+    if delete_after_import {
+        fs::remove_dir_all(&from_path).unwrap_or_else(|err| {
+            warn!("failed to remove source folder after import: {}", err);
+        });
     }
+
+    result
 }
 
 fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {

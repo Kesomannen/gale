@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.1 (2025-07-20)
+
+### Fixed
+
+- Config files not being imported from profiles
+
 ## 1.9.0 (2025-07-20)
 
 ### Added
