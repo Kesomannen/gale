@@ -9,10 +9,11 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 ## Features
 
-- A performant and responsive UI
-- Tiny resource usage and download size
+- Support for all 150+ games on Thunderstore, including Lethal Company, R.E.P.O and Risk Of Rain 2.
+- An intuitive and responsive interface
+- Tiny download size and resource usage
 - Feature-rich mod config editor
-- Export profiles as modpacks and upload directly to Thunderstore
+- Automatic profile syncing (beta)
 
 [...and more](https://github.com/Kesomannen/gale/wiki/Features)
 
