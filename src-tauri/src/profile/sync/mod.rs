@@ -31,7 +31,7 @@ struct CreateSyncProfileResponse {
     updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SyncProfileMetadata {
     id: String,
@@ -199,10 +199,10 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-async fn clone_profile(id: &str, name: String, app: &AppHandle) -> Result<()> {
+async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle) -> Result<()> {
     let metadata = read_profile(id, app).await?;
 
-    download_and_import_file(name, metadata.into(), app).await
+    download_and_import_file(override_name, metadata.into(), app).await
 }
 
 pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
@@ -225,11 +225,11 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
 
     match metadata {
         Some(metadata) if !dry_run && metadata.updated_at > synced_at => {
-            download_and_import_file(name, metadata.into(), app).await
+            download_and_import_file(Some(name), metadata.into(), app).await
         }
         _ => {
             let mut manager = app.lock_manager();
-            let profile = manager.active_game_mut().profile_mut(profile_id)?;
+            let (_, profile) = manager.profile_by_id_mut(profile_id)?;
 
             let synced_at = profile.sync_profile.take().unwrap().synced_at;
 
@@ -246,7 +246,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
 }
 
 async fn download_and_import_file(
-    name: String,
+    override_name: Option<String>,
     sync_profile: SyncProfileData,
     app: &AppHandle,
 ) -> Result<()> {
@@ -262,7 +262,9 @@ async fn download_and_import_file(
     let mut data =
         super::import::read_file(Cursor::new(bytes)).context("failed to import profile")?;
 
-    data.manifest.name = name.clone();
+    if let Some(name) = override_name {
+        data.manifest.name = name;
+    }
 
     let id = super::import::import_profile(data, InstallOptions::default(), false, app)
         .await
@@ -306,7 +308,7 @@ async fn get_profile_meta(id: &str, app: &AppHandle) -> Result<Option<SyncProfil
     }
 }
 
-async fn read_profile(id: &str, app: &AppHandle) -> Result<SyncProfileMetadata> {
+pub async fn read_profile(id: &str, app: &AppHandle) -> Result<SyncProfileMetadata> {
     get_profile_meta(id, app)
         .await?
         .ok_or_eyre("profile not found")

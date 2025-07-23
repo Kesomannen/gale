@@ -25,7 +25,10 @@
 	);
 
 	async function importProfile(profile: ListedSyncProfile) {
+		await games.setActive(profile.community);
+
 		open = false;
+
 		await api.profile.sync.clone(profile.id, profile.name);
 		await profiles.refresh();
 	}

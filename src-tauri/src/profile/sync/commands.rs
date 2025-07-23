@@ -27,7 +27,7 @@ pub async fn push_sync_profile(app: AppHandle) -> Result<()> {
 
 #[command]
 pub async fn clone_sync_profile(id: String, name: String, app: AppHandle) -> Result<()> {
-    super::clone_profile(&id, name, &app).await?;
+    super::clone_profile(&id, Some(name), &app).await?;
 
     Ok(())
 }

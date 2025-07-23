@@ -42,7 +42,7 @@ pub fn read_file_at_path(path: PathBuf) -> Result<ImportData> {
     read_file(file)
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportData {
     pub manifest: ProfileManifest,
@@ -82,7 +82,7 @@ fn read_base64(base64: &str) -> Result<ImportData> {
     read_file(Cursor::new(bytes))
 }
 
-async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
+pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     let response = app
         .http()
         .get(format!(

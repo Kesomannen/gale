@@ -40,8 +40,8 @@
 	let unlistenFn: UnlistenFn | undefined;
 
 	onMount(async () => {
-		unlistenFn = await listen<ImportData>('import_profile', (evt) => {
-			data = { type: 'normal', ...evt.payload };
+		unlistenFn = await listen<AnyImportData>('import_profile', (evt) => {
+			data = evt.payload;
 			name = data.manifest.profileName;
 			mode = isAvailable(name) ? 'new' : 'overwrite';
 

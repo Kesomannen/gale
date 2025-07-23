@@ -5,6 +5,8 @@ class UpdateState {
 	isChecking = $state(false);
 
 	refresh = async () => {
+		if (this.isChecking) return;
+
 		this.isChecking = true;
 		this.next = await check();
 		this.isChecking = false;
