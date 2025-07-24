@@ -46,7 +46,9 @@
 		bind:value={token}
 	/>
 
-	<Link class="mt-2 block max-w-max text-sm" href="https://example.com"
+	<Link
+		class="mt-2 block max-w-max text-sm"
+		href="https://github.com/Kesomannen/gale/wiki/Getting-a-Thunderstore-API-token"
 		>Unsure how to get your API token?</Link
 	>
 

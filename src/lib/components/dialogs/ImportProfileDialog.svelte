@@ -85,8 +85,12 @@
 		if (!data) return;
 
 		if (mode === 'overwrite') {
-			let confirmed = await confirm(`Are you sure you want to override ${name}?`);
-			if (!confirmed) return;
+			let profile = profiles.list.find((profile) => profile.name === name);
+
+			if (profile?.modCount ?? 0 > 0) {
+				let confirmed = await confirm(`Are you sure you want to override ${name}?`);
+				if (!confirmed) return;
+			}
 		}
 
 		open = false;
