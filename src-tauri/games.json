@@ -1042,6 +1042,18 @@
         }
     },
     {
+        "name": "Len's Island",
+        "slug": "lens-island",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1335830
+            }
+        }
+    },
+    {
         "name": "Lethal League Blaze",
         "modLoader": {
             "name": "BepInEx"
