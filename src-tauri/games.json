@@ -1114,6 +1114,18 @@
         }
     },
     {
+        "name": "Mage Arena",
+        "slug": "mage-arena",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3716600
+            }
+        }
+    },
+    {
         "name": "Magicite",
         "slug": "magicite",
         "modLoader": {
