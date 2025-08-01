@@ -1398,6 +1398,24 @@
         }
     },
     {
+        "name": "PATAPON 1+2 REPLAY",
+        "modLoader": {
+            "name": "BepInEx",
+            "subdirs": [
+                {
+                    "name": "hexpatches",
+                    "target": "BepInEx/hexpatches",
+                    "mode": "track"
+                }
+            ]
+        },
+        "platforms": {
+            "steam": {
+                "id": 2383200
+            }
+        }
+    },
+    {
         "name": "Patch Quest",
         "modLoader": {
             "name": "MelonLoader"
