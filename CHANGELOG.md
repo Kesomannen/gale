@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.9.2 (2025-08-01)
+
+### Added
+
+- Support for Len's Island and Mage Arena
+- Two deep link endpoints:
+  - `gale://profile/import/{key}`
+  - `gale://profile/sync/clone/{id}`
+
+### Fixed
+
+- Thunderstore API token help link redirecting to `example.com`
+- Deep link not being registered as default handler on Linux
+- Various other issues with deep links
+
 ## 1.9.1 (2025-07-20)
 
 ### Fixed
