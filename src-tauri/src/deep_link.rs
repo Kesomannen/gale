@@ -116,7 +116,7 @@ async fn import_profile_code(url: String, app: AppHandle) -> Result<()> {
 
 async fn clone_sync_profile(url: String, app: AppHandle) -> Result<()> {
     let id = url
-        .strip_prefix("gale://sync/clone/")
+        .strip_prefix("gale://profile/sync/clone/")
         .ok_or_eyre("invalid url format")?;
 
     let import_data = profile::sync::read_profile(id, &app).await?;

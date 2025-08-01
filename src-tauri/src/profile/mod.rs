@@ -388,10 +388,12 @@ impl ManagedGame {
         self.profiles.iter_mut().find(|profile| profile.id == id)
     }
 
+    /*
     fn profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
         self.profile_ok_mut(id)
             .with_context(|| format!("profile with id {id} not found"))
     }
+    */
 
     fn active_profile(&self) -> &Profile {
         self.profile(self.active_profile_id).unwrap()
