@@ -59,7 +59,7 @@
 			<div class="group text-primary-400 flex items-center gap-1 rounded-lg">
 				<div class="mr-auto">
 					<div>
-						<span class="font-medium text-white">{profile.name}</span>
+						<span class="font-medium text-black">{profile.name}</span>
 
 						<span class="text-primary-300 bg-primary-900 ml-1 rounded px-2 py-0.5 font-mono">
 							{profile.id}

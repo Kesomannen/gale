@@ -80,7 +80,7 @@
 						]}
 					>
 						{#if title}
-							<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-white"
+							<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-black"
 								>{title}</Dialog.Title
 							>
 						{/if}

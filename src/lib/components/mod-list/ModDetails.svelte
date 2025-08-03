@@ -75,7 +75,7 @@
 </script>
 
 <div
-	class="border-primary-600 bg-primary-700 relative flex w-[40%] min-w-72 flex-col border-l px-6 pt-6 pb-4 text-white"
+	class="border-primary-600 bg-primary-700 relative flex w-[40%] min-w-72 flex-col border-l px-6 pt-6 pb-4 text-black"
 >
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
@@ -96,7 +96,7 @@
 
 			<div>
 				<a
-					class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
+					class="pr-4 text-left text-3xl font-bold break-words text-black hover:underline xl:text-4xl"
 					href={communityUrl(`${mod.author}/${mod.name}`)}
 					target="_blank">{mod.name.replace(/_/g, ' ')}</a
 				>
@@ -118,14 +118,14 @@
 
 		<div class="flex flex-wrap gap-1">
 			{#if mod.isDeprecated}
-				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
+				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-black">
 					<Icon class="mr-1 text-xl" icon="mdi:error" />
 					Deprecated
 				</div>
 			{/if}
 
 			{#if mod.containsNsfw}
-				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
+				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-black">
 					<Icon class="mr-1 text-xl" icon="material-symbols:explicit" />
 					Contains NSFW
 				</div>
@@ -192,7 +192,7 @@
 
 	{#if mod.type === 'remote'}
 		<button
-			class="group bg-primary-600 hover:bg-primary-500 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
+			class="group bg-primary-600 hover:bg-primary-500 flex items-center rounded-md py-1 pr-1.5 pl-3 text-black"
 			onmouseenter={() => changelog.fetchMarkdown()}
 			onclick={() => (changelogOpen = true)}
 		>
@@ -201,7 +201,7 @@
 		</button>
 
 		<button
-			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
+			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1.5 pl-3 text-black"
 			onmouseenter={() => readme.fetchMarkdown()}
 			onclick={() => (readmeOpen = true)}
 		>
@@ -212,7 +212,7 @@
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		<button
-			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1 pl-3 text-white"
+			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1 pl-3 text-black"
 			onclick={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />

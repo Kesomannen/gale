@@ -53,7 +53,7 @@
 			<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
 			<div class="shrink grow overflow-hidden pl-3 text-left">
 				<div class="flex items-center gap-1 overflow-hidden">
-					<div class="shrink truncate pr-1 font-medium text-white">
+					<div class="shrink truncate pr-1 font-medium text-black">
 						{mod.name.replace(/_/g, ' ')}
 					</div>
 					{#if mod.isPinned}
@@ -78,7 +78,7 @@
 				<!-- svelte-ignore node_invalid_placement_ssr -->
 				<!-- we're not using ssr -->
 				<button
-					class="bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
+					class="bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-black group-hover:inline"
 					disabled={loading}
 					onclick={(evt) => {
 						evt.stopPropagation();

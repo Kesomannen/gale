@@ -25,7 +25,7 @@
 	<div class="shrink overflow-hidden pl-3 text-left">
 		<div class="flex gap-2">
 			<a
-				class="shrink truncate font-medium text-white hover:underline"
+				class="shrink truncate font-medium text-black hover:underline"
 				href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}/"
 				target="_blank"
 				rel="noopener noreferrer"

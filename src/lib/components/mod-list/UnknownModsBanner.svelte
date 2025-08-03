@@ -16,7 +16,7 @@
 		.map((mod) => mod.fullName)
 		.join(', ')}.
 	<button
-		class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
+		class="ml-1 font-semibold text-black hover:text-red-100 hover:underline"
 		onclick={() => {
 			mods.forEach(uninstall);
 		}}

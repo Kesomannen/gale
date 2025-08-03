@@ -65,7 +65,7 @@
 
 	<Info>
 		<h4>
-			<span class="text-lg font-semibold text-white">{entry.name}</span>
+			<span class="text-lg font-semibold text-black">{entry.name}</span>
 			<span class="text-primary-400 ml-1"> ({typeName})</span>
 		</h4>
 
@@ -84,7 +84,7 @@
 
 		{#if (value.type === 'int' || value.type === 'float') && value.content.range !== null}
 			<p>
-				<span class="font-medium text-white">Range: </span>
+				<span class="font-medium text-black">Range: </span>
 				{value.content.range.start} - {value.content.range.end}
 			</p>
 		{/if}

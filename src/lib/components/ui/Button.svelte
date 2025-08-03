@@ -20,9 +20,9 @@
 
 	let typeClass = $derived(
 		{
-			accent: 'enabled:hover:bg-accent-600 bg-accent-700 font-medium text-white',
+			accent: 'enabled:hover:bg-accent-600 bg-accent-700 font-medium text-black',
 			primary: 'enabled:hover:bg-primary-600 bg-primary-700 text-primary-200',
-			red: 'enabled:hover:bg-red-600 bg-red-700 text-white'
+			red: 'enabled:hover:bg-red-600 bg-red-700 text-black'
 		}[color]
 	);
 

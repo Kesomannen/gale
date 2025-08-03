@@ -30,32 +30,32 @@
 	<div class="h-3"></div>
 	<img src="logo.png" alt="Logo" class="float-right size-20" />
 	<div>
-		<h3 class="text-xl font-semibold text-white">Gale</h3>
+		<h3 class="text-xl font-semibold text-black">Gale</h3>
 		<p class="text-primary-300">
 			Version {version}
 			<br />
 			GNU General Public License v3.0
 		</p>
 		<div class="mt-3 flex items-center gap-2">
-			<Icon icon="mdi:file-document" class="text-xl text-white" />
+			<Icon icon="mdi:file-document" class="text-xl text-black" />
 			<Link href="https://github.com/Kesomannen/gale/blob/master/CHANGELOG.md">Changelog</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="mdi:file-document" class="text-xl text-white" />
+			<Icon icon="mdi:file-document" class="text-xl text-black" />
 			<Link href="https://github.com/Kesomannen/gale/blob/master/privacy_policy.md"
 				>Privacy Policy</Link
 			>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="mdi:github" class="text-xl text-white" />
+			<Icon icon="mdi:github" class="text-xl text-black" />
 			<Link href="https://github.com/Kesomannen/gale">GitHub</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="mdi:discord" class="text-xl text-white" />
+			<Icon icon="mdi:discord" class="text-xl text-black" />
 			<Link href="https://discord.gg/sfuWXRfeTt">Discord</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="mdi:heart" class="text-xl text-white" />
+			<Icon icon="mdi:heart" class="text-xl text-black" />
 			<Link href="https://ko-fi.com/kesomannen">Donate</Link>
 		</div>
 		<div class="mt-3 flex items-center gap-2">

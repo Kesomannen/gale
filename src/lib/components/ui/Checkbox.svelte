@@ -33,7 +33,7 @@
 		]}
 	>
 		{#if checked}
-			<Icon class="h-full w-full font-bold text-white" icon="mdi:check" />
+			<Icon class="h-full w-full font-bold text-black" icon="mdi:check" />
 		{/if}
 	</div>
 </Checkbox.Root>

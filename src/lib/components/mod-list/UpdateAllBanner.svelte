@@ -47,7 +47,7 @@
 		<b class="mx-1">{shownUpdates.length}</b>
 		{shownUpdates.length === 1 ? ' update' : ' updates'} available.
 		<button
-			class="hover:text-accent-200 ml-1 font-semibold text-white hover:underline"
+			class="hover:text-accent-200 ml-1 font-semibold text-black hover:underline"
 			onclick={() => (dialogOpen = true)}
 		>
 			Update all?

@@ -185,7 +185,7 @@
 
 		<div
 			class="text-lg font-semibold
-			 text-white"
+			 text-black"
 		>
 			Profile sync is run on donations!
 		</div>

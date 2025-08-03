@@ -28,7 +28,7 @@
 	<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-12 rounded-sm" />
 
 	<div class="grow pl-1 text-left">
-		<div class="font-medium text-white">
+		<div class="font-medium text-black">
 			{game.name}
 		</div>
 

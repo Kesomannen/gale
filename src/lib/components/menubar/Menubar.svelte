@@ -473,7 +473,7 @@
 
 	{#snippet button(className: string, icon: string, onclick: () => void)}
 		<button class={[className, 'group hover:bg-primary-700 px-3 py-1.5']} {onclick}>
-			<Icon {icon} class="text-primary-500 group-hover:text-white" />
+			<Icon {icon} class="text-primary-500 group-hover:text-black" />
 		</button>
 	{/snippet}
 

@@ -23,7 +23,7 @@
 		{/if}
 
 		{#if selectedFile !== null}
-			<div class="shrink-0 truncate px-4 text-2xl font-bold text-white">
+			<div class="shrink-0 truncate px-4 text-2xl font-bold text-black">
 				{selectedFile.relativePath}
 				{#if selectedSection}
 					<span class="text-primary-400">/</span>

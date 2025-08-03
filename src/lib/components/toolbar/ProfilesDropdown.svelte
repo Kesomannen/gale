@@ -43,7 +43,7 @@
 						{/each}
 
 						<DropdownMenu.Item
-							class="bg-accent-700 hover:bg-accent-600 flex cursor-pointer items-center justify-center rounded-sm py-1 text-white"
+							class="bg-accent-700 hover:bg-accent-600 flex cursor-pointer items-center justify-center rounded-sm py-1 text-black"
 							onclick={() => (createDialogOpen = true)}
 						>
 							<Icon icon="mdi:plus" class="mr-1 text-lg" />

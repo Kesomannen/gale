@@ -71,7 +71,7 @@
 		h1 {
 			font-weight: var(--font-weight-bold);
 			font-size: var(--text-3xl);
-			color: var(--color-white);
+			color: var(--color-black);
 		}
 
 		h2 {

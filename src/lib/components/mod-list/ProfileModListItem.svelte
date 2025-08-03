@@ -80,7 +80,7 @@
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div
 						class={[
-							mod.enabled === false ? 'text-primary-300 line-through' : 'text-white',
+							mod.enabled === false ? 'text-primary-300 line-through' : 'text-black',
 							'shrink truncate font-medium'
 						]}
 					>
