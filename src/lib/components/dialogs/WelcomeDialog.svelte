@@ -26,7 +26,7 @@
 	let prefs: Prefs | null = $state(null);
 
 	onMount(async () => {
-		if ((await api.state.isFirstRun()) || true) {
+		if (await api.state.isFirstRun()) {
 			open = true;
 			prefs = await api.prefs.get();
 		}
