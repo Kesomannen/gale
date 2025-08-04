@@ -72,21 +72,22 @@ impl ModLoader<'_> {
             ModLoaderKind::GDWeave {} => Some("GDWeave/GDWeave.log"),
             ModLoaderKind::Northstar {} => None,
             ModLoaderKind::Shimloader {} => None,
-            ModLoaderKind::Lovely {} => None,
+            ModLoaderKind::Lovely {} => Some("mods/lovely/log"),
             ModLoaderKind::ReturnOfModding { .. } => None,
         }
     }
 
     pub fn mod_config_dir(&self) -> PathBuf {
         match &self.kind {
-            ModLoaderKind::BepInEx { .. } => ["BepInEx", "config"].iter().collect(),
-            ModLoaderKind::MelonLoader { .. } => PathBuf::new(),
-            ModLoaderKind::GDWeave {} => ["GDWeave", "configs"].iter().collect(),
-            ModLoaderKind::Northstar {} => PathBuf::new(),
-            ModLoaderKind::Shimloader {} => PathBuf::new(),
-            ModLoaderKind::Lovely {} => PathBuf::new(),
-            ModLoaderKind::ReturnOfModding { .. } => ["ReturnOfModding", "config"].iter().collect(),
+            ModLoaderKind::BepInEx { .. } => "BepInEx/config",
+            ModLoaderKind::MelonLoader { .. } => ".",
+            ModLoaderKind::GDWeave {} => "GDWeave/configs",
+            ModLoaderKind::Northstar {} => ".",
+            ModLoaderKind::Shimloader {} => ".",
+            ModLoaderKind::Lovely {} => ".",
+            ModLoaderKind::ReturnOfModding { .. } => "ReturnOfModding/config",
         }
+        .into()
     }
 }
 
