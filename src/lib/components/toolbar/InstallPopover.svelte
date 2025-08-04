@@ -4,13 +4,12 @@
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { Popover, Progress } from 'bits-ui';
 	import { onDestroy, onMount } from 'svelte';
-	import Spinner from '../ui/Spinner.svelte';
 	import Icon from '@iconify/svelte';
 	import { fade, fly, scale } from 'svelte/transition';
-	import { expoInOut, expoOut, quadOut } from 'svelte/easing';
+	import { expoInOut, quadOut } from 'svelte/easing';
 	import { dropIn, dropOut } from '$lib/transitions';
-	import { Spring, Tween } from 'svelte/motion';
-	import IconButton from '../ui/IconButton.svelte';
+	import { Tween } from 'svelte/motion';
+	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import * as api from '$lib/api';
 
 	let shown = $state(false);

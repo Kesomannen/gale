@@ -25,21 +25,26 @@ pub enum UseLinks {
 }
 
 pub fn copy_dir(
-    src: &Path,
-    dest: &Path,
+    src: impl AsRef<Path>,
+    dest: impl AsRef<Path>,
     overwrite: Overwrite,
     use_links: UseLinks,
 ) -> eyre::Result<()> {
+    let dest = dest.as_ref();
+
     fs::create_dir_all(dest).fs_context("creating root directory", dest)?;
     copy_contents(src, dest, overwrite, use_links)
 }
 
 pub fn copy_contents(
-    src: &Path,
-    dest: &Path,
+    src: impl AsRef<Path>,
+    dest: impl AsRef<Path>,
     overwrite: Overwrite,
     use_links: UseLinks,
 ) -> eyre::Result<()> {
+    let src = src.as_ref();
+    let dest = dest.as_ref();
+
     for entry in src.read_dir().fs_context("reading directory", src)? {
         let entry = entry?;
         let entry_path = entry.path();

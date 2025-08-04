@@ -8,7 +8,7 @@ use tracing::{info, warn};
 use which::which;
 
 use crate::{
-    game::{Game, Platform},
+    game::{platform::Platform, Game},
     prefs::Prefs,
 };
 
@@ -116,7 +116,7 @@ fn epic_command(game: Game) -> Result<Command> {
         .ok_or_eyre("open returned no commands to try")
 }
 
-pub fn game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf> {
+pub fn locate_game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf> {
     match platform {
         Some(Platform::Steam) => steam_game_dir(game),
         #[cfg(windows)]
@@ -178,7 +178,7 @@ fn xbox_game_dir(game: Game) -> Result<PathBuf> {
 }
 
 #[cfg(windows)]
-fn epic_game_dir(game: &crate::game::GameData<'_>) -> Result<PathBuf, eyre::Error> {
+fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
     use eyre::Context;
     use serde::Deserialize;
 

@@ -6,7 +6,7 @@ use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{
-    game::{self, Platform},
+    game::{self, platform::Platform},
     prefs::{GamePrefs, Prefs},
     profile::{
         export::modpack::ModpackArgs, launch::LaunchMode, LocalMod, ProfileMod, ProfileModKind,

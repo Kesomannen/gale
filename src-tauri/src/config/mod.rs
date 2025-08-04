@@ -8,12 +8,12 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
-use tracing::debug;
 use rayon::prelude::*;
+use tracing::debug;
 use walkdir::WalkDir;
 
 use crate::{
-    game::{ModLoader, ModLoaderKind},
+    game::mod_loader::{ModLoader, ModLoaderKind},
     profile::Profile,
     util::error::IoResultExt,
 };
@@ -113,7 +113,7 @@ impl Profile {
 
 impl ConfigCache {
     pub fn refresh(&mut self, root: &Path, mod_loader: &ModLoader) {
-        let config_dir = root.join(mod_loader.config_path());
+        let config_dir = root.join(mod_loader.mod_config_dir());
 
         let files = WalkDir::new(&config_dir)
             .into_iter()

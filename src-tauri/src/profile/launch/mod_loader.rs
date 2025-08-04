@@ -8,7 +8,7 @@ use eyre::{bail, Context, OptionExt, Result};
 use tracing::{info, warn};
 
 use crate::{
-    game::{ModLoader, ModLoaderKind},
+    game::mod_loader::{ModLoader, ModLoaderKind},
     util::error::IoResultExt,
 };
 

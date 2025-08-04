@@ -9,6 +9,8 @@
 	import Icon from '@iconify/svelte';
 	import * as api from '$lib/api';
 	import { onMount } from 'svelte';
+	import ColorPref from '../prefs/ColorPref.svelte';
+	import { invoke } from '@tauri-apps/api/core';
 
 	type Props = {
 		open?: boolean;
@@ -24,7 +26,7 @@
 	let prefs: Prefs | null = $state(null);
 
 	onMount(async () => {
-		if (await api.state.isFirstRun()) {
+		if ((await api.state.isFirstRun()) || true) {
 			open = true;
 			prefs = await api.prefs.get();
 		}
@@ -32,7 +34,7 @@
 
 	async function onSelectGame() {
 		try {
-			importData = await api.profile.import.getR2modmanInfo(null);
+			importData = await invoke<R2ImportData | null>('get_r2modman_info');
 		} catch {
 			importData = null;
 		}
@@ -80,19 +82,27 @@
 				Let's make sure your settings are to your liking.
 				<br />
 				You can always edit these later by going to <Icon icon="mdi:settings" class="mb-1 inline" />
-				<b>Settings</b>.
+				<b>Manager settings</b>.
 			</p>
 
 			<div class="mt-3 flex flex-col gap-1">
-				{#if prefs !== null}
+				{#if prefs}
 					<PathPref
 						label="Gale data folder"
 						type="dir"
 						value={prefs.dataDir}
 						set={set((value, prefs) => (prefs.dataDir = value as string))}
 					>
-						The folder where mods and profiles are stored.
+						The folder where mods and profiles are stored. Make sure you have plenty of space on its
+						device.
 					</PathPref>
+
+					<ColorPref category="primary" default="slate">
+						The main color of the interface, including backgrounds and text.</ColorPref
+					>
+					<ColorPref category="accent" default="green">
+						The color of highlighted elements, such as buttons and checkboxes</ColorPref
+					>
 				{/if}
 			</div>
 

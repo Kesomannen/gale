@@ -12,7 +12,7 @@ use tracing::{debug, info, warn};
 
 use crate::{
     db::{self, Db},
-    game::{self, Platform},
+    game::{self, platform::Platform},
     logger,
     profile::launch::LaunchMode,
     state::ManagerExt,

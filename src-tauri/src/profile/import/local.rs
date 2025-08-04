@@ -12,7 +12,7 @@ use uuid::Uuid;
 use zip::ZipArchive;
 
 use crate::{
-    game::{ModLoader, ModLoaderKind},
+    game::mod_loader::{ModLoader, ModLoaderKind},
     prefs::Prefs,
     profile::{install::InstallOptions, LocalMod, Profile, ProfileMod},
     state::ManagerExt,

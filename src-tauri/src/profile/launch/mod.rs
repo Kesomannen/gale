@@ -41,9 +41,9 @@ pub enum LaunchMode {
 
 impl ManagedGame {
     pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
-        let game_dir = game_dir(self.game, prefs)?;
-        if let Err(err) = self.link_files(&game_dir) {
-            warn!("failed to link files: {:#}", err);
+        let game_dir = locate_game_dir(self.game, prefs)?;
+        if let Err(err) = self.copy_required_files(&game_dir) {
+            warn!("failed to copy required files to game directory: {:#}", err);
         }
 
         let (launch_mode, command) = self.launch_command(&game_dir, prefs)?;
@@ -73,6 +73,8 @@ impl ManagedGame {
         platform = platform.or_else(|| self.game.platforms.iter().next());
 
         let mut command = match (&launch_mode, platform) {
+            // If the setting is `Launcher` and we have a platform, use the platform-specific
+            // launch command (if there is one). Otherwise, fall back to direct execution.
             (LaunchMode::Launcher, Some(platform)) => {
                 platform::launch_command(game_dir, platform, self.game, prefs).transpose()
             }
@@ -80,55 +82,53 @@ impl ManagedGame {
         }
         .unwrap_or_else(|| exe_path(game_dir).map(Command::new))?;
 
-        let profile = self.active_profile();
-
-        mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
+        mod_loader::add_args(
+            &mut command,
+            &self.active_profile().path,
+            &self.game.mod_loader,
+        )?;
 
         if let Some(custom_args) = custom_args {
             command.args(custom_args);
         }
 
-        /*
-        if let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
-            command.env("WINEDLLOVERRIDES", format!("{}=n,b", proxy_dll));
-        }
-        */
-
         Ok((launch_mode, command))
     }
 
-    fn link_files(&self, game_dir: &Path) -> Result<()> {
+    fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
+        const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
 
-        let files = self
+        let entries = self
             .active_profile()
             .path
             .read_dir()?
             .filter_map(|entry| entry.ok())
-            .filter(|entry| 
-                // dotnet is bepinex il2cpp libraries
-                entry.file_type().is_ok_and(|ty| ty.is_file()) || entry.file_name() == "dotnet"
-            )
             .filter(|entry| {
                 let name = entry.file_name();
-                EXCLUDES.iter().all(|exclude| name != *exclude)
+
+                if EXCLUDES.iter().any(|exclude| name != *exclude) {
+                    return false;
+                }
+
+                let is_file = entry.file_type().is_ok_and(|ty| ty.is_file());
+                let is_included_dir = INCLUDE_DIRS.iter().any(|dir| *dir == name);
+
+                return is_file || is_included_dir;
             });
 
-        for file in files {
+        for entry in entries {
             info!(
                 "copying {} to game directory",
-                file.file_name().to_string_lossy()
+                entry.file_name().to_string_lossy()
             );
 
-            if file.file_type().is_ok_and(|ty| ty.is_file()) {
-                fs::copy(file.path(), game_dir.join(file.file_name()))?;
+            let to_path = game_dir.join(entry.file_name());
+
+            if entry.file_type()?.is_file() {
+                fs::copy(entry.path(), to_path)?;
             } else {
-                util::fs::copy_dir(
-                    &file.path(),
-                    &game_dir.join(file.file_name()),
-                    Overwrite::Yes,
-                    UseLinks::No,
-                )?;
+                util::fs::copy_dir(entry.path(), to_path, Overwrite::Yes, UseLinks::No)?;
             }
         }
 
@@ -165,7 +165,7 @@ fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<
     Ok(())
 }
 
-fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
+fn locate_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     let game_prefs = prefs.game_prefs.get(&*game.slug);
 
     let path = if let Some(GamePrefs {
@@ -173,14 +173,23 @@ fn game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
         ..
     }) = game_prefs
     {
-        info!("using game path override at {}", path.display());
+        info!("using game directory override at {}", path.display());
         path.to_path_buf()
     } else {
         let platform = game_prefs
             .and_then(|prefs| prefs.platform)
             .or_else(|| game.platforms.iter().next());
 
-        platform::game_dir(platform, game)?
+        let path = platform::locate_game_dir(platform, game)?;
+        info!(
+            "found game directory via platform ({}): {}",
+            match &platform {
+                Some(platform) => platform.as_ref(),
+                None => "none",
+            },
+            path.display()
+        );
+        path
     };
 
     ensure!(

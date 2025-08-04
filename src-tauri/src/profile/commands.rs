@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use super::{actions::ActionResult, Dependant, Profile};
 use crate::{
-    game::{self, Game, Platform},
+    game::{self, platform::Platform, Game},
     profile::{self},
     state::ManagerExt,
     thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
@@ -34,7 +34,7 @@ impl From<Game> for FrontendGame {
             name: value.name,
             slug: &*value.slug,
             popular: value.popular,
-            mod_loader: value.mod_loader.to_str(),
+            mod_loader: value.mod_loader.as_str(),
             platforms,
         }
     }

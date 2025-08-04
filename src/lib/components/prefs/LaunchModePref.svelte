@@ -6,18 +6,24 @@
 	import { selectItems } from '$lib/util';
 	import Info from '$lib/components/ui/Info.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { toSentenceCase } from 'js-convert-case';
+	import { toHeaderCase, toSentenceCase } from 'js-convert-case';
 	import games from '$lib/state/game.svelte';
 
 	type Props = {
+		platform: string;
 		value: LaunchMode;
 		set: (value: LaunchMode) => Promise<void>;
 	};
 
-	let { value = $bindable(), set }: Props = $props();
+	let { platform, value = $bindable(), set }: Props = $props();
 
 	let instances = $state(value.content?.instances ?? 1);
 	let intervalSecs = $state(value.content?.intervalSecs ?? 10);
+
+	let items = $derived([
+		{ value: 'launcher', label: `Platform (${toHeaderCase(platform)})` },
+		{ value: 'direct', label: 'Direct' }
+	]);
 
 	async function onValueChange(newValue: string) {
 		value.type = newValue as 'launcher' | 'direct';
@@ -55,7 +61,7 @@
 	<Select
 		type="single"
 		triggerClass="grow"
-		items={selectItems(['launcher', 'direct'], toSentenceCase)}
+		{items}
 		value={value?.type ?? 'direct'}
 		disabled={platforms.length === 0}
 		{onValueChange}

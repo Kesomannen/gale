@@ -16,7 +16,7 @@ use uuid::Uuid;
 use crate::{
     config::ConfigCache,
     db::{self, Db},
-    game::{self, Game, ModLoader},
+    game::{self, mod_loader::ModLoader, Game},
     prefs::Prefs,
     state::ManagerExt,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
@@ -292,8 +292,13 @@ impl Profile {
     }
 
     fn log_path(&self) -> Result<PathBuf> {
+        let mod_loader = &self.game.mod_loader;
+        let relative = mod_loader
+            .log_path()
+            .ok_or_else(|| eyre!("log file is unsupported for {}", mod_loader.as_str()))?;
+
         self.path
-            .join(self.game.mod_loader.log_path())
+            .join(relative)
             .exists_or_none()
             .ok_or_eyre("no log file found")
     }

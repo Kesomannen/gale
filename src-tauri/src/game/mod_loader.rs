@@ -1,179 +1,8 @@
-use std::{
-    borrow::Cow,
-    hash::{self, Hash},
-    path::PathBuf,
-    sync::LazyLock,
-};
+use std::path::PathBuf;
 
-use heck::{ToKebabCase, ToPascalCase};
 use serde::{Deserialize, Serialize};
-use strum::IntoEnumIterator;
-use strum_macros::{Display, EnumIter};
 
-use crate::profile::install::{
-    BepinexInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, PackageInstaller,
-    ShimloaderInstaller, Subdir, SubdirInstaller,
-};
-
-const GAMES_JSON: &str = include_str!("../games.json");
-
-static GAMES: LazyLock<Vec<GameData<'static>>> =
-    LazyLock::new(|| serde_json::from_str(GAMES_JSON).unwrap());
-
-pub type Game = &'static GameData<'static>;
-
-pub fn all() -> impl Iterator<Item = Game> {
-    GAMES.iter()
-}
-
-pub fn from_slug(slug: &str) -> Option<Game> {
-    GAMES.iter().find(|game| game.slug == slug)
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-struct JsonGame<'a> {
-    name: &'a str,
-    #[serde(default)]
-    slug: Option<&'a str>,
-    #[serde(default)]
-    popular: bool,
-    #[serde(default)]
-    server: bool,
-    #[serde(default, rename = "r2dirName")]
-    r2_dir_name: Option<&'a str>,
-    #[serde(borrow)]
-    mod_loader: ModLoader<'a>,
-    #[serde(borrow, default)]
-    platforms: Platforms<'a>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct Platforms<'a> {
-    pub steam: Option<Steam>,
-    #[serde(borrow)]
-    pub epic_games: Option<EpicGames<'a>>,
-    pub oculus: Option<Oculus>,
-    pub origin: Option<Origin>,
-    #[serde(borrow)]
-    pub xbox_store: Option<XboxStore<'a>>,
-}
-
-impl Platforms<'_> {
-    pub fn has(&self, platform: Platform) -> bool {
-        match platform {
-            Platform::Steam => self.steam.is_some(),
-            Platform::EpicGames => self.epic_games.is_some(),
-            Platform::Oculus => self.oculus.is_some(),
-            Platform::Origin => self.origin.is_some(),
-            Platform::XboxStore => self.xbox_store.is_some(),
-        }
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = Platform> + '_ {
-        Platform::iter().filter(|platform| self.has(*platform))
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase", from = "JsonGame")]
-pub struct GameData<'a> {
-    pub name: &'a str,
-    pub slug: Cow<'a, str>,
-    pub r2_dir_name: Cow<'a, str>,
-    pub popular: bool,
-    pub server: bool,
-    pub mod_loader: ModLoader<'a>,
-    pub platforms: Platforms<'a>,
-}
-
-impl<'a> From<JsonGame<'a>> for GameData<'a> {
-    fn from(value: JsonGame<'a>) -> Self {
-        let JsonGame {
-            name,
-            slug,
-            popular,
-            server,
-            r2_dir_name,
-            mod_loader,
-            platforms,
-        } = value;
-
-        let slug = match slug {
-            Some(slug) => Cow::Borrowed(slug),
-            None => Cow::Owned(name.to_kebab_case()),
-        };
-
-        let r2_dir_name = match r2_dir_name {
-            Some(name) => Cow::Borrowed(name),
-            None => Cow::Owned(slug.to_pascal_case()),
-        };
-
-        Self {
-            name,
-            slug,
-            r2_dir_name,
-            popular,
-            server,
-            mod_loader,
-            platforms,
-        }
-    }
-}
-
-impl PartialEq for GameData<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.slug == other.slug
-    }
-}
-
-impl Eq for GameData<'_> {}
-
-impl Hash for GameData<'_> {
-    fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        self.slug.hash(state);
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, Display, EnumIter)]
-#[serde(rename_all = "camelCase")]
-pub enum Platform {
-    #[default]
-    Steam,
-    EpicGames,
-    Oculus,
-    Origin,
-    XboxStore,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Steam {
-    pub id: u32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct EpicGames<'a> {
-    #[serde(default)]
-    pub identifier: Option<&'a str>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Oculus {}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Origin {}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct XboxStore<'a> {
-    #[serde(default)]
-    pub identifier: Option<&'a str>,
-}
+use crate::profile::install::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -205,7 +34,7 @@ pub enum ModLoaderKind<'a> {
 }
 
 impl ModLoader<'_> {
-    pub fn to_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => "BepInEx",
             ModLoaderKind::MelonLoader { .. } => "MelonLoader",
@@ -236,19 +65,19 @@ impl ModLoader<'_> {
         }
     }
 
-    pub fn log_path(&self) -> &str {
+    pub fn log_path(&self) -> Option<&str> {
         match &self.kind {
-            ModLoaderKind::BepInEx { .. } => "BepInEx/LogOutput.log",
-            ModLoaderKind::MelonLoader { .. } => "MelonLoader/Latest.log",
-            ModLoaderKind::GDWeave {} => "GDWeave/GDWeave.log",
-            ModLoaderKind::Northstar {} => "",
-            ModLoaderKind::Shimloader {} => "",
-            ModLoaderKind::Lovely {} => "",
-            ModLoaderKind::ReturnOfModding { .. } => "",
+            ModLoaderKind::BepInEx { .. } => Some("BepInEx/LogOutput.log"),
+            ModLoaderKind::MelonLoader { .. } => Some("MelonLoader/Latest.log"),
+            ModLoaderKind::GDWeave {} => Some("GDWeave/GDWeave.log"),
+            ModLoaderKind::Northstar {} => None,
+            ModLoaderKind::Shimloader {} => None,
+            ModLoaderKind::Lovely {} => None,
+            ModLoaderKind::ReturnOfModding { .. } => None,
         }
     }
 
-    pub fn config_path(&self) -> PathBuf {
+    pub fn mod_config_dir(&self) -> PathBuf {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => ["BepInEx", "config"].iter().collect(),
             ModLoaderKind::MelonLoader { .. } => PathBuf::new(),

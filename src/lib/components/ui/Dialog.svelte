@@ -51,7 +51,7 @@
 	}}
 >
 	<Dialog.Portal>
-		<Dialog.Overlay forceMount class="pointer-events-none">
+		<Dialog.Overlay forceMount class="pointer-events-none" data-tauri-drag-region={!canClose}>
 			{#snippet child({ props, open })}
 				{#if open}
 					<div

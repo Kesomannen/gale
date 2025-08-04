@@ -174,6 +174,7 @@
 		<SmallHeading>Launch</SmallHeading>
 
 		<LaunchModePref
+			platform={gamePrefs.platform ?? games.active?.platforms[0] ?? 'Unknown'}
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>

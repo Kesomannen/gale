@@ -23,7 +23,7 @@ pub fn get_launch_args(app: AppHandle) -> Result<String> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 
-    let game_dir = super::game_dir(manager.active_game, &prefs)?;
+    let game_dir = super::locate_game_dir(manager.active_game, &prefs)?;
     let (_, command) = manager.active_game().launch_command(&game_dir, &prefs)?;
     let text = command
         .get_args()
@@ -38,7 +38,7 @@ pub fn open_game_dir(app: AppHandle) -> Result<()> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 
-    let path = super::game_dir(manager.active_game, &prefs)?;
+    let path = super::locate_game_dir(manager.active_game, &prefs)?;
     open::that(path).context("failed to open directory")?;
 
     Ok(())
