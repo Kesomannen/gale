@@ -306,7 +306,7 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
             }
             Err(InstallError::Err(_)) => {
                 rollback_batch(&batch, app, i)
-                    .unwrap_or_else(|err| warn!("failed to rollback failed installation: {}", err));
+                    .unwrap_or_else(|err| warn!("failed to rollback failed installation: {err}",));
 
                 result = result
                     .wrap_err_with(|| format!("failed to install {}", install.ident))
@@ -326,7 +326,7 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
     match batch.options.cancel_behavior {
         CancelBehavior::Individual => Ok(()),
         CancelBehavior::Prevent => {
-            warn!("rolling back batch with CancelBehavior::Prevent!");
+            warn!("tried to roll back batch with CancelBehavior::Prevent!");
 
             Ok(())
         }
@@ -339,7 +339,7 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
                 profile
                     .force_remove_mod(installed.uuid())
                     .unwrap_or_else(|err| {
-                        warn!("failed to delete mod after cancelled installation: {}", err);
+                        warn!("failed to delete {}: {err}", installed.ident);
                     });
             }
 
