@@ -17,12 +17,10 @@ use crate::{
 #[derive(Debug, Deserialize, Clone)]
 #[serde(tag = "event", content = "payload", rename_all = "camelCase")]
 enum ServerMessage {
-    #[serde(rename_all = "camelCase")]
     ProfileUpdated {
         metadata: super::SyncProfileMetadata,
     },
 
-    #[serde(rename_all = "camelCase")]
     ProfileDeleted {
         id: String,
     },
