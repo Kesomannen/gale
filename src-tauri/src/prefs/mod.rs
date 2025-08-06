@@ -265,7 +265,7 @@ impl Prefs {
                 path.pop();
             }
 
-            manager.save_all(app.db())?;
+            manager.save_all(app)?;
         }
 
         self.data_dir.set(value.data_dir.value)?;

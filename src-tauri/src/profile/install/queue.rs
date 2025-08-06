@@ -343,7 +343,7 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
                     });
             }
 
-            profile.save(app.db())?;
+            profile.save(&app, true)?;
             Ok(())
         }
     }
@@ -399,7 +399,7 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
 
     install.clone().insert_into(profile)?;
 
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     emit(
         InstallEvent::AddProgress {
@@ -532,7 +532,7 @@ fn install_from_download(
     installer.install(&cache_path, package_name, profile)?;
     install.clone().insert_into(profile)?;
 
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     emit(InstallEvent::AddProgress { mods: 1, bytes: 0 }, app);
 

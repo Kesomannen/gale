@@ -11,7 +11,7 @@
 		description: string;
 		commandName: string;
 		positive?: boolean;
-		onExecute: () => void;
+		onExecute?: () => void;
 		onCancel: () => void;
 	};
 
@@ -54,7 +54,7 @@
 		await invoke('force_' + commandName + 's', { uuids });
 		open = false;
 		dependants = [];
-		onExecute();
+		onExecute?.();
 	}
 </script>
 

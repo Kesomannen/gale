@@ -23,7 +23,7 @@ pub fn ignore_update(version_uuid: Uuid, app: AppHandle) -> Result<()> {
 
     let profile = manager.active_profile_mut();
     profile.ignored_updates.insert(version_uuid);
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     Ok(())
 }

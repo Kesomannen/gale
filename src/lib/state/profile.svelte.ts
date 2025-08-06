@@ -1,8 +1,6 @@
 import * as api from '$lib/api';
-import type { ProfileInfo } from '$lib/types';
-import { listen } from '@tauri-apps/api/event';
+import type { ProfileInfo, ManagedGameInfo } from '$lib/types';
 import auth from './auth.svelte';
-import { pushInfoToast } from '$lib/toast';
 
 class ProfilesState {
 	list: ProfileInfo[] = $state([]);
@@ -18,30 +16,37 @@ class ProfilesState {
 		return this.active.sync.owner.discordId != auth.user.discordId;
 	});
 
-	refresh = async () => {
-		const info = await api.profile.getInfo();
-
+	update = async (info: ManagedGameInfo) => {
 		this.list = info.profiles;
 		this.activeId = info.activeId;
-	};
+	}
+
+	updateOne = async (info: ProfileInfo) => {
+		const index = this.list.findIndex(profile => profile.id == info.id);
+		if (index === -1) {
+			this.list.push(info);
+		} else {
+			this.list[index] = info;
+		}
+	}
+
+	refresh = async () => {
+		const info = await api.profile.getInfo();
+		profiles.update(info);
+	}
 
 	setActive = async (index: number) => {
 		await api.profile.setActive(index);
-		await this.refresh();
 
 		const sync = this.active?.sync;
 		if (!sync) return;
 
 		await api.profile.sync.fetch();
-		await this.refresh();
 	};
 }
 
 const profiles = new ProfilesState();
 
-listen('profiles_changed', async () => {
-	pushInfoToast({ message: 'A change was pushed to the sync profile!' });
-	profiles.refresh();
-});
+profiles.refresh();
 
 export default profiles;

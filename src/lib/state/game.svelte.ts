@@ -20,7 +20,6 @@ class GamesState {
 		this.list = info.all;
 
 		this.#refreshCategories();
-		profiles.refresh();
 	};
 
 	#refreshCategories = async () => {

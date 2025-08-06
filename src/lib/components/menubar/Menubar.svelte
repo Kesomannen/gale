@@ -214,9 +214,7 @@
 
 		if (path === null) return;
 		await api.profile.import.localMod(path);
-		await profiles.refresh();
-
-		pushInfoToast({
+		await pushInfoToast({
 			message: 'Imported local mod into profile.'
 		});
 	}
@@ -244,9 +242,7 @@
 
 	async function setAllModsState(enable: boolean) {
 		let count = await api.profile.setAllModsState(enable);
-		await profiles.refresh();
-
-		pushInfoToast({
+		await pushInfoToast({
 			message: `${enable ? 'Enabled' : 'Disabled'} ${count} mods.`
 		});
 	}
@@ -279,7 +275,6 @@
 			throw e;
 		}
 
-		await profiles.refresh();
 		profileOperationInProgress = false;
 		profileOperationOpen = false;
 	}
@@ -301,8 +296,6 @@
 		pushInfoToast({
 			message: `Uninstalled ${count} disabled mods.`
 		});
-
-		await profiles.refresh();
 	}
 
 	async function copyLaunchArgs() {
@@ -373,9 +366,7 @@
 			}
 
 			await api.profile.import.localModBase64(base64);
-			await profiles.refresh();
-
-			pushInfoToast({
+			await pushInfoToast({
 				message: 'Imported local mod into profile.'
 			});
 		}

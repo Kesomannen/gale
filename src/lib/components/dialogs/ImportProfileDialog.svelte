@@ -106,9 +106,7 @@
 		data = null;
 		importAll = false;
 
-		await profiles.refresh();
-
-		pushInfoToast({ message: `Imported profile ${name}.` });
+		await pushInfoToast({ message: `Imported profile ${name}.` });
 	}
 
 	function isAvailable(name: string) {

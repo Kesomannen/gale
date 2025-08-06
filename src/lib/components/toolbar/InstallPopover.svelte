@@ -69,8 +69,6 @@
 
 						taskText = 'Finishing up...';
 						shownProgress.set(1, { duration: 250, easing: expoInOut });
-					} else {
-						profiles.refresh();
 					}
 
 					hideTimeout = setTimeout(() => {
@@ -110,10 +108,6 @@
 				case 'addProgress':
 					completedMods += event.payload.mods;
 					completedBytes += event.payload.bytes;
-
-					if (event.payload.mods > 0) {
-						profiles.refresh();
-					}
 					break;
 
 				case 'setTask':

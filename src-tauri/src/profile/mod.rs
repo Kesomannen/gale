@@ -9,7 +9,7 @@ use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, eyre, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use tracing::{info, warn};
 use uuid::Uuid;
 
@@ -303,9 +303,38 @@ impl Profile {
             .ok_or_eyre("no log file found")
     }
 
-    pub fn save(&self, db: &Db) -> Result<()> {
-        db.save_profile(self)
+    fn to_frontend(&self) -> FrontendProfile {
+        FrontendProfile {
+            id: self.id,
+            name: self.name.clone(),
+            mod_count: self.mods.len(),
+            sync: self.sync.clone(),
+        }
     }
+
+    pub fn save(&self, app: &AppHandle, notify_frontend: bool) -> Result<()> {
+        if notify_frontend {
+            app.emit("profile_changed", self.to_frontend())?;
+        }
+
+        app.db().save_profile(self)
+    }
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendManagedGame {
+    active_id: i64,
+    profiles: Vec<FrontendProfile>,
+}
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendProfile {
+    id: i64,
+    name: String,
+    mod_count: usize,
+    sync: Option<sync::SyncProfileData>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -448,8 +477,21 @@ impl ManagedGame {
         Ok(())
     }
 
-    pub fn save(&self, db: &Db) -> Result<()> {
-        db.save_game(self)
+    pub fn save(&self, app: &AppHandle) -> Result<()> {
+        app.emit("game_changed", self.to_frontend())?;
+
+        app.db().save_game(self)
+    }
+
+    fn to_frontend(&self) -> FrontendManagedGame {
+        FrontendManagedGame {
+            active_id: self.active_profile_id,
+            profiles: self
+                .profiles
+                .iter()
+                .map(|profile| profile.to_frontend())
+                .collect(),
+        }
     }
 }
 
@@ -522,7 +564,7 @@ impl ModManager {
         }
 
         manager.ensure_game(manager.active_game, true, prefs, db)?;
-        manager.save_all(db)?;
+        db.save_all(&manager)?;
 
         Ok(manager)
     }
@@ -673,19 +715,21 @@ impl ModManager {
         Ok(())
     }
 
-    pub fn save_all(&self, db: &Db) -> Result<()> {
-        db.save_all(self)
+    pub fn save_all(&self, app: &AppHandle) -> Result<()> {
+        app.emit("game_changed", self.active_game().to_frontend())?;
+
+        app.db().save_all(self)
     }
 
-    pub fn save(&self, db: &Db) -> Result<()> {
-        db.save_manager(self)
+    pub fn save(&self, app: &AppHandle) -> Result<()> {
+        app.db().save_manager(self)
     }
 
-    pub fn save_active_game(&self, db: &Db) -> Result<()> {
-        self.active_game().save(db)
+    pub fn save_active_game(&self, app: &AppHandle) -> Result<()> {
+        self.active_game().save(app)
     }
 
-    pub fn save_active_profile(&self, db: &Db) -> Result<()> {
-        self.active_profile().save(db)
+    pub fn save_active_profile(&self, app: &AppHandle, notify_frontend: bool) -> Result<()> {
+        self.active_profile().save(app, notify_frontend)
     }
 }

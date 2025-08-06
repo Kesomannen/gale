@@ -25,7 +25,6 @@
 
 	async function createProfile() {
 		await api.profile.create(name, override ? path : null);
-		await profiles.refresh();
 		open = false;
 	}
 

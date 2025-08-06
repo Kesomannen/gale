@@ -122,7 +122,6 @@
 
 		if (response.type == 'done') {
 			selectedMod = null;
-			await profiles.refresh();
 		} else {
 			removeDependants.openFor(mod, response.dependants);
 		}
@@ -310,7 +309,6 @@
 	description="The following mods depend on %s and will likely not work if it is uninstalled:"
 	commandName="remove_mod"
 	onExecute={() => {
-		profiles.refresh();
 		selectedMod = null;
 	}}
 	onCancel={refresh}
@@ -322,7 +320,6 @@
 	verb="Disable"
 	description="The following mods depend on %s and will likely not work if it is disabled:"
 	commandName="toggle_mod"
-	onExecute={profiles.refresh}
 	onCancel={refresh}
 />
 
@@ -332,7 +329,6 @@
 	verb="Enable"
 	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled:"
 	commandName="toggle_mod"
-	onExecute={profiles.refresh}
 	onCancel={refresh}
 	positive
 />

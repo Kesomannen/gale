@@ -30,7 +30,6 @@
 		open = false;
 
 		await api.profile.sync.clone(profile.id, profile.name);
-		await profiles.refresh();
 	}
 
 	async function deleteProfile(profile: ListedSyncProfile) {
@@ -45,7 +44,6 @@
 		syncProfiles.splice(index, 1);
 
 		pushInfoToast({ message: 'Deleted sync profile from database.' });
-		await profiles.refresh();
 	}
 </script>
 

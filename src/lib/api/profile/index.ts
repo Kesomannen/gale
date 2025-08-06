@@ -4,7 +4,7 @@ import type {
 	GameInfo,
 	ModActionResponse,
 	ProfileQuery,
-	ProfilesInfo,
+	ManagedGameInfo,
 	QueryModsArgs
 } from '$lib/types';
 
@@ -18,7 +18,7 @@ export * as update from './update';
 export const getGameInfo = () => invoke<GameInfo>('get_game_info');
 export const favoriteGame = (slug: string) => invoke('favorite_game', { slug });
 export const setActiveGame = (slug: string) => invoke('set_active_game', { slug });
-export const getInfo = () => invoke<ProfilesInfo>('get_profile_info');
+export const getInfo = () => invoke<ManagedGameInfo>('get_profile_info');
 export const setActive = (index: number) => invoke('set_active_profile', { index });
 export const query = (args: QueryModsArgs) => invoke<ProfileQuery>('query_profile', { args });
 export const isModInstalled = (uuid: string) => invoke<boolean>('is_mod_installed', { uuid });

@@ -54,7 +54,6 @@
 
 		try {
 			await api.profile.import.r2modman(importData.path, include);
-			profileState.refresh();
 
 			success = true;
 		} finally {

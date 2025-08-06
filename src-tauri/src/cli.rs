@@ -94,7 +94,7 @@ impl Cli {
         }
 
         if game.is_some() || profile.is_some() {
-            manager.save_all(app.db())?;
+            manager.save_all(app)?;
         }
 
         if let Some(path) = install {

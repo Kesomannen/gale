@@ -110,7 +110,7 @@ pub async fn import_local_mod(
 
     profile.mods.push(ProfileMod::new_local(local_mod));
 
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     Ok(())
 }

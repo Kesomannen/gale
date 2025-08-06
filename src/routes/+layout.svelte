@@ -15,12 +15,17 @@
 	import Navbar from '$lib/components/misc/Navbar.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { updateBanner } from '$lib/state/misc.svelte';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+	import type { ProfileInfo, ManagedGameInfo } from '$lib/types';
 
 	type Props = {
 		children?: Snippet;
 	};
 
 	let { children }: Props = $props();
+
+	let unlistenProfiles: UnlistenFn | null;
+	let unlistenGames: UnlistenFn | null;
 
 	onMount(() => {
 		refreshFont();
@@ -36,6 +41,19 @@
 			profiles.active;
 			updateBanner.threshold = 0;
 		});
+
+		listen<ProfileInfo>('profile_changed', (evt) => {
+			profiles.updateOne(evt.payload);
+		}).then((callback) => (unlistenProfiles = callback));
+
+		listen<ManagedGameInfo>('game_changed', (evt) => {
+			profiles.update(evt.payload);
+		}).then((callback) => (unlistenGames = callback));
+
+		return () => {
+			unlistenProfiles?.();
+			unlistenGames?.();
+		};
 	});
 </script>
 

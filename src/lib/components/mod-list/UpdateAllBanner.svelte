@@ -8,7 +8,6 @@
 	import * as api from '$lib/api';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import profiles from '$lib/state/profile.svelte';
 	import { updateBanner } from '$lib/state/misc.svelte';
 
 	type Props = {
@@ -36,7 +35,6 @@
 		dialogOpen = false;
 
 		await api.profile.update.mods(uuids, true);
-		await profiles.refresh();
 	}
 </script>
 

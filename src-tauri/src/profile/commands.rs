@@ -10,7 +10,7 @@ use uuid::Uuid;
 use super::{actions::ActionResult, Dependant, Profile};
 use crate::{
     game::{self, platform::Platform, Game},
-    profile::{self, sync::SyncProfileData},
+    profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
     util::cmd::Result,
@@ -77,7 +77,7 @@ pub fn favorite_game(slug: String, app: AppHandle) -> Result<()> {
     let managed_game = manager.ensure_game(game, false, &prefs, app.db())?;
     managed_game.favorite = !managed_game.favorite;
 
-    managed_game.save(app.db())?;
+    managed_game.save(&app)?;
 
     Ok(())
 }
@@ -95,45 +95,16 @@ pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
     app.sync_socket().subscribe(managed_game.active_profile());
 
     managed_game.update_window_title(&app)?;
-    manager.save_all(app.db())?;
+    manager.save_all(&app)?;
 
     Ok(())
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProfilesInfo {
-    profiles: Vec<ProfileInfo>,
-    active_id: i64,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProfileInfo {
-    id: i64,
-    name: String,
-    mod_count: usize,
-    sync: Option<SyncProfileData>,
-}
-
 #[command]
-pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
+pub fn get_profile_info(app: AppHandle) -> FrontendManagedGame {
     let manager = app.lock_manager();
-    let game = manager.active_game();
 
-    ProfilesInfo {
-        profiles: game
-            .profiles
-            .iter()
-            .map(|profile| ProfileInfo {
-                id: profile.id,
-                name: profile.name.clone(),
-                mod_count: profile.mods.len(),
-                sync: profile.sync.clone(),
-            })
-            .collect(),
-        active_id: game.active_profile_id,
-    }
+    manager.active_game().to_frontend()
 }
 
 #[command]
@@ -148,7 +119,7 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
 
     app.sync_socket().subscribe(game.active_profile());
 
-    game.save(app.db())?;
+    game.save(&app)?;
     game.update_window_title(&app)?;
 
     Ok(())
@@ -236,8 +207,8 @@ pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHand
 
     let profile = game.create_profile(name, override_path, app.db())?;
 
-    profile.save(app.db())?;
-    game.save(app.db())?;
+    profile.save(&app, false)?;
+    game.save(&app)?;
 
     game.update_window_title(&app)?;
 
@@ -250,7 +221,7 @@ pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
     let game = manager.active_game_mut();
 
     game.delete_profile(index, false, app.db())?;
-    game.save(app.db())?;
+    game.save(&app)?;
 
     game.update_window_title(&app)?;
 
@@ -265,7 +236,7 @@ pub fn rename_profile(name: String, app: AppHandle) -> Result<()> {
     let profile = game.active_profile_mut();
 
     profile.rename(name)?;
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     game.update_window_title(&app)?;
 
@@ -279,8 +250,8 @@ pub fn duplicate_profile(name: String, app: AppHandle) -> Result<()> {
 
     let profile = game.duplicate_profile(name, game.active_profile_id, app.db())?;
 
-    profile.save(app.db())?;
-    game.save(app.db())?;
+    profile.save(&app, false)?;
+    game.save(&app)?;
 
     game.update_window_title(&app)?;
 
@@ -312,7 +283,7 @@ where
     let response = action(profile, &thunderstore)?;
 
     if let ActionResult::Done = response {
-        profile.save(app.db())?;
+        profile.save(&app, true)?;
     }
 
     Ok(response)
@@ -327,7 +298,7 @@ pub fn force_remove_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
         profile.force_remove_mod(package_uuid)?;
     }
 
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     Ok(())
 }
@@ -350,7 +321,7 @@ pub fn set_all_mods_state(enable: bool, app: AppHandle) -> Result<usize> {
         profile.force_toggle_mod(uuid)?;
     }
 
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     Ok(count)
 }
@@ -373,7 +344,7 @@ pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
         profile.force_remove_mod(uuid)?;
     }
 
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     Ok(len)
 }
@@ -387,7 +358,7 @@ pub fn force_toggle_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
         profile.force_toggle_mod(package_uuid)?;
     }
 
-    profile.save(app.db())?;
+    profile.save(&app, true)?;
 
     Ok(())
 }

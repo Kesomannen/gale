@@ -240,10 +240,18 @@ fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
 }
 
 fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
-    app.lock_manager().save_active_profile(app.db())
+    app.lock_manager().save_active_profile(app, true)
 }
 
 impl ManagedGame {
+    fn target_profile_index(&self, name: &str) -> usize {
+        self.profiles
+            .iter()
+            .find_position(|profile| *profile.name > *name)
+            .map(|(i, _)| i)
+            .unwrap_or(self.profiles.len())
+    }
+
     pub fn create_profile(
         &mut self,
         name: String,
@@ -299,7 +307,7 @@ impl ManagedGame {
             "created profile",
         );
 
-        self.profiles.push(Profile {
+        let profile = Profile {
             id,
             name,
             path,
@@ -310,9 +318,12 @@ impl ManagedGame {
             linked_config: HashMap::new(),
             modpack: None,
             sync: None,
-        });
+        };
 
-        self.set_active_profile(self.profiles.len() - 1)
+        let index = self.target_profile_index(&profile.name);
+        self.profiles.insert(index, profile);
+
+        self.set_active_profile(index)
     }
 
     pub fn create_default_profile(&mut self, db: &Db) -> Result<()> {
@@ -341,8 +352,9 @@ impl ManagedGame {
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
 
-        if !self.profiles.is_empty() {
-            self.active_profile_id = self.profiles[0].id;
+        if !self.profiles.is_empty() && self.active_profile_id == id {
+            let new_index = (index - 1).clamp(0, self.profiles.len());
+            self.active_profile_id = self.profiles[new_index].id;
         }
 
         db.delete_profile(id)?;

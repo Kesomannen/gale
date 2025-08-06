@@ -4,7 +4,7 @@ use futures_util::{
     SinkExt, StreamExt,
 };
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tokio::sync::mpsc;
 use tokio_websockets::{MaybeTlsStream, WebSocketStream};
 use tracing::{debug, error, info, warn};
@@ -145,10 +145,8 @@ async fn read(app: AppHandle, mut receiver: SplitStream<WebSocket>) {
                     info.updated_at = metadata.updated_at;
                     info.owner = metadata.owner.clone();
 
-                    profile.save(app.db()).ok();
+                    profile.save(&app, true).ok();
                 }
-
-                app.emit("profiles_changed", ()).ok();
             }
             ServerMessage::ProfileDeleted { id } => {
                 info!("got sync profile delete event for {}", id);
@@ -158,10 +156,8 @@ async fn read(app: AppHandle, mut receiver: SplitStream<WebSocket>) {
                 for profile in sync_profiles_with_id(&mut manager, &id) {
                     profile.sync = None;
 
-                    profile.save(app.db()).ok();
+                    profile.save(&app, true).ok();
                 }
-
-                app.emit("profiles_changed", ()).ok();
             }
             ServerMessage::Error { message } => {
                 error!("got error from socket: {message}");

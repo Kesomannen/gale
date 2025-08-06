@@ -87,7 +87,7 @@ export type SyncImportData = {
 	manifest: ProfileManifest;
 };
 
-export type ProfilesInfo = {
+export type ManagedGameInfo = {
 	profiles: ProfileInfo[];
 	activeId: number;
 };

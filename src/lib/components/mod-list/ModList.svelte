@@ -1,8 +1,9 @@
 <script lang="ts">
-	import VirtualList from '$lib/components/ui/VirtualList.svelte';
 	import type { Mod, QueryModsArgsWithoutMax } from '$lib/types';
 	import type { Snippet } from 'svelte';
 	import games from '$lib/state/game.svelte';
+
+	const itemHeight = 66;
 
 	type Props = {
 		mods: Mod[];
@@ -22,9 +23,8 @@
 		item
 	}: Props = $props();
 
-	let listStart = $state(0);
 	let listEnd = $state(0);
-	let virtualList: VirtualList<Mod, string> | null = $state(null);
+	let list: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
 		if (listEnd > mods.length - 4 && mods.length === maxCount) {
@@ -34,7 +34,7 @@
 
 	$effect(() => {
 		queryArgs;
-		virtualList?.scrollTo(0);
+		list?.scrollTo(0, 0);
 	});
 
 	$effect(() => {
@@ -49,6 +49,15 @@
 			selected = null;
 		}
 	}
+
+	function onscroll() {
+		if (!list) return;
+
+		let scrollTop = list.scrollTop;
+		let visibleCount = Math.ceil(list.clientHeight / itemHeight);
+
+		listEnd = Math.min(mods.length, Math.floor(scrollTop / itemHeight) + visibleCount);
+	}
 </script>
 
 {#if mods.length === 0}
@@ -56,20 +65,13 @@
 		{@render placeholder?.()}
 	</div>
 {:else}
-	<VirtualList
-		itemHeight={66}
-		items={mods}
-		rowId={(mod) => mod.uuid}
-		bind:this={virtualList}
-		bind:start={listStart}
-		bind:end={listEnd}
-	>
-		{#snippet children({ item: mod, index })}
+	<div class="overflow-y-auto" bind:this={list} {onscroll}>
+		{#each mods as mod, index (mod.uuid)}
 			{@render item({
 				mod,
 				index,
 				isSelected: selected?.uuid === mod.uuid
 			})}
-		{/snippet}
-	</VirtualList>
+		{/each}
+	</div>
 {/if}

@@ -27,8 +27,6 @@
 		pushInfoToast({
 			message: `Deleted profile ${profile.name}.`
 		});
-
-		profiles.refresh();
 	}
 </script>
 

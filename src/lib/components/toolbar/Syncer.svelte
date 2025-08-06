@@ -135,8 +135,6 @@
 		loading = true;
 		try {
 			await call();
-			await profiles.refresh();
-
 			if (message) {
 				pushInfoToast({ message });
 			}
