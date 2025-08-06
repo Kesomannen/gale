@@ -1,13 +1,42 @@
-use std::{collections::HashMap, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::{Mutex, MutexGuard},
+    time::Duration,
+};
 
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use chrono::{DateTime, Utc};
 use eyre::{eyre, Context, OptionExt, Result};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, Url};
+use tokio::sync::broadcast;
 use tracing::{debug, error, info, warn};
 
-use crate::{profile::sync::API_URL, state::ManagerExt};
+use crate::{db::Db, profile::sync::API_URL, state::ManagerExt};
+
+pub struct State {
+    creds: Mutex<Option<AuthCredentials>>,
+    callback_channel: broadcast::Sender<String>,
+}
+
+impl State {
+    pub fn new(stored_creds: Option<AuthCredentials>) -> Self {
+        Self {
+            creds: Mutex::new(stored_creds),
+            callback_channel: broadcast::channel(1).0,
+        }
+    }
+
+    fn creds(&self) -> MutexGuard<Option<AuthCredentials>> {
+        self.creds.lock().unwrap()
+    }
+
+    pub fn set_creds(&self, creds: Option<AuthCredentials>, db: &Db) -> Result<()> {
+        db.save_auth(creds.as_ref())?;
+        *self.creds() = creds;
+        Ok(())
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,7 +75,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
     let url = format!("{API_URL}/auth/login");
     open::that(url).context("failed to open url in browser")?;
 
-    let mut channel = app.app_state().auth_callback_channel.subscribe();
+    let mut channel = app.sync_auth().callback_channel.subscribe();
 
     tokio::select! {
         url = channel.recv() => {
@@ -73,7 +102,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
 
          info!("logged in as {}", user.name);
 
-         *app.lock_auth() = Some(creds);
+         app.sync_auth().set_creds(Some(creds), app.db())?;
 
          Ok(user)
         }
@@ -84,7 +113,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
 }
 
 pub async fn handle_callback(url: String, app: &AppHandle) -> Result<()> {
-    app.app_state().auth_callback_channel.send(url)?;
+    app.sync_auth().callback_channel.send(url)?;
 
     Ok(())
 }
@@ -108,7 +137,10 @@ fn decode_jwt(token: &str) -> Result<JwtPayload> {
 }
 
 pub fn user_info(app: &AppHandle) -> Option<User> {
-    app.lock_auth().as_ref().map(|state| state.user.clone())
+    app.sync_auth()
+        .creds()
+        .as_ref()
+        .map(|state| state.user.clone())
 }
 
 #[derive(Debug, Deserialize)]
@@ -120,8 +152,9 @@ struct TokenResponse {
 
 pub async fn access_token(app: &AppHandle) -> Option<String> {
     let refresh_token = {
-        let auth = app.lock_auth();
-        let creds = auth.as_ref()?;
+        let state = app.sync_auth();
+        let creds = state.creds.lock().unwrap();
+        let creds = creds.as_ref()?;
 
         let Some(expiry) = DateTime::from_timestamp(creds.token_expiry, 0) else {
             warn!("token expiry date is invalid");
@@ -166,9 +199,7 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
     let creds =
         AuthCredentials::from_tokens(response.access_token.clone(), response.refresh_token)?;
 
-    let mut state = app.lock_auth();
-    *state = Some(creds);
-    app.db().save_auth(state.as_ref())?;
+    app.sync_auth().set_creds(Some(creds), app.db())?;
 
     Ok(response.access_token)
 }

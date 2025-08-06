@@ -10,7 +10,7 @@ use uuid::Uuid;
 use super::{actions::ActionResult, Dependant, Profile};
 use crate::{
     game::{self, platform::Platform, Game},
-    profile::{self},
+    profile::{self, sync::SyncProfileData},
     state::ManagerExt,
     thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
     util::cmd::Result,
@@ -88,9 +88,13 @@ pub fn set_active_game(slug: &str, app: AppHandle) -> Result<()> {
 
     let game = game::from_slug(slug).ok_or_eyre("unknown game")?;
 
-    let managed_game = manager.set_active_game(game, &app)?;
-    managed_game.update_window_title(&app)?;
+    app.sync_socket().unsubscribe(manager.active_profile());
 
+    let managed_game = manager.set_active_game(game, &app)?;
+
+    app.sync_socket().subscribe(managed_game.active_profile());
+
+    managed_game.update_window_title(&app)?;
     manager.save_all(app.db())?;
 
     Ok(())
@@ -109,7 +113,7 @@ pub struct ProfileInfo {
     id: i64,
     name: String,
     mod_count: usize,
-    sync: Option<profile::sync::SyncProfileData>,
+    sync: Option<SyncProfileData>,
 }
 
 #[command]
@@ -125,7 +129,7 @@ pub fn get_profile_info(app: AppHandle) -> ProfilesInfo {
                 id: profile.id,
                 name: profile.name.clone(),
                 mod_count: profile.mods.len(),
-                sync: profile.sync_profile.clone(),
+                sync: profile.sync.clone(),
             })
             .collect(),
         active_id: game.active_profile_id,
@@ -137,7 +141,13 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     let game = manager.active_game_mut();
+
+    app.sync_socket().unsubscribe(game.active_profile());
+
     game.set_active_profile(index)?;
+
+    app.sync_socket().subscribe(game.active_profile());
+
     game.save(app.db())?;
     game.update_window_title(&app)?;
 

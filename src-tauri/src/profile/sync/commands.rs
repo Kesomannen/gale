@@ -70,16 +70,13 @@ pub async fn get_owned_sync_profiles(app: AppHandle) -> Result<Vec<ListedSyncPro
 #[command]
 pub async fn login(app: AppHandle) -> Result<auth::User> {
     let user = auth::login_with_oauth(&app).await?;
-    app.db().save_auth(app.lock_auth().as_ref())?;
 
     Ok(user)
 }
 
 #[command]
 pub async fn logout(app: AppHandle) -> Result<()> {
-    let mut auth = app.lock_auth();
-    *auth = None;
-    app.db().save_auth(auth.as_ref())?;
+    app.sync_auth().set_creds(None, app.db())?;
 
     Ok(())
 }

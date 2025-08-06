@@ -172,9 +172,9 @@ impl Db {
         })
     }
 
-    pub fn save_auth(&self, auth: Option<&AuthCredentials>) -> Result<()> {
+    pub fn save_auth(&self, creds: Option<&AuthCredentials>) -> Result<()> {
         self.with_transaction(|tx| {
-            let json = auth.map(serde_json::to_string).transpose()?;
+            let json = creds.map(serde_json::to_string).transpose()?;
 
             tx.prepare("INSERT OR REPLACE INTO auth (id, data) VALUES (?, ?)")?
                 .execute(params![1, json])?;
@@ -350,7 +350,7 @@ impl Db {
                 .transpose()?;
             let ignored_updates = serde_json::to_string(&profile.ignored_updates)?;
             let sync_data = profile
-                .sync_profile
+                .sync
                 .as_ref()
                 .map(serde_json::to_string)
                 .transpose()?;

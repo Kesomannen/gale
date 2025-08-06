@@ -1,6 +1,8 @@
 import * as api from '$lib/api';
 import type { ProfileInfo } from '$lib/types';
+import { listen } from '@tauri-apps/api/event';
 import auth from './auth.svelte';
+import { pushInfoToast } from '$lib/toast';
 
 class ProfilesState {
 	list: ProfileInfo[] = $state([]);
@@ -36,4 +38,10 @@ class ProfilesState {
 }
 
 const profiles = new ProfilesState();
+
+listen('profiles_changed', async () => {
+	pushInfoToast({ message: 'A change was pushed to the sync profile!' });
+	profiles.refresh();
+});
+
 export default profiles;

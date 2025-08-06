@@ -10,9 +10,10 @@ use crate::{profile::install::InstallOptions, state::ManagerExt};
 
 pub mod auth;
 pub mod commands;
+pub mod socket;
 
-const API_URL: &str = "https://gale.kesomannen.com/api";
-//const API_URL: &str = "http://localhost:8080/api"; // for local testing
+//const API_URL: &str = "https://gale.kesomannen.com/api";
+const API_URL: &str = "http://127.0.0.1:8080/api"; // for local testing
 
 async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
     let mut req = app.http().request(method, format!("{API_URL}{path}"));
@@ -111,7 +112,7 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
-        profile.sync_profile = Some(SyncProfileData {
+        profile.sync = Some(SyncProfileData {
             id: id.clone(),
             owner: user,
             synced_at: response.updated_at,
@@ -131,7 +132,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
         let profile = game.active_profile();
 
         let id = profile
-            .sync_profile
+            .sync
             .as_ref()
             .map(|data| data.id.clone())
             .ok_or_eyre("profile is not synced")?;
@@ -155,7 +156,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
     {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
-        let sync_data = profile.sync_profile.as_mut().unwrap();
+        let sync_data = profile.sync.as_mut().unwrap();
 
         sync_data.synced_at = response.updated_at;
         sync_data.updated_at = response.updated_at;
@@ -172,7 +173,7 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
         let profile = manager.active_profile_mut();
 
         let (id, owner_discord_id) = profile
-            .sync_profile
+            .sync
             .as_ref()
             .map(|info| (info.id.clone(), &info.owner.discord_id))
             .ok_or_eyre("profile is not synced")?;
@@ -191,7 +192,7 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
-        profile.sync_profile = None;
+        profile.sync = None;
 
         profile.save(app.db())?;
     }
@@ -210,7 +211,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
-        match &profile.sync_profile {
+        match &profile.sync {
             Some(data) => (
                 data.id.clone(),
                 profile.id,
@@ -231,9 +232,9 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
             let mut manager = app.lock_manager();
             let (_, profile) = manager.profile_by_id_mut(profile_id)?;
 
-            let synced_at = profile.sync_profile.take().unwrap().synced_at;
+            let synced_at = profile.sync.take().unwrap().synced_at;
 
-            profile.sync_profile = metadata.map(|metadata| SyncProfileData {
+            profile.sync = metadata.map(|metadata| SyncProfileData {
                 synced_at,
                 ..metadata.into()
             });
@@ -274,7 +275,7 @@ async fn download_and_import_file(
         let mut manager = app.lock_manager();
         let (_, profile) = manager.profile_by_id_mut(id)?;
 
-        profile.sync_profile = Some(sync_profile);
+        profile.sync = Some(sync_profile);
         profile.save(app.db())?;
     }
 

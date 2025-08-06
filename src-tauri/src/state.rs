@@ -2,12 +2,11 @@ use std::sync::{Mutex, MutexGuard};
 
 use eyre::{Context, Result};
 use tauri::{command, AppHandle, Manager};
-use tokio::sync::broadcast;
 
 use crate::{
     db::{self, Db},
     prefs::Prefs,
-    profile::{self, install::queue::InstallQueue, sync::auth::AuthCredentials, ModManager},
+    profile::{self, install::queue::InstallQueue, sync, ModManager},
     thunderstore::{self, Thunderstore},
 };
 
@@ -17,9 +16,9 @@ pub struct AppState {
     pub manager: Mutex<ModManager>,
     pub thunderstore: Mutex<Thunderstore>,
     pub db: Db,
-    pub auth: Mutex<Option<AuthCredentials>>,
-    pub auth_callback_channel: broadcast::Sender<String>,
     pub install_queue: InstallQueue,
+    pub sync_auth: sync::auth::State,
+    pub sync_socket: sync::socket::State,
     pub is_first_run: bool,
 }
 
@@ -35,21 +34,17 @@ impl AppState {
     pub fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.thunderstore.lock().unwrap()
     }
-
-    pub fn lock_auth(&self) -> MutexGuard<'_, Option<AuthCredentials>> {
-        self.auth.lock().unwrap()
-    }
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     let http = reqwest::Client::builder()
-        .user_agent("Kesomannen-gale")
+        .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
         .build()
         .context("failed to init http client")?;
 
     let (db, db_existed) = db::init().context("failed to init database")?;
 
-    let (data, mut prefs, auth, migrated) = db.read()?;
+    let (data, mut prefs, creds, migrated) = db.read()?;
 
     prefs.init(&db, app).context("failed to init prefs")?;
 
@@ -62,8 +57,8 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         prefs: Mutex::new(prefs),
         manager: Mutex::new(manager),
         thunderstore: Mutex::new(thunderstore),
-        auth: Mutex::new(auth),
-        auth_callback_channel: broadcast::channel(1).0,
+        sync_auth: sync::auth::State::new(creds),
+        sync_socket: sync::socket::State::new(app.to_owned()),
         install_queue: InstallQueue::new(app.to_owned()),
         is_first_run: !db_existed && !migrated,
     };
@@ -71,10 +66,10 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     app.manage(state);
 
     thunderstore::start(app);
-    app.lock_manager()
-        .active_game()
-        .update_window_title(app)
-        .ok();
+
+    let manager = app.lock_manager();
+    manager.active_game().update_window_title(app).ok();
+    app.sync_socket().subscribe(manager.active_profile());
 
     Ok(())
 }
@@ -98,16 +93,20 @@ pub trait ManagerExt<R> {
         self.app_state().lock_thunderstore()
     }
 
-    fn lock_auth(&self) -> MutexGuard<'_, Option<AuthCredentials>> {
-        self.app_state().lock_auth()
-    }
-
     fn db(&self) -> &Db {
         &self.app_state().db
     }
 
     fn install_queue(&self) -> &InstallQueue {
         &self.app_state().install_queue
+    }
+
+    fn sync_auth(&self) -> &sync::auth::State {
+        &self.app_state().sync_auth
+    }
+
+    fn sync_socket(&self) -> &sync::socket::State {
+        &self.app_state().sync_socket
     }
 }
 

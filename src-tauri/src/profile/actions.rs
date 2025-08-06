@@ -309,7 +309,7 @@ impl ManagedGame {
             config_cache: ConfigCache::default(),
             linked_config: HashMap::new(),
             modpack: None,
-            sync_profile: None,
+            sync: None,
         });
 
         self.set_active_profile(self.profiles.len() - 1)

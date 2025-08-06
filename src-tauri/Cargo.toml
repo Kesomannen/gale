@@ -38,7 +38,7 @@ eyre = "0.6"
 thiserror = "1"
 justerror = "1"
 
-futures-util = { version = "0.3", features = ["io"] }
+futures-util = { version = "0.3", features = ["io", "sink"] }
 indexmap = { version = "2", features = ["serde"] }
 open = "5"
 itertools = "0.13"
@@ -76,6 +76,7 @@ regashii = "0.4"
 flate2 = "1"
 font-kit = "0.14"
 internment = { version = "0.8.6", features = ["serde"] }
+tokio-websockets = { version = "0.12.0", features = ["client", "rand", "ring"] }
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"
