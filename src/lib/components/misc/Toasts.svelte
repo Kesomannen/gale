@@ -47,11 +47,7 @@
 				</div>
 
 				{#if toast.type === 'error'}
-					<IconButton
-						icon="mdi:clipboard-text"
-						label="Copy error"
-						onclick={() => copyError(toast)}
-					/>
+					<IconButton icon="mdi:content-copy" label="Copy error" onclick={() => copyError(toast)} />
 				{/if}
 
 				<IconButton icon="mdi:close" label="Clear toast" onclick={() => clearToast(i)} />

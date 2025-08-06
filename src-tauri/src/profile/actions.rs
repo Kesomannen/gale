@@ -353,7 +353,7 @@ impl ManagedGame {
         self.profiles.remove(index);
 
         if !self.profiles.is_empty() && self.active_profile_id == id {
-            let new_index = (index - 1).clamp(0, self.profiles.len());
+            let new_index = index.saturating_sub(1).min(self.profiles.len() - 1);
             self.active_profile_id = self.profiles[new_index].id;
         }
 

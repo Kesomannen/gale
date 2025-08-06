@@ -91,15 +91,13 @@ impl State {
 async fn connect(app: AppHandle, rx: mpsc::UnboundedReceiver<ClientMessage>) -> Result<()> {
     let url = format!("{}/socket/connect", super::API_URL.replace("http", "ws"));
 
-    info!("connecting to sync server via socket at {url}");
-
-    let (socket, response) = tokio_websockets::ClientBuilder::new()
+    let (socket, _) = tokio_websockets::ClientBuilder::new()
         .uri(&url)
         .unwrap()
         .connect()
         .await?;
 
-    info!("connected to sync server via socket: {response:?}");
+    info!("connected to sync server socket at {url}");
 
     let (sender, receiver) = socket.split();
 
@@ -152,7 +150,7 @@ async fn read(app: AppHandle, mut receiver: SplitStream<WebSocket>) {
                 let mut manager = app.lock_manager();
 
                 for profile in sync_profiles_with_id(&mut manager, &id) {
-                    profile.sync = None;
+                    profile.sync.as_mut().unwrap().missing = true;
 
                     profile.save(&app, true).ok();
                 }

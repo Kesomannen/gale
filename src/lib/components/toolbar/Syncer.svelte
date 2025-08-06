@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
-	import Tooltip from '$lib/components/ui/Tooltip.svelte';
 	import SyncAvatar from '$lib/components/ui/SyncAvatar.svelte';
 	import * as api from '$lib/api';
 	import type { ListedSyncProfile } from '$lib/types';
@@ -19,7 +18,7 @@
 	import IconButton from '../ui/IconButton.svelte';
 	import Spinner from '../ui/Spinner.svelte';
 
-	type State = 'off' | 'synced' | 'outdated';
+	type State = 'off' | 'synced' | 'outdated' | 'missing';
 
 	let mainDialogOpen = $state(false);
 	let loginLoading = $state(false);
@@ -33,9 +32,11 @@
 	let syncState = $derived(
 		(syncInfo === null
 			? 'off'
-			: new Date(syncInfo.updatedAt) > new Date(syncInfo.syncedAt)
-				? 'outdated'
-				: 'synced') as State
+			: syncInfo.missing
+				? 'missing'
+				: new Date(syncInfo.updatedAt) > new Date(syncInfo.syncedAt)
+					? 'outdated'
+					: 'synced') as State
 	);
 
 	let style = $derived(
@@ -54,6 +55,11 @@
 				icon: 'mdi:cloud-refresh-variant',
 				label: 'Outdated',
 				classes: 'text-yellow-400'
+			},
+			missing: {
+				icon: 'mdi:cloud-alert',
+				label: 'Sync error',
+				classes: 'text-red-500 font-medium'
 			}
 		}[syncState]
 	);
@@ -68,6 +74,19 @@
 			icon: 'mdi:logout',
 			label: 'Sign out',
 			onclick: onLoginClicked
+		}
+	];
+
+	const copyItems = [
+		{
+			icon: 'mdi:clipboard-text',
+			label: 'Copy profile code',
+			onclick: copyCode
+		},
+		{
+			icon: 'mdi:link',
+			label: 'Copy import link',
+			onclick: copyLink
 		}
 	];
 
@@ -113,10 +132,15 @@
 	}
 
 	async function disconnect() {
-		let del = isOwner && (await ask('Do you also want to delete the profile from the database?'));
+		let deleteFromRemote =
+			isOwner &&
+			syncState !== 'missing' &&
+			(await ask('Do you also want to delete the profile from the database?'));
 
-		await wrapApiCall(() => api.profile.sync.disconnect(del), 'Disconnected synced profile.');
-		mainDialogOpen = false;
+		await wrapApiCall(
+			() => api.profile.sync.disconnect(deleteFromRemote),
+			'Disconnected synced profile.'
+		);
 	}
 
 	async function showOwnedProfiles() {
@@ -149,6 +173,16 @@
 		await writeText(syncInfo.id);
 		pushInfoToast({
 			message: 'Copied profile code to clipboard.'
+		});
+	}
+
+	async function copyLink() {
+		if (!syncInfo) return;
+
+		let url = `https://gale.kesomannen.com/api/desktop/profile/sync/clone/${syncInfo.id}`;
+		await writeText(url);
+		pushInfoToast({
+			message: 'Copied profile import link to clipboard.'
 		});
 	}
 </script>
@@ -208,51 +242,78 @@
 	</div>
 
 	{#if syncInfo}
-		{#if !isOwner}
-			<div class="text-primary-300 mt-2 flex items-center gap-2">
-				<SyncAvatar user={syncInfo.owner} />
-				<div>
-					Owned by {syncInfo.owner.displayName}
+		{#if syncState !== 'missing'}
+			{#if !isOwner}
+				<div class="text-primary-300 mt-2 flex items-center gap-2">
+					<SyncAvatar user={syncInfo.owner} />
+					<div>
+						Owned by {syncInfo.owner.displayName}
+					</div>
+				</div>
+			{/if}
+
+			<div class="mt-2 flex items-center gap-2">
+				<button
+					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
+					onclick={copyCode}
+				>
+					{syncInfo.id}
+				</button>
+
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						<IconButton icon="mdi:content-copy" label="Copy to clipboard" />
+					</DropdownMenu.Trigger>
+					<ContextMenuContent type="dropdown" style="dark" items={copyItems} />
+				</DropdownMenu.Root>
+			</div>
+		{:else}
+			<div
+				class="bg-primary-800 border-primary-700 relative my-2 max-w-3xl overflow-hidden rounded-md border shadow"
+			>
+				<div class="absolute left-0 h-full w-1.5 bg-red-600"></div>
+
+				<div class="flex items-center p-2">
+					<Icon class="mx-2 shrink-0 text-xl text-red-600" icon="mdi:error" />
+
+					<div class="mr-4 grow overflow-hidden">
+						<span class="break-words text-white"
+							>This profile has been deleted by its owner, and can no longer receive updates or be
+							imported.</span
+						>
+					</div>
 				</div>
 			</div>
 		{/if}
 
-		<div class="mt-2 flex items-center gap-2">
-			<button
-				class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
-				onclick={copyCode}
-			>
-				{syncInfo.id}
-			</button>
-
-			<IconButton
-				icon="mdi:clipboard-text"
-				label="Copy code to clipboard"
-				showTooltip
-				onclick={copyCode}
-			/>
-		</div>
-
 		<div class="mt-2 flex flex-wrap items-center gap-2">
-			{#if syncState === 'outdated'}
-				<Button onclick={pull} {loading} icon="mdi:cloud-download">Pull update</Button>
-			{/if}
+			{#if syncState !== 'missing'}
+				{#if syncState === 'outdated'}
+					<Button onclick={pull} {loading} icon="mdi:cloud-download">Pull update</Button>
+				{/if}
 
-			{#if isOwner}
-				<Button
-					onclick={push}
-					{loading}
-					disabled={auth.user === null}
-					color="accent"
-					icon="mdi:cloud-upload"
+				{#if isOwner}
+					<Button
+						onclick={push}
+						{loading}
+						disabled={auth.user === null}
+						color="accent"
+						icon="mdi:cloud-upload"
+					>
+						Push update
+					</Button>
+				{/if}
+
+				<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh">Refresh</Button
 				>
-					Push update
-				</Button>
 			{/if}
 
-			<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh">Refresh</Button>
-
-			<Button onclick={disconnect} {loading} color="primary" icon="mdi:cloud-remove">
+			<Button
+				onclick={disconnect}
+				{loading}
+				color={syncState === 'missing' ? 'accent' : 'primary'}
+				icon="mdi:cloud-remove"
+			>
 				Disconnect
 			</Button>
 		</div>

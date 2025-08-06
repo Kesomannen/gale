@@ -39,7 +39,7 @@ class ProfilesState {
 		await api.profile.setActive(index);
 
 		const sync = this.active?.sync;
-		if (!sync) return;
+		if (!sync || sync.missing) return;
 
 		await api.profile.sync.fetch();
 	};

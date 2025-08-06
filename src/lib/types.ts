@@ -62,6 +62,7 @@ export type SyncProfileInfo = {
 	owner: SyncUser;
 	syncedAt: string;
 	updatedAt: string;
+	missing: boolean;
 };
 
 export type ListedSyncProfile = {

@@ -49,6 +49,8 @@ pub struct SyncProfileData {
     owner: auth::User,
     synced_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
+    #[serde(default)]
+    missing: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -76,6 +78,7 @@ impl From<SyncProfileMetadata> for SyncProfileData {
             owner: value.owner,
             synced_at: value.updated_at,
             updated_at: value.updated_at,
+            missing: false,
         }
     }
 }
@@ -117,6 +120,7 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
             owner: user,
             synced_at: response.updated_at,
             updated_at: response.updated_at,
+            missing: false,
         });
 
         profile.save(&app, true)?;
@@ -212,6 +216,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
         let profile = manager.active_profile_mut();
 
         match &profile.sync {
+            Some(data) if data.missing => bail!("cannot pull from missing profile"),
             Some(data) => (
                 data.id.clone(),
                 profile.id,
@@ -228,16 +233,23 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
         Some(metadata) if !dry_run && metadata.updated_at > synced_at => {
             download_and_import_file(Some(name), metadata.into(), app).await
         }
-        _ => {
+        metadata => {
             let mut manager = app.lock_manager();
             let (_, profile) = manager.profile_by_id_mut(profile_id)?;
 
-            let synced_at = profile.sync.take().unwrap().synced_at;
+            let Some(sync) = profile.sync.as_mut() else {
+                return Ok(());
+            };
 
-            profile.sync = metadata.map(|metadata| SyncProfileData {
-                synced_at,
-                ..metadata.into()
-            });
+            match metadata {
+                Some(metadata) => {
+                    *sync = SyncProfileData {
+                        synced_at: sync.synced_at,
+                        ..metadata.into()
+                    };
+                }
+                None => sync.missing = true,
+            }
 
             profile.save(&app, true)?;
 
