@@ -3,10 +3,10 @@ use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
+use reqwest_websocket::{RequestBuilderExt, WebSocket};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::mpsc;
-use tokio_websockets::{MaybeTlsStream, WebSocketStream};
 use tracing::{debug, error, info, warn};
 
 use crate::{
@@ -39,8 +39,6 @@ enum ClientMessage {
     #[serde(rename_all = "camelCase")]
     Unsubscribe { profile_id: String },
 }
-
-type WebSocket = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 
 pub struct State {
     tx: mpsc::UnboundedSender<ClientMessage>,
@@ -91,13 +89,18 @@ impl State {
 async fn connect(app: AppHandle, rx: mpsc::UnboundedReceiver<ClientMessage>) -> Result<()> {
     let url = format!("{}/socket/connect", super::API_URL.replace("http", "ws"));
 
-    let (socket, _) = tokio_websockets::ClientBuilder::new()
-        .uri(&url)
-        .unwrap()
-        .connect()
+    info!("connecting to sync server socket at {url}");
+
+    let socket = app
+        .http()
+        .get(&url)
+        .upgrade()
+        .send()
+        .await?
+        .into_websocket()
         .await?;
 
-    info!("connected to sync server socket at {url}");
+    info!("sucessfully connected to socket");
 
     let (sender, receiver) = socket.split();
 
@@ -112,20 +115,15 @@ async fn read(app: AppHandle, mut receiver: SplitStream<WebSocket>) {
         let item = match item {
             Ok(item) => item,
             Err(err) => {
-                error!("socket error: {err}");
+                error!("socket error, aborting task: {err}");
                 return;
             }
         };
 
-        let Some(text) = item.as_text() else {
-            warn!("got non-text message from socket");
-            continue;
-        };
-
-        let msg = match serde_json::from_str::<ServerMessage>(text) {
+        let msg: ServerMessage = match item.json() {
             Ok(msg) => msg,
             Err(err) => {
-                warn!("failed to deserialize server message: {err}");
+                error!("failed to deserialize message: {err}");
                 continue;
             }
         };
@@ -163,14 +161,14 @@ async fn read(app: AppHandle, mut receiver: SplitStream<WebSocket>) {
 }
 
 async fn write(
-    mut sender: SplitSink<WebSocket, tokio_websockets::Message>,
+    mut sender: SplitSink<WebSocket, reqwest_websocket::Message>,
     mut rx: mpsc::UnboundedReceiver<ClientMessage>,
 ) {
     while let Some(msg) = rx.recv().await {
         debug!("sending {msg:?}");
 
         let msg = match serde_json::to_string(&msg) {
-            Ok(str) => tokio_websockets::Message::text(str),
+            Ok(str) => reqwest_websocket::Message::Text(str),
             Err(err) => {
                 error!("failed to serialize socket message: {err}");
                 continue;

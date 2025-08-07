@@ -12,7 +12,7 @@ use tauri::{AppHandle, Manager, Url};
 use tokio::sync::broadcast;
 use tracing::{debug, error, info, warn};
 
-use crate::{db::Db, profile::sync::API_URL, state::ManagerExt};
+use crate::{db::Db, state::ManagerExt};
 
 pub struct State {
     creds: Mutex<Option<AuthCredentials>>,
@@ -72,7 +72,7 @@ impl AuthCredentials {
 const OAUTH_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
-    let url = format!("{API_URL}/auth/login");
+    let url = format!("{}/auth/login", super::API_URL);
     open::that(url).context("failed to open url in browser")?;
 
     let mut channel = app.sync_auth().callback_channel.subscribe();
@@ -188,7 +188,7 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
 
     let response: TokenResponse = app
         .http()
-        .post(format!("{API_URL}/auth/token"))
+        .post(format!("{}/auth/token", super::API_URL))
         .json(&GrantTokenRequest { refresh_token })
         .send()
         .await?

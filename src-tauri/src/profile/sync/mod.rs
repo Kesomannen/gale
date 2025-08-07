@@ -12,8 +12,8 @@ pub mod auth;
 pub mod commands;
 pub mod socket;
 
-//const API_URL: &str = "https://gale.kesomannen.com/api";
-const API_URL: &str = "http://127.0.0.1:8080/api"; // for local testing
+const API_URL: &str = "https://gale.kesomannen.com/api";
+//const API_URL: &str = "http://127.0.0.1:8080/api"; // for local testing
 
 async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
     let mut req = app.http().request(method, format!("{API_URL}{path}"));
