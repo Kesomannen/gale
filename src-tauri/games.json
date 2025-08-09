@@ -1313,6 +1313,18 @@
         }
     },
     {
+        "name": "Ostranauts",
+        "slug": "ostranauts",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1022980
+            }
+        }
+    },
+    {
         "name": "Outward",
         "modLoader": {
             "name": "BepInEx"
