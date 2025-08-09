@@ -1417,7 +1417,8 @@
                 {
                     "name": "hexpatches",
                     "target": "BepInEx/hexpatches",
-                    "mode": "track"
+                    "mode": "track",
+                    "mutable": true
                 }
             ]
         },
