@@ -10,11 +10,13 @@ use indexmap::IndexMap;
 use query::QueryModsArgs;
 use serde::{Deserialize, Serialize};
 use tauri::{async_runtime::JoinHandle, AppHandle};
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{game::Game, state::ManagerExt};
 
 pub mod cache;
+pub mod cdn;
 pub mod commands;
 pub mod query;
 pub mod token;
@@ -32,6 +34,25 @@ pub fn start(app: &AppHandle) {
     query::setup(app);
     app.lock_thunderstore()
         .switch_game(app.lock_manager().active_game, app.clone());
+
+    let handle = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let cdn = match cdn::preferred(&handle).await {
+            Some(cdn) => {
+                info!("using thunderstore cdn {cdn}");
+                cdn
+            }
+            None => {
+                warn!(
+                    "could not connect to any thunderstore cdns, using default {}",
+                    cdn::default()
+                );
+                cdn::default()
+            }
+        };
+
+        handle.lock_thunderstore().cdn_url = cdn;
+    });
 }
 
 /// A pair of a package and one of its versions.
@@ -109,7 +130,6 @@ impl ModId {
 }
 
 /// Registry of Thunderstore mods for the active game.
-#[derive(Default)]
 pub struct Thunderstore {
     /// A handle to the current [`fetch_package_loop`] task.
     fetch_loop_handle: Option<JoinHandle<()>>,
@@ -122,9 +142,25 @@ pub struct Thunderstore {
     // since we iterate over all mods when resolving identifiers and querying.
     packages: IndexMap<Uuid, PackageListing>,
     current_query: Option<QueryModsArgs>,
+    cdn_url: &'static str,
 }
 
 impl Thunderstore {
+    pub fn new() -> Self {
+        Self {
+            fetch_loop_handle: None,
+            packages_fetched: false,
+            is_fetching: false,
+            packages: IndexMap::new(),
+            current_query: None,
+            cdn_url: cdn::default(),
+        }
+    }
+
+    pub fn cdn_url(&self) -> &'static str {
+        self.cdn_url
+    }
+
     /// Whether packages have been succesfully fetched at least one since
     /// the last call to [`Thunderstore::switch_game`].
     pub fn packages_fetched(&self) -> bool {

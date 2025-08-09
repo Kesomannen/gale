@@ -64,6 +64,7 @@ impl InstallOptions {
     }
 }
 
+/// A mod waiting to be installed via [`queue::InstallQueue`].
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModInstall {

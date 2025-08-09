@@ -27,7 +27,9 @@ use super::{CancelBehavior, InstallError, InstallOptions, InstallResult, ModInst
 
 pub struct InstallQueue {
     state: Mutex<State>,
+    /// Notified when a batch is pushed to the queue.
     notify_push: Notify,
+    /// Notified when all batches have been completed.
     notify_empty: Notify,
     cancel: AtomicBool,
 }
@@ -35,6 +37,7 @@ pub struct InstallQueue {
 #[derive(Default)]
 struct State {
     pending: VecDeque<InstallBatch>,
+    /// The profile id and package uuids of the currently installing batch.
     processing: Option<(i64, Vec<Uuid>)>,
 }
 
@@ -67,6 +70,10 @@ impl InstallQueue {
         }
     }
 
+    /// Queue mods to be installed. Returns a future that resolves when the batch is completed,
+    /// errors out, or is cancelled.
+    ///
+    /// This checks for mods already in the queue and skips them.
     pub fn install(
         &self,
         mods: impl IntoIterator<Item = ModInstall>,
@@ -74,9 +81,16 @@ impl InstallQueue {
         options: InstallOptions,
         app: &AppHandle,
     ) -> impl Future<Output = InstallResult<()>> {
-        self.handle().push_mods(mods, profile_id, options, app)
+        self.handle().push_batch(mods, profile_id, options, app)
     }
 
+    /// Queue mods to be installed, along with their dependencies. Returns a future that resolves
+    /// when the batch is completed, errors out, or is cancelled.
+    ///
+    /// This checks for mods already in the queue *and* already installed ones and skips them.
+    ///
+    /// If `allow_multiple` is `false`, it also checks if "root" mod(s) are already installed
+    /// and errors out of that's the case.
     pub fn install_with_deps(
         &self,
         mods: Vec<ModInstall>,
@@ -90,16 +104,19 @@ impl InstallQueue {
     }
 }
 
+/// A RAII guard for the inner state of the [`InstallQueue`].
 pub struct InstallQueueHandle<'a> {
     state: MutexGuard<'a, State>,
     queue: &'a InstallQueue,
 }
 
 impl<'a> InstallQueueHandle<'a> {
+    /// Whether any mods are currently being installed.
     pub fn is_processing(&self) -> bool {
         self.state.processing.is_some()
     }
 
+    /// Whether any mods are queued for this installation on this profile.
     pub fn has_any_for_profile(&self, profile_id: i64) -> bool {
         self.state
             .processing
@@ -125,7 +142,7 @@ impl<'a> InstallQueueHandle<'a> {
             })
     }
 
-    fn push_mods(
+    fn push_batch(
         &mut self,
         mods: impl IntoIterator<Item = ModInstall>,
         profile_id: i64,
@@ -213,7 +230,7 @@ impl<'a> InstallQueueHandle<'a> {
                 .collect_vec()
         };
 
-        Ok(self.push_mods(mods, profile_id, options, app))
+        Ok(self.push_batch(mods, profile_id, options, app))
     }
 
     fn pop_next(&mut self) -> Option<InstallBatch> {
@@ -239,10 +256,12 @@ impl InstallBatch {
     fn complete(self, result: InstallResult<()>, app: &AppHandle) {
         match self.on_complete.send(result) {
             Ok(_) => (),
+            // The receiver was dropped (meaning the original caller doesn't care anymore), however
+            // if we succeeded or was cancelled we don't care either ...
             Err(Ok(_)) => (),
             Err(Err(InstallError::Cancelled)) => (),
             Err(Err(InstallError::Err(err))) => {
-                // if the receiver has been dropped (meaning the original caller doesn't care anymore), show to the frontend
+                // ... but on errors we want to log the error and notify the frontend.
                 logger::log_webview_err("Failed to install batch", err, app);
             }
         }
@@ -252,6 +271,7 @@ impl InstallBatch {
 async fn handle_queue(app: AppHandle) {
     let queue = app.install_queue();
 
+    // continously wait for new batches to be pushed and process them
     loop {
         queue.notify_push.notified().await;
         queue.cancel.store(false, Ordering::SeqCst);
@@ -424,8 +444,9 @@ async fn download(
     );
 
     let url = format!(
-        "https://thunderstore.io/package/download/{}/",
-        install.ident.path()
+        "{}/live/repository/packages/{}.zip",
+        app.lock_thunderstore().cdn_url(),
+        install.ident
     );
 
     let mut stream = app
@@ -539,6 +560,7 @@ fn install_from_download(
     Ok(())
 }
 
+/// Events sent to the frontend to keep track of installation progress.
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase", tag = "type")]
 enum InstallEvent<'a> {
