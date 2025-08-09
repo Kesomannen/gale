@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Live profile sync updates
+- Support for Add PATAPON 1+2 REPLAY and Ostranauts
+
+### Changed
+
+- Minor UI changes
+
+### Fixed
+
+- Sync profiles being disconnected without notice when deleted by the owner
+
 ## 1.9.2 (2025-08-01)
 
 ### Added
