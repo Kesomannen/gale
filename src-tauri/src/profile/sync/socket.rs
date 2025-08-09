@@ -100,8 +100,6 @@ async fn connect(app: AppHandle, rx: mpsc::UnboundedReceiver<ClientMessage>) -> 
         .into_websocket()
         .await?;
 
-    info!("sucessfully connected to socket");
-
     let (sender, receiver) = socket.split();
 
     tokio::spawn(read(app.to_owned(), receiver));

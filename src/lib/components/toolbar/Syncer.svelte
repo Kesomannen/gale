@@ -278,8 +278,7 @@
 
 					<div class="mr-4 grow overflow-hidden">
 						<span class="break-words text-white"
-							>This profile has been deleted by its owner, and can no longer receive updates or be
-							imported.</span
+							>This profile has been deleted and can no longer receive updates or be imported.</span
 						>
 					</div>
 				</div>
