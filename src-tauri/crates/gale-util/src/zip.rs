@@ -7,8 +7,6 @@ use std::{
 use tracing::{debug, warn};
 use zip::ZipArchive;
 
-use crate::util;
-
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
@@ -30,7 +28,7 @@ pub fn extract(src: impl Read + Seek, target: &Path) -> io::Result<()> {
             false => PathBuf::from(file.name()),
         };
 
-        if !util::fs::is_enclosed(&relative) {
+        if !crate::fs::is_enclosed(&relative) {
             warn!(
                 "file {} escapes the archive root, skipping",
                 relative.display()

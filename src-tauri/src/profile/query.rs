@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, path::Path};
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
@@ -137,7 +137,7 @@ impl Profile {
                 FrontendProfileMod {
                     data,
                     enabled: queryable.enabled,
-                    config_file: self.linked_config.get(&uuid).cloned(),
+                    config_file: self.config.link(uuid).map(Path::to_path_buf),
                 }
             })
             .collect();

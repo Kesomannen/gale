@@ -1,6 +1,10 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use eyre::{Context, OptionExt};
+use gale_core::{
+    game::{self, platform::Platform, Game},
+    ident::VersionIdent,
+};
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{command, AppHandle};
@@ -9,12 +13,12 @@ use uuid::Uuid;
 
 use super::{actions::ActionResult, Dependant, Profile};
 use crate::{
-    game::{self, platform::Platform, Game},
     profile::FrontendManagedGame,
     state::ManagerExt,
-    thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
-    util::cmd::Result,
+    thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore},
 };
+
+use gale_util::cmd::Result;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -411,6 +415,74 @@ pub fn create_desktop_shortcut(app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
     manager.active_game().create_desktop_shortcut()?;
+
+    Ok(())
+}
+
+#[command]
+pub fn get_config_files(app: AppHandle) -> Result<Vec<gale_config::frontend::File>> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+
+    profile.refresh_config();
+
+    Ok(profile.config.to_frontend())
+}
+
+#[command]
+pub fn set_config_entry(
+    file: &Path,
+    section: &str,
+    entry: &str,
+    value: gale_config::frontend::Value,
+    app: AppHandle,
+) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+
+    let file = profile.config.find_file(file)?;
+    file.set(section, entry, value)?;
+    file.write(&profile.path).context("failed to write file")?;
+
+    Ok(())
+}
+
+#[command]
+pub fn reset_config_entry(
+    file: &Path,
+    section: &str,
+    entry: &str,
+    app: AppHandle,
+) -> Result<gale_config::frontend::Value> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+
+    let file = profile.config.find_file(file)?;
+    let value = file.reset(section, entry)?;
+    file.write(&profile.path).context("failed to write file")?;
+
+    Ok(value)
+}
+#[command]
+pub fn open_config_file(file: &Path, app: AppHandle) -> Result<()> {
+    let manager = app.lock_manager();
+    let profile = manager.active_profile();
+
+    let path = profile.path.join(file);
+    open::that(&path)
+        .with_context(|| format!("failed to open config file at {}", path.display()))?;
+
+    Ok(())
+}
+#[command]
+pub fn delete_config_file(file: &Path, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+
+    profile.config.remove_file(file)?;
+
+    let path = profile.path.join(file);
+    trash::delete(path).context("failed to move file to recycle bin")?;
 
     Ok(())
 }

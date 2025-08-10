@@ -11,17 +11,12 @@ use tracing::{error, info, warn};
 extern crate webkit2gtk;
 
 mod cli;
-mod config;
-mod db;
 mod deep_link;
-mod game;
 mod logger;
-mod prefs;
 mod profile;
 mod state;
 mod telemetry;
 mod thunderstore;
-mod util;
 
 fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     info!(
@@ -173,11 +168,11 @@ pub fn run() {
             profile::sync::commands::login,
             profile::sync::commands::logout,
             profile::sync::commands::get_user,
-            config::commands::get_config_files,
-            config::commands::set_config_entry,
-            config::commands::reset_config_entry,
-            config::commands::open_config_file,
-            config::commands::delete_config_file,
+            profile::commands::get_config_files,
+            profile::commands::set_config_entry,
+            profile::commands::reset_config_entry,
+            profile::commands::open_config_file,
+            profile::commands::delete_config_file,
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())

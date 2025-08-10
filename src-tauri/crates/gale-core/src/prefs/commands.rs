@@ -1,13 +1,10 @@
 use eyre::anyhow;
 use font_kit::source::SystemSource;
+use gale_util::{cmd::Result, window::WindowExt};
 use serde::Deserialize;
-use tauri::{command, AppHandle, Manager, Window};
+use tauri::{AppHandle, Manager, Window, command};
 
 use super::Prefs;
-use crate::{
-    state::ManagerExt,
-    util::{cmd::Result, window::WindowExt},
-};
 
 #[command]
 pub fn get_prefs(app: AppHandle) -> Prefs {
@@ -43,7 +40,7 @@ pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
         .zoom(prefs.zoom_factor as f64)
         .map_err(|err| anyhow!(err))?;
 
-    prefs.save(app.db())?;
+    prefs.save(&app.state())?;
 
     Ok(())
 }

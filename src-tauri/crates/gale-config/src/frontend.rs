@@ -5,15 +5,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
-    pub display_name: String,
-    pub relative_path: PathBuf,
+    pub(crate) display_name: String,
+    pub(crate) relative_path: PathBuf,
     #[serde(flatten)]
-    pub kind: FileKind,
+    pub(crate) kind: FileKind,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
-pub enum FileKind {
+pub(crate) enum FileKind {
     Ok(FileData),
     Err { error: String },
     Unsupported,
@@ -29,28 +29,28 @@ impl FileKind {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FileData {
+pub(crate) struct FileData {
     pub metadata: Option<Metadata>,
     pub sections: Vec<Section>,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Metadata {
+pub(crate) struct Metadata {
     pub mod_name: String,
     pub mod_version: String,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Section {
+pub(crate) struct Section {
     pub name: String,
     pub entries: Vec<Entry>,
 }
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Entry {
+pub(crate) struct Entry {
     pub name: String,
     pub description: Option<String>,
     pub default: Option<Value>,

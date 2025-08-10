@@ -1,6 +1,6 @@
 use std::io::{BufRead, Write};
 
-use eyre::{eyre, OptionExt, Result};
+use eyre::{OptionExt, Result, eyre};
 
 use super::frontend::{self, Num};
 
@@ -17,7 +17,7 @@ pub struct File {
 }
 
 impl File {
-    pub fn mod_name(&self) -> Option<&str> {
+    pub fn plugin_name(&self) -> Option<&str> {
         self.metadata
             .as_ref()
             .map(|metadata| metadata.plugin_name.as_str())
@@ -119,12 +119,12 @@ impl EntryKind {
         }
     }
 
-    pub fn set(&mut self, value: frontend::Value) -> Result<()> {
-        self.as_normal_mut()?.value = value.into();
+    pub fn set(&mut self, value: Value) -> Result<()> {
+        self.as_normal_mut()?.value = value;
         Ok(())
     }
 
-    pub fn reset(&mut self) -> Result<frontend::Value> {
+    pub fn reset(&mut self) -> Result<Value> {
         self.as_normal_mut()?.reset()
     }
 }
@@ -163,9 +163,9 @@ pub enum Value {
 }
 
 impl Entry {
-    fn reset(&mut self) -> Result<frontend::Value> {
+    pub fn reset(&mut self) -> Result<Value> {
         self.value = self.default_value.clone().ok_or_eyre("no default value")?;
-        Ok(self.value.clone().into())
+        Ok(self.value.clone())
     }
 
     fn to_frontend(&self) -> frontend::Entry {

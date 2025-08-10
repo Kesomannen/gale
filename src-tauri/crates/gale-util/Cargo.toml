@@ -1,0 +1,19 @@
+[package]
+name = "gale-util"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tauri = { workspace = true }
+
+eyre = "0.6"
+tracing = "0.1"
+
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+
+zip = { version = "2", features = ["deflate"] }
+walkdir = "2"
+dirs-next = "2"
+itertools = "0.13"
+blake3 = "1"

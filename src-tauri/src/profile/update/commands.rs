@@ -1,7 +1,8 @@
 use tauri::{command, AppHandle};
 use uuid::Uuid;
 
-use crate::{state::ManagerExt, thunderstore::ModId, util::cmd::Result};
+use crate::{state::ManagerExt, thunderstore::ModId};
+use gale_util::cmd::Result;
 
 #[command]
 pub async fn change_mod_version(id: ModId, app: AppHandle) -> Result<()> {

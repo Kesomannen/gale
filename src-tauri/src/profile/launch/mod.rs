@@ -6,6 +6,8 @@ use std::{
 };
 
 use eyre::{bail, ensure, eyre, OptionExt, Result};
+use gale_core::game::Game;
+use gale_util::fs::{Overwrite, UseLinks};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
@@ -13,13 +15,8 @@ use tracing::{info, warn};
 
 use super::ManagedGame;
 use crate::{
-    game::Game,
     logger::log_webview_err,
     prefs::{GamePrefs, Prefs},
-    util::{
-        self,
-        fs::{Overwrite, UseLinks},
-    },
 };
 
 #[cfg(target_os = "linux")]
@@ -28,16 +25,6 @@ mod mod_loader;
 mod platform;
 
 pub mod commands;
-
-#[derive(Serialize, Deserialize, Default, Debug, Clone)]
-#[serde(rename_all = "camelCase", tag = "type", content = "content")]
-pub enum LaunchMode {
-    #[default]
-    #[serde(alias = "steam")]
-    Launcher,
-    #[serde(rename_all = "camelCase")]
-    Direct { instances: u32, interval_secs: f32 },
-}
 
 impl ManagedGame {
     pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
@@ -128,7 +115,7 @@ impl ManagedGame {
             if entry.file_type()?.is_file() {
                 fs::copy(entry.path(), to_path)?;
             } else {
-                util::fs::copy_dir(entry.path(), to_path, Overwrite::Yes, UseLinks::No)?;
+                gale_util::fs::copy_dir(entry.path(), to_path, Overwrite::Yes, UseLinks::No)?;
             }
         }
 

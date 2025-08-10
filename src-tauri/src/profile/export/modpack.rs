@@ -8,6 +8,7 @@ use std::{
 use bytes::Bytes;
 use eyre::{anyhow, bail, ensure, eyre, Context, OptionExt, Result};
 use futures_util::future::try_join_all;
+use gale_core::game::Game;
 use image::{imageops::FilterType, ImageFormat};
 use itertools::Itertools;
 use reqwest::StatusCode;
@@ -17,7 +18,7 @@ use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{write::SimpleFileOptions, ZipWriter};
 
-use crate::{game::Game, profile::Profile, thunderstore::*};
+use crate::{profile::Profile, thunderstore::*};
 
 use super::{IncludeExtensions, IncludeGenerated};
 

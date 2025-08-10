@@ -4,13 +4,11 @@ use std::{
 };
 
 use eyre::{bail, ensure, Context, OptionExt, Result};
+use gale_core::game::{platform::Platform, Game};
 use tracing::{info, warn};
 use which::which;
 
-use crate::{
-    game::{platform::Platform, Game},
-    prefs::Prefs,
-};
+use crate::prefs::Prefs;
 
 pub fn launch_command(
     game_dir: &Path,
@@ -182,8 +180,6 @@ fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
     use eyre::Context;
     use serde::Deserialize;
 
-    use crate::util;
-
     let Some(epic) = &game.platforms.epic_games else {
         bail!("{} is not available on Epic Games", game.name)
     };
@@ -205,7 +201,7 @@ fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
     );
 
     let list: Vec<ListItem> =
-        util::fs::read_json(dat_path).context("failed to read LauncherInstalled.dat file")?;
+        gale_util::fs::read_json(dat_path).context("failed to read LauncherInstalled.dat file")?;
 
     list.into_iter()
         .find(|item| item.app_name == name)

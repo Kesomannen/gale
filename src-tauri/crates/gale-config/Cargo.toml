@@ -1,0 +1,23 @@
+[package]
+name = "gale-config"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gale-core = { path = "../gale-core" }
+gale-util = { path = "../gale-util" }
+
+tauri = { workspace = true }
+
+eyre = "0.6"
+tracing = "0.1"
+
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+
+walkdir = "2"
+rayon = "1"
+indexmap = { version = "2", features = ["serde"] }
+itertools = "0.13"
+open = "4"
+uuid = "1"

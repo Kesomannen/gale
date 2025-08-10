@@ -5,18 +5,15 @@ use std::{
 };
 
 use eyre::{bail, Context, Result};
+use gale_core::game::Game;
+use gale_util::fs::{JsonStyle, PathExt};
 use itertools::Itertools;
 use tracing::warn;
 
 use super::modpack::ModpackArgs;
 use crate::{
-    game::Game,
     profile::Profile,
     thunderstore::{BorrowedMod, ModId, PackageListing, Thunderstore},
-    util::{
-        self,
-        fs::{JsonStyle, PathExt},
-    },
 };
 
 pub(super) fn generate_all(
@@ -34,7 +31,7 @@ pub(super) fn generate_all(
         .find_snapshots()?
         .filter(|(_, version)| *version < current_version)
         .map(|(entry, version)| {
-            let mods = util::fs::read_json::<Vec<ModId>>(entry.path())
+            let mods = gale_util::fs::read_json::<Vec<ModId>>(entry.path())
                 .with_context(|| format!("failed to read snapshot for version {version}"))?;
 
             let mods = borrow_mods(mods, thunderstore);
@@ -107,7 +104,7 @@ pub(super) fn generate_latest(
         .find_snapshots()?
         .filter(|(_, v)| *v < version)
         .max_by(|(_, a), (_, b)| a.cmp(b))
-        .map(|(entry, _)| util::fs::read_json::<Vec<ModId>>(entry.path()))
+        .map(|(entry, _)| gale_util::fs::read_json::<Vec<ModId>>(entry.path()))
         .transpose()?;
 
     let latest_snapshot = match latest_snapshot {
@@ -176,7 +173,7 @@ impl Profile {
         path.push(&args.version_number);
         path.add_ext("json");
 
-        util::fs::write_json(
+        gale_util::fs::write_json(
             path,
             &self.mods_to_pack(args).collect_vec(),
             JsonStyle::Compact,

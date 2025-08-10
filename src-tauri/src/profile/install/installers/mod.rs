@@ -20,7 +20,7 @@ pub use self::{
     extract::{ExtractInstaller, FlattenTopLevel},
     gd_weave::GDWeaveModInstaller,
     shimloader::ShimloaderInstaller,
-    subdir::{Subdir, SubdirInstaller},
+    subdir::SubdirInstaller,
 };
 
 pub type PackageZip = ZipArchive<Cursor<Vec<u8>>>;

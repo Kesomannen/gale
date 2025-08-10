@@ -5,12 +5,9 @@ use std::{
 };
 
 use eyre::{bail, Context, OptionExt, Result};
+use gale_core::game::mod_loader::{ModLoader, ModLoaderKind};
+use gale_util::error::IoResultExt;
 use tracing::{info, warn};
-
-use crate::{
-    game::mod_loader::{ModLoader, ModLoaderKind},
-    util::error::IoResultExt,
-};
 
 pub fn add_args(command: &mut Command, profile_dir: &Path, mod_loader: &ModLoader) -> Result<()> {
     match &mod_loader.kind {

@@ -5,7 +5,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use eyre::{bail, ensure, Context, Result};
+use eyre::{Context, Result, bail, ensure};
+use gale_util::{
+    error::IoResultExt,
+    fs::{Overwrite, UseLinks},
+    window::WindowExt,
+};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tracing::{debug, info, warn};
@@ -14,14 +19,6 @@ use crate::{
     db::{self, Db},
     game::{self, platform::Platform},
     logger,
-    profile::launch::LaunchMode,
-    state::ManagerExt,
-    util::{
-        self,
-        error::IoResultExt,
-        fs::{Overwrite, UseLinks},
-        window::WindowExt,
-    },
 };
 
 pub mod commands;
@@ -93,7 +90,7 @@ impl DirPref {
                         }
 
                         if moved_path.is_dir() {
-                            util::fs::copy_dir(
+                            gale_util::fs::copy_dir(
                                 &moved_path,
                                 &original_path,
                                 Overwrite::Yes,
@@ -129,7 +126,7 @@ impl DirPref {
                     if entry.file_type()?.is_dir() {
                         debug!("copying dir {:?} -> {:?}", old_path, new_path);
 
-                        util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes, UseLinks::No)
+                        gale_util::fs::copy_dir(&old_path, &new_path, Overwrite::Yes, UseLinks::No)
                             .context("failed to copy subdirectory")?;
                         fs::remove_dir_all(&old_path)
                             .fs_context("removing old subdirectory", &old_path)?;
@@ -200,10 +197,20 @@ pub struct GamePrefs {
     pub platform: Option<Platform>,
 }
 
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
+#[serde(rename_all = "camelCase", tag = "type", content = "content")]
+pub enum LaunchMode {
+    #[default]
+    #[serde(alias = "steam")]
+    Launcher,
+    #[serde(rename_all = "camelCase")]
+    Direct { instances: u32, interval_secs: f32 },
+}
+
 impl Default for Prefs {
     fn default() -> Self {
         Self {
-            data_dir: DirPref::new(util::path::default_app_data_dir())
+            data_dir: DirPref::new(gale_util::path::default_app_data_dir())
                 .keep(logger::FILE_NAME)
                 .keep(db::FILE_NAME)
                 .keep(db::SHM_FILE_NAME)
@@ -238,7 +245,14 @@ impl Prefs {
     }
 
     fn save(&self, db: &Db) -> Result<()> {
-        db.save_prefs(self)
+        db.with_transaction(|tx| {
+            let json = serde_json::to_string(self).context("failed to serialize to json")?;
+
+            tx.prepare("INSERT OR REPLACE INTO prefs (id, data) VALUES (1, ?)")?
+                .execute([json])?;
+
+            Ok(())
+        })
     }
 
     fn set(&mut self, value: Self, app: &AppHandle) -> Result<()> {
@@ -282,7 +296,7 @@ impl Prefs {
         self.fetch_mods_automatically = value.fetch_mods_automatically;
         self.pull_before_launch = value.pull_before_launch;
 
-        self.save(app.db()).context("failed save prefs")
+        self.save(&app.state()).context("failed save prefs")
     }
 
     fn validate_game_prefs(&mut self) -> Result<()> {

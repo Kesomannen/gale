@@ -5,22 +5,22 @@ use std::{
     str::{self},
 };
 
-use eyre::{eyre, Result};
+use eyre::{Result, eyre};
 use gale_core::{game::Game, ident::VersionIdent};
 use indexmap::IndexMap;
 use query::QueryModsArgs;
 use serde::{Deserialize, Serialize};
-use tauri::{async_runtime::JoinHandle, AppHandle};
+use tauri::{AppHandle, async_runtime::JoinHandle};
 use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::state::ManagerExt;
 
-pub mod cache;
-pub mod cdn;
+mod cache;
+mod cdn;
 pub mod commands;
-pub mod query;
-pub mod token;
+mod query;
+mod token;
 
 mod fetch;
 pub use fetch::wait_for_fetch;

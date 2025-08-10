@@ -7,6 +7,11 @@ use std::{
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
 use eyre::{anyhow, ensure, eyre, Context, ContextCompat, OptionExt, Result};
+use gale_core::{
+    game::{self, mod_loader::ModLoader, Game},
+    ident::VersionIdent,
+};
+use gale_util::fs::PathExt;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
@@ -14,13 +19,10 @@ use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{
-    config::ConfigCache,
     db::{self, Db},
-    game::{self, mod_loader::ModLoader, Game},
     prefs::Prefs,
     state::ManagerExt,
-    thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
-    util::fs::PathExt,
+    thunderstore::{self, BorrowedMod, ModId, Thunderstore},
 };
 
 pub mod commands;
@@ -70,8 +72,7 @@ pub struct Profile {
     pub mods: Vec<ProfileMod>,
     pub game: Game,
     pub ignored_updates: HashSet<Uuid>,
-    pub config_cache: ConfigCache,
-    pub linked_config: HashMap<Uuid, PathBuf>,
+    pub config: gale_config::Cache,
     pub modpack: Option<ModpackArgs>,
     pub sync: Option<sync::SyncProfileData>,
 }
@@ -139,6 +140,10 @@ impl ProfileMod {
         self.kind.full_name()
     }
 
+    pub fn name(&self) -> &str {
+        self.kind.name()
+    }
+
     fn as_thunderstore(&self) -> Option<(&ThunderstoreMod, bool)> {
         self.kind
             .as_thunderstore()
@@ -183,6 +188,13 @@ impl ProfileModKind {
         }
     }
 
+    pub fn name(&self) -> &str {
+        match self {
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod.ident.name(),
+            ProfileModKind::Local(local_mod) => &local_mod.name,
+        }
+    }
+
     pub fn as_thunderstore(&self) -> Option<&ThunderstoreMod> {
         match self {
             ProfileModKind::Thunderstore(ts_mod) => Some(ts_mod),
@@ -220,6 +232,20 @@ impl ProfileModKind {
 }
 
 impl Profile {
+    fn new(id: i64, name: String, path: PathBuf, game: Game) -> Self {
+        Self {
+            id,
+            name,
+            path,
+            game,
+            mods: Vec::new(),
+            ignored_updates: HashSet::new(),
+            config: gale_config::Cache::default(),
+            modpack: None,
+            sync: None,
+        }
+    }
+
     fn is_valid_name(name: &str) -> bool {
         const FORBIDDEN: &[char] = &['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
 
@@ -259,6 +285,19 @@ impl Profile {
 
     fn local_mods(&self) -> impl Iterator<Item = (&LocalMod, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_local)
+    }
+
+    fn refresh_config(&mut self) {
+        let mod_loader = &self.game.mod_loader;
+        let relative_dir = mod_loader.mod_config_dir();
+
+        self.config.refresh(&self.path, &relative_dir, mod_loader);
+
+        self.config.refresh_links(
+            self.mods
+                .iter()
+                .map(|profile_mod| (profile_mod.uuid(), profile_mod.name())),
+        );
     }
 
     /// Finds all the dependants of a mod in this profile.
@@ -552,8 +591,7 @@ impl ModManager {
                 mods: saved_profile.mods,
                 modpack: saved_profile.modpack,
                 ignored_updates: saved_profile.ignored_updates.unwrap_or_default(),
-                config_cache: ConfigCache::default(),
-                linked_config: HashMap::new(),
+                config: gale_config::Cache::default(),
                 sync: saved_profile.sync_data,
             };
 

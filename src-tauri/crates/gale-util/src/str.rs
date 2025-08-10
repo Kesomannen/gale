@@ -2,13 +2,6 @@ use std::cmp::Ordering;
 
 use itertools::Itertools;
 
-pub mod cmd;
-pub mod error;
-pub mod fs;
-pub mod path;
-pub mod window;
-pub mod zip;
-
 pub fn cmp_ignore_case(a: impl AsRef<str>, b: impl AsRef<str>) -> Ordering {
     a.as_ref()
         .chars()

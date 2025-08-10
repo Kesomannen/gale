@@ -13,7 +13,7 @@ use platform::Platforms;
 pub mod mod_loader;
 pub mod platform;
 
-const GAMES_JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", "games.json"));
+const GAMES_JSON: &str = include_str!("../../../../games.json");
 
 static GAMES: LazyLock<Vec<GameData<'static>>> =
     LazyLock::new(|| serde_json::from_str(GAMES_JSON).unwrap());

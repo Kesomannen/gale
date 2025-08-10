@@ -6,17 +6,11 @@ use std::{
 
 use eyre::{Context, Result};
 use include_dir::include_dir;
-use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
+use rusqlite::{OptionalExtension, params, types::Type as SqliteType};
 use rusqlite_migration::Migrations;
 use serde::de::DeserializeOwned;
 use tracing::{info, trace};
 use uuid::Uuid;
-
-use crate::{
-    prefs::Prefs,
-    profile::{self, sync::auth::AuthCredentials, ManagedGame, ModManager, Profile},
-    util,
-};
 
 pub mod cache;
 mod migrate;
@@ -28,7 +22,7 @@ pub const WAL_FILE_NAME: &str = "data.sqlite3-wal";
 pub struct Db(Mutex<rusqlite::Connection>);
 
 pub fn init() -> Result<(Db, bool)> {
-    let path = util::path::default_app_data_dir().join(FILE_NAME);
+    let path = gale_util::path::default_app_data_dir().join(FILE_NAME);
 
     let existed = path.exists();
 
@@ -57,7 +51,7 @@ fn trace_stmt(stmt: &str) {
     trace!("{stmt}");
 }
 
-static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migrations");
+static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/../../migrations");
 
 fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
     let migrations = Migrations::from_directory(&MIGRATIONS_DIR)?;
@@ -120,11 +114,11 @@ pub struct SaveData {
 }
 
 impl Db {
-    fn conn(&self) -> MutexGuard<'_, rusqlite::Connection> {
+    pub fn conn(&self) -> MutexGuard<'_, rusqlite::Connection> {
         self.0.lock().unwrap()
     }
 
-    fn with_transaction<F>(&self, f: F) -> Result<()>
+    pub fn with_transaction<F>(&self, f: F) -> Result<()>
     where
         F: FnOnce(&rusqlite::Transaction) -> Result<()>,
     {

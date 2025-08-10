@@ -5,6 +5,7 @@ use std::{
 };
 
 use eyre::{anyhow, Context};
+use gale_util::{cmd::Result, fs::PathExt};
 use itertools::Itertools;
 use tauri::{command, AppHandle};
 use tauri_plugin_clipboard_manager::ClipboardExt;
@@ -19,7 +20,6 @@ use crate::{
     profile::ProfileModKind,
     state::ManagerExt,
     thunderstore::{self},
-    util::{cmd::Result, fs::PathExt},
 };
 
 #[command]

@@ -56,7 +56,7 @@ pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
     }
 }
 
-const EXCLUDED_PACKAGES_STR: &str = include_str!("../../excluded_packages.txt");
+const EXCLUDED_PACKAGES_STR: &str = include_str!("../../../excluded_packages.txt");
 
 static EXCLUDED_PACKAGES: LazyLock<Vec<&'static str>> = LazyLock::new(|| {
     EXCLUDED_PACKAGES_STR

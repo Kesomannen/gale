@@ -1,6 +1,6 @@
 use std::io::{BufRead, Write};
 
-use eyre::{bail, eyre, OptionExt, Result};
+use eyre::{OptionExt, Result, bail, eyre};
 use indexmap::IndexMap;
 use serde_json::{Number, Value};
 
@@ -22,8 +22,8 @@ impl File {
         Ok(())
     }
 
-    pub fn set(&mut self, name: impl Into<String>, value: frontend::Value) -> Result<()> {
-        self.entries.insert(name.into(), value.try_into()?);
+    pub fn set(&mut self, name: impl Into<String>, value: Value) -> Result<()> {
+        self.entries.insert(name.into(), value);
         Ok(())
     }
 

@@ -7,6 +7,7 @@ use std::{
 
 use base64::{prelude::BASE64_STANDARD, Engine};
 use eyre::{eyre, Context, Result};
+use gale_util::error::IoResultExt;
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -22,14 +23,13 @@ use crate::{
     },
     state::ManagerExt,
     thunderstore::ModId,
-    util::{self, error::IoResultExt},
 };
 
 pub mod commands;
 mod local;
 mod r2modman;
 
-pub use local::{import_local_mod, import_local_mod_base64};
+pub use local::import_local_mod;
 
 use super::{
     export::{self, IncludeExtensions, IncludeGenerated},
@@ -58,7 +58,7 @@ pub fn import_file_from_path(path: PathBuf) -> Result<ImportData> {
 
 pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
     let temp_dir = tempdir().context("failed to create temporary directory")?;
-    util::zip::extract(source, temp_dir.path())?;
+    gale_util::zip::extract(source, temp_dir.path())?;
 
     let reader = File::open(temp_dir.path().join("export.r2x"))
         .map(BufReader::new)
@@ -290,7 +290,7 @@ pub fn import_config(
         };
 
         let need_copy = if dest_path.exists() {
-            util::fs::checksum(&src_path)? != util::fs::checksum(&dest_path)?
+            gale_util::fs::checksum(&src_path)? != gale_util::fs::checksum(&dest_path)?
         } else {
             true
         };

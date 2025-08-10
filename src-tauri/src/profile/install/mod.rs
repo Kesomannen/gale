@@ -2,6 +2,10 @@ use std::{fmt::Display, iter, process};
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
+use gale_core::{
+    game::mod_loader::{ModLoader, ModLoaderKind, Subdir},
+    ident::VersionIdent,
+};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
@@ -14,7 +18,7 @@ use crate::{
     prefs::Prefs,
     profile::{ProfileMod, ProfileModKind, ThunderstoreMod},
     state::ManagerExt,
-    thunderstore::{BorrowedMod, ModId, Thunderstore, VersionIdent},
+    thunderstore::{BorrowedMod, ModId, Thunderstore},
 };
 
 mod cache;
@@ -268,4 +272,143 @@ pub async fn handle_exit(app: AppHandle) {
 
     wait_for_install.await;
     process::exit(0);
+}
+
+/// Checks for the mod loader's own package on Thunderstore.
+fn is_loader_package(mod_loader: &ModLoader, full_name: &str) -> bool {
+    if let Some(package_name) = mod_loader.package_name {
+        full_name == package_name
+    } else {
+        match &mod_loader.kind {
+            ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
+            ModLoaderKind::MelonLoader { .. } => full_name == "LavaGang-MelonLoader",
+            ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
+            ModLoaderKind::Northstar {} => full_name == "northstar-Northstar",
+            ModLoaderKind::Shimloader {} => full_name == "Thunderstore-unreal_shimloader",
+            ModLoaderKind::Lovely {} => full_name == "Thunderstore-lovely",
+            ModLoaderKind::ReturnOfModding { .. } => full_name == "ReturnOfModding-ReturnOfModding",
+        }
+    }
+}
+
+pub fn installer_for(
+    mod_loader: &'static ModLoader,
+    package_name: &str,
+) -> Box<dyn PackageInstaller> {
+    match (
+        is_loader_package(mod_loader, package_name),
+        &mod_loader.kind,
+    ) {
+        (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
+        (false, ModLoaderKind::BepInEx { extra_subdirs, .. }) => {
+            const SUBDIRS: &[Subdir] = &[
+                Subdir::flat_separated("plugins", "BepInEx/plugins"),
+                Subdir::flat_separated("patchers", "BepInEx/patchers"),
+                Subdir::flat_separated("monomod", "BepInEx/monomod").extension(".mm.dll"),
+                Subdir::flat_separated("core", "BepInEx/core"),
+                Subdir::untracked("config", "BepInEx/config").mutable(),
+            ];
+
+            Box::new(
+                SubdirInstaller::new(SUBDIRS)
+                    .with_default(0)
+                    .with_extras(extra_subdirs),
+            )
+        }
+
+        (true, ModLoaderKind::MelonLoader { .. }) => {
+            const FILES: &[&str] = &[
+                "dobby.dll",
+                "version.dll",
+                "MelonLoader/Dependencies",
+                "MelonLoader/Documentation",
+                "MelonLoader/net6",
+                "MelonLoader/net35",
+            ];
+
+            Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
+        }
+        (false, ModLoaderKind::MelonLoader { extra_subdirs }) => {
+            const SUBDIRS: &[Subdir] = &[
+                Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
+                Subdir::tracked("Managed", "MelonLoader/Managed").extension(".managed.dll"),
+                Subdir::tracked("Mods", "Mods").extension(".dll"),
+                Subdir::separated("ModManager", "UserData/ModManager"),
+                Subdir::tracked("MelonLoader", "MelonLoader"),
+                Subdir::tracked("Libs", "MelonLoader/Libs"),
+            ];
+            const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
+
+            Box::new(
+                SubdirInstaller::new(SUBDIRS)
+                    .with_default(2)
+                    .with_extras(extra_subdirs)
+                    .with_ignored_files(IGNORED),
+            )
+        }
+
+        (true, ModLoaderKind::GDWeave {}) => {
+            const FILES: &[&str] = &["winmm.dll", "GDWeave/core"];
+
+            Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
+        }
+        (false, ModLoaderKind::GDWeave {}) => Box::new(GDWeaveModInstaller),
+
+        (true, ModLoaderKind::Northstar {}) => {
+            const FILES: &[&str] = &[
+                "Northstar.dll",
+                "NorthstarLauncher.exe",
+                "r2ds.bat",
+                "bin",
+                "R2Northstar/plugins",
+                "R2Northstar/mods/Northstar.Client",
+                "R2Northstar/mods/Northstar.Custom",
+                "R2Northstar/mods/Northstar.CustomServers",
+                "R2Northstar/mods/md5sum.text",
+            ];
+
+            Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::Yes))
+        }
+        (false, ModLoaderKind::Northstar {}) => {
+            const SUBDIRS: &[Subdir] = &[Subdir::tracked("mods", "R2Northstar/mods")];
+            const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md", "LICENSE"];
+
+            Box::new(SubdirInstaller::new(SUBDIRS).with_ignored_files(IGNORED))
+        }
+
+        (true, ModLoaderKind::Shimloader {}) => Box::new(ShimloaderInstaller),
+        (false, ModLoaderKind::Shimloader {}) => {
+            const SUBDIRS: &[Subdir] = &[
+                Subdir::flat_separated("mod", "shimloader/mod"),
+                Subdir::flat_separated("pak", "shimloader/pak"),
+                Subdir::untracked("cfg", "shimloader/cfg").mutable(),
+            ];
+
+            Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+        }
+
+        (true, ModLoaderKind::ReturnOfModding { files }) => {
+            Box::new(ExtractInstaller::new(files, FlattenTopLevel::Yes))
+        }
+        (false, ModLoaderKind::ReturnOfModding { .. }) => {
+            const SUBDIRS: &[Subdir] = &[
+                Subdir::separated("plugins", "ReturnOfModding/plugins"),
+                Subdir::separated("plugins_data", "ReturnOfModding/plugins_data"),
+                Subdir::separated("config", "ReturnOfModding/config").mutable(),
+            ];
+
+            Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+        }
+
+        (true, ModLoaderKind::Lovely {}) => {
+            const FILES: &[&str] = &["version.dll"];
+
+            Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
+        }
+        (false, ModLoaderKind::Lovely {}) => {
+            const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
+
+            Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+        }
+    }
 }

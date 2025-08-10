@@ -6,18 +6,18 @@ use std::{
 
 use base64::{prelude::BASE64_STANDARD, Engine};
 use eyre::{bail, ensure, Context, Result};
+use gale_core::game::mod_loader::{ModLoader, ModLoaderKind};
+use gale_util::fs::PathExt;
 use tauri::AppHandle;
 use tempfile::NamedTempFile;
 use uuid::Uuid;
 use zip::ZipArchive;
 
 use crate::{
-    game::mod_loader::{ModLoader, ModLoaderKind},
     prefs::Prefs,
-    profile::{install::InstallOptions, LocalMod, Profile, ProfileMod},
+    profile::{self, install::InstallOptions, LocalMod, Profile, ProfileMod},
     state::ManagerExt,
     thunderstore::PackageManifest,
-    util::{self, fs::PathExt},
 };
 
 pub async fn import_local_mod_base64(
@@ -156,7 +156,7 @@ fn read_local_mod(
         None => LocalMod {
             uuid,
             file_size,
-            name: util::fs::file_name_owned(path.with_extension("")),
+            name: gale_util::fs::file_name_owned(path.with_extension("")),
             ..Default::default()
         },
     };
@@ -165,7 +165,7 @@ fn read_local_mod(
 }
 
 fn read_zip_manifest(path: &Path) -> Result<Option<PackageManifest>> {
-    let mut zip = util::fs::open_zip(path).context("failed to open zip archive")?;
+    let mut zip = gale_util::fs::open_zip(path).context("failed to open zip archive")?;
 
     let manifest = zip.by_name("manifest.json");
 
@@ -206,7 +206,7 @@ fn install_from_zip(
         .context("failed to read file")?;
     let archive = ZipArchive::new(reader).context("failed to read archive")?;
 
-    let mut installer = mod_loader.installer_for(package_name);
+    let mut installer = profile::install::installer_for(mod_loader, package_name);
     installer.extract(archive, package_name, temp_path.clone())?;
     installer.install(&temp_path, package_name, profile)?;
 

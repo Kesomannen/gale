@@ -1,0 +1,28 @@
+[package]
+name = "gale-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gale-util = { path = "../gale-util" }
+
+tauri = { workspace = true }
+
+eyre = "0.6"
+
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }
+
+internment = { version = "0.8.6", features = ["serde"] }
+heck = "0.5"
+strum = "0.26"
+strum_macros = "0.26"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+rusqlite = { workspace = true }
+rusqlite_migration = { workspace = true }
+font-kit = "0.14"
+include_dir = "0.7"
+uuid = "1"
+chrono = { version = "0.4", features = ["serde"] }
+open = "5"

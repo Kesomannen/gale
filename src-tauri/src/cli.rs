@@ -6,7 +6,6 @@ use tauri::AppHandle;
 use tracing::{debug, error, info};
 
 use crate::{
-    game::{self},
     logger,
     profile::{self, install::InstallOptions, ModManager},
     state::ManagerExt,
@@ -71,7 +70,7 @@ impl Cli {
         } = self;
 
         if let Some(slug) = &game {
-            let game = game::from_slug(slug).ok_or_eyre("unknown game slug")?;
+            let game = gale_core::game::from_slug(slug).ok_or_eyre("unknown game slug")?;
 
             manager
                 .set_active_game(game, app)

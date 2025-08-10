@@ -1,25 +1,24 @@
 use std::fs;
 
 use eyre::{Context, Result};
+use gale_core::game::{self, platform::Platform};
 use itertools::Itertools;
 use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{
-    game::{self, platform::Platform},
     prefs::{GamePrefs, Prefs},
     profile::{
-        export::modpack::ModpackArgs, launch::LaunchMode, LocalMod, ProfileMod, ProfileModKind,
-        ThunderstoreMod,
+        LocalMod, ProfileMod, ProfileModKind, ThunderstoreMod, export::modpack::ModpackArgs,
+        launch::LaunchMode,
     },
     thunderstore::ModId,
-    util,
 };
 
 use super::{ManagedGameData, ManagerData, ProfileData, SaveData};
 
 pub fn should_migrate() -> bool {
-    util::path::default_app_config_dir()
+    gale_util::path::default_app_config_dir()
         .join("prefs.json")
         .exists()
 }
@@ -27,8 +26,8 @@ pub fn should_migrate() -> bool {
 pub fn migrate() -> Result<(SaveData, Prefs, Option<Uuid>)> {
     info!("migrating legacy save data");
 
-    let prefs_path = util::path::default_app_config_dir().join("prefs.json");
-    let prefs = util::fs::read_json::<legacy::Prefs>(&prefs_path)
+    let prefs_path = gale_util::path::default_app_config_dir().join("prefs.json");
+    let prefs = gale_util::fs::read_json::<legacy::Prefs>(&prefs_path)
         .map(Prefs::from)
         .context("failed to read prefs.json")?;
 
@@ -44,7 +43,7 @@ pub fn migrate() -> Result<(SaveData, Prefs, Option<Uuid>)> {
 fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
     let manifest_path = prefs.data_dir.join("manager.json");
     let manager_data: legacy::ManagerSaveData =
-        util::fs::read_json(&manifest_path).context("failed to read manager.json")?;
+        gale_util::fs::read_json(&manifest_path).context("failed to read manager.json")?;
 
     let manager = ManagerData {
         id: 1,
@@ -65,7 +64,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
         });
 
     for (game, path) in game_dirs {
-        let data: legacy::ManagedGameSaveData = util::fs::read_json(path.join("game.json"))
+        let data: legacy::ManagedGameSaveData = gale_util::fs::read_json(path.join("game.json"))
             .with_context(|| format!("failed to read game.json for {}", game.slug))?;
 
         let mut active_profile_id: i64 = 1;
@@ -79,7 +78,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
             .map(|entry| entry.path());
 
         for (index, path) in profile_dirs.enumerate() {
-            let name = util::fs::file_name_owned(&path);
+            let name = gale_util::fs::file_name_owned(&path);
             let manifest_path = path.join("profile.json");
 
             if !manifest_path.exists() {
@@ -90,7 +89,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
                 continue;
             }
 
-            let profile_data: legacy::ProfileSaveData = util::fs::read_json(manifest_path)
+            let profile_data: legacy::ProfileSaveData = gale_util::fs::read_json(manifest_path)
                 .with_context(|| {
                     format!("failed to read profile.json for {} ({})", name, game.slug)
                 })?;
@@ -129,8 +128,8 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
 }
 
 fn read_user_id() -> Result<legacy::TelemetryData> {
-    let path = util::path::default_app_config_dir().join("telementary.json");
-    util::fs::read_json(path)
+    let path = gale_util::path::default_app_config_dir().join("telementary.json");
+    gale_util::fs::read_json(path)
 }
 
 impl From<legacy::Prefs> for Prefs {
@@ -273,7 +272,7 @@ mod legacy {
     use serde::Deserialize;
     use uuid::Uuid;
 
-    use crate::thunderstore::VersionIdent;
+    use crate::ident::VersionIdent;
 
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]

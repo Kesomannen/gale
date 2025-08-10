@@ -8,12 +8,8 @@ use tauri::{AppHandle, Emitter};
 use tracing::info;
 
 use super::{
-    models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
     BorrowedMod,
-};
-use crate::{
-    profile::{LocalMod, Profile},
-    state::ManagerExt,
+    models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
 };
 
 pub fn setup(app: &AppHandle) {

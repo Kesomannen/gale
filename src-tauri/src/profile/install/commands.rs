@@ -1,11 +1,7 @@
+use gale_util::cmd::Result;
 use tauri::{command, AppHandle};
 
-use crate::{
-    profile::install::InstallResultExt,
-    state::ManagerExt,
-    thunderstore::ModId,
-    util::{self, cmd::Result},
-};
+use crate::{profile::install::InstallResultExt, state::ManagerExt, thunderstore::ModId};
 
 use super::{InstallOptions, ModInstall};
 
@@ -49,7 +45,7 @@ pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     if soft {
         let paths = super::cache::prepare_soft_clear(app)?;
 
-        let size = paths.iter().map(util::fs::get_directory_size).sum();
+        let size = paths.iter().map(gale_util::fs::get_directory_size).sum();
 
         tauri::async_runtime::spawn_blocking(|| super::cache::do_soft_clear(paths)).await??;
 
@@ -57,7 +53,7 @@ pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     } else {
         let path = app.lock_prefs().cache_dir();
 
-        let size = util::fs::get_directory_size(&path);
+        let size = gale_util::fs::get_directory_size(&path);
 
         tauri::async_runtime::spawn_blocking(|| super::cache::clear(path)).await??;
 

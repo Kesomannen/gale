@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
 use eyre::anyhow;
+use gale_util::cmd::Result;
 use tauri::{command, AppHandle};
 use uuid::Uuid;
 
 use crate::{
     profile::install::InstallOptions,
     thunderstore::{self},
-    util::cmd::Result,
 };
 
 use super::{
@@ -58,7 +58,7 @@ pub async fn import_local_mod(path: PathBuf, app: AppHandle) -> Result<()> {
 pub async fn import_local_mod_base64(base64: String, app: AppHandle) -> Result<()> {
     thunderstore::wait_for_fetch(&app).await;
 
-    super::import_local_mod_base64(base64, &app, InstallOptions::default()).await?;
+    super::local::import_local_mod_base64(base64, &app, InstallOptions::default()).await?;
 
     Ok(())
 }

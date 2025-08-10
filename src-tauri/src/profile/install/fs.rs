@@ -6,14 +6,12 @@ use std::{
 };
 
 use eyre::{Context, Result};
+use gale_util::{error::IoResultExt, fs::PathExt};
 use tracing::warn;
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
-use crate::{
-    profile::Profile,
-    util::{self, error::IoResultExt, fs::PathExt},
-};
+use crate::profile::Profile;
 
 /// Extract a package archive to `dest`, mapping files using `map_file`.
 ///
@@ -45,7 +43,7 @@ where
             Path::new(name).into()
         };
 
-        if !util::fs::is_enclosed(&relative_path) {
+        if !gale_util::fs::is_enclosed(&relative_path) {
             warn!(
                 "file {} escapes the archive root, skipping",
                 relative_path.display()

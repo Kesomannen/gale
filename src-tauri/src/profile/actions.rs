@@ -1,10 +1,10 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fs,
-    path::PathBuf,
-};
+use std::{fs, path::PathBuf};
 
 use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
+use gale_util::{
+    error::IoResultExt,
+    fs::{Overwrite, UseLinks},
+};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
@@ -17,18 +17,7 @@ use super::{
     install::PackageInstaller,
     Dependant, ManagedGame, Profile, ProfileMod,
 };
-use crate::{
-    config::ConfigCache,
-    db::Db,
-    logger,
-    state::ManagerExt,
-    thunderstore::Thunderstore,
-    util::{
-        self,
-        error::IoResultExt,
-        fs::{Overwrite, UseLinks},
-    },
-};
+use crate::{db::Db, logger, profile::install, state::ManagerExt, thunderstore::Thunderstore};
 
 pub fn setup(app: &AppHandle) -> Result<()> {
     let handle = app.to_owned();
@@ -205,7 +194,7 @@ impl Profile {
     }
 
     fn installer_for(&self, profile_mod: &ProfileMod) -> Box<dyn PackageInstaller> {
-        self.game.mod_loader.installer_for(&profile_mod.full_name())
+        install::installer_for(&self.game.mod_loader, &profile_mod.full_name())
     }
 
     fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {
@@ -307,18 +296,7 @@ impl ManagedGame {
             "created profile",
         );
 
-        let profile = Profile {
-            id,
-            name,
-            path,
-            mods: Vec::new(),
-            game: self.game,
-            ignored_updates: HashSet::new(),
-            config_cache: ConfigCache::default(),
-            linked_config: HashMap::new(),
-            modpack: None,
-            sync: None,
-        };
+        let profile = Profile::new(id, name, path, self.game);
 
         let index = self.target_profile_index(&profile.name);
         self.profiles.insert(index, profile);
@@ -383,7 +361,7 @@ impl ManagedGame {
         )
         .context("failed to copy config files")?;
 
-        util::fs::copy_dir(
+        gale_util::fs::copy_dir(
             &old_profile.path,
             &new_profile.path,
             Overwrite::No, // don't override the copied mutable files

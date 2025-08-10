@@ -1,6 +1,7 @@
+use gale_util::cmd::Result;
 use tauri::{command, AppHandle};
 
-use crate::{state::ManagerExt, util::cmd::Result};
+use crate::state::ManagerExt;
 
 use super::{auth, ListedSyncProfile, SyncProfileMetadata};
 

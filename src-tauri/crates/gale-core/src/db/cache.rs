@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use chrono::Utc;
 use eyre::Result;
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{OptionalExtension, params};
 use tracing::{debug, info};
 use uuid::Uuid;
 

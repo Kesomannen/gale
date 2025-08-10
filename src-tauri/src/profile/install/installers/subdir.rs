@@ -6,19 +6,18 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
+use gale_core::game::mod_loader::{Subdir, SubdirMode};
+use gale_util::fs::JsonStyle;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
 use super::{PackageInstaller, PackageZip};
-use crate::{
-    profile::{
-        install::{
-            self,
-            fs::{ConflictResolution, FileInstallMethod},
-        },
-        Profile, ProfileMod,
+use crate::profile::{
+    install::{
+        self,
+        fs::{ConflictResolution, FileInstallMethod},
     },
-    util::{self, fs::JsonStyle},
+    Profile, ProfileMod,
 };
 
 pub struct SubdirInstaller<'a> {
@@ -26,83 +25,6 @@ pub struct SubdirInstaller<'a> {
     default_subdir: Option<usize>,
     extra_subdirs: &'a [Subdir<'a>],
     ignored_files: &'a [&'a str],
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Subdir<'a> {
-    /// The name which "triggers" the subdir. Must be a single path component.
-    pub name: &'a str,
-    /// The target path of the subdir, relative to the profile dir.
-    ///
-    /// Use forward slashes to separate path components.
-    pub target: &'a str,
-    #[serde(default)]
-    pub mode: SubdirMode,
-    /// Whether files in this subdir can be/are expected to be mutated.
-    ///
-    /// When this is `false` (as default), files are installed using hard links
-    /// instead of copying, which saves disk space and copy time.
-    #[serde(default)]
-    pub mutable: bool,
-    /// File extension(s) that automatically route to this subdir.
-    /// Multiple extensions are separated by a comma.
-    #[serde(default)]
-    pub extension: Option<&'a str>,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum SubdirMode {
-    /// Separate mods into `author-name` dirs.
-    Separate,
-    /// Same as [`SubdirMode::Separate`], but also flatten any dirs that
-    /// come before the subdir.
-    #[default]
-    SeparateFlatten,
-    /// Track which files are installed by which mod.
-    Track,
-    /// Don't track or separate mods. This prevents disabling
-    /// or uninstallation of files in the subdir.
-    None,
-}
-
-impl<'a> Subdir<'a> {
-    pub const fn new(name: &'a str, target: &'a str, mode: SubdirMode) -> Self {
-        Self {
-            name,
-            target,
-            mode,
-            mutable: false,
-            extension: None,
-        }
-    }
-
-    pub const fn separated(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::Separate)
-    }
-
-    pub const fn flat_separated(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::SeparateFlatten)
-    }
-
-    pub const fn tracked(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::Track)
-    }
-
-    pub const fn untracked(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::None)
-    }
-
-    pub const fn mutable(mut self) -> Self {
-        self.mutable = true;
-        self
-    }
-
-    pub const fn extension(mut self, ext: &'a str) -> Self {
-        self.extension = Some(ext);
-        self
-    }
 }
 
 impl<'a> SubdirInstaller<'a> {
@@ -139,7 +61,7 @@ impl<'a> SubdirInstaller<'a> {
 
     fn match_subdir(&self, name: &str) -> Option<&Subdir> {
         self.subdirs().find(|subdir| {
-            util::cmp_ignore_case(subdir.name, name).is_eq()
+            gale_util::str::cmp_ignore_case(subdir.name, name).is_eq()
                 || subdir
                     .extension
                     .is_some_and(|ext| ext.split(',').any(|ext| name.ends_with(ext)))
@@ -282,7 +204,7 @@ struct PackageState {
 impl PackageStateHandle {
     fn new(package_name: &str, profile: &Profile) -> Self {
         let path = state_file_path(package_name, profile);
-        let state = util::fs::read_json(&path).unwrap_or_default();
+        let state = gale_util::fs::read_json(&path).unwrap_or_default();
         Self { path, state }
     }
 
@@ -296,7 +218,7 @@ impl PackageStateHandle {
 
     fn commit(&self) -> Result<()> {
         fs::create_dir_all(self.path.parent().unwrap())?;
-        util::fs::write_json(&self.path, &self.state, JsonStyle::Pretty)
+        gale_util::fs::write_json(&self.path, &self.state, JsonStyle::Pretty)
     }
 
     fn delete(self) -> Result<()> {
@@ -319,7 +241,7 @@ struct ProfileState {
 impl ProfileStateHandle {
     fn new(profile: &Profile) -> Self {
         let path = state_file_path("profile", profile);
-        let state = util::fs::read_json(&path).unwrap_or_default();
+        let state = gale_util::fs::read_json(&path).unwrap_or_default();
         Self { path, state }
     }
 
@@ -329,7 +251,7 @@ impl ProfileStateHandle {
 
     fn commit(&self) -> Result<()> {
         fs::create_dir_all(self.path.parent().unwrap())?;
-        util::fs::write_json(&self.path, &self.state, JsonStyle::Pretty)
+        gale_util::fs::write_json(&self.path, &self.state, JsonStyle::Pretty)
     }
 }
 

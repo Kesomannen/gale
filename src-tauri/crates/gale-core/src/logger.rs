@@ -5,11 +5,11 @@ use std::{
 
 use eyre::{Context, OptionExt, Result};
 use serde::Serialize;
-use tauri::{command, AppHandle, Emitter};
-use tracing::{level_filters::LevelFilter, Level};
-use tracing_subscriber::{prelude::*, Registry};
+use tauri::{AppHandle, Emitter, command};
+use tracing::{Level, level_filters::LevelFilter};
+use tracing_subscriber::{Registry, prelude::*};
 
-use crate::util::{self, fs::PathExt};
+use gale_util::{self, fs::PathExt};
 
 pub const FILE_NAME: &str = "latest.log";
 
@@ -36,7 +36,7 @@ pub fn log_webview_err(name: impl AsRef<str>, error: eyre::Error, app: &AppHandl
 }
 
 fn log_path() -> PathBuf {
-    util::path::default_app_data_dir().join(FILE_NAME)
+    gale_util::path::default_app_data_dir().join(FILE_NAME)
 }
 
 pub fn setup() -> Result<()> {
@@ -64,7 +64,7 @@ pub fn setup() -> Result<()> {
 }
 
 #[command]
-pub fn open_gale_log() -> util::cmd::Result<()> {
+pub fn open_gale_log() -> gale_util::cmd::Result<()> {
     let path = log_path()
         .exists_or_none()
         .ok_or_eyre("no log file found")?;

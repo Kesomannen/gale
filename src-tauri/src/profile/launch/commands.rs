@@ -1,8 +1,9 @@
 use eyre::Context;
+use gale_util::cmd::Result;
 use itertools::Itertools;
 use tauri::{command, AppHandle};
 
-use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
+use crate::{profile::sync, state::ManagerExt};
 
 #[command]
 pub async fn launch_game(app: AppHandle) -> Result<()> {

@@ -4,6 +4,7 @@ use std::{
 };
 
 use eyre::{bail, Context, Result};
+use gale_util::{error::IoResultExt, fs::PathExt};
 use serde::Serialize;
 use tauri::AppHandle;
 use tracing::{info, warn};
@@ -16,7 +17,6 @@ use crate::{
     },
     state::ManagerExt,
     thunderstore::{self},
-    util::{self, error::IoResultExt, fs::PathExt},
 };
 
 use super::ImportData;
@@ -37,7 +37,7 @@ pub(super) fn gather_info(
     };
 
     let profiles = find_profiles(path.clone(), app)?
-        .map(util::fs::file_name_owned)
+        .map(gale_util::fs::file_name_owned)
         .collect();
 
     Ok(Some(ProfileImportData { path, profiles }))
@@ -127,7 +127,7 @@ async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
 fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<ImportData>> {
     let mut manager = app.lock_manager();
 
-    let name = util::fs::file_name_owned(&profile_dir);
+    let name = gale_util::fs::file_name_owned(&profile_dir);
 
     profile_dir.push("mods.yml");
 

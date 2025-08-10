@@ -13,6 +13,8 @@ use std::{
 
 use eyre::{bail, eyre, Context, Result};
 use futures_util::StreamExt;
+use gale_core::ident::VersionIdent;
+use gale_util::error::IoResultExt;
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
@@ -21,7 +23,7 @@ use tracing::warn;
 use uuid::Uuid;
 use zip::ZipArchive;
 
-use crate::{logger, state::ManagerExt, thunderstore::VersionIdent, util::error::IoResultExt};
+use crate::{logger, state::ManagerExt};
 
 use super::{CancelBehavior, InstallError, InstallOptions, InstallResult, ModInstall};
 
@@ -414,7 +416,7 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
     let (game, profile) = manager.profile_by_id_mut(batch.profile_id)?;
     let package_name = install.ident.full_name();
 
-    let mut installer = game.mod_loader.installer_for(package_name);
+    let mut installer = super::installer_for(&game.mod_loader, package_name);
     installer.install(&cache_path, package_name, profile)?;
 
     install.clone().insert_into(profile)?;
@@ -513,7 +515,7 @@ fn install_from_download(
 
     fs::create_dir_all(&cache_path).fs_context("creating mod cache dir", &cache_path)?;
 
-    let mut installer = game.mod_loader.installer_for(package_name);
+    let mut installer = super::installer_for(&game.mod_loader, package_name);
 
     emit(
         InstallEvent::set_task(&install.ident, InstallTask::Extract),

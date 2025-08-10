@@ -7,6 +7,7 @@ use std::{
 
 use base64::{prelude::BASE64_STANDARD, Engine};
 use eyre::Context;
+use gale_core::{game::Game, ident::PackageIdent};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use uuid::Uuid;
@@ -15,9 +16,8 @@ use zip::{write::SimpleFileOptions, ZipWriter};
 
 use super::{install::ModInstall, Profile, Result};
 use crate::{
-    game::Game,
     state::ManagerExt,
-    thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore},
+    thunderstore::{LegacyProfileCreateResponse, Thunderstore},
 };
 
 mod changelog;
