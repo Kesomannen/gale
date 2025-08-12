@@ -86,7 +86,12 @@ impl State {
     }
 }
 
-async fn connect(app: AppHandle, rx: mpsc::UnboundedReceiver<ClientMessage>) -> Result<()> {
+async fn connect(app: AppHandle, mut rx: mpsc::UnboundedReceiver<ClientMessage>) -> Result<()> {
+    // wait until we want to send a message before connecting
+    let Some(first) = rx.recv().await else {
+        return Ok(());
+    };
+
     let url = format!("{}/socket/connect", super::API_URL.replace("http", "ws"));
 
     info!("connecting to sync server socket at {url}");
@@ -100,9 +105,11 @@ async fn connect(app: AppHandle, rx: mpsc::UnboundedReceiver<ClientMessage>) -> 
         .into_websocket()
         .await?;
 
-    let (sender, receiver) = socket.split();
+    let (mut sender, receiver) = socket.split();
 
     tokio::spawn(read(app.to_owned(), receiver));
+
+    send_queue_message(&mut sender, first).await;
     tokio::spawn(write(sender, rx));
 
     Ok(())
@@ -163,23 +170,29 @@ async fn write(
     mut rx: mpsc::UnboundedReceiver<ClientMessage>,
 ) {
     while let Some(msg) = rx.recv().await {
-        debug!("sending {msg:?}");
-
-        let msg = match serde_json::to_string(&msg) {
-            Ok(str) => reqwest_websocket::Message::Text(str),
-            Err(err) => {
-                error!("failed to serialize socket message: {err}");
-                continue;
-            }
-        };
-
-        if let Err(err) = sender.send(msg).await {
-            warn!("stopping socket write task: transmit error: {err}");
-            return;
-        }
+        send_queue_message(&mut sender, msg).await;
     }
 
     info!("stopping socket write task: channel was closed")
+}
+
+async fn send_queue_message(
+    sender: &mut SplitSink<WebSocket, reqwest_websocket::Message>,
+    msg: ClientMessage,
+) {
+    debug!("sending {msg:?}");
+
+    let msg = match serde_json::to_string(&msg) {
+        Ok(str) => reqwest_websocket::Message::Text(str),
+        Err(err) => {
+            warn!("failed to serialize socket message: {err}");
+            return;
+        }
+    };
+
+    if let Err(err) = sender.send(msg).await {
+        warn!("failed to send socket message: {err}");
+    }
 }
 
 fn sync_profiles_with_id<'a>(

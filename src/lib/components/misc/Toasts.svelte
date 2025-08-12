@@ -35,7 +35,7 @@
 						toast.type === 'error' ? 'text-red-600' : 'text-accent-600',
 						'mx-2 shrink-0 text-xl'
 					)}
-					icon={toast.type === 'error' ? 'mdi:error' : 'mdi:info-circle'}
+					icon={toast.type === 'error' ? 'mdi:error' : 'mdi:check-circle'}
 				/>
 
 				<div class="mr-4 grow overflow-hidden">
@@ -43,7 +43,7 @@
 						<span class="text-primary-300">{toast.name}:</span>
 					{/if}
 
-					<span class="text-primary-100 font-semibold break-words">{toast.message}</span>
+					<span class="text-primary-100 font-medium break-words">{toast.message}</span>
 				</div>
 
 				{#if toast.type === 'error'}

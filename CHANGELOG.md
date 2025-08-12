@@ -5,7 +5,9 @@
 ### Added
 
 - Live profile sync updates
+- Sync profile import links
 - Support for Add PATAPON 1+2 REPLAY and Ostranauts
+- Warning for unknown mods in imported profiles
 
 ### Changed
 

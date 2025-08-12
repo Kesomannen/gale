@@ -16,12 +16,12 @@
 {#if user.avatar}
 	<img
 		src={discordAvatarUrl(user.discordId, user.avatar)}
-		class={[classProp, 'size-10 rounded-full shadow-lg']}
+		class={[classProp, 'size-8 rounded-full shadow-lg']}
 		alt=""
 	/>
 {:else}
 	<Icon
 		icon="mdi:account-circle"
-		class={clsx(classProp, 'text-primary-500 block size-10 shadow-lg')}
+		class={clsx(classProp, 'text-primary-500 block size-8 shadow-lg')}
 	/>
 {/if}

@@ -214,7 +214,7 @@
 
 		if (path === null) return;
 		await api.profile.import.localMod(path);
-		await pushInfoToast({
+		pushInfoToast({
 			message: 'Imported local mod into profile.'
 		});
 	}
@@ -227,7 +227,7 @@
 
 		if (path === null) return;
 		let data = await api.profile.import.readFile(path);
-		importProfileDialog.openFor({ type: 'normal', ...data });
+		importProfileDialog.openFor({ type: 'legacy', ...data });
 	}
 
 	async function exportFile() {
@@ -242,7 +242,7 @@
 
 	async function setAllModsState(enable: boolean) {
 		let count = await api.profile.setAllModsState(enable);
-		await pushInfoToast({
+		pushInfoToast({
 			message: `${enable ? 'Enabled' : 'Disabled'} ${count} mods.`
 		});
 	}
@@ -354,7 +354,7 @@
 
 		if (file.name.endsWith('.r2z')) {
 			let data = await api.profile.import.readBase64(base64);
-			importProfileDialog.openFor({ type: 'normal', ...data });
+			importProfileDialog.openFor({ type: 'legacy', ...data });
 		} else if (file.name.endsWith('.zip')) {
 			if (profiles.activeLocked) {
 				pushToast({
@@ -366,7 +366,7 @@
 			}
 
 			await api.profile.import.localModBase64(base64);
-			await pushInfoToast({
+			pushInfoToast({
 				message: 'Imported local mod into profile.'
 			});
 		}
@@ -389,7 +389,8 @@
 		'-': () => api.prefs.zoomWindow({ delta: -0.25 }),
 		'0': () => api.prefs.zoomWindow({ factor: 1 }),
 		n: () => (newProfileOpen = true),
-		d: () => openProfileOperation('duplicate')
+		d: () => openProfileOperation('duplicate'),
+		a: () => api.profile.install.allMods()
 	};
 
 	onMount(async () => {

@@ -15,7 +15,7 @@
 		"targets": "all",
 		"externalBin": [],
 		"createUpdaterArtifacts": true,
-		"shortDescription": "A lightweight mod manager for Thunderstore",
+		"shortDescription": "A modern mod manager for Thunderstore",
 		"longDescription": "",
 		"icon": [
 			"icons/32x32.png",
@@ -54,10 +54,10 @@
 		"deep-link": {
 			"desktop": {
 				"schemes": [
-					"ror2mm"
+					"ror2mm",
+					"gale"
 				]
-			},
-			"mobile": []
+			}
 		}
 	},
 	"app": {

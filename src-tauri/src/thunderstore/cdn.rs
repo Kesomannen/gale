@@ -1,13 +1,13 @@
 use chrono::Utc;
 use eyre::Result;
 use tauri::AppHandle;
-use tracing::debug;
+use tracing::warn;
 
 use crate::state::ManagerExt;
 
 const CDNS: &[&str] = &[
-    "https://hcdn-1.hcdn.thunderstore.io",
     "https://gcdn.thunderstore.io",
+    "https://hcdn-1.hcdn.thunderstore.io",
 ];
 
 const TEST_FILE: &str = "healthz";
@@ -20,9 +20,7 @@ pub async fn preferred(app: &AppHandle) -> Option<&'static str> {
     for cdn in CDNS {
         match check_cdn(cdn, app.http()).await {
             Ok(()) => return Some(cdn),
-            Err(err) => {
-                debug!("{err:#}");
-            }
+            Err(err) => warn!("could not reach cdn {cdn}: {err:#}"),
         }
     }
 

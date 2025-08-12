@@ -1,7 +1,6 @@
 use std::{fmt::Debug, future::Future, path::PathBuf};
 
 use eyre::{Context, OptionExt, Result};
-use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
@@ -89,16 +88,9 @@ fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
 
     let import_data = profile::import::read_file_at_path(path)?;
 
-    app.emit("import_profile", ImportProfilePayload::Normal(import_data))?;
+    app.emit("import_profile", import_data)?;
 
     Ok(())
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
-enum ImportProfilePayload {
-    Normal(profile::import::ImportData),
-    Sync(profile::sync::SyncProfileMetadata),
 }
 
 async fn import_profile_code(url: String, app: AppHandle) -> Result<()> {
@@ -109,7 +101,7 @@ async fn import_profile_code(url: String, app: AppHandle) -> Result<()> {
 
     let import_data = profile::import::read_code(key, &app).await?;
 
-    app.emit("import_profile", ImportProfilePayload::Normal(import_data))?;
+    app.emit("import_profile", import_data)?;
 
     Ok(())
 }
@@ -121,7 +113,7 @@ async fn clone_sync_profile(url: String, app: AppHandle) -> Result<()> {
 
     let import_data = profile::sync::read_profile(id, &app).await?;
 
-    app.emit("import_profile", ImportProfilePayload::Sync(import_data))?;
+    app.emit("import_profile", import_data)?;
 
     Ok(())
 }

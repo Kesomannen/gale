@@ -4,7 +4,7 @@
 
 	import { Tabs } from 'bits-ui';
 
-	import type { AnyImportData, ImportData, SyncImportData } from '$lib/types';
+	import type { ImportData, LegacyImportData, SyncImportData } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -24,12 +24,13 @@
 	import profiles from '$lib/state/profile.svelte';
 	import games from '$lib/state/game.svelte';
 	import SyncAvatar from '../ui/SyncAvatar.svelte';
+	import InfoBox from '../ui/InfoBox.svelte';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
 
 	let open: boolean = $state(false);
-	let data: AnyImportData | null = $state(null);
+	let data: ImportData | null = $state(null);
 
 	let key: string = $state('');
 	let name: string = $state('');
@@ -40,8 +41,13 @@
 	let unlistenFn: UnlistenFn | undefined;
 
 	onMount(async () => {
-		unlistenFn = await listen<AnyImportData>('import_profile', (evt) => {
-			data = evt.payload;
+		unlistenFn = await listen<LegacyImportData | SyncImportData>('import_profile', (evt) => {
+			if ('owner' in evt.payload) {
+				data = { type: 'sync', ...evt.payload };
+			} else {
+				data = { type: 'legacy', ...evt.payload };
+			}
+
 			name = data.manifest.profileName;
 			mode = isAvailable(name) ? 'new' : 'overwrite';
 
@@ -60,12 +66,12 @@
 	async function submitKey() {
 		loading = true;
 
-		let type = uuidRegex.test(key.trim()) ? 'normal' : 'sync';
+		let type = uuidRegex.test(key.trim()) ? 'legacy' : 'sync';
 
 		try {
-			if (type === 'normal') {
+			if (type === 'legacy') {
 				data = {
-					type: 'normal',
+					type: 'legacy',
 					...(await api.profile.import.readCode(key.trim()))
 				};
 			} else {
@@ -95,7 +101,7 @@
 
 		open = false;
 
-		if (data.type === 'normal') {
+		if (data.type === 'legacy') {
 			data.manifest.profileName = name;
 
 			await api.profile.import.profile(data, importAll);
@@ -106,14 +112,14 @@
 		data = null;
 		importAll = false;
 
-		await pushInfoToast({ message: `Imported profile ${name}.` });
+		pushInfoToast({ message: `Imported profile ${name}.` });
 	}
 
 	function isAvailable(name: string) {
 		return !profiles.list.some((profile) => profile.name === name);
 	}
 
-	export async function openFor(importData: AnyImportData) {
+	export async function openFor(importData: ImportData) {
 		data = importData;
 
 		if (data.manifest.community !== null && games.active?.slug !== data.manifest.community) {
@@ -247,6 +253,18 @@
 					Owned by {data.owner.displayName}
 				</div>
 			</div>
+		{:else if data.missingMods.length > 0}
+			<InfoBox type="warning">
+				<p>Contains unknown mods:</p>
+
+				<ol class="list-disc pl-6">
+					{#each data.missingMods as mod}
+						<li>
+							{mod}
+						</li>
+					{/each}
+				</ol>
+			</InfoBox>
 		{/if}
 
 		<div class="mt-2 flex w-full items-center justify-end gap-2">

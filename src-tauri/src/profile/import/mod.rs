@@ -17,7 +17,7 @@ use uuid::Uuid;
 
 use crate::{
     profile::{
-        export::{ProfileManifest, R2Mod, PROFILE_DATA_PREFIX},
+        export::{ProfileManifest, PROFILE_DATA_PREFIX},
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
@@ -50,7 +50,7 @@ pub struct ImportData {
     pub delete_after_import: bool,
 }
 
-pub fn import_file_from_path(path: PathBuf) -> Result<ImportData> {
+pub fn read_file_from(path: PathBuf) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
     read_file(file)
@@ -106,65 +106,45 @@ pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct ImportOptions {
+    import_all: bool,
+}
+
+impl ImportOptions {
+    fn included_extensions(&self) -> IncludeExtensions {
+        if self.import_all {
+            IncludeExtensions::All
+        } else {
+            IncludeExtensions::Default
+        }
+    }
+
+    pub fn import_all(mut self, value: bool) -> Self {
+        self.import_all = value;
+        self
+    }
+}
+
 pub(super) async fn import_profile(
     data: ImportData,
-    options: InstallOptions,
-    import_all: bool,
+    options: ImportOptions,
+    install_options: InstallOptions,
     app: &AppHandle,
 ) -> Result<i64> {
-    let ImportData {
-        manifest:
-            ProfileManifest {
-                name,
-                mods,
-                ignored_updates,
-                ..
-            },
-        path: from_path,
-        delete_after_import,
-    } = data;
-
-    let (profile_id, profile_path, to_install) = {
-        let installs = resolve_mods(mods, app);
-
-        let mut manager = app.lock_manager();
-        let game = manager.active_game_mut();
-
-        let (profile, to_install) = match game.find_profile_index(&name) {
-            Some(profile_index) => {
-                // overwrite an existing profile
-                let profile = game.set_active_profile(profile_index)?;
-                let to_install = incremental_update(installs, profile)?.collect_vec();
-
-                (profile, to_install)
-            }
-            None => {
-                let profile = game.create_profile(name, None, app.db())?;
-
-                (profile, installs.collect_vec())
-            }
-        };
-
-        profile.ignored_updates = ignored_updates.into_iter().collect();
-
-        (profile.id, profile.path.clone(), to_install)
-    };
+    let (profile_id, profile_path, to_install) = prepare_import(data.manifest, app)?;
 
     let result = app
         .install_queue()
-        .install(to_install, profile_id, options, app)
+        .install(to_install, profile_id, install_options, app)
         .await;
 
     let result = match result {
         Ok(()) => {
             import_config(
                 &profile_path,
-                &from_path,
-                if import_all {
-                    IncludeExtensions::All
-                } else {
-                    IncludeExtensions::Default
-                },
+                &data.path,
+                options.included_extensions(),
                 IncludeGenerated::No,
             )
             .context("error importing config")?;
@@ -173,15 +153,18 @@ pub(super) async fn import_profile(
         }
         Err(err) => {
             cleanup_failed_profile(profile_id, app).unwrap_or_else(|err| {
-                warn!("failed to remove profile after failed import: {}", err);
+                warn!(
+                    "failed to remove profile after failed or cancelled import: {}",
+                    err
+                );
             });
 
             Err(err.into())
         }
     };
 
-    if delete_after_import {
-        fs::remove_dir_all(&from_path).unwrap_or_else(|err| {
+    if data.delete_after_import {
+        fs::remove_dir_all(&data.path).unwrap_or_else(|err| {
             warn!("failed to remove source folder after import: {}", err);
         });
     }
@@ -189,28 +172,64 @@ pub(super) async fn import_profile(
     result
 }
 
+fn prepare_import(
+    manifest: ProfileManifest,
+    app: &AppHandle,
+) -> Result<(i64, PathBuf, Vec<ModInstall>)> {
+    let ProfileManifest {
+        name,
+        mods,
+        ignored_updates,
+        ..
+    } = manifest;
+
+    let mut manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
+
+    let installs = mods
+        .into_iter()
+        .map(|r2_mod| r2_mod.into_install(&thunderstore))
+        .collect::<Result<Vec<_>>>()?;
+
+    let game = manager.active_game_mut();
+
+    let (profile, to_install) = match game.find_profile_index(&name) {
+        Some(profile_index) => {
+            // overwrite an existing profile
+            let profile = game.set_active_profile(profile_index)?;
+            let to_install = incremental_update(installs, profile)?.collect_vec();
+
+            (profile, to_install)
+        }
+        None => {
+            let profile = game.create_profile(name, None, app.db())?;
+
+            (profile, installs)
+        }
+    };
+
+    profile.ignored_updates = ignored_updates.into_iter().collect();
+
+    let id = profile.id;
+    let path = profile.path.clone();
+
+    game.save(app)?;
+
+    Ok((id, path, to_install))
+}
+
 fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     let (game, _) = manager.profile_by_id(profile_id)?;
-    let managed_game = manager.games.get_mut(game).expect("game was not present");
+    let managed_game = manager.games.get_mut(game).unwrap();
+
     let index = managed_game.index_of(profile_id)?;
 
-    managed_game.delete_profile(index, false, app.db())
-}
+    managed_game.delete_profile(index, false, app.db())?;
+    managed_game.save(app)?;
 
-fn resolve_mods<T: IntoIterator<Item = R2Mod>>(
-    mods: T,
-    app: &AppHandle,
-) -> impl Iterator<Item = ModInstall> + use<'_, T> {
-    let thunderstore = app.lock_thunderstore();
-
-    mods.into_iter().filter_map(move |r2_mod| {
-        r2_mod
-            .into_install(&thunderstore)
-            .inspect_err(|err| warn!("failed to resolve mod from import: {}", err))
-            .ok()
-    })
+    Ok(())
 }
 
 fn incremental_update(

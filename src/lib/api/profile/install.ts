@@ -1,6 +1,7 @@
 import { invoke } from '$lib/invoke';
 import type { ModId } from '$lib/types';
 
+export const allMods = () => invoke('install_all_mods');
 export const mod = (id: ModId) => invoke('install_mod', { id });
 export const cancelAll = () => invoke('cancel_all_installs');
 export const clearDownloadCache = (soft: boolean) =>

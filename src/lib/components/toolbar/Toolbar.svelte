@@ -30,14 +30,13 @@
 </script>
 
 <div class="border-primary-600 bg-primary-900 flex h-12 shrink-0 flex-row border-t border-b">
-	<div
-		class="text-accent-400 hover:text-accent-400 border-primary-600 hover:bg-primary-800 shrink-0 border-r pr-8 pl-6"
+	<button
+		class="text-accent-400 hover:text-accent-400 border-primary-600 hover:bg-primary-800 flex shrink-0 items-center border-r pr-8 pl-6 font-semibold"
+		onclick={launchGame}
 	>
-		<button class="flex h-full items-center font-semibold" onclick={launchGame}>
-			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
-			Launch game
-		</button>
-	</div>
+		<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
+		Launch game
+	</button>
 
 	<button
 		onclick={() => (gamesOpen = !gamesOpen)}

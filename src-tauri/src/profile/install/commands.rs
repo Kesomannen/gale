@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use tauri::{command, AppHandle};
 
 use crate::{
@@ -8,6 +9,29 @@ use crate::{
 };
 
 use super::{InstallOptions, ModInstall};
+
+#[command]
+pub async fn install_all_mods(app: AppHandle) -> Result<()> {
+    let profile_id = app.lock_manager().active_profile().id;
+
+    let mods = app
+        .lock_thunderstore()
+        .latest()
+        .map(ModInstall::new)
+        .collect_vec();
+
+    app.install_queue()
+        .install(
+            mods,
+            profile_id,
+            InstallOptions::default().cancel_individually(),
+            &app,
+        )
+        .await
+        .ignore_cancel()?;
+
+    Ok(())
+}
 
 #[command]
 pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {

@@ -12,6 +12,7 @@ use crate::{
     logger,
     profile::{
         export::{ProfileManifest, R2Mod},
+        import::ImportOptions,
         install::InstallOptions,
     },
     state::ManagerExt,
@@ -119,7 +120,13 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
 async fn import_profile(data: ImportData, app: &AppHandle) -> Result<()> {
     info!("importing profile '{}'", data.manifest.name);
 
-    super::import_profile(data, InstallOptions::default().prevent_cancel(), false, app).await?;
+    super::import_profile(
+        data,
+        ImportOptions::default(),
+        InstallOptions::default().prevent_cancel(),
+        app,
+    )
+    .await?;
 
     Ok(())
 }

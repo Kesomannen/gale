@@ -17,6 +17,8 @@
 	import { PersistedState } from 'runed';
 	import IconButton from '../ui/IconButton.svelte';
 	import Spinner from '../ui/Spinner.svelte';
+	import InfoBox from '../ui/InfoBox.svelte';
+	import SyncDonationNotice from './SyncDonationNotice.svelte';
 
 	type State = 'off' | 'synced' | 'outdated' | 'missing';
 
@@ -89,15 +91,6 @@
 			onclick: copyLink
 		}
 	];
-
-	const donationCloseDuration = 1000 * 60 * 60 * 24 * 7; // 1 week
-	let donationClosedAt = new PersistedState<string | null>('donationClosedAt', null);
-
-	let showDonation = $derived(
-		syncInfo &&
-			(!donationClosedAt.current ||
-				Date.now() - new Date(donationClosedAt.current).getTime() > donationCloseDuration)
-	);
 
 	async function onLoginClicked() {
 		loginLoading = true;
@@ -207,39 +200,7 @@
 />
 
 <Dialog bind:open={mainDialogOpen} title="Profile sync">
-	<div
-		class={[
-			!showDonation && 'hidden',
-			'bg-primary-900 relative my-2 overflow-hidden rounded-md py-4 pr-4 pl-6'
-		]}
-	>
-		<div class="bg-accent-600 absolute top-0 bottom-0 left-0 w-1"></div>
-
-		<div
-			class="text-lg font-semibold
-			 text-white"
-		>
-			Profile sync is run on donations!
-		</div>
-
-		<div class="text-primary-300">
-			If you like this feature, please consider supporting on <Link
-				href="https://ko-fi.com/kesomannen">Kofi</Link
-			>
-
-			<Icon class="mb-1 inline" icon="mdi:heart" />.
-		</div>
-
-		<button
-			class="text-primary-400 hover:text-accent-400 mt-2 flex items-center gap-1 text-sm hover:underline"
-			onclick={() => {
-				donationClosedAt.current = new Date().toISOString();
-			}}
-		>
-			<Icon icon="mdi:close" />
-			Remind me later
-		</button>
-	</div>
+	<SyncDonationNotice show={syncInfo !== null} />
 
 	{#if syncInfo}
 		{#if syncState !== 'missing'}
@@ -268,21 +229,9 @@
 				</DropdownMenu.Root>
 			</div>
 		{:else}
-			<div
-				class="bg-primary-800 border-primary-700 relative my-2 max-w-3xl overflow-hidden rounded-md border shadow"
-			>
-				<div class="absolute left-0 h-full w-1.5 bg-red-600"></div>
-
-				<div class="flex items-center p-2">
-					<Icon class="mx-2 shrink-0 text-xl text-red-600" icon="mdi:error" />
-
-					<div class="mr-4 grow overflow-hidden">
-						<span class="break-words text-white"
-							>This profile has been deleted and can no longer receive updates or be imported.</span
-						>
-					</div>
-				</div>
-			</div>
+			<InfoBox type="error">
+				This profile has been deleted and can no longer receive updates or be imported.
+			</InfoBox>
 		{/if}
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">

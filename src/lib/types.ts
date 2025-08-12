@@ -30,7 +30,7 @@ export type ConfigFileData = {
 export type ConfigFileMetadata = {
 	modName: string;
 	modVersion: string;
-}
+};
 
 export type ConfigNum = {
 	value: number;
@@ -48,7 +48,7 @@ export type ConfigFile = { relativePath: string; displayName: string | null } & 
 	| ConfigFileType<'ok', ConfigFileData>
 	| ConfigFileType<'err', { error: string }>
 	| ConfigFileType<'unsupported'>
-)
+);
 
 export type ProfileInfo = {
 	id: number;
@@ -78,14 +78,6 @@ export type SyncUser = {
 	name: string;
 	displayName: string;
 	avatar: string | null;
-};
-
-export type SyncImportData = {
-	id: string;
-	created_at: string;
-	updated_at: string;
-	owner: SyncUser;
-	manifest: ProfileManifest;
 };
 
 export type ManagedGameInfo = {
@@ -128,7 +120,7 @@ export type Mod = {
 export type ModVersion = {
 	name: string;
 	uuid: string;
-}
+};
 
 export enum ModType {
 	Local = 'local',
@@ -183,17 +175,14 @@ export type ModActionResponse =
 	| { type: 'done' }
 	| { type: 'hasDependants'; dependants: Dependant[] };
 
-export type InstallTask =
-	| 'download'
-	| 'extract'
-	| 'install';
+export type InstallTask = 'download' | 'extract' | 'install';
 
 export type InstallEvent =
 	| { type: 'show' }
-	| { type: 'hide', reason: 'done' | 'error' | 'cancelled' }
-	| { type: 'addCount', mods: number, bytes: number }
-	| { type: 'addProgress', mods: number, bytes: number }
-	| { type: 'setTask', name: string, task: InstallTask };
+	| { type: 'hide'; reason: 'done' | 'error' | 'cancelled' }
+	| { type: 'addCount'; mods: number; bytes: number }
+	| { type: 'addProgress'; mods: number; bytes: number }
+	| { type: 'setTask'; name: string; task: InstallTask };
 
 export type ModpackArgs = {
 	name: string;
@@ -256,12 +245,23 @@ export type ProfileQuery = {
 	updates: AvailableUpdate[];
 };
 
-export type AnyImportData = ({ type: 'normal' } & ImportData) | ({ type: 'sync' } & SyncImportData);
+export type ImportData =
+	| ({ type: 'legacy' } & LegacyImportData)
+	| ({ type: 'sync' } & SyncImportData);
 
-export type ImportData = {
+export type LegacyImportData = {
 	manifest: ProfileManifest;
 	path: string;
 	deleteAfterImport: boolean;
+	missingMods: string[];
+};
+
+export type SyncImportData = {
+	manifest: ProfileManifest;
+	id: string;
+	created_at: string;
+	updated_at: string;
+	owner: SyncUser;
 };
 
 type ProfileManifest = {

@@ -17,7 +17,7 @@ use super::{install::ModInstall, Profile, Result};
 use crate::{
     game::Game,
     state::ManagerExt,
-    thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore},
+    thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore, VersionIdent},
 };
 
 mod changelog;
@@ -46,9 +46,12 @@ pub struct R2Mod {
 }
 
 impl R2Mod {
-    pub fn into_install(self, thunderstore: &Thunderstore) -> Result<ModInstall> {
-        let version = self.ident.with_version(self.version);
-        let borrowed_mod = thunderstore.find_ident(&version)?;
+    pub fn version_ident(&self) -> VersionIdent {
+        self.ident.with_version(&self.version)
+    }
+
+    pub fn into_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
+        let borrowed_mod = thunderstore.find_ident(&self.version_ident())?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
     }
@@ -186,11 +189,12 @@ const GENERATED_FILES: &[&str] = &[
     "_state",
 ];
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum IncludeExtensions {
     /// All extensions.
     All,
     /// Only common config extensions (see [`COMMON_EXTENSIONS`]).
+    #[default]
     Default,
 }
 

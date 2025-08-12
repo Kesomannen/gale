@@ -6,7 +6,10 @@ use reqwest::{Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
-use crate::{profile::install::InstallOptions, state::ManagerExt};
+use crate::{
+    profile::{import::ImportOptions, install::InstallOptions},
+    state::ManagerExt,
+};
 
 pub mod auth;
 pub mod commands;
@@ -273,15 +276,20 @@ async fn download_and_import_file(
         .await?;
 
     let mut data =
-        super::import::read_file(Cursor::new(bytes)).context("failed to import profile")?;
+        super::import::read_file(Cursor::new(bytes)).context("failed to read profile")?;
 
     if let Some(name) = override_name {
         data.manifest.name = name;
     }
 
-    let id = super::import::import_profile(data, InstallOptions::default(), false, app)
-        .await
-        .context("failed to import profile")?;
+    let id = super::import::import_profile(
+        data,
+        ImportOptions::default(),
+        InstallOptions::default(),
+        app,
+    )
+    .await
+    .context("failed to import profile")?;
 
     {
         let mut manager = app.lock_manager();

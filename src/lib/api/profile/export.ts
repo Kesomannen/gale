@@ -1,5 +1,5 @@
 import { invoke } from '$lib/invoke';
-import type { ImportData, ModpackArgs, R2ImportData } from '$lib/types';
+import type { LegacyImportData, ModpackArgs, R2ImportData } from '$lib/types';
 
 export const code = () => invoke<string>('export_code');
 export const file = (dir: string) => invoke('export_file', { dir });
