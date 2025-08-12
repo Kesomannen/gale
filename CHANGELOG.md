@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.9.3 (2025-08-12)
 
 ### Added
 
