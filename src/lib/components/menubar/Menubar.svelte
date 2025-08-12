@@ -389,8 +389,7 @@
 		'-': () => api.prefs.zoomWindow({ delta: -0.25 }),
 		'0': () => api.prefs.zoomWindow({ factor: 1 }),
 		n: () => (newProfileOpen = true),
-		d: () => openProfileOperation('duplicate'),
-		a: () => api.profile.install.allMods()
+		d: () => openProfileOperation('duplicate')
 	};
 
 	onMount(async () => {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.4 (2025-08-12)
+
+### Removed
+
+- The easter egg on Ctrl + A
+
 ## 1.9.3 (2025-08-12)
 
 ### Added
