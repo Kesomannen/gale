@@ -107,7 +107,7 @@ impl ManagedGame {
             .filter(|entry| {
                 let name = entry.file_name();
 
-                if EXCLUDES.iter().any(|exclude| name != *exclude) {
+                if EXCLUDES.iter().any(|exclude| name == *exclude) {
                     return false;
                 }
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.5 (2025-08-13)
+
+### Fixed
+
+- Newly selected games not launching with mods
+
 ## 1.9.4 (2025-08-12)
 
 ### Removed
