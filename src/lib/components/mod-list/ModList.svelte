@@ -1,4 +1,5 @@
 <script lang="ts">
+	import VirtualList from '$lib/components/ui/VirtualList.svelte';
 	import type { Mod, QueryModsArgsWithoutMax } from '$lib/types';
 	import type { Snippet } from 'svelte';
 	import games from '$lib/state/game.svelte';
@@ -23,7 +24,9 @@
 		item
 	}: Props = $props();
 
+	let listStart = $state(0);
 	let listEnd = $state(0);
+	let virtualList: VirtualList<Mod, string> | null = $state(null);
 	let list: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
@@ -34,7 +37,7 @@
 
 	$effect(() => {
 		queryArgs;
-		list?.scrollTo(0, 0);
+		virtualList?.scrollTo(0);
 	});
 
 	$effect(() => {
@@ -65,13 +68,20 @@
 		{@render placeholder?.()}
 	</div>
 {:else}
-	<div class="overflow-y-auto" bind:this={list} {onscroll}>
-		{#each mods as mod, index (mod.uuid)}
+	<VirtualList
+		itemHeight={66}
+		items={mods}
+		rowId={(mod) => mod.uuid}
+		bind:this={virtualList}
+		bind:start={listStart}
+		bind:end={listEnd}
+	>
+		{#snippet children({ item: mod, index })}
 			{@render item({
 				mod,
 				index,
 				isSelected: selected?.uuid === mod.uuid
 			})}
-		{/each}
-	</div>
+		{/snippet}
+	</VirtualList>
 {/if}
