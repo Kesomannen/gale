@@ -207,7 +207,8 @@ impl Default for Prefs {
                 .keep(logger::FILE_NAME)
                 .keep(db::FILE_NAME)
                 .keep(db::SHM_FILE_NAME)
-                .keep(db::WAL_FILE_NAME),
+                .keep(db::WAL_FILE_NAME)
+                .keep(game::CACHE_FILE_NAME),
 
             send_telemetry: true,
             fetch_mods_automatically: true,
@@ -227,6 +228,7 @@ impl Prefs {
             db::FILE_NAME,
             db::SHM_FILE_NAME,
             db::WAL_FILE_NAME,
+            game::CACHE_FILE_NAME,
         ]);
 
         let window = app.get_webview_window("main").unwrap();

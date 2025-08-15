@@ -1,22 +1,71 @@
 use std::{
     borrow::Cow,
+    fs,
     hash::{self, Hash},
     sync::LazyLock,
 };
 
+use eyre::Result;
 use heck::{ToKebabCase, ToPascalCase};
 use serde::{Deserialize, Serialize};
 
 use mod_loader::ModLoader;
 use platform::Platforms;
+use tracing::{info, warn};
+
+use crate::util::{self, fs::JsonStyle};
 
 pub mod mod_loader;
 pub mod platform;
 
-const GAMES_JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", "games.json"));
+pub const CACHE_FILE_NAME: &str = "games.json";
+const URL: &str =
+    "https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/src-tauri/games.json";
+const FALLBACK_JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", "games.json"));
 
-static GAMES: LazyLock<Vec<GameData<'static>>> =
-    LazyLock::new(|| serde_json::from_str(GAMES_JSON).unwrap());
+static GAMES: LazyLock<Vec<GameData<'static>>> = LazyLock::new(|| {
+    match (get_remote_games(), get_cached_games()) {
+        (Ok(remote), _) => {
+            info!(count = remote.len(), "got new games from remote");
+
+            write_cache(&remote).unwrap_or_else(|err| {
+                warn!("failed to write games cache: {err}");
+            });
+
+            remote
+        }
+        (Err(err), Ok(cached)) => {
+            warn!("failed to get new games from remote, using cache: {err}");
+
+            cached
+        }
+        (Err(remote_err), Err(cache_err)) => {
+            warn!("failed to get new games from remote ({remote_err}) or cache ({cache_err}), using fallback");
+
+            serde_json::from_str(FALLBACK_JSON).unwrap()
+        }
+    }
+});
+
+fn get_cached_games() -> Result<Vec<GameData<'static>>> {
+    let path = util::path::default_app_data_dir().join(CACHE_FILE_NAME);
+    let str = fs::read_to_string(path)?;
+    let games = serde_json::from_str(str.leak())?;
+
+    Ok(games)
+}
+
+fn write_cache(games: &Vec<GameData<'static>>) -> Result<()> {
+    let path = util::path::default_app_data_dir().join(CACHE_FILE_NAME);
+    util::fs::write_json(path, games, JsonStyle::Pretty)
+}
+
+fn get_remote_games() -> Result<Vec<GameData<'static>>> {
+    let str = reqwest::blocking::get(URL)?.text()?;
+    let games = serde_json::from_str(str.leak())?;
+
+    Ok(games)
+}
 
 pub type Game = &'static GameData<'static>;
 

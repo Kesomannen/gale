@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../../types';
 	import Icon from '@iconify/svelte';
-	import { iconSrc } from '$lib/util';
+	import { modIconSrc } from '$lib/util';
 	import type { MouseEventHandler } from 'svelte/elements';
 	import { ContextMenu } from 'bits-ui';
 	import { activeContextMenu } from '$lib/context';
@@ -50,7 +50,7 @@
 				: 'hover:bg-primary-700 border-transparent'}"
 			{onclick}
 		>
-			<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
+			<img src={modIconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
 			<div class="shrink grow overflow-hidden pl-3 text-left">
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div class="shrink truncate pr-1 font-medium text-white">

@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import type { Mod, ConfigEntry, SyncUser } from './types';
+import type { Mod, ConfigEntry, SyncUser, Game } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
 
@@ -77,7 +77,7 @@ export function communityUrl(path: string) {
 	return `https://thunderstore.io/c/${games.active?.slug}/p/${path}/`;
 }
 
-export function iconSrc(mod: Mod) {
+export function modIconSrc(mod: Mod) {
 	if (mod.type === 'remote') {
 		let fullName = `${mod.author}-${mod.name}-${mod.version}`;
 		return thunderstoreIconUrl(fullName);
@@ -86,6 +86,10 @@ export function iconSrc(mod: Mod) {
 	} else {
 		return `games/${games.active?.slug}.webp`;
 	}
+}
+
+export function gameIconSrc(game: Game) {
+	return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/static/games/${game.slug}.webp`;
 }
 
 export function thunderstoreIconUrl(fullName: string) {
