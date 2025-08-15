@@ -1,9 +1,6 @@
 # Reorders the games.json file to the order shown in Gale's UI 
 # (alphabetical with popular games at the top)
 
-from os import path
-import json
-
 from utils import read_games, write_games
 
 def sort_games():
