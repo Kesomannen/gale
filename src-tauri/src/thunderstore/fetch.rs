@@ -51,6 +51,9 @@ pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
 
         *is_first &= result.is_err();
 
+        // notify frontend to show any mod updates that were just fetched
+        app.lock_manager().active_profile().notify_frontend(app)?;
+
         result
     }
 }

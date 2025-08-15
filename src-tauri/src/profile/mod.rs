@@ -314,10 +314,15 @@ impl Profile {
 
     pub fn save(&self, app: &AppHandle, notify_frontend: bool) -> Result<()> {
         if notify_frontend {
-            app.emit("profile_changed", self.to_frontend())?;
+            self.notify_frontend(app)?;
         }
 
         app.db().save_profile(self)
+    }
+
+    pub fn notify_frontend(&self, app: &AppHandle) -> Result<()> {
+        app.emit("profile_changed", self.to_frontend())?;
+        Ok(())
     }
 }
 
