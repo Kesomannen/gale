@@ -37,7 +37,9 @@ export function pushToast(toast: Toast) {
 		() => {
 			toasts.update((toasts) => {
 				let index = toasts.findIndex(toast => toast.id == id);
-				toasts.splice(index, 1);
+				if (index !== -1) {
+					toasts.splice(index, 1);
+				}
 				return toasts;
 			});
 		},

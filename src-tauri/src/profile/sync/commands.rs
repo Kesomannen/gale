@@ -20,7 +20,9 @@ pub async fn create_sync_profile(app: AppHandle) -> Result<String> {
 
 #[command]
 pub async fn push_sync_profile(app: AppHandle) -> Result<()> {
-    super::push_profile(&app).await?;
+    let id = app.lock_manager().active_profile().id;
+
+    super::push_profile(&app, id).await?;
 
     Ok(())
 }

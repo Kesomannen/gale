@@ -13,10 +13,7 @@
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import auth from '$lib/state/auth.svelte';
-	import Link from '../ui/Link.svelte';
-	import { PersistedState } from 'runed';
 	import IconButton from '../ui/IconButton.svelte';
-	import Spinner from '../ui/Spinner.svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
 	import SyncDonationNotice from './SyncDonationNotice.svelte';
 
@@ -61,7 +58,7 @@
 			missing: {
 				icon: 'mdi:cloud-alert',
 				label: 'Sync error',
-				classes: 'text-red-500 font-medium'
+				classes: 'text-red-500 font-semibold'
 			}
 		}[syncState]
 	);
@@ -181,16 +178,15 @@
 </script>
 
 <button
-	class="{style.classes} bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm"
+	class={[
+		style.classes,
+		'bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
+	]}
 	onclick={() => (mainDialogOpen = true)}
 >
-	{#if loading}
-		<Spinner />
-	{:else}
-		<Icon icon={style.icon} />
-	{/if}
+	<Icon icon={style.icon} />
 
-	<div>{style.label}</div>
+	<div class="truncate">{style.label}</div>
 </button>
 
 <OwnedSyncProfilesDialog

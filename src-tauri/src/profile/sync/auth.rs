@@ -27,7 +27,7 @@ impl State {
         }
     }
 
-    fn creds(&self) -> MutexGuard<Option<AuthCredentials>> {
+    fn creds(&'_ self) -> MutexGuard<'_, Option<AuthCredentials>> {
         self.creds.lock().unwrap()
     }
 
@@ -72,7 +72,7 @@ impl AuthCredentials {
 const OAUTH_TIMEOUT: Duration = Duration::from_secs(60);
 
 pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
-    let url = format!("{}/auth/login", super::API_URL);
+    let url = format!("{}/auth/login", *super::API_URL);
     open::that(url).context("failed to open url in browser")?;
 
     let mut channel = app.sync_auth().callback_channel.subscribe();
@@ -188,7 +188,7 @@ async fn request_token(refresh_token: String, app: &AppHandle) -> Result<String>
 
     let response: TokenResponse = app
         .http()
-        .post(format!("{}/auth/token", super::API_URL))
+        .post(format!("{}/auth/token", *super::API_URL))
         .json(&GrantTokenRequest { refresh_token })
         .send()
         .await?

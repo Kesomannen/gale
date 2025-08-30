@@ -130,7 +130,9 @@
 </script>
 
 <Popover.Root bind:open>
-	<Popover.Trigger class="hover:bg-primary-800 text-accent-500 my-auto rounded-md p-1.5 text-xl">
+	<Popover.Trigger
+		class={['hover:bg-primary-800 text-accent-500 my-auto rounded-md text-xl', shown && 'p-1.5']}
+	>
 		{#if shown}
 			<div in:scale={{ start: 2, duration: 250, easing: quadOut }}>
 				<Icon icon="mdi:download" class="animate-pulse" />

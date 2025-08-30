@@ -58,7 +58,7 @@
 
 {#if updates.next}
 	<button
-		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 my-auto mr-2 ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm"
+		class="bg-accent-700 enabled:hover:bg-accent-600 text-primary-100 mx-2 my-auto ml-auto flex items-center gap-1 rounded-md px-2.5 py-1 text-sm font-bold"
 		disabled={loading}
 		onclick={() => (dialogOpen = true)}
 	>
@@ -67,11 +67,11 @@
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" />
 		{/if}
-		<span class="text-sm">{loading ? 'Downloading update...' : 'Update available'}</span>
+		<div class="truncate text-sm">{loading ? 'Downloading update...' : 'Update available'}</div>
 	</button>
 {/if}
 
-<ConfirmDialog title="App update available" bind:open={dialogOpen}>
+<ConfirmDialog title="App update available!" bind:open={dialogOpen}>
 	<Dialog.Description class="text-primary-300">
 		<p>
 			{#if updates.next}
@@ -83,7 +83,6 @@
 
 			The update will be downloaded in the background, then the app will restart to apply it.
 		</p>
-		<p class="mt-1">Would you like to install it?</p>
 	</Dialog.Description>
 
 	{#snippet buttons()}

@@ -1,4 +1,4 @@
-use std::{fmt::Display, io::Cursor};
+use std::{borrow::Cow, env, fmt::Display, io::Cursor, sync::LazyLock};
 
 use chrono::{DateTime, Utc};
 use eyre::{bail, eyre, Context, OptionExt, Result};
@@ -15,11 +15,13 @@ pub mod auth;
 pub mod commands;
 pub mod socket;
 
-const API_URL: &str = "https://gale.kesomannen.com/api";
-//const API_URL: &str = "http://127.0.0.1:8080/api"; // for local testing
+const API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("GALE_SYNC_URL") {
+    Ok(var) => var.into(),
+    Err(_) => "https://gale.kesomannen.com/api".into(),
+});
 
 async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
-    let mut req = app.http().request(method, format!("{API_URL}{path}"));
+    let mut req = app.http().request(method, format!("{}{path}", *API_URL));
     if let Some(token) = auth::access_token(app).await {
         req = req.bearer_auth(token);
     }
@@ -132,11 +134,10 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
     Ok(id)
 }
 
-async fn push_profile(app: &AppHandle) -> Result<()> {
+pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
     let (id, bytes) = {
         let manager = app.lock_manager();
-        let game = manager.active_game();
-        let profile = game.active_profile();
+        let (game, profile) = manager.profile_by_id(profile_id)?;
 
         let id = profile
             .sync
@@ -145,8 +146,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
             .ok_or_eyre("profile is not synced")?;
 
         let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(profile, &mut bytes, game.game)
-            .context("failed to export profile")?;
+        super::export::export_zip(profile, &mut bytes, game).context("failed to export profile")?;
 
         (id, bytes.into_inner())
     };
@@ -162,7 +162,7 @@ async fn push_profile(app: &AppHandle) -> Result<()> {
 
     {
         let mut manager = app.lock_manager();
-        let profile = manager.active_profile_mut();
+        let (_, profile) = manager.profile_by_id_mut(profile_id)?;
         let sync_data = profile.sync.as_mut().unwrap();
 
         sync_data.synced_at = response.updated_at;

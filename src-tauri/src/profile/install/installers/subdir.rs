@@ -133,11 +133,11 @@ impl<'a> SubdirInstaller<'a> {
         self
     }
 
-    fn subdirs(&self) -> impl Iterator<Item = &Subdir> {
+    fn subdirs(&'_ self) -> impl Iterator<Item = &'_ Subdir<'_>> {
         self.extra_subdirs.iter().chain(self.subdirs.iter())
     }
 
-    fn match_subdir(&self, name: &str) -> Option<&Subdir> {
+    fn match_subdir(&'_ self, name: &str) -> Option<&'_ Subdir<'_>> {
         self.subdirs().find(|subdir| {
             util::cmp_ignore_case(subdir.name, name).is_eq()
                 || subdir
