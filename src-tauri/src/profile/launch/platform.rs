@@ -48,6 +48,17 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
         }
     }
 
+    #[cfg(target_os = "macos")]
+    {
+      // TODO: how to get mods to load? The following command works, but seems to not align with Gale's other platforms
+      /*
+       * arch -x86_64 ~/Library/Application\ Support/com.kesomannen.gale/valheim/profiles/Default/start_game_bepinex.sh \
+       *   ~/Library/Application\ Support/Steam/steamapps/common/Valheim/Valheim.app \
+       *   --doorstop-enabled true \
+       *   --doorstop-target-assembly "/Users/dudeofawesome/Library/Application Support/com.kesomannen.gale/valheim/profiles/Default/BepInEx/core/BepInEx.Preloader.dll"
+       */
+    }
+
     let mut command = Command::new(find_steam_binary()?);
     command.arg("-applaunch").arg(steam.id.to_string());
 
