@@ -75,7 +75,10 @@ fn find_steam_binary() -> Result<PathBuf> {
         }
 
         #[cfg(target_os = "linux")]
-        "/usr/bin/steam".into()
+        return "/usr/bin/steam".into();
+
+        #[cfg(target_os = "macos")]
+        return "/Applications/Steam.app/Contents/MacOS/steam_osx".into();
     });
 
     ensure!(
