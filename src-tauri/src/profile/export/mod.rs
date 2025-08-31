@@ -187,6 +187,7 @@ const GENERATED_FILES: &[&str] = &[
     "doorstop_config.ini",
     "snapshots",
     "_state",
+    "MelonLoader/Dependencies/Il2CppAssemblyGenerator/Config.cfg"
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
