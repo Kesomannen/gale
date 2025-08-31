@@ -1149,6 +1149,19 @@
         }
     },
     {
+        "name": "Maltese's Fluffy Onsen",
+        "slug": "malteses-fluffy-onsen",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3404470,
+                "dirName": "Animal Spa"
+            }
+        }
+    },
+    {
         "name": "Mechanica",
         "modLoader": {
             "name": "BepInEx",
@@ -1339,6 +1352,25 @@
         }
     },
     {
+        "name": "PATAPON 1+2 REPLAY",
+        "modLoader": {
+            "name": "BepInEx",
+            "subdirs": [
+                {
+                    "name": "hexpatches",
+                    "target": "BepInEx/hexpatches",
+                    "mode": "track",
+                    "mutable": true
+                }
+            ]
+        },
+        "platforms": {
+            "steam": {
+                "id": 2383200
+            }
+        }
+    },
+    {
         "name": "PEAK",
         "slug": "peak",
         "modLoader": {
@@ -1398,6 +1430,18 @@
         }
     },
     {
+        "name": "Paper Animal Adventure",
+        "slug": "paper-animal-adventure",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1982120
+            }
+        }
+    },
+    {
         "name": "Paquerette Down the Bunburrows",
         "slug": "paquerette-down-the-bunburrows",
         "modLoader": {
@@ -1406,25 +1450,6 @@
         "platforms": {
             "steam": {
                 "id": 1628610
-            }
-        }
-    },
-    {
-        "name": "PATAPON 1+2 REPLAY",
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "hexpatches",
-                    "target": "BepInEx/hexpatches",
-                    "mode": "track",
-                    "mutable": true
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 2383200
             }
         }
     },
