@@ -172,13 +172,13 @@ if __name__ == '__main__':
             
         all_platforms.remove(new_platform)
     
-    print(f'Add a square image to {bold("static/games")} with the name {bold(slug)} (png, jpg and webp supported)')
+    print(f'Add a square image to {bold("images/games")} with the name {bold(slug)} (png, jpg and webp supported)')
     while True:
         input('(press enter to continue)\n')
         
         found = False
         for ext in ['png', 'jpg', 'jpeg', 'webp']:
-            icon_path = path.join(__file__, '..', '..', 'static', 'games', f'{slug}.{ext}')
+            icon_path = path.join(__file__, '..', '..', 'images', 'games', f'{slug}.{ext}')
             icon_path = path.realpath(icon_path)
             cprint(f'Checking for icon at {icon_path}', 'grey')
 

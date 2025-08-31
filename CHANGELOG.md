@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.6 (2025-08-31)
+
+### Changed
+
+- Game support additions no longer require an app update (as long as there is an internet connection)
+
+### Fixed
+
+- MelonLoader not working on freshly imported profiles
+- 413 Forbidden error when downloading mods with particularly long names
+
 ## 1.9.5 (2025-08-13)
 
 ### Fixed

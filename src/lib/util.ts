@@ -89,7 +89,7 @@ export function modIconSrc(mod: Mod) {
 }
 
 export function gameIconSrc(game: Game) {
-	return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/static/games/${game.slug}.webp`;
+	return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
 }
 
 export function thunderstoreIconUrl(fullName: string) {

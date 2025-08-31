@@ -444,9 +444,8 @@ async fn download(
     );
 
     let url = format!(
-        "{}/live/repository/packages/{}.zip",
-        app.lock_thunderstore().cdn_url(),
-        install.ident
+        "https://thunderstore.io/package/download/{}",
+        install.ident.path()
     );
 
     let mut stream = app
