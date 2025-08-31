@@ -1353,6 +1353,7 @@
     },
     {
         "name": "PATAPON 1+2 REPLAY",
+        "slug": "patapon-1-2-replay",
         "modLoader": {
             "name": "BepInEx",
             "subdirs": [
