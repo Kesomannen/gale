@@ -180,6 +180,7 @@ pub fn run() {
             config::commands::open_config_file,
             config::commands::delete_config_file,
         ])
+        .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_shell::init())
@@ -190,7 +191,6 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         // TODO .plugin(tauri_plugin_oauth::Builder)
-        .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .setup(setup)
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
