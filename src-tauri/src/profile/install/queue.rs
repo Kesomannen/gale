@@ -407,13 +407,12 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
 
     let mut manager = app.lock_manager();
 
+    let (game, profile) = manager.profile_by_id_mut(batch.profile_id)?;
     if let Some(callback) = &batch.options.before_install {
-        callback(install, &mut manager)?;
+        callback(install, profile)?;
     }
 
-    let (game, profile) = manager.profile_by_id_mut(batch.profile_id)?;
     let package_name = install.ident.full_name();
-
     let mut installer = game.mod_loader.installer_for(package_name);
     installer.install(&cache_path, package_name, profile)?;
 
@@ -542,12 +541,11 @@ fn install_from_download(
     );
 
     let mut manager = app.lock_manager();
+    let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;
 
     if let Some(callback) = &batch.options.before_install {
-        callback(install, &mut manager)?;
+        callback(install, profile)?;
     }
-
-    let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;
 
     installer.install(&cache_path, package_name, profile)?;
     install.clone().insert_into(profile)?;

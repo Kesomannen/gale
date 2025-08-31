@@ -140,10 +140,8 @@ async fn install_updates(
             profile_id,
             InstallOptions::default()
                 .cancel_individually()
-                .before_install(Box::new(|install, manager| {
+                .before_install(Box::new(|install, profile| {
                     // remove the old version
-                    let profile = manager.active_profile_mut();
-
                     // check since it could be a new dependency being installed, not an update itself
                     if profile.has_mod(install.uuid()) {
                         profile

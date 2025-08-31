@@ -9,7 +9,7 @@ use tokio::sync::oneshot;
 use tracing::{info, warn};
 use uuid::Uuid;
 
-use super::{ModManager, Profile};
+use super::Profile;
 use crate::{
     prefs::Prefs,
     profile::{ProfileMod, ProfileModKind, ThunderstoreMod},
@@ -25,7 +25,7 @@ pub use installers::*;
 pub mod queue;
 
 type BeforeInstallHandler =
-    Box<dyn Fn(&ModInstall, &mut ModManager) -> Result<()> + 'static + Send + Sync>;
+    Box<dyn Fn(&ModInstall, &mut Profile) -> Result<()> + 'static + Send + Sync>;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum CancelBehavior {
