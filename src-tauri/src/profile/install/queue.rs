@@ -55,7 +55,7 @@ impl InstallQueue {
         }
     }
 
-    pub fn wait_for_empty(&self) -> Notified {
+    pub fn wait_for_empty(&'_ self) -> Notified<'_> {
         self.notify_empty.notified()
     }
 
@@ -63,7 +63,7 @@ impl InstallQueue {
         self.cancel.store(true, Ordering::SeqCst);
     }
 
-    pub fn handle(&self) -> InstallQueueHandle {
+    pub fn handle(&'_ self) -> InstallQueueHandle<'_> {
         InstallQueueHandle {
             state: self.state.lock().unwrap(),
             queue: self,

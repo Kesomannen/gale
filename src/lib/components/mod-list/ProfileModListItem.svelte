@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../../types';
 	import Icon from '@iconify/svelte';
-	import { iconSrc, isOutdated } from '$lib/util';
+	import { modIconSrc, isOutdated } from '$lib/util';
 	import { Switch, ContextMenu } from 'bits-ui';
 	import type { DragEventHandler, MouseEventHandler } from 'svelte/elements';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
@@ -75,7 +75,7 @@
 			{ondragover}
 			{ondragend}
 		>
-			<img src={iconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
+			<img src={modIconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
 			<div class="shrink grow overflow-hidden pr-2 pl-3 text-left">
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div

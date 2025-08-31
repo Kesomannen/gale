@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use eyre::Result;
 use futures_util::{
     stream::{SplitSink, SplitStream},
@@ -25,6 +27,10 @@ enum ServerMessage {
         id: String,
     },
 
+    ProfileNotFound {
+        id: String,
+    },
+
     Error {
         message: String,
     },
@@ -41,6 +47,7 @@ enum ClientMessage {
 }
 
 pub struct State {
+    connected: AtomicBool,
     tx: mpsc::UnboundedSender<ClientMessage>,
 }
 
@@ -54,7 +61,10 @@ impl State {
             }
         });
 
-        Self { tx }
+        Self {
+            connected: AtomicBool::new(false),
+            tx,
+        }
     }
 
     pub fn subscribe(&self, profile: &Profile) {
@@ -89,7 +99,7 @@ impl State {
 async fn connect(app: AppHandle, mut rx: mpsc::UnboundedReceiver<ClientMessage>) -> Result<()> {
     // wait until we want to send a message before connecting
     let Some(first) = rx.recv().await else {
-        return Ok(());
+        return Ok(()); // channel was closed before first message
     };
 
     let url = format!("{}/socket/connect", super::API_URL.replace("http", "ws"));
@@ -107,15 +117,19 @@ async fn connect(app: AppHandle, mut rx: mpsc::UnboundedReceiver<ClientMessage>)
 
     let (mut sender, receiver) = socket.split();
 
-    tokio::spawn(read(app.to_owned(), receiver));
-
-    send_queue_message(&mut sender, first).await;
+    send_queued_message(&mut sender, first).await;
     tokio::spawn(write(sender, rx));
+
+    app.sync_socket().connected.store(true, Ordering::Relaxed);
+
+    read(&app, receiver).await;
+
+    app.sync_socket().connected.store(false, Ordering::Relaxed);
 
     Ok(())
 }
 
-async fn read(app: AppHandle, mut receiver: SplitStream<WebSocket>) {
+async fn read(app: &AppHandle, mut receiver: SplitStream<WebSocket>) {
     while let Some(item) = receiver.next().await {
         let item = match item {
             Ok(item) => item,
@@ -147,7 +161,7 @@ async fn read(app: AppHandle, mut receiver: SplitStream<WebSocket>) {
                     profile.save(&app, true).ok();
                 }
             }
-            ServerMessage::ProfileDeleted { id } => {
+            ServerMessage::ProfileNotFound { id } | ServerMessage::ProfileDeleted { id } => {
                 info!("got sync profile delete event for {}", id);
 
                 let mut manager = app.lock_manager();
@@ -170,13 +184,13 @@ async fn write(
     mut rx: mpsc::UnboundedReceiver<ClientMessage>,
 ) {
     while let Some(msg) = rx.recv().await {
-        send_queue_message(&mut sender, msg).await;
+        send_queued_message(&mut sender, msg).await;
     }
 
     info!("stopping socket write task: channel was closed")
 }
 
-async fn send_queue_message(
+async fn send_queued_message(
     sender: &mut SplitSink<WebSocket, reqwest_websocket::Message>,
     msg: ClientMessage,
 ) {

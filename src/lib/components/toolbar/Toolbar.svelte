@@ -10,6 +10,7 @@
 	import games from '$lib/state/game.svelte';
 	import InstallPopover from './InstallPopover.svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
+	import { gameIconSrc } from '$lib/util';
 
 	let launchDialogOpen = $state(false);
 	let gamesOpen = $state(false);
@@ -43,7 +44,7 @@
 		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 items-center justify-between border-r pr-4 pl-2 font-semibold"
 	>
 		<img
-			src="games/{games.active?.slug}.webp"
+			src={games.active ? gameIconSrc(games.active) : ''}
 			class="mr-2 max-h-8 max-w-8 rounded-sm"
 			alt={games.active?.name}
 		/>

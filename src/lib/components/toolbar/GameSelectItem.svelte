@@ -2,6 +2,7 @@
 	import * as api from '$lib/api';
 	import games from '$lib/state/game.svelte';
 	import type { Game } from '$lib/types';
+	import { gameIconSrc } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { toHeaderCase } from 'js-convert-case';
 
@@ -25,7 +26,7 @@
 	role="button"
 	tabindex="0"
 >
-	<img src="games/{game.slug}.webp" alt={game.name} class="mr-2 size-12 rounded-sm" />
+	<img src={gameIconSrc(game)} alt={game.name} class="mr-2 size-12 rounded-sm" />
 
 	<div class="grow pl-1 text-left">
 		<div class="font-medium text-white">

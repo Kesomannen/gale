@@ -44,7 +44,7 @@ open = "5"
 itertools = "0.13"
 zip = { version = "2", features = ["deflate"] }
 uuid = { version = "1", features = ["v4", "serde"] }
-reqwest = { version = "0.12", features = ["json", "stream", "gzip", "native-tls"] }
+reqwest = { version = "0.12", features = ["json", "stream", "gzip", "native-tls", "blocking"] }
 walkdir = "2"
 image = "0.25"
 semver = { version = "1", features = ["serde"] }
