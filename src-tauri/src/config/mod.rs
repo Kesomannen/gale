@@ -43,7 +43,7 @@ enum AnyFileKind {
 }
 
 impl AnyFile {
-    fn file_stem(&self) -> Cow<str> {
+    fn file_stem(&'_ self) -> Cow<'_, str> {
         self.relative_path
             .file_stem()
             .expect("file should have name")

@@ -67,10 +67,6 @@ impl State {
         }
     }
 
-    pub fn connected(&self) -> bool {
-        self.connected.load(Ordering::Relaxed)
-    }
-
     pub fn subscribe(&self, profile: &Profile) {
         let Some(info) = profile.sync.as_ref() else {
             return;
