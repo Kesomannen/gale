@@ -968,6 +968,19 @@
         }
     },
     {
+        "name": "Hollow Knight: Silksong",
+        "slug": "hollow-knight-silksong",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1030300,
+                "dirName": "Hollow Knight Silksong"
+            }
+        }
+    },
+    {
         "name": "House of the Dying Sun",
         "slug": "hotds",
         "modLoader": {
