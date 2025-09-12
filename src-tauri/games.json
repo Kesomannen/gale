@@ -1037,6 +1037,19 @@
         }
     },
     {
+        "name": "House of Legacy",
+        "slug": "house-of-legacy",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2503770,
+                "dirName": "\u543e\u4eca\u6709\u4e16\u5bb6"
+            }
+        }
+    },
+    {
         "name": "House of the Dying Sun",
         "slug": "hotds",
         "modLoader": {
