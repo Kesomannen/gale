@@ -20,6 +20,7 @@
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
 	import * as api from '$lib/api';
 	import { useNativeMenu } from '$lib/theme';
+	import { platform } from '@tauri-apps/plugin-os';
 
 	import { confirm, open } from '@tauri-apps/plugin-dialog';
 	import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -44,7 +45,16 @@
 
 	let menu: Menu | null = $state(null);
 
-	const submenus = [
+	// Detect if we're running on macOS
+	const isMacOS = platform() === 'macos';
+
+	// Function to quit the application (macOS only)
+	function quitApp() {
+		appWindow.close();
+	}
+
+	// Base menu structure
+	const baseMenus = [
 		{
 			text: 'File',
 			items: [
@@ -196,13 +206,38 @@
 					text: 'Join discord server',
 					onclick: () => shellOpen('https://discord.gg/sfuWXRfeTt')
 				},
-				{
-					text: 'About Gale',
-					onclick: () => (aboutOpen = true)
-				}
+				// On macOS, About Gale will be in the app menu, so exclude it from Help
+				...(isMacOS
+					? []
+					: [
+							{
+								text: 'About Gale',
+								onclick: () => (aboutOpen = true)
+							}
+						])
 			]
 		}
 	];
+
+	// Create macOS app menu (will become the application menu automatically)
+	const macOSAppMenu = {
+		text: 'Gale',
+		items: [
+			{
+				text: 'About Gale',
+				onclick: () => (aboutOpen = true)
+			},
+			'',
+			{
+				text: 'Quit Gale',
+				accelerator: 'Cmd+Q',
+				onclick: quitApp
+			}
+		]
+	};
+
+	// Build final submenu structure based on platform
+	const submenus = isMacOS ? [macOSAppMenu, ...baseMenus] : baseMenus;
 
 	const appWindow = getCurrentWindow();
 
