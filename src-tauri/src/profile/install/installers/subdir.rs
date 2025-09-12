@@ -2,6 +2,7 @@ use std::{
     borrow::Cow,
     collections::HashMap,
     fs,
+    io::Read,
     path::{Path, PathBuf},
 };
 
@@ -33,10 +34,11 @@ pub struct SubdirInstaller<'a> {
 pub struct Subdir<'a> {
     /// The name which "triggers" the subdir. Must be a single path component.
     pub name: &'a str,
-    /// The target path of the subdir, relative to the profile dir.
+    /// The target paths of the subdir, relative to the profile dir.
+    /// Files will be copied to all specified targets.
     ///
     /// Use forward slashes to separate path components.
-    pub target: &'a str,
+    pub targets: Vec<&'a str>,
     #[serde(default)]
     pub mode: SubdirMode,
     /// Whether files in this subdir can be/are expected to be mutated.
@@ -68,38 +70,38 @@ pub enum SubdirMode {
 }
 
 impl<'a> Subdir<'a> {
-    pub const fn new(name: &'a str, target: &'a str, mode: SubdirMode) -> Self {
+    pub fn new(name: &'a str, targets: Vec<&'a str>, mode: SubdirMode) -> Self {
         Self {
             name,
-            target,
+            targets,
             mode,
             mutable: false,
             extension: None,
         }
     }
 
-    pub const fn separated(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::Separate)
+    pub fn separated(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, vec![target], SubdirMode::Separate)
     }
 
-    pub const fn flat_separated(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::SeparateFlatten)
+    pub fn flat_separated(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, vec![target], SubdirMode::SeparateFlatten)
     }
 
-    pub const fn tracked(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::Track)
+    pub fn tracked(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, vec![target], SubdirMode::Track)
     }
 
-    pub const fn untracked(name: &'a str, target: &'a str) -> Self {
-        Self::new(name, target, SubdirMode::None)
+    pub fn untracked(name: &'a str, target: &'a str) -> Self {
+        Self::new(name, vec![target], SubdirMode::None)
     }
 
-    pub const fn mutable(mut self) -> Self {
+    pub fn mutable(mut self) -> Self {
         self.mutable = true;
         self
     }
 
-    pub const fn extension(mut self, ext: &'a str) -> Self {
+    pub fn extension(mut self, ext: &'a str) -> Self {
         self.extension = Some(ext);
         self
     }
@@ -150,12 +152,12 @@ impl<'a> SubdirInstaller<'a> {
         &self,
         relative_path: &'p Path,
         package_name: &str,
-    ) -> Result<Option<Cow<'p, Path>>> {
+    ) -> Result<Vec<Cow<'p, Path>>> {
         use std::path::Component;
 
         if let Some(str) = relative_path.to_str() {
             if self.ignored_files.contains(&str) {
-                return Ok(None);
+                return Ok(Vec::new());
             }
         }
 
@@ -181,12 +183,10 @@ impl<'a> SubdirInstaller<'a> {
                 // default when the whole path is exhausted
                 None => match self.default_subdir {
                     Some(index) => break &self.subdirs[index],
-                    None => return Ok(None),
+                    None => return Ok(Vec::new()),
                 },
             }
         };
-
-        let mut target = PathBuf::from(subdir.target);
 
         let separate = matches!(
             subdir.mode,
@@ -198,31 +198,74 @@ impl<'a> SubdirInstaller<'a> {
         );
         let is_top_level = components.clone().next().is_none();
 
-        if separate {
-            target.push(package_name);
-        }
+        let mut results = Vec::new();
+        for target_path in &subdir.targets {
+            let mut target = PathBuf::from(target_path);
 
-        if is_top_level {
-            if flatten {
-                let file_name = prev.file_name().ok_or_eyre("malformed archive")?;
+            if separate {
+                target.push(package_name);
+            }
 
-                target.push(file_name);
+            if is_top_level {
+                if flatten {
+                    let file_name = prev.file_name().ok_or_eyre("malformed archive")?;
+                    target.push(file_name);
+                } else {
+                    target.push(&prev);
+                }
             } else {
-                target.push(&prev);
-            }
-        } else {
-            if !flatten {
-                let mut prev = prev.components();
-                // remove the subdir component itself
-                prev.next_back();
+                if !flatten {
+                    let mut prev_components = prev.components();
+                    // remove the subdir component itself
+                    prev_components.next_back();
+                    target.push(prev_components);
+                }
 
-                target.push(prev);
+                // When the target path contains the trigger name followed by more path components,
+                // we should strip the overlapping part from the source path
+                let mut components_to_add = components.clone();
+                if flatten && target_path.starts_with(subdir.name) {
+                    // Extract the suffix after the trigger name from the target
+                    if let Some(target_suffix) = target_path.strip_prefix(subdir.name) {
+                        if !target_suffix.is_empty() {
+                            // Remove leading slash if present
+                            let target_suffix =
+                                target_suffix.strip_prefix("/").unwrap_or(target_suffix);
+
+                            // Check if the remaining components start with the same pattern as target_suffix
+                            let suffix_parts: Vec<&str> = target_suffix.split('/').collect();
+                            let mut temp_components = components_to_add.clone();
+                            let mut matches = true;
+
+                            for expected_part in &suffix_parts {
+                                if let Some(Component::Normal(actual)) = temp_components.next() {
+                                    if actual.to_str() != Some(expected_part) {
+                                        matches = false;
+                                        break;
+                                    }
+                                } else {
+                                    matches = false;
+                                    break;
+                                }
+                            }
+
+                            // If the components match the target suffix, skip them
+                            if matches {
+                                for _ in &suffix_parts {
+                                    components_to_add.next();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                target.push(components_to_add);
             }
 
-            target.push(components);
+            results.push(Cow::Owned(target));
         }
 
-        Ok(Some(Cow::Owned(target)))
+        Ok(results)
     }
 
     fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, mut scan: F) -> Result<bool>
@@ -235,11 +278,13 @@ impl<'a> SubdirInstaller<'a> {
         for subdir in self.subdirs() {
             match subdir.mode {
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => {
-                    let mut path = profile.path.to_path_buf();
-                    path.push(subdir.target);
-                    path.push(&*package_name);
+                    for target in &subdir.targets {
+                        let mut path = profile.path.to_path_buf();
+                        path.push(target);
+                        path.push(&*package_name);
 
-                    scan(&path)?;
+                        scan(&path)?;
+                    }
                 }
                 SubdirMode::Track if !scanned_tracked_files => {
                     scanned_tracked_files = true;
@@ -334,10 +379,51 @@ impl ProfileStateHandle {
 }
 
 impl PackageInstaller for SubdirInstaller<'_> {
-    fn extract(&mut self, archive: PackageZip, package_name: &str, dest: PathBuf) -> Result<()> {
-        install::fs::extract(archive, dest, |relative_path| {
-            self.map_file(relative_path, package_name)
-        })
+    fn extract(
+        &mut self,
+        mut archive: PackageZip,
+        package_name: &str,
+        dest: PathBuf,
+    ) -> Result<()> {
+        for i in 0..archive.len() {
+            let mut source_file = archive.by_index(i)?;
+
+            if source_file.is_dir() {
+                continue;
+            }
+
+            let name = source_file.name().to_owned();
+            let relative_path: Cow<'_, Path> = if cfg!(unix) && name.contains('\\') {
+                PathBuf::from(name.replace('\\', "/")).into()
+            } else {
+                Path::new(&name).into()
+            };
+
+            if !util::fs::is_enclosed(&relative_path) {
+                warn!(
+                    "file {} escapes the archive root, skipping",
+                    relative_path.display()
+                );
+                continue;
+            }
+
+            let target_paths = self.map_file(&relative_path, package_name)?;
+
+            if target_paths.is_empty() {
+                continue;
+            }
+
+            let mut content = Vec::new();
+            source_file.read_to_end(&mut content)?;
+
+            for relative_target in target_paths {
+                let target_path = dest.join(&*relative_target);
+                fs::create_dir_all(target_path.parent().unwrap())?;
+                fs::write(&target_path, &content)?;
+            }
+        }
+
+        Ok(())
     }
 
     fn install(&mut self, src: &Path, package_name: &str, profile: &Profile) -> Result<()> {
@@ -347,7 +433,12 @@ impl PackageInstaller for SubdirInstaller<'_> {
         install::fs::install(src, profile, |relative_path, exists| {
             let subdir = self
                 .subdirs()
-                .find(|subdir| relative_path.starts_with(subdir.target))
+                .find(|subdir| {
+                    subdir
+                        .targets
+                        .iter()
+                        .any(|target| relative_path.starts_with(target))
+                })
                 .expect("file should be in a subdir");
 
             let method = if subdir.mutable {
@@ -434,13 +525,13 @@ impl PackageInstaller for SubdirInstaller<'_> {
     }
 
     fn mod_dir(&self, package_name: &str, profile: &Profile) -> Option<PathBuf> {
-        self.default_subdir.map(|index| {
-            let mut path = profile.path.to_path_buf();
-
-            path.push(self.subdirs[index].target);
-            path.push(package_name);
-
-            path
+        self.default_subdir.and_then(|index| {
+            self.subdirs[index].targets.first().map(|target| {
+                let mut path = profile.path.to_path_buf();
+                path.push(target);
+                path.push(package_name);
+                path
+            })
         })
     }
 }

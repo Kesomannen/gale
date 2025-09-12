@@ -20,6 +20,10 @@ pub enum ModLoaderKind<'a> {
         #[serde(default, borrow, rename = "subdirs")]
         extra_subdirs: Vec<Subdir<'a>>,
     },
+    BepisLoader {
+        #[serde(default, borrow, rename = "subdirs")]
+        extra_subdirs: Vec<Subdir<'a>>,
+    },
     MelonLoader {
         #[serde(default, borrow, rename = "subdirs")]
         extra_subdirs: Vec<Subdir<'a>>,
@@ -37,6 +41,7 @@ impl ModLoader<'_> {
     pub fn as_str(&self) -> &'static str {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => "BepInEx",
+            ModLoaderKind::BepisLoader { .. } => "BepisLoader",
             ModLoaderKind::MelonLoader { .. } => "MelonLoader",
             ModLoaderKind::Northstar {} => "Northstar",
             ModLoaderKind::GDWeave {} => "GDWeave",
@@ -53,6 +58,10 @@ impl ModLoader<'_> {
         } else {
             match &self.kind {
                 ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
+                ModLoaderKind::BepisLoader { .. } => {
+                    full_name == "ResoniteModding-BepisLoader"
+                        || full_name == "ResoniteModding-BepInExRenderer"
+                }
                 ModLoaderKind::MelonLoader { .. } => full_name == "LavaGang-MelonLoader",
                 ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
                 ModLoaderKind::Northstar {} => full_name == "northstar-Northstar",
@@ -68,6 +77,7 @@ impl ModLoader<'_> {
     pub fn log_path(&self) -> Option<&str> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => Some("BepInEx/LogOutput.log"),
+            ModLoaderKind::BepisLoader { .. } => Some("BepInEx/LogOutput.log"),
             ModLoaderKind::MelonLoader { .. } => Some("MelonLoader/Latest.log"),
             ModLoaderKind::GDWeave {} => Some("GDWeave/GDWeave.log"),
             ModLoaderKind::Northstar {} => None,
@@ -80,6 +90,7 @@ impl ModLoader<'_> {
     pub fn mod_config_dir(&self) -> PathBuf {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => "BepInEx/config",
+            ModLoaderKind::BepisLoader { .. } => "BepInEx/config",
             ModLoaderKind::MelonLoader { .. } => ".",
             ModLoaderKind::GDWeave {} => "GDWeave/configs",
             ModLoaderKind::Northstar {} => ".",
@@ -96,7 +107,7 @@ impl ModLoader<'static> {
         match (self.is_loader_package(package_name), &self.kind) {
             (true, ModLoaderKind::BepInEx { .. }) => Box::new(BepinexInstaller),
             (false, ModLoaderKind::BepInEx { extra_subdirs, .. }) => {
-                const SUBDIRS: &[Subdir] = &[
+                let subdirs = vec![
                     Subdir::flat_separated("plugins", "BepInEx/plugins"),
                     Subdir::flat_separated("patchers", "BepInEx/patchers"),
                     Subdir::flat_separated("monomod", "BepInEx/monomod").extension(".mm.dll"),
@@ -105,8 +116,32 @@ impl ModLoader<'static> {
                 ];
 
                 Box::new(
-                    SubdirInstaller::new(SUBDIRS)
+                    SubdirInstaller::new(Box::leak(subdirs.into_boxed_slice()))
                         .with_default(0)
+                        .with_extras(extra_subdirs),
+                )
+            }
+
+            // BepisLoader loader package uses BepInEx installer since it's a BepInEx 6 fork
+            (true, ModLoaderKind::BepisLoader { .. }) => Box::new(BepinexInstaller),
+            (false, ModLoaderKind::BepisLoader { extra_subdirs, .. }) => {
+                // BepisLoader uses separate directories for Renderer and regular mods
+                // Note: When a mod has "Renderer" folder, it goes ONLY to Renderer/BepInEx/plugins
+                // When a mod has regular "plugins" or is a regular mod, it goes ONLY to BepInEx/plugins
+                let subdirs = vec![
+                    // Renderer-specific content goes only to Renderer
+                    Subdir::flat_separated("Renderer", "Renderer/BepInEx/plugins"),
+                    // Regular plugins go ONLY to BepInEx/plugins (not to Renderer)
+                    Subdir::flat_separated("plugins", "BepInEx/plugins"),
+                    Subdir::flat_separated("patchers", "BepInEx/patchers"),
+                    Subdir::flat_separated("monomod", "BepInEx/monomod").extension(".mm.dll"),
+                    Subdir::flat_separated("core", "BepInEx/core"),
+                    Subdir::untracked("config", "BepInEx/config").mutable(),
+                ];
+
+                Box::new(
+                    SubdirInstaller::new(Box::leak(subdirs.into_boxed_slice()))
+                        .with_default(1) // Default to plugins
                         .with_extras(extra_subdirs),
                 )
             }
@@ -124,7 +159,7 @@ impl ModLoader<'static> {
                 Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
             }
             (false, ModLoaderKind::MelonLoader { extra_subdirs }) => {
-                const SUBDIRS: &[Subdir] = &[
+                let subdirs = vec![
                     Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
                     Subdir::tracked("Managed", "MelonLoader/Managed").extension(".managed.dll"),
                     Subdir::tracked("Mods", "Mods").extension(".dll"),
@@ -135,7 +170,7 @@ impl ModLoader<'static> {
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
 
                 Box::new(
-                    SubdirInstaller::new(SUBDIRS)
+                    SubdirInstaller::new(Box::leak(subdirs.into_boxed_slice()))
                         .with_default(2)
                         .with_extras(extra_subdirs)
                         .with_ignored_files(IGNORED),
@@ -165,34 +200,41 @@ impl ModLoader<'static> {
                 Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::Yes))
             }
             (false, ModLoaderKind::Northstar {}) => {
-                const SUBDIRS: &[Subdir] = &[Subdir::tracked("mods", "R2Northstar/mods")];
+                let subdirs = vec![Subdir::tracked("mods", "R2Northstar/mods")];
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md", "LICENSE"];
 
-                Box::new(SubdirInstaller::new(SUBDIRS).with_ignored_files(IGNORED))
+                Box::new(
+                    SubdirInstaller::new(Box::leak(subdirs.into_boxed_slice()))
+                        .with_ignored_files(IGNORED),
+                )
             }
 
             (true, ModLoaderKind::Shimloader {}) => Box::new(ShimloaderInstaller),
             (false, ModLoaderKind::Shimloader {}) => {
-                const SUBDIRS: &[Subdir] = &[
+                let subdirs = vec![
                     Subdir::flat_separated("mod", "shimloader/mod"),
                     Subdir::flat_separated("pak", "shimloader/pak"),
                     Subdir::untracked("cfg", "shimloader/cfg").mutable(),
                 ];
 
-                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+                Box::new(
+                    SubdirInstaller::new(Box::leak(subdirs.into_boxed_slice())).with_default(0),
+                )
             }
 
             (true, ModLoaderKind::ReturnOfModding { files }) => {
                 Box::new(ExtractInstaller::new(files, FlattenTopLevel::Yes))
             }
             (false, ModLoaderKind::ReturnOfModding { .. }) => {
-                const SUBDIRS: &[Subdir] = &[
+                let subdirs = vec![
                     Subdir::separated("plugins", "ReturnOfModding/plugins"),
                     Subdir::separated("plugins_data", "ReturnOfModding/plugins_data"),
                     Subdir::separated("config", "ReturnOfModding/config").mutable(),
                 ];
 
-                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+                Box::new(
+                    SubdirInstaller::new(Box::leak(subdirs.into_boxed_slice())).with_default(0),
+                )
             }
 
             (true, ModLoaderKind::Lovely {}) => {
@@ -201,9 +243,11 @@ impl ModLoader<'static> {
                 Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
             }
             (false, ModLoaderKind::Lovely {}) => {
-                const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
+                let subdirs = vec![Subdir::separated("", "mods")];
 
-                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+                Box::new(
+                    SubdirInstaller::new(Box::leak(subdirs.into_boxed_slice())).with_default(0),
+                )
             }
         }
     }
