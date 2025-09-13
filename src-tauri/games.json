@@ -20,16 +20,12 @@
             "subdirs": [
                 {
                     "name": "Assets",
-                    "targets": [
-                        "BepInEx/Assets"
-                    ],
+                    "target": "BepInEx/Assets",
                     "mode": "track"
                 },
                 {
                     "name": "GameData",
-                    "targets": [
-                        "BepInEx/GameData"
-                    ]
+                    "target": "BepInEx/GameData"
                 }
             ]
         },
@@ -49,9 +45,7 @@
             "subdirs": [
                 {
                     "name": "Sideloader",
-                    "targets": [
-                        "BepInEx/Sideloader"
-                    ],
+                    "target": "BepInEx/Sideloader",
                     "mode": "track"
                 }
             ]
@@ -130,9 +124,7 @@
             "subdirs": [
                 {
                     "name": "SlimVML",
-                    "targets": [
-                        "BepInEx/SlimVML"
-                    ]
+                    "target": "BepInEx/SlimVML"
                 }
             ]
         },
@@ -292,9 +284,7 @@
             "subdirs": [
                 {
                     "name": "mods",
-                    "targets": [
-                        "mods"
-                    ],
+                    "target": "mods",
                     "mode": "separate",
                     "extension": ".hotmod,.h3mod"
                 }
@@ -362,88 +352,66 @@
             "subdirs": [
                 {
                     "name": "Plugins",
-                    "targets": [
-                        "Plugins"
-                    ],
+                    "target": "Plugins",
                     "mode": "track",
                     "extension": ".plugin.dll"
                 },
                 {
                     "name": "UserData",
-                    "targets": [
-                        "UserData"
-                    ],
+                    "target": "UserData",
                     "mode": "track"
                 },
                 {
                     "name": "CustomItems",
-                    "targets": [
-                        "UserData/CustomItems"
-                    ],
+                    "target": "UserData/CustomItems",
                     "mode": "track",
                     "extension": ".melon"
                 },
                 {
                     "name": "CustomMaps",
-                    "targets": [
-                        "UserData/CustomMaps"
-                    ],
+                    "target": "UserData/CustomMaps",
                     "mode": "track",
                     "extension": ".bcm,.cma"
                 },
                 {
                     "name": "PlayerModels",
-                    "targets": [
-                        "UserData/PlayerModels"
-                    ],
+                    "target": "UserData/PlayerModels",
                     "mode": "track",
                     "extension": ".body"
                 },
                 {
                     "name": "CustomLoadScreens",
-                    "targets": [
-                        "UserData/CustomLoadScreens"
-                    ],
+                    "target": "UserData/CustomLoadScreens",
                     "mode": "track",
                     "extension": ".load"
                 },
                 {
                     "name": "Music",
-                    "targets": [
-                        "UserData/Music"
-                    ],
+                    "target": "UserData/Music",
                     "mode": "track",
                     "extension": ".wav"
                 },
                 {
                     "name": "Food",
-                    "targets": [
-                        "UserData/Food"
-                    ],
+                    "target": "UserData/Food",
                     "mode": "track",
                     "extension": ".food"
                 },
                 {
                     "name": "Scoreworks",
-                    "targets": [
-                        "UserData/Scoreworks"
-                    ],
+                    "target": "UserData/Scoreworks",
                     "mode": "track",
                     "extension": ".sw"
                 },
                 {
                     "name": "CustomSkins",
-                    "targets": [
-                        "UserData/CustomSkins"
-                    ],
+                    "target": "UserData/CustomSkins",
                     "mode": "track",
                     "extension": ".png"
                 },
                 {
                     "name": "Grenades",
-                    "targets": [
-                        "UserData/Grenades"
-                    ],
+                    "target": "UserData/Grenades",
                     "mode": "track",
                     "extension": ".grenade"
                 }
@@ -464,88 +432,66 @@
             "subdirs": [
                 {
                     "name": "Plugins",
-                    "targets": [
-                        "Plugins"
-                    ],
+                    "target": "Plugins",
                     "mode": "track",
                     "extension": ".plugin.dll"
                 },
                 {
                     "name": "UserData",
-                    "targets": [
-                        "UserData"
-                    ],
+                    "target": "UserData",
                     "mode": "track"
                 },
                 {
                     "name": "CustomItems",
-                    "targets": [
-                        "UserData/CustomItems"
-                    ],
+                    "target": "UserData/CustomItems",
                     "mode": "track",
                     "extension": ".melon"
                 },
                 {
                     "name": "CustomMaps",
-                    "targets": [
-                        "UserData/CustomMaps"
-                    ],
+                    "target": "UserData/CustomMaps",
                     "mode": "track",
                     "extension": ".bcm,.cma"
                 },
                 {
                     "name": "PlayerModels",
-                    "targets": [
-                        "UserData/PlayerModels"
-                    ],
+                    "target": "UserData/PlayerModels",
                     "mode": "track",
                     "extension": ".body"
                 },
                 {
                     "name": "CustomLoadScreens",
-                    "targets": [
-                        "UserData/CustomLoadScreens"
-                    ],
+                    "target": "UserData/CustomLoadScreens",
                     "mode": "track",
                     "extension": ".load"
                 },
                 {
                     "name": "Music",
-                    "targets": [
-                        "UserData/Music"
-                    ],
+                    "target": "UserData/Music",
                     "mode": "track",
                     "extension": ".wav"
                 },
                 {
                     "name": "Food",
-                    "targets": [
-                        "UserData/Food"
-                    ],
+                    "target": "UserData/Food",
                     "mode": "track",
                     "extension": ".food"
                 },
                 {
                     "name": "Scoreworks",
-                    "targets": [
-                        "UserData/Scoreworks"
-                    ],
+                    "target": "UserData/Scoreworks",
                     "mode": "track",
                     "extension": ".sw"
                 },
                 {
                     "name": "CustomSkins",
-                    "targets": [
-                        "UserData/CustomSkins"
-                    ],
+                    "target": "UserData/CustomSkins",
                     "mode": "track",
                     "extension": ".png"
                 },
                 {
                     "name": "Grenades",
-                    "targets": [
-                        "UserData/Grenades"
-                    ],
+                    "target": "UserData/Grenades",
                     "mode": "track",
                     "extension": ".grenade"
                 }
@@ -997,9 +943,7 @@
             "subdirs": [
                 {
                     "name": "CustomNPCs",
-                    "targets": [
-                        "UserData/CustomNPCs"
-                    ],
+                    "target": "UserData/CustomNPCs",
                     "extension": ".npc",
                     "mode": "track"
                 }
@@ -1345,30 +1289,22 @@
             "subdirs": [
                 {
                     "name": "CustomSongs",
-                    "targets": [
-                        "BepInEx/CustomSongs"
-                    ],
+                    "target": "BepInEx/CustomSongs",
                     "mode": "track"
                 },
                 {
                     "name": "Movesets",
-                    "targets": [
-                        "BepInEx/Movesets"
-                    ],
+                    "target": "BepInEx/Movesets",
                     "mode": "track"
                 },
                 {
                     "name": "Skins",
-                    "targets": [
-                        "BepInEx/Skins"
-                    ],
+                    "target": "BepInEx/Skins",
                     "extension": ".nasbskin"
                 },
                 {
                     "name": "Voicepacks",
-                    "targets": [
-                        "BepInEx/Voicepacks"
-                    ],
+                    "target": "BepInEx/Voicepacks",
                     "extension": ".voicepack"
                 }
             ]
@@ -1449,9 +1385,7 @@
             "subdirs": [
                 {
                     "name": "hexpatches",
-                    "targets": [
-                        "BepInEx/hexpatches"
-                    ],
+                    "target": "BepInEx/hexpatches",
                     "mode": "track",
                     "mutable": true
                 }
@@ -1898,9 +1832,7 @@
             "subdirs": [
                 {
                     "name": "QMods",
-                    "targets": [
-                        "QMods"
-                    ],
+                    "target": "QMods",
                     "mode": "track"
                 }
             ]
@@ -1926,9 +1858,7 @@
             "subdirs": [
                 {
                     "name": "QMods",
-                    "targets": [
-                        "QMods"
-                    ],
+                    "target": "QMods",
                     "mode": "track"
                 }
             ]
@@ -2108,9 +2038,7 @@
             "subdirs": [
                 {
                     "name": "Maps",
-                    "targets": [
-                        "BepInEx/Maps"
-                    ]
+                    "target": "BepInEx/Maps"
                 }
             ]
         },
@@ -2154,9 +2082,7 @@
             "subdirs": [
                 {
                     "name": "UMM Mods",
-                    "targets": [
-                        "BepInEx/UMM Mods"
-                    ]
+                    "target": "BepInEx/UMM Mods"
                 }
             ]
         },
