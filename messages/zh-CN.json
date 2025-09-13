@@ -1,0 +1,6 @@
+{
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+    "language_en": "英语",
+    "language_zh_CN": "简体中文",
+    "page_no_mods_installed": "没有安装任何模组"
+}
