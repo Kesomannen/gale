@@ -20,6 +20,10 @@ pub enum ModLoaderKind<'a> {
         #[serde(default, borrow, rename = "subdirs")]
         extra_subdirs: Vec<Subdir<'a>>,
     },
+    BepisLoader {
+        #[serde(default, borrow, rename = "subdirs")]
+        extra_subdirs: Vec<Subdir<'a>>,
+    },
     MelonLoader {
         #[serde(default, borrow, rename = "subdirs")]
         extra_subdirs: Vec<Subdir<'a>>,
@@ -37,6 +41,7 @@ impl ModLoader<'_> {
     pub fn as_str(&self) -> &'static str {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => "BepInEx",
+            ModLoaderKind::BepisLoader { .. } => "BepisLoader",
             ModLoaderKind::MelonLoader { .. } => "MelonLoader",
             ModLoaderKind::Northstar {} => "Northstar",
             ModLoaderKind::GDWeave {} => "GDWeave",
@@ -53,6 +58,10 @@ impl ModLoader<'_> {
         } else {
             match &self.kind {
                 ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
+                ModLoaderKind::BepisLoader { .. } => {
+                    full_name == "ResoniteModding-BepisLoader"
+                        || full_name == "ResoniteModding-BepInExRenderer"
+                }
                 ModLoaderKind::MelonLoader { .. } => full_name == "LavaGang-MelonLoader",
                 ModLoaderKind::GDWeave {} => full_name == "NotNet-GDWeave",
                 ModLoaderKind::Northstar {} => full_name == "northstar-Northstar",
@@ -68,6 +77,7 @@ impl ModLoader<'_> {
     pub fn log_path(&self) -> Option<&str> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => Some("BepInEx/LogOutput.log"),
+            ModLoaderKind::BepisLoader { .. } => Some("BepInEx/LogOutput.log"),
             ModLoaderKind::MelonLoader { .. } => Some("MelonLoader/Latest.log"),
             ModLoaderKind::GDWeave {} => Some("GDWeave/GDWeave.log"),
             ModLoaderKind::Northstar {} => None,
@@ -80,6 +90,7 @@ impl ModLoader<'_> {
     pub fn mod_config_dir(&self) -> PathBuf {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => "BepInEx/config",
+            ModLoaderKind::BepisLoader { .. } => "BepInEx/config",
             ModLoaderKind::MelonLoader { .. } => ".",
             ModLoaderKind::GDWeave {} => "GDWeave/configs",
             ModLoaderKind::Northstar {} => ".",
@@ -109,6 +120,20 @@ impl ModLoader<'static> {
                         .with_default(0)
                         .with_extras(extra_subdirs),
                 )
+            }
+
+            (true, ModLoaderKind::BepisLoader { .. }) => Box::new(BepinexInstaller),
+            (false, ModLoaderKind::BepisLoader { extra_subdirs, .. }) => {
+                const SUBDIRS: &[Subdir] = &[
+                    Subdir::flat_separated("Renderer", "Renderer/BepInEx/plugins"),
+                    Subdir::flat_separated("plugins", "BepInEx/plugins"),
+                    Subdir::flat_separated("patchers", "BepInEx/patchers"),
+                    Subdir::flat_separated("monomod", "BepInEx/monomod").extension(".mm.dll"),
+                    Subdir::flat_separated("core", "BepInEx/core"),
+                    Subdir::untracked("config", "BepInEx/config").mutable(),
+                ];
+
+                Box::new(BepisLoaderInstaller::new(SUBDIRS).with_extras(extra_subdirs))
             }
 
             (true, ModLoaderKind::MelonLoader { .. }) => {

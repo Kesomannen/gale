@@ -15,6 +15,7 @@ use crate::{
 pub fn add_args(command: &mut Command, profile_dir: &Path, mod_loader: &ModLoader) -> Result<()> {
     match &mod_loader.kind {
         ModLoaderKind::BepInEx { .. } => add_bepinex_args(command, profile_dir),
+        ModLoaderKind::BepisLoader { .. } => add_bepisloader_args(command, profile_dir),
         ModLoaderKind::MelonLoader { .. } => add_melon_loader_args(command, profile_dir),
         ModLoaderKind::Northstar {} => add_northstar_args(command, profile_dir),
         ModLoaderKind::GDWeave {} => add_gd_weave_args(command, profile_dir),
@@ -25,12 +26,33 @@ pub fn add_args(command: &mut Command, profile_dir: &Path, mod_loader: &ModLoade
 }
 
 fn add_bepinex_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
-    let (enable_prefix, target_prefix) = doorstop_args(profile_dir)?;
+    let (enable_prefix, target_prefix) = doorstop_args(profile_dir, None)?;
     let preloader_path = bepinex_preloader_path(profile_dir)?;
 
     command
         .args([enable_prefix, "true", target_prefix])
         .arg(preloader_path);
+
+    Ok(())
+}
+
+fn add_bepisloader_args(command: &mut Command, profile_dir: &Path) -> Result<()> {
+    let bepinex_path = profile_dir.join("BepInEx");
+    let preloader_result = bepinex_preloader_path(&profile_dir.join("Renderer"));
+
+    command
+        .arg("--hookfxr-enable")
+        .arg("--bepinex-target")
+        .arg(bepinex_path);
+
+    if let Ok(preloader_path) = preloader_result {
+        let (enable_prefix, target_prefix) = doorstop_args(profile_dir, Some(4))?;
+        command
+            .arg(enable_prefix)
+            .arg("true")
+            .arg(target_prefix)
+            .arg(preloader_path);
+    }
 
     Ok(())
 }
@@ -62,22 +84,30 @@ fn bepinex_preloader_path(profile_dir: &Path) -> Result<PathBuf> {
     Ok(result)
 }
 
-fn doorstop_args(profile_dir: &Path) -> Result<(&'static str, &'static str)> {
-    let path = profile_dir.join(".doorstop_version");
-
-    let version = if path.exists() {
-        let version = fs::read_to_string(&path)
-            .fs_context("reading version file", &path)?
-            .split('.') // read only the major version number
-            .next()
-            .and_then(|str| str.parse().ok())
-            .ok_or_eyre("invalid version format")?;
-
-        info!("doorstop version read: {}", version);
-        version
+fn doorstop_args(
+    profile_dir: &Path,
+    version_override: Option<u32>,
+) -> Result<(&'static str, &'static str)> {
+    let version = if let Some(v) = version_override {
+        info!("using doorstop version override: {}", v);
+        v
     } else {
-        warn!(".doorstop_version file is missing, defaulting to 3");
-        3
+        let path = profile_dir.join(".doorstop_version");
+
+        if path.exists() {
+            let version = fs::read_to_string(&path)
+                .fs_context("reading version file", &path)?
+                .split('.') // read only the major version number
+                .next()
+                .and_then(|str| str.parse().ok())
+                .ok_or_eyre("invalid version format")?;
+
+            info!("doorstop version read: {}", version);
+            version
+        } else {
+            warn!(".doorstop_version file is missing, defaulting to 3");
+            3
+        }
     };
 
     match version {

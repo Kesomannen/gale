@@ -161,7 +161,7 @@ impl ConfigCache {
         }
 
         let kind = match (&mod_loader.kind, extension) {
-            (ModLoaderKind::BepInEx { .. }, "cfg") => {
+            (ModLoaderKind::BepInEx { .. } | ModLoaderKind::BepisLoader { .. }, "cfg") => {
                 read_file(&entry, bepinex::File::read, AnyFileKind::BepInEx)
             }
             (ModLoaderKind::GDWeave {}, "json") => {
