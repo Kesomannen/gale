@@ -22,6 +22,7 @@
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
 	import FontFamilyPref from '$lib/components/prefs/FontFamilyPref.svelte';
+	import LanguagePref from '$lib/components/prefs/LanguagePref.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -86,6 +87,8 @@
 		</PathPref>
 
 		<SmallHeading>Appearance</SmallHeading>
+
+		<LanguagePref value={prefs.language} set={set((value, prefs) => { prefs.language = value })} />
 
 		<ColorPref category="primary" default="slate">
 			The main color of the interface, including backgrounds and text.</ColorPref

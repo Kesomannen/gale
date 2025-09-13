@@ -187,6 +187,7 @@ pub struct Prefs {
     pub fetch_mods_automatically: bool,
     pub zoom_factor: f32,
     pub pull_before_launch: bool,
+    pub language: String,
 
     pub game_prefs: HashMap<String, GamePrefs>,
 }
@@ -215,6 +216,7 @@ impl Default for Prefs {
             pull_before_launch: true,
 
             zoom_factor: 1.0,
+            language: "en".to_string(),
 
             game_prefs: HashMap::new(),
         }
@@ -279,6 +281,7 @@ impl Prefs {
                 .context("failed to set zoom level")?;
         }
         self.zoom_factor = value.zoom_factor;
+        self.language = value.language;
 
         self.send_telemetry = value.send_telemetry;
         self.fetch_mods_automatically = value.fetch_mods_automatically;

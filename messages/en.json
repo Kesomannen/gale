@@ -1,0 +1,6 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "language_en": "English",
+  "language_zh_CN": "Simplified Chinese",
+  "page_no_mods_installed": "No mods installed"
+}

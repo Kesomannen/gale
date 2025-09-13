@@ -17,6 +17,7 @@
 	import UnknownModsBanner from '$lib/components/mod-list/UnknownModsBanner.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { profileQuery } from '$lib/state/misc.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -250,7 +251,7 @@
 					{#if totalModCount === 0}
 						<Icon icon="ph:ghost" class="text-primary-500 mx-auto mt-4 text-9xl" />
 
-						<div class="mt-1 text-lg">No mods installed</div>
+						<div class="mt-1 text-lg">{m.page_no_mods_installed()}</div>
 						<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
 							>Click to <Icon icon="mdi:store-search" class="mr-0.5 ml-1 inline" inline /> Browse Thunderstore</a
 						>

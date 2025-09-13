@@ -1,0 +1,32 @@
+<script lang="ts">
+	import Label from '$lib/components/ui/Label.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import { ChangeLanguage, LanguageTitle, locales } from '$lib/i18n';
+
+	const items = locales.map((option) => ({
+		label: LanguageTitle[option](),
+		value: option,
+	}));
+
+	type Props = {
+		value: string;
+		set: (newValue: string) => void;
+	};
+
+	let { value = $bindable(), set }: Props = $props();
+</script>
+
+<div class="flex items-center">
+	<Label>Language</Label>
+
+	<Select
+		type="single"
+		triggerClass="grow"
+		{items}
+        value={value}
+		onValueChange={(newValue) => {
+            ChangeLanguage(newValue);
+			set(newValue);
+		}}
+	/>
+</div>

@@ -294,6 +294,7 @@ export type Prefs = {
 	fetchModsAutomatically: boolean;
 	pullBeforeLaunch: boolean;
 	zoomFactor: number;
+	language: string;
 	gamePrefs: Map<string, GamePrefs>;
 };
 
