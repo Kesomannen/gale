@@ -4,8 +4,33 @@
   "language_en": "English",
   "language_zh_CN": "Simplified Chinese",
 
-  "page_no_mods_installed": "No mods installed",
+  "page_modList_noMods_1": "No mods installed.",
+  "page_modList_noMods_2": "Click to Browse Thunderstore",
+  "page_modList_noResults_1": "No matching mods found in profile",
+  "page_modList_noResults_2": "Try to adjust your search query/filters",
 
+  "page_modContextItem_1": "Uninstall",
+  "page_modContextItem_2": "Change version",
+  "page_modContextItem_3": "Show dependants",
+  "page_modContextItem_4": "Open folder",
+
+  "page_modDetails_button": "Update to {version}",
+
+  "page_dialog_title": "Dependants of {name}",
+  "page_dialog_noDependants": "No dependants found",
+
+  "page_dependantsDialog_uninstall_title": "Confirm uninstallation",
+  "page_dependantsDialog_uninstall_verb": "Uninstall",
+  "page_dependantsDialog_uninstall_description": "The following mods depend on %s and will likely not work if it is uninstalled:",
+
+  "page_dependantsDialog_disable_title": "Confirm disabling",
+  "page_dependantsDialog_disable_verb": "Disable",
+  "page_dependantsDialog_disable_description": "The following mods depend on %s and will likely not work if it is disabled:",
+
+  "page_dependantsDialog_enable_title": "Confirm enabling",
+  "page_dependantsDialog_enable_verb": "Enable",
+  "page_dependantsDialog_enable_description": "%s depends on the following disabled mods, and will likely not work if any of them are disabled:",
+  
   "menuBar_file_title": "File",
   "menuBar_file_item_1": "Open profile folder",
   "menuBar_file_item_2": "Open game folder",
@@ -70,7 +95,7 @@
   "menuBar_copyLaunchArgs_message": "Copied launch arguments to clipboard.",
 
   "menuBar_clearModCache_confirm": "Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!",
-  "menuBar_clearModmessageCache_": "Deleted mod cache (cleared {size}).",
+  "menuBar_clearModCache_message": "Deleted mod cache (cleared {size}).",
   "menuBar_clearModCache_message_unsed": "Deleted unsed mod cache (cleared {size}).",
 
   "menuBar_copyModList_message": "Copied mod list to clipboard.",
