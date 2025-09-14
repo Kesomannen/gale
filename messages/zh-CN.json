@@ -181,5 +181,8 @@
     "zoomFactorPref_title": "缩放比例",
 
     "apiKeyPref_title": "Thunderstore API 令牌",
-    "apiKeyPref_content": "Thunderstore API 令牌用于发布模组包。一旦设置，您将无法再次查看令牌。"
+    "apiKeyPref_content": "Thunderstore API 令牌用于发布模组包。一旦设置，您将无法再次查看令牌。",
+
+    "platformPref_title": "游戏平台",
+    "platformPref_content": "您正在使用的游戏平台。这会影响 Gale 查找游戏文件夹的方式。"
 }
