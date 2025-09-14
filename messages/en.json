@@ -181,5 +181,7 @@
   "colorPref_color_rose": "rose",
 
   "fontFamilyPref_title": "Font family",
-  "fontFamilyPref_placeholder": "Search for a font..."
+  "fontFamilyPref_placeholder": "Search for a font...",
+
+  "zoomFactorPref_title": "Zoom factor"
 }

@@ -176,5 +176,7 @@
     "colorPref_color_rose": "玫瑰色",
 
     "fontFamilyPref_title": "字体",
-    "fontFamilyPref_placeholder": "搜索一个字体..."
+    "fontFamilyPref_placeholder": "搜索一个字体...",
+
+    "zoomFactorPref_title": "缩放比例"
 }
