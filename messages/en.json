@@ -119,5 +119,11 @@
   "navBar_link_browse": "Install mods",
   "navBar_link_config": "Edit mod config",
   "navBar_link_modpack": "Export modpack",
-  "navBar_link_prefs": "Edit manager settings"
+  "navBar_link_prefs": "Edit manager settings",
+
+  "toolBar_launchGame_message": "Please wait for mod installations to complete before launching.",
+  "toolBar_launchGame_button": "Launch game",
+  "toolBar_dialog_launch_title": "Launching {name}...",
+  "toolBar_dialog_launch_content": "This might take a few minutes depending on the size of your profile.",
+  "toolBar_dialog_games_title": "Select game to mod"
 }

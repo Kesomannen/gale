@@ -115,5 +115,11 @@
     "navBar_link_browse": "安装模组",
     "navBar_link_config": "编辑模组设置",
     "navBar_link_modpack": "导出模组包",
-    "navBar_link_prefs": "编辑管理器设置"
+    "navBar_link_prefs": "编辑管理器设置",
+
+    "toolBar_launchGame_message": "请等待模组安装完成后再启动。",
+    "toolBar_launchGame_button": "启动游戏",
+    "toolBar_dialog_launch_title": "正在启动 {name} 中...",
+    "toolBar_dialog_launch_content": "这可能需要几分钟时间，具体取决于您的配置大小。",
+    "toolBar_dialog_games_title": "选择要添加模组的游戏"
 }
