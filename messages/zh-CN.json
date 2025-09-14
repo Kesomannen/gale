@@ -115,7 +115,7 @@
     "navBar_link_browse": "安装模组",
     "navBar_link_config": "编辑模组设置",
     "navBar_link_modpack": "导出模组包",
-    "navBar_link_prefs": "编辑管理器设置",
+    "navBar_link_prefs": "管理器设置",
 
     "toolBar_launchGame_message": "请等待模组安装完成后再启动。",
     "toolBar_launchGame_button": "启动游戏",
@@ -227,5 +227,31 @@
     "customArgsPref_content_7": "分开输入在不同行。",
 
     "pathPref_title": "选择{name}",
-    "pathField_noset": "未设置"
+    "pathField_noset": "未设置",
+
+    "importR2Flow_title": "R2modman 数据文件夹",
+    "importR2Flow_content": "您的 r2modman/TMM 安装目录中的数据文件夹。",
+    "importR2Flow_content_loading": "加载中...",
+    "importR2Flow_content_noFound": "未找到任何安装，请在上方指定路径。",
+    "importR2Flow_checkList_title": "导入所有",
+
+    "welcomeDialog_title": "欢迎来到 Gale!",
+    "welcomeDialog_content_gameSelect": "开始前，请选择要管理模组的游戏：",
+    "welcomeDialog_content_importProfiles_1": "您可以自动将配置文件从其他模组管理器转移至Gale。",
+    "welcomeDialog_content_importProfiles_2": "您随时可以前往以下位置导入配置文件： ",
+    "welcomeDialog_content_importProfiles_3": "导入 > ...从r2modman",
+    "welcomeDialog_content_settings_1": "让我们确保您的设置符合您的喜好。",
+    "welcomeDialog_content_settings_2": "您随时可以前往以下位置进行编辑： ",
+    "welcomeDialog_content_settings_3": "管理器设置",
+    "welcomeDialog_content_color_primary": "界面的主色调，包括背景和文字。",
+    "welcomeDialog_content_color_accent": "高亮元素的颜色，例如按钮和复选框",
+    "welcomeDialog_content_end_1": "你已经可以开始你的模组之旅了！",
+    "welcomeDialog_content_end_2": "如有任何疑问或需要帮助，欢迎来到我们的",
+    "welcomeDialog_content_end_3": "Discord 社区",
+    "welcomeDialog_settings_path_title": "Gale 数据文件夹",
+    "welcomeDialog_settings_path_content": "存放模组和配置文件的文件夹。请确保设备上留有充足的存储空间。",
+    "welcomeDialog_button_back": "返回",
+    "welcomeDialog_button_skip": "跳过",
+    "welcomeDialog_button_import": "导入",
+    "welcomeDialog_button_next": "下一步"
 }

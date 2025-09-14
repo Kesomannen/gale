@@ -2,6 +2,7 @@ import { get } from 'svelte/store';
 import type { Mod, ConfigEntry, SyncUser, Game } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
+import { isEnglish } from './i18n';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -97,6 +98,11 @@ export function thunderstoreIconUrl(fullName: string) {
 }
 
 export function capitalize(str: string): string {
+	if (!isEnglish(str))
+	{
+		return str;
+	}
+	
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 

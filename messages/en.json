@@ -233,6 +233,31 @@
   "customArgsPref_content_7": " separately.",
 
   "pathPref_title": "Select {name}",
-  "pathField_noset": "Not set"
+  "pathField_noset": "Not set",
 
+  "importR2Flow_title": "R2 data folder",
+  "importR2Flow_content": "The data folder of your r2modman/TMM installation.",
+  "importR2Flow_content_loading": "Loading...",
+  "importR2Flow_content_noFound": "No installations found, please specify the path above.",
+  "importR2Flow_checkList_title": "Include all",
+
+  "welcomeDialog_title": "Welcome to Gale!",
+  "welcomeDialog_content_gameSelect": "To get started, select a game to mod:",
+  "welcomeDialog_content_importProfiles_1": "You can automatically transfer profiles from another mod manager to Gale.",
+  "welcomeDialog_content_importProfiles_2": "You can always import profiles later by going to ",
+  "welcomeDialog_content_importProfiles_3": "Import > ...from r2modman",
+  "welcomeDialog_content_settings_1": "Let's make sure your settings are to your liking.",
+  "welcomeDialog_content_settings_2": "You can always edit these later by going to ",
+  "welcomeDialog_content_settings_3": "Manager settings",
+  "welcomeDialog_content_color_primary": "The main color of the interface, including backgrounds and text.",
+  "welcomeDialog_content_color_accent": "The color of highlighted elements, such as buttons and checkboxes",
+  "welcomeDialog_content_end_1": "That's it, you're all set up to start modding!",
+  "welcomeDialog_content_end_2": "If you have any questions or need help, feel free to ask in the ",
+  "welcomeDialog_content_end_3": "Discord server",
+  "welcomeDialog_settings_path_title": "Gale data folder",
+  "welcomeDialog_settings_path_content": "The folder where mods and profiles are stored. Make sure you have plenty of space on its device.",
+  "welcomeDialog_button_back": "Back",
+  "welcomeDialog_button_skip": "Skip",
+  "welcomeDialog_button_import": "Import",
+  "welcomeDialog_button_next": "Next"
 }
