@@ -14,10 +14,18 @@ use crate::profile::{
 
 pub struct BepinexInstaller;
 
-fn scan(profile: &Profile) -> Result<impl Iterator<Item = PathBuf>> {
+fn get_core_path(package_name: &str) -> PathBuf {
+    const CORE_PATH: &str = "BepInEx/core";
+    match package_name {
+        "ResoniteModding-BepInExRenderer" => PathBuf::from("Renderer").join(CORE_PATH),
+        _ => PathBuf::from(CORE_PATH),
+    }
+}
+
+fn scan(profile: &Profile, package_name: &str) -> Result<impl Iterator<Item = PathBuf>> {
     Ok(profile
         .path
-        .join("BepInEx/core")
+        .join(get_core_path(package_name))
         .read_dir()?
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_file()))
@@ -50,28 +58,23 @@ impl PackageInstaller for BepinexInstaller {
         })
     }
 
-    fn toggle(
-        &mut self,
-        enabled: bool,
-        _profile_mod: &ProfileMod,
-        profile: &Profile,
-    ) -> Result<()> {
-        for file in scan(profile)? {
+    fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
+        for file in scan(profile, &profile_mod.full_name())? {
             install::fs::toggle_file(file, enabled)?;
         }
 
         Ok(())
     }
 
-    fn uninstall(&mut self, _profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        for file in scan(profile)? {
+    fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
+        for file in scan(profile, &profile_mod.full_name())? {
             fs::remove_file(file)?;
         }
 
         Ok(())
     }
 
-    fn mod_dir(&self, _package_name: &str, profile: &Profile) -> Option<PathBuf> {
-        Some(profile.path.join("BepInEx/core"))
+    fn mod_dir(&self, package_name: &str, profile: &Profile) -> Option<PathBuf> {
+        Some(profile.path.join(get_core_path(package_name)))
     }
 }

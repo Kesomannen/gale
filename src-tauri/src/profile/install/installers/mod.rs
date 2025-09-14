@@ -10,7 +10,6 @@ use super::fs::{ConflictResolution, FileInstallMethod};
 use crate::profile::{Profile, ProfileMod};
 
 mod bepinex;
-mod bepisloader;
 mod extract;
 mod gd_weave;
 mod shimloader;
@@ -18,7 +17,6 @@ mod subdir;
 
 pub use self::{
     bepinex::BepinexInstaller,
-    bepisloader::BepisLoaderInstaller,
     extract::{ExtractInstaller, FlattenTopLevel},
     gd_weave::GDWeaveModInstaller,
     shimloader::ShimloaderInstaller,

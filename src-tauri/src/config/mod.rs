@@ -113,16 +113,22 @@ impl Profile {
 
 impl ConfigCache {
     pub fn refresh(&mut self, root: &Path, mod_loader: &ModLoader) {
-        let config_dir = root.join(mod_loader.mod_config_dir());
-
-        let files = WalkDir::new(&config_dir)
-            .into_iter()
-            .par_bridge()
-            .filter_map(Result::ok)
-            .filter_map(|entry| self.read_file(entry, root, &config_dir, mod_loader))
-            .collect_vec_list()
-            .into_iter()
-            .flatten();
+        let files: Vec<_> = mod_loader
+            .mod_config_dirs()
+            .iter()
+            .flat_map(|config_dir_path| {
+                let config_dir = root.join(config_dir_path);
+                WalkDir::new(&config_dir)
+                    .into_iter()
+                    .par_bridge()
+                    .filter_map(Result::ok)
+                    .filter_map(|entry| self.read_file(entry, root, &config_dir, mod_loader))
+                    .collect_vec_list()
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<_>>()
+            })
+            .collect();
 
         for (file, index) in files {
             match index {

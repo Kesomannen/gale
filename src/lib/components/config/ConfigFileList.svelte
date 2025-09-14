@@ -30,6 +30,19 @@
 	});
 
 	let shownFiles = $derived(sortAndFilterFiles(searchTerm, files ?? []));
+	
+	let duplicateNames = $derived(() => {
+		const nameCount = new Map<string, number>();
+		(files ?? []).forEach(file => {
+			const name = file.displayName;
+			if (name) {
+				nameCount.set(name, (nameCount.get(name) || 0) + 1);
+			}
+		});
+		return new Set(Array.from(nameCount.entries())
+			.filter(([_, count]) => count > 1)
+			.map(([name, _]) => name));
+	});
 
 	function sortAndFilterFiles(searchTerm: string, files: ConfigFile[]) {
 		let sortedFiles = [...files];
@@ -91,6 +104,7 @@
 			<ConfigFileListItem
 				{file}
 				{selectedSection}
+				duplicate={duplicateNames().has(file.displayName ?? '')}
 				locked={profiles.activeLocked}
 				onFileClicked={(file) => {
 					selectedFile = file;

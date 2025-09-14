@@ -2,7 +2,7 @@ use std::{
     borrow::Cow,
     collections::HashMap,
     fs,
-    path::{Path, PathBuf},
+    path::{Components, Path, PathBuf},
 };
 
 use eyre::{Context, OptionExt, Result};
@@ -146,6 +146,48 @@ impl<'a> SubdirInstaller<'a> {
         })
     }
 
+    /// Checks if we need to skip overlapping path segments.
+    fn handle_overlap<'p>(
+        &self,
+        mut components: Components<'p>,
+        subdir: &Subdir,
+        flatten: bool,
+    ) -> Components<'p> {
+        // Only process if we're flattening and target starts with the trigger
+        if !flatten || !subdir.target.starts_with(subdir.name) {
+            return components;
+        }
+
+        // Get the suffix after the trigger name
+        let Some(suffix) = subdir.target.strip_prefix(subdir.name) else {
+            return components;
+        };
+
+        let suffix = suffix.strip_prefix('/').unwrap_or(suffix);
+        if suffix.is_empty() {
+            return components;
+        }
+
+        // Check if the source components match the target suffix pattern
+        let suffix_path = Path::new(suffix);
+        let suffix_components: Vec<_> = suffix_path.components().collect();
+
+        // Test if components start with the same pattern
+        let mut test_components = components.clone();
+        let matches = suffix_components
+            .iter()
+            .all(|expected| test_components.next() == Some(*expected));
+
+        // Skip the matching prefix if found
+        if matches {
+            for _ in &suffix_components {
+                components.next();
+            }
+        }
+
+        components
+    }
+
     fn map_file<'p>(
         &self,
         relative_path: &'p Path,
@@ -205,7 +247,6 @@ impl<'a> SubdirInstaller<'a> {
         if is_top_level {
             if flatten {
                 let file_name = prev.file_name().ok_or_eyre("malformed archive")?;
-
                 target.push(file_name);
             } else {
                 target.push(&prev);
@@ -219,7 +260,8 @@ impl<'a> SubdirInstaller<'a> {
                 target.push(prev);
             }
 
-            target.push(components);
+            let components_to_add = self.handle_overlap(components, subdir, flatten);
+            target.push(components_to_add);
         }
 
         Ok(Some(Cow::Owned(target)))

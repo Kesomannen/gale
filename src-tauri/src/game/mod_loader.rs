@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use serde::{Deserialize, Serialize};
 
 use crate::profile::install::*;
@@ -87,18 +85,17 @@ impl ModLoader<'_> {
         }
     }
 
-    pub fn mod_config_dir(&self) -> PathBuf {
+    pub fn mod_config_dirs(&self) -> &[&str] {
         match &self.kind {
-            ModLoaderKind::BepInEx { .. } => "BepInEx/config",
-            ModLoaderKind::BepisLoader { .. } => "BepInEx/config",
-            ModLoaderKind::MelonLoader { .. } => ".",
-            ModLoaderKind::GDWeave {} => "GDWeave/configs",
-            ModLoaderKind::Northstar {} => ".",
-            ModLoaderKind::Shimloader {} => ".",
-            ModLoaderKind::Lovely {} => ".",
-            ModLoaderKind::ReturnOfModding { .. } => "ReturnOfModding/config",
+            ModLoaderKind::BepInEx { .. } => &["BepInEx/config"],
+            ModLoaderKind::BepisLoader { .. } => &["BepInEx/config", "Renderer/BepInEx/config"],
+            ModLoaderKind::MelonLoader { .. } => &["."],
+            ModLoaderKind::GDWeave {} => &["GDWeave/configs"],
+            ModLoaderKind::Northstar {} => &["."],
+            ModLoaderKind::Shimloader {} => &["."],
+            ModLoaderKind::Lovely {} => &["."],
+            ModLoaderKind::ReturnOfModding { .. } => &["ReturnOfModding/config"],
         }
-        .into()
     }
 }
 
@@ -133,7 +130,11 @@ impl ModLoader<'static> {
                     Subdir::untracked("config", "BepInEx/config").mutable(),
                 ];
 
-                Box::new(BepisLoaderInstaller::new(SUBDIRS).with_extras(extra_subdirs))
+                Box::new(
+                    SubdirInstaller::new(SUBDIRS)
+                        .with_default(1)
+                        .with_extras(extra_subdirs),
+                )
             }
 
             (true, ModLoaderKind::MelonLoader { .. }) => {
