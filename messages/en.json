@@ -285,5 +285,16 @@
   "createProfileDialog_useCustomPath_title": "Use custom path",
   "createProfileDialog_pathField_title": "Custom path",
   "createProfileDialog_pathField_content": "The path of the profile.",
-  "createProfileDialog_button": "Create"
+  "createProfileDialog_button": "Create",
+
+  "updater_installUpdate_message_name": "Failed to update Gale",
+  "updater_installUpdate_message_unknown": "Unknown error",
+  "updater_update_message": "Gale will now restart in order to apply the update.",
+  "updater_content_available": "Update available",
+  "updater_content_downloading": "Downloading update...",
+  "updater_confirmDialog_title": "App update available!",
+  "updater_confirmDialog_content_next": "Version {next} of Gale is available - you have {current}.",
+  "updater_confirmDialog_content_available": "There is an update available for Gale.",
+  "updater_confirmDialog_content": "The update will be downloaded in the background, then the app will restart to apply it.",
+  "updater_confirmDialog_button": "Install"
 }

@@ -279,5 +279,16 @@
     "createProfileDialog_useCustomPath_title": "使用自定义路径",
     "createProfileDialog_pathField_title": "自定义路径",
     "createProfileDialog_pathField_content": "配置的路径。",
-    "createProfileDialog_button": "创建"
+    "createProfileDialog_button": "创建",
+
+    "updater_installUpdate_message_name": "更新 Gale 失败",
+    "updater_installUpdate_message_unknown": "未知错误",
+    "updater_update_message": "Gale 将重新启动以应用更新。",
+    "updater_content_available": "有可用的更新！",
+    "updater_content_downloading": "正在下载更新...",
+    "updater_confirmDialog_title": "Gale 有可用更新！",
+    "updater_confirmDialog_content_next": "Gale 的 {next} 版本现已发布——您当前使用的是 {current} 版本。",
+    "updater_confirmDialog_content_available": "Gale 有可用更新。",
+    "updater_confirmDialog_content": "更新将在后台下载，随后应用程序将重新启动以应用更新。",
+    "updater_confirmDialog_button": "安装"
 }
