@@ -1,6 +1,88 @@
 {
     "$schema": "https://inlang.com/schema/inlang-message-format",
+
     "language_en": "英语",
     "language_zh_CN": "简体中文",
-    "page_no_mods_installed": "没有安装任何模组"
+
+    "page_no_mods_installed": "没有安装任何模组",
+    
+    "menuBar_file_title": "文件",
+    "menuBar_file_item_1": "打开配置文件夹",
+    "menuBar_file_item_2": "打开游戏文件夹",
+    "menuBar_file_item_3": "打开游戏日志",
+    "menuBar_file_item_4": "打开 Gale 日志",
+    "menuBar_file_item_5": "清除模组缓存",
+    "menuBar_file_item_6": "清除未使用的模组缓存",
+    "menuBar_file_item_7": "拉取模组",
+
+    "menuBar_profile_title": "配置文件",
+    "menuBar_profile_item_1": "创建新配置",
+    "menuBar_profile_item_2": "重命名配置",
+    "menuBar_profile_item_3": "复制配置",
+    "menuBar_profile_item_4": "复制模组列表",
+    "menuBar_profile_item_5": "复制调试信息",
+    "menuBar_profile_item_6": "复制启动参数",
+    "menuBar_profile_item_7": "启用所有模组",
+    "menuBar_profile_item_8": "禁用所有模组",
+    "menuBar_profile_item_9": "卸载所有禁用模组",
+    "menuBar_profile_item_10": "创建桌面快捷方式",
+
+    "menuBar_import_title": "导入",
+    "menuBar_import_item_1": "...配置从代码",
+    "menuBar_import_item_2": "...配置从文件",
+    "menuBar_import_item_3": "...模组从本地",
+    "menuBar_import_item_4": "...配置从r2modman",
+
+    "menuBar_export_title": "导出",
+    "menuBar_export_item_1": "...配置为代码",
+    "menuBar_export_item_2": "...配置为文件",
+
+    "menuBar_window_title": "窗口",
+    "menuBar_window_item_1": "放大",
+    "menuBar_window_item_2": "缩小",
+    "menuBar_window_item_3": "重置",
+
+    "menuBar_help_title": "帮助",
+    "menuBar_help_item_1": "报告错误",
+    "menuBar_help_item_2": "加入 Discord 服务器",
+    "menuBar_help_item_3": "关于 Gale",
+    
+    "menuBar_importLocalMod_title": "选择要导入的模组",
+    "menuBar_importLocalMod_filters": "Dll 或 zip 文件",
+    "menuBar_importLocalMod_message": "导入本地模组到配置完成！",
+
+    "menuBar_browseImportFile_title": "选择要导入的配置",
+    "menuBar_browseImportFile_filters": "配置文件",
+
+    "menuBar_exportFile_title": "选择要导出配置的文件夹",
+    "menuBar_setAllModsState_message_enable": "启用 {count} 个模组",
+    "menuBar_setAllModsState_message_disable": "模组 {count} 个模组",
+    "menuBar_doProfileOperation_rename_message": "重命名配置为 {name}.",
+    "menuBar_doProfileOperation_duplicate_message": "复制配置为 {name}.",
+
+    "menuBar_createDesktopShotcut_message": "创建桌面快捷方式为 {name}.",
+
+    "menuBar_uninstallDisabledMods_confirm": "你确定要卸载所有禁用模组吗?",
+    "menuBar_uninstallDisabledMods_message": "卸载 {count} 个禁用模组完成！",
+
+    "menuBar_copyLaunchArgs_message": "复制启动参数到剪贴板完成！",
+
+    "menuBar_clearModCache_confirm": "您确定要删除所有缓存的模组吗？这可能会让已安装模组占用内存增加。请再三考虑后进行操作！",
+    "menuBar_clearModCache_message": "清除模组缓存完成！ (一共清理 {size}).",
+    "menuBar_clearModCache_message_unsed": "清理未使用模组缓存完成！ (一共清理 {size}).",
+
+    "menuBar_copyModList_message": "复制模组列表到剪贴板完成！",
+    "menuBar_copyDebugInfo_message": "复制调试信息到剪贴板完成！",
+
+    "menuBar_handleFileDrop_activeLocked_title": "导入本地模组失败",
+    "menuBar_handleFileDrop_activeLocked_message": "目标配置已被锁定，无法导入。",
+    "menuBar_handleFileDrop_message": "从本地导入模组到配置完成！",
+    "menuBar_dialog_title_rename": "重命名配置",
+    "menuBar_dialog_title_duplicate": "复制配置",
+    "menuBar_dialog_content_rename": "请输入新的配置名:",
+    "menuBar_dialog_content_duplicate": "请输入复制的配置名:",
+    "menuBar_dialog_input_placeholder": "输入名称...",
+    "menuBar_dialog_button_accent_rename": "重命名",
+    "menuBar_dialog_button_accent_duplicate": "复制",
+    "menuBar_dialog_button_cancel": "取消"
 }

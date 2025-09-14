@@ -1,6 +1,92 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
+
   "language_en": "English",
   "language_zh_CN": "Simplified Chinese",
-  "page_no_mods_installed": "No mods installed"
+
+  "page_no_mods_installed": "No mods installed",
+
+  "menuBar_file_title": "File",
+  "menuBar_file_item_1": "Open profile folder",
+  "menuBar_file_item_2": "Open game folder",
+  "menuBar_file_item_3": "Open game log",
+  "menuBar_file_item_4": "Open Gale log",
+  "menuBar_file_item_5": "Clear mod cache",
+  "menuBar_file_item_6": "Clear unused mod cache",
+  "menuBar_file_item_7": "Fetch mods",
+
+  "menuBar_profile_title": "Profile",
+  "menuBar_profile_item_1": "Create new profile",
+  "menuBar_profile_item_2": "Rename profile",
+  "menuBar_profile_item_3": "Duplicate profile",
+  "menuBar_profile_item_4": "Copy mod list",
+  "menuBar_profile_item_5": "Copy debug info",
+  "menuBar_profile_item_6": "Copy launch arguments",
+  "menuBar_profile_item_7": "Enable all mods",
+  "menuBar_profile_item_8": "Disable all mods",
+  "menuBar_profile_item_9": "Uninstall disabled mods",
+  "menuBar_profile_item_10": "Create desktop shortcut",
+
+  "menuBar_import_title": "Import",
+  "menuBar_import_item_1": "...profile from code",
+  "menuBar_import_item_2": "...profile from file",
+  "menuBar_import_item_3": "...local mod",
+  "menuBar_import_item_4": "...profiles from r2modman",
+
+  "menuBar_export_title": "Export",
+  "menuBar_export_item_1": "...profile as code",
+  "menuBar_export_item_2": "...profile as file",
+
+  "menuBar_window_title": "Window",
+  "menuBar_window_item_1": "Zoom in",
+  "menuBar_window_item_2": "Zoom out",
+  "menuBar_window_item_3": "Reset zoom",
+
+  "menuBar_help_title": "Help",
+  "menuBar_help_item_1": "Report a bug",
+  "menuBar_help_item_2": "Join discord server",
+  "menuBar_help_item_3": "About Gale",
+
+  "menuBar_importLocalMod_title": "Select the mod file to import",
+  "menuBar_importLocalMod_filters": "Dll or zip",
+  "menuBar_importLocalMod_message": "Imported local mod into profile.",
+
+  "menuBar_browseImportFile_title": "Select the file to import",
+  "menuBar_browseImportFile_filters": "Profile file",
+
+  "menuBar_exportFile_title": "Select the folder to export the profile to",
+
+  "menuBar_setAllModsState_message_enable": "Enabled {count} mods.",
+  "menuBar_setAllModsState_message_disable": "Disabled {count} mods.",
+
+  "menuBar_doProfileOperation_rename_message": "Renamed profile to {name}.",
+  "menuBar_doProfileOperation_duplicate_message": "Duplicated profile to {name}.",
+
+  "menuBar_createDesktopShotcut_message": "Created desktop shortcut for {name}.",
+
+  "menuBar_uninstallDisabledMods_confirm": "Are you sure you want to uninstall all disabled mods?",
+  "menuBar_uninstallDisabledMods_message": "Uninstalled {count} disabled mods.",
+
+  "menuBar_copyLaunchArgs_message": "Copied launch arguments to clipboard.",
+
+  "menuBar_clearModCache_confirm": "Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!",
+  "menuBar_clearModmessageCache_": "Deleted mod cache (cleared {size}).",
+  "menuBar_clearModCache_message_unsed": "Deleted unsed mod cache (cleared {size}).",
+
+  "menuBar_copyModList_message": "Copied mod list to clipboard.",
+
+  "menuBar_copyDebugInfo_message": "Copied debug info to clipboard.",
+
+  "menuBar_handleFileDrop_activeLocked_title": "Failed to import local mod",
+  "menuBar_handleFileDrop_activeLocked_message": "Profile is locked.",
+  "menuBar_handleFileDrop_message": "Imported local mod into profile.",
+
+  "menuBar_dialog_title_rename": "Rename profile",
+  "menuBar_dialog_title_duplicate": "Duplicate profile",
+  "menuBar_dialog_content_rename": "Enter a new name for the profile:",
+  "menuBar_dialog_content_duplicate": "Enter a name for the duplicated profile:",
+  "menuBar_dialog_input_placeholder": "Enter name...",
+  "menuBar_dialog_button_accent_rename": "Rename",
+  "menuBar_dialog_button_accent_duplicate": "Duplicate",
+  "menuBar_dialog_button_cancel": "Cancel"
 }
