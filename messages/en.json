@@ -152,5 +152,31 @@
   "prefs_gameSettings_locations_dirOverride_content_needs": "The location of the {game} folder.",
   "prefs_gameSettings_launch_title": "Launch",
 
-  "languagePref_title": "Language"
+  "languagePref_title": "Language",
+
+  "colorPref_title_accent": "Accent color",
+  "colorPref_title_primary": "Primary color",
+  "colorPref_color_custom": "custom",
+  "colorPref_color_slate": "slate",
+  "colorPref_color_gray": "gray",
+  "colorPref_color_zinc": "zinc",
+  "colorPref_color_neutral": "neutral",
+  "colorPref_color_stone": "stone",
+  "colorPref_color_red": "red",
+  "colorPref_color_orange": "orange",
+  "colorPref_color_amber": "amber",
+  "colorPref_color_yellow": "yellow",
+  "colorPref_color_lime": "lime",
+  "colorPref_color_green": "green",
+  "colorPref_color_emerald": "emerald",
+  "colorPref_color_teal": "teal",
+  "colorPref_color_cyan": "cyan",
+  "colorPref_color_sky": "sky",
+  "colorPref_color_blue": "blue",
+  "colorPref_color_indigo": "indigo",
+  "colorPref_color_violet": "violet",
+  "colorPref_color_purple": "purple",
+  "colorPref_color_fuchsia": "fuchsia",
+  "colorPref_color_pink": "pink",
+  "colorPref_color_rose": "rose"
 }
