@@ -8,6 +8,7 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let open = $state(false);
 	let mod: Mod | null = $state(null);
@@ -39,8 +40,8 @@
 	}
 </script>
 
-<ConfirmDialog bind:open title="Install {mod?.name}">
-	<p class="text-primary-300">Choose a profile to install the mod to:</p>
+<ConfirmDialog bind:open title={m.installModDialog_title({ name : mod?.name ?? 'Unknown' })}>
+	<p class="text-primary-300">{m.installModDialog_content()}</p>
 
 	<Select
 		triggerClass="w-full"
@@ -51,6 +52,6 @@
 	/>
 
 	{#snippet buttons()}
-		<Button icon="mdi:download" onclick={install}>Install</Button>
+		<Button icon="mdi:download" onclick={install}>{m.installModDialog_button()}</Button>
 	{/snippet}
 </ConfirmDialog>
