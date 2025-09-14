@@ -183,5 +183,8 @@
   "fontFamilyPref_title": "Font family",
   "fontFamilyPref_placeholder": "Search for a font...",
 
-  "zoomFactorPref_title": "Zoom factor"
+  "zoomFactorPref_title": "Zoom factor",
+
+  "apiKeyPref_title": "Thunderstore API token",
+  "apiKeyPref_content": "Thunderstore API token to use for modpack publishing. Once this is set, you will <b>not</b> be able to view the token again."
 }

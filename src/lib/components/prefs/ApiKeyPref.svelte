@@ -5,6 +5,7 @@
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
 	import { apiKeyDialog } from '$lib/state/misc.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		field?: Snippet;
@@ -25,11 +26,10 @@
 </script>
 
 <div class="flex items-center">
-	<Label>Thunderstore API token</Label>
+	<Label>{m.apiKeyPref_title()}</Label>
 
 	<Info>
-		Thunderstore API token to use for modpack publishing. Once this is set, you will <b>not</b> be able
-		to view the token again.
+		{m.apiKeyPref_content()}
 	</Info>
 
 	<button

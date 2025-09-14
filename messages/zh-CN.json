@@ -178,5 +178,8 @@
     "fontFamilyPref_title": "字体",
     "fontFamilyPref_placeholder": "搜索一个字体...",
 
-    "zoomFactorPref_title": "缩放比例"
+    "zoomFactorPref_title": "缩放比例",
+
+    "apiKeyPref_title": "Thunderstore API 令牌",
+    "apiKeyPref_content": "Thunderstore API 令牌用于发布模组包。一旦设置，您将无法再次查看令牌。"
 }
