@@ -49,14 +49,14 @@
 		if (!file.displayName) {
 			return { name: file.relativePath, disambiguator: null };
 		}
-		
+
 		if (duplicate) {
 			const firstFolder = file.relativePath.split('/')[0];
 			if (firstFolder !== file.displayName) {
 				return { name: file.displayName, disambiguator: firstFolder };
 			}
 		}
-		
+
 		return { name: file.displayName, disambiguator: null };
 	});
 
