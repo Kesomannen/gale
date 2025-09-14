@@ -44,7 +44,7 @@
 		</div>
 
 		<div class="text-primary-300 group-hover:text-primary-200 truncate">
-			{hasToken ? 'Click to override token' : 'Not set'}
+			{m[`apiKeyPref_hasToken_${hasToken ? 'has' : 'no'}`]()}
 		</div>
 
 		{@render field?.()}

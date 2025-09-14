@@ -187,6 +187,20 @@
 
   "apiKeyPref_title": "Thunderstore API token",
   "apiKeyPref_content": "Thunderstore API token to use for modpack publishing. Once this is set, you will <b>not</b> be able to view the token again.",
+  "apiKeyPref_hasToken_has": "Click to override token",
+  "apiKeyPref_hasToken_no": "Not set",
+  
+  "apiKeyDialog_title": "Set thunderstore API token",
+  "apiKeyDialog_content_1": "Enter your Thunderstore API token below, or leave blank to clear the current one.",
+  "apiKeyDialog_content_2": "This token is used to publish modpacks to Thunderstore, and will be stored securely on your computer.",
+  "apiKeyDialog_content_3": "Once set, you will ",
+  "apiKeyDialog_content_4": "not",
+  "apiKeyDialog_content_5": " be able to view the token again.",
+  "apiKeyDialog_placeholder": "Enter API token...",
+  "apiKeyDialog_link": "Unsure how to get your API token?",
+  "apiKeyDialog_button": "Submit",
+
+  "confirmDialog_button_cancel": "Cancel",
 
   "platformPref_title": "Platform",
   "platformPref_content": "The platform where your game is installed.",
@@ -220,4 +234,5 @@
 
   "pathPref_title": "Select {name}",
   "pathField_noset": "Not set"
+
 }

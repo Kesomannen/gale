@@ -185,6 +185,19 @@
 
     "platformPref_title": "游戏平台",
     "platformPref_content": "您正在使用的游戏平台。这会影响 Gale 查找游戏文件夹的方式。",
+    "apiKeyPref_hasToken_has": "点击重新设置令牌",
+    "apiKeyPref_hasToken_no": "未设置令牌",
+    
+    "apiKeyDialog_title": "设置 Thunderstore API 令牌",
+    "apiKeyDialog_content_1": "请在下方输入您的Thunderstore API令牌。空白将清除当前令牌。",
+    "apiKeyDialog_content_2": "令牌用于在Thunderstore发布模组包，会安全存储在电脑上。",
+    "apiKeyDialog_content_3": "一旦设定，你将 ",
+    "apiKeyDialog_content_4": "不能",
+    "apiKeyDialog_content_5": "再次查看令牌",
+    "apiKeyDialog_placeholder": "输入 API 令牌...",
+    "apiKeyDialog_link": "不确定如何获取您的API令牌?",
+    "apiKeyDialog_button": "保存",
+    "confirmDialog_button_cancel": "取消",
 
     "launchModePref_title": "启动模式",
     "launchModePref_mode_direct": "直接运行",
