@@ -139,7 +139,7 @@
   "prefs_miscellaneous_fetchMods_title": "Fetch mods automatically",
   "prefs_miscellaneous_fetchMods_content_1": "Whether to automatically fetch mods every 15 minutes. This will ensure the mod list stays relatively up-to-date, but can be disabled to save bandwidth.",
   "prefs_miscellaneous_fetchMods_content_2": "To manually trigger a fetch, go to ",
-  "prefs_miscellaneous_fetchMods_content_3": "File &gt; Fetch mods",
+  "prefs_miscellaneous_fetchMods_content_3": "File > Fetch mods",
   "prefs_miscellaneous_sendTelemetry_title": "Send telemetry",
   "prefs_miscellaneous_sendTelemetry_content": "Whether to send anonymous usage metrics when the app starts.",
   "prefs_miscellaneous_pullBeforeLaunch_title": "Pull before launch",
@@ -206,5 +206,15 @@
   "launchModePref_interval_title": "Interval between launches",
   "launchModePref_interval_content_1": "How many seconds to wait between launching each instance. Only applicable in ",
   "launchModePref_interval_content_2": "Direct",
-  "launchModePref_interval_content_3": " mode with multiple instances."
+  "launchModePref_interval_content_3": " mode with multiple instances.",
+
+  "customArgsPref_title": "Set custom launch arguments",
+  "customArgsPref_placeholder": "Enter new argument...",
+  "customArgsPref_content_1": "Allows you to add custom arguments to the launch command. Depending on ",
+  "customArgsPref_content_2": "Launch mode",
+  "customArgsPref_content_3": ", these are either ran against the game or launcher executable.",
+  "customArgsPref_content_4": "Only pass one argument per entry, so instead of ",
+  "customArgsPref_content_5": ", pass",
+  "customArgsPref_content_6": " and ",
+  "customArgsPref_content_7": " separately."
 }
