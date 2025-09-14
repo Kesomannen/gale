@@ -7,6 +7,7 @@
 	import { dropIn, dropOut } from '$lib/transitions';
 	import DropdownArrow from '../ui/DropdownArrow.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let open = $state(false);
 	let createDialogOpen = $state(false);
@@ -47,7 +48,7 @@
 							onclick={() => (createDialogOpen = true)}
 						>
 							<Icon icon="mdi:plus" class="mr-1 text-lg" />
-							New profile
+							{m.profilesDropdown_button()}
 						</DropdownMenu.Item>
 					</div>
 				{/if}

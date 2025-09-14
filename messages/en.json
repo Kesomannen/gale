@@ -276,5 +276,14 @@
 
   "toasts_copyError_message": "Error copied to clipboard.",
   "toasts_button_copy": "Copy error",
-  "toasts_button_clear": "Clear toast"
+  "toasts_button_clear": "Clear toast",
+
+  "profilesDropdown_button": "New profile",
+  "createProfileDialog_title": "Create new profile",
+  "createProfileDialog_content": "Choose a name for the new profile",
+  "createProfileDialog_placeholder": "Enter name...",
+  "createProfileDialog_useCustomPath_title": "Use custom path",
+  "createProfileDialog_pathField_title": "Custom path",
+  "createProfileDialog_pathField_content": "The path of the profile.",
+  "createProfileDialog_button": "Create"
 }

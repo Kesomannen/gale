@@ -270,5 +270,14 @@
 
     "toasts_copyError_message": "已将错误信息复制到剪贴板。",
     "toasts_button_copy": "复制错误信息",
-    "toasts_button_clear": "清除提示"
+    "toasts_button_clear": "清除提示",
+
+    "profilesDropdown_button": "新建配置",
+    "createProfileDialog_title": "创建新配置",
+    "createProfileDialog_content": "请输入新配置的名称：",
+    "createProfileDialog_placeholder": "输入名称...",
+    "createProfileDialog_useCustomPath_title": "使用自定义路径",
+    "createProfileDialog_pathField_title": "自定义路径",
+    "createProfileDialog_pathField_content": "配置的路径。",
+    "createProfileDialog_button": "创建"
 }
