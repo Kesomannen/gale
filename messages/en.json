@@ -296,5 +296,11 @@
   "updater_confirmDialog_content_next": "Version {next} of Gale is available - you have {current}.",
   "updater_confirmDialog_content_available": "There is an update available for Gale.",
   "updater_confirmDialog_content": "The update will be downloaded in the background, then the app will restart to apply it.",
-  "updater_confirmDialog_button": "Install"
+  "updater_confirmDialog_button": "Install",
+
+  "installPopover_taskText_download": "Downloading ",
+  "installPopover_taskText_extract": "Extracting ",
+  "installPopover_taskText_install": "Installing ",
+  "installPopover_content": "Installing mods... ",
+  "installPopover_button": "Cancel"
 }

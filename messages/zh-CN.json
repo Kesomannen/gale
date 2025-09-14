@@ -290,5 +290,11 @@
     "updater_confirmDialog_content_next": "Gale 的 {next} 版本现已发布——您当前使用的是 {current} 版本。",
     "updater_confirmDialog_content_available": "Gale 有可用更新。",
     "updater_confirmDialog_content": "更新将在后台下载，随后应用程序将重新启动以应用更新。",
-    "updater_confirmDialog_button": "安装"
+    "updater_confirmDialog_button": "安装",
+
+    "installPopover_taskText_download": "下载中 ",
+    "installPopover_taskText_extract": "解压中 ",
+    "installPopover_taskText_install": "安装中 ",
+    "installPopover_content": "正在安装模组中... ",
+    "installPopover_button": "取消"
 }
