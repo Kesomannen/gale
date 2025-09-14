@@ -9,10 +9,12 @@
     "page_modList_noResults_1": "在配置没找到任何匹配模组",
     "page_modList_noResults_2": "尝试调整搜索条件",
 
-    "page_modContextItem_1": "卸载",
-    "page_modContextItem_2": "切换版本",
-    "page_modContextItem_3": "查看依赖项",
-    "page_modContextItem_4": "打开文件夹",
+    "page_modContextItem_uninstall": "卸载",
+    "page_modContextItem_changeVersion": "切换版本",
+    "page_modContextItem_showDependants": "查看依赖项",
+    "page_modContextItem_openFolder": "打开文件夹",
+    "page_modContextItem_openWebsite": "打开网站",
+    "page_modContextItem_donate": "赞助",
 
     "page_modDetails_button": "更新到 {version}",
 
@@ -264,5 +266,9 @@
 
     "installModDialog_title": "安装 {name}",
     "installModDialog_content": "选择要安装模组的配置：",
-    "installModDialog_button": "安装"
+    "installModDialog_button": "安装",
+
+    "toasts_copyError_message": "已将错误信息复制到剪贴板。",
+    "toasts_button_copy": "复制错误信息",
+    "toasts_button_clear": "清除提示"
 }

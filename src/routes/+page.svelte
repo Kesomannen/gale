@@ -33,7 +33,7 @@
 
 	const contextItems: ModContextItem[] = [
 		{
-			label: m.page_modContextItem_1(),
+			label: m.page_modContextItem_uninstall(),
 			icon: 'mdi:delete',
 			onclick: (mod) =>
 				uninstall({
@@ -43,7 +43,7 @@
 			showFor: (_, profileLocked) => !profileLocked
 		},
 		{
-			label: m.page_modContextItem_2(),
+			label: m.page_modContextItem_changeVersion(),
 			icon: 'mdi:edit',
 			onclick: () => {},
 			showFor: (mod, profileLocked) => mod.versions.length > 1 && !profileLocked,
@@ -54,12 +54,12 @@
 				}))
 		},
 		{
-			label: m.page_modContextItem_3(),
+			label: m.page_modContextItem_showDependants(),
 			icon: 'mdi:source-branch',
 			onclick: openDependants
 		},
 		{
-			label: m.page_modContextItem_4(),
+			label: m.page_modContextItem_openFolder(),
 			icon: 'mdi:folder',
 			onclick: (mod) => api.profile.openModDir(mod.uuid)
 		},

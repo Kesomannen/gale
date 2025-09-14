@@ -9,10 +9,12 @@
   "page_modList_noResults_1": "No matching mods found in profile",
   "page_modList_noResults_2": "Try to adjust your search query/filters",
 
-  "page_modContextItem_1": "Uninstall",
-  "page_modContextItem_2": "Change version",
-  "page_modContextItem_3": "Show dependants",
-  "page_modContextItem_4": "Open folder",
+  "page_modContextItem_uninstall": "Uninstall",
+  "page_modContextItem_changeVersion": "Change version",
+  "page_modContextItem_showDependants": "Show dependants",
+  "page_modContextItem_openFolder": "Open folder",
+  "page_modContextItem_openWebsite": "Open website",
+  "page_modContextItem_donate": "Donate",
 
   "page_modDetails_button": "Update to {version}",
 
@@ -270,5 +272,9 @@
 
   "installModDialog_title": "Install {name}",
   "installModDialog_content": "Choose a profile to install the mod to:",
-  "installModDialog_button": "Install"
+  "installModDialog_button": "Install",
+
+  "toasts_copyError_message": "Error copied to clipboard.",
+  "toasts_button_copy": "Copy error",
+  "toasts_button_clear": "Clear toast"
 }
