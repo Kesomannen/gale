@@ -259,5 +259,12 @@
   "welcomeDialog_button_back": "Back",
   "welcomeDialog_button_skip": "Skip",
   "welcomeDialog_button_import": "Import",
-  "welcomeDialog_button_next": "Next"
+  "welcomeDialog_button_next": "Next",
+
+  "gameSelect_placeholder": "Search for games...",
+  "gameSelect_content_1": "No games found",
+  "gameSelect_content_2": "Your game missing? If the game is new on Thunderstore there's a chance we have yet to add it. If you can find it on",
+  "gameSelect_content_3": "but not here, please message us on",
+  "gameSelect_content_4": "or open an issue on",
+  "gameSelect_content_5": "our Github"
 }

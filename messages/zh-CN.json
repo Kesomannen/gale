@@ -253,5 +253,12 @@
     "welcomeDialog_button_back": "返回",
     "welcomeDialog_button_skip": "跳过",
     "welcomeDialog_button_import": "导入",
-    "welcomeDialog_button_next": "下一步"
+    "welcomeDialog_button_next": "下一步",
+
+    "gameSelect_placeholder": "搜索游戏...",
+    "gameSelect_content_1": "未找到游戏",
+    "gameSelect_content_2": "找不到游戏？如果该游戏刚在 Thunderstore 添加，我们可能尚未添加。若您能在",
+    "gameSelect_content_3": "找到它，但未在 Gale 中找到，请在",
+    "gameSelect_content_4": "告诉我们，或在",
+    "gameSelect_content_5": "Github 打开一个 Issue."
 }
