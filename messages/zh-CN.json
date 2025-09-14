@@ -173,5 +173,8 @@
     "colorPref_color_purple": "紫色",
     "colorPref_color_fuchsia": "紫红色",
     "colorPref_color_pink": "粉色",
-    "colorPref_color_rose": "玫瑰色"
+    "colorPref_color_rose": "玫瑰色",
+
+    "fontFamilyPref_title": "字体",
+    "fontFamilyPref_placeholder": "搜索一个字体..."
 }

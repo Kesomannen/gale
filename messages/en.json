@@ -178,5 +178,8 @@
   "colorPref_color_purple": "purple",
   "colorPref_color_fuchsia": "fuchsia",
   "colorPref_color_pink": "pink",
-  "colorPref_color_rose": "rose"
+  "colorPref_color_rose": "rose",
+
+  "fontFamilyPref_title": "Font family",
+  "fontFamilyPref_placeholder": "Search for a font..."
 }
