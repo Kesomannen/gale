@@ -113,5 +113,11 @@
   "menuBar_dialog_input_placeholder": "Enter name...",
   "menuBar_dialog_button_accent_rename": "Rename",
   "menuBar_dialog_button_accent_duplicate": "Duplicate",
-  "menuBar_dialog_button_cancel": "Cancel"
+  "menuBar_dialog_button_cancel": "Cancel",
+
+  "navBar_link_profile": "Manage profile",
+  "navBar_link_browse": "Install mods",
+  "navBar_link_config": "Edit mod config",
+  "navBar_link_modpack": "Export modpack",
+  "navBar_link_prefs": "Edit manager settings"
 }
