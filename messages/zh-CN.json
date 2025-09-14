@@ -211,5 +211,8 @@
     "customArgsPref_content_4": "每个条目仅传递一个参数，因此不要像这样： ",
     "customArgsPref_content_5": "放在同一行。需要将",
     "customArgsPref_content_6": "和",
-    "customArgsPref_content_7": "分开输入在不同行。"
+    "customArgsPref_content_7": "分开输入在不同行。",
+
+    "pathPref_title": "选择{name}",
+    "pathField_noset": "未设置"
 }

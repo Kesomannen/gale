@@ -4,7 +4,8 @@
 	import PathField from '$lib/components/ui/PathField.svelte';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
-	import { toSentenceCase } from 'js-convert-case';
+	import { m } from '$lib/paraglide/messages';
+	import { toSentenceCase } from '$lib/i18n';
 
 	type Props = {
 		label: string;
@@ -20,7 +21,7 @@
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			title: 'Select ' + toSentenceCase(label),
+			title: m.pathPref_title({ name : toSentenceCase(label)}),
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;

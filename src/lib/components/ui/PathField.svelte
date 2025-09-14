@@ -3,6 +3,7 @@
 	import Label from './Label.svelte';
 	import Info from './Info.svelte';
 	import type { Snippet } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		label?: string | null;
@@ -46,7 +47,7 @@
 
 		<div class="text-primary-300 truncate" style="direction: rtl;">
 			&#x200E;
-			{hasValue ? value : 'Not set'}
+			{hasValue ? value : m.pathField_noset()}
 		</div>
 
 		{@render field?.()}

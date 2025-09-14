@@ -216,5 +216,8 @@
   "customArgsPref_content_4": "Only pass one argument per entry, so instead of ",
   "customArgsPref_content_5": ", pass",
   "customArgsPref_content_6": " and ",
-  "customArgsPref_content_7": " separately."
+  "customArgsPref_content_7": " separately.",
+
+  "pathPref_title": "Select {name}",
+  "pathField_noset": "Not set"
 }
