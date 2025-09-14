@@ -189,5 +189,22 @@
   "apiKeyPref_content": "Thunderstore API token to use for modpack publishing. Once this is set, you will <b>not</b> be able to view the token again.",
 
   "platformPref_title": "Platform",
-  "platformPref_content": "The platform where your game is installed."
+  "platformPref_content": "The platform where your game is installed.",
+
+  "launchModePref_title": "Launch mode",
+  "launchModePref_mode_direct": "Direct",
+  "launchModePref_mode_launcher": "Platform ({platform})",
+  "launchModePref_content_1": "Determines how the game is launched.",
+  "launchModePref_content_2": "Launcher:",
+  "launchModePref_content_3": "Launches via the specified platform. This is required for some games that, for example, require Steam to be running.",
+  "launchModePref_content_4": "Direct:",
+  "launchModePref_content_5": "Launches the game directly from the executable. Allows you to launch multiple instances at once.",
+  "launchModePref_instance_title": "Number of instances",
+  "launchModePref_instance_content_1": "How many instances of the game to launch at once. Only available in ",
+  "launchModePref_instance_content_2": "Direct",
+  "launchModePref_instance_content_3": " mode.",
+  "launchModePref_interval_title": "Interval between launches",
+  "launchModePref_interval_content_1": "How many seconds to wait between launching each instance. Only applicable in ",
+  "launchModePref_interval_content_2": "Direct",
+  "launchModePref_interval_content_3": " mode with multiple instances."
 }

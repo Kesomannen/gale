@@ -184,5 +184,22 @@
     "apiKeyPref_content": "Thunderstore API 令牌用于发布模组包。一旦设置，您将无法再次查看令牌。",
 
     "platformPref_title": "游戏平台",
-    "platformPref_content": "您正在使用的游戏平台。这会影响 Gale 查找游戏文件夹的方式。"
+    "platformPref_content": "您正在使用的游戏平台。这会影响 Gale 查找游戏文件夹的方式。",
+
+    "launchModePref_title": "启动模式",
+    "launchModePref_mode_direct": "直接运行",
+    "launchModePref_mode_launcher": "游戏平台 ({platform})",
+    "launchModePref_content_1": "决定游戏怎么启动",
+    "launchModePref_content_2": "游戏平台:",
+    "launchModePref_content_3": "通过指定的平台启动。例如，某些游戏需要 Steam 运行。",
+    "launchModePref_content_4": "直接运行:",
+    "launchModePref_content_5": "直接从可执行文件启动游戏。允许您同时启动多个实例。",
+    "launchModePref_instance_title": "实例数量",
+    "launchModePref_instance_content_1": "同时启动多少个游戏实例。仅在“",
+    "launchModePref_instance_content_2": "直接运行",
+    "launchModePref_instance_content_3": "”模式下可用。",
+    "launchModePref_interval_title": "启动间隔",
+    "launchModePref_interval_content_1": "每次启动实例之间需要等待多少秒。仅在“",
+    "launchModePref_interval_content_2": "直接运行",
+    "launchModePref_interval_content_3": "”模式且多实例的情况下使用。"
 }
