@@ -8,6 +8,7 @@ use std::{
 };
 
 use eyre::{Context, OptionExt, Result};
+use itertools::Itertools;
 use rayon::prelude::*;
 use tracing::debug;
 use walkdir::WalkDir;
@@ -113,7 +114,7 @@ impl Profile {
 
 impl ConfigCache {
     pub fn refresh(&mut self, root: &Path, mod_loader: &ModLoader) {
-        let files: Vec<_> = mod_loader
+        let files = mod_loader
             .mod_config_dirs()
             .iter()
             .flat_map(|config_dir_path| {
@@ -126,9 +127,8 @@ impl ConfigCache {
                     .collect_vec_list()
                     .into_iter()
                     .flatten()
-                    .collect::<Vec<_>>()
             })
-            .collect();
+            .collect_vec();
 
         for (file, index) in files {
             match index {
