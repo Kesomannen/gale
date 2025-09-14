@@ -146,5 +146,7 @@
     "prefs_gameSettings_locations_dirOverride_title_needs": "路径",
     "prefs_gameSettings_locations_dirOverride_content": "覆盖 {game} 文件夹的位置。若未设置，Gale 将尝试通过指定平台查找该文件夹。",
     "prefs_gameSettings_locations_dirOverride_content_needs": "{game} 文件夹的位置。",
-    "prefs_gameSettings_launch_title": "启动"
+    "prefs_gameSettings_launch_title": "启动",
+
+    "languagePref_title": "语言"
 }

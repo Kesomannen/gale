@@ -150,5 +150,7 @@
   "prefs_gameSettings_locations_dirOverride_title_needs": "Location",
   "prefs_gameSettings_locations_dirOverride_content": "Overrides the location of the {game} folder. If unset, Gale will try to find it via the specified platform instead.",
   "prefs_gameSettings_locations_dirOverride_content_needs": "The location of the {game} folder.",
-  "prefs_gameSettings_launch_title": "Launch"
+  "prefs_gameSettings_launch_title": "Launch",
+
+  "languagePref_title": "Language"
 }
