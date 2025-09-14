@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Label from '$lib/components/ui/Label.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { ChangeLanguage, LanguageTitle, locales } from '$lib/i18n';
+	import { changeLanguage, languageTitle, locales } from '$lib/i18n';
 
 	const items = locales.map((option) => ({
-		label: LanguageTitle[option](),
+		label: languageTitle[option](),
 		value: option,
 	}));
 
@@ -25,7 +25,7 @@
 		{items}
         value={value}
 		onValueChange={(newValue) => {
-            ChangeLanguage(newValue);
+            changeLanguage(newValue);
 			set(newValue);
 		}}
 	/>
