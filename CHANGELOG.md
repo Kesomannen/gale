@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.7 (2025-09-15)
+
+### Added
+
+- Support for the BepisLoader mod loader (Resonite)
+
+### Fixed
+
+- Backslashes showing up in config file paths on Windows
+- Updating mods then switching profiles causing mods to be removed from the current profile
+
 ## 1.9.6 (2025-08-31)
 
 ### Changed
