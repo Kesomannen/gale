@@ -1594,6 +1594,18 @@
         }
     },
     {
+        "name": "Resonite",
+        "slug": "resonite",
+        "modLoader": {
+            "name": "BepisLoader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2519830
+            }
+        }
+    },
+    {
         "name": "Return of the Obra Dinn",
         "slug": "return-of-the-obra-dinn",
         "modLoader": {
