@@ -145,11 +145,13 @@ impl ConfigCache {
 
         let extension = entry.path().extension().and_then(|ext| ext.to_str())?;
 
-        let relative_path = entry
+        let relative_path: PathBuf = entry
             .path()
             .strip_prefix(root)
             .expect("file path should be a child of root")
-            .to_path_buf();
+            .to_string_lossy()
+            .replace("\\", "/")
+            .into();
 
         let curr_index = self
             .0
