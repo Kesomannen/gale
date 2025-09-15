@@ -8,6 +8,7 @@
 	import Icon from '@iconify/svelte';
 	import { Tabs } from 'bits-ui';
 	import { config } from '$lib/state/misc.svelte';
+	import { expandedConfigEntryDialog_title, m } from '$lib/paraglide/messages';
 
 	let mode: 'text' | 'list' = $state('text');
 	let newElement = $state('');
@@ -58,7 +59,7 @@
 
 <Dialog
 	large
-	title="Edit {config.expandedEntry?.entry.name}"
+	title={m.expandedConfigEntryDialog_title({ name : config.expandedEntry?.entry.name ?? 'Unknown' })}
 	onclose={() => (config.expandedEntry = null)}
 	{open}
 >
@@ -67,11 +68,11 @@
 			bind:value={mode}
 			options={[
 				{
-					label: 'Edit as text',
+					label: m.expandedConfigEntryDialog_tabsMenu_text(),
 					value: 'text'
 				},
 				{
-					label: 'Edit as list',
+					label: m.expandedConfigEntryDialog_tabsMenu_list(),
 					value: 'list'
 				}
 			]}
@@ -112,7 +113,7 @@
 
 					<InputField
 						class="mt-1 w-full pr-9"
-						placeholder="Enter new value..."
+						placeholder={m.expandedConfigEntryDialog_placeholder()}
 						bind:value={newElement}
 						onchange={() => {
 							if (newElement.length === 0) return;

@@ -4,6 +4,7 @@
 	import type { Mod } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		open?: boolean;
@@ -38,13 +39,13 @@
 			<Markdown source={value} />
 		{:else}
 			<div class="text-primary-300 flex items-center justify-center gap-2">
-				No {kind} found
+				{m.modInfoDialog_noFound({ kind })}
 			</div>
 		{/if}
 	{:catch error}
 		<div class="flex items-center justify-center gap-2 text-red-400">
 			<Icon class="text-lg" icon="mdi:alert-circle-outline" />
-			Failed to load {kind}: {error}
+			{m.modInfoDIalog_failed({ kind, error })}
 		</div>
 	{/await}
 </Dialog>

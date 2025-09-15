@@ -346,5 +346,60 @@
 
   "syncDonationNotice_content_1": "Profile sync is run on donations!",
   "syncDonationNotice_content_2": "If you like this feature, please consider supporting on ",
-  "syncDonationNotice_button": "Remind me later"
+  "syncDonationNotice_button": "Remind me later",
+
+  "aboutDialog_title": "About",
+  "aboutDialog_version": "Version {version}",
+  "aboutDialog_changelog": "Changelog",
+  "aboutDialog_policy": "Privacy Policy",
+  "aboutDialog_donate": "Donate",
+  "aboutDialog_checkUpdate": "Check for updates",
+  "aboutDialog_newVersion": "New version available: {version}",
+  "aboutDialog_latestVersion": "You are running the latest version",
+
+  "dependantsDialog_button_executeOne": "{verb}{name} only",
+  "dependantsDialog_button_executeAll": "{verb} all",
+
+  "expandedConfigEntryDialog_title": "Edit {name}",
+  "expandedConfigEntryDialog_tabsMenu_text": "Edit as text",
+  "expandedConfigEntryDialog_tabsMenu_list": "Edit as list",
+  "expandedConfigEntryDialog_placeholder": "Enter new value...",
+
+  "exportCodeDialog_title": "Export as code",
+  "exportCodeDialog_content_1": "Exporting {name} as code...",
+  "exportCodeDialog_content_2": "Export complete! The code has been copied to your clipboard:",
+
+  "modInfoDialog_noFound": "No {kind} found",
+  "modInfoDIalog_failed": "Failed to load {kind}: {error}",
+
+  "importR2Dialog_title": "Import profiles from other manager",
+  "importR2Dialog_content_1": "This will import profiles ",
+  "importR2Dialog_content_2": "for the current game",
+  "importR2Dialog_content_3": " from r2modman or Thunderstore Mod Manager.",
+  "importR2Dialog_content_4": "Do not close Gale while the import is in progress.",
+  "importR2Dialog_button_cancel": "Cancel",
+  "importR2Dialog_button_import": "Import",
+
+  "importProfileDialog_importData_confirm": "Are you sure you want to override {name}?",
+  "importProfileDialog_importData_message": "Imported profile {name}.",
+  "importProfileDialog_title": "Import profile",
+  "importProfileDialog_placeholder": "Enter import code...",
+  "importProfileDialog_button_import": "Import",
+  "importProfileDialog_button_cancel": "Cancel",
+  "importProfileDialog_tabsMenu_option_new": "Create new",
+  "importProfileDialog_tabsMenu_option_overwrite": "Overwrite existing",
+  "importProfileDialog_tabsMenu_new_title": "Profile name",
+  "importProfileDialog_tabsMenu_new_content": "A unique name for the imported profile.",
+  "importProfileDialog_tabsMenu_new_tooltip": "Profile {name} already exists!",
+  "importProfileDialog_tabsMenu_overwrite_title": "Choose profile",
+  "importProfileDialog_tabsMenu_overwrite_content": "Which existing profile to overwrite with the imported one.",
+  "importProfileDialog_details_install": "{length} mods to install",
+  "importProfileDialog_details_advancedOptions": "Advanced options",
+  "importProfileDialog_details_advancedOptions_title": "Import all files",
+  "importProfileDialog_details_advancedOptions_content_1": "Import all files found in the profile, instead of just well-known config file formats. This is unsafe and can let an attacker install malware on your system. ",
+  "importProfileDialog_details_advancedOptions_content_2": "Only enable this for trusted profiles!",
+  "importProfileDialog_sync_tooltip_content": "This profile will receive automatic updates from its owner.",
+  "importProfileDialog_sync_tooltip_title": "Synced profile",
+  "importProfileDialog_sync_owner": "Owned by {name}",
+  "importProfileDialog_unknown": "Contains unknown mods:"
 }

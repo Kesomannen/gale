@@ -10,7 +10,7 @@
 	import { isNum } from '$lib/config';
 	import Info from '$lib/components/ui/Info.svelte';
 	import ColorConfig from './ColorConfig.svelte';
-	import { toSentenceCase } from 'js-convert-case';
+	import { toSentenceCase } from '$lib/i18n';
 
 	type Props = {
 		entryId: ConfigEntryId;

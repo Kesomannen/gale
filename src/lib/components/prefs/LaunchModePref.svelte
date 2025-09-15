@@ -6,7 +6,7 @@
 	import { selectItems } from '$lib/util';
 	import Info from '$lib/components/ui/Info.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { toHeaderCase, toSentenceCase } from 'js-convert-case';
+	import { toHeaderCase } from 'js-convert-case';
 	import games from '$lib/state/game.svelte';
 	import { m } from '$lib/paraglide/messages';
 

@@ -5,7 +5,7 @@
 	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { toSentenceCase } from 'js-convert-case';
+	import { toSentenceCase } from '$lib/i18n';
 
 	type Props = {
 		sortOptions: SortBy[];
