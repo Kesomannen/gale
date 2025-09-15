@@ -11,6 +11,7 @@
 	import Info from '$lib/components/ui/Info.svelte';
 	import ColorConfig from './ColorConfig.svelte';
 	import { toSentenceCase } from '$lib/i18n';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -77,14 +78,14 @@
 
 		{#if entry.default}
 			<p class="break-words">
-				<span class="text-primary-100 font-medium">Default: </span>
+				<span class="text-primary-100 font-medium">{m.configEntryField_default()}</span>
 				{valueToString(entry.default)}
 			</p>
 		{/if}
 
 		{#if (value.type === 'int' || value.type === 'float') && value.content.range !== null}
 			<p>
-				<span class="font-medium text-white">Range: </span>
+				<span class="font-medium text-white">{m.configEntryField_range()}</span>
 				{value.content.range.start} - {value.content.range.end}
 			</p>
 		{/if}

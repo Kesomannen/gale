@@ -401,5 +401,18 @@
   "importProfileDialog_sync_tooltip_content": "This profile will receive automatic updates from its owner.",
   "importProfileDialog_sync_tooltip_title": "Synced profile",
   "importProfileDialog_sync_owner": "Owned by {name}",
-  "importProfileDialog_unknown": "Contains unknown mods:"
+  "importProfileDialog_unknown": "Contains unknown mods:",
+
+  "configEntryField_default": "Default: ",
+  "configEntryField_range": "Range: ",
+  "configFileEditor_metadata": "Created by {name}{file.metadata.modversion}",
+  "configFileList_loading": "Loading config...",
+  "configFileList_noFiles": "No config files found",
+  "configFileList_placeholder": "Search for files...",
+  "resetConfigButton_confirm": "Are you sure you want to reset {name}?",
+  "flagsConfig_placeholder": "Select flags",
+  "configFileListItem_deleteFile_confirm": "Are you sure you want to delete {name}?",
+  "configFileListItem_button_openFile": "Open in external program",
+  "configFileListItem_button_deleteFile": "Trash file",
+  "configFileListItem_nameLess": "<Nameless section>"
 }

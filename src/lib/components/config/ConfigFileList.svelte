@@ -8,6 +8,7 @@
 	import { page } from '$app/state';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		selectedFile: ConfigFile | null;
@@ -76,15 +77,15 @@
 	{#if files === null}
 		<div class="text-primary-300 flex h-full w-full items-center justify-center text-lg">
 			<Spinner class="mr-2" />
-			Loading config...
+			{m.configFileList_loading()}
 		</div>
 	{:else if files.length === 0}
 		<div class="text-primary-300 flex h-full items-center justify-center text-lg">
-			No config files found
+			{m.configFileList_noFiles()}
 		</div>
 	{:else}
 		<div class="relative mx-2 my-2">
-			<SearchBar bind:value={searchTerm} placeholder="Search for files..." brightness={800} />
+			<SearchBar bind:value={searchTerm} placeholder={m.configFileList_placeholder()} brightness={800} />
 		</div>
 
 		{#each shownFiles ?? [] as file (file.relativePath)}

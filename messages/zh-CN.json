@@ -394,5 +394,18 @@
     "importProfileDialog_sync_tooltip_content": "该资料将自动接收作者的更新。",
     "importProfileDialog_sync_tooltip_title": "配置同步",
     "importProfileDialog_sync_owner": "拥有者:{name}",
-    "importProfileDialog_unknown": "存在未知模组:"
+    "importProfileDialog_unknown": "存在未知模组:",
+
+    "configEntryField_default": "默认: ",
+    "configEntryField_range": "范围: ",
+    "configFileEditor_metadata": "创建者: {name} {file.metadata.modversion}",
+    "configFileList_loading": "正在加载配置中...",
+    "configFileList_noFiles": "未找到配置文件",
+    "configFileList_placeholder": "搜索文件...",
+    "resetConfigButton_confirm": "您确定要重置 {name} 吗？",
+    "flagsConfig_placeholder": "选择选项",
+    "configFileListItem_deleteFile_confirm": "您确定要删除 {name} 吗？",
+    "configFileListItem_button_openFile": "打开外部文件",
+    "configFileListItem_button_deleteFile": "删除文件",
+    "configFileListItem_nameLess": "<侠名>"
 }
