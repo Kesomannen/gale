@@ -977,6 +977,9 @@
             "steam": {
                 "id": 1030300,
                 "dirName": "Hollow Knight Silksong"
+            },
+            "xboxStore": {
+                "identifier": "TeamCherry.HollowKnightSilksong"
             }
         }
     },
