@@ -161,12 +161,12 @@ impl<'a> SubdirInstaller<'a> {
         subdir: &Subdir,
         flatten: bool,
     ) -> Components<'p> {
-        // Only process if we're flattening and target starts with the trigger
+        // only process if we're flattening and target starts with the trigger
         if !flatten || !subdir.target.starts_with(subdir.name) {
             return components;
         }
 
-        // Get the suffix after the trigger name
+        // get the suffix after the trigger name
         let Some(suffix) = subdir.target.strip_prefix(subdir.name) else {
             return components;
         };
@@ -176,17 +176,17 @@ impl<'a> SubdirInstaller<'a> {
             return components;
         }
 
-        // Check if the source components match the target suffix pattern
+        // check if the source components match the target suffix pattern
         let suffix_path = Path::new(suffix);
         let suffix_components: Vec<_> = suffix_path.components().collect();
 
-        // Test if components start with the same pattern
+        // test if components start with the same pattern
         let mut test_components = components.clone();
         let matches = suffix_components
             .iter()
             .all(|expected| test_components.next() == Some(*expected));
 
-        // Skip the matching prefix if found
+        // skip the matching prefix if found
         if matches {
             for _ in &suffix_components {
                 components.next();
