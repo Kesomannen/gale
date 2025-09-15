@@ -3,6 +3,7 @@
 	import Link from '../ui/Link.svelte';
 	import Icon from '@iconify/svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		show?: boolean;
@@ -21,12 +22,10 @@
 </script>
 
 <InfoBox class={!show && 'hidden'}>
-	<div class="text-lg font-semibold text-white">Profile sync is run on donations!</div>
+	<div class="text-lg font-semibold text-white">{m.syncDonationNotice_content_1()}</div>
 
 	<div class="text-primary-300">
-		If you like this feature, please consider supporting on <Link
-			href="https://ko-fi.com/kesomannen">Kofi</Link
-		>
+		{m.syncDonationNotice_content_2()}<Link href="https://ko-fi.com/kesomannen">Kofi</Link>
 
 		<Icon class="mb-1 inline" icon="mdi:heart" />.
 	</div>
@@ -38,6 +37,6 @@
 		}}
 	>
 		<Icon icon="mdi:close" />
-		Remind me later
+		{m.syncDonationNotice_button()}
 	</button>
 </InfoBox>
