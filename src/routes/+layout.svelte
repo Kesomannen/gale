@@ -17,6 +17,7 @@
 	import { updateBanner } from '$lib/state/misc.svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import type { ProfileInfo, ManagedGameInfo } from '$lib/types';
+	import { checkLanguage } from '$lib/i18n';
 
 	type Props = {
 		children?: Snippet;
@@ -31,6 +32,7 @@
 		refreshFont();
 		refreshColor('accent');
 		refreshColor('primary');
+		checkLanguage();
 
 		// workaround for https://github.com/huntabyte/bits-ui/issues/1639
 		setTimeout(() => {
