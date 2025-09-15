@@ -1,3 +1,21 @@
+/// Handles downloading, extraction and (un)installation of mods.
+///
+/// Installation in Gale happens like the following:
+///
+/// 1) The mod ZIP is downloaded from Thunderstore and extracted according to the modloader-specific rules.
+/// This is handled by [`PackageInstaller::extract`], implemented in the respective `installers` submodules.
+/// 2) The extracted files are placed into `<data directory>/cache/<author-name>/<version>`.
+/// 3) The files are copied to the profile folder (at the same relative path). Most files are copied using
+/// hard links, but ones that are expected to change are properly cloned. This is also implemented in the
+/// respective `installers` submodules.
+///
+/// If the cache is hit, we skip directly to step 3). This process is orchestrated in the `queue` module.
+///
+/// Modules:
+/// - `cache`: functions related to locating and clearing the mod download cache
+/// - `fs`: utility file system functions for common installer tasks such as extraction
+/// - `queue`: handles the queue of mod installations, orchestrating the other modules
+/// - `installers`: contains installers handle the modloader-specific file placement
 use std::{fmt::Display, iter, process};
 
 use chrono::{DateTime, Utc};
@@ -27,14 +45,16 @@ pub mod queue;
 type BeforeInstallHandler =
     Box<dyn Fn(&ModInstall, &mut Profile) -> Result<()> + 'static + Send + Sync>;
 
+/// Decides what to do when a batch is cancelled while being installed.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum CancelBehavior {
-    /// When installation is cancelled, rollback the already installed mods from this batch.
+    /// When installation is cancelled, rollback the already installed mods from this batch (default).
     #[default]
     Batch,
     /// When installation is cancelled, don't rollback any already installed mods.
     Individual,
     /// (Attempt to) prevent this batch from being cancelled at all.
+    /// If it gets cancelled anyway, fallback to [`CancelBehavior::Individual`].
     Prevent,
 }
 
@@ -73,8 +93,12 @@ pub struct ModInstall {
     file_size: u64,
     enabled: bool,
     /// Where in the profile this should be installed.
+    ///
+    /// If set to `None`, place it at the end of the list.
     index: Option<usize>,
     /// At which time this mod was originally installed.
+    ///
+    /// If set to `None`, use the current time.
     ///
     /// This is mainly used to retain the install date when updating mods.
     install_time: Option<DateTime<Utc>>,
