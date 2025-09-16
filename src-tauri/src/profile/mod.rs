@@ -74,6 +74,14 @@ pub struct Profile {
     pub linked_config: HashMap<Uuid, PathBuf>,
     pub modpack: Option<ModpackArgs>,
     pub sync: Option<sync::SyncProfileData>,
+    pub settings: ProfileSettings,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[serde(default, rename_all = "camelCase")]
+pub struct ProfileSettings {
+    pub custom_args: Vec<String>,
+    pub custom_args_enabled: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -560,6 +568,7 @@ impl ModManager {
                 config_cache: ConfigCache::default(),
                 linked_config: HashMap::new(),
                 sync: saved_profile.sync_data,
+                settings: saved_profile.settings.unwrap_or_default(),
             };
 
             manager

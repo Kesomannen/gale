@@ -306,6 +306,11 @@ export type GamePrefs = {
 	platform: Platform | null;
 };
 
+export type ProfileSettings = {
+	customArgs: string[];
+	customArgsEnabled: boolean;
+};
+
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';
 
 export type ContextItem = {

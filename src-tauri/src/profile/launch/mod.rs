@@ -54,7 +54,7 @@ impl ManagedGame {
     }
 
     fn launch_command(&self, game_dir: &Path, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
-        let (launch_mode, mut platform, custom_args) = prefs
+        let (launch_mode, mut platform, game_custom_args) = prefs
             .game_prefs
             .get(&*self.game.slug)
             .map(|prefs| {
@@ -86,13 +86,21 @@ impl ManagedGame {
         }
         .unwrap_or_else(|| exe_path(game_dir).map(Command::new))?;
 
-        mod_loader::add_args(
-            &mut command,
-            &self.active_profile().path,
-            &self.game.mod_loader,
-        )?;
+        let profile = self.active_profile();
 
-        if let Some(custom_args) = custom_args {
+        mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
+
+        if let Some(custom_args) = game_custom_args {
+            command.args(custom_args);
+        }
+
+        let profile_custom_args = if profile.settings.custom_args_enabled {
+            Some(&profile.settings.custom_args)
+        } else {
+            None
+        };
+
+        if let Some(custom_args) = profile_custom_args {
             command.args(custom_args);
         }
 
