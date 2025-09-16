@@ -295,7 +295,7 @@
 	{/if}
 </div>
 
-<Dialog title={m.page_dialog_title({name : activeMod?.name ?? "Unkown"})}  bind:open={dependantsOpen}>
+<Dialog title={m.page_dialog_title({name : activeMod?.name ?? m.unknown()})}  bind:open={dependantsOpen}>
 	<div class="text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
 			{m.page_dialog_noDependants()}

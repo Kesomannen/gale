@@ -64,7 +64,7 @@
 	<Updater />
 </div>
 
-<Dialog title={m.toolBar_dialog_launch_title({ name: games.active?.name ?? 'Unknown' })} bind:open={launchDialogOpen}>
+<Dialog title={m.toolBar_dialog_launch_title({ name: games.active?.name ?? m.unknown() })} bind:open={launchDialogOpen}>
 	<p class="text-primary-400">
 		{m.toolBar_dialog_launch_content()}
 	</p>

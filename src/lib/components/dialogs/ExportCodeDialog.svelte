@@ -26,7 +26,7 @@
 	<p class="flex-center text-primary-400 mb-1 flex">
 		{#await codePromise}
 			<Spinner class="text-lg" />
-			{m.exportCodeDialog_content_1({name: profiles.active?.name ?? 'Unknown profile'})}
+			{m.exportCodeDialog_content_1({name: profiles.active?.name ?? m.exportCodeDialog_content_unknown()})}
 		{:then}
 			{m.exportCodeDialog_content_2()}
 		{/await}

@@ -59,7 +59,7 @@
 
 <Dialog
 	large
-	title={m.expandedConfigEntryDialog_title({ name : config.expandedEntry?.entry.name ?? 'Unknown' })}
+	title={m.expandedConfigEntryDialog_title({ name : config.expandedEntry?.entry.name ?? m.unknown() })}
 	onclose={() => (config.expandedEntry = null)}
 	{open}
 >

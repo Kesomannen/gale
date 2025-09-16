@@ -143,7 +143,7 @@
 		</TogglePref>
 
 		<LargeHeading>
-			{m.prefs_gameSettings_title({ game : games.active?.name ?? "Unknown" })}
+			{m.prefs_gameSettings_title({ game : games.active?.name ?? m.unknown() })}
 		</LargeHeading>
 
 		<SmallHeading>{m.prefs_gameSettings_locations_title()}</SmallHeading>
@@ -162,13 +162,13 @@
 			value={gamePrefs.dirOverride}
 			set={set((value) => (gamePrefs!.dirOverride = value))}
 		>
-		{m[`prefs_gameSettings_locations_dirOverride_content${needsDirectory ? '_needs' : ''}`]({ game: games.active?.name ?? "Unknown" })}
+		{m[`prefs_gameSettings_locations_dirOverride_content${needsDirectory ? '_needs' : ''}`]({ game: games.active?.name ?? m.unknown() })}
 		</PathPref>
 
 		<SmallHeading>{m.prefs_gameSettings_launch_title()}</SmallHeading>
 
 		<LaunchModePref
-			platform={gamePrefs.platform ?? games.active?.platforms[0] ?? 'Unknown'}
+			platform={gamePrefs.platform ?? games.active?.platforms[0] ?? m.unknown()}
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>

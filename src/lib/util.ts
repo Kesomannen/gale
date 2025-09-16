@@ -3,24 +3,40 @@ import type { Mod, ConfigEntry, SyncUser, Game } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
 import { isEnglish } from './i18n';
+import { m } from './paraglide/messages';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
 	return (size / Math.pow(1024, i)).toFixed(1) + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
+function pluralize(str: string): string {
+	if (isEnglish(str)) {
+		return str + 's';
+	}
+
+	return str;
+}
+
 export function formatTime(seconds: number): string {
 	if (seconds < 60) {
-		return `${Math.round(seconds)} seconds`;
+		return m.util_formatTime_seconds({seconds: Math.round(seconds)});
 	}
 
 	if (seconds < 3600) {
 		let minutes = Math.floor(seconds / 60);
-		return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+		if (minutes > 1)
+		{
+			return pluralize(m.util_formatTime_minute({minutes: minutes}));
+		}
+		return m.util_formatTime_minute({minutes: minutes});
 	}
 
 	let hours = Math.floor(seconds / 3600);
-	return `${hours} hour${hours > 1 ? 's' : ''}`;
+	if (hours > 1) {
+		return pluralize(m.util_formatTime_hour({hours: hours}));
+	}
+	return m.util_formatTime_hour({hours: hours});
 }
 
 export function shortenNum(value: number): string {
@@ -36,33 +52,37 @@ export function timeSince(date: Date | string): string {
 
 	let [interval, str] = (() => {
 		let interval = Math.floor(seconds / (60 * 60 * 24 * 365.25));
-		if (interval >= 1) return [interval, 'year'];
+		if (interval >= 1) return [interval, m.util_timeSince_year()];
 
 		interval = Math.floor(seconds / (60 * 60 * 24 * 30));
-		if (interval >= 1) return [interval, 'month'];
+		if (interval >= 1) return [interval, m.util_timeSince_month()];
 
 		interval = Math.floor(seconds / (60 * 60 * 24 * 7));
-		if (interval >= 1) return [interval, 'week'];
+		if (interval >= 1) return [interval, m.util_timeSince_week()];
 
 		interval = Math.floor(seconds / (60 * 60 * 24));
-		if (interval >= 1) return [interval, 'day'];
+		if (interval >= 1) return [interval, m.util_timeSince_day()];
 
 		interval = Math.floor(seconds / (60 * 60));
-		if (interval >= 1) return [interval, 'hour'];
+		if (interval >= 1) return [interval, m.util_timeSince_hour()];
 
 		interval = Math.floor(seconds / 60);
-		if (interval >= 1) return [interval, 'second'];
+		if (interval >= 1) return [interval, m.util_timeSince_second()];
 
 		return [null, null];
 	})();
 
+	if (!interval || !str) {
+		return "";
+	}
+
 	switch (interval) {
 		case null:
-			return 'a moment';
+			return m.util_timeSince_interval_null();
 		case 1:
-			return `a ${str}`;
+			return m.util_timeSince_interval_1({str});
 		default:
-			return `${interval} ${str}s`;
+			return m.util_timeSince_interval_default({interval, str});
 	}
 }
 

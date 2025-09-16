@@ -251,7 +251,7 @@
 
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
 		profileOperation = operation;
-		profileOperationName = profiles.active?.name ?? 'Unknown';
+		profileOperationName = profiles.active?.name ?? m.unknown();
 		profileOperationOpen = true;
 	}
 
@@ -285,7 +285,7 @@
 		await api.profile.createDesktopShortcut();
 
 		pushInfoToast({
-			message: m.menuBar_createDesktopShotcut_message({ name: profiles.active?.name ?? 'Unknown'})
+			message: m.menuBar_createDesktopShotcut_message({ name: profiles.active?.name ?? m.unknown()})
 		});
 	}
 
