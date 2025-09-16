@@ -32,7 +32,8 @@
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
-			customArgs: null,
+			customArgs: [],
+			customArgsEnabled: false,
 			platform: null
 		};
 	});
@@ -181,7 +182,9 @@
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}
-			set={set((value) => (gamePrefs!.customArgs = value))}
+			enabled={gamePrefs.customArgsEnabled}
+			setValue={set((value) => (gamePrefs!.customArgs = value))}
+			setEnabled={set((value) => (gamePrefs!.customArgsEnabled = value))}
 		/>
 	{/if}
 </div>

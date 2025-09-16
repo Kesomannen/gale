@@ -6,11 +6,13 @@
 	import Icon from '@iconify/svelte';
 
 	type Props = {
-		value: string[] | null;
-		set: (value: string[] | null) => Promise<void>;
+		value: string[];
+		enabled: boolean;
+		setValue: (value: string[]) => Promise<void>;
+		setEnabled: (enabled: boolean) => Promise<void>;
 	};
 
-	let { value = $bindable(), set }: Props = $props();
+	let { value = $bindable(), enabled = $bindable(), setValue, setEnabled }: Props = $props();
 
 	let newArg = $state('');
 </script>
@@ -32,23 +34,22 @@
 	</Info>
 
 	<Checkbox
-		checked={value !== null}
-		onCheckedChange={(newValue) => {
-			set(newValue ? [] : null);
+		checked={enabled}
+		onCheckedChange={(checked) => {
+			setEnabled(checked);
 		}}
 	/>
 </div>
 
-{#if value !== null}
+{#if enabled}
 	<div class="text-primary-300 mt-1 flex flex-col gap-1 pl-[35%]">
 		{#each value as argument, i}
 			<div class="flex gap-1">
 				<button
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 rounded-lg p-1.5 text-xl"
 					onclick={() => {
-						if (value === null) return;
 						value = value.filter((_, index) => index !== i);
-						set(value);
+						setValue(value);
 					}}
 				>
 					<Icon icon="mdi:remove" />
@@ -57,9 +58,8 @@
 					class="grow"
 					value={argument}
 					onchange={(newValue) => {
-						if (value === null) return;
 						value[i] = newValue;
-						set(value);
+						setValue([...value]);
 					}}
 				/>
 			</div>
@@ -69,11 +69,11 @@
 			placeholder="Enter new argument..."
 			bind:value={newArg}
 			onchange={() => {
-				if (newArg.length === 0 || value === null) return;
+				if (newArg.length === 0) return;
 
 				value = [...value, newArg];
 				newArg = '';
-				set(value);
+				setValue(value);
 			}}
 		/>
 	</div>
