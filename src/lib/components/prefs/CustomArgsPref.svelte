@@ -4,6 +4,7 @@
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import Icon from '@iconify/svelte';
+	import type { DragEventHandler } from 'svelte/elements';
 
 	type Props = {
 		value: string[];
@@ -15,6 +16,40 @@
 	let { value = $bindable(), enabled = $bindable(), setValue, setEnabled }: Props = $props();
 
 	let newArg = $state('');
+
+	let reorderPrevIndex: number | null = null;
+
+	const ondragstart: DragEventHandler<HTMLDivElement> = (evt) => {
+		const element = evt.currentTarget;
+		reorderPrevIndex = parseInt(element.dataset.index!);
+		evt.dataTransfer!.effectAllowed = 'move';
+		evt.dataTransfer!.setData('text/html', element.outerHTML);
+	};
+
+	const ondragover: DragEventHandler<HTMLDivElement> = async (evt) => {
+		evt.preventDefault();
+		if (reorderPrevIndex === null) return;
+
+		const element = evt.currentTarget;
+		const newIndex = parseInt(element.dataset.index!);
+
+		if (newIndex === reorderPrevIndex) {
+			return;
+		}
+
+		const temp = value[reorderPrevIndex];
+		value[reorderPrevIndex] = value[newIndex];
+		value[newIndex] = temp;
+
+		reorderPrevIndex = newIndex;
+	};
+
+	const ondragend: DragEventHandler<HTMLDivElement> = async () => {
+		if (reorderPrevIndex !== null) {
+			await setValue(value);
+		}
+		reorderPrevIndex = null;
+	};
 </script>
 
 <div class="mt-1 flex items-center">
@@ -42,9 +77,17 @@
 </div>
 
 {#if enabled}
-	<div class="text-primary-300 mt-1 flex flex-col gap-1 pl-[35%]">
+	<div class="text-primary-300 mt-1 flex flex-col gap-1 pl-[35%]" role="list">
 		{#each value as argument, i}
-			<div class="flex gap-1">
+			<div
+				role="listitem"
+				class="flex gap-1 rounded-lg border-2 border-transparent transition-colors"
+				draggable={true}
+				data-index={i}
+				{ondragstart}
+				{ondragover}
+				{ondragend}
+			>
 				<button
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 rounded-lg p-1.5 text-xl"
 					onclick={() => {
@@ -62,6 +105,13 @@
 						setValue([...value]);
 					}}
 				/>
+				{#if value.length > 1}
+					<button
+						class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 cursor-move rounded-lg p-1.5 text-xl"
+					>
+						<Icon icon="material-symbols:drag-indicator" />
+					</button>
+				{/if}
 			</div>
 		{/each}
 
