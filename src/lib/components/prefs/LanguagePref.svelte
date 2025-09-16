@@ -1,11 +1,12 @@
 <script lang="ts">
 	import Label from '$lib/components/ui/Label.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { changeLanguage, languageTitle, locales } from '$lib/i18n';
+	import { changeLanguage, languageTitle} from '$lib/i18n';
 	import { m } from '$lib/paraglide/messages';
+	import { locales } from '$lib/paraglide/runtime';
 
 	const items = locales.map((option) => ({
-		label: languageTitle[option](),
+		label: languageTitle[option],
 		value: option,
 	}));
 

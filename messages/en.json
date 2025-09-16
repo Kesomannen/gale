@@ -1,8 +1,7 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
 
-  "language_en": "English",
-  "language_zh_CN": "Simplified Chinese",
+  "language_name": "English",
 
   "page_modList_noMods_1": "No mods installed.",
   "page_modList_noMods_2": "Click to Browse Thunderstore",

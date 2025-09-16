@@ -1,5 +1,5 @@
 import { m } from '$lib/paraglide/messages';
-import { getLocale, setLocale, type Locale } from '$lib/paraglide/runtime';
+import { getLocale, locales, setLocale, type Locale } from '$lib/paraglide/runtime';
 import { toSentenceCase as ToSentenceCase  } from 'js-convert-case';
 import * as api from '$lib/api';
 import { locale } from '@tauri-apps/plugin-os';
@@ -15,7 +15,7 @@ export async function checkLanguage()
     {
         if (await api.state.isFirstRun()) {
             let lang = await locale()
-            if (!lang || !locales.includes(lang)) {
+            if (!lang || !locales.includes(lang as Locale)) {
                 return;
             }
 
@@ -41,11 +41,13 @@ export async function checkLanguage()
     }
 }
 
-export const languageTitle: Record<Locale, () => string> = {
-    "en": m.language_en,
-    "zh-CN": m.language_zh_CN
-}
-
+export const languageTitle: Record<Locale, string> = locales.reduce(
+    (acc, item) => {
+        acc[item] = m.language_name({}, { locale: item })
+        return acc;
+    },
+    {} as Record<Locale, string>
+);
 
 export function isEnglish(str: string): boolean {
     return /^[a-zA-Z\s]*$/.test(str);
@@ -74,7 +76,5 @@ export function toSentenceCase(str: string): string {
         return str; // Return the original string if it's not English
     }
 }
-
-export const locales = Object.keys(languageTitle);
 
 
