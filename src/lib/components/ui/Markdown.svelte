@@ -24,16 +24,19 @@
 		{ rehypePlugin: [rehypeRaw] },
 		{
 			rehypePlugin: [rehypeHighlight, { languages: { csharp, json, xml }, ignoreMissing: true }]
-		},
-		{ renderer: { a: MarkdownLink } }
+		}
 	];
 </script>
 
 <div class={[classProp, 'markdown overflow-x-hidden']}>
 	<Markdown md={source} {plugins}>
-		{#snippet img(props)}
-		    {@const { src } = props}
-			<img src={src} alt="" class="block m-0"/>
+		{#snippet img({ class: classProp, ...props })}
+			<img {...props} class={['m-0', classProp]} />
+		{/snippet}
+		{#snippet a({ children, ...props })}
+			<a {...props} target="_blank" rel="noreferrer nofollow">
+				{@render children?.()}
+			</a>
 		{/snippet}
 	</Markdown>
 </div>
