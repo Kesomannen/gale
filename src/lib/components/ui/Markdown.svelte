@@ -30,5 +30,10 @@
 </script>
 
 <div class={[classProp, 'markdown overflow-x-hidden']}>
-	<Markdown md={source} {plugins} />
+	<Markdown md={source} {plugins}>
+		{#snippet img(props)}
+		    {@const { src } = props}
+			<img src={src} alt="" class="block m-0"/>
+		{/snippet}
+	</Markdown>
 </div>
