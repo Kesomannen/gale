@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import type { Mod, ConfigEntry, SyncUser, Game } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
-import { isEnglish } from './i18n';
+import { isLatinAlphabet } from './i18n';
 import { m } from './paraglide/messages';
 
 export function shortenFileSize(size: number): string {
@@ -11,32 +11,27 @@ export function shortenFileSize(size: number): string {
 }
 
 function pluralize(str: string): string {
-	if (isEnglish(str)) {
-		return str + 's';
-	}
-
-	return str;
+	return isLatinAlphabet(str) ? str + 's' : str;
 }
 
 export function formatTime(seconds: number): string {
 	if (seconds < 60) {
-		return m.util_formatTime_seconds({seconds: Math.round(seconds)});
+		return m.util_formatTime_seconds({ seconds: Math.round(seconds) });
 	}
 
 	if (seconds < 3600) {
 		let minutes = Math.floor(seconds / 60);
-		if (minutes > 1)
-		{
-			return pluralize(m.util_formatTime_minute({minutes: minutes}));
+		if (minutes > 1) {
+			return pluralize(m.util_formatTime_minute({ minutes: minutes }));
 		}
-		return m.util_formatTime_minute({minutes: minutes});
+		return m.util_formatTime_minute({ minutes: minutes });
 	}
 
 	let hours = Math.floor(seconds / 3600);
 	if (hours > 1) {
-		return pluralize(m.util_formatTime_hour({hours: hours}));
+		return pluralize(m.util_formatTime_hour({ hours: hours }));
 	}
-	return m.util_formatTime_hour({hours: hours});
+	return m.util_formatTime_hour({ hours: hours });
 }
 
 export function shortenNum(value: number): string {
@@ -73,16 +68,16 @@ export function timeSince(date: Date | string): string {
 	})();
 
 	if (!interval || !str) {
-		return "";
+		return '';
 	}
 
 	switch (interval) {
 		case null:
 			return m.util_timeSince_interval_null();
 		case 1:
-			return m.util_timeSince_interval_1({str});
+			return m.util_timeSince_interval_1({ str });
 		default:
-			return m.util_timeSince_interval_default({interval, str});
+			return m.util_timeSince_interval_default({ interval, str });
 	}
 }
 
@@ -118,11 +113,8 @@ export function thunderstoreIconUrl(fullName: string) {
 }
 
 export function capitalize(str: string): string {
-	if (!isEnglish(str))
-	{
-		return str;
-	}
-	
+	if (!isLatinAlphabet(str)) return str;
+
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 

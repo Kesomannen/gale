@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Label from '$lib/components/ui/Label.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { changeLanguage, languageTitle} from '$lib/i18n';
+	import { setLanguage, languageTitle } from '$lib/i18n';
 	import { m } from '$lib/paraglide/messages';
 	import { locales } from '$lib/paraglide/runtime';
 
 	const items = locales.map((option) => ({
 		label: languageTitle[option],
-		value: option,
+		value: option
 	}));
 
 	type Props = {
@@ -25,9 +25,9 @@
 		type="single"
 		triggerClass="grow"
 		{items}
-        value={value}
+		{value}
 		onValueChange={(newValue) => {
-            changeLanguage(newValue);
+			setLanguage(newValue);
 			set(newValue);
 		}}
 	/>

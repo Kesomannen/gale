@@ -8,7 +8,7 @@
 		type ColorCategory,
 		type Color
 	} from '$lib/theme';
-	import { capitalize, selectItems } from '$lib/util';
+	import { selectItems } from '$lib/util';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Icon from '@iconify/svelte';
 	import ResetButton from '../ui/ResetButton.svelte';
@@ -34,32 +34,6 @@
 		value = color;
 		setColor(category, color);
 	}
-
-	const colorLabels: Record<string, () => string> = {
-		custom: m.colorPref_color_custom,
-		slate: m.colorPref_color_slate,
-		gray: m.colorPref_color_gray,
-		zinc: m.colorPref_color_zinc,
-		neutral: m.colorPref_color_neutral,
-		stone: m.colorPref_color_stone,
-		red: m.colorPref_color_red,
-		orange: m.colorPref_color_orange,
-		amber: m.colorPref_color_amber,
-		yellow: m.colorPref_color_yellow,
-		lime: m.colorPref_color_lime,
-		green: m.colorPref_color_green,
-		emerald: m.colorPref_color_emerald,
-		teal: m.colorPref_color_teal,
-		cyan: m.colorPref_color_cyan,
-		sky: m.colorPref_color_sky,
-		blue: m.colorPref_color_blue,
-		indigo: m.colorPref_color_indigo,
-		violet: m.colorPref_color_violet,
-		purple: m.colorPref_color_purple,
-		fuchsia: m.colorPref_color_fuchsia,
-		pink: m.colorPref_color_pink,
-		rose: m.colorPref_color_rose
-	};
 </script>
 
 <div class="flex items-center">
@@ -81,9 +55,7 @@
 						: { type: 'default', name: selectValue }
 				)
 		}
-		items={selectItems(selectOptions, item => {
-			return colorLabels[item] ? colorLabels[item]() : capitalize(item);
-		})}
+		items={selectItems(selectOptions, (item) => m[`colorPref_color_${item}`]())}
 	>
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(value)}
@@ -93,7 +65,7 @@
 			</div>
 		{/snippet}
 
-		{#snippet item({ label, value })}
+		{#snippet item({ value })}
 			{@render colorIcon(
 				value === 'custom'
 					? { type: 'custom', hex: '' }
