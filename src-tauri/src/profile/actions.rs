@@ -415,6 +415,10 @@ impl ManagedGame {
         let shortcut_path =
             desktop_path.join(format!("gale-{}-{}.desktop", self.game.name, profile.name));
 
+        #[cfg(target_os = "macos")]
+        let shortcut_path =
+            desktop_path.join(format!("gale-{}-{}.app", self.game.name, profile.name));
+
         if shortcut_path.exists() {
             bail!("shortcut already exists");
         }
