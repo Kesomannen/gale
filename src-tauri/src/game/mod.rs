@@ -24,6 +24,11 @@ const URL: &str =
 const FALLBACK_JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", "games.json"));
 
 static GAMES: LazyLock<Vec<GameData<'static>>> = LazyLock::new(|| {
+    if cfg!(debug_assertions) {
+        info!("loading games from local games.json (dev mode)");
+        return serde_json::from_str(FALLBACK_JSON).unwrap();
+    }
+
     match (get_remote_games(), get_cached_games()) {
         (Ok(remote), _) => {
             info!(count = remote.len(), "got new games from remote");

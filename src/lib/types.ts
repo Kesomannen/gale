@@ -300,9 +300,15 @@ export type Prefs = {
 
 export type GamePrefs = {
 	dirOverride: string | null;
-	customArgs: string[] | null;
+	customArgs: string[];
+	customArgsEnabled: boolean;
 	launchMode: LaunchMode;
 	platform: Platform | null;
+};
+
+export type ProfileSettings = {
+	customArgs: string[];
+	customArgsEnabled: boolean;
 };
 
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';
