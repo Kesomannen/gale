@@ -61,7 +61,11 @@ impl ManagedGame {
                 (
                     prefs.launch_mode.clone(),
                     prefs.platform,
-                    prefs.custom_args.as_ref(),
+                    if prefs.custom_args_enabled {
+                        Some(&prefs.custom_args)
+                    } else {
+                        None
+                    },
                 )
             })
             .unwrap_or_else(|| {
