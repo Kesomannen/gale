@@ -3,6 +3,7 @@
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import ResetButton from '$lib/components/ui/ResetButton.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -24,7 +25,7 @@
 
 	async function onclick() {
 		if (shouldConfirm(entryId.entry.value)) {
-			let confirmed = await confirm(`Are you sure you want to reset ${entryId.entry.name}?`);
+			let confirmed = await confirm(m.resetConfigButton_confirm({ name : entryId.entry.name}));
 			if (!confirmed) return;
 		}
 

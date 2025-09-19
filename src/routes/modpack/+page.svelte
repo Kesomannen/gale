@@ -22,6 +22,7 @@
 	import profiles from '$lib/state/profile.svelte';
 	import games from '$lib/state/game.svelte';
 	import { apiKeyDialog } from '$lib/state/misc.svelte';
+	import { m, modpack_button_export, modpack_includeFiles_title } from '$lib/paraglide/messages';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -55,7 +56,7 @@
 	}
 
 	async function refresh() {
-		loading = 'Loading...';
+		loading = m.modpack_refresh_loading();
 
 		let args = await api.profile.export.getPackArgs();
 
@@ -78,8 +79,8 @@
 	async function browseIcon() {
 		let path = await open({
 			defaultPath: iconPath.length > 0 ? iconPath : undefined,
-			title: 'Select modpack icon',
-			filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif'] }]
+			title: m.modpack_browseIcon_title(),
+			filters: [{ name: m.modpack_browseIcon_filter(), extensions: ['png', 'jpg', 'jpeg', 'gif'] }]
 		});
 
 		if (path === null) return;
@@ -94,14 +95,14 @@
 
 	async function exportToFile() {
 		let dir = await open({
-			title: 'Choose folder to save modpack',
+			title: m.modpack_exportToFile_title(),
 			defaultPath: `${name}.zip`,
 			directory: true
 		});
 
 		if (!dir) return;
 
-		loading = 'Exporting modpack to file...';
+		loading = m.modpack_exportToFile_loading();
 		try {
 			await api.profile.export.exportPack(dir, args());
 		} finally {
@@ -132,7 +133,7 @@
 			if (!hasToken) return;
 		}
 
-		loading = 'Uploading modpack to Thunderstore...';
+		loading = m.modpack_uploadToThunderstore_loading();
 		try {
 			await api.profile.export.uploadPack(args());
 			doneDialogOpen = true;
@@ -199,14 +200,14 @@
 		</div>
 	{:else}
 		<FormField
-			label="Name"
-			description="The name of the modpack, as shown on Thunderstore. Make sure this stays consistent between updates. Cannot contain spaces or hyphens."
+			label={m.modpack_name_title()}
+			description={m.modpack_name_description()}
 			required={true}
 		>
 			<InputField
 				onchange={saveArgs}
 				bind:value={name}
-				placeholder="Enter name..."
+				placeholder={m.modpack_name_placeholder()}
 				required={true}
 				pattern="^[a-zA-Z0-9_]+$"
 				class="w-full"
@@ -214,24 +215,24 @@
 		</FormField>
 
 		<FormField
-			label="Author"
-			description="The name of the Thunderstore team connected to your API token."
+			label={m.modpack_author_title()}
+			description={m.modpack_author_description()}
 			required
 		>
 			<InputField
 				onchange={saveArgs}
 				bind:value={author}
-				placeholder="Enter author..."
+				placeholder={m.modpack_author_placeholder()}
 				class="w-full"
 				required
 			/>
 		</FormField>
 
-		<FormField label="Description" description="A short description of the modpack." required>
+		<FormField label={m.modpack_description_title()} description={m.modpack_description_description()} required>
 			<InputField
 				onchange={saveArgs}
 				bind:value={description}
-				placeholder="Enter description..."
+				placeholder={m.modpack_description_placeholder()}
 				maxlength={250}
 				class="w-full"
 				required
@@ -239,8 +240,8 @@
 		</FormField>
 
 		<FormField
-			label="Categories"
-			description="The categories that the modpack belongs to. 'Modpacks' is always included."
+			label={m.modpack_categories_title()}
+			description={m.modpack_categories_description()}
 		>
 			<Select
 				items={games.categories.map((category) => ({
@@ -254,7 +255,7 @@
 			>
 				{#snippet label()}
 					{#if selectedCategories.length === 0}
-						<span class="text-primary-400 truncate pl-2">Select categories...</span>
+						<span class="text-primary-400 truncate pl-2">{m.modpack_categories_content()}</span>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
@@ -279,92 +280,94 @@
 		</FormField>
 
 		<FormField
-			label="Version"
-			description="The version number of the modpack, in the format of X.Y.Z.
-			           You cannot publish with the same version number twice."
+			label={m.modpack_version_title()}
+			description={m.modpack_version_description()}
 			required
 		>
 			<InputField
 				onchange={saveArgs}
 				bind:value={versionNumber}
-				placeholder="Enter version number..."
+				placeholder={m.modpack_version_placeholder()}
 				required={true}
 				pattern="^\d+\.\d+\.\d+$"
 				class="w-full"
 			/>
 		</FormField>
 
-		<FormField label="Website" description="The URL of a website of your choosing. Optional.">
+		<FormField label={m.modpack_website_title()} description={m.modpack_website_description()}>
 			<InputField
 				onchange={saveArgs}
 				bind:value={websiteUrl}
-				placeholder="Enter website URL..."
+				placeholder={m.modpack_website_placeholder()}
 				pattern={URL_PATTERN}
 				class="w-full"
 			/>
 		</FormField>
 
 		<FormField
-			label="Icon"
-			description="Path to the icon of the modpack. This is automatically resized to 256x256 pixels, so
-                 it's recommended to be a square image to avoid stretching or squishing."
+			label={m.modpack_icon_title()}
+			description={m.modpack_icon_description()}
 			required
 		>
 			<PathField icon="mdi:file-image" onclick={browseIcon} value={iconPath} />
 		</FormField>
 
 		<FormField
-			label="Readme"
-			description="A longer description of the modpack, which supports markdown formatting (similarly to Discord messages)."
+			label={m.modpack_readme_title()}
+			description={m.modpack_readme_description()}
 			required
 		>
 			<ResizableInputField
 				onchange={saveArgs}
 				bind:value={readme}
-				placeholder="Enter readme..."
+				placeholder={m.modpack_readme_placeholder()}
 				mono={true}
 			/>
 
 			<details class="mt-1">
-				<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
+				<summary class="text-primary-300 cursor-pointer text-sm">
+					{m.modpack_readme_preview()}
+				</summary>
 				<Markdown class="mt-1 px-4" source={readme} />
 				<div class="bg-primary-500 mt-4 h-[2px]"></div>
 			</details>
 		</FormField>
 
 		<FormField
-			label="Changelog"
-			description="A list of changes in the modpack, also supports markdown formatting. Leave empty to omit."
+			label={m.modpack_changeLog_title()}
+			description={m.modpack_changeLog_description()}
 		>
 			<ResizableInputField
 				onchange={saveArgs}
 				bind:value={changelog}
-				placeholder="Enter changelog..."
+				placeholder={m.modpack_changeLog_placeholder()}
 				mono={true}
 			/>
 
-			<Button color="primary" onclick={() => generateChangelog(false)}
-				>Generate for {versionNumber}</Button
-			>
-			<Button color="primary" onclick={() => generateChangelog(true)}>Generate all</Button>
+			<Button color="primary" onclick={() => generateChangelog(false)}>
+				{m.modpack_changeLog_button_single({versionNumber})}
+			</Button>
+			<Button color="primary" onclick={() => generateChangelog(true)}>
+				{m.modpack_changeLog_button_all()}
+			</Button>
 
 			<details class="mt-1">
-				<summary class="text-primary-300 cursor-pointer text-sm">Preview</summary>
+				<summary class="text-primary-300 cursor-pointer text-sm">{m.modpack_changeLog_preview()}</summary>
 				<Markdown class="mt-1 px-4" source={changelog} />
 				<div class="bg-primary-500 mt-4 h-[2px]"></div>
 			</details>
 		</FormField>
 
 		<FormField
-			label="Include files ({includedFileCount}/{includeFiles?.size})"
-			description="Choose which config files to include in the modpack."
+			label={m.modpack_includeFiles_title({count : includedFileCount, size: includeFiles?.size})}
+			description={m.modpack_includeFiles_description()}
 		>
 			<details>
 				{#if includeFiles}
-					<summary class="text-primary-300 cursor-pointer text-sm">Show list</summary>
+					<summary class="text-primary-300 cursor-pointer text-sm">{m.modpack_includeFiles_preview()}</summary>
 					<Checklist
 						class="mt-1"
-						title="Include all"
+						title={m.modpack_includeFiles_list_title()}
 						items={Array.from(includeFiles.keys()).sort()}
 						getLabel={(item) => item}
 						get={(item) => includeFiles.get(item) ?? false}
@@ -378,40 +381,41 @@
 		</FormField>
 
 		<div class="text-primary-200 mt-1 flex items-center text-lg font-medium">
-			<span class="max-w-96 grow">Contains NSFW content</span>
+			<span class="max-w-96 grow">{m.modpack_NSFW_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={nsfw} />
 		</div>
 
 		<div class="text-primary-200 flex items-center text-lg font-medium">
-			<span class="max-w-96 grow">Include disabled mods</span>
+			<span class="max-w-96 grow">{m.modpack_disabled_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 		</div>
 
 		<div class="mt-3 flex justify-end gap-2">
-			<Button color="primary" icon="mdi:export" onclick={exportToFile}>Export to file</Button>
-			<Button color="accent" icon="mdi:upload" onclick={uploadToThunderstore}
-				>Publish on Thunderstore</Button
-			>
+			<Button color="primary" icon="mdi:export" onclick={exportToFile}>
+				{m.modpack_button_export()}
+			</Button>
+			<Button color="accent" icon="mdi:upload" onclick={uploadToThunderstore}>
+				{m.modpack_button_publish()}
+			</Button>
 		</div>
 	{/if}
 </div>
 
 <ApiKeyDialog />
 
-<Dialog bind:open={doneDialogOpen} title="Modpack upload complete">
+<Dialog bind:open={doneDialogOpen} title={m.modpack_dialog_title()}>
 	<p class="text-primary-300">
-		{name}
-		{versionNumber} has successfully been published on Thunderstore!
-		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}"
-			>Click here to view its page on the website</Link
-		>.
+		{m.modpack_dialog_content_1({name, versionNumber})}
+		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}">
+			{m.modpack_dialog_content_2()}
+		</Link>
 	</p>
 
 	<div class="text-primary-400 mt-2 text-sm">
-		The changes may take up to an hour to appear in Gale and other mod managers.
+		{m.modpack_dialog_content_3()}
 		<br />
-		To publish a new update, increment the version number and publish the modpack again.
+		{m.modpack_dialog_content_4()}
 	</div>
 </Dialog>

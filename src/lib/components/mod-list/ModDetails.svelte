@@ -20,6 +20,7 @@
 	import Icon from '@iconify/svelte';
 	import { type Snippet } from 'svelte';
 	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		mod: Mod;
@@ -42,7 +43,7 @@
 	let allContextItems = $derived([
 		...contextItems,
 		{
-			label: 'Close',
+			label: m.modDetails_allContextItems_close(),
 			icon: 'mdi:close',
 			onclick: onclose
 		}
@@ -103,7 +104,7 @@
 
 				{#if mod.author}
 					<div class="text-primary-300 text-xl xl:text-2xl">
-						by
+						{m.modDetails_by()}
 						<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
 							{mod.author}
 						</a>
@@ -120,14 +121,14 @@
 			{#if mod.isDeprecated}
 				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
 					<Icon class="mr-1 text-xl" icon="mdi:error" />
-					Deprecated
+					{m.modDetails_deprecated()}
 				</div>
 			{/if}
 
 			{#if mod.containsNsfw}
 				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
 					<Icon class="mr-1 text-xl" icon="material-symbols:explicit" />
-					Contains NSFW
+					{m.modDetails_NSFW()}
 				</div>
 			{/if}
 		</div>
@@ -157,7 +158,7 @@
 
 		{#if mod.lastUpdated !== null}
 			<div class="text-primary-400 mt-1 text-lg">
-				Last updated {timeSince(new Date(mod.lastUpdated))} ago
+				{m.modDetails_lastUpdated({time: timeSince(new Date(mod.lastUpdated))})}
 			</div>
 		{/if}
 
@@ -176,7 +177,7 @@
 					<div class="bg-primary-600 mt-2.5 mb-4 h-3 max-w-[400px] rounded-full"></div>
 				</div>
 			{:then readme}
-				<Markdown source={readme ?? 'No readme found'} />
+				<Markdown source={readme ?? m.modDetails_noFound()} />
 			{/await}
 		</div>
 	</div>
@@ -186,7 +187,7 @@
 			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
-			<a href={'/config?file=' + mod.configFile}>Edit config</a>
+			<a href={'/config?file=' + mod.configFile}>{m.modDetails_editConfig()}</a>
 		</div>
 	{/if}
 
@@ -197,7 +198,7 @@
 			onclick={() => (changelogOpen = true)}
 		>
 			<Icon icon="mdi:file-document" class="mr-2 text-lg" />
-			Changelog
+			{m.modDetails_changeLog()}
 		</button>
 
 		<button
@@ -206,7 +207,7 @@
 			onclick={() => (readmeOpen = true)}
 		>
 			<Icon icon="mdi:info" class="mr-2 text-lg" />
-			Details
+			{m.modDetails_details()}
 		</button>
 	{/if}
 
@@ -216,7 +217,7 @@
 			onclick={() => (dependenciesOpen = true)}
 		>
 			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />
-			Dependencies
+			{m.modDetails_dependencies()}
 			<div class="bg-primary-500 group-hover:bg-primary-400 ml-auto rounded-md px-3 py-0.5 text-sm">
 				{mod.dependencies.length}
 			</div>

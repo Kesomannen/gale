@@ -9,6 +9,7 @@
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import games from '$lib/state/game.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		open: boolean;
@@ -33,9 +34,7 @@
 	}
 
 	async function deleteProfile(profile: ListedSyncProfile) {
-		let confirmed = await confirm(
-			`Are you sure you want to delete ${profile.name} from the database? This will disconnect all subscribers and prevent you from pushing further updates!`
-		);
+		let confirmed = await confirm(m.ownedSyncProfilesDialog_deleteProfile_confirm({ name : profile.name}));
 		if (!confirmed) return;
 
 		await api.profile.sync.deleteProfile(profile.id);
@@ -43,14 +42,14 @@
 		let index = syncProfiles.indexOf(profile);
 		syncProfiles.splice(index, 1);
 
-		pushInfoToast({ message: 'Deleted sync profile from database.' });
+		pushInfoToast({ message: m.ownedSyncProfilesDialog_deleteProfile_message()});
 	}
 </script>
 
-<Dialog bind:open onclose={onClose} title="Owned sync profiles">
+<Dialog bind:open onclose={onClose} title={m.ownedSyncProfilesDialog_title()}>
 	<div class="mt-4 flex max-h-80 flex-col space-y-4 overflow-y-auto px-2">
 		{#if sortedProfiles.length === 0}
-			<div class="text-primary-200 w-full text-center text-lg">No profiles found</div>
+			<div class="text-primary-200 w-full text-center text-lg">{m.ownedSyncProfilesDialog_content_1()}</div>
 		{/if}
 
 		{#each sortedProfiles as profile (profile.id)}
@@ -71,14 +70,14 @@
 
 						<span>
 							<Icon icon="mdi:clock-outline" class="mb-0.5 inline text-sm" />
-							{capitalize(timeSince(profile.updatedAt))} ago</span
+							{m.ownedSyncProfilesDialog_content_2({ time : capitalize(timeSince(profile.updatedAt))})}</span
 						>
 					</div>
 				</div>
 
 				{#if !profiles.list.some((other) => other.sync?.id === profile.id)}
 					<IconButton
-						label="Import"
+						label={m.ownedSyncProfilesDialog_button_import()}
 						icon="mdi:download"
 						color="accent"
 						onclick={() => importProfile(profile)}
@@ -86,7 +85,7 @@
 				{/if}
 
 				<IconButton
-					label="Delete"
+					label={m.ownedSyncProfilesDialog_button_delete()}
 					icon="mdi:delete"
 					color="red"
 					onclick={() => deleteProfile(profile)}

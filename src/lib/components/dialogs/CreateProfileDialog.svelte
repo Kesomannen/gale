@@ -8,6 +8,7 @@
 	import PathField from '$lib/components/ui/PathField.svelte';
 	import { open as openDialog } from '@tauri-apps/plugin-dialog';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		open?: boolean;
@@ -35,28 +36,28 @@
 	}
 </script>
 
-<ConfirmDialog title="Create new profile" bind:open>
-	Choose a name for the new profile
+<ConfirmDialog title={m.createProfileDialog_title()} bind:open>
+	{m.createProfileDialog_content()}
 
 	<InputField
-		placeholder="Enter name..."
+		placeholder={m.createProfileDialog_placeholder()}
 		class="mt-1 w-full"
 		onsubmit={createProfile}
 		bind:value={name}
 	/>
 
 	<div class="mt-2 mb-1 flex items-center">
-		<Label>Use custom path</Label>
+		<Label>{m.createProfileDialog_useCustomPath_title()}</Label>
 		<Checkbox bind:checked={override} />
 	</div>
 
 	{#if override}
-		<PathField label="Custom path" bind:value={path} onclick={browse}
-			>The path of the profile.</PathField
-		>
+		<PathField label={m.createProfileDialog_pathField_title()} bind:value={path} onclick={browse}>
+			{m.createProfileDialog_pathField_content()}
+		</PathField>
 	{/if}
 
 	{#snippet buttons()}
-		<Button onclick={createProfile} icon="mdi:plus">Create</Button>
+		<Button onclick={createProfile} icon="mdi:plus">{m.createProfileDialog_button()}</Button>
 	{/snippet}
 </ConfirmDialog>

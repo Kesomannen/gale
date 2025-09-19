@@ -17,6 +17,7 @@
 	import UnknownModsBanner from '$lib/components/mod-list/UnknownModsBanner.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { profileQuery } from '$lib/state/misc.svelte';
+	import { m, page_dialog_title } from '$lib/paraglide/messages';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -32,7 +33,7 @@
 
 	const contextItems: ModContextItem[] = [
 		{
-			label: 'Uninstall',
+			label: m.page_modContextItem_uninstall(),
 			icon: 'mdi:delete',
 			onclick: (mod) =>
 				uninstall({
@@ -42,7 +43,7 @@
 			showFor: (_, profileLocked) => !profileLocked
 		},
 		{
-			label: 'Change version',
+			label: m.page_modContextItem_changeVersion(),
 			icon: 'mdi:edit',
 			onclick: () => {},
 			showFor: (mod, profileLocked) => mod.versions.length > 1 && !profileLocked,
@@ -53,12 +54,12 @@
 				}))
 		},
 		{
-			label: 'Show dependants',
+			label: m.page_modContextItem_showDependants(),
 			icon: 'mdi:source-branch',
 			onclick: openDependants
 		},
 		{
-			label: 'Open folder',
+			label: m.page_modContextItem_openFolder(),
 			icon: 'mdi:folder',
 			onclick: (mod) => api.profile.openModDir(mod.uuid)
 		},
@@ -250,13 +251,13 @@
 					{#if totalModCount === 0}
 						<Icon icon="ph:ghost" class="text-primary-500 mx-auto mt-4 text-9xl" />
 
-						<div class="mt-1 text-lg">No mods installed</div>
+						<div class="mt-1 text-lg">{m.page_modList_noMods_1()}</div>
 						<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
-							>Click to <Icon icon="mdi:store-search" class="mr-0.5 ml-1 inline" inline /> Browse Thunderstore</a
+							><Icon icon="mdi:store-search" class="mr-0.5 ml-1  inline" inline />{m.page_modList_noMods_2()}</a
 						>
 					{:else}
-						<div class="mt-4 text-lg">No matching mods found in profile</div>
-						<div class="text-primary-400">Try to adjust your search query/filters</div>
+						<div class="mt-4 text-lg">{m.page_modList_noResults_1()}</div>
+						<div class="text-primary-400">{m.page_modList_noResults_2()}</div>
 					{/if}
 				{/if}
 			{/snippet}
@@ -287,17 +288,17 @@
 					onclick={() => updateMod(selectedMod)}
 				>
 					<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
-					Update to {selectedMod?.versions[0].name}
+					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
 				</button>
 			{/if}
 		</ModDetails>
 	{/if}
 </div>
 
-<Dialog title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
+<Dialog title={m.page_dialog_title({name : activeMod?.name ?? m.unknown()})}  bind:open={dependantsOpen}>
 	<div class="text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
-			No dependants found
+			{m.page_dialog_noDependants()}
 		{:else}
 			<ModCardList names={dependants} showVersion={false} />
 		{/if}
@@ -306,9 +307,9 @@
 
 <DependantsDialog
 	bind:this={removeDependants}
-	title="Confirm uninstallation"
-	verb="Uninstall"
-	description="The following mods depend on %s and will likely not work if it is uninstalled:"
+	title={m.page_dependantsDialog_uninstall_title()}
+	verb={m.page_dependantsDialog_uninstall_verb()}
+	description={m.page_dependantsDialog_uninstall_description()}
 	commandName="remove_mod"
 	onExecute={() => {
 		selectedMod = null;
@@ -318,18 +319,18 @@
 
 <DependantsDialog
 	bind:this={disableDependants}
-	title="Confirm disabling"
-	verb="Disable"
-	description="The following mods depend on %s and will likely not work if it is disabled:"
+	title={m.page_dependantsDialog_disable_title()}
+	verb={m.page_dependantsDialog_disable_verb()}
+	description={m.page_dependantsDialog_disable_description()}
 	commandName="toggle_mod"
 	onCancel={refresh}
 />
 
 <DependantsDialog
 	bind:this={enableDependencies}
-	title="Confirm enabling"
-	verb="Enable"
-	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled:"
+	title={m.page_dependantsDialog_enable_title()}
+	verb={m.page_dependantsDialog_enable_verb()}
+	description={m.page_dependantsDialog_enable_description()}
 	commandName="toggle_mod"
 	onCancel={refresh}
 	positive
