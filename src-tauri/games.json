@@ -977,6 +977,9 @@
             "steam": {
                 "id": 1030300,
                 "dirName": "Hollow Knight Silksong"
+            },
+            "xboxStore": {
+                "identifier": "TeamCherry.HollowKnightSilksong"
             }
         }
     },
@@ -1590,6 +1593,18 @@
         "platforms": {
             "steam": {
                 "id": 1129310
+            }
+        }
+    },
+    {
+        "name": "Resonite",
+        "slug": "resonite",
+        "modLoader": {
+            "name": "BepisLoader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2519830
             }
         }
     },

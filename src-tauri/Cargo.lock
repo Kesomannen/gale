@@ -1842,7 +1842,7 @@ dependencies = [
 
 [[package]]
 name = "gale"
-version = "1.9.6"
+version = "1.9.7"
 dependencies = [
  "base64 0.22.1",
  "blake3",

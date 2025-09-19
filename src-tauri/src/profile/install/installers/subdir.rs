@@ -2,7 +2,7 @@ use std::{
     borrow::Cow,
     collections::HashMap,
     fs,
-    path::{Path, PathBuf},
+    path::{Components, Path, PathBuf},
 };
 
 use eyre::{Context, OptionExt, Result};
@@ -21,17 +21,24 @@ use crate::{
     util::{self, fs::JsonStyle},
 };
 
+/// A configurable mod installer based on r2modman's install rules:
+/// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
 pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
-    default_subdir: Option<usize>,
     extra_subdirs: &'a [Subdir<'a>],
+    /// Index of the default subdir to place files into.
+    /// If set to `None`, files will be ignored by default.
+    default_subdir: Option<usize>,
+    /// File paths that the installer should always ignore.
     ignored_files: &'a [&'a str],
 }
 
+/// A directory inside the profile where files will be placed into.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Subdir<'a> {
-    /// The name which "triggers" the subdir. Must be a single path component.
+    /// The string which "triggers" the subdir. Must be a single path component.
+    /// Case-independent, that is `plugins` would be matched by `Plugins`.
     pub name: &'a str,
     /// The target path of the subdir, relative to the profile dir.
     ///
@@ -57,10 +64,10 @@ pub enum SubdirMode {
     /// Separate mods into `author-name` dirs.
     Separate,
     /// Same as [`SubdirMode::Separate`], but also flatten any dirs that
-    /// come before the subdir.
+    /// come before the subdir name.
     #[default]
     SeparateFlatten,
-    /// Track which files are installed by which mod.
+    /// Don't separate mods, but instead track which files are installed by which mod.
     Track,
     /// Don't track or separate mods. This prevents disabling
     /// or uninstallation of files in the subdir.
@@ -137,6 +144,7 @@ impl<'a> SubdirInstaller<'a> {
         self.extra_subdirs.iter().chain(self.subdirs.iter())
     }
 
+    /// Determines if a path component matches any subdir names/extensions.
     fn match_subdir(&'_ self, name: &str) -> Option<&'_ Subdir<'_>> {
         self.subdirs().find(|subdir| {
             util::cmp_ignore_case(subdir.name, name).is_eq()
@@ -146,6 +154,50 @@ impl<'a> SubdirInstaller<'a> {
         })
     }
 
+    /// Checks if we need to skip overlapping path segments.
+    fn handle_overlap<'p>(
+        &self,
+        mut components: Components<'p>,
+        subdir: &Subdir,
+        flatten: bool,
+    ) -> Components<'p> {
+        // only process if we're flattening and target starts with the trigger
+        if !flatten || !subdir.target.starts_with(subdir.name) {
+            return components;
+        }
+
+        // get the suffix after the trigger name
+        let Some(suffix) = subdir.target.strip_prefix(subdir.name) else {
+            return components;
+        };
+
+        let suffix = suffix.strip_prefix('/').unwrap_or(suffix);
+        if suffix.is_empty() {
+            return components;
+        }
+
+        // check if the source components match the target suffix pattern
+        let suffix_path = Path::new(suffix);
+        let suffix_components: Vec<_> = suffix_path.components().collect();
+
+        // test if components start with the same pattern
+        let mut test_components = components.clone();
+        let matches = suffix_components
+            .iter()
+            .all(|expected| test_components.next() == Some(*expected));
+
+        // skip the matching prefix if found
+        if matches {
+            for _ in &suffix_components {
+                components.next();
+            }
+        }
+
+        components
+    }
+
+    /// Map a file in the mod archive (at relative_path) to the target path relative to the profile's root.
+    /// Ok(None) means a file should be ignored
     fn map_file<'p>(
         &self,
         relative_path: &'p Path,
@@ -159,6 +211,12 @@ impl<'a> SubdirInstaller<'a> {
             }
         }
 
+        // find a subdir in the file path, ex.
+        // MyFolder/plugins/MyMod.dll
+        //          ^-----^
+        // `prev` holds the path up to the subdir component (or the whole path if it doesn't contain one)
+        // `components` holds the remaining components of the path
+
         let mut prev = PathBuf::new();
         let mut components = relative_path.components();
 
@@ -168,7 +226,7 @@ impl<'a> SubdirInstaller<'a> {
                     prev.push(name);
                     if let Some(name) = name.to_str() {
                         if let Some(subdir) = self.match_subdir(name) {
-                            break subdir;
+                            break subdir; // found a subdir
                         }
                     }
                 }
@@ -186,28 +244,37 @@ impl<'a> SubdirInstaller<'a> {
             }
         };
 
-        let mut target = PathBuf::from(subdir.target);
-
+        // whether to separete mod files by source mod
         let separate = matches!(
             subdir.mode,
             SubdirMode::Separate | SubdirMode::SeparateFlatten
         );
+        // whether to flatten the target path (i.e. placing the files directly in the subdir)
         let flatten = matches!(
             subdir.mode,
             SubdirMode::SeparateFlatten | SubdirMode::Track | SubdirMode::None
         );
-        let is_top_level = components.clone().next().is_none();
+        // this means the path didn't contain any subdirs
+        let defaulted = components.clone().next().is_none();
+
+        // ex. BepInEx/plugins
+        let mut target = PathBuf::from(subdir.target);
 
         if separate {
+            // ex. BepInEx/plugins/Author-ModName
             target.push(package_name);
         }
 
-        if is_top_level {
+        if defaulted {
             if flatten {
+                // place the file directly into the default directory
                 let file_name = prev.file_name().ok_or_eyre("malformed archive")?;
 
+                // ex. icon.png -> BepInEx/plugins/icon.png
                 target.push(file_name);
             } else {
+                // place the file along with its parent directories into the default directory
+                // ex. MyIcons/icon.png -> BepInEx/plugins/MyIcons/icon.png
                 target.push(&prev);
             }
         } else {
@@ -219,24 +286,36 @@ impl<'a> SubdirInstaller<'a> {
                 target.push(prev);
             }
 
-            target.push(components);
+            // ex. relative_path: MyFolder/plugins/MyOtherFolder/Plugin.dll
+            //    (with flatten): BepInEx/plugins/MyOtherFolder/Plugin.dll
+            // (without flatten): BepInEx/plugins/MyFolder/MyOtherFolder/Plugin.dll
+            let components_to_add = self.handle_overlap(components, subdir, flatten);
+            target.push(components_to_add);
         }
 
         Ok(Some(Cow::Owned(target)))
     }
 
+    /// Executes a function for each of a mod's installed files within a profile.
+    /// Returns whether any tracked files where scanned.
     fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, mut scan: F) -> Result<bool>
     where
         F: FnMut(&Path) -> Result<()>,
     {
+        // file tracking doesn't differentiate between subdirs, so we need to make
+        // sure to only scan the tracked files once, even if we have multiple subdirs
+        // with [`SubdirMode::Track`]
         let mut scanned_tracked_files = false;
+
         let package_name = profile_mod.full_name();
 
         for subdir in self.subdirs() {
             match subdir.mode {
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => {
                     let mut path = profile.path.to_path_buf();
+                    // ex. BepInEx/plugins
                     path.push(subdir.target);
+                    // ex. BepInEx/plugins/Author-CoolMod
                     path.push(&*package_name);
 
                     scan(&path)?;
@@ -249,14 +328,23 @@ impl<'a> SubdirInstaller<'a> {
                         scan(&profile.path.join(file))?;
                     }
                 }
-                SubdirMode::Track => (),
-                SubdirMode::None => (),
+                SubdirMode::Track => (), // we have already scanned tracked files
+                SubdirMode::None => (), // we can't know which files in the subdir belong to this mod; ignore
             };
         }
 
         Ok(scanned_tracked_files)
     }
 }
+
+/// The state files are used by subdirs with [`SubdirMode::Track`] to know which files belong to which mods.
+/// This system is similar to r2modman's, with the exception that we use json instead of yaml.
+///
+/// Each mod has its own json file in the `_state` folder that lists the mod's own files.
+/// The profile also has a main json file that links each file to its corresponding mod.
+///
+/// When we want to write a file to the state, we thus have to write to both the mod-specific file as well as
+/// the profile "registry".
 
 fn state_file_path(name: &str, profile: &Profile) -> PathBuf {
     let mut path = profile.path.to_path_buf();
@@ -268,6 +356,7 @@ fn state_file_path(name: &str, profile: &Profile) -> PathBuf {
     path
 }
 
+/// A handle to an opened state file for one mod/package.
 struct PackageStateHandle {
     path: PathBuf,
     state: PackageState,
@@ -305,6 +394,7 @@ impl PackageStateHandle {
     }
 }
 
+/// A handle to an opened profile state file.
 struct ProfileStateHandle {
     path: PathBuf,
     state: ProfileState,

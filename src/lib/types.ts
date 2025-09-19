@@ -213,7 +213,8 @@ export enum ModLoader {
 	MelonLoader = 'MelonLoader',
 	Northstar = 'Northstar',
 	GDWeave = 'GDWeave',
-	ReturnOfModding = 'ReturnOfModding'
+	ReturnOfModding = 'ReturnOfModding',
+	BepisLoader = 'BepisLoader'
 }
 
 export type PackageCategory = {

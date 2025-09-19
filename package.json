@@ -1,6 +1,6 @@
 {
 	"name": "gale",
-	"version": "1.9.6",
+	"version": "1.9.7",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -51,7 +51,7 @@
 		"rehype-highlight": "^7.0.2",
 		"rehype-raw": "^7.0.0",
 		"runed": "^0.29.1",
-		"svelte-exmarkdown": "^3.0.5"
-	},
-	"packageManager": "pnpm@10.16.0"
+    "svelte-exmarkdown": "^5.0.2"
+  },
+	"packageManager": "pnpm@10.17"
 }

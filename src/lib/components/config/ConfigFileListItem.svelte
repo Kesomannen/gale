@@ -10,6 +10,7 @@
 
 	type Props = {
 		file: ConfigFile;
+		duplicate: boolean;
 		selectedSection: ConfigSection | null;
 		locked: boolean;
 		onDeleteClicked: () => void;
@@ -17,8 +18,15 @@
 		onSectionClicked: (file: ConfigFileData, section: ConfigSection) => void;
 	};
 
-	let { file, selectedSection, locked, onDeleteClicked, onFileClicked, onSectionClicked }: Props =
-		$props();
+	let {
+		file,
+		selectedSection,
+		duplicate,
+		locked,
+		onDeleteClicked,
+		onFileClicked,
+		onSectionClicked
+	}: Props = $props();
 
 	let open = $state(false);
 
@@ -37,6 +45,21 @@
 	let shownSections = $derived(
 		file.type === 'ok' ? file.sections.filter((section) => section.entries.length > 0) : []
 	);
+
+	let fileLabel = $derived(() => {
+		if (!file.displayName) {
+			return { name: file.relativePath, disambiguator: null };
+		}
+
+		if (duplicate) {
+			const firstFolder = file.relativePath.split('/')[0];
+			if (firstFolder !== file.displayName) {
+				return { name: file.displayName, disambiguator: firstFolder };
+			}
+		}
+
+		return { name: file.displayName, disambiguator: null };
+	});
 
 	async function deleteFile() {
 		let confirmed = await confirm(m.configFileListItem_deleteFile_confirm({name: file.displayName ?? file.relativePath}));
@@ -71,7 +94,12 @@
 
 			<div class="mr-auto shrink truncate" style="direction: rtl;">
 				&#x200E;
-				{file.displayName ?? file.relativePath}
+				{fileLabel().name}
+				{#if fileLabel().disambiguator}
+					<span class="text-primary-400">
+						({fileLabel().disambiguator})
+					</span>
+				{/if}
 			</div>
 
 			<IconButton
