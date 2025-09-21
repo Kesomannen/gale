@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::{
     logger,
-    profile::{self},
+    profile::{self, import::commands::FrontendImportData},
     state::ManagerExt,
     thunderstore::{self, IntoFrontendMod},
 };
@@ -88,7 +88,7 @@ fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
 
     let import_data = profile::import::read_file_at_path(path)?;
 
-    app.emit("import_profile", import_data)?;
+    app.emit("import_profile", FrontendImportData::new(import_data, &app))?;
 
     Ok(())
 }
@@ -101,7 +101,7 @@ async fn import_profile_code(url: String, app: AppHandle) -> Result<()> {
 
     let import_data = profile::import::read_code(key, &app).await?;
 
-    app.emit("import_profile", import_data)?;
+    app.emit("import_profile", FrontendImportData::new(import_data, &app))?;
 
     Ok(())
 }
