@@ -5,8 +5,7 @@ import type {
 	ModActionResponse,
 	ProfileQuery,
 	ManagedGameInfo,
-	QueryModsArgs,
-	ProfileSettings
+	QueryModsArgs
 } from '$lib/types';
 
 export * as export from './export';
@@ -40,11 +39,5 @@ export const openDir = () => invoke('open_profile_dir');
 export const openModDir = (uuid: string) => invoke('open_mod_dir', { uuid });
 export const openGameLog = () => invoke('open_game_log');
 export const createDesktopShortcut = () => invoke('create_desktop_shortcut');
-export const getActiveProfileSettings = () =>
-	invoke<ProfileSettings>('get_active_profile_settings');
-export const getProfileSettings = (profileId: number) =>
-	invoke<ProfileSettings>('get_profile_settings', { profileId });
-export const setActiveProfileSettings = (settings: ProfileSettings) =>
-	invoke('set_active_profile_settings', { settings });
-export const setProfileSettings = (profileId: number, settings: ProfileSettings) =>
-	invoke('set_profile_settings', { profileId, settings });
+export const setCustomArgs = (customArgs: string[], enabled: boolean) =>
+	invoke('set_custom_args', { customArgs, enabled });

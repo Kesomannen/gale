@@ -55,6 +55,8 @@ export type ProfileInfo = {
 	name: string;
 	modCount: number;
 	sync: SyncProfileInfo | null;
+	customArgs: string[];
+	customArgsEnabled: boolean;
 };
 
 export type SyncProfileInfo = {
@@ -304,11 +306,6 @@ export type GamePrefs = {
 	customArgsEnabled: boolean;
 	launchMode: LaunchMode;
 	platform: Platform | null;
-};
-
-export type ProfileSettings = {
-	customArgs: string[];
-	customArgsEnabled: boolean;
 };
 
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';

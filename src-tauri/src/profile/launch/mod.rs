@@ -94,14 +94,8 @@ impl ManagedGame {
             command.args(custom_args);
         }
 
-        let profile_custom_args = if profile.settings.custom_args_enabled {
-            Some(&profile.settings.custom_args)
-        } else {
-            None
-        };
-
-        if let Some(custom_args) = profile_custom_args {
-            command.args(custom_args);
+        if profile.custom_args_enabled {
+            command.args(&profile.custom_args);
         }
 
         Ok((launch_mode, command))

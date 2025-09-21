@@ -111,7 +111,8 @@ pub struct ProfileData {
     pub modpack: Option<profile::export::modpack::ModpackArgs>,
     pub ignored_updates: Option<HashSet<Uuid>>,
     pub sync_data: Option<profile::sync::SyncProfileData>,
-    pub settings: Option<profile::ProfileSettings>,
+    pub custom_args: Option<Vec<String>>,
+    pub custom_args_enabled: Option<bool>,
 }
 
 pub struct SaveData {
@@ -226,7 +227,7 @@ impl Db {
 
         let mut profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, settings FROM profiles",
+                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled FROM profiles",
             )?
             .query_map((), |row| {
                 Ok(ProfileData {
@@ -238,7 +239,8 @@ impl Db {
                     modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_option_row(row, 6)?,
                     sync_data: map_json_option_row(row, 7)?,
-                    settings: map_json_option_row(row, 8)?,
+                    custom_args: map_json_option_row(row, 8)?,
+                    custom_args_enabled: row.get(9)?,
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
@@ -339,8 +341,8 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, settings) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
@@ -356,7 +358,7 @@ impl Db {
                 .as_ref()
                 .map(serde_json::to_string)
                 .transpose()?;
-            let settings = serde_json::to_string(&profile.settings)?;
+            let custom_args = serde_json::to_string(&profile.custom_args)?;
 
             stmt.execute(params![
                 profile.id,
@@ -367,7 +369,8 @@ impl Db {
                 modpack,
                 ignored_updates,
                 sync_data,
-                settings
+                custom_args,
+                profile.custom_args_enabled
             ])?;
         }
 
