@@ -8,6 +8,9 @@
 - Launch arguments resetting when toggled
 - BepInEx shell scripts not being set as executable on Linux
 - Extra margins between images in mod readmes and changelogs
+- Readmes and changelogs not being loaded from local mods
+- Local mod icons sometimes breaking when the mod is disabled
+- Local mod icons not showing in the mod details section
 
 ### Removed
 

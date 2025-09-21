@@ -1,18 +1,19 @@
 <script lang="ts">
 	import Markdown from '$lib/components/ui/Markdown.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
-	import type { Mod } from '$lib/types';
+	import type { MarkdownType, Mod } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import * as api from '$lib/api';
+	import { getMarkdown } from '$lib/util';
 
 	type Props = {
 		open?: boolean;
 		useLatest?: boolean;
 		mod: Mod;
-		kind: 'readme' | 'changelog';
+		type: MarkdownType;
 	};
 
-	let { open = $bindable(false), useLatest = false, mod, kind }: Props = $props();
+	let { open = $bindable(false), useLatest = false, mod, type }: Props = $props();
 
 	let promise: Promise<string | null> | null = $state(null);
 	let currentMod: Mod | null = null;
@@ -21,12 +22,7 @@
 		if (currentMod === mod) return;
 		currentMod = mod;
 
-		let modRef = {
-			packageUuid: mod.uuid,
-			versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid
-		};
-
-		promise = api.thunderstore.getMarkdown(modRef, kind);
+		promise = getMarkdown(mod, type, useLatest);
 	}
 </script>
 
@@ -38,13 +34,13 @@
 			<Markdown source={value} />
 		{:else}
 			<div class="text-primary-300 flex items-center justify-center gap-2">
-				No {kind} found
+				No {type} found
 			</div>
 		{/if}
 	{:catch error}
 		<div class="flex items-center justify-center gap-2 text-red-400">
 			<Icon class="text-lg" icon="mdi:alert-circle-outline" />
-			Failed to load {kind}: {error}
+			Failed to load {type}: {error}
 		</div>
 	{/await}
 </Dialog>

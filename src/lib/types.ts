@@ -324,4 +324,4 @@ export type ModContextItem = {
 
 export type Zoom = { factor: number } | { delta: number };
 
-export type MarkdownCache = 'readme' | 'changelog';
+export type MarkdownType = 'readme' | 'changelog';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../../types';
 	import Icon from '@iconify/svelte';
-	import { modIconSrc, isOutdated } from '$lib/util';
+	import { modIconSrc, isOutdated, formatModName } from '$lib/util';
 	import { Switch, ContextMenu } from 'bits-ui';
 	import type { DragEventHandler, MouseEventHandler } from 'svelte/elements';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
@@ -84,7 +84,7 @@
 							'shrink truncate font-medium'
 						]}
 					>
-						{mod.name.replace(/_/g, ' ')}
+						{formatModName(mod.name)}
 					</div>
 					<div class={[descriptionClasses, 'px-1']}>
 						{mod.version ?? '?.?.?'}

@@ -5,7 +5,9 @@ import type {
 	ModActionResponse,
 	ProfileQuery,
 	ManagedGameInfo,
-	QueryModsArgs
+	QueryModsArgs,
+	ModId,
+	MarkdownType
 } from '$lib/types';
 
 export * as export from './export';
@@ -39,3 +41,5 @@ export const openDir = () => invoke('open_profile_dir');
 export const openModDir = (uuid: string) => invoke('open_mod_dir', { uuid });
 export const openGameLog = () => invoke('open_game_log');
 export const createDesktopShortcut = () => invoke('create_desktop_shortcut');
+export const getLocalMarkdown = (uuid: string, type: MarkdownType) =>
+	invoke<string | null>('get_local_markdown', { uuid, kind: type });
