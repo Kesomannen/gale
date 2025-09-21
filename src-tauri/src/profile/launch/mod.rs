@@ -41,12 +41,28 @@ pub enum LaunchMode {
 
 impl ManagedGame {
     pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
+        self.launch_with_args(prefs, app, None)
+    }
+
+    pub fn launch_with_args(
+        &self,
+        prefs: &Prefs,
+        app: &AppHandle,
+        args: Option<String>,
+    ) -> Result<()> {
         let game_dir = locate_game_dir(self.game, prefs)?;
         if let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
 
-        let (launch_mode, command) = self.launch_command(&game_dir, prefs)?;
+        let (launch_mode, mut command) = self.launch_command(&game_dir, prefs)?;
+
+        if let Some(args) = args {
+            if !args.is_empty() {
+                command.args(args.split_whitespace());
+            }
+        }
+
         info!("launching {} with command {:?}", self.game.slug, command);
         do_launch(command, app, launch_mode)?;
 

@@ -325,3 +325,30 @@ export type ModContextItem = {
 export type Zoom = { factor: number } | { delta: number };
 
 export type MarkdownCache = 'readme' | 'changelog';
+
+export type LaunchOptionType =
+	| 'none'
+	| 'default'
+	| 'application'
+	| 'safemode'
+	| 'multiplayer'
+	| 'config'
+	| 'vr'
+	| 'server'
+	| 'editor'
+	| 'manual'
+	| 'benchmark'
+	| 'option1'
+	| 'option2'
+	| 'option3'
+	| 'othervr'
+	| 'openvroverlay'
+	| 'osvr'
+	| 'openxr'
+	| { unknown: string };
+
+export interface LaunchOption {
+	name: string;
+	arguments: string;
+	type: LaunchOptionType;
+}
