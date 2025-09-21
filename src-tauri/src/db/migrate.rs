@@ -154,7 +154,7 @@ impl From<legacy::GamePrefs> for GamePrefs {
     fn from(legacy: legacy::GamePrefs) -> Self {
         GamePrefs {
             dir_override: legacy.dir_override,
-            custom_args: legacy.custom_args.clone().unwrap_or_default(),
+            custom_args: legacy.custom_args.clone(),
             custom_args_enabled: legacy.custom_args.is_some(),
             launch_mode: legacy.launch_mode.into(),
             platform: legacy.platform.map(Into::into),
