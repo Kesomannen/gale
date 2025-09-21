@@ -2,15 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- Profile-specific custom launch arguments
+
 ### Fixed
 
 - Config editor resetting on each mod fetch
-- Launch arguments resetting when toggled
+- Launch arguments resetting when toggled (thanks [@hazre](https://github.com/Kesomannen/gale/issues?q=is%3Apr+is%3Aopen+author%3Ahazre))
 - BepInEx shell scripts not being set as executable on Linux
-- Extra margins between images in mod readmes and changelogs
+- Extra margins between images in mod readmes and changelogs (thanks [@TianMengLucky](https://github.com/TianMengLucky))
 - Readmes and changelogs not being loaded from local mods
 - Local mod icons sometimes breaking when the mod is disabled
 - Local mod icons not showing in the mod details section
+- Thunderstore deep link import not working (thanks [@DaXcess](https://github.com/DaXcess))
 
 ### Removed
 
