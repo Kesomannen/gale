@@ -354,6 +354,8 @@ pub struct LocalMod {
     pub uuid: Uuid,
     #[serde(default)]
     pub file_size: u64,
+    pub readme: Option<String>,
+    pub changelog: Option<String>,
 }
 
 impl LocalMod {

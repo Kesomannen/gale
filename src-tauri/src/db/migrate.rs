@@ -233,6 +233,8 @@ impl From<legacy::LocalMod> for LocalMod {
             dependencies: legacy.dependencies,
             uuid: legacy.uuid,
             file_size: legacy.file_size,
+            readme: None,
+            changelog: None,
         }
     }
 }
