@@ -291,7 +291,6 @@ export type R2ImportData = {
 export type Prefs = {
 	dataDir: string;
 	cacheDir: string;
-	sendTelemetry: boolean;
 	fetchModsAutomatically: boolean;
 	pullBeforeLaunch: boolean;
 	zoomFactor: number;

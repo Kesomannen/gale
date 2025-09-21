@@ -152,26 +152,6 @@ impl Db {
         Ok(res)
     }
 
-    pub fn user_id(&self) -> Result<Option<Uuid>> {
-        let conn = self.conn();
-
-        let res = conn
-            .prepare("SELECT user_id FROM telemetry")?
-            .query_row((), |row| row.get(0))
-            .optional()?;
-
-        Ok(res)
-    }
-
-    pub fn save_user_id(&self, id: Uuid) -> Result<()> {
-        self.with_transaction(|tx| {
-            tx.prepare("INSERT OR REPLACE INTO telemetry (id, user_id) VALUES (?, ?)")?
-                .execute(params![1, id])?;
-
-            Ok(())
-        })
-    }
-
     pub fn save_auth(&self, creds: Option<&AuthCredentials>) -> Result<()> {
         self.with_transaction(|tx| {
             let json = creds.map(serde_json::to_string).transpose()?;
@@ -185,12 +165,7 @@ impl Db {
 
     pub fn read(&self) -> Result<(SaveData, Prefs, Option<AuthCredentials>, bool)> {
         if migrate::should_migrate() {
-            let (data, prefs, user_id) =
-                migrate::migrate().context("failed to migrate legacy save data")?;
-
-            if let Some(user_id) = user_id {
-                self.save_user_id(user_id).ok();
-            }
+            let (data, prefs) = migrate::migrate().context("failed to migrate legacy save data")?;
 
             return Ok((data, prefs, None, true));
         }

@@ -19,7 +19,6 @@ mod logger;
 mod prefs;
 mod profile;
 mod state;
-mod telemetry;
 mod thunderstore;
 mod util;
 
@@ -52,9 +51,6 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     if !args.is_empty() && !deep_link::handle(app.handle(), args.clone()) {
         cli::run(args, app.handle());
     }
-
-    let handle = app.handle().to_owned();
-    tauri::async_runtime::spawn(async move { telemetry::send_app_start_event(handle).await });
 
     let handle = app.handle().to_owned();
     tauri::async_runtime::spawn(async move {

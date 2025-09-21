@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Config editor resetting on each mod fetch
+- Launch arguments resetting when toggled
+- BepInEx shell scripts not being set as executable on Linux
+- Extra margins between images in mod readmes and changelogs
+
+### Removed
+
+- All telemetry
+
 ## 1.9.7 (2025-09-15)
 
 ### Added

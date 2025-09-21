@@ -183,7 +183,6 @@ impl From<PathBuf> for DirPref {
 pub struct Prefs {
     pub data_dir: DirPref,
 
-    pub send_telemetry: bool,
     pub fetch_mods_automatically: bool,
     pub zoom_factor: f32,
     pub pull_before_launch: bool,
@@ -210,7 +209,6 @@ impl Default for Prefs {
                 .keep(db::WAL_FILE_NAME)
                 .keep(game::CACHE_FILE_NAME),
 
-            send_telemetry: true,
             fetch_mods_automatically: true,
             pull_before_launch: true,
 
@@ -280,7 +278,6 @@ impl Prefs {
         }
         self.zoom_factor = value.zoom_factor;
 
-        self.send_telemetry = value.send_telemetry;
         self.fetch_mods_automatically = value.fetch_mods_automatically;
         self.pull_before_launch = value.pull_before_launch;
 

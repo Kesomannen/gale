@@ -128,14 +128,6 @@
 		</TogglePref>
 
 		<TogglePref
-			label="Send telemetry"
-			value={prefs.sendTelemetry}
-			set={set((value, prefs) => (prefs.sendTelemetry = value))}
-		>
-			Whether to send anonymous usage metrics when the app starts.
-		</TogglePref>
-
-		<TogglePref
 			label="Pull before launch"
 			value={prefs.pullBeforeLaunch}
 			set={set((value, prefs) => (prefs.pullBeforeLaunch = value))}
