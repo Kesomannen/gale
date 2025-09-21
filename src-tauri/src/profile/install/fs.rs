@@ -63,7 +63,29 @@ where
 
         let mut target_file = File::create(&target_path)?;
         io::copy(&mut source_file, &mut target_file)?;
+
+        #[cfg(unix)]
+        set_unix_mode(&source_file, &target_path)?;
     }
+
+    Ok(())
+}
+
+#[cfg(unix)]
+fn set_unix_mode(file: &zip::read::ZipFile, target_path: &Path) -> io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+
+    let mut mode = match file.unix_mode() {
+        Some(mode) => mode,
+        None => fs::metadata(target_path)?.permissions().mode(),
+    };
+
+    if target_path.extension().is_some_and(|ext| ext == "sh") {
+        // set all scripts to be executable by everyone
+        mode |= 0o111;
+    }
+
+    fs::set_permissions(target_path, PermissionsExt::from_mode(mode));
 
     Ok(())
 }
