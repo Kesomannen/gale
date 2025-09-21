@@ -7,7 +7,7 @@ use tauri::{command, AppHandle};
 use tracing::warn;
 use uuid::Uuid;
 
-use super::{actions::ActionResult, Dependant, Profile};
+use super::{actions::ActionResult, Dependant, Profile, ProfileSettings};
 use crate::{
     game::{self, platform::Platform, Game},
     profile::FrontendManagedGame,
@@ -412,5 +412,36 @@ pub fn create_desktop_shortcut(app: AppHandle) -> Result<()> {
 
     manager.active_game().create_desktop_shortcut()?;
 
+    Ok(())
+}
+
+#[command]
+pub fn get_active_profile_settings(app: AppHandle) -> Result<ProfileSettings> {
+    let manager = app.lock_manager();
+    Ok(manager.active_profile().settings.clone())
+}
+
+#[command]
+pub fn get_profile_settings(profile_id: i64, app: AppHandle) -> Result<ProfileSettings> {
+    let manager = app.lock_manager();
+    let (_, profile) = manager.profile_by_id(profile_id)?;
+    Ok(profile.settings.clone())
+}
+
+#[command]
+pub fn set_active_profile_settings(settings: ProfileSettings, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+    profile.settings = settings;
+    profile.save(&app, false)?;
+    Ok(())
+}
+
+#[command]
+pub fn set_profile_settings(profile_id: i64, settings: ProfileSettings, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
+    profile.settings = settings;
+    profile.save(&app, false)?;
     Ok(())
 }

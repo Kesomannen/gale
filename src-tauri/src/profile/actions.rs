@@ -318,6 +318,7 @@ impl ManagedGame {
             linked_config: HashMap::new(),
             modpack: None,
             sync: None,
+            settings: Default::default(),
         };
 
         let index = self.target_profile_index(&profile.name);
@@ -393,10 +394,12 @@ impl ManagedGame {
 
         let mods = old_profile.mods.clone();
         let ignored_updates = old_profile.ignored_updates.clone();
+        let settings = old_profile.settings.clone();
 
         let new_profile = self.active_profile_mut();
         new_profile.mods = mods;
         new_profile.ignored_updates = ignored_updates;
+        new_profile.settings = settings;
 
         Ok(new_profile)
     }

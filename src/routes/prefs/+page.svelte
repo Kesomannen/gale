@@ -10,7 +10,7 @@
 	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/components/prefs/PlatformPref.svelte';
 
-	import type { Prefs, GamePrefs, Platform } from '$lib/types';
+	import type { Prefs, GamePrefs, Platform, ProfileSettings } from '$lib/types';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
 
@@ -21,10 +21,12 @@
 	import { useNativeMenu } from '$lib/theme';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
+	import profiles from '$lib/state/profile.svelte';
 	import FontFamilyPref from '$lib/components/prefs/FontFamilyPref.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
+	let profileSettings: ProfileSettings | null = $state(null);
 
 	let gameSlug = $derived(games.active?.slug ?? '');
 
@@ -68,10 +70,41 @@
 		let newPrefs = await api.prefs.get();
 		newPrefs.gamePrefs = new Map(Object.entries(newPrefs.gamePrefs));
 		prefs = newPrefs;
+
+		if (profiles.active) {
+			profileSettings = await api.profile.getActiveProfileSettings();
+		}
+	}
+
+	function setProfileSettings<T>(update: (value: T, settings: ProfileSettings) => void) {
+		return async (value: T) => {
+			if (profileSettings === null) return;
+
+			update(value, profileSettings);
+			try {
+				await api.profile.setActiveProfileSettings(profileSettings);
+			} catch (error) {
+				await refresh();
+				throw error;
+			}
+		};
 	}
 </script>
 
 <div class="mx-auto flex w-full max-w-4xl flex-col gap-1 overflow-y-auto px-6 pt-2 pb-6">
+	{#if profileSettings !== null}
+		<LargeHeading>Profile settings</LargeHeading>
+
+		<SmallHeading>Launch</SmallHeading>
+
+		<CustomArgsPref
+			value={profileSettings.customArgs}
+			enabled={profileSettings.customArgsEnabled}
+			setValue={setProfileSettings((value) => (profileSettings!.customArgs = value))}
+			setEnabled={setProfileSettings((value) => (profileSettings!.customArgsEnabled = value))}
+		/>
+	{/if}
+
 	{#if prefs !== null && gamePrefs !== null}
 		<LargeHeading>Global settings</LargeHeading>
 

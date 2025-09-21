@@ -106,6 +106,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
                 modpack: profile_data.modpack.map(Into::into),
                 ignored_updates: Some(profile_data.ignored_updates),
                 sync_data: None,
+                settings: None,
             });
 
             if data.active_profile_index == index {
