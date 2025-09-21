@@ -5,6 +5,7 @@
 ### Added
 
 - Profile-specific custom launch arguments
+- Support for Flatpak Steam installations
 
 ### Fixed
 
@@ -16,6 +17,7 @@
 - Local mod icons sometimes breaking when the mod is disabled
 - Local mod icons not showing in the mod details section
 - Thunderstore deep link import not working (thanks [@DaXcess](https://github.com/DaXcess))
+- Steam installation not being found on certain Linux setups
 
 ### Removed
 
