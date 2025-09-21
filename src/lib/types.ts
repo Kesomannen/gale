@@ -299,7 +299,8 @@ export type Prefs = {
 
 export type GamePrefs = {
 	dirOverride: string | null;
-	customArgs: string[] | null;
+	customArgs: string[];
+	customArgsEnabled: boolean;
 	launchMode: LaunchMode;
 	platform: Platform | null;
 };

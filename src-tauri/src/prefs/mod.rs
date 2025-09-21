@@ -195,6 +195,7 @@ pub struct Prefs {
 pub struct GamePrefs {
     pub dir_override: Option<PathBuf>,
     pub custom_args: Option<Vec<String>>,
+    pub custom_args_enabled: bool,
     pub launch_mode: LaunchMode,
     pub platform: Option<Platform>,
 }
