@@ -88,8 +88,14 @@ pub async fn import_local_mod(
 
     match kind {
         LocalModKind::Zip => {
-            local_mod.icon = install_from_zip(&path, profile, &local_mod.name, mod_loader, &prefs)
-                .context("failed to install")?;
+            let mod_dir = install_from_zip(&path, profile, &local_mod.name, mod_loader, &prefs)
+                .context("install error")?;
+
+            if let Some(mod_dir) = mod_dir {
+                local_mod.icon = mod_dir.join("icon.png").exists_or_none();
+                local_mod.readme = read_text_file(&mod_dir, "README.md")?;
+                local_mod.changelog = read_text_file(&mod_dir, "CHANGELOG.md")?;
+            }
         }
         LocalModKind::Dll => match mod_loader.kind {
             ModLoaderKind::BepInEx { .. } => {
@@ -212,9 +218,15 @@ fn install_from_zip(
 
     fs::remove_dir_all(temp_path).context("failed to remove temporary directory")?;
 
-    let icon = installer
-        .mod_dir(package_name, profile)
-        .and_then(|path| path.join("icon.png").exists_or_none());
+    let directory = installer.mod_dir(package_name, profile);
 
-    Ok(icon)
+    Ok(directory)
+}
+
+fn read_text_file(mod_dir: &Path, file: &str) -> Result<Option<String>> {
+    mod_dir
+        .join(file)
+        .exists_or_none()
+        .map(|path| fs::read_to_string(path).with_context(|| format!("failed to read {file}")))
+        .transpose()
 }

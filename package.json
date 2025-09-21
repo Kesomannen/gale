@@ -48,6 +48,6 @@
 		"rehype-highlight": "^7.0.2",
 		"rehype-raw": "^7.0.0",
 		"runed": "^0.29.1",
-		"svelte-exmarkdown": "^3.0.5"
+		"svelte-exmarkdown": "^5.0.2"
 	}
 }

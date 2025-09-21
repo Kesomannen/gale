@@ -19,7 +19,6 @@ mod logger;
 mod prefs;
 mod profile;
 mod state;
-mod telemetry;
 mod thunderstore;
 mod util;
 
@@ -52,9 +51,6 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     if !args.is_empty() && !deep_link::handle(app.handle(), args.clone()) {
         cli::run(args, app.handle());
     }
-
-    let handle = app.handle().to_owned();
-    tauri::async_runtime::spawn(async move { telemetry::send_app_start_event(handle).await });
 
     let handle = app.handle().to_owned();
     tauri::async_runtime::spawn(async move {
@@ -133,6 +129,7 @@ pub fn run() {
             profile::commands::open_mod_dir,
             profile::commands::open_game_log,
             profile::commands::create_desktop_shortcut,
+            profile::commands::get_local_markdown,
             profile::commands::set_custom_args,
             profile::launch::commands::launch_game,
             profile::launch::commands::get_launch_args,

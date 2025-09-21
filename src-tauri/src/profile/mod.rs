@@ -237,17 +237,20 @@ impl Profile {
             .ok_or_eyre("mod not found in profile")
     }
 
+    fn get_mod_ok(&self, uuid: Uuid) -> Option<&ProfileMod> {
+        self.mods.iter().find(|p| p.uuid() == uuid)
+    }
+
     fn get_mod(&self, uuid: Uuid) -> Result<&ProfileMod> {
-        self.mods
-            .iter()
-            .find(|p| p.uuid() == uuid)
-            .ok_or_eyre("mod not found in profile")
+        self.get_mod_ok(uuid).ok_or_eyre("mod not found in profile")
+    }
+
+    fn get_mod_ok_mut(&mut self, uuid: Uuid) -> Option<&mut ProfileMod> {
+        self.mods.iter_mut().find(|p| p.uuid() == uuid)
     }
 
     fn get_mod_mut(&mut self, uuid: Uuid) -> Result<&mut ProfileMod> {
-        self.mods
-            .iter_mut()
-            .find(|p| p.uuid() == uuid)
+        self.get_mod_ok_mut(uuid)
             .ok_or_eyre("mod not found in profile")
     }
 
@@ -360,6 +363,8 @@ pub struct LocalMod {
     pub uuid: Uuid,
     #[serde(default)]
     pub file_size: u64,
+    pub readme: Option<String>,
+    pub changelog: Option<String>,
 }
 
 impl LocalMod {

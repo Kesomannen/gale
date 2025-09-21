@@ -293,7 +293,6 @@ export type R2ImportData = {
 export type Prefs = {
 	dataDir: string;
 	cacheDir: string;
-	sendTelemetry: boolean;
 	fetchModsAutomatically: boolean;
 	pullBeforeLaunch: boolean;
 	zoomFactor: number;
@@ -327,4 +326,4 @@ export type ModContextItem = {
 
 export type Zoom = { factor: number } | { delta: number };
 
-export type MarkdownCache = 'readme' | 'changelog';
+export type MarkdownType = 'readme' | 'changelog';
