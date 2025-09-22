@@ -31,7 +31,7 @@ pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> 
         .join("pfx")
         .join("user.reg");
 
-    debug!(path = %wine_reg_path, "reading registry file");
+    debug!(path = %wine_reg_path.display(), "reading registry file");
 
     let text =
         fs::read_to_string(&wine_reg_path).fs_context("reading wine registry", &wine_reg_path)?;
