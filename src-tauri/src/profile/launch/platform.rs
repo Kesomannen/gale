@@ -6,11 +6,10 @@ use std::{
 use eyre::{bail, ensure, Context, OptionExt, Result};
 use tracing::{info, warn};
 
-#[cfg(target_os = "windows")]
-use crate::util::fs::PathExt;
 use crate::{
     game::{platform::Platform, Game},
     prefs::Prefs,
+    util::fs::PathExt,
 };
 
 pub fn create_launch_command(
