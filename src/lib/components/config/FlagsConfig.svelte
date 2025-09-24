@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Select from '$lib/components/ui/Select.svelte';
 	import { setConfigEntry } from '$lib/config';
+	import { m } from '$lib/paraglide/messages';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import { selectItems } from '$lib/util';
 	import ResetConfigButton from './ResetConfigButton.svelte';
@@ -33,7 +34,7 @@
 <Select
 	type="multiple"
 	triggerClass="grow overflow-hidden"
-	placeholder="Select flags"
+	placeholder={m.flagsConfig_placeholder()}
 	items={selectItems(content.options)}
 	disabled={locked}
 	{onValueChange}

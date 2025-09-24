@@ -4,6 +4,7 @@
 	import { invoke } from '$lib/invoke';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
 	import type { Dependant, Mod } from '$lib/types';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		title: string;
@@ -69,12 +70,11 @@
 
 	{#snippet buttons()}
 		<Button onclick={executeOne} color="primary" class="truncate">
-			{verb}
-			{name} only
+			{m.dependantsDialog_button_executeOne({ verb, name })}
 		</Button>
 
 		<Button onclick={executeAll} color={positive ? 'accent' : 'red'}>
-			{verb} all
+			{m.dependantsDialog_button_executeAll({verb})}
 		</Button>
 	{/snippet}
 </ConfirmDialog>

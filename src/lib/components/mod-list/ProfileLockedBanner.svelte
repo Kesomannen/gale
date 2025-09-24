@@ -3,6 +3,7 @@
 	import type { ClassValue } from 'clsx';
 	import Info from '../ui/Info.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		class?: ClassValue;
@@ -18,10 +19,7 @@
 	]}
 >
 	<Icon icon="mdi:lock" class="mr-2 text-xl" />
-	<span class="mr-auto">Profile is locked</span>
+	<span class="mr-auto">{m.profileLockedBanner_title()}</span>
 
-	<Info
-		>Modifications to this profile are disabled to prevent desyncs with its owner {profiles.active
-			?.sync?.owner.displayName}.</Info
-	>
+	<Info>{m.profileLockedBanner_content({name : profiles.active?.sync?.owner.displayName ?? m.unknown()})}</Info>
 </div>

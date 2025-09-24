@@ -9,6 +9,7 @@
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
 	import ConfigFileList from '$lib/components/config/ConfigFileList.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let selectedFile: ConfigFile | null = $state(null);
 	let selectedSection: ConfigSection | null = $state(null);
@@ -27,7 +28,7 @@
 				{selectedFile.relativePath}
 				{#if selectedSection}
 					<span class="text-primary-400">/</span>
-					{selectedSection.name.length > 0 ? selectedSection.name : '<Nameless section>'}
+					{selectedSection.name.length > 0 ? selectedSection.name : m.config_nameLess()}
 				{/if}
 			</div>
 
@@ -39,8 +40,7 @@
 				/>
 			{:else if selectedFile.type === 'unsupported'}
 				<div class="text-primary-400 mb-1 px-4">
-					This file is in an unsupported format. Please open it in an external program to make
-					changes.
+					{m.config_unsupported_content()}
 				</div>
 				<Button
 					class="mx-4 max-w-max"
@@ -48,11 +48,11 @@
 					onclick={() => api.config.openFile(selectedFile!)}
 					icon="mdi:open-in-new"
 				>
-					Open in external program
+					{m.config_unsupported_button()}
 				</Button>
 			{:else if selectedFile.type === 'err'}
 				<div class="text-primary-400 mb-1 px-4">
-					An error occured while reading this config file:
+					{m.config_err_content()}
 				</div>
 				<code class="bg-primary-900 mx-4 mb-1 flex rounded-sm p-4 text-red-500">
 					{capitalize(selectedFile.error)}
@@ -63,12 +63,12 @@
 					onclick={() => api.config.openFile(selectedFile!)}
 					icon="icon=mdi:open-in-new"
 				>
-					Open in external program
+					{m.config_err_button()}
 				</Button>
 			{/if}
 		{:else}
 			<div class="text-primary-400 flex w-full grow items-center justify-center text-lg">
-				Select a config file to start editing
+				{m.config_content()}
 			</div>
 		{/if}
 	</div>
