@@ -19,7 +19,8 @@ export function shortenFileSize(size: number): string {
 
 function pluralize(str: string): string {
 	return isLatinAlphabet(str) ? str + 's' : str;
-  
+}
+
 export function formatModName(name: string): string {
 	return name.replace(/_/g, ' ');
 }

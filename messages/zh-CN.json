@@ -137,8 +137,6 @@
     "prefs_miscellaneous_fetchMods_content_1": "是否每15分钟自动获取模组。此设置可确保模组列表保持相对最新状态，但可关闭该功能以节省带宽。",
     "prefs_miscellaneous_fetchMods_content_2": "要手动触发获取操作，请前往 ",
     "prefs_miscellaneous_fetchMods_content_3": "文件 > 拉取模组",
-    "prefs_miscellaneous_sendTelemetry_title": "发送统计数据",
-    "prefs_miscellaneous_sendTelemetry_content": "应用启动时是否发送匿名使用统计数据。",
     "prefs_miscellaneous_pullBeforeLaunch_title": "启动前拉取更新",
     "prefs_miscellaneous_pullBeforeLaunch_content": "是否在启动游戏前从同步的配置中拉取更新。这可以确保您始终使用最新的模组版本。",
     "prefs_gameSettings_title": "{game} 设置",
@@ -362,8 +360,8 @@
     "exportCodeDialog_content_2": "导出完成！代码已复制到您的剪贴板:",
     "exportCodeDialog_content_unknown": "未知配置",
 
-    "modInfoDialog_noFound": "未找到 {kind}",
-    "modInfoDIalog_failed": "加载 {kind} 失败: {error}",
+    "modInfoDialog_noFound": "未找到 {type}",
+    "modInfoDIalog_failed": "加载 {type} 失败: {error}",
 
     "importR2Dialog_title": "从其他模组管理导入配置",
     "importR2Dialog_content_1": "这将导入配置到",
