@@ -22,33 +22,33 @@ struct MarkdownResponse {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum MarkdownCache {
+pub enum MarkdownKind {
     Readme,
     Changelog,
 }
 
-impl Display for MarkdownCache {
+impl Display for MarkdownKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MarkdownCache::Readme => write!(f, "readme"),
-            MarkdownCache::Changelog => write!(f, "changelog"),
+            MarkdownKind::Readme => write!(f, "readme"),
+            MarkdownKind::Changelog => write!(f, "changelog"),
         }
     }
 }
 
 pub async fn get_markdown(
-    cache: MarkdownCache,
-    mod_ref: ModId,
+    cache: MarkdownKind,
+    mod_id: ModId,
     app: &AppHandle,
 ) -> Result<Option<String>> {
     let table = format!("{cache}_cache");
-    if let Some(cached) = app.db().get_cached(&table, mod_ref.version_uuid)? {
+    if let Some(cached) = app.db().get_cached(&table, mod_id.version_uuid)? {
         return Ok(cached);
     }
 
     let url = {
         let thunderstore = app.lock_thunderstore();
-        let ident = mod_ref.borrow(&thunderstore)?.ident();
+        let ident = mod_id.borrow(&thunderstore)?.ident();
 
         format!(
             "https://thunderstore.io/api/experimental/package/{}/{}/{}/{}/",
@@ -69,7 +69,7 @@ pub async fn get_markdown(
         .await?;
 
     app.db()
-        .insert_cached(&table, mod_ref.version_uuid, response.markdown.as_deref())?;
+        .insert_cached(&table, mod_id.version_uuid, response.markdown.as_deref())?;
 
     Ok(response.markdown)
 }

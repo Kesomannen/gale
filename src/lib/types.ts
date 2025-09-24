@@ -291,7 +291,6 @@ export type R2ImportData = {
 export type Prefs = {
 	dataDir: string;
 	cacheDir: string;
-	sendTelemetry: boolean;
 	fetchModsAutomatically: boolean;
 	pullBeforeLaunch: boolean;
 	zoomFactor: number;
@@ -301,7 +300,8 @@ export type Prefs = {
 
 export type GamePrefs = {
 	dirOverride: string | null;
-	customArgs: string[] | null;
+	customArgs: string[];
+	customArgsEnabled: boolean;
 	launchMode: LaunchMode;
 	platform: Platform | null;
 };
@@ -325,4 +325,4 @@ export type ModContextItem = {
 
 export type Zoom = { factor: number } | { delta: number };
 
-export type MarkdownCache = 'readme' | 'changelog';
+export type MarkdownType = 'readme' | 'changelog';

@@ -128,7 +128,9 @@ impl Profile {
         let found = thunderstore::query::query_mods(args, mods)
             .map(|queryable| {
                 let (data, uuid) = match queryable.kind {
-                    QueryableProfileModKind::Local(local) => (local.clone().into(), local.uuid),
+                    QueryableProfileModKind::Local(local) => {
+                        (local.clone().into_frontend(Some(self)), local.uuid)
+                    }
                     QueryableProfileModKind::Thunderstore(remote) => {
                         (remote.into_frontend(Some(self)), remote.package.uuid)
                     }

@@ -19,8 +19,6 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 ## Installation
 
-By installing Gale, you agree to the [Privacy Policy](https://github.com/Kesomannen/gale/blob/master/privacy_policy.md).
-
 ### Windows
 
 **From Thunderstore**

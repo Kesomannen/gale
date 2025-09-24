@@ -3,7 +3,6 @@ use std::fs;
 use eyre::{Context, Result};
 use itertools::Itertools;
 use tracing::{info, warn};
-use uuid::Uuid;
 
 use crate::{
     game::{self, platform::Platform},
@@ -24,7 +23,7 @@ pub fn should_migrate() -> bool {
         .exists()
 }
 
-pub fn migrate() -> Result<(SaveData, Prefs, Option<Uuid>)> {
+pub fn migrate() -> Result<(SaveData, Prefs)> {
     info!("migrating legacy save data");
 
     let prefs_path = util::path::default_app_config_dir().join("prefs.json");
@@ -33,12 +32,11 @@ pub fn migrate() -> Result<(SaveData, Prefs, Option<Uuid>)> {
         .context("failed to read prefs.json")?;
 
     let manager_data = read_manager_data(&prefs)?;
-    let user_id = read_user_id().map(|data| data.user_id).ok();
 
     fs::rename(&prefs_path, prefs_path.with_extension("old"))
         .context("failed to rename prefs.json")?;
 
-    Ok((manager_data, prefs, user_id))
+    Ok((manager_data, prefs))
 }
 
 fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
@@ -128,16 +126,10 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
     })
 }
 
-fn read_user_id() -> Result<legacy::TelemetryData> {
-    let path = util::path::default_app_config_dir().join("telementary.json");
-    util::fs::read_json(path)
-}
-
 impl From<legacy::Prefs> for Prefs {
     fn from(legacy: legacy::Prefs) -> Self {
         Prefs {
             data_dir: legacy.data_dir.into(),
-            send_telemetry: legacy.send_telemetry,
             fetch_mods_automatically: legacy.fetch_mods_automatically,
             zoom_factor: legacy.zoom_factor,
             game_prefs: legacy
@@ -154,7 +146,8 @@ impl From<legacy::GamePrefs> for GamePrefs {
     fn from(legacy: legacy::GamePrefs) -> Self {
         GamePrefs {
             dir_override: legacy.dir_override,
-            custom_args: legacy.custom_args,
+            custom_args: legacy.custom_args.clone(),
+            custom_args_enabled: legacy.custom_args.is_some(),
             launch_mode: legacy.launch_mode.into(),
             platform: legacy.platform.map(Into::into),
         }
@@ -240,6 +233,8 @@ impl From<legacy::LocalMod> for LocalMod {
             dependencies: legacy.dependencies,
             uuid: legacy.uuid,
             file_size: legacy.file_size,
+            readme: None,
+            changelog: None,
         }
     }
 }
@@ -412,11 +407,5 @@ mod legacy {
         Oculus,
         Origin,
         XboxStore,
-    }
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct TelemetryData {
-        pub user_id: Uuid,
     }
 }

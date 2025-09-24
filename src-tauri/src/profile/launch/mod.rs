@@ -61,7 +61,11 @@ impl ManagedGame {
                 (
                     prefs.launch_mode.clone(),
                     prefs.platform,
-                    prefs.custom_args.as_ref(),
+                    if prefs.custom_args_enabled {
+                        prefs.custom_args.as_ref()
+                    } else {
+                        None
+                    },
                 )
             })
             .unwrap_or_else(|| {
@@ -76,7 +80,7 @@ impl ManagedGame {
             // If the setting is `Launcher` and we have a platform, use the platform-specific
             // launch command (if there is one). Otherwise, fall back to direct execution.
             (LaunchMode::Launcher, Some(platform)) => {
-                platform::launch_command(game_dir, platform, self.game, prefs).transpose()
+                platform::create_launch_command(game_dir, platform, self.game, prefs).transpose()
             }
             _ => None,
         }

@@ -17,17 +17,22 @@
 
 	let { selectedFile = $bindable(null), selectedSection = $bindable(null) }: Props = $props();
 
+	let currentProfileId: number | null = null;
+
 	let files: ConfigFile[] | null = $state(null);
 
 	let searchTerm = $state('');
 
 	$effect(() => {
-		profiles.active;
+		// whever we switch to another profile, refresh the config list
+		if (profiles.active && profiles.active.id !== currentProfileId) {
+			currentProfileId = profiles.active.id;
 
-		files = null;
-		selectedFile = null;
-		selectedSection = null;
-		refresh();
+			files = null;
+			selectedFile = null;
+			selectedSection = null;
+			refresh();
+		}
 	});
 
 	let shownFiles = $derived(sortAndFilterFiles(searchTerm, files ?? []));

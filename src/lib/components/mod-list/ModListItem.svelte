@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../../types';
 	import Icon from '@iconify/svelte';
-	import { modIconSrc } from '$lib/util';
+	import { formatModName, modIconSrc } from '$lib/util';
 	import type { MouseEventHandler } from 'svelte/elements';
 	import { ContextMenu } from 'bits-ui';
 	import { activeContextMenu } from '$lib/context';
@@ -54,7 +54,7 @@
 			<div class="shrink grow overflow-hidden pl-3 text-left">
 				<div class="flex items-center gap-1 overflow-hidden">
 					<div class="shrink truncate pr-1 font-medium text-white">
-						{mod.name.replace(/_/g, ' ')}
+						{formatModName(mod.name)}
 					</div>
 					{#if mod.isPinned}
 						<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />

@@ -34,7 +34,8 @@
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
-			customArgs: null,
+			customArgs: [],
+			customArgsEnabled: false,
 			platform: null
 		};
 	});
@@ -125,15 +126,6 @@
 			<br />
 			{m.prefs_miscellaneous_fetchMods_content_2()}<b>{m.prefs_miscellaneous_fetchMods_content_3()}</b>.
 		</TogglePref>
-
-		<TogglePref
-			label={m.prefs_miscellaneous_sendTelemetry_title()}
-			value={prefs.sendTelemetry}
-			set={set((value, prefs) => (prefs.sendTelemetry = value))}
-		>
-			{m.prefs_miscellaneous_sendTelemetry_content()}
-		</TogglePref>
-
 		<TogglePref
 			label={m.prefs_miscellaneous_pullBeforeLaunch_title()}
 			value={prefs.pullBeforeLaunch}
@@ -175,7 +167,9 @@
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}
-			set={set((value) => (gamePrefs!.customArgs = value))}
+			enabled={gamePrefs.customArgsEnabled}
+			setValue={set((value) => (gamePrefs!.customArgs = value))}
+			setEnabled={set((value) => (gamePrefs!.customArgsEnabled = value))}
 		/>
 	{/if}
 </div>

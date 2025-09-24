@@ -1,9 +1,16 @@
-import { get } from 'svelte/store';
-import type { Mod, ConfigEntry, SyncUser, Game } from './types';
+import {
+	type Mod,
+	type ConfigEntry,
+	type SyncUser,
+	type Game,
+	type MarkdownType,
+	ModType
+} from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
 import { isLatinAlphabet } from './i18n';
 import { m } from './paraglide/messages';
+import * as api from '$lib/api';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -12,6 +19,9 @@ export function shortenFileSize(size: number): string {
 
 function pluralize(str: string): string {
 	return isLatinAlphabet(str) ? str + 's' : str;
+  
+export function formatModName(name: string): string {
+	return name.replace(/_/g, ' ');
 }
 
 export function formatTime(seconds: number): string {
@@ -98,7 +108,8 @@ export function modIconSrc(mod: Mod) {
 		let fullName = `${mod.author}-${mod.name}-${mod.version}`;
 		return thunderstoreIconUrl(fullName);
 	} else if (mod.icon !== null) {
-		return convertFileSrc(mod.icon);
+		let path = mod.enabled === false ? mod.icon + '.old' : mod.icon;
+		return convertFileSrc(path);
 	} else {
 		return `games/${games.active?.slug}.webp`;
 	}
@@ -167,4 +178,20 @@ export function selectItems(
 export function emptyOrUndefined(str: string) {
 	if (str.length === 0) return undefined;
 	return str;
+}
+
+export async function getMarkdown(mod: Mod, type: MarkdownType, useLatest = false) {
+	switch (mod.type) {
+		case ModType.Remote:
+			return await api.thunderstore.getMarkdown(
+				{
+					packageUuid: mod.uuid,
+					versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid
+				},
+				type
+			);
+
+		case ModType.Local:
+			return await api.profile.getLocalMarkdown(mod.uuid, type);
+	}
 }

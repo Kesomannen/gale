@@ -9,6 +9,9 @@
 	import { ModType, type Mod, type ModContextItem } from '$lib/types';
 	import {
 		communityUrl,
+		formatModName,
+		getMarkdown,
+		modIconSrc,
 		shortenFileSize,
 		shortenNum,
 		thunderstoreIconUrl,
@@ -61,17 +64,7 @@
 	}
 
 	$effect(() => {
-		if (mod.type === ModType.Remote) {
-			readmePromise = api.thunderstore
-				.getMarkdown(
-					{
-						packageUuid: mod.uuid,
-						versionUuid: mod.versionUuid
-					},
-					'readme'
-				)
-				.then(formatReadme);
-		}
+		readmePromise = getMarkdown(mod, 'readme').then(formatReadme);
 	});
 </script>
 
@@ -89,17 +82,17 @@
 
 	<div class="light-scrollbar grow overflow-x-hidden overflow-y-auto pb-2">
 		<div class="flex flex-wrap gap-4 xl:items-center">
-			<img
-				src={thunderstoreIconUrl(`${mod.author}-${mod.name}-${mod.version}`)}
-				class="max-h-30 max-w-30 rounded-lg"
-				alt=""
-			/>
+			<img src={modIconSrc(mod)} class="max-h-30 max-w-30 rounded-lg" alt="" />
 
 			<div>
-				<a
-					class="pr-4 text-left text-3xl font-bold break-words text-white hover:underline xl:text-4xl"
+				<svelte:element
+					this={mod.type === ModType.Remote ? 'a' : 'div'}
+					class={[
+						'pr-4 text-left text-3xl font-bold break-words text-white xl:text-4xl',
+						mod.type === ModType.Remote && 'hover:underline'
+					]}
 					href={communityUrl(`${mod.author}/${mod.name}`)}
-					target="_blank">{mod.name.replace(/_/g, ' ')}</a
+					target="_blank">{formatModName(mod.name)}</svelte:element
 				>
 
 				{#if mod.author}
@@ -191,25 +184,23 @@
 		</div>
 	{/if}
 
-	{#if mod.type === 'remote'}
-		<button
-			class="group bg-primary-600 hover:bg-primary-500 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
-			onmouseenter={() => changelog.fetchMarkdown()}
-			onclick={() => (changelogOpen = true)}
-		>
-			<Icon icon="mdi:file-document" class="mr-2 text-lg" />
-			{m.modDetails_changeLog()}
-		</button>
+	<button
+		class="group bg-primary-600 hover:bg-primary-500 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
+		onmouseenter={() => changelog.fetchMarkdown()}
+		onclick={() => (changelogOpen = true)}
+	>
+		<Icon icon="mdi:file-document" class="mr-2 text-lg" />
+		{m.modDetails_changeLog()}
+	</button>
 
-		<button
-			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
-			onmouseenter={() => readme.fetchMarkdown()}
-			onclick={() => (readmeOpen = true)}
-		>
-			<Icon icon="mdi:info" class="mr-2 text-lg" />
-			{m.modDetails_details()}
-		</button>
-	{/if}
+	<button
+		class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
+		onmouseenter={() => readme.fetchMarkdown()}
+		onclick={() => (readmeOpen = true)}
+	>
+		<Icon icon="mdi:info" class="mr-2 text-lg" />
+		{m.modDetails_details()}
+	</button>
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		<button
@@ -233,11 +224,11 @@
 	{/if}
 </Dialog>
 
-<ModInfoDialog bind:this={readme} bind:open={readmeOpen} {mod} kind="readme" />
+<ModInfoDialog bind:this={readme} bind:open={readmeOpen} {mod} type="readme" />
 <ModInfoDialog
 	bind:this={changelog}
 	bind:open={changelogOpen}
 	{mod}
 	useLatest={true}
-	kind="changelog"
+	type="changelog"
 />
