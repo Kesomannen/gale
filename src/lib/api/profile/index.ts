@@ -43,3 +43,5 @@ export const openGameLog = () => invoke('open_game_log');
 export const createDesktopShortcut = () => invoke('create_desktop_shortcut');
 export const getLocalMarkdown = (uuid: string, type: MarkdownType) =>
 	invoke<string | null>('get_local_markdown', { uuid, kind: type });
+export const setCustomArgs = (customArgs: string[], enabled: boolean) =>
+	invoke('set_custom_args', { customArgs, enabled });
