@@ -74,6 +74,8 @@ pub struct Profile {
     pub linked_config: HashMap<Uuid, PathBuf>,
     pub modpack: Option<ModpackArgs>,
     pub sync: Option<sync::SyncProfileData>,
+    pub custom_args: Vec<String>,
+    pub custom_args_enabled: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -312,6 +314,8 @@ impl Profile {
             name: self.name.clone(),
             mod_count: self.mods.len(),
             sync: self.sync.clone(),
+            custom_args: self.custom_args.clone(),
+            custom_args_enabled: self.custom_args_enabled,
         }
     }
 
@@ -343,6 +347,8 @@ pub struct FrontendProfile {
     name: String,
     mod_count: usize,
     sync: Option<sync::SyncProfileData>,
+    custom_args: Vec<String>,
+    custom_args_enabled: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -565,6 +571,8 @@ impl ModManager {
                 config_cache: ConfigCache::default(),
                 linked_config: HashMap::new(),
                 sync: saved_profile.sync_data,
+                custom_args: saved_profile.custom_args.unwrap_or_default(),
+                custom_args_enabled: saved_profile.custom_args_enabled.unwrap_or(false),
             };
 
             manager
