@@ -38,12 +38,31 @@
 	let iconPath: string = $state('');
 	let websiteUrl: string = $state('');
 	let includeDisabled: boolean = $state(false);
-	let includeFiles = $state(new SvelteMap<string, boolean>());
 
 	let doneDialogOpen = $state(false);
 	let loading: string | null = $state(null);
 
+	let includeFiles = $state(new SvelteMap<string, boolean>());
 	let includedFileCount = $state(0);
+	let includedFilesSearch = $state('');
+
+	let shownFileIncludes = $derived.by(() => {
+		let fileNames: string[];
+
+		if (includedFilesSearch.length === 0) {
+			fileNames = Array.from(includeFiles.keys());
+		} else {
+			let lowerSearch = includedFilesSearch.toLowerCase();
+
+			fileNames = Array.from(
+				includeFiles
+					.keys()
+					.filter((path) => path.toLowerCase().replace('\\', '/').includes(lowerSearch))
+			);
+		}
+
+		return fileNames.sort();
+	});
 
 	function countIncludedFiles(includeFiles?: SvelteMap<string, boolean>) {
 		if (!includeFiles) return 0;
@@ -363,20 +382,19 @@
 			description={m.modpack_includeFiles_description()}
 		>
 			<details>
-				{#if includeFiles}
-					<summary class="text-primary-300 cursor-pointer text-sm">{m.modpack_includeFiles_preview()}</summary>
-					<Checklist
-						class="mt-1"
-						title={m.modpack_includeFiles_list_title()}
-						items={Array.from(includeFiles.keys()).sort()}
-						getLabel={(item) => item}
-						get={(item) => includeFiles.get(item) ?? false}
-						set={(item, _, value) => {
-							includeFiles.set(item, value);
-							includeFiles = includeFiles;
-						}}
-					/>
-				{/if}
+				<summary class="text-primary-300 cursor-pointer text-sm">{m.modpack_includeFiles_preview()}</summary>
+				<InputField bind:value={includedFilesSearch} class="w-full" placeholder="Filter files..." />
+				<Checklist
+					class="mt-1"
+					title={m.modpack_includeFiles_list_title()}
+					items={shownFileIncludes}
+					getLabel={(item) => item}
+					get={(item) => includeFiles.get(item) ?? false}
+					set={(item, _, value) => {
+						includeFiles.set(item, value);
+						includeFiles = includeFiles;
+					}}
+				/>
 			</details>
 		</FormField>
 
