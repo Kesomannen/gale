@@ -5,28 +5,28 @@ use std::{
 
 use eyre::{bail, ensure, Context, OptionExt, Result};
 use tracing::{info, warn};
-use which::which;
 
 use crate::{
     game::{platform::Platform, Game},
     prefs::Prefs,
+    util::fs::PathExt,
 };
 
-pub fn launch_command(
+pub fn create_launch_command(
     game_dir: &Path,
     platform: Platform,
     game: Game,
     prefs: &Prefs,
 ) -> Result<Option<Command>> {
     match platform {
-        Platform::Steam => steam_command(game_dir, game, prefs).map(Some),
-        Platform::EpicGames => epic_command(game).map(Some),
+        Platform::Steam => create_steam_command(game_dir, game, prefs).map(Some),
+        Platform::EpicGames => create_epic_command(game).map(Some),
         _ => Ok(None),
     }
 }
 
 #[allow(unused_variables)] // allow unused game_dir on windows
-fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> {
+fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> {
     let Some(steam) = &game.platforms.steam else {
         bail!("{} is not available on Steam", game.name)
     };
@@ -48,53 +48,87 @@ fn steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Command> 
         }
     }
 
-    let mut command = Command::new(find_steam_binary()?);
+    let mut command = create_base_steam_command()?;
     command.arg("-applaunch").arg(steam.id.to_string());
 
     Ok(command)
 }
 
-fn find_steam_binary() -> Result<PathBuf> {
-    let path = which("steam").unwrap_or_else(|_| {
-        #[cfg(target_os = "windows")]
-        match read_steam_registry() {
-            Ok(path) => {
-                info!(
-                    "read steam installation path from registry: {}",
-                    path.display()
-                );
-                path.join("steam.exe")
-            }
-            Err(err) => {
-                warn!(
-                    "failed to read steam installation path from registry: {:#}, using default",
-                    err
-                );
-                r"C:\Program Files (x86)\Steam\steam.exe".into()
-            }
+#[cfg(target_os = "windows")]
+fn create_base_steam_command() -> Result<Command> {
+    let path = match read_steam_registry() {
+        Ok(install_dir) => {
+            let exe_path = install_dir.join("steam.exe");
+
+            info!(
+                "read steam installation path from registry: {}",
+                exe_path.display()
+            );
+
+            exe_path
         }
+        Err(err) => {
+            warn!("failed to read steam installation path from registry: {err:#}, using fallback path");
 
-        #[cfg(target_os = "linux")]
-        "/usr/bin/steam".into()
-    });
+            r"C:\Program Files (x86)\Steam\steam.exe".into()
+        }
+    };
 
-    ensure!(
-        path.exists(),
-        "failed to find Steam installation, is it not installed?"
+    let path = path
+        .exists_or_none()
+        .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
+
+    Ok(Command::new(path))
+}
+
+#[cfg(target_os = "linux")]
+fn create_base_steam_command() -> Result<Command> {
+    use tracing::debug;
+
+    if let Ok(path) = which::which("steam") {
+        info!("found steam installation via which: {}", path.display());
+        return Ok(Command::new(path));
+    }
+
+    let mut flatpak_check = Command::new("flatpak");
+    flatpak_check.args(["info", "com.valvesoftware.Steam"]);
+
+    debug!("checking for steam flatpak installation with command {flatpak_check:?}");
+
+    if flatpak_check.status().is_ok_and(|status| status.success()) {
+        info!("using flatpak steam installation");
+
+        let mut command = Command::new("flatpak");
+        command.args(["run", "com.valvesoftware.Steam"]);
+
+        return Ok(command);
+    }
+
+    let path = PathBuf::from("/usr/bin/steam")
+        .exists_or_none()
+        .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
+
+    info!(
+        "using steam installation at fallback path: {}",
+        path.display()
     );
 
-    Ok(path)
+    Ok(Command::new(path))
 }
 
 #[cfg(target_os = "windows")]
 fn read_steam_registry() -> Result<PathBuf> {
+    use tracing::debug;
     use winreg::enums::*;
     use winreg::RegKey;
 
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
 
+    debug!("reading InstallPath from {key:?}");
+
     let path: String = key.get_value("InstallPath")?;
+
     Ok(PathBuf::from(path))
 }
 
@@ -146,7 +180,7 @@ pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
         .ok_or_eyre(format!("App ID {} not found in Steam appinfo.vdf", app_id))
 }
 
-fn epic_command(game: Game) -> Result<Command> {
+fn create_epic_command(game: Game) -> Result<Command> {
     let Some(epic) = &game.platforms.epic_games else {
         bail!("{} is not available on Epic Games", game.name)
     };

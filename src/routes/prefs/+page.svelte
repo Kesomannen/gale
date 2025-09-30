@@ -21,6 +21,7 @@
 	import { useNativeMenu } from '$lib/theme';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
+	import profiles from '$lib/state/profile.svelte';
 	import FontFamilyPref from '$lib/components/prefs/FontFamilyPref.svelte';
 
 	let prefs: Prefs | null = $state(null);
@@ -178,6 +179,21 @@
 			setValue={set((value) => (gamePrefs!.customArgs = value))}
 			setEnabled={set((value) => (gamePrefs!.customArgsEnabled = value))}
 		/>
+
+		{#if profiles.active}
+			<LargeHeading>Profile settings</LargeHeading>
+
+			<SmallHeading>Launch</SmallHeading>
+
+			<CustomArgsPref
+				value={profiles.active.customArgs}
+				enabled={profiles.active.customArgsEnabled}
+				setValue={async (value) =>
+					await api.profile.setCustomArgs(value, profiles.active!.customArgsEnabled)}
+				setEnabled={async (value) =>
+					await api.profile.setCustomArgs(profiles.active!.customArgs, value)}
+			/>
+		{/if}
 	{/if}
 </div>
 

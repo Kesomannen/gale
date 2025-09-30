@@ -55,6 +55,8 @@ export type ProfileInfo = {
 	name: string;
 	modCount: number;
 	sync: SyncProfileInfo | null;
+	customArgs: string[];
+	customArgsEnabled: boolean;
 };
 
 export type SyncProfileInfo = {
@@ -324,7 +326,7 @@ export type ModContextItem = {
 
 export type Zoom = { factor: number } | { delta: number };
 
-export type MarkdownCache = 'readme' | 'changelog';
+export type MarkdownType = 'readme' | 'changelog';
 
 export type LaunchOptionType =
 	| 'none'

@@ -129,6 +129,8 @@ pub fn run() {
             profile::commands::open_mod_dir,
             profile::commands::open_game_log,
             profile::commands::create_desktop_shortcut,
+            profile::commands::get_local_markdown,
+            profile::commands::set_custom_args,
             profile::launch::commands::launch_game,
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,

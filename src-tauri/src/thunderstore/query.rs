@@ -204,8 +204,8 @@ impl IntoFrontendMod for BorrowedMod<'_> {
     }
 }
 
-impl From<LocalMod> for FrontendMod {
-    fn from(value: LocalMod) -> Self {
+impl IntoFrontendMod for LocalMod {
+    fn into_frontend(self, _profile: Option<&Profile>) -> FrontendMod {
         let LocalMod {
             name,
             description,
@@ -215,7 +215,7 @@ impl From<LocalMod> for FrontendMod {
             dependencies,
             icon,
             ..
-        } = value;
+        } = self;
 
         FrontendMod {
             name,

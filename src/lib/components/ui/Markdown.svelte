@@ -2,7 +2,6 @@
 	import type { Plugin } from 'svelte-exmarkdown';
 	import Markdown, { denylist } from 'svelte-exmarkdown';
 	import { gfmPlugin } from 'svelte-exmarkdown/gfm';
-	import MarkdownLink from './MarkdownLink.svelte';
 	import rehypeRaw from 'rehype-raw';
 	import 'highlight.js/styles/atom-one-dark.css';
 	import csharp from 'highlight.js/lib/languages/csharp';

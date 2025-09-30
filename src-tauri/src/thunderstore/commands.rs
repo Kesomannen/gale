@@ -2,12 +2,15 @@ use eyre::anyhow;
 use tauri::{command, AppHandle};
 
 use super::{
-    cache::MarkdownCache,
     models::FrontendMod,
     query::{self, QueryModsArgs},
-    ModId,
 };
-use crate::{logger, state::ManagerExt, util::cmd::Result};
+use crate::{
+    logger,
+    state::ManagerExt,
+    thunderstore::{cache::MarkdownKind, ModId},
+    util::cmd::Result,
+};
 
 #[command]
 pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMod> {
@@ -54,7 +57,7 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
 #[command]
 pub async fn get_markdown(
     mod_ref: ModId,
-    kind: MarkdownCache,
+    kind: MarkdownKind,
     app: AppHandle,
 ) -> Result<Option<String>> {
     let content = super::cache::get_markdown(kind, mod_ref, &app).await?;

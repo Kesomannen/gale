@@ -8,6 +8,7 @@ use crate::util::error::IoResultExt;
 
 pub fn is_proton(game_dir: &Path) -> Result<bool> {
     if game_dir.join(".forceproton").exists() {
+        debug!(".forceproton file found");
         return Ok(true);
     }
 
@@ -18,6 +19,8 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
 }
 
 pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> Result<()> {
+    debug!("adding wine dll override to steam compatdata");
+
     let wine_reg_path = game_dir
         .parent() // common
         .unwrap()
@@ -28,8 +31,13 @@ pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> 
         .join("pfx")
         .join("user.reg");
 
+    debug!(path = %wine_reg_path.display(), "reading registry file");
+
     let text =
         fs::read_to_string(&wine_reg_path).fs_context("reading wine registry", &wine_reg_path)?;
+
+    debug!(len = text.len(), "read registry file");
+
     let new_text = reg_add_in_section(
         &text,
         r#"[Software\\Wine\\DllOverrides]"#,
@@ -38,9 +46,9 @@ pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> 
     );
 
     if text == new_text {
-        debug!("wine registry is unchanged");
+        info!("wine registry is unchanged");
     } else {
-        info!("writing to wine registry");
+        info!("writing to wine registry file");
         fs::write(&wine_reg_path, new_text).fs_context("writing wine registry", &wine_reg_path)?;
     }
 

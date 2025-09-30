@@ -12,7 +12,9 @@ use crate::{
     game::{self, platform::Platform, Game},
     profile::FrontendManagedGame,
     state::ManagerExt,
-    thunderstore::{query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent},
+    thunderstore::{
+        cache::MarkdownKind, query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent,
+    },
     util::cmd::Result,
 };
 
@@ -412,5 +414,40 @@ pub fn create_desktop_shortcut(app: AppHandle) -> Result<()> {
 
     manager.active_game().create_desktop_shortcut()?;
 
+    Ok(())
+}
+
+#[command]
+pub async fn get_local_markdown(
+    uuid: Uuid,
+    kind: MarkdownKind,
+    app: AppHandle,
+) -> Result<Option<String>> {
+    let manager = app.lock_manager();
+    let profile = manager.active_profile();
+
+    let local_mod = profile.get_mod(uuid).and_then(|profile_mod| {
+        profile_mod
+            .as_local()
+            .map(|(local_mod, _)| local_mod)
+            .ok_or_eyre("mod is not local")
+    })?;
+
+    let str = match kind {
+        MarkdownKind::Readme => &local_mod.readme,
+        MarkdownKind::Changelog => &local_mod.changelog,
+    };
+
+    Ok(str.clone())
+}
+
+#[command]
+pub fn set_custom_args(custom_args: Vec<String>, enabled: bool, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+    profile.custom_args = custom_args;
+    profile.custom_args_enabled = enabled;
+    profile.save(&app, false)?;
+    manager.save_active_game(&app)?;
     Ok(())
 }
