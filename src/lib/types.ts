@@ -305,6 +305,7 @@ export type GamePrefs = {
 	customArgsEnabled: boolean;
 	launchMode: LaunchMode;
 	platform: Platform | null;
+	showSteamLaunchOptions: boolean;
 };
 
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';

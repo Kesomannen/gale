@@ -32,7 +32,12 @@
 		if (currentGameSlug && prefs.gamePrefs.get(currentGameSlug)) {
 			const gamePrefs = prefs.gamePrefs.get(currentGameSlug);
 
-			if (gamePrefs && gamePrefs.launchMode.type === 'launcher' && gamePrefs.platform === 'steam') {
+			if (
+				gamePrefs &&
+				gamePrefs.launchMode.type === 'launcher' &&
+				gamePrefs.platform === 'steam' &&
+				gamePrefs.showSteamLaunchOptions
+			) {
 				try {
 					const options = await api.profile.launch.getSteamLaunchOptions();
 
