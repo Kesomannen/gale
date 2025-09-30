@@ -2,16 +2,15 @@ use eyre::Context;
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{command, AppHandle};
-use tracing::warn;
 
 use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct LaunchOption {
-    pub name: String,
     pub arguments: String,
     #[serde(rename = "type")]
     pub launch_type: String,
+    pub description: Option<String>,
 }
 
 #[command]
@@ -81,41 +80,15 @@ pub fn get_steam_launch_options(app: AppHandle) -> Result<Vec<LaunchOption>> {
                     .unwrap_or("")
                     .to_string();
 
-                let name = match option_type {
-                    "none" | "default" => format!("Play {}", game_name),
-                    "application" => format!("Launch {}", game_name),
-                    "safemode" => format!("Launch {} in Safe Mode", game_name),
-                    "multiplayer" => format!("Launch {} in Multiplayer Mode", game_name),
-                    "config" => format!("Launch Controller Layout Tool"),
-                    "vr" => format!("Launch {} in Steam VR Mode", game_name),
-                    "server" => format!("Launch Dedicated Server"),
-                    "editor" => format!("Launch Game Editor"),
-                    "manual" => format!("Show Manual"),
-                    "benchmark" => format!("Launch Benchmark Tool"),
-                    "option1" | "option2" | "option3" => {
-                        if let Some(description) =
-                            option.get("description").and_then(|d| d.as_str())
-                        {
-                            format!("Play {}", description)
-                        } else {
-                            format!("Play {} ({})", game_name, option_type)
-                        }
-                    }
-                    "othervr" => format!("Launch {} in Oculus VR Mode", game_name),
-                    "openvroverlay" => format!("Launch {} as Steam VR Overlay", game_name),
-                    "osvr" => format!("Launch {} in OSVR Mode", game_name),
-                    "openxr" => format!("Launch {} in OpenXR Mode", game_name),
-                    // "dialog" => format!("Show {} Launch Options", game_name), // Idk what this is
-                    _ => {
-                        warn!("Undefined launch option type: {}", option_type);
-                        format!("Launch {} ({})", game_name, option_type)
-                    }
-                };
+                let description = option
+                    .get("description")
+                    .and_then(|d| d.as_str())
+                    .map(|s| s.to_string());
 
                 launch_options.push(LaunchOption {
-                    name,
                     arguments,
                     launch_type: option_type.to_string(),
+                    description,
                 });
             }
         }

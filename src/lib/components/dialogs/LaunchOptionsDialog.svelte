@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { RadioGroup } from 'bits-ui';
 	import type { LaunchOption } from '$lib/types';
+	import { formatLaunchOptionName } from '$lib/util';
 
 	interface Props {
 		open: boolean;
@@ -58,14 +59,9 @@
 							</div>
 						</div>
 						<div class="flex-1 text-left">
-							<div class="font-medium text-white">{option.name}</div>
-							<!-- <div class="text-primary-400 mt-0.5 text-sm">
-								{#if option.arguments}
-									Arguments: {option.arguments}
-								{:else}
-									No additional arguments
-								{/if}
-							</div> -->
+							<div class="font-medium text-white">
+								{formatLaunchOptionName(option.type, gameName, option.description)}
+							</div>
 						</div>
 					</div>
 				</RadioGroup.Item>

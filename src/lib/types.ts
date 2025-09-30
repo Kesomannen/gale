@@ -350,7 +350,7 @@ export type LaunchOptionType =
 	| { unknown: string };
 
 export interface LaunchOption {
-	name: string;
 	arguments: string;
 	type: LaunchOptionType;
+	description?: string;
 }
