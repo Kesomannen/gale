@@ -58,9 +58,7 @@ impl ManagedGame {
         let (launch_mode, mut command) = self.launch_command(&game_dir, prefs)?;
 
         if let Some(args) = args {
-            if !args.is_empty() {
-                command.args(args.split_whitespace());
-            }
+            command.args(args.split_whitespace());
         }
 
         info!("launching {} with command {:?}", self.game.slug, command);
