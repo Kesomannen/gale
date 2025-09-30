@@ -146,10 +146,13 @@ pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
     use crate::util::vdf_parser::appinfo_vdf_parser::open_appinfo_vdf;
     use serde_json::{Map, Value};
 
-    let steam_binary = find_steam_binary()?;
-    let steam_path = steam_binary
+    let steam_command = create_base_steam_command()?;
+    let steam_binary = steam_command.get_program();
+    let steam_path = Path::new(steam_binary)
         .parent()
-        .ok_or_eyre("Steam binary has no parent directory")?;
+        .ok_or_eyre("Steam binary has no parent directory")?
+        .to_path_buf();
+    drop(steam_command);
 
     let appinfo_path = steam_path.join("appcache").join("appinfo.vdf");
 
