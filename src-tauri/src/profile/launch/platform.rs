@@ -3,7 +3,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, Context, OptionExt, Result};
+use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
 use tracing::{info, warn};
 
 use crate::{
@@ -139,7 +139,7 @@ pub fn get_steam_launch_options(app_id: u32) -> Result<serde_json::Value> {
         .get("config")
         .and_then(|config| config.get("launch"))
         .cloned()
-        .ok_or_eyre(format!("No launch options found for app ID {}", app_id))
+        .ok_or_else(|| eyre!("no launch options found for app ID {}", app_id))
 }
 
 pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
@@ -150,7 +150,7 @@ pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
     let steam_binary = steam_command.get_program();
     let steam_path = Path::new(steam_binary)
         .parent()
-        .ok_or_eyre("Steam binary has no parent directory")?
+        .ok_or_eyre("steam binary has no parent directory")?
         .to_path_buf();
     drop(steam_command);
 
@@ -158,18 +158,18 @@ pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
 
     ensure!(
         appinfo_path.exists(),
-        "Steam appinfo.vdf not found at {}",
+        "steam appinfo.vdf not found at {}",
         appinfo_path.display()
     );
 
-    info!("Reading Steam app info from {}", appinfo_path.display());
+    info!("reading Steam app info from {}", appinfo_path.display());
 
     let appinfo_vdf: Map<String, Value> = open_appinfo_vdf(&appinfo_path);
 
     let entries = appinfo_vdf
         .get("entries")
         .and_then(|e| e.as_array())
-        .ok_or_eyre("No entries found in appinfo.vdf")?;
+        .ok_or_eyre("no entries found in appinfo.vdf")?;
 
     entries
         .iter()
@@ -180,7 +180,7 @@ pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
                 .map_or(false, |id| id == app_id as u64)
         })
         .cloned()
-        .ok_or_eyre(format!("App ID {} not found in Steam appinfo.vdf", app_id))
+        .ok_or_else(|| eyre!("app ID {} not found in Steam appinfo.vdf", app_id))
 }
 
 fn create_epic_command(game: Game) -> Result<Command> {

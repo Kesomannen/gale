@@ -29,7 +29,7 @@
 		prefs.gamePrefs = new Map(Object.entries(prefs.gamePrefs));
 		const currentGameSlug = games.active?.slug;
 
-		if (currentGameSlug && prefs.gamePrefs.get(currentGameSlug)) {
+		if (currentGameSlug) {
 			const gamePrefs = prefs.gamePrefs.get(currentGameSlug);
 
 			if (

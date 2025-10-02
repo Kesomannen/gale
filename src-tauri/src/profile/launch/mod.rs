@@ -5,7 +5,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, eyre, OptionExt, Result};
+use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
@@ -37,6 +37,14 @@ pub enum LaunchMode {
     Launcher,
     #[serde(rename_all = "camelCase")]
     Direct { instances: u32, interval_secs: f32 },
+}
+
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
+pub struct LaunchOption {
+    pub arguments: String,
+    #[serde(rename = "type")]
+    pub launch_type: String,
+    pub description: Option<String>,
 }
 
 impl ManagedGame {
@@ -239,4 +247,41 @@ fn exe_path(game_dir: &Path) -> Result<PathBuf> {
         })
         .map(|entry| entry.path())
         .ok_or_eyre("game executable not found")
+}
+
+pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
+    let raw_options = platform::get_steam_launch_options(steam_id)
+        .context("failed to get Steam launch options")?;
+
+    let mut launch_options = Vec::new();
+
+    if let Some(options_obj) = raw_options.as_object() {
+        for (_, option_value) in options_obj.iter() {
+            if let Some(option) = option_value.as_object() {
+                let option_type = option
+                    .get("type")
+                    .and_then(|t| t.as_str())
+                    .unwrap_or("undefined");
+
+                let arguments = option
+                    .get("arguments")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("")
+                    .to_string();
+
+                let description = option
+                    .get("description")
+                    .and_then(|d| d.as_str())
+                    .map(|s| s.to_string());
+
+                launch_options.push(LaunchOption {
+                    arguments,
+                    launch_type: option_type.to_string(),
+                    description,
+                });
+            }
+        }
+    }
+
+    Ok(launch_options)
 }
