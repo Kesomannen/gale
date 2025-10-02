@@ -86,6 +86,10 @@ impl ManagedGame {
         }
         .unwrap_or_else(|| exe_path(game_dir).map(Command::new))?;
 
+        if matches!(launch_mode, LaunchMode::Direct { .. }) {
+            command.current_dir(game_dir);
+        }
+
         let profile = self.active_profile();
 
         mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
