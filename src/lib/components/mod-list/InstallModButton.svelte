@@ -8,6 +8,7 @@
 	import clsx from 'clsx';
 	import DropdownArrow from '$lib/components/ui/DropdownArrow.svelte';
 	import Spinner from '../ui/Spinner.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		mod: Mod;
@@ -56,16 +57,16 @@
 		{disabled}
 	>
 		{#if locked}
-			Profile locked
+			{m.installModButton_button_locked()}
 		{:else if mod.isInstalled}
-			Already installed
+			{m.installModButton_button_isInstalled()}
 		{:else if loading}
 			<Spinner />
 
-			Installing...
+			{m.installModButton_button_loading()}
 		{:else}
 			<Icon icon="mdi:download" class="align-middle text-xl" />
-			Install
+			{m.installModButton_button_install()}
 
 			{#if downloadSize}
 				({shortenFileSize(downloadSize)})

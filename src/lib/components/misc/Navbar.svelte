@@ -1,32 +1,33 @@
 <script lang="ts">
 	import { PersistedState } from 'runed';
 	import NavbarLink from './NavbarLink.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const links = [
 		{
 			to: '/',
 			icon: 'mdi:account-circle',
-			tooltip: 'Manage profile'
+			tooltip: m.navBar_link_profile()
 		},
 		{
 			to: '/browse',
 			icon: 'mdi:store-search',
-			tooltip: 'Install mods'
+			tooltip: m.navBar_link_browse()
 		},
 		{
 			to: '/config',
 			icon: 'mdi:file-cog',
-			tooltip: 'Edit mod config'
+			tooltip: m.navBar_link_config()
 		},
 		{
 			to: '/modpack',
 			icon: 'mdi-package-variant',
-			tooltip: 'Export modpack'
+			tooltip: m.navBar_link_modpack()
 		},
 		{
 			to: '/prefs',
 			icon: 'mdi:cog',
-			tooltip: 'Edit manager settings'
+			tooltip: m.navBar_link_prefs()
 		}
 	];
 </script>

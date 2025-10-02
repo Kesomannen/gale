@@ -14,6 +14,7 @@
 	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems = [...defaultContextItems];
@@ -104,8 +105,8 @@
 		>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
-					<div class="mt-4 text-lg">No matching mods found</div>
-					<div class="text-primary-400">Try to adjust your search query/filters</div>
+					<div class="mt-4 text-lg">{m.browse_modList_content_1()}</div>
+					<div class="text-primary-400">{m.browse_modList_content_2()}</div>
 				{/if}
 			{/snippet}
 

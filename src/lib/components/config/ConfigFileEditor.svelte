@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$lib/paraglide/messages';
 	import type { ConfigEntry, ConfigFileData, ConfigSection } from '$lib/types';
 	import ConfigEntryField from './ConfigEntryField.svelte';
 
@@ -23,8 +24,7 @@
 
 {#if file.metadata}
 	<div class="text-primary-400 mb-1 px-4 font-medium">
-		Created by {file.metadata.modName}
-		{file.metadata.modVersion}
+		{m.configFileEditor_metadata({ name: file.metadata.modName, version: file.metadata.modVersion })}
 	</div>
 {/if}
 

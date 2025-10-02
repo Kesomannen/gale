@@ -3,6 +3,7 @@
 	import Info from '$lib/components/ui/Info.svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import Icon from '@iconify/svelte';
 	import type { DragEventHandler } from 'svelte/elements';
 
@@ -53,18 +54,21 @@
 </script>
 
 <div class="mt-1 flex items-center">
-	<Label>Set custom launch arguments</Label>
+	<Label>{m.customArgsPref_title()}</Label>
 
 	<Info>
 		<p>
-			Allows you to add custom arguments to the launch command. Depending on <b>Launch mode</b>,
-			these are either ran against the game or launcher executable.
+			{m.customArgsPref_content_1()}<b>{m.customArgsPref_content_2()}</b>{m.customArgsPref_content_3()}
 		</p>
 
 		<p>
-			Only pass one argument per entry, so instead of <code>--foo value</code>, pass
+			{m.customArgsPref_content_4()}
+			<code>--foo value</code>
+			{m.customArgsPref_content_5()}
 			<code>--foo</code>
-			and <code>value</code> separately.
+			{m.customArgsPref_content_6()}
+			<code>value</code>
+			{m.customArgsPref_content_7()}
 		</p>
 	</Info>
 
@@ -116,7 +120,7 @@
 		{/each}
 
 		<InputField
-			placeholder="Enter new argument..."
+			placeholder={m.customArgsPref_placeholder()}
 			bind:value={newArg}
 			onchange={() => {
 				if (newArg.length === 0) return;
