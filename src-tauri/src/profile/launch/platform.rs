@@ -143,7 +143,7 @@ pub fn get_steam_launch_options(app_id: u32) -> Result<serde_json::Value> {
 }
 
 pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
-    use crate::util::vdf_parser::appinfo_vdf_parser::open_appinfo_vdf;
+    use new_vdf_parser::appinfo_vdf_parser::open_appinfo_vdf;
     use serde_json::{Map, Value};
 
     let steam_command = create_base_steam_command()?;
