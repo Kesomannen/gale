@@ -305,6 +305,7 @@ export type GamePrefs = {
 	customArgsEnabled: boolean;
 	launchMode: LaunchMode;
 	platform: Platform | null;
+	showSteamLaunchOptions: boolean;
 };
 
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';
@@ -327,3 +328,30 @@ export type ModContextItem = {
 export type Zoom = { factor: number } | { delta: number };
 
 export type MarkdownType = 'readme' | 'changelog';
+
+export type LaunchOptionType =
+	| 'none'
+	| 'default'
+	| 'application'
+	| 'safemode'
+	| 'multiplayer'
+	| 'config'
+	| 'vr'
+	| 'server'
+	| 'editor'
+	| 'manual'
+	| 'benchmark'
+	| 'option1'
+	| 'option2'
+	| 'option3'
+	| 'othervr'
+	| 'openvroverlay'
+	| 'osvr'
+	| 'openxr'
+	| { unknown: string };
+
+export interface LaunchOption {
+	arguments: string;
+	type: LaunchOptionType;
+	description?: string;
+}

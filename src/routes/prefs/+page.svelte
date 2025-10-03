@@ -35,7 +35,8 @@
 			dirOverride: null,
 			customArgs: [],
 			customArgsEnabled: false,
-			platform: null
+			platform: null,
+			showSteamLaunchOptions: false
 		};
 	});
 
@@ -172,6 +173,18 @@
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>
+
+		{#if gamePrefs.launchMode.type === 'launcher' && gamePrefs.platform === 'steam'}
+			<TogglePref
+				label="Show Steam launch options"
+				value={gamePrefs.showSteamLaunchOptions}
+				set={set((value) => (gamePrefs!.showSteamLaunchOptions = value))}
+			>
+				When enabled, displays Steam launch options defined by the game developer (if any) before
+				starting the game. These options may include different game modes like VR, Safe Mode,
+				Dedicated Server, or other launch configurations specific to the game.
+			</TogglePref>
+		{/if}
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}

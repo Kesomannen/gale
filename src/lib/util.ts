@@ -4,6 +4,7 @@ import {
 	type SyncUser,
 	type Game,
 	type MarkdownType,
+	type LaunchOptionType,
 	ModType
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
@@ -31,6 +32,53 @@ export function formatTime(seconds: number): string {
 
 	let hours = Math.floor(seconds / 3600);
 	return `${hours} hour${hours > 1 ? 's' : ''}`;
+}
+
+export function formatLaunchOptionName(
+	type: LaunchOptionType,
+	gameName: string,
+	description?: string
+): string {
+	switch (type) {
+		case 'none':
+		case 'default':
+			return `Play ${gameName}`;
+		case 'application':
+			return `Launch ${gameName}`;
+		case 'safemode':
+			return `Launch ${gameName} in Safe Mode`;
+		case 'multiplayer':
+			return `Launch ${gameName} in Multiplayer Mode`;
+		case 'config':
+			return 'Launch Controller Layout Tool';
+		case 'vr':
+			return `Launch ${gameName} in Steam VR Mode`;
+		case 'server':
+			return 'Launch Dedicated Server';
+		case 'editor':
+			return 'Launch Game Editor';
+		case 'manual':
+			return 'Show Manual';
+		case 'benchmark':
+			return 'Launch Benchmark Tool';
+		case 'option1':
+		case 'option2':
+		case 'option3':
+			return description ? `Play ${description}` : `Play ${gameName} (${type})`;
+		case 'othervr':
+			return `Launch ${gameName} in Oculus VR Mode`;
+		case 'openvroverlay':
+			return `Launch ${gameName} as Steam VR Overlay`;
+		case 'osvr':
+			return `Launch ${gameName} in OSVR Mode`;
+		case 'openxr':
+			return `Launch ${gameName} in OpenXR Mode`;
+		default:
+			if (typeof type === 'object' && 'unknown' in type) {
+				return `Launch ${gameName} (${type.unknown})`;
+			}
+			return `Launch ${gameName}`;
+	}
 }
 
 export function shortenNum(value: number): string {
