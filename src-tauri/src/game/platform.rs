@@ -23,9 +23,9 @@ pub struct Steam {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct EpicGames<'a> {
+pub struct EpicGames {
     #[serde(default)]
-    pub identifier: Option<&'a str>,
+    pub identifier: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,28 +38,22 @@ pub struct Origin {}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct XboxStore<'a> {
+pub struct XboxStore {
     #[serde(default)]
-    pub identifier: Option<&'a str>,
+    pub identifier: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct Platforms<'a> {
+pub struct Platforms {
     pub steam: Option<Steam>,
-
-    #[serde(borrow)]
-    pub epic_games: Option<EpicGames<'a>>,
-
+    pub epic_games: Option<EpicGames>,
     pub oculus: Option<Oculus>,
-
     pub origin: Option<Origin>,
-
-    #[serde(borrow)]
-    pub xbox_store: Option<XboxStore<'a>>,
+    pub xbox_store: Option<XboxStore>,
 }
 
-impl Platforms<'_> {
+impl Platforms {
     pub fn has(&self, platform: Platform) -> bool {
         match platform {
             Platform::Steam => self.steam.is_some(),

@@ -139,7 +139,7 @@ fn create_epic_command(game: Game) -> Result<Command> {
 
     let url = format!(
         "com.epicgames.launcher://apps/{}?action=launch&silent=true",
-        epic.identifier.unwrap_or(game.name)
+        epic.identifier.as_ref().unwrap_or(&game.name)
     );
 
     info!("launching from Epic Games with URL {}", url);
@@ -184,7 +184,7 @@ fn xbox_game_dir(game: Game) -> Result<PathBuf> {
         bail!("{} is not available on Xbox Store", game.name)
     };
 
-    let name = xbox.identifier.unwrap_or(game.name);
+    let name = xbox.identifier.as_ref().unwrap_or(&game.name);
     let mut query = Command::new("powershell.exe");
     query.args([
         "get-appxpackage",
@@ -222,7 +222,7 @@ fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
         bail!("{} is not available on Epic Games", game.name)
     };
 
-    let name = epic.identifier.unwrap_or(game.name);
+    let name = epic.identifier.as_ref().unwrap_or(&game.name);
     let dat_path: PathBuf =
         PathBuf::from("C:/ProgramData/Epic/UnrealEngineLauncher/LauncherInstalled.dat");
 
@@ -242,7 +242,7 @@ fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
         util::fs::read_json(dat_path).context("failed to read LauncherInstalled.dat file")?;
 
     list.into_iter()
-        .find(|item| item.app_name == name)
+        .find(|item| item.app_name == *name)
         .map(|item| item.install_location)
         .ok_or_eyre("could not find entry in the list of installed games")
 }

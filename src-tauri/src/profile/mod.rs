@@ -16,7 +16,7 @@ use uuid::Uuid;
 use crate::{
     config::ConfigCache,
     db::{self, Db},
-    game::{self, mod_loader::ModLoader, Game},
+    game::{self, Game, ModLoader},
     prefs::Prefs,
     state::ManagerExt,
     thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
@@ -41,7 +41,6 @@ pub fn setup(data: db::SaveData, prefs: &Prefs, db: &Db, app: &AppHandle) -> Res
 }
 
 /// The main state of the app.
-#[derive(Debug)]
 pub struct ModManager {
     /// Holds all the currently managed games.
     ///
@@ -52,7 +51,6 @@ pub struct ModManager {
 }
 
 /// Stores profiles and other state for one game.
-#[derive(Debug)]
 pub struct ManagedGame {
     pub id: i64,
     pub game: Game,
@@ -62,7 +60,6 @@ pub struct ManagedGame {
     pub active_profile_id: i64,
 }
 
-#[derive(Debug)]
 pub struct Profile {
     pub id: i64,
     pub name: String,
@@ -298,12 +295,16 @@ impl Profile {
 
     fn log_path(&self) -> Result<PathBuf> {
         let mod_loader = &self.game.mod_loader;
-        let relative = mod_loader
-            .log_path()
-            .ok_or_else(|| eyre!("log file is unsupported for {}", mod_loader.as_str()))?;
 
-        self.path
-            .join(relative)
+        mod_loader
+            .inner()
+            .log_path(&self.path)
+            .ok_or_else(|| {
+                eyre!(
+                    "log file is unsupported for {}",
+                    mod_loader.inner().to_str()
+                )
+            })?
             .exists_or_none()
             .ok_or_eyre("no log file found")
     }
@@ -587,7 +588,7 @@ impl ModManager {
         Ok(manager)
     }
 
-    pub fn active_mod_loader(&self) -> &'static ModLoader<'static> {
+    pub fn active_mod_loader(&self) -> &'static ModLoader {
         &self.active_game.mod_loader
     }
 

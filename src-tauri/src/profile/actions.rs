@@ -13,9 +13,7 @@ use uuid::Uuid;
 
 use super::{
     export::{IncludeExtensions, IncludeGenerated},
-    import,
-    install::PackageInstaller,
-    Dependant, ManagedGame, Profile, ProfileMod,
+    import, Dependant, ManagedGame, Profile, ProfileMod,
 };
 use crate::{
     config::ConfigCache,
@@ -103,7 +101,7 @@ impl Profile {
         let profile_mod = &self.mods[index];
 
         self.installer_for(profile_mod)
-            .uninstall(profile_mod, self)?;
+            .uninstall(&self.path, &profile_mod.full_name())?;
 
         self.mods.remove(index);
 
@@ -195,7 +193,7 @@ impl Profile {
 
         if let Some(path) = self
             .installer_for(profile_mod)
-            .mod_dir(&profile_mod.full_name(), self)
+            .package_dir(&self.path, &profile_mod.full_name())?
         {
             open::that(path)?;
             Ok(())
@@ -204,7 +202,7 @@ impl Profile {
         }
     }
 
-    fn installer_for(&self, profile_mod: &ProfileMod) -> Box<dyn PackageInstaller> {
+    fn installer_for(&self, profile_mod: &ProfileMod) -> &dyn loadsmith::PackageInstaller {
         self.game.mod_loader.installer_for(&profile_mod.full_name())
     }
 

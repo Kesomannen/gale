@@ -33,10 +33,10 @@ impl From<Game> for FrontendGame {
         let platforms = value.platforms.iter().collect();
 
         Self {
-            name: value.name,
+            name: &value.name,
             slug: &*value.slug,
             popular: value.popular,
-            mod_loader: value.mod_loader.as_str(),
+            mod_loader: value.mod_loader.inner().to_str(),
             platforms,
         }
     }

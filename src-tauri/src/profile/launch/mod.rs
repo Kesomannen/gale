@@ -1,6 +1,5 @@
 use core::str;
 use std::{
-    fs,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -9,22 +8,17 @@ use eyre::{bail, ensure, eyre, OptionExt, Result};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
-use tracing::{info, warn};
+use tracing::info;
 
 use super::ManagedGame;
 use crate::{
     game::Game,
     logger::log_webview_err,
     prefs::{GamePrefs, Prefs},
-    util::{
-        self,
-        fs::{Overwrite, UseLinks},
-    },
 };
 
 #[cfg(target_os = "linux")]
 mod linux;
-mod mod_loader;
 mod platform;
 
 pub mod commands;
@@ -42,9 +36,12 @@ pub enum LaunchMode {
 impl ManagedGame {
     pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
         let game_dir = locate_game_dir(self.game, prefs)?;
-        if let Err(err) = self.copy_required_files(&game_dir) {
-            warn!("failed to copy required files to game directory: {:#}", err);
-        }
+
+        let profile = self.active_profile();
+        self.game
+            .mod_loader
+            .inner()
+            .prepare_launch(&profile.path, &game_dir)?;
 
         let (launch_mode, command) = self.launch_command(&game_dir, prefs)?;
         info!("launching {} with command {:?}", self.game.slug, command);
@@ -92,7 +89,13 @@ impl ManagedGame {
 
         let profile = self.active_profile();
 
-        mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
+        let loader_args = self
+            .game
+            .mod_loader
+            .inner()
+            .get_launch_args(&profile.path)?;
+
+        command.args(loader_args);
 
         if let Some(custom_args) = game_custom_args {
             command.args(custom_args);
@@ -103,46 +106,6 @@ impl ManagedGame {
         }
 
         Ok((launch_mode, command))
-    }
-
-    fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
-        const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
-        const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
-
-        let entries = self
-            .active_profile()
-            .path
-            .read_dir()?
-            .filter_map(|entry| entry.ok())
-            .filter(|entry| {
-                let name = entry.file_name();
-
-                if EXCLUDES.iter().any(|exclude| name == *exclude) {
-                    return false;
-                }
-
-                let is_file = entry.file_type().is_ok_and(|ty| ty.is_file());
-                let is_included_dir = INCLUDE_DIRS.iter().any(|dir| *dir == name);
-
-                return is_file || is_included_dir;
-            });
-
-        for entry in entries {
-            info!(
-                "copying {} to game directory",
-                entry.file_name().to_string_lossy()
-            );
-
-            let to_path = game_dir.join(entry.file_name());
-
-            if entry.file_type()?.is_file() {
-                fs::copy(entry.path(), to_path)?;
-            } else {
-                util::fs::copy_dir(entry.path(), to_path, Overwrite::Yes, UseLinks::No)?;
-            }
-        }
-
-        Ok(())
     }
 }
 

@@ -38,8 +38,6 @@ use crate::{
 mod cache;
 pub mod commands;
 mod fs;
-mod installers;
-pub use installers::*;
 pub mod queue;
 
 type BeforeInstallHandler =

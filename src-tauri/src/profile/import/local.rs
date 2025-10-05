@@ -12,8 +12,7 @@ use uuid::Uuid;
 use zip::ZipArchive;
 
 use crate::{
-    game::mod_loader::{ModLoader, ModLoaderKind},
-    prefs::Prefs,
+    game::ModLoader,
     profile::{install::InstallOptions, LocalMod, Profile, ProfileMod},
     state::ManagerExt,
     thunderstore::PackageManifest,
@@ -68,7 +67,6 @@ pub async fn import_local_mod(
             .context("failed to install dependencies")?;
     }
 
-    let prefs = app.lock_prefs();
     let mut manager = app.lock_manager();
 
     let mod_loader = manager.active_mod_loader();
@@ -88,7 +86,7 @@ pub async fn import_local_mod(
 
     match kind {
         LocalModKind::Zip => {
-            let mod_dir = install_from_zip(&path, profile, &local_mod.name, mod_loader, &prefs)
+            let mod_dir = install_from_zip(&path, profile, &local_mod.name, mod_loader)
                 .context("install error")?;
 
             if let Some(mod_dir) = mod_dir {
@@ -97,8 +95,8 @@ pub async fn import_local_mod(
                 local_mod.changelog = read_text_file(&mod_dir, "CHANGELOG.md")?;
             }
         }
-        LocalModKind::Dll => match mod_loader.kind {
-            ModLoaderKind::BepInEx { .. } => {
+        LocalModKind::Dll => match mod_loader.inner().to_str() {
+            "BepInEx" => {
                 let target: PathBuf = ["BepInEx", "plugins", &local_mod.name, &local_mod.name]
                     .iter()
                     .collect();
@@ -199,26 +197,20 @@ fn install_from_zip(
     profile: &Profile,
     package_name: &str,
     mod_loader: &'static ModLoader,
-    prefs: &Prefs,
 ) -> Result<Option<PathBuf>> {
     // dont use tempdir since we need the files on the same drive as the destination
     // for hard linking to work
 
-    let temp_path = prefs.data_dir.join("temp").join("extract");
-    fs::create_dir_all(&temp_path).context("failed to create temporary directory")?;
-
-    let reader = fs::read(src)
+    let reader: Box<dyn loadsmith::AnyZipReader> = fs::read(src)
         .map(Cursor::new)
+        .map(Box::new)
         .context("failed to read file")?;
     let archive = ZipArchive::new(reader).context("failed to read archive")?;
 
-    let mut installer = mod_loader.installer_for(package_name);
-    installer.extract(archive, package_name, temp_path.clone())?;
-    installer.install(&temp_path, package_name, profile)?;
+    let installer = mod_loader.installer_for(package_name);
+    installer.extract_and_install(archive, package_name, &profile.path)?;
 
-    fs::remove_dir_all(temp_path).context("failed to remove temporary directory")?;
-
-    let directory = installer.mod_dir(package_name, profile);
+    let directory = installer.package_dir(&profile.path, package_name)?;
 
     Ok(directory)
 }

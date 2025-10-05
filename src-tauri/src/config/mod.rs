@@ -14,7 +14,7 @@ use tracing::debug;
 use walkdir::WalkDir;
 
 use crate::{
-    game::mod_loader::{ModLoader, ModLoaderKind},
+    game::mod_loader::{JsonModLoader, JsonModLoaderKind},
     profile::Profile,
     util::error::IoResultExt,
 };
@@ -113,7 +113,7 @@ impl Profile {
 }
 
 impl ConfigCache {
-    pub fn refresh(&mut self, root: &Path, mod_loader: &ModLoader) {
+    pub fn refresh(&mut self, root: &Path, mod_loader: &JsonModLoader) {
         let files = mod_loader
             .mod_config_dirs()
             .iter()
@@ -145,7 +145,7 @@ impl ConfigCache {
         entry: walkdir::DirEntry,
         root: &Path,
         config_dir: &Path,
-        mod_loader: &ModLoader,
+        mod_loader: &JsonModLoader,
     ) -> Option<(AnyFile, Option<usize>)> {
         const EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];
 
@@ -169,10 +169,10 @@ impl ConfigCache {
         }
 
         let kind = match (&mod_loader.kind, extension) {
-            (ModLoaderKind::BepInEx { .. } | ModLoaderKind::BepisLoader { .. }, "cfg") => {
+            (JsonModLoaderKind::BepInEx { .. } | JsonModLoaderKind::BepisLoader { .. }, "cfg") => {
                 read_file(&entry, bepinex::File::read, AnyFileKind::BepInEx)
             }
-            (ModLoaderKind::GDWeave {}, "json") => {
+            (JsonModLoaderKind::GDWeave {}, "json") => {
                 read_file(&entry, gd_weave::File::read, AnyFileKind::GDWeave)
             }
             (_, ext) if EXTENSIONS.contains(&ext) => AnyFileKind::Unsupported,

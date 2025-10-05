@@ -42,7 +42,7 @@ futures-util = { version = "0.3", features = ["io", "sink"] }
 indexmap = { version = "2", features = ["serde"] }
 open = "5"
 itertools = "0.13"
-zip = { version = "2", features = ["deflate"] }
+zip = { version = "5", features = ["deflate"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 reqwest = { version = "0.12", features = ["json", "stream", "gzip", "native-tls", "blocking"] }
 walkdir = "2"
@@ -76,6 +76,7 @@ flate2 = "1"
 font-kit = "0.14"
 internment = { version = "0.8.6", features = ["serde"] }
 reqwest-websocket = { version = "0.5.0", features = ["json"] }
+loadsmith = "0.1.1"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

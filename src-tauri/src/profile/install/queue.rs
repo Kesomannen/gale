@@ -413,8 +413,12 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
     }
 
     let package_name = install.ident.full_name();
-    let mut installer = game.mod_loader.installer_for(package_name);
-    installer.install(&cache_path, package_name, profile)?;
+    game.mod_loader.installer_for(package_name).install(
+        &profile.path,
+        &cache_path,
+        package_name,
+        true,
+    )?;
 
     install.clone().insert_into(profile)?;
 
@@ -511,17 +515,18 @@ fn install_from_download(
 
     fs::create_dir_all(&cache_path).fs_context("creating mod cache dir", &cache_path)?;
 
-    let mut installer = game.mod_loader.installer_for(package_name);
+    let installer = game.mod_loader.installer_for(package_name);
 
     emit(
         InstallEvent::set_task(&install.ident, InstallTask::Extract),
         app,
     );
 
-    let archive = ZipArchive::new(Cursor::new(data)).context("failed to open archive")?;
+    let reader: Box<dyn loadsmith::AnyZipReader> = Box::new(Cursor::new(data));
+    let archive = ZipArchive::new(reader).context("failed to open archive")?;
 
     installer
-        .extract(archive, package_name, cache_path.clone())
+        .extract(archive, package_name, &cache_path)
         .inspect_err(|_| {
             // the cached mod is probably in an invalid state, so remove it
             fs::remove_dir_all(&cache_path).unwrap_or_else(|err| {
@@ -547,7 +552,9 @@ fn install_from_download(
         callback(install, profile)?;
     }
 
-    installer.install(&cache_path, package_name, profile)?;
+    installer
+        .install(&profile.path, &cache_path, package_name, true)
+        .context("error while installing")?;
     install.clone().insert_into(profile)?;
 
     profile.save(&app, true)?;
