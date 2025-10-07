@@ -639,6 +639,18 @@
         }
     },
     {
+        "name": "CloverPit",
+        "slug": "clover-pit",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3314790
+            }
+        }
+    },
+    {
         "name": "Core Keeper",
         "modLoader": {
             "name": "BepInEx"
