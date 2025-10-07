@@ -16,6 +16,7 @@
 	import IconButton from '../ui/IconButton.svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
 	import SyncDonationNotice from './SyncDonationNotice.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type State = 'off' | 'synced' | 'outdated' | 'missing';
 
@@ -42,22 +43,22 @@
 		{
 			off: {
 				icon: 'mdi:cloud-off',
-				label: 'Sync off',
+				label: m.syncer_style_off(),
 				classes: 'text-primary-400'
 			},
 			synced: {
 				icon: 'mdi:cloud-check-variant',
-				label: 'Up to date',
+				label: m.syncer_style_synced(),
 				classes: 'text-accent-400'
 			},
 			outdated: {
 				icon: 'mdi:cloud-refresh-variant',
-				label: 'Outdated',
+				label: m.syncer_style_outdated(),
 				classes: 'text-yellow-400'
 			},
 			missing: {
 				icon: 'mdi:cloud-alert',
-				label: 'Sync error',
+				label: m.syncer_style_missing(),
 				classes: 'text-red-500 font-semibold'
 			}
 		}[syncState]
@@ -66,12 +67,12 @@
 	const dropdownItems = [
 		{
 			icon: 'mdi:database-eye',
-			label: 'Show owned profiles',
+			label: m.syncer_dropdownItems_showOwnedProfiles(),
 			onclick: showOwnedProfiles
 		},
 		{
 			icon: 'mdi:logout',
-			label: 'Sign out',
+			label: m.syncer_dropdownItems_login(),
 			onclick: onLoginClicked
 		}
 	];
@@ -79,12 +80,12 @@
 	const copyItems = [
 		{
 			icon: 'mdi:clipboard-text',
-			label: 'Copy profile code',
+			label: m.syncer_copyItems_copyCode(),
 			onclick: copyCode
 		},
 		{
 			icon: 'mdi:link',
-			label: 'Copy import link',
+			label: m.syncer_copyItems_copyLink(),
 			onclick: copyLink
 		}
 	];
@@ -95,7 +96,7 @@
 			if (auth.user === null) {
 				let userInfo = await auth.login();
 				pushInfoToast({
-					message: `Signed in with Discord as ${userInfo.displayName}.`
+					message: m.syncer_onLoginClicked_message({name : userInfo.displayName})
 				});
 			} else {
 				await auth.logout();
@@ -106,30 +107,30 @@
 	}
 
 	async function connect() {
-		await wrapApiCall(api.profile.sync.create, 'Created synced profile.');
+		await wrapApiCall(api.profile.sync.create, m.syncer_connect_message());
 	}
 
 	async function push() {
-		await wrapApiCall(api.profile.sync.push, 'Pushed update to synced profile.');
+		await wrapApiCall(api.profile.sync.push, m.syncer_push_message());
 	}
 
 	async function pull() {
-		await wrapApiCall(api.profile.sync.pull, 'Pulled changes from synced profile.');
+		await wrapApiCall(api.profile.sync.pull, m.syncer_pull_message());
 	}
 
 	async function refresh() {
-		await wrapApiCall(api.profile.sync.fetch, 'Refreshed synced profile status.');
+		await wrapApiCall(api.profile.sync.fetch, m.syncer_refresh_message());
 	}
 
 	async function disconnect() {
 		let deleteFromRemote =
 			isOwner &&
 			syncState !== 'missing' &&
-			(await ask('Do you also want to delete the profile from the database?'));
+			(await ask(m.syncer_disconnect_ask()));
 
 		await wrapApiCall(
 			() => api.profile.sync.disconnect(deleteFromRemote),
-			'Disconnected synced profile.'
+			m.syncer_disconnect_message()
 		);
 	}
 
@@ -162,7 +163,7 @@
 
 		await writeText(syncInfo.id);
 		pushInfoToast({
-			message: 'Copied profile code to clipboard.'
+			message: m.syncer_copyCode_message()
 		});
 	}
 
@@ -172,7 +173,7 @@
 		let url = `https://gale.kesomannen.com/api/desktop/profile/sync/clone/${syncInfo.id}`;
 		await writeText(url);
 		pushInfoToast({
-			message: 'Copied profile import link to clipboard.'
+			message: m.syncer_copyLink_message()
 		});
 	}
 </script>
@@ -195,7 +196,7 @@
 	onClose={() => (mainDialogOpen = true)}
 />
 
-<Dialog bind:open={mainDialogOpen} title="Profile sync">
+<Dialog bind:open={mainDialogOpen} title={m.syncer_title()}>
 	<SyncDonationNotice show={syncInfo !== null} />
 
 	{#if syncInfo}
@@ -204,7 +205,7 @@
 				<div class="text-primary-300 mt-2 flex items-center gap-2">
 					<SyncAvatar user={syncInfo.owner} />
 					<div>
-						Owned by {syncInfo.owner.displayName}
+						{m.syncer_content_1()}{syncInfo.owner.displayName}
 					</div>
 				</div>
 			{/if}
@@ -219,21 +220,21 @@
 
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
-						<IconButton icon="mdi:content-copy" label="Copy to clipboard" />
+						<IconButton icon="mdi:content-copy" label={m.syncer_button_copyConetnt()} />
 					</DropdownMenu.Trigger>
 					<ContextMenuContent type="dropdown" style="dark" items={copyItems} />
 				</DropdownMenu.Root>
 			</div>
 		{:else}
 			<InfoBox type="error">
-				This profile has been deleted and can no longer receive updates or be imported.
+				{m.syncer_content_2()}
 			</InfoBox>
 		{/if}
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">
 			{#if syncState !== 'missing'}
 				{#if syncState === 'outdated'}
-					<Button onclick={pull} {loading} icon="mdi:cloud-download">Pull update</Button>
+					<Button onclick={pull} {loading} icon="mdi:cloud-download">{m.syncer_button_pull()}</Button>
 				{/if}
 
 				{#if isOwner}
@@ -244,12 +245,11 @@
 						color="accent"
 						icon="mdi:cloud-upload"
 					>
-						Push update
+						{m.syncer_button_push()}
 					</Button>
 				{/if}
 
-				<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh">Refresh</Button
-				>
+				<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh">{m.syncer_button_refresh()}</Button>
 			{/if}
 
 			<Button
@@ -258,12 +258,12 @@
 				color={syncState === 'missing' ? 'accent' : 'primary'}
 				icon="mdi:cloud-remove"
 			>
-				Disconnect
+				{m.syncer_button_disconnect()}
 			</Button>
 		</div>
 	{:else if auth.user !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
-			Connect
+			{m.syncer_button_connect()}
 		</Button>
 	{/if}
 
@@ -275,7 +275,7 @@
 				color="primary"
 				icon="ic:baseline-discord"
 			>
-				Sign in with Discord
+				{m.syncer_button_login()}
 			</Button>
 		{:else}
 			<SyncAvatar user={auth.user} />
@@ -289,12 +289,9 @@
 		{/if}
 	</div>
 
-	<div
-		class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
-	>
+	<div class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline">
 		<Icon icon="mdi:help-circle" inline />
 
-		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">What is this?</a
-		>
+		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">{m.syncer_content_help()}</a>
 	</div>
 </Dialog>

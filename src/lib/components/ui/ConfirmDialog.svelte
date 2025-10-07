@@ -2,6 +2,7 @@
 	import Dialog from './Dialog.svelte';
 	import Button from './Button.svelte';
 	import type { Snippet } from 'svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		title?: string;
@@ -35,7 +36,7 @@
 			onclick={() => {
 				onCancel?.();
 				open = false;
-			}}>Cancel</Button
+			}}>{m.confirmDialog_button_cancel()}</Button
 		>
 		{@render buttons?.()}
 	</div>

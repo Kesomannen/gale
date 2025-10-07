@@ -5,6 +5,7 @@
 	import Link from '$lib/components/ui/Link.svelte';
 	import * as api from '$lib/api';
 	import { apiKeyDialog } from '$lib/state/misc.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let token: string = $state('');
 	let loading = $state(false);
@@ -27,20 +28,19 @@
 	}
 </script>
 
-<ConfirmDialog title="Set thunderstore API token" bind:open={apiKeyDialog.open}>
-	<p>Enter your Thunderstore API token below, or leave blank to clear the current one.</p>
+<ConfirmDialog title={m.apiKeyDialog_title()} bind:open={apiKeyDialog.open}>
+	<p>{m.apiKeyDialog_content_1()}</p>
 
 	<p class="mt-2">
-		This token is used to publish modpacks to Thunderstore, and will be stored securely on your
-		computer.
+		{m.apiKeyDialog_content_2()}
 	</p>
 
 	<p class="mt-2 mb-1">
-		Once set, you will <b>not</b> be able to view the token again.
+		{m.apiKeyDialog_content_3()}<b>{m.apiKeyDialog_content_4()}</b>{m.apiKeyDialog_content_5()}
 	</p>
 
 	<InputField
-		placeholder="Enter API token..."
+		placeholder={m.apiKeyDialog_placeholder()}
 		class="w-full"
 		onsubmit={submit}
 		bind:value={token}
@@ -49,10 +49,11 @@
 	<Link
 		class="mt-2 block max-w-max text-sm"
 		href="https://github.com/Kesomannen/gale/wiki/Getting-a-Thunderstore-API-token"
-		>Unsure how to get your API token?</Link
-	>
+		>
+		{m.apiKeyDialog_link()}
+	</Link>
 
 	{#snippet buttons()}
-		<Button icon="mdi:exchange" color="accent" onclick={submit} {loading}>Submit</Button>
+		<Button icon="mdi:exchange" color="accent" onclick={submit} {loading}>{m.apiKeyDialog_button()}</Button>
 	{/snippet}
 </ConfirmDialog>
