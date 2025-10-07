@@ -1046,6 +1046,19 @@
         }
     },
     {
+        "name": "Jump Space",
+        "slug": "jump-space",
+        "modLoader": {
+            "name": "MelonLoader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1757300,
+                "dirName": "JumpSpace"
+            }
+        }
+    },
+    {
         "name": "Labyrinthine",
         "slug": "labyrinthine",
         "modLoader": {
