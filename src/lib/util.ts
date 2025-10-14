@@ -61,7 +61,7 @@ export function timeSince(date: Date | string): string {
 		if (interval >= 1) return [interval, 'hour'];
 
 		interval = Math.floor(seconds / 60);
-		if (interval >= 1) return [interval, 'second'];
+		if (interval >= 1) return [interval, 'minute'];
 
 		return [null, null];
 	})();

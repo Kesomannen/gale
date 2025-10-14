@@ -89,6 +89,7 @@ export type ManagedGameInfo = {
 
 export type GameInfo = {
 	active: Game;
+	lastUpdated: string;
 	all: Game[];
 	favorites: string[];
 };

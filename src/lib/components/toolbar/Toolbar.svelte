@@ -10,10 +10,15 @@
 	import games from '$lib/state/game.svelte';
 	import InstallPopover from './InstallPopover.svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
-	import { gameIconSrc } from '$lib/util';
+	import { gameIconSrc, timeSince } from '$lib/util';
 
 	let launchDialogOpen = $state(false);
 	let gamesOpen = $state(false);
+
+	let timeSinceGamesUpdate = $derived.by(() => {
+		gamesOpen; // refresh whenever the dialog is opened
+		return timeSince(games.lastUpdated);
+	});
 
 	async function launchGame() {
 		if (await api.profile.install.hasPendingInstallations()) {
@@ -71,4 +76,7 @@
 
 <Dialog title="Select game to mod" bind:open={gamesOpen}>
 	<GameSelect onselect={() => (gamesOpen = false)} />
+	<div class="text-primary-400 my-1 text-center text-sm">
+		Last updated {timeSinceGamesUpdate} ago
+	</div>
 </Dialog>
