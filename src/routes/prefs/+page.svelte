@@ -29,6 +29,10 @@
 
 	let gameSlug = $derived(games.active?.slug ?? '');
 
+	let shownPlatform = $derived.by(
+		() => gamePrefs?.platform ?? games.active?.platforms[0] ?? 'Unknown'
+	);
+
 	$effect(() => {
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
@@ -169,12 +173,12 @@
 		<SmallHeading>Launch</SmallHeading>
 
 		<LaunchModePref
-			platform={gamePrefs.platform ?? games.active?.platforms[0] ?? 'Unknown'}
+			platform={shownPlatform}
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>
 
-		{#if gamePrefs.launchMode.type === 'launcher' && gamePrefs.platform === 'steam'}
+		{#if gamePrefs.launchMode.type === 'launcher' && shownPlatform === 'steam'}
 			<TogglePref
 				label="Show Steam launch options"
 				value={gamePrefs.showSteamLaunchOptions}
