@@ -258,6 +258,14 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
     if let Some(options_obj) = raw_options.as_object() {
         for (_, option_value) in options_obj.iter() {
             if let Some(option) = option_value.as_object() {
+                // TODO: Figure out how to properly filter by active beta branch.
+                // Need to find where Steam stores info about which beta branch is active for an app.
+                if let Some(config) = option.get("config") {
+                    if config.get("BetaKey").is_some() {
+                        continue;
+                    }
+                }
+
                 let option_type = option
                     .get("type")
                     .and_then(|t| t.as_str())
