@@ -4,7 +4,6 @@
 	import { RadioGroup } from 'bits-ui';
 	import type { LaunchOption } from '$lib/types';
 	import { formatLaunchOptionName } from '$lib/util';
-	import Icon from '@iconify/svelte';
 
 	interface Props {
 		open: boolean;
