@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- The working directory of the game launch command is now set to the game directory
+
+### Fixed
+
+- Sync profiles not being deleted
+
 ## 1.10.0 (2025-09-27)
 
 ### Added

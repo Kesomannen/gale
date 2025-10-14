@@ -5,76 +5,151 @@ use std::{
     sync::LazyLock,
 };
 
-use eyre::Result;
+use chrono::{DateTime, Utc};
+use eyre::{OptionExt, Result};
 use heck::{ToKebabCase, ToPascalCase};
 use serde::{Deserialize, Serialize};
 
 use mod_loader::ModLoader;
 use platform::Platforms;
+use tauri::AppHandle;
 use tracing::{info, warn};
 
-use crate::util::{self, fs::JsonStyle};
+use crate::{
+    state::ManagerExt,
+    util::{self, fs::JsonStyle},
+};
 
 pub mod mod_loader;
 pub mod platform;
 
 pub const CACHE_FILE_NAME: &str = "games.json";
-const URL: &str =
+
+const GITHUB_API_URL: &str =
+    "https://api.github.com/repos/Kesomannen/gale/commits?path=src-tauri/games.json&per_page=1";
+const GAMES_JSON_URL: &str =
     "https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/src-tauri/games.json";
-const FALLBACK_JSON: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", "games.json"));
 
-static GAMES: LazyLock<Vec<GameData<'static>>> = LazyLock::new(|| {
-    match (get_remote_games(), get_cached_games()) {
-        (Ok(remote), _) => {
-            info!(count = remote.len(), "got new games from remote");
+const BUNDLED_GAMES_JSON: &str =
+    include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", "games.json"));
 
-            write_cache(&remote).unwrap_or_else(|err| {
-                warn!("failed to write games cache: {err}");
-            });
+const BUILD_TIME: &str = env!("BUILD_TIME");
 
-            remote
-        }
-        (Err(err), Ok(cached)) => {
-            warn!("failed to get new games from remote, using cache: {err}");
-
-            cached
-        }
-        (Err(remote_err), Err(cache_err)) => {
-            warn!("failed to get new games from remote ({remote_err}) or cache ({cache_err}), using fallback");
-
-            serde_json::from_str(FALLBACK_JSON).unwrap()
+static GAMES: LazyLock<(DateTime<Utc>, Vec<GameData<'static>>)> = LazyLock::new(|| {
+    if cfg!(debug_assertions) {
+        match get_cached_games() {
+            Ok(cache) => {
+                info!("using cached games list, last commit at {}", cache.date);
+                return (cache.date, cache.games);
+            }
+            Err(err) => {
+                warn!("failed to cached games list: {err}");
+            }
         }
     }
+
+    let updated_at = DateTime::parse_from_rfc3339(BUILD_TIME).unwrap().to_utc();
+
+    info!("using bundled games list (built at {updated_at})");
+
+    (
+        updated_at,
+        serde_json::from_str(BUNDLED_GAMES_JSON).unwrap(),
+    )
 });
 
-fn get_cached_games() -> Result<Vec<GameData<'static>>> {
+#[derive(Debug, Serialize, Deserialize)]
+struct GamesCache<'a> {
+    date: DateTime<Utc>,
+    #[serde(borrow)]
+    games: Vec<GameData<'a>>,
+}
+
+fn get_cached_games() -> Result<GamesCache<'static>> {
     let path = util::path::default_app_data_dir().join(CACHE_FILE_NAME);
+
     let str = fs::read_to_string(path)?;
     let games = serde_json::from_str(str.leak())?;
 
     Ok(games)
 }
 
-fn write_cache(games: &Vec<GameData<'static>>) -> Result<()> {
+pub async fn update_list_task(app: &AppHandle) -> Result<()> {
+    let str = app
+        .http()
+        .get(GAMES_JSON_URL)
+        .send()
+        .await?
+        .error_for_status()?
+        .text()
+        .await?;
+
+    let games: Vec<GameData<'_>> = serde_json::from_str(&str)?;
+
+    let date = get_last_commit_date(app).await.unwrap_or_else(|err| {
+        warn!("failed to get last commit date: {err}");
+        Utc::now()
+    });
+
+    let cache = GamesCache {
+        date: date.clone(),
+        games,
+    };
+
     let path = util::path::default_app_data_dir().join(CACHE_FILE_NAME);
-    util::fs::write_json(path, games, JsonStyle::Pretty)
+    util::fs::write_json(path, &cache, JsonStyle::Pretty)?;
+
+    info!("updated games list from github, last commit at {date}");
+
+    Ok(())
 }
 
-fn get_remote_games() -> Result<Vec<GameData<'static>>> {
-    let str = reqwest::blocking::get(URL)?.text()?;
-    let games = serde_json::from_str(str.leak())?;
+async fn get_last_commit_date(app: &AppHandle) -> Result<DateTime<Utc>> {
+    #[derive(Debug, Deserialize)]
+    struct ResponseEntry {
+        commit: Commit,
+    }
 
-    Ok(games)
+    #[derive(Debug, Deserialize)]
+    struct Commit {
+        author: Author,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct Author {
+        date: DateTime<Utc>,
+    }
+
+    let response: Vec<ResponseEntry> = app
+        .http()
+        .get(GITHUB_API_URL)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+    let date = response
+        .get(0)
+        .ok_or_eyre("github api response contained no entries")?
+        .commit
+        .author
+        .date;
+
+    Ok(date)
 }
 
 pub type Game = &'static GameData<'static>;
 
-pub fn all() -> impl Iterator<Item = Game> {
-    GAMES.iter()
+pub fn list() -> impl Iterator<Item = Game> {
+    GAMES.1.iter()
 }
 
 pub fn from_slug(slug: &str) -> Option<Game> {
-    GAMES.iter().find(|game| game.slug == slug)
+    GAMES.1.iter().find(|game| game.slug == slug)
+}
+
+pub fn last_updated() -> DateTime<Utc> {
+    return GAMES.0;
 }
 
 #[derive(Deserialize, Debug)]

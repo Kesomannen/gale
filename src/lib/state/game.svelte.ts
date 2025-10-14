@@ -2,21 +2,22 @@ import type { FiltersResponse, Game, GameInfo, PackageCategory } from '$lib/type
 import * as api from '$lib/api';
 import { pushToast } from '$lib/toast';
 import { fetch } from '@tauri-apps/plugin-http';
-import profiles from './profile.svelte';
 
 class GamesState {
 	active: Game | null = $state(null);
+	lastUpdated: string = $state('');
 	list: Game[] = $state([]);
 	categories: PackageCategory[] = $state([]);
 
 	refresh = async () => {
-		const info: GameInfo = await api.profile.getGameInfo();
+		const info = await api.profile.getGameInfo();
 
 		for (let game of info.all) {
 			game.favorite = info.favorites.includes(game.slug);
 		}
 
 		this.active = info.active;
+		this.lastUpdated = info.lastUpdated;
 		this.list = info.all;
 
 		this.#refreshCategories();

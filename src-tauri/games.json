@@ -529,6 +529,18 @@
         }
     },
     {
+        "name": "Bad North",
+        "slug": "bad-north",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 688420
+            }
+        }
+    },
+    {
         "name": "Balatro",
         "modLoader": {
             "name": "Lovely"
@@ -635,6 +647,18 @@
             },
             "xboxStore": {
                 "identifier": "ParadoxInteractive.CitiesSkylinesII-PCEdition"
+            }
+        }
+    },
+    {
+        "name": "CloverPit",
+        "slug": "clover-pit",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3314790
             }
         }
     },
@@ -1046,6 +1070,19 @@
         }
     },
     {
+        "name": "Jump Space",
+        "slug": "jump-space",
+        "modLoader": {
+            "name": "MelonLoader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1757300,
+                "dirName": "JumpSpace"
+            }
+        }
+    },
+    {
         "name": "Labyrinthine",
         "slug": "labyrinthine",
         "modLoader": {
@@ -1210,6 +1247,18 @@
         "platforms": {
             "steam": {
                 "id": 900010
+            }
+        }
+    },
+    {
+        "name": "Megabonk",
+        "slug": "megabonk",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3405340
             }
         }
     },
