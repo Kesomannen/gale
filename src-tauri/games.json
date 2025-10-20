@@ -787,6 +787,18 @@
         }
     },
     {
+        "name": "Easy Delivery Co",
+        "slug": "easy-delivery-co",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3293010
+            }
+        }
+    },
+    {
         "name": "Enter the Gungeon",
         "modLoader": {
             "name": "BepInEx"
