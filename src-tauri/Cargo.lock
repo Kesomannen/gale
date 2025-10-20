@@ -1861,6 +1861,7 @@ dependencies = [
  "itertools 0.13.0",
  "justerror",
  "keyring",
+ "new-vdf-parser",
  "open",
  "rayon",
  "reqwest",
@@ -3330,6 +3331,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys",
+]
+
+[[package]]
+name = "new-vdf-parser"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcfae50b7ad7d93142e170e4f86d90599282ef7f5108fad4155610cf0aacf1f5"
+dependencies = [
+ "rayon",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

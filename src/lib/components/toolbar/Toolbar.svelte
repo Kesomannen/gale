@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import LaunchOptionsDialog from '$lib/components/dialogs/LaunchOptionsDialog.svelte';
 
 	import * as api from '$lib/api';
 	import Icon from '@iconify/svelte';
@@ -11,9 +12,12 @@
 	import InstallPopover from './InstallPopover.svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
 	import { gameIconSrc, timeSince } from '$lib/util';
+	import type { LaunchOption } from '$lib/types';
 
 	let launchDialogOpen = $state(false);
 	let gamesOpen = $state(false);
+	let launchOptionsDialogOpen = $state(false);
+	let launchOptions = $state<LaunchOption[]>([]);
 
 	let timeSinceGamesUpdate = $derived.by(() => {
 		gamesOpen; // refresh whenever the dialog is opened
@@ -26,12 +30,47 @@
 			return;
 		}
 
+		const prefs = await api.prefs.get();
+		prefs.gamePrefs = new Map(Object.entries(prefs.gamePrefs));
+		const currentGameSlug = games.active?.slug;
+
+		if (currentGameSlug) {
+			const gamePrefs = prefs.gamePrefs.get(currentGameSlug);
+
+			if (
+				gamePrefs &&
+				gamePrefs.launchMode.type === 'launcher' &&
+				gamePrefs.platform === 'steam' &&
+				gamePrefs.showSteamLaunchOptions
+			) {
+				try {
+					const options = await api.profile.launch.getSteamLaunchOptions();
+
+					if (options && options.length > 0) {
+						launchOptions = options;
+						launchOptionsDialogOpen = true;
+						return;
+					}
+				} catch (error) {
+					console.log('No Steam launch options available or not a Steam game');
+				}
+			}
+		}
+
+		await doLaunch();
+	}
+
+	async function doLaunch(args?: string) {
 		launchDialogOpen = true;
 		try {
-			await api.profile.launch.launchGame();
+			await api.profile.launch.launchGame(args);
 		} catch {
 			launchDialogOpen = false;
 		}
+	}
+
+	function handleLaunchOptionSelect(args: string) {
+		doLaunch(args);
 	}
 </script>
 
@@ -80,3 +119,10 @@
 		Last updated {timeSinceGamesUpdate} ago
 	</div>
 </Dialog>
+
+<LaunchOptionsDialog
+	bind:open={launchOptionsDialogOpen}
+	options={launchOptions}
+	gameName={games.active?.name ?? ''}
+	onselect={handleLaunchOptionSelect}
+/>

@@ -5,7 +5,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, eyre, OptionExt, Result};
+use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
@@ -39,14 +39,36 @@ pub enum LaunchMode {
     Direct { instances: u32, interval_secs: f32 },
 }
 
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
+pub struct LaunchOption {
+    pub arguments: String,
+    #[serde(rename = "type")]
+    pub launch_type: String,
+    pub description: Option<String>,
+}
+
 impl ManagedGame {
     pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
+        self.launch_with_args(prefs, app, None)
+    }
+
+    pub fn launch_with_args(
+        &self,
+        prefs: &Prefs,
+        app: &AppHandle,
+        args: Option<String>,
+    ) -> Result<()> {
         let game_dir = locate_game_dir(self.game, prefs)?;
         if let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
 
-        let (launch_mode, command) = self.launch_command(&game_dir, prefs)?;
+        let (launch_mode, mut command) = self.launch_command(&game_dir, prefs)?;
+
+        if let Some(args) = args {
+            command.args(args.split_whitespace());
+        }
+
         info!("launching {} with command {:?}", self.game.slug, command);
         do_launch(command, app, launch_mode)?;
 
@@ -229,4 +251,49 @@ fn exe_path(game_dir: &Path) -> Result<PathBuf> {
         })
         .map(|entry| entry.path())
         .ok_or_eyre("game executable not found")
+}
+
+pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
+    let raw_options = platform::get_steam_launch_options(steam_id)
+        .context("failed to get Steam launch options")?;
+
+    let mut launch_options = Vec::new();
+
+    if let Some(options_obj) = raw_options.as_object() {
+        for (_, option_value) in options_obj.iter() {
+            if let Some(option) = option_value.as_object() {
+                // TODO: Figure out how to properly filter by active beta branch.
+                // Need to find where Steam stores info about which beta branch is active for an app.
+                if let Some(config) = option.get("config") {
+                    if config.get("BetaKey").is_some() {
+                        continue;
+                    }
+                }
+
+                let option_type = option
+                    .get("type")
+                    .and_then(|t| t.as_str())
+                    .unwrap_or("undefined");
+
+                let arguments = option
+                    .get("arguments")
+                    .and_then(|a| a.as_str())
+                    .unwrap_or("")
+                    .to_string();
+
+                let description = option
+                    .get("description")
+                    .and_then(|d| d.as_str())
+                    .map(|s| s.to_string());
+
+                launch_options.push(LaunchOption {
+                    arguments,
+                    launch_type: option_type.to_string(),
+                    description,
+                });
+            }
+        }
+    }
+
+    Ok(launch_options)
 }

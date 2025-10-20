@@ -29,13 +29,18 @@
 
 	let gameSlug = $derived(games.active?.slug ?? '');
 
+	let shownPlatform = $derived.by(
+		() => gamePrefs?.platform ?? games.active?.platforms[0] ?? 'Unknown'
+	);
+
 	$effect(() => {
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
 			customArgs: [],
 			customArgsEnabled: false,
-			platform: null
+			platform: null,
+			showSteamLaunchOptions: false
 		};
 	});
 
@@ -168,10 +173,22 @@
 		<SmallHeading>Launch</SmallHeading>
 
 		<LaunchModePref
-			platform={gamePrefs.platform ?? games.active?.platforms[0] ?? 'Unknown'}
+			platform={shownPlatform}
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>
+
+		{#if gamePrefs.launchMode.type === 'launcher' && shownPlatform === 'steam'}
+			<TogglePref
+				label="Show Steam launch options"
+				value={gamePrefs.showSteamLaunchOptions}
+				set={set((value) => (gamePrefs!.showSteamLaunchOptions = value))}
+			>
+				When enabled, displays Steam launch options defined by the game developer (if any) before
+				starting the game. These options may include different game modes like VR, Safe Mode,
+				Dedicated Server, or other launch configurations specific to the game.
+			</TogglePref>
+		{/if}
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}

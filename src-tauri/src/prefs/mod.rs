@@ -198,6 +198,7 @@ pub struct GamePrefs {
     pub custom_args_enabled: bool,
     pub launch_mode: LaunchMode,
     pub platform: Option<Platform>,
+    pub show_steam_launch_options: bool,
 }
 
 impl Default for Prefs {

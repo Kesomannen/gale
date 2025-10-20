@@ -141,6 +141,7 @@ pub fn run() {
             profile::launch::commands::launch_game,
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,
+            profile::launch::commands::get_steam_launch_options,
             profile::install::commands::install_all_mods,
             profile::install::commands::install_mod,
             profile::install::commands::cancel_all_installs,
