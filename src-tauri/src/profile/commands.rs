@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use chrono::{DateTime, Utc};
 use eyre::{Context, OptionExt};
 use itertools::Itertools;
 use serde::Serialize;
@@ -46,6 +47,7 @@ impl From<Game> for FrontendGame {
 #[serde(rename_all = "camelCase")]
 pub struct GameInfo {
     all: Vec<FrontendGame>,
+    last_updated: DateTime<Utc>,
     active: FrontendGame,
     favorites: Vec<&'static str>,
 }
@@ -64,7 +66,8 @@ pub fn get_game_info(app: AppHandle) -> GameInfo {
         .collect();
 
     GameInfo {
-        all: game::all().map_into().collect(),
+        all: game::list().map_into().collect(),
+        last_updated: game::last_updated(),
         active: manager.active_game.into(),
         favorites,
     }
