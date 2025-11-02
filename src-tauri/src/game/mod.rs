@@ -36,14 +36,14 @@ const BUNDLED_GAMES_JSON: &str =
 const BUILD_TIME: &str = env!("BUILD_TIME");
 
 static GAMES: LazyLock<(DateTime<Utc>, Vec<GameData<'static>>)> = LazyLock::new(|| {
-    if cfg!(debug_assertions) {
+    if !cfg!(debug_assertions) {
         match get_cached_games() {
             Ok(cache) => {
                 info!("using cached games list, last commit at {}", cache.date);
                 return (cache.date, cache.games);
             }
             Err(err) => {
-                warn!("failed to cached games list: {err}");
+                warn!("failed to read cached games list: {err}");
             }
         }
     }
