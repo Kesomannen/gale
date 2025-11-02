@@ -38,7 +38,7 @@
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
-						{#each profiles.list as profile, index}
+						{#each profiles.list as profile, index (profile.id)}
 							<ProfilesDropdownItem {profile} {index} />
 						{/each}
 

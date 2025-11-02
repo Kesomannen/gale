@@ -84,7 +84,7 @@ impl ManagedGame {
             }
             _ => None,
         }
-        .unwrap_or_else(|| exe_path(game_dir).map(Command::new))?;
+        .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
 
         if matches!(launch_mode, LaunchMode::Direct { .. }) {
             command.current_dir(game_dir);
@@ -211,12 +211,19 @@ fn locate_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     Ok(path)
 }
 
-fn exe_path(game_dir: &Path) -> Result<PathBuf> {
+const IGNORED_EXES: &[&str] = &[
+    "crashpad_handler.exe",
+    "UnityCrashHandler32.exe",
+    "UnityCrashHandler64.exe",
+];
+
+fn find_executable(game_dir: &Path) -> Result<PathBuf> {
     game_dir
         .read_dir()?
         .filter_map(Result::ok)
         .find(|entry| {
             let file_name = PathBuf::from(entry.file_name());
+            let file_name_str = file_name.to_string_lossy();
             let extension = file_name.extension().and_then(|ext| ext.to_str());
 
             let has_correct_extension = if cfg!(windows) {
@@ -225,7 +232,7 @@ fn exe_path(game_dir: &Path) -> Result<PathBuf> {
                 matches!(extension, Some("exe" | "sh"))
             };
 
-            has_correct_extension && !file_name.to_string_lossy().contains("UnityCrashHandler")
+            has_correct_extension && !IGNORED_EXES.contains(&&*file_name_str)
         })
         .map(|entry| entry.path())
         .ok_or_eyre("game executable not found")
