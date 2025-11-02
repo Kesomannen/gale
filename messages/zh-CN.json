@@ -342,7 +342,7 @@
     "importProfileDialog_unknown": "存在未知模组:",
     "configEntryField_default": "默认: ",
     "configEntryField_range": "范围: ",
-    "configFileEditor_metadata": "创建者: {name} {file.metadata.modversion}",
+    "configFileEditor_metadata": "创建者: {name} {version}",
     "configFileList_loading": "正在加载配置中...",
     "configFileList_noFiles": "未找到配置文件",
     "configFileList_placeholder": "搜索文件...",

@@ -342,7 +342,7 @@
   "importProfileDialog_unknown": "Innehåller okända mods:",
   "configEntryField_default": "Standard: ",
   "configEntryField_range": "Räckvidd: ",
-  "configFileEditor_metadata": "Skapad av {name} {file.metadata.modversion}",
+  "configFileEditor_metadata": "Skapad av {name} {version}",
   "configFileList_loading": "Laddar konfiguration...",
   "configFileList_noFiles": "Inga konfigurationsfiler hittades",
   "configFileList_placeholder": "Sök efter filer...",

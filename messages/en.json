@@ -342,7 +342,7 @@
     "importProfileDialog_unknown": "Contains unknown mods:",
     "configEntryField_default": "Default: ",
     "configEntryField_range": "Range: ",
-    "configFileEditor_metadata": "Created by {name}{file.metadata.modversion}",
+    "configFileEditor_metadata": "Created by {name}{version}",
     "configFileList_loading": "Loading config...",
     "configFileList_noFiles": "No config files found",
     "configFileList_placeholder": "Search for files...",
