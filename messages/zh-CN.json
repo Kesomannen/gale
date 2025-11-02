@@ -430,7 +430,7 @@
     "util_timeSince_day": "天",
     "util_timeSince_hour": "小时",
     "util_timeSince_interval_null": "某个时间",
-    "util_timeSince_interval_1": "一 {str}",
+    "util_timeSince_interval_1": "一{str}",
     "util_timeSince_interval_default": "{interval} {str}",
     "modListFilters_filter_include": "包含类别",
     "modListFilters_filter_exclude": "排除类别",
@@ -465,5 +465,7 @@
     "updateAllBanner_dialog_list_content": "在“全部更新”列表中忽略此更新。",
     "updateAllBanner_dialog_button": "更新模组",
     "unknown": "未知",
-    "util_timeSince_minute": "分"
+    "util_timeSince_minute": "分",
+    "prefs_profileSettings_title": "游戏配置设置",
+    "prefs_profileSettings_launch_title": "启动"
 }

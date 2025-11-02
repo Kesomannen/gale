@@ -465,5 +465,7 @@
     "updateAllBanner_dialog_list_content": "Ignore this update in the 'Update all' list.",
     "updateAllBanner_dialog_button": "Update mods",
     "unknown": "Unknown",
-    "util_timeSince_minute": "minute"
+    "util_timeSince_minute": "minute",
+    "prefs_profileSettings_title": "Profile settings",
+    "prefs_profileSettings_launch_title": "Launch"
 }
