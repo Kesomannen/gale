@@ -14,6 +14,8 @@
 ### Fixed
 
 - Sync profiles not being deleted
+- Direct launch executing the crash handler for some games
+- The name of the profile below being shown when a profile is deleted
 
 ## 1.10.0 (2025-09-27)
 
