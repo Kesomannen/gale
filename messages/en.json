@@ -429,7 +429,6 @@
     "util_timeSince_week": "week",
     "util_timeSince_day": "day",
     "util_timeSince_hour": "hour",
-    "util_timeSince_second": "second",
     "util_timeSince_interval_null": "a moment",
     "util_timeSince_interval_1": "a {str}",
     "util_timeSince_interval_default": "{interval} {str}s",
@@ -465,5 +464,6 @@
     "updateAllBanner_dialog_list_title": "Update selected",
     "updateAllBanner_dialog_list_content": "Ignore this update in the 'Update all' list.",
     "updateAllBanner_dialog_button": "Update mods",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "util_timeSince_minute": "minute"
 }
