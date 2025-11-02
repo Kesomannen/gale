@@ -28,6 +28,7 @@
 	import { pushInfoToast, pushToast } from '$lib/toast';
 	import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/menu';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let importR2Open = $state(false);
 	let newProfileOpen = $state(false);
@@ -46,158 +47,158 @@
 
 	const submenus = [
 		{
-			text: 'File',
+			text: m.menuBar_file_title(),
 			items: [
 				{
-					text: 'Open profile folder',
+					text: m.menuBar_file_item_1(),
 					onclick: api.profile.openDir
 				},
 				{
-					text: 'Open game folder',
+					text: m.menuBar_file_item_2(),
 					onclick: api.profile.launch.openGameDir
 				},
 				'',
 				{
-					text: 'Open game log',
+					text: m.menuBar_file_item_3(),
 					onclick: api.profile.openGameLog
 				},
 				{
-					text: 'Open Gale log',
+					text: m.menuBar_file_item_4(),
 					onclick: api.logger.openGaleLog
 				},
 				'',
 				{
-					text: 'Clear mod cache',
+					text: m.menuBar_file_item_5(),
 					onclick: () => clearModCache(false)
 				},
 				{
-					text: 'Clear unused mod cache',
+					text: m.menuBar_file_item_6(),
 					onclick: () => clearModCache(true)
 				},
 				{
-					text: 'Fetch mods',
+					text: m.menuBar_file_item_7(),
 					onclick: api.thunderstore.triggerModFetch
 				}
 			]
 		},
 		{
-			text: 'Profile',
+			text: m.menuBar_profile_title(),
 			items: [
 				{
-					text: 'Create new profile',
+					text: m.menuBar_profile_item_1(),
 					accelerator: 'Ctrl+N',
 					onclick: () => (newProfileOpen = true)
 				},
 				{
-					text: 'Rename profile',
+					text: m.menuBar_profile_item_2(),
 					accelerator: 'F2',
 					onclick: () => openProfileOperation('rename')
 				},
 				{
-					text: 'Duplicate profile',
+					text: m.menuBar_profile_item_3(),
 					accelerator: 'Ctrl+D',
 					onclick: () => openProfileOperation('duplicate')
 				},
 				'',
 				{
-					text: 'Copy mod list',
+					text: m.menuBar_profile_item_4(),
 					onclick: copyModList
 				},
 				{
-					text: 'Copy debug info',
+					text: m.menuBar_profile_item_5(),
 					onclick: copyDebugInfo
 				},
 				{
-					text: 'Copy launch arguments',
+					text: m.menuBar_profile_item_6(),
 					onclick: copyLaunchArgs
 				},
 				'',
 				{
-					text: 'Enable all mods',
+					text: m.menuBar_profile_item_7(),
 					onclick: () => setAllModsState(true)
 				},
 				{
-					text: 'Disable all mods',
+					text: m.menuBar_profile_item_8(),
 					onclick: () => setAllModsState(false)
 				},
 				{
-					text: 'Uninstall disabled mods',
+					text: m.menuBar_profile_item_9(),
 					onclick: uninstallDisabledMods
 				},
 				'',
 				{
-					text: 'Create desktop shortcut',
+					text: m.menuBar_profile_item_10(),
 					onclick: createDesktopShotcut
 				}
 			]
 		},
 		{
-			text: 'Import',
+			text: m.menuBar_import_title(),
 			items: [
 				{
-					text: '...profile from code',
+					text: m.menuBar_import_item_1(),
 					onclick: () => importProfileDialog.openForCode()
 				},
 				{
-					text: '...profile from file',
+					text: m.menuBar_import_item_2(),
 					onclick: browseImportFile
 				},
 				{
-					text: '...local mod',
+					text: m.menuBar_import_item_3(),
 					onclick: importLocalMod
 				},
 				{
-					text: '...profiles from r2modman',
+					text: m.menuBar_import_item_4(),
 					onclick: () => (importR2Open = true)
 				}
 			]
 		},
 		{
-			text: 'Export',
+			text: m.menuBar_export_title(),
 			items: [
 				{
-					text: '...profile as code',
+					text: m.menuBar_export_item_1(),
 					onclick: () => exportCodeDialog.open()
 				},
 				{
-					text: '...profile as file',
+					text: m.menuBar_export_item_2(),
 					onclick: exportFile
 				}
 			]
 		},
 		{
-			text: 'Window',
+			text: m.menuBar_window_title(),
 			items: [
 				{
-					text: 'Zoom in',
+					text: m.menuBar_window_item_1(),
 					accelerator: 'Ctrl++',
 					onclick: () => api.prefs.zoomWindow({ delta: 0.25 })
 				},
 				{
-					text: 'Zoom out',
+					text: m.menuBar_window_item_2(),
 					accelerator: 'Ctrl+-',
 					onclick: () => api.prefs.zoomWindow({ delta: -0.25 })
 				},
 				{
-					text: 'Reset zoom',
+					text: m.menuBar_window_item_3(),
 					accelerator: 'Ctrl+0',
 					onclick: () => api.prefs.zoomWindow({ factor: 1 })
 				}
 			]
 		},
 		{
-			text: 'Help',
+			text: m.menuBar_help_title(),
 			items: [
 				{
-					text: 'Report a bug',
+					text: m.menuBar_help_item_1(),
 					onclick: () => shellOpen('https://github.com/Kesomannen/ModManager/issues/')
 				},
 				{
-					text: 'Join discord server',
+					text: m.menuBar_help_item_2(),
 					onclick: () => shellOpen('https://discord.gg/sfuWXRfeTt')
 				},
 				{
-					text: 'About Gale',
+					text: m.menuBar_help_item_3(),
 					onclick: () => (aboutOpen = true)
 				}
 			]
@@ -208,21 +209,21 @@
 
 	async function importLocalMod() {
 		let path = await open({
-			title: 'Select the mod file to import',
-			filters: [{ name: 'Dll or zip', extensions: ['dll', 'zip'] }]
+			title: m.menuBar_importLocalMod_title(),
+			filters: [{ name: m.menuBar_importLocalMod_filters(), extensions: ['dll', 'zip'] }]
 		});
 
 		if (path === null) return;
 		await api.profile.import.localMod(path);
 		pushInfoToast({
-			message: 'Imported local mod into profile.'
+			message: m.menuBar_importLocalMod_message()
 		});
 	}
 
 	async function browseImportFile() {
 		let path = await open({
-			title: 'Select the file to import',
-			filters: [{ name: 'Profile file', extensions: ['r2z'] }]
+			title: m.menuBar_browseImportFile_title(),
+			filters: [{ name: m.menuBar_browseImportFile_filters(), extensions: ['r2z'] }]
 		});
 
 		if (path === null) return;
@@ -233,7 +234,7 @@
 	async function exportFile() {
 		let dir = await open({
 			directory: true,
-			title: 'Select the folder to export the profile to'
+			title: m.menuBar_exportFile_title()
 		});
 
 		if (dir === null) return;
@@ -242,14 +243,15 @@
 
 	async function setAllModsState(enable: boolean) {
 		let count = await api.profile.setAllModsState(enable);
+		let messageText = enable ? m.menuBar_setAllModsState_message_enable : m.menuBar_setAllModsState_message_disable;
 		pushInfoToast({
-			message: `${enable ? 'Enabled' : 'Disabled'} ${count} mods.`
+			message: messageText({ count : count})
 		});
 	}
 
 	function openProfileOperation(operation: 'rename' | 'duplicate') {
 		profileOperation = operation;
-		profileOperationName = profiles.active?.name ?? 'Unknown';
+		profileOperationName = profiles.active?.name ?? m.unknown();
 		profileOperationOpen = true;
 	}
 
@@ -262,12 +264,12 @@
 			if (profileOperation == 'rename') {
 				await api.profile.rename(profileOperationName);
 				pushInfoToast({
-					message: `Renamed profile to ${profileOperationName}.`
+					message: m.menuBar_doProfileOperation_rename_message({ name: profileOperationName })
 				});
 			} else if (profileOperation == 'duplicate') {
 				await api.profile.duplicate(profileOperationName);
 				pushInfoToast({
-					message: `Duplicated profile to ${profileOperationName}.`
+					message: m.menuBar_doProfileOperation_duplicate_message({ name: profileOperationName })
 				});
 			}
 		} catch (e) {
@@ -283,18 +285,18 @@
 		await api.profile.createDesktopShortcut();
 
 		pushInfoToast({
-			message: `Created desktop shortcut for ${profiles.active?.name}.`
+			message: m.menuBar_createDesktopShotcut_message({ name: profiles.active?.name ?? m.unknown()})
 		});
 	}
 
 	async function uninstallDisabledMods() {
-		let confirmed = await confirm('Are you sure you want to uninstall all disabled mods?');
+		let confirmed = await confirm(m.menuBar_uninstallDisabledMods_confirm());
 		if (!confirmed) return;
 
 		let count = await api.profile.removeDisabledMods();
 
 		pushInfoToast({
-			message: `Uninstalled ${count} disabled mods.`
+			message: m.menuBar_uninstallDisabledMods_message({ count: count })
 		});
 	}
 
@@ -303,36 +305,35 @@
 		await writeText(str);
 
 		pushInfoToast({
-			message: `Copied launch arguments to clipboard.`
+			message: m.menuBar_copyLaunchArgs_message()
 		});
 	}
 
 	async function clearModCache(soft: boolean) {
 		if (!soft) {
-			let result = await confirm(
-				"Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!"
-			);
+			let result = await confirm(m.menuBar_clearModCache_confirm());
 
 			if (!result) return;
 		}
 
 		let size = await api.profile.install.clearDownloadCache(soft);
+		let messageText = soft ? m.menuBar_clearModCache_message_unsed : m.menuBar_clearModCache_message;
 		pushInfoToast({
-			message: `Deleted${soft ? ' unused' : ''} mod cache (cleared ${shortenFileSize(size)}).`
+			message: messageText({ size : shortenFileSize(size)})
 		});
 	}
 
 	async function copyModList() {
 		await api.profile.export.copyDependencyStrings();
 		pushInfoToast({
-			message: 'Copied mod list to clipboard.'
+			message: m.menuBar_copyModList_message()
 		});
 	}
 
 	async function copyDebugInfo() {
 		await api.profile.export.copyDebugInfo();
 		pushInfoToast({
-			message: 'Copied debug info to clipboard.'
+			message: m.menuBar_copyDebugInfo_message()
 		});
 	}
 
@@ -359,15 +360,15 @@
 			if (profiles.activeLocked) {
 				pushToast({
 					type: 'error',
-					name: 'Failed to import local mod',
-					message: 'Profile is locked.'
+					name: m.menuBar_handleFileDrop_activeLocked_title(),
+					message: m.menuBar_handleFileDrop_activeLocked_message()
 				});
 				return;
 			}
 
 			await api.profile.import.localModBase64(base64);
 			pushInfoToast({
-				message: 'Imported local mod into profile.'
+				message: m.menuBar_handleFileDrop_message()
 			});
 		}
 	}
@@ -474,19 +475,17 @@
 </header>
 
 <Dialog
-	title="{capitalize(profileOperation)} profile"
+	title={m[`menuBar_dialog_title_${profileOperation}`]()}
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
 	<p class="text-primary-300 mb-1">
-		{profileOperation == 'duplicate'
-			? 'Enter a name for the duplicated profile:'
-			: 'Enter a new name for the profile:'}
+		{m[`menuBar_dialog_content_${profileOperation}`]()}
 	</p>
 
 	<InputField
 		bind:value={profileOperationName}
-		placeholder="Enter name..."
+		placeholder={m.menuBar_dialog_input_placeholder()}
 		size="lg"
 		class="w-full"
 		onsubmit={doProfileOperation}
@@ -494,7 +493,7 @@
 
 	<div class="mt-2 ml-auto flex justify-end gap-2">
 		{#if !profileOperationInProgress}
-			<Button color="primary" onclick={() => (profileOperationOpen = false)}>Cancel</Button>
+			<Button color="primary" onclick={() => (profileOperationOpen = false)}>{m.menuBar_dialog_button_cancel()}</Button>
 		{/if}
 
 		<Button
@@ -503,7 +502,7 @@
 			onclick={doProfileOperation}
 			icon={profileOperation === 'duplicate' ? 'mdi:content-duplicate' : 'mdi:edit'}
 		>
-			{capitalize(profileOperation)}
+			{m[`menuBar_dialog_button_accent_${profileOperation}`]()}
 		</Button>
 	</div>
 </Dialog>

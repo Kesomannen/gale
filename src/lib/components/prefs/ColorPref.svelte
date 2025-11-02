@@ -8,7 +8,7 @@
 		type ColorCategory,
 		type Color
 	} from '$lib/theme';
-	import { capitalize, selectItems } from '$lib/util';
+	import { selectItems } from '$lib/util';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Icon from '@iconify/svelte';
 	import ResetButton from '../ui/ResetButton.svelte';
@@ -16,6 +16,7 @@
 	import Info from '../ui/Info.svelte';
 	import type { Snippet } from 'svelte';
 	import clsx from 'clsx';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		category: ColorCategory;
@@ -36,7 +37,7 @@
 </script>
 
 <div class="flex items-center">
-	<Label>{capitalize(category)} color</Label>
+	<Label>{m[`colorPref_title_${category}`]()}</Label>
 
 	<Info>
 		{@render children()}
@@ -54,7 +55,7 @@
 						: { type: 'default', name: selectValue }
 				)
 		}
-		items={selectItems(selectOptions, capitalize)}
+		items={selectItems(selectOptions, (item) => m[`colorPref_color_${item}`]())}
 	>
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(value)}
@@ -64,7 +65,7 @@
 			</div>
 		{/snippet}
 
-		{#snippet item({ label, value })}
+		{#snippet item({ value })}
 			{@render colorIcon(
 				value === 'custom'
 					? { type: 'custom', hex: '' }

@@ -6,8 +6,9 @@
 	import { selectItems } from '$lib/util';
 	import Info from '$lib/components/ui/Info.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
-	import { toHeaderCase, toSentenceCase } from 'js-convert-case';
+	import { toHeaderCase } from 'js-convert-case';
 	import games from '$lib/state/game.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		platform: string;
@@ -21,8 +22,8 @@
 	let intervalSecs = $state(value.content?.intervalSecs ?? 10);
 
 	let items = $derived([
-		{ value: 'launcher', label: `Platform (${toHeaderCase(platform)})` },
-		{ value: 'direct', label: 'Direct' }
+		{ value: 'launcher', label: m.launchModePref_mode_launcher({ platform: toHeaderCase(platform) }) },
+		{ value: 'direct', label: m.launchModePref_mode_direct() }
 	]);
 
 	async function onValueChange(newValue: string) {
@@ -44,17 +45,15 @@
 </script>
 
 <div class="flex items-center">
-	<Label>Launch mode</Label>
+	<Label>{m.launchModePref_title()}</Label>
 
 	<Info>
-		<p>Determines how the game is launched.</p>
+		<p>{m.launchModePref_content_1()}</p>
 		<p class="my-1.5">
-			<b>Launcher:</b> Launches via the specified platform. This is required for some games that, for
-			example, require Steam to be running.
+			<b>{m.launchModePref_content_2()}</b> {m.launchModePref_content_3()}
 		</p>
 		<p>
-			<b>Direct:</b> Launches the game directly from the executable. Allows you to launch multiple instances
-			at once.
+			<b>{m.launchModePref_content_4()}</b> {m.launchModePref_content_5()}
 		</p>
 	</Info>
 
@@ -69,11 +68,13 @@
 </div>
 
 <div class="flex items-center">
-	<Label>Number of instances</Label>
+	<Label>{m.launchModePref_instance_title()}</Label>
 
-	<Info
-		>How many instances of the game to launch at once. Only available in <b>Direct</b> mode.</Info
-	>
+	<Info>
+		{m.launchModePref_instance_content_1()}
+		<b>{m.launchModePref_instance_content_2()}</b>
+		{m.launchModePref_instance_content_3()}
+	</Info>
 
 	<InputField
 		disabled={value.type !== 'direct'}
@@ -86,11 +87,10 @@
 </div>
 
 <div class="flex items-center">
-	<Label>Interval between launches</Label>
+	<Label>{m.launchModePref_interval_title()}</Label>
 
 	<Info>
-		How many seconds to wait between launching each instance. Only applicable in <b>Direct</b> mode with
-		multiple instances.
+		{m.launchModePref_interval_content_1()}<b>{m.launchModePref_interval_content_2()}</b>{m.launchModePref_interval_content_3()}
 	</Info>
 
 	<InputField

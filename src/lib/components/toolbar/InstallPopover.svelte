@@ -11,6 +11,7 @@
 	import { Tween } from 'svelte/motion';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 
 	let shown = $state(false);
 	let showCancel = $state(false);
@@ -30,9 +31,9 @@
 	let taskText = $derived(
 		task
 			? {
-					download: 'Downloading ',
-					extract: 'Extracting ',
-					install: 'Installing '
+					download: m.installPopover_taskText_download(),
+					extract: m.installPopover_taskText_extract(),
+					install: m.installPopover_taskText_install(),
 				}[task] + name!.replace(/_/g, ' ')
 			: null
 	);
@@ -150,9 +151,9 @@
 						out:fade={dropOut}
 					>
 						<div class="text-primary-300 flex items-center justify-between font-semibold">
-							<div>Installing mods... ({completedMods}/{totalMods})</div>
+							<div>{m.installPopover_content()}({completedMods}/{totalMods})</div>
 							{#if showCancel}
-								<IconButton label="Cancel" icon="mdi:cancel" color="red" onclick={cancel} />
+								<IconButton label={m.installPopover_button()} icon="mdi:cancel" color="red" onclick={cancel} />
 							{/if}
 						</div>
 

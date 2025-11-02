@@ -10,6 +10,7 @@
 	import games from '$lib/state/game.svelte';
 	import InstallPopover from './InstallPopover.svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
+	import { m, toolBar_dialog_launch_title } from '$lib/paraglide/messages';
 	import { gameIconSrc, timeSince } from '$lib/util';
 
 	let launchDialogOpen = $state(false);
@@ -22,7 +23,7 @@
 
 	async function launchGame() {
 		if (await api.profile.install.hasPendingInstallations()) {
-			await message('Please wait for mod installations to complete before launching.');
+			await message(m.toolBar_launchGame_message());
 			return;
 		}
 
@@ -41,7 +42,7 @@
 		onclick={launchGame}
 	>
 		<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
-		Launch game
+		{m.toolBar_launchGame_button()}
 	</button>
 
 	<button
@@ -68,13 +69,13 @@
 	<Updater />
 </div>
 
-<Dialog title="Launching {games.active?.name}..." bind:open={launchDialogOpen}>
+<Dialog title={m.toolBar_dialog_launch_title({ name: games.active?.name ?? m.unknown() })} bind:open={launchDialogOpen}>
 	<p class="text-primary-400">
-		This might take a few minutes depending on the size of your profile.
+		{m.toolBar_dialog_launch_content()}
 	</p>
 </Dialog>
 
-<Dialog title="Select game to mod" bind:open={gamesOpen}>
+<Dialog title={m.toolBar_dialog_games_title()} bind:open={gamesOpen}>
 	<GameSelect onselect={() => (gamesOpen = false)} />
 	<div class="text-primary-400 my-1 text-center text-sm">
 		Last updated {timeSinceGamesUpdate} ago

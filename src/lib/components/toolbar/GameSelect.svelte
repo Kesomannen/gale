@@ -4,6 +4,7 @@
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 	import Link from '$lib/components/ui/Link.svelte';
 	import games from '$lib/state/game.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		onselect: () => void;
@@ -46,7 +47,7 @@
 
 <div class="mt-1">
 	<div class="relative grow">
-		<SearchBar bind:value={searchTerm} placeholder="Search for games..." />
+		<SearchBar bind:value={searchTerm} placeholder={m.gameSelect_placeholder()} />
 	</div>
 
 	<div class="mt-1 flex h-80 flex-col overflow-y-scroll">
@@ -62,17 +63,14 @@
 				/>
 			{/each}
 		{:else}
-			<div class="text-primary-300 mt-4 text-center">No games found</div>
+			<div class="text-primary-300 mt-4 text-center">{m.gameSelect_content_1()}</div>
 			<div class="text-primary-400 mt-2 max-w-[35rem] text-sm">
-				Your game missing? If the game is new on Thunderstore there's a chance we have yet to add
-				it. If you can find it on
+				{m.gameSelect_content_2()}
 				<Link href="https://thunderstore.io">thunderstore.io</Link>
-				but not here, please message us on
-				<Link href="https://discord.com/channels/1168655651455639582/1246088342458863618"
-					>Discord</Link
-				>
-				or open an issue on
-				<Link href="https://github.com/Kesomannen/ModManager/issues/">our Github</Link>
+				{m.gameSelect_content_3()}
+				<Link href="https://discord.com/channels/1168655651455639582/1246088342458863618">Discord</Link>
+				{m.gameSelect_content_4()}
+				<Link href="https://github.com/Kesomannen/ModManager/issues/">{m.gameSelect_content_5()}</Link>
 			</div>
 		{/if}
 	</div>

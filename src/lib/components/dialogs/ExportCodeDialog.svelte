@@ -4,6 +4,7 @@
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import profiles from '$lib/state/profile.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let isOpen = $state(false);
 	let codePromise: Promise<string> | null = $state(null);
@@ -21,13 +22,13 @@
 	}
 </script>
 
-<Dialog title="Export as code" bind:open={isOpen}>
+<Dialog title={m.exportCodeDialog_title()} bind:open={isOpen}>
 	<p class="flex-center text-primary-400 mb-1 flex">
 		{#await codePromise}
 			<Spinner class="text-lg" />
-			Exporting {profiles.active?.name} as code...
+			{m.exportCodeDialog_content_1({name: profiles.active?.name ?? m.exportCodeDialog_content_unknown()})}
 		{:then}
-			Export complete! The code has been copied to your clipboard:
+			{m.exportCodeDialog_content_2()}
 		{/await}
 	</p>
 

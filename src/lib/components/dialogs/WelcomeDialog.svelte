@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import ColorPref from '../prefs/ColorPref.svelte';
 	import { invoke } from '@tauri-apps/api/core';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		open?: boolean;
@@ -58,71 +59,69 @@
 	}
 </script>
 
-<Dialog title="Welcome to Gale!" canClose={stage === 'end'} bind:open>
+<Dialog title={m.welcomeDialog_title()} canClose={stage === 'end'} bind:open>
 	<div class="text-primary-300">
 		{#if stage === 'gameSelect'}
-			To get started, select a game to mod:
+			{m.welcomeDialog_content_gameSelect()}
 			<GameSelect onselect={onSelectGame} />
 		{:else if stage === 'importProfiles'}
-			<p>You can automatically transfer profiles from another mod manager to Gale.</p>
+			<p>{m.welcomeDialog_content_importProfiles_1()}</p>
 
 			<p class="mt-1">
-				You can always import profiles later by going to <b>Import &gt; ...from r2modman</b>.
+				{m.welcomeDialog_content_importProfiles_2()}<b>{m.welcomeDialog_content_importProfiles_3()}</b>.
 			</p>
 
 			<ImportR2Flow bind:importData bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
-				<Button color="primary" class="mr-auto" onclick={() => (stage = 'gameSelect')}>Back</Button>
-				<Button color="primary" onclick={() => (stage = 'settings')}>Skip</Button>
-				<Button color="accent" onclick={importProfiles}>Import</Button>
+				<Button color="primary" class="mr-auto" onclick={() => (stage = 'gameSelect')}>{m.welcomeDialog_button_back()}</Button>
+				<Button color="primary" onclick={() => (stage = 'settings')}>{m.welcomeDialog_button_skip()}</Button>
+				<Button color="accent" onclick={importProfiles}>{m.welcomeDialog_button_import()}</Button>
 			</div>
 		{:else if stage === 'settings'}
 			<p>
-				Let's make sure your settings are to your liking.
+				{m.welcomeDialog_content_settings_1()}
 				<br />
-				You can always edit these later by going to <Icon icon="mdi:settings" class="mb-1 inline" />
-				<b>Manager settings</b>.
+				{m.welcomeDialog_content_settings_2()}<Icon icon="mdi:settings" class="mb-1 inline" />
+				<b>{m.welcomeDialog_content_settings_3()}</b>.
 			</p>
 
 			<div class="mt-3 flex flex-col gap-1">
 				{#if prefs}
 					<PathPref
-						label="Gale data folder"
+						label={m.welcomeDialog_settings_path_title()}
 						type="dir"
 						value={prefs.dataDir}
 						set={set((value, prefs) => (prefs.dataDir = value as string))}
 					>
-						The folder where mods and profiles are stored. Make sure you have plenty of space on its
-						device.
+						{m.welcomeDialog_settings_path_content()}
 					</PathPref>
 
-					<ColorPref category="primary" default="slate">
-						The main color of the interface, including backgrounds and text.</ColorPref
-					>
-					<ColorPref category="accent" default="green">
-						The color of highlighted elements, such as buttons and checkboxes</ColorPref
-					>
+					<ColorPref category="primary" default="slate">{m.welcomeDialog_content_color_primary()}</ColorPref>
+					<ColorPref category="accent" default="green">{m.welcomeDialog_content_color_accent()}</ColorPref>
 				{/if}
 			</div>
 
 			<div class="mt-3 flex justify-between">
 				<Button
-					color="primary"
-					onclick={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
-					>Back</Button
+				color="primary"
+				onclick={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
 				>
-				<Button color="accent" onclick={() => (stage = 'end')}>Next</Button>
+				{m.welcomeDialog_button_back()}
+				</Button>
+				<Button color="accent" onclick={() => (stage = 'end')}>{m.welcomeDialog_button_next()}</Button>
 			</div>
 		{:else if stage === 'end'}
-			<p>That's it, you're all set up to start modding!</p>
+			<p>{m.welcomeDialog_content_end_1()}</p>
 
 			<p class="mt-1">
-				If you have any questions or need help, feel free to ask in the <a
-					href="https://discord.gg/sfuWXRfeTt"
-					target="_blank"
-					class="text-accent-400 hover:underline">Discord server</a
-				>.
+				{m.welcomeDialog_content_end_2()}
+				<a
+				href="https://discord.gg/sfuWXRfeTt"
+				target="_blank"
+				class="text-accent-400 hover:underline">
+				{m.welcomeDialog_content_end_3()}
+				</a>.
 			</p>
 		{/if}
 	</div>

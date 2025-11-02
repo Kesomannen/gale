@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as api from '$lib/api';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -61,7 +62,7 @@
 	});
 
 	async function deleteFile() {
-		let confirmed = await confirm(`Are you sure you want to delete ${file.displayName}?`);
+		let confirmed = await confirm(m.configFileListItem_deleteFile_confirm({name: file.displayName ?? file.relativePath}));
 		if (!confirmed) return;
 
 		await api.config.deleteFile(file);
@@ -102,7 +103,7 @@
 			</div>
 
 			<IconButton
-				label="Open in external program"
+				label={m.configFileListItem_button_openFile()}
 				icon="mdi:open-in-new"
 				class="ml-2 hidden group-hover:block"
 				onclick={(evt) => {
@@ -113,7 +114,7 @@
 
 			{#if !locked}
 				<IconButton
-					label="Trash file"
+					label={m.configFileListItem_button_deleteFile()}
 					icon="mdi:delete"
 					class="hidden group-hover:block"
 					onclick={(evt) => {
@@ -139,7 +140,7 @@
 									'truncate py-0.5 pr-2 pl-9 text-left text-sm'
 								]}
 							>
-								{section.name.length > 0 ? section.name : '<Nameless section>'}
+								{section.name.length > 0 ? section.name : m.configFileListItem_nameLess()}
 							</button>
 						{/each}
 					</div>

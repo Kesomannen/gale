@@ -7,6 +7,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toHeaderCase } from 'js-convert-case';
 	import games from '$lib/state/game.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		value: Platform | null;
@@ -19,9 +20,9 @@
 </script>
 
 <div class="flex items-center">
-	<Label>Platform</Label>
+	<Label>{m.platformPref_title()}</Label>
 
-	<Info>The platform where your game is installed.</Info>
+	<Info>{m.platformPref_content()}</Info>
 
 	<Select
 		type="single"

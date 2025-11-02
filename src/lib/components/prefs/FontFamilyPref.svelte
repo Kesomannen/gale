@@ -6,6 +6,7 @@
 	import { getFont, setFont } from '$lib/theme';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 
 	let fonts: string[] = $state([]);
 	let value = $state(getFont());
@@ -20,13 +21,13 @@
 </script>
 
 <div class="flex items-center">
-	<Label>Font family</Label>
+	<Label>{m.fontFamilyPref_title()}</Label>
 
 	<Combobox
 		items={selectItems(fonts)}
 		type="single"
 		triggerClass="grow"
-		placeholder="Search for a font..."
+		placeholder={m.fontFamilyPref_placeholder()}
 		bind:value
 	/>
 

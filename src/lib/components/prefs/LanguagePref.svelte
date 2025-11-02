@@ -1,33 +1,34 @@
 <script lang="ts">
 	import Label from '$lib/components/ui/Label.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
+	import { setLanguage, languageTitle } from '$lib/i18n';
 	import { m } from '$lib/paraglide/messages';
+	import { locales } from '$lib/paraglide/runtime';
 
-	const options = [0.5, 0.75, 1, 1.25, 1.5];
-	const items = options.map((option) => ({
-		label: option * 100 + '%',
-		value: option.toFixed(2)
+	const items = locales.map((option) => ({
+		label: languageTitle[option],
+		value: option
 	}));
 
 	type Props = {
-		value: number;
-		set: (newValue: number) => void;
+		value: string;
+		set: (newValue: string) => void;
 	};
 
 	let { value = $bindable(), set }: Props = $props();
 </script>
 
 <div class="flex items-center">
-	<Label>{m.zoomFactorPref_title()}</Label>
+	<Label>{m.languagePref_title()}</Label>
 
 	<Select
 		type="single"
 		triggerClass="grow"
 		{items}
-		value={value.toFixed(2)}
+		{value}
 		onValueChange={(newValue) => {
-			value = parseFloat(newValue);
-			set(value);
+			setLanguage(newValue);
+			set(newValue);
 		}}
 	/>
 </div>
