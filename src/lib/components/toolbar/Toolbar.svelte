@@ -10,7 +10,7 @@
 	import games from '$lib/state/game.svelte';
 	import InstallPopover from './InstallPopover.svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
-	import { m, toolBar_dialog_launch_title } from '$lib/paraglide/messages';
+	import { m } from '$lib/paraglide/messages';
 	import { gameIconSrc, timeSince } from '$lib/util';
 
 	let launchDialogOpen = $state(false);
@@ -69,7 +69,10 @@
 	<Updater />
 </div>
 
-<Dialog title={m.toolBar_dialog_launch_title({ name: games.active?.name ?? m.unknown() })} bind:open={launchDialogOpen}>
+<Dialog
+	title={m.toolBar_dialog_launch_title({ name: games.active?.name ?? m.unknown() })}
+	bind:open={launchDialogOpen}
+>
 	<p class="text-primary-400">
 		{m.toolBar_dialog_launch_content()}
 	</p>

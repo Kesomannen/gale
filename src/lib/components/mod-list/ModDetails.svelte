@@ -14,7 +14,6 @@
 		modIconSrc,
 		shortenFileSize,
 		shortenNum,
-		thunderstoreIconUrl,
 		timeSince
 	} from '$lib/util';
 
@@ -151,7 +150,7 @@
 
 		{#if mod.lastUpdated !== null}
 			<div class="text-primary-400 mt-1 text-lg">
-				{m.modDetails_lastUpdated({time: timeSince(new Date(mod.lastUpdated))})}
+				{m.modDetails_lastUpdated({ time: timeSince(new Date(mod.lastUpdated)) })}
 			</div>
 		{/if}
 

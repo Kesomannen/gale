@@ -4,7 +4,8 @@
 
 ### Added
 
-- Chinese localization 
+- I18n support (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Chinese and Swedish localization
 
 ### Changed
 
