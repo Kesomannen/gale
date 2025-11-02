@@ -467,5 +467,6 @@
     "unknown": "Unknown",
     "util_timeSince_minute": "minute",
     "prefs_profileSettings_title": "Profile settings",
-    "prefs_profileSettings_launch_title": "Launch"
+    "prefs_profileSettings_launch_title": "Launch",
+    "modpack_includeFiles_placeholder": "Filter files..."
 }

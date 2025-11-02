@@ -467,5 +467,6 @@
     "unknown": "未知",
     "util_timeSince_minute": "分",
     "prefs_profileSettings_title": "游戏配置设置",
-    "prefs_profileSettings_launch_title": "启动"
+    "prefs_profileSettings_launch_title": "启动",
+    "modpack_includeFiles_placeholder": "筛选文件..."
 }

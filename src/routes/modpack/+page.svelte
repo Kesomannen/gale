@@ -383,7 +383,7 @@
 		>
 			<details>
 				<summary class="text-primary-300 cursor-pointer text-sm">{m.modpack_includeFiles_preview()}</summary>
-				<InputField bind:value={includedFilesSearch} class="w-full" placeholder="Filter files..." />
+				<InputField bind:value={includedFilesSearch} class="w-full" placeholder={m.modpack_includeFiles_placeholder()} />
 				<Checklist
 					class="mt-1"
 					title={m.modpack_includeFiles_list_title()}
