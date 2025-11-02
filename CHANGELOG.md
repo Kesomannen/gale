@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Chinese localization 
+
 ### Changed
 
 - The working directory of the game launch command is now set to the game directory

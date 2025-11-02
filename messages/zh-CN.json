@@ -1,37 +1,28 @@
 {
     "$schema": "https://inlang.com/schema/inlang-message-format",
-
     "language_name": "简体中文",
-
     "page_modList_noMods_1": "没有安装任何模组",
     "page_modList_noMods_2": "点击浏览 Thunderstore",
     "page_modList_noResults_1": "在配置没找到任何符合条件的模组",
     "page_modList_noResults_2": "尝试调整搜索条件",
-
     "page_modContextItem_uninstall": "卸载",
     "page_modContextItem_changeVersion": "切换版本",
     "page_modContextItem_showDependants": "查看依赖项",
     "page_modContextItem_openFolder": "打开文件夹",
     "page_modContextItem_openWebsite": "打开网站",
     "page_modContextItem_donate": "赞助",
-
     "page_modDetails_button": "更新到 {version}",
-
     "page_dialog_title": "{name} 的依赖项",
     "page_dialog_noDependants": "没有依赖项",
-
     "page_dependantsDialog_uninstall_title": "确认卸载",
     "page_dependantsDialog_uninstall_verb": "卸载",
     "page_dependantsDialog_uninstall_description": "以下模组依赖于 %s，若卸载该模组则可能无法正常运行：",
-
     "page_dependantsDialog_disable_title": "确认禁用",
     "page_dependantsDialog_disable_verb": "禁用",
     "page_dependantsDialog_disable_description": "以下模组依赖于 %s，若禁用该模组则可能无法正常运行：",
-
     "page_dependantsDialog_enable_title": "确认启用",
     "page_dependantsDialog_enable_verb": "启用",
     "page_dependantsDialog_enable_description": "%s 依赖于以下已禁用的模组，若其中任何一个被禁用，则可能无法正常运行：",
-    
     "menuBar_file_title": "文件",
     "menuBar_file_item_1": "打开配置文件夹",
     "menuBar_file_item_2": "打开游戏文件夹",
@@ -40,7 +31,6 @@
     "menuBar_file_item_5": "清除模组缓存",
     "menuBar_file_item_6": "清除未使用的模组缓存",
     "menuBar_file_item_7": "拉取模组",
-
     "menuBar_profile_title": "配置文件",
     "menuBar_profile_item_1": "创建新配置",
     "menuBar_profile_item_2": "重命名配置",
@@ -52,54 +42,41 @@
     "menuBar_profile_item_8": "禁用所有模组",
     "menuBar_profile_item_9": "卸载所有禁用模组",
     "menuBar_profile_item_10": "创建桌面快捷方式",
-
     "menuBar_import_title": "导入",
     "menuBar_import_item_1": "...配置从代码",
     "menuBar_import_item_2": "...配置从文件",
     "menuBar_import_item_3": "...模组从本地",
     "menuBar_import_item_4": "...配置从r2modman",
-
     "menuBar_export_title": "导出",
     "menuBar_export_item_1": "...配置为代码",
     "menuBar_export_item_2": "...配置为文件",
-
     "menuBar_window_title": "窗口",
     "menuBar_window_item_1": "放大",
     "menuBar_window_item_2": "缩小",
     "menuBar_window_item_3": "重置",
-
     "menuBar_help_title": "帮助",
     "menuBar_help_item_1": "报告错误",
     "menuBar_help_item_2": "加入 Discord 服务器",
     "menuBar_help_item_3": "关于 Gale",
-    
     "menuBar_importLocalMod_title": "选择要导入的模组",
     "menuBar_importLocalMod_filters": "Dll 或 zip 文件",
     "menuBar_importLocalMod_message": "导入本地模组到配置完成！",
-
     "menuBar_browseImportFile_title": "选择要导入的配置",
     "menuBar_browseImportFile_filters": "配置文件",
-
     "menuBar_exportFile_title": "选择要导出配置的文件夹",
     "menuBar_setAllModsState_message_enable": "启用 {count} 个模组",
     "menuBar_setAllModsState_message_disable": "模组 {count} 个模组",
     "menuBar_doProfileOperation_rename_message": "重命名配置为 {name}.",
     "menuBar_doProfileOperation_duplicate_message": "复制配置为 {name}.",
-
     "menuBar_createDesktopShotcut_message": "创建桌面快捷方式为 {name}.",
-
     "menuBar_uninstallDisabledMods_confirm": "你确定要卸载所有禁用模组吗?",
     "menuBar_uninstallDisabledMods_message": "卸载 {count} 个禁用模组完成！",
-
     "menuBar_copyLaunchArgs_message": "复制启动参数到剪贴板完成！",
-
     "menuBar_clearModCache_confirm": "您确定要删除所有缓存的模组吗？这可能会让已安装模组占用内存增加。请再三考虑后进行操作！",
     "menuBar_clearModCache_message": "清除模组缓存完成！ (一共清理 {size}).",
     "menuBar_clearModCache_message_unsed": "清理未使用模组缓存完成！ (一共清理 {size}).",
-
     "menuBar_copyModList_message": "复制模组列表到剪贴板完成！",
     "menuBar_copyDebugInfo_message": "复制调试信息到剪贴板完成！",
-
     "menuBar_handleFileDrop_activeLocked_title": "导入本地模组失败",
     "menuBar_handleFileDrop_activeLocked_message": "目标配置已被锁定，无法导入。",
     "menuBar_handleFileDrop_message": "从本地导入模组到配置完成！",
@@ -111,19 +88,16 @@
     "menuBar_dialog_button_accent_rename": "重命名",
     "menuBar_dialog_button_accent_duplicate": "复制",
     "menuBar_dialog_button_cancel": "取消",
-
     "navBar_link_profile": "管理配置",
     "navBar_link_browse": "安装模组",
     "navBar_link_config": "编辑模组配置",
     "navBar_link_modpack": "打包模组",
     "navBar_link_prefs": "应用设置",
-
     "toolBar_launchGame_message": "请等待模组安装完成后再启动。",
     "toolBar_launchGame_button": "启动游戏",
     "toolBar_dialog_launch_title": "正在启动 {name} 中...",
     "toolBar_dialog_launch_content": "这可能需要几分钟时间，具体取决于您的配置大小。",
     "toolBar_dialog_games_title": "选择要添加模组的游戏",
-
     "prefs_global_title": "全局设置",
     "prefs_locations_title": "路径",
     "prefs_locations_dataFolder": "Gale 数据文件夹",
@@ -146,7 +120,6 @@
     "prefs_gameSettings_locations_dirOverride_content": "覆盖 {game} 文件夹的位置。若未设置，Gale 将尝试通过指定平台查找该文件夹。",
     "prefs_gameSettings_locations_dirOverride_content_needs": "{game} 文件夹的位置。",
     "prefs_gameSettings_launch_title": "启动",
-
     "languagePref_title": "语言",
     "colorPref_title_accent": "主要颜色",
     "colorPref_title_primary": "高亮颜色",
@@ -173,20 +146,15 @@
     "colorPref_color_fuchsia": "紫红色",
     "colorPref_color_pink": "粉色",
     "colorPref_color_rose": "玫瑰色",
-
     "fontFamilyPref_title": "字体",
     "fontFamilyPref_placeholder": "搜索一个字体...",
-
     "zoomFactorPref_title": "缩放比例",
-
     "apiKeyPref_title": "Thunderstore API 令牌",
     "apiKeyPref_content": "Thunderstore API 令牌用于发布模组包。一旦设置，您将无法再次查看令牌。",
-
     "platformPref_title": "游戏平台",
     "platformPref_content": "您正在使用的游戏平台。这会影响 Gale 查找游戏文件夹的方式。",
     "apiKeyPref_hasToken_has": "点击重新设置令牌",
     "apiKeyPref_hasToken_no": "未设置令牌",
-    
     "apiKeyDialog_title": "设置 Thunderstore API 令牌",
     "apiKeyDialog_content_1": "请在下方输入您的Thunderstore API令牌。空白将清除当前令牌。",
     "apiKeyDialog_content_2": "令牌用于在Thunderstore发布模组包，会安全存储在电脑上。",
@@ -197,7 +165,6 @@
     "apiKeyDialog_link": "不确定如何获取您的API令牌?",
     "apiKeyDialog_button": "保存",
     "confirmDialog_button_cancel": "取消",
-
     "launchModePref_title": "启动模式",
     "launchModePref_mode_direct": "直接运行",
     "launchModePref_mode_launcher": "游戏平台 ({platform})",
@@ -214,7 +181,6 @@
     "launchModePref_interval_content_1": "每次启动实例之间需要等待多少秒。仅在“",
     "launchModePref_interval_content_2": "直接运行",
     "launchModePref_interval_content_3": "”模式且多实例的情况下使用。",
-
     "customArgsPref_title": "设置自定义启动参数",
     "customArgsPref_placeholder": "输入新的启动参数...",
     "customArgsPref_content_1": "允许您向启动命令添加自定义参数。根据 ",
@@ -224,16 +190,13 @@
     "customArgsPref_content_5": "放在同一行。需要将",
     "customArgsPref_content_6": "和",
     "customArgsPref_content_7": "分开输入在不同行。",
-
     "pathPref_title": "选择{name}",
     "pathField_noset": "未设置",
-
     "importR2Flow_title": "R2modman 数据文件夹",
     "importR2Flow_content": "您的 r2modman/TMM 安装目录中的数据文件夹。",
     "importR2Flow_content_loading": "加载中...",
     "importR2Flow_content_noFound": "未找到任何安装，请在上方指定路径。",
     "importR2Flow_checkList_title": "导入所有",
-
     "welcomeDialog_title": "欢迎来到 Gale!",
     "welcomeDialog_content_gameSelect": "开始前，请选择要管理模组的游戏：",
     "welcomeDialog_content_importProfiles_1": "您可以自动将配置文件从其他模组管理器转移至Gale。",
@@ -253,22 +216,18 @@
     "welcomeDialog_button_skip": "跳过",
     "welcomeDialog_button_import": "导入",
     "welcomeDialog_button_next": "下一步",
-
     "gameSelect_placeholder": "搜索游戏...",
     "gameSelect_content_1": "未找到游戏",
     "gameSelect_content_2": "找不到游戏？如果该游戏刚在 Thunderstore 添加，我们可能尚未添加。若您能在",
     "gameSelect_content_3": "找到它，但未在 Gale 中找到，请在",
     "gameSelect_content_4": "告诉我们，或在",
     "gameSelect_content_5": "Github 打开一个 Issue.",
-
     "installModDialog_title": "安装 {name}",
     "installModDialog_content": "选择要安装模组的配置：",
     "installModDialog_button": "安装",
-
     "toasts_copyError_message": "已将错误信息复制到剪贴板。",
     "toasts_button_copy": "复制错误信息",
     "toasts_button_clear": "清除提示",
-
     "profilesDropdown_button": "新建配置",
     "createProfileDialog_title": "创建新配置",
     "createProfileDialog_content": "请输入新配置的名称：",
@@ -277,7 +236,6 @@
     "createProfileDialog_pathField_title": "自定义路径",
     "createProfileDialog_pathField_content": "配置的路径。",
     "createProfileDialog_button": "创建",
-
     "updater_installUpdate_message_name": "更新 Gale 失败",
     "updater_installUpdate_message_unknown": "未知错误",
     "updater_update_message": "Gale 将重新启动以应用更新。",
@@ -288,16 +246,13 @@
     "updater_confirmDialog_content_available": "Gale 有可用更新。",
     "updater_confirmDialog_content": "更新将在后台下载，随后应用程序将重新启动以应用更新。",
     "updater_confirmDialog_button": "安装",
-
     "installPopover_taskText_download": "下载中 ",
     "installPopover_taskText_extract": "解压中 ",
     "installPopover_taskText_install": "安装中 ",
     "installPopover_content": "正在安装模组中... ",
     "installPopover_button": "取消",
-
     "browse_modList_content_1": "未找到任何符合条件的模组",
     "browse_modList_content_2": "尝试调整搜索条件",
-
     "syncer_style_off": "关闭",
     "syncer_style_synced": "最新",
     "syncer_style_outdated": "过时",
@@ -326,7 +281,6 @@
     "syncer_button_connect": "连接",
     "syncer_button_login": "登录到 Discord",
     "syncer_content_help": "这是什么?",
-
     "ownedSyncProfilesDialog_deleteProfile_confirm": "您确定要从数据库中删除 {name} 吗？此操作将断开所有订阅者的连接，并阻止您推送后续更新！",
     "ownedSyncProfilesDialog_deleteProfile_message": "从数据库中删除了同步配置文件。",
     "ownedSyncProfilesDialog_title": "已同步配置文件",
@@ -337,7 +291,6 @@
     "syncDonationNotice_content_1": "资料同步功能通过捐赠运营!",
     "syncDonationNotice_content_2": "若您喜欢此功能，请考虑支持我们。",
     "syncDonationNotice_button": "稍后提醒",
-
     "aboutDialog_title": "关于我们",
     "aboutDialog_version": "版本 {version}",
     "aboutDialog_changelog": "更新日志",
@@ -346,23 +299,18 @@
     "aboutDialog_checkUpdate": "检查更新",
     "aboutDialog_newVersion": "新版本可用: {version}",
     "aboutDialog_latestVersion": "已经是最新版本啦！",
-
     "dependantsDialog_button_executeOne": "{verb}{name} 仅",
     "dependantsDialog_button_executeAll": "{verb} 所有",
-
     "expandedConfigEntryDialog_title": "编辑 {name}",
     "expandedConfigEntryDialog_tabsMenu_text": "编辑为文本",
     "expandedConfigEntryDialog_tabsMenu_list": "编辑为列表",
     "expandedConfigEntryDialog_placeholder": "输入内容...",
-
     "exportCodeDialog_title": "导出代码",
     "exportCodeDialog_content_1": "正在导出 {name} 为代码中...",
     "exportCodeDialog_content_2": "导出完成！代码已复制到您的剪贴板:",
     "exportCodeDialog_content_unknown": "未知配置",
-
     "modInfoDialog_noFound": "未找到 {type}",
     "modInfoDIalog_failed": "加载 {type} 失败: {error}",
-
     "importR2Dialog_title": "从其他模组管理导入配置",
     "importR2Dialog_content_1": "这将导入配置到",
     "importR2Dialog_content_2": "当前游戏",
@@ -370,7 +318,6 @@
     "importR2Dialog_content_4": "导入过程中请勿关闭Gale。",
     "importR2Dialog_button_cancel": "取消",
     "importR2Dialog_button_import": "导入",
-
     "importProfileDialog_importData_confirm": "您确定要覆盖 {name} 吗？",
     "importProfileDialog_importData_message": "导入配置 {name}。",
     "importProfileDialog_title": "导入配置",
@@ -393,7 +340,6 @@
     "importProfileDialog_sync_tooltip_title": "配置同步",
     "importProfileDialog_sync_owner": "拥有者:{name}",
     "importProfileDialog_unknown": "存在未知模组:",
-
     "configEntryField_default": "默认: ",
     "configEntryField_range": "范围: ",
     "configFileEditor_metadata": "创建者: {name} {file.metadata.modversion}",
@@ -406,14 +352,12 @@
     "configFileListItem_button_openFile": "打开外部文件",
     "configFileListItem_button_deleteFile": "删除文件",
     "configFileListItem_nameLess": "<侠名>",
-
     "config_nameLess": "<侠名>",
     "config_unsupported_content": "此文件采用不受支持的格式。请使用外部应用打开以进行修改。",
     "config_unsupported_button": "在外部应用打开",
     "config_err_content": "读取此配置文件时发生错误：",
     "config_err_button": "在外部应用打开",
     "config_content": "选择一个配置文件开始编辑",
-
     "modpack_refresh_loading": "加载中...",
     "modpack_browseIcon_title": "选择模组包图片",
     "modpack_browseIcon_filter": "图像",
@@ -463,12 +407,10 @@
     "modpack_dialog_content_2": "点击此处查看模组包页面。",
     "modpack_dialog_content_3": "模组包可能需要一个小时时间才可在 Gale 和其他模组管理器搜索到。",
     "modpack_dialog_content_4": "要发布新更新，请更新版本号并重新发布模组包。",
-
     "installModButton_button_locked": "配置锁定",
     "installModButton_button_isInstalled": "重复安装",
     "installModButton_button_loading": "正在安装中...",
     "installModButton_button_install": "安装",
-
     "modDetails_allContextItems_close": "关闭",
     "modDetails_by": "作者:",
     "modDetails_deprecated": "已弃用",
@@ -479,7 +421,6 @@
     "modDetails_changeLog": "更新日志",
     "modDetails_details": "详情",
     "modDetails_dependencies": "依赖",
-
     "util_formatTime_seconds": "{seconds} 秒",
     "util_formatTime_minute": "{minutes} 分",
     "util_formatTime_hour": "{hours} 小时",
@@ -492,12 +433,10 @@
     "util_timeSince_interval_null": "某个时间",
     "util_timeSince_interval_1": "{str}",
     "util_timeSince_interval_default": "{interval} {str}",
-
     "modListFilters_filter_include": "包含类别",
     "modListFilters_filter_exclude": "排除类别",
     "modListFilters_select_title": "包括",
     "modListFilters_searchBar_placeholder": "搜索模组...",
-
     "modListFilters_options_deprecated": "已弃用",
     "modListFilters_options_NSFW": "限制级(NSFW)",
     "modListFilters_options_disabled": "禁用",
@@ -513,14 +452,11 @@
     "modListFilters_options_diskSpace": "大小",
     "modListFilters_options_name": "名称",
     "modListFilters_options_author": "作者",
-
     "profileLockedBanner_title": "配置已被锁定",
     "profileLockedBanner_content": "为防止与所有者{name}的同步失效，此配置文件的修改功能已被禁用。",
-
     "unknownModsBanner_noFound": "以下模组无法找到： ",
     "unknownModsBanner_uninstall_it": "卸载它?",
     "unknownModsBanner_uninstall_them": "卸载它们?",
-
     "updateAllBanner_content_is": "存在",
     "updateAllBanner_content_update": " 个更新可用",
     "updateAllBanner_button": "更新所有?",
@@ -529,6 +465,5 @@
     "updateAllBanner_dialog_list_title": "更新所选项",
     "updateAllBanner_dialog_list_content": "在“全部更新”列表中忽略此更新。",
     "updateAllBanner_dialog_button": "更新模组",
-
     "unknown": "未知"
 }
