@@ -81,6 +81,6 @@
 <Dialog title={m.toolBar_dialog_games_title()} bind:open={gamesOpen}>
 	<GameSelect onselect={() => (gamesOpen = false)} />
 	<div class="text-primary-400 my-1 text-center text-sm">
-		Last updated {timeSinceGamesUpdate} ago
+		{m.toolBar_dialog_games_lastUpdated({ time: timeSinceGamesUpdate })}
 	</div>
 </Dialog>
