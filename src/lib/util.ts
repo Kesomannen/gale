@@ -73,7 +73,7 @@ export function timeSince(date: Date | string): string {
 		if (interval >= 1) return [interval, m.util_timeSince_hour()];
 
 		interval = Math.floor(seconds / 60);
-		if (interval >= 1) return [interval, 'minute'];
+		if (interval >= 1) return [interval, m.util_timeSince_minute()];
 
 		return [null, null];
 	})();

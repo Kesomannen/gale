@@ -342,7 +342,7 @@
     "importProfileDialog_unknown": "Contains unknown mods:",
     "configEntryField_default": "Default: ",
     "configEntryField_range": "Range: ",
-    "configFileEditor_metadata": "Created by {name}{file.metadata.modversion}",
+    "configFileEditor_metadata": "Created by {name}{version}",
     "configFileList_loading": "Loading config...",
     "configFileList_noFiles": "No config files found",
     "configFileList_placeholder": "Search for files...",
@@ -429,7 +429,6 @@
     "util_timeSince_week": "week",
     "util_timeSince_day": "day",
     "util_timeSince_hour": "hour",
-    "util_timeSince_second": "second",
     "util_timeSince_interval_null": "a moment",
     "util_timeSince_interval_1": "a {str}",
     "util_timeSince_interval_default": "{interval} {str}s",
@@ -465,5 +464,10 @@
     "updateAllBanner_dialog_list_title": "Update selected",
     "updateAllBanner_dialog_list_content": "Ignore this update in the 'Update all' list.",
     "updateAllBanner_dialog_button": "Update mods",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "util_timeSince_minute": "minute",
+    "prefs_profileSettings_title": "Profile settings",
+    "prefs_profileSettings_launch_title": "Launch",
+    "modpack_includeFiles_placeholder": "Filter files...",
+    "toolBar_dialog_games_lastUpdated": "Last updated {time} ago"
 }

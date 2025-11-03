@@ -342,7 +342,7 @@
     "importProfileDialog_unknown": "存在未知模组:",
     "configEntryField_default": "默认: ",
     "configEntryField_range": "范围: ",
-    "configFileEditor_metadata": "创建者: {name} {file.metadata.modversion}",
+    "configFileEditor_metadata": "创建者: {name} {version}",
     "configFileList_loading": "正在加载配置中...",
     "configFileList_noFiles": "未找到配置文件",
     "configFileList_placeholder": "搜索文件...",
@@ -429,9 +429,8 @@
     "util_timeSince_week": "周",
     "util_timeSince_day": "天",
     "util_timeSince_hour": "小时",
-    "util_timeSince_second": "秒",
     "util_timeSince_interval_null": "某个时间",
-    "util_timeSince_interval_1": "{str}",
+    "util_timeSince_interval_1": "一{str}",
     "util_timeSince_interval_default": "{interval} {str}",
     "modListFilters_filter_include": "包含类别",
     "modListFilters_filter_exclude": "排除类别",
@@ -465,5 +464,10 @@
     "updateAllBanner_dialog_list_title": "更新所选项",
     "updateAllBanner_dialog_list_content": "在“全部更新”列表中忽略此更新。",
     "updateAllBanner_dialog_button": "更新模组",
-    "unknown": "未知"
+    "unknown": "未知",
+    "util_timeSince_minute": "分",
+    "prefs_profileSettings_title": "游戏配置设置",
+    "prefs_profileSettings_launch_title": "启动",
+    "modpack_includeFiles_placeholder": "筛选文件...",
+    "toolBar_dialog_games_lastUpdated": "最后更新在{time}前"
 }
