@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.1 (2025-11-03)
+
+### Fixed
+
+- Config page not working for some profiles (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Various localization issues (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+
 ## 1.11.0 (2025-11-02)
 
 ### Added
