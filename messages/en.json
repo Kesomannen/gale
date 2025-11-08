@@ -469,5 +469,6 @@
     "prefs_profileSettings_title": "Profile settings",
     "prefs_profileSettings_launch_title": "Launch",
     "modpack_includeFiles_placeholder": "Filter files...",
-    "toolBar_dialog_games_lastUpdated": "Last updated {time} ago"
+    "toolBar_dialog_games_lastUpdated": "Last updated {time} ago",
+    "installPopover_taskText_done": "Finishing up..."
 }

@@ -174,9 +174,9 @@
 		/>
 
 		{#if profiles.active}
-			<LargeHeading>Profile settings</LargeHeading>
+			<LargeHeading>{m.prefs_profileSettings_title()}</LargeHeading>
 
-			<SmallHeading>Launch</SmallHeading>
+			<SmallHeading>{m.prefs_profileSettings_launch_title()}</SmallHeading>
 
 			<CustomArgsPref
 				value={profiles.active.customArgs}
