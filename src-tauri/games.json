@@ -1195,7 +1195,7 @@
         "name": "MIMESIS",
         "slug": "mimesis",
         "modLoader": {
-            "name": "Melonloader"
+            "name": "MelonLoader"
         },
         "platforms": {
             "steam": {
