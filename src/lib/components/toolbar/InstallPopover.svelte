@@ -68,7 +68,7 @@
 					if (event.payload.reason === 'done') {
 						hideDelay = 500;
 
-						taskText = 'Finishing up...';
+						taskText = m.installPopover_taskText_done();
 						shownProgress.set(1, { duration: 250, easing: expoInOut });
 					}
 

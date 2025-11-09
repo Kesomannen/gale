@@ -469,5 +469,6 @@
     "prefs_profileSettings_title": "游戏配置设置",
     "prefs_profileSettings_launch_title": "启动",
     "modpack_includeFiles_placeholder": "筛选文件...",
-    "toolBar_dialog_games_lastUpdated": "最后更新在{time}前"
+    "toolBar_dialog_games_lastUpdated": "最后更新在{time}前",
+    "installPopover_taskText_done": "完成下载..."
 }
