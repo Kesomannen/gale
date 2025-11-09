@@ -1192,6 +1192,18 @@
         }
     },
     {
+        "name": "MIMESIS",
+        "slug": "mimesis",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2827200
+            }
+        }
+    },
+    {
         "name": "Mage Arena",
         "slug": "mage-arena",
         "modLoader": {
