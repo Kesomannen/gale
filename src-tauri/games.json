@@ -226,6 +226,18 @@
         }
     },
     {
+        "name": "Aeruta",
+        "slug": "aeruta",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2286780
+            }
+        }
+    },
+    {
         "name": "Against the Storm",
         "modLoader": {
             "name": "BepInEx"
@@ -552,6 +564,19 @@
         }
     },
     {
+        "name": "Beetleball",
+        "slug": "beetleball",
+        "modLoader": {
+            "name": "MelonLoader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3821880,
+                "dirName": "BeetleBall Playtest"
+            }
+        }
+    },
+    {
         "name": "Below the Stone",
         "modLoader": {
             "name": "BepInEx"
@@ -836,6 +861,18 @@
         }
     },
     {
+        "name": "Football Manager 26",
+        "slug": "football-manager-26",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3551340
+            }
+        }
+    },
+    {
         "name": "For The King",
         "modLoader": {
             "name": "BepInEx"
@@ -940,6 +977,18 @@
                 "id": 1782330
             },
             "oculus": {}
+        }
+    },
+    {
+        "name": "Grey Hack",
+        "slug": "grey-hack",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 605230
+            }
         }
     },
     {
@@ -1354,6 +1403,18 @@
         "platforms": {
             "steam": {
                 "id": 1268900
+            }
+        }
+    },
+    {
+        "name": "Necropolis",
+        "slug": "necropolis",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 384490
             }
         }
     },
@@ -1997,6 +2058,18 @@
         }
     },
     {
+        "name": "Super Fantasy Kingdom",
+        "slug": "super-fantasy-kingdom",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2289750
+            }
+        }
+    },
+    {
         "name": "Supermarket Together",
         "modLoader": {
             "name": "BepInEx"
@@ -2222,6 +2295,18 @@
         "platforms": {
             "steam": {
                 "id": 843390
+            }
+        }
+    },
+    {
+        "name": "Vigil",
+        "slug": "vigil",
+        "modLoader": {
+            "name": "MelonLoader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3817090
             }
         }
     },
