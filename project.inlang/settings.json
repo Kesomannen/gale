@@ -3,6 +3,7 @@
   "baseLocale": "en",
   "locales": [
     "en",
+    "pl",
     "zh-CN",
     "sv-SE"
   ],
