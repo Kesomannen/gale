@@ -31,7 +31,8 @@
 <Dialog bind:open title={m.importR2Dialog_title()} canClose={!loading}>
 	<div class="text-primary-300 mb-2">
 		<p>
-			{m.importR2Dialog_content_1()}<b>{m.importR2Dialog_content_2()}</b>{m.importR2Dialog_content_3()}
+			{m.importR2Dialog_content_1()}<b>{m.importR2Dialog_content_2()}</b
+			>{m.importR2Dialog_content_3()}
 		</p>
 
 		<p class="mt-2">
@@ -41,7 +42,11 @@
 	<ImportR2Flow bind:this={importFlow} bind:loading bind:importData />
 
 	<div class="mt-3 mr-0.5 flex w-full justify-end gap-2">
-		<Button color="primary" onclick={() => (open = false)}>{m.importR2Dialog_button_cancel()}</Button>
-		<Button color="accent" onclick={doImport} icon="mdi:import">{m.importR2Dialog_button_import()}</Button>
+		<Button color="primary" onclick={() => (open = false)}
+			>{m.importR2Dialog_button_cancel()}</Button
+		>
+		<Button color="accent" onclick={doImport} icon="mdi:import"
+			>{m.importR2Dialog_button_import()}</Button
+		>
 	</div>
 </Dialog>

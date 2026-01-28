@@ -33,7 +33,7 @@
 			? {
 					download: m.installPopover_taskText_download(),
 					extract: m.installPopover_taskText_extract(),
-					install: m.installPopover_taskText_install(),
+					install: m.installPopover_taskText_install()
 				}[task] + name!.replace(/_/g, ' ')
 			: null
 	);
@@ -153,7 +153,12 @@
 						<div class="text-primary-300 flex items-center justify-between font-semibold">
 							<div>{m.installPopover_content()}({completedMods}/{totalMods})</div>
 							{#if showCancel}
-								<IconButton label={m.installPopover_button()} icon="mdi:cancel" color="red" onclick={cancel} />
+								<IconButton
+									label={m.installPopover_button()}
+									icon="mdi:cancel"
+									color="red"
+									onclick={cancel}
+								/>
 							{/if}
 						</div>
 

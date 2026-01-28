@@ -62,7 +62,9 @@
 	});
 
 	async function deleteFile() {
-		let confirmed = await confirm(m.configFileListItem_deleteFile_confirm({name: file.displayName ?? file.relativePath}));
+		let confirmed = await confirm(
+			m.configFileListItem_deleteFile_confirm({ name: file.displayName ?? file.relativePath })
+		);
 		if (!confirmed) return;
 
 		await api.config.deleteFile(file);

@@ -68,9 +68,13 @@
 				{m.gameSelect_content_2()}
 				<Link href="https://thunderstore.io">thunderstore.io</Link>
 				{m.gameSelect_content_3()}
-				<Link href="https://discord.com/channels/1168655651455639582/1246088342458863618">Discord</Link>
+				<Link href="https://discord.com/channels/1168655651455639582/1246088342458863618"
+					>Discord</Link
+				>
 				{m.gameSelect_content_4()}
-				<Link href="https://github.com/Kesomannen/ModManager/issues/">{m.gameSelect_content_5()}</Link>
+				<Link href="https://github.com/Kesomannen/ModManager/issues/"
+					>{m.gameSelect_content_5()}</Link
+				>
 			</div>
 		{/if}
 	</div>
