@@ -253,7 +253,11 @@
 
 						<div class="mt-1 text-lg">{m.page_modList_noMods_1()}</div>
 						<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
-							><Icon icon="mdi:store-search" class="mr-0.5 ml-1  inline" inline />{m.page_modList_noMods_2()}</a
+							><Icon
+								icon="mdi:store-search"
+								class="mr-0.5 ml-1  inline"
+								inline
+							/>{m.page_modList_noMods_2()}</a
 						>
 					{:else}
 						<div class="mt-4 text-lg">{m.page_modList_noResults_1()}</div>
@@ -295,7 +299,10 @@
 	{/if}
 </div>
 
-<Dialog title={m.page_dialog_title({name : activeMod?.name ?? m.unknown()})}  bind:open={dependantsOpen}>
+<Dialog
+	title={m.page_dialog_title({ name: activeMod?.name ?? m.unknown() })}
+	bind:open={dependantsOpen}
+>
 	<div class="text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
 			{m.page_dialog_noDependants()}
