@@ -1361,6 +1361,18 @@
         }
     },
     {
+        "name": "MineMogul",
+        "slug": "mine-mogul",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3846120
+            }
+        }
+    },
+    {
         "name": "Monster Train 2",
         "slug": "monster-train-2",
         "modLoader": {
