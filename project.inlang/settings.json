@@ -5,7 +5,8 @@
     "en",
     "pl",
     "zh-CN",
-    "sv-SE"
+    "sv-SE",
+    "pt-BR"
   ],
   "modules": [
     "https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js",
