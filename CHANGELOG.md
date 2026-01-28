@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- More locales:
+  - Brazilian Portugese
+  - Polish
+  - Spanish
+
+### Fixed
+
+- Duplicate mods causing the profile screen to freeze the UI (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Replaced some unlocalized text (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Weird text appearing in the unknown-mods banner
+
 ## 1.11.1 (2025-11-03)
 
 ### Fixed
