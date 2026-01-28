@@ -68,7 +68,9 @@
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" />
 		{/if}
-		<div class="truncate text-sm">{m[`updater_content_${loading ? 'downloading' : 'available'}`]()}</div>
+		<div class="truncate text-sm">
+			{m[`updater_content_${loading ? 'downloading' : 'available'}`]()}
+		</div>
 	</button>
 {/if}
 
@@ -76,7 +78,10 @@
 	<Dialog.Description class="text-primary-300">
 		<p>
 			{#if updates.next}
-				{m.updater_confirmDialog_content_next({ next: updates.next.version, current: updates.next.currentVersion})}
+				{m.updater_confirmDialog_content_next({
+					next: updates.next.version,
+					current: updates.next.currentVersion
+				})}
 			{:else}
 				{m.updater_confirmDialog_content_available()}
 			{/if}

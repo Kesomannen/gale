@@ -24,7 +24,10 @@
 
 {#if file.metadata}
 	<div class="text-primary-400 mb-1 px-4 font-medium">
-		{m.configFileEditor_metadata({ name: file.metadata.modName, version: file.metadata.modVersion })}
+		{m.configFileEditor_metadata({
+			name: file.metadata.modName,
+			version: file.metadata.modVersion
+		})}
 	</div>
 {/if}
 

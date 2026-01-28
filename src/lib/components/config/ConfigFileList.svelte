@@ -105,7 +105,11 @@
 		</div>
 	{:else}
 		<div class="relative mx-2 my-2">
-			<SearchBar bind:value={searchTerm} placeholder={m.configFileList_placeholder()} brightness={800} />
+			<SearchBar
+				bind:value={searchTerm}
+				placeholder={m.configFileList_placeholder()}
+				brightness={800}
+			/>
 		</div>
 
 		{#each shownFiles ?? [] as file (file.relativePath)}

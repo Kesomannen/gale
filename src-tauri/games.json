@@ -699,6 +699,19 @@
         }
     },
     {
+        "name": "Crawlspace 2",
+        "slug": "crawlspace-2",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2258670,
+                "dirName": "Crawlspace 2"
+            }
+        }
+    },
+    {
         "name": "Cult of the Lamb",
         "modLoader": {
             "name": "BepInEx"
@@ -1344,6 +1357,18 @@
         "platforms": {
             "steam": {
                 "id": 2527500
+            }
+        }
+    },
+    {
+        "name": "MineMogul",
+        "slug": "mine-mogul",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3846120
             }
         }
     },

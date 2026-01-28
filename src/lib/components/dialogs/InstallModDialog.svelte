@@ -40,7 +40,7 @@
 	}
 </script>
 
-<ConfirmDialog bind:open title={m.installModDialog_title({ name : mod?.name ?? m.unknown() })}>
+<ConfirmDialog bind:open title={m.installModDialog_title({ name: mod?.name ?? m.unknown() })}>
 	<p class="text-primary-300">{m.installModDialog_content()}</p>
 
 	<Select

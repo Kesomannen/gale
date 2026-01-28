@@ -25,7 +25,7 @@
 
 	async function onclick() {
 		if (shouldConfirm(entryId.entry.value)) {
-			let confirmed = await confirm(m.resetConfigButton_confirm({ name : entryId.entry.name}));
+			let confirmed = await confirm(m.resetConfigButton_confirm({ name: entryId.entry.name }));
 			if (!confirmed) return;
 		}
 

@@ -43,9 +43,9 @@
 {#if shownUpdates.length > updateBanner.threshold}
 	<div class="bg-accent-700 text-accent-100 mr-3 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
 		<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
-		{pluralizeOption(shownUpdates.length, m.updateAllBanner_content_is(), "is", "are")}
+		{pluralizeOption(shownUpdates.length, m.updateAllBanner_content_is(), 'is', 'are')}
 		<b class="mx-1">{shownUpdates.length}</b>
-		{pluralizeOption(shownUpdates.length, m.updateAllBanner_content_update(), "update", "updates")}
+		{pluralizeOption(shownUpdates.length, m.updateAllBanner_content_update(), 'update', 'updates')}
 		<button
 			class="hover:text-accent-200 ml-1 font-semibold text-white hover:underline"
 			onclick={() => (dialogOpen = true)}
@@ -95,6 +95,8 @@
 	</Checklist>
 
 	{#snippet buttons()}
-		<Button color="accent" icon="mdi:download" onclick={updateAll}>{m.updateAllBanner_dialog_button()}</Button>
+		<Button color="accent" icon="mdi:download" onclick={updateAll}
+			>{m.updateAllBanner_dialog_button()}</Button
+		>
 	{/snippet}
 </ConfirmDialog>
