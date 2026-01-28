@@ -63,7 +63,6 @@
 			{/snippet}
 		</Dialog.Overlay>
 		<Dialog.Content
-			forceMount
 			interactOutsideBehavior={canClose && confirmClose === null ? 'close' : 'ignore'}
 			class="pointer-events-none"
 		>
