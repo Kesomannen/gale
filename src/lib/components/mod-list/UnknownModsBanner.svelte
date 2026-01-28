@@ -22,6 +22,6 @@
 			mods.forEach(uninstall);
 		}}
 	>
-		{m[`unknownModsBanner_uninstall_${mods.length === 1 ? 'it' : 'them'}`]}
+		{m[`unknownModsBanner_uninstall_${mods.length === 1 ? 'it' : 'them'}`]()}
 	</button>
 </div>
