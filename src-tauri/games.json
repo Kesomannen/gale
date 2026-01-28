@@ -334,6 +334,18 @@
         }
     },
     {
+        "name": "Astroneer",
+        "slug": "astroneer",
+        "modLoader": {
+            "name": "Shimloader"
+        },
+        "platforms": {
+            "steam": {
+                "id": 361420
+            }
+        }
+    },
+    {
         "name": "Atomicrops",
         "modLoader": {
             "name": "BepInEx"

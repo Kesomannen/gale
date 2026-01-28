@@ -190,16 +190,16 @@ pub struct UserMedia {
     //pub status: UserMediaStatus,
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum UserMediaStatus {
-    Initial,
-    UploadInitiated,
-    UploadCreated,
-    UploadError,
-    UploadComplete,
-    UploadAborted,
-}
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub enum UserMediaStatus {
+//     Initial,
+//     UploadInitiated,
+//     UploadCreated,
+//     UploadError,
+//     UploadComplete,
+//     UploadAborted,
+// }
 
 #[derive(Deserialize, Debug)]
 pub struct UploadPartUrl {
