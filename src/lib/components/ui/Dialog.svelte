@@ -74,12 +74,12 @@
 				>
 					<div
 						class={[
-							large ? 'max-w-[60rem]' : 'max-w-[35rem]',
+							large ? 'max-w-240' : 'max-w-140',
 							'border-primary-600 bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
 						]}
 					>
 						{#if title}
-							<Dialog.Title class="w-full pr-10 text-2xl font-bold break-words text-white"
+							<Dialog.Title class="w-full pr-10 text-2xl font-bold wrap-break-word text-white"
 								>{title}</Dialog.Title
 							>
 						{/if}
