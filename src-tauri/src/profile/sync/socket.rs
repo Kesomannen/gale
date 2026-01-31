@@ -5,7 +5,7 @@ use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
-use reqwest_websocket::{RequestBuilderExt, WebSocket};
+use reqwest_websocket::{Upgrade, WebSocket};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::mpsc;
