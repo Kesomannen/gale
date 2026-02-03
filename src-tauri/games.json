@@ -2471,6 +2471,18 @@
         }
     },
     {
+	    "name": "YAPYAP",
+	    "slug": "yapyap",
+	    "modLoader": {
+		    "name": "BepInEx"
+	    },
+	    "platforms": {
+		    "steam": {
+			    "id": 3834090
+		    }
+	    }
+    },
+    {
         "name": "Zort",
         "slug": "zort",
         "modLoader": {
