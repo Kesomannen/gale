@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Typo in notification
+
 ## 1.12.0 (2025-02-05)
 
 ### Added
