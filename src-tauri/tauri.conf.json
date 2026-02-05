@@ -1,6 +1,6 @@
 {
 	"productName": "Gale",
-	"version": "1.11.1",
+	"version": "1.12.0",
 	"identifier": "com.kesomannen.gale",
 	"build": {
 		"beforeBuildCommand": "pnpm run build",
@@ -37,7 +37,9 @@
 		"resources": [],
 		"fileAssociations": [
 			{
-				"ext": ["r2z"],
+				"ext": [
+					"r2z"
+				],
 				"mimeType": "application/zip"
 			}
 		]
@@ -51,7 +53,10 @@
 		},
 		"deep-link": {
 			"desktop": {
-				"schemes": ["ror2mm", "gale"]
+				"schemes": [
+					"ror2mm",
+					"gale"
+				]
 			}
 		}
 	},
@@ -74,7 +79,9 @@
 			"csp": "default-src * ipc: http://ipc.localhost; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' https://storage.ko-fi.com; font-src https://fonts.gstatic.com",
 			"assetProtocol": {
 				"enable": true,
-				"scope": ["**"]
+				"scope": [
+					"**"
+				]
 			}
 		}
 	}

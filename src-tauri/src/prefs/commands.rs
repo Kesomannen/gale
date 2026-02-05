@@ -16,6 +16,7 @@ pub fn get_prefs(app: AppHandle) -> Prefs {
 
 #[command]
 pub fn set_prefs(value: Prefs, app: AppHandle) -> Result<()> {
+    dbg!(&value);
     let mut prefs = app.lock_prefs();
     prefs.set(value, &app)?;
     Ok(())

@@ -3,7 +3,6 @@
 	import InputField from '$lib/components/ui/InputField.svelte';
 
 	import type { LaunchMode } from '$lib/types';
-	import { selectItems } from '$lib/util';
 	import Info from '$lib/components/ui/Info.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toHeaderCase } from 'js-convert-case';
@@ -18,8 +17,8 @@
 
 	let { platform, value = $bindable(), set }: Props = $props();
 
-	let instances = $state(value.content?.instances ?? 1);
-	let intervalSecs = $state(value.content?.intervalSecs ?? 10);
+	let instances = $derived(value.content?.instances ?? 1);
+	let intervalSecs = $derived(value.content?.intervalSecs ?? 10);
 
 	let items = $derived([
 		{
@@ -40,7 +39,7 @@
 		} else {
 			value.content = undefined;
 		}
-
+		
 		await set(value);
 	}
 

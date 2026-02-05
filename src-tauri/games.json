@@ -1,2570 +1,2566 @@
 [
-    {
-        "name": "Content Warning",
-        "popular": true,
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2881650
-            }
-        }
-    },
-    {
-        "name": "GTFO",
-        "slug": "gtfo",
-        "popular": true,
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "Assets",
-                    "target": "BepInEx/Assets",
-                    "mode": "track"
-                },
-                {
-                    "name": "GameData",
-                    "target": "BepInEx/GameData"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 493520
-            }
-        }
-    },
-    {
-        "name": "H3VR",
-        "slug": "h3vr",
-        "r2dirName": "H3VR",
-        "popular": true,
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "Sideloader",
-                    "target": "BepInEx/Sideloader",
-                    "mode": "track"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 450540
-            }
-        }
-    },
-    {
-        "name": "Lethal Company",
-        "popular": true,
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1966720
-            }
-        }
-    },
-    {
-        "name": "R.E.P.O.",
-        "slug": "repo",
-        "popular": true,
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3241660,
-                "dirName": "REPO"
-            }
-        }
-    },
-    {
-        "name": "Risk of Rain 2",
-        "slug": "riskofrain2",
-        "r2dirName": "RiskOfRain2",
-        "popular": true,
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "bbepis-BepInExPack"
-        },
-        "platforms": {
-            "steam": {
-                "id": 632360
-            },
-            "epicGames": {
-                "identifier": "4b3dcc5723454a47a9112d8fe8fd5f5c"
-            }
-        }
-    },
-    {
-        "name": "Titanfall 2: Northstar",
-        "slug": "northstar",
-        "r2dirName": "Titanfall2",
-        "popular": true,
-        "modLoader": {
-            "name": "Northstar"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1237970
-            },
-            "origin": {}
-        }
-    },
-    {
-        "name": "Valheim",
-        "popular": true,
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "denikson-BepInExPack_Valheim",
-            "subdirs": [
-                {
-                    "name": "SlimVML",
-                    "target": "BepInEx/SlimVML"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 892970
-            },
-            "xboxStore": {
-                "identifier": "CoffeeStainStudios.Valheim"
-            }
-        }
-    },
-    {
-        "name": "20 Minutes Till Dawn",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "BepInExPackMTD-BepInExPack_20MTD"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1966900,
-                "dirName": "20MinuteTillDawn"
-            },
-            "epicGames": {
-                "identifier": "4656facc740742a39e265b026e13d075"
-            }
-        }
-    },
-    {
-        "name": "9 Kings",
-        "slug": "9-kings",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2784470,
-                "dirName": "9Kings"
-            }
-        }
-    },
-    {
-        "name": "AGAINST",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1584840,
-                "dirName": "AGAINST_steam"
-            }
-        }
-    },
-    {
-        "name": "ANEURISM IV",
-        "slug": "aneurism-iv",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2773280,
-                "dirName": "ANEURISMIV"
-            }
-        }
-    },
-    {
-        "name": "ASKA",
-        "slug": "aska",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1898300
-            }
-        }
-    },
-    {
-        "name": "ATLYSS",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2768430
-            }
-        }
-    },
-    {
-        "name": "Across the Obelisk",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1385380
-            }
-        }
-    },
-    {
-        "name": "Aeruta",
-        "slug": "aeruta",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2286780
-            }
-        }
-    },
-    {
-        "name": "Against the Storm",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1336490
-            }
-        }
-    },
-    {
-        "name": "Ale & Tale Tavern",
-        "slug": "ale-and-tale-tavern",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2683150
-            }
-        }
-    },
-    {
-        "name": "Aloft",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2051980,
-                "dirName": "Aloft Demo"
-            }
-        }
-    },
-    {
-        "name": "Among Us",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 945360
-            },
-            "epicGames": {
-                "identifier": "among-us"
-            },
-            "xboxStore": {
-                "identifier": "Innersloth.AmongUs"
-            }
-        }
-    },
-    {
-        "name": "Ancient Dungeon VR",
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "mods",
-                    "target": "mods",
-                    "mode": "separate",
-                    "extension": ".hotmod,.h3mod"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1125240
-            },
-            "oculus": {}
-        }
-    },
-    {
-        "name": "Another Crab's Treasure",
-        "slug": "another-crabs-treasure",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1887840,
-                "dirName": "AnotherCrabsTreasure"
-            }
-        }
-    },
-    {
-        "name": "Arcus Chroma",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1447350
-            }
-        }
-    },
-    {
-        "name": "Astroneer",
-        "slug": "astroneer",
-        "modLoader": {
-            "name": "Shimloader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 361420
-            }
-        }
-    },
-    {
-        "name": "Atomicrops",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 757320
-            }
-        }
-    },
-    {
-        "name": "Atrio: The Dark Wild",
-        "slug": "atrio-the-dark-wild",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1125390,
-                "dirName": "Atrio The Dark Wild"
-            }
-        }
-    },
-    {
-        "name": "BONELAB",
-        "modLoader": {
-            "name": "MelonLoader",
-            "subdirs": [
-                {
-                    "name": "Plugins",
-                    "target": "Plugins",
-                    "mode": "track",
-                    "extension": ".plugin.dll"
-                },
-                {
-                    "name": "UserData",
-                    "target": "UserData",
-                    "mode": "track"
-                },
-                {
-                    "name": "CustomItems",
-                    "target": "UserData/CustomItems",
-                    "mode": "track",
-                    "extension": ".melon"
-                },
-                {
-                    "name": "CustomMaps",
-                    "target": "UserData/CustomMaps",
-                    "mode": "track",
-                    "extension": ".bcm,.cma"
-                },
-                {
-                    "name": "PlayerModels",
-                    "target": "UserData/PlayerModels",
-                    "mode": "track",
-                    "extension": ".body"
-                },
-                {
-                    "name": "CustomLoadScreens",
-                    "target": "UserData/CustomLoadScreens",
-                    "mode": "track",
-                    "extension": ".load"
-                },
-                {
-                    "name": "Music",
-                    "target": "UserData/Music",
-                    "mode": "track",
-                    "extension": ".wav"
-                },
-                {
-                    "name": "Food",
-                    "target": "UserData/Food",
-                    "mode": "track",
-                    "extension": ".food"
-                },
-                {
-                    "name": "Scoreworks",
-                    "target": "UserData/Scoreworks",
-                    "mode": "track",
-                    "extension": ".sw"
-                },
-                {
-                    "name": "CustomSkins",
-                    "target": "UserData/CustomSkins",
-                    "mode": "track",
-                    "extension": ".png"
-                },
-                {
-                    "name": "Grenades",
-                    "target": "UserData/Grenades",
-                    "mode": "track",
-                    "extension": ".grenade"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1592190
-            },
-            "oculus": {}
-        }
-    },
-    {
-        "name": "BONEWORKS",
-        "r2dirName": "BONEWORKS",
-        "modLoader": {
-            "name": "MelonLoader",
-            "subdirs": [
-                {
-                    "name": "Plugins",
-                    "target": "Plugins",
-                    "mode": "track",
-                    "extension": ".plugin.dll"
-                },
-                {
-                    "name": "UserData",
-                    "target": "UserData",
-                    "mode": "track"
-                },
-                {
-                    "name": "CustomItems",
-                    "target": "UserData/CustomItems",
-                    "mode": "track",
-                    "extension": ".melon"
-                },
-                {
-                    "name": "CustomMaps",
-                    "target": "UserData/CustomMaps",
-                    "mode": "track",
-                    "extension": ".bcm,.cma"
-                },
-                {
-                    "name": "PlayerModels",
-                    "target": "UserData/PlayerModels",
-                    "mode": "track",
-                    "extension": ".body"
-                },
-                {
-                    "name": "CustomLoadScreens",
-                    "target": "UserData/CustomLoadScreens",
-                    "mode": "track",
-                    "extension": ".load"
-                },
-                {
-                    "name": "Music",
-                    "target": "UserData/Music",
-                    "mode": "track",
-                    "extension": ".wav"
-                },
-                {
-                    "name": "Food",
-                    "target": "UserData/Food",
-                    "mode": "track",
-                    "extension": ".food"
-                },
-                {
-                    "name": "Scoreworks",
-                    "target": "UserData/Scoreworks",
-                    "mode": "track",
-                    "extension": ".sw"
-                },
-                {
-                    "name": "CustomSkins",
-                    "target": "UserData/CustomSkins",
-                    "mode": "track",
-                    "extension": ".png"
-                },
-                {
-                    "name": "Grenades",
-                    "target": "UserData/Grenades",
-                    "mode": "track",
-                    "extension": ".grenade"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 823500,
-                "dirName": "BONEWORKS/BONEWORKS"
-            },
-            "oculus": {}
-        }
-    },
-    {
-        "name": "Back to the Dawn",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1735700,
-                "dirName": "MetalHeadGames"
-            }
-        }
-    },
-    {
-        "name": "Backpack Hero",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1970580
-            }
-        }
-    },
-    {
-        "name": "Bad North",
-        "slug": "bad-north",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 688420
-            }
-        }
-    },
-    {
-        "name": "Balatro",
-        "modLoader": {
-            "name": "Lovely"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2379780
-            }
-        }
-    },
-    {
-        "name": "Beetleball",
-        "slug": "beetleball",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3821880,
-                "dirName": "BeetleBall Playtest"
-            }
-        }
-    },
-    {
-        "name": "Below the Stone",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1170230,
-                "dirName": "Below The Stone"
-            }
-        }
-    },
-    {
-        "name": "Betrayal Beach",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2643810
-            }
-        }
-    },
-    {
-        "name": "Bomb Rush Cyberfunk",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1353230,
-                "dirName": "BombRushCyberfunk"
-            },
-            "xboxStore": {
-                "identifier": "TeamReptile.BombRushCyberfunk"
-            }
-        }
-    },
-    {
-        "name": "Bopl Battle",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1686940
-            }
-        }
-    },
-    {
-        "name": "Carrier Deck",
-        "slug": "carrier-deck",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 580720
-            }
-        }
-    },
-    {
-        "name": "Castle Story",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 227860
-            }
-        }
-    },
-    {
-        "name": "Cats are Liquid - A Better Place",
-        "slug": "cats-are-liquid",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1188080
-            }
-        }
-    },
-    {
-        "name": "Chrono Ark",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1188930
-            }
-        }
-    },
-    {
-        "name": "Cities: Skylines II",
-        "slug": "cities-skylines-ii",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 949230,
-                "dirName": "Cities Skylines II"
-            },
-            "xboxStore": {
-                "identifier": "ParadoxInteractive.CitiesSkylinesII-PCEdition"
-            }
-        }
-    },
-    {
-        "name": "CloverPit",
-        "slug": "clover-pit",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3314790
-            }
-        }
-    },
-    {
-        "name": "Core Keeper",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1621690
-            }
-        }
-    },
-    {
-        "name": "Crawlspace 2",
-        "slug": "crawlspace-2",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2258670,
-                "dirName": "Crawlspace 2"
-            }
-        }
-    },
-    {
-        "name": "Cult of the Lamb",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1313140
-            }
-        }
-    },
-    {
-        "name": "DEPO : Death Epileptic Pixel Origins",
-        "slug": "depo",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1091320,
-                "dirName": "DEPO"
-            }
-        }
-    },
-    {
-        "name": "DREDGE",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1562430
-            }
-        }
-    },
-    {
-        "name": "DUSK",
-        "slug": "dusk",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 519860,
-                "dirName": "Dusk"
-            }
-        }
-    },
-    {
-        "name": "Deep Rock Galactic: Survivor",
-        "slug": "deep-rock-galactic-survivor",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2321470,
-                "dirName": "Deep Rock Survivor"
-            }
-        }
-    },
-    {
-        "name": "Disco Elysium",
-        "slug": "disco-elysium",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 632470
-            }
-        }
-    },
-    {
-        "name": "Distance",
-        "slug": "distance",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 233610
-            }
-        }
-    },
-    {
-        "name": "Dyson Sphere Program",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "xiaoye97-BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1366540
-            },
-            "xboxStore": {
-                "identifier": "GameraGame.DysonSphereProgram"
-            }
-        }
-    },
-    {
-        "name": "ENA: Dream BBQ",
-        "slug": "ena-dream-bbq",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2134320,
-                "dirName": "ENA-4-DreamBBQ"
-            }
-        }
-    },
-    {
-        "name": "Easy Delivery Co",
-        "slug": "easy-delivery-co",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3293010
-            }
-        }
-    },
-    {
-        "name": "Enter the Gungeon",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 311690
-            },
-            "epicGames": {
-                "identifier": "Garlic"
-            }
-        }
-    },
-    {
-        "name": "Erenshor",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2382520
-            }
-        }
-    },
-    {
-        "name": "Factory Planner",
-        "slug": "factory-planner",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3679930
-            }
-        }
-    },
-    {
-        "name": "Five Nights at Freddy's: Into the Pit",
-        "slug": "five-nights-at-freddys-into-the-pit",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2638370
-            }
-        }
-    },
-    {
-        "name": "Football Manager 26",
-        "slug": "football-manager-26",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3551340
-            }
-        }
-    },
-    {
-        "name": "For The King",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 527230
-            },
-            "epicGames": {
-                "identifier": "Discus"
-            }
-        }
-    },
-    {
-        "name": "Gang Beasts",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 285900
-            }
-        }
-    },
-    {
-        "name": "Garfield Kart - Furious Racing",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1085510
-            }
-        }
-    },
-    {
-        "name": "Gatekeeper",
-        "slug": "gatekeeper",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2106670
-            }
-        }
-    },
-    {
-        "name": "Gladio Mori",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2908480,
-                "dirName": "Gladio Mori Demo"
-            }
-        }
-    },
-    {
-        "name": "Gloomwood",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1150760
-            }
-        }
-    },
-    {
-        "name": "Goodbye Volcano High",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1310330
-            }
-        }
-    },
-    {
-        "name": "GoreBox",
-        "slug": "gorebox",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2027330
-            }
-        }
-    },
-    {
-        "name": "Green Hell VR",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "PCVR_Modders-BepInExPack_GHVR"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1782330
-            },
-            "oculus": {}
-        }
-    },
-    {
-        "name": "Grey Hack",
-        "slug": "grey-hack",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 605230
-            }
-        }
-    },
-    {
-        "name": "Guilty as Sock!",
-        "slug": "guilty-as-sock",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3400930,
-                "dirName": "GuiltyasSock"
-            }
-        }
-    },
-    {
-        "name": "Hades II",
-        "slug": "hades-ii",
-        "modLoader": {
-            "name": "ReturnOfModding",
-            "packageName": "Hell2Modding-Hell2Modding",
-            "files": [
-                "d3d12.dll"
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1145350,
-                "dirName": "Hades II/Ship"
-            }
-        }
-    },
-    {
-        "name": "Hard Bullet",
-        "modLoader": {
-            "name": "MelonLoader",
-            "subdirs": [
-                {
-                    "name": "CustomNPCs",
-                    "target": "UserData/CustomNPCs",
-                    "extension": ".npc",
-                    "mode": "track"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1294760
-            }
-        }
-    },
-    {
-        "name": "Hard Time III",
-        "slug": "hard-time-3",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3009850
-            }
-        }
-    },
-    {
-        "name": "Hollow Knight: Silksong",
-        "slug": "hollow-knight-silksong",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1030300,
-                "dirName": "Hollow Knight Silksong"
-            },
-            "xboxStore": {
-                "identifier": "TeamCherry.HollowKnightSilksong"
-            }
-        }
-    },
-    {
-        "name": "House of Legacy",
-        "slug": "house-of-legacy",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2503770,
-                "dirName": "\u543e\u4eca\u6709\u4e16\u5bb6"
-            }
-        }
-    },
-    {
-        "name": "House of the Dying Sun",
-        "slug": "hotds",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 283160,
-                "dirName": "DyingSun"
-            }
-        }
-    },
-    {
-        "name": "Human Fall Flat",
-        "slug": "human-fall-flat",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 477160,
-                "dirName": "Human"
-            }
-        }
-    },
-    {
-        "name": "I Am Your Beast",
-        "slug": "i-am-your-beast",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1876590
-            }
-        }
-    },
-    {
-        "name": "Inscryption",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1092790
-            }
-        }
-    },
-    {
-        "name": "Jump Space",
-        "slug": "jump-space",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1757300,
-                "dirName": "JumpSpace"
-            }
-        }
-    },
-    {
-        "name": "Labyrinthine",
-        "slug": "labyrinthine",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1302240
-            }
-        }
-    },
-    {
-        "name": "Last Train Outta' Wormtown",
-        "slug": "last-train-outta-wormtown",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "BepInEx_Wormtown-BepInExPack"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2318480
-            }
-        }
-    },
-    {
-        "name": "Len's Island",
-        "slug": "lens-island",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1335830
-            }
-        }
-    },
-    {
-        "name": "Lethal League Blaze",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 553310,
-                "dirName": "LLBlaze"
-            }
-        }
-    },
-    {
-        "name": "Logic World",
-        "slug": "logic-world",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1054340
-            }
-        }
-    },
-    {
-        "name": "Lost Skies",
-        "slug": "lost-skies",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1931180,
-                "dirName": "Wild Skies"
-            }
-        }
-    },
-    {
-        "name": "Lost Skies Island Creator",
-        "slug": "lost-skies-ic",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2102670
-            }
-        }
-    },
-    {
-        "name": "Lycans",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2596100
-            }
-        }
-    },
-    {
-        "name": "MIMESIS",
-        "slug": "mimesis",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2827200
-            }
-        }
-    },
-    {
-        "name": "Mage Arena",
-        "slug": "mage-arena",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3716600
-            }
-        }
-    },
-    {
-        "name": "Magicite",
-        "slug": "magicite",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 268750
-            }
-        }
-    },
-    {
-        "name": "Magicraft",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2103140
-            }
-        }
-    },
-    {
-        "name": "Maltese's Fluffy Onsen",
-        "slug": "malteses-fluffy-onsen",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3404470,
-                "dirName": "Animal Spa"
-            }
-        }
-    },
-    {
-        "name": "Mechanica",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "Zinal001-BepInExPack_MECHANICA"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1226990
-            }
-        }
-    },
-    {
-        "name": "Meeple Station",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 900010
-            }
-        }
-    },
-    {
-        "name": "Megabonk",
-        "slug": "megabonk",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3405340
-            }
-        }
-    },
-    {
-        "name": "MiSide",
-        "slug": "miside",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2527500
-            }
-        }
-    },
-    {
-        "name": "MineMogul",
-        "slug": "mine-mogul",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3846120
-            }
-        }
-    },
-    {
-        "name": "Monster Train 2",
-        "slug": "monster-train-2",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2742830
-            }
-        }
-    },
-    {
-        "name": "Muck",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1625450
-            }
-        }
-    },
-    {
-        "name": "My Dream Setup",
-        "slug": "my-dream-setup",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2200780,
-                "dirName": "My dream setup/MDS"
-            }
-        }
-    },
-    {
-        "name": "Mycopunk",
-        "slug": "mycopunk",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3247750
-            }
-        }
-    },
-    {
-        "name": "Nearly Dead",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1268900
-            }
-        }
-    },
-    {
-        "name": "Necropolis",
-        "slug": "necropolis",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 384490
-            }
-        }
-    },
-    {
-        "name": "Nickelodeon All-Star Brawl",
-        "slug": "nasb",
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "CustomSongs",
-                    "target": "BepInEx/CustomSongs",
-                    "mode": "track"
-                },
-                {
-                    "name": "Movesets",
-                    "target": "BepInEx/Movesets",
-                    "mode": "track"
-                },
-                {
-                    "name": "Skins",
-                    "target": "BepInEx/Skins",
-                    "extension": ".nasbskin"
-                },
-                {
-                    "name": "Voicepacks",
-                    "target": "BepInEx/Voicepacks",
-                    "extension": ".voicepack"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1414850
-            }
-        }
-    },
-    {
-        "name": "Nine Sols",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1809540
-            }
-        }
-    },
-    {
-        "name": "Odd Remedy",
-        "slug": "odd-remedy",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1745680,
-                "dirName": "OddRemedy"
-            }
-        }
-    },
-    {
-        "name": "Old Market Simulator",
-        "slug": "old-market-simulator",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2878420
-            }
-        }
-    },
-    {
-        "name": "On-Together: Virtual Co-Working",
-        "slug": "on-together",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3707400,
-                "dirName": "On-Together"
-            }
-        }
-    },
-    {
-        "name": "Ostranauts",
-        "slug": "ostranauts",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1022980
-            }
-        }
-    },
-    {
-        "name": "Outward",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 794260
-            },
-            "epicGames": {
-                "identifier": "Viola"
-            }
-        }
-    },
-    {
-        "name": "PATAPON 1+2 REPLAY",
-        "slug": "patapon-1-2-replay",
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "hexpatches",
-                    "target": "BepInEx/hexpatches",
-                    "mode": "track",
-                    "mutable": true
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 2383200
-            }
-        }
-    },
-    {
-        "name": "PEAK",
-        "slug": "peak",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3527290
-            }
-        }
-    },
-    {
-        "name": "PIGFACE",
-        "slug": "pigface",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3746840
-            }
-        }
-    },
-    {
-        "name": "Painting VR",
-        "slug": "painting-vr",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1905940,
-                "dirName": "PaintingVr"
-            }
-        }
-    },
-    {
-        "name": "Palworld",
-        "modLoader": {
-            "name": "Shimloader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1623730
-            }
-        }
-    },
-    {
-        "name": "Panicore",
-        "modLoader": {
-            "name": "Shimloader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2695940
-            }
-        }
-    },
-    {
-        "name": "Paper Animal Adventure",
-        "slug": "paper-animal-adventure",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1982120
-            }
-        }
-    },
-    {
-        "name": "Paquerette Down the Bunburrows",
-        "slug": "paquerette-down-the-bunburrows",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1628610
-            }
-        }
-    },
-    {
-        "name": "Patch Quest",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1347970
-            }
-        }
-    },
-    {
-        "name": "Peaks of Yore",
-        "slug": "peaks-of-yore",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2236070
-            }
-        }
-    },
-    {
-        "name": "Peglin",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1296610
-            }
-        }
-    },
-    {
-        "name": "Plasma",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1409160
-            }
-        }
-    },
-    {
-        "name": "Potion Craft",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1210320
-            }
-        }
-    },
-    {
-        "name": "Project Arrhythmia",
-        "slug": "project-arrhythmia",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 440310
-            }
-        }
-    },
-    {
-        "name": "Pulsar: Lost Colony",
-        "slug": "pulsar-lost-colony",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 252870,
-                "dirName": "PULSARLostColony"
-            }
-        }
-    },
-    {
-        "name": "ROUNDS",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1557740
-            }
-        }
-    },
-    {
-        "name": "RUMBLE",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 890550
-            }
-        }
-    },
-    {
-        "name": "Ravenfield",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 636480
-            }
-        }
-    },
-    {
-        "name": "Receiver 2",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1129310
-            }
-        }
-    },
-    {
-        "name": "Resonite",
-        "slug": "resonite",
-        "modLoader": {
-            "name": "BepisLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2519830
-            }
-        }
-    },
-    {
-        "name": "Return of the Obra Dinn",
-        "slug": "return-of-the-obra-dinn",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 653530,
-                "dirName": "ObraDinn"
-            }
-        }
-    },
-    {
-        "name": "Risk Of Rain Returns",
-        "modLoader": {
-            "name": "ReturnOfModding",
-            "files": [
-                "version.dll"
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1337520
-            }
-        }
-    },
-    {
-        "name": "Rogue : Genesia",
-        "slug": "rogue-genesia",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2067920,
-                "dirName": "Rogue Genesia"
-            }
-        }
-    },
-    {
-        "name": "Rogue Tower",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "bbepis-BepInEx_Rogue_Tower"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1843760
-            }
-        }
-    },
-    {
-        "name": "STRAFTAT",
-        "slug": "straftat",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2386720
-            }
-        }
-    },
-    {
-        "name": "SULFUR",
-        "slug": "sulfur",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2124120
-            }
-        }
-    },
-    {
-        "name": "Sailwind",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1764530
-            }
-        }
-    },
-    {
-        "name": "Schedule I",
-        "slug": "schedule-i",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3164500
-            }
-        }
-    },
-    {
-        "name": "Screw Drivers",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1279510
-            }
-        }
-    },
-    {
-        "name": "Shadows Over Loathing",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1939160
-            }
-        }
-    },
-    {
-        "name": "Shadows of Doubt",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 986130
-            }
-        }
-    },
-    {
-        "name": "Shapez 2",
-        "slug": "shapez-2",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2162800
-            }
-        }
-    },
-    {
-        "name": "Skul: The Hero Slayer",
-        "slug": "skul-the-hero-slayer",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1147560,
-                "dirName": "Skul"
-            }
-        }
-    },
-    {
-        "name": "Slipstream: Rogue Space",
-        "slug": "slipstream-rogue-space",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2765860,
-                "dirName": "Slipstream Rogue Space"
-            }
-        }
-    },
-    {
-        "name": "Songs of Conquest",
-        "slug": "songs-of-conquest",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 867210,
-                "dirName": "SongsOfConquest"
-            }
-        }
-    },
-    {
-        "name": "Sons Of The Forest",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1326470
-            }
-        }
-    },
-    {
-        "name": "Stacklands",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1948280
-            }
-        }
-    },
-    {
-        "name": "Starsand",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1380220
-            },
-            "epicGames": {
-                "identifier": "a774278c0813447c96a76b053cbf73ff"
-            }
-        }
-    },
-    {
-        "name": "Stolen Realm",
-        "slug": "stolen-realm",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1330000
-            }
-        }
-    },
-    {
-        "name": "Subnautica",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "Subnautica_Modding-BepInExPack_Subnautica",
-            "subdirs": [
-                {
-                    "name": "QMods",
-                    "target": "QMods",
-                    "mode": "track"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 264710
-            },
-            "epicGames": {
-                "identifier": "Jaguar"
-            },
-            "xboxStore": {
-                "identifier": "UnknownWorldsEntertainmen.GAMEPREVIEWSubnautica"
-            }
-        }
-    },
-    {
-        "name": "Subnautica: Below Zero",
-        "slug": "subnautica-below-zero",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "Subnautica_Modding-BepInExPack_BelowZero",
-            "subdirs": [
-                {
-                    "name": "QMods",
-                    "target": "QMods",
-                    "mode": "track"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 848450,
-                "dirName": "SubnauticaZero"
-            },
-            "xboxStore": {
-                "identifier": "UnknownWorldsEntertainmen.SubnauticaBelowZero"
-            }
-        }
-    },
-    {
-        "name": "Subterranauts",
-        "slug": "subterranauts",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3075800
-            }
-        }
-    },
-    {
-        "name": "Subterror",
-        "slug": "subterror",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2846060
-            }
-        }
-    },
-    {
-        "name": "Sun Haven",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1432860
-            }
-        }
-    },
-    {
-        "name": "Sunkenland",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "SunkenlandModding-BepInExPack_Sunkenland"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2080690
-            }
-        }
-    },
-    {
-        "name": "Super Fantasy Kingdom",
-        "slug": "super-fantasy-kingdom",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2289750
-            }
-        }
-    },
-    {
-        "name": "Supermarket Together",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2709570
-            }
-        }
-    },
-    {
-        "name": "TABS",
-        "slug": "totally-accurate-battle-simulator",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 508440,
-                "dirName": "Totally Accurate Battle Simulator"
-            },
-            "epicGames": {
-                "identifier": "Driftfish"
-            },
-            "xboxStore": {
-                "identifier": "LandfallGames.TotallyAccurateBattleSimulator"
-            }
-        }
-    },
-    {
-        "name": "TCG Card Shop Simulator",
-        "slug": "tcg-card-shop-simulator",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3070070
-            }
-        }
-    },
-    {
-        "name": "TaleSpire",
-        "slug": "talespire",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "bbepisTaleSpire-BepInExPack"
-        },
-        "platforms": {
-            "steam": {
-                "id": 720620
-            }
-        }
-    },
-    {
-        "name": "Tank Team",
-        "slug": "tank-team",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2587450
-            }
-        }
-    },
-    {
-        "name": "Techtonica",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1457320
-            }
-        }
-    },
-    {
-        "name": "The Farmer Was Replaced",
-        "slug": "the-farmer-was-replaced",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2060160
-            }
-        }
-    },
-    {
-        "name": "The Ouroboros King",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2096510
-            }
-        }
-    },
-    {
-        "name": "The Planet Crafter",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1284190
-            }
-        }
-    },
-    {
-        "name": "Thronefall",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 2239150
-            }
-        }
-    },
-    {
-        "name": "Timberborn",
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "Maps",
-                    "target": "BepInEx/Maps"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1062090
-            },
-            "epicGames": {
-                "identifier": "972a4ca2631e43b4ba7bc3b7586ad8c4"
-            }
-        }
-    },
-    {
-        "name": "TouhouLostBranchOfLegend",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1140150,
-                "dirName": "LBoL"
-            }
-        }
-    },
-    {
-        "name": "Trombone Champ",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1059990,
-                "dirName": "TromboneChamp"
-            }
-        }
-    },
-    {
-        "name": "ULTRAKILL",
-        "modLoader": {
-            "name": "BepInEx",
-            "subdirs": [
-                {
-                    "name": "UMM Mods",
-                    "target": "BepInEx/UMM Mods"
-                }
-            ]
-        },
-        "platforms": {
-            "steam": {
-                "id": 1229490
-            }
-        }
-    },
-    {
-        "name": "Ultimate Chicken Horse",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 386940
-            }
-        }
-    },
-    {
-        "name": "V Rising",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1604030,
-                "dirName": "VRising"
-            }
-        }
-    },
-    {
-        "name": "VTOL VR",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 667970
-            }
-        }
-    },
-    {
-        "name": "Vellum",
-        "slug": "vellum",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 917950
-            }
-        }
-    },
-    {
-        "name": "Vertigo 2",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 843390
-            }
-        }
-    },
-    {
-        "name": "Vigil",
-        "slug": "vigil",
-        "modLoader": {
-            "name": "MelonLoader"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3817090
-            }
-        }
-    },
-    {
-        "name": "Voices of the Void",
-        "r2dirName": "VotV",
-        "modLoader": {
-            "name": "Shimloader"
-        },
-        "platforms": {}
-    },
-    {
-        "name": "Void Crew",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1063420
-            }
-        }
-    },
-    {
-        "name": "WEBFISHING",
-        "modLoader": {
-            "name": "GDWeave"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3146520
-            }
-        }
-    },
-    {
-        "name": "We Love Katamari REROLL+ Royal Reverie",
-        "slug": "we-love-katamari-reroll-royal-reverie",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1730700,
-                "dirName": "WLKRR"
-            }
-        }
-    },
-    {
-        "name": "West of Loathing",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 597220
-            }
-        }
-    },
-    {
-        "name": "White Knuckle",
-        "slug": "white-knuckle",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3195790
-            }
-        }
-    },
-    {
-        "name": "Wildfrost",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1811990
-            }
-        }
-    },
-    {
-        "name": "Wizard With A Gun",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1150530
-            }
-        }
-    },
-    {
-        "name": "Wizard of Legend",
-        "modLoader": {
-            "name": "BepInEx",
-            "packageName": "Modding_Council-BepInExPack_of_Legend"
-        },
-        "platforms": {
-            "steam": {
-                "id": 445980
-            }
-        }
-    },
-    {
-        "name": "Word Play",
-        "slug": "word-play",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3586660
-            }
-        }
-    },
-    {
-        "name": "Wrestling Empire",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 1620340
-            }
-        }
-    },
-    {
-        "name": "YAPYAP",
-        "slug": "yapyap",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3834090
-            }
-        }
-    },
-    {
-        "name": "Zort",
-        "slug": "zort",
-        "modLoader": {
-            "name": "BepInEx"
-        },
-        "platforms": {
-            "steam": {
-                "id": 3121110
-            }
-        }
-    }
+	{
+		"name": "Content Warning",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2881650
+			}
+		}
+	},
+	{
+		"name": "GTFO",
+		"slug": "gtfo",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx",
+			"subdirs": [
+				{
+					"name": "Assets",
+					"target": "BepInEx/Assets",
+					"mode": "track"
+				},
+				{
+					"name": "GameData",
+					"target": "BepInEx/GameData"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 493520
+			}
+		}
+	},
+	{
+		"name": "H3VR",
+		"slug": "h3vr",
+		"r2dirName": "H3VR",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx",
+			"subdirs": [
+				{
+					"name": "Sideloader",
+					"target": "BepInEx/Sideloader",
+					"mode": "track"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 450540
+			}
+		}
+	},
+	{
+		"name": "Lethal Company",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1966720
+			}
+		}
+	},
+	{
+		"name": "R.E.P.O.",
+		"slug": "repo",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3241660,
+				"dirName": "REPO"
+			}
+		}
+	},
+	{
+		"name": "Risk of Rain 2",
+		"slug": "riskofrain2",
+		"r2dirName": "RiskOfRain2",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "bbepis-BepInExPack"
+		},
+		"platforms": {
+			"steam": {
+				"id": 632360
+			},
+			"epicGames": {
+				"identifier": "4b3dcc5723454a47a9112d8fe8fd5f5c"
+			}
+		}
+	},
+	{
+		"name": "Titanfall 2: Northstar",
+		"slug": "northstar",
+		"r2dirName": "Titanfall2",
+		"popular": true,
+		"modLoader": {
+			"name": "Northstar"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1237970
+			},
+			"origin": {}
+		}
+	},
+	{
+		"name": "Valheim",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "denikson-BepInExPack_Valheim",
+			"subdirs": [
+				{
+					"name": "SlimVML",
+					"target": "BepInEx/SlimVML"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 892970
+			},
+			"xboxStore": {
+				"identifier": "CoffeeStainStudios.Valheim"
+			}
+		}
+	},
+	{
+		"name": "20 Minutes Till Dawn",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "BepInExPackMTD-BepInExPack_20MTD"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1966900,
+				"dirName": "20MinuteTillDawn"
+			},
+			"epicGames": {
+				"identifier": "4656facc740742a39e265b026e13d075"
+			}
+		}
+	},
+	{
+		"name": "9 Kings",
+		"slug": "9-kings",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2784470,
+				"dirName": "9Kings"
+			}
+		}
+	},
+	{
+		"name": "AGAINST",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1584840,
+				"dirName": "AGAINST_steam"
+			}
+		}
+	},
+	{
+		"name": "ANEURISM IV",
+		"slug": "aneurism-iv",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2773280,
+				"dirName": "ANEURISMIV"
+			}
+		}
+	},
+	{
+		"name": "ASKA",
+		"slug": "aska",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1898300
+			}
+		}
+	},
+	{
+		"name": "ATLYSS",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2768430
+			}
+		}
+	},
+	{
+		"name": "Across the Obelisk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1385380
+			}
+		}
+	},
+	{
+		"name": "Aeruta",
+		"slug": "aeruta",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2286780
+			}
+		}
+	},
+	{
+		"name": "Against the Storm",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1336490
+			}
+		}
+	},
+	{
+		"name": "Ale & Tale Tavern",
+		"slug": "ale-and-tale-tavern",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2683150
+			}
+		}
+	},
+	{
+		"name": "Aloft",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2051980,
+				"dirName": "Aloft Demo"
+			}
+		}
+	},
+	{
+		"name": "Among Us",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 945360
+			},
+			"epicGames": {
+				"identifier": "among-us"
+			},
+			"xboxStore": {
+				"identifier": "Innersloth.AmongUs"
+			}
+		}
+	},
+	{
+		"name": "Ancient Dungeon VR",
+		"modLoader": {
+			"name": "BepInEx",
+			"subdirs": [
+				{
+					"name": "mods",
+					"target": "mods",
+					"mode": "separate",
+					"extension": ".hotmod,.h3mod"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1125240
+			},
+			"oculus": {}
+		}
+	},
+	{
+		"name": "Another Crab's Treasure",
+		"slug": "another-crabs-treasure",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1887840,
+				"dirName": "AnotherCrabsTreasure"
+			}
+		}
+	},
+	{
+		"name": "Arcus Chroma",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1447350
+			}
+		}
+	},
+	{
+		"name": "Astroneer",
+		"slug": "astroneer",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 361420
+			}
+		}
+	},
+	{
+		"name": "Atomicrops",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 757320
+			}
+		}
+	},
+	{
+		"name": "Atrio: The Dark Wild",
+		"slug": "atrio-the-dark-wild",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1125390,
+				"dirName": "Atrio The Dark Wild"
+			}
+		}
+	},
+	{
+		"name": "BONELAB",
+		"modLoader": {
+			"name": "MelonLoader",
+			"subdirs": [
+				{
+					"name": "Plugins",
+					"target": "Plugins",
+					"mode": "track",
+					"extension": ".plugin.dll"
+				},
+				{
+					"name": "UserData",
+					"target": "UserData",
+					"mode": "track"
+				},
+				{
+					"name": "CustomItems",
+					"target": "UserData/CustomItems",
+					"mode": "track",
+					"extension": ".melon"
+				},
+				{
+					"name": "CustomMaps",
+					"target": "UserData/CustomMaps",
+					"mode": "track",
+					"extension": ".bcm,.cma"
+				},
+				{
+					"name": "PlayerModels",
+					"target": "UserData/PlayerModels",
+					"mode": "track",
+					"extension": ".body"
+				},
+				{
+					"name": "CustomLoadScreens",
+					"target": "UserData/CustomLoadScreens",
+					"mode": "track",
+					"extension": ".load"
+				},
+				{
+					"name": "Music",
+					"target": "UserData/Music",
+					"mode": "track",
+					"extension": ".wav"
+				},
+				{
+					"name": "Food",
+					"target": "UserData/Food",
+					"mode": "track",
+					"extension": ".food"
+				},
+				{
+					"name": "Scoreworks",
+					"target": "UserData/Scoreworks",
+					"mode": "track",
+					"extension": ".sw"
+				},
+				{
+					"name": "CustomSkins",
+					"target": "UserData/CustomSkins",
+					"mode": "track",
+					"extension": ".png"
+				},
+				{
+					"name": "Grenades",
+					"target": "UserData/Grenades",
+					"mode": "track",
+					"extension": ".grenade"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1592190
+			},
+			"oculus": {}
+		}
+	},
+	{
+		"name": "BONEWORKS",
+		"r2dirName": "BONEWORKS",
+		"modLoader": {
+			"name": "MelonLoader",
+			"subdirs": [
+				{
+					"name": "Plugins",
+					"target": "Plugins",
+					"mode": "track",
+					"extension": ".plugin.dll"
+				},
+				{
+					"name": "UserData",
+					"target": "UserData",
+					"mode": "track"
+				},
+				{
+					"name": "CustomItems",
+					"target": "UserData/CustomItems",
+					"mode": "track",
+					"extension": ".melon"
+				},
+				{
+					"name": "CustomMaps",
+					"target": "UserData/CustomMaps",
+					"mode": "track",
+					"extension": ".bcm,.cma"
+				},
+				{
+					"name": "PlayerModels",
+					"target": "UserData/PlayerModels",
+					"mode": "track",
+					"extension": ".body"
+				},
+				{
+					"name": "CustomLoadScreens",
+					"target": "UserData/CustomLoadScreens",
+					"mode": "track",
+					"extension": ".load"
+				},
+				{
+					"name": "Music",
+					"target": "UserData/Music",
+					"mode": "track",
+					"extension": ".wav"
+				},
+				{
+					"name": "Food",
+					"target": "UserData/Food",
+					"mode": "track",
+					"extension": ".food"
+				},
+				{
+					"name": "Scoreworks",
+					"target": "UserData/Scoreworks",
+					"mode": "track",
+					"extension": ".sw"
+				},
+				{
+					"name": "CustomSkins",
+					"target": "UserData/CustomSkins",
+					"mode": "track",
+					"extension": ".png"
+				},
+				{
+					"name": "Grenades",
+					"target": "UserData/Grenades",
+					"mode": "track",
+					"extension": ".grenade"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 823500,
+				"dirName": "BONEWORKS/BONEWORKS"
+			},
+			"oculus": {}
+		}
+	},
+	{
+		"name": "Back to the Dawn",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1735700,
+				"dirName": "MetalHeadGames"
+			}
+		}
+	},
+	{
+		"name": "Backpack Hero",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1970580
+			}
+		}
+	},
+	{
+		"name": "Bad North",
+		"slug": "bad-north",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 688420
+			}
+		}
+	},
+	{
+		"name": "Balatro",
+		"modLoader": {
+			"name": "Lovely"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2379780
+			}
+		}
+	},
+	{
+		"name": "Beetleball",
+		"slug": "beetleball",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3821880,
+				"dirName": "BeetleBall Playtest"
+			}
+		}
+	},
+	{
+		"name": "Below the Stone",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1170230,
+				"dirName": "Below The Stone"
+			}
+		}
+	},
+	{
+		"name": "Betrayal Beach",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2643810
+			}
+		}
+	},
+	{
+		"name": "Bomb Rush Cyberfunk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1353230,
+				"dirName": "BombRushCyberfunk"
+			},
+			"xboxStore": {
+				"identifier": "TeamReptile.BombRushCyberfunk"
+			}
+		}
+	},
+	{
+		"name": "Bopl Battle",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1686940
+			}
+		}
+	},
+	{
+		"name": "Carrier Deck",
+		"slug": "carrier-deck",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 580720
+			}
+		}
+	},
+	{
+		"name": "Castle Story",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 227860
+			}
+		}
+	},
+	{
+		"name": "Cats are Liquid - A Better Place",
+		"slug": "cats-are-liquid",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1188080
+			}
+		}
+	},
+	{
+		"name": "Chrono Ark",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1188930
+			}
+		}
+	},
+	{
+		"name": "Cities: Skylines II",
+		"slug": "cities-skylines-ii",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 949230,
+				"dirName": "Cities Skylines II"
+			},
+			"xboxStore": {
+				"identifier": "ParadoxInteractive.CitiesSkylinesII-PCEdition"
+			}
+		}
+	},
+	{
+		"name": "CloverPit",
+		"slug": "clover-pit",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3314790
+			}
+		}
+	},
+	{
+		"name": "Core Keeper",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1621690
+			}
+		}
+	},
+	{
+		"name": "Crawlspace 2",
+		"slug": "crawlspace-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2258670,
+				"dirName": "Crawlspace 2"
+			}
+		}
+	},
+	{
+		"name": "Cult of the Lamb",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1313140
+			}
+		}
+	},
+	{
+		"name": "DEPO : Death Epileptic Pixel Origins",
+		"slug": "depo",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1091320,
+				"dirName": "DEPO"
+			}
+		}
+	},
+	{
+		"name": "DREDGE",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1562430
+			}
+		}
+	},
+	{
+		"name": "DUSK",
+		"slug": "dusk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 519860,
+				"dirName": "Dusk"
+			}
+		}
+	},
+	{
+		"name": "Deep Rock Galactic: Survivor",
+		"slug": "deep-rock-galactic-survivor",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2321470,
+				"dirName": "Deep Rock Survivor"
+			}
+		}
+	},
+	{
+		"name": "Disco Elysium",
+		"slug": "disco-elysium",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 632470
+			}
+		}
+	},
+	{
+		"name": "Distance",
+		"slug": "distance",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 233610
+			}
+		}
+	},
+	{
+		"name": "Dyson Sphere Program",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "xiaoye97-BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1366540
+			},
+			"xboxStore": {
+				"identifier": "GameraGame.DysonSphereProgram"
+			}
+		}
+	},
+	{
+		"name": "ENA: Dream BBQ",
+		"slug": "ena-dream-bbq",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2134320,
+				"dirName": "ENA-4-DreamBBQ"
+			}
+		}
+	},
+	{
+		"name": "Easy Delivery Co",
+		"slug": "easy-delivery-co",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3293010
+			}
+		}
+	},
+	{
+		"name": "Enter the Gungeon",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 311690
+			},
+			"epicGames": {
+				"identifier": "Garlic"
+			}
+		}
+	},
+	{
+		"name": "Erenshor",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2382520
+			}
+		}
+	},
+	{
+		"name": "Factory Planner",
+		"slug": "factory-planner",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3679930
+			}
+		}
+	},
+	{
+		"name": "Five Nights at Freddy's: Into the Pit",
+		"slug": "five-nights-at-freddys-into-the-pit",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2638370
+			}
+		}
+	},
+	{
+		"name": "Football Manager 26",
+		"slug": "football-manager-26",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3551340
+			}
+		}
+	},
+	{
+		"name": "For The King",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 527230
+			},
+			"epicGames": {
+				"identifier": "Discus"
+			}
+		}
+	},
+	{
+		"name": "Gang Beasts",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 285900
+			}
+		}
+	},
+	{
+		"name": "Garfield Kart - Furious Racing",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1085510
+			}
+		}
+	},
+	{
+		"name": "Gatekeeper",
+		"slug": "gatekeeper",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2106670
+			}
+		}
+	},
+	{
+		"name": "Gladio Mori",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2908480,
+				"dirName": "Gladio Mori Demo"
+			}
+		}
+	},
+	{
+		"name": "Gloomwood",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1150760
+			}
+		}
+	},
+	{
+		"name": "Goodbye Volcano High",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1310330
+			}
+		}
+	},
+	{
+		"name": "GoreBox",
+		"slug": "gorebox",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2027330
+			}
+		}
+	},
+	{
+		"name": "Green Hell VR",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "PCVR_Modders-BepInExPack_GHVR"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1782330
+			},
+			"oculus": {}
+		}
+	},
+	{
+		"name": "Grey Hack",
+		"slug": "grey-hack",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 605230
+			}
+		}
+	},
+	{
+		"name": "Guilty as Sock!",
+		"slug": "guilty-as-sock",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3400930,
+				"dirName": "GuiltyasSock"
+			}
+		}
+	},
+	{
+		"name": "Hades II",
+		"slug": "hades-ii",
+		"modLoader": {
+			"name": "ReturnOfModding",
+			"packageName": "Hell2Modding-Hell2Modding",
+			"files": ["d3d12.dll"]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1145350,
+				"dirName": "Hades II/Ship"
+			}
+		}
+	},
+	{
+		"name": "Hard Bullet",
+		"modLoader": {
+			"name": "MelonLoader",
+			"subdirs": [
+				{
+					"name": "CustomNPCs",
+					"target": "UserData/CustomNPCs",
+					"extension": ".npc",
+					"mode": "track"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1294760
+			}
+		}
+	},
+	{
+		"name": "Hard Time III",
+		"slug": "hard-time-3",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3009850
+			}
+		}
+	},
+	{
+		"name": "Hollow Knight: Silksong",
+		"slug": "hollow-knight-silksong",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1030300,
+				"dirName": "Hollow Knight Silksong"
+			},
+			"xboxStore": {
+				"identifier": "TeamCherry.HollowKnightSilksong"
+			}
+		}
+	},
+	{
+		"name": "House of Legacy",
+		"slug": "house-of-legacy",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2503770,
+				"dirName": "\u543e\u4eca\u6709\u4e16\u5bb6"
+			}
+		}
+	},
+	{
+		"name": "House of the Dying Sun",
+		"slug": "hotds",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 283160,
+				"dirName": "DyingSun"
+			}
+		}
+	},
+	{
+		"name": "Human Fall Flat",
+		"slug": "human-fall-flat",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 477160,
+				"dirName": "Human"
+			}
+		}
+	},
+	{
+		"name": "I Am Your Beast",
+		"slug": "i-am-your-beast",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1876590
+			}
+		}
+	},
+	{
+		"name": "Inscryption",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1092790
+			}
+		}
+	},
+	{
+		"name": "Jump Space",
+		"slug": "jump-space",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1757300,
+				"dirName": "JumpSpace"
+			}
+		}
+	},
+	{
+		"name": "Labyrinthine",
+		"slug": "labyrinthine",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1302240
+			}
+		}
+	},
+	{
+		"name": "Last Train Outta' Wormtown",
+		"slug": "last-train-outta-wormtown",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "BepInEx_Wormtown-BepInExPack"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2318480
+			}
+		}
+	},
+	{
+		"name": "Len's Island",
+		"slug": "lens-island",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1335830
+			}
+		}
+	},
+	{
+		"name": "Lethal League Blaze",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 553310,
+				"dirName": "LLBlaze"
+			}
+		}
+	},
+	{
+		"name": "Logic World",
+		"slug": "logic-world",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1054340
+			}
+		}
+	},
+	{
+		"name": "Lost Skies",
+		"slug": "lost-skies",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1931180,
+				"dirName": "Wild Skies"
+			}
+		}
+	},
+	{
+		"name": "Lost Skies Island Creator",
+		"slug": "lost-skies-ic",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2102670
+			}
+		}
+	},
+	{
+		"name": "Lycans",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2596100
+			}
+		}
+	},
+	{
+		"name": "MIMESIS",
+		"slug": "mimesis",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2827200
+			}
+		}
+	},
+	{
+		"name": "Mage Arena",
+		"slug": "mage-arena",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3716600
+			}
+		}
+	},
+	{
+		"name": "Magicite",
+		"slug": "magicite",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 268750
+			}
+		}
+	},
+	{
+		"name": "Magicraft",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2103140
+			}
+		}
+	},
+	{
+		"name": "Maltese's Fluffy Onsen",
+		"slug": "malteses-fluffy-onsen",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3404470,
+				"dirName": "Animal Spa"
+			}
+		}
+	},
+	{
+		"name": "Mechanica",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "Zinal001-BepInExPack_MECHANICA"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1226990
+			}
+		}
+	},
+	{
+		"name": "Meeple Station",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 900010
+			}
+		}
+	},
+	{
+		"name": "Megabonk",
+		"slug": "megabonk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3405340
+			}
+		}
+	},
+	{
+		"name": "MiSide",
+		"slug": "miside",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2527500
+			}
+		}
+	},
+	{
+		"name": "MineMogul",
+		"slug": "mine-mogul",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3846120
+			}
+		}
+	},
+	{
+		"name": "Monster Train 2",
+		"slug": "monster-train-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2742830
+			}
+		}
+	},
+	{
+		"name": "Muck",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1625450
+			}
+		}
+	},
+	{
+		"name": "My Dream Setup",
+		"slug": "my-dream-setup",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2200780,
+				"dirName": "My dream setup/MDS"
+			}
+		}
+	},
+	{
+		"name": "Mycopunk",
+		"slug": "mycopunk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3247750
+			}
+		}
+	},
+	{
+		"name": "Nearly Dead",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1268900
+			}
+		}
+	},
+	{
+		"name": "Necropolis",
+		"slug": "necropolis",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 384490
+			}
+		}
+	},
+	{
+		"name": "Nickelodeon All-Star Brawl",
+		"slug": "nasb",
+		"modLoader": {
+			"name": "BepInEx",
+			"subdirs": [
+				{
+					"name": "CustomSongs",
+					"target": "BepInEx/CustomSongs",
+					"mode": "track"
+				},
+				{
+					"name": "Movesets",
+					"target": "BepInEx/Movesets",
+					"mode": "track"
+				},
+				{
+					"name": "Skins",
+					"target": "BepInEx/Skins",
+					"extension": ".nasbskin"
+				},
+				{
+					"name": "Voicepacks",
+					"target": "BepInEx/Voicepacks",
+					"extension": ".voicepack"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1414850
+			}
+		}
+	},
+	{
+		"name": "Nine Sols",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1809540
+			}
+		}
+	},
+	{
+		"name": "Odd Remedy",
+		"slug": "odd-remedy",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1745680,
+				"dirName": "OddRemedy"
+			}
+		}
+	},
+	{
+		"name": "Old Market Simulator",
+		"slug": "old-market-simulator",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2878420
+			}
+		}
+	},
+	{
+		"name": "On-Together: Virtual Co-Working",
+		"slug": "on-together",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3707400,
+				"dirName": "On-Together"
+			}
+		}
+	},
+	{
+		"name": "Ostranauts",
+		"slug": "ostranauts",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1022980
+			}
+		}
+	},
+	{
+		"name": "Outward",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 794260
+			},
+			"epicGames": {
+				"identifier": "Viola"
+			}
+		}
+	},
+	{
+		"name": "PATAPON 1+2 REPLAY",
+		"slug": "patapon-1-2-replay",
+		"modLoader": {
+			"name": "BepInEx",
+			"subdirs": [
+				{
+					"name": "hexpatches",
+					"target": "BepInEx/hexpatches",
+					"mode": "track",
+					"mutable": true
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 2383200
+			}
+		}
+	},
+	{
+		"name": "PEAK",
+		"slug": "peak",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3527290
+			}
+		}
+	},
+	{
+		"name": "PIGFACE",
+		"slug": "pigface",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3746840
+			}
+		}
+	},
+	{
+		"name": "Painting VR",
+		"slug": "painting-vr",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1905940,
+				"dirName": "PaintingVr"
+			}
+		}
+	},
+	{
+		"name": "Palworld",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1623730
+			}
+		}
+	},
+	{
+		"name": "Panicore",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2695940
+			}
+		}
+	},
+	{
+		"name": "Paper Animal Adventure",
+		"slug": "paper-animal-adventure",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1982120
+			}
+		}
+	},
+	{
+		"name": "Paquerette Down the Bunburrows",
+		"slug": "paquerette-down-the-bunburrows",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1628610
+			}
+		}
+	},
+	{
+		"name": "Patch Quest",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1347970
+			}
+		}
+	},
+	{
+		"name": "Peaks of Yore",
+		"slug": "peaks-of-yore",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2236070
+			}
+		}
+	},
+	{
+		"name": "Peglin",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1296610
+			}
+		}
+	},
+	{
+		"name": "Plasma",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1409160
+			}
+		}
+	},
+	{
+		"name": "Potion Craft",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1210320
+			}
+		}
+	},
+	{
+		"name": "Project Arrhythmia",
+		"slug": "project-arrhythmia",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 440310
+			}
+		}
+	},
+	{
+		"name": "Pulsar: Lost Colony",
+		"slug": "pulsar-lost-colony",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 252870,
+				"dirName": "PULSARLostColony"
+			}
+		}
+	},
+	{
+		"name": "ROUNDS",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1557740
+			}
+		}
+	},
+	{
+		"name": "RUMBLE",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 890550
+			}
+		}
+	},
+	{
+		"name": "Ravenfield",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 636480
+			}
+		}
+	},
+	{
+		"name": "Receiver 2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1129310
+			}
+		}
+	},
+	{
+		"name": "Resonite",
+		"slug": "resonite",
+		"modLoader": {
+			"name": "BepisLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2519830
+			}
+		}
+	},
+	{
+		"name": "Return of the Obra Dinn",
+		"slug": "return-of-the-obra-dinn",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 653530,
+				"dirName": "ObraDinn"
+			}
+		}
+	},
+	{
+		"name": "Risk Of Rain Returns",
+		"modLoader": {
+			"name": "ReturnOfModding",
+			"files": ["version.dll"]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1337520
+			}
+		}
+	},
+	{
+		"name": "Rogue : Genesia",
+		"slug": "rogue-genesia",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2067920,
+				"dirName": "Rogue Genesia"
+			}
+		}
+	},
+	{
+		"name": "Rogue Tower",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "bbepis-BepInEx_Rogue_Tower"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1843760
+			}
+		}
+	},
+	{
+		"name": "STRAFTAT",
+		"slug": "straftat",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2386720
+			}
+		}
+	},
+	{
+		"name": "SULFUR",
+		"slug": "sulfur",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2124120
+			}
+		}
+	},
+	{
+		"name": "Sailwind",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1764530
+			}
+		}
+	},
+	{
+		"name": "Schedule I",
+		"slug": "schedule-i",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3164500
+			}
+		}
+	},
+	{
+		"name": "Screw Drivers",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1279510
+			}
+		}
+	},
+	{
+		"name": "Shadows Over Loathing",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1939160
+			}
+		}
+	},
+	{
+		"name": "Shadows of Doubt",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 986130
+			}
+		}
+	},
+	{
+		"name": "Shapez 2",
+		"slug": "shapez-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2162800
+			}
+		}
+	},
+	{
+		"name": "Skul: The Hero Slayer",
+		"slug": "skul-the-hero-slayer",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1147560,
+				"dirName": "Skul"
+			}
+		}
+	},
+	{
+		"name": "Slipstream: Rogue Space",
+		"slug": "slipstream-rogue-space",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2765860,
+				"dirName": "Slipstream Rogue Space"
+			}
+		}
+	},
+	{
+		"name": "Songs of Conquest",
+		"slug": "songs-of-conquest",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 867210,
+				"dirName": "SongsOfConquest"
+			}
+		}
+	},
+	{
+		"name": "Sons Of The Forest",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1326470
+			}
+		}
+	},
+	{
+		"name": "Stacklands",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1948280
+			}
+		}
+	},
+	{
+		"name": "Starsand",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1380220
+			},
+			"epicGames": {
+				"identifier": "a774278c0813447c96a76b053cbf73ff"
+			}
+		}
+	},
+	{
+		"name": "Stolen Realm",
+		"slug": "stolen-realm",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1330000
+			}
+		}
+	},
+	{
+		"name": "Subnautica",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "Subnautica_Modding-BepInExPack_Subnautica",
+			"subdirs": [
+				{
+					"name": "QMods",
+					"target": "QMods",
+					"mode": "track"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 264710
+			},
+			"epicGames": {
+				"identifier": "Jaguar"
+			},
+			"xboxStore": {
+				"identifier": "UnknownWorldsEntertainmen.GAMEPREVIEWSubnautica"
+			}
+		}
+	},
+	{
+		"name": "Subnautica: Below Zero",
+		"slug": "subnautica-below-zero",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "Subnautica_Modding-BepInExPack_BelowZero",
+			"subdirs": [
+				{
+					"name": "QMods",
+					"target": "QMods",
+					"mode": "track"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 848450,
+				"dirName": "SubnauticaZero"
+			},
+			"xboxStore": {
+				"identifier": "UnknownWorldsEntertainmen.SubnauticaBelowZero"
+			}
+		}
+	},
+	{
+		"name": "Subterranauts",
+		"slug": "subterranauts",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3075800
+			}
+		}
+	},
+	{
+		"name": "Subterror",
+		"slug": "subterror",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2846060
+			}
+		}
+	},
+	{
+		"name": "Sun Haven",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1432860
+			}
+		}
+	},
+	{
+		"name": "Sunkenland",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "SunkenlandModding-BepInExPack_Sunkenland"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2080690
+			}
+		}
+	},
+	{
+		"name": "Super Fantasy Kingdom",
+		"slug": "super-fantasy-kingdom",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2289750
+			}
+		}
+	},
+	{
+		"name": "Supermarket Together",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2709570
+			}
+		}
+	},
+	{
+		"name": "TABS",
+		"slug": "totally-accurate-battle-simulator",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 508440,
+				"dirName": "Totally Accurate Battle Simulator"
+			},
+			"epicGames": {
+				"identifier": "Driftfish"
+			},
+			"xboxStore": {
+				"identifier": "LandfallGames.TotallyAccurateBattleSimulator"
+			}
+		}
+	},
+	{
+		"name": "TCG Card Shop Simulator",
+		"slug": "tcg-card-shop-simulator",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3070070
+			}
+		}
+	},
+	{
+		"name": "TaleSpire",
+		"slug": "talespire",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "bbepisTaleSpire-BepInExPack"
+		},
+		"platforms": {
+			"steam": {
+				"id": 720620
+			}
+		}
+	},
+	{
+		"name": "Tank Team",
+		"slug": "tank-team",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2587450
+			}
+		}
+	},
+	{
+		"name": "Techtonica",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1457320
+			}
+		}
+	},
+	{
+		"name": "The Farmer Was Replaced",
+		"slug": "the-farmer-was-replaced",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2060160
+			}
+		}
+	},
+	{
+		"name": "The Ouroboros King",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2096510
+			}
+		}
+	},
+	{
+		"name": "The Planet Crafter",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1284190
+			}
+		}
+	},
+	{
+		"name": "Thronefall",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2239150
+			}
+		}
+	},
+	{
+		"name": "Timberborn",
+		"modLoader": {
+			"name": "BepInEx",
+			"subdirs": [
+				{
+					"name": "Maps",
+					"target": "BepInEx/Maps"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1062090
+			},
+			"epicGames": {
+				"identifier": "972a4ca2631e43b4ba7bc3b7586ad8c4"
+			}
+		}
+	},
+	{
+		"name": "TouhouLostBranchOfLegend",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1140150,
+				"dirName": "LBoL"
+			}
+		}
+	},
+	{
+		"name": "Trombone Champ",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1059990,
+				"dirName": "TromboneChamp"
+			}
+		}
+	},
+	{
+		"name": "ULTRAKILL",
+		"modLoader": {
+			"name": "BepInEx",
+			"subdirs": [
+				{
+					"name": "UMM Mods",
+					"target": "BepInEx/UMM Mods"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 1229490
+			}
+		}
+	},
+	{
+		"name": "Ultimate Chicken Horse",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 386940
+			}
+		}
+	},
+	{
+		"name": "V Rising",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1604030,
+				"dirName": "VRising"
+			}
+		}
+	},
+	{
+		"name": "VTOL VR",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 667970
+			}
+		}
+	},
+	{
+		"name": "Vellum",
+		"slug": "vellum",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 917950
+			}
+		}
+	},
+	{
+		"name": "Vertigo 2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 843390
+			}
+		}
+	},
+	{
+		"name": "Vigil",
+		"slug": "vigil",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3817090
+			}
+		}
+	},
+	{
+		"name": "Voices of the Void",
+		"r2dirName": "VotV",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {}
+	},
+	{
+		"name": "Void Crew",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1063420
+			}
+		}
+	},
+	{
+		"name": "WEBFISHING",
+		"modLoader": {
+			"name": "GDWeave"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3146520
+			}
+		}
+	},
+	{
+		"name": "We Love Katamari REROLL+ Royal Reverie",
+		"slug": "we-love-katamari-reroll-royal-reverie",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1730700,
+				"dirName": "WLKRR"
+			}
+		}
+	},
+	{
+		"name": "West of Loathing",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 597220
+			}
+		}
+	},
+	{
+		"name": "White Knuckle",
+		"slug": "white-knuckle",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3195790
+			}
+		}
+	},
+	{
+		"name": "Wildfrost",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1811990
+			}
+		}
+	},
+	{
+		"name": "Wizard With A Gun",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1150530
+			}
+		}
+	},
+	{
+		"name": "Wizard of Legend",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "Modding_Council-BepInExPack_of_Legend"
+		},
+		"platforms": {
+			"steam": {
+				"id": 445980
+			}
+		}
+	},
+	{
+		"name": "Word Play",
+		"slug": "word-play",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3586660
+			}
+		}
+	},
+	{
+		"name": "Wrestling Empire",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1620340
+			}
+		}
+	},
+	{
+		"name": "YAPYAP",
+		"slug": "yapyap",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3834090
+			}
+		}
+	},
+	{
+		"name": "Zort",
+		"slug": "zort",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3121110
+			}
+		}
+	}
 ]
