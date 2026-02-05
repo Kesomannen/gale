@@ -638,6 +638,18 @@
         }
     },
     {
+        "name": "Carrier Deck",
+        "slug": "carrier-deck",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 580720
+            }
+        }
+    },
+    {
         "name": "Castle Story",
         "modLoader": {
             "name": "BepInEx"
@@ -870,6 +882,18 @@
         "platforms": {
             "steam": {
                 "id": 2382520
+            }
+        }
+    },
+    {
+        "name": "Factory Planner",
+        "slug": "factory-planner",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3679930
             }
         }
     },
@@ -1526,6 +1550,19 @@
         }
     },
     {
+        "name": "On-Together: Virtual Co-Working",
+        "slug": "on-together",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3707400,
+                "dirName": "On-Together"
+            }
+        }
+    },
+    {
         "name": "Ostranauts",
         "slug": "ostranauts",
         "modLoader": {
@@ -1707,6 +1744,18 @@
         "platforms": {
             "steam": {
                 "id": 1210320
+            }
+        }
+    },
+    {
+        "name": "Project Arrhythmia",
+        "slug": "project-arrhythmia",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 440310
             }
         }
     },
@@ -1999,6 +2048,18 @@
         }
     },
     {
+        "name": "Stolen Realm",
+        "slug": "stolen-realm",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 1330000
+            }
+        }
+    },
+    {
         "name": "Subnautica",
         "modLoader": {
             "name": "BepInEx",
@@ -2181,6 +2242,18 @@
         "platforms": {
             "steam": {
                 "id": 1457320
+            }
+        }
+    },
+    {
+        "name": "The Farmer Was Replaced",
+        "slug": "the-farmer-was-replaced",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 2060160
             }
         }
     },
@@ -2467,6 +2540,18 @@
         "platforms": {
             "steam": {
                 "id": 1620340
+            }
+        }
+    },
+    {
+        "name": "YAPYAP",
+        "slug": "yapyap",
+        "modLoader": {
+            "name": "BepInEx"
+        },
+        "platforms": {
+            "steam": {
+                "id": 3834090
             }
         }
     },
