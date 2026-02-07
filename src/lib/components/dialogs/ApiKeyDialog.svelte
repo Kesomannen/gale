@@ -49,11 +49,13 @@
 	<Link
 		class="mt-2 block max-w-max text-sm"
 		href="https://github.com/Kesomannen/gale/wiki/Getting-a-Thunderstore-API-token"
-		>
+	>
 		{m.apiKeyDialog_link()}
 	</Link>
 
 	{#snippet buttons()}
-		<Button icon="mdi:exchange" color="accent" onclick={submit} {loading}>{m.apiKeyDialog_button()}</Button>
+		<Button icon="mdi:exchange" color="accent" onclick={submit} {loading}
+			>{m.apiKeyDialog_button()}</Button
+		>
 	{/snippet}
 </ConfirmDialog>

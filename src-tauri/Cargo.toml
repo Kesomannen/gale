@@ -1,6 +1,6 @@
 [package]
 name = "gale"
-version = "1.11.1"
+version = "1.12.0"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"
@@ -45,7 +45,7 @@ open = "5"
 itertools = "0.13"
 zip = { version = "2", features = ["deflate"] }
 uuid = { version = "1", features = ["v4", "serde"] }
-reqwest = { version = "0.12", features = ["json", "stream", "gzip", "native-tls"] }
+reqwest = { version = "0.13.1", features = ["json", "stream", "gzip"] }
 walkdir = "2"
 image = "0.25"
 semver = { version = "1", features = ["serde"] }
@@ -76,7 +76,7 @@ steamlocate = "2"
 flate2 = "1"
 font-kit = "0.14"
 internment = { version = "0.8.6", features = ["serde"] }
-reqwest-websocket = { version = "0.5.0", features = ["json"] }
+reqwest-websocket = { version = "0.6.0", features = ["json"] }
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

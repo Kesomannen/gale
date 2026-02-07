@@ -243,9 +243,11 @@
 
 	async function setAllModsState(enable: boolean) {
 		let count = await api.profile.setAllModsState(enable);
-		let messageText = enable ? m.menuBar_setAllModsState_message_enable : m.menuBar_setAllModsState_message_disable;
+		let messageText = enable
+			? m.menuBar_setAllModsState_message_enable
+			: m.menuBar_setAllModsState_message_disable;
 		pushInfoToast({
-			message: messageText({ count : count})
+			message: messageText({ count: count })
 		});
 	}
 
@@ -285,7 +287,9 @@
 		await api.profile.createDesktopShortcut();
 
 		pushInfoToast({
-			message: m.menuBar_createDesktopShotcut_message({ name: profiles.active?.name ?? m.unknown()})
+			message: m.menuBar_createDesktopShotcut_message({
+				name: profiles.active?.name ?? m.unknown()
+			})
 		});
 	}
 
@@ -317,9 +321,11 @@
 		}
 
 		let size = await api.profile.install.clearDownloadCache(soft);
-		let messageText = soft ? m.menuBar_clearModCache_message_unsed : m.menuBar_clearModCache_message;
+		let messageText = soft
+			? m.menuBar_clearModCache_message_unsed
+			: m.menuBar_clearModCache_message;
 		pushInfoToast({
-			message: messageText({ size : shortenFileSize(size)})
+			message: messageText({ size: shortenFileSize(size) })
 		});
 	}
 
@@ -493,7 +499,9 @@
 
 	<div class="mt-2 ml-auto flex justify-end gap-2">
 		{#if !profileOperationInProgress}
-			<Button color="primary" onclick={() => (profileOperationOpen = false)}>{m.menuBar_dialog_button_cancel()}</Button>
+			<Button color="primary" onclick={() => (profileOperationOpen = false)}
+				>{m.menuBar_dialog_button_cancel()}</Button
+			>
 		{/if}
 
 		<Button

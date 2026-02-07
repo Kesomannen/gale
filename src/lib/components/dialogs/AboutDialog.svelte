@@ -33,17 +33,21 @@
 	<div>
 		<h3 class="text-xl font-semibold text-white">Gale</h3>
 		<p class="text-primary-300">
-			{m.aboutDialog_version({version : version})}
+			{m.aboutDialog_version({ version: version })}
 			<br />
 			GNU General Public License v3.0
 		</p>
 		<div class="mt-3 flex items-center gap-2">
 			<Icon icon="mdi:file-document" class="text-xl text-white" />
-			<Link href="https://github.com/Kesomannen/gale/blob/master/CHANGELOG.md">{m.aboutDialog_changelog()}</Link>
+			<Link href="https://github.com/Kesomannen/gale/blob/master/CHANGELOG.md"
+				>{m.aboutDialog_changelog()}</Link
+			>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
 			<Icon icon="mdi:file-document" class="text-xl text-white" />
-			<Link href="https://github.com/Kesomannen/gale/blob/master/privacy_policy.md">{m.aboutDialog_policy()}</Link>
+			<Link href="https://github.com/Kesomannen/gale/blob/master/privacy_policy.md"
+				>{m.aboutDialog_policy()}</Link
+			>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
 			<Icon icon="mdi:github" class="text-xl text-white" />
@@ -71,7 +75,9 @@
 			{#if !updates.isChecking && checkedUpdate}
 				{#if updates.next}
 					<Icon icon="mdi:arrow-up-circle" class="text-accent-400 inline text-xl" />
-					<span class="text-accent-400">{m.aboutDialog_newVersion({version : updates.next.version})}</span>
+					<span class="text-accent-400"
+						>{m.aboutDialog_newVersion({ version: updates.next.version })}</span
+					>
 				{:else}
 					<Icon icon="mdi:check" class="text-primary-300 text-xl" />
 					<span class="text-primary-300">{m.aboutDialog_latestVersion()}</span>

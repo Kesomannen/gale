@@ -74,7 +74,7 @@
 		</Button>
 
 		<Button onclick={executeAll} color={positive ? 'accent' : 'red'}>
-			{m.dependantsDialog_button_executeAll({verb})}
+			{m.dependantsDialog_button_executeAll({ verb })}
 		</Button>
 	{/snippet}
 </ConfirmDialog>

@@ -21,5 +21,9 @@
 	<Icon icon="mdi:lock" class="mr-2 text-xl" />
 	<span class="mr-auto">{m.profileLockedBanner_title()}</span>
 
-	<Info>{m.profileLockedBanner_content({name : profiles.active?.sync?.owner.displayName ?? m.unknown()})}</Info>
+	<Info
+		>{m.profileLockedBanner_content({
+			name: profiles.active?.sync?.owner.displayName ?? m.unknown()
+		})}</Info
+	>
 </div>

@@ -36,7 +36,7 @@ export function pushToast(toast: Toast) {
 	setTimeout(
 		() => {
 			toasts.update((toasts) => {
-				let index = toasts.findIndex(toast => toast.id == id);
+				let index = toasts.findIndex((toast) => toast.id == id);
 				if (index !== -1) {
 					toasts.splice(index, 1);
 				}

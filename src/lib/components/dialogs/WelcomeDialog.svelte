@@ -68,14 +68,20 @@
 			<p>{m.welcomeDialog_content_importProfiles_1()}</p>
 
 			<p class="mt-1">
-				{m.welcomeDialog_content_importProfiles_2()}<b>{m.welcomeDialog_content_importProfiles_3()}</b>.
+				{m.welcomeDialog_content_importProfiles_2()}<b
+					>{m.welcomeDialog_content_importProfiles_3()}</b
+				>.
 			</p>
 
 			<ImportR2Flow bind:importData bind:this={importFlow} />
 
 			<div class="mt-2 flex gap-1.5">
-				<Button color="primary" class="mr-auto" onclick={() => (stage = 'gameSelect')}>{m.welcomeDialog_button_back()}</Button>
-				<Button color="primary" onclick={() => (stage = 'settings')}>{m.welcomeDialog_button_skip()}</Button>
+				<Button color="primary" class="mr-auto" onclick={() => (stage = 'gameSelect')}
+					>{m.welcomeDialog_button_back()}</Button
+				>
+				<Button color="primary" onclick={() => (stage = 'settings')}
+					>{m.welcomeDialog_button_skip()}</Button
+				>
 				<Button color="accent" onclick={importProfiles}>{m.welcomeDialog_button_import()}</Button>
 			</div>
 		{:else if stage === 'settings'}
@@ -97,19 +103,25 @@
 						{m.welcomeDialog_settings_path_content()}
 					</PathPref>
 
-					<ColorPref category="primary" default="slate">{m.welcomeDialog_content_color_primary()}</ColorPref>
-					<ColorPref category="accent" default="green">{m.welcomeDialog_content_color_accent()}</ColorPref>
+					<ColorPref category="primary" default="slate"
+						>{m.welcomeDialog_content_color_primary()}</ColorPref
+					>
+					<ColorPref category="accent" default="green"
+						>{m.welcomeDialog_content_color_accent()}</ColorPref
+					>
 				{/if}
 			</div>
 
 			<div class="mt-3 flex justify-between">
 				<Button
-				color="primary"
-				onclick={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
+					color="primary"
+					onclick={() => (stage = importData === null ? 'gameSelect' : 'importProfiles')}
 				>
-				{m.welcomeDialog_button_back()}
+					{m.welcomeDialog_button_back()}
 				</Button>
-				<Button color="accent" onclick={() => (stage = 'end')}>{m.welcomeDialog_button_next()}</Button>
+				<Button color="accent" onclick={() => (stage = 'end')}
+					>{m.welcomeDialog_button_next()}</Button
+				>
 			</div>
 		{:else if stage === 'end'}
 			<p>{m.welcomeDialog_content_end_1()}</p>
@@ -117,10 +129,11 @@
 			<p class="mt-1">
 				{m.welcomeDialog_content_end_2()}
 				<a
-				href="https://discord.gg/sfuWXRfeTt"
-				target="_blank"
-				class="text-accent-400 hover:underline">
-				{m.welcomeDialog_content_end_3()}
+					href="https://discord.gg/sfuWXRfeTt"
+					target="_blank"
+					class="text-accent-400 hover:underline"
+				>
+					{m.welcomeDialog_content_end_3()}
 				</a>.
 			</p>
 		{/if}

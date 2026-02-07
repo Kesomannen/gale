@@ -96,7 +96,7 @@
 			if (auth.user === null) {
 				let userInfo = await auth.login();
 				pushInfoToast({
-					message: m.syncer_onLoginClicked_message({name : userInfo.displayName})
+					message: m.syncer_onLoginClicked_message({ name: userInfo.displayName })
 				});
 			} else {
 				await auth.logout();
@@ -124,9 +124,7 @@
 
 	async function disconnect() {
 		let deleteFromRemote =
-			isOwner &&
-			syncState !== 'missing' &&
-			(await ask(m.syncer_disconnect_ask()));
+			isOwner && syncState !== 'missing' && (await ask(m.syncer_disconnect_ask()));
 
 		await wrapApiCall(
 			() => api.profile.sync.disconnect(deleteFromRemote),
@@ -234,7 +232,9 @@
 		<div class="mt-2 flex flex-wrap items-center gap-2">
 			{#if syncState !== 'missing'}
 				{#if syncState === 'outdated'}
-					<Button onclick={pull} {loading} icon="mdi:cloud-download">{m.syncer_button_pull()}</Button>
+					<Button onclick={pull} {loading} icon="mdi:cloud-download"
+						>{m.syncer_button_pull()}</Button
+					>
 				{/if}
 
 				{#if isOwner}
@@ -249,7 +249,9 @@
 					</Button>
 				{/if}
 
-				<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh">{m.syncer_button_refresh()}</Button>
+				<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh"
+					>{m.syncer_button_refresh()}</Button
+				>
 			{/if}
 
 			<Button
@@ -289,9 +291,13 @@
 		{/if}
 	</div>
 
-	<div class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline">
+	<div
+		class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
+	>
 		<Icon icon="mdi:help-circle" inline />
 
-		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/">{m.syncer_content_help()}</a>
+		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/"
+			>{m.syncer_content_help()}</a
+		>
 	</div>
 </Dialog>

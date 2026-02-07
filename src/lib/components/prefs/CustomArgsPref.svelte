@@ -58,7 +58,8 @@
 
 	<Info>
 		<p>
-			{m.customArgsPref_content_1()}<b>{m.customArgsPref_content_2()}</b>{m.customArgsPref_content_3()}
+			{m.customArgsPref_content_1()}<b>{m.customArgsPref_content_2()}</b
+			>{m.customArgsPref_content_3()}
 		</p>
 
 		<p>

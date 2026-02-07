@@ -205,12 +205,15 @@ impl Db {
                 "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled FROM profiles",
             )?
             .query_map((), |row| {
+                let mut mods : Vec<profile::ProfileMod> = map_json_row(row, 4)?;
+                mods.dedup_by(|a, b| a.kind.uuid() == b.kind.uuid());
+
                 Ok(ProfileData {
                     id: row.get(0)?,
                     name: row.get(1)?,
                     path: row.get(2)?,
                     game_slug: row.get(3)?,
-                    mods: map_json_row(row, 4)?,
+                    mods,
                     modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_option_row(row, 6)?,
                     sync_data: map_json_option_row(row, 7)?,

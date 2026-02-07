@@ -26,33 +26,35 @@
 		return selected;
 	}
 
-	const optionsTranslate : Record<string, string> = {
-		deprecated : m.modListFilters_options_deprecated(),
-		NSFW : m.modListFilters_options_NSFW(),
-		enabled : m.modListFilters_options_enabled(),
-		disabled : m.modListFilters_options_disabled(),
-		ascending : m.modListFilters_options_ascending(),
-		descending : m.modListFilters_options_descending(),
-		lastUpdated : m.modListFilters_options_lastUpdated(),
-		newest : m.modListFilters_options_newest(),
-		rating : m.modListFilters_options_rating(),
-		downloads : m.modListFilters_options_downloads(),
-		custom : m.modListFilters_options_custom(),
-		installDate : m.modListFilters_options_installDate(),
-		diskSpace : m.modListFilters_options_diskSpace(),
-		name : m.modListFilters_options_name(),
-		author : m.modListFilters_options_author(),
-	}
+	const optionsTranslate: Record<string, string> = {
+		deprecated: m.modListFilters_options_deprecated(),
+		NSFW: m.modListFilters_options_NSFW(),
+		enabled: m.modListFilters_options_enabled(),
+		disabled: m.modListFilters_options_disabled(),
+		ascending: m.modListFilters_options_ascending(),
+		descending: m.modListFilters_options_descending(),
+		lastUpdated: m.modListFilters_options_lastUpdated(),
+		newest: m.modListFilters_options_newest(),
+		rating: m.modListFilters_options_rating(),
+		downloads: m.modListFilters_options_downloads(),
+		custom: m.modListFilters_options_custom(),
+		installDate: m.modListFilters_options_installDate(),
+		diskSpace: m.modListFilters_options_diskSpace(),
+		name: m.modListFilters_options_name(),
+		author: m.modListFilters_options_author()
+	};
 
-	function getOptionsLabel(item: string) : string { 
-		return optionsTranslate[item] ?? toSentenceCase(item)
+	function getOptionsLabel(item: string): string {
+		return optionsTranslate[item] ?? toSentenceCase(item);
 	}
-
 </script>
 
 <div class="mb-1.5 flex flex-wrap gap-1.5 pr-3">
 	<div class="relative flex-grow-3">
-		<SearchBar bind:value={queryArgs.searchTerm} placeholder={m.modListFilters_searchBar_placeholder()} />
+		<SearchBar
+			bind:value={queryArgs.searchTerm}
+			placeholder={m.modListFilters_searchBar_placeholder()}
+		/>
 	</div>
 
 	<div class="flex grow gap-1.5">

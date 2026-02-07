@@ -3,7 +3,6 @@
 	import InputField from '$lib/components/ui/InputField.svelte';
 
 	import type { LaunchMode } from '$lib/types';
-	import { selectItems } from '$lib/util';
 	import Info from '$lib/components/ui/Info.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toHeaderCase } from 'js-convert-case';
@@ -18,11 +17,14 @@
 
 	let { platform, value = $bindable(), set }: Props = $props();
 
-	let instances = $state(value.content?.instances ?? 1);
-	let intervalSecs = $state(value.content?.intervalSecs ?? 10);
+	let instances = $derived(value.content?.instances ?? 1);
+	let intervalSecs = $derived(value.content?.intervalSecs ?? 10);
 
 	let items = $derived([
-		{ value: 'launcher', label: m.launchModePref_mode_launcher({ platform: toHeaderCase(platform) }) },
+		{
+			value: 'launcher',
+			label: m.launchModePref_mode_launcher({ platform: toHeaderCase(platform) })
+		},
 		{ value: 'direct', label: m.launchModePref_mode_direct() }
 	]);
 
@@ -37,7 +39,7 @@
 		} else {
 			value.content = undefined;
 		}
-
+		
 		await set(value);
 	}
 
@@ -50,10 +52,12 @@
 	<Info>
 		<p>{m.launchModePref_content_1()}</p>
 		<p class="my-1.5">
-			<b>{m.launchModePref_content_2()}</b> {m.launchModePref_content_3()}
+			<b>{m.launchModePref_content_2()}</b>
+			{m.launchModePref_content_3()}
 		</p>
 		<p>
-			<b>{m.launchModePref_content_4()}</b> {m.launchModePref_content_5()}
+			<b>{m.launchModePref_content_4()}</b>
+			{m.launchModePref_content_5()}
 		</p>
 	</Info>
 
@@ -90,7 +94,8 @@
 	<Label>{m.launchModePref_interval_title()}</Label>
 
 	<Info>
-		{m.launchModePref_interval_content_1()}<b>{m.launchModePref_interval_content_2()}</b>{m.launchModePref_interval_content_3()}
+		{m.launchModePref_interval_content_1()}<b>{m.launchModePref_interval_content_2()}</b
+		>{m.launchModePref_interval_content_3()}
 	</Info>
 
 	<InputField

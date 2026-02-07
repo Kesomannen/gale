@@ -296,13 +296,13 @@ export type ColorCategory = 'accent' | 'primary';
 
 export type Color =
 	| {
-		type: 'default';
-		name: DefaultColor;
-	}
+			type: 'default';
+			name: DefaultColor;
+	  }
 	| {
-		type: 'custom';
-		hex: string;
-	};
+			type: 'custom';
+			hex: string;
+	  };
 
 const root = document.querySelector(':root') as HTMLElement;
 const fallbacks: Record<ColorCategory, Color> = {
@@ -365,4 +365,7 @@ export function refreshFont() {
 	setFont(getFont());
 }
 
-export const useNativeMenu = new PersistedState('useNativeMenu', platform() === 'windows' ? false : true);
+export const useNativeMenu = new PersistedState(
+	'useNativeMenu',
+	platform() === 'windows' ? false : true
+);

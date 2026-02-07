@@ -48,10 +48,18 @@
 				</div>
 
 				{#if toast.type === 'error'}
-					<IconButton icon="mdi:content-copy" label={m.toasts_button_copy()} onclick={() => copyError(toast)} />
+					<IconButton
+						icon="mdi:content-copy"
+						label={m.toasts_button_copy()}
+						onclick={() => copyError(toast)}
+					/>
 				{/if}
 
-				<IconButton icon="mdi:close" label={m.toasts_button_clear()} onclick={() => clearToast(i)} />
+				<IconButton
+					icon="mdi:close"
+					label={m.toasts_button_clear()}
+					onclick={() => clearToast(i)}
+				/>
 			</div>
 		</div>
 	{/each}

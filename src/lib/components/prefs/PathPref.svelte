@@ -21,7 +21,7 @@
 	function browse() {
 		open({
 			defaultPath: value ?? undefined,
-			title: m.pathPref_title({ name : toSentenceCase(label)}),
+			title: m.pathPref_title({ name: toSentenceCase(label) }),
 			directory: type === 'dir'
 		}).then(async (result) => {
 			if (result === null) return;

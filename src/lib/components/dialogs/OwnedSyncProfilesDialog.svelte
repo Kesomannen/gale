@@ -34,7 +34,9 @@
 	}
 
 	async function deleteProfile(profile: ListedSyncProfile) {
-		let confirmed = await confirm(m.ownedSyncProfilesDialog_deleteProfile_confirm({ name : profile.name}));
+		let confirmed = await confirm(
+			m.ownedSyncProfilesDialog_deleteProfile_confirm({ name: profile.name })
+		);
 		if (!confirmed) return;
 
 		await api.profile.sync.deleteProfile(profile.id);
@@ -42,14 +44,16 @@
 		let index = syncProfiles.indexOf(profile);
 		syncProfiles.splice(index, 1);
 
-		pushInfoToast({ message: m.ownedSyncProfilesDialog_deleteProfile_message()});
+		pushInfoToast({ message: m.ownedSyncProfilesDialog_deleteProfile_message() });
 	}
 </script>
 
 <Dialog bind:open onclose={onClose} title={m.ownedSyncProfilesDialog_title()}>
 	<div class="mt-4 flex max-h-80 flex-col space-y-4 overflow-y-auto px-2">
 		{#if sortedProfiles.length === 0}
-			<div class="text-primary-200 w-full text-center text-lg">{m.ownedSyncProfilesDialog_content_1()}</div>
+			<div class="text-primary-200 w-full text-center text-lg">
+				{m.ownedSyncProfilesDialog_content_1()}
+			</div>
 		{/if}
 
 		{#each sortedProfiles as profile (profile.id)}
@@ -70,7 +74,9 @@
 
 						<span>
 							<Icon icon="mdi:clock-outline" class="mb-0.5 inline text-sm" />
-							{m.ownedSyncProfilesDialog_content_2({ time : capitalize(timeSince(profile.updatedAt))})}</span
+							{m.ownedSyncProfilesDialog_content_2({
+								time: capitalize(timeSince(profile.updatedAt))
+							})}</span
 						>
 					</div>
 				</div>

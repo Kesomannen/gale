@@ -34,11 +34,6 @@
 		refreshColor('primary');
 		refreshLanguage();
 
-		// workaround for https://github.com/huntabyte/bits-ui/issues/1639
-		setTimeout(() => {
-			document.body.style.pointerEvents = 'auto';
-		});
-
 		$effect(() => {
 			profiles.active;
 			updateBanner.threshold = 0;
