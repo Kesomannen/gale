@@ -88,7 +88,7 @@ fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
 
     let import_data = profile::import::read_file_at_path(path)?;
 
-    app.emit("import_profile", FrontendImportData::new(import_data, &app))?;
+    app.emit("import_profile", FrontendImportData::new(import_data, app))?;
 
     Ok(())
 }

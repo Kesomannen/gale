@@ -85,7 +85,7 @@ fn set_unix_mode(file: &zip::read::ZipFile, target_path: &Path) -> io::Result<()
         mode |= 0o111;
     }
 
-    fs::set_permissions(target_path, PermissionsExt::from_mode(mode));
+    fs::set_permissions(target_path, PermissionsExt::from_mode(mode))?;
 
     Ok(())
 }
