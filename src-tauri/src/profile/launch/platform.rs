@@ -3,8 +3,8 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, Context, OptionExt, Result};
-use tracing::{info, warn};
+use eyre::{bail, Context, OptionExt, Result};
+use tracing::info;
 
 use crate::{
     game::{platform::Platform, Game},

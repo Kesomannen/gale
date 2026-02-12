@@ -124,7 +124,7 @@ impl ManagedGame {
                 let is_file = entry.file_type().is_ok_and(|ty| ty.is_file());
                 let is_included_dir = INCLUDE_DIRS.iter().any(|dir| *dir == name);
 
-                return is_file || is_included_dir;
+                is_file || is_included_dir
             });
 
         for entry in entries {

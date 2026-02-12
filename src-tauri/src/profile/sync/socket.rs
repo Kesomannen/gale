@@ -158,7 +158,7 @@ async fn read(app: &AppHandle, mut receiver: SplitStream<WebSocket>) {
                     info.updated_at = metadata.updated_at;
                     info.owner = metadata.owner.clone();
 
-                    profile.save(&app, true).ok();
+                    profile.save(app, true).ok();
                 }
             }
             ServerMessage::ProfileNotFound { id } | ServerMessage::ProfileDeleted { id } => {
@@ -169,7 +169,7 @@ async fn read(app: &AppHandle, mut receiver: SplitStream<WebSocket>) {
                 for profile in sync_profiles_with_id(&mut manager, &id) {
                     profile.sync.as_mut().unwrap().missing = true;
 
-                    profile.save(&app, true).ok();
+                    profile.save(app, true).ok();
                 }
             }
             ServerMessage::Error { message } => {
