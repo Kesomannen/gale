@@ -96,7 +96,7 @@ pub async fn update_list_task(app: &AppHandle) -> Result<()> {
     });
 
     let cache = GamesCache {
-        date: date.clone(),
+        date,
         games,
     };
 
@@ -132,8 +132,7 @@ async fn get_last_commit_date(app: &AppHandle) -> Result<DateTime<Utc>> {
         .error_for_status()?
         .json()
         .await?;
-    let date = response
-        .get(0)
+    let date = response.first()
         .ok_or_eyre("github api response contained no entries")?
         .commit
         .author
@@ -153,7 +152,7 @@ pub fn from_slug(slug: &str) -> Option<Game> {
 }
 
 pub fn last_updated() -> DateTime<Utc> {
-    return GAMES.0;
+    GAMES.0
 }
 
 #[derive(Deserialize, Debug)]
