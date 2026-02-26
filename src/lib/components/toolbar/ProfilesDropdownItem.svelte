@@ -22,7 +22,7 @@
 		let confirmed = await confirm(`Are you sure you want to delete ${profile.name}?`);
 		if (!confirmed) return;
 
-		await api.profile.deleteProfile(index);
+		await api.profile.deleteProfile(profile.id);
 
 		pushInfoToast({
 			message: `Deleted profile ${profile.name}.`

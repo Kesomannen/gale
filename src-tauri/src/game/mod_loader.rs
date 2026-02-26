@@ -7,6 +7,8 @@ use crate::profile::install::*;
 pub struct ModLoader<'a> {
     #[serde(default)]
     pub package_name: Option<&'a str>,
+    #[serde(default)]
+    pub file_target: Option<&'a str>,
     #[serde(flatten)]
     pub kind: ModLoaderKind<'a>,
 }
@@ -201,7 +203,7 @@ impl ModLoader<'static> {
             (false, ModLoaderKind::Shimloader {}) => {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::flat_separated("mod", "shimloader/mod"),
-                    Subdir::flat_separated("pak", "shimloader/pak"),
+                    Subdir::flat_separated("pak", "shimloader/pak").extension(".pak"),
                     Subdir::untracked("cfg", "shimloader/cfg").mutable(),
                 ];
 

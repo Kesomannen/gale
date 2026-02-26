@@ -320,6 +320,7 @@ impl ManagedGame {
             sync: None,
             custom_args: Vec::new(),
             custom_args_enabled: false,
+            missing: false,
         };
 
         let index = self.target_profile_index(&profile.name);
@@ -342,26 +343,52 @@ impl ManagedGame {
         }
     }
 
-    pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool, db: &Db) -> Result<()> {
+    pub fn forget_profile(&mut self, id: i64, db: &Db) -> Result<()> {
+        let index = self.index_of(id).expect("profile must exist");
+
+        self.profiles.remove(index);
+
+        if id == self.active_profile_id {
+            self.shift_active_profile(index);
+        }
+
+        db.delete_profile(id)?;
+
+        if self.profiles.is_empty() {
+            self.create_default_profile(db)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn delete_profile(&mut self, id: i64, allow_delete_last: bool, db: &Db) -> Result<()> {
         ensure!(
             allow_delete_last || self.profiles.len() > 1,
             "cannot delete last profile"
         );
 
-        let profile = self.profile_at(index)?;
-        let id = profile.id;
+        let profile = self.profile(id)?;
+        let index = self.index_of(id).expect("profile must exist");
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
 
-        if !self.profiles.is_empty() && self.active_profile_id == id {
-            let new_index = index.saturating_sub(1).min(self.profiles.len() - 1);
-            self.active_profile_id = self.profiles[new_index].id;
+        if self.active_profile_id == id {
+            self.shift_active_profile(index);
         }
 
         db.delete_profile(id)?;
 
         Ok(())
+    }
+
+    fn shift_active_profile(&mut self, prev_index: usize) {
+        if self.profiles.is_empty() {
+            return;
+        }
+
+        let new_index = prev_index.saturating_sub(1).min(self.profiles.len() - 1);
+        self.active_profile_id = self.profiles[new_index].id;
     }
 
     pub fn duplicate_profile(

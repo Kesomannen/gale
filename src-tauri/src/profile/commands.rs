@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use chrono::{DateTime, Utc};
-use eyre::{Context, OptionExt};
+use eyre::{eyre, Context, OptionExt};
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{command, AppHandle};
@@ -221,11 +221,11 @@ pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHand
 }
 
 #[command]
-pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
+pub fn delete_profile(id: i64, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
     let game = manager.active_game_mut();
 
-    game.delete_profile(index, false, app.db())?;
+    game.delete_profile(id, false, app.db())?;
     game.save(&app)?;
 
     game.update_window_title(&app)?;
@@ -452,5 +452,35 @@ pub fn set_custom_args(custom_args: Vec<String>, enabled: bool, app: AppHandle) 
     profile.custom_args_enabled = enabled;
     profile.save(&app, false)?;
     manager.save_active_game(&app)?;
+    Ok(())
+}
+
+#[command]
+pub fn set_profile_path(new_path: PathBuf, profile_id: i64, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let game = manager.active_game_mut();
+
+    if !new_path.is_dir() {
+        return Err(eyre!("provided path is not a directory").into());
+    }
+
+    let profile = game.profile_mut(profile_id)?;
+    profile.path = new_path;
+    profile.missing = false;
+
+    profile.save(&app, true)?;
+
+    Ok(())
+}
+
+#[command]
+pub fn forget_profile(profile_id: i64, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let game = manager.active_game_mut();
+
+    game.forget_profile(profile_id, app.db())?;
+
+    game.save(&app)?;
+
     Ok(())
 }

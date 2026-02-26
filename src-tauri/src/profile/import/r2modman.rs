@@ -83,7 +83,9 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
             let game = manager.active_game_mut();
 
             if let Some(index) = game.find_profile_index(&name) {
-                game.delete_profile(index, true, app.db())
+                let profile = game.profile_at(index)?;
+
+                game.delete_profile(profile.id, true, app.db())
                     .unwrap_or_else(|_| {
                         warn!("failed to delete possibly corrupted profile '{}'", name)
                     });
@@ -147,12 +149,15 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
 
     profile_dir.pop();
 
-    if let Some(index) = manager.active_game().find_profile_index(&name) {
+    let game = manager.active_game();
+
+    if let Some(index) = game.find_profile_index(&name) {
+        let profile_id = game.profile_at(index)?.id;
         info!("deleting existing profile '{}'", name);
 
         manager
             .active_game_mut()
-            .delete_profile(index, true, app.db())
+            .delete_profile(profile_id, true, app.db())
             .context("failed to delete existing profile")?;
     }
 

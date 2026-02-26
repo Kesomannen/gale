@@ -6,10 +6,12 @@ use std::{
 };
 
 use eyre::{bail, ensure, eyre, OptionExt, Result};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
 use tracing::{info, warn};
+use walkdir::WalkDir;
 
 use super::ManagedGame;
 use crate::{
@@ -109,6 +111,13 @@ impl ManagedGame {
         const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
 
+        let target_dir = game_dir.join(self.game.mod_loader.file_target.unwrap_or("."));
+        ensure!(
+            target_dir.exists(),
+            "target directory for mod loader files does not exist at {}, please check your settings",
+            target_dir.display()
+        );
+
         let entries = self
             .active_profile()
             .path
@@ -124,7 +133,7 @@ impl ManagedGame {
                 let is_file = entry.file_type().is_ok_and(|ty| ty.is_file());
                 let is_included_dir = INCLUDE_DIRS.iter().any(|dir| *dir == name);
 
-                return is_file || is_included_dir;
+                is_file || is_included_dir
             });
 
         for entry in entries {
@@ -133,7 +142,7 @@ impl ManagedGame {
                 entry.file_name().to_string_lossy()
             );
 
-            let to_path = game_dir.join(entry.file_name());
+            let to_path = target_dir.join(entry.file_name());
 
             if entry.file_type()?.is_file() {
                 fs::copy(entry.path(), to_path)?;
@@ -218,9 +227,11 @@ const IGNORED_EXES: &[&str] = &[
 ];
 
 fn find_executable(game_dir: &Path) -> Result<PathBuf> {
-    game_dir
-        .read_dir()?
+    WalkDir::new(game_dir)
+        .into_iter()
         .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_file())
+        .sorted_by(|a, b| a.depth().cmp(&b.depth())) // prefer shallower entries
         .find(|entry| {
             let file_name = PathBuf::from(entry.file_name());
             let file_name_str = file_name.to_string_lossy();
@@ -234,6 +245,6 @@ fn find_executable(game_dir: &Path) -> Result<PathBuf> {
 
             has_correct_extension && !IGNORED_EXES.contains(&&*file_name_str)
         })
-        .map(|entry| entry.path())
+        .map(|entry| entry.into_path())
         .ok_or_eyre("game executable not found")
 }

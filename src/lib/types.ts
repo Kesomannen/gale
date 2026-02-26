@@ -57,6 +57,7 @@ export type ProfileInfo = {
 	sync: SyncProfileInfo | null;
 	customArgs: string[];
 	customArgsEnabled: boolean;
+	missing: boolean;
 };
 
 export type SyncProfileInfo = {
@@ -329,3 +330,5 @@ export type ModContextItem = {
 export type Zoom = { factor: number } | { delta: number };
 
 export type MarkdownType = 'readme' | 'changelog';
+
+export type MissingProfileAction = { type: 'locate'; newPath: string } | { type: 'delete' };

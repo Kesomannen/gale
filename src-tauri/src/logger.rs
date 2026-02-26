@@ -7,7 +7,7 @@ use eyre::{Context, OptionExt, Result};
 use serde::Serialize;
 use tauri::{command, AppHandle, Emitter};
 use tracing::{level_filters::LevelFilter, Level};
-use tracing_subscriber::{prelude::*, Registry};
+use tracing_subscriber::{filter::Targets, prelude::*, Registry};
 
 use crate::util::{self, fs::PathExt};
 
@@ -48,7 +48,11 @@ pub fn setup() -> Result<()> {
         .with(
             tracing_subscriber::fmt::layer()
                 .with_ansi(true)
-                .with_filter(LevelFilter::from_level(Level::DEBUG)),
+                .with_filter(
+                    Targets::new()
+                        .with_target("gale", Level::DEBUG)
+                        .with_default(Level::INFO),
+                ),
         )
         .with(
             tracing_subscriber::fmt::layer()

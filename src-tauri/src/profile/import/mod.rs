@@ -224,9 +224,7 @@ fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
     let (game, _) = manager.profile_by_id(profile_id)?;
     let managed_game = manager.games.get_mut(game).unwrap();
 
-    let index = managed_game.index_of(profile_id)?;
-
-    managed_game.delete_profile(index, false, app.db())?;
+    managed_game.delete_profile(profile_id, false, app.db())?;
     managed_game.save(app)?;
 
     Ok(())

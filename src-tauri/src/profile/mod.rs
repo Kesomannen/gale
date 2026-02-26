@@ -76,6 +76,7 @@ pub struct Profile {
     pub sync: Option<sync::SyncProfileData>,
     pub custom_args: Vec<String>,
     pub custom_args_enabled: bool,
+    pub missing: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -316,6 +317,7 @@ impl Profile {
             sync: self.sync.clone(),
             custom_args: self.custom_args.clone(),
             custom_args_enabled: self.custom_args_enabled,
+            missing: self.missing,
         }
     }
 
@@ -349,6 +351,7 @@ pub struct FrontendProfile {
     sync: Option<sync::SyncProfileData>,
     custom_args: Vec<String>,
     custom_args_enabled: bool,
+    missing: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -438,12 +441,10 @@ impl ManagedGame {
         self.profiles.iter_mut().find(|profile| profile.id == id)
     }
 
-    /*
     fn profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
         self.profile_ok_mut(id)
             .with_context(|| format!("profile with id {id} not found"))
     }
-    */
 
     fn active_profile(&self) -> &Profile {
         self.profile(self.active_profile_id).unwrap()
@@ -539,17 +540,14 @@ impl ModManager {
 
         for saved_profile in profiles {
             let path = PathBuf::from(saved_profile.path);
+            let missing = !path.exists();
 
-            if !path.exists() {
+            if missing {
                 warn!(
                     "profile {} at {} does not exist anymore",
                     saved_profile.name,
                     path.display()
                 );
-                if let Err(err) = db.delete_profile(saved_profile.id) {
-                    warn!("failed to delete missing profile from database: {:#}", err);
-                }
-                continue;
             }
 
             let game = game::from_slug(&saved_profile.game_slug).ok_or_else(|| {
@@ -573,6 +571,7 @@ impl ModManager {
                 sync: saved_profile.sync_data,
                 custom_args: saved_profile.custom_args.unwrap_or_default(),
                 custom_args_enabled: saved_profile.custom_args_enabled.unwrap_or(false),
+                missing,
             };
 
             manager

@@ -128,7 +128,7 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
             missing: false,
         });
 
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     }
 
     Ok(id)
@@ -168,7 +168,7 @@ pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
         sync_data.synced_at = response.updated_at;
         sync_data.updated_at = response.updated_at;
 
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     };
 
     Ok(())
@@ -201,7 +201,7 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
 
         profile.sync = None;
 
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     }
 
     Ok(())
@@ -254,7 +254,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
                 None => sync.missing = true,
             }
 
-            profile.save(&app, true)?;
+            profile.save(app, true)?;
 
             Ok(())
         }
@@ -296,7 +296,7 @@ async fn download_and_import_file(
         let (_, profile) = manager.profile_by_id_mut(id)?;
 
         profile.sync = Some(sync_profile);
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     }
 
     Ok(())

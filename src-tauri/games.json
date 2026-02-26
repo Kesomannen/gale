@@ -349,7 +349,8 @@
 		"name": "Astroneer",
 		"slug": "astroneer",
 		"modLoader": {
-			"name": "Shimloader"
+			"name": "Shimloader",
+			"fileTarget": "./Astro/Binaries/Win64"
 		},
 		"platforms": {
 			"steam": {
@@ -2482,7 +2483,8 @@
 		"name": "Voices of the Void",
 		"r2dirName": "VotV",
 		"modLoader": {
-			"name": "Shimloader"
+			"name": "Shimloader",
+			"fileTarget": "./WindowsNoEditor/VotV/Binaries/Win64"
 		},
 		"platforms": {}
 	},

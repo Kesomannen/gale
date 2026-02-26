@@ -26,7 +26,7 @@ export const query = (args: QueryModsArgs) => invoke<ProfileQuery>('query_profil
 export const isModInstalled = (uuid: string) => invoke<boolean>('is_mod_installed', { uuid });
 export const create = (name: string, overridePath: string | null) =>
 	invoke('create_profile', { name, overridePath });
-export const deleteProfile = (index: number) => invoke('delete_profile', { index });
+export const deleteProfile = (profileId: number) => invoke('delete_profile', { id: profileId });
 export const rename = (name: string) => invoke('rename_profile', { name });
 export const duplicate = (name: string) => invoke('duplicate_profile', { name });
 export const removeMod = (uuid: string) => invoke<ModActionResponse>('remove_mod', { uuid });
@@ -45,3 +45,6 @@ export const getLocalMarkdown = (uuid: string, type: MarkdownType) =>
 	invoke<string | null>('get_local_markdown', { uuid, kind: type });
 export const setCustomArgs = (customArgs: string[], enabled: boolean) =>
 	invoke('set_custom_args', { customArgs, enabled });
+export const setProfilePath = (profileId: number, newPath: string) =>
+	invoke('set_profile_path', { profileId, newPath });
+export const forgetProfile = (profileId: number) => invoke('forget_profile', { profileId });
