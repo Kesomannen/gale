@@ -290,6 +290,18 @@
 		}
 	},
 	{
+		"name": "An Unfinished Game",
+		"slug": "an-unfinished-game",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2919990
+			}
+		}
+	},
+	{
 		"name": "Ancient Dungeon VR",
 		"modLoader": {
 			"name": "BepInEx",
@@ -723,6 +735,18 @@
 		}
 	},
 	{
+		"name": "Crab Game",
+		"slug": "crab-game",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1782210
+			}
+		}
+	},
+	{
 		"name": "Crawlspace 2",
 		"slug": "crawlspace-2",
 		"modLoader": {
@@ -780,6 +804,18 @@
 			"steam": {
 				"id": 519860,
 				"dirName": "Dusk"
+			}
+		}
+	},
+	{
+		"name": "Deadly Delivery",
+		"slug": "deadly-delivery",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3743090
 			}
 		}
 	},
@@ -1012,6 +1048,19 @@
 		"platforms": {
 			"steam": {
 				"id": 2027330
+			}
+		}
+	},
+	{
+		"name": "Granny: Chapter 2",
+		"slug": "granny-chapter-two",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1205040,
+				"dirName": "Granny Chapter Two"
 			}
 		}
 	},
@@ -1873,6 +1922,19 @@
 		"platforms": {
 			"steam": {
 				"id": 1843760
+			}
+		}
+	},
+	{
+		"name": "SOULCALIBUR VI",
+		"slug": "soulcalibur-vi",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 544750,
+				"dirName": "SoulcaliburVI"
 			}
 		}
 	},
