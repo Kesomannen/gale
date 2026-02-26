@@ -1,12 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.13.0 (2026-02-26)
 
 ### Added
 
 - Missing profiles dialog for when gale detects profiles that have been manually moved or deleted
   - The previous behaviour was to automatically wipe these profiles from the database
-  - You now get the option, per profile, to either locate the profile or have gale wipe it
+  - You now get the option, per profile, to either locate the profile or remove it from Gale
 
 ### Changed
 
@@ -18,7 +18,7 @@
 - Required shimloader files being put in the wrong directory
 - Shimloader .pak being put in the `mod` directory rather than `pak`
 
-## 1.12.0 (2025-02-05)
+## 1.12.0 (2026-02-05)
 
 ### Added
 

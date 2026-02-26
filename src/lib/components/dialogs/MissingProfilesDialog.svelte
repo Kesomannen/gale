@@ -5,7 +5,7 @@
 	import MissingProfileItem from './MissingProfileItem.svelte';
 	import type { MissingProfileAction } from '$lib/types';
 	import { forgetProfile, setProfilePath } from '$lib/api/profile';
-	import { pushInfoToast, pushToast } from '$lib/toast';
+	import { pushToast } from '$lib/toast';
 
 	const missingProfiles = $derived(profiles.list.filter((profile) => profile.missing));
 
