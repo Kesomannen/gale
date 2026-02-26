@@ -5,6 +5,7 @@ use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
+use reqwest::Version;
 use reqwest_websocket::{Upgrade, WebSocket};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -109,6 +110,7 @@ async fn connect(app: AppHandle, mut rx: mpsc::UnboundedReceiver<ClientMessage>)
     let socket = app
         .http()
         .get(&url)
+        .version(Version::HTTP_11) // reqwest-websocket doesn't support HTTP/2
         .upgrade()
         .send()
         .await?
