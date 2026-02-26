@@ -20,7 +20,7 @@ use crate::{
 #[serde(tag = "event", content = "payload", rename_all = "camelCase")]
 enum ServerMessage {
     ProfileUpdated {
-        metadata: super::SyncProfileMetadata,
+        metadata: Box<super::SyncProfileMetadata>,
     },
 
     ProfileDeleted {

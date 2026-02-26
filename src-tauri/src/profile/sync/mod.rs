@@ -15,13 +15,15 @@ pub mod auth;
 pub mod commands;
 pub mod socket;
 
-const API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("GALE_SYNC_URL") {
+static API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("GALE_SYNC_URL") {
     Ok(var) => var.into(),
     Err(_) => "https://gale.kesomannen.com/api".into(),
 });
 
 async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
-    let mut req = app.http().request(method, format!("{}{path}", *API_URL));
+    let url = format!("{}{path}", *API_URL);
+
+    let mut req = app.http().request(method, url);
     if let Some(token) = auth::access_token(app).await {
         req = req.bearer_auth(token);
     }

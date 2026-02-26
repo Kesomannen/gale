@@ -337,14 +337,16 @@ impl<'a> SubdirInstaller<'a> {
     }
 }
 
-/// The state files are used by subdirs with [`SubdirMode::Track`] to know which files belong to which mods.
-/// This system is similar to r2modman's, with the exception that we use json instead of yaml.
-///
-/// Each mod has its own json file in the `_state` folder that lists the mod's own files.
-/// The profile also has a main json file that links each file to its corresponding mod.
-///
-/// When we want to write a file to the state, we thus have to write to both the mod-specific file as well as
-/// the profile "registry".
+/*
+ * The state files are used by subdirs with [`SubdirMode::Track`] to know which files belong to which mods.
+ * This system is similar to r2modman's, with the exception that we use json instead of yaml.
+ *
+ * Each mod has its own json file in the `_state` folder that lists the mod's own files.
+ * The profile also has a main json file that links each file to its corresponding mod.
+ *
+ * When we want to write a file to the state, we thus have to write to both the mod-specific file as well as
+ * the profile "registry".
+ */
 
 fn state_file_path(name: &str, profile: &Profile) -> PathBuf {
     let mut path = profile.path.to_path_buf();
