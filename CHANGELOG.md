@@ -17,6 +17,7 @@
 - Typo in notification
 - Required shimloader files being put in the wrong directory
 - Shimloader .pak being put in the `mod` directory rather than `pak`
+- Profile sync live updates not working due to incorrect HTTP version
 
 ## 1.12.0 (2026-02-05)
 

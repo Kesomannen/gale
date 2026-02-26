@@ -56,6 +56,8 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
 
 #[cfg(target_os = "windows")]
 fn create_base_steam_command() -> Result<Command> {
+    use tracing::warn;
+
     let path = match read_steam_registry() {
         Ok(install_dir) => {
             let exe_path = install_dir.join("steam.exe");
