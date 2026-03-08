@@ -2215,6 +2215,18 @@
 		}
 	},
 	{
+		"name": "Super Battle Golf",
+		"slug": "super-battle-golf",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4069520
+			}
+		}
+	},
+	{
 		"name": "Super Fantasy Kingdom",
 		"slug": "super-fantasy-kingdom",
 		"modLoader": {
