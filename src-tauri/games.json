@@ -761,6 +761,18 @@
 		}
 	},
 	{
+		"name": "Crime Simulator",
+		"slug": "crime-simulator",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2737070
+			}
+		}
+	},
+	{
 		"name": "Cult of the Lamb",
 		"modLoader": {
 			"name": "BepInEx"
