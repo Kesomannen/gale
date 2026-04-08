@@ -167,6 +167,18 @@
 		}
 	},
 	{
+		"name": "A Gentlemen's Dispute",
+		"slug": "a-gentlemens-dispute",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2820700
+			}
+		}
+	},
+	{
 		"name": "AGAINST",
 		"modLoader": {
 			"name": "BepInEx"
@@ -625,6 +637,18 @@
 		}
 	},
 	{
+		"name": "Big Ambitions",
+		"slug": "big-ambitions",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1331550
+			}
+		}
+	},
+	{
 		"name": "Bomb Rush Cyberfunk",
 		"modLoader": {
 			"name": "BepInEx"
@@ -748,6 +772,18 @@
 		}
 	},
 	{
+		"name": "Crawlspace",
+		"slug": "crawlspace",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1787860
+			}
+		}
+	},
+	{
 		"name": "Crawlspace 2",
 		"slug": "crawlspace-2",
 		"modLoader": {
@@ -773,6 +809,19 @@
 		}
 	},
 	{
+		"name": "Cryo",
+		"slug": "cryo",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2564910,
+				"dirName": "CRYO"
+			}
+		}
+	},
+	{
 		"name": "Cult of the Lamb",
 		"modLoader": {
 			"name": "BepInEx"
@@ -780,6 +829,19 @@
 		"platforms": {
 			"steam": {
 				"id": 1313140
+			}
+		}
+	},
+	{
+		"name": "Cursed Words",
+		"slug": "cursed-words",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3856460,
+				"dirName": "Cursed Words Demo"
 			}
 		}
 	},
@@ -866,6 +928,18 @@
 		"platforms": {
 			"steam": {
 				"id": 233610
+			}
+		}
+	},
+	{
+		"name": "Ducks Can Drive",
+		"slug": "ducks-can-drive",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2472840
 			}
 		}
 	},
@@ -1065,6 +1139,18 @@
 		}
 	},
 	{
+		"name": "Gorilla Tag",
+		"slug": "gorilla-tag",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1533390
+			}
+		}
+	},
+	{
 		"name": "Granny: Chapter 2",
 		"slug": "granny-chapter-two",
 		"modLoader": {
@@ -1121,7 +1207,9 @@
 		"modLoader": {
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
-			"files": ["d3d12.dll"]
+			"files": [
+				"d3d12.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
@@ -1174,6 +1262,19 @@
 			},
 			"xboxStore": {
 				"identifier": "TeamCherry.HollowKnightSilksong"
+			}
+		}
+	},
+	{
+		"name": "Hot Lava",
+		"slug": "hot-lava",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 382560,
+				"dirName": "Hot Lava/archive/build"
 			}
 		}
 	},
@@ -1786,6 +1887,18 @@
 		}
 	},
 	{
+		"name": "Pit of Goblin",
+		"slug": "pit-of-goblin",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3253530
+			}
+		}
+	},
+	{
 		"name": "Plasma",
 		"modLoader": {
 			"name": "BepInEx"
@@ -1905,7 +2018,9 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": ["version.dll"]
+			"files": [
+				"version.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
@@ -2057,6 +2172,18 @@
 		}
 	},
 	{
+		"name": "Sledding Game",
+		"slug": "sledding-game",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4029310
+			}
+		}
+	},
+	{
 		"name": "Slipstream: Rogue Space",
 		"slug": "slipstream-rogue-space",
 		"modLoader": {
@@ -2090,6 +2217,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1326470
+			}
+		}
+	},
+	{
+		"name": "Spooky's Jump Scare Mansion: HD Renovation",
+		"slug": "jump-scare-mansion",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 577690
 			}
 		}
 	},
@@ -2488,6 +2627,18 @@
 		"platforms": {
 			"steam": {
 				"id": 843390
+			}
+		}
+	},
+	{
+		"name": "Very Very Valet",
+		"slug": "very-very-valet",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1448840
 			}
 		}
 	},
