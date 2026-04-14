@@ -1960,6 +1960,18 @@
 		}
 	},
 	{
+		"name": "Puttler",
+		"slug": "puttler",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3198680
+			}
+		}
+	},
+	{
 		"name": "ROUNDS",
 		"modLoader": {
 			"name": "BepInEx"
