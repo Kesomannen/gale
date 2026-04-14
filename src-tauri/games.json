@@ -101,6 +101,20 @@
 		}
 	},
 	{
+		"name": "RV There Yet?",
+		"slug": "rv-there-yet",
+		"popular": true,
+		"modLoader": {
+			"name": "Shimloader",
+			"fileTarget": "./Ride/Binaries/Win64"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3949040
+			}
+		}
+	},
+	{
 		"name": "Titanfall 2: Northstar",
 		"slug": "northstar",
 		"r2dirName": "Titanfall2",
