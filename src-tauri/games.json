@@ -105,7 +105,7 @@
 		"slug": "rv-there-yet",
 		"popular": true,
 		"modLoader": {
-			"name": "BepInEx"
+			"name": "unreal_shimloader"
 		},
 		"platforms": {
 			"steam": {
