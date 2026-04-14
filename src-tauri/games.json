@@ -105,7 +105,8 @@
 		"slug": "rv-there-yet",
 		"popular": true,
 		"modLoader": {
-			"name": "unreal_shimloader"
+			"name": "Shimloader",
+			"fileTarget": "./Ride/Binaries/Win64"
 		},
 		"platforms": {
 			"steam": {
