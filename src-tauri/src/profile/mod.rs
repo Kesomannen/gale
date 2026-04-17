@@ -550,13 +550,14 @@ impl ModManager {
                 );
             }
 
-            let game = game::from_slug(&saved_profile.game_slug).ok_or_else(|| {
-                eyre!(
+            let Some(game) = game::from_slug(&saved_profile.game_slug) else {
+                warn!(
                     "profile {} is in unknown game: {}",
-                    saved_profile.name,
-                    saved_profile.game_slug
-                )
-            })?;
+                    saved_profile.name, saved_profile.game_slug
+                );
+
+                continue;
+            };
 
             let profile = Profile {
                 path,
@@ -711,13 +712,18 @@ impl ModManager {
         thunderstore::cache::write_packages(&packages, self.active_game, prefs)
     }
 
-    fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) -> Result<()> {
-        let game = game::from_slug(&saved_game.slug).ok_or_else(|| {
-            eyre!(
+    fn add_saved_game(
+        &mut self,
+        base_path: &Path,
+        saved_game: db::ManagedGameData,
+    ) -> Result<bool> {
+        let Some(game) = game::from_slug(&saved_game.slug) else {
+            warn!(
                 "unknown game in save: {} (has Gale been downgraded?)",
                 saved_game.slug
-            )
-        })?;
+            );
+            return Ok(false);
+        };
 
         let managed_game = ManagedGame {
             id: saved_game.id,
@@ -729,7 +735,7 @@ impl ModManager {
         };
 
         self.games.insert(game, managed_game);
-        Ok(())
+        Ok(true)
     }
 
     pub fn save_all(&self, app: &AppHandle) -> Result<()> {
