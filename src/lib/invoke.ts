@@ -40,6 +40,6 @@ export async function invoke<T = void>(cmd: string, args?: any): Promise<T> {
 			message: displayMessage
 		});
 
-		throw error;
+		throw error.detail;
 	}
 }

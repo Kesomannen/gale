@@ -36,12 +36,12 @@
 	"menuBar_profile_item_2": "重命名配置",
 	"menuBar_profile_item_3": "复制配置",
 	"menuBar_profile_item_4": "复制模组列表",
-	"menuBar_profile_item_5": "复制调试信息",
-	"menuBar_profile_item_6": "复制启动参数",
-	"menuBar_profile_item_7": "启用所有模组",
-	"menuBar_profile_item_8": "禁用所有模组",
-	"menuBar_profile_item_9": "卸载所有禁用模组",
-	"menuBar_profile_item_10": "创建桌面快捷方式",
+	"menuBar_profile_item_6": "复制调试信息",
+	"menuBar_profile_item_7": "复制启动参数",
+	"menuBar_profile_item_8": "启用所有模组",
+	"menuBar_profile_item_9": "禁用所有模组",
+	"menuBar_profile_item_10": "卸载所有禁用模组",
+	"menuBar_profile_item_11": "创建桌面快捷方式",
 	"menuBar_import_title": "导入",
 	"menuBar_import_item_1": "...配置从代码",
 	"menuBar_import_item_2": "...配置从文件",
@@ -470,5 +470,8 @@
 	"prefs_profileSettings_launch_title": "启动",
 	"modpack_includeFiles_placeholder": "筛选文件...",
 	"toolBar_dialog_games_lastUpdated": "最后更新在{time}前",
-	"installPopover_taskText_done": "完成下载..."
+	"installPopover_taskText_done": "完成下载...",
+	"menuBar_profile_item_5": "将模组列表导出到文件",
+	"menuBar_exportModList_message": "已导出模组列表。",
+	"menuBar_exportModList_title": "选择要将模组列表导出到的目录。"
 }

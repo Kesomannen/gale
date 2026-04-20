@@ -106,28 +106,32 @@
 				},
 				{
 					text: m.menuBar_profile_item_5(),
-					onclick: copyDebugInfo
+					onclick: exportModList
 				},
 				{
 					text: m.menuBar_profile_item_6(),
+					onclick: copyDebugInfo
+				},
+				{
+					text: m.menuBar_profile_item_7(),
 					onclick: copyLaunchArgs
 				},
 				'',
 				{
-					text: m.menuBar_profile_item_7(),
+					text: m.menuBar_profile_item_8(),
 					onclick: () => setAllModsState(true)
 				},
 				{
-					text: m.menuBar_profile_item_8(),
+					text: m.menuBar_profile_item_9(),
 					onclick: () => setAllModsState(false)
 				},
 				{
-					text: m.menuBar_profile_item_9(),
+					text: m.menuBar_profile_item_10(),
 					onclick: uninstallDisabledMods
 				},
 				'',
 				{
-					text: m.menuBar_profile_item_10(),
+					text: m.menuBar_profile_item_11(),
 					onclick: createDesktopShotcut
 				}
 			]
@@ -333,6 +337,19 @@
 		await api.profile.export.copyDependencyStrings();
 		pushInfoToast({
 			message: m.menuBar_copyModList_message()
+		});
+	}
+
+	async function exportModList() {
+		const directory = await open({
+			directory: true,
+			title: m.menuBar_exportModList_title()
+		});
+		if (directory === null) return;
+
+		await api.profile.export.exportDependencyStrings(directory);
+		pushInfoToast({
+			message: m.menuBar_exportModList_message()
 		});
 	}
 

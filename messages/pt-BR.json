@@ -36,12 +36,12 @@
 	"menuBar_profile_item_2": "Renomear perfil",
 	"menuBar_profile_item_3": "Duplicar perfil",
 	"menuBar_profile_item_4": "Copiar lista de mods",
-	"menuBar_profile_item_5": "Copiar informações de debug",
-	"menuBar_profile_item_6": "Copiar argumentos de inicialização",
-	"menuBar_profile_item_7": "Ativar todos os mods",
-	"menuBar_profile_item_8": "Desativar todos os mods",
-	"menuBar_profile_item_9": "Desinstalar mods desativados",
-	"menuBar_profile_item_10": "Criar atalho na área de trabalho",
+	"menuBar_profile_item_6": "Copiar informações de debug",
+	"menuBar_profile_item_7": "Copiar argumentos de inicialização",
+	"menuBar_profile_item_8": "Ativar todos os mods",
+	"menuBar_profile_item_9": "Desativar todos os mods",
+	"menuBar_profile_item_10": "Desinstalar mods desativados",
+	"menuBar_profile_item_11": "Criar atalho na área de trabalho",
 	"menuBar_import_title": "Importar",
 	"menuBar_import_item_1": "...perfil via código",
 	"menuBar_import_item_2": "...perfil via arquivo",
@@ -470,5 +470,8 @@
 	"prefs_profileSettings_launch_title": "Inicialização",
 	"modpack_includeFiles_placeholder": "Filtrar arquivos...",
 	"toolBar_dialog_games_lastUpdated": "Atualizado há {time}",
-	"installPopover_taskText_done": "Finalizando..."
+	"installPopover_taskText_done": "Finalizando...",
+	"menuBar_profile_item_5": "Exportar lista de mods para arquivo",
+	"menuBar_exportModList_message": "Lista de mods exportada.",
+	"menuBar_exportModList_title": "Escolha um diretório para exportar a lista de mods."
 }

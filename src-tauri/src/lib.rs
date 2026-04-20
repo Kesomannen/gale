@@ -168,6 +168,7 @@ pub fn run() {
             profile::export::commands::set_pack_args,
             profile::export::commands::generate_changelog,
             profile::export::commands::copy_dependency_strings,
+            profile::export::commands::export_dependency_strings,
             profile::export::commands::copy_debug_info,
             profile::sync::commands::read_sync_profile,
             profile::sync::commands::create_sync_profile,

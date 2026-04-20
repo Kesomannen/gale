@@ -36,12 +36,12 @@
 	"menuBar_profile_item_2": "Zmień nazwę profilu",
 	"menuBar_profile_item_3": "Duplikuj profil",
 	"menuBar_profile_item_4": "Kopiuj listę modów",
-	"menuBar_profile_item_5": "Kopiuj informacje debugowania",
-	"menuBar_profile_item_6": "Kopiuj argumenty uruchamiania",
-	"menuBar_profile_item_7": "Włącz wszystkie mody",
-	"menuBar_profile_item_8": "Wyłącz wszystkie mody",
-	"menuBar_profile_item_9": "Odinstaluj wyłączone mody",
-	"menuBar_profile_item_10": "Utwórz skrót na pulpicie",
+	"menuBar_profile_item_6": "Kopiuj informacje debugowania",
+	"menuBar_profile_item_7": "Kopiuj argumenty uruchamiania",
+	"menuBar_profile_item_8": "Włącz wszystkie mody",
+	"menuBar_profile_item_9": "Wyłącz wszystkie mody",
+	"menuBar_profile_item_10": "Odinstaluj wyłączone mody",
+	"menuBar_profile_item_11": "Utwórz skrót na pulpicie",
 	"menuBar_import_title": "Importuj",
 	"menuBar_import_item_1": "...profil z kodu",
 	"menuBar_import_item_2": "...profil z pliku",
@@ -470,5 +470,8 @@
 	"prefs_profileSettings_launch_title": "Uruchamianie",
 	"modpack_includeFiles_placeholder": "Filtruj pliki...",
 	"toolBar_dialog_games_lastUpdated": "Ostatnia aktualizacja {time} temu",
-	"installPopover_taskText_done": "Kończenie..."
+	"installPopover_taskText_done": "Kończenie...",
+	"menuBar_profile_item_5": "Eksportuj listę modów do pliku",
+	"menuBar_exportModList_message": "Wyeksportowano listę modów.",
+	"menuBar_exportModList_title": "Wybierz katalog, do którego chcesz wyeksportować listę modów"
 }

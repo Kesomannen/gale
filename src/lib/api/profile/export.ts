@@ -8,6 +8,8 @@ export const setPackArgs = (args: ModpackArgs) => invoke('set_pack_args', { args
 export const exportPack = (dir: string, args: ModpackArgs) => invoke('export_pack', { dir, args });
 export const uploadPack = (args: ModpackArgs) => invoke('upload_pack', { args });
 export const copyDependencyStrings = () => invoke('copy_dependency_strings');
+export const exportDependencyStrings = (directory: string) =>
+	invoke('export_dependency_strings', { directory });
 export const copyDebugInfo = () => invoke('copy_debug_info');
 export const generateChangelog = (args: ModpackArgs, all: boolean) =>
 	invoke<string>('generate_changelog', { args, all });
