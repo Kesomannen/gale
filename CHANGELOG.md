@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Option to export mod list to file, rather than copy to clipboard
+
+### Changed
+
+- A stack trace is now logged when a command fails
+
 ## 1.13.0 (2026-02-26)
 
 ### Added
