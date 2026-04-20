@@ -5,7 +5,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, eyre, OptionExt, Result};
+use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -43,7 +43,8 @@ pub enum LaunchMode {
 
 impl ManagedGame {
     pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
-        let game_dir = locate_game_dir(self.game, prefs)?;
+        let game_dir =
+            locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
         if let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }

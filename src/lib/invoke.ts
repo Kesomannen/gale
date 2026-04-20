@@ -15,29 +15,31 @@ listen<Error>('error', (evt) =>
 	})
 );
 
+type InvokeError = {
+	message: string;
+	detail: string;
+};
+
 export async function invoke<T = void>(cmd: string, args?: any): Promise<T> {
 	try {
 		return await tauriInvoke<T>(cmd, args);
-	} catch (error: any) {
-		let errStr = error as string;
-		let name = `Failed to ${toSentenceCase(cmd).toLowerCase()}`;
-		let message = errStr[0].toUpperCase() + errStr.slice(1);
+	} catch (anyError: any) {
+		let error = anyError as InvokeError;
+		tauriInvoke('log_err', { msg: `${cmd} failed: ${error.detail}` });
 
-		if (!['.', '?', '!'].includes(message[message.length - 1])) {
-			message += '.';
+		let name = `Failed to ${toSentenceCase(cmd).toLowerCase()}`;
+		let displayMessage = error.message[0].toUpperCase() + error.message.slice(1);
+
+		if (!['.', '?', '!'].includes(displayMessage[displayMessage.length - 1])) {
+			displayMessage += '.';
 		}
 
-		pushError({ name, message });
+		pushToast({
+			type: 'error',
+			name,
+			message: displayMessage
+		});
+
 		throw error;
 	}
-}
-
-function pushError(error: Error) {
-	let msg = `${error.name}: ${error.message}`;
-	tauriInvoke('log_err', { msg });
-
-	pushToast({
-		type: 'error',
-		...error
-	});
 }
