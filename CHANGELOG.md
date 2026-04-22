@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.13.1 (2026-04-22)
 
 ### Added
 
@@ -9,6 +9,10 @@
 ### Changed
 
 - A stack trace is now logged when a command fails
+
+### Fixed
+
+- Profile sync socket connection being closed due to invalid HTTP version
 
 ## 1.13.0 (2026-02-26)
 
