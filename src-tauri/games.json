@@ -2416,6 +2416,18 @@
 		}
 	},
 	{
+		"name": "Super Psycho Baseball",
+		"slug": "super-psycho-baseball",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2216960
+			}
+		}
+	},
+	{
 		"name": "Supermarket Together",
 		"modLoader": {
 			"name": "BepInEx"
