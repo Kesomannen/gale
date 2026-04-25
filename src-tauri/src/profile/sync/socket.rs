@@ -6,7 +6,7 @@ use futures_util::{
     SinkExt, StreamExt,
 };
 use reqwest::Version;
-use reqwest_websocket::{Upgrade, WebSocket};
+use reqwest_websocket::{RequestBuilderExt, WebSocket};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::mpsc;

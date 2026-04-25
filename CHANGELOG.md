@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13.2 (2026-05-25)
+
+### Changed
+
+- Downgraded reqwest version to try and fix mod download errors
+
 ## 1.13.1 (2026-04-22)
 
 ### Added
