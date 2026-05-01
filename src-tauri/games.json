@@ -83,6 +83,20 @@
 		}
 	},
 	{
+		"name": "RV There Yet?",
+		"slug": "rv-there-yet",
+		"popular": true,
+		"modLoader": {
+			"name": "Shimloader",
+			"fileTarget": "./Ride/Binaries/Win64"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3949040
+			}
+		}
+	},
+	{
 		"name": "Risk of Rain 2",
 		"slug": "riskofrain2",
 		"r2dirName": "RiskOfRain2",
@@ -97,20 +111,6 @@
 			},
 			"epicGames": {
 				"identifier": "4b3dcc5723454a47a9112d8fe8fd5f5c"
-			}
-		}
-	},
-	{
-		"name": "RV There Yet?",
-		"slug": "rv-there-yet",
-		"popular": true,
-		"modLoader": {
-			"name": "Shimloader",
-			"fileTarget": "./Ride/Binaries/Win64"
-		},
-		"platforms": {
-			"steam": {
-				"id": 3949040
 			}
 		}
 	},
@@ -1221,9 +1221,7 @@
 		"modLoader": {
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
-			"files": [
-				"d3d12.dll"
-			]
+			"files": ["d3d12.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -2044,9 +2042,7 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": [
-				"version.dll"
-			]
+			"files": ["version.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -2619,6 +2615,18 @@
 		"platforms": {
 			"steam": {
 				"id": 386940
+			}
+		}
+	},
+	{
+		"name": "Unfair Flips",
+		"slug": "unfair-flips",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3925760
 			}
 		}
 	},
