@@ -4,6 +4,7 @@ runtime: org.gnome.Platform
 runtime-version: '49'
 sdk: org.gnome.Sdk
 
+command: gale
 finish-args:
   # Standard steam install
   # - --filesystem=home/.local/share/Steam
@@ -48,7 +49,5 @@ modules:
         path: com.kesomannen.gale.metainfo.xml
 
       - type: file
-        url: https://github.com/Kesomannen/gale/releases/download/1.13.2/Gale_1.13.2_amd64.AppImage
+        path: src-tauri/target/release/bundle/appimage/Gale_1.13.2_amd64.AppImage
         dest-filename: gale.AppImage
-        sha256: ee6235849b4f278934d0f27ea0c23bca593b7654c223354b8f47838d8afeea21
-        only-arches: [x86_64]

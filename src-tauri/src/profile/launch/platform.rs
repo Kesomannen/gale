@@ -6,10 +6,11 @@ use std::{
 use eyre::{bail, Context, OptionExt, Result};
 use tracing::info;
 
+#[cfg(target_os = "linux")]
+use crate::util;
 use crate::{
     game::{platform::Platform, Game},
     prefs::Prefs,
-    util::fs::PathExt,
 };
 
 pub fn create_launch_command(
@@ -49,6 +50,20 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
     }
 
     let mut command = create_base_steam_command()?;
+
+    if util::is_flatpak() {
+        use tracing::debug;
+
+        debug!("flatpak detected, wrapping command with flatpak-spawn");
+
+        let mut wrapper = Command::new("flatpak-spawn");
+        wrapper
+            .arg("--host")
+            .arg(command.get_program())
+            .args(command.get_args());
+        command = wrapper;
+    }
+
     command.arg("-applaunch").arg(steam.id.to_string());
 
     Ok(command)
@@ -87,6 +102,8 @@ fn create_base_steam_command() -> Result<Command> {
 fn create_base_steam_command() -> Result<Command> {
     use tracing::debug;
 
+    debug!("checking for steam system installation with which");
+
     if let Ok(path) = which::which("steam") {
         info!("found steam installation via which: {}", path.display());
         return Ok(Command::new(path));
@@ -106,9 +123,9 @@ fn create_base_steam_command() -> Result<Command> {
         return Ok(command);
     }
 
-    let path = PathBuf::from("/usr/bin/steam")
-        .exists_or_none()
-        .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
+    let path = PathBuf::from("/usr/bin/steam");
+    // .exists_or_none()
+    // .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
 
     info!(
         "using steam installation at fallback path: {}",

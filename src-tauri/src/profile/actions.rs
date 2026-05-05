@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
+use eyre::{anyhow, bail, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
@@ -452,7 +452,15 @@ impl ManagedGame {
             bail!("shortcut already exists");
         }
 
-        let exe_path = std::env::current_exe().context("failed to get current executable path")?;
+        let command = if util::is_flatpak() {
+            format!("flatpak run {}", util::path::APP_GUID)
+        } else {
+            std::env::current_exe()
+                .context("failed to get current executable path")?
+                .to_str()
+                .context("executable path must be UTF-8")?
+                .to_string()
+        };
 
         #[cfg(target_os = "windows")]
         {
@@ -469,7 +477,7 @@ impl ManagedGame {
                  $shortcut.Save()",
                 shortcut_path.to_string_lossy().replace("\\", "\\\\"),
                 exe_path.to_string_lossy().replace("\\", "\\\\"),
-                self.game.slug,
+                self.game.name,
                 profile.name
             );
 
@@ -487,6 +495,8 @@ impl ManagedGame {
 
         #[cfg(target_os = "linux")]
         {
+            use std::os::unix::fs::PermissionsExt;
+
             let desktop_content = format!(
                 "[Desktop Entry]\n\
                  Type=Application\n\
@@ -495,21 +505,14 @@ impl ManagedGame {
                  Icon=gale\n\
                  Terminal=false\n\
                  Categories=Game;",
-                self.game.slug,
-                profile.name,
-                exe_path.to_string_lossy(),
-                self.game.slug,
-                profile.name
+                self.game.name, profile.name, command, self.game.slug, profile.name
             );
 
             std::fs::write(&shortcut_path, desktop_content)
-                .context("Failed to write desktop file")?;
+                .context("failed to write desktop file")?;
 
-            std::fs::set_permissions(
-                &shortcut_path,
-                std::os::unix::fs::PermissionsExt::from_mode(0o755),
-            )
-            .context("Failed to set permissions on desktop file")?;
+            std::fs::set_permissions(&shortcut_path, PermissionsExt::from_mode(0o755))
+                .context("failed to set permissions on desktop file")?;
         }
 
         Ok(())
