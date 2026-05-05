@@ -6,18 +6,11 @@ sdk: org.gnome.Sdk
 
 command: gale
 finish-args:
-  # Standard steam install
-  # - --filesystem=home/.local/share/Steam
-  # - --filesystem=home/.steam
-  # Flatpak steam install
-  # - --filesystem=home/.var/app/com.valvesoftware.Steam
-  # Snap steam install
-  # - --filesystem=home/steam
-
   - --filesystem=home
   - --talk-name=org.freedesktop.Flatpak
 
   - --device=dri
+  - --share=ipc
   - --share=network
   - --socket=wayland
   - --socket=fallback-x11

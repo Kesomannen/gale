@@ -1,5 +1,7 @@
 import os
 
+import mistune
+
 
 changelog_path = os.path.join(os.path.dirname(__file__), "..", "CHANGELOG.md")
 
@@ -13,27 +15,21 @@ out = "<releases>\n"
 for release in changelog.split("\n## ")[1:]:
     # only the header has a double newline after it
     header = release.split("\n\n")[0].strip()
+    body = release[len(header) :].strip()
     version, date, *_ = header.split(" ")
     date = date.strip("()")
 
-    out += f'<release version="{version}" date="{date}">\n'
+    out += f'<release version="{version}" date="{date}">\n<description>\n'
 
-    # parse sections like "Added", "Changed", etc. which have a third-level header
-    for section in release.split("\n### ")[1:]:
-        subheader, *content = section.split("\n\n")
-        out += f"<p>{subheader.strip()}</p>\n<ul>\n"
+    out += mistune.html(body)
+    out = (
+        out.replace("<h3>", "<p>")
+        .replace("</h3>", "</p>")
+        .replace("<strong>", "<em>")
+        .replace("</strong>", "</em>")
+    )
 
-        # put each change in a list item
-        for line in "".join(content).split("\n"):
-            line = line.replace("- ", "").strip()
-            # escape XML special characters
-            line = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-            if line:
-                out += f"<li>{line}</li>\n"
-
-        out += "</ul>\n"
-
-    out += "</release>\n"
+    out += "</description>\n</release>\n"
 
 out += "</releases>"
 
