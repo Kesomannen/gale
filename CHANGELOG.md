@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.13.2 (2026-05-25)
+## 1.13.3 (2026-05-05)
+
+### Fixed
+
+- UI flashing after changing locale setting on Linux
+
+## 1.13.2 (2026-04-25)
 
 ### Changed
 
