@@ -26,7 +26,7 @@
 		triggerClass="grow"
 		{items}
 		{value}
-		onValueChange={(newValue) => {
+		onValueChange={async (newValue) => {
 			setLanguage(newValue);
 			set(newValue);
 		}}
