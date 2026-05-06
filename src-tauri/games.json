@@ -2779,6 +2779,18 @@
 		}
 	},
 	{
+		"name": "Windrose",
+		"slug": "windrose",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3041230
+			}
+		}
+	},
+	{
 		"name": "Wizard With A Gun",
 		"modLoader": {
 			"name": "BepInEx"
