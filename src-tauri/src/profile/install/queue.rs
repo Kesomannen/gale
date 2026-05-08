@@ -378,8 +378,11 @@ async fn handle_install(
     match try_cache_install(batch, index, app)? {
         CacheStatus::Hit => Ok(()),
         CacheStatus::Miss => {
-            let bytes = download(&batch.mods[index], cancel, &batch.options, app).await?;
-            install_from_download(bytes, batch, index, cancel, app)?;
+            let bytes = download(&batch.mods[index], cancel, &batch.options, app)
+                .await
+                .context("error while downloading")?;
+            install_from_download(bytes, batch, index, cancel, app)
+                .context("error while installing")?;
 
             Ok(())
         }
@@ -453,7 +456,7 @@ async fn download(
         .send()
         .await
         .and_then(|response| response.error_for_status())
-        .map_err(|err| eyre!(err))?
+        .context("failed to send request")?
         .bytes_stream();
 
     let mut response = Vec::with_capacity(install.file_size as usize);
@@ -463,7 +466,7 @@ async fn download(
     let mut last_size_update = 0u64;
 
     while let Some(item) = stream.next().await {
-        let item = item.map_err(eyre::Report::new)?;
+        let item = item.context("failed to read chunk from stream")?;
         response.extend_from_slice(&item);
 
         if last_update.elapsed() >= UPDATE_DELAY {

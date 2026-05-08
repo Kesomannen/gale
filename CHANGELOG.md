@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.13.3 (2026-05-05)
+
+### Fixed
+
+- UI flashing after changing locale setting on Linux
+
+## 1.13.2 (2026-04-25)
+
+### Changed
+
+- Downgraded reqwest version to try and fix mod download errors
+
 ## 1.13.1 (2026-04-22)
 
 ### Added
@@ -154,8 +166,8 @@
 - Support for Len's Island and Mage Arena
 - Two deep link endpoints:
   - `gale://profile/import/{key}`
-  - `gale://profile/sync/clone/{id}`
 
+  - `gale://profile/sync/clone/{id}`
 ### Fixed
 
 - Thunderstore API token help link redirecting to `example.com`
@@ -553,7 +565,7 @@
   - Subterror
   - STRAFTAT
 
-## Fixed
+### Fixed
 
 - ReturnOfModding mods being installed incorrectly
 - Launch mode defaulting to `Direct` instead of `Launcher` for first time users
@@ -581,7 +593,7 @@
 
 ## 1.1.4 (2024-11-19)
 
-## Added
+### Added
 
 - Config support to WEBFISHING (TackleBox)
 
