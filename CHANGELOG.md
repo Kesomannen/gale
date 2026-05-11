@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Flatpak distrubution
+
+### Fixed
+
+- Thunderstore API token not persisting on Linux
+
 ## 1.13.3 (2026-05-05)
 
 ### Fixed
