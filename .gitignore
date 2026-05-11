@@ -9,7 +9,7 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .VSCodeCounter
-src-tauri/gen
-flatpak-build
-.flatpak-builder
-repo
+/src-tauri/gen
+/flatpak-build
+/.flatpak-builder
+/repo

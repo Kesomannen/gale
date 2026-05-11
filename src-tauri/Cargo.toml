@@ -55,7 +55,7 @@ heck = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 keyring = { version = "3", features = [
     "windows-native",
-    "linux-native",
+    "linux-native-sync-persistent",
 ] }
 dirs-next = "2"
 trash = "5"
