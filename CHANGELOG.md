@@ -4,7 +4,7 @@
 
 ### Added
 
-- Flatpak distrubution
+- Flatpak distribution
 
 ### Fixed
 
