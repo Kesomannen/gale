@@ -476,7 +476,7 @@ impl ManagedGame {
                  $shortcut.Arguments = '--game {} --profile \"{}\" --launch --no-gui'; \
                  $shortcut.Save()",
                 shortcut_path.to_string_lossy().replace("\\", "\\\\"),
-                command.to_string_lossy().replace("\\", "\\\\"),
+                command.replace("\\", "\\\\"),
                 self.game.name,
                 profile.name
             );
