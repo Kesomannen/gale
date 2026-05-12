@@ -6,7 +6,6 @@ use std::{
 use eyre::{bail, Context, OptionExt, Result};
 use tracing::info;
 
-#[cfg(target_os = "linux")]
 use crate::util;
 use crate::{
     game::{platform::Platform, Game},
@@ -71,6 +70,7 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
 
 #[cfg(target_os = "windows")]
 fn create_base_steam_command() -> Result<Command> {
+    use crate::util::fs::PathExt;
     use tracing::warn;
 
     let path = match read_steam_registry() {
