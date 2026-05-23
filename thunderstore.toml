@@ -1,3 +1,4 @@
+
 [general]
 repository = "https://thunderstore.io"
 
@@ -94,7 +95,6 @@ communities = [
     "grey-hack",
     "gtfo",
     "gang-beasts",
-    "gamble-with-your-friends",
     "garfield-kart-furious-racing",
     "gatekeeper",
     "gladio-mori",
@@ -205,6 +205,7 @@ communities = [
     "super-psycho-baseball",
     "supermarket-together",
     "the-farmer-was-replaced",
+    "the-spell-brigade",
     "totally-accurate-battle-simulator",
     "tcg-card-shop-simulator",
     "talespire",
@@ -234,7 +235,6 @@ communities = [
     "west-of-loathing",
     "white-knuckle",
     "wildfrost",
-    "windrose",
     "wizard-with-a-gun",
     "wizard-of-legend",
     "word-play",
