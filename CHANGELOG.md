@@ -160,8 +160,8 @@
 - Support for Len's Island and Mage Arena
 - Two deep link endpoints:
   - `gale://profile/import/{key}`
-  - `gale://profile/sync/clone/{id}`
 
+  - `gale://profile/sync/clone/{id}`
 ### Fixed
 
 - Thunderstore API token help link redirecting to `example.com`
@@ -559,7 +559,7 @@
   - Subterror
   - STRAFTAT
 
-## Fixed
+### Fixed
 
 - ReturnOfModding mods being installed incorrectly
 - Launch mode defaulting to `Direct` instead of `Launcher` for first time users
@@ -587,7 +587,7 @@
 
 ## 1.1.4 (2024-11-19)
 
-## Added
+### Added
 
 - Config support to WEBFISHING (TackleBox)
 

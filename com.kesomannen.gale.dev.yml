@@ -6,15 +6,12 @@ sdk: org.gnome.Sdk
 
 command: gale
 finish-args:
-  - --filesystem=xdg-download:ro # allow drag and drop from downloads
-  # We can't use this yet, see <https://github.com/flatpak/flatpak/issues/5681>
-  # So we have to use device=all
-  # - --device=dri
-  # - --device=input
-  - --device=all
+  - --filesystem=home
+  - --talk-name=org.freedesktop.Flatpak
+
+  - --device=dri
   - --share=ipc
   - --share=network
-  - --socket=pulseaudio
   - --socket=wayland
   - --socket=fallback-x11
 
@@ -34,18 +31,16 @@ modules:
           --set-key="StartupNotify" --set-value="true" \
           "squashfs-root/usr/share/applications/Gale.desktop"
 
-      - mkdir -p "$FLATPAK_DEST"/{bin,share}
+      - mkdir -p "$FLATPAK_DEST"/{bin,lib,share}
+      - install -Dm644 squashfs-root/usr/lib/libbz2.so.1.0 "$FLATPAK_DEST"/lib/libbz2.so.1.0
       - cp -r squashfs-root/usr/share/{applications,icons} "$FLATPAK_DEST"/share/
       - install -Dm755 squashfs-root/usr/bin/gale "$FLATPAK_DEST"/bin/gale
-      # - install -Dm644 com.modrinth.ModrinthApp.metainfo.xml "$FLATPAK_DEST"/share/metainfo/com.modrinth.ModrinthApp.metainfo.xml
+      - install -Dm644 com.kesomannen.gale.metainfo.xml "$FLATPAK_DEST"/share/metainfo/com.kesomannen.gale.metainfo.xml
 
     sources:
-      # - type: file
-      #   path: com.modrinth.ModrinthApp.metainfo.xml
+      - type: file
+        path: com.kesomannen.gale.metainfo.xml
 
       - type: file
-        url: https://github.com/Kesomannen/gale/releases/download/1.13.2/Gale_1.13.2_amd64.AppImage
+        path: src-tauri/target/release/bundle/appimage/Gale_1.13.2_amd64.AppImage
         dest-filename: gale.AppImage
-        sha256: ee6235849b4f278934d0f27ea0c23bca593b7654c223354b8f47838d8afeea21
-        only-arches: [x86_64]
-
