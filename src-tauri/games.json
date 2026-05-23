@@ -1221,7 +1221,9 @@
 		"modLoader": {
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
-			"files": ["d3d12.dll"]
+			"files": [
+				"d3d12.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
@@ -2042,7 +2044,9 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": ["version.dll"]
+			"files": [
+				"version.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
@@ -2532,6 +2536,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1284190
+			}
+		}
+	},
+	{
+		"name": "The Spell Brigade",
+		"slug": "the-spell-brigade",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2904000
 			}
 		}
 	},
