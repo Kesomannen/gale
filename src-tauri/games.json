@@ -786,6 +786,18 @@
 		}
 	},
 	{
+		"name": "Crashout Crew",
+		"slug": "crashout-crew",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3583210
+			}
+		}
+	},
+	{
 		"name": "Crawlspace",
 		"slug": "crawlspace",
 		"modLoader": {
