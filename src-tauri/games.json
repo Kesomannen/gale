@@ -1084,6 +1084,18 @@
 		}
 	},
 	{
+		"name": "Gamble With Your Friends",
+		"slug": "gamble-with-your-friends",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3892270
+			}
+		}
+	},
+	{
 		"name": "Garfield Kart - Furious Racing",
 		"modLoader": {
 			"name": "BepInEx"
@@ -2791,6 +2803,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1811990
+			}
+		}
+	},
+	{
+		"name": "Windrose",
+		"slug": "windrose",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3041230
 			}
 		}
 	},
