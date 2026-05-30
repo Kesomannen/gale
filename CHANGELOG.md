@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- French and Traditional Chinese translations
+
+### Fixed
+
+- Installation rules for new Silksong BepInEx package
+- Installation rules for MelonLoader plugins
+
 ## 1.13.4 (2026-05-12)
 
 ### Added

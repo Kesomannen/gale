@@ -57,7 +57,10 @@ impl ModLoader<'_> {
             full_name == package_name
         } else {
             match &self.kind {
-                ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
+                ModLoaderKind::BepInEx { .. } => {
+                    full_name.starts_with("BepInEx-BepInExPack")
+                        || full_name == "silksong_modding-BepInExPack_Silksong"
+                }
                 ModLoaderKind::BepisLoader { .. } => {
                     full_name == "ResoniteModding-BepisLoader"
                         || full_name == "ResoniteModding-BepInExRenderer"
@@ -156,6 +159,7 @@ impl ModLoader<'static> {
                     Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
                     Subdir::tracked("Managed", "MelonLoader/Managed").extension(".managed.dll"),
                     Subdir::tracked("Mods", "Mods").extension(".dll"),
+                    Subdir::tracked("Plugins", "Plugins"),
                     Subdir::separated("ModManager", "UserData/ModManager"),
                     Subdir::tracked("MelonLoader", "MelonLoader"),
                     Subdir::tracked("Libs", "MelonLoader/Libs"),
