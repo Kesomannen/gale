@@ -794,6 +794,9 @@
 		"platforms": {
 			"steam": {
 				"id": 3583210
+			},
+			"xboxStore": {
+				"identifier": "AggroCrab.CrashoutCrew"
 			}
 		}
 	},
