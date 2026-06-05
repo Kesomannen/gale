@@ -79,6 +79,11 @@ Entry3 = Easy
 # Acceptable value range: From 0 to 10
 Entry4 = 5
 
+## Multiplier for a carts content weight. E.g. set to 0 to ignore a cart's content weight
+# Setting type: Single
+# Default value: NaN
+ContentMassMultiplier = NaN
+
 ## This is entry 5
 # Setting type: Double
 # Default value: 2
@@ -156,6 +161,18 @@ fn test_file() -> File {
                         Value::Int32(Num {
                             value: 5,
                             range: Some(0..10),
+                        }),
+                    ),
+                    EntryKind::normal(
+                        "ContentMassMultiplier",
+                        "Multiplier for a carts content weight. E.g. set to 0 to ignore a cart's content weight",
+                        Some(Value::Single(Num {
+                            value: f32::NAN,
+                            range: None,
+                        })),
+                        Value::Single(Num {
+                            value: f32::NAN,
+                            range: None,
                         }),
                     ),
                     EntryKind::normal(

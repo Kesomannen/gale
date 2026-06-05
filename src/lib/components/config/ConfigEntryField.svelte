@@ -28,7 +28,7 @@
 				return val.content;
 			case 'int':
 			case 'float':
-				return val.content.value.toString();
+				return val.content.value?.toString() ?? 'NaN';
 			case 'enum':
 				return val.content.options[val.content.index];
 			case 'flags':
