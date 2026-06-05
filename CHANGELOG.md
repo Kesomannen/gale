@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Preferred version to dependants dialog
+
+### Fixed
+
+- Zoom-in hotkey unclear when the + and = keys are shared 
+
 ## 1.13.5 (2026-06-05)
 
 ### Added
