@@ -410,6 +410,7 @@
 
 	const hotkeys: { [key: string]: () => void } = {
 		'+': () => api.prefs.zoomWindow({ delta: 0.25 }),
+		'=': () => api.prefs.zoomWindow({ delta: 0.25 }),
 		'-': () => api.prefs.zoomWindow({ delta: -0.25 }),
 		'0': () => api.prefs.zoomWindow({ factor: 1 }),
 		n: () => (newProfileOpen = true),
