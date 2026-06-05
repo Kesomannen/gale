@@ -407,6 +407,7 @@ impl ManagedGame {
         import::import_config(
             &new_profile.path,
             &old_profile.path,
+            false,
             IncludeExtensions::Default,
             IncludeGenerated::Yes,
         )

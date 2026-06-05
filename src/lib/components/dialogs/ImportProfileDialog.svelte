@@ -17,7 +17,7 @@
 	import Info from '$lib/components/ui/Info.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { discordAvatarUrl, selectItems } from '$lib/util';
+	import { selectItems } from '$lib/util';
 	import { pushInfoToast } from '$lib/toast';
 	import Select from '$lib/components/ui/Select.svelte';
 	import * as api from '$lib/api';
@@ -25,7 +25,7 @@
 	import games from '$lib/state/game.svelte';
 	import SyncAvatar from '../ui/SyncAvatar.svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
-	import { importProfileDialog_sync_tooltip_title, m } from '$lib/paraglide/messages';
+	import { m } from '$lib/paraglide/messages';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -33,10 +33,11 @@
 	let open: boolean = $state(false);
 	let data: ImportData | null = $state(null);
 
-	let key: string = $state('');
-	let name: string = $state('');
-	let loading: boolean = $state(false);
-	let importAll: boolean = $state(false);
+	let key = $state('');
+	let name = $state('');
+	let loading = $state(false);
+	let importAll = $state(false);
+	let merge = $state(false);
 	let mode: 'new' | 'overwrite' = $state('new');
 
 	let unlistenFn: UnlistenFn | undefined;
@@ -105,7 +106,7 @@
 		if (data.type === 'legacy') {
 			data.manifest.profileName = name;
 
-			await api.profile.import.profile(data, importAll);
+			await api.profile.import.profile(data, { importAll, merge });
 		} else {
 			await api.profile.sync.clone(data.id, name);
 		}
@@ -237,13 +238,23 @@
 			>
 
 			<div class="mt-1 flex items-center">
-				<Label>{m.importProfileDialog_details_advancedOptions_title()}</Label>
+				<Label>{m.importProfileDialog_importAllFiles_title()}</Label>
 				<Info>
-					{m.importProfileDialog_details_advancedOptions_content_1()}
-					<b>{m.importProfileDialog_details_advancedOptions_content_2()}</b>
+					{m.importProfileDialog_importAllFiles_content1()}
+					<b>{m.importProfileDialog_importAllFiles_content2()}</b>
 				</Info>
 				<Checkbox bind:checked={importAll} />
 			</div>
+
+			{#if mode === 'overwrite'}
+				<div class="mt-1 flex items-center">
+					<Label>{m.importProfileDialog_merge_title()}</Label>
+					<Info>
+						{m.importProfileDialog_merge_content()}
+					</Info>
+					<Checkbox bind:checked={merge} />
+				</div>
+			{/if}
 		</details>
 
 		{#if data.type === 'sync'}

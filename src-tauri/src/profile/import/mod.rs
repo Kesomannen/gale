@@ -106,9 +106,11 @@ pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize, Clone)]
+#[serde(default, rename_all = "camelCase")]
 pub struct ImportOptions {
     import_all: bool,
+    merge: bool,
 }
 
 impl ImportOptions {
@@ -119,11 +121,6 @@ impl ImportOptions {
             IncludeExtensions::Default
         }
     }
-
-    pub fn import_all(mut self, value: bool) -> Self {
-        self.import_all = value;
-        self
-    }
 }
 
 pub(super) async fn import_profile(
@@ -132,7 +129,7 @@ pub(super) async fn import_profile(
     install_options: InstallOptions,
     app: &AppHandle,
 ) -> Result<i64> {
-    let (profile_id, profile_path, to_install) = prepare_import(data.manifest, app)?;
+    let (profile_id, profile_path, to_install) = prepare_import(&options, data.manifest, app)?;
 
     let result = app
         .install_queue()
@@ -144,6 +141,7 @@ pub(super) async fn import_profile(
             import_config(
                 &profile_path,
                 &data.path,
+                options.merge,
                 options.included_extensions(),
                 IncludeGenerated::No,
             )
@@ -173,6 +171,7 @@ pub(super) async fn import_profile(
 }
 
 fn prepare_import(
+    options: &ImportOptions,
     manifest: ProfileManifest,
     app: &AppHandle,
 ) -> Result<(i64, PathBuf, Vec<ModInstall>)> {
@@ -197,7 +196,7 @@ fn prepare_import(
         Some(profile_index) => {
             // overwrite an existing profile
             let profile = game.set_active_profile(profile_index)?;
-            let to_install = incremental_update(installs, profile)?.collect_vec();
+            let to_install = incremental_update(options.merge, installs, profile)?.collect_vec();
 
             (profile, to_install)
         }
@@ -231,6 +230,7 @@ fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
 }
 
 fn incremental_update(
+    merge: bool,
     installs: impl IntoIterator<Item = ModInstall>,
     profile: &mut Profile,
 ) -> Result<impl Iterator<Item = ModInstall>> {
@@ -248,9 +248,23 @@ fn incremental_update(
 
     let new_ids: HashSet<&ModId> = new_mods.keys().collect();
 
-    let to_remove = current_ids.difference(&new_ids);
-    for mod_id in to_remove {
-        profile.force_remove_mod(mod_id.package_uuid)?;
+    if merge {
+        // remove only version mismatches
+        let to_remove = current_mods.keys().filter(|id| {
+            new_mods.values().any(|install| {
+                install.mod_id().package_uuid == id.package_uuid
+                    && install.mod_id().version_uuid != id.version_uuid
+            })
+        });
+        for mod_id in to_remove {
+            profile.force_remove_mod(mod_id.package_uuid)?;
+        }
+    } else {
+        // remove all extra mods
+        let to_remove = current_ids.difference(&new_ids);
+        for mod_id in to_remove {
+            profile.force_remove_mod(mod_id.package_uuid)?;
+        }
     }
 
     let to_toggle = current_ids
@@ -278,20 +292,21 @@ fn incremental_update(
 pub fn import_config(
     dest: &Path,
     src: &Path,
+    merge: bool,
     extensions: IncludeExtensions,
     generated: IncludeGenerated,
 ) -> Result<()> {
     let existing_files = export::find_config(dest, extensions, generated);
     let source_files = export::find_config(src, extensions, generated);
 
-    if extensions != IncludeExtensions::All {
+    if !merge {
         for file in existing_files {
-            let exists = src.join(&file).exists()
+            let exists_in_src = src.join(&file).exists()
                 || file
                     .strip_prefix("BepInEx/config")
                     .is_ok_and(|suffix| src.join("config").join(suffix).exists());
 
-            if !exists {
+            if !exists_in_src {
                 trace!("remove {}", file.display());
                 fs::remove_file(dest.join(&file))?;
             }

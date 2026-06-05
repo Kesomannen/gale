@@ -297,6 +297,11 @@ export type R2ImportData = {
 	include: boolean[];
 };
 
+export type ImportOptions = {
+	importAll?: boolean;
+	merge?: boolean;
+};
+
 export type Prefs = {
 	dataDir: string;
 	cacheDir: string;

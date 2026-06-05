@@ -49,14 +49,12 @@ impl FrontendImportData {
 }
 
 #[command]
-pub async fn import_profile(data: ImportData, import_all: bool, app: AppHandle) -> Result<()> {
-    super::import_profile(
-        data,
-        ImportOptions::default().import_all(import_all),
-        InstallOptions::default(),
-        &app,
-    )
-    .await?;
+pub async fn import_profile(
+    data: ImportData,
+    options: ImportOptions,
+    app: AppHandle,
+) -> Result<()> {
+    super::import_profile(data, options, InstallOptions::default(), &app).await?;
 
     Ok(())
 }
