@@ -139,8 +139,8 @@
 		open = true;
 	}
 
-	let mods = $derived(data?.manifest.mods ?? []);
-	let nameAvailable = $derived(mode === 'overwrite' || isAvailable(name));
+	let mods = $derived.by(() => data?.manifest.mods ?? []);
+	let nameAvailable = $derived.by(() => mode === 'overwrite' || isAvailable(name));
 
 	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
@@ -224,10 +224,10 @@
 			>
 
 			<ModCardList
-				names={mods.map(
-					(mod) => `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`
-				)}
 				class="mt-2 max-h-[50vh] shrink grow"
+				mods={mods.map((mod) => ({
+					fullName: `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`
+				}))}
 			/>
 		</details>
 

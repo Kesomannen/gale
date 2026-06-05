@@ -62,11 +62,7 @@
 <ConfirmDialog {title} {onCancel} bind:open>
 	{description.replaceAll('%s', name)}
 
-	<ModCardList
-		class="my-2 max-h-[50vh] overflow-y-auto"
-		names={dependants.map(({ fullName }) => fullName)}
-		showVersion={false}
-	/>
+	<ModCardList class="my-2 max-h-[50vh] overflow-y-auto" mods={dependants} showVersion={false} />
 
 	{#snippet buttons()}
 		<Button onclick={executeOne} color="primary" class="truncate">

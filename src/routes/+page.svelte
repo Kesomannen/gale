@@ -1,7 +1,14 @@
 <script lang="ts">
 	import * as api from '$lib/api';
 	import DependantsDialog from '$lib/components/dialogs/DependantsDialog.svelte';
-	import type { Mod, AvailableUpdate, Dependant, ModContextItem, SortBy } from '$lib/types';
+	import type {
+		Mod,
+		AvailableUpdate,
+		Dependant,
+		ModContextItem,
+		SortBy,
+		DependantWithVersion
+	} from '$lib/types';
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
@@ -80,7 +87,7 @@
 	let enableDependencies: DependantsDialog;
 
 	let dependantsOpen = $state(false);
-	let dependants: string[] = $state([]);
+	let dependants: DependantWithVersion[] = $state([]);
 
 	let activeMod: Mod | null = $state(null);
 
@@ -307,7 +314,15 @@
 		{#if dependants.length === 0}
 			{m.page_dialog_noDependants()}
 		{:else}
-			<ModCardList names={dependants} showVersion={false} />
+			<ModCardList mods={dependants} showVersion={false}>
+				{#snippet cardChildren({ mod })}
+					{#if mod.preferredVersion}
+						<div class="text-primary-400">
+							Preferred Version: {mod.preferredVersion}
+						</div>
+					{/if}
+				{/snippet}
+			</ModCardList>
 		{/if}
 	</div>
 </Dialog>

@@ -30,8 +30,8 @@
 	// local state
 	let heightMap: number[] = [];
 	let rows: HTMLCollectionOf<HTMLElement>;
-	let viewport: HTMLElement = $state();
-	let contents: HTMLElement = $state();
+	let viewport: HTMLElement;
+	let contents: HTMLElement;
 	let viewportHeight = $state(0);
 	let visible: { index: number; data: T }[] = $derived(
 		items.slice(start, end).map((data, i) => {

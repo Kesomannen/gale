@@ -36,7 +36,8 @@ export const forceToggleMods = (uuids: string[]) => invoke('force_toggle_mods', 
 export const setAllModsState = (enable: boolean) =>
 	invoke<number>('set_all_mods_state', { enable });
 export const removeDisabledMods = () => invoke<number>('remove_disabled_mods');
-export const getDependants = (uuid: string) => invoke<string[]>('get_dependants', { uuid });
+export const getDependants = (uuid: string) =>
+	invoke<{ fullName: string; preferredVersion: string | null }[]>('get_dependants', { uuid });
 export const openDir = () => invoke('open_profile_dir');
 export const openModDir = (uuid: string) => invoke('open_mod_dir', { uuid });
 export const openGameLog = () => invoke('open_game_log');

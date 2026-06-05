@@ -13,3 +13,4 @@ vite.config.ts.timestamp-*
 /flatpak-build
 /.flatpak-builder
 /repo
+PRS.md

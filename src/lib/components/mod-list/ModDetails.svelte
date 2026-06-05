@@ -219,7 +219,7 @@
 
 <Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
-		<ModCardList names={mod.dependencies} class="mt-4" />
+		<ModCardList mods={mod.dependencies.map((fullName) => ({ fullName }))} class="mt-4" />
 	{/if}
 </Dialog>
 

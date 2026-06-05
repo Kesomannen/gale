@@ -368,15 +368,43 @@ pub fn force_toggle_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DependantWithVersion {
+    #[serde(rename = "fullName")]
+    ident: VersionIdent,
+    preferred_version: Option<String>,
+}
+
 #[command]
-pub fn get_dependants(uuid: Uuid, app: AppHandle) -> Result<Vec<VersionIdent>> {
+pub fn get_dependants(uuid: Uuid, app: AppHandle) -> Result<Vec<DependantWithVersion>> {
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
+
+    let target_mod = manager.active_profile().get_mod(uuid)?;
 
     let dependants = manager
         .active_profile()
         .dependants(uuid, &thunderstore)
-        .map(|profile_mod| profile_mod.ident().into_owned())
+        .map(|profile_mod| {
+            let preferred_version =
+                profile_mod
+                    .direct_dependencies(&thunderstore)
+                    .and_then(|direct_deps| {
+                        direct_deps
+                            .into_iter()
+                            .find(|dep_ident| {
+                                dep_ident.full_name() == target_mod.ident().full_name()
+                            })
+                            .map(|ident| ident.version().to_string())
+                    });
+            let ident = profile_mod.ident().into_owned();
+
+            DependantWithVersion {
+                ident,
+                preferred_version,
+            }
+        })
         .collect();
 
     Ok(dependants)

@@ -170,6 +170,11 @@ export type Dependant = {
 	uuid: string;
 };
 
+export type DependantWithVersion = {
+	fullName: string;
+	preferredVersion: string | null;
+};
+
 export type ModId = {
 	packageUuid: string;
 	versionUuid: string;

@@ -152,6 +152,13 @@ impl ProfileMod {
         self.kind.as_local().map(|local| (local, self.enabled))
     }
 
+    pub fn direct_dependencies<'a>(
+        &'a self,
+        thunderstore: &'a Thunderstore,
+    ) -> Option<&'a [VersionIdent]> {
+        self.kind.direct_dependencies(thunderstore)
+    }
+
     /// Finds all dependencies of this mod.
     ///
     /// See [`Thunderstore::dependencies`] for more information.
@@ -200,6 +207,20 @@ impl ProfileModKind {
         }
     }
 
+    pub fn direct_dependencies<'a>(
+        &'a self,
+        thunderstore: &'a Thunderstore,
+    ) -> Option<&'a [VersionIdent]> {
+        match self {
+            ProfileModKind::Local(local_mod) => local_mod.dependencies.as_deref(),
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod
+                .id
+                .borrow(thunderstore)
+                .ok()
+                .map(|borrowed| &*borrowed.version.dependencies),
+        }
+    }
+
     /// Finds all dependencies of this mod.
     ///
     /// See [`Thunderstore::dependencies`] for more information.
@@ -207,16 +228,7 @@ impl ProfileModKind {
         &'a self,
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = BorrowedMod<'a>> {
-        let idents = match self {
-            ProfileModKind::Local(local_mod) => local_mod.dependencies.as_ref(),
-            ProfileModKind::Thunderstore(ts_mod) => ts_mod
-                .id
-                .borrow(thunderstore)
-                .map(|borrowed| &borrowed.version.dependencies)
-                .ok(),
-        };
-
-        idents
+        self.direct_dependencies(thunderstore)
             .into_iter()
             .flat_map(|deps| thunderstore.dependencies(deps))
     }
