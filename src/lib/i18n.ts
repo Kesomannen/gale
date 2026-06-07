@@ -44,27 +44,6 @@ export function isLatinAlphabet(str: string): boolean {
 	return /^[a-zA-Z\s]*$/.test(str);
 }
 
-export function pluralizeOption(
-	isPlural: boolean | number,
-	origin: string,
-	singular: string,
-	plural: string
-): string {
-	if (typeof isPlural === 'number' && isPlural !== 1) {
-		return origin;
-	}
-
-	if (typeof isPlural === 'boolean' && !isPlural) {
-		return origin;
-	}
-
-	if (!isLatinAlphabet(origin)) {
-		return origin;
-	}
-
-	return origin.replace(new RegExp(singular, 'g'), plural);
-}
-
 export function toSentenceCase(str: string): string {
 	return isLatinAlphabet(str) ? toSentenceCaseLatin(str) : str;
 }
