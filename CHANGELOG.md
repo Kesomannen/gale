@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- Badges in markdown rendering on separate lines
 - Zoom-in hotkey unclear when the + and = keys are shared 
 
 ## 1.13.5 (2026-06-05)
