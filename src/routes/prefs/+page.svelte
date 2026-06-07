@@ -91,10 +91,19 @@
 
 		<SmallHeading>{m.prefs_appearance_title()}</SmallHeading>
 
-		<LanguagePref value={prefs.language} set={set((value, prefs) => { prefs.language = value })} />
+		<LanguagePref
+			value={prefs.language}
+			set={set((value, prefs) => {
+				prefs.language = value;
+			})}
+		/>
 
-		<ColorPref category="primary" default="slate">{m.prefs_appearance_color_primary_content()}</ColorPref>
-		<ColorPref category="accent" default="green">{m.prefs_appearance_color_accent_content()}</ColorPref>
+		<ColorPref category="primary" default="slate"
+			>{m.prefs_appearance_color_primary_content()}</ColorPref
+		>
+		<ColorPref category="accent" default="green"
+			>{m.prefs_appearance_color_accent_content()}</ColorPref
+		>
 
 		<FontFamilyPref />
 
@@ -125,7 +134,9 @@
 		>
 			{m.prefs_miscellaneous_fetchMods_content_1()}
 			<br />
-			{m.prefs_miscellaneous_fetchMods_content_2()}<b>{m.prefs_miscellaneous_fetchMods_content_3()}</b>.
+			{m.prefs_miscellaneous_fetchMods_content_2()}<b
+				>{m.prefs_miscellaneous_fetchMods_content_3()}</b
+			>.
 		</TogglePref>
 		<TogglePref
 			label={m.prefs_miscellaneous_pullBeforeLaunch_title()}
@@ -136,7 +147,7 @@
 		</TogglePref>
 
 		<LargeHeading>
-			{m.prefs_gameSettings_title({ game : games.active?.name ?? m.unknown() })}
+			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}
 		</LargeHeading>
 
 		<SmallHeading>{m.prefs_gameSettings_locations_title()}</SmallHeading>
@@ -155,7 +166,9 @@
 			value={gamePrefs.dirOverride}
 			set={set((value) => (gamePrefs!.dirOverride = value))}
 		>
-		{m[`prefs_gameSettings_locations_dirOverride_content${needsDirectory ? '_needs' : ''}`]({ game: games.active?.name ?? m.unknown() })}
+			{m[`prefs_gameSettings_locations_dirOverride_content${needsDirectory ? '_needs' : ''}`]({
+				game: games.active?.name ?? m.unknown()
+			})}
 		</PathPref>
 
 		<SmallHeading>{m.prefs_gameSettings_launch_title()}</SmallHeading>

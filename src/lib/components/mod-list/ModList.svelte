@@ -27,7 +27,6 @@
 	let listStart = $state(0);
 	let listEnd = $state(0);
 	let virtualList: VirtualList<Mod, string> | null = $state(null);
-	let list: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
 		if (listEnd > mods.length - 4 && mods.length === maxCount) {
@@ -51,15 +50,6 @@
 		} else {
 			selected = null;
 		}
-	}
-
-	function onscroll() {
-		if (!list) return;
-
-		let scrollTop = list.scrollTop;
-		let visibleCount = Math.ceil(list.clientHeight / itemHeight);
-
-		listEnd = Math.min(mods.length, Math.floor(scrollTop / itemHeight) + visibleCount);
 	}
 </script>
 

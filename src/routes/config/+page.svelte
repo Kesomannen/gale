@@ -15,7 +15,7 @@
 	let selectedSection: ConfigSection | null = $state(null);
 </script>
 
-<div class="flex grow overflow-hidden">
+<div class="flex grow overflow-y-auto">
 	<ConfigFileList bind:selectedFile bind:selectedSection />
 
 	<div class="flex max-w-4xl grow flex-col overflow-y-auto py-4">

@@ -24,7 +24,8 @@
 	import UnknownModsBanner from '$lib/components/mod-list/UnknownModsBanner.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { profileQuery } from '$lib/state/misc.svelte';
-	import { m, page_dialog_title } from '$lib/paraglide/messages';
+	import { m } from '$lib/paraglide/messages';
+	import ReorderableList from '$lib/components/profile/ReorderableList.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -246,49 +247,47 @@
 			<UnknownModsBanner mods={unknownMods} {uninstall} />
 		{/if}
 
-		<ModList
-			{mods}
-			queryArgs={profileQuery.current}
-			bind:this={modList}
-			bind:maxCount
-			bind:selected={selectedMod}
-		>
-			{#snippet placeholder()}
-				{#if hasRefreshed}
-					{#if totalModCount === 0}
-						<Icon icon="ph:ghost" class="text-primary-500 mx-auto mt-4 text-9xl" />
+		{#if mods.length === 0 && hasRefreshed}
+			<div class="text-primary-300 text-center">
+				{#if totalModCount === 0}
+					<Icon icon="ph:ghost" class="text-primary-500 mx-auto mt-4 text-9xl" />
 
-						<div class="mt-1 text-lg">{m.page_modList_noMods_1()}</div>
-						<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
-							><Icon
-								icon="mdi:store-search"
-								class="mr-0.5 ml-1  inline"
-								inline
-							/>{m.page_modList_noMods_2()}</a
-						>
-					{:else}
-						<div class="mt-4 text-lg">{m.page_modList_noResults_1()}</div>
-						<div class="text-primary-400">{m.page_modList_noResults_2()}</div>
-					{/if}
+					<div class="mt-1 text-lg">{m.page_modList_noMods_1()}</div>
+					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
+						><Icon
+							icon="mdi:store-search"
+							class="mr-0.5 ml-1  inline"
+							inline
+						/>{m.page_modList_noMods_2()}</a
+					>
+				{:else}
+					<div class="mt-4 text-lg">{m.page_modList_noResults_1()}</div>
+					<div class="text-primary-400">{m.page_modList_noResults_2()}</div>
 				{/if}
-			{/snippet}
-
-			{#snippet item({ mod, index, isSelected })}
-				<ProfileModListItem
-					{mod}
-					{index}
-					{isSelected}
-					{contextItems}
-					{reorderable}
-					{locked}
-					{ondragstart}
-					{ondragover}
-					{ondragend}
-					ontoggle={(newState) => toggleMod(mod, newState)}
-					onclick={() => modList.selectMod(mod)}
-				/>
-			{/snippet}
-		</ModList>
+			</div>
+		{:else}
+			<ReorderableList bind:mods>
+				{#snippet item({ mod, index, isSelected })}
+					<!-- <div>
+						{mod.name}
+					</div> -->
+					<ProfileModListItem
+						{mod}
+						{isSelected}
+						{contextItems}
+						{locked}
+						ontoggle={(newState) => toggleMod(mod, newState)}
+						onclick={() => {
+							if (selectedMod?.uuid === mod.uuid) {
+								selectedMod = null;
+							} else {
+								selectedMod = mod;
+							}
+						}}
+					/>
+				{/snippet}
+			</ReorderableList>
+		{/if}
 	</div>
 
 	{#if selectedMod}
