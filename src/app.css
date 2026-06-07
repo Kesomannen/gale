@@ -98,6 +98,10 @@
 				color: var(--color-accent-300);
 				text-decoration-line: underline;
 			}
+
+			img {
+				display: inline;
+			}
 		}
 
 		p {
