@@ -8,7 +8,21 @@ on:
       - main
 
 jobs:
-  check:
+  check-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run clippy lint
+        run: |
+          cd src-tauri
+          cargo clippy --all-targets -- -D warnings
+
+  check-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -31,16 +45,8 @@ jobs:
       - name: Compile locales
         run: pnpm locale:compile
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Run Prettier lint
         run: pnpm lint
 
       - name: Run Svelte check
         run: pnpm check
-
-      - name: Run clippy lint
-        run: |
-          cd src-tauri
-          cargo clippy --all-targets -- -D warnings
