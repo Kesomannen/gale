@@ -12,7 +12,8 @@
 		"lint": "prettier --check .",
 		"format": "prettier --write .",
 		"tauri": "tauri",
-		"machine-translate": "inlang machine translate --project project.inlang"
+		"locale:compile": "paraglide-js compile",
+		"locale:machine-translate": "inlang machine translate --project project.inlang"
 	},
 	"devDependencies": {
 		"@iconify/svelte": "^5.2.1",

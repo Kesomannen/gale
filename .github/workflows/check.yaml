@@ -8,7 +8,7 @@ on:
       - main
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,6 +27,9 @@ jobs:
 
       - name: Install frontend dependencies
         run: pnpm install
+
+      - name: Compile locales
+        run: pnpm locale:compile
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
