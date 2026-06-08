@@ -437,10 +437,16 @@ impl PackageInstaller for SubdirInstaller<'_> {
         let mut profile_state: Option<ProfileStateHandle> = None;
 
         install::fs::install(src, profile, |relative_path, exists| {
-            let subdir = self
+            let Some(subdir) = self
                 .subdirs()
                 .find(|subdir| relative_path.starts_with(subdir.target))
-                .expect("file should be in a subdir");
+            else {
+                warn!(
+                    "file {} is not in a valid subdir; cache might have been manually modified",
+                    relative_path.display()
+                );
+                return Ok((FileInstallMethod::Copy, ConflictResolution::Skip));
+            };
 
             let method = if subdir.mutable {
                 FileInstallMethod::Copy
