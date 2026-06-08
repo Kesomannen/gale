@@ -2,21 +2,17 @@
 	import { ContextMenu } from 'bits-ui';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
 	import type { Mod, ModContextItem } from '$lib/types';
-	import type { MouseEventHandler } from 'svelte/elements';
 	import type { Snippet } from 'svelte';
 	import { activeContextMenu } from '$lib/context';
-	import ModItem from './ModItem.svelte';
 
 	type Props = {
 		mod: Mod;
-		isSelected: boolean;
-		onclick?: MouseEventHandler<HTMLButtonElement>;
-		children?: Snippet;
 		locked: boolean;
 		contextItems: ModContextItem[];
+		children?: Snippet;
 	};
 
-	let { mod, isSelected, onclick, children, locked, contextItems }: Props = $props();
+	let { mod, children, locked, contextItems }: Props = $props();
 
 	let contextMenuOpen = $state(false);
 
@@ -38,7 +34,7 @@
 	}}
 >
 	<ContextMenu.Trigger class="contents">
-		<ModItem {mod} {isSelected} {onclick} {children} />
+		{@render children?.()}
 	</ContextMenu.Trigger>
 	<ModContextMenuContent type="context" style="dark" {locked} {mod} items={contextItems} />
 </ContextMenu.Root>

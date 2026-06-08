@@ -2,56 +2,92 @@
 	import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
 	import { isSortable } from '@dnd-kit/svelte/sortable';
 	import ReorderableMod from './ReorderableMod.svelte';
-	import type { Mod } from '$lib/types';
+	import type { ListItem, Mod } from '$lib/types';
 	import type { Snippet } from 'svelte';
+	import ReorderableFolder from './ReorderableFolder.svelte';
 	import ModItem from '../mod-list/ModItem.svelte';
 
 	type Props = {
-		mods: Mod[];
-		item: Snippet<[{ mod: Mod; index: number; isSelected: boolean }]>;
+		items: ListItem[];
+		mod: Snippet<[{ mod: Mod }]>;
+		onmove?: (item: ListItem, fromIndex: number, toIndex: number) => void;
+		reorderable?: boolean;
 	};
 
-	let { mods = $bindable(), item }: Props = $props();
+	let { items = $bindable(), mod, onmove, reorderable = true }: Props = $props();
 
-	let snapshot: Mod[] = [];
+	let dragging: ListItem | null = $state(null);
+	let hovering: ListItem | null = $state(null);
 
-	function onDragStart() {
-		snapshot = mods.slice();
+	function createFolderItem(children: ListItem[]): ListItem {
+		return {
+			type: 'folder',
+			folder: {
+				id: crypto.randomUUID(),
+				children
+			}
+		};
+	}
+
+	function itemId(item: ListItem) {
+		return item.type === 'folder' ? item.folder.id : item.mod.uuid;
+	}
+
+	function onDragStart(event: any) {
+		dragging = event.operation.source.id;
 	}
 
 	function onDragOver(event: any) {
 		const { source, target } = event.operation;
 
-		if (isSortable(source) && isSortable(target)) {
-			const fromIndex = mods.findIndex((mod) => mod.uuid === source.id);
-			const toIndex = mods.findIndex((mod) => mod.uuid === target.id);
-
-			if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-				const newMods = [...mods];
-				const [removed] = newMods.splice(fromIndex, 1);
-				newMods.splice(toIndex, 0, removed);
-				mods = newMods;
-			}
+		if (!isSortable(source) || !isSortable(target) || source.id === target.id) {
+			return;
 		}
+
+		const fromIndex = items.findIndex((item) => itemId(item) === source.id);
+		const toIndex = items.findIndex((item) => itemId(item) === target.id);
+
+		if (fromIndex === -1 || toIndex === -1) {
+			return;
+		}
+
+		const newItems = [...items];
+		const [removed] = newItems.splice(fromIndex, 1);
+		newItems.splice(toIndex, 0, removed);
+		items = newItems;
+
+		onmove?.(removed, fromIndex, toIndex);
 	}
 
-	function onDragEnd(event: any) {
-		if (event.canceled) mods = snapshot;
-	}
+	function onDragEnd(event: any) {}
 </script>
 
 <DragDropProvider {onDragStart} {onDragOver} {onDragEnd}>
 	<ul class="overflow-y-auto">
-		{#each mods as mod, index (mod.uuid)}
-			<ReorderableMod {mod} {index}>
-				{@render item({ mod, index, isSelected: false })}
-			</ReorderableMod>
+		{#each items as item, index (itemId(item))}
+			{@const hovered = item === hovering}
+
+			{#if item.type === 'folder'}
+				<ReorderableFolder folder={item.folder} {index} {hovered} />
+			{:else}
+				<ReorderableMod mod={item.mod} {index} {hovered} disabled={!reorderable}>
+					{@render mod({ mod: item.mod })}
+				</ReorderableMod>
+			{/if}
 		{/each}
 	</ul>
 
-	<DragOverlay>
+	<DragOverlay dropAnimation={{ duration: 150, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' }}>
 		{#snippet children(source)}
-			<ModItem mod={source.data.mod} isSelected={false} />
+			{#if source.data.mod}
+				<ModItem mod={source.data.mod} hideInstalledIcon />
+			{:else if source.data.folder}
+				<div
+					class="bg-primary-950 border-primary-800 text-primary-200 rounded-xl border px-4 py-3 shadow-lg"
+				>
+					Folder
+				</div>
+			{/if}
 		{/snippet}
 	</DragOverlay>
 </DragDropProvider>

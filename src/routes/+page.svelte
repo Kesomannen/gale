@@ -7,7 +7,8 @@
 		Dependant,
 		ModContextItem,
 		SortBy,
-		DependantWithVersion
+		DependantWithVersion,
+		ListItem
 	} from '$lib/types';
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 	import { isOutdated } from '$lib/util';
@@ -75,12 +76,12 @@
 	];
 
 	let mods: Mod[] = $state([]);
+	let items: ListItem[] = $state([]);
 	let totalModCount = $state(0);
 	let unknownMods: Dependant[] = $state([]);
 	let updates: AvailableUpdate[] = $state([]);
 
 	let modList: ModList;
-	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
 
 	let removeDependants: DependantsDialog;
@@ -99,9 +100,10 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		let result = await api.profile.query({ ...profileQuery.current, maxCount });
+		let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
 
 		mods = result.mods;
+		items = result.mods.map((mod) => ({ type: 'mod', mod }));
 		totalModCount = result.totalModCount;
 		unknownMods = result.unknownMods;
 		updates = result.updates;
@@ -162,62 +164,22 @@
 		}
 	}
 
-	let reorderUuid: string;
-	let reorderPrevIndex: number;
+	async function onmove(item: ListItem, fromIndex: number, toIndex: number) {
+		if (item.type !== 'mod') return;
 
-	function ondragstart(evt: DragEvent) {
-		if (!isDragApplicable(evt)) return;
-
-		let element = evt.currentTarget as HTMLElement;
-
-		reorderUuid = element.dataset.uuid!;
-		reorderPrevIndex = parseInt(element.dataset.index!);
-
-		evt.dataTransfer!.effectAllowed = 'move';
-		evt.dataTransfer!.setData('text/html', element.outerHTML);
-	}
-
-	async function ondragover(evt: DragEvent) {
-		if (!isDragApplicable(evt)) return;
-
-		let target = evt.currentTarget as HTMLElement;
-		let newIndex = parseInt(target.dataset.index!);
-		let delta = newIndex - reorderPrevIndex;
-
-		if (delta === 0) {
-			return;
-		}
-
-		let temp = mods[reorderPrevIndex];
-		mods[reorderPrevIndex] = mods[newIndex];
-		mods[newIndex] = temp;
-
-		reorderPrevIndex = newIndex;
+		let delta = toIndex - fromIndex;
 
 		if (profileQuery.current.sortOrder === 'descending') {
 			delta *= -1; // list is reversed
 		}
 
-		await emit('reorder_mod', { uuid: reorderUuid, delta });
-	}
-
-	async function ondragend(evt: DragEvent) {
-		if (!isDragApplicable(evt)) return;
-		await emit('finish_reorder');
-	}
-
-	function isDragApplicable(evt: DragEvent) {
-		if (!reorderable || evt.dataTransfer === null) return false;
-		let items = [...evt.dataTransfer.items];
-		return items.length === 0 || items[0].kind !== 'file';
+		await emit('reorder_mod', { uuid: item.mod.uuid, delta });
 	}
 
 	$effect(() => {
-		if (maxCount > 0) {
-			profiles.active;
-			profileQuery.current;
-			refresh();
-		}
+		profiles.active;
+		profileQuery.current;
+		refresh();
 	});
 
 	let reorderable = $derived(
@@ -266,16 +228,13 @@
 				{/if}
 			</div>
 		{:else}
-			<ReorderableList bind:mods>
-				{#snippet item({ mod, index, isSelected })}
-					<!-- <div>
-						{mod.name}
-					</div> -->
+			<ReorderableList bind:items {onmove} {reorderable}>
+				{#snippet mod({ mod })}
 					<ProfileModListItem
 						{mod}
-						{isSelected}
-						{contextItems}
 						{locked}
+						{contextItems}
+						selected={selectedMod?.uuid === mod.uuid}
 						ontoggle={(newState) => toggleMod(mod, newState)}
 						onclick={() => {
 							if (selectedMod?.uuid === mod.uuid) {
