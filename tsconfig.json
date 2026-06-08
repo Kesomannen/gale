@@ -10,7 +10,5 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"
-	},
-	"include": ["src/**/*"],
-	"exclude": ["**/paraglide/**/*"]
+	}
 }

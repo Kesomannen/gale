@@ -26,7 +26,7 @@
 	let name: string | null = $state(null);
 	let task: InstallTask | null = $state(null);
 
-	let hideTimeout: number | null = $state(null);
+	let hideTimeout: NodeJS.Timeout | null = $state(null);
 
 	let taskText = $derived(
 		task

@@ -30,6 +30,31 @@
 
 	const selectOptions = ['custom', ...Object.keys(defaultColors)];
 
+	const colorNames = {
+		amber: m.colorPref_color_amber,
+		blue: m.colorPref_color_blue,
+		custom: m.colorPref_color_custom,
+		cyan: m.colorPref_color_cyan,
+		emerald: m.colorPref_color_emerald,
+		fuchsia: m.colorPref_color_fuchsia,
+		gray: m.colorPref_color_gray,
+		green: m.colorPref_color_green,
+		indigo: m.colorPref_color_indigo,
+		lime: m.colorPref_color_lime,
+		neutral: m.colorPref_color_neutral,
+		orange: m.colorPref_color_orange,
+		pink: m.colorPref_color_pink,
+		purple: m.colorPref_color_purple,
+		red: m.colorPref_color_red,
+		rose: m.colorPref_color_rose,
+		sky: m.colorPref_color_sky,
+		slate: m.colorPref_color_slate,
+		stone: m.colorPref_color_stone,
+		teal: m.colorPref_color_teal,
+		violet: m.colorPref_color_violet,
+		yellow: m.colorPref_color_yellow
+	};
+
 	function set(color: Color) {
 		value = color;
 		setColor(category, color);
@@ -55,7 +80,7 @@
 						: { type: 'default', name: selectValue }
 				)
 		}
-		items={selectItems(selectOptions, (item) => m[`colorPref_color_${item}`]())}
+		items={selectItems(selectOptions, (item) => colorNames[item as keyof typeof colorNames]())}
 	>
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(value)}
