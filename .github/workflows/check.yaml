@@ -1,5 +1,5 @@
-name: 'lint'
-run-name: 'Check and lint code'
+name: Check
+run-name: Check and lint code
 
 on:
   workflow_dispatch:
