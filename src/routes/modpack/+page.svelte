@@ -247,7 +247,11 @@
 			/>
 		</FormField>
 
-		<FormField label={m.modpack_description_title()} description={m.modpack_description_description()} required>
+		<FormField
+			label={m.modpack_description_title()}
+			description={m.modpack_description_description()}
+			required
+		>
 			<InputField
 				onchange={saveArgs}
 				bind:value={description}
@@ -323,11 +327,7 @@
 			/>
 		</FormField>
 
-		<FormField
-			label={m.modpack_icon_title()}
-			description={m.modpack_icon_description()}
-			required
-		>
+		<FormField label={m.modpack_icon_title()} description={m.modpack_icon_description()} required>
 			<PathField icon="mdi:file-image" onclick={browseIcon} value={iconPath} />
 		</FormField>
 
@@ -352,10 +352,7 @@
 			</details>
 		</FormField>
 
-		<FormField
-			label={m.modpack_changeLog_title()}
-			description={m.modpack_changeLog_description()}
-		>
+		<FormField label={m.modpack_changeLog_title()} description={m.modpack_changeLog_description()}>
 			<ResizableInputField
 				onchange={saveArgs}
 				bind:value={changelog}
@@ -364,26 +361,34 @@
 			/>
 
 			<Button color="primary" onclick={() => generateChangelog(false)}>
-				{m.modpack_changeLog_button_single({versionNumber})}
+				{m.modpack_changeLog_button_single({ versionNumber })}
 			</Button>
 			<Button color="primary" onclick={() => generateChangelog(true)}>
 				{m.modpack_changeLog_button_all()}
 			</Button>
 
 			<details class="mt-1">
-				<summary class="text-primary-300 cursor-pointer text-sm">{m.modpack_changeLog_preview()}</summary>
+				<summary class="text-primary-300 cursor-pointer text-sm"
+					>{m.modpack_changeLog_preview()}</summary
+				>
 				<Markdown class="mt-1 px-4" source={changelog} />
 				<div class="bg-primary-500 mt-4 h-[2px]"></div>
 			</details>
 		</FormField>
 
 		<FormField
-			label={m.modpack_includeFiles_title({count : includedFileCount, size: includeFiles?.size})}
+			label={m.modpack_includeFiles_title({ count: includedFileCount, size: includeFiles?.size })}
 			description={m.modpack_includeFiles_description()}
 		>
 			<details>
-				<summary class="text-primary-300 cursor-pointer text-sm">{m.modpack_includeFiles_preview()}</summary>
-				<InputField bind:value={includedFilesSearch} class="w-full" placeholder={m.modpack_includeFiles_placeholder()} />
+				<summary class="text-primary-300 cursor-pointer text-sm"
+					>{m.modpack_includeFiles_preview()}</summary
+				>
+				<InputField
+					bind:value={includedFilesSearch}
+					class="w-full"
+					placeholder={m.modpack_includeFiles_placeholder()}
+				/>
 				<Checklist
 					class="mt-1"
 					title={m.modpack_includeFiles_list_title()}
@@ -425,7 +430,7 @@
 
 <Dialog bind:open={doneDialogOpen} title={m.modpack_dialog_title()}>
 	<p class="text-primary-300">
-		{m.modpack_dialog_content_1({name, versionNumber})}
+		{m.modpack_dialog_content_1({ name, versionNumber })}
 		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}">
 			{m.modpack_dialog_content_2()}
 		</Link>

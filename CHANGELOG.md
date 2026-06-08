@@ -207,6 +207,7 @@
   - `gale://profile/import/{key}`
 
   - `gale://profile/sync/clone/{id}`
+
 ### Fixed
 
 - Thunderstore API token help link redirecting to `example.com`

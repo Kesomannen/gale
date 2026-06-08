@@ -39,7 +39,7 @@
 		} else {
 			value.content = undefined;
 		}
-		
+
 		await set(value);
 	}
 
