@@ -1,4 +1,3 @@
-
 [general]
 repository = "https://thunderstore.io"
 
@@ -7,6 +6,7 @@ name = "GaleModManager"
 namespace = "Kesomannen"
 description = "A modern and lightweight mod manager for many games on Thunderstore."
 websiteUrl = "https://github.com/Kesomannen/gale"
+dependencies = []
 
 [build]
 icon = "images/icons/app-icon@0,25x.png"
@@ -20,7 +20,7 @@ source = "LICENSE.md"
 target = "LICENSE.md"
 
 [[build.copy]]
-pattern = "src-tauri/target/release/bundle/msi/*.msi"
+pattern = "src-tauri/target/release/bundle/msi"
 target = ""
 
 [publish]

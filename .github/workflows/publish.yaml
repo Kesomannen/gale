@@ -3,40 +3,35 @@ name: 'publish'
 on: workflow_dispatch
 
 jobs:
-  publish-tauri:
-    permissions:
-      contents: write
+  build:
     strategy:
-      fail-fast: false
       matrix:
         include:
-          - platform: 'ubuntu-24.04'
-            args: ''
-          - platform: 'windows-latest'
-            args: '--bundles msi'
+          - platform: ubuntu-24.04
+          - platform: windows-latest
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
         with:
-          version: 10
+          version: 11
 
-      - name: use Node.js 20
-        uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
-      - name: install frontend dependencies
+      - name: Install frontend dependencies
         run: pnpm install
 
-      - name: install Rust stable
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: install dependencies (ubuntu only)
+      - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
         run: |
           sudo apt update;
@@ -48,7 +43,8 @@ jobs:
             gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
             gir1.2-webkit2-4.1=2.44.0-2
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Build and upload Tauri app
+        uses: tauri-apps/tauri-action@v0
         id: tauri
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -58,35 +54,26 @@ jobs:
           tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: '__VERSION__'
           releaseDraft: true
-          args: ${{ matrix.args }}
 
-      - name: setup .NET
-        if: matrix.platform == 'windows-latest'
+  publish:
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 7.0.405
+          dotnet-version: 10.0.8
 
-      - name: clone thunderstore cli (fork)
-        uses: actions/checkout@v4
-        if: matrix.platform == 'windows-latest'
-        with:
-          repository: Kesomannen/thunderstore-cli
-          path: tcli
+      - name: Install Thunderstore CLI
+        run: dotnet tool install -g tcli
 
-      - name: build thunderstore cli
-        if: matrix.platform == 'windows-latest'
-        working-directory: tcli/ThunderstoreCLI
-        run: dotnet build --configuration Release
-
-      - name: publish to thunderstore
-        if: matrix.platform == 'windows-latest'
+      - name: Publish to Thunderstore
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: ./tcli/ThunderstoreCLI/bin/release/net7.0/tcli.exe publish --package-version ${{ steps.tauri.outputs.appVersion }}
+        run: dotnet tcli publish --package-version ${{ steps.tauri.outputs.appVersion }}
 
-      - name: update latest.json github gist
+      - name: Update latest.json Github gist
         uses: exuanbo/actions-deploy-gist@v1
-        if: matrix.platform == 'windows-latest'
         with:
           token: ${{ secrets.GIST_TOKEN }}
           gist_id: 58b4f08009e7b7b5baaea253ebccb94d
