@@ -93,10 +93,37 @@ fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
     }
 }
 
+#[cfg(target_os = "linux")]
+fn should_disable_dmabuf_renderer(
+    xdg_session_type: Option<&str>,
+    has_wayland_display: bool,
+) -> bool {
+    matches!(xdg_session_type, Some("wayland")) || has_wayland_display
+}
+
+#[cfg(target_os = "linux")]
+fn setup_linux_webkit_env() {
+    let xdg_session_type = env::var("XDG_SESSION_TYPE").ok();
+    let has_wayland_display = env::var_os("WAYLAND_DISPLAY").is_some();
+
+    if !should_disable_dmabuf_renderer(xdg_session_type.as_deref(), has_wayland_display) {
+        return;
+    }
+
+    const WEBKIT_DISABLE_DMABUF_RENDERER: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
+    if env::var_os(WEBKIT_DISABLE_DMABUF_RENDERER).is_none() {
+        info!("wayland session detected, disabling WebKit DMABUF renderer");
+        env::set_var(WEBKIT_DISABLE_DMABUF_RENDERER, "1");
+    }
+}
+
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
         eprintln!("failed to set up logger: {err:#}");
     });
+
+    #[cfg(target_os = "linux")]
+    setup_linux_webkit_env();
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -203,4 +230,24 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
         .run(event_handler);
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod tests {
+    use super::should_disable_dmabuf_renderer;
+
+    #[test]
+    fn disable_dmabuf_on_wayland_session_type() {
+        assert!(should_disable_dmabuf_renderer(Some("wayland"), false));
+    }
+
+    #[test]
+    fn disable_dmabuf_when_wayland_display_exists() {
+        assert!(should_disable_dmabuf_renderer(None, true));
+    }
+
+    #[test]
+    fn keep_dmabuf_enabled_on_non_wayland_session() {
+        assert!(!should_disable_dmabuf_renderer(Some("x11"), false));
+    }
 }
