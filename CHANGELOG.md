@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- Crash when installing some manually modified cached mods
 - Badges in markdown rendering on separate lines
 - Zoom-in hotkey unclear when the + and = keys are shared
 - Pluralization issues
