@@ -154,7 +154,7 @@ export type QueryModsArgs = {
 	includeEnabled: boolean;
 	sortBy: SortBy;
 	sortOrder: SortOrder;
-	maxCount: number;
+	maxCount: number | null;
 };
 
 export type QueryModsArgsWithoutMax = Omit<QueryModsArgs, 'maxCount'>;
@@ -342,3 +342,18 @@ export type Zoom = { factor: number } | { delta: number };
 export type MarkdownType = 'readme' | 'changelog';
 
 export type MissingProfileAction = { type: 'locate'; newPath: string } | { type: 'delete' };
+
+export type Folder = {
+	id: string;
+	children: ListItem[];
+};
+
+export type ListItem =
+	| {
+			type: 'mod';
+			mod: Mod;
+	  }
+	| {
+			type: 'folder';
+			folder: Folder;
+	  };

@@ -6,10 +6,12 @@
 	type Props = {
 		mod: Mod;
 		index: number;
-		children: Snippet;
+		hovered: boolean;
+		disabled?: boolean;
+		children?: Snippet;
 	};
 
-	let { mod, index, children }: Props = $props();
+	let { mod, index, hovered, disabled, children }: Props = $props();
 
 	const sortable = createSortable({
 		get id() {
@@ -21,6 +23,9 @@
 		get data() {
 			return { mod };
 		},
+		get disabled() {
+			return disabled;
+		},
 		transition: {
 			duration: 150,
 			easing: 'cubic-bezier(0.33, 1, 0.68, 1)'
@@ -28,6 +33,6 @@
 	});
 </script>
 
-<li {@attach sortable.attach} id={mod.uuid} class={[sortable.isDragging && 'opacity-20']}>
-	{@render children()}
+<li {@attach sortable.attach} id={mod.uuid} class={[sortable.isDragging && 'opacity-40']}>
+	{@render children?.()}
 </li>

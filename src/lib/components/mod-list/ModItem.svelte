@@ -7,31 +7,35 @@
 
 	type Props = {
 		mod: Mod;
-		isSelected: boolean;
-		onclick?: MouseEventHandler<HTMLButtonElement>;
+		selected?: boolean;
 		children?: Snippet;
+		onclick?: MouseEventHandler<HTMLDivElement>;
+		hideInstalledIcon?: boolean;
 	};
 
-	let { mod, isSelected, onclick, children }: Props = $props();
+	let { mod, selected = false, onclick, children, hideInstalledIcon }: Props = $props();
 
 	let descriptionClasses = $derived(
 		mod.enabled === false
 			? 'text-primary-500 line-through'
-			: isSelected
+			: selected
 				? 'text-primary-300'
 				: 'text-primary-400 group-hover:text-primary-300'
 	);
 </script>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	{onclick}
+	role="button"
+	tabindex="0"
 	class={[
-		'group flex w-full rounded-lg border p-2',
-		isSelected ? 'border-primary-500 bg-primary-700' : 'hover:bg-primary-700 border-transparent'
+		'group flex w-full items-center gap-3 rounded-lg border p-2',
+		selected ? 'border-primary-500 bg-primary-700' : 'hover:bg-primary-700 border-transparent'
 	]}
 >
 	<img src={modIconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
-	<div class="shrink grow overflow-hidden pl-3 text-left">
+	<div class="shrink grow overflow-hidden text-left">
 		<div class="flex items-center gap-1 overflow-hidden">
 			<div class="shrink truncate pr-1 font-medium text-white">
 				{formatModName(mod.name)}
@@ -42,7 +46,7 @@
 			{#if mod.isDeprecated}
 				<Icon class="shrink-0 text-red-500" icon="mdi:error" />
 			{/if}
-			{#if mod.isInstalled}
+			{#if mod.isInstalled && !hideInstalledIcon}
 				<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
 			{/if}
 			{#if isOutdated(mod)}
