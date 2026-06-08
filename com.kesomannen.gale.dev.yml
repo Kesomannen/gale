@@ -43,5 +43,5 @@ modules:
         path: com.kesomannen.gale.metainfo.xml
 
       - type: file
-        path: src-tauri/target/release/bundle/appimage/Gale_1.13.4_amd64.AppImage
+        path: src-tauri/target/release/bundle/appimage/Gale_1.13.6_amd64.AppImage
         dest-filename: gale.AppImage
