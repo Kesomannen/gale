@@ -112,7 +112,7 @@ fn setup_linux_webkit_env() {
 
     const WEBKIT_DISABLE_DMABUF_RENDERER: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
     if env::var_os(WEBKIT_DISABLE_DMABUF_RENDERER).is_none() {
-        info!("wayland session detected, disabling WebKit DMABUF renderer");
+        info!("Wayland session detected, disabling WebKit DMABUF renderer");
         env::set_var(WEBKIT_DISABLE_DMABUF_RENDERER, "1");
     }
 }
