@@ -24,5 +24,5 @@ pub fn cmp_ignore_case(a: impl AsRef<str>, b: impl AsRef<str>) -> Ordering {
 }
 
 pub fn is_flatpak() -> bool {
-    return cfg!(target_os = "linux") && std::env::var("container").is_ok();
+    cfg!(target_os = "linux") && std::env::var("container").is_ok()
 }

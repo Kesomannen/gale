@@ -1,0 +1,43 @@
+name: 'lint'
+run-name: 'Check and lint code'
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Prettier lint
+        run: pnpm lint
+
+      - name: Run Svelte check
+        run: pnpm check
+
+      - name: Run clippy lint
+        run: |
+          cd src-tauri
+          cargo clippy --all-targets -- -D warnings
