@@ -4,7 +4,7 @@
 	"homepage": "https://github.com/gale",
 	"license": "GPL-3.0",
 	"url": "https://github.com/Kesomannen/gale/releases/download/1.13.7/Gale_1.13.7_x64_en-US.msi",
-	"hash": "sha256:deadbeef...",
+	"hash": "sha256:abaa07104ca269bb1ef18e048526288f85827cd60d66e890e29cf16ad6eccc1b",
 	"installer": {
 		"script": [
 			"$msi = \"$dir\\Gale_1.13.7_x64_en-US.msi\"",
