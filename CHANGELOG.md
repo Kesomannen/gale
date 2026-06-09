@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13.7 (2026-06-09)
+
+### Fixed
+
+- Release pipeline
+
 ## 1.13.6 (2026-06-08)
 
 ### Added

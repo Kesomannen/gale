@@ -20,7 +20,7 @@ source = "LICENSE.md"
 target = "LICENSE.md"
 
 [[build.copy]]
-pattern = "src-tauri/target/release/bundle/msi"
+source = "src-tauri/target/release/bundle/msi"
 target = ""
 
 [publish]

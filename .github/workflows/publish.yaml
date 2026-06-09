@@ -4,6 +4,8 @@ on: workflow_dispatch
 
 jobs:
   build:
+    outputs:
+      appVersion: ${{ steps.tauri.outputs.appVersion }}
     strategy:
       matrix:
         include:
@@ -43,7 +45,7 @@ jobs:
             gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
             gir1.2-webkit2-4.1=2.44.0-2
 
-      - name: Build and upload Tauri app
+      - name: Build Tauri app and upload artifacts
         uses: tauri-apps/tauri-action@v0
         id: tauri
         env:
@@ -51,7 +53,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
-          tagName: __VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          tagName: __VERSION__
           releaseName: '__VERSION__'
           releaseDraft: true
 
@@ -59,6 +61,14 @@ jobs:
     runs-on: ubuntu-24.04
     needs: build
     steps:
+      - name: Download release assets
+        run: gh release download ${{ needs.build.outputs.appVersion }} --repo ${{ github.repository }}
+
+      - name: Move msi installer to bundle directory
+        run: |
+          mkdir -p src-tauri/target/release/bundle/msi
+          mv *.msi src-tauri/target/release/bundle/msi
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -70,7 +80,7 @@ jobs:
       - name: Publish to Thunderstore
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: dotnet tcli publish --package-version ${{ steps.tauri.outputs.appVersion }}
+          run: dotnet tcli publish --package-version ${{ needs.build.outputs.appVersion }}
 
       - name: Update latest.json Github gist
         uses: exuanbo/actions-deploy-gist@v1
