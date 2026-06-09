@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Vanilla launch option
+
 ## 1.13.7 (2026-06-09)
 
 ### Fixed
