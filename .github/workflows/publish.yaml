@@ -87,7 +87,7 @@ jobs:
       - name: Publish to Thunderstore
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: dotnet tcli publish --package-version ${{ needs.build.outputs.appVersion }}
+        run: tcli publish --package-version ${{ needs.build.outputs.appVersion }}
 
       - name: Update latest.json Github gist
         uses: exuanbo/actions-deploy-gist@v1
