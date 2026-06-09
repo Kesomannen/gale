@@ -21,13 +21,13 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 ### Windows
 
-**From Thunderstore**
+#### Manual (Thunderstore)
 
 - Go to the [Thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and click _Manual Download_.
 - Extract the downloaded .zip file (for example by right-clicking and choosing _Extract All_).
 - Run the `Gale_X.X.X_x64_en-US.msi` file inside of the extracted folder.
 
-**From Github**
+#### Manual (Github)
 
 - Go to [Releases](https://github.com/Kesomannen/gale/releases).
 - Download the `Gale_X.X.X_x64_en-US.msi` file for your desired version (the latest is recommended).
@@ -39,12 +39,61 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 > [!TIP]
 > If you're unsure about the safety of this app, I would suggest running it through a service like [VirusTotal](https://www.virustotal.com).
 
+#### Scoop
+
+Gale is available as a [Scoop](https://scoop.sh/) app:
+
+```powershell
+scoop install https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/gale.json
+```
+
+To update, run:
+
+```powershell
+scoop uninstall gale
+scoop install https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/gale.json
+```
+
 ### Linux
 
-AppImages, .rpm and .deb files are available in [Releases](https://github.com/Kesomannen/gale/releases).
-You can also get it through the community-maintained [AUR package](https://aur.archlinux.org/packages/gale-bin).
+#### Arch Linux
 
-Want to build it yourself? See the [wiki](https://github.com/Kesomannen/gale/wiki/building-from-source).
+Gale is available as a community-maintained [AUR package](https://aur.archlinux.org/packages/gale-bin).
+
+Example installation command:
+
+```bash
+yay -S gale-bin
+```
+
+#### Debian
+
+Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+
+```bash
+sudo dpkg -i Gale_X.X.X_x64_en-US.deb
+```
+
+#### Fedora
+
+Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+
+```bash
+sudo rpm -i Gale_X.X.X_x64_en-US.rpm
+```
+
+#### AppImage
+
+Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
+
+```bash
+chmod +x Gale_X.X.X_x64_en-US.AppImage
+./Gale_X.X.X_x64_en-US.AppImage
+```
+
+---
+
+Want to build it from source? See the [wiki](https://github.com/Kesomannen/gale/wiki/building-from-source).
 
 ## Screenshots
 
