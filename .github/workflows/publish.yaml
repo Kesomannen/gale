@@ -67,6 +67,8 @@ jobs:
     needs: build
     steps:
       - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: gh release download ${{ needs.build.outputs.appVersion }} --repo ${{ github.repository }}
 
       - name: Move msi installer to bundle directory

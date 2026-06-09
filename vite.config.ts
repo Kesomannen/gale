@@ -12,8 +12,5 @@ export default defineConfig({
 		}),
 		tailwindcss(),
 		sveltekit()
-	],
-	build: {
-		chunkSizeWarningLimit: 1000
-	}
+	]
 });
