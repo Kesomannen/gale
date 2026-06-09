@@ -52,7 +52,8 @@
 		stone: m.colorPref_color_stone,
 		teal: m.colorPref_color_teal,
 		violet: m.colorPref_color_violet,
-		yellow: m.colorPref_color_yellow
+		yellow: m.colorPref_color_yellow,
+		zinc: m.colorPref_color_zinc
 	};
 
 	function set(color: Color) {
@@ -80,7 +81,10 @@
 						: { type: 'default', name: selectValue }
 				)
 		}
-		items={selectItems(selectOptions, (item) => colorNames[item as keyof typeof colorNames]())}
+		items={selectItems(selectOptions, (item) => {
+			console.log(item);
+			return colorNames[item as keyof typeof colorNames]();
+		})}
 	>
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(value)}

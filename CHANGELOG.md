@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- Settings screen showing blank
 - Release pipeline
 
 ## 1.13.6 (2026-06-08)
