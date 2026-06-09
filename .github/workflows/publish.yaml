@@ -3,6 +3,10 @@ run-name: Publish a new version
 
 on: workflow_dispatch
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     outputs:
