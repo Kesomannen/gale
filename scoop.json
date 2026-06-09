@@ -1,0 +1,22 @@
+{
+	"version": "1.13.7",
+	"description": "A modern mod manager for Thunderstore",
+	"homepage": "https://github.com/gale",
+	"license": "GPL-3.0",
+	"url": "https://github.com/Kesomannen/gale/releases/download/1.13.7/Gale_1.13.7_x64_en-US.msi",
+	"hash": "sha256:deadbeef...",
+	"installer": {
+		"script": [
+			"$msi = \"$dir\\Gale_1.13.7_x64_en-US.msi\"",
+			"Start-Process msiexec -ArgumentList \"/i `\"$msi`\" /qn /norestart\" -Wait"
+		]
+	},
+	"uninstaller": {
+		"script": [
+			"$msi = \"$dir\\Gale_1.13.7_x64_en-US.msi\"",
+			"Start-Process msiexec -ArgumentList \"/x `\"$msi`\" /qn /norestart\" -Wait"
+		]
+	},
+	"bin": ["bin\\gale.exe"],
+	"shortcuts": [["bin\\gale.exe", "Gale"]]
+}
