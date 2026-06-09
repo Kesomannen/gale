@@ -6,8 +6,7 @@ name = "GaleModManager"
 namespace = "Kesomannen"
 description = "An modern and lightweight alternative mod manager for Thunderstore."
 websiteUrl = "https://github.com/Kesomannen/gale"
-
-[package.dependencies]
+dependencies = {}
 
 [build]
 icon = "images/icons/app-icon@0,25x.png"
