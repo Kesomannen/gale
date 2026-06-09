@@ -42,21 +42,26 @@ pub enum LaunchMode {
 }
 
 impl ManagedGame {
-    pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
+    pub fn launch(&self, vanilla: bool, prefs: &Prefs, app: &AppHandle) -> Result<()> {
         let game_dir =
             locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
         if let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
 
-        let (launch_mode, command) = self.launch_command(&game_dir, prefs)?;
+        let (launch_mode, command) = self.launch_command(vanilla, &game_dir, prefs)?;
         info!("launching {} with command {:?}", self.game.slug, command);
         do_launch(command, app, launch_mode)?;
 
         Ok(())
     }
 
-    fn launch_command(&self, game_dir: &Path, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
+    fn launch_command(
+        &self,
+        vanilla: bool,
+        game_dir: &Path,
+        prefs: &Prefs,
+    ) -> Result<(LaunchMode, Command)> {
         let (launch_mode, mut platform, game_custom_args) = prefs
             .game_prefs
             .get(&*self.game.slug)
@@ -95,7 +100,9 @@ impl ManagedGame {
 
         let profile = self.active_profile();
 
-        mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
+        if !vanilla {
+            mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
+        }
 
         if let Some(custom_args) = game_custom_args {
             command.args(custom_args);

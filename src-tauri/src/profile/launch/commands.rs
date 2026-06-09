@@ -5,7 +5,7 @@ use tauri::{command, AppHandle};
 use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
 
 #[command]
-pub async fn launch_game(app: AppHandle) -> Result<()> {
+pub async fn launch_game(app: AppHandle, vanilla: bool) -> Result<()> {
     if app.lock_prefs().pull_before_launch {
         sync::pull_profile(false, &app).await?;
     }
@@ -13,7 +13,7 @@ pub async fn launch_game(app: AppHandle) -> Result<()> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 
-    manager.active_game().launch(&prefs, &app)?;
+    manager.active_game().launch(vanilla, &prefs, &app)?;
 
     Ok(())
 }
@@ -24,7 +24,9 @@ pub fn get_launch_args(app: AppHandle) -> Result<String> {
     let manager = app.lock_manager();
 
     let game_dir = super::locate_game_dir(manager.active_game, &prefs)?;
-    let (_, command) = manager.active_game().launch_command(&game_dir, &prefs)?;
+    let (_, command) = manager
+        .active_game()
+        .launch_command(false, &game_dir, &prefs)?;
     let text = command
         .get_args()
         .map(|arg| format!("\"{}\"", arg.to_string_lossy()))
