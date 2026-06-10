@@ -6,6 +6,11 @@
 
 - Russian translation
 
+### Fixed
+
+- Normalized locale names
+- Improved Swedish locale
+
 ## 1.14.0 (2026-06-10)
 
 ### Added
