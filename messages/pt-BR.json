@@ -421,8 +421,8 @@
 	"toolBar_dialog_launch_modded_content": "Isso pode levar alguns minutos dependendo do tamanho do seu perfil.",
 	"toolBar_dialog_launch_modded_title": "Iniciando {name} com mods...",
 	"toolBar_dialog_launch_vanilla_title": "Iniciando {name} em modo vanilla...",
-	"toolBar_launch_vanilla": "Iniciar vanilla",
 	"toolBar_launch_modded": "Iniciar com mods",
+	"toolBar_launch_vanilla": "Iniciar vanilla",
 	"toolBar_launchGame_message": "Por favor, aguarde a instalação dos mods terminar antes de iniciar.",
 	"unknown": "Desconhecido",
 	"unknownModsBanner_content": [

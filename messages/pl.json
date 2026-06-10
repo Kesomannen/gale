@@ -149,7 +149,7 @@
 	"installPopover_taskText_download": "Pobieranie ",
 	"installPopover_taskText_extract": "Rozpakowywanie ",
 	"installPopover_taskText_install": "Instalowanie ",
-	"language_name": "Polski",
+	"language_name": "Polski (Polska)",
 	"languagePref_title": "Język",
 	"launchModePref_content_1": "Określa sposób uruchamiania gry.",
 	"launchModePref_content_2": "Launcher:",
@@ -421,8 +421,8 @@
 	"toolBar_dialog_launch_modded_content": "To może potrwać kilka minut w zależności od rozmiaru profilu.",
 	"toolBar_dialog_launch_modded_title": "Uruchamianie zmodyfikowanego {name}...",
 	"toolBar_dialog_launch_vanilla_title": "Uruchamianie vanilla {name}...",
-	"toolBar_launch_vanilla": "Uruchom w trybie vanilla",
 	"toolBar_launch_modded": "Uruchom z modami",
+	"toolBar_launch_vanilla": "Uruchom w trybie vanilla",
 	"toolBar_launchGame_message": "Poczekaj na zakończenie instalacji modów przed uruchomieniem gry.",
 	"unknown": "Nieznany",
 	"unknownModsBanner_content": [

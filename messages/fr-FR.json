@@ -149,7 +149,7 @@
 	"installPopover_taskText_download": "Téléchargement de ",
 	"installPopover_taskText_extract": "Extraction de ",
 	"installPopover_taskText_install": "Installation de ",
-	"language_name": "Français (French)",
+	"language_name": "Français (la France)",
 	"languagePref_title": "Langue",
 	"launchModePref_content_1": "Détermine comment le jeu est lancé.",
 	"launchModePref_content_2": "Lanceur :",
@@ -421,8 +421,8 @@
 	"toolBar_dialog_launch_modded_content": "Cela peut prendre quelques minutes selon la taille de votre profil.",
 	"toolBar_dialog_launch_modded_title": "Lancement moddé de {name}...",
 	"toolBar_dialog_launch_vanilla_title": "Lancement vanilla de {name}...",
-	"toolBar_launch_vanilla": "Lancer en vanilla",
 	"toolBar_launch_modded": "Lancer moddé",
+	"toolBar_launch_vanilla": "Lancer en vanilla",
 	"toolBar_launchGame_message": "Merci d'attendre la fin de l'installation des mods avant de lancer le jeu.",
 	"unknown": "Inconnu",
 	"unknownModsBanner_content": [

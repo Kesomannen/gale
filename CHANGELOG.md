@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Russian translation
+
 ## 1.14.0 (2026-06-10)
 
 ### Added

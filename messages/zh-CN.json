@@ -149,7 +149,7 @@
 	"installPopover_taskText_download": "下载中 ",
 	"installPopover_taskText_extract": "解压中 ",
 	"installPopover_taskText_install": "安装中 ",
-	"language_name": "简体中文",
+	"language_name": "简体中文 (中国)",
 	"languagePref_title": "语言",
 	"launchModePref_content_1": "决定游戏怎么启动",
 	"launchModePref_content_2": "游戏平台:",
@@ -421,8 +421,8 @@
 	"toolBar_dialog_launch_modded_content": "根据配置文件的大小，这可能需要几分钟。",
 	"toolBar_dialog_launch_modded_title": "正在启动已使用模组的 {name}...",
 	"toolBar_dialog_launch_vanilla_title": "正在启动原版 {name}...",
-	"toolBar_launch_vanilla": "启动原版",
 	"toolBar_launch_modded": "启动已使用模组",
+	"toolBar_launch_vanilla": "启动原版",
 	"toolBar_launchGame_message": "请等待模组安装完成后再启动。",
 	"unknown": "未知",
 	"unknownModsBanner_content": [
