@@ -6,6 +6,7 @@
 	import type { Snippet } from 'svelte';
 	import ReorderableFolder from './ReorderableFolder.svelte';
 	import ModItem from '../mod-list/ModItem.svelte';
+	import VirtualList from '../ui/VirtualList.svelte';
 
 	type Props = {
 		items: ListItem[];
@@ -63,8 +64,8 @@
 </script>
 
 <DragDropProvider {onDragStart} {onDragOver} {onDragEnd}>
-	<ul class="overflow-y-auto">
-		{#each items as item, index (itemId(item))}
+	<VirtualList {items} rowId={(item) => itemId(item)} itemHeight={66}>
+		{#snippet children({ item, index })}
 			{@const hovered = item === hovering}
 
 			{#if item.type === 'folder'}
@@ -74,8 +75,8 @@
 					{@render mod({ mod: item.mod })}
 				</ReorderableMod>
 			{/if}
-		{/each}
-	</ul>
+		{/snippet}
+	</VirtualList>
 
 	<DragOverlay dropAnimation={{ duration: 150, easing: 'cubic-bezier(0.33, 1, 0.68, 1)' }}>
 		{#snippet children(source)}

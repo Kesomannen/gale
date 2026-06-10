@@ -2,7 +2,7 @@
 	import type { Mod, ModContextItem } from '../../types';
 	import { Switch } from 'bits-ui';
 	import type { MouseEventHandler } from 'svelte/elements';
-	import ModItemWithContext from './ModItemContext.svelte';
+	import ModItemContext from './ModItemContext.svelte';
 	import ModItem from './ModItem.svelte';
 
 	type Props = {
@@ -17,7 +17,7 @@
 	let { mod, selected: selected, contextItems, locked, ontoggle, onclick }: Props = $props();
 </script>
 
-<ModItemWithContext {mod} {locked} {contextItems}>
+<ModItemContext {mod} {locked} {contextItems}>
 	<ModItem {mod} {selected} {onclick} hideInstalledIcon>
 		<!-- make sure click events don't propagate and cause the mod to be selected -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -35,4 +35,4 @@
 			</Switch.Root>
 		</div>
 	</ModItem>
-</ModItemWithContext>
+</ModItemContext>

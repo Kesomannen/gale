@@ -1,10 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.14.0 (2026-06-10)
 
 ### Added
 
 - Vanilla launch option
+
+### Fixed
+
+- Profile mod list order not saving between restarts
+- Improved performance of profile mod list
 
 ## 1.13.7 (2026-06-09)
 

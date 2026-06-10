@@ -38,13 +38,6 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         }
     });
 
-    let handle = app.to_owned();
-    app.listen("finish_reorder", move |_| {
-        if let Err(err) = handle_finish_reorder_event(&handle) {
-            logger::log_webview_err("Failed to finish reordering", err, &handle);
-        }
-    });
-
     Ok(())
 }
 
@@ -235,12 +228,9 @@ fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
 
     let mut manager = app.lock_manager();
     manager.active_profile_mut().reorder_mod(uuid, delta)?;
+    manager.save_active_profile(app, true)?;
 
     Ok(())
-}
-
-fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
-    app.lock_manager().save_active_profile(app, true)
 }
 
 impl ManagedGame {
