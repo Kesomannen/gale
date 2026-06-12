@@ -460,6 +460,7 @@
 	"updater_confirmDialog_content": "Uppdateringen laddas ner i bakgrunden och appen startas sedan om för att tillämpa den.",
 	"updater_confirmDialog_content_available": "Det finns en uppdatering tillgänglig för Gale.",
 	"updater_confirmDialog_content_next": "Du har version {current}, men den senaste är {latest}.",
+	"updater_confirmDialog_content_noAutoUpdate": "Gale kan inte uppdateras automatiskt på grund av din installationsmetod. Använd din pakethanterare för att ladda ner den senaste versionen.",
 	"updater_confirmDialog_title": "Appuppdatering tillgänglig!",
 	"updater_content_available": "Uppdatering tillgänglig",
 	"updater_content_downloading": "Laddar ner uppdatering...",

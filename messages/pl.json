@@ -460,6 +460,7 @@
 	"updater_confirmDialog_content": "Aktualizacja zostanie pobrana w tle, a następnie aplikacja uruchomi się ponownie, aby ją zastosować.",
 	"updater_confirmDialog_content_available": "Dostępna jest aktualizacja dla Gale.",
 	"updater_confirmDialog_content_next": "Wersja {next} Gale jest dostępna – posiadasz wersję {current}.",
+	"updater_confirmDialog_content_noAutoUpdate": "Gale nie może zaktualizować się automatycznie ze względu na metodę instalacji. Użyj menedżera pakietów, aby pobrać najnowszą wersję.",
 	"updater_confirmDialog_title": "Dostępna aktualizacja aplikacji!",
 	"updater_content_available": "Dostępna aktualizacja",
 	"updater_content_downloading": "Pobieranie aktualizacji...",

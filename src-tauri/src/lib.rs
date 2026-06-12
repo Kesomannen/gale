@@ -93,6 +93,11 @@ fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
     }
 }
 
+#[tauri::command]
+fn is_flatpak() -> bool {
+    util::is_flatpak()
+}
+
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
         eprintln!("failed to set up logger: {err:#}");
@@ -100,6 +105,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            is_flatpak,
             logger::open_gale_log,
             logger::log_err,
             state::is_first_run,

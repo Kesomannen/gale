@@ -1,3 +1,4 @@
+import { isFlatpak } from '$lib/api';
 import { check, type Update } from '@tauri-apps/plugin-updater';
 
 class UpdateState {

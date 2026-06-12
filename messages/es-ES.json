@@ -461,6 +461,7 @@
 	"updater_confirmDialog_content": "La actualización se descargará en segundo plano y, a continuación, la aplicación se reiniciará para aplicarla.",
 	"updater_confirmDialog_content_available": "Hay una actualización disponible para Gale.",
 	"updater_confirmDialog_content_next": "La versión {next} de Gale está disponible - tienes la versión {current}.",
+	"updater_confirmDialog_content_noAutoUpdate": "Gale no puede actualizarse automáticamente debido a tu método de instalación. Usa tu gestor de paquetes para descargar la última versión.",
 	"updater_confirmDialog_title": "¡Actualización de la aplicación disponible!",
 	"updater_content_available": "Actualización disponible",
 	"updater_content_downloading": "Descargando actualización...",

@@ -460,6 +460,7 @@
 	"updater_confirmDialog_content": "更新将在后台下载，随后应用程序将重新启动以应用更新。",
 	"updater_confirmDialog_content_available": "Gale 有可用更新。",
 	"updater_confirmDialog_content_next": "Gale 的 {next} 版本现已发布——您当前使用的是 {current} 版本。",
+	"updater_confirmDialog_content_noAutoUpdate": "由于您的安装方式，Gale 无法自动更新。请使用软件包管理器下载最新版本。",
 	"updater_confirmDialog_title": "Gale 有可用更新！",
 	"updater_content_available": "有可用的更新！",
 	"updater_content_downloading": "正在下载更新...",

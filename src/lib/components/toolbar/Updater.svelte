@@ -10,12 +10,15 @@
 	import { pushToast } from '$lib/toast';
 	import updates from '$lib/state/update.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { isFlatpak } from '$lib/api';
 
 	let dialogOpen = $state(false);
 	let loading = $state(false);
+	let canAutoUpdate = $state(true);
 
-	onMount(() => {
+	onMount(async () => {
 		updates.refresh();
+		canAutoUpdate = !(await isFlatpak());
 	});
 
 	async function installUpdate() {
@@ -79,18 +82,24 @@
 		<p>
 			{#if updates.next}
 				{m.updater_confirmDialog_content_next({
-					next: updates.next.version,
-					current: updates.next.currentVersion
+					current: updates.next.currentVersion,
+					next: updates.next.version
 				})}
 			{:else}
 				{m.updater_confirmDialog_content_available()}
 			{/if}
 
-			{m.updater_confirmDialog_content()}
+			{#if canAutoUpdate}
+				{m.updater_confirmDialog_content()}
+			{:else}
+				{m.updater_confirmDialog_content_noAutoUpdate()}
+			{/if}
 		</p>
 	</Dialog.Description>
 
 	{#snippet buttons()}
-		<Button color="accent" onclick={update}>{m.updater_confirmDialog_button()}</Button>
+		{#if canAutoUpdate}
+			<Button color="accent" onclick={update}>{m.updater_confirmDialog_button()}</Button>
+		{/if}
 	{/snippet}
 </ConfirmDialog>
