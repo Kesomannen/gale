@@ -21,7 +21,7 @@
 </script>
 
 <ModItemWithContext {mod} {locked} {contextItems}>
-	<ModItem {mod} {selected} {onclick}>
+	<ModItem {mod} {selected} {onclick} hideVersion>
 		{#if !mod.isInstalled && !locked}
 			<!-- svelte-ignore node_invalid_placement_ssr -->
 			<!-- we're not using ssr -->

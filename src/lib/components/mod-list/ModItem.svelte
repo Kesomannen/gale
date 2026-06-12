@@ -11,9 +11,17 @@
 		children?: Snippet;
 		onclick?: MouseEventHandler<HTMLDivElement>;
 		hideInstalledIcon?: boolean;
+		hideVersion?: boolean;
 	};
 
-	let { mod, selected = false, onclick, children, hideInstalledIcon }: Props = $props();
+	let {
+		mod,
+		selected = false,
+		onclick,
+		children,
+		hideInstalledIcon,
+		hideVersion
+	}: Props = $props();
 
 	let descriptionClasses = $derived(
 		mod.enabled === false
@@ -40,6 +48,11 @@
 			<div class="shrink truncate pr-1 font-medium text-white">
 				{formatModName(mod.name)}
 			</div>
+			{#if !hideVersion}
+				<div class="text-primary-400">
+					{mod.version}
+				</div>
+			{/if}
 			{#if mod.isPinned}
 				<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
 			{/if}

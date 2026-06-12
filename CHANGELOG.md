@@ -4,12 +4,13 @@
 
 ### Added
 
-- Russian translation
+- Russian translation (auto-generated)
 
 ### Fixed
 
 - Normalized locale names
 - Improved Swedish locale
+- Readded version to profile mod list items
 
 ## 1.14.0 (2026-06-10)
 
