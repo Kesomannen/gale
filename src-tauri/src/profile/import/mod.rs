@@ -178,7 +178,8 @@ fn prepare_import(
     let ProfileManifest {
         name,
         mods,
-        ignored_updates,
+        ignored_version_updates,
+        ignored_package_updates,
         ..
     } = manifest;
 
@@ -207,7 +208,8 @@ fn prepare_import(
         }
     };
 
-    profile.ignored_version_updates = ignored_updates.into_iter().collect();
+    profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
+    profile.ignored_package_updates = ignored_package_updates.into_iter().collect();
 
     let id = profile.id;
     let path = profile.path.clone();

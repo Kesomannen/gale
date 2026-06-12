@@ -44,14 +44,18 @@ pub fn setup() -> Result<()> {
     fs::create_dir_all(path.parent().unwrap()).context("failed to create log directory")?;
     let log_file = File::create(path).context("failed to create log file")?;
 
+    tracing_log::LogTracer::init()?;
+
     let subscriber = Registry::default()
         .with(
             tracing_subscriber::fmt::layer()
                 .with_ansi(true)
                 .with_filter(
                     Targets::new()
-                        .with_target("gale", Level::DEBUG)
-                        .with_default(Level::INFO),
+                        .with_target("tauri_plugin_updater", Level::INFO)
+                        .with_target("hyper_util::client", Level::INFO)
+                        .with_target("reqwest::connect", Level::INFO)
+                        .with_default(Level::DEBUG),
                 ),
         )
         .with(
@@ -59,7 +63,7 @@ pub fn setup() -> Result<()> {
                 .compact()
                 .with_ansi(false)
                 .with_writer(log_file)
-                .with_filter(LevelFilter::from_level(Level::INFO)),
+                .with_filter(LevelFilter::from_level(Level::DEBUG)),
         );
 
     tracing::subscriber::set_global_default(subscriber).context("failed to register subscriber")?;

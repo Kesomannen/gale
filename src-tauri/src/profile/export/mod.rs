@@ -32,8 +32,10 @@ pub struct ProfileManifest {
     pub mods: Vec<R2Mod>,
     #[serde(default, rename = "community")]
     pub game: Option<String>,
+    #[serde(default, rename = "ignoredUpdates")]
+    pub ignored_version_updates: Vec<Uuid>,
     #[serde(default)]
-    pub ignored_updates: Vec<Uuid>,
+    pub ignored_package_updates: Vec<Uuid>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -107,9 +109,10 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
 
     let manifest = ProfileManifest {
         name: profile.name.clone(),
-        ignored_updates: profile.ignored_version_updates.iter().cloned().collect(),
         game: Some(game.slug.to_string()),
         mods,
+        ignored_version_updates: profile.ignored_version_updates.iter().cloned().collect(),
+        ignored_package_updates: profile.ignored_package_updates.iter().cloned().collect(),
     };
 
     zip.start_file("export.r2x", SimpleFileOptions::default())?;

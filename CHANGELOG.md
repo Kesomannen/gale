@@ -5,6 +5,7 @@
 ### Added
 
 - Russian translation (auto-generated)
+- Ability to ignore all future updates for a mod, instead of just a single version
 
 ### Fixed
 
