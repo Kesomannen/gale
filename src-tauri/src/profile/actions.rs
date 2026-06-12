@@ -323,15 +323,9 @@ impl ManagedGame {
     pub fn create_default_profile(&mut self, db: &Db) -> Result<()> {
         info!("creating default profile for {}", self.game.slug);
 
-        let res = self.create_profile("Default".to_owned(), None, db);
-
-        match res.map(|profile| profile.id) {
-            Ok(id) => {
-                self.active_profile_id = id;
-                Ok(())
-            }
-            Err(err) => Err(err),
-        }
+        let profile = self.create_profile("Default".to_owned(), None, db)?;
+        self.active_profile_id = profile.id;
+        Ok(())
     }
 
     pub fn forget_profile(&mut self, id: i64, db: &Db) -> Result<()> {
