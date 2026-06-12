@@ -303,7 +303,7 @@ impl ManagedGame {
             path,
             mods: Vec::new(),
             game: self.game,
-            ignored_updates: HashSet::new(),
+            ignored_version_updates: HashSet::new(),
             config_cache: ConfigCache::default(),
             linked_config: HashMap::new(),
             modpack: None,
@@ -311,6 +311,7 @@ impl ManagedGame {
             custom_args: Vec::new(),
             custom_args_enabled: false,
             missing: false,
+            ignored_package_updates: HashSet::new(),
         };
 
         let index = self.target_profile_index(&profile.name);
@@ -412,13 +413,13 @@ impl ManagedGame {
         .context("failed to copy profile directory")?;
 
         let mods = old_profile.mods.clone();
-        let ignored_updates = old_profile.ignored_updates.clone();
+        let ignored_updates = old_profile.ignored_version_updates.clone();
         let custom_args = old_profile.custom_args.clone();
         let custom_args_enabled = old_profile.custom_args_enabled;
 
         let new_profile = self.active_profile_mut();
         new_profile.mods = mods;
-        new_profile.ignored_updates = ignored_updates;
+        new_profile.ignored_version_updates = ignored_updates;
         new_profile.custom_args = custom_args;
         new_profile.custom_args_enabled = custom_args_enabled;
 

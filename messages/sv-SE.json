@@ -175,7 +175,7 @@
 	"menuBar_copyDebugInfo_message": "Kopierade felsökningsinformation till urklipp.",
 	"menuBar_copyLaunchArgs_message": "Kopierade startargument till urklipp.",
 	"menuBar_copyModList_message": "Kopierade modlistan till urklipp.",
-	"menuBar_createDesktopShotcut_message": "Skapade skrivbordsgenväg för {name}.",
+	"menuBar_createDesktopShortcut_message": "Skapade skrivbordsgenväg för {name}.",
 	"menuBar_dialog_button_accent_duplicate": "Duplicera",
 	"menuBar_dialog_button_accent_rename": "Byt namn",
 	"menuBar_dialog_button_cancel": "Avbryt",
@@ -435,7 +435,6 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"unknownModsBanner_noFound": "Följande moddar kunde inte hittas: ",
 	"unknownModsBanner_uninstall_it": "Avinstallera det?",
 	"unknownModsBanner_uninstall_them": "Avinstallera dem?",
 	"updateAllBanner_button": "Uppdatera alla?",
@@ -449,18 +448,14 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"updateAllBanner_content_is": "Det finns ",
-	"updateAllBanner_content_update": " uppdatering tillgänglig.",
 	"updateAllBanner_dialog_button": "Uppdatera mods",
 	"updateAllBanner_dialog_content": "Välj vilka moddar som ska uppdateras:",
-	"updateAllBanner_dialog_list_content": "Ignorera den här uppdateringen \"Uppdatera alla\"-listan.",
 	"updateAllBanner_dialog_list_title": "Uppdatering vald",
 	"updateAllBanner_dialog_title": "Bekräfta",
 	"updater_confirmDialog_button": "Installera",
 	"updater_confirmDialog_content": "Uppdateringen laddas ner i bakgrunden och appen startas sedan om för att tillämpa den.",
 	"updater_confirmDialog_content_available": "Det finns en uppdatering tillgänglig för Gale.",
 	"updater_confirmDialog_content_next": "Du har version {current}, men den senaste är {latest}.",
-	"updater_confirmDialog_content_noAutoUpdate": "Gale kan inte uppdateras automatiskt på grund av din installationsmetod. Använd din pakethanterare för att ladda ner den senaste versionen.",
 	"updater_confirmDialog_title": "Appuppdatering tillgänglig!",
 	"updater_content_available": "Uppdatering tillgänglig",
 	"updater_content_downloading": "Laddar ner uppdatering...",

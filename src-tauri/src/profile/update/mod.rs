@@ -25,6 +25,15 @@ pub struct AvailableUpdate<'a> {
     pub latest: &'a PackageVersion,
 }
 
+impl<'a> AvailableUpdate<'a> {
+    pub fn id(&self) -> ModId {
+        ModId {
+            package_uuid: self.package.uuid,
+            version_uuid: self.latest.uuid,
+        }
+    }
+}
+
 impl From<AvailableUpdate<'_>> for ModInstall {
     fn from(value: AvailableUpdate<'_>) -> Self {
         ModInstall::new((value.package, value.latest))
@@ -35,18 +44,22 @@ impl From<AvailableUpdate<'_>> for ModInstall {
 }
 
 impl Profile {
+    pub fn is_update_ignored(&self, id: ModId) -> bool {
+        self.ignored_version_updates.contains(&id.version_uuid)
+            || self.ignored_package_updates.contains(&id.package_uuid)
+    }
+
     pub fn check_update<'a>(
         &'a self,
-        uuid: Uuid,
-        respect_ignored: bool,
+        package_uuid: Uuid,
         thunderstore: &'a Thunderstore,
         install_queue: &InstallQueueHandle,
     ) -> Result<Option<AvailableUpdate<'a>>> {
-        if install_queue.has_mod(uuid, self.id) {
+        if install_queue.has_mod(package_uuid, self.id) {
             return Ok(None); // a new version of this mod is installing or pending
         }
 
-        let index = self.index_of(uuid)?;
+        let index = self.index_of(package_uuid)?;
         let profile_mod = &self.mods[index];
 
         let Some((ts_mod, _)) = profile_mod.as_thunderstore() else {
@@ -61,13 +74,10 @@ impl Profile {
             return Ok(None); // ignore missing mods
         };
 
-        let package = thunderstore.get_package(uuid)?;
+        let package = thunderstore.get_package(package_uuid)?;
+        let latest = package.latest();
 
-        if current.parsed_version() >= package.latest().parsed_version() {
-            return Ok(None);
-        }
-
-        if respect_ignored && self.ignored_updates.contains(&uuid) {
+        if current.parsed_version() >= latest.parsed_version() {
             return Ok(None);
         }
 
@@ -117,9 +127,10 @@ pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: &AppHandl
             .into_iter()
             .filter_map(|uuid| {
                 profile
-                    .check_update(uuid, respect_ignored, &thunderstore, &install_queue)
+                    .check_update(uuid, &thunderstore, &install_queue)
                     .transpose()
             })
+            .filter_ok(|update| !respect_ignored || !profile.is_update_ignored(update.id()))
             .map_ok(ModInstall::from)
             .collect::<Result<Vec<_>>>()?;
 

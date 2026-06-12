@@ -106,6 +106,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
                 sync_data: None,
                 custom_args: None,
                 custom_args_enabled: None,
+                ignored_package_updates: None,
             });
 
             if data.active_profile_index == index {

@@ -113,6 +113,7 @@ pub struct ProfileData {
     pub sync_data: Option<profile::sync::SyncProfileData>,
     pub custom_args: Option<Vec<String>>,
     pub custom_args_enabled: Option<bool>,
+    pub ignored_package_updates: Option<HashSet<Uuid>>,
 }
 
 pub struct SaveData {
@@ -202,7 +203,7 @@ impl Db {
 
         let mut profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled FROM profiles",
+                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled, ignored_package_updates FROM profiles",
             )?
             .query_map((), |row| {
                 let mut mods : Vec<profile::ProfileMod> = map_json_row(row, 4)?;
@@ -219,6 +220,7 @@ impl Db {
                     sync_data: map_json_option_row(row, 7)?,
                     custom_args: map_json_option_row(row, 8)?,
                     custom_args_enabled: row.get(9)?,
+                    ignored_package_updates: map_json_option_row(row, 10)?,
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()?;
@@ -319,8 +321,8 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled, ignored_package_updates) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
@@ -330,13 +332,14 @@ impl Db {
                 .as_ref()
                 .map(serde_json::to_string)
                 .transpose()?;
-            let ignored_updates = serde_json::to_string(&profile.ignored_updates)?;
+            let ignored_updates = serde_json::to_string(&profile.ignored_version_updates)?;
             let sync_data = profile
                 .sync
                 .as_ref()
                 .map(serde_json::to_string)
                 .transpose()?;
             let custom_args = serde_json::to_string(&profile.custom_args)?;
+            let ignored_package_updates = serde_json::to_string(&profile.ignored_package_updates)?;
 
             stmt.execute(params![
                 profile.id,
@@ -348,7 +351,8 @@ impl Db {
                 ignored_updates,
                 sync_data,
                 custom_args,
-                profile.custom_args_enabled
+                profile.custom_args_enabled,
+                ignored_package_updates
             ])?;
         }
 

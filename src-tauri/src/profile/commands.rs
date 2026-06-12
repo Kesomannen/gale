@@ -166,11 +166,11 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
         .iter()
         .filter_map(|profile_mod| {
             profile
-                .check_update(profile_mod.uuid(), false, &thunderstore, &install_queue)
+                .check_update(profile_mod.uuid(), &thunderstore, &install_queue)
                 .transpose()
         })
         .map_ok(|update| {
-            let ignore = profile.ignored_updates.contains(&update.latest.uuid);
+            let ignore = profile.is_update_ignored(update.id());
 
             FrontendAvailableUpdate {
                 full_name: update.latest.ident.clone(),

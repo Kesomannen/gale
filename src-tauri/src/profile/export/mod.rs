@@ -107,7 +107,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
 
     let manifest = ProfileManifest {
         name: profile.name.clone(),
-        ignored_updates: profile.ignored_updates.iter().cloned().collect(),
+        ignored_updates: profile.ignored_version_updates.iter().cloned().collect(),
         game: Some(game.slug.to_string()),
         mods,
     };

@@ -175,7 +175,7 @@
 	"menuBar_copyDebugInfo_message": "复制调试信息到剪贴板完成！",
 	"menuBar_copyLaunchArgs_message": "复制启动参数到剪贴板完成！",
 	"menuBar_copyModList_message": "复制模组列表到剪贴板完成！",
-	"menuBar_createDesktopShotcut_message": "创建桌面快捷方式为 {name}.",
+	"menuBar_createDesktopShortcut_message": "创建桌面快捷方式为 {name}.",
 	"menuBar_dialog_button_accent_duplicate": "复制",
 	"menuBar_dialog_button_accent_rename": "重命名",
 	"menuBar_dialog_button_cancel": "取消",
@@ -435,7 +435,6 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"unknownModsBanner_noFound": "以下模组无法找到： ",
 	"unknownModsBanner_uninstall_it": "卸载它?",
 	"unknownModsBanner_uninstall_them": "卸载它们?",
 	"updateAllBanner_button": "更新所有?",
@@ -449,18 +448,14 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"updateAllBanner_content_is": "存在",
-	"updateAllBanner_content_update": " 个更新可用",
 	"updateAllBanner_dialog_button": "更新模组",
 	"updateAllBanner_dialog_content": "选择要更新的模组：",
-	"updateAllBanner_dialog_list_content": "在“全部更新”列表中忽略此更新。",
 	"updateAllBanner_dialog_list_title": "更新所选项",
 	"updateAllBanner_dialog_title": "更新确认",
 	"updater_confirmDialog_button": "安装",
 	"updater_confirmDialog_content": "更新将在后台下载，随后应用程序将重新启动以应用更新。",
 	"updater_confirmDialog_content_available": "Gale 有可用更新。",
 	"updater_confirmDialog_content_next": "Gale 的 {next} 版本现已发布——您当前使用的是 {current} 版本。",
-	"updater_confirmDialog_content_noAutoUpdate": "由于您的安装方式，Gale 无法自动更新。请使用软件包管理器下载最新版本。",
 	"updater_confirmDialog_title": "Gale 有可用更新！",
 	"updater_content_available": "有可用的更新！",
 	"updater_content_downloading": "正在下载更新...",

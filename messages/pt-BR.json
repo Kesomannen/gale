@@ -175,7 +175,7 @@
 	"menuBar_copyDebugInfo_message": "Informações de debug copiadas para a área de transferência.",
 	"menuBar_copyLaunchArgs_message": "Argumentos de inicialização copiados para a área de transferência.",
 	"menuBar_copyModList_message": "Lista de mods copiada para a área de transferência.",
-	"menuBar_createDesktopShotcut_message": "Atalho criado na área de trabalho para {name}.",
+	"menuBar_createDesktopShortcut_message": "Atalho criado na área de trabalho para {name}.",
 	"menuBar_dialog_button_accent_duplicate": "Duplicar",
 	"menuBar_dialog_button_accent_rename": "Renomear",
 	"menuBar_dialog_button_cancel": "Cancelar",
@@ -435,7 +435,6 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"unknownModsBanner_noFound": "O seguinte mod não pôde ser encontrado: ",
 	"unknownModsBanner_uninstall_it": "Desinstalá-lo?",
 	"unknownModsBanner_uninstall_them": "Desinstalá-los?",
 	"updateAllBanner_button": "Atualizar tudo?",
@@ -449,11 +448,8 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"updateAllBanner_content_is": "Existe ",
-	"updateAllBanner_content_update": " atualização disponível.",
 	"updateAllBanner_dialog_button": "Atualizar mods",
 	"updateAllBanner_dialog_content": "Selecione quais mods atualizar:",
-	"updateAllBanner_dialog_list_content": "Ignorar esta atualização na lista 'Atualizar tudo'.",
 	"updateAllBanner_dialog_list_title": "Atualizar selecionados",
 	"updateAllBanner_dialog_title": "Confirmar atualização",
 	"updater_confirmDialog_button": "Instalar",

@@ -175,7 +175,7 @@
 	"menuBar_copyDebugInfo_message": "Skopiowano informacje debugowania do schowka.",
 	"menuBar_copyLaunchArgs_message": "Skopiowano argumenty uruchamiania do schowka.",
 	"menuBar_copyModList_message": "Skopiowano listę modów do schowka.",
-	"menuBar_createDesktopShotcut_message": "Utworzono skrót na pulpicie dla {name}.",
+	"menuBar_createDesktopShortcut_message": "Utworzono skrót na pulpicie dla {name}.",
 	"menuBar_dialog_button_accent_duplicate": "Duplikuj",
 	"menuBar_dialog_button_accent_rename": "Zmień nazwę",
 	"menuBar_dialog_button_cancel": "Anuluj",
@@ -435,7 +435,6 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"unknownModsBanner_noFound": "Nie znaleziono następującego moda: ",
 	"unknownModsBanner_uninstall_it": "Odinstalować go?",
 	"unknownModsBanner_uninstall_them": "Odinstalować je?",
 	"updateAllBanner_button": "Aktualizować wszystko?",
@@ -449,18 +448,14 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"updateAllBanner_content_is": "Dostępna jest ",
-	"updateAllBanner_content_update": " aktualizacja.",
 	"updateAllBanner_dialog_button": "Aktualizuj mody",
 	"updateAllBanner_dialog_content": "Wybierz mody do aktualizacji:",
-	"updateAllBanner_dialog_list_content": "Ignoruj tę aktualizację na liście 'Aktualizuj wszystko'.",
 	"updateAllBanner_dialog_list_title": "Aktualizuj zaznaczone",
 	"updateAllBanner_dialog_title": "Potwierdź aktualizację",
 	"updater_confirmDialog_button": "Instaluj",
 	"updater_confirmDialog_content": "Aktualizacja zostanie pobrana w tle, a następnie aplikacja uruchomi się ponownie, aby ją zastosować.",
 	"updater_confirmDialog_content_available": "Dostępna jest aktualizacja dla Gale.",
 	"updater_confirmDialog_content_next": "Wersja {next} Gale jest dostępna – posiadasz wersję {current}.",
-	"updater_confirmDialog_content_noAutoUpdate": "Gale nie może zaktualizować się automatycznie ze względu na metodę instalacji. Użyj menedżera pakietów, aby pobrać najnowszą wersję.",
 	"updater_confirmDialog_title": "Dostępna aktualizacja aplikacji!",
 	"updater_content_available": "Dostępna aktualizacja",
 	"updater_content_downloading": "Pobieranie aktualizacji...",

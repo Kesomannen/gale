@@ -175,7 +175,7 @@
 	"menuBar_copyDebugInfo_message": "已將偵錯資訊複製到剪貼簿。",
 	"menuBar_copyLaunchArgs_message": "已將啟動參數複製到剪貼簿。",
 	"menuBar_copyModList_message": "已將模組清單複製到剪貼簿。",
-	"menuBar_createDesktopShotcut_message": "已建立 {name} 的桌面捷徑。",
+	"menuBar_createDesktopShortcut_message": "已建立 {name} 的桌面捷徑。",
 	"menuBar_dialog_button_accent_duplicate": "複製",
 	"menuBar_dialog_button_accent_rename": "重新命名",
 	"menuBar_dialog_button_cancel": "取消",
@@ -435,7 +435,6 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"unknownModsBanner_noFound": "找不到以下模組：",
 	"unknownModsBanner_uninstall_it": "將其解除安裝？",
 	"unknownModsBanner_uninstall_them": "將它們解除安裝？",
 	"updateAllBanner_button": "全部更新？",
@@ -449,11 +448,8 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"updateAllBanner_content_is": "有 ",
-	"updateAllBanner_content_update": " 個可用更新。",
 	"updateAllBanner_dialog_button": "更新模組",
 	"updateAllBanner_dialog_content": "選擇要更新的模組：",
-	"updateAllBanner_dialog_list_content": "在「全部更新」清單中忽略此更新。",
 	"updateAllBanner_dialog_list_title": "更新所選",
 	"updateAllBanner_dialog_title": "確認更新",
 	"updater_confirmDialog_button": "安裝",

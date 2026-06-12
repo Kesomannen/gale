@@ -207,7 +207,7 @@ fn prepare_import(
         }
     };
 
-    profile.ignored_updates = ignored_updates.into_iter().collect();
+    profile.ignored_version_updates = ignored_updates.into_iter().collect();
 
     let id = profile.id;
     let path = profile.path.clone();

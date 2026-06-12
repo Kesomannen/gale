@@ -175,7 +175,7 @@
 	"menuBar_copyDebugInfo_message": "Información de depuración copiada al portapapeles.",
 	"menuBar_copyLaunchArgs_message": "Parámetros de lanzamiento copiados en el portapapeles.",
 	"menuBar_copyModList_message": "Lista de mods copiadas al portapapeles.",
-	"menuBar_createDesktopShotcut_message": "Se creó un acceso directo en el escritorio para {name} .",
+	"menuBar_createDesktopShortcut_message": "Se creó un acceso directo en el escritorio para {name} .",
 	"menuBar_createDesktopStcut_message": "Atajo de escritorio creado para {name}.",
 	"menuBar_dialog_button_accent_duplicate": "Duplicar",
 	"menuBar_dialog_button_accent_rename": "Renombrar",
@@ -436,7 +436,6 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"unknownModsBanner_noFound": "No se ha encontrado el siguiente mod: ",
 	"unknownModsBanner_uninstall_it": "¿Desinstalar?",
 	"unknownModsBanner_uninstall_them": "¿Desinstalarlos?",
 	"updateAllBanner_button": "¿Actualizar todo?",
@@ -450,11 +449,8 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"updateAllBanner_content_is": "Hay ",
-	"updateAllBanner_content_update": " actualización(es) disponible(s).",
 	"updateAllBanner_dialog_button": "Actualizar mods",
 	"updateAllBanner_dialog_content": "Seleccione que mods actualizar:",
-	"updateAllBanner_dialog_list_content": "Ignorar esta actualización en la lista «Actualizar todo».",
 	"updateAllBanner_dialog_list_title": "Actualización seleccionada",
 	"updateAllBanner_dialog_title": "Confirmar actualización",
 	"updater_confirmDialog_button": "Instalar",

@@ -291,7 +291,7 @@
 		await api.profile.createDesktopShortcut();
 
 		pushInfoToast({
-			message: m.menuBar_createDesktopShotcut_message({
+			message: m.menuBar_createDesktopShortcut_message({
 				name: profiles.active?.name ?? m.unknown()
 			})
 		});

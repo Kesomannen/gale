@@ -175,7 +175,7 @@
 	"menuBar_copyDebugInfo_message": "Information de débogage copiée dans le presse-papier.",
 	"menuBar_copyLaunchArgs_message": "Paramètres de lancement copiés dans le presse-papier.",
 	"menuBar_copyModList_message": "Liste des mods copiée dans le presse-papier.",
-	"menuBar_createDesktopShotcut_message": "Raccourci sur le bureau créé pour {name}.",
+	"menuBar_createDesktopShortcut_message": "Raccourci sur le bureau créé pour {name}.",
 	"menuBar_dialog_button_accent_duplicate": "Dupliquer",
 	"menuBar_dialog_button_accent_rename": "Renommer",
 	"menuBar_dialog_button_cancel": "Annuler",
@@ -435,7 +435,6 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"unknownModsBanner_noFound": "Le mod suivant est introuvable : ",
 	"unknownModsBanner_uninstall_it": "Le désinstaller ?",
 	"unknownModsBanner_uninstall_them": "Les désinstaller ?",
 	"updateAllBanner_button": "Tout mettre à jour ?",
@@ -449,18 +448,14 @@
 			"selectors": ["countPlural"]
 		}
 	],
-	"updateAllBanner_content_is": "Il y a ",
-	"updateAllBanner_content_update": " mise à jour disponible.",
 	"updateAllBanner_dialog_button": "Mettre à jour les mods",
 	"updateAllBanner_dialog_content": "Sélectionnez les mods à mettre à jour :",
-	"updateAllBanner_dialog_list_content": "Ignorer cette mise à jour dans la liste 'Tout mettre à jour'.",
 	"updateAllBanner_dialog_list_title": "Mettre à jour la sélection",
 	"updateAllBanner_dialog_title": "Confirmer la mise à jour",
 	"updater_confirmDialog_button": "Installer",
 	"updater_confirmDialog_content": "La mise à jour sera téléchargée en arrière-plan, puis l'application redémarrera pour l'appliquer.",
 	"updater_confirmDialog_content_available": "Une mise à jour est disponible pour Gale.",
 	"updater_confirmDialog_content_next": "La version {next} de Gale est disponible - vous avez la {current}.",
-	"updater_confirmDialog_content_noAutoUpdate": "Gale ne peut pas se mettre à jour automatiquement en raison de votre méthode d'installation. Utilisez votre gestionnaire de paquets pour télécharger la dernière version.",
 	"updater_confirmDialog_title": "Mise à jour de l'application disponible !",
 	"updater_content_available": "Mise à jour disponible",
 	"updater_content_downloading": "Téléchargement de la mise à jour...",

@@ -10,6 +10,8 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { updateBanner } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { DropdownMenu } from 'bits-ui';
+	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -36,6 +38,11 @@
 		dialogOpen = false;
 
 		await api.profile.update.mods(uuids, true);
+	}
+
+	function ignoreUpdate(update: AvailableUpdate) {
+		update.ignore = true;
+		include.delete(update);
 	}
 </script>
 
@@ -78,17 +85,33 @@
 			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
 			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
-			<Tooltip text={m.updateAllBanner_dialog_list_content()} side="left" sideOffset={-2}>
-				<button
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
-					onclick={() => {
-						update.ignore = true;
-						include.delete(update);
-
-						api.profile.update.ignore(update.versionUuid);
-					}}><Icon icon="mdi:notifications-off" /></button
 				>
-			</Tooltip>
+					<Icon icon="mdi:notifications-off" />
+				</DropdownMenu.Trigger>
+				<ContextMenuContent
+					type="dropdown"
+					style="dark"
+					items={[
+						{
+							label: m.updateAllBanner_dialog_list_ignore_version(),
+							onclick: () => {
+								ignoreUpdate(update);
+								api.profile.update.ignore(update.versionUuid);
+							}
+						},
+						{
+							label: m.updateAllBanner_dialog_list_ignore_package(),
+							onclick: () => {
+								ignoreUpdate(update);
+								api.profile.update.ignorePackage(update.packageUuid);
+							}
+						}
+					]}
+				/>
+			</DropdownMenu.Root>
 		{/snippet}
 	</Checklist>
 
