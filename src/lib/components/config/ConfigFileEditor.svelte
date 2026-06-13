@@ -59,48 +59,46 @@
 	let isLarge = $derived(totalEntryCount > LARGE_FILE_ENTRY_COUNT);
 </script>
 
-<div class="max-w-4xl">
-	{#if file.metadata}
-		<div class="text-primary-400 mb-1 font-medium">
-			{m.configFileEditor_metadata({
-				name: file.metadata.modName,
-				version: file.metadata.modVersion
-			})}
-		</div>
-	{/if}
+{#if file.metadata}
+	<div class="text-primary-400 mb-1 font-medium">
+		{m.configFileEditor_metadata({
+			name: file.metadata.modName,
+			version: file.metadata.modVersion
+		})}
+	</div>
+{/if}
 
-	<div class="flex gap-2">
-		<div class="relative grow">
-			<SearchBar bind:value={search} placeholder={m.configFileEditor_searchPlaceholder()} />
-		</div>
-
-		<ResetButton onclick={resetAll} label={m.configFileEditor_resetAll()} />
+<div class="flex gap-2">
+	<div class="relative grow">
+		<SearchBar bind:value={search} placeholder={m.configFileEditor_searchPlaceholder()} />
 	</div>
 
-	{#if isLarge}
-		<SmallHeading>{m.configFileEditor_sections()}</SmallHeading>
-
-		<div class="max-h-52 overflow-y-auto text-left">
-			{#each file.sections as section (section)}
-				<button
-					class="text-accent-400 hover:text-accent-300 block hover:underline"
-					onclick={() => onSectionClick(section)}
-				>
-					{section.name} ({section.entries.length})
-				</button>
-			{/each}
-		</div>
-	{/if}
-
-	{#if overflowing}
-		<InfoBox type="warning">
-			{m.configFileEditor_largeFileWarning({
-				count: filteredEntryCount,
-				threshold: LARGE_FILE_ENTRY_COUNT
-			})}
-		</InfoBox>
-	{/if}
+	<ResetButton onclick={resetAll} label={m.configFileEditor_resetAll()} />
 </div>
+
+{#if isLarge}
+	<SmallHeading>{m.configFileEditor_sections()}</SmallHeading>
+
+	<div class="max-h-52 overflow-y-auto text-left">
+		{#each file.sections as section (section)}
+			<button
+				class="text-accent-400 hover:text-accent-300 block hover:underline"
+				onclick={() => onSectionClick(section)}
+			>
+				{section.name} ({section.entries.length})
+			</button>
+		{/each}
+	</div>
+{/if}
+
+{#if overflowing}
+	<InfoBox type="warning">
+		{m.configFileEditor_largeFileWarning({
+			count: filteredEntryCount,
+			threshold: LARGE_FILE_ENTRY_COUNT
+		})}
+	</InfoBox>
+{/if}
 
 {#if !overflowing}
 	{#each filteredSections as section (section)}

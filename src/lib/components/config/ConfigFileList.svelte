@@ -35,7 +35,7 @@
 
 	let shownFiles = $derived(sortAndFilterFiles(searchTerm, files ?? []));
 
-	let duplicateNames = $derived(() => {
+	let duplicateNames = $derived.by(() => {
 		const nameCount = new Map<string, number>();
 		(files ?? []).forEach((file) => {
 			const name = file.displayName;
@@ -85,7 +85,7 @@
 	}
 </script>
 
-<div class="light-scrollbar w-[20%] min-w-60 overflow-x-hidden overflow-y-auto">
+<div class="overflow-x-hidden overflow-y-auto">
 	{#if files === null}
 		<div class="text-primary-300 flex h-full w-full items-center justify-center text-lg">
 			<Spinner class="mr-2" />
@@ -104,7 +104,7 @@
 			<ConfigFileListItem
 				{file}
 				selected={selectedFile == file}
-				duplicate={duplicateNames().has(file.displayName ?? '')}
+				duplicate={duplicateNames.has(file.displayName ?? '')}
 				locked={profiles.activeLocked}
 				onFileClicked={(file) => {
 					selectedFile = file;

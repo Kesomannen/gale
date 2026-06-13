@@ -65,7 +65,7 @@
 		class={[
 			colorClasses,
 			selected ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-700',
-			'group flex w-full items-center overflow-hidden px-2 py-0.5'
+			'group flex w-full items-center overflow-hidden rounded px-2 py-1'
 		]}
 	>
 		{#if icon}

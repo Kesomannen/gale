@@ -29,10 +29,10 @@
 	}
 </script>
 
-<div class="flex grow overflow-y-auto">
+<div class="mx-auto grid grid-cols-[max(25%,15rem)_auto] overflow-y-auto">
 	<ConfigFileList bind:selectedFile />
 
-	<div class="grow overflow-y-auto px-6 pb-6">
+	<div class="w-full max-w-3xl overflow-y-auto px-6 pb-6">
 		{#if profiles.activeLocked}
 			<ProfileLockedBanner class="mb-4" />
 		{/if}
@@ -45,11 +45,11 @@
 			{#if selectedFile.type === 'ok'}
 				<ConfigFileEditor file={selectedFile} locked={profiles.activeLocked} {resetAll} />
 			{:else if selectedFile.type === 'unsupported'}
-				<div class="text-primary-400 mb-1 px-4">
+				<div class="text-primary-400 mb-1">
 					{m.config_unsupported_content()}
 				</div>
 				<Button
-					class="mx-4 max-w-max"
+					class="max-w-max"
 					color="primary"
 					onclick={() => api.config.openFile(selectedFile!)}
 					icon="mdi:open-in-new"
@@ -57,14 +57,14 @@
 					{m.config_unsupported_button()}
 				</Button>
 			{:else if selectedFile.type === 'err'}
-				<div class="text-primary-400 mb-1 px-4">
+				<div class="text-primary-400 mb-1">
 					{m.config_err_content()}
 				</div>
-				<code class="bg-primary-900 mx-4 mb-1 flex rounded-sm p-4 text-red-500">
+				<code class="bg-primary-900 mb-1 flex rounded-sm p-4 text-red-500">
 					{capitalize(selectedFile.error)}
 				</code>
 				<Button
-					class="mx-4 max-w-max"
+					class="max-w-max"
 					color="primary"
 					onclick={() => api.config.openFile(selectedFile!)}
 					icon="icon=mdi:open-in-new"
