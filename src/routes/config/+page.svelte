@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import type { ConfigSection, ConfigFile } from '$lib/types';
+	import type { ConfigFile } from '$lib/types';
 	import { capitalize } from '$lib/util';
 	import ExpandedConfigEntryDialog from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 
@@ -10,34 +10,40 @@
 	import ConfigFileList from '$lib/components/config/ConfigFileList.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 
 	let selectedFile: ConfigFile | null = $state(null);
-	let selectedSection: ConfigSection | null = $state(null);
+
+	async function resetAll() {
+		if (!selectedFile) return;
+		const confirmed = await confirm(
+			m.config_resetAllConfirm_message({ name: selectedFile.displayName }),
+			{
+				title: m.config_resetAllConfirm_title()
+			}
+		);
+
+		if (!confirmed) return;
+		await api.config.resetAll(selectedFile);
+	}
 </script>
 
 <div class="flex grow overflow-y-auto">
-	<ConfigFileList bind:selectedFile bind:selectedSection />
+	<ConfigFileList bind:selectedFile />
 
-	<div class="flex max-w-4xl grow flex-col overflow-y-auto py-4">
+	<div class="grow overflow-y-auto px-6 pb-6">
 		{#if profiles.activeLocked}
-			<ProfileLockedBanner class="mx-4 mb-4" />
+			<ProfileLockedBanner class="mb-4" />
 		{/if}
 
 		{#if selectedFile !== null}
-			<div class="shrink-0 truncate px-4 text-2xl font-bold text-white">
+			<LargeHeading class="mb-2 truncate">
 				{selectedFile.relativePath}
-				{#if selectedSection}
-					<span class="text-primary-400">/</span>
-					{selectedSection.name.length > 0 ? selectedSection.name : m.config_nameLess()}
-				{/if}
-			</div>
+			</LargeHeading>
 
 			{#if selectedFile.type === 'ok'}
-				<ConfigFileEditor
-					file={selectedFile}
-					section={selectedSection}
-					locked={profiles.activeLocked}
-				/>
+				<ConfigFileEditor file={selectedFile} locked={profiles.activeLocked} {resetAll} />
 			{:else if selectedFile.type === 'unsupported'}
 				<div class="text-primary-400 mb-1 px-4">
 					{m.config_unsupported_content()}
@@ -67,7 +73,7 @@
 				</Button>
 			{/if}
 		{:else}
-			<div class="text-primary-400 flex w-full grow items-center justify-center text-lg">
+			<div class="text-primary-400 flex h-full w-full grow items-center justify-center text-lg">
 				{m.config_content()}
 			</div>
 		{/if}

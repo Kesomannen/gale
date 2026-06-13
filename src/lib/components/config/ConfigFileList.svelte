@@ -2,7 +2,7 @@
 	import * as api from '$lib/api';
 
 	import ConfigFileListItem from '$lib/components/config/ConfigFileListItem.svelte';
-	import type { ConfigSection, ConfigFile } from '$lib/types';
+	import type { ConfigFile } from '$lib/types';
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 
 	import { page } from '$app/state';
@@ -12,10 +12,9 @@
 
 	type Props = {
 		selectedFile: ConfigFile | null;
-		selectedSection: ConfigSection | null;
 	};
 
-	let { selectedFile = $bindable(null), selectedSection = $bindable(null) }: Props = $props();
+	let { selectedFile = $bindable(null) }: Props = $props();
 
 	let currentProfileId: number | null = null;
 
@@ -30,7 +29,6 @@
 
 			files = null;
 			selectedFile = null;
-			selectedSection = null;
 			refresh();
 		}
 	});
@@ -82,18 +80,12 @@
 		selectedFile = files.find((file) => file.relativePath === searchParam) ?? null;
 		if (selectedFile === null) return;
 
-		if (selectedFile.type === 'ok') {
-			selectedSection = selectedFile.sections[0];
-		}
-
 		searchTerm = selectedFile.relativePath;
 		page.url.searchParams.delete('file');
 	}
 </script>
 
-<div
-	class="light-scrollbar border-primary-600 bg-primary-700 w-[20%] min-w-72 overflow-hidden overflow-y-auto border-r"
->
+<div class="light-scrollbar w-[20%] min-w-60 overflow-x-hidden overflow-y-auto">
 	{#if files === null}
 		<div class="text-primary-300 flex h-full w-full items-center justify-center text-lg">
 			<Spinner class="mr-2" />
@@ -105,26 +97,17 @@
 		</div>
 	{:else}
 		<div class="relative mx-2 my-2">
-			<SearchBar
-				bind:value={searchTerm}
-				placeholder={m.configFileList_placeholder()}
-				brightness={800}
-			/>
+			<SearchBar bind:value={searchTerm} placeholder={m.configFileList_placeholder()} />
 		</div>
 
 		{#each shownFiles ?? [] as file (file.relativePath)}
 			<ConfigFileListItem
 				{file}
-				{selectedSection}
+				selected={selectedFile == file}
 				duplicate={duplicateNames().has(file.displayName ?? '')}
 				locked={profiles.activeLocked}
 				onFileClicked={(file) => {
 					selectedFile = file;
-					selectedSection = null;
-				}}
-				onSectionClicked={(file, section) => {
-					selectedFile = { type: 'ok', ...file };
-					selectedSection = section;
 				}}
 				onDeleteClicked={() => {
 					refresh();

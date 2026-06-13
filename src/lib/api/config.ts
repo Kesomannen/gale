@@ -17,6 +17,10 @@ export const resetEntry = (id: ConfigEntryId) =>
 	invoke<ConfigValue>('reset_config_entry', {
 		...idToArgs(id)
 	});
+export const resetAll = (file: ConfigFile) =>
+	invoke('reset_config_file', {
+		file: file.relativePath
+	});
 export const openFile = (file: ConfigFile) =>
 	invoke('open_config_file', { file: file.relativePath });
 export const deleteFile = (file: ConfigFile) =>

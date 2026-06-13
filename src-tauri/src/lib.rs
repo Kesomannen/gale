@@ -192,6 +192,7 @@ pub fn run() {
             config::commands::get_config_files,
             config::commands::set_config_entry,
             config::commands::reset_config_entry,
+            config::commands::reset_config_file,
             config::commands::open_config_file,
             config::commands::delete_config_file,
         ])

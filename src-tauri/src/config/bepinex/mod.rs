@@ -54,6 +54,16 @@ impl File {
         self.find_section(section)
             .and_then(|section| section.find_entry(entry))
     }
+
+    pub fn reset_all(&mut self) -> Result<()> {
+        for section in &mut self.sections {
+            for entry in &mut section.entries {
+                entry.reset()?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq)]

@@ -2,41 +2,24 @@
 	import * as api from '$lib/api';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import type { ConfigFileData, ConfigSection, ConfigFile } from '$lib/types';
+	import type { ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
-	import { Collapsible } from 'bits-ui';
-	import clsx from 'clsx';
 
 	type Props = {
 		file: ConfigFile;
 		duplicate: boolean;
-		selectedSection: ConfigSection | null;
 		locked: boolean;
+		selected: boolean;
 		onDeleteClicked: () => void;
 		onFileClicked: (file: ConfigFile) => void;
-		onSectionClicked: (file: ConfigFileData, section: ConfigSection) => void;
 	};
 
-	let {
-		file,
-		selectedSection,
-		duplicate,
-		locked,
-		onDeleteClicked,
-		onFileClicked,
-		onSectionClicked
-	}: Props = $props();
-
-	let open = $state(false);
-
-	let isSelected = $derived(
-		selectedSection && file.type === 'ok' && file.sections.includes(selectedSection)
-	);
+	let { file, duplicate, locked, selected, onDeleteClicked, onFileClicked }: Props = $props();
 
 	let { colorClasses, icon } = $derived(
 		{
-			ok: { colorClasses: 'text-primary-200', icon: 'mdi:chevron-down' },
+			ok: { colorClasses: 'text-primary-200', icon: null },
 			err: { colorClasses: 'text-red-400', icon: 'mdi:error' },
 			unsupported: { colorClasses: 'text-primary-400', icon: 'mdi:help' }
 		}[file.type]
@@ -46,7 +29,7 @@
 		file.type === 'ok' ? file.sections.filter((section) => section.entries.length > 0) : []
 	);
 
-	let fileLabel = $derived(() => {
+	let fileLabel = $derived.by(() => {
 		if (!file.displayName) {
 			return { name: file.relativePath, disambiguator: null };
 		}
@@ -76,78 +59,49 @@
 	}
 </script>
 
-<Collapsible.Root bind:open>
-	{#if file.type !== 'ok' || shownSections.length > 0}
-		<Collapsible.Trigger
-			onclick={() => file.type !== 'ok' && onFileClicked(file)}
-			class={[
-				colorClasses,
-				isSelected ? 'bg-primary-600 font-semibold' : 'hover:bg-primary-600',
-				'group flex w-full items-center overflow-hidden px-2 py-0.5'
-			]}
-		>
-			<Icon
-				{icon}
-				class={clsx([
-					open && file.type === 'ok' ? 'rotate-180' : 'rotate-0',
-					'mr-1 shrink-0 text-lg'
-				])}
-			/>
+{#if file.type !== 'ok' || shownSections.length > 0}
+	<button
+		onclick={() => onFileClicked(file)}
+		class={[
+			colorClasses,
+			selected ? 'bg-primary-700 font-semibold' : 'hover:bg-primary-700',
+			'group flex w-full items-center overflow-hidden px-2 py-0.5'
+		]}
+	>
+		{#if icon}
+			<Icon {icon} class="mr-1 shrink-0 text-lg" />
+		{/if}
 
-			<div class="mr-auto shrink truncate" style="direction: rtl;">
-				&#x200E;
-				{fileLabel().name}
-				{#if fileLabel().disambiguator}
-					<span class="text-primary-400">
-						({fileLabel().disambiguator})
-					</span>
-				{/if}
-			</div>
+		<div class="mr-auto shrink truncate" style="direction: rtl;">
+			&#x200E;
+			{fileLabel.name}
+			{#if fileLabel.disambiguator}
+				<span class="text-primary-400">
+					({fileLabel.disambiguator})
+				</span>
+			{/if}
+		</div>
 
+		<IconButton
+			label={m.configFileListItem_button_openFile()}
+			icon="mdi:open-in-new"
+			class="ml-2 hidden group-hover:block"
+			onclick={(evt) => {
+				evt.preventDefault();
+				openFile();
+			}}
+		/>
+
+		{#if !locked}
 			<IconButton
-				label={m.configFileListItem_button_openFile()}
-				icon="mdi:open-in-new"
-				class="ml-2 hidden group-hover:block"
+				label={m.configFileListItem_button_deleteFile()}
+				icon="mdi:delete"
+				class="hidden group-hover:block"
 				onclick={(evt) => {
 					evt.preventDefault();
-					openFile();
+					deleteFile();
 				}}
 			/>
-
-			{#if !locked}
-				<IconButton
-					label={m.configFileListItem_button_deleteFile()}
-					icon="mdi:delete"
-					class="hidden group-hover:block"
-					onclick={(evt) => {
-						evt.preventDefault();
-						deleteFile();
-					}}
-				/>
-			{/if}
-		</Collapsible.Trigger>
-	{/if}
-	{#if file.type === 'ok' && shownSections.length > 0}
-		<Collapsible.Content forceMount>
-			{#snippet child({ props, open })}
-				{#if open}
-					<div {...props} class="mb-1 flex flex-col">
-						{#each shownSections as section}
-							<button
-								onclick={() => onSectionClicked(file, section)}
-								class={[
-									selectedSection === section
-										? 'bg-primary-600 text-primary-200 font-medium'
-										: 'text-primary-300 hover:bg-primary-600',
-									'truncate py-0.5 pr-2 pl-9 text-left text-sm'
-								]}
-							>
-								{section.name.length > 0 ? section.name : m.configFileListItem_nameLess()}
-							</button>
-						{/each}
-					</div>
-				{/if}
-			{/snippet}
-		</Collapsible.Content>
-	{/if}
-</Collapsible.Root>
+		{/if}
+	</button>
+{/if}
