@@ -237,7 +237,8 @@ export type FiltersResponse = {
 
 export type LaunchMode =
 	| { type: 'launcher'; content?: undefined }
-	| { type: 'direct'; content: { instances: number; intervalSecs: number } };
+	| { type: 'direct'; content: { instances: number; intervalSecs: number } }
+	| { type: 'protontricks'; content: { instances: number; intervalSecs: number } };
 
 export type AvailableUpdate = {
 	fullName: string;

@@ -25,16 +25,17 @@
 			value: 'launcher',
 			label: m.launchModePref_mode_launcher({ platform: toHeaderCase(platform) })
 		},
-		{ value: 'direct', label: m.launchModePref_mode_direct() }
+		{ value: 'direct', label: m.launchModePref_mode_direct() },
+		{ value: 'protontricks', label: m.launchModePref_mode_protontricks() }
 	]);
 
 	async function onValueChange(newValue: string) {
-		value.type = newValue as 'launcher' | 'direct';
+		value.type = newValue as 'launcher' | 'direct' | 'protontricks';
 		await submit();
 	}
 
 	async function submit() {
-		if (value.type === 'direct') {
+		if (value.type === 'direct' || value.type === 'protontricks') {
 			value.content = { instances, intervalSecs };
 		} else {
 			value.content = undefined;
@@ -81,7 +82,7 @@
 	</Info>
 
 	<InputField
-		disabled={value.type !== 'direct'}
+		disabled={value.type === 'launcher'}
 		value={instances.toString()}
 		onchange={(value) => {
 			instances = parseInt(value);
@@ -99,7 +100,7 @@
 	</Info>
 
 	<InputField
-		disabled={value.type !== 'direct' || instances <= 1}
+		disabled={value.type === 'launcher' || instances <= 1}
 		value={intervalSecs.toString()}
 		onchange={(value) => {
 			intervalSecs = parseInt(value);

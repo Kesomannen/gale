@@ -166,6 +166,7 @@
 	"launchModePref_interval_title": "Interval between launches",
 	"launchModePref_mode_direct": "Direct",
 	"launchModePref_mode_launcher": "Platform ({platform})",
+	"launchModePref_mode_protontricks": "Protontricks",
 	"launchModePref_title": "Launch mode",
 	"menuBar_browseImportFile_filters": "Profile file",
 	"menuBar_browseImportFile_title": "Select the file to import",

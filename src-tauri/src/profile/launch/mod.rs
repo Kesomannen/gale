@@ -39,6 +39,29 @@ pub enum LaunchMode {
     Launcher,
     #[serde(rename_all = "camelCase")]
     Direct { instances: u32, interval_secs: f32 },
+    #[serde(rename_all = "camelCase")]
+    Protontricks { instances: u32, interval_secs: f32 },
+}
+
+impl LaunchMode {
+    fn instances(&self) -> u32 {
+        match self {
+            LaunchMode::Launcher => 1,
+            LaunchMode::Direct { instances, .. } | LaunchMode::Protontricks { instances, .. } => {
+                *instances
+            }
+        }
+    }
+
+    fn interval(&self) -> Duration {
+        match self {
+            LaunchMode::Launcher => Duration::from_secs_f32(0.0),
+            LaunchMode::Direct { interval_secs, .. }
+            | LaunchMode::Protontricks { interval_secs, .. } => {
+                Duration::from_secs_f32(*interval_secs)
+            }
+        }
+    }
 }
 
 impl ManagedGame {
@@ -89,6 +112,15 @@ impl ManagedGame {
             // launch command (if there is one). Otherwise, fall back to direct execution.
             (LaunchMode::Launcher, Some(platform)) => {
                 platform::create_launch_command(game_dir, platform, self.game, prefs).transpose()
+            }
+            (LaunchMode::Protontricks { .. }, _) => {
+                let executable = find_executable(game_dir)?;
+                let protontricks_path = which::which("protontricks-launch")
+                    .context("protontricks-launch executable not found in PATH")?;
+
+                let mut command = Command::new(protontricks_path);
+                command.arg(executable).arg("--cwd-app");
+                Some(Ok(command))
             }
             _ => None,
         }
@@ -164,15 +196,12 @@ impl ManagedGame {
 }
 
 fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<()> {
-    match mode {
-        LaunchMode::Launcher | LaunchMode::Direct { instances: 1, .. } => {
+    match mode.instances() {
+        0 => bail!("instances must be greater than 0"),
+        1 => {
             command.spawn()?;
         }
-        LaunchMode::Direct { instances: 0, .. } => bail!("instances must be greater than 0"),
-        LaunchMode::Direct {
-            instances,
-            interval_secs,
-        } => {
+        instances => {
             let app = app.clone();
             tauri::async_runtime::spawn(async move {
                 for i in 0..instances {
@@ -183,7 +212,7 @@ fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<
                             &app,
                         );
                     }
-                    tokio::time::sleep(Duration::from_secs_f32(interval_secs)).await;
+                    tokio::time::sleep(mode.interval()).await;
                 }
             });
         }
