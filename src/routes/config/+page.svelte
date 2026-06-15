@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import type { ConfigFile } from '$lib/types';
 	import { capitalize } from '$lib/util';
 	import ExpandedConfigEntryDialog from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 
@@ -11,73 +10,86 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
-	import { confirm } from '@tauri-apps/plugin-dialog';
+	import config from '$lib/state/config.svelte';
+	import { untrack } from 'svelte';
+	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 
-	let selectedFile: ConfigFile | null = $state(null);
+	const selectedFile = $derived(config.selectedFile);
 
-	async function resetAll() {
-		if (!selectedFile) return;
-		const confirmed = await confirm(
-			m.config_resetAllConfirm_message({ name: selectedFile.displayName }),
-			{
-				title: m.config_resetAllConfirm_title()
-			}
-		);
-
-		if (!confirmed) return;
-		await api.config.resetAll(selectedFile);
-	}
+	$effect(() => {
+		profiles.activeId;
+		untrack(() => config.refresh());
+	});
 </script>
 
-<div class="mx-auto grid grid-cols-[max(25%,15rem)_auto] overflow-y-auto">
-	<ConfigFileList bind:selectedFile />
-
-	<div class="w-full max-w-3xl overflow-y-auto px-6 pb-6">
-		{#if profiles.activeLocked}
-			<ProfileLockedBanner class="mb-4" />
-		{/if}
-
-		{#if selectedFile !== null}
-			<LargeHeading class="mb-2 truncate">
-				{selectedFile.relativePath}
-			</LargeHeading>
-
-			{#if selectedFile.type === 'ok'}
-				<ConfigFileEditor file={selectedFile} locked={profiles.activeLocked} {resetAll} />
-			{:else if selectedFile.type === 'unsupported'}
-				<div class="text-primary-400 mb-1">
-					{m.config_unsupported_content()}
-				</div>
-				<Button
-					class="max-w-max"
-					color="primary"
-					onclick={() => api.config.openFile(selectedFile!)}
-					icon="mdi:open-in-new"
-				>
-					{m.config_unsupported_button()}
-				</Button>
-			{:else if selectedFile.type === 'err'}
-				<div class="text-primary-400 mb-1">
-					{m.config_err_content()}
-				</div>
-				<code class="bg-primary-900 mb-1 flex rounded-sm p-4 text-red-500">
-					{capitalize(selectedFile.error)}
-				</code>
-				<Button
-					class="max-w-max"
-					color="primary"
-					onclick={() => api.config.openFile(selectedFile!)}
-					icon="icon=mdi:open-in-new"
-				>
-					{m.config_err_button()}
-				</Button>
-			{/if}
+{#if !config.loading && config.files.length === 0}
+	<HelpCard title={m.config_noFiles()} icon="mdi:folder-open-outline" class="w-full" />
+{:else}
+	<div class="grid w-full grid-cols-[15rem_1fr] xl:grid-cols-[20rem_1fr]">
+		{#if config.loading}
+			{@render loadingSkeletons()}
 		{:else}
-			<div class="text-primary-400 flex h-full w-full grow items-center justify-center text-lg">
-				{m.config_content()}
-			</div>
+			<ConfigFileList />
 		{/if}
+
+		<div class="overflow-y-auto px-6 pb-6">
+			{#if profiles.activeLocked}
+				<ProfileLockedBanner class="mt-4 mb-4" />
+			{/if}
+
+			{#if selectedFile}
+				<LargeHeading class="mb-2 truncate">
+					{selectedFile.relativePath}
+				</LargeHeading>
+
+				{#if selectedFile.type === 'ok'}
+					<ConfigFileEditor file={selectedFile} locked={profiles.activeLocked} />
+				{:else if selectedFile.type === 'unsupported'}
+					<div class="text-primary-400 mb-1">
+						{m.config_unsupported_content()}
+					</div>
+					<Button
+						class="max-w-max"
+						color="primary"
+						onclick={() => api.config.openFile(selectedFile!)}
+						icon="mdi:open-in-new"
+					>
+						{m.config_unsupported_button()}
+					</Button>
+				{:else if selectedFile.type === 'err'}
+					<div class="text-primary-400 mb-1">
+						{m.config_err_content()}
+					</div>
+					<code class="bg-primary-900 mb-1 flex rounded-sm p-4 text-red-500">
+						{capitalize(selectedFile.error)}
+					</code>
+					<Button
+						class="max-w-max"
+						color="primary"
+						onclick={() => api.config.openFile(selectedFile!)}
+						icon="icon=mdi:open-in-new"
+					>
+						{m.config_err_button()}
+					</Button>
+				{/if}
+			{:else if !config.loading}
+				<HelpCard title={m.config_content()} icon="mdi:config" class="h-full" />
+			{/if}
+		</div>
 	</div>
-</div>
+{/if}
+
+{#snippet loadingSkeletons()}
+	<div class="space-y-1 px-2 pt-10">
+		{#each [0.9, 1, 0.8, 0.7] as width1, i (i)}
+			{#each [0.8, 1, 0.7, 0.6, 0.9] as width2, j (j)}
+				<div
+					class="bg-primary-700 h-7 animate-pulse rounded"
+					style="width: {width1 * width2 * 100}%;"
+				></div>
+			{/each}
+		{/each}
+	</div>
+{/snippet}
 
 <ExpandedConfigEntryDialog />

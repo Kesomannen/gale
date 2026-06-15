@@ -350,7 +350,7 @@ export function refreshColor(category: ColorCategory) {
 	setColor(category, getColor(category));
 }
 
-const defaultFont = 'Nunito Sans';
+const defaultFont = 'Inter';
 
 export function setFont(fontFamily: string) {
 	root.style.fontFamily = `'${fontFamily}', '${defaultFont}', sans-serif`;

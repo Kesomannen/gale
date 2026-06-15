@@ -44,11 +44,14 @@ export type ConfigRange = {
 
 export type ConfigFileType<T extends string, C = {}> = { type: T } & C;
 
-export type ConfigFile = { relativePath: string; displayName: string | null } & (
-	| ConfigFileType<'ok', ConfigFileData>
-	| ConfigFileType<'err', { error: string }>
-	| ConfigFileType<'unsupported'>
-);
+export type BaseConfigFile = { relativePath: string; displayName: string | null };
+
+export type ConfigFile = BaseConfigFile &
+	(
+		| ConfigFileType<'ok', ConfigFileData>
+		| ConfigFileType<'err', { error: string }>
+		| ConfigFileType<'unsupported'>
+	);
 
 export type ProfileInfo = {
 	id: number;

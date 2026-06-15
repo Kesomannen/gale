@@ -1,19 +1,20 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
+	import config from '$lib/state/config.svelte';
 	import type { ConfigFileData, ConfigSection } from '$lib/types';
 	import SmallHeading from '../prefs/SmallHeading.svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
 	import ResetButton from '../ui/ResetButton.svelte';
 	import SearchBar from '../ui/SearchBar.svelte';
 	import ConfigEntryField from './ConfigEntryField.svelte';
+	import { confirm } from '@tauri-apps/plugin-dialog';
 
 	type Props = {
 		file: ConfigFileData;
 		locked: boolean;
-		resetAll: () => void;
 	};
 
-	let { file, locked, resetAll }: Props = $props();
+	let { file, locked }: Props = $props();
 
 	const LARGE_FILE_ENTRY_COUNT = 100;
 
@@ -24,12 +25,20 @@
 		search = '';
 	});
 
+	async function resetAll() {
+		const confirmed = await confirm(m.config_resetAllConfirm_message({ name: file.displayName }), {
+			title: m.config_resetAllConfirm_title()
+		});
+
+		if (!confirmed) return;
+		await config.resetFile(file);
+	}
+
 	function sumEntryCount(sections: ConfigSection[]) {
 		return sections.reduce((acc, section) => acc + section.entries.length, 0);
 	}
 
 	function onSectionClick(section: ConfigSection) {
-		console.log('Section clicked:', section.name);
 		search = section.name;
 	}
 
@@ -79,13 +88,13 @@
 {#if isLarge}
 	<SmallHeading>{m.configFileEditor_sections()}</SmallHeading>
 
-	<div class="max-h-52 overflow-y-auto text-left">
-		{#each file.sections as section (section)}
+	<div class="text-left">
+		{#each filteredSections as section (section)}
 			<button
 				class="text-accent-400 hover:text-accent-300 block hover:underline"
 				onclick={() => onSectionClick(section)}
 			>
-				{section.name} ({section.entries.length})
+				{section.name}
 			</button>
 		{/each}
 	</div>

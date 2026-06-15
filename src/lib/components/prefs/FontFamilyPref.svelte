@@ -12,7 +12,7 @@
 	let value = $state(getFont());
 
 	onMount(async () => {
-		fonts = ['Nunito Sans', ...(await api.prefs.getSystemFonts())];
+		fonts = ['Inter', ...(await api.prefs.getSystemFonts())];
 	});
 
 	$effect(() => {
@@ -31,5 +31,5 @@
 		bind:value
 	/>
 
-	<ResetButton onclick={() => (value = 'Nunito Sans')} class="ml-1" />
+	<ResetButton onclick={() => (value = 'Inter')} class="ml-1" />
 </div>

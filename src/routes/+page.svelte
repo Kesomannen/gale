@@ -27,6 +27,7 @@
 	import { profileQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import ReorderableList from '$lib/components/profile/ReorderableList.svelte';
+	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -81,7 +82,6 @@
 	let unknownMods: Dependant[] = $state([]);
 	let updates: AvailableUpdate[] = $state([]);
 
-	let modList: ModList;
 	let selectedMod: Mod | null = $state(null);
 
 	let removeDependants: DependantsDialog;
@@ -196,11 +196,11 @@
 </script>
 
 <div class="flex grow overflow-hidden">
-	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
+	<div class="flex w-[60%] grow flex-col overflow-hidden px-4 pt-4">
 		<ModListFilters {sortOptions} queryArgs={profileQuery.current} />
 
 		{#if locked}
-			<ProfileLockedBanner class="mr-4 mb-1" />
+			<ProfileLockedBanner class="mb-1" />
 		{:else}
 			<UpdateAllBanner {updates} />
 		{/if}
@@ -210,11 +210,8 @@
 		{/if}
 
 		{#if mods.length === 0 && hasRefreshed}
-			<div class="text-primary-300 text-center">
-				{#if totalModCount === 0}
-					<Icon icon="ph:ghost" class="text-primary-500 mx-auto mt-4 text-9xl" />
-
-					<div class="mt-1 text-lg">{m.page_modList_noMods_1()}</div>
+			{#if totalModCount === 0}
+				<HelpCard icon="ph:ghost" title={m.page_modList_noMods_1()}>
 					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
 						><Icon
 							icon="mdi:store-search"
@@ -222,11 +219,12 @@
 							inline
 						/>{m.page_modList_noMods_2()}</a
 					>
-				{:else}
-					<div class="mt-4 text-lg">{m.page_modList_noResults_1()}</div>
-					<div class="text-primary-400">{m.page_modList_noResults_2()}</div>
-				{/if}
-			</div>
+				</HelpCard>
+			{:else}
+				<HelpCard class="mt-8" title={m.page_modList_noResults_1()}>
+					{m.page_modList_noResults_2()}
+				</HelpCard>
+			{/if}
 		{:else}
 			<ReorderableList bind:items {onmove} {reorderable}>
 				{#snippet mod({ mod })}

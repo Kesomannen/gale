@@ -47,7 +47,7 @@
 </script>
 
 {#if shownUpdates.length > updateBanner.threshold}
-	<div class="bg-accent-700 text-accent-100 mr-3 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
+	<div class="bg-accent-700 text-accent-100 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
 		<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
 		{m.updateAllBanner_content({ count: shownUpdates.length })}
 

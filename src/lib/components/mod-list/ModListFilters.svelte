@@ -49,7 +49,7 @@
 	}
 </script>
 
-<div class="mb-1.5 flex flex-wrap gap-1.5 pr-3">
+<div class="mb-1.5 flex flex-wrap gap-1.5">
 	<div class="relative flex-grow-3">
 		<SearchBar
 			bind:value={queryArgs.searchTerm}
@@ -76,7 +76,7 @@
 	</div>
 </div>
 
-<div class="mb-1.5 flex items-start gap-1.5 pr-3">
+<div class="mb-1.5 flex items-start gap-1.5">
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_include()}
 		icon="mdi:filter"

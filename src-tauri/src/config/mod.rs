@@ -85,12 +85,12 @@ impl Profile {
 
     fn link_config(&mut self) {
         for profile_mod in &self.mods {
-            let ident = profile_mod.ident();
+            let lowercase_name = profile_mod.ident().name().to_lowercase();
             let file = self
                 .config_cache
                 .0
                 .iter()
-                .find(|file| matches(file, ident.name()));
+                .find(|file| matches(file, &lowercase_name));
 
             if let Some(file) = file {
                 self.linked_config
@@ -99,7 +99,9 @@ impl Profile {
         }
 
         fn matches(file: &AnyFile, mod_name: &str) -> bool {
-            if file.relative_path.as_os_str() == mod_name {
+            // check the segments of the file name for a match
+            let file_name = file.file_stem().to_lowercase();
+            if file_name.split('.').any(|segment| segment == mod_name) {
                 return true;
             }
 
@@ -107,7 +109,7 @@ impl Profile {
                 return false;
             };
 
-            metadata_name == mod_name
+            metadata_name.to_lowercase() == mod_name
         }
     }
 }
@@ -121,8 +123,8 @@ impl ConfigCache {
                 let config_dir = root.join(config_dir_path);
                 WalkDir::new(&config_dir)
                     .into_iter()
-                    .par_bridge()
                     .filter_map(Result::ok)
+                    .par_bridge()
                     .filter_map(|entry| self.read_file(entry, root, &config_dir, mod_loader))
                     .collect_vec_list()
                     .into_iter()

@@ -64,7 +64,7 @@
 </script>
 
 <DragDropProvider {onDragStart} {onDragOver} {onDragEnd}>
-	<VirtualList {items} rowId={(item) => itemId(item)} itemHeight={66}>
+	<VirtualList {items} rowId={(item) => itemId(item)} itemHeight={58}>
 		{#snippet children({ item, index })}
 			{@const hovered = item === hovering}
 
