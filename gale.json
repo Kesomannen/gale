@@ -11,12 +11,12 @@
 			"Start-Process msiexec -ArgumentList \"/i `\"$msi`\" /qn /norestart\" -Wait"
 		]
 	},
+	"bin": "PFiles\\Gale\\gale.exe",
+	"shortcuts": ["PFiles\\Gale\\gale.exe", "Gale"],
 	"uninstaller": {
 		"script": [
 			"$msi = \"$dir\\Gale_1.14.0_x64_en-US.msi\"",
 			"Start-Process msiexec -ArgumentList \"/x `\"$msi`\" /qn /norestart\" -Wait"
 		]
-	},
-	"bin": ["PFiles\\Gale\\gale.exe"],
-	"shortcuts": [["PFiles\\Gale\\gale.exe", "Gale"]]
+	}
 }
