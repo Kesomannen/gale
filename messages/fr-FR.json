@@ -51,7 +51,9 @@
 	"config_content": "Sélectionnez un fichier de configuration pour commencer l'édition",
 	"config_err_button": "Ouvrir dans un programme externe",
 	"config_err_content": "Une erreur s'est produite lors de la lecture de ce fichier de configuration :",
+	"config_loading": "Chargement de la configuration...",
 	"config_nameLess": "<Section sans nom>",
+	"config_noFiles": "Aucun fichier de configuration trouvé",
 	"config_resetAllConfirm_message": "Êtes-vous sûr de vouloir réinitialiser toutes les entrées dans {name} ?",
 	"config_resetAllConfirm_title": "Réinitialiser toutes les entrées",
 	"config_unsupported_button": "Ouvrir dans un programme externe",
@@ -63,8 +65,6 @@
 	"configFileEditor_resetAll": "Réinitialiser tout",
 	"configFileEditor_searchPlaceholder": "Rechercher des sections ou des entrées...",
 	"configFileEditor_sections": "Sections",
-	"configFileList_loading": "Chargement de la configuration...",
-	"configFileList_noFiles": "Aucun fichier de configuration trouvé",
 	"configFileList_placeholder": "Rechercher des fichiers...",
 	"configFileListItem_button_deleteFile": "Mettre le fichier à la corbeille",
 	"configFileListItem_button_openFile": "Ouvrir dans un programme externe",
@@ -245,12 +245,12 @@
 	"modDetails_by": "par",
 	"modDetails_changeLog": "Journal des modifications",
 	"modDetails_dependencies": "Dépendances",
-	"modDetails_deprecated": "Obsolète",
+	"modDetails_deprecated": "Ce module complémentaire est obsolète et il est suggéré d'utiliser une autre alternative. ",
 	"modDetails_details": "Détails",
 	"modDetails_editConfig": "Modifier la configuration",
 	"modDetails_lastUpdated": "Dernière mise à jour il y a {time}",
 	"modDetails_noFound": "Aucune description trouvée",
-	"modDetails_NSFW": "Contient NSFW",
+	"modDetails_NSFW": "Contient du contenu NSFW",
 	"modInfoDIalog_failed": "Échec du chargement de {type} : {error}",
 	"modInfoDialog_noFound": "Aucun {type} trouvé",
 	"modListFilters_filter_exclude": "Exclure les catégories",
@@ -433,12 +433,17 @@
 	"unknown": "Inconnu",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Le mod suivant est introuvable :",
 				"countPlural=other": "Les mods suivants sont introuvables :"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Le désinstaller ?",
@@ -446,12 +451,17 @@
 	"updateAllBanner_button": "Tout mettre à jour ?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Une mise à jour est disponible.",
 				"countPlural=other": "Des mises à jour {count} sont disponibles."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Mettre à jour les mods",

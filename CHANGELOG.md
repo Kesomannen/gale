@@ -7,10 +7,21 @@
 - Russian translation (auto-generated)
 - Ability to ignore all future updates for a mod, instead of just a single version
 
+### Changed
+
+- Made Inter the default font instead of Nunito Sans
+- Redesigned config page
+  - Removed per-file section dropdown in favor of showing all entries in one list
+  - Added in-file search bar
+  - Added button to reset all entries in a file
+- Show version and author instead of description in profile mod list
+- Various UI changes
+
 ### Fixed
 
 - Normalized locale names
-- Improved Swedish locale
+- Improved some translations, mainly Swedish
+- Improved linking between mods and config files
 - Readded version to profile mod list items
 
 ## 1.14.0 (2026-06-10)

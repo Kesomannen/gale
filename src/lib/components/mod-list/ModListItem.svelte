@@ -5,6 +5,7 @@
 	import Spinner from '../ui/Spinner.svelte';
 	import ModItemWithContext from './ModItemContext.svelte';
 	import ModItem from './ModItem.svelte';
+	import { formatModName, isOutdated, modIconSrc } from '$lib/util';
 
 	type Props = {
 		mod: Mod;
@@ -21,7 +22,43 @@
 </script>
 
 <ModItemWithContext {mod} {locked} {contextItems}>
-	<ModItem {mod} {selected} {onclick} hideVersion>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div
+		{onclick}
+		role="button"
+		tabindex="0"
+		class={[
+			'group flex w-full items-center gap-3 rounded-lg border p-2',
+			selected ? 'border-primary-500 bg-primary-700' : 'hover:bg-primary-700 border-transparent'
+		]}
+	>
+		<img src={modIconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
+		<div class="shrink grow overflow-hidden text-left">
+			<div class="flex items-center gap-1 overflow-hidden">
+				<div class="shrink truncate pr-1 font-medium text-white">
+					{formatModName(mod.name)}
+				</div>
+				{#if mod.isPinned}
+					<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
+				{/if}
+				{#if mod.isDeprecated}
+					<Icon class="shrink-0 text-red-500" icon="mdi:error" />
+				{/if}
+				{#if mod.isInstalled}
+					<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
+				{/if}
+				{#if isOutdated(mod)}
+					<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
+				{/if}
+			</div>
+
+			{#if mod.description !== null}
+				<div class="text-primary-400 truncate">
+					{mod.description}
+				</div>
+			{/if}
+		</div>
+
 		{#if !mod.isInstalled && !locked}
 			<!-- svelte-ignore node_invalid_placement_ssr -->
 			<!-- we're not using ssr -->
@@ -41,5 +78,5 @@
 				{/if}
 			</button>
 		{/if}
-	</ModItem>
+	</div>
 </ModItemWithContext>

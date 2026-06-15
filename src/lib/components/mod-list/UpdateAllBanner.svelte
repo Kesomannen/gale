@@ -93,7 +93,6 @@
 				</DropdownMenu.Trigger>
 				<ContextMenuContent
 					type="dropdown"
-					style="dark"
 					items={[
 						{
 							label: m.updateAllBanner_dialog_list_ignore_version(),

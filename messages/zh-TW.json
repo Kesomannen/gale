@@ -51,7 +51,9 @@
 	"config_content": "選擇一個設定檔開始編輯",
 	"config_err_button": "在外部程式中開啟",
 	"config_err_content": "讀取此設定檔時發生錯誤：",
+	"config_loading": "正在加載配置...",
 	"config_nameLess": "<無名區段>",
+	"config_noFiles": "未找到設定檔",
 	"config_resetAllConfirm_message": "您確定要重設{name}中的所有條目嗎？",
 	"config_resetAllConfirm_title": "重置所有條目",
 	"config_unsupported_button": "在外部程式中開啟",
@@ -63,8 +65,6 @@
 	"configFileEditor_resetAll": "全部重置",
 	"configFileEditor_searchPlaceholder": "搜尋章節或條目…",
 	"configFileEditor_sections": "章節",
-	"configFileList_loading": "正在載入設定...",
-	"configFileList_noFiles": "找不到設定檔",
 	"configFileList_placeholder": "搜尋檔案...",
 	"configFileListItem_button_deleteFile": "丟到垃圾桶",
 	"configFileListItem_button_openFile": "在外部程式中開啟",
@@ -245,12 +245,12 @@
 	"modDetails_by": "由",
 	"modDetails_changeLog": "更新日誌",
 	"modDetails_dependencies": "依賴項目",
-	"modDetails_deprecated": "已棄用",
+	"modDetails_deprecated": "該模組已被標記為已棄用，建議使用其他替代方案。 ",
 	"modDetails_details": "詳細資訊",
 	"modDetails_editConfig": "編輯設定",
 	"modDetails_lastUpdated": "最後更新於 {time} 前",
 	"modDetails_noFound": "找不到讀我檔案",
-	"modDetails_NSFW": "包含 NSFW",
+	"modDetails_NSFW": "包含不適合工作場所觀看的內容",
 	"modInfoDIalog_failed": "載入 {type} 失敗：{error}",
 	"modInfoDialog_noFound": "找不到 {type}",
 	"modListFilters_filter_exclude": "排除類別",
@@ -433,12 +433,17 @@
 	"unknown": "未知",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "找不到以下模組：",
 				"countPlural=other": "以下模組未找到："
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "將其解除安裝？",
@@ -446,12 +451,17 @@
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一個更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模組",

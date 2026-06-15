@@ -51,7 +51,9 @@
 	"config_content": "选择一个配置文件开始编辑",
 	"config_err_button": "在外部应用打开",
 	"config_err_content": "读取此配置文件时发生错误：",
+	"config_loading": "正在加载配置...",
 	"config_nameLess": "<侠名>",
+	"config_noFiles": "未找到配置文件",
 	"config_resetAllConfirm_message": "您确定要重置{name}中的所有条目吗？",
 	"config_resetAllConfirm_title": "重置所有条目",
 	"config_unsupported_button": "在外部应用打开",
@@ -63,8 +65,6 @@
 	"configFileEditor_resetAll": "全部重置",
 	"configFileEditor_searchPlaceholder": "搜索章节或条目……",
 	"configFileEditor_sections": "章节",
-	"configFileList_loading": "正在加载配置中...",
-	"configFileList_noFiles": "未找到配置文件",
 	"configFileList_placeholder": "搜索文件...",
 	"configFileListItem_button_deleteFile": "删除文件",
 	"configFileListItem_button_openFile": "打开外部文件",
@@ -245,12 +245,12 @@
 	"modDetails_by": "作者:",
 	"modDetails_changeLog": "更新日志",
 	"modDetails_dependencies": "依赖",
-	"modDetails_deprecated": "已弃用",
+	"modDetails_deprecated": "该模组已被标记为已弃用，建议使用其他替代方案。 ",
 	"modDetails_details": "详情",
 	"modDetails_editConfig": "编辑配置",
 	"modDetails_lastUpdated": "最后更新: {time}前",
 	"modDetails_noFound": "没找到自述文件",
-	"modDetails_NSFW": "存在限制级(NSFW)内容",
+	"modDetails_NSFW": "包含不适宜工作场所观看的内容",
 	"modInfoDIalog_failed": "加载 {type} 失败: {error}",
 	"modInfoDialog_noFound": "未找到 {type}",
 	"modListFilters_filter_exclude": "排除类别",
@@ -433,12 +433,17 @@
 	"unknown": "未知",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "找不到以下模组：",
 				"countPlural=other": "以下模组未找到："
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "卸载它?",
@@ -446,12 +451,17 @@
 	"updateAllBanner_button": "更新所有?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一个更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模组",

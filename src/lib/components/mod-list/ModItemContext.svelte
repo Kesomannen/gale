@@ -36,5 +36,5 @@
 	<ContextMenu.Trigger class="contents">
 		{@render children?.()}
 	</ContextMenu.Trigger>
-	<ModContextMenuContent type="context" style="dark" {locked} {mod} items={contextItems} />
+	<ModContextMenuContent type="context" {locked} {mod} items={contextItems} />
 </ContextMenu.Root>

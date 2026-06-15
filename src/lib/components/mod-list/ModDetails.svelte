@@ -76,7 +76,7 @@
 		>
 			<Icon class="text-primary-200 text-3xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
-		<ModContextMenuContent style="dark" {mod} {locked} items={allContextItems} type="dropdown" />
+		<ModContextMenuContent {mod} {locked} items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
 
 	<div class="-mr-3 grow overflow-x-hidden overflow-y-auto pr-3 pb-2">
@@ -217,7 +217,7 @@
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		{@render button(
 			'material-symbols:network-node',
-			m.modDetails_dependencies(),
+			`${m.modDetails_dependencies()} (${mod.dependencies.length})`,
 			() => (dependenciesOpen = true)
 		)}
 	{/if}

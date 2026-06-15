@@ -82,7 +82,6 @@
 		</DropdownMenu.Trigger>
 		<ContextMenuContent
 			type="dropdown"
-			style="light"
 			items={contextItems}
 			class="max-h-90 overflow-y-auto text-base"
 		/>

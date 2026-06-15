@@ -6,11 +6,10 @@
 		mod: Mod;
 		items: ModContextItem[];
 		type: 'dropdown' | 'context';
-		style: 'dark' | 'light';
 		locked: boolean;
 	};
 
-	let { mod, items, type, style, locked }: Props = $props();
+	let { mod, items, type, locked }: Props = $props();
 
 	function mapItem(modItem: ModContextItem): ContextItem | null {
 		if (modItem.showFor && !modItem.showFor(mod, locked)) {
@@ -29,4 +28,4 @@
 	}
 </script>
 
-<ContextMenuContent {type} {style} items={items.map(mapItem).filter((item) => item != null)} />
+<ContextMenuContent {type} items={items.map(mapItem).filter((item) => item != null)} />

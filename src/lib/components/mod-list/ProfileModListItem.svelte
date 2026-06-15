@@ -25,7 +25,7 @@
 		role="button"
 		tabindex="0"
 		class={[
-			'group text-primary-300 grid w-full grid-cols-[2fr_1fr_auto] items-center rounded-lg border p-2 lg:grid-cols-[2fr_1fr_1fr_auto]',
+			'group text-primary-300 grid w-full grid-cols-[2fr_1fr_auto] items-center gap-2 rounded-lg border p-2 lg:grid-cols-[2fr_1fr_1fr_auto]',
 			selected ? 'border-primary-500 bg-primary-700' : 'hover:bg-primary-700 border-transparent'
 		]}
 	>
@@ -49,7 +49,7 @@
 			{/if}
 		</div>
 
-		<div class="hidden lg:block">
+		<div class="hidden overflow-hidden lg:block">
 			{mod.author}
 		</div>
 

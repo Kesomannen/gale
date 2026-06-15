@@ -51,7 +51,9 @@
 	"config_content": "Wybierz plik konfiguracyjny, aby zacząć edycję",
 	"config_err_button": "Otwórz w programie zewnętrznym",
 	"config_err_content": "Wystąpił błąd podczas odczytu pliku konfiguracyjnego:",
+	"config_loading": "Ładowanie konfiguracji...",
 	"config_nameLess": "<Sekcja bez nazwy>",
+	"config_noFiles": "Nie znaleziono plików konfiguracyjnych",
 	"config_resetAllConfirm_message": "Czy na pewno chcesz zresetować wszystkie wpisy w {name} ?",
 	"config_resetAllConfirm_title": "Zresetuj wszystkie wpisy",
 	"config_unsupported_button": "Otwórz w programie zewnętrznym",
@@ -63,8 +65,6 @@
 	"configFileEditor_resetAll": "Zresetuj wszystko",
 	"configFileEditor_searchPlaceholder": "Wyszukaj sekcje lub wpisy...",
 	"configFileEditor_sections": "Sekcje",
-	"configFileList_loading": "Ładowanie konfiguracji...",
-	"configFileList_noFiles": "Nie znaleziono plików konfiguracyjnych",
 	"configFileList_placeholder": "Szukaj plików...",
 	"configFileListItem_button_deleteFile": "Usuń plik",
 	"configFileListItem_button_openFile": "Otwórz w programie zewnętrznym",
@@ -245,12 +245,12 @@
 	"modDetails_by": "autor:",
 	"modDetails_changeLog": "Lista zmian",
 	"modDetails_dependencies": "Zależności",
-	"modDetails_deprecated": "Przestarzały",
+	"modDetails_deprecated": "Ten mod został oznaczony jako przestarzały i sugeruje się użycie innej alternatywy. ",
 	"modDetails_details": "Szczegóły",
 	"modDetails_editConfig": "Edytuj konfigurację",
 	"modDetails_lastUpdated": "Ostatnia aktualizacja {time} temu",
 	"modDetails_noFound": "Nie znaleziono pliku readme",
-	"modDetails_NSFW": "Zawiera NSFW",
+	"modDetails_NSFW": "Zawiera treści NSFW",
 	"modInfoDIalog_failed": "Nie udało się załadować {type}: {error}",
 	"modInfoDialog_noFound": "Nie znaleziono {type}",
 	"modListFilters_filter_exclude": "Wyklucz kategorie",
@@ -433,12 +433,17 @@
 	"unknown": "Nieznany",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Nie znaleziono następującego moda:",
 				"countPlural=other": "Nie znaleziono następujących modów:"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Odinstalować go?",
@@ -446,12 +451,17 @@
 	"updateAllBanner_button": "Aktualizować wszystko?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Dostępna jest jedna aktualizacja.",
 				"countPlural=other": "Dostępnych jest {count} aktualizacji."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Aktualizuj mody",

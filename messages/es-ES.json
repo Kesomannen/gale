@@ -51,7 +51,9 @@
 	"config_content": "Seleccione un archivo de configuración para comenzar a editarlo.",
 	"config_err_button": "Abrir en un programa externo",
 	"config_err_content": "Se ha producido un error al leer este archivo de configuración:",
+	"config_loading": "Cargando configuración...",
 	"config_nameLess": "<Nameless section>",
+	"config_noFiles": "No se encontraron archivos de configuración.",
 	"config_resetAllConfirm_message": "¿Está seguro de que desea restablecer todas las entradas en {name} ?",
 	"config_resetAllConfirm_title": "Restablecer todas las entradas",
 	"config_unsupported_button": "Abrir en un programa externo",
@@ -63,8 +65,6 @@
 	"configFileEditor_resetAll": "Restablecer todo",
 	"configFileEditor_searchPlaceholder": "Buscar secciones o entradas...",
 	"configFileEditor_sections": "Secciones",
-	"configFileList_loading": "Cargando configuración...",
-	"configFileList_noFiles": "No se han encontrado archivos de configuración",
 	"configFileList_placeholder": "Buscar archivos...",
 	"configFileListItem_button_deleteFile": "Eliminar archivo",
 	"configFileListItem_button_openFile": "Abrir con un programa externo",
@@ -182,7 +182,6 @@
 	"menuBar_copyLaunchArgs_message": "Parámetros de lanzamiento copiados en el portapapeles.",
 	"menuBar_copyModList_message": "Lista de mods copiadas al portapapeles.",
 	"menuBar_createDesktopShortcut_message": "Se creó un acceso directo en el escritorio para {name} .",
-	"menuBar_createDesktopStcut_message": "Atajo de escritorio creado para {name}.",
 	"menuBar_dialog_button_accent_duplicate": "Duplicar",
 	"menuBar_dialog_button_accent_rename": "Renombrar",
 	"menuBar_dialog_button_cancel": "Cancelar",
@@ -246,12 +245,12 @@
 	"modDetails_by": "por",
 	"modDetails_changeLog": "Notas de cambio",
 	"modDetails_dependencies": "Dependencias",
-	"modDetails_deprecated": "Obsoleto",
+	"modDetails_deprecated": "Este mod ha sido marcado como obsoleto y se sugiere utilizar otra alternativa. ",
 	"modDetails_details": "Detalles",
 	"modDetails_editConfig": "Editar configuración",
 	"modDetails_lastUpdated": "Ultima actualización hace {time}",
 	"modDetails_noFound": "No se ha encontrado Readme",
-	"modDetails_NSFW": "Contiene NSFW",
+	"modDetails_NSFW": "Contiene contenido para adultos",
 	"modInfoDIalog_failed": "Error al cargar {type}: {error}",
 	"modInfoDialog_noFound": "No se ha encontrado {type}",
 	"modListFilters_filter_exclude": "Excluir categorías",
@@ -434,12 +433,17 @@
 	"unknown": "Desconocido",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "No se pudo encontrar el siguiente mod:",
 				"countPlural=other": "No se pudieron encontrar los siguientes mods:"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "¿Desinstalar?",
@@ -447,12 +451,17 @@
 	"updateAllBanner_button": "¿Actualizar todo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Hay una actualización disponible.",
 				"countPlural=other": "Hay {count} actualizaciones disponibles."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Actualizar mods",
