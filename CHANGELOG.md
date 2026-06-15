@@ -12,6 +12,7 @@
 - Normalized locale names
 - Improved Swedish locale
 - Readded version to profile mod list items
+- Profile shortcuts created with the previous version not working
 
 ## 1.14.0 (2026-06-10)
 

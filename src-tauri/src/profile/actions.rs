@@ -459,11 +459,11 @@ impl ManagedGame {
                 "$ws = New-Object -ComObject WScript.Shell; \
                  $shortcut = $ws.CreateShortcut('{}'); \
                  $shortcut.TargetPath = '{}'; \
-                 $shortcut.Arguments = '--game {} --profile \"{}\" --launch --no-gui'; \
+                 $shortcut.Arguments = '--game \"{}\" --profile \"{}\" --launch --no-gui'; \
                  $shortcut.Save()",
                 shortcut_path.to_string_lossy().replace("\\", "\\\\"),
                 command.replace("\\", "\\\\"),
-                self.game.name,
+                self.game.slug,
                 profile.name
             );
 
@@ -487,7 +487,7 @@ impl ManagedGame {
                 "[Desktop Entry]\n\
                  Type=Application\n\
                  Name=Gale - {} - {}\n\
-                 Exec=\"{}\" --game {} --profile \"{}\" --launch --no-gui\n\
+                 Exec=\"{}\" --game \"{}\" --profile \"{}\" --launch --no-gui\n\
                  Icon=gale\n\
                  Terminal=false\n\
                  Categories=Game;",
