@@ -13,6 +13,7 @@
 - Improved Swedish locale
 - Readded version to profile mod list items
 - Profile shortcuts created with the previous version not working
+- Improve error message when database has been modified by a newer version of Gale
 
 ## 1.14.0 (2026-06-10)
 

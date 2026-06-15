@@ -4,10 +4,10 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
-use eyre::{Context, Result};
+use eyre::{eyre, Context, Result};
 use include_dir::include_dir;
 use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
-use rusqlite_migration::Migrations;
+use rusqlite_migration::{MigrationDefinitionError, Migrations};
 use serde::de::DeserializeOwned;
 use tracing::{info, trace};
 use uuid::Uuid;
@@ -62,7 +62,12 @@ static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migr
 fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
     let migrations = Migrations::from_directory(&MIGRATIONS_DIR)?;
 
-    migrations.to_latest(conn)?;
+    migrations.to_latest(conn).map_err(|err| match err {
+        rusqlite_migration::Error::MigrationDefinition(
+            MigrationDefinitionError::DatabaseTooFarAhead,
+        ) => eyre!("database has been modified by a newer version of Gale, please update to the latest version"),
+        _ => eyre!(err),
+    })?;
 
     Ok(())
 }
