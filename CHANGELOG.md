@@ -7,6 +7,10 @@
 - Russian translation (auto-generated)
 - Ability to ignore all future updates for a mod, instead of just a single version
 
+### Changed
+
+- Upgraded rust edition and version
+
 ### Fixed
 
 - Normalized locale names

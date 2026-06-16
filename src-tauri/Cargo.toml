@@ -6,8 +6,8 @@ authors = ["Kesomannen"]
 license = "GPL-3.0"
 repository = "https://github.com/Kesomannen/gale"
 default-run = "gale"
-edition = "2021"
-rust-version = "1.80"
+edition = "2024"
+rust-version = "1.85"
 
 [[bin]]
 name = "gale"
@@ -18,7 +18,7 @@ chrono = "0.4"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [ "protocol-asset" ] }
+tauri = { version= "2", features = [ "protocol-asset" ] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-window-state = "2"
 tauri-plugin-dialog = "2"
