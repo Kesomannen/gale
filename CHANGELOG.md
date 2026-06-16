@@ -15,14 +15,13 @@
   - Added in-file search bar
   - Added button to reset all entries in a file
 - Show version and author instead of description in profile mod list
-- Various UI changes
+- Various other UI changes
 
 ### Fixed
 
 - Normalized locale names
-- Improved some translations, mainly Swedish
+- Improved some translations, mainly Swedish locale
 - Improved linking between mods and config files
-- Readded version to profile mod list items
 
 ## 1.14.0 (2026-06-10)
 

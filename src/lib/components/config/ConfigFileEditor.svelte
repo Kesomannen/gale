@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pushState } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
 	import type { ConfigFileData, ConfigSection } from '$lib/types';
@@ -8,6 +9,7 @@
 	import SearchBar from '../ui/SearchBar.svelte';
 	import ConfigEntryField from './ConfigEntryField.svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
+	import { page } from '$app/state';
 
 	type Props = {
 		file: ConfigFileData;
@@ -18,12 +20,12 @@
 
 	const LARGE_FILE_ENTRY_COUNT = 100;
 
-	let search = $state('');
+	let search = $derived(page.state.search ?? '');
 
-	$effect(() => {
-		file;
-		search = '';
-	});
+	// $effect(() => {
+	// 	file;
+	// 	search = '';
+	// });
 
 	async function resetAll() {
 		const confirmed = await confirm(m.config_resetAllConfirm_message({ name: file.displayName }), {
@@ -39,7 +41,9 @@
 	}
 
 	function onSectionClick(section: ConfigSection) {
-		search = section.name;
+		pushState('', {
+			search: section.name
+		});
 	}
 
 	let filteredSections = $derived.by(() => {
@@ -79,7 +83,11 @@
 
 <div class="flex gap-2">
 	<div class="relative grow">
-		<SearchBar bind:value={search} placeholder={m.configFileEditor_searchPlaceholder()} />
+		<SearchBar
+			bind:value={search}
+			onclear={() => history.back()}
+			placeholder={m.configFileEditor_searchPlaceholder()}
+		/>
 	</div>
 
 	<ResetButton onclick={resetAll} label={m.configFileEditor_resetAll()} />

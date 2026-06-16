@@ -6,9 +6,10 @@
 		placeholder: string;
 		size?: 'sm' | 'base' | 'lg';
 		onkeydown?: () => void;
+		onclear?: () => void;
 	};
 
-	let { value = $bindable(), placeholder, size = 'base', onkeydown }: Props = $props();
+	let { value = $bindable(), placeholder, size = 'base', onkeydown, onclear }: Props = $props();
 </script>
 
 <input
@@ -22,7 +23,10 @@
 
 <button
 	class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute top-1.25 right-1.5 rounded-md p-1 text-xl"
-	onclick={() => (value = '')}
+	onclick={() => {
+		value = '';
+		onclear?.();
+	}}
 >
 	<Icon icon="mdi:close" />
 </button>
