@@ -3,8 +3,7 @@
 	import { Switch } from 'bits-ui';
 	import type { MouseEventHandler } from 'svelte/elements';
 	import ModItemContext from './ModItemContext.svelte';
-	import { formatModName, isOutdated, modIconSrc } from '$lib/util';
-	import Icon from '@iconify/svelte';
+	import ProfileModListItemNoContext from './ProfileModListItemNoContext.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -19,44 +18,8 @@
 </script>
 
 <ModItemContext {mod} {locked} {contextItems}>
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<div
-		{onclick}
-		role="button"
-		tabindex="0"
-		class={[
-			'group text-primary-300 grid w-full grid-cols-[2fr_1fr_auto] items-center gap-2 rounded-lg border p-2 lg:grid-cols-[2fr_1fr_1fr_auto]',
-			selected ? 'border-primary-500 bg-primary-700' : 'hover:bg-primary-700 border-transparent'
-		]}
-	>
-		<div class="flex items-center overflow-hidden">
-			<img src={modIconSrc(mod)} alt={mod.name} class="mr-3 size-10 rounded-sm" />
-
-			<div
-				class={[mod.enabled ? 'text-white' : 'line-through', 'mr-2 shrink truncate font-medium']}
-			>
-				{formatModName(mod.name)}
-			</div>
-
-			{#if mod.isPinned}
-				<Icon class="text-primary-400 mr-1 shrink-0" icon="mdi:pin" />
-			{/if}
-			{#if mod.isDeprecated}
-				<Icon class="mr-1 shrink-0 text-red-500" icon="mdi:error" />
-			{/if}
-			{#if isOutdated(mod)}
-				<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
-			{/if}
-		</div>
-
-		<div class="hidden overflow-hidden lg:block">
-			{mod.author}
-		</div>
-
-		<div>
-			{mod.version}
-		</div>
-
+	<ProfileModListItemNoContext {mod} {selected} {onclick}>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div class="contents" onclick={(evt) => evt.stopPropagation()}>
 			<Switch.Root
@@ -70,5 +33,5 @@
 				/>
 			</Switch.Root>
 		</div>
-	</div>
+	</ProfileModListItemNoContext>
 </ModItemContext>

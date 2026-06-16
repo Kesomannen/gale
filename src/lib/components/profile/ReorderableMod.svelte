@@ -11,7 +11,7 @@
 		children?: Snippet;
 	};
 
-	let { mod, index, hovered, disabled, children }: Props = $props();
+	let { mod, index, disabled, children }: Props = $props();
 
 	const sortable = createSortable({
 		get id() {
