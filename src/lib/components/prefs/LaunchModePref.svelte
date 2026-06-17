@@ -81,7 +81,7 @@
 	</Info>
 
 	<InputField
-		disabled={value.type !== 'direct'}
+		disabled={value.type === 'launcher'}
 		value={instances.toString()}
 		onchange={(value) => {
 			instances = parseInt(value);
@@ -99,7 +99,7 @@
 	</Info>
 
 	<InputField
-		disabled={value.type !== 'direct' || instances <= 1}
+		disabled={value.type === 'launcher' || instances <= 1}
 		value={intervalSecs.toString()}
 		onchange={(value) => {
 			intervalSecs = parseInt(value);

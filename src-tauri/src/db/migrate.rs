@@ -104,8 +104,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
                 modpack: profile_data.modpack.map(Into::into),
                 ignored_updates: Some(profile_data.ignored_updates),
                 sync_data: None,
-                custom_args: None,
-                custom_args_enabled: None,
+                custom_args: String::new(),
                 ignored_package_updates: None,
             });
 
@@ -149,8 +148,7 @@ impl From<legacy::GamePrefs> for GamePrefs {
     fn from(legacy: legacy::GamePrefs) -> Self {
         GamePrefs {
             dir_override: legacy.dir_override,
-            custom_args: legacy.custom_args.clone(),
-            custom_args_enabled: legacy.custom_args.is_some(),
+            custom_args: legacy.custom_args.into_iter().flatten().join(" "),
             launch_mode: legacy.launch_mode.into(),
             platform: legacy.platform.map(Into::into),
         }

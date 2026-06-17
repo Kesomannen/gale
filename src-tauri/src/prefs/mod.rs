@@ -195,8 +195,11 @@ pub struct Prefs {
 #[serde(default, rename_all = "camelCase")]
 pub struct GamePrefs {
     pub dir_override: Option<PathBuf>,
-    pub custom_args: Option<Vec<String>>,
-    pub custom_args_enabled: bool,
+    // Older versions used to have a list of arguments instead of one string
+    // this is hard to migrate in SQL due to the nested JSON structure, so we
+    // support both formats in deserialization and convert to the new format
+    #[serde(deserialize_with = "string_or_vec")]
+    pub custom_args: String,
     pub launch_mode: LaunchMode,
     pub platform: Option<Platform>,
 }
@@ -328,4 +331,46 @@ impl Prefs {
     pub fn cache_dir(&self) -> PathBuf {
         self.data_dir.join("cache")
     }
+}
+
+fn string_or_vec<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    struct StringOrVec;
+
+    impl<'de> serde::de::Visitor<'de> for StringOrVec {
+        type Value = String;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("string, list of strings or null")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(value.to_string())
+        }
+
+        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::SeqAccess<'de>,
+        {
+            let mut args = Vec::new();
+            while let Some(arg) = seq.next_element::<String>()? {
+                args.push(arg);
+            }
+            Ok(args.join(" "))
+        }
+
+        fn visit_unit<E>(self) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(String::new())
+        }
+    }
+
+    deserializer.deserialize_any(StringOrVec)
 }

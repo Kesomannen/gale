@@ -10,15 +10,25 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
     if game_dir.join(".forceproton").exists() {
         debug!(".forceproton file found");
         return Ok(true);
+    } else {
+        debug!(".forceproton file not found");
     }
 
-    Ok(game_dir
+    let has_exe = game_dir
         .read_dir()?
         .filter_map(Result::ok)
-        .any(|entry| entry.path().extension().is_some_and(|ext| ext == "exe")))
+        .any(|entry| entry.path().extension().is_some_and(|ext| ext == "exe"));
+
+    if has_exe {
+        debug!(".exe extension found in game directory");
+    } else {
+        debug!("no .exe extension found in game directory");
+    }
+
+    Ok(has_exe)
 }
 
-pub fn ensure_wine_override(steam_id: u64, proxy_dll: &str, game_dir: &Path) -> Result<()> {
+pub fn ensure_wine_override(steam_id: u32, proxy_dll: &str, game_dir: &Path) -> Result<()> {
     debug!("adding wine dll override to steam compatdata");
 
     let wine_reg_path = game_dir

@@ -473,11 +473,10 @@ pub async fn get_local_markdown(
 }
 
 #[command]
-pub fn set_custom_args(custom_args: Vec<String>, enabled: bool, app: AppHandle) -> Result<()> {
+pub fn set_custom_args(custom_args: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
     let profile = manager.active_profile_mut();
     profile.custom_args = custom_args;
-    profile.custom_args_enabled = enabled;
     profile.save(&app, false)?;
     manager.save_active_game(&app)?;
     Ok(())
