@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Made Inter the default font instead of Nunito Sans
+- Redesigned config page
+  - Removed per-file section dropdown in favor of showing all entries in one list
+  - Added in-file search bar
+  - Added button to reset all entries in a file
+- Show version and author instead of description in profile mod list
+- Various other UI changes
+
+### Fixed
+
+- Normalized locale names
+- Improved linking between mods and config files
+- Profile shortcuts created with the previous version not working
+
 ## 1.15.1 (2026-06-18)
 
 ### Fixed
@@ -15,13 +33,6 @@
 
 ### Changed
 
-- Made Inter the default font instead of Nunito Sans
-- Redesigned config page
-  - Removed per-file section dropdown in favor of showing all entries in one list
-  - Added in-file search bar
-  - Added button to reset all entries in a file
-- Show version and author instead of description in profile mod list
-- Various other UI changes
 - Upgraded rust edition and version
 - Reworked custom launch arguments
   - Arguments are now entered as one string instead of a list
@@ -36,10 +47,7 @@
 
 ### Fixed
 
-- Normalized locale names
-- Improved linking between mods and config files
 - Improved Swedish locale
-- Profile shortcuts created with the previous version not working
 - Improve error message when database has been modified by a newer version of Gale
 - Hades II mod loader files being placed in the root game directory instead of the nested `Ship` directory
 - The shimloader proxy DLL `dwmapi.dll` not being added to `WINEDLLOVERRIDES`, leading to Windows UE games launching unmodded on Linux

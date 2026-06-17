@@ -4,7 +4,6 @@
 	import type { MouseEventHandler } from 'svelte/elements';
 	import Spinner from '../ui/Spinner.svelte';
 	import ModItemWithContext from './ModItemContext.svelte';
-	import ModItem from './ModItem.svelte';
 	import { formatModName, isOutdated, modIconSrc } from '$lib/util';
 
 	type Props = {

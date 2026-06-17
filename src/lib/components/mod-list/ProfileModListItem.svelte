@@ -20,10 +20,6 @@
 
 <ModItemContext {mod} {locked} {contextItems}>
 	<ProfileModListItemNoContext {mod} {selected} {onclick}>
-		{#snippet leading()}
-			<Checkbox checked={selected} />
-		{/snippet}
-
 		{#snippet trailing()}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
