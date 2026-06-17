@@ -25,17 +25,16 @@
 			value: 'launcher',
 			label: m.launchModePref_mode_launcher({ platform: toHeaderCase(platform) })
 		},
-		{ value: 'direct', label: m.launchModePref_mode_direct() },
-		{ value: 'protontricks', label: m.launchModePref_mode_protontricks() }
+		{ value: 'direct', label: m.launchModePref_mode_direct() }
 	]);
 
 	async function onValueChange(newValue: string) {
-		value.type = newValue as 'launcher' | 'direct' | 'protontricks';
+		value.type = newValue as 'launcher' | 'direct';
 		await submit();
 	}
 
 	async function submit() {
-		if (value.type === 'direct' || value.type === 'protontricks') {
+		if (value.type === 'direct') {
 			value.content = { instances, intervalSecs };
 		} else {
 			value.content = undefined;

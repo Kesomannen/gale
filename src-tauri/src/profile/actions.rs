@@ -308,8 +308,7 @@ impl ManagedGame {
             linked_config: HashMap::new(),
             modpack: None,
             sync: None,
-            custom_args: Vec::new(),
-            custom_args_enabled: false,
+            custom_args: String::new(),
             missing: false,
             ignored_package_updates: HashSet::new(),
         };
@@ -409,13 +408,11 @@ impl ManagedGame {
         let mods = old_profile.mods.clone();
         let ignored_updates = old_profile.ignored_version_updates.clone();
         let custom_args = old_profile.custom_args.clone();
-        let custom_args_enabled = old_profile.custom_args_enabled;
 
         let new_profile = self.active_profile_mut();
         new_profile.mods = mods;
         new_profile.ignored_version_updates = ignored_updates;
         new_profile.custom_args = custom_args;
-        new_profile.custom_args_enabled = custom_args_enabled;
 
         Ok(new_profile)
     }

@@ -33,9 +33,9 @@ pub fn init() -> Result<(Db, bool)> {
     let existed = path.exists();
 
     info!(
-        "connecting to database at {} (exists: {})",
-        path.display(),
-        existed
+        exists = existed,
+        path = %path.display(),
+        "opening database",
     );
 
     let mut conn = rusqlite::Connection::open(path).context("failed to connect")?;
@@ -116,8 +116,7 @@ pub struct ProfileData {
     pub modpack: Option<profile::export::modpack::ModpackArgs>,
     pub ignored_updates: Option<HashSet<Uuid>>,
     pub sync_data: Option<profile::sync::SyncProfileData>,
-    pub custom_args: Option<Vec<String>>,
-    pub custom_args_enabled: Option<bool>,
+    pub custom_args: String,
     pub ignored_package_updates: Option<HashSet<Uuid>>,
 }
 
@@ -204,15 +203,23 @@ impl Db {
                     active_profile_id: row.get(3)?,
                 })
             })?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .context("failed to read games")?;
 
         let mut profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled, ignored_package_updates FROM profiles",
+                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates FROM profiles",
             )?
             .query_map((), |row| {
                 let mut mods : Vec<profile::ProfileMod> = map_json_row(row, 4)?;
                 mods.dedup_by(|a, b| a.kind.uuid() == b.kind.uuid());
+
+                // custom args may be a json array of strings instead of one string
+                let custom_args = match map_json_option_row::<_, Vec<String>>(row, 8) {
+                    Ok(Some(args)) => args.join(" "),
+                    Ok(None) => String::new(),
+                    Err(_) => row.get(8)?,
+                };
 
                 Ok(ProfileData {
                     id: row.get(0)?,
@@ -223,25 +230,27 @@ impl Db {
                     modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_option_row(row, 6)?,
                     sync_data: map_json_option_row(row, 7)?,
-                    custom_args: map_json_option_row(row, 8)?,
-                    custom_args_enabled: row.get(9)?,
-                    ignored_package_updates: map_json_option_row(row, 10)?,
+                    custom_args: custom_args,
+                    ignored_package_updates: map_json_option_row(row, 9)?,
                 })
             })?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .context("failed to read profiles")?;
 
         profiles.sort_by(|a, b| a.name.cmp(&b.name));
 
         let prefs = conn
             .prepare("SELECT data FROM prefs")?
             .query_row((), |row| map_json_row(row, 0))
-            .optional()?
+            .optional()
+            .context("failed to read prefs")?
             .unwrap_or_default();
 
         let auth_state = conn
             .prepare("SELECT data FROM auth")?
             .query_row((), |row| map_json_option_row(row, 0))
-            .optional()?
+            .optional()
+            .context("failed to read auth")?
             .flatten();
 
         Ok((
@@ -326,8 +335,8 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled, ignored_package_updates) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
@@ -343,7 +352,6 @@ impl Db {
                 .as_ref()
                 .map(serde_json::to_string)
                 .transpose()?;
-            let custom_args = serde_json::to_string(&profile.custom_args)?;
             let ignored_package_updates = serde_json::to_string(&profile.ignored_package_updates)?;
 
             stmt.execute(params![
@@ -355,8 +363,7 @@ impl Db {
                 modpack,
                 ignored_updates,
                 sync_data,
-                custom_args,
-                profile.custom_args_enabled,
+                profile.custom_args,
                 ignored_package_updates
             ])?;
         }

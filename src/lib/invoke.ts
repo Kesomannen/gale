@@ -28,7 +28,8 @@ export async function invoke<T = void>(cmd: string, args?: any): Promise<T> {
 		tauriInvoke('log_err', { msg: `${cmd} failed: ${error.detail}` });
 
 		let name = `Failed to ${toSentenceCase(cmd).toLowerCase()}`;
-		let displayMessage = error.message[0].toUpperCase() + error.message.slice(1);
+		let message = error.message || error.toString();
+		let displayMessage = message[0].toUpperCase() + message.slice(1);
 
 		if (!['.', '?', '!'].includes(displayMessage[displayMessage.length - 1])) {
 			displayMessage += '.';

@@ -78,6 +78,7 @@ font-kit = "0.14"
 internment = { version = "0.8.6", features = ["serde"] }
 reqwest-websocket = { version = "0.5.1", features = ["json"] }
 tracing-log = "0.2.0"
+shell-words = "1.1.1"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

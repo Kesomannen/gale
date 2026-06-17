@@ -35,8 +35,7 @@
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
-			customArgs: [],
-			customArgsEnabled: false,
+			customArgs: '',
 			platform: null
 		};
 	});
@@ -181,9 +180,7 @@
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}
-			enabled={gamePrefs.customArgsEnabled}
 			setValue={set((value) => (gamePrefs!.customArgs = value))}
-			setEnabled={set((value) => (gamePrefs!.customArgsEnabled = value))}
 		/>
 
 		{#if profiles.active}
@@ -193,11 +190,7 @@
 
 			<CustomArgsPref
 				value={profiles.active.customArgs}
-				enabled={profiles.active.customArgsEnabled}
-				setValue={async (value) =>
-					await api.profile.setCustomArgs(value, profiles.active!.customArgsEnabled)}
-				setEnabled={async (value) =>
-					await api.profile.setCustomArgs(profiles.active!.customArgs, value)}
+				setValue={async (value) => await api.profile.setCustomArgs(value)}
 			/>
 		{/if}
 	{/if}

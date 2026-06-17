@@ -244,6 +244,7 @@ impl ModLoader<'static> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => Some("winhttp"),
             ModLoaderKind::GDWeave {} => Some("winmm"),
+            ModLoaderKind::Shimloader {} => Some("dwmapi"),
             ModLoaderKind::ReturnOfModding { files } => Some(files[0]),
             _ => None,
         }

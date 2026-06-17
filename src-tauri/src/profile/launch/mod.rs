@@ -24,6 +24,7 @@ use crate::{
     },
 };
 
+mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
 mod mod_loader;
@@ -39,27 +40,20 @@ pub enum LaunchMode {
     Launcher,
     #[serde(rename_all = "camelCase")]
     Direct { instances: u32, interval_secs: f32 },
-    #[serde(rename_all = "camelCase")]
-    Protontricks { instances: u32, interval_secs: f32 },
 }
 
 impl LaunchMode {
     fn instances(&self) -> u32 {
         match self {
             LaunchMode::Launcher => 1,
-            LaunchMode::Direct { instances, .. } | LaunchMode::Protontricks { instances, .. } => {
-                *instances
-            }
+            LaunchMode::Direct { instances, .. } => *instances,
         }
     }
 
     fn interval(&self) -> Duration {
         match self {
             LaunchMode::Launcher => Duration::from_secs_f32(0.0),
-            LaunchMode::Direct { interval_secs, .. }
-            | LaunchMode::Protontricks { interval_secs, .. } => {
-                Duration::from_secs_f32(*interval_secs)
-            }
+            LaunchMode::Direct { interval_secs, .. } => Duration::from_secs_f32(*interval_secs),
         }
     }
 }
@@ -92,11 +86,7 @@ impl ManagedGame {
                 (
                     prefs.launch_mode.clone(),
                     prefs.platform,
-                    if prefs.custom_args_enabled {
-                        prefs.custom_args.as_ref()
-                    } else {
-                        None
-                    },
+                    prefs.custom_args.as_str(),
                 )
             })
             .unwrap_or_else(|| {
@@ -113,35 +103,58 @@ impl ManagedGame {
             (LaunchMode::Launcher, Some(platform)) => {
                 platform::create_launch_command(game_dir, platform, self.game, prefs).transpose()
             }
-            (LaunchMode::Protontricks { .. }, _) => {
-                let executable = find_executable(game_dir)?;
-                let protontricks_path = which::which("protontricks-launch")
-                    .context("protontricks-launch executable not found in PATH")?;
-
-                let mut command = Command::new(protontricks_path);
-                command.arg(executable).arg("--cwd-app");
-                Some(Ok(command))
-            }
             _ => None,
         }
         .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
 
-        if matches!(launch_mode, LaunchMode::Direct { .. }) {
-            command.current_dir(game_dir);
-        }
-
         let profile = self.active_profile();
 
         if !vanilla {
-            mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
+            #[cfg(target_os = "linux")]
+            let is_proton = {
+                use crate::game::platform::Platform;
+                use tracing::warn;
+
+                let is_proton = linux::is_proton(game_dir).unwrap_or_else(|err| {
+                    warn!("failed to determine if game uses proton: {:#}", err);
+                    false
+                });
+
+                if is_proton {
+                    if let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
+                        command.env("WINEDLLOVERRIDE", format!("{proxy_dll}=n,b"));
+
+                        if let Some(steam) = &self.game.platforms.steam {
+                            if matches!(platform, Some(Platform::Steam)) {
+                                if let Err(err) =
+                                    linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
+                                {
+                                    warn!("failed to ensure wine dll override: {:#}", err);
+                                };
+                            }
+                        }
+                    }
+                }
+
+                is_proton
+            };
+
+            #[cfg(target_os = "windows")]
+            let is_proton = false;
+
+            if is_proton {
+                info!("game appears to be running under proton, using proton launch method");
+            }
+
+            let mut ctx = mod_loader::ArgsContext::new(&mut command, &profile.path, is_proton);
+            ctx.add_args(&self.game.mod_loader)?;
         }
 
-        if let Some(custom_args) = game_custom_args {
-            command.args(custom_args);
-        }
+        custom_args::add_args(&mut command, game_custom_args)?;
+        custom_args::add_args(&mut command, &profile.custom_args)?;
 
-        if profile.custom_args_enabled {
-            command.args(&profile.custom_args);
+        if matches!(launch_mode, LaunchMode::Direct { .. }) {
+            command.current_dir(game_dir);
         }
 
         Ok((launch_mode, command))
@@ -177,12 +190,12 @@ impl ManagedGame {
             });
 
         for entry in entries {
-            info!(
-                "copying {} to game directory",
-                entry.file_name().to_string_lossy()
-            );
-
             let to_path = target_dir.join(entry.file_name());
+            info!(
+                file_name = %entry.file_name().to_string_lossy(),
+                to_path = %to_path.display(),
+                "copying to game directory",
+            );
 
             if entry.file_type()?.is_file() {
                 fs::copy(entry.path(), to_path)?;

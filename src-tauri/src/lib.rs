@@ -4,7 +4,6 @@ use itertools::Itertools;
 use state::ManagerExt;
 use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_dialog::DialogExt;
 use tracing::{error, info, warn};
 
 #[cfg(target_os = "linux")]
@@ -24,17 +23,22 @@ mod util;
 
 fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     info!(
-        "gale v{} running on {}",
-        env!("CARGO_PKG_VERSION"),
-        std::env::consts::OS,
+        version = env!("CARGO_PKG_VERSION"),
+        os = std::env::consts::OS,
     );
 
     if let Err(err) = state::setup(app.handle()) {
-        error!("setup error: {:?}", err);
+        error!("setup error: {err:?}");
 
-        app.dialog()
-            .message(format!("Failed to launch Gale: {err:?}"))
-            .blocking_show();
+        // Linux dialog often won't work before the event loop starts and instead hangs the application
+        #[cfg(target_os = "windows")]
+        {
+            use tauri_plugin_dialog::DialogExt;
+
+            app.dialog()
+                .message(format!("Failed to launch Gale: {err:?}"))
+                .blocking_show();
+        }
 
         return Err(err.into());
     }
