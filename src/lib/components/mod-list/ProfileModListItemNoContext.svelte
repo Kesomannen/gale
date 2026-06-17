@@ -1,31 +1,40 @@
 <script lang="ts">
-	import type { Mod, ModContextItem } from '../../types';
+	import type { Mod } from '../../types';
 	import type { MouseEventHandler } from 'svelte/elements';
-	import ModItemContext from './ModItemContext.svelte';
 	import { formatModName, isOutdated, modIconSrc } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
+	import type { ClassValue } from 'clsx';
 
 	type Props = {
 		mod: Mod;
+		class?: ClassValue;
 		selected?: boolean;
 		onclick?: MouseEventHandler<HTMLDivElement>;
-		children?: Snippet;
+		leading?: Snippet;
+		trailing?: Snippet;
 	};
 
-	let { mod, selected, onclick, children }: Props = $props();
+	let { mod, class: classProp, selected, onclick, leading, trailing }: Props = $props();
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	{onclick}
 	role="button"
-	tabindex="0"
+	tabindex="-1"
 	class={[
-		'group text-primary-300 grid w-full grid-cols-[2fr_1fr_auto] items-center gap-2 rounded-lg border p-2 lg:grid-cols-[2fr_1fr_1fr_auto]',
-		selected ? 'border-primary-500 bg-primary-700' : 'hover:bg-primary-700 border-transparent'
+		classProp,
+		selected ? 'border-primary-500 bg-primary-700' : 'hover:bg-primary-700 border-transparent',
+		'group text-primary-300 grid w-full grid-cols-[auto_2fr_1fr_auto] items-center gap-2 rounded-lg border p-2 lg:grid-cols-[auto_2fr_1fr_1fr_auto]'
 	]}
 >
+	{#if leading}
+		{@render leading()}
+	{:else}
+		<div></div>
+	{/if}
+
 	<div class="flex items-center overflow-hidden">
 		<img src={modIconSrc(mod)} alt={mod.name} class="mr-3 size-10 rounded-sm" />
 
@@ -52,5 +61,9 @@
 		{mod.version}
 	</div>
 
-	{@render children?.()}
+	{#if trailing}
+		{@render trailing()}
+	{:else}
+		<div></div>
+	{/if}
 </div>
