@@ -4,9 +4,9 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
-use eyre::{eyre, Context, Result};
+use eyre::{Context, Result, eyre};
 use include_dir::include_dir;
-use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
+use rusqlite::{OptionalExtension, params, types::Type as SqliteType};
 use rusqlite_migration::{MigrationDefinitionError, Migrations};
 use serde::de::DeserializeOwned;
 use tracing::{info, trace};
@@ -14,7 +14,7 @@ use uuid::Uuid;
 
 use crate::{
     prefs::Prefs,
-    profile::{self, sync::auth::AuthCredentials, ManagedGame, ModManager, Profile},
+    profile::{self, ManagedGame, ModManager, Profile, sync::auth::AuthCredentials},
     util,
 };
 
@@ -230,7 +230,7 @@ impl Db {
                     modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_option_row(row, 6)?,
                     sync_data: map_json_option_row(row, 7)?,
-                    custom_args: custom_args,
+                    custom_args,
                     ignored_package_updates: map_json_option_row(row, 9)?,
                 })
             })?

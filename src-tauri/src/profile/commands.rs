@@ -392,7 +392,7 @@ pub fn get_dependants(uuid: Uuid, app: AppHandle) -> Result<Vec<DependantWithVer
                     .direct_dependencies(&thunderstore)
                     .and_then(|direct_deps| {
                         direct_deps
-                            .into_iter()
+                            .iter()
                             .find(|dep_ident| {
                                 dep_ident.full_name() == target_mod.ident().full_name()
                             })
