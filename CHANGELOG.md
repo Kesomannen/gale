@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.15.0 (2026-06-17)
 
 ### Added
 
@@ -10,6 +10,16 @@
 ### Changed
 
 - Upgraded rust edition and version
+- Reworked custom launch arguments
+  - Arguments are now entered as one string instead of a list
+    - This might break some existing arguments, so please check after updating
+  - Added support for custom environment variables
+    - Written as `VARIABLE=value` in the arguments field
+  - Added support for command prefixes
+    - Similar to Steam, type `%command%` in the arguments field to specify a placeholder for the standard launch command
+    - This allows tools like `wine` and `protontricks` to be used with Gale directly
+- Steam is now launched via the `steam.sh` script on Linux, when available
+- Tweaked log levels and added better logging support for external libraries
 
 ### Fixed
 
@@ -18,6 +28,11 @@
 - Readded version to profile mod list items
 - Profile shortcuts created with the previous version not working
 - Improve error message when database has been modified by a newer version of Gale
+- Hades II mod loader files being placed in the root game directory instead of the nested `Ship` directory
+- The shimloader proxy DLL `dwmapi.dll` not being added to `WINEDLLOVERRIDES`, leading to Windows UE games launching unmodded on Linux
+- The `WINEDLLOVERRIDES` environment variable is now automatically set during launch when Proton/Wine is detected
+- Improved `Copy launch arguments` option to better handle special characters and quotes
+- Readded version to profile mod list items
 
 ## 1.14.0 (2026-06-10)
 
