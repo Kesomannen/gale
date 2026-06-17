@@ -446,6 +446,8 @@
 	],
 	"updateAllBanner_dialog_button": "Update mods",
 	"updateAllBanner_dialog_content": "Select which mods to update:",
+	"updateAllBanner_dialog_list_ignore_package": "Ignore all updates for this mod",
+	"updateAllBanner_dialog_list_ignore_version": "Ignore this update",
 	"updateAllBanner_dialog_list_title": "Update selected",
 	"updateAllBanner_dialog_title": "Confirm update",
 	"updater_confirmDialog_button": "Install",

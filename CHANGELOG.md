@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.15.1 (2026-06-18)
+
+### Fixed
+
+- Clicking `Update All` freezing the app
+
 ## 1.15.0 (2026-06-17)
 
 ### Added
