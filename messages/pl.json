@@ -81,10 +81,6 @@
 	"customArgsPref_content_1": "Pozwala dodać własne argumenty do komendy uruchamiania. Zależnie od ",
 	"customArgsPref_content_2": "Trybu uruchamiania",
 	"customArgsPref_content_3": ", są one przekazywane do gry lub launchera.",
-	"customArgsPref_content_4": "Podawaj tylko jeden argument na wpis, więc zamiast ",
-	"customArgsPref_content_5": ", podaj",
-	"customArgsPref_content_6": " oraz ",
-	"customArgsPref_content_7": " oddzielnie.",
 	"customArgsPref_placeholder": "Wprowadź nowy argument...",
 	"customArgsPref_title": "Ustaw własne argumenty uruchamiania",
 	"dependantsDialog_button_executeAll": "{verb} wszystko",
@@ -433,17 +429,12 @@
 	"unknown": "Nieznany",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Nie znaleziono następującego moda:",
 				"countPlural=other": "Nie znaleziono następujących modów:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Odinstalować go?",
@@ -451,23 +442,18 @@
 	"updateAllBanner_button": "Aktualizować wszystko?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Dostępna jest jedna aktualizacja.",
 				"countPlural=other": "Dostępnych jest {count} aktualizacji."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Aktualizuj mody",
 	"updateAllBanner_dialog_content": "Wybierz mody do aktualizacji:",
-	"updateAllBanner_dialog_list_ignore_package": "Zignoruj wszystkie przyszłe aktualizacje tego moda",
-	"updateAllBanner_dialog_list_ignore_version": "Zignoruj tę wersję",
+	"updateAllBanner_dialog_list_ignore_package": "Zignoruj wszystkie aktualizacje tego moda",
+	"updateAllBanner_dialog_list_ignore_version": "Zignoruj tę aktualizację",
 	"updateAllBanner_dialog_list_title": "Aktualizuj zaznaczone",
 	"updateAllBanner_dialog_title": "Potwierdź aktualizację",
 	"updater_confirmDialog_button": "Instaluj",

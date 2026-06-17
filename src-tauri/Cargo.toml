@@ -1,13 +1,13 @@
 [package]
 name = "gale"
-version = "1.14.0"
+version = "1.15.1"
 description = "A lightweight mod manager for Thunderstore"
 authors = ["Kesomannen"]
 license = "GPL-3.0"
 repository = "https://github.com/Kesomannen/gale"
 default-run = "gale"
-edition = "2021"
-rust-version = "1.80"
+edition = "2024"
+rust-version = "1.87"
 
 [[bin]]
 name = "gale"
@@ -18,7 +18,7 @@ chrono = "0.4"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [ "protocol-asset" ] }
+tauri = { version= "2", features = [ "protocol-asset" ] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-window-state = "2"
 tauri-plugin-dialog = "2"
@@ -78,6 +78,7 @@ font-kit = "0.14"
 internment = { version = "0.8.6", features = ["serde"] }
 reqwest-websocket = { version = "0.5.1", features = ["json"] }
 tracing-log = "0.2.0"
+shell-words = "1.1.1"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

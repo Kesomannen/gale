@@ -31,23 +31,6 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
         bail!("{} is not available on Steam", game.name)
     };
 
-    #[cfg(target_os = "linux")]
-    if let Some(proxy_dll) = game.mod_loader.proxy_dll() {
-        use super::linux;
-        use tracing::warn;
-
-        if linux::is_proton(game_dir).unwrap_or_else(|err| {
-            warn!("failed to determine if game uses proton: {:#}", err);
-            false
-        }) {
-            linux::ensure_wine_override(steam.id as u64, proxy_dll, game_dir).unwrap_or_else(
-                |err| {
-                    warn!("failed to ensure wine dll override: {:#}", err);
-                },
-            );
-        }
-    }
-
     let mut command = create_base_steam_command()?;
 
     if util::is_flatpak() {
@@ -98,9 +81,40 @@ fn create_base_steam_command() -> Result<Command> {
     Ok(Command::new(path))
 }
 
+#[cfg(target_os = "windows")]
+fn read_steam_registry() -> Result<PathBuf> {
+    use tracing::debug;
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
+
+    debug!("reading InstallPath from {key:?}");
+
+    let path: String = key.get_value("InstallPath")?;
+
+    Ok(PathBuf::from(path))
+}
+
 #[cfg(target_os = "linux")]
 fn create_base_steam_command() -> Result<Command> {
+    use crate::util::fs::PathExt;
     use tracing::debug;
+
+    // return Ok(Command::new("/home/keso/.local/share/Steam/steam.sh"));
+
+    debug!("checking for steam.sh script in steam installation directory");
+
+    match locate_steam_script() {
+        Ok(path) => {
+            info!("found steam.sh script at {}", path.display());
+            return Ok(Command::new(path));
+        }
+        Err(err) => {
+            debug!("failed to locate steam.sh script: {:#}", err);
+        }
+    };
 
     debug!("checking for steam system installation with which");
 
@@ -123,9 +137,9 @@ fn create_base_steam_command() -> Result<Command> {
         return Ok(command);
     }
 
-    let path = PathBuf::from("/usr/bin/steam");
-    // .exists_or_none()
-    // .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
+    let path = PathBuf::from("/usr/bin/steam")
+        .exists_or_none()
+        .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
 
     info!(
         "using steam installation at fallback path: {}",
@@ -135,20 +149,26 @@ fn create_base_steam_command() -> Result<Command> {
     Ok(Command::new(path))
 }
 
-#[cfg(target_os = "windows")]
-fn read_steam_registry() -> Result<PathBuf> {
-    use tracing::debug;
-    use winreg::enums::*;
-    use winreg::RegKey;
+#[cfg(target_os = "linux")]
+fn locate_steam_script() -> Result<PathBuf> {
+    use crate::util::fs::PathExt;
 
-    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
+    steamlocate::locate()
+        .context("failed to locate steam installation")
+        .and_then(|steam_dir| {
+            use eyre::eyre;
 
-    debug!("reading InstallPath from {key:?}");
-
-    let path: String = key.get_value("InstallPath")?;
-
-    Ok(PathBuf::from(path))
+            steam_dir
+                .path()
+                .join("steam.sh")
+                .exists_or_none()
+                .ok_or_else(|| {
+                    eyre!(
+                        "steam.sh not present in steam install at {}",
+                        steam_dir.path().display()
+                    )
+                })
+        })
 }
 
 fn create_epic_command(game: Game) -> Result<Command> {

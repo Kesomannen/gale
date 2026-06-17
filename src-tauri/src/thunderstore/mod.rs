@@ -5,11 +5,11 @@ use std::{
     str::{self},
 };
 
-use eyre::{eyre, Result};
+use eyre::{Result, eyre};
 use indexmap::IndexMap;
 use query::QueryModsArgs;
 use serde::{Deserialize, Serialize};
-use tauri::{async_runtime::JoinHandle, AppHandle};
+use tauri::{AppHandle, async_runtime::JoinHandle};
 use uuid::Uuid;
 
 use crate::{game::Game, state::ManagerExt};
@@ -50,7 +50,7 @@ impl<'a> BorrowedMod<'a> {
         &self.version.ident
     }
 
-    pub fn dependencies(&self) -> impl Iterator<Item = &'a VersionIdent> + 'a {
+    pub fn dependencies(&self) -> impl Iterator<Item = &'a VersionIdent> + 'a + use<'a> {
         self.version.dependencies.iter()
     }
 }

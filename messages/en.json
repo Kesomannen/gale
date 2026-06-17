@@ -81,12 +81,8 @@
 	"customArgsPref_content_1": "Allows you to add custom arguments to the launch command. Depending on ",
 	"customArgsPref_content_2": "Launch mode",
 	"customArgsPref_content_3": ", these are either ran against the game or launcher executable.",
-	"customArgsPref_content_4": "Only pass one argument per entry, so instead of ",
-	"customArgsPref_content_5": ", pass",
-	"customArgsPref_content_6": " and ",
-	"customArgsPref_content_7": " separately.",
 	"customArgsPref_placeholder": "Enter new argument...",
-	"customArgsPref_title": "Set custom launch arguments",
+	"customArgsPref_title": "Custom launch arguments",
 	"dependantsDialog_button_executeAll": "{verb} all",
 	"dependantsDialog_button_executeOne": "{verb}{name} only",
 	"expandedConfigEntryDialog_placeholder": "Enter new value...",
@@ -433,17 +429,12 @@
 	"unknown": "Unknown",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "The following mod could not be found:",
 				"countPlural=other": "The following mods could not be found:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Uninstall it?",
@@ -451,23 +442,18 @@
 	"updateAllBanner_button": "Update all?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",
 	"updateAllBanner_dialog_content": "Select which mods to update:",
-	"updateAllBanner_dialog_list_ignore_package": "Ignore all future updates for this mod",
-	"updateAllBanner_dialog_list_ignore_version": "Ignore this version",
+	"updateAllBanner_dialog_list_ignore_package": "Ignore all updates for this mod",
+	"updateAllBanner_dialog_list_ignore_version": "Ignore this update",
 	"updateAllBanner_dialog_list_title": "Update selected",
 	"updateAllBanner_dialog_title": "Confirm update",
 	"updater_confirmDialog_button": "Install",

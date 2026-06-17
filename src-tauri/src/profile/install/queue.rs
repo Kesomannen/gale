@@ -5,18 +5,18 @@ use std::{
     io::Cursor,
     iter,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Mutex, MutexGuard,
+        atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant},
 };
 
-use eyre::{bail, eyre, Context, Result};
+use eyre::{Context, Result, bail, eyre};
 use futures_util::StreamExt;
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
-use tokio::sync::{futures::Notified, oneshot, Notify};
+use tokio::sync::{Notify, futures::Notified, oneshot};
 use tracing::warn;
 use uuid::Uuid;
 use zip::ZipArchive;
@@ -142,13 +142,16 @@ impl<'a> InstallQueueHandle<'a> {
             })
     }
 
-    fn push_batch(
+    fn push_batch<I>(
         &mut self,
-        mods: impl IntoIterator<Item = ModInstall>,
+        mods: I,
         profile_id: i64,
         options: InstallOptions,
         app: &AppHandle,
-    ) -> impl Future<Output = InstallResult<()>> {
+    ) -> impl Future<Output = InstallResult<()>> + use<I>
+    where
+        I: IntoIterator<Item = ModInstall>,
+    {
         let (tx, rx) = oneshot::channel();
 
         let mods = mods
@@ -198,7 +201,7 @@ impl<'a> InstallQueueHandle<'a> {
         options: InstallOptions,
         allow_multiple: bool,
         app: &AppHandle,
-    ) -> Result<impl Future<Output = InstallResult<()>>> {
+    ) -> Result<impl Future<Output = InstallResult<()>> + use<>> {
         let mods = {
             let manager = app.lock_manager();
             let thunderstore = app.lock_thunderstore();

@@ -1,5 +1,4 @@
 use eyre::Context;
-use itertools::Itertools;
 use tauri::{command, AppHandle};
 
 use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
@@ -23,14 +22,11 @@ pub fn get_launch_args(app: AppHandle) -> Result<String> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 
-    let game_dir = super::locate_game_dir(manager.active_game, &prefs)?;
-    let (_, command) = manager
-        .active_game()
-        .launch_command(false, &game_dir, &prefs)?;
-    let text = command
-        .get_args()
-        .map(|arg| format!("\"{}\"", arg.to_string_lossy()))
-        .join(" ");
+    let game = manager.active_game();
+    let game_dir = super::locate_game_dir(game.game, &prefs)?;
+    let (_, command) = game.launch_command(false, &game_dir, &prefs)?;
+
+    let text = shell_words::join(command.get_args().map(|arg| arg.to_string_lossy()));
 
     Ok(text)
 }

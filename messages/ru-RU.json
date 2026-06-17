@@ -81,10 +81,6 @@
 	"customArgsPref_content_1": "Позволяет добавлять пользовательские аргументы к команде запуска. В зависимости от ",
 	"customArgsPref_content_2": "Режим запуска",
 	"customArgsPref_content_3": "Эти команды запускаются либо для самой игры, либо для исполняемого файла лаунчера.",
-	"customArgsPref_content_4": "Передавайте только один аргумент на каждую запись, поэтому вместо ",
-	"customArgsPref_content_5": ", проходить",
-	"customArgsPref_content_6": " и ",
-	"customArgsPref_content_7": " отдельно.",
 	"customArgsPref_placeholder": "Введите новый аргумент...",
 	"customArgsPref_title": "Задайте пользовательские параметры запуска",
 	"dependantsDialog_button_executeAll": "{verb} все",
@@ -433,17 +429,12 @@
 	"unknown": "Неизвестный",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Следующий мод не найден:",
 				"countPlural=other": "Следующие модификации не были найдены:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Удалить?",
@@ -451,23 +442,18 @@
 	"updateAllBanner_button": "Обновить все?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Доступно одно обновление.",
 				"countPlural=other": "Доступны обновления {count} ."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Обновить моды",
 	"updateAllBanner_dialog_content": "Выберите, какие моды обновить:",
-	"updateAllBanner_dialog_list_ignore_package": "Игнорируйте все будущие обновления этого мода.",
-	"updateAllBanner_dialog_list_ignore_version": "Игнорируйте эту версию",
+	"updateAllBanner_dialog_list_ignore_package": "Игнорируйте все обновления для этого мода.",
+	"updateAllBanner_dialog_list_ignore_version": "Игнорируйте это обновление",
 	"updateAllBanner_dialog_list_title": "Обновить выбранное",
 	"updateAllBanner_dialog_title": "Подтвердить обновление",
 	"updater_confirmDialog_button": "Установить",

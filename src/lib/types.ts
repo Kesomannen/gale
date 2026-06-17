@@ -58,8 +58,7 @@ export type ProfileInfo = {
 	name: string;
 	modCount: number;
 	sync: SyncProfileInfo | null;
-	customArgs: string[];
-	customArgsEnabled: boolean;
+	customArgs: string;
 	missing: boolean;
 };
 
@@ -317,8 +316,7 @@ export type Prefs = {
 
 export type GamePrefs = {
 	dirOverride: string | null;
-	customArgs: string[];
-	customArgsEnabled: boolean;
+	customArgs: string;
 	launchMode: LaunchMode;
 	platform: Platform | null;
 };

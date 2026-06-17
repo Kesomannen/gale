@@ -81,10 +81,6 @@
 	"customArgsPref_content_1": "允許您在啟動命令中新增自訂參數。根據",
 	"customArgsPref_content_2": "啟動模式",
 	"customArgsPref_content_3": "，這些參數將針對遊戲或啟動器執行檔執行。",
-	"customArgsPref_content_4": "每個項目僅傳遞一個參數，因此不要輸入 ",
-	"customArgsPref_content_5": "，請分別傳遞",
-	"customArgsPref_content_6": " 和 ",
-	"customArgsPref_content_7": "。",
 	"customArgsPref_placeholder": "輸入新參數...",
 	"customArgsPref_title": "設定自訂啟動參數",
 	"dependantsDialog_button_executeAll": "{verb}全部",
@@ -433,17 +429,12 @@
 	"unknown": "未知",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "找不到以下模組：",
 				"countPlural=other": "以下模組未找到："
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "將其解除安裝？",
@@ -451,23 +442,18 @@
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "有一個更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模組",
 	"updateAllBanner_dialog_content": "選擇要更新的模組：",
-	"updateAllBanner_dialog_list_ignore_package": "忽略此模組的所有後續更新",
-	"updateAllBanner_dialog_list_ignore_version": "忽略此版本",
+	"updateAllBanner_dialog_list_ignore_package": "忽略此模組的所有更新",
+	"updateAllBanner_dialog_list_ignore_version": "忽略此更新",
 	"updateAllBanner_dialog_list_title": "更新所選",
 	"updateAllBanner_dialog_title": "確認更新",
 	"updater_confirmDialog_button": "安裝",
