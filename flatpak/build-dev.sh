@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install flatpak-build flatpak/com.kesomannen.gale.dev.yml
+flatpak-builder --force-clean --install-deps-from=flathub --repo=repo $@ build com.kesomannen.gale.dev.yml
