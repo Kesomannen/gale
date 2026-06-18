@@ -31,14 +31,17 @@
 		},
 		"linux": {
 			"deb": {
-				"depends": []
+				"depends": [],
+				"files": {
+					"/usr/share/mime/packages/gale.xml": "../static/gale-mime.xml"
+				}
 			}
 		},
 		"resources": [],
 		"fileAssociations": [
 			{
 				"ext": ["r2z"],
-				"mimeType": "application/zip"
+				"mimeType": "application/x-r2z"
 			}
 		]
 	},

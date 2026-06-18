@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<mime-info xmlns='http://www.freedesktop.org/standards/shared-mime-info'>
+    <mime-type type="application/x-r2z">
+        <comment>r2modman profile zip</comment>
+        <sub-class-of type="application/zip"/>
+        <glob pattern="*.r2z"/>
+        <icon name="gale"/>
+    </mime-type>
+</mime-info>
