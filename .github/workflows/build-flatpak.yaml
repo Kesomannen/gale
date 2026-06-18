@@ -28,7 +28,7 @@ jobs:
 
       - name: Generate CNAME
         run: |
-          echo "gale.kesomannen.github.io" > CNAME
+          echo "kesomannen.com" > CNAME
 
       - name: Build and upload Flatpak bundles
         uses: andyholmes/flatter@main
@@ -39,8 +39,7 @@ jobs:
           upload-pages-artifact: true
           upload-pages-includes: |
             CNAME
-            default.css
-            index.html
+            flatpak/index.html
 
   deploy:
     name: Deploy
