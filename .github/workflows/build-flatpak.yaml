@@ -5,7 +5,7 @@ on:
 
 jobs:
   flatter:
-    name: Flatter
+    name: Build
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/andyholmes/flatter/gnome:49
@@ -20,7 +20,6 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup GPG
-        if: ${{ github.triggering_actor == github.repository_owner }}
         id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
@@ -29,7 +28,7 @@ jobs:
 
       - name: Generate CNAME
         run: |
-          echo "flatter.andyholmes.ca" > CNAME
+          echo "gale.kesomannen.github.io" > CNAME
 
       - name: Build and upload Flatpak bundles
         uses: andyholmes/flatter@main
@@ -37,7 +36,7 @@ jobs:
           files: |
             flatpak/com.kesomannen.gale.yml
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
-          upload-bundles: true
+          upload-pages-artifact: true
           upload-pages-includes: |
             CNAME
             default.css
@@ -55,6 +54,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Deploy repo to GitHub Pages
+      - name: Upload to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
