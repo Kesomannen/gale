@@ -11,6 +11,8 @@
   - Added button to reset all entries in a file
 - Show version and author instead of description in profile mod list
 - Various other UI changes
+- Mod downloads are now retried up to 3 times if there is a network error
+- Stdout log format
 
 ### Fixed
 

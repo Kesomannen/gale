@@ -81,7 +81,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
 fn event_handler(app: &AppHandle, event: RunEvent) {
     if let RunEvent::ExitRequested { api, .. } = event {
-        if !app.install_queue().handle().is_processing() {
+        if !app.install_queue().lock().is_processing() {
             return;
         }
 

@@ -1,20 +1,20 @@
 use std::path::PathBuf;
 
 use chrono::{DateTime, Utc};
-use eyre::{eyre, Context, OptionExt};
+use eyre::{Context, OptionExt, eyre};
 use itertools::Itertools;
 use serde::Serialize;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 use tracing::warn;
 use uuid::Uuid;
 
-use super::{actions::ActionResult, Dependant, Profile};
+use super::{Dependant, Profile, actions::ActionResult};
 use crate::{
-    game::{self, platform::Platform, Game},
+    game::{self, Game, platform::Platform},
     profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{
-        cache::MarkdownKind, query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent,
+        FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind, query::QueryModsArgs,
     },
     util::cmd::Result,
 };
@@ -154,7 +154,7 @@ pub struct ProfileQuery {
 pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery> {
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
-    let install_queue = app.install_queue().handle();
+    let install_queue = app.install_queue().lock();
 
     let profile = manager.active_profile();
 
@@ -200,7 +200,7 @@ pub fn is_mod_installed(uuid: Uuid, app: AppHandle) -> Result<bool> {
     let manager = app.lock_manager();
     let profile = manager.active_profile();
 
-    let result = profile.has_mod(uuid) || app.install_queue().handle().has_mod(uuid, profile.id);
+    let result = profile.has_mod(uuid) || app.install_queue().lock().has_mod(uuid, profile.id);
 
     Ok(result)
 }

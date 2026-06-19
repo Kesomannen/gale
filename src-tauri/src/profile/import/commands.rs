@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use eyre::anyhow;
 use serde::Serialize;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 use uuid::Uuid;
 
 use crate::{
@@ -13,8 +13,8 @@ use crate::{
 };
 
 use super::{
-    r2modman::{self},
     ImportData,
+    r2modman::{self},
 };
 
 #[derive(Debug, Serialize, Clone)]
@@ -63,6 +63,8 @@ pub async fn import_profile(
 pub async fn read_profile_code(key: &str, app: AppHandle) -> Result<FrontendImportData> {
     let key = Uuid::parse_str(key).map_err(|_| anyhow!("invalid code format"))?;
 
+    thunderstore::wait_for_fetch(&app).await;
+
     let data = super::read_code(key, &app).await?;
 
     Ok(FrontendImportData::new(data, &app))
@@ -70,6 +72,8 @@ pub async fn read_profile_code(key: &str, app: AppHandle) -> Result<FrontendImpo
 
 #[command]
 pub async fn read_profile_file(path: PathBuf, app: AppHandle) -> Result<FrontendImportData> {
+    thunderstore::wait_for_fetch(&app).await;
+
     let data = super::read_file_from(path)?;
 
     Ok(FrontendImportData::new(data, &app))
@@ -77,6 +81,8 @@ pub async fn read_profile_file(path: PathBuf, app: AppHandle) -> Result<Frontend
 
 #[command]
 pub async fn read_profile_base64(base64: String, app: AppHandle) -> Result<FrontendImportData> {
+    thunderstore::wait_for_fetch(&app).await;
+
     let data = super::read_base64(&base64)?;
 
     Ok(FrontendImportData::new(data, &app))

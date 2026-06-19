@@ -5,8 +5,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use base64::{prelude::BASE64_STANDARD, Engine};
-use eyre::{eyre, Context, Result};
+use base64::{Engine, prelude::BASE64_STANDARD};
+use eyre::{Context, Result, eyre};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ use uuid::Uuid;
 
 use crate::{
     profile::{
-        export::{ProfileManifest, PROFILE_DATA_PREFIX},
+        export::{PROFILE_DATA_PREFIX, ProfileManifest},
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
@@ -32,8 +32,8 @@ mod r2modman;
 pub use local::{import_local_mod, import_local_mod_base64};
 
 use super::{
-    export::{self, IncludeExtensions, IncludeGenerated},
     Profile,
+    export::{self, IncludeExtensions, IncludeGenerated},
 };
 
 pub fn read_file_at_path(path: PathBuf) -> Result<ImportData> {
@@ -225,8 +225,12 @@ fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
     let (game, _) = manager.profile_by_id(profile_id)?;
     let managed_game = manager.games.get_mut(game).unwrap();
 
-    managed_game.delete_profile(profile_id, false, app.db())?;
-    managed_game.save(app)?;
+    if managed_game.profiles.len() > 1 {
+        managed_game.delete_profile(profile_id, false, app.db())?;
+        managed_game.save(app)?;
+    } else {
+        warn!("import failed for last profile")
+    }
 
     Ok(())
 }

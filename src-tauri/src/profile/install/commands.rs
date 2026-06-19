@@ -63,7 +63,7 @@ pub fn cancel_all_installs(app: AppHandle) -> Result<()> {
 pub fn has_pending_installations(app: AppHandle) -> Result<bool> {
     let profile_id = app.lock_manager().active_profile().id;
 
-    let result = app.install_queue().handle().has_any_for_profile(profile_id);
+    let result = app.install_queue().lock().has_any_for_profile(profile_id);
 
     Ok(result)
 }
@@ -94,7 +94,7 @@ pub fn get_download_size(mod_ref: ModId, app: AppHandle) -> Result<u64> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
-    let queue = app.install_queue().handle();
+    let queue = app.install_queue().lock();
 
     let size = super::total_download_size(
         mod_ref.borrow(&thunderstore)?,

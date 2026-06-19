@@ -195,12 +195,12 @@ pub type InstallResult<T> = std::result::Result<T, InstallError>;
 #[derive(Debug)]
 pub enum InstallError {
     Cancelled,
-    Err(eyre::Report),
+    Error(eyre::Report),
 }
 
 impl From<eyre::Report> for InstallError {
     fn from(value: eyre::Report) -> Self {
-        Self::Err(value)
+        Self::Error(value)
     }
 }
 
@@ -210,7 +210,7 @@ impl Display for InstallError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             InstallError::Cancelled => f.pad("installation was cancelled"),
-            InstallError::Err(report) => report.fmt(f),
+            InstallError::Error(report) => report.fmt(f),
         }
     }
 }
@@ -225,7 +225,7 @@ impl<T> InstallResultExt<T> for InstallResult<T> {
         match self {
             Ok(_) => Ok(()),
             Err(InstallError::Cancelled) => Ok(()),
-            Err(InstallError::Err(err)) => Err(err),
+            Err(InstallError::Error(err)) => Err(err),
         }
     }
 }
@@ -237,7 +237,7 @@ fn total_download_size(
     profile: &Profile,
     prefs: &Prefs,
     thunderstore: &Thunderstore,
-    queue: &queue::InstallQueueHandle,
+    queue: &queue::InstallQueueLock,
 ) -> u64 {
     profile
         .missing_deps(borrowed.dependencies(), thunderstore)

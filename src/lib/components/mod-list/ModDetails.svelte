@@ -95,7 +95,7 @@
 				>
 
 				{#if mod.author}
-					<div class="text-primary-400 text-xl xl:text-2xl">
+					<div class="text-primary-400 text-lg xl:text-xl">
 						{m.modDetails_by()}
 						<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
 							{mod.author}
@@ -104,7 +104,7 @@
 				{/if}
 
 				{#if mod.version}
-					<div class="text-primary-400 text-xl xl:text-2xl">v{mod.version}</div>
+					<div class="text-primary-400 text-lg xl:text-xl">v{mod.version}</div>
 				{/if}
 			</div>
 		</div>

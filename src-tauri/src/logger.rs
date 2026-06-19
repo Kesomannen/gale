@@ -5,9 +5,9 @@ use std::{
 
 use eyre::{Context, OptionExt, Result};
 use serde::Serialize;
-use tauri::{command, AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, command};
 use tracing::Level;
-use tracing_subscriber::{filter::Targets, prelude::*, Registry};
+use tracing_subscriber::{Registry, filter::Targets, prelude::*};
 
 use crate::util::{self, fs::PathExt};
 
@@ -55,6 +55,7 @@ pub fn setup() -> Result<()> {
     let subscriber = Registry::default()
         .with(
             tracing_subscriber::fmt::layer()
+                .pretty()
                 .with_ansi(true)
                 .with_filter(filter.clone()),
         )
