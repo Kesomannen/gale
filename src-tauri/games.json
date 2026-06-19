@@ -2322,7 +2322,7 @@
 		"name": "Subnautica",
 		"modLoader": {
 			"name": "BepInEx",
-			"packageName": "Subnautica_Modding-BepInExPack_Subnautica",
+			"packageName": "Subnautica_Modding-BepInExPack",
 			"subdirs": [
 				{
 					"name": "QMods",
