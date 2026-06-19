@@ -87,7 +87,6 @@
 			</DropdownMenu.Trigger>
 			<ContextMenuContent
 				type="dropdown"
-				style="dark"
 				items={launchDropdownItems}
 				class="max-h-90 overflow-y-auto text-base"
 			/>

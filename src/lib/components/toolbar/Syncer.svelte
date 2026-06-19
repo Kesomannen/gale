@@ -220,7 +220,7 @@
 					<DropdownMenu.Trigger>
 						<IconButton icon="mdi:content-copy" label={m.syncer_button_copyConetnt()} />
 					</DropdownMenu.Trigger>
-					<ContextMenuContent type="dropdown" style="dark" items={copyItems} />
+					<ContextMenuContent type="dropdown" items={copyItems} />
 				</DropdownMenu.Root>
 			</div>
 		{:else}
@@ -286,7 +286,7 @@
 				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">
 					<Icon class="text-2xl" icon="mdi:dots-vertical" />
 				</DropdownMenu.Trigger>
-				<ContextMenuContent type="dropdown" style="dark" items={dropdownItems} />
+				<ContextMenuContent type="dropdown" items={dropdownItems} />
 			</DropdownMenu.Root>
 		{/if}
 	</div>

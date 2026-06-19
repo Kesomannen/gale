@@ -419,7 +419,7 @@
 
 	onMount(async () => {
 		document.onkeydown = ({ key, ctrlKey }) => {
-			if (useNativeMenu.current) return;
+			if (useNativeMenu.current) return; // Tauri handles shortcuts to the native menu
 
 			if (key === 'F2') {
 				openProfileOperation('rename');

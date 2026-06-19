@@ -15,7 +15,9 @@ jobs:
       matrix:
         include:
           - platform: ubuntu-24.04
+            args: ''
           - platform: windows-latest
+            args: '--bundles msi'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -62,6 +64,7 @@ jobs:
           tagName: __VERSION__
           releaseName: '__VERSION__'
           releaseDraft: true
+          args: ${{ matrix.args }}
 
   publish:
     runs-on: ubuntu-24.04

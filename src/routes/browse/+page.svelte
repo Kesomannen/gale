@@ -89,11 +89,11 @@
 </script>
 
 <div class="flex grow overflow-hidden">
-	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
+	<div class="flex w-[60%] grow flex-col overflow-hidden px-4 pt-4">
 		<ModListFilters {sortOptions} queryArgs={modQuery.current} />
 
 		{#if locked}
-			<ProfileLockedBanner class="mr-4 mb-1" />
+			<ProfileLockedBanner class="mb-1" />
 		{/if}
 
 		<ModList

@@ -10,30 +10,17 @@
 	type Props = {
 		items: ContextItem[];
 		type: 'dropdown' | 'context';
-		style: 'dark' | 'light';
 		sub?: boolean;
 		class?: ClassValue;
 	};
 
-	let { items, type, style, sub = false, class: classProp }: Props = $props();
+	let { items, type, sub = false, class: classProp }: Props = $props();
 
 	const commonContentClass = 'flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl z-50';
 	const commonItemClass =
 		'flex shrink-0 cursor-default items-center truncate rounded-sm px-3 py-1 text-left';
 	const submenuClass = 'max-h-80 overflow-y-auto';
-
-	let { contentClass, itemClass } = $derived(
-		{
-			dark: {
-				contentClass: 'border-primary-600 bg-primary-800',
-				itemClass: 'text-primary-400 hover:text-primary-200 hover:bg-primary-700'
-			},
-			light: {
-				contentClass: 'border-primary-500 bg-primary-700',
-				itemClass: 'text-primary-300 hover:text-primary-100 hover:bg-primary-600'
-			}
-		}[style]
-	);
+	const itemClass = 'text-primary-400 hover:text-primary-200 hover:bg-primary-700';
 
 	let { Content, Item, Sub, SubTrigger } = $derived(
 		{
@@ -60,7 +47,12 @@
 				{#if open}
 					<div
 						{...props}
-						class={[commonContentClass, contentClass, sub && submenuClass, classProp]}
+						class={[
+							classProp,
+							sub && submenuClass,
+							commonContentClass,
+							'border-primary-600 bg-primary-800'
+						]}
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
@@ -76,7 +68,7 @@
 
 										<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
 									</SubTrigger>
-									<ContextMenuContent {type} {style} sub items={children} />
+									<ContextMenuContent {type} sub items={children} />
 								</Sub>
 							{:else}
 								<Item class={[commonItemClass, itemClass, 'pr-6']} {onclick}>

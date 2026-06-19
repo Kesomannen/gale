@@ -81,10 +81,7 @@
 						: { type: 'default', name: selectValue }
 				)
 		}
-		items={selectItems(selectOptions, (item) => {
-			console.log(item);
-			return colorNames[item as keyof typeof colorNames]();
-		})}
+		items={selectItems(selectOptions, (item) => colorNames[item as keyof typeof colorNames]())}
 	>
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(value)}
