@@ -71,7 +71,7 @@
 		</h4>
 
 		{#if entry.description}
-			<p class="mb-1">
+			<p class="mb-1 whitespace-pre-wrap">
 				{entry.description}
 			</p>
 		{/if}

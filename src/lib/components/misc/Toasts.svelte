@@ -25,7 +25,7 @@
 		>
 			<div
 				class={[
-					toast.type === 'error' ? 'bg-red-600' : 'bg-accent-600',
+					toast.type === 'error' ? 'bg-red-600' : 'bg-accent-700',
 					'absolute left-0 h-full w-1.5'
 				]}
 			></div>
@@ -44,7 +44,7 @@
 						<span class="text-primary-300">{toast.name}:</span>
 					{/if}
 
-					<span class="text-primary-100 font-medium break-words">{toast.message}</span>
+					<span class="text-primary-100 font-medium wrap-break-word">{toast.message}</span>
 				</div>
 
 				{#if toast.type === 'error'}

@@ -174,7 +174,7 @@
 							class="bg-primary-900 relative mt-2 h-4 w-full overflow-hidden rounded-full"
 						>
 							<div
-								class="bg-accent-600 absolute top-0 left-0 h-full rounded-l-full"
+								class="bg-accent-700 absolute top-0 left-0 h-full rounded-l-full"
 								style="width: {shownProgress.current * 100}%"
 							></div>
 						</Progress.Root>

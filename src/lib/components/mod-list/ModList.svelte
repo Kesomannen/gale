@@ -4,7 +4,7 @@
 	import type { Snippet } from 'svelte';
 	import games from '$lib/state/game.svelte';
 
-	const itemHeight = 66;
+	const itemHeight = 98;
 
 	type Props = {
 		mods: Mod[];
@@ -59,7 +59,6 @@
 	</div>
 {:else}
 	<VirtualList
-		itemHeight={66}
 		items={mods}
 		rowId={(mod) => mod.uuid}
 		bind:this={virtualList}

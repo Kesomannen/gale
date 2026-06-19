@@ -10,6 +10,7 @@
   - Added in-file search bar
   - Added button to reset all entries in a file
 - Show version and author instead of description in profile mod list
+- Show ratings, downloads and time since last update in Thunderstore mod list
 - Various other UI changes
 - Mod downloads are now retried up to 3 times if there is a network error
 - Stdout log format
@@ -17,8 +18,10 @@
 ### Fixed
 
 - Normalized locale names
+- Dates and duration being translated incorrectly most of the time
 - Improved linking between mods and config files
 - Profile shortcuts created with the previous version not working
+- Whitespace and newlines being stripped from config entry descriptions
 
 ## 1.15.1 (2026-06-18)
 

@@ -11,6 +11,7 @@ import games from './state/game.svelte';
 import { isLatinAlphabet } from './i18n';
 import { m } from './paraglide/messages';
 import * as api from '$lib/api';
+import { getLocale } from './paraglide/runtime';
 
 export function shortenFileSize(size: number): string {
 	var i = size == 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -53,43 +54,30 @@ export function shortenNum(value: number): string {
 	return (value / Math.pow(1000, i)).toFixed(1) + ['', 'k', 'M', 'G', 'T'][i];
 }
 
+const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' });
+
 export function timeSince(date: Date | string): string {
 	let seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
 
-	let [interval, str] = (() => {
-		let interval = Math.floor(seconds / (60 * 60 * 24 * 365.25));
-		if (interval >= 1) return [interval, m.util_timeSince_year()];
+	let value = Math.floor(seconds / (60 * 60 * 24 * 365.25));
+	if (value > 0) return rtf.format(-value, 'year');
 
-		interval = Math.floor(seconds / (60 * 60 * 24 * 30));
-		if (interval >= 1) return [interval, m.util_timeSince_month()];
+	value = Math.floor(seconds / (60 * 60 * 24 * 30));
+	if (value > 0) return rtf.format(-value, 'month');
 
-		interval = Math.floor(seconds / (60 * 60 * 24 * 7));
-		if (interval >= 1) return [interval, m.util_timeSince_week()];
+	value = Math.floor(seconds / (60 * 60 * 24 * 7));
+	if (value > 0) return rtf.format(-value, 'week');
 
-		interval = Math.floor(seconds / (60 * 60 * 24));
-		if (interval >= 1) return [interval, m.util_timeSince_day()];
+	value = Math.floor(seconds / (60 * 60 * 24));
+	if (value > 0) return rtf.format(-value, 'day');
 
-		interval = Math.floor(seconds / (60 * 60));
-		if (interval >= 1) return [interval, m.util_timeSince_hour()];
+	value = Math.floor(seconds / (60 * 60));
+	if (value > 0) return rtf.format(-value, 'hour');
 
-		interval = Math.floor(seconds / 60);
-		if (interval >= 1) return [interval, m.util_timeSince_minute()];
+	value = Math.floor(seconds / 60);
+	if (value > 0) return rtf.format(-value, 'minute');
 
-		return [null, null];
-	})();
-
-	if (!interval || !str) {
-		return '';
-	}
-
-	switch (interval) {
-		case null:
-			return m.util_timeSince_interval_null();
-		case 1:
-			return m.util_timeSince_interval_1({ str });
-		default:
-			return m.util_timeSince_interval_default({ interval, str });
-	}
+	return m.util_timeSince_interval_null();
 }
 
 export function isOutdated(mod: Mod): boolean {

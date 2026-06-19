@@ -28,6 +28,8 @@
 	import { m } from '$lib/paraglide/messages';
 	import ReorderableList from '$lib/components/profile/ReorderableList.svelte';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import config from '$lib/state/config.svelte';
+	import { goto } from '$app/navigation';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -72,6 +74,21 @@
 			label: m.page_modContextItem_openFolder(),
 			icon: 'mdi:folder',
 			onclick: (mod) => api.profile.openModDir(mod.uuid)
+		},
+		{
+			label: m.modDetails_editConfig(),
+			icon: 'mdi:file-cog',
+			showFor: (mod) => mod.configFile != null,
+			onclick: (mod) => {
+				const file = config.findFileByPath(mod.configFile!);
+				if (!file) {
+					console.error('Config file not found for mod', mod.configFile);
+					return;
+				}
+
+				config.selectedFile = file;
+				goto('/config');
+			}
 		},
 		...defaultContextItems
 	];
@@ -251,7 +268,7 @@
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
 			{#if selectedMod && isOutdated(selectedMod) && !locked}
 				<button
-					class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
+					class="bg-accent-700 hover:bg-accent-600 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
 					onclick={() => updateMod(selectedMod)}
 				>
 					<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />

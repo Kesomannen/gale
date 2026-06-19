@@ -95,16 +95,17 @@
 				>
 
 				{#if mod.author}
-					<div class="text-primary-400 text-lg xl:text-xl">
-						{m.modDetails_by()}
-						<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
-							{mod.author}
-						</a>
-					</div>
+					<a
+						class="text-primary-400 hover:text-primary-300 block text-lg hover:underline xl:text-xl"
+						href={communityUrl(mod.author)}
+						target="_blank"
+					>
+						{mod.author}
+					</a>
 				{/if}
 
 				{#if mod.version}
-					<div class="text-primary-400 text-lg xl:text-xl">v{mod.version}</div>
+					<div class="text-primary-400 text-lg xl:text-xl">{mod.version}</div>
 				{/if}
 			</div>
 		</div>

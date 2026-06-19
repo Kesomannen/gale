@@ -73,10 +73,8 @@
 						<span class="text-primary-500 mx-1">|</span>
 
 						<span>
-							<Icon icon="mdi:clock-outline" class="mb-0.5 inline text-sm" />
-							{m.ownedSyncProfilesDialog_content_2({
-								time: capitalize(timeSince(profile.updatedAt))
-							})}</span
+							<Icon icon="mdi:clock-outline" class="mb-0.5 inline" />
+							{capitalize(timeSince(profile.updatedAt))}</span
 						>
 					</div>
 				</div>
