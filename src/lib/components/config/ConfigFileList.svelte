@@ -7,6 +7,7 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
+	import translation from '$lib/state/translation.svelte';
 
 	let searchTerm = $state('');
 
@@ -36,15 +37,31 @@
 			sortedFiles = sortedFiles.filter((file) => {
 				let lowerSearch = searchTerm.toLowerCase().trim();
 
-				return (
-					file.relativePath.toLowerCase().includes(lowerSearch) ||
-					file.displayName?.toLowerCase().includes(lowerSearch)
-				);
+				// Check original name
+				const pathMatch = file.relativePath.toLowerCase().includes(lowerSearch);
+				const nameMatch = file.displayName?.toLowerCase().includes(lowerSearch);
+				if (pathMatch || nameMatch) return true;
+
+				// Check translation
+				if (translation.showTranslation && file.displayName) {
+					const translatedName = translation.getDisplayName('', file.displayName);
+					if (translatedName !== file.displayName && translatedName.toLowerCase().includes(lowerSearch)) {
+						return true;
+					}
+				}
+
+				return false;
 			});
 		}
 
 		sortedFiles.sort((a, b) => {
-			return (a.displayName ?? a.relativePath).localeCompare(b.displayName ?? b.relativePath);
+			const nameA = translation.showTranslation && a.displayName
+				? translation.getDisplayName('', a.displayName)
+				: (a.displayName ?? a.relativePath);
+			const nameB = translation.showTranslation && b.displayName
+				? translation.getDisplayName('', b.displayName)
+				: (b.displayName ?? b.relativePath);
+			return nameA.localeCompare(nameB);
 		});
 
 		return sortedFiles;

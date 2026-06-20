@@ -19,6 +19,7 @@ mod prefs;
 mod profile;
 mod state;
 mod thunderstore;
+mod translation;
 mod util;
 
 fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
@@ -199,6 +200,9 @@ pub fn run() {
             config::commands::reset_config_file,
             config::commands::open_config_file,
             config::commands::delete_config_file,
+            translation::commands::translate_mods,
+            translation::commands::get_translation_prefs,
+            translation::commands::set_translation_prefs,
         ])
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_deep_link::init())

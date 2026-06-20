@@ -15,6 +15,7 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import translation from '$lib/state/translation.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems = [...defaultContextItems];
@@ -43,13 +44,22 @@
 	let hasRefreshed = $state(false);
 	let refreshing = false;
 
+	function isNonAscii(str: string): boolean {
+		return /[^\x00-\x7F]/.test(str);
+	}
+
 	async function refresh() {
 		if (refreshing) return;
 		refreshing = true;
 
-		mods = await api.thunderstore.query({ ...modQuery.current, maxCount });
+		// If search contains non-ASCII (e.g. Chinese, Japanese, etc.), filter on frontend
+		const queryForBackend = { ...modQuery.current };
+		if (queryForBackend.searchTerm && isNonAscii(queryForBackend.searchTerm)) {
+			queryForBackend.searchTerm = '';
+		}
+
+		mods = await api.thunderstore.query({ ...queryForBackend, maxCount });
 		if (selectedMod) {
-			// isInstalled might have changed
 			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
 		}
 
@@ -85,6 +95,48 @@
 		}
 	});
 
+	let lastTranslateRequest = $state(0);
+
+	$effect(() => {
+		if (translation.translateRequest > lastTranslateRequest) {
+			lastTranslateRequest = translation.translateRequest;
+			if (mods.length > 0) {
+				translation.translateMods(mods);
+			}
+		}
+	});
+
+	let lastAutoTranslatedCount = $state(0);
+
+	$effect(() => {
+		if (mods.length > 0 && translation.prefs?.enabled && translation.prefs?.apiKey && translation.prefs?.apiUrl && mods.length !== lastAutoTranslatedCount) {
+			lastAutoTranslatedCount = mods.length;
+			translation.translateMods(mods);
+		}
+	});
+
+	let displayMods = $derived.by(() => {
+		const searchTerm = modQuery.current.searchTerm?.toLowerCase().trim();
+		if (!searchTerm) return mods;
+
+		return mods.filter((mod) => {
+			// Check original name/description
+			const nameMatch = mod.name.toLowerCase().replace(/_/g, ' ').includes(searchTerm);
+			const descMatch = mod.description?.toLowerCase().includes(searchTerm);
+			if (nameMatch || descMatch) return true;
+
+			// Check translation
+			const translated = translation.getTranslation(mod.uuid);
+			if (translated) {
+				const transNameMatch = translated.name.toLowerCase().includes(searchTerm);
+				const transDescMatch = translated.description?.toLowerCase().includes(searchTerm);
+				if (transNameMatch || transDescMatch) return true;
+			}
+
+			return false;
+		});
+	});
+
 	let locked = $derived(profiles.activeLocked);
 </script>
 
@@ -97,7 +149,7 @@
 		{/if}
 
 		<ModList
-			{mods}
+			mods={displayMods}
 			queryArgs={modQuery.current}
 			bind:this={modList}
 			bind:maxCount

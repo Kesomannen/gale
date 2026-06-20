@@ -14,6 +14,26 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 - Tiny download size and resource usage
 - Feature-rich mod config editor
 - Automatic profile syncing (beta)
+- AI-powered translation for mod names, descriptions, and config entries (NEW)
+
+### AI Translation
+
+Gale supports AI-powered translation for mod names, descriptions, and configuration entries. This feature uses any OpenAI-compatible API (e.g., OpenAI, DeepSeek, Moonshot, etc.).
+
+**How to use:**
+1. Go to **Settings** → **AI Translation**
+2. Enable the feature and configure your API endpoint
+3. Enter your API URL and API Key
+4. Adjust batch size if needed (default: 20 mods per request)
+5. Use the translate button in the toolbar or mod details page
+
+**Features:**
+- Batch translation (translate multiple mods in one API call)
+- Translation cache (persistent storage in local database)
+- Chinese/Japanese/Korean search support (search mods by translated names)
+- Toggle switch to show/hide translations
+- Auto-translation when browsing mod list
+- Config entry translation
 
 [...and more](https://github.com/Kesomannen/gale/wiki/Features)
 

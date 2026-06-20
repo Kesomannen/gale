@@ -17,6 +17,7 @@
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 	import type { ContextItem } from '$lib/types';
 	import { PersistedState } from 'runed';
+	import translation from '$lib/state/translation.svelte';
 
 	type Mode = 'vanilla' | 'modded';
 
@@ -54,6 +55,10 @@
 	});
 
 	const activeGameName = $derived(games.active?.name ?? m.unknown());
+
+	let isTranslationEnabled = $derived(
+		translation.prefs?.enabled && translation.prefs?.apiKey && translation.prefs?.apiUrl
+	);
 
 	async function launchGame() {
 		if (await api.profile.install.hasPendingInstallations()) {
@@ -115,6 +120,32 @@
 	<Syncer />
 	<InstallPopover />
 	<Updater />
+
+	{#if isTranslationEnabled}
+		<div class="border-primary-600 flex shrink-0 items-center gap-1 border-l px-2">
+			<button
+				class="text-primary-300 hover:text-primary-100 p-1"
+				onclick={() => translation.requestTranslateVisible()}
+				title="Translate visible mods"
+			>
+				<Icon icon="mdi:translate" class="text-xl" />
+			</button>
+
+			<button
+				class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors"
+				class:bg-primary-500={translation.showTranslation}
+				class:bg-primary-700={!translation.showTranslation}
+				onclick={() => (translation.showTranslation = !translation.showTranslation)}
+				title={translation.showTranslation ? 'Showing translations' : 'Showing originals'}
+			>
+				<span
+					class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform"
+					class:translate-x-4.5={translation.showTranslation}
+					class:translate-x-0.5={!translation.showTranslation}
+				></span>
+			</button>
+		</div>
+	{/if}
 </div>
 
 <Dialog

@@ -5,6 +5,7 @@
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
 	import type { ClassValue } from 'clsx';
+	import translation from '$lib/state/translation.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -16,6 +17,8 @@
 	};
 
 	let { mod, class: classProp, selected, onclick, leading, trailing }: Props = $props();
+
+	let displayName = $derived(translation.getDisplayName(mod.uuid, formatModName(mod.name)));
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -39,7 +42,7 @@
 		<img src={modIconSrc(mod)} alt={mod.name} class="mr-3 size-10 rounded-sm" />
 
 		<div class={[mod.enabled ? 'text-white' : 'line-through', 'mr-2 shrink truncate font-medium']}>
-			{formatModName(mod.name)}
+			{displayName}
 		</div>
 
 		{#if mod.isPinned}

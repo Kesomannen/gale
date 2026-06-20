@@ -13,12 +13,28 @@
 	import config from '$lib/state/config.svelte';
 	import { untrack } from 'svelte';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import translation from '$lib/state/translation.svelte';
 
 	const selectedFile = $derived(config.selectedFile);
 
 	$effect(() => {
 		profiles.activeId;
 		untrack(() => config.refresh());
+	});
+
+	// Translate config file names when files are loaded
+	let lastTranslatedCount = $state(0);
+	$effect(() => {
+		const files = config.files;
+		if (files.length > 0 && files.length !== lastTranslatedCount) {
+			lastTranslatedCount = files.length;
+			const namesToTranslate = files
+				.filter(f => f.displayName && !translation.getTranslation(f.displayName))
+				.map(f => f.displayName!);
+			if (namesToTranslate.length > 0) {
+				translation.translateNames(namesToTranslate);
+			}
+		}
 	});
 </script>
 

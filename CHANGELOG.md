@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Added
+
+- AI-powered translation for mod names, descriptions, and config entries
+  - Support any OpenAI-compatible API (OpenAI, DeepSeek, Moonshot, etc.)
+  - Batch translation with configurable batch size
+  - Translation cache with persistent storage in local database
+  - Auto-translation when browsing mod list
+  - Manual translation button in mod details page
+  - Toggle switch to show/hide translations
+  - Config entry translation
+  - Search support for translated names (Chinese, Japanese, Korean, etc.)
+  - URL auto-completion for API endpoint
+  - Show/hide API key toggle
+
 ### Changed
 
 - Made Inter the default font instead of Nunito Sans

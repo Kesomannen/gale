@@ -5,6 +5,7 @@
 	import type { ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
+	import translation from '$lib/state/translation.svelte';
 
 	type Props = {
 		file: ConfigFile;
@@ -34,14 +35,18 @@
 			return { name: file.relativePath, disambiguator: null };
 		}
 
+		const shownName = translation.showTranslation
+			? translation.getDisplayName('', file.displayName)
+			: file.displayName;
+
 		if (duplicate) {
 			const firstFolder = file.relativePath.split('/')[0];
 			if (firstFolder !== file.displayName) {
-				return { name: file.displayName, disambiguator: firstFolder };
+				return { name: shownName, disambiguator: firstFolder };
 			}
 		}
 
-		return { name: file.displayName, disambiguator: null };
+		return { name: shownName, disambiguator: null };
 	});
 
 	async function deleteFile() {

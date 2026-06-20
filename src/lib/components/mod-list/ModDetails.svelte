@@ -25,6 +25,7 @@
 	import config from '$lib/state/config.svelte';
 	import { goto } from '$app/navigation';
 	import InfoBox from '../ui/InfoBox.svelte';
+	import translation from '$lib/state/translation.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -55,6 +56,11 @@
 
 	let readmePromise: Promise<string | null> | null = $state(null);
 
+	let displayName = $derived(translation.getDisplayName(mod.uuid, formatModName(mod.name)));
+	let displayDescription = $derived(translation.getDisplayDescription(mod.uuid, mod.description));
+	let isTranslatingThis = $derived(translation.isTranslating(mod.uuid));
+	let hasTranslation = $derived(!!translation.getTranslation(mod.uuid));
+
 	function formatReadme(readme: string | null) {
 		if (readme === null) return null;
 
@@ -67,6 +73,11 @@
 	$effect(() => {
 		readmePromise = getMarkdown(mod, 'readme').then(formatReadme);
 	});
+
+	async function handleTranslate() {
+		if (hasTranslation || isTranslatingThis) return;
+		await translation.translateMod(mod);
+	}
 </script>
 
 <div class="relative flex w-[40%] min-w-72 flex-col p-4 text-white">
@@ -91,7 +102,7 @@
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
 					href={communityUrl(`${mod.author}/${mod.name}`)}
-					target="_blank">{formatModName(mod.name)}</svelte:element
+					target="_blank">{displayName}</svelte:element
 				>
 
 				{#if mod.author}
@@ -151,9 +162,9 @@
 			</div>
 		{/if}
 
-		{#if mod.description !== null}
+		{#if displayDescription !== null}
 			<p class="text-primary-300 mt-2 text-xl lg:hidden">
-				{mod.description}
+				{displayDescription}
 			</p>
 		{/if}
 
@@ -197,7 +208,7 @@
 			{onmouseenter}
 			{onclick}
 		>
-			<Icon {icon} class="mr-2 text-lg" />
+			<Icon {icon} class={["mr-2 text-lg", isTranslatingThis && "animate-spin"]} />
 			{label}
 		</button>
 	{/snippet}
@@ -220,6 +231,14 @@
 			'material-symbols:network-node',
 			`${m.modDetails_dependencies()} (${mod.dependencies.length})`,
 			() => (dependenciesOpen = true)
+		)}
+	{/if}
+
+	{#if translation.prefs?.enabled && translation.prefs?.apiUrl && translation.prefs?.apiKey}
+		{@render button(
+			isTranslatingThis ? 'mdi:loading' : hasTranslation ? 'mdi:check-circle' : 'mdi:translate',
+			isTranslatingThis ? 'Translating...' : hasTranslation ? 'Translated' : 'Translate',
+			handleTranslate
 		)}
 	{/if}
 

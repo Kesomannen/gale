@@ -9,6 +9,7 @@
 	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
 	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/components/prefs/PlatformPref.svelte';
+	import TranslationPref from '$lib/components/prefs/TranslationPref.svelte';
 
 	import type { Prefs, GamePrefs, Platform } from '$lib/types';
 	import { onMount } from 'svelte';
@@ -144,6 +145,9 @@
 		>
 			{m.prefs_miscellaneous_pullBeforeLaunch_content()}
 		</TogglePref>
+
+		<SmallHeading>AI Translation</SmallHeading>
+		<TranslationPref />
 
 		<LargeHeading>
 			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}

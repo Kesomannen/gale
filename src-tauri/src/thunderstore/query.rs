@@ -12,6 +12,7 @@ use super::{
     BorrowedMod,
 };
 use crate::{
+    db::Db,
     profile::{LocalMod, Profile},
     state::ManagerExt,
     util,

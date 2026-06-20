@@ -12,6 +12,7 @@
 	import ColorConfig from './ColorConfig.svelte';
 	import { toSentenceCase } from '$lib/i18n';
 	import { m } from '$lib/paraglide/messages';
+	import translation from '$lib/state/translation.svelte';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -56,23 +57,31 @@
 	let entry = $derived(entryId.entry);
 	let value = $derived(entry.value);
 	let typeName = $derived(getTypeName(value));
+
+	let translatedEntry = $derived(translation.getConfigTranslation(entryId.file.relativePath, entry.name));
+	let displayEntryName = $derived(
+		translation.showTranslation && translatedEntry ? translatedEntry.name : toSentenceCase(entry.name)
+	);
+	let displayEntryDesc = $derived(
+		translation.showTranslation && translatedEntry?.description ? translatedEntry.description : entry.description
+	);
 </script>
 
 <!-- odd:bg-[#1b2433] -->
 <div class="text-primary-300 odd:bg-primary-900/30 flex items-center px-3 py-1.5">
 	<div class="text-primary-300 w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left">
-		{toSentenceCase(entry.name)}
+		{displayEntryName}
 	</div>
 
 	<Info>
 		<h4>
-			<span class="text-lg font-semibold text-white">{entry.name}</span>
+			<span class="text-lg font-semibold text-white">{displayEntryName}</span>
 			<span class="text-primary-400 ml-1"> ({typeName})</span>
 		</h4>
 
-		{#if entry.description}
+		{#if displayEntryDesc}
 			<p class="mb-1 whitespace-pre-wrap">
-				{entry.description}
+				{displayEntryDesc}
 			</p>
 		{/if}
 

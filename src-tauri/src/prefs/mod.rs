@@ -16,6 +16,7 @@ use crate::{
     logger,
     profile::launch::LaunchMode,
     state::ManagerExt,
+    translation::TranslationPrefs,
     util::{
         self,
         error::IoResultExt,
@@ -189,6 +190,9 @@ pub struct Prefs {
     pub language: String,
 
     pub game_prefs: HashMap<String, GamePrefs>,
+
+    #[serde(default)]
+    pub translation: TranslationPrefs,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -221,6 +225,8 @@ impl Default for Prefs {
             language: "en".to_string(),
 
             game_prefs: HashMap::new(),
+
+            translation: TranslationPrefs::default(),
         }
     }
 }
@@ -287,6 +293,7 @@ impl Prefs {
 
         self.fetch_mods_automatically = value.fetch_mods_automatically;
         self.pull_before_launch = value.pull_before_launch;
+        self.translation = value.translation;
 
         self.save(app.db()).context("failed save prefs")
     }

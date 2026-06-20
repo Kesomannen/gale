@@ -127,7 +127,7 @@ pub struct SaveData {
 }
 
 impl Db {
-    fn conn(&self) -> MutexGuard<'_, rusqlite::Connection> {
+    pub fn conn(&self) -> MutexGuard<'_, rusqlite::Connection> {
         self.0.lock().unwrap()
     }
 
@@ -380,5 +380,66 @@ impl Db {
 
             Ok(())
         })
+    }
+
+    pub fn get_translation_cache(
+        &self,
+        mod_uuid: &str,
+        language: &str,
+        original_name: &str,
+        original_description: Option<&str>,
+    ) -> Result<Option<(String, Option<String>)>> {
+        let conn = self.conn();
+
+        let mut stmt = conn.prepare(
+            "SELECT translated_name, translated_description, original_name, original_description
+             FROM translation_cache
+             WHERE mod_uuid = ?1 AND language = ?2",
+        )?;
+
+        let result = stmt
+            .query_row(params![mod_uuid, language], |row| {
+                let cached_name: String = row.get(0)?;
+                let cached_desc: Option<String> = row.get(1)?;
+                let orig_name: String = row.get(2)?;
+                let orig_desc: Option<String> = row.get(3)?;
+
+                if orig_name == original_name && orig_desc.as_deref() == original_description {
+                    Ok(Some((cached_name, cached_desc)))
+                } else {
+                    Ok(None)
+                }
+            })
+            .optional()?;
+
+        Ok(result.flatten())
+    }
+
+    pub fn save_translation_cache(
+        &self,
+        mod_uuid: &str,
+        language: &str,
+        original_name: &str,
+        original_description: Option<&str>,
+        translated_name: &str,
+        translated_description: Option<&str>,
+    ) -> Result<()> {
+        let conn = self.conn();
+
+        conn.prepare(
+            "INSERT OR REPLACE INTO translation_cache
+             (mod_uuid, language, original_name, original_description, translated_name, translated_description)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        )?
+        .execute(params![
+            mod_uuid,
+            language,
+            original_name,
+            original_description,
+            translated_name,
+            translated_description,
+        ])?;
+
+        Ok(())
     }
 }

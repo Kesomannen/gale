@@ -312,6 +312,7 @@ export type Prefs = {
 	zoomFactor: number;
 	language: string;
 	gamePrefs: Map<string, GamePrefs>;
+	translation: TranslationPrefs;
 };
 
 export type GamePrefs = {
@@ -358,3 +359,22 @@ export type ListItem =
 			type: 'folder';
 			folder: Folder;
 	  };
+
+export type TranslationPrefs = {
+	enabled: boolean;
+	apiUrl: string;
+	apiKey: string;
+	model: string;
+	batchSize: number;
+};
+
+export type TranslateRequest = {
+	uuid: string;
+	name: string;
+	description: string | null;
+};
+
+export type TranslateResponse = {
+	name: string;
+	description: string | null;
+};

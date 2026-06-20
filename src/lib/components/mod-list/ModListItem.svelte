@@ -12,6 +12,7 @@
 		shortenNum,
 		timeSince
 	} from '$lib/util';
+	import translation from '$lib/state/translation.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -25,6 +26,9 @@
 	let { mod, selected: selected, locked, contextItems, onclick, oninstall }: Props = $props();
 
 	let loading = $state(false);
+
+	let displayName = $derived(translation.getDisplayName(mod.uuid, formatModName(mod.name)));
+	let displayDescription = $derived(translation.getDisplayDescription(mod.uuid, mod.description));
 </script>
 
 <ModItemWithContext {mod} {locked} {contextItems}>
@@ -45,7 +49,7 @@
 		<div class="shrink grow overflow-hidden text-left">
 			<div class="flex items-center gap-1 overflow-hidden">
 				<div class="shrink pr-1 text-lg font-medium text-white">
-					{formatModName(mod.name)}
+					{displayName}
 				</div>
 				{#if mod.isPinned}
 					<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
@@ -59,11 +63,14 @@
 				{#if isOutdated(mod)}
 					<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
 				{/if}
+				{#if translation.isTranslating(mod.uuid)}
+					<Icon class="text-primary-400 shrink-0 animate-spin" icon="mdi:loading" />
+				{/if}
 			</div>
 
-			{#if mod.description !== null}
+			{#if displayDescription !== null}
 				<div class="text-primary-300 line-clamp-1 text-sm text-ellipsis lg:line-clamp-2">
-					{mod.description}
+					{displayDescription}
 				</div>
 			{/if}
 

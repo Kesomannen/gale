@@ -30,6 +30,7 @@
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import config from '$lib/state/config.svelte';
 	import { goto } from '$app/navigation';
+	import translation from '$lib/state/translation.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -197,6 +198,12 @@
 		profiles.active;
 		profileQuery.current;
 		refresh();
+	});
+
+	$effect(() => {
+		if (mods.length > 0 && translation.prefs?.apiKey && translation.prefs?.apiUrl) {
+			translation.translateMods(mods);
+		}
 	});
 
 	let reorderable = $derived(

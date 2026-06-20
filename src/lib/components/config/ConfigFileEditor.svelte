@@ -10,6 +10,7 @@
 	import ConfigEntryField from './ConfigEntryField.svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import { page } from '$app/state';
+	import translation from '$lib/state/translation.svelte';
 
 	type Props = {
 		file: ConfigFileData;
@@ -22,10 +23,18 @@
 
 	let search = $derived(page.state.search ?? '');
 
-	// $effect(() => {
-	// 	file;
-	// 	search = '';
-	// });
+	// Translate config entries when file changes
+	let lastTranslatedFile = $state('');
+	$effect(() => {
+		const filePath = file.relativePath;
+		if (filePath && filePath !== lastTranslatedFile) {
+			lastTranslatedFile = filePath;
+			const allEntries = file.sections.flatMap((s) =>
+				s.entries.map((e) => ({ name: e.name, description: e.description }))
+			);
+			translation.translateConfigEntries(filePath, allEntries);
+		}
+	});
 
 	async function resetAll() {
 		const confirmed = await confirm(m.config_resetAllConfirm_message({ name: file.displayName }), {
