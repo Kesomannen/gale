@@ -23,6 +23,7 @@
 - Whitespace and newlines being stripped from config entry descriptions
 - Reduced log spam from network requests
 - UNIX argument parsing being used on Windows, causing paths with backslashes to require extra escaping
+- Resonite mods not loading on Linux due to Z: path prefixes 
 
 ## 1.15.1 (2026-06-18)
 

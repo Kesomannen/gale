@@ -4,7 +4,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, eyre, Context, OptionExt, Result};
+use eyre::{Context, OptionExt, Result, bail, eyre};
 use tracing::{info, warn};
 
 use crate::{
@@ -69,9 +69,10 @@ impl<'a> ArgsContext<'a> {
 
     fn add_bepisloader_args(&mut self) -> Result<()> {
         let bepinex_path = self.format_path(self.profile_dir.join("BepInEx"))?;
-        let preloader_result = self
-            .bepinex_preloader_path(Some("Renderer"))
-            .and_then(|path| self.format_path(path));
+        // Don't use format_path as BepisLoader escapes Proton and therefore
+        // does not recognize the Z: prefix, see
+        // https://github.com/Kesomannen/gale/issues/627#issuecomment-4753748042
+        let preloader_result = self.bepinex_preloader_path(Some("Renderer"));
 
         self.command
             .arg("--hookfxr-enable")
