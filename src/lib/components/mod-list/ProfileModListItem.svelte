@@ -4,7 +4,6 @@
 	import type { MouseEventHandler } from 'svelte/elements';
 	import ModItemContext from './ModItemContext.svelte';
 	import ProfileModListItemNoContext from './ProfileModListItemNoContext.svelte';
-	import Checkbox from '../ui/Checkbox.svelte';
 
 	type Props = {
 		mod: Mod;

@@ -34,7 +34,7 @@
 		role="button"
 		tabindex="0"
 		class={[
-			'group my-1 grid grid-cols-[auto_1fr] items-center gap-4 rounded-lg border p-3',
+			'group my-1 flex items-center gap-4 rounded-lg border p-3',
 			selected
 				? 'border-primary-500 bg-primary-700'
 				: 'hover:bg-primary-700 border-primary-700 hover:border-primary-600'
@@ -51,7 +51,7 @@
 					<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
 				{/if}
 				{#if mod.isDeprecated}
-					<Icon class="shrink-0 text-red-500" icon="mdi:error" />
+					<Icon class="shrink-0 text-yellow-500" icon="mdi:warning" />
 				{/if}
 				{#if mod.isInstalled}
 					<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
@@ -68,10 +68,6 @@
 			{/if}
 
 			<div class="text-primary-300 mt-2 flex items-center gap-1 text-sm">
-				{#if mod.rating !== null}
-					<Icon class="shrink-0" icon="mdi:star-outline" />
-					<span class="mr-4">{shortenNum(mod.rating)}</span>
-				{/if}
 				{#if mod.downloads !== null}
 					<Icon class="shrink-0" icon="mdi:download-outline" />
 					<span class="mr-4">{shortenNum(mod.downloads)}</span>
@@ -83,7 +79,7 @@
 			</div>
 		</div>
 
-		<!-- {#if !mod.isInstalled && !locked}
+		{#if !mod.isInstalled && !locked}
 			<button
 				class={[
 					'bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline'
@@ -101,6 +97,6 @@
 					<Icon icon="mdi:download" />
 				{/if}
 			</button>
-		{/if} -->
+		{/if}
 	</div>
 </ModItemWithContext>

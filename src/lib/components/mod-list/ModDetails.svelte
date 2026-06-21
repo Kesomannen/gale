@@ -80,7 +80,7 @@
 	</DropdownMenu.Root>
 
 	<div class="-mr-3 grow overflow-x-hidden overflow-y-auto pr-3 pb-2">
-		<div class="mb-4 flex flex-wrap gap-4 xl:items-center">
+		<div class="mb-3 flex flex-wrap gap-4 xl:items-center">
 			<img src={modIconSrc(mod)} class="max-h-30 max-w-30 rounded-lg" alt="" />
 
 			<div>
@@ -125,7 +125,7 @@
 		{#if mod.categories}
 			<div class="mt-2 mb-1 flex flex-wrap gap-1">
 				{#each mod.categories as category}
-					<div class="bg-primary-700 text-primary-200 rounded-full px-4 py-1">
+					<div class="bg-primary-700 text-primary-200 rounded-full px-3 py-1 text-sm">
 						{category}
 					</div>
 				{/each}

@@ -46,7 +46,7 @@
 			<Icon class="text-primary-400 mr-1 shrink-0" icon="mdi:pin" />
 		{/if}
 		{#if mod.isDeprecated}
-			<Icon class="mr-1 shrink-0 text-red-500" icon="mdi:error" />
+			<Icon class="mr-1 shrink-0 text-yellow-500" icon="mdi:warning" />
 		{/if}
 		{#if isOutdated(mod)}
 			<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
