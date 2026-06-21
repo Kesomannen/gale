@@ -55,7 +55,6 @@ pub fn setup() -> Result<()> {
     let subscriber = Registry::default()
         .with(
             tracing_subscriber::fmt::layer()
-                .pretty()
                 .with_ansi(true)
                 .with_filter(filter.clone()),
         )
