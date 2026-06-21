@@ -7,11 +7,13 @@
 		to: string;
 		icon: string;
 		tooltip: string;
+		outline?: boolean;
 	};
 
-	let { to, icon, tooltip }: Props = $props();
+	let { to, icon, tooltip, outline = true }: Props = $props();
 
 	let active = $derived(page.url.pathname === to);
+	let hasOutline = $derived(outline && !active);
 </script>
 
 <Tooltip text={tooltip} side="right">
@@ -21,9 +23,10 @@
 			active
 				? 'text-accent-500 bg-primary-800 font-semibold'
 				: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400',
-			'relative flex items-center gap-2 rounded-lg p-2.5'
+			'relative flex items-center rounded-lg p-2.5 text-3xl'
 		]}
 	>
-		<Icon class="text-[1.75rem]" {icon} />
+		<Icon {icon} class={[hasOutline && 'hidden']} />
+		<Icon icon="{icon}-outline" class={[!hasOutline && 'hidden']} />
 	</a>
 </Tooltip>

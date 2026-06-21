@@ -1,7 +1,7 @@
 use eyre::anyhow;
 use font_kit::source::SystemSource;
 use serde::Deserialize;
-use tauri::{command, AppHandle, Manager, Window};
+use tauri::{AppHandle, Manager, Window, command};
 
 use super::Prefs;
 use crate::{

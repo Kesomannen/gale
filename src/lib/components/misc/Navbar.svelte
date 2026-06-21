@@ -21,8 +21,9 @@
 		},
 		{
 			to: '/modpack',
-			icon: 'mdi-package-variant',
-			tooltip: m.navBar_link_modpack()
+			icon: 'mdi:package-variant',
+			tooltip: m.navBar_link_modpack(),
+			outline: false
 		},
 		{
 			to: '/prefs',
@@ -32,7 +33,7 @@
 	];
 </script>
 
-<nav class="border-primary-600 bg-primary-900 relative flex shrink-0 flex-col gap-1.5 border-r p-3">
+<nav class="border-primary-600 bg-primary-900 relative flex shrink-0 flex-col gap-2 border-r p-3">
 	{#each links as link (link.to)}
 		<NavbarLink {...link} />
 	{/each}
