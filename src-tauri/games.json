@@ -689,6 +689,19 @@
 		}
 	},
 	{
+		"name": "Burglin' Gnomes ",
+		"slug": "burglin-gnomes",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3844970,
+				"dirName": "Burglin' Gnomes"
+			}
+		}
+	},
+	{
 		"name": "Carrier Deck",
 		"slug": "carrier-deck",
 		"modLoader": {
@@ -1088,17 +1101,6 @@
 		}
 	},
 	{
-		"name": "Gang Beasts",
-		"modLoader": {
-			"name": "MelonLoader"
-		},
-		"platforms": {
-			"steam": {
-				"id": 285900
-			}
-		}
-	},
-	{
 		"name": "Gamble With Your Friends",
 		"slug": "gamble-with-your-friends",
 		"modLoader": {
@@ -1107,6 +1109,17 @@
 		"platforms": {
 			"steam": {
 				"id": 3892270
+			}
+		}
+	},
+	{
+		"name": "Gang Beasts",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 285900
 			}
 		}
 	},
@@ -1249,7 +1262,9 @@
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
 			"fileTarget": "./Ship",
-			"files": ["d3d12.dll"]
+			"files": [
+				"d3d12.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
@@ -2069,7 +2084,9 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": ["version.dll"]
+			"files": [
+				"version.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
