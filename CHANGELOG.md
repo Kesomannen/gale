@@ -22,6 +22,8 @@
 - Improved linking between mods and config files
 - Profile shortcuts created with the previous version not working
 - Whitespace and newlines being stripped from config entry descriptions
+- Reduced log spam from network requests
+- UNIX argument parsing being used on Windows, causing paths with backslashes to require extra escaping
 
 ## 1.15.1 (2026-06-18)
 

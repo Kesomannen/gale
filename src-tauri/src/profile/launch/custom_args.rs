@@ -1,4 +1,4 @@
-use eyre::{bail, Context, Result};
+use eyre::{Context, Result, bail};
 use std::{process::Command, str::FromStr};
 
 pub fn add_args(command: &mut Command, custom_args: &str) -> Result<()> {
@@ -9,15 +9,44 @@ pub fn add_args(command: &mut Command, custom_args: &str) -> Result<()> {
     Ok(())
 }
 
+pub fn join<I, S>(words: I) -> String
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    #[cfg(target_os = "linux")]
+    {
+        shell_words::join(words)
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        words.join(" ")
+    }
+}
+
+fn split(custom_args: &str) -> Result<Vec<String>> {
+    #[cfg(target_os = "linux")]
+    {
+        shell_words::split(custom_args).context("failed to split arguments")
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        winsplit::split(custom_args).context("failed to split arguments")
+    }
+}
+
 /// A parsed set of custom arguments:
+///
 /// - `args`: list of command-line arguments to append to the launch command
 ///
 /// - `env`: list of environment variables to set for the launch command,
-///    written as VARIABLE=value before the rest of the arguments
+///   written as VARIABLE=value before the rest of the arguments
 ///
 /// - `prefix`: an optional prefix to prepend to the launch command,
-///    which can be used to run the game with a custom launcher (e.g. `protontricks`),
-///    written using a %command% placeholder
+///   which can be used to run the game with a custom launcher (e.g. `protontricks`),
+///   written using a %command% placeholder
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 struct CustomArgs {
     args: Vec<String>,
@@ -53,7 +82,7 @@ impl FromStr for CustomArgs {
     type Err = eyre::Report;
 
     fn from_str(s: &str) -> Result<Self> {
-        let words = shell_words::split(s).context("failed to split arguments")?;
+        let words = split(s)?;
 
         let mut args = Vec::new();
         let mut env = Vec::new();

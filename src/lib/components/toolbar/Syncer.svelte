@@ -49,7 +49,7 @@
 			synced: {
 				icon: 'mdi:cloud-check-variant',
 				label: m.syncer_style_synced(),
-				classes: 'text-accent-400'
+				classes: 'text-accent-500'
 			},
 			outdated: {
 				icon: 'mdi:cloud-refresh-variant',

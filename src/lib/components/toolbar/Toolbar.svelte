@@ -72,7 +72,7 @@
 
 <div class="border-primary-600 bg-primary-900 flex h-12 shrink-0 flex-row border-t border-b">
 	<div
-		class="text-accent-400 *:hover:text-accent-400 border-primary-600 *:hover:bg-primary-800 flex shrink-0 items-stretch border-r font-semibold"
+		class="text-accent-500 *:hover:text-accent-400 border-primary-600 *:hover:bg-primary-800 flex shrink-0 items-stretch border-r font-semibold"
 	>
 		<button onclick={() => launchGame()} class="flex items-center pr-4 pl-6">
 			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />

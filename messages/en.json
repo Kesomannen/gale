@@ -467,7 +467,7 @@
 	"updater_installUpdate_message_name": "Failed to update Gale",
 	"updater_installUpdate_message_unknown": "Unknown error",
 	"updater_update_message": "Gale will now restart in order to apply the update.",
-	"util_timeSince_interval_null": "a moment",
+	"util_timeSince_interval_null": "just now",
 	"welcomeDialog_button_back": "Back",
 	"welcomeDialog_button_import": "Import",
 	"welcomeDialog_button_next": "Next",

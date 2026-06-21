@@ -1,5 +1,5 @@
 use eyre::Context;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 
 use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
 
@@ -26,7 +26,7 @@ pub fn get_launch_args(app: AppHandle) -> Result<String> {
     let game_dir = super::locate_game_dir(game.game, &prefs)?;
     let (_, command) = game.launch_command(false, &game_dir, &prefs)?;
 
-    let text = shell_words::join(command.get_args().map(|arg| arg.to_string_lossy()));
+    let text = super::custom_args::join(command.get_args().map(|arg| arg.to_string_lossy()));
 
     Ok(text)
 }

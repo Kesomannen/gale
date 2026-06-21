@@ -19,7 +19,7 @@
 		href={to}
 		class={[
 			active
-				? 'text-accent-400 bg-primary-800 font-semibold'
+				? 'text-accent-500 bg-primary-800 font-semibold'
 				: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400',
 			'relative flex items-center gap-2 rounded-lg p-2.5'
 		]}
