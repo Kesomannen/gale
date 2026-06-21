@@ -117,7 +117,7 @@
 
 {#snippet colorIcon(value: Color, className?: ClassValue)}
 	{#if value.type === 'custom'}
-		<Icon class={clsx(className, 'text-primary-400 size-4')} icon="mdi:edit" />
+		<Icon class={clsx(className, 'text-primary-400 size-4')} icon="ph:pencil-simple-fill" />
 	{:else}
 		<span
 			class={[className, 'inline-block size-4 rounded-full']}

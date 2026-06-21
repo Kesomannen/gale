@@ -47,7 +47,7 @@
 							class="bg-accent-700 hover:bg-accent-600 flex cursor-pointer items-center justify-center rounded-sm py-1 text-white"
 							onclick={() => (createDialogOpen = true)}
 						>
-							<Icon icon="mdi:plus" class="mr-1 text-lg" />
+							<Icon icon="ph:plus-fill" class="mr-1 text-lg" />
 							{m.profilesDropdown_button()}
 						</DropdownMenu.Item>
 					</div>

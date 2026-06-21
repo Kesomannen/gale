@@ -21,9 +21,11 @@
 			active
 				? 'text-accent-500 bg-primary-800 font-semibold'
 				: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400',
-			'relative flex items-center gap-2 rounded-lg p-2.5'
+			'flex items-center rounded-lg p-3 text-3xl'
 		]}
 	>
-		<Icon class="text-[1.75rem]" {icon} />
+		<!-- Keep both icons in the DOM to avoid layout shifts when the filled icon loads. -->
+		<Icon {icon} class={[active && 'hidden']} />
+		<Icon icon="{icon}-fill" class={[!active && 'hidden']} />
 	</a>
 </Tooltip>

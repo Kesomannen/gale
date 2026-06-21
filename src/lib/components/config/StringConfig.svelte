@@ -52,7 +52,7 @@
 			class="bg-primary-900 text-primary-400 hover:bg-primary-800 absolute top-1 right-1 rounded-lg p-1 text-lg"
 			onclick={() => (config.expandedEntry = entryId)}
 		>
-			<Icon icon="mdi:arrow-expand" />
+			<Icon icon="ph:arrows-out-fill" />
 		</button>
 	{/if}
 </div>

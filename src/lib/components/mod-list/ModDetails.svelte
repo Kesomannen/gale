@@ -48,7 +48,7 @@
 		...contextItems,
 		{
 			label: m.modDetails_allContextItems_close(),
-			icon: 'mdi:close',
+			icon: 'ph:x-fill',
 			onclick: onclose
 		}
 	]);
@@ -74,7 +74,7 @@
 		<DropdownMenu.Trigger
 			class="bg-primary-800 hover:bg-primary-700 absolute right-4 mt-1 rounded-full p-1"
 		>
-			<Icon class="text-primary-200 text-3xl" icon="mdi:dots-vertical" />
+			<Icon class="text-primary-200 text-3xl" icon="ph:dots-three-vertical-fill" />
 		</DropdownMenu.Trigger>
 		<ModContextMenuContent {mod} {locked} items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
@@ -134,14 +134,14 @@
 
 		<div class="mt-2 flex items-center gap-1.5 text-lg">
 			{#if mod.rating !== null}
-				<Icon class="shrink-0 text-yellow-500" icon="mdi:star" />
+				<Icon class="shrink-0 text-yellow-500" icon="ph:star-fill" />
 				<span class="mr-4 text-yellow-500">{shortenNum(mod.rating)}</span>
 			{/if}
 			{#if mod.downloads !== null}
-				<Icon class="shrink-0 text-green-500" icon="mdi:download" />
+				<Icon class="shrink-0 text-green-500" icon="ph:download-simple-fill" />
 				<span class="mr-4 text-green-500">{shortenNum(mod.downloads)}</span>
 			{/if}
-			<Icon class="text-primary-400 shrink-0" icon="mdi:weight" />
+			<Icon class="text-primary-400 shrink-0" icon="ph:hard-drives-fill" />
 			<span class="text-primary-400">{shortenFileSize(mod.fileSize)}</span>
 		</div>
 
@@ -175,7 +175,7 @@
 		<div
 			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
-			<Icon class="text-xl" icon="mdi:file-cog" />
+			<Icon class="text-xl" icon="ph:faders-fill" />
 			<button
 				onclick={() => {
 					const file = config.findFileByPath(mod.configFile!);
@@ -203,13 +203,13 @@
 	{/snippet}
 
 	{@render button(
-		'mdi:file-document',
+		'ph:file-fill',
 		m.modDetails_changeLog(),
 		() => (changelogOpen = true),
 		() => changelog.fetchMarkdown()
 	)}
 	{@render button(
-		'mdi:info',
+		'ph:info-fill',
 		m.modDetails_details(),
 		() => (readmeOpen = true),
 		() => readme.fetchMarkdown()

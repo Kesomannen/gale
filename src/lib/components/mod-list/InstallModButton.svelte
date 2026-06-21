@@ -65,7 +65,7 @@
 
 			{m.installModButton_button_loading()}
 		{:else}
-			<Icon icon="mdi:download" class="align-middle text-xl" />
+			<Icon icon="ph:download-simple-fill" class="align-middle text-xl" />
 			{m.installModButton_button_install()}
 
 			{#if downloadSize}

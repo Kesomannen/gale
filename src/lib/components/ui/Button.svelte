@@ -27,7 +27,7 @@
 	);
 
 	let disabled = $derived(disabledProp || loading);
-	let renderedIcon = $derived(loading ? 'mdi:loading' : icon);
+	let renderedIcon = $derived(loading ? 'ph:circle-notch-fill' : icon);
 </script>
 
 <button

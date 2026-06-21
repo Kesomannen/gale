@@ -48,7 +48,7 @@
 
 {#if shownUpdates.length > updateBanner.threshold}
 	<div class="bg-accent-700 text-accent-100 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
-		<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
+		<Icon icon="ph:arrow-circle-up-fill" class="mr-2 text-xl" />
 		{m.updateAllBanner_content({ count: shownUpdates.length })}
 
 		<button
@@ -62,7 +62,7 @@
 			class="hover:bg-accent-600 ml-auto rounded-md p-1 text-xl"
 			onclick={() => (updateBanner.threshold = shownUpdates.length)}
 		>
-			<Icon icon="mdi:close" />
+			<Icon icon="ph:x-fill" />
 		</button>
 	</div>
 {/if}
@@ -82,14 +82,14 @@
 			<ModCard fullName={update.fullName} showVersion={false} />
 
 			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
-			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
+			<Icon icon="ph:arrow-right-fill" class="text-primary-400 mx-1.5 text-lg" />
 			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
 				>
-					<Icon icon="mdi:notifications-off" />
+					<Icon icon="ph:bell-simple-slash-fill" />
 				</DropdownMenu.Trigger>
 				<ContextMenuContent
 					type="dropdown"
@@ -115,7 +115,7 @@
 	</Checklist>
 
 	{#snippet buttons()}
-		<Button color="accent" icon="mdi:download" onclick={updateAll}
+		<Button color="accent" icon="ph:download-simple-fill" onclick={updateAll}
 			>{m.updateAllBanner_dialog_button()}</Button
 		>
 	{/snippet}

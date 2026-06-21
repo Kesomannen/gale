@@ -45,7 +45,7 @@
 		<Button color="primary" onclick={() => (open = false)}
 			>{m.importR2Dialog_button_cancel()}</Button
 		>
-		<Button color="accent" onclick={doImport} icon="mdi:import"
+		<Button color="accent" onclick={doImport} icon="ph:download-simple-fill"
 			>{m.importR2Dialog_button_import()}</Button
 		>
 	</div>

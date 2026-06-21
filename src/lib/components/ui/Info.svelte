@@ -11,7 +11,7 @@
 </script>
 
 <Tooltip class="text-primary-400 cursor-help px-2 py-1" delayDuration={300}>
-	<Icon icon="mdi:question-mark-circle" />
+	<Icon icon="ph:question-fill" />
 
 	{#snippet tooltip()}
 		{@render children?.()}

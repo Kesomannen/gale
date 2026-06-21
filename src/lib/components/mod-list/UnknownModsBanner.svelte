@@ -12,7 +12,7 @@
 </script>
 
 <div class="mr-3 mb-1 flex items-center rounded-lg bg-red-600 py-1.5 pr-1 pl-3 text-red-100">
-	<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
+	<Icon icon="ph:warning-circle-fill" class="mr-2 text-xl" />
 	{m.unknownModsBanner_content({ count: mods.length })}
 	{mods.map((mod) => mod.fullName).join(', ')}.
 	<button

@@ -100,7 +100,7 @@
 									updateListContent();
 								}}
 							>
-								<Icon icon="mdi:remove" />
+								<Icon icon="ph:backspace-fill" />
 							</button>
 							<InputField
 								class="grow"

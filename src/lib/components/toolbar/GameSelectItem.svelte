@@ -55,6 +55,6 @@
 			api.profile.favoriteGame(game.slug);
 		}}
 	>
-		<Icon icon={game.favorite ? 'mdi:star' : 'mdi:star-outline'} class="text-accent-500 text-xl" />
+		<Icon icon={game.favorite ? 'ph:star-fill' : 'ph:star'} class="text-accent-500 text-xl" />
 	</button>
 </div>

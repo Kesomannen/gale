@@ -42,22 +42,22 @@
 	let style = $derived(
 		{
 			off: {
-				icon: 'mdi:cloud-off',
+				icon: 'ph:cloud-slash-fill',
 				label: m.syncer_style_off(),
 				classes: 'text-primary-400'
 			},
 			synced: {
-				icon: 'mdi:cloud-check-variant',
+				icon: 'ph:cloud-check-fill',
 				label: m.syncer_style_synced(),
 				classes: 'text-accent-500'
 			},
 			outdated: {
-				icon: 'mdi:cloud-refresh-variant',
+				icon: 'ph:cloud-arrow-down-fill',
 				label: m.syncer_style_outdated(),
 				classes: 'text-yellow-400'
 			},
 			missing: {
-				icon: 'mdi:cloud-alert',
+				icon: 'ph:cloud-x-fill',
 				label: m.syncer_style_missing(),
 				classes: 'text-red-500 font-semibold'
 			}
@@ -66,12 +66,12 @@
 
 	const dropdownItems = [
 		{
-			icon: 'mdi:database-eye',
+			icon: 'ph:database-fill',
 			label: m.syncer_dropdownItems_showOwnedProfiles(),
 			onclick: showOwnedProfiles
 		},
 		{
-			icon: 'mdi:logout',
+			icon: 'ph:sign-out-fill',
 			label: m.syncer_dropdownItems_login(),
 			onclick: onLoginClicked
 		}
@@ -79,12 +79,12 @@
 
 	const copyItems = [
 		{
-			icon: 'mdi:clipboard-text',
+			icon: 'ph:clipboard-text-fill',
 			label: m.syncer_copyItems_copyCode(),
 			onclick: copyCode
 		},
 		{
-			icon: 'mdi:link',
+			icon: 'ph:link-fill',
 			label: m.syncer_copyItems_copyLink(),
 			onclick: copyLink
 		}
@@ -218,7 +218,7 @@
 
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
-						<IconButton icon="mdi:content-copy" label={m.syncer_button_copyConetnt()} />
+						<IconButton icon="ph:copy-simple-fill" label={m.syncer_button_copyConetnt()} />
 					</DropdownMenu.Trigger>
 					<ContextMenuContent type="dropdown" items={copyItems} />
 				</DropdownMenu.Root>
@@ -232,7 +232,7 @@
 		<div class="mt-2 flex flex-wrap items-center gap-2">
 			{#if syncState !== 'missing'}
 				{#if syncState === 'outdated'}
-					<Button onclick={pull} {loading} icon="mdi:cloud-download"
+					<Button onclick={pull} {loading} icon="ph:cloud-arrow-down-fill"
 						>{m.syncer_button_pull()}</Button
 					>
 				{/if}
@@ -243,13 +243,13 @@
 						{loading}
 						disabled={auth.user === null}
 						color="accent"
-						icon="mdi:cloud-upload"
+						icon="ph:cloud-arrow-up-fill"
 					>
 						{m.syncer_button_push()}
 					</Button>
 				{/if}
 
-				<Button onclick={refresh} {loading} color="primary" icon="mdi:cloud-refresh"
+				<Button onclick={refresh} {loading} color="primary" icon="ph:arrow-clockwise-fill"
 					>{m.syncer_button_refresh()}</Button
 				>
 			{/if}
@@ -258,13 +258,13 @@
 				onclick={disconnect}
 				{loading}
 				color={syncState === 'missing' ? 'accent' : 'primary'}
-				icon="mdi:cloud-remove"
+				icon="ph:cloud-x-fill"
 			>
 				{m.syncer_button_disconnect()}
 			</Button>
 		</div>
 	{:else if auth.user !== null}
-		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
+		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="ph:cloud-arrow-up-fill">
 			{m.syncer_button_connect()}
 		</Button>
 	{/if}
@@ -284,7 +284,7 @@
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">
-					<Icon class="text-2xl" icon="mdi:dots-vertical" />
+					<Icon class="text-2xl" icon="ph:dots-three-vertical-fill" />
 				</DropdownMenu.Trigger>
 				<ContextMenuContent type="dropdown" items={dropdownItems} />
 			</DropdownMenu.Root>
@@ -294,7 +294,7 @@
 	<div
 		class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
 	>
-		<Icon icon="mdi:help-circle" inline />
+		<Icon icon="ph:question-fill" inline />
 
 		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/"
 			>{m.syncer_content_help()}</a

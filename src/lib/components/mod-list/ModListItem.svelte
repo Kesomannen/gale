@@ -48,16 +48,16 @@
 					{formatModName(mod.name)}
 				</div>
 				{#if mod.isPinned}
-					<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
+					<Icon class="text-primary-400 shrink-0" icon="ph:push-pin-fill" />
 				{/if}
 				{#if mod.isDeprecated}
-					<Icon class="shrink-0 text-yellow-500" icon="mdi:warning" />
+					<Icon class="shrink-0 text-yellow-500" icon="ph:warning-fill" />
 				{/if}
 				{#if mod.isInstalled}
-					<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
+					<Icon class="text-accent-500 shrink-0" icon="ph:check-circle-fill" />
 				{/if}
 				{#if isOutdated(mod)}
-					<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
+					<Icon class="text-accent-500 shrink-0" icon="ph:arrow-circle-up-fill" />
 				{/if}
 			</div>
 
@@ -69,11 +69,11 @@
 
 			<div class="text-primary-300 mt-2 flex items-center gap-1 text-sm">
 				{#if mod.downloads !== null}
-					<Icon class="shrink-0" icon="mdi:download-outline" />
+					<Icon class="shrink-0" icon="ph:download-simple-fill" />
 					<span class="mr-4">{shortenNum(mod.downloads)}</span>
 				{/if}
 				{#if mod.lastUpdated}
-					<Icon class=" shrink-0" icon="mdi:clock-outline" />
+					<Icon class=" shrink-0" icon="ph:clock-fill" />
 					<span class="">{timeSince(new Date(mod.lastUpdated))}</span>
 				{/if}
 			</div>
@@ -94,7 +94,7 @@
 				{#if loading}
 					<Spinner />
 				{:else}
-					<Icon icon="mdi:download" />
+					<Icon icon="ph:download-simple-fill" />
 				{/if}
 			</button>
 		{/if}

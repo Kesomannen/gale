@@ -83,10 +83,10 @@
 {:else if importData === null}
 	<div class="text-primary-300 mt-2 flex w-full items-center gap-2">
 		{#if path === null}
-			<Icon icon="mdi:warning" />
+			<Icon icon="ph:warning-fill" />
 			{m.importR2Flow_content_noFound()}
 		{:else}
-			<Icon icon="mdi:error" class="shrink-0" />
+			<Icon icon="ph:warning-circle-fill" class="shrink-0" />
 			{capitalize(error)}
 		{/if}
 	</div>

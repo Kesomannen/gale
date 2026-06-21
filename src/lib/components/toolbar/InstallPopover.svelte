@@ -136,7 +136,7 @@
 	>
 		{#if shown}
 			<div in:scale={{ start: 2, duration: 250, easing: quadOut }}>
-				<Icon icon="mdi:download" class="animate-pulse" />
+				<Icon icon="ph:download-simple-fill" class="animate-pulse" />
 			</div>
 		{/if}
 	</Popover.Trigger>
@@ -155,7 +155,7 @@
 							{#if showCancel}
 								<IconButton
 									label={m.installPopover_button()}
-									icon="mdi:cancel"
+									icon="ph:x-circle-fill"
 									color="red"
 									onclick={cancel}
 								/>

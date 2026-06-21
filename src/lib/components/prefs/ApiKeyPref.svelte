@@ -37,10 +37,7 @@
 		onclick={() => (apiKeyDialog.open = true)}
 	>
 		<div class="mr-2 rounded-sm">
-			<Icon
-				icon={hasToken ? 'mdi:key' : 'mdi:key-remove'}
-				class="text-primary-300 group-hover:text-primary-200 align-middle"
-			/>
+			<Icon icon="key" class="text-primary-300 group-hover:text-primary-200 align-middle" />
 		</div>
 
 		<div class="text-primary-300 group-hover:text-primary-200 truncate">

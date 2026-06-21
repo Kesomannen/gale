@@ -46,7 +46,7 @@
 	const contextItems: ModContextItem[] = [
 		{
 			label: m.page_modContextItem_uninstall(),
-			icon: 'mdi:delete',
+			icon: 'ph:trash-fill',
 			onclick: (mod) =>
 				uninstall({
 					uuid: mod.uuid,
@@ -56,7 +56,7 @@
 		},
 		{
 			label: m.page_modContextItem_changeVersion(),
-			icon: 'mdi:edit',
+			icon: 'ph:pencil-simple-fill',
 			onclick: () => {},
 			showFor: (mod, profileLocked) => mod.versions.length > 1 && !profileLocked,
 			children: (mod) =>
@@ -67,17 +67,17 @@
 		},
 		{
 			label: m.page_modContextItem_showDependants(),
-			icon: 'mdi:source-branch',
+			icon: 'ph:git-branch-fill',
 			onclick: openDependants
 		},
 		{
 			label: m.page_modContextItem_openFolder(),
-			icon: 'mdi:folder',
+			icon: 'ph:folder-fill',
 			onclick: (mod) => api.profile.openModDir(mod.uuid)
 		},
 		{
 			label: m.modDetails_editConfig(),
-			icon: 'mdi:file-cog',
+			icon: 'ph:faders-fill',
 			showFor: (mod) => mod.configFile != null,
 			onclick: (mod) => {
 				const file = config.findFileByPath(mod.configFile!);
@@ -228,10 +228,10 @@
 
 		{#if mods.length === 0 && hasRefreshed}
 			{#if totalModCount === 0}
-				<HelpCard icon="ph:ghost" title={m.page_modList_noMods_1()}>
+				<HelpCard icon="ph:ghost-fill" title={m.page_modList_noMods_1()}>
 					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
 						><Icon
-							icon="mdi:store-search"
+							icon="ph:storefront-fill"
 							class="mr-0.5 ml-1  inline"
 							inline
 						/>{m.page_modList_noMods_2()}</a
@@ -271,7 +271,7 @@
 					class="bg-accent-700 hover:bg-accent-600 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
 					onclick={() => updateMod(selectedMod)}
 				>
-					<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
+					<Icon icon="ph:arrow-circle-up-fill" class="align-middle text-xl" />
 					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
 				</button>
 			{/if}

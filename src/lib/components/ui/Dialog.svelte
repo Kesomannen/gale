@@ -91,7 +91,7 @@
 								class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
 								onclick={close}
 							>
-								<Icon icon="mdi:close" />
+								<Icon icon="ph:x-fill" />
 							</button>
 						{/if}
 					</div>

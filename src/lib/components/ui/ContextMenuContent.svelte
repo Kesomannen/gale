@@ -16,7 +16,6 @@
 
 	let { items, type, sub = false, class: classProp }: Props = $props();
 
-	const commonContentClass = 'flex flex-col gap-0.5 rounded-lg border p-1 shadow-xl z-50';
 	const commonItemClass =
 		'flex shrink-0 cursor-default items-center truncate rounded-sm px-3 py-1 text-left';
 	const submenuClass = 'max-h-80 overflow-y-auto';
@@ -50,8 +49,7 @@
 						class={[
 							classProp,
 							sub && submenuClass,
-							commonContentClass,
-							'border-primary-600 bg-primary-800'
+							'border-primary-600 bg-primary-800 z-50 flex flex-col gap-0.5 rounded-lg border p-1 font-normal shadow-xl'
 						]}
 						in:fly={dropIn}
 						out:fade={dropOut}
@@ -66,7 +64,7 @@
 
 										{label}
 
-										<Icon class="ml-auto text-lg" icon="mdi:chevron-right" />
+										<Icon class="ml-auto text-lg" icon="ph:caret-right-fill" />
 									</SubTrigger>
 									<ContextMenuContent {type} sub items={children} />
 								</Sub>

@@ -52,6 +52,6 @@
 	/>
 
 	{#snippet buttons()}
-		<Button icon="mdi:download" onclick={install}>{m.installModDialog_button()}</Button>
+		<Button icon="ph:download-simple-fill" onclick={install}>{m.installModDialog_button()}</Button>
 	{/snippet}
 </ConfirmDialog>

@@ -27,7 +27,7 @@
 </script>
 
 <div class={[classProp, 'border-primary-900 relative overflow-hidden rounded-lg border-2']}>
-	<div class="bg-primary-950 text-primary-300 flex w-full items-center px-3 py-2 font-bold">
+	<div class="bg-primary-900 text-primary-300 flex w-full items-center px-3 py-2 font-bold">
 		<Checkbox
 			class="mr-3"
 			checked={items.every((item, i) => get(item, i))}

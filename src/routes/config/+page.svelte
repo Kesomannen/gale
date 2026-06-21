@@ -23,7 +23,7 @@
 </script>
 
 {#if !config.loading && config.files.length === 0}
-	<HelpCard title={m.config_noFiles()} icon="mdi:folder-open-outline" class="w-full" />
+	<HelpCard title={m.config_noFiles()} icon="ph:folder-open-fill" class="w-full" />
 {:else}
 	<div class="grid w-full grid-cols-[15rem_1fr] xl:grid-cols-[20rem_1fr]">
 		{#if config.loading}
@@ -52,7 +52,7 @@
 						class="max-w-max"
 						color="primary"
 						onclick={() => api.config.openFile(selectedFile!)}
-						icon="mdi:open-in-new"
+						icon="ph:arrow-square-out-fill"
 					>
 						{m.config_unsupported_button()}
 					</Button>
@@ -67,13 +67,13 @@
 						class="max-w-max"
 						color="primary"
 						onclick={() => api.config.openFile(selectedFile!)}
-						icon="icon=mdi:open-in-new"
+						icon="ph:arrow-square-out-fill"
 					>
 						{m.config_err_button()}
 					</Button>
 				{/if}
 			{:else if !config.loading}
-				<HelpCard title={m.config_content()} icon="mdi:config" class="h-full" />
+				<HelpCard title={m.config_content()} icon="ph:faders-fill" class="h-full" />
 			{/if}
 		</div>
 	</div>

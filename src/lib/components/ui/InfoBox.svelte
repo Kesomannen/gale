@@ -14,17 +14,17 @@
 	let { icon, bgClass, iconClass } = $derived(
 		{
 			error: {
-				icon: 'mdi:error',
+				icon: 'ph:warning-circle-fill',
 				bgClass: 'bg-red-600',
 				iconClass: 'text-red-600'
 			},
 			warning: {
-				icon: 'mdi:warning',
+				icon: 'ph:warning-fill',
 				bgClass: 'bg-yellow-600',
 				iconClass: 'text-yellow-600'
 			},
 			info: {
-				icon: 'mdi:info',
+				icon: 'ph:info-fill',
 				bgClass: 'bg-accent-700',
 				iconClass: 'text-accent-700'
 			}

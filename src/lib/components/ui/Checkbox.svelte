@@ -29,11 +29,11 @@
 		class={[
 			classProp,
 			stateClasses,
-			'size-6 cursor-pointer rounded-md p-1 group-data-[disabled]:cursor-default'
+			'size-6 cursor-pointer rounded-md p-1 group-data-disabled:cursor-default'
 		]}
 	>
 		{#if checked}
-			<Icon class="h-full w-full font-bold text-white" icon="mdi:check" />
+			<Icon class="h-full w-full font-bold text-white" icon="ph:check-fill" />
 		{/if}
 	</div>
 </Checkbox.Root>

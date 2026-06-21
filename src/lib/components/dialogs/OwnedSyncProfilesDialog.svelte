@@ -73,7 +73,7 @@
 						<span class="text-primary-500 mx-1">|</span>
 
 						<span>
-							<Icon icon="mdi:clock-outline" class="mb-0.5 inline" />
+							<Icon icon="ph:clock-fill" class="mb-0.5 inline" />
 							{capitalize(timeSince(profile.updatedAt))}</span
 						>
 					</div>
@@ -82,7 +82,7 @@
 				{#if !profiles.list.some((other) => other.sync?.id === profile.id)}
 					<IconButton
 						label={m.ownedSyncProfilesDialog_button_import()}
-						icon="mdi:download"
+						icon="ph:download-simple-fill"
 						color="accent"
 						onclick={() => importProfile(profile)}
 					/>
@@ -90,7 +90,7 @@
 
 				<IconButton
 					label={m.ownedSyncProfilesDialog_button_delete()}
-					icon="mdi:delete"
+					icon="ph:trash-fill"
 					color="red"
 					onclick={() => deleteProfile(profile)}
 				/>

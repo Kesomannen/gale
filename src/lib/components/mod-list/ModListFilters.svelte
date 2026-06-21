@@ -59,7 +59,7 @@
 
 	<div class="flex grow gap-1.5">
 		<Select
-			icon={queryArgs.sortOrder === 'descending' ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
+			icon={queryArgs.sortOrder === 'descending' ? 'ph:sort-descending-fill' : 'ph:sort-ascending-fill'}
 			triggerClass="grow basis-0 py-1.5"
 			items={selectItems(['descending', 'ascending'], getOptionsLabel)}
 			bind:value={queryArgs.sortOrder}
@@ -67,7 +67,7 @@
 		/>
 
 		<Select
-			icon="mdi:sort"
+			icon="ph:list-fill"
 			triggerClass="grow basis-0 py-1.5"
 			items={selectItems(sortOptions, getOptionsLabel)}
 			bind:value={queryArgs.sortBy}
@@ -79,21 +79,21 @@
 <div class="mb-1.5 flex items-start gap-1.5">
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_include()}
-		icon="mdi:filter"
+		icon="ph:funnel-simple-fill"
 		bind:selected={queryArgs.includeCategories}
 		bind:excluded={queryArgs.excludeCategories}
 	/>
 
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_exclude()}
-		icon="mdi:filter-remove"
+		icon="ph:funnel-simple-x-fill"
 		bind:selected={queryArgs.excludeCategories}
 		bind:excluded={queryArgs.includeCategories}
 	/>
 
 	<Select
 		label={m.modListFilters_select_title()}
-		icon="mdi:filter"
+		icon="ph:funnel-fill"
 		triggerClass="min-w-36 grow basis-0 py-1.5"
 		items={selectItems(['deprecated', 'NSFW', 'enabled', 'disabled'], getOptionsLabel)}
 		onValueChange={(items) => {

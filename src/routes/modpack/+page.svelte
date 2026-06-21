@@ -328,7 +328,7 @@
 		</FormField>
 
 		<FormField label={m.modpack_icon_title()} description={m.modpack_icon_description()} required>
-			<PathField icon="mdi:file-image" onclick={browseIcon} value={iconPath} />
+			<PathField icon="ph:file-image-fill" onclick={browseIcon} value={iconPath} />
 		</FormField>
 
 		<FormField
@@ -416,10 +416,10 @@
 		</div>
 
 		<div class="mt-3 flex justify-end gap-2">
-			<Button color="primary" icon="mdi:export" onclick={exportToFile}>
+			<Button color="primary" icon="ph:export-fill" onclick={exportToFile}>
 				{m.modpack_button_export()}
 			</Button>
-			<Button color="accent" icon="mdi:upload" onclick={uploadToThunderstore}>
+			<Button color="accent" icon="ph:upload-simple-fill" onclick={uploadToThunderstore}>
 				{m.modpack_button_publish()}
 			</Button>
 		</div>

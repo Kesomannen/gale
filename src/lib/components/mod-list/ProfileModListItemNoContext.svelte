@@ -43,13 +43,13 @@
 		</div>
 
 		{#if mod.isPinned}
-			<Icon class="text-primary-400 mr-1 shrink-0" icon="mdi:pin" />
+			<Icon class="text-primary-400 mr-1 shrink-0" icon="ph:push-pin-fill" />
 		{/if}
 		{#if mod.isDeprecated}
-			<Icon class="mr-1 shrink-0 text-yellow-500" icon="mdi:warning" />
+			<Icon class="mr-1 shrink-0 text-yellow-500" icon="ph:warning-fill" />
 		{/if}
 		{#if isOutdated(mod)}
-			<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
+			<Icon class="text-accent-500 shrink-0" icon="ph:arrow-circle-up-fill" />
 		{/if}
 	</div>
 

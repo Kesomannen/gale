@@ -36,7 +36,7 @@
 						toast.type === 'error' ? 'text-red-600' : 'text-accent-600',
 						'mx-2 shrink-0 text-xl'
 					)}
-					icon={toast.type === 'error' ? 'mdi:error' : 'mdi:check-circle'}
+					icon={toast.type === 'error' ? 'ph:warning-circle-fill' : 'ph:check-circle-fill'}
 				/>
 
 				<div class="mr-4 grow overflow-hidden">
@@ -49,17 +49,13 @@
 
 				{#if toast.type === 'error'}
 					<IconButton
-						icon="mdi:content-copy"
+						icon="ph:copy-simple-fill"
 						label={m.toasts_button_copy()}
 						onclick={() => copyError(toast)}
 					/>
 				{/if}
 
-				<IconButton
-					icon="mdi:close"
-					label={m.toasts_button_clear()}
-					onclick={() => clearToast(i)}
-				/>
+				<IconButton icon="ph:x-fill" label={m.toasts_button_clear()} onclick={() => clearToast(i)} />
 			</div>
 		</div>
 	{/each}

@@ -75,7 +75,7 @@
 		class="text-accent-500 *:hover:text-accent-400 border-primary-600 *:hover:bg-primary-800 flex shrink-0 items-stretch border-r font-semibold"
 	>
 		<button onclick={() => launchGame()} class="flex items-center pr-4 pl-6">
-			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
+			<Icon icon="ph:play-circle-fill" class="mr-2 text-xl" />
 			<span>
 				{labels[mode.current]}
 			</span>
@@ -106,7 +106,7 @@
 		{games.active?.name}
 
 		<Icon
-			icon="mdi:menu"
+			icon="ph:list-fill"
 			class="text-primary-300 group-hover:text-primary-200 ml-6 shrink-0 text-lg"
 		/>
 	</button>

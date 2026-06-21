@@ -18,7 +18,7 @@
 		'bg-primary-700 text-primary-300 flex items-center rounded-lg py-1.5 pr-1 pl-3'
 	]}
 >
-	<Icon icon="mdi:lock" class="mr-2 text-xl" />
+	<Icon icon="ph:lock-fill" class="mr-2 text-xl" />
 	<span class="mr-auto">{m.profileLockedBanner_title()}</span>
 
 	<Info

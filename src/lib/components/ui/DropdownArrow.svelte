@@ -11,10 +11,10 @@
 </script>
 
 <Icon
-	icon="mdi:chevron-down"
+	icon="ph:caret-down-fill"
 	class={clsx(
 		classProp,
 		open ? 'rotate-180' : 'rotate-0',
-		'shrink-0 origin-center transform text-lg transition-transform duration-100'
+		'shrink-0 origin-center transform text-base transition-transform duration-100 ease-out'
 	)}
 />

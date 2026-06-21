@@ -493,9 +493,9 @@
 		</button>
 	{/snippet}
 
-	{@render button('hover:bg-primary-700 ml-auto', 'mdi:minimize', appWindow.minimize)}
-	{@render button('hover:bg-primary-700', 'mdi:maximize', appWindow.toggleMaximize)}
-	{@render button('hover:bg-red-700', 'mdi:close', appWindow.close)}
+	{@render button('hover:bg-primary-700 ml-auto', 'ph:minus-fill', appWindow.minimize)}
+	{@render button('hover:bg-primary-700', 'ph:square-fill', appWindow.toggleMaximize)}
+	{@render button('hover:bg-red-700', 'ph:x-fill', appWindow.close)}
 </header>
 
 <Dialog
@@ -526,7 +526,7 @@
 			color="accent"
 			loading={profileOperationInProgress}
 			onclick={doProfileOperation}
-			icon={profileOperation === 'duplicate' ? 'mdi:content-duplicate' : 'mdi:edit'}
+			icon={profileOperation === 'duplicate' ? 'ph:copy-simple-fill' : 'ph:pencil-simple-fill'}
 		>
 			{m[`menuBar_dialog_button_accent_${profileOperation}`]()}
 		</Button>

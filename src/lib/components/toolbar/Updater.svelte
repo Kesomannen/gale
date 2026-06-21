@@ -67,9 +67,9 @@
 		onclick={() => (dialogOpen = true)}
 	>
 		{#if loading}
-			<Icon icon="mdi:loading" class="animate-spin" />
+			<Icon icon="ph:circle-notch-fill" class="animate-spin" />
 		{:else}
-			<Icon icon="mdi:arrow-up-circle" />
+			<Icon icon="ph:arrow-circle-up-fill" />
 		{/if}
 		<div class="truncate text-sm">
 			{m[`updater_content_${loading ? 'downloading' : 'available'}`]()}

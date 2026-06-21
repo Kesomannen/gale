@@ -169,7 +169,7 @@
 				/>
 			</div>
 
-			<Button onclick={submitKey} {loading} icon="mdi:import"
+			<Button onclick={submitKey} {loading} icon="ph:download-simple-fill"
 				>{m.importProfileDialog_button_import()}</Button
 			>
 		</div>
@@ -195,7 +195,7 @@
 								class="absolute right-2 bottom-0 h-full cursor-default text-xl text-red-500"
 								text={m.importProfileDialog_tabsMenu_new_tooltip({ name })}
 							>
-								<Icon icon="mdi:error" />
+								<Icon icon="ph:warning-circle-fill" />
 							</Tooltip>
 						{/if}
 					</div>
@@ -260,7 +260,7 @@
 		{#if data.type === 'sync'}
 			<Tooltip text={m.importProfileDialog_sync_tooltip_content()} class="cursor-help">
 				<div class="text-primary-300 mt-2 flex items-center gap-2">
-					<Icon icon="mdi:info" />
+					<Icon icon="ph:question-fill" />
 					<div>{m.importProfileDialog_sync_tooltip_title()}</div>
 				</div>
 			</Tooltip>
@@ -295,7 +295,7 @@
 			>
 				{m.importProfileDialog_button_cancel()}
 			</Button>
-			<Button disabled={!nameAvailable} {loading} onclick={importData} icon="mdi:import">
+			<Button disabled={!nameAvailable} {loading} onclick={importData} icon="ph:download-simple-fill">
 				{m.importProfileDialog_button_import()}
 			</Button>
 		</div>

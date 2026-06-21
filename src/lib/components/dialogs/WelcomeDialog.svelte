@@ -88,7 +88,7 @@
 			<p>
 				{m.welcomeDialog_content_settings_1()}
 				<br />
-				{m.welcomeDialog_content_settings_2()}<Icon icon="mdi:settings" class="mb-1 inline" />
+				{m.welcomeDialog_content_settings_2()}<Icon icon="ph:gear-fill" class="mb-1 inline" />
 				<b>{m.welcomeDialog_content_settings_3()}</b>.
 			</p>
 

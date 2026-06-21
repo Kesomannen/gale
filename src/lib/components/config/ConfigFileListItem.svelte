@@ -20,8 +20,8 @@
 	let { colorClasses, icon } = $derived(
 		{
 			ok: { colorClasses: 'text-primary-200', icon: null },
-			err: { colorClasses: 'text-red-400', icon: 'mdi:error' },
-			unsupported: { colorClasses: 'text-primary-400', icon: 'mdi:help' }
+			err: { colorClasses: 'text-red-400', icon: 'ph:warning-circle-fill' },
+			unsupported: { colorClasses: 'text-primary-400', icon: 'ph:question-fill' }
 		}[file.type]
 	);
 
@@ -84,7 +84,7 @@
 
 		<IconButton
 			label={m.configFileListItem_button_openFile()}
-			icon="mdi:open-in-new"
+			icon="ph:arrow-square-out-fill"
 			class="mr-1 ml-2 hidden group-hover:block"
 			onclick={(evt) => {
 				evt.preventDefault();
@@ -95,7 +95,7 @@
 		{#if !locked}
 			<IconButton
 				label={m.configFileListItem_button_deleteFile()}
-				icon="mdi:delete"
+				icon="ph:trash-fill"
 				class="hidden group-hover:block"
 				onclick={(evt) => {
 					evt.preventDefault();

@@ -6,27 +6,27 @@
 	const links = [
 		{
 			to: '/',
-			icon: 'mdi:account-circle',
+			icon: 'ph:user-circle',
 			tooltip: m.navBar_link_profile()
 		},
 		{
 			to: '/browse',
-			icon: 'mdi:store-search',
+			icon: 'ph:storefront',
 			tooltip: m.navBar_link_browse()
 		},
 		{
 			to: '/config',
-			icon: 'mdi:file-cog',
+			icon: 'ph:faders',
 			tooltip: m.navBar_link_config()
 		},
 		{
 			to: '/modpack',
-			icon: 'mdi-package-variant',
+			icon: 'ph:package',
 			tooltip: m.navBar_link_modpack()
 		},
 		{
 			to: '/prefs',
-			icon: 'mdi:cog',
+			icon: 'ph:gear',
 			tooltip: m.navBar_link_prefs()
 		}
 	];

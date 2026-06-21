@@ -19,14 +19,14 @@
 	{onkeydown}
 	{placeholder}
 />
-<Icon class="text-primary-400 absolute top-1.75 left-2.5 text-2xl" icon="mdi:magnify" />
+<Icon class="text-primary-400 absolute top-2 left-2.5 text-lg" icon="ph:magnifying-glass-fill" />
 
 <button
-	class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute top-1.25 right-1.5 rounded-md p-1 text-xl"
+	class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute top-1.25 right-1.5 rounded-md p-1 text-lg"
 	onclick={() => {
 		value = '';
 		onclear?.();
 	}}
 >
-	<Icon icon="mdi:close" />
+	<Icon icon="ph:x-fill" />
 </button>

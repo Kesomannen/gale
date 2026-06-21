@@ -29,7 +29,7 @@
 
 <Dialog large bind:open>
 	{#await promise}
-		<Icon class="text-primary-300 animate-spin text-4xl" icon="mdi:loading" />
+		<Icon class="text-primary-300 animate-spin text-4xl" icon="ph:circle-notch-fill" />
 	{:then value}
 		{#if value !== null}
 			<Markdown source={value} />
@@ -40,7 +40,7 @@
 		{/if}
 	{:catch error}
 		<div class="flex items-center justify-center gap-2 text-red-400">
-			<Icon class="text-lg" icon="mdi:alert-circle-outline" />
+			<Icon class="text-lg" icon="ph:warning-circle-fill" />
 			{m.modInfoDIalog_failed({ type, error })}
 		</div>
 	{/await}
