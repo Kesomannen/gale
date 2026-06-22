@@ -16,6 +16,7 @@ jobs:
     name: Build
     outputs:
       appVersion: ${{ steps.tauri.outputs.appVersion }}
+      sha256: ${{ steps.hash.outputs.sha256 }}
     strategy:
       matrix:
         include:
@@ -46,7 +47,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dependencies (ubuntu only)
+      - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-24.04'
         run: |
           sudo apt update;
@@ -70,6 +71,13 @@ jobs:
           releaseName: '__VERSION__'
           releaseDraft: false
           args: ${{ matrix.args }}
+
+      - name: Compute AppImage hash
+        if: matrix.platform == 'ubuntu-24.04'
+        id: hash
+        run: |
+          SHA256=$(sha256sum src-tauri/target/release/bundle/appimage/*.AppImage | awk '{print $1}')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
 
   publish:
     name: Publish
@@ -132,9 +140,11 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: Generate CNAME
+      - name: Update AppImage checksum in manifest
+        env:
+          SHA256: ${{ needs.build.outputs.sha256 }}
         run: |
-          echo "kesomannen.com" > CNAME
+          sed -i "s|sha256: .*|sha256: $SHA256|" flatpak/com.kesomannen.gale.yml
 
       - name: Build and upload Flatpak bundles
         uses: andyholmes/flatter@main
