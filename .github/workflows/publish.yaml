@@ -1,7 +1,11 @@
 name: Publish
 run-name: Publish a new version
 
-on: workflow_dispatch
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -61,7 +65,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
-          tagName: __VERSION__
+          tagName: ${{ github.ref_name }}
           releaseName: '__VERSION__'
           releaseDraft: true
           args: ${{ matrix.args }}

@@ -1,5 +1,5 @@
 use eyre::{Context, Result, bail};
-use std::{process::Command, str::FromStr};
+use std::{fmt::Display, process::Command, str::FromStr};
 
 pub fn add_args(command: &mut Command, custom_args: &str) -> Result<()> {
     let args: CustomArgs = custom_args.parse().context("failed to parse custom args")?;
@@ -12,7 +12,7 @@ pub fn add_args(command: &mut Command, custom_args: &str) -> Result<()> {
 pub fn join<I, S>(words: I) -> String
 where
     I: IntoIterator<Item = S>,
-    S: AsRef<str>,
+    S: AsRef<str> + Display,
 {
     #[cfg(target_os = "linux")]
     {
@@ -23,7 +23,7 @@ where
     {
         use itertools::Itertools;
 
-        words.into_iter().map(|s| s.as_ref()).join(" ")
+        words.into_iter().join(" ")
     }
 }
 
@@ -35,7 +35,7 @@ fn split(custom_args: &str) -> Result<Vec<String>> {
 
     #[cfg(target_os = "windows")]
     {
-        winsplit::split(custom_args).context("failed to split arguments")
+        Ok(winsplit::split(custom_args))
     }
 }
 
