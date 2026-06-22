@@ -2,9 +2,6 @@ name: Publish
 run-name: Publish a new version
 
 on:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 permissions:
@@ -12,76 +9,16 @@ permissions:
   packages: write
 
 jobs:
-  build:
-    name: Build
-    outputs:
-      appVersion: ${{ steps.tauri.outputs.appVersion }}
-    strategy:
-      matrix:
-        include:
-          - platform: ubuntu-24.04
-            args: ''
-          - platform: windows-latest
-            args: '--bundles msi'
-
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 11
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install frontend dependencies
-        run: pnpm install
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-24.04'
-        run: |
-          sudo apt update;
-          sudo apt-get install -y libappindicator3-dev librsvg2-dev libudev-dev patchelf \
-            libwebkit2gtk-4.1-0=2.44.0-2 \
-            libwebkit2gtk-4.1-dev=2.44.0-2 \
-            libjavascriptcoregtk-4.1-0=2.44.0-2 \
-            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
-            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
-            gir1.2-webkit2-4.1=2.44.0-2
-
-      - name: Build Tauri app and upload artifacts
-        uses: tauri-apps/tauri-action@v0
-        id: tauri
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-        with:
-          tagName: __VERSION__
-          releaseName: '__VERSION__'
-          releaseDraft: false
-          args: ${{ matrix.args }}
-
   publish:
     name: Publish
     runs-on: ubuntu-24.04
-    needs: build
     steps:
       - uses: actions/checkout@v6
 
       - name: Download release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release download ${{ needs.build.outputs.appVersion }} --repo ${{ github.repository }}
+        run: gh release download 1.16.0 --repo ${{ github.repository }}
 
       - name: Move msi installer to bundle directory
         run: |
@@ -99,7 +36,7 @@ jobs:
       - name: Publish to Thunderstore
         env:
           TCLI_AUTH_TOKEN: ${{ secrets.THUNDERSTORE_TOKEN }}
-        run: tcli publish --package-version ${{ needs.build.outputs.appVersion }}
+        run: tcli publish --package-version 1.16.0
 
       - name: Update latest.json Github gist
         uses: exuanbo/actions-deploy-gist@v1
@@ -112,7 +49,6 @@ jobs:
   flatter:
     name: Build Flatpak
     runs-on: ubuntu-latest
-    needs: build
     container:
       image: ghcr.io/andyholmes/flatter/gnome:49
       options: --privileged
