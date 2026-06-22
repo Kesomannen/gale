@@ -36,6 +36,7 @@ modules:
       - cp -r squashfs-root/usr/share/{applications,icons} "$FLATPAK_DEST"/share/
       - install -Dm755 squashfs-root/usr/bin/gale "$FLATPAK_DEST"/bin/gale
       - install -Dm644 com.kesomannen.gale.metainfo.xml "$FLATPAK_DEST"/share/metainfo/com.kesomannen.gale.metainfo.xml
+      - install -Dm644 squashfs-root/usr/share/mime/packages/gale.xml "$FLATPAK_DEST"/share/mime/packages/com.kesomannen.gale.xml
 
     sources:
       - type: file
