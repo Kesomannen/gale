@@ -67,7 +67,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: '__VERSION__'
-          releaseDraft: true
+          releaseDraft: false
           args: ${{ matrix.args }}
 
   publish:
