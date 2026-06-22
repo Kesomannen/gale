@@ -21,7 +21,9 @@ where
 
     #[cfg(target_os = "windows")]
     {
-        words.join(" ")
+        use itertools::Itertools;
+
+        words.into_iter().map(|s| s.as_ref()).join(" ")
     }
 }
 
