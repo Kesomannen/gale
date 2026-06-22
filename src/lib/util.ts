@@ -18,32 +18,8 @@ export function shortenFileSize(size: number): string {
 	return (size / Math.pow(1024, i)).toFixed(1) + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
-function pluralize(str: string): string {
-	return isLatinAlphabet(str) ? str + 's' : str;
-}
-
 export function formatModName(name: string): string {
 	return name.replace(/_/g, ' ');
-}
-
-export function formatTime(seconds: number): string {
-	if (seconds < 60) {
-		return m.util_formatTime_seconds({ seconds: Math.round(seconds) });
-	}
-
-	if (seconds < 3600) {
-		let minutes = Math.floor(seconds / 60);
-		if (minutes > 1) {
-			return pluralize(m.util_formatTime_minute({ minutes: minutes }));
-		}
-		return m.util_formatTime_minute({ minutes: minutes });
-	}
-
-	let hours = Math.floor(seconds / 3600);
-	if (hours > 1) {
-		return pluralize(m.util_formatTime_hour({ hours: hours }));
-	}
-	return m.util_formatTime_hour({ hours: hours });
 }
 
 export function shortenNum(value: number): string {
