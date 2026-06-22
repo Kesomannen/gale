@@ -6,6 +6,12 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
+    inputs:
+      skipBuild:
+        description: 'Skip the build step'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -13,6 +19,8 @@ permissions:
 
 jobs:
   build:
+    name: Build
+    if: ${{ !inputs.skipBuild }}
     outputs:
       appVersion: ${{ steps.tauri.outputs.appVersion }}
     strategy:
@@ -65,12 +73,13 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
-          tagName: ${{ github.ref_name }}
+          tagName: __VERSION__
           releaseName: '__VERSION__'
           releaseDraft: false
           args: ${{ matrix.args }}
 
   publish:
+    name: Publish
     runs-on: ubuntu-24.04
     needs: build
     steps:
