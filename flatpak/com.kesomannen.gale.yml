@@ -42,7 +42,7 @@ modules:
         path: com.kesomannen.gale.metainfo.xml
 
       - type: file
-        url: https://github.com/Kesomannen/gale/releases/download/1.16.0/Gale_1.16.0_amd64.AppImage
+        url: https://github.com/Kesomannen/gale/releases/download/1.16.1/Gale_1.16.1_amd64.AppImage
         dest-filename: gale.AppImage
         sha256: ee72d847b8253fff08779442074c420d35e6173cf0d4ecacdf6b678dc76d59c1
         only-arches: [x86_64]

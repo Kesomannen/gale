@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.16.1 (2026-06-23)
+
+### Fixed
+
+- Inter font not being bundled with the app, causing it to fallback to the system font
+
 ## 1.16.0 (2026-06-22)
 
 ### Changed
