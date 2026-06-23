@@ -9,7 +9,7 @@
 
 	type Props = {
 		items: ListItem[];
-		mod: Snippet<[{ mod: Mod }]>;
+		mod: Snippet<[{ mod: Mod; index: number }]>;
 		onmove?: (item: ListItem, fromIndex: number, toIndex: number) => void;
 		reorderable?: boolean;
 	};
@@ -54,7 +54,7 @@
 				<!-- <ReorderableFolder folder={item.folder} {index} {hovered} /> -->
 			{:else}
 				<ReorderableMod mod={item.mod} {index} {hovered} disabled={!reorderable}>
-					{@render mod({ mod: item.mod })}
+					{@render mod({ mod: item.mod, index })}
 				</ReorderableMod>
 			{/if}
 		{/snippet}

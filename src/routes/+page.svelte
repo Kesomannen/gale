@@ -244,9 +244,10 @@
 			{/if}
 		{:else}
 			<ReorderableList bind:items {onmove} {reorderable}>
-				{#snippet mod({ mod })}
+				{#snippet mod({ mod, index })}
 					<ProfileModListItem
 						{mod}
+						{index}
 						{locked}
 						{contextItems}
 						selected={selectedMod?.uuid === mod.uuid}
