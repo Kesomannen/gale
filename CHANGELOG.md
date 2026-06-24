@@ -4,11 +4,18 @@
 
 ### Changed
 
-- UI tweaks
+- Reverted the main config page UI changes
+  - Sections are no longer combined but instead picked via dropdown
+  - When `Edit config` is clicked on the profile page, the user is prompted to select one section to edit
+  - Removed the limit on shown entries
+- Readded mod descriptions to profile page and tweaked column size ratios
+- Added tags/categories to the mod list
+- Other UI tweaks and fixes
 
 ### Fixed
 
 - Tweaked Spanish translation (thanks [@ismakenji](https://github.com/ismakenji))
+- Actually fixed Resonite Linux unmodded launch issues
 
 ## 1.16.1 (2026-06-23)
 
