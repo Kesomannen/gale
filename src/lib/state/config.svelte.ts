@@ -1,12 +1,23 @@
 import { goto } from '$app/navigation';
 import * as api from '$lib/api';
 import type { BaseConfigFile, ConfigFile, ConfigSection } from '$lib/types';
+import { untrack } from 'svelte';
+import profiles from './profile.svelte';
 
 class ConfigState {
 	files: ConfigFile[] = $state([]);
 	selectedFile: ConfigFile | null = $state(null);
 	selectedSection: ConfigSection | null = $state(null);
 	loading = $state(false);
+
+	constructor() {
+		$effect.root(() => {
+			$effect(() => {
+				profiles.activeId;
+				untrack(() => this.refresh());
+			});
+		});
+	}
 
 	async refresh() {
 		if (this.loading) return;
@@ -53,7 +64,5 @@ class ConfigState {
 }
 
 const config = new ConfigState();
-
-config.refresh();
 
 export default config;

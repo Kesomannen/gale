@@ -58,7 +58,7 @@
 	let typeName = $derived(getTypeName(value));
 </script>
 
-<div class="text-primary-300 odd:bg-primary-900/30 flex items-center px-3 py-1.5">
+<div class="text-primary-300 even:bg-primary-900/30 flex items-center px-3 py-1.5">
 	<div class="text-primary-300 w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left">
 		{toSentenceCase(entry.name)}
 	</div>

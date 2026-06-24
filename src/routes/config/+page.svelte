@@ -11,14 +11,13 @@
 	import { m } from '$lib/paraglide/messages';
 	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
 	import config from '$lib/state/config.svelte';
-	import { untrack } from 'svelte';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import { onMount } from 'svelte';
 
 	const selectedFile = $derived(config.selectedFile);
 
-	$effect(() => {
-		profiles.activeId;
-		untrack(() => config.refresh());
+	onMount(() => {
+		config.refresh();
 	});
 </script>
 

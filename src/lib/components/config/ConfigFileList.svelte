@@ -3,7 +3,6 @@
 	import type { ConfigFile } from '$lib/types';
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 
-	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
