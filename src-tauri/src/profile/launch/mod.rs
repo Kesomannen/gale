@@ -5,7 +5,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
+use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -67,7 +67,9 @@ impl ManagedGame {
         }
 
         let (launch_mode, command) = self.launch_command(vanilla, &game_dir, prefs)?;
-        info!("launching {} with command {:?}", self.game.slug, command);
+
+        info!(game = %self.game.slug, ?command, "launching");
+
         do_launch(command, app, launch_mode)?;
 
         Ok(())

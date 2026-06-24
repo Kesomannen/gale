@@ -79,16 +79,7 @@
 			label: m.modDetails_editConfig(),
 			icon: 'mdi:file-cog',
 			showFor: (mod) => mod.configFile != null,
-			onclick: (mod) => {
-				const file = config.findFileByPath(mod.configFile!);
-				if (!file) {
-					console.error('Config file not found for mod', mod.configFile);
-					return;
-				}
-
-				config.selectedFile = file;
-				goto('/config');
-			}
+			onclick: (mod) => config.gotoModConfig(mod.configFile!)
 		},
 		...defaultContextItems
 	];
@@ -267,7 +258,7 @@
 
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			{#if selectedMod && isOutdated(selectedMod) && !locked}
+			{#if isOutdated(selectedMod) && !locked}
 				<button
 					class="bg-accent-700 hover:bg-accent-600 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
 					onclick={() => updateMod(selectedMod)}

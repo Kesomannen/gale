@@ -67,7 +67,7 @@
 		onclick={() => (dialogOpen = true)}
 	>
 		{#if loading}
-			<Icon icon="mdi:loading" class="animate-spin" />
+			<Icon icon="ph:circle-notch" class="animate-spin" />
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" />
 		{/if}

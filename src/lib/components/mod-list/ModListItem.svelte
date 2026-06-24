@@ -34,7 +34,7 @@
 		role="button"
 		tabindex="0"
 		class={[
-			'group my-1 flex items-center gap-4 rounded-lg border p-3',
+			'group text-primary-400 my-1 flex items-center gap-4 rounded-lg border p-3',
 			selected
 				? 'border-primary-500 bg-primary-700'
 				: 'hover:bg-primary-700 border-primary-700 hover:border-primary-600'
@@ -62,20 +62,31 @@
 			</div>
 
 			{#if mod.description !== null}
-				<div class="text-primary-300 line-clamp-1 text-sm text-ellipsis lg:line-clamp-2">
+				<div class="line-clamp-1 text-ellipsis lg:line-clamp-2">
 					{mod.description}
 				</div>
 			{/if}
 
-			<div class="text-primary-300 mt-2 flex items-center gap-1 text-sm">
+			<div class="mt-1 flex flex-wrap items-center gap-1">
 				{#if mod.downloads !== null}
 					<Icon class="shrink-0" icon="mdi:download-outline" />
 					<span class="mr-4">{shortenNum(mod.downloads)}</span>
 				{/if}
 				{#if mod.lastUpdated}
-					<Icon class=" shrink-0" icon="mdi:clock-outline" />
-					<span class="">{timeSince(new Date(mod.lastUpdated))}</span>
+					<Icon class="shrink-0" icon="mdi:clock-outline" />
+					<span class="mr-2">{timeSince(new Date(mod.lastUpdated))}</span>
 				{/if}
+
+				{#each mod.categories?.slice(0, 3) as category (category)}
+					<span
+						class={[
+							selected ? 'bg-primary-600' : 'bg-primary-700 group-hover:bg-primary-600',
+							'text-primary-300 rounded-full px-2 py-1 text-xs'
+						]}
+					>
+						{category}
+					</span>
+				{/each}
 			</div>
 		</div>
 

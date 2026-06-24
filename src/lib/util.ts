@@ -89,9 +89,7 @@ export function thunderstoreIconUrl(fullName: string) {
 }
 
 export function capitalize(str: string): string {
-	if (!isLatinAlphabet(str)) return str;
-
-	return str.charAt(0).toUpperCase() + str.slice(1);
+	return str.charAt(0).toLocaleUpperCase() + str.slice(1);
 }
 
 export interface ListSeparator {

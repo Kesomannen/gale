@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- UI tweaks
+
+### Fixed
+
+- Tweaked Spanish translation (thanks [@ismakenji](https://github.com/ismakenji))
+
 ## 1.16.1 (2026-06-23)
 
 ### Fixed

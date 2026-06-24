@@ -59,15 +59,8 @@
 	{#each shownFiles ?? [] as file (file.relativePath)}
 		<ConfigFileListItem
 			{file}
-			selected={config.selectedFile == file}
 			duplicate={duplicateNames.has(file.displayName ?? '')}
 			locked={profiles.activeLocked}
-			onFileClicked={(file) => {
-				config.selectedFile = file;
-			}}
-			onDeleteClicked={() => {
-				config.deleteFile(file);
-			}}
 		/>
 	{/each}
 </div>

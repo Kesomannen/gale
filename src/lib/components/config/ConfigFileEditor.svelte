@@ -1,31 +1,30 @@
 <script lang="ts">
-	import { pushState } from '$app/navigation';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
 	import type { ConfigFileData, ConfigSection } from '$lib/types';
 	import SmallHeading from '../prefs/SmallHeading.svelte';
-	import InfoBox from '../ui/InfoBox.svelte';
+	import HelpCard from '../ui/HelpCard.svelte';
 	import ResetButton from '../ui/ResetButton.svelte';
 	import SearchBar from '../ui/SearchBar.svelte';
 	import ConfigEntryField from './ConfigEntryField.svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
-	import { page } from '$app/state';
 
 	type Props = {
 		file: ConfigFileData;
+		section: ConfigSection | null;
 		locked: boolean;
 	};
 
-	let { file, locked }: Props = $props();
+	let { file, section, locked }: Props = $props();
 
-	const LARGE_FILE_ENTRY_COUNT = 100;
+	let search = $state('');
 
-	let search = $derived(page.state.search ?? '');
+	const filteredEntries = $derived.by(() => {
+		if (!search) return section?.entries;
 
-	// $effect(() => {
-	// 	file;
-	// 	search = '';
-	// });
+		const lowerSearch = search.toLowerCase();
+		return section?.entries.filter((entry) => entry.name.toLowerCase().includes(lowerSearch));
+	});
 
 	async function resetAll() {
 		const confirmed = await confirm(m.config_resetAllConfirm_message({ name: file.displayName }), {
@@ -35,45 +34,10 @@
 		if (!confirmed) return;
 		await config.resetFile(file);
 	}
-
-	function sumEntryCount(sections: ConfigSection[]) {
-		return sections.reduce((acc, section) => acc + section.entries.length, 0);
-	}
-
-	function onSectionClick(section: ConfigSection) {
-		pushState('', {
-			search: section.name
-		});
-	}
-
-	let filteredSections = $derived.by(() => {
-		const lowerSearch = search.toLowerCase().trim();
-
-		return file.sections
-			.map((section) => {
-				if (section.name.toLowerCase().includes(lowerSearch)) {
-					return section;
-				}
-
-				return {
-					...section,
-					entries: section.entries.filter((entry) => {
-						return entry.name.toLowerCase().includes(lowerSearch);
-					})
-				};
-			})
-			.filter((section) => section.entries.length > 0);
-	});
-
-	let filteredEntryCount = $derived(sumEntryCount(filteredSections));
-	let overflowing = $derived(filteredEntryCount > LARGE_FILE_ENTRY_COUNT);
-
-	let totalEntryCount = $derived(sumEntryCount(file.sections));
-	let isLarge = $derived(totalEntryCount > LARGE_FILE_ENTRY_COUNT);
 </script>
 
 {#if file.metadata}
-	<div class="text-primary-400 mb-1 font-medium">
+	<div class="text-primary-400">
 		{m.configFileEditor_metadata({
 			name: file.metadata.modName,
 			version: file.metadata.modVersion
@@ -81,57 +45,40 @@
 	</div>
 {/if}
 
-<div class="flex gap-2">
-	<div class="relative grow">
-		<SearchBar
-			bind:value={search}
-			onclear={() => history.back()}
-			placeholder={m.configFileEditor_searchPlaceholder()}
-		/>
+{#if section}
+	<div class="mt-2 mb-4 flex gap-2">
+		<div class="relative grow">
+			<SearchBar
+				bind:value={search}
+				onclear={() => history.back()}
+				placeholder={m.configFileEditor_searchPlaceholder()}
+			/>
+		</div>
+
+		<ResetButton onclick={resetAll} label={m.configFileEditor_resetAll()} />
 	</div>
 
-	<ResetButton onclick={resetAll} label={m.configFileEditor_resetAll()} />
-</div>
-
-{#if isLarge}
+	{#each filteredEntries as entry (entry)}
+		<ConfigEntryField
+			{locked}
+			entryId={{
+				file,
+				section,
+				entry
+			}}
+		/>
+	{:else}
+		<HelpCard icon="mdi:magnify" title={m.configFileEditor_noResults()} />
+	{/each}
+{:else}
 	<SmallHeading>{m.configFileEditor_sections()}</SmallHeading>
 
-	<div class="text-left">
-		{#each filteredSections as section (section)}
-			<button
-				class="text-accent-400 hover:text-accent-300 block hover:underline"
-				onclick={() => onSectionClick(section)}
-			>
-				{section.name}
-			</button>
-		{/each}
-	</div>
-{/if}
-
-{#if overflowing}
-	<InfoBox type="warning">
-		{m.configFileEditor_largeFileWarning({
-			count: filteredEntryCount,
-			threshold: LARGE_FILE_ENTRY_COUNT
-		})}
-	</InfoBox>
-{/if}
-
-{#if !overflowing}
-	{#each filteredSections as section (section)}
-		<SmallHeading class="mb-1">
+	{#each file.sections as section}
+		<button
+			class="text-accent-400 hover:text-accent-300 block hover:underline"
+			onclick={() => (config.selectedSection = section)}
+		>
 			{section.name}
-		</SmallHeading>
-
-		{#each section.entries as entry (entry)}
-			<ConfigEntryField
-				{locked}
-				entryId={{
-					file,
-					section,
-					entry
-				}}
-			/>
-		{/each}
+		</button>
 	{/each}
 {/if}

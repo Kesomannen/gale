@@ -25,6 +25,7 @@
 	import config from '$lib/state/config.svelte';
 	import { goto } from '$app/navigation';
 	import InfoBox from '../ui/InfoBox.svelte';
+	import Tooltip from '../ui/Tooltip.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -146,9 +147,12 @@
 		</div>
 
 		{#if mod.lastUpdated !== null}
-			<div class="text-primary-400 mt-1 text-lg">
+			<Tooltip
+				class="text-primary-400 border-primary-400 mt-1 mb-1 border-b border-dashed text-lg"
+				text={new Date(mod.lastUpdated).toLocaleString()}
+			>
 				{m.modDetails_lastUpdated({ time: timeSince(new Date(mod.lastUpdated)) })}
-			</div>
+			</Tooltip>
 		{/if}
 
 		{#if mod.description !== null}
@@ -176,18 +180,9 @@
 			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
-			<button
-				onclick={() => {
-					const file = config.findFileByPath(mod.configFile!);
-					if (!file) {
-						console.error('Config file not found for mod', mod.configFile);
-						return;
-					}
-
-					config.selectedFile = file;
-					goto('/config');
-				}}>{m.modDetails_editConfig()}</button
-			>
+			<button onclick={() => config.gotoModConfig(mod.configFile!)}>
+				{m.modDetails_editConfig()}
+			</button>
 		</div>
 	{/if}
 
