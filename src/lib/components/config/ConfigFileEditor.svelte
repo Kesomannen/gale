@@ -19,6 +19,11 @@
 
 	let search = $state('');
 
+	$effect(() => {
+		section;
+		search = '';
+	});
+
 	const filteredEntries = $derived.by(() => {
 		if (!search) return section?.entries;
 
@@ -48,11 +53,7 @@
 {#if section}
 	<div class="mt-2 mb-4 flex gap-2">
 		<div class="relative grow">
-			<SearchBar
-				bind:value={search}
-				onclear={() => history.back()}
-				placeholder={m.configFileEditor_searchPlaceholder()}
-			/>
+			<SearchBar bind:value={search} placeholder={m.configFileEditor_searchPlaceholder()} />
 		</div>
 
 		<ResetButton onclick={resetAll} label={m.configFileEditor_resetAll()} />
