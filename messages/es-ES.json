@@ -62,6 +62,7 @@
 	"configEntryField_range": "Rango: ",
 	"configFileEditor_largeFileWarning": "Hay demasiadas entradas para mostrar; por favor, introduzca una consulta de búsqueda o seleccione una sección.",
 	"configFileEditor_metadata": "Creado por {name}{version}",
+	"configFileEditor_noResults": "No se encontraron coincidencias.",
 	"configFileEditor_resetAll": "Restablecer todo",
 	"configFileEditor_searchPlaceholder": "Buscar secciones o entradas...",
 	"configFileEditor_sections": "Secciones",
@@ -429,12 +430,17 @@
 	"unknown": "Desconocido",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "No se pudo encontrar el siguiente mod:",
 				"countPlural=other": "No se pudieron encontrar los siguientes mods:"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "¿Desinstalar?",
@@ -442,12 +448,17 @@
 	"updateAllBanner_button": "¿Actualizar todo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Hay una actualización disponible.",
 				"countPlural=other": "Hay {count} actualizaciones disponibles."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Actualizar mods",

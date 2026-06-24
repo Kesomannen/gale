@@ -62,6 +62,7 @@
 	"configEntryField_range": "Plage : ",
 	"configFileEditor_largeFileWarning": "Il y a trop d'entrées à afficher, veuillez saisir une requête de recherche ou sélectionner une section.",
 	"configFileEditor_metadata": "Créé par {name}{version}",
+	"configFileEditor_noResults": "Aucune entrée correspondante trouvée",
 	"configFileEditor_resetAll": "Réinitialiser tout",
 	"configFileEditor_searchPlaceholder": "Rechercher des sections ou des entrées...",
 	"configFileEditor_sections": "Sections",
@@ -429,12 +430,17 @@
 	"unknown": "Inconnu",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Le mod suivant est introuvable :",
 				"countPlural=other": "Les mods suivants sont introuvables :"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Le désinstaller ?",
@@ -442,12 +448,17 @@
 	"updateAllBanner_button": "Tout mettre à jour ?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Une mise à jour est disponible.",
 				"countPlural=other": "Des mises à jour {count} sont disponibles."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Mettre à jour les mods",

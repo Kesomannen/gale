@@ -62,6 +62,7 @@
 	"configEntryField_range": "范围: ",
 	"configFileEditor_largeFileWarning": "条目过多，无法全部显示，请输入搜索词或选择一个部分。",
 	"configFileEditor_metadata": "创建者: {name} {version}",
+	"configFileEditor_noResults": "未找到匹配项",
 	"configFileEditor_resetAll": "全部重置",
 	"configFileEditor_searchPlaceholder": "搜索章节或条目……",
 	"configFileEditor_sections": "章节",
@@ -429,12 +430,17 @@
 	"unknown": "未知",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "找不到以下模组：",
 				"countPlural=other": "以下模组未找到："
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "卸载它?",
@@ -442,12 +448,17 @@
 	"updateAllBanner_button": "更新所有?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一个更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模组",
