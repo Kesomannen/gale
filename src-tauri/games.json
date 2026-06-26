@@ -1170,6 +1170,19 @@
 		}
 	},
 	{
+		"name": "Goblin Cleanup",
+		"slug": "goblin-cleanup",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "GoblinCleanupModding-BepInExPack_GoblinCleanup"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2748340
+			}
+		}
+	},
+	{
 		"name": "Goodbye Volcano High",
 		"modLoader": {
 			"name": "BepInEx"
