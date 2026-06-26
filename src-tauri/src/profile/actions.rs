@@ -4,18 +4,18 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{anyhow, bail, ensure, Context, ContextCompat, OptionExt, Result};
+use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, bail, ensure};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 use uuid::Uuid;
 
 use super::{
+    Dependant, ManagedGame, Profile, ProfileMod,
     export::{IncludeExtensions, IncludeGenerated},
     import,
     install::PackageInstaller,
-    Dependant, ManagedGame, Profile, ProfileMod,
 };
 use crate::{
     config::ConfigCache,
@@ -60,19 +60,18 @@ impl Profile {
 
         ensure!(
             !new_path.exists(),
-            "profile with name '{}' already exists",
+            "profile with name {} already exists",
             name
         );
 
         debug!(
-            from = self.path.display().to_string(),
-            to = new_path.display().to_string(),
+            profile = %self.name,
+            from = %self.path.display(),
+            to = %new_path.display(),
             "renaming profile directory",
         );
 
         fs::rename(&self.path, &new_path).fs_context("renaming profile directory", &self.path)?;
-
-        info!("renamed profile: {} -> {}", self.name, name);
 
         self.name = name;
         self.path = new_path;
@@ -94,6 +93,13 @@ impl Profile {
     pub fn force_remove_mod(&mut self, uuid: Uuid) -> Result<()> {
         let index = self.index_of(uuid)?;
         let profile_mod = &self.mods[index];
+
+        debug!(
+            profile = %self.name,
+            full_name = %profile_mod.full_name(),
+            %uuid,
+            "removing mod"
+        );
 
         self.installer_for(profile_mod)
             .uninstall(profile_mod, self)?;
@@ -121,6 +127,14 @@ impl Profile {
     pub fn force_toggle_mod(&mut self, uuid: Uuid) -> Result<()> {
         let profile_mod = self.get_mod(uuid)?;
         let enabled = profile_mod.enabled;
+
+        debug!(
+            profile = %self.name,
+            full_name = %profile_mod.full_name(),
+            new_enabled = !enabled,
+            %uuid,
+            "toggling mod"
+        );
 
         self.installer_for(profile_mod)
             .toggle(enabled, profile_mod, self)?;
@@ -193,7 +207,7 @@ impl Profile {
             open::that(path)?;
             Ok(())
         } else {
-            Err(anyhow!("unsupported"))
+            Err(anyhow!("mod does not have a directory to open"))
         }
     }
 
@@ -210,6 +224,15 @@ impl Profile {
 
         let target = (index as i32 + delta).clamp(0, self.mods.len() as i32 - 1) as usize;
         let profile_mod = self.mods.remove(index);
+
+        trace!(
+            profile = %self.name,
+            full_name = %profile_mod.full_name(),
+            from = index,
+            to = target,
+            "reordering mod",
+        );
+
         self.mods.insert(target, profile_mod);
 
         Ok(())
@@ -291,9 +314,9 @@ impl ManagedGame {
         let id = db.next_profile_id()?;
 
         debug!(
-            name,
             id,
-            path = path.display().to_string(),
+            name,
+            path = %path.display(),
             "created profile",
         );
 
@@ -320,7 +343,10 @@ impl ManagedGame {
     }
 
     pub fn create_default_profile(&mut self, db: &Db) -> Result<()> {
-        info!("creating default profile for {}", self.game.slug);
+        info!(
+            game = %self.game.slug,
+            "creating default profile"
+        );
 
         let profile = self.create_profile("Default".to_owned(), None, db)?;
         self.active_profile_id = profile.id;
@@ -353,6 +379,12 @@ impl ManagedGame {
 
         let profile = self.profile(id)?;
         let index = self.index_of(id).expect("profile must exist");
+
+        info!(
+            profile = %profile.name,
+            path = %profile.path.display(),
+            "deleting profile"
+        );
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);

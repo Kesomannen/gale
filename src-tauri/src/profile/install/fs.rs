@@ -6,7 +6,7 @@ use std::{
 };
 
 use eyre::{Context, Result};
-use tracing::warn;
+use tracing::{trace, warn};
 use walkdir::WalkDir;
 use zip::ZipArchive;
 
@@ -34,7 +34,11 @@ where
     for i in 0..archive.len() {
         let mut source_file = archive.by_index(i)?;
 
+        let _span =
+            tracing::trace_span!("extract_file", index = i, name = source_file.name()).entered();
+
         if source_file.is_dir() {
+            trace!("skipping directory entry");
             continue; // we create the necessary dirs when copying files instead
         }
 
@@ -46,16 +50,19 @@ where
         };
 
         if !util::fs::is_enclosed(&relative_path) {
-            warn!(
-                "file {} escapes the archive root, skipping",
-                relative_path.display()
-            );
+            warn!("file escapes archive root, skipping",);
             continue;
         }
 
         let Some(relative_target) = map_file(&relative_path)? else {
+            trace!("map_file returned None, skipping",);
             continue;
         };
+
+        trace!(
+            mapped_path = %relative_target.display(),
+            "extracting file"
+        );
 
         let target_path = dest.join(relative_target);
 
@@ -74,6 +81,7 @@ where
 #[cfg(unix)]
 fn set_unix_mode(file: &zip::read::ZipFile, target_path: &Path) -> io::Result<()> {
     use std::os::unix::fs::PermissionsExt;
+    use tracing::debug;
 
     let mut mode = match file.unix_mode() {
         Some(mode) => mode,
@@ -81,6 +89,7 @@ fn set_unix_mode(file: &zip::read::ZipFile, target_path: &Path) -> io::Result<()
     };
 
     if target_path.extension().is_some_and(|ext| ext == "sh") {
+        debug!("setting executable bit for shell script");
         // set all scripts to be executable by everyone
         mode |= 0o111;
     }
@@ -124,11 +133,20 @@ where
             .strip_prefix(src)
             .expect("WalkDir should only return full paths inside of the root");
 
+        let _span = tracing::trace_span!(
+            "install_entry",
+            path = %relative_path.display(),
+        )
+        .entered();
+
         let target = profile.path.join(relative_path);
         if entry.file_type().is_dir() {
             if target.exists() {
+                trace!("directory already exists, skipping");
                 continue;
             }
+
+            trace!("creating directory");
 
             fs::create_dir(target).with_context(|| {
                 format!("failed to create directory {}", relative_path.display())
@@ -140,15 +158,15 @@ where
             if target_exists {
                 match (conflict, method) {
                     (ConflictResolution::Skip, _) => {
-                        warn!(
-                            "skipping file {} since it already exists",
-                            relative_path.display()
-                        );
+                        warn!("file already exists, skipping",);
                         continue;
                     }
                     // fs::copy already overwrites the target, no need to remove it
-                    (ConflictResolution::Overwrite, FileInstallMethod::Copy) => (),
+                    (ConflictResolution::Overwrite, FileInstallMethod::Copy) => {
+                        trace!("overwriting existing file");
+                    }
                     (ConflictResolution::Overwrite, FileInstallMethod::Link) => {
+                        trace!("removing existing file");
                         fs::remove_file(&target).with_context(|| {
                             format!(
                                 "failed to remove existing file at {}",
@@ -159,6 +177,7 @@ where
                 }
             }
 
+            trace!(?method, "installing file");
             match method {
                 FileInstallMethod::Link => {
                     fs::hard_link(entry.path(), target).with_context(|| {

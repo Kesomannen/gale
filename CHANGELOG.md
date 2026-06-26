@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.16.2 (2026-06-24)
 
 ### Changed
 
@@ -11,11 +11,16 @@
 - Readded mod descriptions to profile page and tweaked column size ratios
 - Added tags/categories to the mod list
 - Other UI tweaks and fixes
+- DEBUG logs are now hidden by default, but can be controlled via the `GALE_LOG` environment variable
+  - The variable syntax mirrors [tracing's directory syntax](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives)
+  - For example, `GALE_LOG=debug` will show all debug logs and avobe
+- Added more fine-grained logging
 
 ### Fixed
 
 - Tweaked Spanish translation (thanks [@ismakenji](https://github.com/ismakenji))
-- Actually fixed Resonite Linux unmodded launch issues
+- Fixed Resonite Linux unmodded launch issues again
+- Checking `Import all files` in the import profile dialog causing most mod files to be deleted from the profile
 
 ## 1.16.1 (2026-06-23)
 

@@ -16,7 +16,10 @@
 /// - `fs`: utility file system functions for common installer tasks such as extraction
 /// - `queue`: handles the queue of mod installations, orchestrating the other modules
 /// - `installers`: contains installers handle the modloader-specific file placement
-use std::{fmt::Display, iter, process};
+use std::{
+    fmt::{Debug, Display},
+    iter, process,
+};
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
@@ -81,6 +84,22 @@ impl InstallOptions {
     pub fn before_install(mut self, before_install: BeforeInstallHandler) -> Self {
         self.before_install = Some(before_install);
         self
+    }
+}
+
+impl Debug for InstallOptions {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("InstallOptions")
+            .field("cancel_behavior", &self.cancel_behavior)
+            .field(
+                "before_install",
+                if self.before_install.is_some() {
+                    &Some("<handler>")
+                } else {
+                    &None::<()>
+                },
+            )
+            .finish()
     }
 }
 
@@ -210,7 +229,7 @@ impl Display for InstallError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             InstallError::Cancelled => f.pad("installation was cancelled"),
-            InstallError::Error(report) => report.fmt(f),
+            InstallError::Error(report) => write!(f, "{report}"),
         }
     }
 }

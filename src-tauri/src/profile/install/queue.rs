@@ -17,7 +17,7 @@ use itertools::Itertools;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 use tokio::sync::{Notify, futures::Notified, oneshot};
-use tracing::warn;
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 use zip::ZipArchive;
 
@@ -170,6 +170,7 @@ impl<'a> InstallQueueLock<'a> {
         };
 
         if mod_count > 0 {
+            info!(len = mod_count, options = ?batch.options, "pushing batch to install queue");
             self.state.pending.push_back(batch);
             self.queue.notify_push.notify_waiters();
 
@@ -181,6 +182,7 @@ impl<'a> InstallQueueLock<'a> {
                 app,
             );
         } else {
+            info!(options = ?batch.options, "no mods to install, completing batch immediately");
             // complete the task immediately since there are no mods to install
             batch.complete(Ok(()), app);
         }
@@ -279,6 +281,8 @@ async fn handle_queue(app: AppHandle) {
         queue.notify_push.notified().await;
         queue.cancel.store(false, Ordering::SeqCst);
 
+        debug!("started processing batches");
+
         let mut reason = HideReason::Done;
 
         emit(InstallEvent::Show, &app);
@@ -293,6 +297,8 @@ async fn handle_queue(app: AppHandle) {
                 None => break,
             }
         }
+
+        debug!(?reason, "finished processing batches");
 
         emit(InstallEvent::Hide { reason }, &app);
 
@@ -329,7 +335,7 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
             }
             Err(InstallError::Error(err)) => {
                 rollback_batch(&batch, app, i)
-                    .unwrap_or_else(|err| warn!("failed to rollback failed installation: {err}",));
+                    .unwrap_or_else(|err| warn!(?err, "failed to rollback failed installation",));
 
                 result = Err(InstallError::Error(
                     err.wrap_err(format!("failed to install {}", install.ident)),
@@ -340,6 +346,8 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
             }
         }
     }
+
+    info!(len = batch.mods.len(), "completed batch");
 
     batch.complete(result, app);
     reason
@@ -354,6 +362,12 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
             Ok(())
         }
         CancelBehavior::Batch => {
+            info!(
+                batch_len = batch.mods.len(),
+                rollback_count = count,
+                "rolling back batch"
+            );
+
             let mut manager = app.lock_manager();
 
             let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;
@@ -362,7 +376,9 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
                 profile
                     .force_remove_mod(installed.uuid())
                     .unwrap_or_else(|err| {
-                        warn!("failed to delete {}: {err}", installed.ident);
+                        warn!(
+                            ident = %installed.ident,
+                            ?err, "failed to rollback installed mod");
                     });
             }
 
@@ -418,6 +434,11 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
         callback(install, profile)?;
     }
 
+    debug!(
+        ident = %install.ident,
+        "cache hit, installing from cache"
+    );
+
     let package_name = install.ident.full_name();
     let mut installer = game.mod_loader.installer_for(package_name);
     installer.install(&cache_path, package_name, profile)?;
@@ -453,6 +474,13 @@ async fn download(
         install.ident.path()
     );
 
+    debug!(
+        ident = %install.ident,
+        size = install.file_size,
+        url = %url,
+        "downloading mod"
+    );
+
     const MAX_RETRIES: usize = 3;
     const INITIAL_BACKOFF: Duration = Duration::from_secs(2);
 
@@ -481,7 +509,7 @@ async fn download(
 
                 retries += 1;
 
-                warn!(attempt = retries, err = ?err, "download failed, retrying in {backoff:?}");
+                warn!(attempt = retries, err = ?err, url = %url, backoff = ?backoff, "download failed, retrying");
 
                 tokio::time::sleep(backoff).await;
                 backoff *= 2;
@@ -595,6 +623,11 @@ fn install_from_download(
     if let Some(callback) = &batch.options.before_install {
         callback(install, profile)?;
     }
+
+    debug!(
+        ident = %install.ident,
+        "installing mod"
+    );
 
     installer.install(&cache_path, package_name, profile)?;
     install.clone().insert_into(profile)?;

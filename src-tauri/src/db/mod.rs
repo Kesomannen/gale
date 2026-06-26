@@ -1,6 +1,6 @@
 use std::{
     collections::HashSet,
-    iter,
+    env, iter,
     sync::{Mutex, MutexGuard},
 };
 
@@ -46,7 +46,9 @@ pub fn init() -> Result<(Db, bool)> {
     conn.pragma_update(None, "synchronous", "normal")
         .context("failed to set synchronous mode")?;
 
-    conn.trace(Some(trace_stmt));
+    if env::var("GALE_DEBUG_SQL").is_ok() {
+        conn.trace(Some(trace_stmt));
+    }
 
     run_migrations(&mut conn).context("failed to run migrations")?;
 

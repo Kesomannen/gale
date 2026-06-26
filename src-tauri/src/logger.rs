@@ -6,7 +6,7 @@ use std::{
 use eyre::{Context, OptionExt, Result};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, command};
-use tracing::Level;
+use tracing::{Level, level_filters::LevelFilter};
 use tracing_subscriber::{Registry, filter::Targets, prelude::*};
 
 use crate::util::{self, fs::PathExt};
@@ -46,25 +46,23 @@ pub fn setup() -> Result<()> {
 
     tracing_log::LogTracer::init()?;
 
+    let env_filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .with_env_var("GALE_LOG")
+        .from_env_lossy();
+
     let filter = Targets::new()
         .with_target("tauri_plugin_updater", Level::INFO)
         .with_target("hyper_util::client", Level::INFO)
         .with_target("reqwest::connect", Level::INFO)
-        .with_default(Level::DEBUG);
+        .with_target("reqwest::retry", Level::DEBUG)
+        .with_default(Level::TRACE);
 
     let subscriber = Registry::default()
-        .with(
-            tracing_subscriber::fmt::layer()
-                .with_ansi(true)
-                .with_filter(filter.clone()),
-        )
-        .with(
-            tracing_subscriber::fmt::layer()
-                .compact()
-                .with_ansi(false)
-                .with_writer(log_file)
-                .with_filter(filter),
-        );
+        .with(filter)
+        .with(env_filter)
+        .with(tracing_subscriber::fmt::layer())
+        .with(tracing_subscriber::fmt::layer().with_writer(log_file));
 
     tracing::subscriber::set_global_default(subscriber).context("failed to register subscriber")?;
 

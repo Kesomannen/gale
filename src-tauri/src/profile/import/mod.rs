@@ -12,7 +12,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::{trace, warn};
+use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -129,6 +129,13 @@ pub(super) async fn import_profile(
     install_options: InstallOptions,
     app: &AppHandle,
 ) -> Result<i64> {
+    info!(
+        name = %data.manifest.name,
+        options = ?options,
+        install_options = ?install_options,
+        "importing profile"
+    );
+
     let (profile_id, profile_path, to_install) = prepare_import(&options, data.manifest, app)?;
 
     let result = app
@@ -302,10 +309,12 @@ pub fn import_config(
     extensions: IncludeExtensions,
     generated: IncludeGenerated,
 ) -> Result<()> {
-    let existing_files = export::find_config(dest, extensions, generated);
+    let existing_files = export::find_config(dest, IncludeExtensions::Default, generated);
     let source_files = export::find_config(src, extensions, generated);
 
     if !merge {
+        debug!("merge is disabled, removing config files not present in source");
+
         for file in existing_files {
             let exists_in_src = src.join(&file).exists()
                 || file
@@ -313,11 +322,16 @@ pub fn import_config(
                     .is_ok_and(|suffix| src.join("config").join(suffix).exists());
 
             if !exists_in_src {
-                trace!("remove {}", file.display());
+                trace!(
+                    relative_path = %file.display(),
+                    "remove extra file"
+                );
                 fs::remove_file(dest.join(&file))?;
             }
         }
     }
+
+    debug!("importing config files from source to destination");
 
     for file in source_files {
         let src_path = src.join(&file);
@@ -334,9 +348,17 @@ pub fn import_config(
         };
 
         if need_copy {
-            trace!("copy {}", file.display());
+            trace!(
+                relative_path = %file.display(),
+                "copy file"
+            );
             fs::create_dir_all(dest_path.parent().unwrap())?;
             fs::copy(src_path, dest_path)?;
+        } else {
+            trace!(
+                relative_path = %file.display(),
+                "file is identical, skipping copy"
+            );
         }
     }
 
