@@ -30,15 +30,27 @@
 			"timestampUrl": ""
 		},
 		"linux": {
+			"appimage": {
+				"files": {
+					"/usr/share/mime/packages/gale.xml": "../assets/gale-mime.xml"
+				}
+			},
 			"deb": {
-				"depends": []
+				"files": {
+					"/usr/share/mime/packages/gale.xml": "../assets/gale-mime.xml"
+				}
+			},
+			"rpm": {
+				"files": {
+					"/usr/share/mime/packages/gale.xml": "../assets/gale-mime.xml"
+				}
 			}
 		},
 		"resources": [],
 		"fileAssociations": [
 			{
 				"ext": ["r2z"],
-				"mimeType": "application/zip"
+				"mimeType": "application/x-r2z"
 			}
 		]
 	},
