@@ -3,10 +3,12 @@ use std::{
     fs::{self, File},
     io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use eyre::{Context, Result, eyre};
+use globset::{Glob, GlobSet, GlobSetBuilder};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -14,6 +16,7 @@ use tauri::AppHandle;
 use tempfile::tempdir;
 use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
+use walkdir::WalkDir;
 
 use crate::{
     profile::{
@@ -31,10 +34,7 @@ mod r2modman;
 
 pub use local::{import_local_mod, import_local_mod_base64};
 
-use super::{
-    Profile,
-    export::{self, IncludeExtensions, IncludeGenerated},
-};
+use super::Profile;
 
 pub fn read_file_at_path(path: PathBuf) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
@@ -113,16 +113,6 @@ pub struct ImportOptions {
     merge: bool,
 }
 
-impl ImportOptions {
-    fn included_extensions(&self) -> IncludeExtensions {
-        if self.import_all {
-            IncludeExtensions::All
-        } else {
-            IncludeExtensions::Default
-        }
-    }
-}
-
 pub(super) async fn import_profile(
     data: ImportData,
     options: ImportOptions,
@@ -145,14 +135,7 @@ pub(super) async fn import_profile(
 
     let result = match result {
         Ok(()) => {
-            import_config(
-                &profile_path,
-                &data.path,
-                options.merge,
-                options.included_extensions(),
-                IncludeGenerated::No,
-            )
-            .context("error importing config")?;
+            import_config(&profile_path, &data.path, &options).context("error importing config")?;
 
             Ok(profile_id)
         }
@@ -302,40 +285,26 @@ fn incremental_update(
     Ok(to_install)
 }
 
-pub fn import_config(
-    dest: &Path,
-    src: &Path,
-    merge: bool,
-    extensions: IncludeExtensions,
-    generated: IncludeGenerated,
-) -> Result<()> {
-    let existing_files = export::find_config(dest, IncludeExtensions::Default, generated);
-    let source_files = export::find_config(src, extensions, generated);
-
-    if !merge {
-        debug!("merge is disabled, removing config files not present in source");
-
-        for file in existing_files {
-            let exists_in_src = src.join(&file).exists()
-                || file
-                    .strip_prefix("BepInEx/config")
-                    .is_ok_and(|suffix| src.join("config").join(suffix).exists());
-
-            if !exists_in_src {
-                trace!(
-                    relative_path = %file.display(),
-                    "remove extra file"
-                );
-                fs::remove_file(dest.join(&file))?;
-            }
-        }
-    }
+pub fn import_config(dest: &Path, src: &Path, options: &ImportOptions) -> Result<()> {
+    let src_files = WalkDir::new(src)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_file())
+        .map(|entry| {
+            entry
+                .into_path()
+                .strip_prefix(src)
+                .expect("path should be child of source")
+                .to_path_buf()
+        })
+        .filter(|path| options.import_all || is_always_included(path));
 
     debug!("importing config files from source to destination");
 
-    for file in source_files {
+    for file in src_files {
         let src_path = src.join(&file);
-        let dest_path = if file.starts_with("config") {
+        let dest_path = if file.starts_with("config/") {
             dest.join("BepInEx").join(&file)
         } else {
             dest.join(&file)
@@ -363,4 +332,17 @@ pub fn import_config(
     }
 
     Ok(())
+}
+
+fn is_always_included(path: impl AsRef<Path>) -> bool {
+    static EXCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
+        GlobSetBuilder::new()
+            .add(Glob::new("export.r2x").unwrap())
+            .add(Glob::new("mods.yml").unwrap())
+            .add(Glob::new("*.{dll,exe,scr,com,pif,bat,cmd,ps1,vbs,vbe,js,jse,wsf,wsh,hta,msi,msix,sys,drv,cpl,ocx,lnk,reg,inf}").unwrap())
+            .build()
+            .unwrap()
+    });
+
+    !EXCLUDE_SET.is_match(path.as_ref())
 }

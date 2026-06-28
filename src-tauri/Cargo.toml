@@ -80,6 +80,7 @@ reqwest-websocket = { version = "0.5.1", features = ["json"] }
 tracing-log = "0.2.0"
 shell-words = "1.1.1"
 winsplit = "0.1.0"
+globset = "0.4.18"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

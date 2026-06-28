@@ -11,16 +11,12 @@ use tauri::{AppHandle, Listener};
 use tracing::{debug, info, trace};
 use uuid::Uuid;
 
-use super::{
-    Dependant, ManagedGame, Profile, ProfileMod,
-    export::{IncludeExtensions, IncludeGenerated},
-    import,
-    install::PackageInstaller,
-};
+use super::{Dependant, ManagedGame, Profile, ProfileMod, import, install::PackageInstaller};
 use crate::{
     config::ConfigCache,
     db::Db,
     logger,
+    profile::import::ImportOptions,
     state::ManagerExt,
     thunderstore::Thunderstore,
     util::{
@@ -418,16 +414,24 @@ impl ManagedGame {
         let old_profile = self.profile(id)?;
         let new_profile = self.active_profile();
 
-        // Make sure generated files and configs are properly copied
-        // and not linked between the two profiles.
+        // Make sure configs are properly copied and not linked between the two profiles
         import::import_config(
             &new_profile.path,
             &old_profile.path,
-            false,
-            IncludeExtensions::Default,
-            IncludeGenerated::Yes,
+            &ImportOptions::default(),
         )
         .context("failed to copy config files")?;
+
+        // State should also be a deep copy, but is not included in the config files
+        if old_profile.path.join("_state").exists() {
+            util::fs::copy_dir(
+                old_profile.path.join("_state"),
+                new_profile.path.join("_state"),
+                Overwrite::No,
+                UseLinks::No,
+            )
+            .context("failed to copy generated files")?;
+        }
 
         util::fs::copy_dir(
             &old_profile.path,

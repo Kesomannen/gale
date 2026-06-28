@@ -23,12 +23,14 @@
 </script>
 
 <Dialog title={m.exportCodeDialog_title()} bind:open={isOpen}>
-	<p class="flex-center text-primary-400 mb-1 flex">
+	<p class="text-primary-400 mb-1 flex items-center">
 		{#await codePromise}
 			<Spinner class="text-lg" />
-			{m.exportCodeDialog_content_1({
-				name: profiles.active?.name ?? m.exportCodeDialog_content_unknown()
-			})}
+			<span>
+				{m.exportCodeDialog_content_1({
+					name: profiles.active?.name ?? m.exportCodeDialog_content_unknown()
+				})}
+			</span>
 		{:then}
 			{m.exportCodeDialog_content_2()}
 		{/await}

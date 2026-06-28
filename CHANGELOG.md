@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Gale being registered as a handler for all zip files on Linux (thanks [@Damglador](https://github.com/Damglador))
+
 ## 1.17.0 (2026-06-26)
 
 ### Changed
