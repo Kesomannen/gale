@@ -6,6 +6,17 @@
 
 A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [Svelte](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
+## Getting Started
+
+If you want to hack on Gale from source, the fastest path is:
+
+1. Install `pnpm`, `Node.js`, and Rust via `rustup`.
+2. Clone this repo and run `pnpm install`.
+3. Start the web UI with `pnpm dev`.
+4. In a second terminal, run `cd src-tauri && cargo run`.
+
+The app uses Svelte for UI and Tauri for the native shell, so frontend and backend often need to be run together while developing.
+
 ## Features
 
 - Support for all 150+ games on Thunderstore, including Lethal Company, R.E.P.O and Risk Of Rain 2
@@ -22,11 +33,29 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
 
 Gale now builds as a native unsigned Apple Silicon macOS app.
 
+#### Developing on macOS
+
+If you are developing Gale on macOS, this is the setup that matches the current repo:
+
+- Use Apple Silicon macOS. The native app target is `universal-apple-darwin`.
+- Install Xcode Command Line Tools before building native dependencies.
+- Run `xcode-select --install` if you have not already installed them.
+- Use Rust `1.88` or newer. The backend is pinned to `rust-version = "1.88"` in `src-tauri/Cargo.toml`.
+- Use the repo `pnpm` scripts for frontend work:
+  - `pnpm dev` for the Svelte app
+  - `pnpm check` for type and Svelte diagnostics
+  - `pnpm tauri dev` for the full desktop app
+- For a macOS release-style build, use `pnpm tauri build --target universal-apple-darwin --bundles app`.
+- Some features are still platform-limited on macOS:
+  - game discovery and launching are not yet supported
+  - Steam launching is not yet supported
+  - desktop shortcut creation is not yet supported
+
 - Download the macOS `.app.tar.gz` archive from [Releases](https://github.com/Kesomannen/gale/releases)
   when available, then extract it.
 - Open the extracted `.app` bundle. Because it is unsigned, macOS may require right-clicking it,
   selecting **Open**, then confirming **Open**.
-- Game discovery and launching are not yet supported on macOS.
+- If you are testing locally, build first and launch the app bundle from the generated `target/release/bundle/macos/` output.
 
 ### Windows
 
