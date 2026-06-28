@@ -3,11 +3,11 @@
 /// Installation in Gale happens like the following:
 ///
 /// 1) The mod ZIP is downloaded from Thunderstore and extracted according to the modloader-specific rules.
-/// This is handled by [`PackageInstaller::extract`], implemented in the respective `installers` submodules.
+///    This is handled by [`PackageInstaller::extract`], implemented in the respective `installers` submodules.
 /// 2) The extracted files are placed into `<data directory>/cache/<author-name>/<version>`.
 /// 3) The files are copied to the profile folder (at the same relative path). Most files are copied using
-/// hard links, but ones that are expected to change are properly cloned. This is also implemented in the
-/// respective `installers` submodules.
+///    hard links, but ones that are expected to change are properly cloned. This is also implemented in the
+///    respective `installers` submodules.
 ///
 /// If the cache is hit, we skip directly to step 3). This process is orchestrated in the `queue` module.
 ///

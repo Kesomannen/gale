@@ -7,7 +7,7 @@ license = "GPL-3.0"
 repository = "https://github.com/Kesomannen/gale"
 default-run = "gale"
 edition = "2024"
-rust-version = "1.87"
+rust-version = "1.88"
 
 [[bin]]
 name = "gale"
@@ -54,6 +54,7 @@ base64 = "0.22"
 heck = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 keyring = { version = "3", features = [
+    "apple-native",
     "windows-native",
     "linux-native-sync-persistent",
 ] }

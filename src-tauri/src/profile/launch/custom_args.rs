@@ -14,12 +14,12 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<str> + Display,
 {
-    #[cfg(target_os = "linux")]
+    #[cfg(unix)]
     {
         shell_words::join(words)
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(unix))]
     {
         use itertools::Itertools;
 
@@ -28,12 +28,12 @@ where
 }
 
 fn split(custom_args: &str) -> Result<Vec<String>> {
-    #[cfg(target_os = "linux")]
+    #[cfg(unix)]
     {
         shell_words::split(custom_args).context("failed to split arguments")
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(not(unix))]
     {
         Ok(winsplit::split(custom_args))
     }
@@ -144,6 +144,12 @@ mod tests {
         let result = CustomArgs::from_str(r#"--foo "bar baz""#).unwrap();
         let expected = new_args(vec!["--foo", "bar baz"], vec![], None);
         assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn unix_quoted_args() {
+        let result = CustomArgs::from_str(r#"--name "Mac Profile""#).unwrap();
+        assert_eq!(result.args, vec!["--name", "Mac Profile"]);
     }
 
     #[test]

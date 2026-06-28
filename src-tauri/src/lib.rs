@@ -31,7 +31,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         error!("setup error: {err:?}");
 
         // Linux dialog often won't work before the event loop starts and instead hangs the application
-        #[cfg(target_os = "windows")]
+        #[cfg(any(target_os = "windows", target_os = "macos"))]
         {
             use tauri_plugin_dialog::DialogExt;
 

@@ -18,6 +18,16 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
 
 ## Installation
 
+### macOS
+
+Gale now builds as a native unsigned Apple Silicon macOS app.
+
+- Download the macOS `.app.tar.gz` archive from [Releases](https://github.com/Kesomannen/gale/releases)
+  when available, then extract it.
+- Open the extracted `.app` bundle. Because it is unsigned, macOS may require right-clicking it,
+  selecting **Open**, then confirming **Open**.
+- Game discovery and launching are not yet supported on macOS.
+
 ### Windows
 
 <details>
@@ -29,6 +39,7 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
   - Extract the downloaded .zip file (for example by right-clicking and choosing _Extract All_).
   - Run the `Gale_X.X.X_x64_en-US.msi` file inside of the extracted folder.
 </details>
+
 
 <details>
   <summary>
@@ -82,7 +93,6 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
   yay -S gale-bin
   ```
 </details>
-
 
 <details>
   <summary>

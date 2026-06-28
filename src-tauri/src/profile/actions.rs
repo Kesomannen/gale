@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, bail, ensure};
+use eyre::{Context, OptionExt, Result, anyhow, bail, ensure};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
@@ -80,10 +80,10 @@ impl Profile {
     }
 
     pub fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
-        if self.get_mod(uuid)?.enabled {
-            if let Some(dependants) = self.check_dependants(uuid, true, thunderstore) {
-                return Ok(ActionResult::Confirm { dependants });
-            }
+        if self.get_mod(uuid)?.enabled
+            && let Some(dependants) = self.check_dependants(uuid, true, thunderstore)
+        {
+            return Ok(ActionResult::Confirm { dependants });
         }
 
         self.force_remove_mod(uuid)?;
@@ -449,6 +449,12 @@ impl ManagedGame {
         Ok(new_profile)
     }
 
+    #[cfg(target_os = "macos")]
+    pub fn create_desktop_shortcut(&self) -> Result<()> {
+        bail!("desktop shortcuts are not yet supported on macOS")
+    }
+
+    #[cfg(not(target_os = "macos"))]
     pub fn create_desktop_shortcut(&self) -> Result<()> {
         let profile = self.active_profile();
 

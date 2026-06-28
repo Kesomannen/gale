@@ -5,12 +5,16 @@ use std::{
     process::Command,
 };
 
-use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
+#[cfg(not(target_os = "macos"))]
+use eyre::Context;
+use eyre::{OptionExt, Result, bail, ensure, eyre};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
-use tracing::{info, warn};
+#[cfg(not(target_os = "macos"))]
+use tracing::warn;
+use tracing::info;
 use walkdir::WalkDir;
 
 use super::ManagedGame;
@@ -42,6 +46,7 @@ pub enum LaunchMode {
     Direct { instances: u32, interval_secs: f32 },
 }
 
+#[cfg_attr(target_os = "macos", allow(dead_code))]
 impl LaunchMode {
     fn instances(&self) -> u32 {
         match self {
@@ -59,6 +64,12 @@ impl LaunchMode {
 }
 
 impl ManagedGame {
+    #[cfg(target_os = "macos")]
+    pub fn launch(&self, _vanilla: bool, _prefs: &Prefs, _app: &AppHandle) -> Result<()> {
+        bail!("game discovery and launching are not yet supported on macOS")
+    }
+
+    #[cfg(not(target_os = "macos"))]
     pub fn launch(&self, vanilla: bool, prefs: &Prefs, app: &AppHandle) -> Result<()> {
         let game_dir =
             locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
@@ -141,7 +152,7 @@ impl ManagedGame {
                 is_proton
             };
 
-            #[cfg(target_os = "windows")]
+            #[cfg(not(target_os = "linux"))]
             let is_proton = false;
 
             if is_proton {
@@ -162,6 +173,7 @@ impl ManagedGame {
         Ok((launch_mode, command))
     }
 
+    #[cfg_attr(target_os = "macos", allow(dead_code))]
     fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
         const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
@@ -210,6 +222,7 @@ impl ManagedGame {
     }
 }
 
+#[cfg_attr(target_os = "macos", allow(dead_code))]
 fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<()> {
     match mode.instances() {
         0 => bail!("instances must be greater than 0"),

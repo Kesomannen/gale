@@ -9,7 +9,12 @@ on:
 
 jobs:
   check-backend:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-14
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -17,7 +22,25 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install pnpm
+        if: matrix.os == 'macos-14'
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - name: Use Node.js 24
+        if: matrix.os == 'macos-14'
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install frontend dependencies
+        if: matrix.os == 'macos-14'
+        run: pnpm install --frozen-lockfile
+
       - name: Install build dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update;
           sudo apt-get install -y libappindicator3-dev librsvg2-dev libudev-dev patchelf \
@@ -32,6 +55,13 @@ jobs:
         run: |
           cd src-tauri
           cargo clippy --all-targets -- -D warnings
+
+      - name: Run Rust tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Build macOS app
+        if: matrix.os == 'macos-14'
+        run: pnpm tauri build --bundles app
 
   check-frontend:
     runs-on: ubuntu-latest
