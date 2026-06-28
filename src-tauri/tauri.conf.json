@@ -14,7 +14,7 @@
 		"copyright": "",
 		"targets": "all",
 		"externalBin": [],
-		"createUpdaterArtifacts": false,
+		"createUpdaterArtifacts": true,
 		"shortDescription": "A modern mod manager for Thunderstore",
 		"longDescription": "",
 		"icon": [

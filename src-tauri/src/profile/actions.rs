@@ -80,10 +80,10 @@ impl Profile {
     }
 
     pub fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
-        if self.get_mod(uuid)?.enabled
-            && let Some(dependants) = self.check_dependants(uuid, true, thunderstore)
-        {
-            return Ok(ActionResult::Confirm { dependants });
+        if self.get_mod(uuid)?.enabled {
+            if let Some(dependants) = self.check_dependants(uuid, true, thunderstore) {
+                return Ok(ActionResult::Confirm { dependants });
+            }
         }
 
         self.force_remove_mod(uuid)?;

@@ -52,7 +52,7 @@ impl R2Mod {
         self.ident.with_version(&self.version)
     }
 
-    pub fn to_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
+    pub fn into_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
         let borrowed_mod = thunderstore.find_ident(&self.version_ident())?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))

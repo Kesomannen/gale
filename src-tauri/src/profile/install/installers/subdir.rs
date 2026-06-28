@@ -205,10 +205,10 @@ impl<'a> SubdirInstaller<'a> {
     ) -> Result<Option<Cow<'p, Path>>> {
         use std::path::Component;
 
-        if let Some(str) = relative_path.to_str()
-            && self.ignored_files.contains(&str)
-        {
-            return Ok(None);
+        if let Some(str) = relative_path.to_str() {
+            if self.ignored_files.contains(&str) {
+                return Ok(None);
+            }
         }
 
         // find a subdir in the file path, ex.
@@ -224,10 +224,10 @@ impl<'a> SubdirInstaller<'a> {
             match components.next() {
                 Some(Component::Normal(name)) => {
                     prev.push(name);
-                    if let Some(name) = name.to_str()
-                        && let Some(subdir) = self.match_subdir(name)
-                    {
-                        break subdir; // found a subdir
+                    if let Some(name) = name.to_str() {
+                        if let Some(subdir) = self.match_subdir(name) {
+                            break subdir; // found a subdir
+                        }
                     }
                 }
                 // remove the previous parent
@@ -467,12 +467,12 @@ impl PackageInstaller for SubdirInstaller<'_> {
                     let profile_state =
                         profile_state.get_or_insert_with(|| ProfileStateHandle::new(profile));
 
-                    if exists
-                        && let Some(owner) = profile_state.file_map().get(relative_path)
-                    {
-                        let mut package = PackageStateHandle::new(owner, profile);
-                        package.files().retain(|file| file != relative_path);
-                        package.commit()?;
+                    if exists {
+                        if let Some(owner) = profile_state.file_map().get(relative_path) {
+                            let mut package = PackageStateHandle::new(owner, profile);
+                            package.files().retain(|file| file != relative_path);
+                            package.commit()?;
+                        }
                     }
 
                     profile_state

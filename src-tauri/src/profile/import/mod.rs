@@ -195,7 +195,7 @@ fn prepare_import(
 
     let installs = mods
         .into_iter()
-        .map(|r2_mod| r2_mod.to_install(&thunderstore))
+        .map(|r2_mod| r2_mod.into_install(&thunderstore))
         .collect::<Result<Vec<_>>>()?;
 
     let game = manager.active_game_mut();

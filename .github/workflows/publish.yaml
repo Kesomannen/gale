@@ -17,11 +17,11 @@ jobs:
       matrix:
         include:
           - platform: ubuntu-24.04
-            args: '--config ''{"bundle":{"createUpdaterArtifacts":true}}'''
+            args: ''
           - platform: windows-latest
-            args: '--bundles msi --config ''{"bundle":{"createUpdaterArtifacts":true}}'''
+            args: '--bundles msi'
           - platform: macos-14
-            args: '--bundles app --config ''{"bundle":{"createUpdaterArtifacts":true}}'''
+            args: '--bundles app'
 
     runs-on: ${{ matrix.platform }}
     steps:
