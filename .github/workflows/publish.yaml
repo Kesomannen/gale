@@ -21,7 +21,7 @@ jobs:
           - platform: windows-latest
             args: '--bundles msi'
           - platform: macos-14
-            args: '--bundles app'
+            args: '--target universal-apple-darwin --bundles app'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -44,6 +44,10 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Add universal macOS Rust targets
+        if: matrix.platform == 'macos-14'
+        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-24.04'

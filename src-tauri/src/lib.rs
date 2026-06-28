@@ -107,7 +107,7 @@ pub fn run() {
         eprintln!("failed to set up logger: {err:#}");
     });
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             is_flatpak,
             logger::open_gale_log,
@@ -210,8 +210,12 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         // TODO .plugin(tauri_plugin_oauth::Builder)
-        .plugin(tauri_plugin_single_instance::init(handle_single_instance))
-        .setup(setup)
+        .plugin(tauri_plugin_single_instance::init(handle_single_instance));
+
+    #[cfg(target_os = "macos")]
+    let app = app.menu(tauri::menu::Menu::default);
+
+    app.setup(setup)
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
         .run(event_handler);
