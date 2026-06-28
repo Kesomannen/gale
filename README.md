@@ -74,7 +74,7 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
     <b>Arch</b>
   </summary>
   
-  Gale is available as a **community-maintained** [AUR package](https://aur.archlinux.org/packages/gale-bin).
+  Gale is available as two **community-maintained** AUR packages: [gale](https://aur.archlinux.org/packages/gale) (from source) and [gale-bin](https://aur.archlinux.org/packages/gale-bin) (prebuilt).
   
   Example installation command:
   
