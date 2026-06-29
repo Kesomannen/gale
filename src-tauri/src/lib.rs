@@ -43,12 +43,27 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         return Err(err.into());
     }
 
-    if let Err(err) = app.deep_link().register("ror2mm") {
-        warn!("failed to register ror2mm deep link protocol: {:#}", err);
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        if let Err(err) = app.deep_link().register("ror2mm") {
+            warn!("failed to register ror2mm deep link protocol: {:#}", err);
+        }
+
+        if let Err(err) = app.deep_link().register("gale") {
+            warn!("failed to register gale deep link protocol: {:#}", err);
+        }
     }
 
-    if let Err(err) = app.deep_link().register("gale") {
-        warn!("failed to register gale deep link protocol: {:#}", err);
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(urls) = app.deep_link().get_current()? {
+            deep_link::handle_urls(app.handle(), urls.iter().map(|url| url.as_str()));
+        }
+
+        let handle = app.handle().to_owned();
+        app.deep_link().on_open_url(move |event| {
+            deep_link::handle_urls(&handle, event.urls().iter().map(|url| url.as_str()));
+        });
     }
 
     let args = env::args().collect_vec();
@@ -107,7 +122,9 @@ pub fn run() {
         eprintln!("failed to set up logger: {err:#}");
     });
 
+    // TODO: add tauri_plugin_oauth when the plugin is ready.
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .invoke_handler(tauri::generate_handler![
             is_flatpak,
             logger::open_gale_log,
@@ -208,9 +225,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_http::init())
-        .plugin(tauri_plugin_window_state::Builder::new().build())
-        // TODO .plugin(tauri_plugin_oauth::Builder)
-        .plugin(tauri_plugin_single_instance::init(handle_single_instance));
+        .plugin(tauri_plugin_window_state::Builder::new().build());
 
     #[cfg(target_os = "macos")]
     let app = app.menu(tauri::menu::Menu::default);

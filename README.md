@@ -31,13 +31,13 @@ The app uses Svelte for UI and Tauri for the native shell, so frontend and backe
 
 ### macOS
 
-Gale now builds as a native unsigned Apple Silicon macOS app.
+Gale now builds as a native unsigned universal macOS app for Apple Silicon and Intel Macs.
 
 #### Developing on macOS
 
 If you are developing Gale on macOS, this is the setup that matches the current repo:
 
-- Use Apple Silicon macOS. The native app target is `universal-apple-darwin`.
+- The native app target is `universal-apple-darwin`.
 - Install Xcode Command Line Tools before building native dependencies.
 - Run `xcode-select --install` if you have not already installed them.
 - Use Rust `1.88` or newer. The backend is pinned to `rust-version = "1.88"` in `src-tauri/Cargo.toml`.
@@ -55,7 +55,8 @@ If you are developing Gale on macOS, this is the setup that matches the current 
   when available, then extract it.
 - Open the extracted `.app` bundle. Because it is unsigned, macOS may require right-clicking it,
   selecting **Open**, then confirming **Open**.
-- If you are testing locally, build first and launch the app bundle from the generated `target/release/bundle/macos/` output.
+- If you are testing locally, build first and launch the app bundle from
+  `src-tauri/target/universal-apple-darwin/release/bundle/macos/`.
 
 ### Windows
 

@@ -12,9 +12,55 @@ use crate::{
     thunderstore::{self, IntoFrontendMod},
 };
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum DeepLinkKind {
+    R2Install,
+    AuthCallback,
+    ImportProfile,
+    CloneSyncProfile,
+    ProfileFile,
+}
+
+fn classify_url(url: &str) -> Option<DeepLinkKind> {
+    if url.starts_with("ror2mm://") {
+        Some(DeepLinkKind::R2Install)
+    } else if url.starts_with("gale://auth/callback") {
+        Some(DeepLinkKind::AuthCallback)
+    } else if url.starts_with("gale://profile/import") {
+        Some(DeepLinkKind::ImportProfile)
+    } else if url.starts_with("gale://profile/sync/clone") {
+        Some(DeepLinkKind::CloneSyncProfile)
+    } else if url.ends_with("r2z") {
+        Some(DeepLinkKind::ProfileFile)
+    } else {
+        None
+    }
+}
+
 pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
     let Some(url) = args.into_iter().nth(1) else {
         debug!("deep link has too few arguments");
+        return false;
+    };
+
+    handle_url(app, url)
+}
+
+pub fn handle_urls<I, S>(app: &AppHandle, urls: I) -> bool
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let mut handled = false;
+    for url in urls {
+        handled |= handle_url(app, url.as_ref().to_owned());
+    }
+    handled
+}
+
+fn handle_url(app: &AppHandle, url: String) -> bool {
+    let Some(kind) = classify_url(&url) else {
+        warn!("unsupported deep link protocol: {}", url);
         return false;
     };
 
@@ -25,21 +71,24 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
 
     let app = app.to_owned();
 
-    if url.starts_with("ror2mm://") {
-        handle_inner_task(app.clone(), handle_r2_install(url, app));
-    } else if url.starts_with("gale://auth/callback") {
-        handle_inner_task(app.clone(), async move {
-            profile::sync::auth::handle_callback(url, &app).await
-        });
-    } else if url.starts_with("gale://profile/import") {
-        handle_inner_task(app.clone(), import_profile_code(url, app));
-    } else if url.starts_with("gale://profile/sync/clone") {
-        handle_inner_task(app.clone(), clone_sync_profile(url, app));
-    } else if url.ends_with("r2z") {
-        handle_inner_task(app.clone(), async move { import_profile_file(&url, &app) });
-    } else {
-        warn!("unsupported deep link protocol: {}", url);
-        return false;
+    match kind {
+        DeepLinkKind::R2Install => {
+            handle_inner_task(app.clone(), handle_r2_install(url, app));
+        }
+        DeepLinkKind::AuthCallback => {
+            handle_inner_task(app.clone(), async move {
+                profile::sync::auth::handle_callback(url, &app).await
+            });
+        }
+        DeepLinkKind::ImportProfile => {
+            handle_inner_task(app.clone(), import_profile_code(url, app));
+        }
+        DeepLinkKind::CloneSyncProfile => {
+            handle_inner_task(app.clone(), clone_sync_profile(url, app));
+        }
+        DeepLinkKind::ProfileFile => {
+            handle_inner_task(app.clone(), async move { import_profile_file(&url, &app) });
+        }
     }
 
     true
@@ -116,4 +165,34 @@ async fn clone_sync_profile(url: String, app: AppHandle) -> Result<()> {
     app.emit("import_profile", import_data)?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn classifies_urls_delivered_by_macos_events() {
+        assert_eq!(
+            classify_url("ror2mm://v1/install/thunderstore.io/owner/name/version"),
+            Some(DeepLinkKind::R2Install)
+        );
+        assert_eq!(
+            classify_url("gale://auth/callback?code=example"),
+            Some(DeepLinkKind::AuthCallback)
+        );
+        assert_eq!(
+            classify_url("gale://profile/import/00000000-0000-0000-0000-000000000000"),
+            Some(DeepLinkKind::ImportProfile)
+        );
+        assert_eq!(
+            classify_url("gale://profile/sync/clone/example"),
+            Some(DeepLinkKind::CloneSyncProfile)
+        );
+    }
+
+    #[test]
+    fn rejects_unknown_urls() {
+        assert_eq!(classify_url("https://example.com"), None);
+    }
 }
