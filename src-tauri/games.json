@@ -1275,9 +1275,7 @@
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
 			"fileTarget": "./Ship",
-			"files": [
-				"d3d12.dll"
-			]
+			"files": ["d3d12.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -2097,9 +2095,7 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": [
-				"version.dll"
-			]
+			"files": ["version.dll"]
 		},
 		"platforms": {
 			"steam": {

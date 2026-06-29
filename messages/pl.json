@@ -90,8 +90,6 @@
 	"expandedConfigEntryDialog_tabsMenu_list": "Edytuj jako listę",
 	"expandedConfigEntryDialog_tabsMenu_text": "Edytuj jako tekst",
 	"expandedConfigEntryDialog_title": "Edytuj {name}",
-	"exportCodeDialog_content_1": "Eksportowanie {name} jako kod...",
-	"exportCodeDialog_content_2": "Eksport zakończony! Kod został skopiowany do schowka:",
 	"exportCodeDialog_content_unknown": "Nieznany profil",
 	"exportCodeDialog_title": "Eksportuj jako kod",
 	"flagsConfig_placeholder": "Wybierz flagi",

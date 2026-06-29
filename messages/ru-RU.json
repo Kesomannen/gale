@@ -90,8 +90,6 @@
 	"expandedConfigEntryDialog_tabsMenu_list": "Редактировать как список",
 	"expandedConfigEntryDialog_tabsMenu_text": "Редактировать как текст",
 	"expandedConfigEntryDialog_title": "Редактировать {name}",
-	"exportCodeDialog_content_1": "Экспорт {name} в виде кода...",
-	"exportCodeDialog_content_2": "Экспорт завершен! Код скопирован в буфер обмена:",
 	"exportCodeDialog_content_unknown": "Неизвестный профиль",
 	"exportCodeDialog_title": "Экспорт в виде кода",
 	"flagsConfig_placeholder": "Выберите флаги",

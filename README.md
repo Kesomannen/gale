@@ -47,18 +47,19 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
   
   Gale is available as an independently hosted [Scoop](https://scoop.sh/) app:
 
-  ```powershell
-  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
-  ```
-  
-  To update, run:
-  
-  ```powershell
-  scoop uninstall gale
-  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
-  ```
+```powershell
+scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
+```
 
-  > Efforts are in progress to submit the app to the [Scoop games bucket](https://github.com/Calinou/scoop-games/pull/1756) to make installation and updating more straightforward.
+To update, run:
+
+```powershell
+scoop uninstall gale
+scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
+```
+
+> Efforts are in progress to submit the app to the [Scoop games bucket](https://github.com/Calinou/scoop-games/pull/1756) to make installation and updating more straightforward.
+
 </details>
 
 > [!NOTE]
@@ -83,17 +84,17 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
   ```
 </details>
 
-
 <details>
   <summary>
     <b>Debian</b>
   </summary>
 
-  Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
 
-  ```bash
-  sudo dpkg -i Gale_X.X.X_x64_en-US.deb
-  ```
+```bash
+sudo dpkg -i Gale_X.X.X_x64_en-US.deb
+```
+
 </details>
 
 <details>
@@ -101,11 +102,12 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
     <b>Fedora</b>
   </summary>
 
-  Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
 
-  ```bash
-  sudo rpm -i Gale_X.X.X_x64_en-US.rpm
-  ```
+```bash
+sudo rpm -i Gale_X.X.X_x64_en-US.rpm
+```
+
 </details>
 
 <details>
@@ -113,11 +115,12 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
     <b>Flatpak</b>
   </summary>
 
-  Gale is available as an independently hosted Flatpak package:
+Gale is available as an independently hosted Flatpak package:
 
-  ```bash
-  flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
-  ```
+```bash
+flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
+```
+
 </details>
 
 <details>
@@ -125,12 +128,13 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
     <b>AppImage</b>
   </summary>
 
-  Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
-  
-  ```bash
-  chmod +x Gale_X.X.X_x64_en-US.AppImage
-  ./Gale_X.X.X_x64_en-US.AppImage
-  ```
+Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
+
+```bash
+chmod +x Gale_X.X.X_x64_en-US.AppImage
+./Gale_X.X.X_x64_en-US.AppImage
+```
+
 </details>
 
 ---

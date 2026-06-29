@@ -11,6 +11,7 @@ use eyre::Context;
 use globset::{Glob, GlobBuilder, GlobSet, GlobSetBuilder};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
+use tracing::info;
 use uuid::Uuid;
 use walkdir::WalkDir;
 use zip::{ZipWriter, write::SimpleFileOptions};
@@ -120,7 +121,11 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
     serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
-    write_config(find_config(&profile.path), &profile.path, &mut zip)?;
+    write_config(
+        find_config(&profile.path, game.mod_loader.mod_config_dirs()),
+        &profile.path,
+        &mut zip,
+    )?;
 
     Ok(())
 }
@@ -140,6 +145,8 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
 
         base64
     };
+
+    info!(len = base64.len(), "exporting profile code");
 
     const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
 
@@ -175,7 +182,10 @@ where
     Ok(())
 }
 
-pub fn find_config(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
+pub fn find_config<'a>(
+    root: &'a Path,
+    config_dirs: &'a [&str],
+) -> impl Iterator<Item = PathBuf> + 'a {
     static INCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
             .add(Glob::new("BepInEx/config/*").unwrap())
@@ -211,5 +221,8 @@ pub fn find_config(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
                 .expect("path should be child of root")
                 .to_path_buf()
         })
-        .filter(move |path| INCLUDE_SET.is_match(path) && !EXCLUDE_SET.is_match(path))
+        .filter(move |path| {
+            (config_dirs.iter().any(|dir| path.starts_with(dir)) || INCLUDE_SET.is_match(path))
+                && !EXCLUDE_SET.is_match(path)
+        })
 }

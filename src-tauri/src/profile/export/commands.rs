@@ -4,9 +4,9 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{anyhow, Context};
+use eyre::{Context, anyhow};
 use itertools::Itertools;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tracing::{debug, warn};
 use uuid::Uuid;
@@ -52,9 +52,11 @@ pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
 #[command]
 pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
     let mut manager = app.lock_manager();
+
+    let game = manager.active_game;
     let profile = manager.active_profile_mut();
 
-    modpack::refresh_args(profile);
+    modpack::refresh_args(profile, game);
 
     Ok(profile.modpack.clone())
 }

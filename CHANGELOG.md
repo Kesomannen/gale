@@ -2,9 +2,21 @@
 
 ## Unreleased
 
+### Changed
+
+- Minor UI changes
+
 ### Fixed
 
 - Gale being registered as a handler for all zip files on Linux (thanks [@Damglador](https://github.com/Damglador))
+- Extra files in the config directory not being included in profile exports
+  - This now matches r2modman behaviour for BepInEx, plus additional support for other mod loaders
+  - The recognized config directories are as follows:
+    - `BepInEx/config`
+    - `Renderer/BepInEx/config`
+    - `GDWeave/configs`
+    - `shimloader/cfg`
+    - `ReturnOfModding/config`
 
 ## 1.17.0 (2026-06-26)
 
@@ -57,7 +69,7 @@
 - Whitespace and newlines being stripped from config entry descriptions
 - Reduced log spam from network requests
 - UNIX argument parsing being used on Windows, causing paths with backslashes to require extra escaping
-- Resonite mods not loading on Linux due to Z: path prefixes 
+- Resonite mods not loading on Linux due to Z: path prefixes
 
 ## 1.15.1 (2026-06-18)
 

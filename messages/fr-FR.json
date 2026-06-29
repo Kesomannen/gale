@@ -90,8 +90,6 @@
 	"expandedConfigEntryDialog_tabsMenu_list": "Modifier comme une liste",
 	"expandedConfigEntryDialog_tabsMenu_text": "Modifier comme un texte",
 	"expandedConfigEntryDialog_title": "Modifier {name}",
-	"exportCodeDialog_content_1": "Exportation de {name} en tant que code...",
-	"exportCodeDialog_content_2": "Exportation terminée ! Le code a été copié dans votre presse-papier :",
 	"exportCodeDialog_content_unknown": "Profil inconnu",
 	"exportCodeDialog_title": "Exporter en tant que code",
 	"flagsConfig_placeholder": "Sélectionner des drapeaux",

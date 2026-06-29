@@ -19,7 +19,7 @@ use zip::{ZipWriter, write::SimpleFileOptions};
 
 use crate::{game::Game, profile::Profile, thunderstore::*};
 
-pub fn refresh_args(profile: &mut Profile) {
+pub fn refresh_args(profile: &mut Profile, game: Game) {
     if profile.modpack.is_none() {
         profile.modpack = Some(ModpackArgs {
             name: profile.name.replace([' ', '-'], ""),
@@ -35,7 +35,7 @@ pub fn refresh_args(profile: &mut Profile) {
     // remove deleted files
     includes.retain(|file, _| profile.path.join(file).exists());
 
-    for path in super::find_config(&profile.path) {
+    for path in super::find_config(&profile.path, game.mod_loader.mod_config_dirs()) {
         includes.entry(path).or_insert(true);
     }
 }

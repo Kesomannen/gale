@@ -90,8 +90,6 @@
 	"expandedConfigEntryDialog_tabsMenu_list": "编辑为列表",
 	"expandedConfigEntryDialog_tabsMenu_text": "编辑为文本",
 	"expandedConfigEntryDialog_title": "编辑 {name}",
-	"exportCodeDialog_content_1": "正在导出 {name} 为代码中...",
-	"exportCodeDialog_content_2": "导出完成！代码已复制到您的剪贴板:",
 	"exportCodeDialog_content_unknown": "未知配置",
 	"exportCodeDialog_title": "导出代码",
 	"flagsConfig_placeholder": "选择选项",
