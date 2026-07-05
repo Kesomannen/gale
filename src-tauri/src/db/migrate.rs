@@ -4,18 +4,17 @@ use eyre::{Context, Result};
 use itertools::Itertools;
 use tracing::{info, warn};
 
+use super::{ManagedGameData, ManagerData, ProfileData, SaveData};
 use crate::{
     game::{self, platform::Platform},
-    prefs::{GamePrefs, Prefs},
+    prefs::{Backends, GamePrefs, Prefs},
     profile::{
-        export::modpack::ModpackArgs, launch::LaunchMode, LocalMod, ProfileMod, ProfileModKind,
-        ThunderstoreMod,
+        LocalMod, ProfileMod, ProfileModKind, ThunderstoreMod, export::modpack::ModpackArgs,
+        launch::LaunchMode,
     },
-    thunderstore::ModId,
+    thunderstore::{Backend, ModId},
     util,
 };
-
-use super::{ManagedGameData, ManagerData, ProfileData, SaveData};
 
 pub fn should_migrate() -> bool {
     util::path::default_app_config_dir()
@@ -151,6 +150,7 @@ impl From<legacy::GamePrefs> for GamePrefs {
             custom_args: legacy.custom_args.into_iter().flatten().join(" "),
             launch_mode: legacy.launch_mode.into(),
             platform: legacy.platform.map(Into::into),
+            backend: Backends::All,
         }
     }
 }
@@ -219,6 +219,7 @@ impl From<legacy::ModId> for ModId {
         ModId {
             package_uuid: legacy.package_uuid,
             version_uuid: legacy.version_uuid,
+            backend: Backend::Thunderstore,
         }
     }
 }

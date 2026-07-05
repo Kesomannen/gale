@@ -71,7 +71,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
                     query_frontend_mods(args, thunderstore.latest(), manager.active_profile());
                 app.emit("mod_query_result", &mods)?;
 
-                if thunderstore.packages_fetched {
+                if thunderstore.packages_fetched(&app, manager.active_game) {
                     info!("all packages fetched, pausing query loop");
                     thunderstore.current_query = None;
                 }
@@ -200,6 +200,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
                 .collect(),
             kind: FrontendModKind::Remote,
             icon: None,
+            backend: pkg.backend,
         }
     }
 }

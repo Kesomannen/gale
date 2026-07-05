@@ -97,6 +97,11 @@ export type GameInfo = {
 	favorites: string[];
 };
 
+export enum Backend {
+	Thunderstore = 'Thunderstore',
+	Hexium = 'Hexium'
+}
+
 export type Mod = {
 	name: string;
 	description: string | null;
@@ -121,6 +126,7 @@ export type Mod = {
 	enabled?: boolean | null;
 	icon: string | null;
 	configFile: string | null;
+	backend: Backend;
 };
 
 export type ModVersion = {
@@ -170,16 +176,19 @@ export type ConfigEntryId = {
 export type Dependant = {
 	fullName: string;
 	uuid: string;
+	backend: Backend;
 };
 
 export type DependantWithVersion = {
 	fullName: string;
 	preferredVersion: string | null;
+	backend: Backend;
 };
 
 export type ModId = {
 	packageUuid: string;
 	versionUuid: string;
+	backend: Backend;
 };
 
 export type ModActionResponse =
@@ -246,6 +255,7 @@ export type AvailableUpdate = {
 	ignore: boolean;
 	packageUuid: string;
 	versionUuid: string;
+	backend: Backend;
 	old: string;
 	new: string;
 };
@@ -291,6 +301,7 @@ type ProfileManifestMod = {
 		minor: number;
 		patch: number;
 	};
+	backend: Backend;
 };
 
 export type R2ImportData = {
@@ -312,13 +323,21 @@ export type Prefs = {
 	zoomFactor: number;
 	language: string;
 	gamePrefs: Map<string, GamePrefs>;
+	backendSkipConfirm: boolean;
 };
+
+export enum Backends {
+	All = 'All',
+	Thunderstore = 'Thunderstore',
+	Hexium = 'Hexium',
+}
 
 export type GamePrefs = {
 	dirOverride: string | null;
 	customArgs: string;
 	launchMode: LaunchMode;
 	platform: Platform | null;
+	backend: Backends,
 };
 
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';

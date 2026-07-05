@@ -22,6 +22,7 @@ use crate::{
     state::ManagerExt,
     thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore, VersionIdent},
 };
+use crate::thunderstore::Backend;
 
 mod changelog;
 pub mod commands;
@@ -48,6 +49,11 @@ pub struct R2Mod {
     #[serde(alias = "versionNumber")]
     pub version: R2Version,
     pub enabled: bool,
+    // This will make the field available for future comparison against the loaded mods.
+    // Defaults to Thunderstore for now.
+    #[allow(dead_code)]
+    #[serde(skip)]
+    pub backend: Backend,
 }
 
 impl R2Mod {
@@ -106,6 +112,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
                 ident,
                 version,
                 enabled,
+                backend: ts_mod.id.backend,
             }
         })
         .collect();
@@ -131,7 +138,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
 }
 
 async fn export_code(app: &AppHandle) -> Result<Uuid> {
-    let base64 = {
+    let (backend, base64) = {
         let mut manager = app.lock_manager();
 
         let game = manager.active_game().game;
@@ -143,16 +150,14 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
-        base64
+        (profile.thunderstore_backend(), base64)
     };
 
     info!(len = base64.len(), "exporting profile code");
 
-    const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
-
     let response = app
         .http()
-        .post(URL)
+        .post(backend.profile_export())
         .header("Content-Type", "application/octet-stream")
         .body(base64)
         .send()

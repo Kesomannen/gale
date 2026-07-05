@@ -19,7 +19,7 @@ pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMo
 
     let result = query::query_frontend_mods(&args, thunderstore.latest(), manager.active_profile());
 
-    if !thunderstore.packages_fetched {
+    if !thunderstore.packages_fetched(&app, manager.active_game) {
         thunderstore.current_query = Some(args);
     }
 
@@ -33,6 +33,8 @@ pub fn stop_querying_thunderstore(app: AppHandle) {
 
 #[command]
 pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
+    let game = app.lock_manager().active_game;
+
     let write_directly = {
         let state = app.lock_thunderstore();
 
@@ -40,14 +42,12 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
             return Err(anyhow!("already fetching mods").into());
         }
 
-        !state.packages_fetched
+        !state.packages_fetched(&app, game)
     };
 
-    let game = app.lock_manager().active_game;
-
     tauri::async_runtime::spawn(async move {
-        if let Err(err) = super::fetch::fetch_packages(game, write_directly, &app).await {
-            logger::log_webview_err("error while fetching mods from Thunderstore", err, &app);
+        for (backend, err) in super::fetch::fetch_packages(game, write_directly, &app).await {
+            logger::log_webview_err(format!("error while fetching mods from {:?}", backend), err, &app);
         }
     });
 

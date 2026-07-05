@@ -9,13 +9,15 @@ use internment::Intern;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{PackageIdent, VersionIdent};
+use super::{Backend, PackageIdent, VersionIdent};
 use crate::{game::Game, profile::Profile};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
     #[serde(rename = "full_name")]
     pub ident: PackageIdent,
+    #[serde(skip_serializing, default = "thunderstore_backend")]
+    pub backend: Backend,
     pub categories: HashSet<Intern<String>>,
     pub date_created: DateTime<Utc>,
     pub date_updated: DateTime<Utc>,
@@ -28,6 +30,10 @@ pub struct PackageListing {
     #[serde(rename = "uuid4")]
     pub uuid: Uuid,
     pub versions: Vec<PackageVersion>,
+}
+
+fn thunderstore_backend() -> Backend {
+    Backend::Thunderstore
 }
 
 impl PackageListing {
@@ -64,20 +70,11 @@ impl PackageListing {
     }
 
     pub fn owner_url(&self, game: Game) -> String {
-        format!(
-            "https://thunderstore.io/c/{}/p/{}/",
-            game.slug,
-            self.owner()
-        )
+        self.backend.get_owner_url(self.owner(), game)
     }
 
     pub fn url(&self, game: Game) -> String {
-        format!(
-            "https://thunderstore.io/c/{}/p/{}/{}/",
-            game.slug,
-            self.owner(),
-            self.name()
-        )
+        self.backend.get_mod_url(self.owner(), self.name(), game)
     }
 }
 
@@ -265,6 +262,7 @@ pub struct FrontendMod {
     pub icon: Option<PathBuf>,
     #[serde(rename = "type")]
     pub kind: FrontendModKind,
+    pub backend: Backend,
 }
 
 #[derive(Debug, Serialize, Clone)]

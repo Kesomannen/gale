@@ -103,7 +103,7 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
 
 #[command]
 pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
-    let (data, game, args, token) = {
+    let (data, game, args, backend, token) = {
         let manager = app.lock_manager();
         let thunderstore = app.lock_thunderstore();
 
@@ -120,11 +120,17 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
             warn!("failed to take profile snapshot: {}", err);
         }
 
-        (data, manager.active_game, args, token)
+        (
+            data,
+            manager.active_game,
+            args,
+            profile.thunderstore_backend(),
+            token,
+        )
     };
 
     let client = app.http().clone();
-    modpack::publish(data.into_inner().into(), game, args, token, client).await?;
+    modpack::publish(data.into_inner().into(), game, args, backend, token, client).await?;
 
     Ok(())
 }

@@ -10,7 +10,7 @@
 	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/components/prefs/PlatformPref.svelte';
 
-	import type { Prefs, GamePrefs, Platform } from '$lib/types';
+	import { Backends, type GamePrefs, type Prefs } from '$lib/types';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
 
@@ -25,6 +25,7 @@
 	import FontFamilyPref from '$lib/components/prefs/FontFamilyPref.svelte';
 	import LanguagePref from '$lib/components/prefs/LanguagePref.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import BackendPref from '$lib/components/prefs/BackendPref.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -36,6 +37,7 @@
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
 			customArgs: '',
+			backend: Backends.All,
 			platform: null
 		};
 	});
@@ -148,6 +150,20 @@
 		<LargeHeading>
 			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}
 		</LargeHeading>
+
+		{#if games.active?.name == "Valheim"}
+			<BackendPref
+				value={gamePrefs.backend}
+				set={set((value) => (gamePrefs!.backend = value))}
+			/>
+			<TogglePref
+				label={m.backendPref_other_server_title()}
+				value={!prefs.backendSkipConfirm}
+				set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
+			>
+				{m.backendPref_other_server_content()}
+			</TogglePref>
+		{/if}
 
 		<SmallHeading>{m.prefs_gameSettings_locations_title()}</SmallHeading>
 

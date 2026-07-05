@@ -79,7 +79,7 @@
 		set={(update, _, value) => include.set(update, value)}
 	>
 		{#snippet item({ item: update })}
-			<ModCard fullName={update.fullName} showVersion={false} />
+			<ModCard fullName={update.fullName} showVersion={false} backend={update.backend} />
 
 			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
 			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />

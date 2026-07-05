@@ -150,10 +150,11 @@ where
 
 fn base_request(
     tail: impl Display,
+    backend: Backend,
     token: impl Display,
     client: &reqwest::Client,
 ) -> reqwest::RequestBuilder {
-    let url = format!("https://thunderstore.io/api/experimental/{tail}/");
+    let url = format!("{}/{tail}/", backend.modpack_upload_baseurl());
 
     client.post(url).bearer_auth(token)
 }
@@ -162,6 +163,7 @@ pub async fn publish(
     data: Bytes,
     game: Game,
     args: ModpackArgs,
+    backend: Backend,
     token: String,
     client: reqwest::Client,
 ) -> Result<()> {
@@ -175,9 +177,15 @@ pub async fn publish(
 
     info!("publishing modpack");
 
-    let response = initiate_upload(args.name.clone(), data.len() as u64, &token, &client)
-        .await
-        .context("failed to initiate upload")?;
+    let response = initiate_upload(
+        args.name.clone(),
+        data.len() as u64,
+        backend,
+        &token,
+        &client,
+    )
+    .await
+    .context("failed to initiate upload")?;
 
     let uuid = response.user_media.uuid.ok_or_eyre("no uuid in response")?;
 
@@ -194,16 +202,18 @@ pub async fn publish(
     {
         Ok(parts) => parts,
         Err(err) => {
-            tauri::async_runtime::spawn(async move { abort_upload(&uuid, &token, client).await });
+            tauri::async_runtime::spawn(async move {
+                abort_upload(&uuid, backend, &token, client).await
+            });
             return Err(err.wrap_err("failed to upload file"));
         }
     };
 
-    finish_upload(parts, &uuid, &token, &client)
+    finish_upload(parts, &uuid, backend, &token, &client)
         .await
         .context("failed to finalize upload")?;
 
-    submit_package(uuid, game, args, &token, &client)
+    submit_package(uuid, game, args, backend, &token, &client)
         .await
         .context("failed to submit package")?;
 
@@ -213,6 +223,7 @@ pub async fn publish(
 async fn initiate_upload(
     name: String,
     size: u64,
+    backend: Backend,
     token: &str,
     client: &reqwest::Client,
 ) -> Result<UserMediaInitiateUploadResponse> {
@@ -221,7 +232,7 @@ async fn initiate_upload(
         name, size
     );
 
-    let response = base_request("usermedia/initiate-upload", token, client)
+    let response = base_request("usermedia/initiate-upload", backend, token, client)
         .json(&UserMediaInitiateUploadParams {
             filename: name,
             file_size_bytes: size,
@@ -269,14 +280,24 @@ async fn upload_chunk(
     })
 }
 
-async fn abort_upload(uuid: &Uuid, token: &str, client: reqwest::Client) -> Result<()> {
+async fn abort_upload(
+    uuid: &Uuid,
+    backend: Backend,
+    token: &str,
+    client: reqwest::Client,
+) -> Result<()> {
     info!("aborting upload");
 
-    base_request(format!("usermedia/{uuid}/abort-upload"), token, &client)
-        .json(&uuid)
-        .send()
-        .await?
-        .map_auth_err()?;
+    base_request(
+        format!("usermedia/{uuid}/abort-upload"),
+        backend,
+        token,
+        &client,
+    )
+    .json(&uuid)
+    .send()
+    .await?
+    .map_auth_err()?;
 
     Ok(())
 }
@@ -284,16 +305,22 @@ async fn abort_upload(uuid: &Uuid, token: &str, client: reqwest::Client) -> Resu
 async fn finish_upload(
     parts: Vec<CompletedPart>,
     uuid: &Uuid,
+    backend: Backend,
     token: &str,
     client: &reqwest::Client,
 ) -> Result<()> {
     debug!("finishing upload");
 
-    base_request(format!("usermedia/{uuid}/finish-upload"), token, client)
-        .json(&UserMediaFinishUploadParams { parts })
-        .send()
-        .await?
-        .map_auth_err()?;
+    base_request(
+        format!("usermedia/{uuid}/finish-upload"),
+        backend,
+        token,
+        client,
+    )
+    .json(&UserMediaFinishUploadParams { parts })
+    .send()
+    .await?
+    .map_auth_err()?;
 
     Ok(())
 }
@@ -302,6 +329,7 @@ async fn submit_package(
     uuid: Uuid,
     game: Game,
     args: ModpackArgs,
+    backend: Backend,
     token: &str,
     client: &reqwest::Client,
 ) -> Result<()> {
@@ -316,7 +344,7 @@ async fn submit_package(
 
     debug!("submitting package");
 
-    let response = base_request("submission/submit", token, client)
+    let response = base_request("submission/submit", backend, token, client)
         .json(&metadata)
         .send()
         .await?;

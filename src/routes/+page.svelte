@@ -10,7 +10,6 @@
 		DependantWithVersion,
 		ListItem
 	} from '$lib/types';
-	import ModList from '$lib/components/mod-list/ModList.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -50,7 +49,8 @@
 			onclick: (mod) =>
 				uninstall({
 					uuid: mod.uuid,
-					fullName: mod.name
+					fullName: mod.name,
+					backend: mod.backend,
 				}),
 			showFor: (_, profileLocked) => !profileLocked
 		},
@@ -147,7 +147,7 @@
 	}
 
 	async function openDependants(mod: Mod) {
-		dependants = await api.profile.getDependants(mod.uuid);
+		dependants = (await api.profile.getDependants(mod.uuid)).map(d => ({ backend: mod.backend, ...d }));
 
 		activeMod = mod;
 		dependantsOpen = true;
@@ -161,7 +161,8 @@
 		} else {
 			await api.profile.update.changeModVersion({
 				packageUuid: mod.uuid,
-				versionUuid: versionUuid
+				versionUuid: versionUuid,
+				backend: mod.backend,
 			});
 		}
 

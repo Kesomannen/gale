@@ -1,14 +1,13 @@
+use eyre::Result;
+use itertools::Itertools;
+use query::QueryModsArgs;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashSet, VecDeque},
     hash::Hash,
     iter::FusedIterator,
     str::{self},
 };
-
-use eyre::{Result, eyre};
-use indexmap::IndexMap;
-use query::QueryModsArgs;
-use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, async_runtime::JoinHandle};
 use uuid::Uuid;
 
@@ -27,6 +26,10 @@ pub use models::*;
 
 mod ident;
 pub use ident::*;
+
+mod backend;
+pub use backend::Backend;
+use backend::ThunderstoreBackend;
 
 pub fn start(app: &AppHandle) {
     query::setup(app);
@@ -78,6 +81,19 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
 pub struct ModId {
     pub package_uuid: Uuid,
     pub version_uuid: Uuid,
+    #[serde(
+        skip_serializing_if = "is_thunderstore_backend",
+        default = "thunderstore_backend"
+    )]
+    pub backend: Backend,
+}
+
+fn is_thunderstore_backend(backend: &Backend) -> bool {
+    *backend == Backend::Thunderstore
+}
+
+fn thunderstore_backend() -> Backend {
+    Backend::Thunderstore
 }
 
 impl From<BorrowedMod<'_>> for ModId {
@@ -85,6 +101,7 @@ impl From<BorrowedMod<'_>> for ModId {
         Self {
             package_uuid: borrowed.package.uuid,
             version_uuid: borrowed.version.uuid,
+            backend: borrowed.package.backend,
         }
     }
 }
@@ -112,69 +129,105 @@ impl ModId {
 pub struct Thunderstore {
     /// A handle to the current [`fetch_package_loop`] task.
     fetch_loop_handle: Option<JoinHandle<()>>,
-    /// Whether packages have been succesfully fetched at least one since
-    /// the last call to [`Thunderstore::switch_game`].
-    packages_fetched: bool,
     /// Whether a [`fetch_mods`] task is currently running.
     is_fetching: bool,
-    // IndexMap is not used for ordering here, but for fast iteration,
-    // since we iterate over all mods when resolving identifiers and querying.
-    packages: IndexMap<Uuid, PackageListing>,
     current_query: Option<QueryModsArgs>,
+    thunderstore_backend: ThunderstoreBackend,
+    hexium_backend: ThunderstoreBackend,
 }
 
 impl Thunderstore {
     pub fn new() -> Self {
         Self {
             fetch_loop_handle: None,
-            packages_fetched: false,
             is_fetching: false,
-            packages: IndexMap::new(),
             current_query: None,
+            thunderstore_backend: ThunderstoreBackend::new(Backend::Thunderstore),
+            hexium_backend: ThunderstoreBackend::new(Backend::Hexium),
         }
     }
 
     /// Whether packages have been succesfully fetched at least one since
     /// the last call to [`Thunderstore::switch_game`].
-    pub fn packages_fetched(&self) -> bool {
-        self.packages_fetched
+    pub fn packages_fetched(&self, app: &AppHandle, game: Game) -> bool {
+        let backends = app.lock_prefs().backends(game);
+        Backend::apply_all(|b| self.backend(b).packages_fetched(), backends)
+            .iter()
+            .all(|b| *b)
     }
 
     /// Returns an iterator over the latest versions of every package.
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
-        self.packages.values().map(move |package| BorrowedMod {
-            package,
-            version: package.latest(),
-        })
+        self.thunderstore_backend
+            .latest()
+            .chain(self.hexium_backend.latest())
+            .sorted_by(|a, b| a.package.full_name().cmp(&b.package.full_name()))
+            .coalesce(|a, b| {
+                if a.package.full_name() == b.package.full_name() {
+                    Ok(Self::cmp_borrowed_mod(a, b))
+                } else {
+                    Err((a, b))
+                }
+            })
+    }
+
+    fn resolve_thunderstore_vs_hexium<'a, R: 'a>(
+        &'a self,
+        f: impl Fn(&'a ThunderstoreBackend) -> Result<R>,
+        cmp: impl Fn(R, R) -> R,
+    ) -> Result<R> {
+        let thunderstore = f(&self.thunderstore_backend);
+        let hexium = f(&self.hexium_backend);
+        match (thunderstore, hexium) {
+            (Ok(thunderstore), Ok(hexium)) => Ok(cmp(thunderstore, hexium)),
+            (Ok(thunderstore), Err(_)) => Ok(thunderstore),
+            (Err(_), Ok(hexium)) => Ok(hexium),
+            (Err(e), Err(_)) => Err(e),
+        }
+    }
+
+    fn cmp_package_listing<'a>(
+        thunderstore: &'a PackageListing,
+        hexium: &'a PackageListing,
+    ) -> &'a PackageListing {
+        if thunderstore.latest().version() >= hexium.latest().version() {
+            thunderstore
+        } else {
+            hexium
+        }
     }
 
     pub fn get_package(&self, uuid: Uuid) -> Result<&PackageListing> {
-        self.packages
-            .get(&uuid)
-            .ok_or_else(|| eyre!("package with id {uuid} not found",))
+        self.resolve_thunderstore_vs_hexium(|b| b.get_package(uuid), Self::cmp_package_listing)
     }
 
     /// Finds a package with the given `full_name` (formatted as `owner-name`).
-    pub fn find_package<'a>(&'a self, full_name: &str) -> Result<&'a PackageListing> {
-        self.packages
-            .values()
-            .find(|package| package.ident.as_str() == full_name)
-            .ok_or_else(|| eyre!("package {full_name} not found",))
+    pub fn find_package(&self, full_name: &str) -> Result<&PackageListing> {
+        self.resolve_thunderstore_vs_hexium(
+            |b| b.find_package(full_name),
+            Self::cmp_package_listing,
+        )
+    }
+
+    fn cmp_borrowed_mod<'a>(
+        thunderstore: BorrowedMod<'a>,
+        hexium: BorrowedMod<'a>,
+    ) -> BorrowedMod<'a> {
+        if thunderstore.version.version() >= hexium.version.version() {
+            thunderstore
+        } else {
+            hexium
+        }
     }
 
     pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> Result<BorrowedMod<'_>> {
-        let package = self.get_package(package_uuid)?;
-        let version = package.get_version(version_uuid).ok_or_else(|| {
-            eyre!(
-                "version with id {version_uuid} not found in package {}",
-                package.ident
-            )
-        })?;
-
-        Ok((package, version).into())
+        self.resolve_thunderstore_vs_hexium(
+            |b| b.get_mod(package_uuid, version_uuid),
+            Self::cmp_borrowed_mod,
+        )
     }
 
-    pub fn find_ident<'a>(&'a self, ident: &VersionIdent) -> Result<BorrowedMod<'a>> {
+    pub fn find_ident(&self, ident: &VersionIdent) -> Result<BorrowedMod<'_>> {
         self.find_mod(ident.owner(), ident.name(), ident.version())
     }
 
@@ -184,22 +237,10 @@ impl Thunderstore {
         name: &str,
         version: &str,
     ) -> Result<BorrowedMod<'a>> {
-        let package = self
-            .packages
-            .values()
-            .find(|package| package.owner() == owner && package.name() == name)
-            .ok_or_else(|| eyre!("package {}-{} not found", owner, name))?;
-
-        let version = package.get_version_with_num(version).ok_or_else(|| {
-            eyre!(
-                "version {} not found in package {}-{}",
-                version,
-                owner,
-                name
-            )
-        })?;
-
-        Ok((package, version).into())
+        self.resolve_thunderstore_vs_hexium(
+            |b| b.find_mod(owner, name, version),
+            Self::cmp_borrowed_mod,
+        )
     }
 
     /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
@@ -209,13 +250,27 @@ impl Thunderstore {
         }
 
         self.is_fetching = false;
-        self.packages_fetched = false;
-        self.packages = IndexMap::new();
 
-        self.read_and_insert_cache(game, &app.lock_prefs());
+        self.thunderstore_backend
+            .clear_packages(game, &app.lock_prefs());
+        self.hexium_backend.clear_packages(game, &app.lock_prefs());
 
         let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(game, app));
         self.fetch_loop_handle = Some(load_mods_handle);
+    }
+
+    pub fn backend(&self, backend: Backend) -> &ThunderstoreBackend {
+        match backend {
+            Backend::Thunderstore => &self.thunderstore_backend,
+            Backend::Hexium => &self.hexium_backend,
+        }
+    }
+
+    pub fn backend_mut(&mut self, backend: Backend) -> &mut ThunderstoreBackend {
+        match backend {
+            Backend::Thunderstore => &mut self.thunderstore_backend,
+            Backend::Hexium => &mut self.hexium_backend,
+        }
     }
 }
 

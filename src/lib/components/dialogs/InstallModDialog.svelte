@@ -35,7 +35,8 @@
 		await profiles.setActive(profileIndex);
 		await api.profile.install.mod({
 			packageUuid: mod.uuid,
-			versionUuid: mod.versionUuid
+			versionUuid: mod.versionUuid,
+			backend: mod.backend
 		});
 	}
 </script>

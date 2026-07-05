@@ -227,7 +227,8 @@
 			<ModCardList
 				class="mt-2 max-h-[50vh] shrink grow"
 				mods={mods.map((mod) => ({
-					fullName: `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`
+					fullName: `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`,
+					backend: mod.backend
 				}))}
 			/>
 		</details>

@@ -1,9 +1,9 @@
 import {
-	type Mod,
+	Backend,
 	type ConfigEntry,
-	type SyncUser,
 	type Game,
 	type MarkdownType,
+	type Mod,
 	ModType
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
@@ -64,14 +64,22 @@ export function isOutdated(mod: Mod): boolean {
 	return mod.version !== mod.versions[0].name;
 }
 
-export function communityUrl(path: string) {
-	return `https://thunderstore.io/c/${games.active?.slug}/p/${path}/`;
+export function communityUrl(backend: Backend, author: string, mod?: string) {
+	if (backend === Backend.Hexium) {
+		return `https://mods.valtools.org/${mod === undefined ? `teams/${author}` : `mods/1/${author}/${mod}`}`;
+	} else {
+		return `https://thunderstore.io/c/${games.active?.slug}/p/${author}${mod && `/${mod}`}/`;
+	}
 }
 
 export function modIconSrc(mod: Mod) {
 	if (mod.type === 'remote') {
-		let fullName = `${mod.author}-${mod.name}-${mod.version}`;
-		return thunderstoreIconUrl(fullName);
+		if (mod.backend === Backend.Thunderstore) {
+			let fullName = `${mod.author}-${mod.name}-${mod.version}`;
+			return thunderstoreIconUrl(fullName);
+		} else {
+			return hexiumIconUrl('' + mod.author, mod.name);
+		}
 	} else if (mod.icon !== null) {
 		let path = mod.enabled === false ? mod.icon + '.old' : mod.icon;
 		return convertFileSrc(path);
@@ -86,6 +94,10 @@ export function gameIconSrc(game: Game) {
 
 export function thunderstoreIconUrl(fullName: string) {
 	return `https://gcdn.thunderstore.io/live/repository/icons/${fullName}.png`;
+}
+
+export function hexiumIconUrl(pkg: string, name: string) {
+	return `https://mods.valtools.org/uploads/${pkg}/${name}/icon.png`;
 }
 
 export function capitalize(str: string): string {
@@ -149,7 +161,8 @@ export async function getMarkdown(mod: Mod, type: MarkdownType, useLatest = fals
 			return await api.thunderstore.getMarkdown(
 				{
 					packageUuid: mod.uuid,
-					versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid
+					versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid,
+					backend: mod.backend
 				},
 				type
 			);

@@ -8,6 +8,7 @@ use std::{
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use eyre::{Context, Result, eyre};
+use futures_util::future::join_all;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use itertools::Itertools;
 use reqwest::StatusCode;
@@ -19,12 +20,13 @@ use uuid::Uuid;
 use walkdir::WalkDir;
 
 use crate::{
+    prefs::Backends,
     profile::{
         export::{PROFILE_DATA_PREFIX, ProfileManifest},
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::ModId,
+    thunderstore::{Backend, ModId},
     util::{self, error::IoResultExt},
 };
 
@@ -83,22 +85,29 @@ fn read_base64(base64: &str) -> Result<ImportData> {
 }
 
 pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
-    let response = app
-        .http()
-        .get(format!(
-            "https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"
-        ))
-        .send()
-        .await?
-        .error_for_status()
-        .map_err(|err| match err.status() {
-            Some(status) if status == StatusCode::NOT_FOUND => {
-                eyre!("profile code is expired or invalid")
-            }
-            _ => err.into(),
-        })?
-        .text()
-        .await?;
+    let response = join_all(Backend::apply_all(
+        async |b| -> Result<String> {
+            Ok(app
+                .http()
+                .get(b.profile_import(&key.to_string()))
+                .send()
+                .await?
+                .error_for_status()
+                .map_err(|err| match err.status() {
+                    Some(status) if status == StatusCode::NOT_FOUND => {
+                        eyre!("profile code is expired or invalid")
+                    }
+                    _ => err.into(),
+                })?
+                .text()
+                .await?)
+        },
+        Backends::All,
+    ))
+    .await
+    .into_iter()
+    .find_or_first(|r| r.is_ok())
+    .unwrap()?;
 
     match response.strip_prefix(PROFILE_DATA_PREFIX) {
         Some(str) => read_base64(str),
