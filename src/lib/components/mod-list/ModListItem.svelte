@@ -47,6 +47,11 @@
 				<div class="shrink pr-1 text-lg font-medium text-white">
 					{formatModName(mod.name)}
 				</div>
+				{#if mod.author !== null}
+					<div class="text-primary-300 truncate pr-2">
+						{mod.author}
+					</div>
+				{/if}
 				{#if mod.isPinned}
 					<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
 				{/if}
