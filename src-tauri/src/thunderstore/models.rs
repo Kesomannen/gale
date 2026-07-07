@@ -16,7 +16,7 @@ use crate::{game::Game, profile::Profile};
 pub struct PackageListing {
     #[serde(rename = "full_name")]
     pub ident: PackageIdent,
-    #[serde(skip_serializing, default = "thunderstore_backend")]
+    #[serde(default, skip_serializing)]
     pub backend: Backend,
     pub categories: HashSet<Intern<String>>,
     pub date_created: DateTime<Utc>,
@@ -30,10 +30,6 @@ pub struct PackageListing {
     #[serde(rename = "uuid4")]
     pub uuid: Uuid,
     pub versions: Vec<PackageVersion>,
-}
-
-fn thunderstore_backend() -> Backend {
-    Backend::Thunderstore
 }
 
 impl PackageListing {
@@ -70,11 +66,11 @@ impl PackageListing {
     }
 
     pub fn owner_url(&self, game: Game) -> String {
-        self.backend.get_owner_url(self.owner(), game)
+        self.backend.owner_url(self.owner(), game)
     }
 
     pub fn url(&self, game: Game) -> String {
-        self.backend.get_mod_url(self.owner(), self.name(), game)
+        self.backend.mod_url(&self.ident, game)
     }
 }
 

@@ -49,7 +49,7 @@ pub async fn get_markdown(
     let url = {
         let thunderstore = app.lock_thunderstore();
         let ident = mod_id.borrow(&thunderstore)?.ident();
-        mod_id.backend.get_markdown_url(ident, cache)
+        mod_id.backend.markdown_url(ident, cache)
     };
 
     let response: MarkdownResponse = app
@@ -126,5 +126,5 @@ fn cache_path(game: Game, prefs: &Prefs, backend: Backend) -> PathBuf {
     prefs
         .data_dir
         .join(&*game.slug)
-        .join(format!("{}_cache.json", backend))
+        .join(format!("{backend}_cache.json"))
 }

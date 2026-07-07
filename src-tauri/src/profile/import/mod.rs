@@ -8,7 +8,7 @@ use std::{
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use eyre::{Context, Result, eyre};
-use futures_util::future::join_all;
+use futures_util::future;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use itertools::Itertools;
 use reqwest::StatusCode;
@@ -85,7 +85,7 @@ fn read_base64(base64: &str) -> Result<ImportData> {
 }
 
 pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
-    let response = join_all(Backend::apply_all(
+    let response = future::join_all(Backend::apply_all(
         async |b| -> Result<String> {
             Ok(app
                 .http()

@@ -39,7 +39,7 @@
 
 	let disabled = $derived(mod.isInstalled || locked || loading);
 
-	let doInstall = async () => {
+	async function doInstall() {
 		if (warnNoRemind) {
 			let prefs = await api.prefs.get();
 			prefs.backendSkipConfirm = true;
@@ -48,15 +48,15 @@
 		install(installPayload);
 		loading = true;
 		dialogOpen = false;
-	};
-	let tryInstall = async (modId: ModId) => {
+	}
+	async function tryInstall(modId: ModId) {
 		installPayload = modId;
 		if (mod.backend !== Backend.Thunderstore && !(await api.prefs.get()).backendSkipConfirm) {
 			dialogOpen = true;
 		} else {
 			doInstall();
 		}
-	};
+	}
 
 	let contextItems: ContextItem[] = $derived(
 		mod.versions.map((version) => ({

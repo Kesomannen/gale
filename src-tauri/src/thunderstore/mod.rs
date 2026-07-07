@@ -81,19 +81,8 @@ impl<'a> From<(&'a PackageListing, &'a PackageVersion)> for BorrowedMod<'a> {
 pub struct ModId {
     pub package_uuid: Uuid,
     pub version_uuid: Uuid,
-    #[serde(
-        skip_serializing_if = "is_thunderstore_backend",
-        default = "thunderstore_backend"
-    )]
+    #[serde(default)]
     pub backend: Backend,
-}
-
-fn is_thunderstore_backend(backend: &Backend) -> bool {
-    *backend == Backend::Thunderstore
-}
-
-fn thunderstore_backend() -> Backend {
-    Backend::Thunderstore
 }
 
 impl From<BorrowedMod<'_>> for ModId {

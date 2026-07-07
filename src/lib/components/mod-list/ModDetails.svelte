@@ -117,8 +117,8 @@
 		{#if mod.categories || mod.backend === Backend.Hexium}
 			<div class="mt-2 mb-1 flex flex-wrap gap-1">
 				{#if mod.backend === Backend.Hexium}
-					<div class="text-primary-200 rounded-full px-3 text-sm" style="background: #331b72; border: 1px solid #965dbe; padding-block: calc(var(--spacing) - 2px);">
-						<img src="https://mods.valtools.org/favicon.ico" alt="" style="height: 1rem; display: inline;" />
+					<div class="text-primary-200 rounded-full px-3 text-sm bg-[#331b72] border border-[#965dbe]" style="padding-block: calc(var(--spacing) - 2px);">
+						<img src="hexium.ico" alt="" class="h-4 inline" />
 						Hexium
 					</div>
 				{/if}

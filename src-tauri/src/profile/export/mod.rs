@@ -150,7 +150,13 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
-        (profile.thunderstore_backend(), base64)
+        let backend = if profile.has_hexium_mods() {
+            Backend::Hexium
+        } else {
+            Backend::Thunderstore
+        };
+
+        (backend, base64)
     };
 
     info!(len = base64.len(), "exporting profile code");

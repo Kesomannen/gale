@@ -8,7 +8,7 @@ use std::{
 use bytes::Bytes;
 use eyre::{Context, Report, Result};
 use flate2::read::GzDecoder;
-use futures_util::{TryFutureExt, future::join_all};
+use futures_util::{TryFutureExt, future};
 use indexmap::IndexMap;
 use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
@@ -23,7 +23,7 @@ use crate::{
 
 pub async fn fetch_package_loop(game: Game, app: AppHandle) {
     let backends = app.lock_prefs().backends(game);
-    join_all(Backend::apply_all(
+    future::join_all(Backend::apply_all(
         |b| fetch_single_package_loop(game, app.clone(), b),
         backends,
     ))
@@ -98,7 +98,7 @@ pub(super) async fn fetch_packages(
     app: &AppHandle,
 ) -> Vec<(Backend, Report)> {
     let backends = app.lock_prefs().backends(game);
-    let result = join_all(Backend::apply_all(
+    let result = future::join_all(Backend::apply_all(
         |backend| {
             fetch_single_packages(game, write_directly, app, backend).map_err(move |e| (backend, e))
         },
@@ -123,7 +123,7 @@ pub(super) async fn fetch_single_packages(
 ) -> Result<()> {
     let start_time = Instant::now();
 
-    let Some(index_url) = backend.get_index_url(game) else {
+    let Some(index_url) = backend.index_url(game) else {
         app.lock_thunderstore()
             .backend_mut(backend)
             .packages_fetched = true;

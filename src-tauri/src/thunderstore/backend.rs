@@ -8,6 +8,7 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
+use crate::thunderstore::PackageIdent;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Backend {
@@ -26,7 +27,7 @@ impl Display for Backend {
 }
 
 impl Backend {
-    pub fn get_index_url(self, game: Game) -> Option<String> {
+    pub fn index_url(self, game: Game) -> Option<String> {
         match self {
             Backend::Thunderstore => Some(format!(
                 "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
@@ -45,7 +46,7 @@ impl Backend {
         }
     }
 
-    pub fn get_markdown_url(self, ident: &VersionIdent, cache: MarkdownKind) -> String {
+    pub fn markdown_url(self, ident: &VersionIdent, cache: MarkdownKind) -> String {
         match self {
             Backend::Thunderstore => format!(
                 "https://thunderstore.io/api/experimental/package/{}/{}/{}/{}/",
@@ -64,7 +65,7 @@ impl Backend {
         }
     }
 
-    pub fn get_owner_url(self, owner: &str, game: Game) -> String {
+    pub fn owner_url(self, owner: &str, game: Game) -> String {
         match self {
             Backend::Thunderstore => {
                 format!("https://thunderstore.io/c/{}/p/{}/", game.slug, owner)
@@ -73,24 +74,30 @@ impl Backend {
         }
     }
 
-    pub fn get_mod_url(self, owner: &str, package: &str, game: Game) -> String {
+    pub fn mod_url(self, package: &PackageIdent, game: Game) -> String {
         match self {
             Backend::Thunderstore => {
-                format!("https://thunderstore.io/c/{}/p/{}/", game.slug, owner)
+                format!(
+                    "https://thunderstore.io/c/{}/p/{}/{}/",
+                    game.slug, package.name(), package.name()
+                )
             }
-            Backend::Hexium => format!("https://mods.valtools.org/mods/1/{}/{}", owner, package),
+            Backend::Hexium => format!(
+                "https://mods.valtools.org/mods/1/{}/{}",
+                package.name(), package.name()
+            ),
         }
     }
 
-    pub fn get_download_url(self, owner: &str, name: &str, version: &str) -> String {
+    pub fn download_url(self, version: &VersionIdent) -> String {
         match self {
             Backend::Thunderstore => format!(
                 "https://thunderstore.io/package/download/{}/{}/{}",
-                owner, name, version
+                version.owner(), version.name(), version.version()
             ),
             Backend::Hexium => format!(
                 "https://mods.valtools.org/uploads/{}/{}/{}.zip",
-                owner, name, version
+                version.owner(), version.name(), version.version()
             ),
         }
     }
@@ -131,7 +138,7 @@ impl Backend {
     }
 }
 
-/// Registry of Thunderstore mods for the active game.
+/// Registry for all Thunderstore-like mods for the active game (Hexium, Thunderstore).
 pub struct ThunderstoreBackend {
     /// Whether packages have been succesfully fetched at least one since
     /// the last call to [`crate::thunderstore::Thunderstore::switch_game`].

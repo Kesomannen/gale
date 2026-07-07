@@ -27,7 +27,7 @@ class GamesState {
 		const slug = this.active?.slug;
 		if (!slug) return;
 
-		let fetchCategories = async (baseUrl: string) => {
+		async function fetchCategories(baseUrl: string) {
 			try {
 				const url = `${baseUrl}/experimental/community/${slug}/category/`;
 				const response = await fetch(url);

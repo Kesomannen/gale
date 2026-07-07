@@ -286,15 +286,10 @@ impl Profile {
         self.mods.iter().filter_map(ProfileMod::as_thunderstore)
     }
 
-    fn thunderstore_backend(&self) -> Backend {
-        if self
+    fn has_hexium_mods(&self) -> bool {
+        self
             .thunderstore_mods()
             .any(|(package, _)| package.id.backend == Backend::Hexium)
-        {
-            Backend::Hexium
-        } else {
-            Backend::Thunderstore
-        }
     }
 
     fn local_mods(&self) -> impl Iterator<Item = (&LocalMod, bool)> {

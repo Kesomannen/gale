@@ -21,6 +21,7 @@ use crate::{
     thunderstore::{self},
     util::{cmd::Result, error::IoResultExt, fs::PathExt},
 };
+use crate::thunderstore::Backend;
 
 #[command]
 pub async fn export_code(app: AppHandle) -> Result<Uuid> {
@@ -124,7 +125,7 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
             data,
             manager.active_game,
             args,
-            profile.thunderstore_backend(),
+            if profile.has_hexium_mods() { Backend::Hexium } else { Backend::Thunderstore },
             token,
         )
     };

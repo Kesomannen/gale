@@ -469,7 +469,7 @@ async fn download(
         app,
     );
 
-    let url = install.id.backend.get_download_url(install.ident.owner(), install.ident.name(), install.ident.version());
+    let url = install.id.backend.download_url(&install.ident);
 
     debug!(
         ident = %install.ident,
