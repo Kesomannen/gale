@@ -86,6 +86,7 @@ async fn handle_r2_install(url: String, app: AppHandle) -> Result<()> {
 async fn handle_gale_install(url: String, app: AppHandle) -> Result<()> {
     let package = url
         .strip_prefix("gale://install/hexium/")
+        .or_else(|| url.strip_prefix("gale://install/thunderstore/"))
         .and_then(InstallPackage::split)
         .ok_or_eyre("invalid package url")?;
 
