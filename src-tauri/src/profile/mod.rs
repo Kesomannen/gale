@@ -286,10 +286,17 @@ impl Profile {
         self.mods.iter().filter_map(ProfileMod::as_thunderstore)
     }
 
-    fn has_hexium_mods(&self) -> bool {
-        self
-            .thunderstore_mods()
-            .any(|(package, _)| package.id.backend == Backend::Hexium)
+    /// Checks if any mods are hexium-exclusive mods
+    fn has_hexium_mods(&self, app: &AppHandle) -> bool {
+        self.thunderstore_mods().any(|(package, _)| {
+            let ident = &package.ident;
+            package.id.backend == Backend::Hexium
+                && app
+                    .lock_thunderstore()
+                    .backend(Backend::Thunderstore)
+                    .find_mod(ident.owner(), ident.name(), ident.version())
+                    .is_err()
+        })
     }
 
     fn local_mods(&self) -> impl Iterator<Item = (&LocalMod, bool)> {

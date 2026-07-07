@@ -1,5 +1,5 @@
 use eyre::anyhow;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 
 use super::{
     models::FrontendMod,
@@ -8,7 +8,7 @@ use super::{
 use crate::{
     logger,
     state::ManagerExt,
-    thunderstore::{cache::MarkdownKind, ModId},
+    thunderstore::{ModId, cache::MarkdownKind},
     util::cmd::Result,
 };
 
@@ -47,7 +47,11 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
 
     tauri::async_runtime::spawn(async move {
         for (backend, err) in super::fetch::fetch_packages(game, write_directly, &app).await {
-            logger::log_webview_err(format!("error while fetching mods from {:?}", backend), err, &app);
+            logger::log_webview_err(
+                format!("error while fetching mods from {:?}", backend),
+                err,
+                &app,
+            );
         }
     });
 

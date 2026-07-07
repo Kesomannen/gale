@@ -17,12 +17,12 @@ use walkdir::WalkDir;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
 use super::{Profile, Result, install::ModInstall};
+use crate::thunderstore::Backend;
 use crate::{
     game::Game,
     state::ManagerExt,
     thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore, VersionIdent},
 };
-use crate::thunderstore::Backend;
 
 mod changelog;
 pub mod commands;
@@ -137,7 +137,13 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     Ok(())
 }
 
-async fn export_code(app: &AppHandle) -> Result<Uuid> {
+#[derive(Serialize)]
+pub struct ExportCode {
+    code: Uuid,
+    backend: Backend,
+}
+
+async fn export_code(app: &AppHandle) -> Result<ExportCode> {
     let (backend, base64) = {
         let mut manager = app.lock_manager();
 
@@ -150,7 +156,7 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
-        let backend = if profile.has_hexium_mods() {
+        let backend = if profile.has_hexium_mods(app) {
             Backend::Hexium
         } else {
             Backend::Thunderstore
@@ -172,7 +178,10 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
         .json::<LegacyProfileCreateResponse>()
         .await?;
 
-    Ok(response.key)
+    Ok(ExportCode {
+        code: response.key,
+        backend,
+    })
 }
 
 fn write_config<P, I, W>(files: I, source: &Path, zip: &mut ZipWriter<W>) -> Result<()>

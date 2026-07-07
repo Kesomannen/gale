@@ -97,6 +97,7 @@
 	"exportCodeDialog_copyCode_label": "Copy to clipboard",
 	"exportCodeDialog_copyCode_message": "Copied profile code to clipboard.",
 	"exportCodeDialog_done": "Export complete! Click the code to copy it to your clipboard:",
+	"exportCodeDialog_galeExclusive": "This profile contains mods which are not available on Thunderstore. This code may only be imported with Gale.",
 	"exportCodeDialog_loading": "Exporting {name}...",
 	"exportCodeDialog_title": "Export as code",
 	"flagsConfig_placeholder": "Select flags",

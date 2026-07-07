@@ -1,7 +1,7 @@
 import { invoke } from '$lib/invoke';
-import type { ModpackArgs } from '$lib/types';
+import type { ExportCode, ModpackArgs } from '$lib/types';
 
-export const code = () => invoke<string>('export_code');
+export const code = () => invoke<ExportCode>('export_code');
 export const file = (dir: string) => invoke('export_file', { dir });
 export const getPackArgs = () => invoke<ModpackArgs>('get_pack_args');
 export const setPackArgs = (args: ModpackArgs) => invoke('set_pack_args', { args });

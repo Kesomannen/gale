@@ -219,6 +219,11 @@ export type ModpackArgs = {
 	includeFileMap: Map<string, boolean>;
 };
 
+export type ExportCode = {
+	code: string;
+	backend: Backend;
+}
+
 export type Game = {
 	name: string;
 	slug: string;

@@ -9,22 +9,20 @@ use itertools::Itertools;
 use tauri::{AppHandle, command};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tracing::{debug, warn};
-use uuid::Uuid;
 
 use super::{
-    changelog,
+    ExportCode, changelog,
     modpack::{self, ModpackArgs},
 };
 use crate::{
     profile::ProfileModKind,
     state::ManagerExt,
-    thunderstore::{self},
+    thunderstore::{self, Backend},
     util::{cmd::Result, error::IoResultExt, fs::PathExt},
 };
-use crate::thunderstore::Backend;
 
 #[command]
-pub async fn export_code(app: AppHandle) -> Result<Uuid> {
+pub async fn export_code(app: AppHandle) -> Result<ExportCode> {
     let key = super::export_code(&app).await?;
 
     Ok(key)
@@ -125,7 +123,11 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
             data,
             manager.active_game,
             args,
-            if profile.has_hexium_mods() { Backend::Hexium } else { Backend::Thunderstore },
+            if profile.has_hexium_mods(&app) {
+                Backend::Hexium
+            } else {
+                Backend::Thunderstore
+            },
             token,
         )
     };
