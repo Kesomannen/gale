@@ -1,10 +1,7 @@
 use eyre::anyhow;
 use tauri::{AppHandle, command};
 
-use super::{
-    models::FrontendMod,
-    query::{self, QueryModsArgs},
-};
+use super::{models::FrontendMod, query::{self, QueryModsArgs}, Backend};
 use crate::{
     logger,
     state::ManagerExt,
@@ -69,18 +66,18 @@ pub async fn get_markdown(
 }
 
 #[command]
-pub fn set_thunderstore_token(token: &str) -> Result<()> {
-    super::token::set(token)?;
+pub fn set_api_token(backend: Backend, token: &str) -> Result<()> {
+    super::token::set(backend, token)?;
     Ok(())
 }
 
 #[command]
-pub fn has_thunderstore_token() -> bool {
-    super::token::get().is_ok_and(|token| token.is_some())
+pub fn has_api_token(backend: Backend) -> bool {
+    super::token::get(backend).is_ok_and(|token| token.is_some())
 }
 
 #[command]
-pub fn clear_thunderstore_token() -> Result<()> {
-    super::token::clear()?;
+pub fn clear_api_token(backend: Backend) -> Result<()> {
+    super::token::clear(backend)?;
     Ok(())
 }

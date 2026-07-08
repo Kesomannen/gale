@@ -12,7 +12,8 @@
 		{
 			label: "Thunderstore + Hexium",
 			value: Backends.All
-		}, {
+		},
+		{
 			label: "Hexium",
 			value: Backends.Hexium,
 		}

@@ -12,14 +12,15 @@ use image::{ImageFormat, imageops::FilterType};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use tauri::Url;
+use tauri::{AppHandle, Url};
 use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
 use crate::{game::Game, profile::Profile, thunderstore::*};
 
-pub fn refresh_args(profile: &mut Profile, game: Game) {
+/// Returns whether it's hexium-exclusive now
+pub fn refresh_args(profile: &mut Profile, app: &AppHandle, game: Game) -> bool {
     if profile.modpack.is_none() {
         profile.modpack = Some(ModpackArgs {
             name: profile.name.replace([' ', '-'], ""),
@@ -30,6 +31,11 @@ pub fn refresh_args(profile: &mut Profile, game: Game) {
         });
     }
 
+    let hexium_exclusive = profile.has_hexium_mods(app);
+    if hexium_exclusive {
+        profile.modpack.as_mut().unwrap().backend = Backend::Hexium;
+    }
+
     let includes = &mut profile.modpack.as_mut().unwrap().include_files;
 
     // remove deleted files
@@ -38,6 +44,8 @@ pub fn refresh_args(profile: &mut Profile, game: Game) {
     for path in super::find_config(&profile.path, game.mod_loader.mod_config_dirs()) {
         includes.entry(path).or_insert(true);
     }
+
+    hexium_exclusive
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -57,6 +65,8 @@ pub struct ModpackArgs {
     pub include_disabled: bool,
     #[serde(default, rename = "includeFileMap")]
     pub include_files: HashMap<PathBuf, bool>,
+    #[serde(default)]
+    pub backend: Backend,
 }
 
 impl Profile {
@@ -163,7 +173,6 @@ pub async fn publish(
     data: Bytes,
     game: Game,
     args: ModpackArgs,
-    backend: Backend,
     token: String,
     client: reqwest::Client,
 ) -> Result<()> {
@@ -180,7 +189,7 @@ pub async fn publish(
     let response = initiate_upload(
         args.name.clone(),
         data.len() as u64,
-        backend,
+        args.backend,
         &token,
         &client,
     )
@@ -203,17 +212,17 @@ pub async fn publish(
         Ok(parts) => parts,
         Err(err) => {
             tauri::async_runtime::spawn(async move {
-                abort_upload(&uuid, backend, &token, client).await
+                abort_upload(&uuid, args.backend, &token, client).await
             });
             return Err(err.wrap_err("failed to upload file"));
         }
     };
 
-    finish_upload(parts, &uuid, backend, &token, &client)
+    finish_upload(parts, &uuid, args.backend, &token, &client)
         .await
         .context("failed to finalize upload")?;
 
-    submit_package(uuid, game, args, backend, &token, &client)
+    submit_package(uuid, game, args, &token, &client)
         .await
         .context("failed to submit package")?;
 
@@ -329,7 +338,6 @@ async fn submit_package(
     uuid: Uuid,
     game: Game,
     args: ModpackArgs,
-    backend: Backend,
     token: &str,
     client: &reqwest::Client,
 ) -> Result<()> {
@@ -344,7 +352,7 @@ async fn submit_package(
 
     debug!("submitting package");
 
-    let response = base_request("submission/submit", backend, token, client)
+    let response = base_request("submission/submit", args.backend, token, client)
         .json(&metadata)
         .send()
         .await?;

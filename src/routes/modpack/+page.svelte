@@ -10,7 +10,7 @@
 	import ApiKeyDialog from '$lib/components/dialogs/ApiKeyDialog.svelte';
 
 	import * as api from '$lib/api';
-	import type { ModpackArgs } from '$lib/types';
+	import { Backend, type ModpackArgs } from '$lib/types';
 	import { open } from '@tauri-apps/plugin-dialog';
 
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -23,6 +23,7 @@
 	import games from '$lib/state/game.svelte';
 	import { apiKeyDialog } from '$lib/state/misc.svelte';
 	import { m, modpack_button_export, modpack_includeFiles_title } from '$lib/paraglide/messages';
+	import Info from '$lib/components/ui/Info.svelte';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -38,6 +39,8 @@
 	let iconPath: string = $state('');
 	let websiteUrl: string = $state('');
 	let includeDisabled: boolean = $state(false);
+	let hexiumExclusive: boolean = $state(false);
+	let backend: Backend = $state(Backend.Thunderstore);
 
 	let doneDialogOpen = $state(false);
 	let loading: string | null = $state(null);
@@ -77,8 +80,10 @@
 	async function refresh() {
 		loading = m.modpack_refresh_loading();
 
-		let args = await api.profile.export.getPackArgs();
+		let info = await api.profile.export.getPackArgs();
+		let args = info.args;
 
+		// Exclusive for Hexium if initial fetch already reports Hexium
 		name = args.name;
 		author = args.author;
 		nsfw = args.nsfw;
@@ -91,6 +96,8 @@
 		websiteUrl = args.websiteUrl;
 		includeDisabled = args.includeDisabled;
 		includeFiles = new SvelteMap(Object.entries(args.includeFileMap));
+		backend = args.backend;
+		hexiumExclusive = info.hexiumExclusive;
 
 		loading = null;
 	}
@@ -130,10 +137,11 @@
 	}
 
 	async function uploadToThunderstore() {
-		let hasToken = await api.thunderstore.hasToken();
+		let hasToken = await api.thunderstore.hasToken(backend);
 
 		if (!hasToken) {
 			apiKeyDialog.open = true;
+			apiKeyDialog.backend = backend;
 
 			// wait until api key has been set
 			await new Promise<void>((resolve) => {
@@ -147,12 +155,12 @@
 				return () => clearInterval(interval);
 			});
 
-			hasToken = await api.thunderstore.hasToken();
+			hasToken = await api.thunderstore.hasToken(backend);
 
 			if (!hasToken) return;
 		}
 
-		loading = m.modpack_uploadToThunderstore_loading();
+		loading = m.modpack_uploadToServer_loading({ backend });
 		try {
 			await api.profile.export.uploadPack(args());
 			doneDialogOpen = true;
@@ -181,9 +189,22 @@
 			websiteUrl,
 			includeDisabled,
 			includeFileMap: includeFiles,
-			categories: selectedCategories
+			categories: selectedCategories,
+			backend,
 		};
 	}
+
+	let backendItems = $derived([
+		{
+			label: "Thunderstore",
+			value: Backend.Thunderstore,
+			disabled: hexiumExclusive,
+		},
+		{
+			label: "Hexium",
+			value: Backend.Hexium,
+		}
+	]);
 
 	$effect(() => {
 		profiles.active;
@@ -220,7 +241,7 @@
 	{:else}
 		<FormField
 			label={m.modpack_name_title()}
-			description={m.modpack_name_description()}
+			description={m.modpack_name_description({ backend })}
 			required={true}
 		>
 			<InputField
@@ -235,7 +256,7 @@
 
 		<FormField
 			label={m.modpack_author_title()}
-			description={m.modpack_author_description()}
+			description={m.modpack_author_description({ backend })}
 			required
 		>
 			<InputField
@@ -415,12 +436,24 @@
 			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 		</div>
 
+		{#if games.active?.name == "Valheim"}
+			<div class="text-primary-200 flex items-center text-lg font-medium">
+				<span class="max-w-96 grow">{m.modpack_upload_server()}</span>
+
+				{#if hexiumExclusive}
+					<Info>{m.modpack_upload_serverHexiumExclusive()}</Info>
+				{/if}
+
+				<Select type="single" triggerClass="grow" items={backendItems} bind:value={backend} />
+			</div>
+		{/if}
+
 		<div class="mt-3 flex justify-end gap-2">
 			<Button color="primary" icon="mdi:export" onclick={exportToFile}>
 				{m.modpack_button_export()}
 			</Button>
 			<Button color="accent" icon="mdi:upload" onclick={uploadToThunderstore}>
-				{m.modpack_button_publish()}
+				{m.modpack_button_publish({ backend })}
 			</Button>
 		</div>
 	{/if}
@@ -430,7 +463,7 @@
 
 <Dialog bind:open={doneDialogOpen} title={m.modpack_dialog_title()}>
 	<p class="text-primary-300">
-		{m.modpack_dialog_content_1({ name, versionNumber })}
+		{m.modpack_dialog_content_1({ name, versionNumber, backend })}
 		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}">
 			{m.modpack_dialog_content_2()}
 		</Link>

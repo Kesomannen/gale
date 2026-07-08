@@ -6,6 +6,7 @@ use std::{
 
 use eyre::{Context, anyhow};
 use itertools::Itertools;
+use serde::Serialize;
 use tauri::{AppHandle, command};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tracing::{debug, warn};
@@ -17,7 +18,7 @@ use super::{
 use crate::{
     profile::ProfileModKind,
     state::ManagerExt,
-    thunderstore::{self, Backend},
+    thunderstore,
     util::{cmd::Result, error::IoResultExt, fs::PathExt},
 };
 
@@ -48,16 +49,26 @@ pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModpackInfo {
+    args: ModpackArgs,
+    hexium_exclusive: bool,
+}
+
 #[command]
-pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
+pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackInfo>> {
     let mut manager = app.lock_manager();
 
     let game = manager.active_game;
     let profile = manager.active_profile_mut();
 
-    modpack::refresh_args(profile, game);
+    let hexium_exclusive = modpack::refresh_args(profile, &app, game);
 
-    Ok(profile.modpack.clone())
+    Ok(profile.modpack.as_ref().map(|args| ModpackInfo {
+        args: args.clone(),
+        hexium_exclusive,
+    }))
 }
 
 #[command]
@@ -102,15 +113,15 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
 
 #[command]
 pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
-    let (data, game, args, backend, token) = {
+    let (data, game, args, token) = {
         let manager = app.lock_manager();
         let thunderstore = app.lock_thunderstore();
 
-        let token = thunderstore::token::get()
+        let profile = manager.active_profile();
+
+        let token = thunderstore::token::get(args.backend)
             .context("failed to get thunderstore API token")?
             .ok_or(anyhow!("no thunderstore API token found"))?;
-
-        let profile = manager.active_profile();
 
         let mut data = Cursor::new(Vec::new());
         profile.export_pack(&args, &mut data, &thunderstore)?;
@@ -119,21 +130,11 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
             warn!("failed to take profile snapshot: {}", err);
         }
 
-        (
-            data,
-            manager.active_game,
-            args,
-            if profile.has_hexium_mods(&app) {
-                Backend::Hexium
-            } else {
-                Backend::Thunderstore
-            },
-            token,
-        )
+        (data, manager.active_game, args, token)
     };
 
     let client = app.http().clone();
-    modpack::publish(data.into_inner().into(), game, args, backend, token, client).await?;
+    modpack::publish(data.into_inner().into(), game, args, token, client).await?;
 
     Ok(())
 }

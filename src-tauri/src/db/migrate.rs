@@ -256,6 +256,7 @@ impl From<legacy::ModpackArgs> for ModpackArgs {
             website_url: legacy.website_url,
             include_disabled: legacy.include_disabled,
             include_files: legacy.include_files,
+            backend: Backend::Thunderstore,
         }
     }
 }

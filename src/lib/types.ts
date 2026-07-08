@@ -217,12 +217,18 @@ export type ModpackArgs = {
 	websiteUrl: string;
 	includeDisabled: boolean;
 	includeFileMap: Map<string, boolean>;
+	backend: Backend;
+};
+
+export type ModpackInfo = {
+	args: ModpackArgs;
+	hexiumExclusive: boolean;
 };
 
 export type ExportCode = {
 	code: string;
 	backend: Backend;
-}
+};
 
 export type Game = {
 	name: string;

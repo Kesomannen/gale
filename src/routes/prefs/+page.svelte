@@ -10,7 +10,7 @@
 	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/components/prefs/PlatformPref.svelte';
 
-	import { Backends, type GamePrefs, type Prefs } from '$lib/types';
+	import { Backend, Backends, type GamePrefs, type Prefs } from '$lib/types';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
 
@@ -126,7 +126,7 @@
 
 		<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
 
-		<ApiKeyPref />
+		<ApiKeyPref backend={Backend.Thunderstore} />
 
 		<TogglePref
 			label={m.prefs_miscellaneous_fetchMods_title()}
@@ -163,6 +163,8 @@
 			>
 				{m.backendPref_other_server_content()}
 			</TogglePref>
+
+			<ApiKeyPref backend={Backend.Hexium} />
 		{/if}
 
 		<SmallHeading>{m.prefs_gameSettings_locations_title()}</SmallHeading>
