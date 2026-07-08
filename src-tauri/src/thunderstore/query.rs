@@ -9,7 +9,7 @@ use tracing::info;
 
 use super::{
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
-    BorrowedMod,
+    BorrowedMod, Thunderstore
 };
 use crate::{
     profile::{LocalMod, Profile},
@@ -88,6 +88,9 @@ pub trait Queryable {
     /// The package's full name, including the author.
     fn full_name(&self) -> &str;
 
+    /// The packages latest version.
+    fn version(&self) -> semver::Version;
+
     /// Whether the package should be included in the given query.
     fn matches(&self, args: &QueryModsArgs) -> bool;
 
@@ -103,6 +106,10 @@ pub trait Queryable {
 impl Queryable for BorrowedMod<'_> {
     fn full_name(&self) -> &str {
         self.package.ident.as_str()
+    }
+
+    fn version(&self) -> semver::Version {
+        self.package.latest().parsed_version()
     }
 
     fn description(&self) -> Option<&str> {
@@ -261,7 +268,7 @@ where
         (full, package)
     });
 
-    let mut results = mods
+    let results = mods
         .filter(|queryable| {
             if let Some((full_search, package_search)) = &search_terms {
                 let name_match = queryable
@@ -279,8 +286,8 @@ where
             }
 
             queryable.matches(args)
-        })
-        .collect_vec();
+        });
+    let mut results = Thunderstore::deduplicate(results).collect_vec();
 
     results.sort_by(|a, b| a.cmp(b, args));
     results

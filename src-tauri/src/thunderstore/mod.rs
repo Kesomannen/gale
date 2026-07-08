@@ -11,7 +11,7 @@ use std::{
 use tauri::{AppHandle, async_runtime::JoinHandle};
 use uuid::Uuid;
 
-use crate::{game::Game, state::ManagerExt};
+use crate::{game::Game, state::ManagerExt, thunderstore::query::Queryable};
 
 pub mod cache;
 pub mod commands;
@@ -145,19 +145,22 @@ impl Thunderstore {
             .all(|b| *b)
     }
 
-    /// Returns an iterator over the latest versions of every package.
-    pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
-        self.thunderstore_backend
-            .latest()
-            .chain(self.hexium_backend.latest())
-            .sorted_by(|a, b| a.package.full_name().cmp(&b.package.full_name()))
+    pub fn deduplicate<T: Queryable>(mods: impl Iterator<Item = T>) -> impl Iterator<Item = T> {
+        mods
+            .sorted_by(|a, b| a.full_name().cmp(&b.full_name()))
             .coalesce(|a, b| {
-                if a.package.full_name() == b.package.full_name() {
+                if a.full_name() == b.full_name() {
                     Ok(Self::cmp_borrowed_mod(a, b))
                 } else {
                     Err((a, b))
                 }
             })
+    }
+
+    /// Returns an iterator over the latest versions of every package.
+    /// Without deduplication, usable for filtering. Call [`Thunderstore::deduplicate`] afterwards.
+    pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
+        self.thunderstore_backend.latest().chain(self.hexium_backend.latest())
     }
 
     fn resolve_thunderstore_vs_hexium<'a, R: 'a>(
@@ -198,11 +201,8 @@ impl Thunderstore {
         )
     }
 
-    fn cmp_borrowed_mod<'a>(
-        thunderstore: BorrowedMod<'a>,
-        hexium: BorrowedMod<'a>,
-    ) -> BorrowedMod<'a> {
-        if thunderstore.version.version() >= hexium.version.version() {
+    fn cmp_borrowed_mod<T: Queryable>(thunderstore: T, hexium: T) -> T {
+        if thunderstore.version() >= hexium.version() {
             thunderstore
         } else {
             hexium

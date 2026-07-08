@@ -56,6 +56,15 @@ impl Queryable for QueryableProfileMod<'_> {
         }
     }
 
+    fn version(&self) -> semver::Version {
+        use QueryableProfileModKind as Kind;
+
+        match &self.kind {
+            Kind::Local(local) => <LocalMod as Queryable>::version(local),
+            Kind::Thunderstore(remote) => remote.package.latest().parsed_version(),
+        }
+    }
+
     fn matches(&self, args: &QueryModsArgs) -> bool {
         use QueryableProfileModKind as Kind;
 
@@ -151,6 +160,10 @@ impl Profile {
 impl Queryable for LocalMod {
     fn full_name(&self) -> &str {
         &self.name
+    }
+
+    fn version(&self) -> semver::Version {
+        self.version.as_ref().map(|v| v.clone()).unwrap_or(semver::Version::new(0, 0, 0))
     }
 
     fn description(&self) -> Option<&str> {
