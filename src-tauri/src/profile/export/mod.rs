@@ -49,7 +49,7 @@ pub struct R2Mod {
     #[serde(alias = "versionNumber")]
     pub version: R2Version,
     pub enabled: bool,
-    // This will make the field available for future comparison against the loaded mods.
+    // This will make the field available to UI for future comparison against the loaded mods.
     // Defaults to Thunderstore for now.
     #[allow(dead_code)]
     #[serde(skip)]
@@ -156,7 +156,7 @@ async fn export_code(app: &AppHandle) -> Result<ExportCode> {
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
-        let backend = if profile.has_hexium_mods(app) {
+        let backend = if profile.has_hexium_exclusive_mods(&*app.lock_thunderstore()) {
             Backend::Hexium
         } else {
             Backend::Thunderstore

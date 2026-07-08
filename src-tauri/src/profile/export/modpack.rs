@@ -12,7 +12,7 @@ use image::{ImageFormat, imageops::FilterType};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Url};
+use tauri::Url;
 use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{ZipWriter, write::SimpleFileOptions};
@@ -20,7 +20,7 @@ use zip::{ZipWriter, write::SimpleFileOptions};
 use crate::{game::Game, profile::Profile, thunderstore::*};
 
 /// Returns whether it's hexium-exclusive now
-pub fn refresh_args(profile: &mut Profile, app: &AppHandle, game: Game) -> bool {
+pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Game) -> bool {
     if profile.modpack.is_none() {
         profile.modpack = Some(ModpackArgs {
             name: profile.name.replace([' ', '-'], ""),
@@ -31,7 +31,7 @@ pub fn refresh_args(profile: &mut Profile, app: &AppHandle, game: Game) -> bool 
         });
     }
 
-    let hexium_exclusive = profile.has_hexium_mods(app);
+    let hexium_exclusive = profile.has_hexium_exclusive_mods(thunderstore);
     if hexium_exclusive {
         profile.modpack.as_mut().unwrap().backend = Backend::Hexium;
     }

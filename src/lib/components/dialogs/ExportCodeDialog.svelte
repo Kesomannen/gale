@@ -8,6 +8,7 @@
 	import IconButton from '../ui/IconButton.svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import { Backend, type ExportCode } from '$lib/types';
+	import InfoBox from '$lib/components/ui/InfoBox.svelte';
 
 	let isOpen = $state(false);
 	let code = $state<ExportCode | null>(null);
@@ -56,9 +57,9 @@
 			</div>
 
 			{#if code.backend !== Backend.Thunderstore}
-				<div>
+				<InfoBox type="info">
 					{m.exportCodeDialog_galeExclusive()}
-				</div>
+				</InfoBox>
 			{/if}
 		{:else}
 			<div class="flex items-center gap-1">

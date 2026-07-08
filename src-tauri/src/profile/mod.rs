@@ -287,12 +287,11 @@ impl Profile {
     }
 
     /// Checks if any mods are hexium-exclusive mods
-    fn has_hexium_mods(&self, app: &AppHandle) -> bool {
+    fn has_hexium_exclusive_mods(&self, thunderstore: &Thunderstore) -> bool {
         self.thunderstore_mods().any(|(package, _)| {
             let ident = &package.ident;
             package.id.backend == Backend::Hexium
-                && app
-                    .lock_thunderstore()
+                && thunderstore
                     .backend(Backend::Thunderstore)
                     .find_mod(ident.owner(), ident.name(), ident.version())
                     .is_err()

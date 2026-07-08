@@ -1,14 +1,13 @@
 use crate::{
     game::Game,
-    prefs::{Backends, Prefs},
-    thunderstore::{BorrowedMod, PackageListing, VersionIdent, cache::MarkdownKind},
+    prefs::Prefs,
+    thunderstore::{BorrowedMod, PackageIdent, PackageListing, VersionIdent, cache::MarkdownKind},
 };
 use eyre::eyre;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
-use crate::thunderstore::PackageIdent;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Backend {
@@ -79,12 +78,15 @@ impl Backend {
             Backend::Thunderstore => {
                 format!(
                     "https://thunderstore.io/c/{}/p/{}/{}/",
-                    game.slug, package.name(), package.name()
+                    game.slug,
+                    package.name(),
+                    package.name()
                 )
             }
             Backend::Hexium => format!(
                 "https://mods.valtools.org/mods/1/{}/{}",
-                package.name(), package.name()
+                package.name(),
+                package.name()
             ),
         }
     }
@@ -93,11 +95,15 @@ impl Backend {
         match self {
             Backend::Thunderstore => format!(
                 "https://thunderstore.io/package/download/{}/{}/{}",
-                version.owner(), version.name(), version.version()
+                version.owner(),
+                version.name(),
+                version.version()
             ),
             Backend::Hexium => format!(
                 "https://mods.valtools.org/uploads/{}/{}/{}.zip",
-                version.owner(), version.name(), version.version()
+                version.owner(),
+                version.name(),
+                version.version()
             ),
         }
     }
@@ -126,14 +132,6 @@ impl Backend {
         match self {
             Backend::Thunderstore => "https://thunderstore.io/api/experimental",
             Backend::Hexium => "https://mods.valtools.org/api/experimental",
-        }
-    }
-
-    pub fn apply_all<R>(f: impl Fn(Self) -> R, backends: Backends) -> Vec<R> {
-        match backends {
-            Backends::All => vec![f(Backend::Thunderstore), f(Backend::Hexium)],
-            Backends::Thunderstore => vec![f(Backend::Thunderstore)],
-            Backends::Hexium => vec![f(Backend::Hexium)],
         }
     }
 }

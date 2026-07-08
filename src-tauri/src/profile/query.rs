@@ -6,9 +6,8 @@ use tracing::warn;
 
 use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
 use crate::thunderstore::{
-    self,
+    self, BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
     query::{QueryModsArgs, Queryable, SortBy, SortOrder},
-    BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
 };
 
 struct QueryableProfileMod<'a> {
@@ -56,12 +55,12 @@ impl Queryable for QueryableProfileMod<'_> {
         }
     }
 
-    fn version(&self) -> semver::Version {
+    fn version(&self) -> Option<semver::Version> {
         use QueryableProfileModKind as Kind;
 
         match &self.kind {
             Kind::Local(local) => <LocalMod as Queryable>::version(local),
-            Kind::Thunderstore(remote) => remote.package.latest().parsed_version(),
+            Kind::Thunderstore(remote) => Some(remote.package.latest().parsed_version()),
         }
     }
 
@@ -162,8 +161,8 @@ impl Queryable for LocalMod {
         &self.name
     }
 
-    fn version(&self) -> semver::Version {
-        self.version.as_ref().map(|v| v.clone()).unwrap_or(semver::Version::new(0, 0, 0))
+    fn version(&self) -> Option<semver::Version> {
+        self.version.as_ref().cloned()
     }
 
     fn description(&self) -> Option<&str> {

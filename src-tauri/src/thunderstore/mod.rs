@@ -140,14 +140,15 @@ impl Thunderstore {
     /// the last call to [`Thunderstore::switch_game`].
     pub fn packages_fetched(&self, app: &AppHandle, game: Game) -> bool {
         let backends = app.lock_prefs().backends(game);
-        Backend::apply_all(|b| self.backend(b).packages_fetched(), backends)
+        backends
+            .into_backend_slice()
             .iter()
-            .all(|b| *b)
+            .map(|b| self.backend(*b).packages_fetched())
+            .all(|b| b)
     }
 
     pub fn deduplicate<T: Queryable>(mods: impl Iterator<Item = T>) -> impl Iterator<Item = T> {
-        mods
-            .sorted_by(|a, b| a.full_name().cmp(&b.full_name()))
+        mods.sorted_by(|a, b| a.full_name().cmp(&b.full_name()))
             .coalesce(|a, b| {
                 if a.full_name() == b.full_name() {
                     Ok(Self::cmp_borrowed_mod(a, b))
@@ -160,7 +161,9 @@ impl Thunderstore {
     /// Returns an iterator over the latest versions of every package.
     /// Without deduplication, usable for filtering. Call [`Thunderstore::deduplicate`] afterwards.
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
-        self.thunderstore_backend.latest().chain(self.hexium_backend.latest())
+        self.thunderstore_backend
+            .latest()
+            .chain(self.hexium_backend.latest())
     }
 
     fn resolve_thunderstore_vs_hexium<'a, R: 'a>(

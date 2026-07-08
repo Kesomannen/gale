@@ -8,8 +8,8 @@ use tauri::{AppHandle, Emitter};
 use tracing::info;
 
 use super::{
+    BorrowedMod, Thunderstore,
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
-    BorrowedMod, Thunderstore
 };
 use crate::{
     profile::{LocalMod, Profile},
@@ -89,7 +89,7 @@ pub trait Queryable {
     fn full_name(&self) -> &str;
 
     /// The packages latest version.
-    fn version(&self) -> semver::Version;
+    fn version(&self) -> Option<semver::Version>;
 
     /// Whether the package should be included in the given query.
     fn matches(&self, args: &QueryModsArgs) -> bool;
@@ -108,8 +108,8 @@ impl Queryable for BorrowedMod<'_> {
         self.package.ident.as_str()
     }
 
-    fn version(&self) -> semver::Version {
-        self.package.latest().parsed_version()
+    fn version(&self) -> Option<semver::Version> {
+        Some(self.package.latest().parsed_version())
     }
 
     fn description(&self) -> Option<&str> {
@@ -268,25 +268,24 @@ where
         (full, package)
     });
 
-    let results = mods
-        .filter(|queryable| {
-            if let Some((full_search, package_search)) = &search_terms {
-                let name_match = queryable
-                    .full_name()
-                    .to_lowercase()
-                    .contains(package_search);
+    let results = mods.filter(|queryable| {
+        if let Some((full_search, package_search)) = &search_terms {
+            let name_match = queryable
+                .full_name()
+                .to_lowercase()
+                .contains(package_search);
 
-                let description_match = queryable
-                    .description()
-                    .is_some_and(|description| description.to_lowercase().contains(full_search));
+            let description_match = queryable
+                .description()
+                .is_some_and(|description| description.to_lowercase().contains(full_search));
 
-                if !name_match && !description_match {
-                    return false;
-                }
+            if !name_match && !description_match {
+                return false;
             }
+        }
 
-            queryable.matches(args)
-        });
+        queryable.matches(args)
+    });
     let mut results = Thunderstore::deduplicate(results).collect_vec();
 
     results.sort_by(|a, b| a.cmp(b, args));

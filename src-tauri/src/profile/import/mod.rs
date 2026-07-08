@@ -26,7 +26,7 @@ use crate::{
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::{Backend, ModId},
+    thunderstore::ModId,
     util::{self, error::IoResultExt},
 };
 
@@ -85,7 +85,7 @@ fn read_base64(base64: &str) -> Result<ImportData> {
 }
 
 pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
-    let response = future::join_all(Backend::apply_all(
+    let response = future::join_all(Backends::All.into_backend_slice().iter().map(
         async |b| -> Result<String> {
             Ok(app
                 .http()
@@ -102,7 +102,6 @@ pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
                 .text()
                 .await?)
         },
-        Backends::All,
     ))
     .await
     .into_iter()

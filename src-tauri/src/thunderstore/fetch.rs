@@ -23,10 +23,12 @@ use crate::{
 
 pub async fn fetch_package_loop(game: Game, app: AppHandle) {
     let backends = app.lock_prefs().backends(game);
-    future::join_all(Backend::apply_all(
-        |b| fetch_single_package_loop(game, app.clone(), b),
-        backends,
-    ))
+    future::join_all(
+        backends
+            .into_backend_slice()
+            .iter()
+            .map(|b| fetch_single_package_loop(game, app.clone(), *b)),
+    )
     .await;
 }
 
@@ -98,16 +100,14 @@ pub(super) async fn fetch_packages(
     app: &AppHandle,
 ) -> Vec<(Backend, Report)> {
     let backends = app.lock_prefs().backends(game);
-    let result = future::join_all(Backend::apply_all(
-        |backend| {
-            fetch_single_packages(game, write_directly, app, backend).map_err(move |e| (backend, e))
-        },
-        backends,
-    ))
-    .await
-    .into_iter()
-    .filter_map(Result::err)
-    .collect();
+    let result =
+        future::join_all(backends.into_backend_slice().iter().map(|b| {
+            fetch_single_packages(game, write_directly, app, *b).map_err(move |e| (*b, e))
+        }))
+        .await
+        .into_iter()
+        .filter_map(Result::err)
+        .collect();
 
     let mut state = app.lock_thunderstore();
     state.is_fetching = false;

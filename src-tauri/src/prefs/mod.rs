@@ -16,6 +16,7 @@ use crate::{
     logger,
     profile::launch::LaunchMode,
     state::ManagerExt,
+    thunderstore::Backend,
     util::{
         self,
         error::IoResultExt,
@@ -198,6 +199,16 @@ pub enum Backends {
     All,
     Thunderstore,
     Hexium,
+}
+
+impl Backends {
+    pub fn into_backend_slice(self) -> &'static [Backend] {
+        match self {
+            Backends::All => &[Backend::Thunderstore, Backend::Hexium],
+            Backends::Thunderstore => &[Backend::Thunderstore],
+            Backends::Hexium => &[Backend::Hexium],
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
