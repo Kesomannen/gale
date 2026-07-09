@@ -228,7 +228,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::new().build());
 
     #[cfg(target_os = "macos")]
-    let app = app.menu(tauri::menu::Menu::default);
+    let app = app.menu(|app_handle| tauri::menu::Menu::default(app_handle));
 
     app.setup(setup)
         .build(tauri::generate_context!())
