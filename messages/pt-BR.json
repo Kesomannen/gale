@@ -430,17 +430,12 @@
 	"unknown": "Desconhecido",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "O seguinte mod não foi encontrado:",
 				"countPlural=other": "Os seguintes mods não foram encontrados:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Desinstalá-lo?",
@@ -448,17 +443,12 @@
 	"updateAllBanner_button": "Atualizar tudo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Há uma atualização disponível.",
 				"countPlural=other": "Existem atualizações disponíveis {count} ."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Atualizar mods",
