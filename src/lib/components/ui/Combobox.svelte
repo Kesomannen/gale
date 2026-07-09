@@ -61,7 +61,7 @@
 					{#if open}
 						<div
 							{...props}
-							class="border-primary-600 bg-primary-800 flex max-h-96 w-[var(--bits-combobox-anchor-width)] gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
+							class="border-primary-600 bg-primary-800 z-50 flex max-h-96 w-[var(--bits-combobox-anchor-width)] gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
 							in:fly={dropIn}
 							out:fade={dropOut}
 						>

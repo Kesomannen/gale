@@ -57,7 +57,7 @@
 					<div
 						{...props}
 						transition:fade={{ duration: 80 }}
-						class="fixed inset-0 z-0 rounded-lg bg-black/60"
+						class="fixed inset-0 z-50 rounded-lg bg-black/60"
 					></div>
 				{/if}
 			{/snippet}
@@ -68,14 +68,14 @@
 		>
 			{#if open}
 				<div
-					class="pointer-events-none fixed inset-0 flex items-center justify-center"
+					class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
 					in:fly={{ duration: 200, easing: expoOut, y: 8 }}
 					out:fly={{ duration: 50, easing: linear, y: 5 }}
 				>
 					<div
 						class={[
 							large ? 'max-w-240' : 'max-w-140',
-							'border-primary-600 bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
+							'border-primary-600 bg-primary-800 pointer-events-auto relative max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
 						]}
 					>
 						{#if title}
