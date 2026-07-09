@@ -57,12 +57,12 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "macos")]
     {
         if let Some(urls) = app.deep_link().get_current()? {
-            deep_link::handle_urls(app.handle(), urls.iter().map(|url| url.as_str()));
+            deep_link::handle_tauri_urls(app.handle(), urls.iter());
         }
 
         let handle = app.handle().to_owned();
         app.deep_link().on_open_url(move |event| {
-            deep_link::handle_urls(&handle, event.urls().iter().map(|url| url.as_str()));
+            deep_link::handle_tauri_urls(&handle, event.urls().iter());
         });
     }
 
