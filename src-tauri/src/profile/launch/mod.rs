@@ -325,14 +325,20 @@ fn find_executable(game_dir: &Path) -> Result<PathBuf> {
 /// Finds the executable of the first `.app` bundle inside `game_dir`.
 #[cfg(target_os = "macos")]
 fn find_app_bundle_executable(game_dir: &Path) -> Result<Option<PathBuf>> {
-    let Some(bundle) = game_dir
-        .read_dir()?
-        .filter_map(|entry| entry.ok())
-        .map(|entry| entry.path())
-        .sorted()
-        .find(|path| path.extension().is_some_and(|ext| ext == "app") && path.is_dir())
-    else {
-        return Ok(None);
+    let bundle = if game_dir.extension().is_some_and(|ext| ext == "app") && game_dir.is_dir() {
+        game_dir.to_path_buf()
+    } else {
+        let Some(bundle) = game_dir
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .sorted()
+            .find(|path| path.extension().is_some_and(|ext| ext == "app") && path.is_dir())
+        else {
+            return Ok(None);
+        };
+
+        bundle
     };
 
     #[derive(Deserialize)]
@@ -407,6 +413,18 @@ mod tests {
         assert_eq!(
             find_app_bundle_executable(dir.path()).unwrap(),
             Some(dir.path().join("Game.app/Contents/MacOS/SomeBinary"))
+        );
+    }
+
+    #[test]
+    fn finds_executable_when_game_dir_is_app_bundle() {
+        let dir = tempfile::tempdir().unwrap();
+        make_bundle(dir.path(), "GameBinary", true);
+        let bundle = dir.path().join("Game.app");
+
+        assert_eq!(
+            find_app_bundle_executable(&bundle).unwrap(),
+            Some(bundle.join("Contents/MacOS/GameBinary"))
         );
     }
 
