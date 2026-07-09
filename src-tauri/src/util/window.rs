@@ -5,7 +5,7 @@ pub trait WindowExt {
 impl WindowExt for tauri::WebviewWindow {
     fn zoom(&self, scale_factor: f64) -> tauri::Result<()> {
         #[cfg(target_os = "macos")]
-        return tauri::WebviewWindow::set_zoom(self, scale_factor);
+        return self.set_zoom(scale_factor);
 
         #[cfg(not(target_os = "macos"))]
         self.with_webview(move |webview| {

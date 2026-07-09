@@ -479,7 +479,7 @@ impl ManagedGame {
             std::env::current_exe()
                 .context("failed to get current executable path")?
                 .to_str()
-                .context("executable path must be UTF-8")?
+                .ok_or_eyre("executable path must be UTF-8")?
                 .to_string()
         };
 

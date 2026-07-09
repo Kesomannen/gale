@@ -31,32 +31,22 @@ The app uses Svelte for UI and Tauri for the native shell, so frontend and backe
 
 ### macOS
 
-Gale now builds as a native unsigned universal macOS app for Apple Silicon and Intel Macs.
-
-#### Developing on macOS
-
-If you are developing Gale on macOS, this is the setup that matches the current repo:
-
-- The native app target is `universal-apple-darwin`.
-- Install Xcode Command Line Tools before building native dependencies.
-- Run `xcode-select --install` if you have not already installed them.
-- Use Rust `1.88` or newer. The backend is pinned to `rust-version = "1.88"` in `src-tauri/Cargo.toml`.
-- Use the repo `pnpm` scripts for frontend work:
-  - `pnpm dev` for the Svelte app
-  - `pnpm check` for type and Svelte diagnostics
-  - `pnpm tauri dev` for the full desktop app
-- For a macOS release-style build, use `pnpm tauri build --target universal-apple-darwin --bundles app`.
-- Some features are still platform-limited on macOS:
-  - game discovery and launching are not yet supported
-  - Steam launching is not yet supported
-  - desktop shortcut creation is not yet supported
+Gale builds as a native, unsigned, universal macOS app for both Apple Silicon and Intel Macs.
 
 - Download the macOS `.app.tar.gz` archive from [Releases](https://github.com/Kesomannen/gale/releases)
   when available, then extract it.
 - Open the extracted `.app` bundle. Because it is unsigned, macOS may require right-clicking it,
   selecting **Open**, then confirming **Open**.
-- If you are testing locally, build first and launch the app bundle from
-  `src-tauri/target/universal-apple-darwin/release/bundle/macos/`.
+
+#### Developing on macOS
+
+- Install Xcode Command Line Tools with `xcode-select --install` if you have not already.
+- Use Rust `1.88` or newer, matching `rust-version` in `src-tauri/Cargo.toml`.
+- `pnpm tauri dev` runs the full desktop app; `pnpm dev` and `pnpm check` cover frontend-only work.
+- For a release-style build, run `pnpm tauri build --target universal-apple-darwin --bundles app`,
+  then launch the app bundle from `src-tauri/target/universal-apple-darwin/release/bundle/macos/`.
+- Some features are not yet supported on macOS: game discovery, game launching (including through
+  Steam), and desktop shortcut creation.
 
 ### Windows
 
@@ -69,7 +59,6 @@ If you are developing Gale on macOS, this is the setup that matches the current 
   - Extract the downloaded .zip file (for example by right-clicking and choosing _Extract All_).
   - Run the `Gale_X.X.X_x64_en-US.msi` file inside of the extracted folder.
 </details>
-
 
 <details>
   <summary>

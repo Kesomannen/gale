@@ -46,9 +46,6 @@
 				}
 			}
 		},
-		"macOS": {
-			"infoPlist": "Info.plist"
-		},
 		"resources": [],
 		"fileAssociations": [
 			{

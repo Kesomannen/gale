@@ -86,8 +86,8 @@
 				'',
 				{
 					text: 'Quit Gale',
-					key: quitShortcut,
-					onclick: appWindow.close,
+					accelerator: quitShortcut,
+					onclick: () => appWindow.close(),
 					predefined: { item: 'Quit' as const, text: 'Quit Gale' }
 				}
 			]
@@ -219,11 +219,6 @@
 			]
 		}
 	];
-
-	function menuItemShortcut(item: Exclude<(typeof submenus)[number]['items'][number], string>) {
-		if ('key' in item) return item.key;
-		if ('accelerator' in item) return item.accelerator;
-	}
 
 	async function importLocalMod() {
 		let path = await open({
@@ -429,7 +424,7 @@
 		'0': () => api.prefs.zoomWindow({ factor: 1 }),
 		n: () => (newProfileOpen = true),
 		d: () => openProfileOperation('duplicate'),
-		q: appWindow.close
+		q: () => appWindow.close()
 	};
 
 	onMount(async () => {
@@ -496,7 +491,11 @@
 					{#if typeof item === 'string'}
 						<MenubarSeparator />
 					{:else}
-						<MenubarItem onclick={item.onclick} text={item.text} key={menuItemShortcut(item)} />
+						<MenubarItem
+							onclick={item.onclick}
+							text={item.text}
+							key={'accelerator' in item ? item.accelerator : undefined}
+						/>
 					{/if}
 				{/each}
 			</MenubarMenu>

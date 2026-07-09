@@ -1,8 +1,4 @@
-use std::{
-    fmt::Debug,
-    future::Future,
-    path::{Path, PathBuf},
-};
+use std::{fmt::Debug, future::Future, path::PathBuf};
 
 use eyre::{Context, OptionExt, Result};
 use tauri::{AppHandle, Emitter, Manager, Url};
@@ -16,48 +12,49 @@ use crate::{
     thunderstore::{self, IntoFrontendMod},
 };
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum DeepLinkKind {
+/// A recognized deep link, parsed from a CLI argument or a macOS open event.
+#[derive(Debug, Eq, PartialEq)]
+enum DeepLink {
     R2Install,
     AuthCallback,
     ImportProfile,
     CloneSyncProfile,
-    ProfileFile,
+    ProfileFile(PathBuf),
 }
 
-#[derive(Clone, Debug)]
-enum DeepLinkInput {
-    Text(String),
-    Url(Url),
-}
-
-impl DeepLinkInput {
-    fn as_str(&self) -> &str {
-        match self {
-            Self::Text(url) => url,
-            Self::Url(url) => url.as_str(),
-        }
-    }
-
-    fn into_string(self) -> String {
-        match self {
-            Self::Text(url) => url,
-            Self::Url(url) => url.to_string(),
-        }
-    }
-
-    fn profile_file_path(&self) -> Option<PathBuf> {
-        match self {
-            Self::Text(url) => profile_file_path_from_str(url),
-            Self::Url(url) => profile_file_path_from_url(url),
-        }
+fn classify_url(url: &str) -> Option<DeepLink> {
+    if url.starts_with("ror2mm://") {
+        Some(DeepLink::R2Install)
+    } else if url.starts_with("gale://auth/callback") {
+        Some(DeepLink::AuthCallback)
+    } else if url.starts_with("gale://profile/import") {
+        Some(DeepLink::ImportProfile)
+    } else if url.starts_with("gale://profile/sync/clone") {
+        Some(DeepLink::CloneSyncProfile)
+    } else {
+        profile_file_path(url).map(DeepLink::ProfileFile)
     }
 }
 
-fn is_profile_file_path(path: &Path) -> bool {
+/// Interprets `url` as a local `.r2z` profile file, given either as a plain
+/// filesystem path or a `file://` URL.
+fn profile_file_path(url: &str) -> Option<PathBuf> {
+    let path = if looks_like_windows_absolute_path(url) {
+        // windows drive paths would otherwise parse as URLs with a one-letter scheme
+        PathBuf::from(url)
+    } else if let Ok(parsed) = Url::parse(url) {
+        if parsed.scheme() != "file" {
+            return None;
+        }
+
+        parsed.to_file_path().ok()?
+    } else {
+        PathBuf::from(url)
+    };
+
     path.extension()
-        .and_then(|extension| extension.to_str())
         .is_some_and(|extension| extension.eq_ignore_ascii_case("r2z"))
+        .then_some(path)
 }
 
 fn looks_like_windows_absolute_path(path: &str) -> bool {
@@ -69,53 +66,6 @@ fn looks_like_windows_absolute_path(path: &str) -> bool {
         && matches!(bytes[2], b'\\' | b'/')
 }
 
-fn profile_file_path_from_url(url: &Url) -> Option<PathBuf> {
-    if url.scheme() != "file" {
-        return None;
-    }
-
-    url.to_file_path()
-        .ok()
-        .filter(|path| is_profile_file_path(path))
-}
-
-fn profile_file_path_from_str(url: &str) -> Option<PathBuf> {
-    let path = PathBuf::from(url);
-
-    if looks_like_windows_absolute_path(url) {
-        return is_profile_file_path(&path).then_some(path);
-    }
-
-    if let Ok(url) = Url::parse(url) {
-        return profile_file_path_from_url(&url);
-    }
-
-    is_profile_file_path(&path).then_some(path)
-}
-
-fn classify_deep_link(input: &DeepLinkInput) -> Option<DeepLinkKind> {
-    let url = input.as_str();
-
-    if url.starts_with("ror2mm://") {
-        Some(DeepLinkKind::R2Install)
-    } else if url.starts_with("gale://auth/callback") {
-        Some(DeepLinkKind::AuthCallback)
-    } else if url.starts_with("gale://profile/import") {
-        Some(DeepLinkKind::ImportProfile)
-    } else if url.starts_with("gale://profile/sync/clone") {
-        Some(DeepLinkKind::CloneSyncProfile)
-    } else if input.profile_file_path().is_some() {
-        Some(DeepLinkKind::ProfileFile)
-    } else {
-        None
-    }
-}
-
-#[cfg(test)]
-fn classify_url(url: &str) -> Option<DeepLinkKind> {
-    classify_deep_link(&DeepLinkInput::Text(url.to_owned()))
-}
-
 pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
     let Some(url) = args.into_iter().nth(1) else {
         debug!("deep link has too few arguments");
@@ -125,24 +75,17 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
     handle_url(app, url)
 }
 
-pub fn handle_tauri_urls<'a, I>(app: &AppHandle, urls: I) -> bool
-where
-    I: IntoIterator<Item = &'a Url>,
-{
-    let mut handled = false;
+/// Handles deep links and file opens delivered as URL events on macOS.
+#[cfg(target_os = "macos")]
+pub fn handle_urls(app: &AppHandle, urls: Vec<Url>) {
     for url in urls {
-        handled |= handle_deep_link(app, DeepLinkInput::Url(url.to_owned()));
+        handle_url(app, url.to_string());
     }
-    handled
 }
 
 fn handle_url(app: &AppHandle, url: String) -> bool {
-    handle_deep_link(app, DeepLinkInput::Text(url))
-}
-
-fn handle_deep_link(app: &AppHandle, input: DeepLinkInput) -> bool {
-    let Some(kind) = classify_deep_link(&input) else {
-        warn!("unsupported deep link protocol: {}", input.as_str());
+    let Some(deep_link) = classify_url(&url) else {
+        warn!("unsupported deep link protocol: {url}");
         return false;
     };
 
@@ -153,35 +96,15 @@ fn handle_deep_link(app: &AppHandle, input: DeepLinkInput) -> bool {
 
     let app = app.to_owned();
 
-    match kind {
-        DeepLinkKind::R2Install => {
-            let url = input.into_string();
-            let task_app = app.clone();
-            handle_inner_task(app, handle_r2_install(url, task_app));
-        }
-        DeepLinkKind::AuthCallback => {
-            let url = input.into_string();
-            let task_app = app.clone();
-            handle_inner_task(app, async move {
-                profile::sync::auth::handle_callback(url, &task_app).await
-            });
-        }
-        DeepLinkKind::ImportProfile => {
-            let url = input.into_string();
-            let task_app = app.clone();
-            handle_inner_task(app, import_profile_code(url, task_app));
-        }
-        DeepLinkKind::CloneSyncProfile => {
-            let url = input.into_string();
-            let task_app = app.clone();
-            handle_inner_task(app, clone_sync_profile(url, task_app));
-        }
-        DeepLinkKind::ProfileFile => {
-            let path = input
-                .profile_file_path()
-                .expect("classified profile file should resolve to a path");
-            let task_app = app.clone();
-            handle_inner_task(app, async move { import_profile_file(path, &task_app) });
+    match deep_link {
+        DeepLink::R2Install => handle_inner_task(app.clone(), handle_r2_install(url, app)),
+        DeepLink::AuthCallback => handle_inner_task(app.clone(), async move {
+            profile::sync::auth::handle_callback(url, &app).await
+        }),
+        DeepLink::ImportProfile => handle_inner_task(app.clone(), import_profile_code(url, app)),
+        DeepLink::CloneSyncProfile => handle_inner_task(app.clone(), clone_sync_profile(url, app)),
+        DeepLink::ProfileFile(path) => {
+            handle_inner_task(app.clone(), async move { import_profile_file(path, &app) })
         }
     }
 
@@ -264,22 +187,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn classifies_urls_delivered_by_macos_events() {
+    fn classifies_deep_link_urls() {
         assert_eq!(
             classify_url("ror2mm://v1/install/thunderstore.io/owner/name/version"),
-            Some(DeepLinkKind::R2Install)
+            Some(DeepLink::R2Install)
         );
         assert_eq!(
             classify_url("gale://auth/callback?code=example"),
-            Some(DeepLinkKind::AuthCallback)
+            Some(DeepLink::AuthCallback)
         );
         assert_eq!(
             classify_url("gale://profile/import/00000000-0000-0000-0000-000000000000"),
-            Some(DeepLinkKind::ImportProfile)
+            Some(DeepLink::ImportProfile)
         );
         assert_eq!(
             classify_url("gale://profile/sync/clone/example"),
-            Some(DeepLinkKind::CloneSyncProfile)
+            Some(DeepLink::CloneSyncProfile)
         );
     }
 
@@ -290,19 +213,37 @@ mod tests {
 
     #[test]
     fn only_classifies_real_r2z_profile_files() {
-        assert_eq!(classify_url("Default.r2z"), Some(DeepLinkKind::ProfileFile));
-        assert_eq!(classify_url("Default.R2Z"), Some(DeepLinkKind::ProfileFile));
+        assert_eq!(
+            classify_url("Default.r2z"),
+            Some(DeepLink::ProfileFile(PathBuf::from("Default.r2z")))
+        );
+        assert_eq!(
+            classify_url("Default.R2Z"),
+            Some(DeepLink::ProfileFile(PathBuf::from("Default.R2Z")))
+        );
         assert_eq!(classify_url("Default.notr2z"), None);
         assert_eq!(classify_url("https://example.com/Default.r2z"), None);
         assert_eq!(classify_url("https://example.com/somethingr2z"), None);
     }
 
     #[test]
+    fn classifies_windows_absolute_paths() {
+        assert_eq!(
+            classify_url(r"C:\Profiles\Default.r2z"),
+            Some(DeepLink::ProfileFile(PathBuf::from(
+                r"C:\Profiles\Default.r2z"
+            )))
+        );
+    }
+
+    #[test]
     fn converts_file_url_profile_links_to_filesystem_paths() {
         let path = std::env::temp_dir().join("Default.r2z");
-        let url = tauri::Url::from_file_path(&path).expect("temp path should convert to file URL");
+        let url = Url::from_file_path(&path).expect("temp path should convert to file URL");
 
-        assert_eq!(classify_url(url.as_str()), Some(DeepLinkKind::ProfileFile));
-        assert_eq!(profile_file_path_from_str(url.as_str()), Some(path));
+        assert_eq!(
+            classify_url(url.as_str()),
+            Some(DeepLink::ProfileFile(path))
+        );
     }
 }

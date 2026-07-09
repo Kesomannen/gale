@@ -54,15 +54,18 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // macOS delivers deep links and file opens as events instead of process arguments
     #[cfg(target_os = "macos")]
     {
-        if let Some(urls) = app.deep_link().get_current()? {
-            deep_link::handle_tauri_urls(app.handle(), urls.iter());
+        match app.deep_link().get_current() {
+            Ok(Some(urls)) => deep_link::handle_urls(app.handle(), urls),
+            Ok(None) => (),
+            Err(err) => warn!("failed to read startup deep links: {err:#}"),
         }
 
         let handle = app.handle().to_owned();
         app.deep_link().on_open_url(move |event| {
-            deep_link::handle_tauri_urls(&handle, event.urls().iter());
+            deep_link::handle_urls(&handle, event.urls());
         });
     }
 
@@ -228,7 +231,7 @@ pub fn run() {
         .plugin(tauri_plugin_window_state::Builder::new().build());
 
     #[cfg(target_os = "macos")]
-    let app = app.menu(|app_handle| tauri::menu::Menu::default(app_handle));
+    let app = app.menu(tauri::menu::Menu::default);
 
     app.setup(setup)
         .build(tauri::generate_context!())

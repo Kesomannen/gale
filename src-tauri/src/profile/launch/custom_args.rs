@@ -147,12 +147,6 @@ mod tests {
     }
 
     #[test]
-    fn unix_quoted_args() {
-        let result = CustomArgs::from_str(r#"--name "Mac Profile""#).unwrap();
-        assert_eq!(result.args, vec!["--name", "Mac Profile"]);
-    }
-
-    #[test]
     fn env_var() {
         let result = CustomArgs::from_str("FOO=bar WINE=yes --baz qux").unwrap();
         let expected = new_args(

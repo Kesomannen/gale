@@ -207,5 +207,8 @@ fn check_to_string() {
 #[test]
 fn check_from_string() {
     let parsed = de::from_reader(TEST_STR.as_bytes()).unwrap();
+
+    // compare Debug output since the NaN values are never equal under PartialEq
+    assert_eq!(format!("{parsed:#?}"), format!("{:#?}", test_file()));
     assert_eq!(ser::to_string(&parsed).unwrap(), TEST_STR);
 }
