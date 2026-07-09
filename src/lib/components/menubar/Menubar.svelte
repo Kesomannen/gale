@@ -47,7 +47,8 @@
 	let menu: Menu | null = $state(null);
 
 	const appWindow = getCurrentWindow();
-	const quitShortcut = platform() === 'macos' ? 'Command+Q' : 'Ctrl+Q';
+	const isMac = platform() === 'macos';
+	const quitShortcut = isMac ? 'Command+Q' : 'Ctrl+Q';
 
 	const submenus = [
 		{
@@ -436,7 +437,8 @@
 				return;
 			}
 
-			if (!ctrlKey && !metaKey) return;
+			// metaKey is only a menu modifier on macOS (Cmd); elsewhere it's the OS key
+			if (!ctrlKey && !(isMac && metaKey)) return;
 
 			let hotkey = hotkeys[key.toLowerCase()];
 			if (hotkey !== undefined) hotkey();
