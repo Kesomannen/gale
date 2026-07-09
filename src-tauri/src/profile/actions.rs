@@ -1,10 +1,10 @@
 use std::{
     collections::{HashMap, HashSet},
     fs,
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
-use eyre::{Context, OptionExt, Result, anyhow, bail, ensure};
+use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
@@ -12,10 +12,10 @@ use tracing::{debug, info, trace};
 use uuid::Uuid;
 
 use super::{
-    Dependant, ManagedGame, Profile, ProfileMod,
     export::{IncludeExtensions, IncludeGenerated},
     import,
     install::PackageInstaller,
+    Dependant, ManagedGame, Profile, ProfileMod,
 };
 use crate::{
     config::ConfigCache,
@@ -462,8 +462,7 @@ impl ManagedGame {
         let desktop_path =
             dirs_next::desktop_dir().ok_or_eyre("could not find desktop directory")?;
 
-        let bundle =
-            desktop_path.join(format!("Gale - {} - {}.app", self.game.name, profile.name));
+        let bundle = desktop_path.join(format!("Gale - {} - {}.app", self.game.name, profile.name));
 
         if bundle.exists() {
             bail!("shortcut already exists");
@@ -475,15 +474,9 @@ impl ManagedGame {
             .ok_or_eyre("executable path must be UTF-8")?
             .to_string();
 
-        let args: [&str; 7] = [
-            &exe,
-            "--game",
-            &self.game.slug,
-            "--profile",
-            &profile.name,
-            "--launch",
-            "--no-gui",
-        ];
+        ensure_not_translocated(Path::new(&exe))?;
+
+        let args = macos_shortcut_args(&exe, &self.game.slug, &profile.name);
 
         // run in the background so the applet exits right away
         let shell_command = format!("{} > /dev/null 2>&1 &", shell_words::join(args));
@@ -521,7 +514,6 @@ impl ManagedGame {
 
         Ok(())
     }
-
     #[cfg(not(target_os = "macos"))]
     pub fn create_desktop_shortcut(&self) -> Result<()> {
         let profile = self.active_profile();
@@ -605,5 +597,57 @@ impl ManagedGame {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn macos_shortcut_args(exe: &str, game_slug: &str, profile_name: &str) -> Vec<String> {
+    [
+        exe,
+        "--game",
+        game_slug,
+        "--profile",
+        profile_name,
+        "--launch",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect()
+}
+
+#[cfg(target_os = "macos")]
+fn ensure_not_translocated(exe: &Path) -> Result<()> {
+    ensure!(
+        !exe.components()
+            .any(|component| component.as_os_str() == "AppTranslocation"),
+        "Gale is running from a translocated app path; move Gale to /Applications before creating a desktop shortcut"
+    );
+
+    Ok(())
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod macos_shortcut_tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn shortcut_launch_args_do_not_close_running_app() {
+        let args = macos_shortcut_args(
+            "/Applications/Gale.app/Contents/MacOS/Gale",
+            "valheim",
+            "Default",
+        );
+
+        assert!(args.iter().any(|arg| arg == "--launch"));
+        assert!(!args.iter().any(|arg| arg == "--no-gui"));
+    }
+
+    #[test]
+    fn shortcut_rejects_translocated_executable_path() {
+        let path =
+            Path::new("/private/var/folders/x/AppTranslocation/123/d/Gale.app/Contents/MacOS/Gale");
+
+        assert!(ensure_not_translocated(path).is_err());
     }
 }

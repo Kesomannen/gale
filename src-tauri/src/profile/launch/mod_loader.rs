@@ -4,7 +4,7 @@ use std::{
     process::Command,
 };
 
-use eyre::{Context, OptionExt, Result, bail, eyre};
+use eyre::{bail, eyre, Context, OptionExt, Result};
 use tracing::{info, warn};
 
 use crate::{
@@ -96,6 +96,10 @@ impl<'a> ArgsContext<'a> {
         self.command
             .env("DYLD_INSERT_LIBRARIES", &dylib)
             .env("DYLD_LIBRARY_PATH", dylib.parent().unwrap())
+            .env(
+                "DOORSTOP_MONO_DLL_SEARCH_PATH_OVERRIDE",
+                preloader.parent().unwrap_or(preloader),
+            )
             // doorstop v3 configuration
             .env("DOORSTOP_ENABLE", "TRUE")
             .env("DOORSTOP_INVOKE_DLL_PATH", preloader)
