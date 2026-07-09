@@ -23,6 +23,7 @@
 
 	import { confirm, open } from '@tauri-apps/plugin-dialog';
 	import { getCurrentWindow } from '@tauri-apps/api/window';
+	import { platform } from '@tauri-apps/plugin-os';
 	import { open as shellOpen } from '@tauri-apps/plugin-shell';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { pushInfoToast, pushToast } from '$lib/toast';
@@ -44,6 +45,9 @@
 	let aboutOpen = $state(false);
 
 	let menu: Menu | null = $state(null);
+
+	const appWindow = getCurrentWindow();
+	const quitShortcut = platform() === 'macos' ? 'Command+Q' : 'Ctrl+Q';
 
 	const submenus = [
 		{
@@ -78,6 +82,13 @@
 				{
 					text: m.menuBar_file_item_7(),
 					onclick: api.thunderstore.triggerModFetch
+				},
+				'',
+				{
+					text: 'Quit Gale',
+					key: quitShortcut,
+					onclick: appWindow.close,
+					predefined: { item: 'Quit' as const, text: 'Quit Gale' }
 				}
 			]
 		},
@@ -209,7 +220,10 @@
 		}
 	];
 
-	const appWindow = getCurrentWindow();
+	function menuItemShortcut(item: Exclude<(typeof submenus)[number]['items'][number], string>) {
+		if ('key' in item) return item.key;
+		if ('accelerator' in item) return item.accelerator;
+	}
 
 	async function importLocalMod() {
 		let path = await open({
@@ -414,11 +428,12 @@
 		'-': () => api.prefs.zoomWindow({ delta: -0.25 }),
 		'0': () => api.prefs.zoomWindow({ factor: 1 }),
 		n: () => (newProfileOpen = true),
-		d: () => openProfileOperation('duplicate')
+		d: () => openProfileOperation('duplicate'),
+		q: appWindow.close
 	};
 
 	onMount(async () => {
-		document.onkeydown = ({ key, ctrlKey }) => {
+		document.onkeydown = ({ key, ctrlKey, metaKey }) => {
 			if (useNativeMenu.current) return; // Tauri handles shortcuts to the native menu
 
 			if (key === 'F2') {
@@ -426,9 +441,9 @@
 				return;
 			}
 
-			if (!ctrlKey) return;
+			if (!ctrlKey && !metaKey) return;
 
-			let hotkey = hotkeys[key];
+			let hotkey = hotkeys[key.toLowerCase()];
 			if (hotkey !== undefined) hotkey();
 		};
 
@@ -442,14 +457,15 @@
 					await Submenu.new({
 						text: menu.text,
 						items: await Promise.all(
-							menu.items.map(async (item) =>
-								typeof item === 'string'
-									? separator
-									: await MenuItem.new({
-											action: item.onclick,
-											...item
-										})
-							)
+							menu.items.map(async (item) => {
+								if (typeof item === 'string') return separator;
+								if ('predefined' in item) return await PredefinedMenuItem.new(item.predefined);
+
+								return await MenuItem.new({
+									action: item.onclick,
+									...item
+								});
+							})
 						)
 					})
 			)
@@ -480,7 +496,7 @@
 					{#if typeof item === 'string'}
 						<MenubarSeparator />
 					{:else}
-						<MenubarItem onclick={item.onclick} text={item.text} />
+						<MenubarItem onclick={item.onclick} text={item.text} key={menuItemShortcut(item)} />
 					{/if}
 				{/each}
 			</MenubarMenu>
