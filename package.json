@@ -13,7 +13,13 @@
 		"format": "prettier --write .",
 		"tauri": "tauri",
 		"locale:compile": "paraglide-js compile --outdir src/lib/paraglide",
-		"locale:machine-translate": "inlang machine translate --project project.inlang --locale en"
+		"locale:machine-translate": "inlang machine translate --project project.inlang --locale en",
+		"setup": "node scripts/dev.mjs setup",
+		"app": "node scripts/dev.mjs app",
+		"test": "node scripts/dev.mjs test",
+		"verify": "node scripts/dev.mjs verify",
+		"build:app": "node scripts/dev.mjs build",
+		"clean": "node scripts/dev.mjs clean"
 	},
 	"devDependencies": {
 		"@iconify/svelte": "^5.2.1",

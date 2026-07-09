@@ -17,6 +17,21 @@ If you want to hack on Gale from source, the fastest path is:
 
 The app uses Svelte for UI and Tauri for the native shell, so frontend and backend often need to be run together while developing.
 
+### Developer scripts
+
+[`scripts/dev.mjs`](scripts/dev.mjs) bundles the common development tasks into one cross-platform
+runner (it also finds `cargo` through `rustup` if it is not on your PATH):
+
+| Command                     | What it does                                                        |
+| --------------------------- | ------------------------------------------------------------------- |
+| `pnpm setup`                | Install dependencies, compile locales and add Rust targets          |
+| `pnpm app`                  | Run the full desktop app in dev mode                                |
+| `pnpm test`                 | Run the Rust test suite                                             |
+| `pnpm verify`               | Run everything CI checks: lint, type-check, clippy and tests        |
+| `pnpm build:app`            | Release build for this platform (`--universal` for a mac universal) |
+| `pnpm clean`                | Delete build artifacts (`--deep` also deletes the Rust target dir)  |
+| `node scripts/dev.mjs help` | List every task                                                     |
+
 ## Features
 
 - Support for all 150+ games on Thunderstore, including Lethal Company, R.E.P.O and Risk Of Rain 2
@@ -77,18 +92,19 @@ Gale builds as a native, unsigned, universal macOS app for both Apple Silicon an
   
   Gale is available as an independently hosted [Scoop](https://scoop.sh/) app:
 
-  ```powershell
-  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
-  ```
-  
-  To update, run:
-  
-  ```powershell
-  scoop uninstall gale
-  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
-  ```
+```powershell
+scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
+```
 
-  > Efforts are in progress to submit the app to the [Scoop games bucket](https://github.com/Calinou/scoop-games/pull/1756) to make installation and updating more straightforward.
+To update, run:
+
+```powershell
+scoop uninstall gale
+scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
+```
+
+> Efforts are in progress to submit the app to the [Scoop games bucket](https://github.com/Calinou/scoop-games/pull/1756) to make installation and updating more straightforward.
+
 </details>
 
 > [!NOTE]
@@ -118,11 +134,12 @@ Gale builds as a native, unsigned, universal macOS app for both Apple Silicon an
     <b>Debian</b>
   </summary>
 
-  Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
 
-  ```bash
-  sudo dpkg -i Gale_X.X.X_x64_en-US.deb
-  ```
+```bash
+sudo dpkg -i Gale_X.X.X_x64_en-US.deb
+```
+
 </details>
 
 <details>
@@ -130,11 +147,12 @@ Gale builds as a native, unsigned, universal macOS app for both Apple Silicon an
     <b>Fedora</b>
   </summary>
 
-  Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
 
-  ```bash
-  sudo rpm -i Gale_X.X.X_x64_en-US.rpm
-  ```
+```bash
+sudo rpm -i Gale_X.X.X_x64_en-US.rpm
+```
+
 </details>
 
 <details>
@@ -142,11 +160,12 @@ Gale builds as a native, unsigned, universal macOS app for both Apple Silicon an
     <b>Flatpak</b>
   </summary>
 
-  Gale is available as an independently hosted Flatpak package:
+Gale is available as an independently hosted Flatpak package:
 
-  ```bash
-  flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
-  ```
+```bash
+flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
+```
+
 </details>
 
 <details>
@@ -154,12 +173,13 @@ Gale builds as a native, unsigned, universal macOS app for both Apple Silicon an
     <b>AppImage</b>
   </summary>
 
-  Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
-  
-  ```bash
-  chmod +x Gale_X.X.X_x64_en-US.AppImage
-  ./Gale_X.X.X_x64_en-US.AppImage
-  ```
+Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
+
+```bash
+chmod +x Gale_X.X.X_x64_en-US.AppImage
+./Gale_X.X.X_x64_en-US.AppImage
+```
+
 </details>
 
 ---
