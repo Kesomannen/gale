@@ -85,6 +85,9 @@ winsplit = "0.1.0"
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"
 
+[target.'cfg(target_os="macos")'.dependencies]
+plist = "1"
+
 [target.'cfg(target_os="linux")'.dependencies]
 webkit2gtk = "2.0.1"
 

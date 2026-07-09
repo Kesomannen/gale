@@ -60,10 +60,6 @@ impl LaunchMode {
 
 impl ManagedGame {
     pub fn launch(&self, vanilla: bool, prefs: &Prefs, app: &AppHandle) -> Result<()> {
-        if cfg!(target_os = "macos") {
-            bail!("game discovery and launching are not yet supported on macOS");
-        }
-
         let game_dir =
             locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
         if let Err(err) = self.copy_required_files(&game_dir) {
@@ -99,6 +95,20 @@ impl ManagedGame {
                 info!("game prefs not set, using default settings");
                 Default::default()
             });
+
+        // launching through Steam cannot inject the mod loader on macOS: a
+        // running Steam client receives -applaunch over IPC and spawns the
+        // game without our DYLD environment, silently starting vanilla
+        #[cfg(target_os = "macos")]
+        let launch_mode = if !vanilla && matches!(launch_mode, LaunchMode::Launcher) {
+            info!("using direct launch for modded macOS game");
+            LaunchMode::Direct {
+                instances: 1,
+                interval_secs: 0.0,
+            }
+        } else {
+            launch_mode
+        };
 
         // if the game has a platform but the setting is unset, fill it in
         platform = platform.or_else(|| self.game.platforms.iter().next());
@@ -283,6 +293,13 @@ const IGNORED_EXES: &[&str] = &[
 ];
 
 fn find_executable(game_dir: &Path) -> Result<PathBuf> {
+    // prefer the binary inside the app bundle: it must be spawned directly
+    // (not via `open`) for DYLD-based mod loader injection to apply
+    #[cfg(target_os = "macos")]
+    if let Some(path) = find_app_bundle_executable(game_dir)? {
+        return Ok(path);
+    }
+
     WalkDir::new(game_dir)
         .into_iter()
         .filter_map(Result::ok)
@@ -303,4 +320,101 @@ fn find_executable(game_dir: &Path) -> Result<PathBuf> {
         })
         .map(|entry| entry.into_path())
         .ok_or_eyre("game executable not found")
+}
+
+/// Finds the executable of the first `.app` bundle inside `game_dir`.
+#[cfg(target_os = "macos")]
+fn find_app_bundle_executable(game_dir: &Path) -> Result<Option<PathBuf>> {
+    let Some(bundle) = game_dir
+        .read_dir()?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .sorted()
+        .find(|path| path.extension().is_some_and(|ext| ext == "app") && path.is_dir())
+    else {
+        return Ok(None);
+    };
+
+    #[derive(Deserialize)]
+    struct InfoPlist {
+        #[serde(rename = "CFBundleExecutable")]
+        executable: String,
+    }
+
+    let name = plist::from_file(bundle.join("Contents/Info.plist"))
+        .map(|plist: InfoPlist| plist.executable)
+        .inspect_err(|err| warn!("failed to read Info.plist in {}: {err:#}", bundle.display()));
+
+    let path = match name {
+        Ok(name) => bundle.join("Contents/MacOS").join(name),
+        // fall back to the only file in Contents/MacOS
+        Err(_) => bundle
+            .join("Contents/MacOS")
+            .read_dir()?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .exactly_one()
+            .map_err(|_| eyre!("cannot determine executable of {}", bundle.display()))?,
+    };
+
+    ensure!(
+        path.exists(),
+        "app bundle executable does not exist at {}",
+        path.display()
+    );
+
+    Ok(Some(path))
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::*;
+
+    fn make_bundle(game_dir: &Path, executable: &str, plist: bool) {
+        let macos_dir = game_dir.join("Game.app/Contents/MacOS");
+        fs::create_dir_all(&macos_dir).unwrap();
+        fs::write(macos_dir.join(executable), []).unwrap();
+
+        if plist {
+            let content = format!(
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>{executable}</string>
+<key>CFBundleIdentifier</key><string>com.example.game</string>
+</dict></plist>"#
+            );
+            fs::write(game_dir.join("Game.app/Contents/Info.plist"), content).unwrap();
+        }
+    }
+
+    #[test]
+    fn finds_app_bundle_executable_from_plist() {
+        let dir = tempfile::tempdir().unwrap();
+        make_bundle(dir.path(), "GameBinary", true);
+
+        assert_eq!(
+            find_app_bundle_executable(dir.path()).unwrap(),
+            Some(dir.path().join("Game.app/Contents/MacOS/GameBinary"))
+        );
+    }
+
+    #[test]
+    fn falls_back_to_only_binary_without_plist() {
+        let dir = tempfile::tempdir().unwrap();
+        make_bundle(dir.path(), "SomeBinary", false);
+
+        assert_eq!(
+            find_app_bundle_executable(dir.path()).unwrap(),
+            Some(dir.path().join("Game.app/Contents/MacOS/SomeBinary"))
+        );
+    }
+
+    #[test]
+    fn ignores_dirs_without_app_bundles() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(dir.path().join("data")).unwrap();
+
+        assert_eq!(find_app_bundle_executable(dir.path()).unwrap(), None);
+    }
 }

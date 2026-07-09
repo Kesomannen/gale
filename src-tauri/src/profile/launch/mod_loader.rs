@@ -56,15 +56,52 @@ impl<'a> ArgsContext<'a> {
 
     fn add_bepinex_args(&mut self) -> Result<()> {
         let (enable_prefix, target_prefix) = self.doorstop_args(None)?;
-        let preloader_path = self
-            .bepinex_preloader_path(None)
-            .and_then(|path| self.format_path(path))?;
+        let preloader = self.bepinex_preloader_path(None)?;
+        let preloader_path = self.format_path(&preloader)?;
 
         self.command
             .args([enable_prefix, "true", target_prefix])
             .arg(preloader_path);
 
+        #[cfg(target_os = "macos")]
+        self.add_macos_doorstop_env(&preloader);
+
         Ok(())
+    }
+
+    /// Injects doorstop into the game with DYLD environment variables, the
+    /// equivalent of BepInEx's `run_bepinex.sh`. The doorstop CLI arguments
+    /// only work on Windows, where the proxy dll is loaded by the game itself.
+    #[cfg(target_os = "macos")]
+    fn add_macos_doorstop_env(&mut self, preloader: &Path) {
+        const DYLIB_PATHS: &[&str] = &[
+            "doorstop_libs/libdoorstop_x64.dylib", // doorstop v3
+            "libdoorstop.dylib",                   // doorstop v4
+        ];
+
+        let Some(dylib) = DYLIB_PATHS
+            .iter()
+            .map(|path| self.profile_dir.join(path))
+            .find(|path| path.exists())
+        else {
+            warn!(
+                "no doorstop library found in the profile - \
+                the game will launch without mods unless the launch is otherwise modded"
+            );
+            return;
+        };
+
+        info!("injecting doorstop via DYLD from {}", dylib.display());
+
+        self.command
+            .env("DYLD_INSERT_LIBRARIES", &dylib)
+            .env("DYLD_LIBRARY_PATH", dylib.parent().unwrap())
+            // doorstop v3 configuration
+            .env("DOORSTOP_ENABLE", "TRUE")
+            .env("DOORSTOP_INVOKE_DLL_PATH", preloader)
+            // doorstop v4 configuration
+            .env("DOORSTOP_ENABLED", "1")
+            .env("DOORSTOP_TARGET_ASSEMBLY", preloader);
     }
 
     fn add_bepisloader_args(&mut self) -> Result<()> {

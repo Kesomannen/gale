@@ -3,9 +3,7 @@ use std::{
     process::Command,
 };
 
-#[cfg(not(target_os = "macos"))]
-use eyre::Context;
-use eyre::{bail, OptionExt, Result};
+use eyre::{bail, Context, OptionExt, Result};
 use tracing::info;
 
 use crate::util;
@@ -101,7 +99,21 @@ fn read_steam_registry() -> Result<PathBuf> {
 
 #[cfg(target_os = "macos")]
 fn create_base_steam_command() -> Result<Command> {
-    bail!("Steam launching is not yet supported on macOS")
+    // steamlocate's directory holds Steam's data, not the client binary,
+    // so look for the app bundle directly
+    let path = [
+        Some(PathBuf::from("/Applications")),
+        dirs_next::home_dir().map(|home| home.join("Applications")),
+    ]
+    .into_iter()
+    .flatten()
+    .map(|dir| dir.join("Steam.app/Contents/MacOS/steam_osx"))
+    .find(|path| path.exists())
+    .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
+
+    info!("using steam installation at {}", path.display());
+
+    Ok(Command::new(path))
 }
 
 #[cfg(target_os = "linux")]
@@ -196,12 +208,6 @@ fn create_epic_command(game: Game) -> Result<Command> {
         .ok_or_eyre("open returned no commands to try")
 }
 
-#[cfg(target_os = "macos")]
-pub fn locate_game_dir(_platform: Option<Platform>, _game: Game) -> Result<PathBuf> {
-    bail!("game discovery is not yet supported on macOS")
-}
-
-#[cfg(not(target_os = "macos"))]
 pub fn locate_game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf> {
     match platform {
         Some(Platform::Steam) => steam_game_dir(game),
@@ -213,7 +219,6 @@ pub fn locate_game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf
     }
 }
 
-#[cfg(not(target_os = "macos"))]
 fn steam_game_dir(game: Game) -> Result<PathBuf> {
     let Some(steam) = &game.platforms.steam else {
         bail!("{} is not available on Steam", game.slug);

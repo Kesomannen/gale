@@ -1935,6 +1935,7 @@ dependencies = [
  "justerror",
  "keyring",
  "open",
+ "plist",
  "rayon",
  "reqwest 0.12.28",
  "reqwest-websocket",
