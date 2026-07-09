@@ -1,4 +1,7 @@
+# macOS
 .DS_Store
+._*
+
 node_modules
 /build
 /.svelte-kit
@@ -11,3 +14,15 @@ vite.config.ts.timestamp-*
 .VSCodeCounter
 /src-tauri/gen
 PRS.md
+
+# editors (settings.json and extensions.json are shared and stay tracked)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# logs
+pnpm-debug.log*
+
+# Claude Code local settings
+.claude/settings.local.json
