@@ -60,10 +60,10 @@ Gale builds as a native, unsigned, universal macOS app for both Apple Silicon an
 - `pnpm tauri dev` runs the full desktop app; `pnpm dev` and `pnpm check` cover frontend-only work.
 - For a release-style build, run `pnpm tauri build --target universal-apple-darwin --bundles app`,
   then launch the app bundle from `src-tauri/target/universal-apple-darwin/release/bundle/macos/`.
-- Desktop shortcut creation is not yet supported on macOS.
 - Modded games launch directly with DYLD-based BepInEx injection. Launching through Steam is
   only used for vanilla launches, because a running Steam client starts the game without the
   injection environment.
+- Desktop shortcuts are created as small app bundles that launch the selected profile.
 
 ### Windows
 

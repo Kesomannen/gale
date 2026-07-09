@@ -213,7 +213,7 @@ pub fn locate_game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf
         Some(Platform::Steam) => steam_game_dir(game),
         #[cfg(windows)]
         Some(Platform::XboxStore) => xbox_game_dir(game),
-        #[cfg(windows)]
+        #[cfg(any(windows, target_os = "macos"))]
         Some(Platform::EpicGames) => epic_game_dir(game),
         _ => bail!("game directory not found - you may need to specify it in the settings"),
     }
@@ -269,9 +269,8 @@ fn xbox_game_dir(game: Game) -> Result<PathBuf> {
     Ok(PathBuf::from(str))
 }
 
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "macos"))]
 fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
-    use eyre::Context;
     use serde::Deserialize;
 
     use crate::util;
@@ -281,8 +280,13 @@ fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
     };
 
     let name = epic.identifier.unwrap_or(game.name);
-    let dat_path: PathBuf =
-        PathBuf::from("C:/ProgramData/Epic/UnrealEngineLauncher/LauncherInstalled.dat");
+
+    #[cfg(windows)]
+    let dat_path = PathBuf::from("C:/ProgramData/Epic/UnrealEngineLauncher/LauncherInstalled.dat");
+
+    #[cfg(target_os = "macos")]
+    let dat_path =
+        PathBuf::from("/Users/Shared/Epic Games/UnrealEngineLauncher/LauncherInstalled.dat");
 
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "PascalCase")]

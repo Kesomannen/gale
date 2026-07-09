@@ -449,9 +449,77 @@ impl ManagedGame {
         Ok(new_profile)
     }
 
+    /// Creates an AppleScript applet bundle on the desktop. Symlinks and
+    /// plain scripts cannot both carry launch arguments and open from Finder,
+    /// and recent macOS versions refuse to launch app bundles whose
+    /// executable is not a real Mach-O binary, so let osacompile build one.
     #[cfg(target_os = "macos")]
     pub fn create_desktop_shortcut(&self) -> Result<()> {
-        bail!("desktop shortcuts are not yet supported on macOS")
+        use std::process::Command;
+
+        let profile = self.active_profile();
+
+        let desktop_path =
+            dirs_next::desktop_dir().ok_or_eyre("could not find desktop directory")?;
+
+        let bundle =
+            desktop_path.join(format!("Gale - {} - {}.app", self.game.name, profile.name));
+
+        if bundle.exists() {
+            bail!("shortcut already exists");
+        }
+
+        let exe = std::env::current_exe()
+            .context("failed to get current executable path")?
+            .to_str()
+            .ok_or_eyre("executable path must be UTF-8")?
+            .to_string();
+
+        let args: [&str; 7] = [
+            &exe,
+            "--game",
+            &self.game.slug,
+            "--profile",
+            &profile.name,
+            "--launch",
+            "--no-gui",
+        ];
+
+        // run in the background so the applet exits right away
+        let shell_command = format!("{} > /dev/null 2>&1 &", shell_words::join(args));
+        let script = format!(
+            "do shell script \"{}\"",
+            shell_command.replace('\\', "\\\\").replace('"', "\\\"")
+        );
+
+        let output = Command::new("/usr/bin/osacompile")
+            .arg("-o")
+            .arg(&bundle)
+            .args(["-e", &script])
+            .output()
+            .context("failed to run osacompile")?;
+
+        ensure!(
+            output.status.success(),
+            "osacompile failed to create the shortcut: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        // replace the default applet icon with gale's own when running from
+        // an app bundle; not worth aborting over if it fails
+        let icon = PathBuf::from(&exe)
+            .parent()
+            .and_then(|dir| dir.parent())
+            .map(|contents| contents.join("Resources/icon.icns"))
+            .filter(|icon| icon.exists());
+
+        if let Some(icon) = icon {
+            if let Err(err) = fs::copy(icon, bundle.join("Contents/Resources/applet.icns")) {
+                tracing::warn!("failed to copy shortcut icon: {err:#}");
+            }
+        }
+
+        Ok(())
     }
 
     #[cfg(not(target_os = "macos"))]
