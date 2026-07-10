@@ -224,6 +224,7 @@
 					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
 						><Icon
 							icon="mdi:store-search"
+
 							class="mr-0.5 ml-1  inline"
 							inline
 						/>{m.page_modList_noMods_2()}</a

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import type { SortBy, Mod, ModId } from '$lib/types';
+	import { type SortBy, type Mod, type ModId, Backend } from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
@@ -15,6 +15,9 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems = [...defaultContextItems];
@@ -24,6 +27,10 @@
 	let modList: ModList;
 	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
+	let installDialogOpen = $state(false);
+	let loading = $state(false);
+	let warnNoRemind = $state(false);
+	let installId: ModId | null = $state(null);
 
 	let unlistenFromQuery: UnlistenFn | undefined;
 
@@ -60,13 +67,34 @@
 	async function installLatest(mod: Mod) {
 		await install({
 			packageUuid: mod.uuid,
-			versionUuid: mod.versions[0].uuid
+			versionUuid: mod.versions[0].uuid,
+			backend: mod.backend,
 		});
 	}
 
-	async function install(id: ModId) {
-		await api.profile.install.mod(id);
+	async function doInstall() {
+		if (!installId) {
+			return;
+		}
+
+		if (warnNoRemind) {
+			let prefs = await api.prefs.get();
+			prefs.backendSkipConfirm = true;
+			await api.prefs.set(prefs);
+		}
+		installDialogOpen = false;
+		loading = true;
+		await api.profile.install.mod(installId);
 		await refresh();
+	}
+
+	async function install(id: ModId) {
+		installId = id;
+		if (id.backend !== Backend.Thunderstore && !(await api.prefs.get()).backendSkipConfirm) {
+			installDialogOpen = true;
+		} else {
+			await doInstall();
+		}
 	}
 
 	function onModClicked(evt: MouseEvent, mod: Mod) {
@@ -83,6 +111,10 @@
 			profiles.active;
 			refresh();
 		}
+	});
+
+	$effect(() => {
+		loading = false;
 	});
 
 	let locked = $derived(profiles.activeLocked);
@@ -125,7 +157,23 @@
 
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			<InstallModButton mod={selectedMod} {install} {locked} />
+			<InstallModButton mod={selectedMod} {install} {locked} {loading} />
 		</ModDetails>
 	{/if}
+
+	<ConfirmDialog title={m.otherServer_warn_title()} bind:open={installDialogOpen}>
+		{m.otherServer_warn_content()}
+		<div class="my-5 flex items-center">
+			<Checkbox id="neverwarninstall" bind:checked={warnNoRemind} />
+			<label class="ml-3" for="neverwarninstall">
+				{m.otherServer_warn_noremind()}
+			</label>
+		</div>
+
+		{#snippet buttons()}
+			<Button color="accent" icon="mdi:download" onclick={doInstall}>
+				{m.installModButton_button_install()}
+			</Button>
+		{/snippet}
+	</ConfirmDialog>
 </div>

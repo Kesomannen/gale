@@ -143,8 +143,7 @@ impl Thunderstore {
         backends
             .into_backend_slice()
             .iter()
-            .map(|b| self.backend(*b).packages_fetched())
-            .all(|b| b)
+            .all(|b| self.backend(*b).packages_fetched())
     }
 
     pub fn deduplicate<T: Queryable>(mods: impl Iterator<Item = T>) -> impl Iterator<Item = T> {
