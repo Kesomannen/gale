@@ -6,6 +6,7 @@ use serde::Deserialize;
 use tauri::AppHandle;
 use tracing::{debug, info, warn};
 
+use super::{Backend, ModId, PackageListing};
 use crate::{
     game::Game,
     prefs::Prefs,
@@ -13,7 +14,6 @@ use crate::{
     thunderstore::backend::ThunderstoreBackend,
     util::{self, fs::JsonStyle},
 };
-use super::{Backend, ModId, PackageListing};
 
 #[derive(Debug, Deserialize)]
 struct MarkdownResponse {
@@ -81,7 +81,11 @@ impl ThunderstoreBackend {
     }
 }
 
-fn get_packages(game: Game, prefs: &Prefs, backend: Backend) -> Result<Option<Vec<PackageListing>>> {
+fn get_packages(
+    game: Game,
+    prefs: &Prefs,
+    backend: Backend,
+) -> Result<Option<Vec<PackageListing>>> {
     let start = Instant::now();
     let path = cache_path(game, prefs, backend);
 
@@ -90,7 +94,11 @@ fn get_packages(game: Game, prefs: &Prefs, backend: Backend) -> Result<Option<Ve
         return Ok(None);
     }
 
-    let result: Vec<PackageListing> = util::fs::read_json::<Vec<_>>(path).context("failed to deserialize cache")?.into_iter().map(|p| PackageListing { backend, ..p }).collect();
+    let result: Vec<PackageListing> = util::fs::read_json::<Vec<_>>(path)
+        .context("failed to deserialize cache")?
+        .into_iter()
+        .map(|p| PackageListing { backend, ..p })
+        .collect();
 
     debug!(
         "read {} packages from cache in {:?}",
@@ -101,16 +109,22 @@ fn get_packages(game: Game, prefs: &Prefs, backend: Backend) -> Result<Option<Ve
     Ok(Some(result))
 }
 
-pub fn write_packages(packages: &[&PackageListing], game: Game, prefs: &Prefs) -> Result<()> {
+pub fn write_packages(mut packages: Vec<&PackageListing>, game: Game, prefs: &Prefs) -> Result<()> {
     if packages.is_empty() {
         info!("no packages to write to cache");
         return Ok(());
     }
 
+    packages.sort_by_key(|p| p.backend);
+
     let start = Instant::now();
     for (backend, packages) in &packages.iter().chunk_by(|p| p.backend) {
-        util::fs::write_json(cache_path(game, prefs, backend), &packages.collect::<Vec<_>>(), JsonStyle::Compact)
-            .context("failed to write mod cache")?;
+        util::fs::write_json(
+            cache_path(game, prefs, backend),
+            &packages.collect::<Vec<_>>(),
+            JsonStyle::Compact,
+        )
+        .context("failed to write mod cache")?;
     }
 
     debug!(

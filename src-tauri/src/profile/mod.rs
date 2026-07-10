@@ -745,7 +745,7 @@ impl ModManager {
             .unique()
             .collect_vec();
 
-        thunderstore::cache::write_packages(&packages, self.active_game, prefs)
+        thunderstore::cache::write_packages(packages, self.active_game, prefs)
     }
 
     fn add_saved_game(
