@@ -11,9 +11,11 @@
 	let token: string = $state('');
 	let loading = $state(false);
 
-	let helpUrl = $derived(apiKeyDialog.backend === Backend.Thunderstore
-		? "https://github.com/Kesomannen/gale/wiki/Getting-a-Thunderstore-API-token"
-		: "https://mods.valtools.org/faq#api-token");
+	let helpUrl = $derived(
+		apiKeyDialog.backend === Backend.Thunderstore
+			? 'https://github.com/Kesomannen/gale/wiki/Getting-a-Thunderstore-API-token'
+			: 'https://mods.valtools.org/faq#api-token'
+	);
 
 	async function submit() {
 		loading = true;
@@ -33,7 +35,10 @@
 	}
 </script>
 
-<ConfirmDialog title={m.apiKeyDialog_title({ backend: apiKeyDialog.backend })} bind:open={apiKeyDialog.open}>
+<ConfirmDialog
+	title={m.apiKeyDialog_title({ backend: apiKeyDialog.backend })}
+	bind:open={apiKeyDialog.open}
+>
 	<p>{m.apiKeyDialog_content_1({ backend: apiKeyDialog.backend })}</p>
 
 	<p class="mt-2">

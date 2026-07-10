@@ -32,11 +32,12 @@
 	let contextItems: ContextItem[] = $derived(
 		mod.versions.map((version) => ({
 			label: version.name,
-			onclick: () => install({
-				packageUuid: mod.uuid,
-				versionUuid: version.uuid,
-				backend: mod.backend
-			}),
+			onclick: () =>
+				install({
+					packageUuid: mod.uuid,
+					versionUuid: version.uuid,
+					backend: mod.backend
+				})
 		}))
 	);
 

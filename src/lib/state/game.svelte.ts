@@ -46,7 +46,7 @@ class GamesState {
 				});
 				return { results: [] };
 			}
-		};
+		}
 
 		let backends = ['https://thunderstore.io/api'];
 		if (slug === 'valheim') {
@@ -58,14 +58,16 @@ class GamesState {
 				case Backends.Hexium:
 					backends = [];
 				case Backends.All:
-					backends.push("https://mods.valtools.org/api");
+					backends.push('https://mods.valtools.org/api');
 			}
 		}
 
 		// Deduplicate categories from all sources
 		Promise.allSettled(backends.map(fetchCategories)).then((results) => {
 			this.categories = [
-				...new Set(results.flatMap(result => result.status === "fulfilled" ? result.value.results : []))
+				...new Set(
+					results.flatMap((result) => (result.status === 'fulfilled' ? result.value.results : []))
+				)
 			].sort((a, b) => a.name.localeCompare(b.name));
 		});
 	};

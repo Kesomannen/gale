@@ -50,7 +50,7 @@
 				uninstall({
 					uuid: mod.uuid,
 					fullName: mod.name,
-					backend: mod.backend,
+					backend: mod.backend
 				}),
 			showFor: (_, profileLocked) => !profileLocked
 		},
@@ -147,7 +147,10 @@
 	}
 
 	async function openDependants(mod: Mod) {
-		dependants = (await api.profile.getDependants(mod.uuid)).map(d => ({ backend: mod.backend, ...d }));
+		dependants = (await api.profile.getDependants(mod.uuid)).map((d) => ({
+			backend: mod.backend,
+			...d
+		}));
 
 		activeMod = mod;
 		dependantsOpen = true;
@@ -162,7 +165,7 @@
 			await api.profile.update.changeModVersion({
 				packageUuid: mod.uuid,
 				versionUuid: versionUuid,
-				backend: mod.backend,
+				backend: mod.backend
 			});
 		}
 
@@ -224,7 +227,6 @@
 					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
 						><Icon
 							icon="mdi:store-search"
-
 							class="mr-0.5 ml-1  inline"
 							inline
 						/>{m.page_modList_noMods_2()}</a

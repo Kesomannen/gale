@@ -6,16 +6,16 @@
 
 	const items = [
 		{
-			label: "Thunderstore",
+			label: 'Thunderstore',
 			value: Backends.Thunderstore
 		},
 		{
-			label: "Thunderstore + Hexium",
+			label: 'Thunderstore + Hexium',
 			value: Backends.All
 		},
 		{
-			label: "Hexium",
-			value: Backends.Hexium,
+			label: 'Hexium',
+			value: Backends.Hexium
 		}
 	];
 

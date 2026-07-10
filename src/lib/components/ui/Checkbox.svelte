@@ -4,7 +4,7 @@
 	import type { ClassValue } from 'clsx';
 
 	type Props = {
-		id?: string,
+		id?: string;
 		checked?: boolean;
 		disabled?: boolean;
 		onCheckedChange?: (newValue: boolean) => void;

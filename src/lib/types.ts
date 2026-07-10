@@ -340,7 +340,7 @@ export type Prefs = {
 export enum Backends {
 	All = 'All',
 	Thunderstore = 'Thunderstore',
-	Hexium = 'Hexium',
+	Hexium = 'Hexium'
 }
 
 export type GamePrefs = {
@@ -348,7 +348,7 @@ export type GamePrefs = {
 	customArgs: string;
 	launchMode: LaunchMode;
 	platform: Platform | null;
-	backend: Backends,
+	backend: Backends;
 };
 
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';

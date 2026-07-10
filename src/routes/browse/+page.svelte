@@ -30,8 +30,8 @@
 	let installDialogOpen = $state(false);
 	let loading = $state(false);
 	let warnNoRemind = $state(false);
-	let installId: ModId | null = $state(null);
 
+	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
 
 	onMount(() => {
@@ -68,15 +68,11 @@
 		await install({
 			packageUuid: mod.uuid,
 			versionUuid: mod.versions[0].uuid,
-			backend: mod.backend,
+			backend: mod.backend
 		});
 	}
 
 	async function doInstall() {
-		if (!installId) {
-			return;
-		}
-
 		if (warnNoRemind) {
 			let prefs = await api.prefs.get();
 			prefs.backendSkipConfirm = true;

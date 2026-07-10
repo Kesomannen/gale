@@ -19,23 +19,29 @@
 	let author = $derived(split.length === 3 ? split[0] : null);
 	let name = $derived(split.length === 3 ? split[1] : split[0]);
 	let version = $derived(split.length >= 2 ? (split.length === 3 ? split[2] : split[1]) : null);
-	
-	let authorLink = $derived(backend === Backend.Hexium ? `https://mods.valtools.org/teams/${author}` : `https://thunderstore.io/c/${games.active?.slug}/p/${author}/`);
-	let modLink = $derived(backend === Backend.Hexium ? `https://mods.valtools.org/mods/1/${author}/${name}` : `https://thunderstore.io/c/${games.active?.slug}/p/${author}/${name}/`);
-	let iconUrl = $derived(backend === Backend.Hexium ? hexiumIconUrl("" + author, name) : thunderstoreIconUrl(fullName))
+
+	let authorLink = $derived(
+		backend === Backend.Hexium
+			? `https://mods.valtools.org/teams/${author}`
+			: `https://thunderstore.io/c/${games.active?.slug}/p/${author}/`
+	);
+	let modLink = $derived(
+		backend === Backend.Hexium
+			? `https://mods.valtools.org/mods/1/${author}/${name}`
+			: `https://thunderstore.io/c/${games.active?.slug}/p/${author}/${name}/`
+	);
+	let iconUrl = $derived(
+		backend === Backend.Hexium ? hexiumIconUrl('' + author, name) : thunderstoreIconUrl(fullName)
+	);
 </script>
 
 <div class="flex overflow-hidden">
-	<img
-		src={iconUrl}
-		alt={name}
-		class="size-12 rounded-sm"
-	/>
+	<img src={iconUrl} alt={name} class="size-12 rounded-sm" />
 	<div class="shrink overflow-hidden pl-3 text-left">
 		<div class="flex gap-2">
 			<a
 				class="shrink truncate font-medium text-white hover:underline"
-				href="{modLink}"
+				href={modLink}
 				target="_blank"
 				rel="noopener noreferrer"
 			>
@@ -50,11 +56,7 @@
 		</div>
 
 		{#if author !== null}
-			<a
-				class="text-primary-400 truncate hover:underline"
-				href="{authorLink}"
-				target="_blank"
-			>
+			<a class="text-primary-400 truncate hover:underline" href={authorLink} target="_blank">
 				{author}
 			</a>
 		{/if}

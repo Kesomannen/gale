@@ -151,11 +151,8 @@
 			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}
 		</LargeHeading>
 
-		{#if games.active?.name == "Valheim"}
-			<BackendPref
-				value={gamePrefs.backend}
-				set={set((value) => (gamePrefs!.backend = value))}
-			/>
+		{#if games.active?.name == 'Valheim'}
+			<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
 			<TogglePref
 				label={m.backendPref_other_server_title()}
 				value={!prefs.backendSkipConfirm}

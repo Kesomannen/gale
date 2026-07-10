@@ -7,7 +7,15 @@
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
 
 	import { Backend, type Mod, type ModContextItem, ModType } from '$lib/types';
-	import { communityUrl, formatModName, getMarkdown, modIconSrc, shortenFileSize, shortenNum, timeSince } from '$lib/util';
+	import {
+		communityUrl,
+		formatModName,
+		getMarkdown,
+		modIconSrc,
+		shortenFileSize,
+		shortenNum,
+		timeSince
+	} from '$lib/util';
 
 	import { DropdownMenu } from 'bits-ui';
 
@@ -82,7 +90,7 @@
 						'pr-4 text-left text-3xl font-bold wrap-break-word text-white xl:text-4xl',
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
-					href={communityUrl(mod.backend, "" + mod.author, mod.name)}
+					href={communityUrl(mod.backend, '' + mod.author, mod.name)}
 					target="_blank">{formatModName(mod.name)}</svelte:element
 				>
 
@@ -117,8 +125,11 @@
 		{#if mod.categories || mod.backend === Backend.Hexium}
 			<div class="mt-2 mb-1 flex flex-wrap gap-1">
 				{#if mod.backend === Backend.Hexium}
-					<div class="text-primary-200 rounded-full px-3 text-sm bg-[#331b72] border border-[#965dbe]" style="padding-block: calc(var(--spacing) - 2px);">
-						<img src="hexium.ico" alt="" class="h-4 inline" />
+					<div
+						class="text-primary-200 rounded-full border border-[#965dbe] bg-[#331b72] px-3 text-sm"
+						style="padding-block: calc(var(--spacing) - 2px);"
+					>
+						<img src="hexium.ico" alt="" class="inline h-4" />
 						Hexium
 					</div>
 				{/if}
@@ -220,7 +231,10 @@
 
 <Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
-		<ModCardList mods={mod.dependencies.map((fullName) => ({ fullName, backend: mod.backend }))} class="mt-4" />
+		<ModCardList
+			mods={mod.dependencies.map((fullName) => ({ fullName, backend: mod.backend }))}
+			class="mt-4"
+		/>
 	{/if}
 </Dialog>
 

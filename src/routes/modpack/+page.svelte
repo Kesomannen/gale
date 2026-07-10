@@ -190,19 +190,19 @@
 			includeDisabled,
 			includeFileMap: includeFiles,
 			categories: selectedCategories,
-			backend,
+			backend
 		};
 	}
 
 	let backendItems = $derived([
 		{
-			label: "Thunderstore",
+			label: 'Thunderstore',
 			value: Backend.Thunderstore,
-			disabled: hexiumExclusive,
+			disabled: hexiumExclusive
 		},
 		{
-			label: "Hexium",
-			value: Backend.Hexium,
+			label: 'Hexium',
+			value: Backend.Hexium
 		}
 	]);
 
@@ -436,7 +436,7 @@
 			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 		</div>
 
-		{#if games.active?.name == "Valheim"}
+		{#if games.active?.name == 'Valheim'}
 			<div class="text-primary-200 flex items-center text-lg font-medium">
 				<span class="max-w-96 grow">{m.modpack_upload_server()}</span>
 
