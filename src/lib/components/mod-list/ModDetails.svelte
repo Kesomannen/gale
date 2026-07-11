@@ -6,7 +6,7 @@
 	import ModCardList from '../ui/ModCardList.svelte';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
 
-	import { ModType, type Mod, type ModContextItem } from '$lib/types';
+	import { Backend, type Mod, type ModContextItem, ModType } from '$lib/types';
 	import {
 		communityUrl,
 		formatModName,
@@ -23,7 +23,6 @@
 	import { type Snippet } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
-	import { goto } from '$app/navigation';
 	import InfoBox from '../ui/InfoBox.svelte';
 	import Tooltip from '../ui/Tooltip.svelte';
 
@@ -91,14 +90,14 @@
 						'pr-4 text-left text-3xl font-bold wrap-break-word text-white xl:text-4xl',
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
-					href={communityUrl(`${mod.author}/${mod.name}`)}
+					href={communityUrl(mod.backend, '' + mod.author, mod.name)}
 					target="_blank">{formatModName(mod.name)}</svelte:element
 				>
 
 				{#if mod.author}
 					<a
 						class="text-primary-400 hover:text-primary-300 block text-lg hover:underline xl:text-xl"
-						href={communityUrl(mod.author)}
+						href={communityUrl(mod.backend, mod.author)}
 						target="_blank"
 					>
 						{mod.author}
@@ -123,8 +122,17 @@
 			</InfoBox>
 		{/if}
 
-		{#if mod.categories}
+		{#if mod.categories || mod.backend === Backend.Hexium}
 			<div class="mt-2 mb-1 flex flex-wrap gap-1">
+				{#if mod.backend === Backend.Hexium}
+					<div
+						class="text-primary-200 rounded-full border border-[#965dbe] bg-[#331b72] px-3 text-sm"
+						style="padding-block: calc(var(--spacing) - 2px);"
+					>
+						<img src="hexium.ico" alt="" class="inline h-4" />
+						Hexium
+					</div>
+				{/if}
 				{#each mod.categories as category}
 					<div class="bg-primary-700 text-primary-200 rounded-full px-3 py-1 text-sm">
 						{category}
@@ -223,7 +231,10 @@
 
 <Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
-		<ModCardList mods={mod.dependencies.map((fullName) => ({ fullName }))} class="mt-4" />
+		<ModCardList
+			mods={mod.dependencies.map((fullName) => ({ fullName, backend: mod.backend }))}
+			class="mt-4"
+		/>
 	{/if}
 </Dialog>
 

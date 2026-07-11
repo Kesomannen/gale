@@ -8,8 +8,8 @@ use tauri::{AppHandle, Emitter};
 use tracing::info;
 
 use super::{
+    BorrowedMod, Thunderstore,
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
-    BorrowedMod,
 };
 use crate::{
     profile::{LocalMod, Profile},
@@ -71,7 +71,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
                     query_frontend_mods(args, thunderstore.latest(), manager.active_profile());
                 app.emit("mod_query_result", &mods)?;
 
-                if thunderstore.packages_fetched {
+                if thunderstore.packages_fetched(&app, manager.active_game) {
                     info!("all packages fetched, pausing query loop");
                     thunderstore.current_query = None;
                 }
@@ -88,6 +88,9 @@ pub trait Queryable {
     /// The package's full name, including the author.
     fn full_name(&self) -> &str;
 
+    /// The packages latest version.
+    fn version(&self) -> Option<semver::Version>;
+
     /// Whether the package should be included in the given query.
     fn matches(&self, args: &QueryModsArgs) -> bool;
 
@@ -103,6 +106,10 @@ pub trait Queryable {
 impl Queryable for BorrowedMod<'_> {
     fn full_name(&self) -> &str {
         self.package.ident.as_str()
+    }
+
+    fn version(&self) -> Option<semver::Version> {
+        Some(self.package.latest().parsed_version())
     }
 
     fn description(&self) -> Option<&str> {
@@ -200,6 +207,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
                 .collect(),
             kind: FrontendModKind::Remote,
             icon: None,
+            backend: pkg.backend,
         }
     }
 }
@@ -260,26 +268,25 @@ where
         (full, package)
     });
 
-    let mut results = mods
-        .filter(|queryable| {
-            if let Some((full_search, package_search)) = &search_terms {
-                let name_match = queryable
-                    .full_name()
-                    .to_lowercase()
-                    .contains(package_search);
+    let results = mods.filter(|queryable| {
+        if let Some((full_search, package_search)) = &search_terms {
+            let name_match = queryable
+                .full_name()
+                .to_lowercase()
+                .contains(package_search);
 
-                let description_match = queryable
-                    .description()
-                    .is_some_and(|description| description.to_lowercase().contains(full_search));
+            let description_match = queryable
+                .description()
+                .is_some_and(|description| description.to_lowercase().contains(full_search));
 
-                if !name_match && !description_match {
-                    return false;
-                }
+            if !name_match && !description_match {
+                return false;
             }
+        }
 
-            queryable.matches(args)
-        })
-        .collect_vec();
+        queryable.matches(args)
+    });
+    let mut results = Thunderstore::deduplicate(results).collect_vec();
 
     results.sort_by(|a, b| a.cmp(b, args));
     results

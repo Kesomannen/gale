@@ -4,6 +4,7 @@
 	import type { ClassValue } from 'clsx';
 
 	type Props = {
+		id?: string;
 		checked?: boolean;
 		disabled?: boolean;
 		onCheckedChange?: (newValue: boolean) => void;
@@ -11,6 +12,7 @@
 	};
 
 	let {
+		id,
 		checked = $bindable(false),
 		disabled = false,
 		onCheckedChange,
@@ -24,7 +26,7 @@
 	);
 </script>
 
-<Checkbox.Root {disabled} bind:checked {onCheckedChange} class="group">
+<Checkbox.Root {id} {disabled} bind:checked {onCheckedChange} class="group">
 	<div
 		class={[
 			classProp,

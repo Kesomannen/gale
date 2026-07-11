@@ -5,17 +5,18 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use eyre::{bail, ensure, Context, Result};
+use eyre::{Context, Result, bail, ensure};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tracing::{debug, info, warn};
 
 use crate::{
     db::{self, Db},
-    game::{self, platform::Platform},
+    game::{self, Game, platform::Platform},
     logger,
     profile::launch::LaunchMode,
     state::ManagerExt,
+    thunderstore::Backend,
     util::{
         self,
         error::IoResultExt,
@@ -187,8 +188,27 @@ pub struct Prefs {
     pub zoom_factor: f32,
     pub pull_before_launch: bool,
     pub language: String,
+    pub backend_skip_confirm: bool,
 
     pub game_prefs: HashMap<String, GamePrefs>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default)]
+pub enum Backends {
+    #[default]
+    All,
+    Thunderstore,
+    Hexium,
+}
+
+impl Backends {
+    pub fn into_backend_slice(self) -> &'static [Backend] {
+        match self {
+            Backends::All => &[Backend::Thunderstore, Backend::Hexium],
+            Backends::Thunderstore => &[Backend::Thunderstore],
+            Backends::Hexium => &[Backend::Hexium],
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -202,6 +222,7 @@ pub struct GamePrefs {
     pub custom_args: String,
     pub launch_mode: LaunchMode,
     pub platform: Option<Platform>,
+    pub backend: Backends,
 }
 
 impl Default for Prefs {
@@ -219,6 +240,7 @@ impl Default for Prefs {
 
             zoom_factor: 1.0,
             language: "en".to_string(),
+            backend_skip_confirm: false,
 
             game_prefs: HashMap::new(),
         }
@@ -287,6 +309,7 @@ impl Prefs {
 
         self.fetch_mods_automatically = value.fetch_mods_automatically;
         self.pull_before_launch = value.pull_before_launch;
+        self.backend_skip_confirm = value.backend_skip_confirm;
 
         self.save(app.db()).context("failed save prefs")
     }
@@ -330,6 +353,17 @@ impl Prefs {
 
     pub fn cache_dir(&self) -> PathBuf {
         self.data_dir.join("cache")
+    }
+
+    pub fn backends(&self, game: Game) -> Backends {
+        if game.slug == "valheim" {
+            self.game_prefs
+                .get(&*game.slug)
+                .map(|p| p.backend)
+                .unwrap_or_default()
+        } else {
+            Backends::Thunderstore
+        }
     }
 }
 

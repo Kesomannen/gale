@@ -1,4 +1,4 @@
-import type { FiltersResponse, Game, GameInfo, PackageCategory } from '$lib/types';
+import { Backends, type FiltersResponse, type Game, type PackageCategory } from '$lib/types';
 import * as api from '$lib/api';
 import { pushToast } from '$lib/toast';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -27,24 +27,49 @@ class GamesState {
 		const slug = this.active?.slug;
 		if (!slug) return;
 
-		try {
-			const url = `https://thunderstore.io/api/experimental/community/${slug}/category/`;
-			const response = await fetch(url);
+		async function fetchCategories(baseUrl: string) {
+			try {
+				const url = `${baseUrl}/experimental/community/${slug}/category/`;
+				const response = await fetch(url);
 
-			if (!response.ok) {
-				const message = await response.text();
-				throw new Error(`${response.status} ${response.statusText}: ${message}`);
+				if (!response.ok) {
+					const message = await response.text();
+					throw new Error(`${response.status} ${response.statusText}: ${message}`);
+				}
+
+				return (await response.json()) as FiltersResponse;
+			} catch (err) {
+				pushToast({
+					type: 'error',
+					name: 'Failed to fetch categories',
+					message: err instanceof Error ? err.message : String(err)
+				});
+				return { results: [] };
 			}
-
-			const data = (await response.json()) as FiltersResponse;
-			this.categories = data.results.sort((a, b) => a.name.localeCompare(b.name));
-		} catch (err) {
-			pushToast({
-				type: 'error',
-				name: 'Failed to fetch categories',
-				message: err instanceof Error ? err.message : String(err)
-			});
 		}
+
+		let backends = ['https://thunderstore.io/api'];
+		if (slug === 'valheim') {
+			let prefs = await api.prefs.get();
+			prefs.gamePrefs = new Map(Object.entries(prefs.gamePrefs));
+			switch (prefs.gamePrefs.get(slug)?.backend || Backends.All) {
+				case Backends.Thunderstore:
+					break;
+				case Backends.Hexium:
+					backends = [];
+				case Backends.All:
+					backends.push('https://mods.valtools.org/api');
+			}
+		}
+
+		// Deduplicate categories from all sources
+		Promise.allSettled(backends.map(fetchCategories)).then((results) => {
+			this.categories = [
+				...new Set(
+					results.flatMap((result) => (result.status === 'fulfilled' ? result.value.results : []))
+				)
+			].sort((a, b) => a.name.localeCompare(b.name));
+		});
 	};
 
 	setActive = async (slug: string) => {

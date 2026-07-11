@@ -469,10 +469,7 @@ async fn download(
         app,
     );
 
-    let url = format!(
-        "https://thunderstore.io/package/download/{}",
-        install.ident.path()
-    );
+    let url = install.id.backend.download_url(&install.ident);
 
     debug!(
         ident = %install.ident,

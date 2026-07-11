@@ -6,7 +6,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, ensure, eyre, Context, ContextCompat, OptionExt, Result};
+use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, ensure, eyre};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager};
@@ -16,10 +16,10 @@ use uuid::Uuid;
 use crate::{
     config::ConfigCache,
     db::{self, Db},
-    game::{self, mod_loader::ModLoader, Game},
+    game::{self, Game, mod_loader::ModLoader},
     prefs::Prefs,
     state::ManagerExt,
-    thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
+    thunderstore::{self, Backend, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::fs::PathExt,
 };
 
@@ -134,6 +134,10 @@ impl ProfileMod {
         self.kind.uuid()
     }
 
+    pub fn backend(&self) -> Backend {
+        self.kind.backend()
+    }
+
     pub fn ident(&self) -> Cow<'_, VersionIdent> {
         self.kind.ident()
     }
@@ -176,6 +180,13 @@ impl ProfileModKind {
         match self {
             ProfileModKind::Local(local_mod) => local_mod.uuid,
             ProfileModKind::Thunderstore(ts_mod) => ts_mod.id.package_uuid,
+        }
+    }
+
+    pub fn backend(&self) -> Backend {
+        match self {
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod.id.backend,
+            _ => Backend::Thunderstore,
         }
     }
 
@@ -273,6 +284,18 @@ impl Profile {
 
     fn thunderstore_mods(&self) -> impl Iterator<Item = (&ThunderstoreMod, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_thunderstore)
+    }
+
+    /// Checks if any mods are hexium-exclusive mods
+    fn has_hexium_exclusive_mods(&self, thunderstore: &Thunderstore) -> bool {
+        self.thunderstore_mods().any(|(package, _)| {
+            let ident = &package.ident;
+            package.id.backend == Backend::Hexium
+                && thunderstore
+                    .backend(Backend::Thunderstore)
+                    .find_mod(ident.owner(), ident.name(), ident.version())
+                    .is_err()
+        })
     }
 
     fn local_mods(&self) -> impl Iterator<Item = (&LocalMod, bool)> {
@@ -398,6 +421,7 @@ pub struct Dependant {
     #[serde(rename = "fullName")]
     ident: VersionIdent,
     uuid: Uuid,
+    backend: Backend,
 }
 
 impl From<BorrowedMod<'_>> for Dependant {
@@ -405,6 +429,7 @@ impl From<BorrowedMod<'_>> for Dependant {
         Self {
             ident: value.version.ident.clone(),
             uuid: value.package.uuid,
+            backend: value.package.backend,
         }
     }
 }
@@ -414,6 +439,7 @@ impl From<&ProfileMod> for Dependant {
         Self {
             ident: value.ident().into_owned(),
             uuid: value.uuid(),
+            backend: value.backend(),
         }
     }
 }
@@ -719,7 +745,7 @@ impl ModManager {
             .unique()
             .collect_vec();
 
-        thunderstore::cache::write_packages(&packages, self.active_game, prefs)
+        thunderstore::cache::write_packages(packages, self.active_game, prefs)
     }
 
     fn add_saved_game(

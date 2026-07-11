@@ -1,7 +1,8 @@
-<script lang="ts" generics="T extends { fullName: string }">
+<script lang="ts" generics="T extends { fullName: string, backend: Backend }">
 	import type { ClassValue } from 'clsx';
 	import ModCard from './ModCard.svelte';
 	import type { Snippet } from 'svelte';
+	import type { Backend } from '$lib/types';
 
 	type Props = {
 		mods: T[];
@@ -20,7 +21,7 @@
 
 <div class={[classProp, 'grid gap-3 overflow-y-auto']}>
 	{#each mods as mod (mod.fullName)}
-		<ModCard fullName={mod.fullName} {showVersion}>
+		<ModCard fullName={mod.fullName} backend={mod.backend} {showVersion}>
 			{@render cardChildren?.({ mod })}
 		</ModCard>
 	{/each}

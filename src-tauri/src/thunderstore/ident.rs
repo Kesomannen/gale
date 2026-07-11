@@ -56,10 +56,6 @@ impl VersionIdent {
         (self.owner(), self.name(), self.version())
     }
 
-    pub fn path(&self) -> impl Display + '_ {
-        VersionIdentPath(self)
-    }
-
     pub fn without_version(&self) -> PackageIdent {
         let repr = self.repr[..self.version_start as usize - 1].to_string();
 
@@ -186,20 +182,6 @@ where
             owner.as_ref(),
             name.as_ref(),
             &format!("{major}.{minor}.{patch}"),
-        )
-    }
-}
-
-struct VersionIdentPath<'a>(&'a VersionIdent);
-
-impl Display for VersionIdentPath<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}/{}/{}",
-            self.0.owner(),
-            self.0.name(),
-            self.0.version()
         )
     }
 }

@@ -7,9 +7,11 @@
 	import { m } from '$lib/paraglide/messages';
 	import IconButton from '../ui/IconButton.svelte';
 	import { pushInfoToast } from '$lib/toast';
+	import { Backend, type ExportCode } from '$lib/types';
+	import InfoBox from '$lib/components/ui/InfoBox.svelte';
 
 	let isOpen = $state(false);
-	let code = $state<string | null>(null);
+	let code = $state<ExportCode | null>(null);
 
 	export async function open() {
 		try {
@@ -24,7 +26,7 @@
 	async function copyCode() {
 		if (!code) return;
 
-		await writeText(code);
+		await writeText(code.code);
 
 		pushInfoToast({
 			message: m.exportCodeDialog_copyCode_message()
@@ -44,7 +46,7 @@
 					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
 					onclick={copyCode}
 				>
-					{code}
+					{code.code}
 				</button>
 
 				<IconButton
@@ -53,6 +55,12 @@
 					onclick={copyCode}
 				/>
 			</div>
+
+			{#if code.backend !== Backend.Thunderstore}
+				<InfoBox type="info">
+					{m.exportCodeDialog_galeExclusive()}
+				</InfoBox>
+			{/if}
 		{:else}
 			<div class="flex items-center gap-1">
 				<Spinner class="text-lg" />

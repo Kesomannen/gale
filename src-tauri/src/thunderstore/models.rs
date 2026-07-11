@@ -9,13 +9,15 @@ use internment::Intern;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{PackageIdent, VersionIdent};
+use super::{Backend, PackageIdent, VersionIdent};
 use crate::{game::Game, profile::Profile};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
     #[serde(rename = "full_name")]
     pub ident: PackageIdent,
+    #[serde(default, skip_serializing)]
+    pub backend: Backend,
     pub categories: HashSet<Intern<String>>,
     pub date_created: DateTime<Utc>,
     pub date_updated: DateTime<Utc>,
@@ -64,20 +66,11 @@ impl PackageListing {
     }
 
     pub fn owner_url(&self, game: Game) -> String {
-        format!(
-            "https://thunderstore.io/c/{}/p/{}/",
-            game.slug,
-            self.owner()
-        )
+        self.backend.owner_url(self.owner(), game)
     }
 
     pub fn url(&self, game: Game) -> String {
-        format!(
-            "https://thunderstore.io/c/{}/p/{}/{}/",
-            game.slug,
-            self.owner(),
-            self.name()
-        )
+        self.backend.mod_url(&self.ident, game)
     }
 }
 
@@ -265,6 +258,7 @@ pub struct FrontendMod {
     pub icon: Option<PathBuf>,
     #[serde(rename = "type")]
     pub kind: FrontendModKind,
+    pub backend: Backend,
 }
 
 #[derive(Debug, Serialize, Clone)]

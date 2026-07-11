@@ -5,7 +5,6 @@
 	import { shortenFileSize } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { DropdownMenu } from 'bits-ui';
-	import clsx from 'clsx';
 	import DropdownArrow from '$lib/components/ui/DropdownArrow.svelte';
 	import Spinner from '../ui/Spinner.svelte';
 	import { m } from '$lib/paraglide/messages';
@@ -13,21 +12,21 @@
 	type Props = {
 		mod: Mod;
 		locked: boolean;
+		loading: boolean;
 		install: (mod: ModId) => void;
 	};
 
-	let { mod, locked, install }: Props = $props();
+	let { mod, locked, loading = $bindable(), install }: Props = $props();
 
 	let versionsOpen = $state(false);
 	let downloadSize: number | null = $state(null);
-
-	let loading = $state(false);
 
 	let disabled = $derived(mod.isInstalled || locked || loading);
 
 	let modId = $derived({
 		packageUuid: mod.uuid,
-		versionUuid: mod.versionUuid
+		versionUuid: mod.versionUuid,
+		backend: mod.backend
 	});
 
 	let contextItems: ContextItem[] = $derived(
@@ -36,13 +35,13 @@
 			onclick: () =>
 				install({
 					packageUuid: mod.uuid,
-					versionUuid: version.uuid
+					versionUuid: version.uuid,
+					backend: mod.backend
 				})
 		}))
 	);
 
 	$effect(() => {
-		loading = false;
 		api.profile.install.getDownloadSize(modId).then((size) => (downloadSize = size));
 	});
 </script>
@@ -50,10 +49,7 @@
 <div class="mt-2 flex text-lg text-white">
 	<button
 		class="enabled:bg-accent-700 enabled:hover:bg-accent-600 disabled:bg-primary-700 disabled:text-primary-300 flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed"
-		onclick={() => {
-			install(modId);
-			loading = true;
-		}}
+		onclick={() => install(modId)}
 		{disabled}
 	>
 		{#if locked}

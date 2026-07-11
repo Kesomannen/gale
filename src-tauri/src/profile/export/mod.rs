@@ -17,6 +17,7 @@ use walkdir::WalkDir;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
 use super::{Profile, Result, install::ModInstall};
+use crate::thunderstore::Backend;
 use crate::{
     game::Game,
     state::ManagerExt,
@@ -48,6 +49,11 @@ pub struct R2Mod {
     #[serde(alias = "versionNumber")]
     pub version: R2Version,
     pub enabled: bool,
+    // This will make the field available to UI for future comparison against the loaded mods.
+    // Defaults to Thunderstore for now.
+    #[allow(dead_code)]
+    #[serde(skip)]
+    pub backend: Backend,
 }
 
 impl R2Mod {
@@ -106,6 +112,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
                 ident,
                 version,
                 enabled,
+                backend: ts_mod.id.backend,
             }
         })
         .collect();
@@ -130,8 +137,14 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     Ok(())
 }
 
-async fn export_code(app: &AppHandle) -> Result<Uuid> {
-    let base64 = {
+#[derive(Serialize)]
+pub struct ExportCode {
+    code: Uuid,
+    backend: Backend,
+}
+
+async fn export_code(app: &AppHandle) -> Result<ExportCode> {
+    let (backend, base64) = {
         let mut manager = app.lock_manager();
 
         let game = manager.active_game().game;
@@ -143,16 +156,20 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
-        base64
+        let backend = if profile.has_hexium_exclusive_mods(&*app.lock_thunderstore()) {
+            Backend::Hexium
+        } else {
+            Backend::Thunderstore
+        };
+
+        (backend, base64)
     };
 
     info!(len = base64.len(), "exporting profile code");
 
-    const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
-
     let response = app
         .http()
-        .post(URL)
+        .post(backend.profile_export())
         .header("Content-Type", "application/octet-stream")
         .body(base64)
         .send()
@@ -161,7 +178,10 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
         .json::<LegacyProfileCreateResponse>()
         .await?;
 
-    Ok(response.key)
+    Ok(ExportCode {
+        code: response.key,
+        backend,
+    })
 }
 
 fn write_config<P, I, W>(files: I, source: &Path, zip: &mut ZipWriter<W>) -> Result<()>

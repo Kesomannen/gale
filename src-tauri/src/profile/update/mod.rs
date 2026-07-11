@@ -30,6 +30,7 @@ impl<'a> AvailableUpdate<'a> {
         ModId {
             package_uuid: self.package.uuid,
             version_uuid: self.latest.uuid,
+            backend: self.package.backend,
         }
     }
 }

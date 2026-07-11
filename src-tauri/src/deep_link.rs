@@ -27,6 +27,8 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
 
     if url.starts_with("ror2mm://") {
         handle_inner_task(app.clone(), handle_r2_install(url, app));
+    } else if url.starts_with("gale://install/") {
+        handle_inner_task(app.clone(), handle_gale_install(url, app));
     } else if url.starts_with("gale://auth/callback") {
         handle_inner_task(app.clone(), async move {
             profile::sync::auth::handle_callback(url, &app).await
@@ -57,20 +59,45 @@ where
     });
 }
 
+struct InstallPackage<'a> {
+    owner: &'a str,
+    name: &'a str,
+    version: &'a str,
+}
+
+impl<'a> InstallPackage<'a> {
+    fn split(string: &'a str) -> Option<Self> {
+        let mut split = string.split('/');
+        let (owner, name, version) = (split.next()?, split.next()?, split.next()?);
+
+        Some(Self { owner, name, version })
+    }
+}
+
 async fn handle_r2_install(url: String, app: AppHandle) -> Result<()> {
-    thunderstore::wait_for_fetch(&app).await;
-
-    let (owner, name, version) = url
+    let package = url
         .strip_prefix("ror2mm://v1/install/thunderstore.io/")
-        .and_then(|path| {
-            let mut split = path.split('/');
-
-            Some((split.next()?, split.next()?, split.next()?))
-        })
+        .and_then(InstallPackage::split)
         .ok_or_eyre("invalid package url")?;
 
+    handle_install(package, app).await
+}
+
+async fn handle_gale_install(url: String, app: AppHandle) -> Result<()> {
+    let package = url
+        .strip_prefix("gale://install/hexium/")
+        .or_else(|| url.strip_prefix("gale://install/thunderstore/"))
+        .and_then(InstallPackage::split)
+        .ok_or_eyre("invalid package url")?;
+
+    handle_install(package, app).await
+}
+
+async fn handle_install(package: InstallPackage<'_>, app: AppHandle) -> Result<()> {
+    thunderstore::wait_for_fetch(&app).await;
+
     let thunderstore = app.lock_thunderstore();
-    let borrowed_mod = thunderstore.find_mod(owner, name, version)?;
+    let borrowed_mod = thunderstore.find_mod(package.owner, package.name, package.version)?;
     let frontend_mod = borrowed_mod.into_frontend(None);
 
     app.emit("install_mod", frontend_mod)?;

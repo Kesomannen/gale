@@ -1,8 +1,9 @@
-import type { ConfigEntryId, QueryModsArgsWithoutMax } from '$lib/types';
+import { Backend, type ConfigEntryId, type QueryModsArgsWithoutMax } from '$lib/types';
 import { PersistedState } from 'runed';
 
 export const apiKeyDialog = $state({
-	open: false
+	open: false,
+	backend: Backend.Thunderstore
 });
 
 export const config: {

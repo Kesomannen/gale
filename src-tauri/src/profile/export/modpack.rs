@@ -19,7 +19,8 @@ use zip::{ZipWriter, write::SimpleFileOptions};
 
 use crate::{game::Game, profile::Profile, thunderstore::*};
 
-pub fn refresh_args(profile: &mut Profile, game: Game) {
+/// Returns whether it's hexium-exclusive now
+pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Game) -> bool {
     if profile.modpack.is_none() {
         profile.modpack = Some(ModpackArgs {
             name: profile.name.replace([' ', '-'], ""),
@@ -30,6 +31,11 @@ pub fn refresh_args(profile: &mut Profile, game: Game) {
         });
     }
 
+    let hexium_exclusive = profile.has_hexium_exclusive_mods(thunderstore);
+    if hexium_exclusive {
+        profile.modpack.as_mut().unwrap().backend = Backend::Hexium;
+    }
+
     let includes = &mut profile.modpack.as_mut().unwrap().include_files;
 
     // remove deleted files
@@ -38,6 +44,8 @@ pub fn refresh_args(profile: &mut Profile, game: Game) {
     for path in super::find_config(&profile.path, game.mod_loader.mod_config_dirs()) {
         includes.entry(path).or_insert(true);
     }
+
+    hexium_exclusive
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -57,6 +65,8 @@ pub struct ModpackArgs {
     pub include_disabled: bool,
     #[serde(default, rename = "includeFileMap")]
     pub include_files: HashMap<PathBuf, bool>,
+    #[serde(default)]
+    pub backend: Backend,
 }
 
 impl Profile {
@@ -150,10 +160,11 @@ where
 
 fn base_request(
     tail: impl Display,
+    backend: Backend,
     token: impl Display,
     client: &reqwest::Client,
 ) -> reqwest::RequestBuilder {
-    let url = format!("https://thunderstore.io/api/experimental/{tail}/");
+    let url = format!("{}/{tail}/", backend.modpack_upload_baseurl());
 
     client.post(url).bearer_auth(token)
 }
@@ -175,9 +186,15 @@ pub async fn publish(
 
     info!("publishing modpack");
 
-    let response = initiate_upload(args.name.clone(), data.len() as u64, &token, &client)
-        .await
-        .context("failed to initiate upload")?;
+    let response = initiate_upload(
+        args.name.clone(),
+        data.len() as u64,
+        args.backend,
+        &token,
+        &client,
+    )
+    .await
+    .context("failed to initiate upload")?;
 
     let uuid = response.user_media.uuid.ok_or_eyre("no uuid in response")?;
 
@@ -194,12 +211,14 @@ pub async fn publish(
     {
         Ok(parts) => parts,
         Err(err) => {
-            tauri::async_runtime::spawn(async move { abort_upload(&uuid, &token, client).await });
+            tauri::async_runtime::spawn(async move {
+                abort_upload(&uuid, args.backend, &token, client).await
+            });
             return Err(err.wrap_err("failed to upload file"));
         }
     };
 
-    finish_upload(parts, &uuid, &token, &client)
+    finish_upload(parts, &uuid, args.backend, &token, &client)
         .await
         .context("failed to finalize upload")?;
 
@@ -213,6 +232,7 @@ pub async fn publish(
 async fn initiate_upload(
     name: String,
     size: u64,
+    backend: Backend,
     token: &str,
     client: &reqwest::Client,
 ) -> Result<UserMediaInitiateUploadResponse> {
@@ -221,7 +241,7 @@ async fn initiate_upload(
         name, size
     );
 
-    let response = base_request("usermedia/initiate-upload", token, client)
+    let response = base_request("usermedia/initiate-upload", backend, token, client)
         .json(&UserMediaInitiateUploadParams {
             filename: name,
             file_size_bytes: size,
@@ -269,14 +289,24 @@ async fn upload_chunk(
     })
 }
 
-async fn abort_upload(uuid: &Uuid, token: &str, client: reqwest::Client) -> Result<()> {
+async fn abort_upload(
+    uuid: &Uuid,
+    backend: Backend,
+    token: &str,
+    client: reqwest::Client,
+) -> Result<()> {
     info!("aborting upload");
 
-    base_request(format!("usermedia/{uuid}/abort-upload"), token, &client)
-        .json(&uuid)
-        .send()
-        .await?
-        .map_auth_err()?;
+    base_request(
+        format!("usermedia/{uuid}/abort-upload"),
+        backend,
+        token,
+        &client,
+    )
+    .json(&uuid)
+    .send()
+    .await?
+    .map_auth_err()?;
 
     Ok(())
 }
@@ -284,16 +314,22 @@ async fn abort_upload(uuid: &Uuid, token: &str, client: reqwest::Client) -> Resu
 async fn finish_upload(
     parts: Vec<CompletedPart>,
     uuid: &Uuid,
+    backend: Backend,
     token: &str,
     client: &reqwest::Client,
 ) -> Result<()> {
     debug!("finishing upload");
 
-    base_request(format!("usermedia/{uuid}/finish-upload"), token, client)
-        .json(&UserMediaFinishUploadParams { parts })
-        .send()
-        .await?
-        .map_auth_err()?;
+    base_request(
+        format!("usermedia/{uuid}/finish-upload"),
+        backend,
+        token,
+        client,
+    )
+    .json(&UserMediaFinishUploadParams { parts })
+    .send()
+    .await?
+    .map_auth_err()?;
 
     Ok(())
 }
@@ -316,7 +352,7 @@ async fn submit_package(
 
     debug!("submitting package");
 
-    let response = base_request("submission/submit", token, client)
+    let response = base_request("submission/submit", args.backend, token, client)
         .json(&metadata)
         .send()
         .await?;
