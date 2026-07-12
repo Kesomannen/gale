@@ -34,10 +34,10 @@ impl Backend {
             )),
             Backend::Hexium => {
                 if game.slug == "valheim" {
-                    Some(
-                        "https://mods.valtools.org/c/valheim/api/v1/package-listing-index/"
-                            .to_string(),
-                    )
+                    Some(format!(
+                        "https://{}.hexium.gg/api/v1/package-listing-index/",
+                        game.slug,
+                    ))
                 } else {
                     None
                 }
@@ -55,7 +55,7 @@ impl Backend {
                 cache
             ),
             Backend::Hexium => format!(
-                "https://mods.valtools.org/api/experimental/package/{}/{}/{}/{}/",
+                "https://hexium.gg/api/experimental/package/{}/{}/{}/{}/",
                 ident.owner(),
                 ident.name(),
                 ident.version(),
@@ -69,7 +69,7 @@ impl Backend {
             Backend::Thunderstore => {
                 format!("https://thunderstore.io/c/{}/p/{}/", game.slug, owner)
             }
-            Backend::Hexium => format!("https://mods.valtools.org/teams/{}", owner),
+            Backend::Hexium => format!("https://{}.hexium.gg/teams/{}", game.slug, owner),
         }
     }
 
@@ -84,7 +84,8 @@ impl Backend {
                 )
             }
             Backend::Hexium => format!(
-                "https://mods.valtools.org/mods/1/{}/{}",
+                "https://{}.hexium.gg/mods/{}/{}",
+                game.slug,
                 package.name(),
                 package.name()
             ),
@@ -100,7 +101,7 @@ impl Backend {
                 version.version()
             ),
             Backend::Hexium => format!(
-                "https://mods.valtools.org/uploads/{}/{}/{}.zip",
+                "https://cdn.hexium.gg/uploads/{}/{}/{}.zip",
                 version.owner(),
                 version.name(),
                 version.version()
@@ -114,7 +115,7 @@ impl Backend {
                 format!("https://thunderstore.io/api/experimental/legacyprofile/get/{key}/")
             }
             Backend::Hexium => {
-                format!("https://mods.valtools.org/api/experimental/legacyprofile/get/{key}/")
+                format!("https://hexium.gg/api/experimental/legacyprofile/get/{key}/")
             }
         }
     }
@@ -124,14 +125,14 @@ impl Backend {
             Backend::Thunderstore => {
                 "https://thunderstore.io/api/experimental/legacyprofile/create/"
             }
-            Backend::Hexium => "https://mods.valtools.org/api/experimental/legacyprofile/create/",
+            Backend::Hexium => "https://hexium.gg/api/experimental/legacyprofile/create/",
         }
     }
 
     pub fn modpack_upload_baseurl(self) -> &'static str {
         match self {
             Backend::Thunderstore => "https://thunderstore.io/api/experimental",
-            Backend::Hexium => "https://mods.valtools.org/api/experimental",
+            Backend::Hexium => "https://hexium.gg/api/experimental",
         }
     }
 }

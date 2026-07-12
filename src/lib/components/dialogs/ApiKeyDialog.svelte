@@ -14,7 +14,7 @@
 	let helpUrl = $derived(
 		apiKeyDialog.backend === Backend.Thunderstore
 			? 'https://github.com/Kesomannen/gale/wiki/Getting-a-Thunderstore-API-token'
-			: 'https://mods.valtools.org/faq#api-token'
+			: 'https://hexium.gg/faq#api-token'
 	);
 
 	async function submit() {

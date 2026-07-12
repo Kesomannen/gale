@@ -22,12 +22,12 @@
 
 	let authorLink = $derived(
 		backend === Backend.Hexium
-			? `https://mods.valtools.org/teams/${author}`
+			? `https://${games.active?.slug}.hexium.gg/teams/${author}`
 			: `https://thunderstore.io/c/${games.active?.slug}/p/${author}/`
 	);
 	let modLink = $derived(
 		backend === Backend.Hexium
-			? `https://mods.valtools.org/mods/1/${author}/${name}`
+			? `https://${games.active?.slug}.hexium.gg/mods/${author}/${name}`
 			: `https://thunderstore.io/c/${games.active?.slug}/p/${author}/${name}/`
 	);
 	let iconUrl = $derived(
