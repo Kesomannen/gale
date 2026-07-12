@@ -58,7 +58,7 @@ class GamesState {
 				case Backends.Hexium:
 					backends = [];
 				case Backends.All:
-					backends.push('https://mods.valtools.org/api');
+					backends.push('https://hexium.gg/api');
 			}
 		}
 

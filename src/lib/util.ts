@@ -66,7 +66,7 @@ export function isOutdated(mod: Mod): boolean {
 
 export function communityUrl(backend: Backend, author: string, mod?: string) {
 	if (backend === Backend.Hexium) {
-		return `https://mods.valtools.org/${mod === undefined ? `teams/${author}` : `mods/1/${author}/${mod}`}`;
+		return `https://${games.active?.slug}.hexium.gg/${mod === undefined ? `teams/${author}` : `mods/${author}/${mod}`}`;
 	} else {
 		return `https://thunderstore.io/c/${games.active?.slug}/p/${author}${mod && `/${mod}`}/`;
 	}
@@ -97,7 +97,7 @@ export function thunderstoreIconUrl(fullName: string) {
 }
 
 export function hexiumIconUrl(pkg: string, name: string) {
-	return `https://mods.valtools.org/uploads/${pkg}/${name}/icon.png`;
+	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png`;
 }
 
 export function capitalize(str: string): string {
