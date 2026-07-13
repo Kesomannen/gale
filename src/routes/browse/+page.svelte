@@ -141,8 +141,8 @@
 			{#snippet item({ mod, isSelected })}
 				<ModListItem
 					{mod}
-					selected={isSelected}
 					{contextItems}
+					selected={isSelected}
 					locked={profiles.activeLocked}
 					oninstall={() => installLatest(mod)}
 					onclick={(evt) => onModClicked(evt, mod)}

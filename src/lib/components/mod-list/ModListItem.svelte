@@ -19,7 +19,7 @@
 		locked: boolean;
 		contextItems: ModContextItem[];
 		onclick?: MouseEventHandler<HTMLDivElement>;
-		oninstall?: () => void;
+		oninstall?: () => Promise<void>;
 	};
 
 	let { mod, selected: selected, locked, contextItems, onclick, oninstall }: Props = $props();
@@ -90,10 +90,16 @@
 					'bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline'
 				]}
 				disabled={loading}
-				onclick={(evt) => {
+				onclick={async (evt) => {
 					evt.stopPropagation();
-					oninstall?.();
+					if (!oninstall) return;
+
 					loading = true;
+					try {
+						await oninstall();
+					} finally {
+						loading = false;
+					}
 				}}
 			>
 				{#if loading}
