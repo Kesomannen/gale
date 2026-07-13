@@ -202,10 +202,7 @@ where
     Ok(())
 }
 
-pub fn find_config<'a>(
-    root: &'a Path,
-    config_dirs: &'a [&str],
-) -> impl Iterator<Item = PathBuf> + 'a {
+fn find_config<'a>(root: &'a Path, config_dirs: &'a [&str]) -> impl Iterator<Item = PathBuf> + 'a {
     static INCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
             .add(Glob::new("*.{cfg,txt,json,yml,yaml,ini}").unwrap())
@@ -215,8 +212,7 @@ pub fn find_config<'a>(
 
     static EXCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
-            .add(Glob::new("{dotnet,_state,MelonLoader}/*").unwrap())
-            .add(Glob::new("dotnet/*").unwrap())
+            .add(Glob::new("{dotnet,_state,snapshots,MelonLoader}/*").unwrap())
             .add(Glob::new("GDWeave/{GDWeave.log,core/*,mods/*}").unwrap())
             .add(Glob::new("mods.yml").unwrap())
             .add(
