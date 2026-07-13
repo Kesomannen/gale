@@ -45,7 +45,7 @@
 - Added tags/categories to the mod list
 - Other UI tweaks and fixes
 - DEBUG logs are now hidden by default, but can be controlled via the `GALE_LOG` environment variable
-  - The variable syntax mirrors [tracing's directory syntax](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives)
+  - The variable syntax mirrors [tracing's directive syntax](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives)
   - For example, `GALE_LOG=debug` will show all debug logs and avobe
 - Added more fine-grained logging
 
