@@ -7,6 +7,11 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
+permissions:
+  pages: write
+  id-token: write
+  contents: write
+
 jobs:
   build:
     name: Build
@@ -154,9 +159,6 @@ jobs:
     name: Deploy Flatpak
     runs-on: ubuntu-latest
     needs: flatter
-    permissions:
-      pages: write
-      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
