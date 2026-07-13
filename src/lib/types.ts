@@ -245,7 +245,9 @@ export enum ModLoader {
 	Northstar = 'Northstar',
 	GDWeave = 'GDWeave',
 	ReturnOfModding = 'ReturnOfModding',
-	BepisLoader = 'BepisLoader'
+	BepisLoader = 'BepisLoader',
+	Shimloader = 'Shimloader',
+	Lovely = 'Lovely'
 }
 
 export type PackageCategory = {

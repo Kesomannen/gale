@@ -21,6 +21,9 @@
 	"apiKeyPref_hasToken_has": "Нажмите, чтобы переопределить токен.",
 	"apiKeyPref_hasToken_no": "Не задано",
 	"apiKeyPref_title": "API-токен {backend}",
+	"backendPref_other_server_content": "Подтверждайте загрузку из любого источника, кроме Thunderstore.",
+	"backendPref_other_server_title": "Подтвердите загрузки из-за рубежа",
+	"backendPref_title": "Скачать источники",
 	"browse_modList_content_1": "Подходящих модов не найдено",
 	"browse_modList_content_2": "Попробуйте скорректировать поисковый запрос/фильтры.",
 	"colorPref_color_amber": "Янтарь",
@@ -91,6 +94,11 @@
 	"expandedConfigEntryDialog_tabsMenu_text": "Редактировать как текст",
 	"expandedConfigEntryDialog_title": "Редактировать {name}",
 	"exportCodeDialog_content_unknown": "Неизвестный профиль",
+	"exportCodeDialog_copyCode_label": "Скопировать в буфер обмена",
+	"exportCodeDialog_copyCode_message": "Код профиля скопирован в буфер обмена.",
+	"exportCodeDialog_done": "Экспорт завершен! Нажмите на код, чтобы скопировать его в буфер обмена:",
+	"exportCodeDialog_galeExclusive": "Этот профиль содержит моды, недоступные в Thunderstore. Этот код можно импортировать только с помощью Gale.",
+	"exportCodeDialog_loading": "Экспорт {name} ...",
 	"exportCodeDialog_title": "Экспорт в виде кода",
 	"flagsConfig_placeholder": "Выберите флаги",
 	"fontFamilyPref_placeholder": "Поиск шрифта...",
@@ -310,6 +318,8 @@
 	"modpack_readme_preview": "Предварительный просмотр",
 	"modpack_readme_title": "Readme",
 	"modpack_refresh_loading": "Загрузка...",
+	"modpack_upload_server": "Платформа для загрузки",
+	"modpack_upload_serverHexiumExclusive": "Этот профиль содержит моды, эксклюзивные для Hexium, и поэтому его нельзя загрузить в Thunderstore.",
 	"modpack_uploadToServer_loading": "Загрузка модпака в {backend}...",
 	"modpack_version_description": "Номер версии модпака в формате XYZ. Нельзя публиковать мод с одним и тем же номером версии дважды.",
 	"modpack_version_placeholder": "Введите номер версии...",
@@ -320,8 +330,12 @@
 	"navBar_link_browse": "Установите моды",
 	"navBar_link_config": "Редактировать конфигурацию мода",
 	"navBar_link_modpack": "Экспорт модпака",
+	"navBar_link_modpack_disabled": "Экспорт модпака (недоступен для текущей игры)",
 	"navBar_link_prefs": "Редактировать настройки менеджера",
 	"navBar_link_profile": "Управление профилем",
+	"otherServer_warn_content": "Вы устанавливаете этот мод из источника, отличного от Thunderstore. Этот файл был проверен источником, на котором он размещен, а не Thunderstore.",
+	"otherServer_warn_noremind": "Больше не появляйтесь.",
+	"otherServer_warn_title": "Скачать из другого источника",
 	"ownedSyncProfilesDialog_button_delete": "Удалить",
 	"ownedSyncProfilesDialog_button_import": "Импорт",
 	"ownedSyncProfilesDialog_content_1": "Профили не найдены",
@@ -428,17 +442,12 @@
 	"unknown": "Неизвестный",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Следующий мод не найден:",
 				"countPlural=other": "Следующие модификации не были найдены:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Удалить?",
@@ -446,17 +455,12 @@
 	"updateAllBanner_button": "Обновить все?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Доступно одно обновление.",
 				"countPlural=other": "Доступны обновления {count} ."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Обновить моды",

@@ -81,17 +81,6 @@
 					<Icon class="shrink-0" icon="mdi:clock-outline" />
 					<span class="mr-2">{timeSince(new Date(mod.lastUpdated))}</span>
 				{/if}
-
-				{#each mod.categories?.slice(0, 3) as category (category)}
-					<span
-						class={[
-							selected ? 'bg-primary-600' : 'bg-primary-700 group-hover:bg-primary-600',
-							'text-primary-300 rounded-full px-2 py-1 text-xs'
-						]}
-					>
-						{category}
-					</span>
-				{/each}
 			</div>
 		</div>
 

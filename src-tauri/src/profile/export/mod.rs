@@ -208,7 +208,6 @@ pub fn find_config<'a>(
 ) -> impl Iterator<Item = PathBuf> + 'a {
     static INCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
-            .add(Glob::new("BepInEx/config/*").unwrap())
             .add(Glob::new("*.{cfg,txt,json,yml,yaml,ini}").unwrap())
             .build()
             .unwrap()
@@ -230,6 +229,13 @@ pub fn find_config<'a>(
             .unwrap()
     });
 
+    list_files(root).filter(move |path| {
+        (config_dirs.iter().any(|dir| path.starts_with(dir)) || INCLUDE_SET.is_match(path))
+            && !EXCLUDE_SET.is_match(path)
+    })
+}
+
+fn list_files<'a>(root: &'a Path) -> impl Iterator<Item = PathBuf> + 'a {
     WalkDir::new(root)
         .into_iter()
         .filter_map(Result::ok)
@@ -240,9 +246,5 @@ pub fn find_config<'a>(
                 .strip_prefix(root)
                 .expect("path should be child of root")
                 .to_path_buf()
-        })
-        .filter(move |path| {
-            (config_dirs.iter().any(|dir| path.starts_with(dir)) || INCLUDE_SET.is_match(path))
-                && !EXCLUDE_SET.is_match(path)
         })
 }

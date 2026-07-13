@@ -4,11 +4,11 @@ import {
 	type Game,
 	type MarkdownType,
 	type Mod,
-	ModType
+	ModType,
+	ModLoader
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
-import { isLatinAlphabet } from './i18n';
 import { m } from './paraglide/messages';
 import * as api from '$lib/api';
 import { getLocale } from './paraglide/runtime';
@@ -169,5 +169,21 @@ export async function getMarkdown(mod: Mod, type: MarkdownType, useLatest = fals
 
 		case ModType.Local:
 			return await api.profile.getLocalMarkdown(mod.uuid, type);
+	}
+}
+
+export function loaderSupportsModpacks(loader: ModLoader) {
+	switch (loader) {
+		case ModLoader.BepInEx:
+		case ModLoader.BepisLoader:
+		case ModLoader.MelonLoader:
+		case ModLoader.Shimloader:
+		case ModLoader.Lovely:
+		case ModLoader.ReturnOfModding:
+			return true;
+
+		case ModLoader.Northstar:
+		case ModLoader.GDWeave:
+			return false;
 	}
 }

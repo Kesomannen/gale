@@ -21,6 +21,9 @@
 	"apiKeyPref_hasToken_has": "點擊以覆寫權杖",
 	"apiKeyPref_hasToken_no": "未設定",
 	"apiKeyPref_title": "{backend} API 權杖",
+	"backendPref_other_server_content": "從 Thunderstore 以外的任何來源下載時，請確認。",
+	"backendPref_other_server_title": "確認境外下載",
+	"backendPref_title": "下載資源",
 	"browse_modList_content_1": "找不到符合的模組",
 	"browse_modList_content_2": "請嘗試調整您的搜尋字詞/篩選條件",
 	"colorPref_color_amber": "琥珀色",
@@ -94,6 +97,7 @@
 	"exportCodeDialog_copyCode_label": "複製到剪貼簿",
 	"exportCodeDialog_copyCode_message": "已將設定檔代碼複製到剪貼簿。",
 	"exportCodeDialog_done": "匯出完成！點擊代碼即可複製到剪貼簿：",
+	"exportCodeDialog_galeExclusive": "此設定檔包含 Thunderstore 上未提供的模組。此程式碼只能使用 Gale 導入。",
 	"exportCodeDialog_loading": "導出{name} ...",
 	"exportCodeDialog_title": "匯出為代碼",
 	"flagsConfig_placeholder": "選擇標記",
@@ -314,6 +318,8 @@
 	"modpack_readme_preview": "預覽",
 	"modpack_readme_title": "讀我檔案",
 	"modpack_refresh_loading": "載入中...",
+	"modpack_upload_server": "上傳平台",
+	"modpack_upload_serverHexiumExclusive": "此設定檔包含 Hexium 獨有的模組，因此無法上傳到 Thunderstore。",
 	"modpack_uploadToServer_loading": "正在將模組包上傳到 {backend}...",
 	"modpack_version_description": "模組包的版本號碼，格式為 X.Y.Z。您不能重複發布相同的版本號碼。",
 	"modpack_version_placeholder": "輸入版本號碼...",
@@ -324,8 +330,12 @@
 	"navBar_link_browse": "安裝模組",
 	"navBar_link_config": "編輯模組設定",
 	"navBar_link_modpack": "匯出模組包",
+	"navBar_link_modpack_disabled": "匯出模組包（目前遊戲不支援）",
 	"navBar_link_prefs": "編輯管理員設定",
 	"navBar_link_profile": "管理設定檔",
+	"otherServer_warn_content": "您是從 Thunderstore 以外的來源安裝此模組的。此文件已由其託管來源掃描，而非由 Thunderstore 掃描。",
+	"otherServer_warn_noremind": "不要再次顯示",
+	"otherServer_warn_title": "從其他來源下載",
 	"ownedSyncProfilesDialog_button_delete": "刪除",
 	"ownedSyncProfilesDialog_button_import": "匯入",
 	"ownedSyncProfilesDialog_content_1": "找不到設定檔",
@@ -432,17 +442,12 @@
 	"unknown": "未知",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "找不到以下模組：",
 				"countPlural=other": "以下模組未找到："
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "將其解除安裝？",
@@ -450,17 +455,12 @@
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "有一個更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模組",

@@ -21,6 +21,9 @@
 	"apiKeyPref_hasToken_has": "Cliquez pour remplacer le jeton",
 	"apiKeyPref_hasToken_no": "Non défini",
 	"apiKeyPref_title": "Jeton de l'API {backend}",
+	"backendPref_other_server_content": "Veuillez confirmer lors du téléchargement depuis une source autre que Thunderstore.",
+	"backendPref_other_server_title": "Confirmer les téléchargements étrangers",
+	"backendPref_title": "Sources de téléchargement",
 	"browse_modList_content_1": "Aucun mod correspondant trouvé",
 	"browse_modList_content_2": "Essayez d'ajuster votre recherche et vos filtres",
 	"colorPref_color_amber": "Ambre",
@@ -91,6 +94,11 @@
 	"expandedConfigEntryDialog_tabsMenu_text": "Modifier comme un texte",
 	"expandedConfigEntryDialog_title": "Modifier {name}",
 	"exportCodeDialog_content_unknown": "Profil inconnu",
+	"exportCodeDialog_copyCode_label": "Copier dans le presse-papiers",
+	"exportCodeDialog_copyCode_message": "Code du profil copié dans le presse-papiers.",
+	"exportCodeDialog_done": "Exportation terminée ! Cliquez sur le code pour le copier dans votre presse-papiers :",
+	"exportCodeDialog_galeExclusive": "Ce profil contient des modifications non disponibles sur Thunderstore. Ce code ne peut être importé qu'avec Gale.",
+	"exportCodeDialog_loading": "Exportation {name} ...",
 	"exportCodeDialog_title": "Exporter en tant que code",
 	"flagsConfig_placeholder": "Sélectionner des drapeaux",
 	"fontFamilyPref_placeholder": "Rechercher une police...",
@@ -310,6 +318,8 @@
 	"modpack_readme_preview": "Aperçu",
 	"modpack_readme_title": "Description (Readme)",
 	"modpack_refresh_loading": "Chargement...",
+	"modpack_upload_server": "Plateforme pour télécharger sur",
+	"modpack_upload_serverHexiumExclusive": "Ce profil contient des modifications exclusives à Hexium et ne peut donc pas être téléchargé sur Thunderstore.",
 	"modpack_uploadToServer_loading": "Téléchargement du modpack sur {backend}...",
 	"modpack_version_description": "Le numéro de version du modpack, au format X.Y.Z. Vous ne pouvez pas publier deux fois avec le même numéro de version.",
 	"modpack_version_placeholder": "Saisir le numéro de version...",
@@ -320,8 +330,12 @@
 	"navBar_link_browse": "Installer des mods",
 	"navBar_link_config": "Modifier la configuration du mod",
 	"navBar_link_modpack": "Exporter le modpack",
+	"navBar_link_modpack_disabled": "Exporter le pack de mods (indisponible pour la version actuelle du jeu)",
 	"navBar_link_prefs": "Modifier les paramètres du gestionnaire",
 	"navBar_link_profile": "Gérer le profil",
+	"otherServer_warn_content": "Vous installez ce mod depuis une source autre que Thunderstore. Ce fichier a été analysé par la source qui l'héberge, et non par Thunderstore.",
+	"otherServer_warn_noremind": "Ne plus afficher",
+	"otherServer_warn_title": "Télécharger depuis une autre source",
 	"ownedSyncProfilesDialog_button_delete": "Supprimer",
 	"ownedSyncProfilesDialog_button_import": "Importer",
 	"ownedSyncProfilesDialog_content_1": "Aucun profil trouvé",
@@ -428,17 +442,12 @@
 	"unknown": "Inconnu",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Le mod suivant est introuvable :",
 				"countPlural=other": "Les mods suivants sont introuvables :"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Le désinstaller ?",
@@ -446,17 +455,12 @@
 	"updateAllBanner_button": "Tout mettre à jour ?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Une mise à jour est disponible.",
 				"countPlural=other": "Des mises à jour {count} sont disponibles."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Mettre à jour les mods",

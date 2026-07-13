@@ -17,13 +17,14 @@
 	"apiKeyDialog_link": "Unsure how to get your API token?",
 	"apiKeyDialog_placeholder": "Enter API token...",
 	"apiKeyDialog_title": "Set {backend} API token",
-	"apiKeyPref_content": "{backend} API token to use for modpack publishing. Once this is set, you will <b>not</b> be able to view the token again.",
+	"apiKeyPref_content": "{backend} API token to use for modpack publishing. Once this is set, you will not be able to view the token again.",
 	"apiKeyPref_hasToken_has": "Click to override token",
 	"apiKeyPref_hasToken_no": "Not set",
 	"apiKeyPref_title": "{backend} API token",
-	"backendPref_title": "Download sources",
+	"backendPref_other_server_content": "Confirm when downloading from any source other than Thunderstore.",
 	"backendPref_other_server_title": "Confirm foreign downloads",
-	"backendPref_other_server_content": "Confirm when downloading from any source other than Thunderstore",
+	"backendPref_title": "Download sources",
+	"backendPref_heading": "Hexium",
 	"browse_modList_content_1": "No matching mods found",
 	"browse_modList_content_2": "Try to adjust your search query/filters",
 	"colorPref_color_amber": "Amber",
@@ -85,7 +86,7 @@
 	"customArgsPref_content_1": "Allows you to add custom arguments to the launch command. Depending on ",
 	"customArgsPref_content_2": "Launch mode",
 	"customArgsPref_content_3": ", these are either ran against the game or launcher executable.",
-	"customArgsPref_placeholder": "Enter new argument...",
+	"customArgsPref_placeholder": "Enter arguments...",
 	"customArgsPref_title": "Custom launch arguments",
 	"dependantsDialog_button_executeAll": "{verb} all",
 	"dependantsDialog_button_executeOne": "{verb}{name} only",
@@ -300,8 +301,6 @@
 	"modpack_dialog_content_4": "To publish a new update, increment the version number and publish the modpack again.",
 	"modpack_dialog_title": "Modpack upload complete",
 	"modpack_disabled_title": "Include disabled mods",
-	"modpack_upload_server": "Server to upload to",
-	"modpack_upload_serverHexiumExclusive": "This profile contains mods exclusive to Hexium and therefore cannot be uploaded to Thunderstore.",
 	"modpack_exportToFile_loading": "Exporting modpack to file...",
 	"modpack_exportToFile_title": "Choose folder to save modpack",
 	"modpack_icon_description": "Path to the icon of the modpack. This is automatically resized to 256x256 pixels, so it's recommended to be a square image to avoid stretching or squishing.",
@@ -320,6 +319,8 @@
 	"modpack_readme_preview": "Preview",
 	"modpack_readme_title": "Readme",
 	"modpack_refresh_loading": "Loading...",
+	"modpack_upload_server": "Platform to upload to",
+	"modpack_upload_serverHexiumExclusive": "This profile contains mods exclusive to Hexium and therefore cannot be uploaded to Thunderstore.",
 	"modpack_uploadToServer_loading": "Uploading modpack to {backend}...",
 	"modpack_version_description": "The version number of the modpack, in the format of X.Y.Z. You cannot publish with the same version number twice.",
 	"modpack_version_placeholder": "Enter version number...",
@@ -330,11 +331,12 @@
 	"navBar_link_browse": "Install mods",
 	"navBar_link_config": "Edit mod config",
 	"navBar_link_modpack": "Export modpack",
+	"navBar_link_modpack_disabled": "Export modpack (unavailable for current game)",
 	"navBar_link_prefs": "Edit manager settings",
 	"navBar_link_profile": "Manage profile",
-	"otherServer_warn_title": "Download from other Source",
 	"otherServer_warn_content": "You are installing this mod from a source other than Thunderstore. This file has been scanned by the source hosting it, rather than by Thunderstore.",
 	"otherServer_warn_noremind": "Don't show again",
+	"otherServer_warn_title": "Download from other source",
 	"ownedSyncProfilesDialog_button_delete": "Delete",
 	"ownedSyncProfilesDialog_button_import": "Import",
 	"ownedSyncProfilesDialog_content_1": "No profiles found",
@@ -441,17 +443,12 @@
 	"unknown": "Unknown",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "The following mod could not be found:",
 				"countPlural=other": "The following mods could not be found:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Uninstall it?",
@@ -459,17 +456,12 @@
 	"updateAllBanner_button": "Update all?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",

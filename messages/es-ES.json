@@ -21,6 +21,9 @@
 	"apiKeyPref_hasToken_has": "Click para sustituir la clave",
 	"apiKeyPref_hasToken_no": "No establecido",
 	"apiKeyPref_title": "Clave API de {backend}",
+	"backendPref_other_server_content": "Confirme la descarga al descargar desde cualquier fuente que no sea Thunderstore.",
+	"backendPref_other_server_title": "Confirmar descargas extranjeras",
+	"backendPref_title": "Descargar fuentes",
 	"browse_modList_content_1": "No se han encontrado mods coincidentes.",
 	"browse_modList_content_2": "Intenta ajustar la búsqueda/filtros.",
 	"colorPref_color_amber": "Ambar",
@@ -91,6 +94,11 @@
 	"expandedConfigEntryDialog_tabsMenu_text": "Editar como texto",
 	"expandedConfigEntryDialog_title": "Editar {name}",
 	"exportCodeDialog_content_unknown": "Perfil desconocido",
+	"exportCodeDialog_copyCode_label": "Copiar al portapapeles",
+	"exportCodeDialog_copyCode_message": "Se copió el código de perfil al portapapeles.",
+	"exportCodeDialog_done": "¡Exportación completada! Haz clic en el código para copiarlo al portapapeles:",
+	"exportCodeDialog_galeExclusive": "Este perfil contiene modificaciones que no están disponibles en Thunderstore. Este código solo se puede importar con Gale.",
+	"exportCodeDialog_loading": "Exportando {name} ...",
 	"exportCodeDialog_title": "Exportar como código",
 	"flagsConfig_placeholder": "Seleccionar marcadores",
 	"fontFamilyPref_placeholder": "Buscar una fuente...",
@@ -310,6 +318,8 @@
 	"modpack_readme_preview": "Vista previa",
 	"modpack_readme_title": "«Readme»",
 	"modpack_refresh_loading": "Cargando...",
+	"modpack_upload_server": "Plataforma para subir a",
+	"modpack_upload_serverHexiumExclusive": "Este perfil contiene modificaciones exclusivas de Hexium y, por lo tanto, no se puede subir a Thunderstore.",
 	"modpack_uploadToServer_loading": "Subiendo modpack a {backend}...",
 	"modpack_version_description": "El número de versión del modpack, en formato X.Y.Z. No se puede publicar dos veces con el mismo número de versión.",
 	"modpack_version_placeholder": "Introduzca número de versión...",
@@ -320,8 +330,12 @@
 	"navBar_link_browse": "Instalar mods",
 	"navBar_link_config": "Editar configuración de mods",
 	"navBar_link_modpack": "Exportar paquete",
+	"navBar_link_modpack_disabled": "Exportar paquete de mods (no disponible para el juego actual)",
 	"navBar_link_prefs": "Editar configuración del gestor",
 	"navBar_link_profile": "Gestionar perfil",
+	"otherServer_warn_content": "Estás instalando este mod desde una fuente distinta a Thunderstore. Este archivo ha sido analizado por la fuente que lo aloja, no por Thunderstore.",
+	"otherServer_warn_noremind": "No volver a mostrarlo",
+	"otherServer_warn_title": "Descargar desde otra fuente",
 	"ownedSyncProfilesDialog_button_delete": "Eliminar",
 	"ownedSyncProfilesDialog_button_import": "Importar",
 	"ownedSyncProfilesDialog_content_1": "No se han encontrado perfiles",
@@ -428,17 +442,12 @@
 	"unknown": "Desconocido",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "No se pudo encontrar el siguiente mod:",
 				"countPlural=other": "No se pudieron encontrar los siguientes mods:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "¿Desinstalar?",
@@ -446,17 +455,12 @@
 	"updateAllBanner_button": "¿Actualizar todo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Hay una actualización disponible.",
 				"countPlural=other": "Hay {count} actualizaciones disponibles."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Actualizar mods",

@@ -21,6 +21,9 @@
 	"apiKeyPref_hasToken_has": "Klicka för att skriva över din nuvarande API-token",
 	"apiKeyPref_hasToken_no": "Inte satt",
 	"apiKeyPref_title": "{backend} API-token",
+	"backendPref_other_server_content": "Bekräfta vid nedladdning från någon annan källa än Thunderstore",
+	"backendPref_other_server_title": "Bekräfta utländska nedladdningar",
+	"backendPref_title": "Ladda ner källor",
 	"browse_modList_content_1": "Inga matchande moddar hittades",
 	"browse_modList_content_2": "Testa att justera din sökfråga och/eller filter",
 	"colorPref_color_amber": "Bärnsten",
@@ -91,6 +94,11 @@
 	"expandedConfigEntryDialog_tabsMenu_text": "Redigera som text",
 	"expandedConfigEntryDialog_title": "Redigera {name}",
 	"exportCodeDialog_content_unknown": "Okänd profil",
+	"exportCodeDialog_copyCode_label": "Kopiera till urklipp",
+	"exportCodeDialog_copyCode_message": "Kopierade profilkoden till urklipp.",
+	"exportCodeDialog_done": "Exporten är klar! Klicka på koden för att kopiera den till urklipp:",
+	"exportCodeDialog_galeExclusive": "Den här profilen innehåller moddar som inte är tillgängliga på Thunderstore. Den här koden får endast importeras med Gale.",
+	"exportCodeDialog_loading": "Exporterar {name} ...",
 	"exportCodeDialog_title": "Exportera som kod",
 	"flagsConfig_placeholder": "Välj flaggor",
 	"fontFamilyPref_placeholder": "Sök efter ett typsnitt...",
@@ -310,6 +318,8 @@
 	"modpack_readme_preview": "Förhandsvisning",
 	"modpack_readme_title": "Viktigt",
 	"modpack_refresh_loading": "Laddar...",
+	"modpack_upload_server": "Plattform att ladda upp till",
+	"modpack_upload_serverHexiumExclusive": "Den här profilen innehåller mods exklusiva för Hexium och kan därför inte laddas upp till Thunderstore.",
 	"modpack_uploadToServer_loading": "Laddar upp modpack till {backend}...",
 	"modpack_version_description": "Moddpackets versionsnummer, i formatet X.Y.Z. Du kan inte publicera med samma versionsnummer två gånger.",
 	"modpack_version_placeholder": "Ange versionsnummer...",
@@ -320,8 +330,12 @@
 	"navBar_link_browse": "Installera mods",
 	"navBar_link_config": "Redigera modkonfiguration",
 	"navBar_link_modpack": "Exportera modpack",
+	"navBar_link_modpack_disabled": "Exportera modpack (ej tillgängligt för aktuellt spel)",
 	"navBar_link_prefs": "Redigera Gale-inställningar",
 	"navBar_link_profile": "Hantera profil",
+	"otherServer_warn_content": "Du installerar den här modden från en annan källa än Thunderstore. Den här filen har skannats av källan som är värd för den, snarare än av Thunderstore.",
+	"otherServer_warn_noremind": "Visa inte igen",
+	"otherServer_warn_title": "Ladda ner från annan källa",
 	"ownedSyncProfilesDialog_button_delete": "Radera",
 	"ownedSyncProfilesDialog_button_import": "Importera",
 	"ownedSyncProfilesDialog_content_1": "Inga profiler hittades",
@@ -428,17 +442,12 @@
 	"unknown": "Okänd",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Följande mod kunde inte hittas:",
 				"countPlural=other": "Följande moddar kunde inte hittas:"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_uninstall_it": "Avinstallera det?",
@@ -446,17 +455,12 @@
 	"updateAllBanner_button": "Uppdatera alla?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Det finns en uppdatering tillgänglig.",
 				"countPlural=other": "Det finns {count} uppdateringar tillgängliga."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Uppdatera mods",

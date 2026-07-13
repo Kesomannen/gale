@@ -207,7 +207,7 @@
 	]);
 
 	$effect(() => {
-		profiles.active;
+		profiles.activeId;
 		refresh();
 	});
 
@@ -369,7 +369,7 @@
 					{m.modpack_readme_preview()}
 				</summary>
 				<Markdown class="mt-1 px-4" source={readme} />
-				<div class="bg-primary-500 mt-4 h-[2px]"></div>
+				<div class="bg-primary-500 mt-4 h-0.5"></div>
 			</details>
 		</FormField>
 
@@ -393,7 +393,7 @@
 					>{m.modpack_changeLog_preview()}</summary
 				>
 				<Markdown class="mt-1 px-4" source={changelog} />
-				<div class="bg-primary-500 mt-4 h-[2px]"></div>
+				<div class="bg-primary-500 mt-4 h-0.5"></div>
 			</details>
 		</FormField>
 
@@ -407,11 +407,11 @@
 				>
 				<InputField
 					bind:value={includedFilesSearch}
-					class="w-full"
+					class="mt-2 w-full"
 					placeholder={m.modpack_includeFiles_placeholder()}
 				/>
 				<Checklist
-					class="mt-1"
+					class="mt-2"
 					title={m.modpack_includeFiles_list_title()}
 					items={shownFileIncludes}
 					getLabel={(item) => item}

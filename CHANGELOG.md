@@ -2,13 +2,28 @@
 
 ## Unreleased
 
+### Added
+
+- Support for the [Hexium](https://hexium.gg/) modding platform for Valheim (thanks [@bwoebi](https://github.com/bwoebi))
+  - By default, Hexium mods are fetched alongside Thunderstore mods. You can opt-out of either platform in the Valheim-specific settings
+  - The mod list shows mods from both platforms. If a mod exists on both, the Thunderstore version is favoured given the latest version is the same on both platforms
+  - Profile and modpack exports go to Thunderstore if all mods and versions are published there. If not, they are uploaded to Hexium and will only be available in Gale, not the official Thunderstore mod managers
+
 ### Changed
 
-- Minor UI changes
+- Removed tags in the mod list
+- Other minor UI changes
+- The modpack export page is now disabled for games/communities that don't support modpacks
+  - This includes WEBFISHING (GDWeave) and Northstar
+- The modpack export page now lists config files that can correctly be imported via modpacks
+  - This now includes _all_ files in config directories such as `BepInEx/config` (see the whole list further below), instead of only those with certain file extensions
+  - This excludes some previously included but incorrectly included files like those in `BepInEx/plugins/<AUTHOR-NAME>`
 
 ### Fixed
 
 - Gale being registered as a handler for all zip files on Linux (thanks [@Damglador](https://github.com/Damglador))
+- Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
+- The modpack export page refreshing when some fields are changed
 - Extra files in the config directory not being included in profile exports
   - This now matches r2modman behaviour for BepInEx, plus additional support for other mod loaders
   - The recognized config directories are as follows:

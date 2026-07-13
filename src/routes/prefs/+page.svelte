@@ -151,19 +151,6 @@
 			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}
 		</LargeHeading>
 
-		{#if games.active?.name == 'Valheim'}
-			<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
-			<TogglePref
-				label={m.backendPref_other_server_title()}
-				value={!prefs.backendSkipConfirm}
-				set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
-			>
-				{m.backendPref_other_server_content()}
-			</TogglePref>
-
-			<ApiKeyPref backend={Backend.Hexium} />
-		{/if}
-
 		<SmallHeading>{m.prefs_gameSettings_locations_title()}</SmallHeading>
 
 		{#if platforms.length > 0}
@@ -197,6 +184,21 @@
 			value={gamePrefs.customArgs}
 			setValue={set((value) => (gamePrefs!.customArgs = value))}
 		/>
+
+		{#if games.active?.name == 'Valheim'}
+			<SmallHeading>{m.backendPref_heading()}</SmallHeading>
+
+			<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
+			<TogglePref
+				label={m.backendPref_other_server_title()}
+				value={!prefs.backendSkipConfirm}
+				set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
+			>
+				{m.backendPref_other_server_content()}
+			</TogglePref>
+
+			<ApiKeyPref backend={Backend.Hexium} />
+		{/if}
 
 		{#if profiles.active}
 			<LargeHeading>{m.prefs_profileSettings_title()}</LargeHeading>

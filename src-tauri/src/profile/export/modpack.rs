@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fmt::Display,
     io::{Cursor, Seek, Write},
     path::{Path, PathBuf},
@@ -36,13 +36,22 @@ pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Ga
         profile.modpack.as_mut().unwrap().backend = Backend::Hexium;
     }
 
-    let includes = &mut profile.modpack.as_mut().unwrap().include_files;
+    let config_files: HashSet<PathBuf> = super::list_files(&profile.path)
+        .filter(|path| {
+            game.mod_loader
+                .mod_config_dirs()
+                .iter()
+                .any(|dir| path.starts_with(dir))
+        })
+        .collect();
 
-    // remove deleted files
-    includes.retain(|file, _| profile.path.join(file).exists());
+    let included_files = &mut profile.modpack.as_mut().unwrap().include_files;
 
-    for path in super::find_config(&profile.path, game.mod_loader.mod_config_dirs()) {
-        includes.entry(path).or_insert(true);
+    included_files
+        .retain(|file, _| config_files.contains(file) && profile.path.join(file).exists());
+
+    for path in config_files {
+        included_files.entry(path).or_insert(true);
     }
 
     hexium_exclusive

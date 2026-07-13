@@ -85,7 +85,6 @@
 	{
 		"name": "RV There Yet?",
 		"slug": "rv-there-yet",
-		"popular": true,
 		"modLoader": {
 			"name": "Shimloader",
 			"fileTarget": "./Ride/Binaries/Win64"
@@ -490,6 +489,7 @@
 	{
 		"name": "BONEWORKS",
 		"r2dirName": "BONEWORKS",
+		"popular": true,
 		"modLoader": {
 			"name": "MelonLoader",
 			"subdirs": [
@@ -1837,6 +1837,7 @@
 	{
 		"name": "PEAK",
 		"slug": "peak",
+		"popular": true,
 		"modLoader": {
 			"name": "BepInEx"
 		},
@@ -2024,6 +2025,7 @@
 	},
 	{
 		"name": "ROUNDS",
+		"popular": true,
 		"modLoader": {
 			"name": "BepInEx"
 		},
