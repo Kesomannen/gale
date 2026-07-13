@@ -148,7 +148,7 @@ jobs:
           sed -i "s|sha256: .*|sha256: $SHA256|" flatpak/com.kesomannen.gale.yml
 
       - name: Build and upload Flatpak bundles
-        uses: andyholmes/flatter@1.0.0
+        uses: andyholmes/flatter@v1
         with:
           files: |
             flatpak/com.kesomannen.gale.yml
