@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "Klicka för att skriva över din nuvarande API-token",
 	"apiKeyPref_hasToken_no": "Inte satt",
 	"apiKeyPref_title": "{backend} API-token",
+	"backendPref_heading": "Hexium",
+	"backendPref_info": "Välj vilka källor du vill hämta och ladda ner moddar från. Om du exkluderar en källa kommer moddar därifrån inte att vara tillgängliga för installation och kommer inte att visas i moddlistan.",
 	"backendPref_other_server_content": "Bekräfta vid nedladdning från någon annan källa än Thunderstore",
 	"backendPref_other_server_title": "Bekräfta utländska nedladdningar",
 	"backendPref_title": "Ladda ner källor",

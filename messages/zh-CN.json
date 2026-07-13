@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "点击重新设置令牌",
 	"apiKeyPref_hasToken_no": "未设置令牌",
 	"apiKeyPref_title": "{backend} API 令牌",
+	"backendPref_heading": "六氢可待因",
+	"backendPref_info": "选择要从中获取和下载模组的来源。如果排除某个来源，则来自该来源的模组将无法安装，也不会出现在模组列表中。",
 	"backendPref_other_server_content": "从 Thunderstore 以外的任何来源下载时，请确认。",
 	"backendPref_other_server_title": "确认境外下载",
 	"backendPref_title": "下载资源",

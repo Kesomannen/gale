@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "Kliknij, aby nadpisać token",
 	"apiKeyPref_hasToken_no": "Nie ustawiono",
 	"apiKeyPref_title": "Token API {backend}",
+	"backendPref_heading": "Heks",
+	"backendPref_info": "Wybierz źródła, z których chcesz pobrać mody. Jeśli wykluczysz źródło, mody z tego źródła nie będą dostępne do instalacji i nie pojawią się na liście modów.",
 	"backendPref_other_server_content": "Potwierdź przy pobieraniu z innego źródła niż Thunderstore",
 	"backendPref_other_server_title": "Potwierdź pobieranie plików zagranicznych",
 	"backendPref_title": "Pobierz źródła",

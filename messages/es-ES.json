@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "Click para sustituir la clave",
 	"apiKeyPref_hasToken_no": "No establecido",
 	"apiKeyPref_title": "Clave API de {backend}",
+	"backendPref_heading": "Hexio",
+	"backendPref_info": "Selecciona las fuentes desde las que deseas obtener y descargar mods. Si excluyes una fuente, los mods de esa fuente no estarán disponibles para su instalación y no aparecerán en la lista de mods.",
 	"backendPref_other_server_content": "Confirme la descarga al descargar desde cualquier fuente que no sea Thunderstore.",
 	"backendPref_other_server_title": "Confirmar descargas extranjeras",
 	"backendPref_title": "Descargar fuentes",

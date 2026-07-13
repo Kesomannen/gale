@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "Clique para substituir o token",
 	"apiKeyPref_hasToken_no": "Não definido",
 	"apiKeyPref_title": "Token da API {backend}",
+	"backendPref_heading": "Hélio",
+	"backendPref_info": "Selecione de quais fontes buscar e baixar mods. Se você excluir uma fonte, os mods dessa fonte não estarão disponíveis para instalação e não aparecerão na lista de mods.",
 	"backendPref_other_server_content": "Confirme ao baixar de qualquer fonte que não seja o Thunderstore.",
 	"backendPref_other_server_title": "Confirmar downloads estrangeiros",
 	"backendPref_title": "Baixar fontes",

@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "Cliquez pour remplacer le jeton",
 	"apiKeyPref_hasToken_no": "Non défini",
 	"apiKeyPref_title": "Jeton de l'API {backend}",
+	"backendPref_heading": "Hexium",
+	"backendPref_info": "Choisissez les sources à partir desquelles télécharger les mods. Si vous excluez une source, les mods provenant de celle-ci ne seront pas disponibles à l'installation et n'apparaîtront pas dans la liste des mods.",
 	"backendPref_other_server_content": "Veuillez confirmer lors du téléchargement depuis une source autre que Thunderstore.",
 	"backendPref_other_server_title": "Confirmer les téléchargements étrangers",
 	"backendPref_title": "Sources de téléchargement",

@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "點擊以覆寫權杖",
 	"apiKeyPref_hasToken_no": "未設定",
 	"apiKeyPref_title": "{backend} API 權杖",
+	"backendPref_heading": "六氫可待因",
+	"backendPref_info": "選擇要從中取得和下載模組的來源。如果排除某個來源，則來自該來源的模組將無法安裝，也不會出現在模組清單中。",
 	"backendPref_other_server_content": "從 Thunderstore 以外的任何來源下載時，請確認。",
 	"backendPref_other_server_title": "確認境外下載",
 	"backendPref_title": "下載資源",

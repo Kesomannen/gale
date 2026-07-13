@@ -3,6 +3,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import { Backends } from '$lib/types';
+	import Info from '../ui/Info.svelte';
 
 	const items = [
 		{
@@ -29,6 +30,10 @@
 
 <div class="flex items-center">
 	<Label>{m.backendPref_title()}</Label>
+
+	<Info>
+		{m.backendPref_info()}
+	</Info>
 
 	<Select
 		type="single"

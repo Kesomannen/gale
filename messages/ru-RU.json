@@ -21,6 +21,8 @@
 	"apiKeyPref_hasToken_has": "Нажмите, чтобы переопределить токен.",
 	"apiKeyPref_hasToken_no": "Не задано",
 	"apiKeyPref_title": "API-токен {backend}",
+	"backendPref_heading": "Гексиум",
+	"backendPref_info": "Выберите источники, из которых вы будете загружать моды. Если вы исключите какой-либо источник, моды из него не будут доступны для установки и не будут отображаться в списке модов.",
 	"backendPref_other_server_content": "Подтверждайте загрузку из любого источника, кроме Thunderstore.",
 	"backendPref_other_server_title": "Подтвердите загрузки из-за рубежа",
 	"backendPref_title": "Скачать источники",
