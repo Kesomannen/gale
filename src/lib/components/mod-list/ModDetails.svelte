@@ -87,10 +87,10 @@
 				<svelte:element
 					this={mod.type === ModType.Remote ? 'a' : 'div'}
 					class={[
-						'pr-4 text-left text-3xl font-bold wrap-break-word text-white xl:text-4xl',
+						'block pr-4 text-left text-3xl font-bold text-white xl:text-4xl',
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
-					href={communityUrl(mod.backend, '' + mod.author, mod.name)}
+					href={communityUrl(mod.backend, mod.author ?? '', mod.name)}
 					target="_blank">{formatModName(mod.name)}</svelte:element
 				>
 

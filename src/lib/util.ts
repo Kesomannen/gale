@@ -68,7 +68,7 @@ export function communityUrl(backend: Backend, author: string, mod?: string) {
 	if (backend === Backend.Hexium) {
 		return `https://${games.active?.slug}.hexium.gg/${mod === undefined ? `teams/${author}` : `mods/${author}/${mod}`}`;
 	} else {
-		return `https://thunderstore.io/c/${games.active?.slug}/p/${author}${mod && `/${mod}`}/`;
+		return `https://thunderstore.io/c/${games.active?.slug}/p/${author}${mod ? `/${mod}` : ''}/`;
 	}
 }
 
@@ -78,7 +78,7 @@ export function modIconSrc(mod: Mod) {
 			let fullName = `${mod.author}-${mod.name}-${mod.version}`;
 			return thunderstoreIconUrl(fullName);
 		} else {
-			return hexiumIconUrl('' + mod.author, mod.name);
+			return hexiumIconUrl(mod.author ?? '', mod.name);
 		}
 	} else if (mod.icon !== null) {
 		let path = mod.enabled === false ? mod.icon + '.old' : mod.icon;

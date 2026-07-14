@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Thunderstore mod author name linking to an invalid URL
+
 ## 1.18.0 (2026-07-13)
 
 ### Added

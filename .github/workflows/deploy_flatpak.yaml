@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   flatter:
-    name: Build Flatpak
+    name: Build
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/andyholmes/flatter/gnome:49
@@ -38,7 +38,7 @@ jobs:
           upload-pages-artifact: true
 
   deploy:
-    name: Deploy Flatpak
+    name: Deploy to Pages
     runs-on: ubuntu-latest
     needs: flatter
     environment:

@@ -312,7 +312,7 @@ pub fn import_config(dest: &Path, src: &Path, options: &ImportOptions) -> Result
 
     for file in src_files {
         let src_path = src.join(&file);
-        let dest_path = if file.starts_with("config/") {
+        let dest_path = if file.starts_with("config") {
             dest.join("BepInEx").join(&file)
         } else {
             dest.join(&file)
