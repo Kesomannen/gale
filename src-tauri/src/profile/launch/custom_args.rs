@@ -23,7 +23,20 @@ where
     {
         use itertools::Itertools;
 
-        words.into_iter().join(" ")
+        words
+            .into_iter()
+            .map(|s| {
+                // escape and quote the argument
+                let s = s.as_ref();
+
+                if s.contains(' ') || s.contains('"') {
+                    let escaped = s.replace('"', "\\\"");
+                    format!("\"{escaped}\"")
+                } else {
+                    s.to_string()
+                }
+            })
+            .join(" ")
     }
 }
 
@@ -218,6 +231,30 @@ mod tests {
         assert_eq!(
             command.get_envs().collect_vec(),
             expected.get_envs().collect_vec()
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn join_linux() {
+        let args = vec!["--foo", "bar baz", "something else"];
+        let joined = join(args);
+        assert_eq!(joined, "--foo 'bar baz' 'something else'");
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn join_windows() {
+        let args = vec![
+            "--foo",
+            "bar baz",
+            "something else",
+            r"C:\A\Path\With Spaces",
+        ];
+        let joined = join(args);
+        assert_eq!(
+            joined,
+            r#"--foo "bar baz" "something else" "C:\A\Path\With Spaces""#
         );
     }
 }
