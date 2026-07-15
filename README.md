@@ -45,20 +45,12 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
     <b>Scoop</b>
   </summary>
   
-  Gale is available as an independently hosted [Scoop](https://scoop.sh/) app:
+  Gale is available as a [Scoop](https://scoop.sh/) app in the official [games bucket](https://github.com/Calinou/scoop-games):
 
 ```powershell
-scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
+scoop bucket add games
+scoop install gale
 ```
-
-To update, run:
-
-```powershell
-scoop uninstall gale
-scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
-```
-
-> Efforts are in progress to submit the app to the [Scoop games bucket](https://github.com/Calinou/scoop-games/pull/1756) to make installation and updating more straightforward.
 
 </details>
 
