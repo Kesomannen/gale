@@ -54,6 +54,19 @@ scoop install gale
 
 </details>
 
+<details>
+  <summary>
+    <b>WinGet</b>
+  </summary>
+  
+  Gale is available as a [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/) application:
+
+```powershell
+winget install Kesomannen.Gale
+```
+
+</details>
+
 > [!NOTE]
 > You might get a prompt saying "Windows has protected your PC". In this case, click `More Info` and `Run Anyway`.
 
