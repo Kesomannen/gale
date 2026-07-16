@@ -1,0 +1,16 @@
+name: Update winget manifest
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Komac
+        uses: michidk/run-komac@v2
+        with:
+          komac-version: v2.16.0
+          args: '--version'
+
+# update Package.Identifier --version 1.2.3 --urls https://www.example.com/installer.exe https://www.example.com/installer.msi --submit
