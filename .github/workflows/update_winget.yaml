@@ -1,19 +1,28 @@
-name: Update winget manifest
+name: Publish to WinGet
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version of the application to update'
+      release_name:
+        description: 'Release name'
         required: true
-        type: string
+        default: 'v1.0.0'
 
 jobs:
-  check-backend:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Run Komac
-        uses: michidk/run-komac@v2
+      - name: Get version
+        id: get-version
+        run: |
+          $VERSION="${{ github.event.inputs.release_name }}" -replace '^.*/ '
+          "version=$VERSION" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Publish to WinGet
+        id: publish-winget
+        uses: vedantmgoyal9/winget-releaser@main
         with:
-          komac-version: 2.16.0
-          args: 'update Kesomannen.Gale --version ${{ github.event.inputs.version }} --urls https://github.com/Kesomannen/gale/releases/download/${{ github.event.inputs.version }}/Gale_${{ github.event.inputs.version }}_x64_en-US.msi --submit'
+          identifier: Package.Identifier
+          version: ${{ steps.get-version.outputs.version }}
+          token: ${{ secrets.WINGET_TOKEN }}
