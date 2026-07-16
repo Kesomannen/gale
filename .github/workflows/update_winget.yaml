@@ -2,10 +2,11 @@ name: Update winget manifest
 
 on:
   workflow_dispatch:
-    args:
+    inputs:
       version:
         description: 'Version of the application to update'
         required: true
+        type: string
 
 jobs:
   check-backend:
