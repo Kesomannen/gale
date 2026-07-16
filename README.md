@@ -88,8 +88,9 @@ winget install Kesomannen.Gale
   yay -S gale-bin
   ```
 
-  > [!WARN]
-  > **Do not** use the in-app updater, instead update the app via the AUR.
+> [!WARN]
+> **Do not** use the in-app updater, instead update the app via the AUR.
+
 </details>
 
 <details>

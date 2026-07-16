@@ -5,6 +5,7 @@
 	import Link from '$lib/components/ui/Link.svelte';
 	import games from '$lib/state/game.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import HelpCard from '../ui/HelpCard.svelte';
 
 	type Props = {
 		onselect: () => void;
@@ -63,17 +64,15 @@
 				/>
 			{/each}
 		{:else}
-			<div class="text-primary-300 mt-4 text-center">{m.gameSelect_content_1()}</div>
-			<div class="text-primary-400 mt-2 max-w-[35rem] text-sm">
-				{m.gameSelect_content_2()}
-				<Link href="https://thunderstore.io">thunderstore.io</Link>
-				{m.gameSelect_content_3()}
-				<Link href="https://discord.gg/sfuWXRfeTt">Discord</Link>
-				{m.gameSelect_content_4()}
-				<Link href="https://github.com/Kesomannen/ModManager/issues/"
-					>{m.gameSelect_content_5()}</Link
-				>
-			</div>
+			<HelpCard title={m.gameSelect_title()} icon="mdi:magnify">
+				<div class="text-primary-400 mt-2 max-w-140 text-sm">
+					{m.gameSelect_content_1()}
+					<Link href="https://github.com/Kesomannen/ModManager/issues/new"
+						>{m.gameSelect_content_2()}</Link
+					>
+					{m.gameSelect_content_3()}
+				</div>
+			</HelpCard>
 		{/if}
 	</div>
 </div>
