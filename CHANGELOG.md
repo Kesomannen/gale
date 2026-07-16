@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+- Made error message more informative when a profile code couldn't be exported due to upload size limits
+- Small UI edits
+
 ### Fixed
 
 - Thunderstore mod author name linking to an invalid URL

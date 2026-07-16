@@ -81,6 +81,7 @@ tracing-log = "0.2.0"
 shell-words = "1.1.1"
 winsplit = "0.1.0"
 globset = "0.4.18"
+humansize = "2.1.3"
 
 [target.'cfg(target_os="windows")'.dependencies]
 winreg = "0.52"

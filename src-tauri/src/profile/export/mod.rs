@@ -7,8 +7,9 @@ use std::{
 };
 
 use base64::{Engine, prelude::BASE64_STANDARD};
-use eyre::Context;
+use eyre::{Context, bail};
 use globset::{Glob, GlobBuilder, GlobSet, GlobSetBuilder};
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tracing::info;
@@ -165,7 +166,9 @@ async fn export_code(app: &AppHandle) -> Result<ExportCode> {
         (backend, base64)
     };
 
-    info!(len = base64.len(), "exporting profile code");
+    let len = base64.len();
+
+    info!(len, "exporting profile code");
 
     let response = app
         .http()
@@ -173,10 +176,18 @@ async fn export_code(app: &AppHandle) -> Result<ExportCode> {
         .header("Content-Type", "application/octet-stream")
         .body(base64)
         .send()
-        .await?
-        .error_for_status()?
-        .json::<LegacyProfileCreateResponse>()
         .await?;
+
+    let response = match response.status() {
+        status if status.is_success() => response.json::<LegacyProfileCreateResponse>().await?,
+        StatusCode::PAYLOAD_TOO_LARGE => {
+            bail!(
+                "profile config is too large to export: {}, please reduce the size by removing heavy and/or unneeded config files",
+                humansize::format_size(len, humansize::BINARY)
+            );
+        }
+        _ => bail!("upload failed with status: {}", response.status()),
+    };
 
     Ok(ExportCode {
         code: response.key,
