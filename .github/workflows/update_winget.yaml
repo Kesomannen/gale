@@ -26,4 +26,4 @@ jobs:
           identifier: Kesomannen.Gale
           version: ${{ steps.get-version.outputs.version }}
           token: ${{ secrets.WINGET_TOKEN }}
-          release-tag: ${{ github.event.release.tag_name || github.ref_name || steps.get-version.outputs.version }}
+          release-tag: ${{ steps.get-version.outputs.version }}
