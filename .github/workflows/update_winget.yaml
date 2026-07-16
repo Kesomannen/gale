@@ -23,6 +23,6 @@ jobs:
         id: publish-winget
         uses: vedantmgoyal9/winget-releaser@main
         with:
-          identifier: Package.Identifier
+          identifier: Kesomannen.Gale
           version: ${{ steps.get-version.outputs.version }}
           token: ${{ secrets.WINGET_TOKEN }}
