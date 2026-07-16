@@ -87,6 +87,9 @@ winget install Kesomannen.Gale
   ```bash
   yay -S gale-bin
   ```
+
+  > [!WARN]
+  > **Do not** use the in-app updater, instead update the app via the AUR.
 </details>
 
 <details>
@@ -99,6 +102,8 @@ Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/
 ```bash
 sudo dpkg -i Gale_X.X.X_x64_en-US.deb
 ```
+
+Updating Gale can be done from the in-app updater UI.
 
 </details>
 
@@ -113,6 +118,8 @@ Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/
 sudo rpm -i Gale_X.X.X_x64_en-US.rpm
 ```
 
+Updating Gale can be done from the in-app updater UI.
+
 </details>
 
 <details>
@@ -125,6 +132,8 @@ Gale is available as an independently hosted Flatpak package:
 ```bash
 flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
 ```
+
+Updating the app can be done with `flatpak update com.kesomannen.gale`.
 
 </details>
 
@@ -139,6 +148,8 @@ Distribution-agnostic AppImages are available in [Releases](https://github.com/K
 chmod +x Gale_X.X.X_x64_en-US.AppImage
 ./Gale_X.X.X_x64_en-US.AppImage
 ```
+
+Updating Gale can be done from the in-app updater UI.
 
 </details>
 
