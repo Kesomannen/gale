@@ -2,15 +2,23 @@ name: Update winget manifest
 
 on:
   workflow_dispatch:
+    args:
+      version:
+        description: 'Version of the application to update'
+        required: true
 
 jobs:
   check-backend:
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch version input
+        run: export VERSION=${{ github.event.inputs.version }}
+
+      - name: Echo version input
+        run: echo "Version to update $(VERSION)"
+
       - name: Run Komac
         uses: michidk/run-komac@v2
         with:
           komac-version: 2.16.0
-          args: '--version'
-
-# update Package.Identifier --version 1.2.3 --urls https://www.example.com/installer.exe https://www.example.com/installer.msi --submit
+          args: 'update Kesomannen.Gale --version $(VERSION) --urls https://github.com/Kesomannen/gale/releases/download/$(VERSION)/Gale_$(VERSION)_x64_en-US.msi --submit'
