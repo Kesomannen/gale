@@ -74,7 +74,7 @@ pub async fn read_profile_code(key: &str, app: AppHandle) -> Result<FrontendImpo
 pub async fn read_profile_file(path: PathBuf, app: AppHandle) -> Result<FrontendImportData> {
     thunderstore::wait_for_fetch(&app).await;
 
-    let data = super::read_file_from(path)?;
+    let data = super::read_file_from(path, &*app.lock_thunderstore())?;
 
     Ok(FrontendImportData::new(data, &app))
 }
@@ -83,7 +83,7 @@ pub async fn read_profile_file(path: PathBuf, app: AppHandle) -> Result<Frontend
 pub async fn read_profile_base64(base64: String, app: AppHandle) -> Result<FrontendImportData> {
     thunderstore::wait_for_fetch(&app).await;
 
-    let data = super::read_base64(&base64)?;
+    let data = super::read_base64(&base64, &*app.lock_thunderstore())?;
 
     Ok(FrontendImportData::new(data, &app))
 }

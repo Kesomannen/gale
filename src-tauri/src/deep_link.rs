@@ -38,7 +38,10 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
     } else if url.starts_with("gale://profile/sync/clone") {
         handle_inner_task(app.clone(), clone_sync_profile(url, app));
     } else if url.ends_with("r2z") {
-        handle_inner_task(app.clone(), async move { import_profile_file(&url, &app) });
+        handle_inner_task(
+            app.clone(),
+            async move { import_profile_file(&url, &app).await },
+        );
     } else {
         warn!("unsupported deep link protocol: {}", url);
         return false;
@@ -109,7 +112,7 @@ async fn handle_install(package: InstallPackage<'_>, app: AppHandle) -> Result<(
     Ok(())
 }
 
-fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
+async fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
     let path = PathBuf::from(url);
 
     info!(
@@ -117,7 +120,9 @@ fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
         path.display()
     );
 
-    let import_data = profile::import::read_file_at_path(path)?;
+    thunderstore::wait_for_fetch(&app).await;
+
+    let import_data = profile::import::read_file_at_path(path, &*app.lock_thunderstore())?;
 
     app.emit("import_profile", FrontendImportData::new(import_data, app))?;
 
@@ -129,6 +134,8 @@ async fn import_profile_code(url: String, app: AppHandle) -> Result<()> {
         .strip_prefix("gale://profile/import/")
         .ok_or_eyre("invalid url format")
         .and_then(|str| Uuid::parse_str(str).context("invalid UUID"))?;
+
+    thunderstore::wait_for_fetch(&app).await;
 
     let import_data = profile::import::read_code(key, &app).await?;
 

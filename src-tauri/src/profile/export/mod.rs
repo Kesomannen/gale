@@ -52,9 +52,8 @@ pub struct R2Mod {
     pub enabled: bool,
     // This will make the field available to UI for future comparison against the loaded mods.
     // Defaults to Thunderstore for now.
-    #[allow(dead_code)]
-    #[serde(skip)]
-    pub backend: Backend,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backend: Option<Backend>,
 }
 
 impl R2Mod {
@@ -113,7 +112,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
                 ident,
                 version,
                 enabled,
-                backend: ts_mod.id.backend,
+                backend: None, // avoid serializing this
             }
         })
         .collect();
