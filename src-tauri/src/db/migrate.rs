@@ -1,4 +1,4 @@
-use std::fs;
+use std::{collections::HashSet, fs};
 
 use eyre::{Context, Result};
 use itertools::Itertools;
@@ -46,6 +46,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
     let manager = ManagerData {
         id: 1,
         active_game_slug: Some(manager_data.active_game),
+        hidden_mods: HashSet::new(),
     };
 
     let mut games = Vec::new();

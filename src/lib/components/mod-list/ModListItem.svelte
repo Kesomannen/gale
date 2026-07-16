@@ -44,7 +44,7 @@
 
 		<div class="shrink grow overflow-hidden text-left">
 			<div class="flex items-center gap-1 overflow-hidden">
-				<div class="shrink pr-1 text-lg font-medium text-white">
+				<div class="truncate pr-1 text-lg font-medium text-white">
 					{formatModName(mod.name)}
 				</div>
 				{#if mod.author !== null}

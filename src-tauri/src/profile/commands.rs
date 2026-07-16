@@ -14,7 +14,8 @@ use crate::{
     profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{
-        FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind, query::QueryModsArgs,
+        BorrowedMod, FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind,
+        query::QueryModsArgs,
     },
     util::cmd::Result,
 };
@@ -510,4 +511,36 @@ pub fn forget_profile(profile_id: i64, app: AppHandle) -> Result<()> {
     game.save(&app)?;
 
     Ok(())
+}
+
+#[command]
+pub fn toggle_hidden_mod(uuid: Uuid, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+
+    if manager.hidden_mods.contains(&uuid) {
+        manager.hidden_mods.remove(&uuid);
+    } else {
+        manager.hidden_mods.insert(uuid);
+    }
+
+    manager.save(&app)?;
+
+    Ok(())
+}
+
+#[command]
+pub fn get_hidden_mods(app: AppHandle) -> Result<Vec<Dependant>> {
+    let manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
+
+    let hidden_mods = manager
+        .hidden_mods
+        .iter()
+        .filter_map(|uuid| {
+            let package = thunderstore.get_package(*uuid).ok()?;
+            Some(Dependant::from(BorrowedMod::latest(package)))
+        })
+        .collect();
+
+    Ok(hidden_mods)
 }

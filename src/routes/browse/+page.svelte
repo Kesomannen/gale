@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import { type SortBy, type Mod, type ModId, Backend } from '$lib/types';
+	import { type SortBy, type Mod, type ModId, Backend, type ModContextItem } from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
@@ -18,9 +18,24 @@
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { pushInfoToast } from '$lib/toast';
+	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
-	const contextItems = [...defaultContextItems];
+	const contextItems: ModContextItem[] = [
+		{
+			label: m.browse_contextItem_hideMod(),
+			icon: 'mdi:eye-off',
+			onclick: async (mod: Mod) => {
+				await api.profile.toggleHiddenMod(mod.uuid);
+				await refresh();
+				pushInfoToast({
+					message: m.browse_contextitem_hideMod_message({ name: mod.name })
+				});
+			}
+		},
+		...defaultContextItems
+	];
 
 	let mods: Mod[] = $state([]);
 
@@ -133,8 +148,9 @@
 		>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
-					<div class="mt-4 text-lg">{m.browse_modList_content_1()}</div>
-					<div class="text-primary-400">{m.browse_modList_content_2()}</div>
+					<HelpCard title={m.browse_modList_content_1()} icon="mdi:store-search" class="mt-4">
+						{m.browse_modList_content_2()}
+					</HelpCard>
 				{/if}
 			{/snippet}
 

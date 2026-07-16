@@ -233,7 +233,7 @@
 					>
 				</HelpCard>
 			{:else}
-				<HelpCard class="mt-8" title={m.page_modList_noResults_1()}>
+				<HelpCard class="mt-4" title={m.page_modList_noResults_1()} icon="mdi:magnify">
 					{m.page_modList_noResults_2()}
 				</HelpCard>
 			{/if}

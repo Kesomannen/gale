@@ -150,6 +150,8 @@ pub fn run() {
             profile::commands::set_custom_args,
             profile::commands::set_profile_path,
             profile::commands::forget_profile,
+            profile::commands::toggle_hidden_mod,
+            profile::commands::get_hidden_mods,
             profile::launch::commands::launch_game,
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,
@@ -209,7 +211,6 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
-        // TODO .plugin(tauri_plugin_oauth::Builder)
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .setup(setup)
         .build(tauri::generate_context!())

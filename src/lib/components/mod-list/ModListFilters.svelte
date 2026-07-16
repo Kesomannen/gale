@@ -49,34 +49,30 @@
 	}
 </script>
 
-<div class="mb-1.5 flex flex-wrap gap-1.5">
-	<div class="relative flex-grow-3">
+<div class="mb-1.5 grid grid-cols-[2fr_1fr_1fr] gap-1.5">
+	<div class="relative grow-2">
 		<SearchBar
 			bind:value={queryArgs.searchTerm}
 			placeholder={m.modListFilters_searchBar_placeholder()}
 		/>
 	</div>
 
-	<div class="flex grow gap-1.5">
-		<Select
-			icon={queryArgs.sortOrder === 'descending' ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
-			triggerClass="grow basis-0 py-1.5"
-			items={selectItems(['descending', 'ascending'], getOptionsLabel)}
-			bind:value={queryArgs.sortOrder}
-			type="single"
-		/>
+	<Select
+		icon={queryArgs.sortOrder === 'descending' ? 'mdi:sort-descending' : 'mdi:sort-ascending'}
+		items={selectItems(['descending', 'ascending'], getOptionsLabel)}
+		bind:value={queryArgs.sortOrder}
+		type="single"
+	/>
 
-		<Select
-			icon="mdi:sort"
-			triggerClass="grow basis-0 py-1.5"
-			items={selectItems(sortOptions, getOptionsLabel)}
-			bind:value={queryArgs.sortBy}
-			type="single"
-		/>
-	</div>
+	<Select
+		icon="mdi:sort"
+		items={selectItems(sortOptions, getOptionsLabel)}
+		bind:value={queryArgs.sortBy}
+		type="single"
+	/>
 </div>
 
-<div class="mb-1.5 flex items-start gap-1.5">
+<div class="mb-1.5 grid grid-cols-[2fr_2fr_1fr] gap-1.5">
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_include()}
 		icon="mdi:filter"
@@ -94,7 +90,6 @@
 	<Select
 		label={m.modListFilters_select_title()}
 		icon="mdi:filter"
-		triggerClass="min-w-36 grow basis-0 py-1.5"
 		items={selectItems(['deprecated', 'NSFW', 'enabled', 'disabled'], getOptionsLabel)}
 		onValueChange={(items) => {
 			queryArgs.includeEnabled = items.includes('enabled');

@@ -46,7 +46,7 @@
 			<div
 				class={[mod.enabled ? 'text-white' : 'line-through', 'font-medium', 'flex items-center']}
 			>
-				<span class="mr-2">{formatModName(mod.name)}</span>
+				<span class="mr-2 truncate">{formatModName(mod.name)}</span>
 
 				{#if mod.isPinned}
 					<Icon class="text-primary-400 mr-1 shrink-0" icon="mdi:pin" />

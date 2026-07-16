@@ -26,6 +26,7 @@
 	import LanguagePref from '$lib/components/prefs/LanguagePref.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import BackendPref from '$lib/components/prefs/BackendPref.svelte';
+	import HiddenModsPref from '$lib/components/prefs/HiddenModsPref.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -199,6 +200,10 @@
 
 			<ApiKeyPref backend={Backend.Hexium} />
 		{/if}
+
+		<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
+
+		<HiddenModsPref />
 
 		{#if profiles.active}
 			<LargeHeading>{m.prefs_profileSettings_title()}</LargeHeading>

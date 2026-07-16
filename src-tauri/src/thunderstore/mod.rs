@@ -49,6 +49,13 @@ pub struct BorrowedMod<'a> {
 }
 
 impl<'a> BorrowedMod<'a> {
+    pub fn latest(package: &'a PackageListing) -> Self {
+        Self {
+            package,
+            version: package.latest(),
+        }
+    }
+
     pub fn ident(&self) -> &'a VersionIdent {
         &self.version.ident
     }
