@@ -1,4 +1,10 @@
-import { Backends, type FiltersResponse, type Game, type PackageCategory } from '$lib/types';
+import {
+	Backend,
+	Backends,
+	type FiltersResponse,
+	type Game,
+	type PackageCategory
+} from '$lib/types';
 import * as api from '$lib/api';
 import { pushToast } from '$lib/toast';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -48,18 +54,27 @@ class GamesState {
 			}
 		}
 
-		let backends = ['https://thunderstore.io/api'];
-		if (slug === 'valheim') {
+		let thunderstoreBackend = 'https://thunderstore.io/api';
+		let hexiumBackend = 'https://hexium.gg/api';
+		let backends: string[] = [];
+		if ((this.active?.backends?.length || 0) > 1) {
+			// for now assume this means both backends are available
 			let prefs = await api.prefs.get();
 			prefs.gamePrefs = new Map(Object.entries(prefs.gamePrefs));
 			switch (prefs.gamePrefs.get(slug)?.backend || Backends.All) {
 				case Backends.Thunderstore:
+					backends = [thunderstoreBackend];
 					break;
 				case Backends.Hexium:
-					backends = [];
+					backends = [hexiumBackend];
+					break;
 				case Backends.All:
-					backends.push('https://hexium.gg/api');
+					backends = [thunderstoreBackend, hexiumBackend];
 			}
+		} else if (this.active?.backends?.includes(Backend.Hexium)) {
+			backends = [hexiumBackend];
+		} else {
+			backends = [thunderstoreBackend];
 		}
 
 		// Deduplicate categories from all sources

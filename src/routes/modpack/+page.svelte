@@ -436,7 +436,7 @@
 			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 		</div>
 
-		{#if games.active?.name == 'Valheim'}
+		{#if (games.active?.backends?.length || 1) > 1}
 			<div class="text-primary-200 flex items-center text-lg font-medium">
 				<span class="max-w-96 grow">{m.modpack_upload_server()}</span>
 

@@ -237,6 +237,7 @@ export type Game = {
 	favorite: boolean;
 	modLoader: ModLoader;
 	popular: boolean;
+	backends: Backend[];
 };
 
 export enum ModLoader {

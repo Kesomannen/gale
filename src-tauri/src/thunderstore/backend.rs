@@ -7,9 +7,12 @@ use eyre::eyre;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
+use strum_macros::EnumString;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Default)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Default, EnumString,
+)]
 pub enum Backend {
     #[default]
     Thunderstore,
@@ -27,21 +30,19 @@ impl Display for Backend {
 
 impl Backend {
     pub fn index_url(self, game: Game) -> Option<String> {
-        match self {
-            Backend::Thunderstore => Some(format!(
-                "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
-                game.slug
-            )),
-            Backend::Hexium => {
-                if game.slug == "valheim" {
-                    Some(format!(
-                        "https://{}.hexium.gg/api/v1/package-listing-index/",
-                        game.slug,
-                    ))
-                } else {
-                    None
-                }
-            }
+        if game.backends.contains(&self) {
+            Some(match self {
+                Backend::Thunderstore => format!(
+                    "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
+                    game.slug
+                ),
+                Backend::Hexium => format!(
+                    "https://{}.hexium.gg/api/v1/package-listing-index/",
+                    game.slug,
+                ),
+            })
+        } else {
+            None
         }
     }
 

@@ -2,6 +2,7 @@ use std::{
     borrow::Cow,
     fs,
     hash::{self, Hash},
+    str::FromStr,
     sync::LazyLock,
 };
 
@@ -17,6 +18,7 @@ use tracing::{info, warn};
 
 use crate::{
     state::ManagerExt,
+    thunderstore::Backend,
     util::{self, fs::JsonStyle},
 };
 
@@ -175,6 +177,13 @@ struct JsonGame<'a> {
 
     #[serde(borrow, default)]
     platforms: Platforms<'a>,
+
+    #[serde(borrow, default = "thunderstore_backend_default")]
+    backends: Vec<&'a str>,
+}
+
+fn thunderstore_backend_default() -> Vec<&'static str> {
+    vec!["Thunderstore"]
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -187,6 +196,7 @@ pub struct GameData<'a> {
     pub server: bool,
     pub mod_loader: ModLoader<'a>,
     pub platforms: Platforms<'a>,
+    pub backends: Vec<Backend>,
 }
 
 impl<'a> From<JsonGame<'a>> for GameData<'a> {
@@ -199,6 +209,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             r2_dir_name,
             mod_loader,
             platforms,
+            backends,
         } = value;
 
         let slug = match slug {
@@ -211,6 +222,11 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             None => Cow::Owned(slug.to_pascal_case()),
         };
 
+        let backends: Vec<_> = backends
+            .iter()
+            .filter_map(|b| Backend::from_str(b).ok())
+            .collect();
+
         Self {
             name,
             slug,
@@ -219,6 +235,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             server,
             mod_loader,
             platforms,
+            backends,
         }
     }
 }

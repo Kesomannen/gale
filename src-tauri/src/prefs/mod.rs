@@ -356,11 +356,15 @@ impl Prefs {
     }
 
     pub fn backends(&self, game: Game) -> Backends {
-        if game.slug == "valheim" {
-            self.game_prefs
-                .get(&*game.slug)
-                .map(|p| p.backend)
-                .unwrap_or_default()
+        if game.backends.contains(&Backend::Hexium) {
+            if game.backends.contains(&Backend::Thunderstore) {
+                self.game_prefs
+                    .get(&*game.slug)
+                    .map(|p| p.backend)
+                    .unwrap_or_default()
+            } else {
+                Backends::Hexium
+            }
         } else {
             Backends::Thunderstore
         }

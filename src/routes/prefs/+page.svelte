@@ -186,7 +186,7 @@
 			setValue={set((value) => (gamePrefs!.customArgs = value))}
 		/>
 
-		{#if games.active?.name == 'Valheim'}
+		{#if (games.active?.backends?.length || 1) > 1}
 			<SmallHeading>{m.backendPref_heading()}</SmallHeading>
 
 			<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
