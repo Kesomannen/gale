@@ -247,7 +247,7 @@
 	{/if}
 </Dialog>
 
-<Dialog title="Suggestions for {mod.name}" bind:open={suggestionsOpen}>
+<Dialog title="Suggested by {mod.name}" bind:open={suggestionsOpen}>
 	{#if mod.suggestions}
 		<ModCardList
 			mods={mod.suggestions.map((fullName) => ({ fullName, backend: mod.backend }))}
