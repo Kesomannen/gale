@@ -92,6 +92,8 @@ pub struct PackageVersion {
     pub ident: VersionIdent,
     pub date_created: DateTime<Utc>,
     pub dependencies: Vec<VersionIdent>,
+    #[serde(default)]
+    pub suggestions: Vec<VersionIdent>,
     pub description: Intern<String>,
     pub downloads: u32,
     pub file_size: u64,
@@ -247,6 +249,7 @@ pub struct FrontendMod {
     pub website_url: Option<String>,
     pub donate_url: Option<String>,
     pub dependencies: Option<Vec<VersionIdent>>,
+    pub suggestions: Option<Vec<VersionIdent>>,
     pub is_pinned: bool,
     pub is_deprecated: bool,
     pub contains_nsfw: bool,

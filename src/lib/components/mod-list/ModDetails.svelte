@@ -37,6 +37,7 @@
 	let { mod, contextItems = [], locked, onclose, children }: Props = $props();
 
 	let dependenciesOpen = $state(false);
+	let suggestionsOpen = $state(false);
 
 	let readmeOpen = $state(false);
 	let readme: ModInfoDialog;
@@ -226,6 +227,14 @@
 		)}
 	{/if}
 
+	{#if mod.suggestions !== null && mod.suggestions.length > 0}
+		{@render button(
+			'material-symbols:lightbulb-2',
+			`${m.modDetails_suggestions()} (${mod.suggestions.length})`,
+			() => (suggestionsOpen = true)
+		)}
+	{/if}
+
 	{@render children?.()}
 </div>
 
@@ -233,6 +242,15 @@
 	{#if mod.dependencies}
 		<ModCardList
 			mods={mod.dependencies.map((fullName) => ({ fullName, backend: mod.backend }))}
+			class="mt-4"
+		/>
+	{/if}
+</Dialog>
+
+<Dialog title="Suggestions for {mod.name}" bind:open={suggestionsOpen}>
+	{#if mod.suggestions}
+		<ModCardList
+			mods={mod.suggestions.map((fullName) => ({ fullName, backend: mod.backend }))}
 			class="mt-4"
 		/>
 	{/if}
