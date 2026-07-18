@@ -294,7 +294,7 @@ impl Profile {
             package.id.backend == Backend::Hexium
                 && thunderstore
                     .backend(Backend::Thunderstore)
-                    .find_mod(ident.owner(), ident.name(), ident.version())
+                    .find_ident(ident)
                     .is_err()
         })
     }

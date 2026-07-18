@@ -73,12 +73,14 @@ pub(super) fn read_file(
 
     // resolve backend now so that frontend knows where to fetch displaying from
     for r2mod in manifest.mods.iter_mut() {
-        if let Ok(package) = thunderstore.find_mod(
-            r2mod.ident.owner(),
-            r2mod.ident.name(),
-            r2mod.version.to_string().as_str(),
-        ) {
-            r2mod.backend = Some(package.package.backend);
+        if thunderstore
+            .backend(r2mod.source)
+            .find_ident(&r2mod.version_ident())
+            .is_err()
+        {
+            if let Ok(package) = thunderstore.find_ident(&r2mod.version_ident()) {
+                r2mod.source = package.package.backend;
+            }
         }
     }
 

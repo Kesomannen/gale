@@ -200,6 +200,10 @@ impl ThunderstoreBackend {
         Ok((package, version).into())
     }
 
+    pub fn find_ident(&self, ident: &VersionIdent) -> eyre::Result<BorrowedMod<'_>> {
+        self.find_mod(ident.owner(), ident.name(), ident.version())
+    }
+
     pub fn find_mod<'a>(
         &'a self,
         owner: &str,
