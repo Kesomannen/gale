@@ -1,7 +1,8 @@
 <script lang="ts">
 	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import games from '$lib/state/game.svelte';
-	import type { Game } from '$lib/types';
+	import { Backend, type Game } from '$lib/types';
 	import { gameIconSrc } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import { toHeaderCase } from 'js-convert-case';
@@ -31,6 +32,15 @@
 	<div class="grow pl-1 text-left">
 		<div class="font-medium text-white">
 			{game.name}
+
+			{#if game.backends.length === 1 && game.backends[0] === Backend.Hexium}
+				<img
+					src="hexium.ico"
+					alt="[Hexium]"
+					title={m.gameSelect_hexium_icon()}
+					class="inline h-4"
+				/>
+			{/if}
 		</div>
 
 		<div class="text-primary-400">
