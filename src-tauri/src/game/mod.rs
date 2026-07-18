@@ -2,7 +2,6 @@ use std::{
     borrow::Cow,
     fs,
     hash::{self, Hash},
-    str::FromStr,
     sync::LazyLock,
 };
 
@@ -178,12 +177,12 @@ struct JsonGame<'a> {
     #[serde(borrow, default)]
     platforms: Platforms<'a>,
 
-    #[serde(borrow, default = "thunderstore_backend_default")]
-    backends: Vec<&'a str>,
+    #[serde(default = "thunderstore_backend_default")]
+    backends: Vec<Backend>,
 }
 
-fn thunderstore_backend_default() -> Vec<&'static str> {
-    vec!["Thunderstore"]
+fn thunderstore_backend_default() -> Vec<Backend> {
+    vec![Backend::Thunderstore]
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -221,11 +220,6 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             Some(name) => Cow::Borrowed(name),
             None => Cow::Owned(slug.to_pascal_case()),
         };
-
-        let backends: Vec<_> = backends
-            .iter()
-            .filter_map(|b| Backend::from_str(b).ok())
-            .collect();
 
         Self {
             name,

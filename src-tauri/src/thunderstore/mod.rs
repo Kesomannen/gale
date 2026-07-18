@@ -146,7 +146,7 @@ impl Thunderstore {
     /// Whether packages have been succesfully fetched at least one since
     /// the last call to [`Thunderstore::switch_game`].
     pub fn packages_fetched(&self, app: &AppHandle, game: Game) -> bool {
-        let backends = app.lock_prefs().backends(game);
+        let backends = app.lock_prefs().enabled_backends(game);
         backends
             .into_backend_slice()
             .iter()

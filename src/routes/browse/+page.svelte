@@ -105,7 +105,7 @@
 		if (
 			id.backend !== Backend.Thunderstore &&
 			!(await api.prefs.get()).backendSkipConfirm &&
-			(games.active?.backends?.length || 1) > 1
+			games.activeBackends.length > 1
 		) {
 			installDialogOpen = true;
 		} else {

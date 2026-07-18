@@ -7,12 +7,9 @@ use eyre::eyre;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
-use strum_macros::EnumString;
 use uuid::Uuid;
 
-#[derive(
-    Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Default, EnumString,
-)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Default)]
 pub enum Backend {
     #[default]
     Thunderstore,

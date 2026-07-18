@@ -14,6 +14,7 @@ class GamesState {
 	lastUpdated: string = $state('');
 	list: Game[] = $state([]);
 	categories: PackageCategory[] = $state([]);
+	activeBackends: Backend[] = $derived(this.active?.backends ?? []);
 
 	refresh = async () => {
 		const info = await api.profile.getGameInfo();
@@ -54,31 +55,31 @@ class GamesState {
 			}
 		}
 
-		let thunderstoreBackend = 'https://thunderstore.io/api';
-		let hexiumBackend = 'https://hexium.gg/api';
-		let backends: string[] = [];
-		if ((this.active?.backends?.length || 0) > 1) {
+		let thunderstoreUrl = 'https://thunderstore.io/api';
+		let hexiumUrl = 'https://hexium.gg/api';
+		let apiUrls: string[] = [];
+		if (this.activeBackends.length > 1) {
 			// for now assume this means both backends are available
 			let prefs = await api.prefs.get();
 			prefs.gamePrefs = new Map(Object.entries(prefs.gamePrefs));
 			switch (prefs.gamePrefs.get(slug)?.backend || Backends.All) {
 				case Backends.Thunderstore:
-					backends = [thunderstoreBackend];
+					apiUrls = [thunderstoreUrl];
 					break;
 				case Backends.Hexium:
-					backends = [hexiumBackend];
+					apiUrls = [hexiumUrl];
 					break;
 				case Backends.All:
-					backends = [thunderstoreBackend, hexiumBackend];
+					apiUrls = [thunderstoreUrl, hexiumUrl];
 			}
 		} else if (this.active?.backends?.includes(Backend.Hexium)) {
-			backends = [hexiumBackend];
+			apiUrls = [hexiumUrl];
 		} else {
-			backends = [thunderstoreBackend];
+			apiUrls = [thunderstoreUrl];
 		}
 
 		// Deduplicate categories from all sources
-		Promise.allSettled(backends.map(fetchCategories)).then((results) => {
+		Promise.allSettled(apiUrls.map(fetchCategories)).then((results) => {
 			this.categories = [
 				...new Set(
 					results.flatMap((result) => (result.status === 'fulfilled' ? result.value.results : []))
