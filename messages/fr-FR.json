@@ -477,7 +477,7 @@
 	"updateAllBanner_dialog_content": "Sélectionnez les mods à mettre à jour :",
 	"updateAllBanner_dialog_list_ignore_package": "Ignorez toutes les mises à jour de ce mod",
 	"updateAllBanner_dialog_list_ignore_version": "Ignorez cette mise à jour",
-	"updateAllBanner_dialog_list_title": "Mettre à jour la sélection",
+	"updateAllBanner_dialog_list_title": "Tout sélectionner",
 	"updateAllBanner_dialog_title": "Confirmer la mise à jour",
 	"updater_confirmDialog_button": "Installer",
 	"updater_confirmDialog_content": "La mise à jour sera téléchargée en arrière-plan, puis l'application redémarrera pour l'appliquer.",

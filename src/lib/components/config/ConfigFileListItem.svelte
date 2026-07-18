@@ -67,7 +67,7 @@
 				file.type === 'unsupported' && 'text-primary-400',
 				file.type === 'err' && 'text-red-500',
 				config.selectedFile === file ? 'bg-primary-700' : 'hover:bg-primary-700',
-				'group flex w-full items-center overflow-hidden rounded px-2 py-1'
+				'group flex h-8 w-full items-center overflow-hidden rounded pr-1 pl-2'
 			]}
 		>
 			{#if file.type === 'ok'}
@@ -92,7 +92,7 @@
 			<IconButton
 				label={m.configFileListItem_button_openFile()}
 				icon="mdi:open-in-new"
-				class="mr-1 ml-2 hidden group-hover:block"
+				class="mr-0.5 ml-2 hidden group-hover:block"
 				onclick={(evt) => {
 					evt.preventDefault();
 					openFile();

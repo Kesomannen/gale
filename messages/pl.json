@@ -477,7 +477,7 @@
 	"updateAllBanner_dialog_content": "Wybierz mody do aktualizacji:",
 	"updateAllBanner_dialog_list_ignore_package": "Zignoruj wszystkie aktualizacje tego moda",
 	"updateAllBanner_dialog_list_ignore_version": "Zignoruj tę aktualizację",
-	"updateAllBanner_dialog_list_title": "Aktualizuj zaznaczone",
+	"updateAllBanner_dialog_list_title": "Zaznacz wszystko",
 	"updateAllBanner_dialog_title": "Potwierdź aktualizację",
 	"updater_confirmDialog_button": "Instaluj",
 	"updater_confirmDialog_content": "Aktualizacja zostanie pobrana w tle, a następnie aplikacja uruchomi się ponownie, aby ją zastosować.",

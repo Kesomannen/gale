@@ -12,6 +12,9 @@
 	import { m } from '$lib/paraglide/messages';
 	import { DropdownMenu } from 'bits-ui';
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
+	import IconButton from '../ui/IconButton.svelte';
+	import { open } from '@tauri-apps/plugin-shell';
+	import { communityUrl } from '$lib/util';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -87,7 +90,7 @@
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger
-					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
+					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-3 rounded-sm p-1.5"
 				>
 					<Icon icon="mdi:notifications-off" />
 				</DropdownMenu.Trigger>
@@ -111,6 +114,17 @@
 					]}
 				/>
 			</DropdownMenu.Root>
+
+			<IconButton
+				class="ml-0.5"
+				icon="mdi:file-document"
+				label="View changelog"
+				onclick={() => {
+					const [author, name] = update.fullName.split('-');
+
+					open(communityUrl(update.backend, author, name) + 'changelog');
+				}}
+			/>
 		{/snippet}
 	</Checklist>
 

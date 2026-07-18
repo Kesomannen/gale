@@ -477,7 +477,7 @@
 	"updateAllBanner_dialog_content": "选择要更新的模组：",
 	"updateAllBanner_dialog_list_ignore_package": "忽略此模组的所有更新",
 	"updateAllBanner_dialog_list_ignore_version": "忽略此更新",
-	"updateAllBanner_dialog_list_title": "更新所选项",
+	"updateAllBanner_dialog_list_title": "全选",
 	"updateAllBanner_dialog_title": "更新确认",
 	"updater_confirmDialog_button": "安装",
 	"updater_confirmDialog_content": "更新将在后台下载，随后应用程序将重新启动以应用更新。",

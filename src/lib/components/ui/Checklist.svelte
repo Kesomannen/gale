@@ -27,14 +27,14 @@
 </script>
 
 <div class={[classProp, 'border-primary-900 relative overflow-hidden rounded-lg border']}>
-	<div class="bg-primary-900 text-primary-300 flex w-full items-center px-4 py-2.5 font-bold">
+	<label class="bg-primary-900 flex w-full items-center px-4 py-2.5 font-medium text-white">
 		<Checkbox
 			class="mr-3"
 			checked={items.every((item, i) => get(item, i))}
 			onCheckedChange={(newValue) => items.forEach((item, i) => set(item, i, newValue))}
 		/>
 		{title}
-	</div>
+	</label>
 
 	<div
 		class="overflow-x-hidden"
