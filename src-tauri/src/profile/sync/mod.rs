@@ -1,7 +1,7 @@
 use std::{borrow::Cow, env, fmt::Display, io::Cursor, sync::LazyLock};
 
 use chrono::{DateTime, Utc};
-use eyre::{bail, eyre, Context, OptionExt, Result};
+use eyre::{Context, OptionExt, Result, bail, eyre};
 use reqwest::{Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;

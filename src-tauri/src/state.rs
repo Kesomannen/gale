@@ -1,12 +1,12 @@
 use std::sync::{Mutex, MutexGuard};
 
 use eyre::{Context, Result};
-use tauri::{command, AppHandle, Manager};
+use tauri::{AppHandle, Manager, command};
 
 use crate::{
     db::{self, Db},
     prefs::Prefs,
-    profile::{self, install::queue::InstallQueue, sync, ModManager},
+    profile::{self, ModManager, install::queue::InstallQueue, sync},
     thunderstore::{self, Thunderstore},
 };
 

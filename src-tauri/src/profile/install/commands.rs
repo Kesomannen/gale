@@ -1,13 +1,13 @@
 use itertools::Itertools;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 
+use super::{InstallOptions, ModInstall};
 use crate::{
     profile::install::InstallResultExt,
     state::ManagerExt,
     thunderstore::{ModId, Thunderstore},
     util::{self, cmd::Result},
 };
-use super::{InstallOptions, ModInstall};
 
 #[command]
 pub async fn install_all_mods(app: AppHandle) -> Result<()> {

@@ -1,9 +1,9 @@
 use std::sync::LazyLock;
 
+use crate::thunderstore::Backend;
 use eyre::Result;
 use keyring::Entry;
 use tracing::info;
-use crate::thunderstore::Backend;
 
 static THUNDERSTORE_ENTRY: LazyLock<keyring::Result<Entry>> =
     LazyLock::new(|| Entry::new("thunderstore", "api_token"));

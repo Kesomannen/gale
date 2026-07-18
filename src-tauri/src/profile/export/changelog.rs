@@ -4,7 +4,7 @@ use std::{
     iter,
 };
 
-use eyre::{bail, Context, Result};
+use eyre::{Context, Result, bail};
 use itertools::Itertools;
 use tracing::warn;
 

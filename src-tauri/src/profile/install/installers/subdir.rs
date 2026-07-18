@@ -12,11 +12,11 @@ use tracing::warn;
 use super::{PackageInstaller, PackageZip};
 use crate::{
     profile::{
+        Profile, ProfileMod,
         install::{
             self,
             fs::{ConflictResolution, FileInstallMethod},
         },
-        Profile, ProfileMod,
     },
     util::{self, fs::JsonStyle},
 };
