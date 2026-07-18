@@ -17,6 +17,7 @@
 
 - Thunderstore mod author name linking to an invalid URL
 - Custom arguments being copied without quotes or escapes on Windows
+- Minor localization fixes
 
 ## 1.18.0 (2026-07-13)
 

@@ -258,6 +258,7 @@
 	"modDetails_by": "por",
 	"modDetails_changeLog": "Notas de cambio",
 	"modDetails_dependencies": "Dependencias",
+	"modDetails_dependencies_title": "Dependencias de {name}",
 	"modDetails_deprecated": "Este mod ha sido marcado como obsoleto y se sugiere utilizar otra alternativa. ",
 	"modDetails_details": "Detalles",
 	"modDetails_editConfig": "Editar configuración",

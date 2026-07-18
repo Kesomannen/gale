@@ -258,6 +258,7 @@
 	"modDetails_by": "autor:",
 	"modDetails_changeLog": "Lista zmian",
 	"modDetails_dependencies": "Zależności",
+	"modDetails_dependencies_title": "Zależności {name}",
 	"modDetails_deprecated": "Ten mod został oznaczony jako przestarzały i sugeruje się użycie innej alternatywy. ",
 	"modDetails_details": "Szczegóły",
 	"modDetails_editConfig": "Edytuj konfigurację",

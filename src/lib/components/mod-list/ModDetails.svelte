@@ -220,7 +220,7 @@
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		{@render button(
-			'material-symbols:network-node',
+			'mdi:dependency',
 			`${m.modDetails_dependencies()} (${mod.dependencies.length})`,
 			() => (dependenciesOpen = true)
 		)}
@@ -229,7 +229,7 @@
 	{@render children?.()}
 </div>
 
-<Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
+<Dialog title={m.modDetails_dependencies_title({ name: mod.name })} bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
 		<ModCardList
 			mods={mod.dependencies.map((fullName) => ({ fullName, backend: mod.backend }))}

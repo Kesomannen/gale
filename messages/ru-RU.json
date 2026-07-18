@@ -258,6 +258,7 @@
 	"modDetails_by": "к",
 	"modDetails_changeLog": "Список изменений",
 	"modDetails_dependencies": "Зависимости",
+	"modDetails_dependencies_title": "Зависимости {name}",
 	"modDetails_deprecated": "Этот мод помечен как устаревший, и рекомендуется использовать другую альтернативу. ",
 	"modDetails_details": "Подробности",
 	"modDetails_editConfig": "Редактировать конфигурацию",

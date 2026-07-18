@@ -258,6 +258,7 @@
 	"modDetails_by": "作者:",
 	"modDetails_changeLog": "更新日志",
 	"modDetails_dependencies": "依赖项",
+	"modDetails_dependencies_title": "{name}的依赖项",
 	"modDetails_deprecated": "该模组已被标记为已弃用，建议使用其他替代方案。 ",
 	"modDetails_details": "详情",
 	"modDetails_editConfig": "编辑配置",

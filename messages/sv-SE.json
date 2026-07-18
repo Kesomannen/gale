@@ -258,6 +258,7 @@
 	"modDetails_by": "av",
 	"modDetails_changeLog": "Ändringslogg",
 	"modDetails_dependencies": "Beroenden",
+	"modDetails_dependencies_title": "Beroenden för {name}",
 	"modDetails_deprecated": "Denna modd har markerats som utfasad, och det föreslås att ett annat alternativ används. ",
 	"modDetails_details": "Detaljer",
 	"modDetails_editConfig": "Redigera konfiguration",

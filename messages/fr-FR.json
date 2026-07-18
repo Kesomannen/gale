@@ -258,6 +258,7 @@
 	"modDetails_by": "par",
 	"modDetails_changeLog": "Journal des modifications",
 	"modDetails_dependencies": "Dépendances",
+	"modDetails_dependencies_title": "Dépendances de {name}",
 	"modDetails_deprecated": "Ce module complémentaire est obsolète et il est suggéré d'utiliser une autre alternative. ",
 	"modDetails_details": "Détails",
 	"modDetails_editConfig": "Modifier la configuration",

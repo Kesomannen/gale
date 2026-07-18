@@ -258,6 +258,7 @@
 	"modDetails_by": "由",
 	"modDetails_changeLog": "更新日誌",
 	"modDetails_dependencies": "依賴項目",
+	"modDetails_dependencies_title": "{name}的依賴項",
 	"modDetails_deprecated": "該模組已被標記為已棄用，建議使用其他替代方案。 ",
 	"modDetails_details": "詳細資訊",
 	"modDetails_editConfig": "編輯設定",
