@@ -229,7 +229,7 @@
 
 	{#if mod.suggestions !== null && mod.suggestions.length > 0}
 		{@render button(
-			'material-symbols:lightbulb-2',
+			'mdi:lightbulb',
 			`${m.modDetails_suggestions()} (${mod.suggestions.length})`,
 			() => (suggestionsOpen = true)
 		)}
@@ -247,7 +247,7 @@
 	{/if}
 </Dialog>
 
-<Dialog title="Suggested by {mod.name}" bind:open={suggestionsOpen}>
+<Dialog title={m.modDetails_suggestions_title({ name: mod.name })} bind:open={suggestionsOpen}>
 	{#if mod.suggestions}
 		<ModCardList
 			mods={mod.suggestions.map((fullName) => ({ fullName, backend: mod.backend }))}
