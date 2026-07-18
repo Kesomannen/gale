@@ -77,12 +77,13 @@ impl PackageListing {
 impl Hash for PackageListing {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.uuid.hash(state);
+        self.backend.hash(state);
     }
 }
 
 impl PartialEq for PackageListing {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid == other.uuid
+        self.uuid == other.uuid && self.backend == other.backend
     }
 }
 

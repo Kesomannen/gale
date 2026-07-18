@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Default)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Default,
+)]
 pub enum Backend {
     #[default]
     Thunderstore,
