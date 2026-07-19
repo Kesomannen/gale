@@ -177,12 +177,8 @@ struct JsonGame<'a> {
     #[serde(borrow, default)]
     platforms: Platforms<'a>,
 
-    #[serde(default = "thunderstore_backend_default")]
-    backends: Vec<Backend>,
-}
-
-fn thunderstore_backend_default() -> Vec<Backend> {
-    vec![Backend::Thunderstore]
+    #[serde(default)]
+    backends: Option<Vec<Backend>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -229,7 +225,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             server,
             mod_loader,
             platforms,
-            backends,
+            backends: backends.unwrap_or(vec![Backend::Thunderstore]),
         }
     }
 }

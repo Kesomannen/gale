@@ -110,7 +110,7 @@
 	"gameSelect_content_1": "Your game missing? ",
 	"gameSelect_content_2": "Open an issue",
 	"gameSelect_content_3": " on our Github to let us know.",
-	"gameSelect_hexium_icon": "The community game only exists on hexium. There are no Thunderstore packages for it.",
+	"gameSelect_hexium_icon": "This game only available on Hexium. All mods will be downloaded from there, rather than Thunderstore.",
 	"gameSelect_placeholder": "Search for games...",
 	"gameSelect_title": "No games found",
 	"hiddenModsPref_button_content": "{count} hidden mods",
