@@ -4,6 +4,7 @@
 
 ### Added
 
+- Hexium mod suggestions (thanks [@bwoebi](https://github.com/bwoebi))
 - Context menu options to hide mods from the mod list
   - This does not prevent them from being installed or shown in the profile mod list
   - Hidden mods can be unhidden from game-specific manager settings
