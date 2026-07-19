@@ -315,7 +315,7 @@ type ProfileManifestMod = {
 		minor: number;
 		patch: number;
 	};
-	backend: Backend;
+	source: Backend;
 };
 
 export type R2ImportData = {

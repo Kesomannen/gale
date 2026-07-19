@@ -119,6 +119,7 @@
 	"hiddenModsPref_reset_toast": "Unhid {count} mods.",
 	"hiddenModsPref_title": "Hidden mods",
 	"hiddenModsPrefs_title": "Hidden mods",
+	"importProfileDialog_hexium_warning": "This profile contains Hexium mods. Importing the profile will download mods that have not been verified by Thunderstore.",
 	"importProfileDialog_button_cancel": "Cancel",
 	"importProfileDialog_button_import": "Import",
 	"importProfileDialog_details_advancedOptions": "Advanced options",

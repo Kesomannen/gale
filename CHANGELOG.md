@@ -4,6 +4,7 @@
 
 ### Added
 
+- Notice to import profile dialog informing about importing Hexium mods
 - Hexium mod suggestions (thanks [@bwoebi](https://github.com/bwoebi))
 - Context menu options to hide mods from the mod list
   - This does not prevent them from being installed or shown in the profile mod list
@@ -12,6 +13,7 @@
 ### Changed
 
 - Made error message more informative when a profile code couldn't be exported due to upload size limits
+- Import code dialog no longer auto-pastes from the clipboard when opened
 - Small UI edits
 
 ### Fixed

@@ -4,7 +4,7 @@
 
 	import { Tabs } from 'bits-ui';
 
-	import type { ImportData, LegacyImportData, SyncImportData } from '$lib/types';
+	import { Backend, type ImportData, type LegacyImportData, type SyncImportData } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -60,10 +60,6 @@
 	onDestroy(() => {
 		unlistenFn?.();
 	});
-
-	async function getKeyFromClipboard() {
-		key = (await readText()) ?? '';
-	}
 
 	async function submitKey() {
 		loading = true;
@@ -135,13 +131,15 @@
 
 	export function openForCode() {
 		data = null;
-		getKeyFromClipboard();
-
 		open = true;
 	}
 
+	// Typescript freaks out if we use derived instead of derived.by here
 	let mods = $derived.by(() => data?.manifest.mods ?? []);
 	let nameAvailable = $derived.by(() => mode === 'overwrite' || isAvailable(name));
+	let hasHexiumMods = $derived.by(
+		() => data?.manifest.mods.some((mod) => mod.source === Backend.Hexium) ?? false
+	);
 
 	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
@@ -228,7 +226,7 @@
 				class="mt-2 max-h-[50vh] shrink grow"
 				mods={mods.map((mod) => ({
 					fullName: `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`,
-					backend: mod.backend
+					backend: mod.source
 				}))}
 			/>
 		</details>
@@ -272,18 +270,26 @@
 					{m.importProfileDialog_sync_owner({ name: data.owner.displayName })}
 				</div>
 			</div>
-		{:else if data.missingMods.length > 0}
-			<InfoBox type="warning">
-				<p>{m.importProfileDialog_unknown()}</p>
+		{:else}
+			{#if hasHexiumMods}
+				<InfoBox type="info" class="mt-2">
+					<p>{m.importProfileDialog_hexium_warning()}</p>
+				</InfoBox>
+			{/if}
 
-				<ol class="list-disc pl-6">
-					{#each data.missingMods as mod}
-						<li>
-							{mod}
-						</li>
-					{/each}
-				</ol>
-			</InfoBox>
+			{#if data.missingMods.length > 0}
+				<InfoBox type="warning">
+					<p>{m.importProfileDialog_unknown()}</p>
+
+					<ol class="list-disc pl-6">
+						{#each data.missingMods as mod}
+							<li>
+								{mod}
+							</li>
+						{/each}
+					</ol>
+				</InfoBox>
+			{/if}
 		{/if}
 
 		<div class="mt-2 flex w-full items-center justify-end gap-2">

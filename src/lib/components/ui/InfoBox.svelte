@@ -25,8 +25,8 @@
 			},
 			info: {
 				icon: 'mdi:info',
-				bgClass: 'bg-accent-700',
-				iconClass: 'text-accent-700'
+				bgClass: 'bg-accent-600',
+				iconClass: 'text-accent-600'
 			}
 		}[type]
 	);
