@@ -265,6 +265,8 @@
 	"modDetails_lastUpdated": "Last updated {time}",
 	"modDetails_noFound": "No readme found",
 	"modDetails_NSFW": "Contains NSFW",
+	"modDetails_suggestions": "Suggestions",
+	"modDetails_suggestions_title": "Suggestions by {name}",
 	"modInfoDIalog_failed": "Failed to load {type}: {error}",
 	"modInfoDialog_noFound": "No {type} found",
 	"modListFilters_filter_exclude": "Exclude categories",

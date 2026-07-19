@@ -114,6 +114,7 @@ export type Mod = {
 	websiteUrl: string | null;
 	donateUrl: string | null;
 	dependencies: string[] | null;
+	suggestions: string[] | null;
 	isPinned: boolean;
 	isDeprecated: boolean;
 	isInstalled: boolean | undefined;

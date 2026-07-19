@@ -187,6 +187,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             },
             donate_url: pkg.donation_link.clone(),
             dependencies: Some(vers.dependencies.clone()),
+            suggestions: Some(vers.suggestions.clone()),
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
             contains_nsfw: pkg.has_nsfw_content,
