@@ -277,8 +277,8 @@ async fn download_and_import_file(
         .bytes()
         .await?;
 
-    let mut data =
-        super::import::read_file(Cursor::new(bytes)).context("failed to read profile")?;
+    let mut data = super::import::read_file(Cursor::new(bytes), &*app.lock_thunderstore())
+        .context("failed to read profile")?;
 
     if let Some(name) = override_name {
         data.manifest.name = name;

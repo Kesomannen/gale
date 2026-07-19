@@ -50,11 +50,8 @@ pub struct R2Mod {
     #[serde(alias = "versionNumber")]
     pub version: R2Version,
     pub enabled: bool,
-    // This will make the field available to UI for future comparison against the loaded mods.
-    // Defaults to Thunderstore for now.
-    #[allow(dead_code)]
-    #[serde(skip)]
-    pub backend: Backend,
+    #[serde(default)]
+    pub source: Backend,
 }
 
 impl R2Mod {
@@ -63,7 +60,11 @@ impl R2Mod {
     }
 
     pub fn into_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
-        let borrowed_mod = thunderstore.find_ident(&self.version_ident())?;
+        // Prefer backend, otherwise fallback to generic lookup
+        let borrowed_mod = thunderstore
+            .backend(self.source)
+            .find_ident(&self.version_ident())
+            .or_else(|_| thunderstore.find_ident(&self.version_ident()))?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
     }
@@ -113,7 +114,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
                 ident,
                 version,
                 enabled,
-                backend: ts_mod.id.backend,
+                source: ts_mod.id.backend,
             }
         })
         .collect();

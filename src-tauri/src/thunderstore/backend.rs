@@ -9,7 +9,9 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Default)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Default,
+)]
 pub enum Backend {
     #[default]
     Thunderstore,
@@ -198,6 +200,10 @@ impl ThunderstoreBackend {
         })?;
 
         Ok((package, version).into())
+    }
+
+    pub fn find_ident(&self, ident: &VersionIdent) -> eyre::Result<BorrowedMod<'_>> {
+        self.find_mod(ident.owner(), ident.name(), ident.version())
     }
 
     pub fn find_mod<'a>(
