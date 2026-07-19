@@ -16,6 +16,7 @@
 
 ### Fixed
 
+- Export of Hexium mods not being respected on import (thanks [@bwoebi](https://github.com/bwoebi))
 - Thunderstore mod author name linking to an invalid URL
 - Custom arguments being copied without quotes or escapes on Windows
 - Minor localization fixes
