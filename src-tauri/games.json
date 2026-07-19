@@ -663,6 +663,22 @@
 		}
 	},
 	{
+		"name": "Bloons TD 6",
+		"slug": "bloons-td-6",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 960090,
+				"dirName": "BloonsTD6"
+			},
+			"epicGames": {
+				"identifier": "7786b355a13b47a6b3915335117cd0b2"
+			}
+		}
+	},
+	{
 		"name": "Bomb Rush Cyberfunk",
 		"modLoader": {
 			"name": "BepInEx"
