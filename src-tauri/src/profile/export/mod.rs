@@ -60,7 +60,11 @@ impl R2Mod {
     }
 
     pub fn into_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
-        let borrowed_mod = thunderstore.find_ident(&self.version_ident())?;
+        // Prefer backend, otherwise fallback to generic lookup
+        let borrowed_mod = thunderstore
+            .backend(self.source)
+            .find_ident(&self.version_ident())
+            .or_else(|_| thunderstore.find_ident(&self.version_ident()))?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
     }

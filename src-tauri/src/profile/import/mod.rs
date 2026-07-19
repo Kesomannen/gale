@@ -71,8 +71,9 @@ pub(super) fn read_file(
     let mut manifest: ProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
 
-    // resolve backend now so that frontend knows where to fetch displaying from
     for r2mod in manifest.mods.iter_mut() {
+        // first try the backend stored in the manifest, if it's not there,
+        // then try falling back to checking any other backend and update the source as needed
         if thunderstore
             .backend(r2mod.source)
             .find_ident(&r2mod.version_ident())
