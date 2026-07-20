@@ -1970,6 +1970,21 @@
 		}
 	},
 	{
+		"name": "Pikuniku",
+		"slug": "pikuniku",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 572890
+			},
+			"epicGames": {
+				"identifier": "48619f5656da446abccb727b78cda644"
+			}
+		}
+	},
+	{
 		"name": "Pit of Goblin",
 		"slug": "pit-of-goblin",
 		"modLoader": {
