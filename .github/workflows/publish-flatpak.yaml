@@ -6,6 +6,7 @@ on:
 
 permissions:
   pages: write
+  id-token: write
 
 jobs:
   flatter:
