@@ -2306,6 +2306,18 @@
 		}
 	},
 	{
+		"name": "Smushi Come Home",
+		"slug": "smushi-come-home",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1740300
+			}
+		}
+	},
+	{
 		"name": "Songs of Conquest",
 		"slug": "songs-of-conquest",
 		"modLoader": {
