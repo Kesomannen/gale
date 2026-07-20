@@ -18,7 +18,7 @@ chrono = "0.4"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version= "2", features = [ "protocol-asset" ] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-window-state = "2"
 tauri-plugin-dialog = "2"
@@ -45,7 +45,12 @@ open = "5"
 itertools = "0.13"
 zip = { version = "2", features = ["deflate"] }
 uuid = { version = "1", features = ["v4", "serde"] }
-reqwest = { version = "0.12", features = ["json", "stream", "gzip", "rustls-tls"] }
+reqwest = { version = "0.12", features = [
+    "json",
+    "stream",
+    "gzip",
+    "rustls-tls",
+] }
 walkdir = "2"
 image = "0.25"
 semver = { version = "1", features = ["serde"] }
@@ -93,6 +98,7 @@ webkit2gtk = "2.0.1"
 custom-protocol = ["tauri/custom-protocol"]
 
 [profile.release]
-panic = "abort"   # Strip expensive panic clean-up logic
-codegen-units = 1 # Compile crates one after another so the compiler can optimize better
-strip = true      # Remove debug symbols
+opt-level = "z"
+codegen-units = 1
+strip = true
+lto = true
