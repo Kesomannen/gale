@@ -16,7 +16,7 @@
 
 - Made error message more informative when a profile code couldn't be exported due to upload size limits
 - Import code dialog no longer auto-pastes from the clipboard when opened
-- Small UI edits
+- Minor UI changes
 
 ### Fixed
 
@@ -24,7 +24,7 @@
 - Improved the "fetching mods" bar behaviour when multiple download sources are enabled
 - Thunderstore mod author name linking to an invalid URL
 - Custom arguments being copied without quotes or escapes on Windows
-- Minor localization fixes
+- Minor localization issues
 
 ## 1.18.0 (2026-07-13)
 
