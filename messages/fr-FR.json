@@ -412,7 +412,7 @@
 	"profileLockedBanner_title": "Le profil est verrouillé",
 	"profilesDropdown_button": "Nouveau profil",
 	"resetConfigButton_confirm": "Êtes-vous sûr de vouloir réinitialiser {name} ?",
-	"statusbar_content": "Récupération des modules depuis {backends} ...",
+	"fetchModsBar_content": "Récupération des modules depuis {backends} ...",
 	"syncDonationNotice_button": "Me le rappeler plus tard",
 	"syncDonationNotice_content_1": "La synchronisation des profils fonctionne grâce aux dons !",
 	"syncDonationNotice_content_2": "Si vous aimez cette fonctionnalité, pensez à nous soutenir sur ",

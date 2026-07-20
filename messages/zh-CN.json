@@ -412,7 +412,7 @@
 	"profileLockedBanner_title": "档案已被锁定",
 	"profilesDropdown_button": "新建档案",
 	"resetConfigButton_confirm": "您确定要重置 {name} 吗？",
-	"statusbar_content": "正在从{backends}获取模块...",
+	"fetchModsBar_content": "正在从{backends}获取模块...",
 	"syncDonationNotice_button": "稍后提醒",
 	"syncDonationNotice_content_1": "档案同步功能通过赞助运营!",
 	"syncDonationNotice_content_2": "若您喜欢此功能，请考虑支持我们。",

@@ -5,7 +5,7 @@
 
 	import Menubar from '$lib/components/menubar/Menubar.svelte';
 	import Toolbar from '$lib/components/toolbar/Toolbar.svelte';
-	import Statusbar from '$lib/components/misc/Statusbar.svelte';
+	import FetchModsBar from '$lib/components/misc/FetchModsBar.svelte';
 	import Toasts from '$lib/components/misc/Toasts.svelte';
 
 	import { onMount, type Snippet } from 'svelte';
@@ -75,7 +75,7 @@
 			{@render children?.()}
 		</div>
 
-		<Statusbar />
+		<FetchModsBar />
 		<Toasts />
 	</main>
 

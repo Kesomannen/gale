@@ -412,7 +412,7 @@
 	"profileLockedBanner_title": "Profilen är låst",
 	"profilesDropdown_button": "Ny profil",
 	"resetConfigButton_confirm": "Är du säker på att du vill återställa {name}?",
-	"statusbar_content": "Hämtar modifieringar från {backends} ...",
+	"fetchModsBar_content": "Hämtar modifieringar från {backends} ...",
 	"syncDonationNotice_button": "Påminn mig senare",
 	"syncDonationNotice_content_1": "Profilsynkronisering körs på donationer!",
 	"syncDonationNotice_content_2": "Om du gillar den här funktionen, överväg gärna att stödja Gale på ",

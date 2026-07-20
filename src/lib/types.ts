@@ -205,6 +205,11 @@ export type InstallEvent =
 	| { type: 'addProgress'; mods: number; bytes: number }
 	| { type: 'setTask'; name: string; task: InstallTask };
 
+export type FetchEvent =
+	| { type: 'start'; backend: Backend }
+	| { type: 'progress'; mods: number }
+	| { type: 'done'; backend: Backend };
+
 export type ModpackArgs = {
 	name: string;
 	description: string;

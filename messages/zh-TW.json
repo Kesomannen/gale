@@ -412,7 +412,7 @@
 	"profileLockedBanner_title": "設定檔已鎖定",
 	"profilesDropdown_button": "新增設定檔",
 	"resetConfigButton_confirm": "確定要重設 {name} 嗎？",
-	"statusbar_content": "正在從{backends}取得模組 ...",
+	"fetchModsBar_content": "正在從{backends}取得模組 ...",
 	"syncDonationNotice_button": "稍後提醒我",
 	"syncDonationNotice_content_1": "設定檔同步的運作仰賴您的贊助！",
 	"syncDonationNotice_content_2": "如果您喜歡這個功能，請考慮在以下平台支持我們：",

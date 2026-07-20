@@ -412,7 +412,7 @@
 	"profileLockedBanner_title": "Профиль заблокирован",
 	"profilesDropdown_button": "Новый профиль",
 	"resetConfigButton_confirm": "Вы уверены, что хотите сбросить {name} ?",
-	"statusbar_content": "Получение модификаций из {backends} ...",
+	"fetchModsBar_content": "Получение модификаций из {backends} ...",
 	"syncDonationNotice_button": "Напомни мне позже",
 	"syncDonationNotice_content_1": "Синхронизация профилей осуществляется за счет пожертвований!",
 	"syncDonationNotice_content_2": "Если вам нравится эта функция, пожалуйста, рассмотрите возможность оказания поддержки. ",

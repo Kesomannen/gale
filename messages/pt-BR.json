@@ -412,7 +412,7 @@
 	"profileLockedBanner_title": "O perfil está bloqueado",
 	"profilesDropdown_button": "Novo perfil",
 	"resetConfigButton_confirm": "Tem certeza de que deseja redefinir {name}?",
-	"statusbar_content": "Buscando mods de {backends} ...",
+	"fetchModsBar_content": "Buscando mods de {backends} ...",
 	"syncDonationNotice_button": "Lembrar mais tarde",
 	"syncDonationNotice_content_1": "A sincronização de perfis é mantida por doações!",
 	"syncDonationNotice_content_2": "Se você gosta deste recurso, por favor considere apoiar no ",

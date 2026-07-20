@@ -412,7 +412,7 @@
 	"profileLockedBanner_title": "Profil jest zablokowany",
 	"profilesDropdown_button": "Nowy profil",
 	"resetConfigButton_confirm": "Czy na pewno chcesz zresetować {name}?",
-	"statusbar_content": "Pobieranie modów z {backends} ...",
+	"fetchModsBar_content": "Pobieranie modów z {backends} ...",
 	"syncDonationNotice_button": "Przypomnij mi później",
 	"syncDonationNotice_content_1": "Synchronizacja profili działa dzięki darowiznom!",
 	"syncDonationNotice_content_2": "Jeśli podoba Ci się ta funkcja, rozważ wsparcie na ",
