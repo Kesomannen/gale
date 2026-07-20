@@ -14,7 +14,7 @@ use crate::{
     profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{
-        BorrowedMod, FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind,
+        Backend, BorrowedMod, FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind,
         query::QueryModsArgs,
     },
     util::cmd::Result,
@@ -28,6 +28,7 @@ pub struct FrontendGame {
     popular: bool,
     mod_loader: &'static str,
     platforms: Vec<Platform>,
+    backends: Vec<Backend>,
 }
 
 impl From<Game> for FrontendGame {
@@ -40,6 +41,7 @@ impl From<Game> for FrontendGame {
             popular: value.popular,
             mod_loader: value.mod_loader.as_str(),
             platforms,
+            backends: value.backends.clone(),
         }
     }
 }

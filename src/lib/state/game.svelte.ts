@@ -1,4 +1,10 @@
-import { Backends, type FiltersResponse, type Game, type PackageCategory } from '$lib/types';
+import {
+	Backend,
+	Backends,
+	type FiltersResponse,
+	type Game,
+	type PackageCategory
+} from '$lib/types';
 import * as api from '$lib/api';
 import { pushToast } from '$lib/toast';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -8,6 +14,7 @@ class GamesState {
 	lastUpdated: string = $state('');
 	list: Game[] = $state([]);
 	categories: PackageCategory[] = $state([]);
+	activeBackends: Backend[] = $derived(this.active?.backends ?? []);
 
 	refresh = async () => {
 		const info = await api.profile.getGameInfo();
@@ -48,22 +55,31 @@ class GamesState {
 			}
 		}
 
-		let backends = ['https://thunderstore.io/api'];
-		if (slug === 'valheim') {
+		let thunderstoreUrl = 'https://thunderstore.io/api';
+		let hexiumUrl = 'https://hexium.gg/api';
+		let apiUrls: string[] = [];
+		if (this.activeBackends.length > 1) {
+			// for now assume this means both backends are available
 			let prefs = await api.prefs.get();
 			prefs.gamePrefs = new Map(Object.entries(prefs.gamePrefs));
 			switch (prefs.gamePrefs.get(slug)?.backend || Backends.All) {
 				case Backends.Thunderstore:
+					apiUrls = [thunderstoreUrl];
 					break;
 				case Backends.Hexium:
-					backends = [];
+					apiUrls = [hexiumUrl];
+					break;
 				case Backends.All:
-					backends.push('https://hexium.gg/api');
+					apiUrls = [thunderstoreUrl, hexiumUrl];
 			}
+		} else if (this.active?.backends?.includes(Backend.Hexium)) {
+			apiUrls = [hexiumUrl];
+		} else {
+			apiUrls = [thunderstoreUrl];
 		}
 
 		// Deduplicate categories from all sources
-		Promise.allSettled(backends.map(fetchCategories)).then((results) => {
+		Promise.allSettled(apiUrls.map(fetchCategories)).then((results) => {
 			this.categories = [
 				...new Set(
 					results.flatMap((result) => (result.status === 'fulfilled' ? result.value.results : []))

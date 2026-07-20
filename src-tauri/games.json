@@ -148,7 +148,8 @@
 			"xboxStore": {
 				"identifier": "CoffeeStainStudios.Valheim"
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "20 Minutes Till Dawn",
@@ -2504,6 +2505,23 @@
 				"id": 2709570
 			}
 		}
+	},
+	{
+		"name": "Survival: Fountain of Youth",
+		"slug": "sfoy",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "Legacy_Modding-BepInExPack_SFOY"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1967630
+			},
+			"epicGames": {
+				"identifier": "3842cb79cc4146c7ae33f3ede64ca484"
+			}
+		},
+		"backends": ["Hexium"]
 	},
 	{
 		"name": "TABS",

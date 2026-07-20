@@ -29,21 +29,19 @@ impl Display for Backend {
 
 impl Backend {
     pub fn index_url(self, game: Game) -> Option<String> {
-        match self {
-            Backend::Thunderstore => Some(format!(
-                "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
-                game.slug
-            )),
-            Backend::Hexium => {
-                if game.slug == "valheim" {
-                    Some(format!(
-                        "https://{}.hexium.gg/api/v1/package-listing-index/",
-                        game.slug,
-                    ))
-                } else {
-                    None
-                }
-            }
+        if game.backends.contains(&self) {
+            Some(match self {
+                Backend::Thunderstore => format!(
+                    "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
+                    game.slug
+                ),
+                Backend::Hexium => format!(
+                    "https://{}.hexium.gg/api/v1/package-listing-index/",
+                    game.slug,
+                ),
+            })
+        } else {
+            None
         }
     }
 

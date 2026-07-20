@@ -20,6 +20,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import games from '$lib/state/game.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems: ModContextItem[] = [
@@ -101,7 +102,11 @@
 
 	async function install(id: ModId) {
 		installId = id;
-		if (id.backend !== Backend.Thunderstore && !(await api.prefs.get()).backendSkipConfirm) {
+		if (
+			id.backend !== Backend.Thunderstore &&
+			!(await api.prefs.get()).backendSkipConfirm &&
+			games.activeBackends.length > 1
+		) {
 			installDialogOpen = true;
 		} else {
 			await doInstall();

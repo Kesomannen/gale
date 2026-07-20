@@ -17,6 +17,7 @@ use tracing::{info, warn};
 
 use crate::{
     state::ManagerExt,
+    thunderstore::Backend,
     util::{self, fs::JsonStyle},
 };
 
@@ -175,6 +176,9 @@ struct JsonGame<'a> {
 
     #[serde(borrow, default)]
     platforms: Platforms<'a>,
+
+    #[serde(default)]
+    backends: Option<Vec<Backend>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -187,6 +191,7 @@ pub struct GameData<'a> {
     pub server: bool,
     pub mod_loader: ModLoader<'a>,
     pub platforms: Platforms<'a>,
+    pub backends: Vec<Backend>,
 }
 
 impl<'a> From<JsonGame<'a>> for GameData<'a> {
@@ -199,6 +204,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             r2_dir_name,
             mod_loader,
             platforms,
+            backends,
         } = value;
 
         let slug = match slug {
@@ -219,6 +225,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             server,
             mod_loader,
             platforms,
+            backends: backends.unwrap_or(vec![Backend::Thunderstore]),
         }
     }
 }

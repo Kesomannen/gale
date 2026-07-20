@@ -211,6 +211,15 @@ impl Backends {
     }
 }
 
+impl From<Backend> for Backends {
+    fn from(value: Backend) -> Self {
+        match value {
+            Backend::Thunderstore => Backends::Thunderstore,
+            Backend::Hexium => Backends::Hexium,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub struct GamePrefs {
@@ -355,14 +364,14 @@ impl Prefs {
         self.data_dir.join("cache")
     }
 
-    pub fn backends(&self, game: Game) -> Backends {
-        if game.slug == "valheim" {
-            self.game_prefs
+    pub fn enabled_backends(&self, game: Game) -> Backends {
+        match game.backends.as_slice() {
+            [backend] => (*backend).into(),
+            _ => self
+                .game_prefs
                 .get(&*game.slug)
                 .map(|p| p.backend)
-                .unwrap_or_default()
-        } else {
-            Backends::Thunderstore
+                .unwrap_or_default(),
         }
     }
 }

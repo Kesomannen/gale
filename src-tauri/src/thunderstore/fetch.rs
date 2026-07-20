@@ -22,7 +22,7 @@ use crate::{
 };
 
 pub async fn fetch_package_loop(game: Game, app: AppHandle) {
-    let backends = app.lock_prefs().backends(game);
+    let backends = app.lock_prefs().enabled_backends(game);
     future::join_all(
         backends
             .into_backend_slice()
@@ -99,7 +99,7 @@ pub(super) async fn fetch_packages(
     write_directly: bool,
     app: &AppHandle,
 ) -> Vec<(Backend, Report)> {
-    let backends = app.lock_prefs().backends(game);
+    let backends = app.lock_prefs().enabled_backends(game);
     let result =
         future::join_all(backends.into_backend_slice().iter().map(|b| {
             fetch_single_packages(game, write_directly, app, *b).map_err(move |e| (*b, e))
