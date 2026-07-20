@@ -4,8 +4,10 @@
 
 ### Added
 
-- Notice to import profile dialog informing about importing Hexium mods
 - Hexium mod suggestions (thanks [@bwoebi](https://github.com/bwoebi))
+- Support for Hexium-only games (thanks [@bwoebi](https://github.com/bwoebi))
+  - This currently only includes Survival: Fountain of Youth
+- Notice to import profile dialog informing about importing Hexium mods
 - Context menu options to hide mods from the mod list
   - This does not prevent them from being installed or shown in the profile mod list
   - Hidden mods can be unhidden from game-specific manager settings
@@ -19,6 +21,7 @@
 ### Fixed
 
 - Export of Hexium mods not being respected on import (thanks [@bwoebi](https://github.com/bwoebi))
+- Improved the "fetching mods" bar behaviour when multiple download sources are enabled
 - Thunderstore mod author name linking to an invalid URL
 - Custom arguments being copied without quotes or escapes on Windows
 - Minor localization fixes
