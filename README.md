@@ -180,7 +180,7 @@ _Modpack export_
 
 Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
-Thanks to Ebkr for helping to navigate the thunderstore API and BepInEx, and of course making the original mod manager!
+Thanks to Ebkr for helping to navigate the Thunderstore API and BepInEx, and of course making the original mod manager!
 
 ---
 
