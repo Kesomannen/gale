@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
 	import { isSortable } from '@dnd-kit/svelte/sortable';
+	import { PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
 	import ReorderableMod from './ReorderableMod.svelte';
 	import type { ListItem, Mod } from '$lib/types';
 	import type { Snippet } from 'svelte';
@@ -45,7 +46,17 @@
 	}
 </script>
 
-<DragDropProvider {onDragOver}>
+<DragDropProvider
+	{onDragOver}
+	sensors={(defaults) => [
+		...defaults.filter((sensor) => sensor !== PointerSensor),
+		PointerSensor.configure({
+			activationConstraints: [
+				new PointerActivationConstraints.Delay({ value: 250, tolerance: 6 })
+			]
+		})
+	]}
+>
 	<VirtualList {items} rowId={(item) => itemId(item)} itemHeight={58}>
 		{#snippet children({ item, index })}
 			{@const hovered = item === hovering}
