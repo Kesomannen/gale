@@ -52,7 +52,7 @@
 		...defaults.filter((sensor) => sensor !== PointerSensor),
 		PointerSensor.configure({
 			activationConstraints: [
-				new PointerActivationConstraints.Delay({ value: 250, tolerance: 6 })
+				new PointerActivationConstraints.Distance({ value: 6 })
 			]
 		})
 	]}
