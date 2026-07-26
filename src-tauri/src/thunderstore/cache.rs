@@ -20,7 +20,7 @@ struct MarkdownResponse {
     markdown: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub enum MarkdownKind {
     Readme,

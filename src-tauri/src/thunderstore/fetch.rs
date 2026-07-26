@@ -87,12 +87,8 @@ pub(super) async fn fetch_single_package_loop(game: Game, app: AppHandle, backen
 
 const EXCLUDED_PACKAGES_STR: &str = include_str!("../../excluded_packages.txt");
 
-static EXCLUDED_PACKAGES: LazyLock<Vec<&'static str>> = LazyLock::new(|| {
-    EXCLUDED_PACKAGES_STR
-        .split('\n')
-        .map(|line| line.trim())
-        .collect()
-});
+static EXCLUDED_PACKAGES: LazyLock<Vec<&'static str>> =
+    LazyLock::new(|| EXCLUDED_PACKAGES_STR.split('\n').map(str::trim).collect());
 
 pub(super) async fn fetch_packages(
     game: Game,
@@ -208,7 +204,7 @@ async fn fetch_single_packages(
                 package_buffer.extend(packages);
 
                 package_count = package_buffer.len();
-            };
+            }
 
             emit_event(
                 FetchEvent::Progress {

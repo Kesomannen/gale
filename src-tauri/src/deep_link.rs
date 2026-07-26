@@ -31,7 +31,7 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
         handle_inner_task(app.clone(), handle_gale_install(url, app));
     } else if url.starts_with("gale://auth/callback") {
         handle_inner_task(app.clone(), async move {
-            profile::sync::auth::handle_callback(url, &app).await
+            profile::sync::auth::handle_callback(url, &app)
         });
     } else if url.starts_with("gale://profile/import") {
         handle_inner_task(app.clone(), import_profile_code(url, app));

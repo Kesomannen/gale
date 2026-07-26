@@ -81,7 +81,7 @@ pub fn copy_contents(
                 UseLinks::No => {
                     fs::copy(&entry_path, &new_path).fs_context("copying file", &new_path)?;
                 }
-            };
+            }
         }
     }
 
@@ -178,10 +178,7 @@ pub trait PathExt: Sized {
 
 impl PathExt for PathBuf {
     fn exists_or_none(self) -> Option<PathBuf> {
-        match self.exists() {
-            true => Some(self),
-            false => None,
-        }
+        if self.exists() { Some(self) } else { None }
     }
 
     fn add_ext(&mut self, extension: impl AsRef<OsStr>) {

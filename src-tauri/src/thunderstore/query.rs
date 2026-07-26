@@ -181,9 +181,10 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             rating: Some(pkg.rating_score),
             downloads: Some(pkg.total_downloads()),
             file_size: vers.file_size,
-            website_url: match vers.website_url.is_empty() {
-                true => None,
-                false => Some(vers.website_url.to_string()),
+            website_url: if vers.website_url.is_empty() {
+                None
+            } else {
+                Some(vers.website_url.to_string())
             },
             donate_url: pkg.donation_link.clone(),
             dependencies: Some(vers.dependencies.clone()),
@@ -193,9 +194,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid,
             version_uuid: vers.uuid,
-            is_installed: profile
-                .map(|profile| profile.has_mod(pkg.uuid))
-                .unwrap_or(false),
+            is_installed: profile.is_some_and(|profile| profile.has_mod(pkg.uuid)),
             last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions

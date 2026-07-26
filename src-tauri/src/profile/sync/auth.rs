@@ -112,7 +112,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
     }
 }
 
-pub async fn handle_callback(url: String, app: &AppHandle) -> Result<()> {
+pub fn handle_callback(url: String, app: &AppHandle) -> Result<()> {
     app.sync_auth().callback_channel.send(url)?;
 
     Ok(())

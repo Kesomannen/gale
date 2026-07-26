@@ -63,7 +63,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
             handle
                 .db()
                 .evict_outdated_cache()
-                .unwrap_or_else(|err| warn!("failed to evict outdated cache: {err:#}"))
+                .unwrap_or_else(|err| warn!(?err, "failed to evict outdated cache"));
         })
         .await
     });
