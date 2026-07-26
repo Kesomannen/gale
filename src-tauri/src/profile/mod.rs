@@ -9,7 +9,7 @@ use export::modpack::ModpackArgs;
 use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, ensure, eyre};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tracing::{info, warn};
 use uuid::Uuid;
 
