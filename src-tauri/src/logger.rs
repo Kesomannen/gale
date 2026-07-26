@@ -5,7 +5,7 @@ use std::{
 
 use eyre::{Context, OptionExt, Result};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, command};
+use tauri::{AppHandle, command};
 use tracing::{Level, level_filters::LevelFilter};
 use tracing_subscriber::{Registry, filter::Targets, prelude::*};
 

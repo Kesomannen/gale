@@ -15,7 +15,7 @@ use eyre::{Context, Result, bail, eyre};
 use futures_util::StreamExt;
 use itertools::Itertools;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tokio::sync::{Notify, futures::Notified, oneshot};
 use tracing::{debug, info, warn};
 use uuid::Uuid;

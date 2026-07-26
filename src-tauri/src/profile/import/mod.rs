@@ -112,7 +112,7 @@ pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     .unwrap()?;
 
     match response.strip_prefix(PROFILE_DATA_PREFIX) {
-        Some(str) => read_base64(str, &*app.lock_thunderstore()),
+        Some(str) => read_base64(str, &app.lock_thunderstore()),
         None => Err(eyre!("invalid profile data")),
     }
 }

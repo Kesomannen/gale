@@ -158,7 +158,7 @@ async fn export_code(app: &AppHandle) -> Result<ExportCode> {
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
-        let backend = if profile.has_hexium_exclusive_mods(&*app.lock_thunderstore()) {
+        let backend = if profile.has_hexium_exclusive_mods(&app.lock_thunderstore()) {
             Backend::Hexium
         } else {
             Backend::Thunderstore

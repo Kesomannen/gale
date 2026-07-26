@@ -204,11 +204,10 @@ pub enum Backends {
 impl Backends {
     pub fn iter(&self) -> impl Iterator<Item = Backend> {
         match self {
-            Backends::All => (&[Backend::Thunderstore, Backend::Hexium]).iter(),
-            Backends::Thunderstore => (&[Backend::Thunderstore]).iter(),
-            Backends::Hexium => (&[Backend::Hexium]).iter(),
-        }
-        .map(|item| *item)
+            Backends::All => [Backend::Thunderstore, Backend::Hexium].iter(),
+            Backends::Thunderstore => [Backend::Thunderstore].iter(),
+            Backends::Hexium => [Backend::Hexium].iter(),
+        }.copied()
     }
 }
 

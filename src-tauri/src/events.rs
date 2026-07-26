@@ -52,7 +52,7 @@ impl EventBuffer {
             }
         };
 
-        self.0.enqueue(event.into(), content.into());
+        self.0.enqueue(event.into(), content);
     }
 }
 

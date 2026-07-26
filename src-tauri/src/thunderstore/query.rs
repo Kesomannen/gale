@@ -4,7 +4,7 @@ use eyre::Result;
 use internment::Intern;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tracing::info;
 
 use super::{

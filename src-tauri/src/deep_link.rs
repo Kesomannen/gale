@@ -1,7 +1,7 @@
 use std::{fmt::Debug, future::Future, path::PathBuf};
 
 use eyre::{Context, OptionExt, Result};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
@@ -120,9 +120,9 @@ async fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
         path.display()
     );
 
-    thunderstore::wait_for_fetch(&app).await;
+    thunderstore::wait_for_fetch(app).await;
 
-    let import_data = profile::import::read_file_at_path(path, &*app.lock_thunderstore())?;
+    let import_data = profile::import::read_file_at_path(path, &app.lock_thunderstore())?;
 
     app.emit_buffered("import_profile", &FrontendImportData::new(import_data, app));
 

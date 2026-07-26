@@ -11,7 +11,7 @@ use flate2::read::GzDecoder;
 use futures_util::{TryFutureExt, future};
 use indexmap::IndexMap;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, warn};
 
@@ -262,7 +262,7 @@ pub async fn wait_for_fetch(app: &AppHandle) {
     loop {
         let game = app.lock_manager().active_game;
 
-        if app.lock_thunderstore().packages_fetched(&app, game) {
+        if app.lock_thunderstore().packages_fetched(app, game) {
             return;
         }
 

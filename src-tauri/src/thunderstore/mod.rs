@@ -153,7 +153,7 @@ impl Thunderstore {
     }
 
     pub fn deduplicate<T: Queryable>(mods: impl Iterator<Item = T>) -> impl Iterator<Item = T> {
-        mods.sorted_by(|a, b| a.full_name().cmp(&b.full_name()))
+        mods.sorted_by(|a, b| a.full_name().cmp(b.full_name()))
             .coalesce(|a, b| {
                 if a.full_name() == b.full_name() {
                     Ok(Self::cmp_borrowed_mod(a, b))
