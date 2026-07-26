@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Messages are now buffered before being emitted to the UI, fixing issues with events that happen on startup
+  - This fix includes initial mod fetching as well as deep links
+- Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
+- Some mods from disabled sources remaining available due to cache from previous installations
+- ANSI escape codes being written to the log file
+
 ## 1.19.0 (2026-07-20)
 
 ### Added

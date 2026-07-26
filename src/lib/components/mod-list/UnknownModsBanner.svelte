@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages';
 	import type { Dependant } from '$lib/types';
-	import Icon from '@iconify/svelte';
+	import InfoBox from '../ui/InfoBox.svelte';
+	import Button from '../ui/Button.svelte';
+	import Dialog from '../ui/Dialog.svelte';
+	import ModCardList from '../ui/ModCardList.svelte';
 
 	type Props = {
 		mods: Dependant[];
@@ -9,18 +12,41 @@
 	};
 
 	let { mods, uninstall }: Props = $props();
+
+	let dialogOpen = $state(false);
 </script>
 
-<div class="mr-3 mb-1 flex items-center rounded-lg bg-red-600 py-1.5 pr-1 pl-3 text-red-100">
-	<Icon icon="mdi:alert-circle" class="mr-2 text-xl" />
-	{m.unknownModsBanner_content({ count: mods.length })}
-	{mods.map((mod) => mod.fullName).join(', ')}.
-	<button
-		class="ml-1 font-semibold text-white hover:text-red-100 hover:underline"
-		onclick={() => {
-			mods.forEach(uninstall);
-		}}
-	>
-		{m[`unknownModsBanner_uninstall_${mods.length === 1 ? 'it' : 'them'}`]()}
-	</button>
-</div>
+<InfoBox type="warning">
+	<div class="flex items-center justify-between">
+		<span>{m.unknownModsBanner_content()}</span>
+		<Button color="primary" icon="mdi:info" onclick={() => (dialogOpen = true)}
+			>{m.unknownModsBanner_details_content()}</Button
+		>
+	</div>
+</InfoBox>
+
+<Dialog bind:open={dialogOpen} title="Unknown mods">
+	<div class="text-primary-300 mb-3">
+		{m.unknownModsBanner_dialog_content_1()}
+		<br />
+		{m.unknownModsBanner_dialog_content_2()}
+	</div>
+
+	<ModCardList {mods} />
+
+	<div class="mt-2 flex justify-end gap-2">
+		<Button color="primary" onclick={() => (dialogOpen = false)}
+			>{m.unknownModsBanner_ignore_content()}</Button
+		>
+		<Button
+			icon="mdi:trash"
+			color="primary"
+			onclick={() => {
+				mods.forEach(uninstall);
+				dialogOpen = false;
+			}}
+		>
+			{m.unknownModsBanner_uninstall_content()}
+		</Button>
+	</div>
+</Dialog>

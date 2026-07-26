@@ -688,7 +688,7 @@ impl<'a> InstallEvent<'a> {
 }
 
 fn emit(event: InstallEvent, app: &AppHandle) {
-    app.emit("install_event", event).ok();
+    app.emit_buffered("install_event", &event);
 }
 
 fn check_cancel(cancel: &AtomicBool, options: &InstallOptions) -> InstallResult<()> {

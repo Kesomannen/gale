@@ -68,7 +68,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
                 let manager = app.lock_manager();
 
                 let mods = thunderstore.query_mods(args, &manager);
-                app.emit("mod_query_result", &mods)?;
+                app.emit_buffered("mod_query_result", &mods);
 
                 if thunderstore.packages_fetched(&app, manager.active_game) {
                     info!("all packages fetched, pausing query loop");

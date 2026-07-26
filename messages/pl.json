@@ -104,6 +104,7 @@
 	"exportCodeDialog_galeExclusive": "Ten profil zawiera mody, które nie są dostępne w Thunderstore. Ten kod można zaimportować tylko za pomocą Gale.",
 	"exportCodeDialog_loading": "Eksportowanie {name} ...",
 	"exportCodeDialog_title": "Eksportuj jako kod",
+	"fetchModsBar_content": "Pobieranie modów z {backends} ...",
 	"flagsConfig_placeholder": "Wybierz flagi",
 	"fontFamilyPref_placeholder": "Szukaj czcionki...",
 	"fontFamilyPref_title": "Rodzina czcionek",
@@ -412,7 +413,6 @@
 	"profileLockedBanner_title": "Profil jest zablokowany",
 	"profilesDropdown_button": "Nowy profil",
 	"resetConfigButton_confirm": "Czy na pewno chcesz zresetować {name}?",
-	"fetchModsBar_content": "Pobieranie modów z {backends} ...",
 	"syncDonationNotice_button": "Przypomnij mi później",
 	"syncDonationNotice_content_1": "Synchronizacja profili działa dzięki darowiznom!",
 	"syncDonationNotice_content_2": "Jeśli podoba Ci się ta funkcja, rozważ wsparcie na ",
@@ -458,14 +458,20 @@
 	"unknown": "Nieznany",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": ["input countPlural"],
 			"match": {
+				"0": "Niektórych modyfikacji w tym profilu nie udało się rozwiązać.",
 				"countPlural=one": "Nie znaleziono następującego moda:",
 				"countPlural=other": "Nie znaleziono następujących modów:"
 			},
 			"selectors": ["countPlural"]
 		}
 	],
+	"unknownModsBanner_details_content": "Bliższe dane",
+	"unknownModsBanner_dialog_content_1": "Następujące mody nie zostały znalezione przez Gale.",
+	"unknownModsBanner_dialog_content_2": "Mogły zostać usunięte z platformy moderskiej lub zainstalowane ze źródła, które od tamtej pory wyłączyłeś.",
+	"unknownModsBanner_ignore_content": "Ignorować",
+	"unknownModsBanner_uninstall_content": "Odinstaluj",
 	"unknownModsBanner_uninstall_it": "Odinstalować go?",
 	"unknownModsBanner_uninstall_them": "Odinstalować je?",
 	"updateAllBanner_button": "Aktualizować wszystko?",

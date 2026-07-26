@@ -68,8 +68,8 @@ pub async fn get_markdown(
 }
 
 impl ThunderstoreBackend {
-    pub fn read_and_insert_cache(&mut self, game: Game, prefs: &Prefs, backend: Backend) {
-        match get_packages(game, prefs, backend) {
+    pub fn read_and_insert_cache(&mut self, game: Game, prefs: &Prefs) {
+        match get_packages(game, prefs, self.backend) {
             Ok(Some(mods)) => {
                 for package in mods {
                     self.packages.insert(package.uuid, package);

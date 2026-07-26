@@ -365,7 +365,7 @@ impl Profile {
     }
 
     pub fn notify_frontend(&self, app: &AppHandle) -> Result<()> {
-        app.emit("profile_changed", self.to_frontend())?;
+        app.emit_buffered("profile_changed", &self.to_frontend());
         Ok(())
     }
 }
@@ -532,7 +532,7 @@ impl ManagedGame {
     }
 
     pub fn save(&self, app: &AppHandle) -> Result<()> {
-        app.emit("game_changed", self.to_frontend())?;
+        app.emit_buffered("game_changed", &self.to_frontend());
 
         app.db().save_game(self)
     }
@@ -672,12 +672,10 @@ impl ModManager {
     pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<&ManagedGame> {
         self.ensure_game(game, true, &app.lock_prefs(), app.db())?;
 
-        if self.active_game != game {
-            self.active_game = game;
+        self.active_game = game;
 
-            let mut thunderstore = app.lock_thunderstore();
-            thunderstore.switch_game(game, app.clone());
-        }
+        let mut thunderstore = app.lock_thunderstore();
+        thunderstore.switch_game(game, app.clone());
 
         Ok(self.active_game())
     }
@@ -777,7 +775,7 @@ impl ModManager {
     }
 
     pub fn save_all(&self, app: &AppHandle) -> Result<()> {
-        app.emit("game_changed", self.active_game().to_frontend())?;
+        app.emit_buffered("game_changed", &self.active_game().to_frontend());
 
         app.db().save_all(self)
     }

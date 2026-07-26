@@ -207,7 +207,7 @@ export type InstallEvent =
 
 export type FetchEvent =
 	| { type: 'start'; backend: Backend }
-	| { type: 'progress'; mods: number }
+	| { type: 'progress'; backend: Backend; mods: number }
 	| { type: 'done'; backend: Backend };
 
 export type ModpackArgs = {

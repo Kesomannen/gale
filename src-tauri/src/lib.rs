@@ -13,6 +13,7 @@ mod cli;
 mod config;
 mod db;
 mod deep_link;
+mod events;
 mod game;
 mod logger;
 mod prefs;

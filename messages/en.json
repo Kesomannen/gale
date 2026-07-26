@@ -104,6 +104,7 @@
 	"exportCodeDialog_galeExclusive": "This profile contains mods which are not available on Thunderstore. This code may only be imported with Gale.",
 	"exportCodeDialog_loading": "Exporting {name}...",
 	"exportCodeDialog_title": "Export as code",
+	"fetchModsBar_content": "Fetching mods from {backends}...",
 	"flagsConfig_placeholder": "Select flags",
 	"fontFamilyPref_placeholder": "Search for a font...",
 	"fontFamilyPref_title": "Font family",
@@ -412,7 +413,6 @@
 	"profileLockedBanner_title": "Profile is locked",
 	"profilesDropdown_button": "New profile",
 	"resetConfigButton_confirm": "Are you sure you want to reset {name}?",
-	"fetchModsBar_content": "Fetching mods from {backends}...",
 	"syncDonationNotice_button": "Remind me later",
 	"syncDonationNotice_content_1": "Profile sync is run on donations!",
 	"syncDonationNotice_content_2": "If you like this feature, please consider supporting on ",
@@ -456,27 +456,26 @@
 	"toolBar_launch_vanilla": "Launch vanilla",
 	"toolBar_launchGame_message": "Please wait for mod installations to complete before launching.",
 	"unknown": "Unknown",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"match": {
-				"countPlural=one": "The following mod could not be found:",
-				"countPlural=other": "The following mods could not be found:"
-			},
-			"selectors": ["countPlural"]
-		}
-	],
-	"unknownModsBanner_uninstall_it": "Uninstall it?",
-	"unknownModsBanner_uninstall_them": "Uninstall them?",
+	"unknownModsBanner_content": "Some mods in this profile could not be resolved.",
+	"unknownModsBanner_details_content": "Details",
+	"unknownModsBanner_dialog_content_1": "The following mods could not be found by Gale.",
+	"unknownModsBanner_dialog_content_2": "They may have been removed from the modding platform, or installed from a source you have since disabled.",
+	"unknownModsBanner_ignore_content": "Ignore",
+	"unknownModsBanner_uninstall_content": "Uninstall",
 	"updateAllBanner_button": "Update all?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",

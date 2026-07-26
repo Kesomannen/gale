@@ -26,9 +26,8 @@ pub async fn fetch_package_loop(game: Game, app: AppHandle) {
     let backends = app.lock_prefs().enabled_backends(game);
     future::join_all(
         backends
-            .into_backend_slice()
             .iter()
-            .map(|b| fetch_single_package_loop(game, app.clone(), *b)),
+            .map(|backend| fetch_single_package_loop(game, app.clone(), backend)),
     )
     .await;
 }
@@ -101,14 +100,13 @@ pub(super) async fn fetch_packages(
     app: &AppHandle,
 ) -> Vec<(Backend, Report)> {
     let backends = app.lock_prefs().enabled_backends(game);
-    let result =
-        future::join_all(backends.into_backend_slice().iter().map(|b| {
-            fetch_single_packages(game, write_directly, app, *b).map_err(move |e| (*b, e))
-        }))
-        .await
-        .into_iter()
-        .filter_map(Result::err)
-        .collect();
+    let result = future::join_all(backends.iter().map(|backend| {
+        fetch_single_packages(game, write_directly, app, backend).map_err(move |err| (backend, err))
+    }))
+    .await
+    .into_iter()
+    .filter_map(Result::err)
+    .collect();
 
     let mut state = app.lock_thunderstore();
     state.is_fetching = false;
@@ -214,6 +212,7 @@ async fn fetch_single_packages(
 
             emit_event(
                 FetchEvent::Progress {
+                    backend,
                     mods: package_count - prev_package_count,
                 },
                 app,
@@ -251,17 +250,18 @@ async fn fetch_single_packages(
 #[serde(rename_all = "camelCase", tag = "type")]
 enum FetchEvent {
     Start { backend: Backend },
-    Progress { mods: usize },
+    Progress { backend: Backend, mods: usize },
     Done { backend: Backend },
 }
 
 fn emit_event(event: FetchEvent, app: &AppHandle) {
-    app.emit("fetch_event", event).ok();
+    app.emit_buffered("fetch_event", &event);
 }
 
 pub async fn wait_for_fetch(app: &AppHandle) {
     loop {
         let game = app.lock_manager().active_game;
+
         if app.lock_thunderstore().packages_fetched(&app, game) {
             return;
         }

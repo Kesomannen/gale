@@ -47,7 +47,7 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
     tauri::async_runtime::spawn(async move {
         for (backend, err) in super::fetch::fetch_packages(game, write_directly, &app).await {
             logger::log_webview_err(
-                format!("error while fetching mods from {:?}", backend),
+                format!("error while fetching mods from {backend}"),
                 err,
                 &app,
             );

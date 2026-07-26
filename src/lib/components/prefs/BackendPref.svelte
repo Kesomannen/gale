@@ -2,6 +2,7 @@
 	import Label from '$lib/components/ui/Label.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import games from '$lib/state/game.svelte';
 	import { Backends } from '$lib/types';
 	import Info from '../ui/Info.svelte';
 
@@ -22,7 +23,7 @@
 
 	type Props = {
 		value: Backends;
-		set: (newValue: Backends) => void;
+		set: (newValue: Backends) => Promise<void>;
 	};
 
 	let { value = $bindable(), set }: Props = $props();
@@ -40,6 +41,11 @@
 		triggerClass="grow"
 		{items}
 		{value}
-		onValueChange={(value) => set(value as Backends)}
+		onValueChange={async (value) => {
+			await set(value as Backends);
+			if (games.active) {
+				await games.setActive(games.active.slug);
+			}
+		}}
 	/>
 </div>

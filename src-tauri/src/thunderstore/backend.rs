@@ -1,6 +1,5 @@
 use crate::{
     game::Game,
-    prefs::Prefs,
     thunderstore::{BorrowedMod, PackageIdent, PackageListing, VersionIdent, cache::MarkdownKind},
 };
 use eyre::eyre;
@@ -147,7 +146,7 @@ pub struct ThunderstoreBackend {
     // IndexMap is not used for ordering here, but for fast iteration,
     // since we iterate over all mods when resolving identifiers and querying.
     pub(super) packages: IndexMap<Uuid, PackageListing>,
-    backend: Backend,
+    pub(super) backend: Backend,
 }
 
 impl ThunderstoreBackend {
@@ -177,7 +176,7 @@ impl ThunderstoreBackend {
     pub fn get_package(&self, uuid: Uuid) -> eyre::Result<&PackageListing> {
         self.packages
             .get(&uuid)
-            .ok_or_else(|| eyre!("package with id {uuid} not found",))
+            .ok_or_else(|| eyre!("package with id {uuid} not found"))
     }
 
     /// Finds a package with the given `full_name` (formatted as `owner-name`).
@@ -185,7 +184,7 @@ impl ThunderstoreBackend {
         self.packages
             .values()
             .find(|package| package.ident.as_str() == full_name)
-            .ok_or_else(|| eyre!("package {full_name} not found",))
+            .ok_or_else(|| eyre!("package {full_name} not found"))
     }
 
     pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> eyre::Result<BorrowedMod<'_>> {
@@ -229,11 +228,9 @@ impl ThunderstoreBackend {
     }
 
     /// Clear the package map.
-    pub fn clear_packages(&mut self, game: Game, prefs: &Prefs) {
+    pub fn clear_packages(&mut self) {
         self.is_fetching = false;
         self.packages_fetched = false;
         self.packages = IndexMap::new();
-
-        self.read_and_insert_cache(game, prefs, self.backend);
     }
 }

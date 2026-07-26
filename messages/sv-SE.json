@@ -104,6 +104,7 @@
 	"exportCodeDialog_galeExclusive": "Den här profilen innehåller moddar som inte är tillgängliga på Thunderstore. Den här koden får endast importeras med Gale.",
 	"exportCodeDialog_loading": "Exporterar {name} ...",
 	"exportCodeDialog_title": "Exportera som kod",
+	"fetchModsBar_content": "Hämtar modifieringar från {backends} ...",
 	"flagsConfig_placeholder": "Välj flaggor",
 	"fontFamilyPref_placeholder": "Sök efter ett typsnitt...",
 	"fontFamilyPref_title": "Typsnitt",
@@ -412,7 +413,6 @@
 	"profileLockedBanner_title": "Profilen är låst",
 	"profilesDropdown_button": "Ny profil",
 	"resetConfigButton_confirm": "Är du säker på att du vill återställa {name}?",
-	"fetchModsBar_content": "Hämtar modifieringar från {backends} ...",
 	"syncDonationNotice_button": "Påminn mig senare",
 	"syncDonationNotice_content_1": "Profilsynkronisering körs på donationer!",
 	"syncDonationNotice_content_2": "Om du gillar den här funktionen, överväg gärna att stödja Gale på ",
@@ -458,14 +458,20 @@
 	"unknown": "Okänd",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": ["input countPlural"],
 			"match": {
+				"0": "Vissa modifieringar i den här profilen kunde inte lösas.",
 				"countPlural=one": "Följande mod kunde inte hittas:",
 				"countPlural=other": "Följande moddar kunde inte hittas:"
 			},
 			"selectors": ["countPlural"]
 		}
 	],
+	"unknownModsBanner_details_content": "Detaljer",
+	"unknownModsBanner_dialog_content_1": "Följande moddar kunde inte hittas av Gale.",
+	"unknownModsBanner_dialog_content_2": "De kan ha tagits bort från moddplattformen, eller installerats från en källa som du sedan dess har inaktiverat.",
+	"unknownModsBanner_ignore_content": "Ignorera",
+	"unknownModsBanner_uninstall_content": "Avinstallera",
 	"unknownModsBanner_uninstall_it": "Avinstallera det?",
 	"unknownModsBanner_uninstall_them": "Avinstallera dem?",
 	"updateAllBanner_button": "Uppdatera alla?",

@@ -104,6 +104,7 @@
 	"exportCodeDialog_galeExclusive": "Este perfil contiene modificaciones que no están disponibles en Thunderstore. Este código solo se puede importar con Gale.",
 	"exportCodeDialog_loading": "Exportando {name} ...",
 	"exportCodeDialog_title": "Exportar como código",
+	"fetchModsBar_content": "Obteniendo modificaciones de {backends} ...",
 	"flagsConfig_placeholder": "Seleccionar marcadores",
 	"fontFamilyPref_placeholder": "Buscar una fuente...",
 	"fontFamilyPref_title": "Fuente",
@@ -412,7 +413,6 @@
 	"profileLockedBanner_title": "El perfil está bloqueado",
 	"profilesDropdown_button": "Nuevo perfil",
 	"resetConfigButton_confirm": "¿Está seguro de querer restablecer {name}?",
-	"fetchModsBar_content": "Obteniendo modificaciones de {backends} ...",
 	"syncDonationNotice_button": "Recordar más tarde",
 	"syncDonationNotice_content_1": "¡Los perfiles sincronizados funcionan gracias a las donaciones!",
 	"syncDonationNotice_content_2": "Si te gusta esta función, por favor, considera apoyarnos en ",
@@ -458,14 +458,20 @@
 	"unknown": "Desconocido",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": ["input countPlural"],
 			"match": {
+				"0": "No se pudieron resolver algunos mods en este perfil.",
 				"countPlural=one": "No se pudo encontrar el siguiente mod:",
 				"countPlural=other": "No se pudieron encontrar los siguientes mods:"
 			},
 			"selectors": ["countPlural"]
 		}
 	],
+	"unknownModsBanner_details_content": "Detalles",
+	"unknownModsBanner_dialog_content_1": "Gale no pudo encontrar los siguientes mods.",
+	"unknownModsBanner_dialog_content_2": "Es posible que se hayan eliminado de la plataforma de modificación o que se hayan instalado desde una fuente que usted haya desactivado posteriormente.",
+	"unknownModsBanner_ignore_content": "Ignorar",
+	"unknownModsBanner_uninstall_content": "Desinstalar",
 	"unknownModsBanner_uninstall_it": "¿Desinstalar?",
 	"unknownModsBanner_uninstall_them": "¿Desinstalarlos?",
 	"updateAllBanner_button": "¿Actualizar todo?",

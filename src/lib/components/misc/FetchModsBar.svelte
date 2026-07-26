@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { listen } from '@tauri-apps/api/event';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { onMount } from 'svelte';
 	import { expoOut } from 'svelte/easing';
 	import { slide } from 'svelte/transition';
@@ -19,8 +19,11 @@
 
 	let backendsList = $derived(lst.format(Array.from(backendsFetching)));
 
+	let unlisten: UnlistenFn | null = null;
+
 	onMount(() => {
 		listen<FetchEvent>('fetch_event', (evt) => {
+			console.log(evt.payload);
 			switch (evt.payload.type) {
 				case 'start':
 					backendsFetching.add(evt.payload.backend);
@@ -37,7 +40,11 @@
 					}
 					break;
 			}
-		});
+		}).then((fn) => (unlisten = fn));
+
+		return () => {
+			unlisten?.();
+		};
 	});
 </script>
 

@@ -26,7 +26,7 @@ use crate::{
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::{ModId, Thunderstore},
+    thunderstore::{Backend, ModId, Thunderstore},
     util::{self, error::IoResultExt},
 };
 
@@ -101,24 +101,11 @@ fn read_base64(base64: &str, thunderstore: &Thunderstore) -> Result<ImportData> 
 }
 
 pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
-    let response = future::join_all(Backends::All.into_backend_slice().iter().map(
-        async |b| -> Result<String> {
-            Ok(app
-                .http()
-                .get(b.profile_import(&key.to_string()))
-                .send()
-                .await?
-                .error_for_status()
-                .map_err(|err| match err.status() {
-                    Some(status) if status == StatusCode::NOT_FOUND => {
-                        eyre!("profile code is expired or invalid")
-                    }
-                    _ => err.into(),
-                })?
-                .text()
-                .await?)
-        },
-    ))
+    let response = future::join_all(
+        Backends::All
+            .iter()
+            .map(async |backend| read_code_from_backend(backend, key, app).await),
+    )
     .await
     .into_iter()
     .find_or_first(|r| r.is_ok())
@@ -128,6 +115,25 @@ pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
         Some(str) => read_base64(str, &*app.lock_thunderstore()),
         None => Err(eyre!("invalid profile data")),
     }
+}
+
+async fn read_code_from_backend(backend: Backend, key: Uuid, app: &AppHandle) -> Result<String> {
+    let response = app
+        .http()
+        .get(backend.profile_import(&key.to_string()))
+        .send()
+        .await?
+        .error_for_status()
+        .map_err(|err| match err.status() {
+            Some(status) if status == StatusCode::NOT_FOUND => {
+                eyre!("profile code is expired or invalid")
+            }
+            _ => err.into(),
+        })?
+        .text()
+        .await?;
+
+    Ok(response)
 }
 
 #[derive(Debug, Default, Deserialize, Clone)]

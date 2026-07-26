@@ -104,6 +104,7 @@
 	"exportCodeDialog_galeExclusive": "此配置文件包含 Thunderstore 上未提供的模组。此代码只能使用 Gale 导入。",
 	"exportCodeDialog_loading": "正在导出 {name} 中...",
 	"exportCodeDialog_title": "导出为标识码",
+	"fetchModsBar_content": "正在从{backends}获取模块...",
 	"flagsConfig_placeholder": "选择选项",
 	"fontFamilyPref_placeholder": "搜索一个字体...",
 	"fontFamilyPref_title": "字体",
@@ -412,7 +413,6 @@
 	"profileLockedBanner_title": "档案已被锁定",
 	"profilesDropdown_button": "新建档案",
 	"resetConfigButton_confirm": "您确定要重置 {name} 吗？",
-	"fetchModsBar_content": "正在从{backends}获取模块...",
 	"syncDonationNotice_button": "稍后提醒",
 	"syncDonationNotice_content_1": "档案同步功能通过赞助运营!",
 	"syncDonationNotice_content_2": "若您喜欢此功能，请考虑支持我们。",
@@ -458,14 +458,20 @@
 	"unknown": "未知",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": ["input countPlural"],
 			"match": {
+				"0": "此配置文件中的某些模组无法解析。",
 				"countPlural=one": "以下模组未找到：",
 				"countPlural=other": "以下模组未找到："
 			},
 			"selectors": ["countPlural"]
 		}
 	],
+	"unknownModsBanner_details_content": "细节",
+	"unknownModsBanner_dialog_content_1": "Gale 找不到以下模组。",
+	"unknownModsBanner_dialog_content_2": "它们可能已从模组平台移除，或者来自您后来禁用的来源。",
+	"unknownModsBanner_ignore_content": "忽略",
+	"unknownModsBanner_uninstall_content": "卸载",
 	"unknownModsBanner_uninstall_it": "卸载它?",
 	"unknownModsBanner_uninstall_them": "卸载它们?",
 	"updateAllBanner_button": "更新所有?",

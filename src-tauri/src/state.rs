@@ -1,10 +1,12 @@
 use std::sync::{Mutex, MutexGuard};
 
 use eyre::{Context, Result};
+use serde::Serialize;
 use tauri::{AppHandle, Manager, command};
 
 use crate::{
     db::{self, Db},
+    events::EventBuffer,
     prefs::Prefs,
     profile::{self, ModManager, install::queue::InstallQueue, sync},
     thunderstore::{self, Thunderstore},
@@ -19,6 +21,7 @@ pub struct AppState {
     pub install_queue: InstallQueue,
     pub sync_auth: sync::auth::State,
     pub sync_socket: sync::socket::State,
+    pub event_buffer: EventBuffer,
     pub is_first_run: bool,
 }
 
@@ -60,6 +63,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         sync_auth: sync::auth::State::new(creds),
         sync_socket: sync::socket::State::new(app.to_owned()),
         install_queue: InstallQueue::new(app.to_owned()),
+        event_buffer: EventBuffer::new(app.to_owned()),
         is_first_run: !db_existed && !migrated,
     };
 
@@ -107,6 +111,14 @@ pub trait ManagerExt<R> {
 
     fn sync_socket(&self) -> &sync::socket::State {
         &self.app_state().sync_socket
+    }
+
+    fn event_buffer(&self) -> &EventBuffer {
+        &self.app_state().event_buffer
+    }
+
+    fn emit_buffered(&self, event: impl Into<String>, content: &impl Serialize) {
+        self.event_buffer().emit(event, content);
     }
 }
 

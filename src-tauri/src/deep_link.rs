@@ -107,7 +107,7 @@ async fn handle_install(package: InstallPackage<'_>, app: AppHandle) -> Result<(
     let borrowed_mod = thunderstore.find_mod(package.owner, package.name, package.version)?;
     let frontend_mod = borrowed_mod.into_frontend(None);
 
-    app.emit("install_mod", frontend_mod)?;
+    app.emit_buffered("install_mod", &frontend_mod);
 
     Ok(())
 }
@@ -124,7 +124,7 @@ async fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
 
     let import_data = profile::import::read_file_at_path(path, &*app.lock_thunderstore())?;
 
-    app.emit("import_profile", FrontendImportData::new(import_data, app))?;
+    app.emit_buffered("import_profile", &FrontendImportData::new(import_data, app));
 
     Ok(())
 }
@@ -139,7 +139,10 @@ async fn import_profile_code(url: String, app: AppHandle) -> Result<()> {
 
     let import_data = profile::import::read_code(key, &app).await?;
 
-    app.emit("import_profile", FrontendImportData::new(import_data, &app))?;
+    app.emit_buffered(
+        "import_profile",
+        &FrontendImportData::new(import_data, &app),
+    );
 
     Ok(())
 }
@@ -151,7 +154,7 @@ async fn clone_sync_profile(url: String, app: AppHandle) -> Result<()> {
 
     let import_data = profile::sync::read_profile(id, &app).await?;
 
-    app.emit("import_profile", import_data)?;
+    app.emit_buffered("import_profile", &import_data);
 
     Ok(())
 }

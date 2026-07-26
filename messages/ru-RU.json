@@ -104,6 +104,7 @@
 	"exportCodeDialog_galeExclusive": "Этот профиль содержит моды, недоступные в Thunderstore. Этот код можно импортировать только с помощью Gale.",
 	"exportCodeDialog_loading": "Экспорт {name} ...",
 	"exportCodeDialog_title": "Экспорт в виде кода",
+	"fetchModsBar_content": "Получение модификаций из {backends} ...",
 	"flagsConfig_placeholder": "Выберите флаги",
 	"fontFamilyPref_placeholder": "Поиск шрифта...",
 	"fontFamilyPref_title": "Семейство шрифтов",
@@ -412,7 +413,6 @@
 	"profileLockedBanner_title": "Профиль заблокирован",
 	"profilesDropdown_button": "Новый профиль",
 	"resetConfigButton_confirm": "Вы уверены, что хотите сбросить {name} ?",
-	"fetchModsBar_content": "Получение модификаций из {backends} ...",
 	"syncDonationNotice_button": "Напомни мне позже",
 	"syncDonationNotice_content_1": "Синхронизация профилей осуществляется за счет пожертвований!",
 	"syncDonationNotice_content_2": "Если вам нравится эта функция, пожалуйста, рассмотрите возможность оказания поддержки. ",
@@ -458,14 +458,20 @@
 	"unknown": "Неизвестный",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": ["input countPlural"],
 			"match": {
+				"0": "Некоторые модификации в этом профиле не удалось разрешить.",
 				"countPlural=one": "Следующий мод не найден:",
 				"countPlural=other": "Следующие модификации не были найдены:"
 			},
 			"selectors": ["countPlural"]
 		}
 	],
+	"unknownModsBanner_details_content": "Подробности",
+	"unknownModsBanner_dialog_content_1": "Следующие модификации не были найдены программой Gale.",
+	"unknownModsBanner_dialog_content_2": "Возможно, они были удалены с платформы для моддинга или установлены из источника, который вы впоследствии отключили.",
+	"unknownModsBanner_ignore_content": "Игнорировать",
+	"unknownModsBanner_uninstall_content": "Удалить",
 	"unknownModsBanner_uninstall_it": "Удалить?",
 	"unknownModsBanner_uninstall_them": "Удалить их?",
 	"updateAllBanner_button": "Обновить все?",
