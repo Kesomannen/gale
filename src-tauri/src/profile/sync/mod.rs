@@ -20,7 +20,11 @@ static API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("G
     Err(_) => "https://gale.kesomannen.com/api".into(),
 });
 
-async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
+async fn request(
+    method: Method,
+    path: impl Display,
+    app: &AppHandle,
+) -> reqwest_middleware::RequestBuilder {
     let url = format!("{}{path}", *API_URL);
 
     let mut req = app.http().request(method, url);

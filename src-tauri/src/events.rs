@@ -72,7 +72,10 @@ impl Inner {
     }
 
     fn on_frontend_ready(&self) {
-        self.frontend_ready.store(true, Ordering::SeqCst);
+        if self.frontend_ready.swap(true, Ordering::SeqCst) {
+            debug!("frontend emitted ready event but was already marked as ready, ignoring");
+            return;
+        }
 
         let mut buffer = self.buffer.lock().unwrap();
 
@@ -88,9 +91,7 @@ impl Inner {
 
     fn emit_now(&self, event: &str, payload: String) {
         if let Err(err) = self.app.emit_str(event, payload) {
-            error!(?err, "failed to emit event to frontend");
-        } else {
-            trace!(event, "emitted event to frontend");
+            error!(?err, event, "failed to emit event to frontend");
         }
     }
 }

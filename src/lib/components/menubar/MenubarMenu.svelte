@@ -12,7 +12,7 @@
 
 <Menubar.Menu>
 	<Menubar.Trigger
-		class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 mx-[-1px] h-full cursor-default rounded-sm px-3 text-sm"
+		class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 -mx-px h-full cursor-default rounded-sm px-3 text-sm"
 	>
 		{label}
 	</Menubar.Trigger>

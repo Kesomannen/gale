@@ -133,8 +133,7 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
         (data, manager.active_game, args, token)
     };
 
-    let client = app.http().clone();
-    modpack::publish(data.into_inner().into(), game, args, token, client).await?;
+    modpack::publish(&app, data.into_inner().into(), game, args, token).await?;
 
     Ok(())
 }

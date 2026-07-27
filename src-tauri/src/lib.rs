@@ -59,17 +59,6 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
     let handle = app.handle().to_owned();
     tauri::async_runtime::spawn(async move {
-        tokio::task::spawn_blocking(move || {
-            handle
-                .db()
-                .evict_outdated_cache()
-                .unwrap_or_else(|err| warn!(?err, "failed to evict outdated cache"));
-        })
-        .await
-    });
-
-    let handle = app.handle().to_owned();
-    tauri::async_runtime::spawn(async move {
         if let Err(err) = game::update_list_task(&handle).await {
             warn!("failed to update games list: {err}");
         }

@@ -9,6 +9,9 @@
 - Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
 - Some mods from disabled sources remaining available due to cache from previous installations
 - ANSI escape codes being written to the log file
+- Removed broken privacy policy link in about dialog
+- HTTP cache headers are now respected
+  - Thunderstore README and changelog requests are excepted from this and always aggressively cached
 
 ## 1.19.0 (2026-07-20)
 

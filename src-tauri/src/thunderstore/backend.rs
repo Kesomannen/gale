@@ -44,6 +44,10 @@ impl Backend {
         }
     }
 
+    pub fn force_cache_markdown(self) -> bool {
+        matches!(self, Backend::Thunderstore)
+    }
+
     pub fn markdown_url(self, ident: &VersionIdent, cache: MarkdownKind) -> String {
         match self {
             Backend::Thunderstore => format!(

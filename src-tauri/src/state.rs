@@ -1,6 +1,7 @@
 use std::sync::{Mutex, MutexGuard};
 
 use eyre::{Context, Result};
+use http_cache_reqwest::{CACacheManager, CacheMode, HttpCache, HttpCacheOptions};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, command};
 
@@ -13,7 +14,7 @@ use crate::{
 };
 
 pub struct AppState {
-    pub http: reqwest::Client,
+    pub http: reqwest_middleware::ClientWithMiddleware,
     pub prefs: Mutex<Prefs>,
     pub manager: Mutex<ModManager>,
     pub thunderstore: Mutex<Thunderstore>,
@@ -40,10 +41,7 @@ impl AppState {
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {
-    let http = reqwest::Client::builder()
-        .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
-        .build()
-        .context("failed to init http client")?;
+    let http = create_http_client().context("failed to init http client")?;
 
     let (db, db_existed) = db::init().context("failed to init database")?;
 
@@ -78,10 +76,30 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
+fn create_http_client() -> Result<reqwest_middleware::ClientWithMiddleware> {
+    let base = reqwest::Client::builder()
+        .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
+        .build()?;
+
+    let cache_path = crate::util::path::default_app_cache_dir().join("http");
+
+    let cache = http_cache_reqwest::Cache(HttpCache {
+        mode: CacheMode::NoCache,
+        manager: CACacheManager::new(cache_path, false),
+        options: HttpCacheOptions::default(),
+    });
+
+    let http = reqwest_middleware::ClientBuilder::new(base)
+        .with(cache)
+        .build();
+
+    Ok(http)
+}
+
 pub trait ManagerExt<R> {
     fn app_state(&self) -> &AppState;
 
-    fn http(&self) -> &reqwest::Client {
+    fn http(&self) -> &reqwest_middleware::ClientWithMiddleware {
         &self.app_state().http
     }
 

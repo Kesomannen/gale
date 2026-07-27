@@ -529,8 +529,9 @@ async fn try_download(
         .get(url)
         .send()
         .await
-        .and_then(|response| response.error_for_status())
         .context("failed to send request")?
+        .error_for_status()
+        .context("request failed")?
         .bytes_stream();
 
     let mut last_update = Instant::now();
