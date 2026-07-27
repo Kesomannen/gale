@@ -33,6 +33,6 @@
 	});
 </script>
 
-<div {@attach sortable.attach} id={mod.uuid} class={[sortable.isDragging && 'opacity-40']}>
+<div {@attach sortable.attach} id={mod.uuid} class={['select-none', sortable.isDragging && 'opacity-40']}>
 	{@render children?.()}
 </div>

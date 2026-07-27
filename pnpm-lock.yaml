@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@dnd-kit/dom':
+        specifier: ^0.4.0
+        version: 0.4.0
       '@dnd-kit/svelte':
         specifier: ^0.4.0
         version: 0.4.0(svelte@5.56.2)
