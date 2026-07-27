@@ -1,17 +1,18 @@
 # Changelog
 
-## Unreleased
+## 1.19.1 (2026-07-27)
 
 ### Fixed
 
 - Messages are now buffered before being emitted to the UI, fixing issues with events that happen on startup
-  - This fix includes initial mod fetching as well as deep links
+  - This fixes issues with the initial mod fetch and deep link handling among others
 - Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
 - Some mods from disabled sources remaining available due to cache from previous installations
 - ANSI escape codes being written to the log file
 - Removed broken privacy policy link in about dialog
 - HTTP cache headers are now respected
-  - Thunderstore README and changelog requests are excepted from this and always aggressively cached
+  - Thunderstore README and changelog requests are exempt from this and are always aggressively cached
+- Cards in profile mod list being unable to open with touch input (thanks [@NemGam](https://github.com/NemGam))
 
 ## 1.19.0 (2026-07-20)
 
