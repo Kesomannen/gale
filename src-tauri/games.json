@@ -1423,6 +1423,18 @@
 		}
 	},
 	{
+		"name": "Inside The Backrooms",
+		"slug": "inside-the-backrooms",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1987080
+			}
+		}
+	},
+	{
 		"name": "Jump Space",
 		"slug": "jump-space",
 		"modLoader": {
