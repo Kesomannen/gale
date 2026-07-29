@@ -18,7 +18,7 @@
 
 <InfoBox type="warning">
 	<div class="flex items-center justify-between">
-		<span>{m.unknownModsBanner_content()}</span>
+		<span>{m.unknownModsBanner_content({ countPlural: mods.length })}</span>
 		<Button color="primary" icon="mdi:info" onclick={() => (dialogOpen = true)}
 			>{m.unknownModsBanner_details_content()}</Button
 		>
