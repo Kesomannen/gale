@@ -2280,6 +2280,18 @@
 		}
 	},
 	{
+		"name": "Sineus Arena Survivors",
+		"slug": "sineus-arena-survivors",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4227400
+			}
+		}
+	},
+	{
 		"name": "Skul: The Hero Slayer",
 		"slug": "skul-the-hero-slayer",
 		"modLoader": {
