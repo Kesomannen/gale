@@ -8,6 +8,7 @@
   - This fixes issues with the initial mod fetch and deep link handling among others
 - Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
 - Some mods from disabled sources remaining available due to cache from previous installations
+- Disabling a source requiring the app to be restarted
 - ANSI escape codes being written to the log file
 - Removed broken privacy policy link in about dialog
 - HTTP cache headers are now respected
