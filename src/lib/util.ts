@@ -89,7 +89,11 @@ export function modIconSrc(mod: Mod) {
 }
 
 export function gameIconSrc(game: Game) {
-	return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
+	if (game.backends.length === 1 && game.backends[0] === Backend.Hexium) {
+		return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
+	} else {
+		return `https://gcdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
+	}
 }
 
 export function thunderstoreIconUrl(fullName: string) {
