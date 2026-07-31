@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.19.2 (2026-07-31)
+
+### Fixed
+
+- HTTP cache causing mod downloads to be cached twice
+
 ## 1.19.1 (2026-07-27)
 
 ### Fixed
