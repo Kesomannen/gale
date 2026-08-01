@@ -197,31 +197,31 @@ if __name__ == "__main__":
 
         all_platforms.remove(new_platform)
 
-    # print(
-    #     f"Add a square image to {bold('images/games')} with the name {bold(slug)} (png, jpg and webp supported)"
-    # )
-    # while True:
-    #     input("(press enter to continue)\n")
+    print(
+        f"Add a square image to {bold('images/games')} with the name {bold(slug)} (png, jpg and webp supported)"
+    )
+    while True:
+        input("(press enter to continue)\n")
 
-    #     found = False
-    #     for ext in ["png", "jpg", "jpeg", "webp"]:
-    #         icon_path = path.join(
-    #             __file__, "..", "..", "images", "games", f"{slug}.{ext}"
-    #         )
-    #         icon_path = path.realpath(icon_path)
-    #         cprint(f"Checking for icon at {icon_path}", "grey")
+        found = False
+        for ext in ["png", "jpg", "jpeg", "webp"]:
+            icon_path = path.join(
+                __file__, "..", "..", "images", "games", f"{slug}.{ext}"
+            )
+            icon_path = path.realpath(icon_path)
+            cprint(f"Checking for icon at {icon_path}", "grey")
 
-    #         if path.isfile(icon_path):
-    #             print("Icon found, resizing and optimizing...")
-    #             resize_and_optimize_icon(icon_path)
+            if path.isfile(icon_path):
+                print("Icon found, resizing and optimizing...")
+                resize_and_optimize_icon(icon_path)
 
-    #             found = True
-    #             break
+                found = True
+                break
 
-    #     if found:
-    #         break
+        if found:
+            break
 
-    #     cprint("Icon not found, try a gain", "red")
+        cprint("Icon not found, try a gain", "red")
 
     game = {
         "name": name,
