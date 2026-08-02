@@ -51,9 +51,7 @@
 	sensors={(defaults) => [
 		...defaults.filter((sensor) => sensor !== PointerSensor),
 		PointerSensor.configure({
-			activationConstraints: [
-				new PointerActivationConstraints.Distance({ value: 6 })
-			]
+			activationConstraints: [new PointerActivationConstraints.Distance({ value: 6 })]
 		})
 	]}
 >

@@ -335,3 +335,21 @@ impl Thunderstore {
         }
     }
 }
+
+async fn get_categories(
+    backend: Backend,
+    game: Game,
+    app: &AppHandle,
+) -> Result<Vec<PackageCategory>> {
+    let url = backend.category_url(game);
+    let response: CategoryResponse = app
+        .http()
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
+    Ok(response.results)
+}

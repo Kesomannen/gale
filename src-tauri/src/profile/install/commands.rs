@@ -51,7 +51,7 @@ pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
 
 #[command]
 pub fn cancel_all_installs(app: AppHandle) -> Result<()> {
-    app.app_state().install_queue.cancel_all();
+    app.install_queue().cancel_all();
 
     Ok(())
 }

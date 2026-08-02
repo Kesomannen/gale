@@ -21,23 +21,6 @@
 		"updater:allow-check",
 		"dialog:default",
 		"shell:default",
-		"http:default",
-		"http:allow-fetch",
-		{
-			"identifier": "http:default",
-			"allow": [
-				{
-					"url": "https://thunderstore.io/api/*"
-				},
-				{
-					"url": "https://hexium.gg/api/*"
-				},
-				{
-					"url": "https://raw.githubusercontent.com/Kesomannen/gale/master/*"
-				}
-			],
-			"deny": []
-		},
 		"os:allow-locale"
 	]
 }

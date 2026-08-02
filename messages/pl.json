@@ -459,11 +459,7 @@
 	"unknownModsBanner_content": [
 		{
 			"declarations": ["input countPlural"],
-			"match": {
-				"0": "Niektórych modyfikacji w tym profilu nie udało się rozwiązać.",
-				"countPlural=one": "Nie znaleziono następującego moda:",
-				"countPlural=other": "Nie znaleziono następujących modów:"
-			},
+			"match": ["Niektórych modyfikacji w tym profilu nie udało się rozwiązać."],
 			"selectors": ["countPlural"]
 		}
 	],

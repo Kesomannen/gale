@@ -459,11 +459,7 @@
 	"unknownModsBanner_content": [
 		{
 			"declarations": ["input countPlural"],
-			"match": {
-				"0": "Vissa modifieringar i den här profilen kunde inte lösas.",
-				"countPlural=one": "Följande mod kunde inte hittas:",
-				"countPlural=other": "Följande moddar kunde inte hittas:"
-			},
+			"match": ["Vissa modifieringar i den här profilen kunde inte lösas."],
 			"selectors": ["countPlural"]
 		}
 	],

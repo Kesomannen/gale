@@ -284,3 +284,16 @@ pub struct FrontendProfileMod {
 pub trait IntoFrontendMod {
     fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod;
 }
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CategoryResponse {
+    pub results: Vec<PackageCategory>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PackageCategory {
+    pub name: String,
+    pub slug: String,
+}

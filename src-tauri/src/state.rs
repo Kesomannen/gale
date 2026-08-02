@@ -1,4 +1,4 @@
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use eyre::{Context, Result};
 use http_cache_reqwest::{CACacheManager, CacheMode, HttpCache, HttpCacheOptions};
@@ -14,16 +14,16 @@ use crate::{
 };
 
 pub struct AppState {
-    pub http: reqwest_middleware::ClientWithMiddleware,
-    pub prefs: Mutex<Prefs>,
-    pub manager: Mutex<ModManager>,
-    pub thunderstore: Mutex<Thunderstore>,
-    pub db: Db,
-    pub install_queue: InstallQueue,
-    pub sync_auth: sync::auth::State,
-    pub sync_socket: sync::socket::State,
-    pub event_buffer: EventBuffer,
-    pub is_first_run: bool,
+    http: reqwest_middleware::ClientWithMiddleware,
+    prefs: Mutex<Prefs>,
+    manager: Mutex<ModManager>,
+    thunderstore: Mutex<Thunderstore>,
+    db: Db,
+    install_queue: Arc<InstallQueue>,
+    sync_auth: sync::auth::State,
+    sync_socket: sync::socket::State,
+    event_buffer: EventBuffer,
+    is_first_run: bool,
 }
 
 impl AppState {

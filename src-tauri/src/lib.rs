@@ -110,6 +110,7 @@ pub fn run() {
             thunderstore::commands::has_api_token,
             thunderstore::commands::clear_api_token,
             thunderstore::commands::trigger_mod_fetch,
+            thunderstore::commands::get_categories,
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
             prefs::commands::zoom_window,
@@ -199,7 +200,6 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .setup(setup)

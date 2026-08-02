@@ -132,7 +132,20 @@ impl Backend {
         }
     }
 
-    pub fn modpack_upload_baseurl(self) -> &'static str {
+    pub fn category_url(&self, game: Game) -> String {
+        match self {
+            Backend::Thunderstore => format!(
+                "https://thunderstore.io/api/experimental/community/{}/category/",
+                game.slug
+            ),
+            Backend::Hexium => format!(
+                "https://hexium.gg/api/experimental/community/{}/category/",
+                game.slug
+            ),
+        }
+    }
+
+    pub fn modpack_upload_base_url(self) -> &'static str {
         match self {
             Backend::Thunderstore => "https://thunderstore.io/api/experimental",
             Backend::Hexium => "https://hexium.gg/api/experimental",

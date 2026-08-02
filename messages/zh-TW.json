@@ -459,11 +459,7 @@
 	"unknownModsBanner_content": [
 		{
 			"declarations": ["input countPlural"],
-			"match": {
-				"0": "此設定檔中的某些模組無法解析。",
-				"countPlural=one": "找不到以下模組：",
-				"countPlural=other": "以下模組未找到："
-			},
+			"match": ["此設定檔中的某些模組無法解析。"],
 			"selectors": ["countPlural"]
 		}
 	],

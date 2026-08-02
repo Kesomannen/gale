@@ -459,11 +459,7 @@
 	"unknownModsBanner_content": [
 		{
 			"declarations": ["input countPlural"],
-			"match": {
-				"0": "Некоторые модификации в этом профиле не удалось разрешить.",
-				"countPlural=one": "Следующий мод не найден:",
-				"countPlural=other": "Следующие модификации не были найдены:"
-			},
+			"match": ["Некоторые модификации в этом профиле не удалось разрешить."],
 			"selectors": ["countPlural"]
 		}
 	],

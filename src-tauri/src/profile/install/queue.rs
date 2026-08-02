@@ -5,7 +5,7 @@ use std::{
     io::Cursor,
     iter,
     sync::{
-        Mutex, MutexGuard,
+        Arc, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant},
@@ -43,17 +43,19 @@ struct State {
 }
 
 impl InstallQueue {
-    pub fn new(app: AppHandle) -> Self {
+    pub fn new(app: AppHandle) -> Arc<Self> {
         let cancel = AtomicBool::new(false);
 
-        tauri::async_runtime::spawn(handle_queue(app));
-
-        Self {
+        let this = Arc::new(Self {
             state: Mutex::new(State::default()),
             notify_push: Notify::new(),
             notify_empty: Notify::new(),
             cancel,
-        }
+        });
+
+        tauri::async_runtime::spawn(handle_queue(Arc::clone(&this), app));
+
+        this
     }
 
     pub fn wait_for_empty(&'_ self) -> Notified<'_> {
@@ -274,9 +276,7 @@ impl InstallBatch {
     }
 }
 
-async fn handle_queue(app: AppHandle) {
-    let queue = app.install_queue();
-
+async fn handle_queue(queue: Arc<InstallQueue>, app: AppHandle) {
     // continously wait for new batches to be pushed and process them
     loop {
         queue.notify_push.notified().await;

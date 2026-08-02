@@ -16,6 +16,8 @@
 
 	const selectedFile = $derived(config.selectedFile);
 
+	let searchTerm = $state('');
+
 	onMount(() => {
 		config.refresh();
 	});
@@ -28,7 +30,7 @@
 		{#if config.loading}
 			{@render loadingSkeletons()}
 		{:else}
-			<ConfigFileList />
+			<ConfigFileList bind:searchTerm />
 		{/if}
 
 		<div class="max-w-5xl overflow-y-auto px-6 pb-6">

@@ -34,7 +34,7 @@
 	class={[
 		classProp,
 		typeClass,
-		'disabled:bg-primary-700 disabled:text-primary-400 inline-flex items-center overflow-hidden rounded-lg px-4 py-2 text-base text-nowrap disabled:cursor-not-allowed disabled:opacity-70'
+		'disabled:bg-primary-700 disabled:text-primary-400 inline-flex shrink-0 items-center overflow-hidden rounded-lg px-4 py-2 text-base text-nowrap disabled:cursor-not-allowed disabled:opacity-70'
 	]}
 	{disabled}
 	{...restProps}

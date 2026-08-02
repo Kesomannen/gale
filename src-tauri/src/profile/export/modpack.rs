@@ -173,7 +173,7 @@ fn base_request(
     backend: Backend,
     token: impl Display,
 ) -> reqwest_middleware::RequestBuilder {
-    let url = format!("{}/{tail}/", backend.modpack_upload_baseurl());
+    let url = format!("{}/{tail}/", backend.modpack_upload_base_url());
 
     app.http().post(url).bearer_auth(token)
 }

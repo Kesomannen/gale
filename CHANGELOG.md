@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Mods sometimes not being installed until Gale is restarted
+- Search bar being cleared after a config file is deleted
+- Clipping issues with the unknown mods banner
+
 ## 1.19.2 (2026-07-31)
 
 ### Fixed

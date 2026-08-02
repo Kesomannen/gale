@@ -146,6 +146,11 @@
 		}
 	}
 
+	async function forceUninstall(mod: Dependant) {
+		await api.profile.forceRemoveMods([mod.uuid]);
+		selectedMod = null;
+	}
+
 	async function openDependants(mod: Mod) {
 		dependants = (await api.profile.getDependants(mod.uuid)).map((d) => ({
 			backend: mod.backend,
@@ -218,7 +223,7 @@
 		{/if}
 
 		{#if unknownMods.length > 0}
-			<UnknownModsBanner mods={unknownMods} {uninstall} />
+			<UnknownModsBanner mods={unknownMods} uninstall={forceUninstall} />
 		{/if}
 
 		{#if mods.length === 0 && hasRefreshed}
