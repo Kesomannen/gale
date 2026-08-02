@@ -273,9 +273,7 @@ export type LaunchMode =
 export type AvailableUpdate = {
 	fullName: string;
 	ignore: boolean;
-	packageUuid: string;
-	versionUuid: string;
-	backend: Backend;
+	updatedId: ModId;
 	old: string;
 	new: string;
 };

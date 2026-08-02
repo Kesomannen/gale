@@ -25,9 +25,7 @@
 			"icons/icon.ico"
 		],
 		"windows": {
-			"certificateThumbprint": null,
-			"digestAlgorithm": "sha256",
-			"timestampUrl": ""
+			"signCommand": "artifact-signing-cli -e https://wus2.codesigning.azure.net -a GaleAzureSigning -c GaleAzureSigning -d Gale-The-Signer %1"
 		},
 		"linux": {
 			"appimage": {

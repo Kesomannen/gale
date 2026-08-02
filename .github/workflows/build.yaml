@@ -1,0 +1,61 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+  contents: write
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        include:
+          - platform: windows-latest
+            args: '--bundles msi'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.7.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install frontend dependencies
+        run: pnpm install
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install artifact signing cli
+        if: matrix.platform == 'windows-latest'
+        run: |
+          cargo install artifact-signing-cli
+
+      - name: Build Tauri app and upload artifacts
+        uses: tauri-apps/tauri-action@v0
+        id: tauri
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        with:
+          tagName: __VERSION__
+          releaseName: '__VERSION__'
+          releaseDraft: true
+          args: ${{ matrix.args }}

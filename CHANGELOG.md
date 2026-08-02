@@ -8,6 +8,7 @@
 - Search bar being cleared after a config file is deleted
 - Clipping issues with the unknown mods banner
 - Mod card lists such as the dependencies and hidden mods dialogs not being sorted correctly
+- Icons and links in update dialog always pointing to Thunderstore
 
 ## 1.19.2 (2026-07-31)
 

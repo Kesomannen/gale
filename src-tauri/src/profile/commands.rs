@@ -14,8 +14,8 @@ use crate::{
     profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{
-        Backend, BorrowedMod, FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind,
-        query::QueryModsArgs,
+        Backend, BorrowedMod, FrontendProfileMod, ModId, Thunderstore, VersionIdent,
+        cache::MarkdownKind, query::QueryModsArgs,
     },
     util::cmd::Result,
 };
@@ -138,8 +138,7 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
 pub struct FrontendAvailableUpdate {
     full_name: VersionIdent,
     ignore: bool,
-    package_uuid: Uuid,
-    version_uuid: Uuid,
+    updated_id: ModId,
     old: semver::Version,
     new: semver::Version,
 }
@@ -177,10 +176,13 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
 
             FrontendAvailableUpdate {
                 full_name: update.latest.ident.clone(),
-                package_uuid: update.package.uuid,
-                version_uuid: update.latest.uuid,
-                old: update.current.parsed_version().clone(),
-                new: update.latest.parsed_version().clone(),
+                updated_id: ModId {
+                    package_uuid: update.package.uuid,
+                    version_uuid: update.latest.uuid,
+                    backend: update.package.backend,
+                },
+                old: update.current.parsed_version(),
+                new: update.latest.parsed_version(),
                 ignore,
             }
         })
