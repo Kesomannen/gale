@@ -2520,7 +2520,8 @@
 			"steam": {
 				"id": 2080690
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Super Battle Golf",
