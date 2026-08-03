@@ -3,7 +3,7 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{bail, Context, Result};
+use eyre::{Context, Result, bail};
 use serde::Serialize;
 use tauri::AppHandle;
 use tracing::{info, warn};

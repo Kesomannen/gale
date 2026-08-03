@@ -5,17 +5,18 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use eyre::{bail, ensure, Context, Result};
+use eyre::{Context, Result, bail, ensure};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 use tracing::{debug, info, warn};
 
 use crate::{
     db::{self, Db},
-    game::{self, platform::Platform},
+    game::{self, Game, platform::Platform},
     logger,
     profile::launch::LaunchMode,
     state::ManagerExt,
+    thunderstore::Backend,
     util::{
         self,
         error::IoResultExt,
@@ -187,8 +188,37 @@ pub struct Prefs {
     pub zoom_factor: f32,
     pub pull_before_launch: bool,
     pub language: String,
+    pub backend_skip_confirm: bool,
 
     pub game_prefs: HashMap<String, GamePrefs>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default)]
+pub enum Backends {
+    #[default]
+    All,
+    Thunderstore,
+    Hexium,
+}
+
+impl Backends {
+    pub fn iter(&self) -> impl Iterator<Item = Backend> {
+        match self {
+            Backends::All => [Backend::Thunderstore, Backend::Hexium].iter(),
+            Backends::Thunderstore => [Backend::Thunderstore].iter(),
+            Backends::Hexium => [Backend::Hexium].iter(),
+        }
+        .copied()
+    }
+}
+
+impl From<Backend> for Backends {
+    fn from(value: Backend) -> Self {
+        match value {
+            Backend::Thunderstore => Backends::Thunderstore,
+            Backend::Hexium => Backends::Hexium,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -203,6 +233,7 @@ pub struct GamePrefs {
     pub launch_mode: LaunchMode,
     pub platform: Option<Platform>,
     pub show_steam_launch_options: bool,
+    pub backend: Backends,
 }
 
 impl Default for Prefs {
@@ -220,6 +251,7 @@ impl Default for Prefs {
 
             zoom_factor: 1.0,
             language: "en".to_string(),
+            backend_skip_confirm: false,
 
             game_prefs: HashMap::new(),
         }
@@ -288,6 +320,7 @@ impl Prefs {
 
         self.fetch_mods_automatically = value.fetch_mods_automatically;
         self.pull_before_launch = value.pull_before_launch;
+        self.backend_skip_confirm = value.backend_skip_confirm;
 
         self.save(app.db()).context("failed save prefs")
     }
@@ -331,6 +364,17 @@ impl Prefs {
 
     pub fn cache_dir(&self) -> PathBuf {
         self.data_dir.join("cache")
+    }
+
+    pub fn enabled_backends(&self, game: Game) -> Backends {
+        match game.backends.as_slice() {
+            [backend] => (*backend).into(),
+            _ => self
+                .game_prefs
+                .get(&*game.slug)
+                .map(|p| p.backend)
+                .unwrap_or_default(),
+        }
     }
 }
 

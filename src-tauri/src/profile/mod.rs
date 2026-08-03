@@ -6,20 +6,20 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use export::modpack::ModpackArgs;
-use eyre::{anyhow, ensure, eyre, Context, ContextCompat, OptionExt, Result};
+use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, ensure, eyre};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{
     config::ConfigCache,
     db::{self, Db},
-    game::{self, mod_loader::ModLoader, Game},
+    game::{self, Game, mod_loader::ModLoader},
     prefs::Prefs,
     state::ManagerExt,
-    thunderstore::{self, BorrowedMod, ModId, Thunderstore, VersionIdent},
+    thunderstore::{self, Backend, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::fs::PathExt,
 };
 
@@ -49,6 +49,7 @@ pub struct ModManager {
     /// which the user has selected at least once.
     pub games: HashMap<Game, ManagedGame>,
     pub active_game: Game,
+    pub hidden_mods: HashSet<Uuid>,
 }
 
 /// Stores profiles and other state for one game.
@@ -134,6 +135,10 @@ impl ProfileMod {
         self.kind.uuid()
     }
 
+    pub fn backend(&self) -> Backend {
+        self.kind.backend()
+    }
+
     pub fn ident(&self) -> Cow<'_, VersionIdent> {
         self.kind.ident()
     }
@@ -176,6 +181,13 @@ impl ProfileModKind {
         match self {
             ProfileModKind::Local(local_mod) => local_mod.uuid,
             ProfileModKind::Thunderstore(ts_mod) => ts_mod.id.package_uuid,
+        }
+    }
+
+    pub fn backend(&self) -> Backend {
+        match self {
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod.id.backend,
+            _ => Backend::Thunderstore,
         }
     }
 
@@ -275,6 +287,18 @@ impl Profile {
         self.mods.iter().filter_map(ProfileMod::as_thunderstore)
     }
 
+    /// Checks if any mods are hexium-exclusive mods
+    fn has_hexium_exclusive_mods(&self, thunderstore: &Thunderstore) -> bool {
+        self.thunderstore_mods().any(|(package, _)| {
+            let ident = &package.ident;
+            package.id.backend == Backend::Hexium
+                && thunderstore
+                    .backend(Backend::Thunderstore)
+                    .find_ident(ident)
+                    .is_err()
+        })
+    }
+
     fn local_mods(&self) -> impl Iterator<Item = (&LocalMod, bool)> {
         self.mods.iter().filter_map(ProfileMod::as_local)
     }
@@ -341,7 +365,7 @@ impl Profile {
     }
 
     pub fn notify_frontend(&self, app: &AppHandle) -> Result<()> {
-        app.emit("profile_changed", self.to_frontend())?;
+        app.emit_buffered("profile_changed", &self.to_frontend());
         Ok(())
     }
 }
@@ -398,6 +422,7 @@ pub struct Dependant {
     #[serde(rename = "fullName")]
     ident: VersionIdent,
     uuid: Uuid,
+    backend: Backend,
 }
 
 impl From<BorrowedMod<'_>> for Dependant {
@@ -405,6 +430,7 @@ impl From<BorrowedMod<'_>> for Dependant {
         Self {
             ident: value.version.ident.clone(),
             uuid: value.package.uuid,
+            backend: value.package.backend,
         }
     }
 }
@@ -414,6 +440,7 @@ impl From<&ProfileMod> for Dependant {
         Self {
             ident: value.ident().into_owned(),
             uuid: value.uuid(),
+            backend: value.backend(),
         }
     }
 }
@@ -505,7 +532,7 @@ impl ManagedGame {
     }
 
     pub fn save(&self, app: &AppHandle) -> Result<()> {
-        app.emit("game_changed", self.to_frontend())?;
+        app.emit_buffered("game_changed", &self.to_frontend());
 
         app.db().save_game(self)
     }
@@ -538,14 +565,15 @@ impl ModManager {
             .unwrap_or_else(|| game::from_slug(DEFAULT_GAME_SLUG).unwrap());
 
         let mut manager = Self {
-            games: HashMap::new(),
             active_game,
+            hidden_mods: manager.hidden_mods,
+            games: HashMap::new(),
         };
 
         let path = prefs.data_dir.to_path_buf();
 
         for saved_game in games {
-            manager.add_saved_game(&path, saved_game)?;
+            manager.add_saved_game(&path, saved_game);
         }
 
         for saved_profile in profiles {
@@ -644,12 +672,10 @@ impl ModManager {
     pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<&ManagedGame> {
         self.ensure_game(game, true, &app.lock_prefs(), app.db())?;
 
-        if self.active_game != game {
-            self.active_game = game;
+        self.active_game = game;
 
-            let mut thunderstore = app.lock_thunderstore();
-            thunderstore.switch_game(game, app.clone());
-        }
+        let mut thunderstore = app.lock_thunderstore();
+        thunderstore.switch_game(game, app.clone());
 
         Ok(self.active_game())
     }
@@ -719,20 +745,16 @@ impl ModManager {
             .unique()
             .collect_vec();
 
-        thunderstore::cache::write_packages(&packages, self.active_game, prefs)
+        thunderstore::cache::write_packages(packages, self.active_game, prefs)
     }
 
-    fn add_saved_game(
-        &mut self,
-        base_path: &Path,
-        saved_game: db::ManagedGameData,
-    ) -> Result<bool> {
+    fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) -> bool {
         let Some(game) = game::from_slug(&saved_game.slug) else {
             warn!(
                 "unknown game in save: {} (has Gale been downgraded?)",
                 saved_game.slug
             );
-            return Ok(false);
+            return false;
         };
 
         let managed_game = ManagedGame {
@@ -745,11 +767,11 @@ impl ModManager {
         };
 
         self.games.insert(game, managed_game);
-        Ok(true)
+        true
     }
 
     pub fn save_all(&self, app: &AppHandle) -> Result<()> {
-        app.emit("game_changed", self.active_game().to_frontend())?;
+        app.emit_buffered("game_changed", &self.active_game().to_frontend());
 
         app.db().save_all(self)
     }

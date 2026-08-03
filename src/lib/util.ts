@@ -1,15 +1,15 @@
 import {
-	type Mod,
+	Backend,
 	type ConfigEntry,
-	type SyncUser,
 	type Game,
 	type MarkdownType,
 	type LaunchOptionType,
-	ModType
+	type Mod,
+	ModType,
+	ModLoader
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
-import { isLatinAlphabet } from './i18n';
 import { m } from './paraglide/messages';
 import * as api from '$lib/api';
 import { getLocale } from './paraglide/runtime';
@@ -19,32 +19,8 @@ export function shortenFileSize(size: number): string {
 	return (size / Math.pow(1024, i)).toFixed(1) + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
-function pluralize(str: string): string {
-	return isLatinAlphabet(str) ? str + 's' : str;
-}
-
 export function formatModName(name: string): string {
 	return name.replace(/_/g, ' ');
-}
-
-export function formatTime(seconds: number): string {
-	if (seconds < 60) {
-		return m.util_formatTime_seconds({ seconds: Math.round(seconds) });
-	}
-
-	if (seconds < 3600) {
-		let minutes = Math.floor(seconds / 60);
-		if (minutes > 1) {
-			return pluralize(m.util_formatTime_minute({ minutes: minutes }));
-		}
-		return m.util_formatTime_minute({ minutes: minutes });
-	}
-
-	let hours = Math.floor(seconds / 3600);
-	if (hours > 1) {
-		return pluralize(m.util_formatTime_hour({ hours: hours }));
-	}
-	return m.util_formatTime_hour({ hours: hours });
 }
 
 export function formatLaunchOptionName(
@@ -136,14 +112,22 @@ export function isOutdated(mod: Mod): boolean {
 	return mod.version !== mod.versions[0].name;
 }
 
-export function communityUrl(path: string) {
-	return `https://thunderstore.io/c/${games.active?.slug}/p/${path}/`;
+export function communityUrl(backend: Backend, author: string, mod?: string) {
+	if (backend === Backend.Hexium) {
+		return `https://${games.active?.slug}.hexium.gg/${mod === undefined ? `teams/${author}` : `mods/${author}/${mod}`}`;
+	} else {
+		return `https://thunderstore.io/c/${games.active?.slug}/p/${author}${mod ? `/${mod}` : ''}/`;
+	}
 }
 
 export function modIconSrc(mod: Mod) {
 	if (mod.type === 'remote') {
-		let fullName = `${mod.author}-${mod.name}-${mod.version}`;
-		return thunderstoreIconUrl(fullName);
+		if (mod.backend === Backend.Thunderstore) {
+			let fullName = `${mod.author}-${mod.name}-${mod.version}`;
+			return thunderstoreIconUrl(fullName);
+		} else {
+			return hexiumIconUrl(mod.author ?? '', mod.name);
+		}
 	} else if (mod.icon !== null) {
 		let path = mod.enabled === false ? mod.icon + '.old' : mod.icon;
 		return convertFileSrc(path);
@@ -153,17 +137,23 @@ export function modIconSrc(mod: Mod) {
 }
 
 export function gameIconSrc(game: Game) {
-	return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
+	if (game.backends.length === 1 && game.backends[0] === Backend.Thunderstore) {
+		return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
+	} else {
+		return `https://gcdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
+	}
 }
 
 export function thunderstoreIconUrl(fullName: string) {
 	return `https://gcdn.thunderstore.io/live/repository/icons/${fullName}.png`;
 }
 
-export function capitalize(str: string): string {
-	if (!isLatinAlphabet(str)) return str;
+export function hexiumIconUrl(pkg: string, name: string) {
+	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png`;
+}
 
-	return str.charAt(0).toUpperCase() + str.slice(1);
+export function capitalize(str: string): string {
+	return str.charAt(0).toLocaleUpperCase() + str.slice(1);
 }
 
 export interface ListSeparator {
@@ -223,12 +213,29 @@ export async function getMarkdown(mod: Mod, type: MarkdownType, useLatest = fals
 			return await api.thunderstore.getMarkdown(
 				{
 					packageUuid: mod.uuid,
-					versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid
+					versionUuid: useLatest ? mod.versions[0].uuid : mod.versionUuid,
+					backend: mod.backend
 				},
 				type
 			);
 
 		case ModType.Local:
 			return await api.profile.getLocalMarkdown(mod.uuid, type);
+	}
+}
+
+export function loaderSupportsModpacks(loader: ModLoader) {
+	switch (loader) {
+		case ModLoader.BepInEx:
+		case ModLoader.BepisLoader:
+		case ModLoader.MelonLoader:
+		case ModLoader.Shimloader:
+		case ModLoader.Lovely:
+		case ModLoader.ReturnOfModding:
+			return true;
+
+		case ModLoader.Northstar:
+		case ModLoader.GDWeave:
+			return false;
 	}
 }

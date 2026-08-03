@@ -68,24 +68,31 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_bepisloader_args(&mut self) -> Result<()> {
-        let bepinex_path = self.format_path(self.profile_dir.join("BepInEx"))?;
         // Don't use format_path as BepisLoader escapes Proton and therefore
-        // does not recognize the Z: prefix, see
-        // https://github.com/Kesomannen/gale/issues/627#issuecomment-4753748042
-        let preloader_result = self.bepinex_preloader_path(Some("Renderer"));
+        // does not recognize the Z: prefix, see https://github.com/Kesomannen/gale/issues/627
+        let bepinex_target = self.profile_dir.join("BepInEx");
 
         self.command
             .arg("--hookfxr-enable")
             .arg("--bepinex-target")
-            .arg(bepinex_path);
+            .arg(bepinex_target);
 
-        if let Ok(preloader_path) = preloader_result {
-            let (enable_prefix, target_prefix) = self.doorstop_args(Some(4))?;
-            self.command
-                .arg(enable_prefix)
-                .arg("true")
-                .arg(target_prefix)
-                .arg(preloader_path);
+        let preloader_result = self
+            .bepinex_preloader_path(Some("Renderer"))
+            .and_then(|path| self.format_path(path));
+
+        match preloader_result {
+            Ok(preloader_path) => {
+                let (enable_prefix, target_prefix) = self.doorstop_args(Some(4))?;
+                self.command
+                    .arg(enable_prefix)
+                    .arg("true")
+                    .arg(target_prefix)
+                    .arg(preloader_path);
+            }
+            Err(err) => {
+                warn!(err = ?err, "failed to find BepInEx preloader, launching without doorstep")
+            }
         }
 
         Ok(())

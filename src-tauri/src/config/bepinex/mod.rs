@@ -1,6 +1,6 @@
 use std::io::{BufRead, Write};
 
-use eyre::{eyre, OptionExt, Result};
+use eyre::{OptionExt, Result, eyre};
 
 use super::frontend::{self, Num};
 

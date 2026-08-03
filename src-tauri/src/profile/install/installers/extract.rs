@@ -3,7 +3,7 @@ use std::{borrow::Cow, path::PathBuf};
 use eyre::Result;
 
 use super::{PackageInstaller, PackageZip};
-use crate::profile::{install, Profile, ProfileMod};
+use crate::profile::{Profile, ProfileMod, install};
 
 pub enum FlattenTopLevel {
     Yes,

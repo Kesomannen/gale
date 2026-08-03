@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import type { SortBy, Mod, ModId } from '$lib/types';
+	import { type SortBy, type Mod, type ModId, Backend, type ModContextItem } from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
@@ -15,16 +15,39 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import { pushInfoToast } from '$lib/toast';
+	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import games from '$lib/state/game.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
-	const contextItems = [...defaultContextItems];
+	const contextItems: ModContextItem[] = [
+		{
+			label: m.browse_contextItem_hideMod(),
+			icon: 'mdi:eye-off',
+			onclick: async (mod: Mod) => {
+				await api.profile.toggleHiddenMod(mod.uuid);
+				await refresh();
+				pushInfoToast({
+					message: m.browse_contextitem_hideMod_message({ name: mod.name })
+				});
+			}
+		},
+		...defaultContextItems
+	];
 
 	let mods: Mod[] = $state([]);
 
 	let modList: ModList;
 	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
+	let installDialogOpen = $state(false);
+	let loading = $state(false);
+	let warnNoRemind = $state(false);
 
+	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
 
 	onMount(() => {
@@ -60,13 +83,34 @@
 	async function installLatest(mod: Mod) {
 		await install({
 			packageUuid: mod.uuid,
-			versionUuid: mod.versions[0].uuid
+			versionUuid: mod.versions[0].uuid,
+			backend: mod.backend
 		});
 	}
 
-	async function install(id: ModId) {
-		await api.profile.install.mod(id);
+	async function doInstall() {
+		if (warnNoRemind) {
+			let prefs = await api.prefs.get();
+			prefs.backendSkipConfirm = true;
+			await api.prefs.set(prefs);
+		}
+		installDialogOpen = false;
+		loading = true;
+		await api.profile.install.mod(installId);
 		await refresh();
+	}
+
+	async function install(id: ModId) {
+		installId = id;
+		if (
+			id.backend !== Backend.Thunderstore &&
+			!(await api.prefs.get()).backendSkipConfirm &&
+			games.activeBackends.length > 1
+		) {
+			installDialogOpen = true;
+		} else {
+			await doInstall();
+		}
 	}
 
 	function onModClicked(evt: MouseEvent, mod: Mod) {
@@ -83,6 +127,10 @@
 			profiles.active;
 			refresh();
 		}
+	});
+
+	$effect(() => {
+		loading = false;
 	});
 
 	let locked = $derived(profiles.activeLocked);
@@ -105,16 +153,17 @@
 		>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
-					<div class="mt-4 text-lg">{m.browse_modList_content_1()}</div>
-					<div class="text-primary-400">{m.browse_modList_content_2()}</div>
+					<HelpCard title={m.browse_modList_content_1()} icon="mdi:store-search" class="mt-4">
+						{m.browse_modList_content_2()}
+					</HelpCard>
 				{/if}
 			{/snippet}
 
 			{#snippet item({ mod, isSelected })}
 				<ModListItem
 					{mod}
-					selected={isSelected}
 					{contextItems}
+					selected={isSelected}
 					locked={profiles.activeLocked}
 					oninstall={() => installLatest(mod)}
 					onclick={(evt) => onModClicked(evt, mod)}
@@ -125,7 +174,23 @@
 
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			<InstallModButton mod={selectedMod} {install} {locked} />
+			<InstallModButton mod={selectedMod} {install} {locked} {loading} />
 		</ModDetails>
 	{/if}
+
+	<ConfirmDialog title={m.otherServer_warn_title()} bind:open={installDialogOpen}>
+		{m.otherServer_warn_content()}
+		<div class="my-5 flex items-center">
+			<Checkbox id="neverwarninstall" bind:checked={warnNoRemind} />
+			<label class="ml-3" for="neverwarninstall">
+				{m.otherServer_warn_noremind()}
+			</label>
+		</div>
+
+		{#snippet buttons()}
+			<Button color="accent" icon="mdi:download" onclick={doInstall}>
+				{m.installModButton_button_install()}
+			</Button>
+		{/snippet}
+	</ConfirmDialog>
 </div>

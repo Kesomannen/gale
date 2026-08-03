@@ -10,6 +10,10 @@ pub fn default_app_data_dir() -> PathBuf {
     app_dir("data", dirs_next::data_dir())
 }
 
+pub fn default_app_cache_dir() -> PathBuf {
+    app_dir("cache", dirs_next::cache_dir())
+}
+
 fn app_dir(id: &str, base: Option<PathBuf>) -> PathBuf {
     let mut path = base.unwrap_or_else(|| panic!("failed to resolve {id} dir"));
     path.push(APP_GUID);

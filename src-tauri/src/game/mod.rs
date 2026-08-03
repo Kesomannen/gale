@@ -17,6 +17,7 @@ use tracing::{info, warn};
 
 use crate::{
     state::ManagerExt,
+    thunderstore::Backend,
     util::{self, fs::JsonStyle},
 };
 
@@ -95,10 +96,7 @@ pub async fn update_list_task(app: &AppHandle) -> Result<()> {
         Utc::now()
     });
 
-    let cache = GamesCache {
-        date,
-        games,
-    };
+    let cache = GamesCache { date, games };
 
     let path = util::path::default_app_data_dir().join(CACHE_FILE_NAME);
     util::fs::write_json(path, &cache, JsonStyle::Pretty)?;
@@ -132,7 +130,8 @@ async fn get_last_commit_date(app: &AppHandle) -> Result<DateTime<Utc>> {
         .error_for_status()?
         .json()
         .await?;
-    let date = response.first()
+    let date = response
+        .first()
         .ok_or_eyre("github api response contained no entries")?
         .commit
         .author
@@ -177,6 +176,9 @@ struct JsonGame<'a> {
 
     #[serde(borrow, default)]
     platforms: Platforms<'a>,
+
+    #[serde(default)]
+    backends: Option<Vec<Backend>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -189,6 +191,7 @@ pub struct GameData<'a> {
     pub server: bool,
     pub mod_loader: ModLoader<'a>,
     pub platforms: Platforms<'a>,
+    pub backends: Vec<Backend>,
 }
 
 impl<'a> From<JsonGame<'a>> for GameData<'a> {
@@ -201,6 +204,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             r2_dir_name,
             mod_loader,
             platforms,
+            backends,
         } = value;
 
         let slug = match slug {
@@ -221,6 +225,7 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             server,
             mod_loader,
             platforms,
+            backends: backends.unwrap_or(vec![Backend::Thunderstore]),
         }
     }
 }

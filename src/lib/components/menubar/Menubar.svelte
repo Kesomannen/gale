@@ -469,7 +469,7 @@
 
 <header
 	data-tauri-drag-region
-	class="bg-primary-800 flex h-8 shrink-0"
+	class="bg-primary-800 flex h-9 shrink-0"
 	class:hidden={useNativeMenu.current}
 >
 	<Menubar.Root class="flex items-center py-1">
@@ -480,7 +480,7 @@
 					{#if typeof item === 'string'}
 						<MenubarSeparator />
 					{:else}
-						<MenubarItem onclick={item.onclick} text={item.text} />
+						<MenubarItem onclick={item.onclick} text={item.text} key={(item as any).accelerator} />
 					{/if}
 				{/each}
 			</MenubarMenu>
@@ -488,14 +488,14 @@
 	</Menubar.Root>
 
 	{#snippet button(className: string, icon: string, onclick: () => void)}
-		<button class={[className, 'group hover:bg-primary-700 px-3 py-1.5']} {onclick}>
-			<Icon {icon} class="text-primary-500 group-hover:text-white" />
+		<button class={[className, 'group hover:bg-primary-700 px-4']} {onclick}>
+			<Icon {icon} class="text-primary-400 group-hover:text-white" />
 		</button>
 	{/snippet}
 
-	{@render button('hover:bg-primary-700 ml-auto', 'mdi:minimize', appWindow.minimize)}
-	{@render button('hover:bg-primary-700', 'mdi:maximize', appWindow.toggleMaximize)}
-	{@render button('hover:bg-red-700', 'mdi:close', appWindow.close)}
+	{@render button('hover:bg-primary-700 ml-auto', 'mdi:window-minimize', appWindow.minimize)}
+	{@render button('hover:bg-primary-700', 'mdi:window-maximize', appWindow.toggleMaximize)}
+	{@render button('hover:bg-red-700', 'mdi:window-close', appWindow.close)}
 </header>
 
 <Dialog

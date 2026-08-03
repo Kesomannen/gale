@@ -1,6 +1,6 @@
 use std::{
     collections::HashSet,
-    iter,
+    env, iter,
     sync::{Mutex, MutexGuard},
 };
 
@@ -18,7 +18,6 @@ use crate::{
     util,
 };
 
-pub mod cache;
 mod migrate;
 
 pub const FILE_NAME: &str = "data.sqlite3";
@@ -46,7 +45,9 @@ pub fn init() -> Result<(Db, bool)> {
     conn.pragma_update(None, "synchronous", "normal")
         .context("failed to set synchronous mode")?;
 
-    conn.trace(Some(trace_stmt));
+    if env::var("GALE_DEBUG_SQL").is_ok() {
+        conn.trace(Some(trace_stmt));
+    }
 
     run_migrations(&mut conn).context("failed to run migrations")?;
 
@@ -98,6 +99,7 @@ where
 pub struct ManagerData {
     pub id: i64,
     pub active_game_slug: Option<String>,
+    pub hidden_mods: HashSet<Uuid>,
 }
 
 pub struct ManagedGameData {
@@ -180,17 +182,19 @@ impl Db {
         let conn = self.conn();
 
         let manager = conn
-            .prepare("SELECT id, active_game_slug FROM manager")?
+            .prepare("SELECT id, active_game_slug, hidden_mods FROM manager")?
             .query_row((), |row| {
                 Ok(ManagerData {
                     id: row.get(0)?,
                     active_game_slug: row.get(1)?,
+                    hidden_mods: map_json_row(row, 2)?,
                 })
             })
             .optional()?
             .unwrap_or(ManagerData {
                 id: 1,
                 active_game_slug: None,
+                hidden_mods: HashSet::new(),
             });
 
         let games = conn
@@ -290,9 +294,13 @@ impl Db {
 
     fn _save_manager(&self, tx: &rusqlite::Transaction, manager: &ModManager) -> Result<()> {
         tx.execute(
-            "INSERT OR REPLACE INTO manager (id, active_game_slug)
-            VALUES (?, ?)",
-            params![1, manager.active_game.slug],
+            "INSERT OR REPLACE INTO manager (id, active_game_slug, hidden_mods)
+            VALUES (?, ?, ?)",
+            params![
+                1,
+                manager.active_game.slug,
+                serde_json::to_string(&manager.hidden_mods)?
+            ],
         )?;
 
         Ok(())

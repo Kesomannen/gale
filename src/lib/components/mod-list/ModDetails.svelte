@@ -6,7 +6,7 @@
 	import ModCardList from '../ui/ModCardList.svelte';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
 
-	import { ModType, type Mod, type ModContextItem } from '$lib/types';
+	import { Backend, type Mod, type ModContextItem, ModType } from '$lib/types';
 	import {
 		communityUrl,
 		formatModName,
@@ -23,8 +23,8 @@
 	import { type Snippet } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
-	import { goto } from '$app/navigation';
 	import InfoBox from '../ui/InfoBox.svelte';
+	import Tooltip from '../ui/Tooltip.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -37,6 +37,7 @@
 	let { mod, contextItems = [], locked, onclose, children }: Props = $props();
 
 	let dependenciesOpen = $state(false);
+	let suggestionsOpen = $state(false);
 
 	let readmeOpen = $state(false);
 	let readme: ModInfoDialog;
@@ -87,17 +88,17 @@
 				<svelte:element
 					this={mod.type === ModType.Remote ? 'a' : 'div'}
 					class={[
-						'pr-4 text-left text-3xl font-bold wrap-break-word text-white xl:text-4xl',
+						'block pr-4 text-left text-3xl font-bold text-white xl:text-4xl',
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
-					href={communityUrl(`${mod.author}/${mod.name}`)}
+					href={communityUrl(mod.backend, mod.author ?? '', mod.name)}
 					target="_blank">{formatModName(mod.name)}</svelte:element
 				>
 
 				{#if mod.author}
 					<a
 						class="text-primary-400 hover:text-primary-300 block text-lg hover:underline xl:text-xl"
-						href={communityUrl(mod.author)}
+						href={communityUrl(mod.backend, mod.author)}
 						target="_blank"
 					>
 						{mod.author}
@@ -122,8 +123,17 @@
 			</InfoBox>
 		{/if}
 
-		{#if mod.categories}
+		{#if mod.categories || mod.backend === Backend.Hexium}
 			<div class="mt-2 mb-1 flex flex-wrap gap-1">
+				{#if mod.backend === Backend.Hexium}
+					<div
+						class="text-primary-200 rounded-full border border-[#965dbe] bg-[#331b72] px-3 text-sm"
+						style="padding-block: calc(var(--spacing) - 2px);"
+					>
+						<img src="hexium.ico" alt="" class="inline h-4" />
+						Hexium
+					</div>
+				{/if}
 				{#each mod.categories as category}
 					<div class="bg-primary-700 text-primary-200 rounded-full px-3 py-1 text-sm">
 						{category}
@@ -146,9 +156,12 @@
 		</div>
 
 		{#if mod.lastUpdated !== null}
-			<div class="text-primary-400 mt-1 text-lg">
+			<Tooltip
+				class="text-primary-400 border-primary-400 mt-1 mb-1 border-b border-dashed text-lg"
+				text={new Date(mod.lastUpdated).toLocaleString()}
+			>
 				{m.modDetails_lastUpdated({ time: timeSince(new Date(mod.lastUpdated)) })}
-			</div>
+			</Tooltip>
 		{/if}
 
 		{#if mod.description !== null}
@@ -176,18 +189,9 @@
 			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
-			<button
-				onclick={() => {
-					const file = config.findFileByPath(mod.configFile!);
-					if (!file) {
-						console.error('Config file not found for mod', mod.configFile);
-						return;
-					}
-
-					config.selectedFile = file;
-					goto('/config');
-				}}>{m.modDetails_editConfig()}</button
-			>
+			<button onclick={() => config.gotoModConfig(mod.configFile!)}>
+				{m.modDetails_editConfig()}
+			</button>
 		</div>
 	{/if}
 
@@ -217,18 +221,38 @@
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		{@render button(
-			'material-symbols:network-node',
+			'mdi:dependency',
 			`${m.modDetails_dependencies()} (${mod.dependencies.length})`,
 			() => (dependenciesOpen = true)
+		)}
+	{/if}
+
+	{#if mod.suggestions !== null && mod.suggestions.length > 0}
+		{@render button(
+			'mdi:lightbulb',
+			`${m.modDetails_suggestions()} (${mod.suggestions.length})`,
+			() => (suggestionsOpen = true)
 		)}
 	{/if}
 
 	{@render children?.()}
 </div>
 
-<Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
+<Dialog title={m.modDetails_dependencies_title({ name: mod.name })} bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
-		<ModCardList mods={mod.dependencies.map((fullName) => ({ fullName }))} class="mt-4" />
+		<ModCardList
+			mods={mod.dependencies.map((fullName) => ({ fullName, backend: mod.backend }))}
+			class="mt-4"
+		/>
+	{/if}
+</Dialog>
+
+<Dialog title={m.modDetails_suggestions_title({ name: mod.name })} bind:open={suggestionsOpen}>
+	{#if mod.suggestions}
+		<ModCardList
+			mods={mod.suggestions.map((fullName) => ({ fullName, backend: mod.backend }))}
+			class="mt-4"
+		/>
 	{/if}
 </Dialog>
 

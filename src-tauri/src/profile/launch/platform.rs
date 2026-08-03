@@ -1,9 +1,8 @@
+use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
 use std::{
     path::{Path, PathBuf},
     process::Command,
 };
-
-use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
 use tracing::info;
 
 use crate::util;

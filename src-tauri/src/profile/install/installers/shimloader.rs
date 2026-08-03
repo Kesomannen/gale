@@ -8,8 +8,8 @@ use eyre::{Context, Result};
 
 use super::{PackageInstaller, PackageZip};
 use crate::profile::{
-    install::{self},
     Profile, ProfileMod,
+    install::{self},
 };
 
 pub struct ShimloaderInstaller;

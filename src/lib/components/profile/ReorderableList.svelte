@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
 	import { isSortable } from '@dnd-kit/svelte/sortable';
+	import { PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
 	import ReorderableMod from './ReorderableMod.svelte';
 	import type { ListItem, Mod } from '$lib/types';
 	import type { Snippet } from 'svelte';
@@ -9,7 +10,7 @@
 
 	type Props = {
 		items: ListItem[];
-		mod: Snippet<[{ mod: Mod }]>;
+		mod: Snippet<[{ mod: Mod; index: number }]>;
 		onmove?: (item: ListItem, fromIndex: number, toIndex: number) => void;
 		reorderable?: boolean;
 	};
@@ -45,7 +46,15 @@
 	}
 </script>
 
-<DragDropProvider {onDragOver}>
+<DragDropProvider
+	{onDragOver}
+	sensors={(defaults) => [
+		...defaults.filter((sensor) => sensor !== PointerSensor),
+		PointerSensor.configure({
+			activationConstraints: [new PointerActivationConstraints.Distance({ value: 6 })]
+		})
+	]}
+>
 	<VirtualList {items} rowId={(item) => itemId(item)} itemHeight={58}>
 		{#snippet children({ item, index })}
 			{@const hovered = item === hovering}
@@ -54,7 +63,7 @@
 				<!-- <ReorderableFolder folder={item.folder} {index} {hovered} /> -->
 			{:else}
 				<ReorderableMod mod={item.mod} {index} {hovered} disabled={!reorderable}>
-					{@render mod({ mod: item.mod })}
+					{@render mod({ mod: item.mod, index })}
 				</ReorderableMod>
 			{/if}
 		{/snippet}

@@ -31,13 +31,13 @@
 	});
 
 	async function updateAll() {
-		let uuids = shownUpdates
+		let packageUuids = shownUpdates
 			.filter((update) => include.get(update) ?? true)
-			.map((update) => update.packageUuid);
+			.map((update) => update.updatedId.packageUuid);
 
 		dialogOpen = false;
 
-		await api.profile.update.mods(uuids, true);
+		await api.profile.update.mods(packageUuids, true);
 	}
 
 	function ignoreUpdate(update: AvailableUpdate) {
@@ -79,7 +79,7 @@
 		set={(update, _, value) => include.set(update, value)}
 	>
 		{#snippet item({ item: update })}
-			<ModCard fullName={update.fullName} showVersion={false} />
+			<ModCard fullName={update.fullName} showVersion={false} backend={update.updatedId.backend} />
 
 			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
 			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
@@ -98,14 +98,14 @@
 							label: m.updateAllBanner_dialog_list_ignore_version(),
 							onclick: () => {
 								ignoreUpdate(update);
-								api.profile.update.ignore(update.versionUuid);
+								api.profile.update.ignore(update.updatedId.versionUuid);
 							}
 						},
 						{
 							label: m.updateAllBanner_dialog_list_ignore_package(),
 							onclick: () => {
 								ignoreUpdate(update);
-								api.profile.update.ignorePackage(update.packageUuid);
+								api.profile.update.ignorePackage(update.updatedId.packageUuid);
 							}
 						}
 					]}

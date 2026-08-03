@@ -94,11 +94,11 @@ impl ModLoader<'_> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => &["BepInEx/config"],
             ModLoaderKind::BepisLoader { .. } => &["BepInEx/config", "Renderer/BepInEx/config"],
-            ModLoaderKind::MelonLoader { .. } => &["."],
+            ModLoaderKind::MelonLoader { .. } => &[],
             ModLoaderKind::GDWeave {} => &["GDWeave/configs"],
-            ModLoaderKind::Northstar {} => &["."],
-            ModLoaderKind::Shimloader {} => &["."],
-            ModLoaderKind::Lovely {} => &["."],
+            ModLoaderKind::Northstar {} => &[],
+            ModLoaderKind::Shimloader {} => &["shimloader/cfg"],
+            ModLoaderKind::Lovely {} => &[],
             ModLoaderKind::ReturnOfModding { .. } => &["ReturnOfModding/config"],
         }
     }

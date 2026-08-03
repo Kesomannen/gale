@@ -4,8 +4,6 @@
 	import type { Snippet } from 'svelte';
 	import games from '$lib/state/game.svelte';
 
-	const itemHeight = 98;
-
 	type Props = {
 		mods: Mod[];
 		maxCount: number;

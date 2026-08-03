@@ -1,21 +1,20 @@
-use std::fs;
+use std::{collections::HashSet, fs};
 
 use eyre::{Context, Result};
 use itertools::Itertools;
 use tracing::{info, warn};
 
+use super::{ManagedGameData, ManagerData, ProfileData, SaveData};
 use crate::{
     game::{self, platform::Platform},
-    prefs::{GamePrefs, Prefs},
+    prefs::{Backends, GamePrefs, Prefs},
     profile::{
-        export::modpack::ModpackArgs, launch::LaunchMode, LocalMod, ProfileMod, ProfileModKind,
-        ThunderstoreMod,
+        LocalMod, ProfileMod, ProfileModKind, ThunderstoreMod, export::modpack::ModpackArgs,
+        launch::LaunchMode,
     },
-    thunderstore::ModId,
+    thunderstore::{Backend, ModId},
     util,
 };
-
-use super::{ManagedGameData, ManagerData, ProfileData, SaveData};
 
 pub fn should_migrate() -> bool {
     util::path::default_app_config_dir()
@@ -47,6 +46,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
     let manager = ManagerData {
         id: 1,
         active_game_slug: Some(manager_data.active_game),
+        hidden_mods: HashSet::new(),
     };
 
     let mut games = Vec::new();
@@ -152,6 +152,7 @@ impl From<legacy::GamePrefs> for GamePrefs {
             launch_mode: legacy.launch_mode.into(),
             platform: legacy.platform.map(Into::into),
             show_steam_launch_options: false,
+            backend: Backends::All,
         }
     }
 }
@@ -220,6 +221,7 @@ impl From<legacy::ModId> for ModId {
         ModId {
             package_uuid: legacy.package_uuid,
             version_uuid: legacy.version_uuid,
+            backend: Backend::Thunderstore,
         }
     }
 }
@@ -256,6 +258,7 @@ impl From<legacy::ModpackArgs> for ModpackArgs {
             website_url: legacy.website_url,
             include_disabled: legacy.include_disabled,
             include_files: legacy.include_files,
+            backend: Backend::Thunderstore,
         }
     }
 }

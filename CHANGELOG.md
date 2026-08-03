@@ -1,5 +1,123 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Mods sometimes not being installed until Gale is restarted
+- Search bar being cleared after a config file is deleted
+- Clipping issues with the unknown mods banner
+- Mod card lists such as the dependencies and hidden mods dialogs not being sorted correctly
+- Icons and links in update dialog always pointing to Thunderstore
+
+## 1.19.2 (2026-07-31)
+
+### Fixed
+
+- HTTP cache causing mod downloads to be cached twice
+
+## 1.19.1 (2026-07-27)
+
+### Fixed
+
+- Messages are now buffered before being emitted to the UI, fixing issues with events that happen on startup
+  - This fixes issues with the initial mod fetch and deep link handling among others
+- Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
+- Some mods from disabled sources remaining available due to cache from previous installations
+- Disabling a source requiring the app to be restarted
+- ANSI escape codes being written to the log file
+- Removed broken privacy policy link in about dialog
+- HTTP cache headers are now respected
+  - Thunderstore README and changelog requests are exempt from this and are always aggressively cached
+- Cards in profile mod list being unable to open with touch input (thanks [@NemGam](https://github.com/NemGam))
+
+## 1.19.0 (2026-07-20)
+
+### Added
+
+- Hexium mod suggestions (thanks [@bwoebi](https://github.com/bwoebi))
+- Support for Hexium-only games (thanks [@bwoebi](https://github.com/bwoebi))
+  - This currently only includes Survival: Fountain of Youth
+- Notice to import profile dialog informing about importing Hexium mods
+- Context menu options to hide mods from the mod list
+  - This does not prevent them from being installed or shown in the profile mod list
+  - Hidden mods can be unhidden from game-specific manager settings
+
+### Changed
+
+- Made error message more informative when a profile code couldn't be exported due to upload size limits
+- Import code dialog no longer auto-pastes from the clipboard when opened
+- Minor UI changes
+
+### Fixed
+
+- Export of Hexium mods not being respected on import (thanks [@bwoebi](https://github.com/bwoebi))
+- Improved the "fetching mods" bar behaviour when multiple download sources are enabled
+- Thunderstore mod author name linking to an invalid URL
+- Custom arguments being copied without quotes or escapes on Windows
+- Minor localization issues
+
+## 1.18.0 (2026-07-13)
+
+### Added
+
+- Support for the [Hexium](https://hexium.gg/) modding platform for Valheim (thanks [@bwoebi](https://github.com/bwoebi))
+  - By default, Hexium mods are fetched alongside Thunderstore mods. You can opt-out of either platform in the Valheim-specific settings
+  - The mod list shows mods from both platforms. If a mod exists on both, the Thunderstore version is favoured given the latest version is the same on both platforms
+  - Profile and modpack exports go to Thunderstore if all mods and versions are published there. If not, they are uploaded to Hexium and will only be available in Gale, not the official Thunderstore mod managers
+
+### Changed
+
+- Removed tags in the mod list
+- Other minor UI changes
+- The modpack export page is now disabled for games/communities that don't support modpacks
+  - This includes WEBFISHING (GDWeave) and Northstar
+- The modpack export page now lists config files that can correctly be imported via modpacks
+  - This now includes _all_ files in config directories such as `BepInEx/config` (see the whole list further below), instead of only those with certain file extensions
+  - This excludes some previously included but incorrectly included files like those in `BepInEx/plugins/<AUTHOR-NAME>`
+
+### Fixed
+
+- Gale being registered as a handler for all zip files on Linux (thanks [@Damglador](https://github.com/Damglador))
+- Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
+- The modpack export page refreshing when some fields are changed
+- Extra files in the config directory not being included in profile exports
+  - This now matches r2modman behaviour for BepInEx, plus additional support for other mod loaders
+  - The recognized config directories are as follows:
+    - `BepInEx/config`
+    - `Renderer/BepInEx/config`
+    - `GDWeave/configs`
+    - `shimloader/cfg`
+    - `ReturnOfModding/config`
+
+## 1.17.0 (2026-06-26)
+
+### Changed
+
+- Reverted the main config page UI changes
+  - Sections are no longer combined but instead picked via dropdown
+  - When `Edit config` is clicked on the profile page, the user is prompted to select one section to edit
+  - Removed the limit on shown entries
+- Readded mod descriptions to profile page and tweaked column size ratios
+- Added tags/categories to the mod list
+- Other UI tweaks and fixes
+- DEBUG logs are now hidden by default, but can be controlled via the `GALE_LOG` environment variable
+  - The variable syntax mirrors [tracing's directive syntax](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html#directives)
+  - For example, `GALE_LOG=debug` will show all debug logs and avobe
+- Added more fine-grained logging
+
+### Fixed
+
+- Tweaked Spanish translation (thanks [@ismakenji](https://github.com/ismakenji))
+- Fixed Resonite Linux unmodded launch issues again
+- Checking `Import all files` in the import profile dialog causing most mod files to be deleted from the profile
+
+## 1.16.1 (2026-06-23)
+
+### Fixed
+
+- Inter font not being bundled with the app, causing it to fallback to the system font
+
 ## 1.16.0 (2026-06-22)
 
 ### Changed
@@ -23,7 +141,7 @@
 - Whitespace and newlines being stripped from config entry descriptions
 - Reduced log spam from network requests
 - UNIX argument parsing being used on Windows, causing paths with backslashes to require extra escaping
-- Resonite mods not loading on Linux due to Z: path prefixes 
+- Resonite mods not loading on Linux due to Z: path prefixes
 
 ## 1.15.1 (2026-06-18)
 

@@ -1,14 +1,14 @@
-use eyre::anyhow;
-use tauri::{command, AppHandle};
+use eyre::{ContextCompat, anyhow};
+use futures_util::TryFutureExt;
+use itertools::Itertools;
+use tauri::{AppHandle, command};
+use tracing::warn;
 
-use super::{
-    models::FrontendMod,
-    query::{self, QueryModsArgs},
-};
+use super::{Backend, models::FrontendMod, query::QueryModsArgs};
 use crate::{
-    logger,
+    game, logger,
     state::ManagerExt,
-    thunderstore::{cache::MarkdownKind, ModId},
+    thunderstore::{ModId, PackageCategory, cache::MarkdownKind},
     util::cmd::Result,
 };
 
@@ -17,9 +17,11 @@ pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMo
     let manager = app.lock_manager();
     let mut thunderstore = app.lock_thunderstore();
 
-    let result = query::query_frontend_mods(&args, thunderstore.latest(), manager.active_profile());
+    // return some results immediately...
+    let result = thunderstore.query_mods(&args, &manager);
 
-    if !thunderstore.packages_fetched {
+    // ...then if we still have packages to fetch, continue fetching and returning new results in the background
+    if !thunderstore.packages_fetched(&app, manager.active_game) {
         thunderstore.current_query = Some(args);
     }
 
@@ -33,6 +35,8 @@ pub fn stop_querying_thunderstore(app: AppHandle) {
 
 #[command]
 pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
+    let game = app.lock_manager().active_game;
+
     let write_directly = {
         let state = app.lock_thunderstore();
 
@@ -40,14 +44,16 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
             return Err(anyhow!("already fetching mods").into());
         }
 
-        !state.packages_fetched
+        !state.packages_fetched(&app, game)
     };
 
-    let game = app.lock_manager().active_game;
-
     tauri::async_runtime::spawn(async move {
-        if let Err(err) = super::fetch::fetch_packages(game, write_directly, &app).await {
-            logger::log_webview_err("error while fetching mods from Thunderstore", err, &app);
+        for (backend, err) in super::fetch::fetch_packages(game, write_directly, &app).await {
+            logger::log_webview_err(
+                format!("error while fetching mods from {backend}"),
+                err,
+                &app,
+            );
         }
     });
 
@@ -65,18 +71,43 @@ pub async fn get_markdown(
 }
 
 #[command]
-pub fn set_thunderstore_token(token: &str) -> Result<()> {
-    super::token::set(token)?;
+pub fn set_api_token(backend: Backend, token: &str) -> Result<()> {
+    super::token::set(backend, token)?;
     Ok(())
 }
 
 #[command]
-pub fn has_thunderstore_token() -> bool {
-    super::token::get().is_ok_and(|token| token.is_some())
+pub fn has_api_token(backend: Backend) -> bool {
+    super::token::get(backend).is_ok_and(|token| token.is_some())
 }
 
 #[command]
-pub fn clear_thunderstore_token() -> Result<()> {
-    super::token::clear()?;
+pub fn clear_api_token(backend: Backend) -> Result<()> {
+    super::token::clear(backend)?;
     Ok(())
+}
+
+#[command]
+pub async fn get_categories(game: &str, app: AppHandle) -> Result<Vec<PackageCategory>> {
+    let game = game::from_slug(game).context("unknown game")?;
+
+    let tasks = game
+        .backends
+        .iter()
+        .map(|backend| super::get_categories(*backend, game, &app).map_err(|err| (*backend, err)));
+    let categories = futures_util::future::join_all(tasks)
+        .await
+        .into_iter()
+        .filter_map(|result| match result {
+            Ok(categories) => Some(categories),
+            Err((backend, error)) => {
+                warn!(%backend, ?error, "failed to fetch categories");
+                None
+            }
+        })
+        .flatten()
+        .unique()
+        .collect();
+
+    Ok(categories)
 }

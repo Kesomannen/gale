@@ -13,6 +13,7 @@ mod cli;
 mod config;
 mod db;
 mod deep_link;
+mod events;
 mod game;
 mod logger;
 mod prefs;
@@ -55,17 +56,6 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     if !args.is_empty() && !deep_link::handle(app.handle(), args.clone()) {
         cli::run(args, app.handle());
     }
-
-    let handle = app.handle().to_owned();
-    tauri::async_runtime::spawn(async move {
-        tokio::task::spawn_blocking(move || {
-            handle
-                .db()
-                .evict_outdated_cache()
-                .unwrap_or_else(|err| warn!("failed to evict outdated cache: {err:#}"))
-        })
-        .await
-    });
 
     let handle = app.handle().to_owned();
     tauri::async_runtime::spawn(async move {
@@ -116,10 +106,11 @@ pub fn run() {
             thunderstore::commands::query_thunderstore,
             thunderstore::commands::stop_querying_thunderstore,
             thunderstore::commands::get_markdown,
-            thunderstore::commands::set_thunderstore_token,
-            thunderstore::commands::has_thunderstore_token,
-            thunderstore::commands::clear_thunderstore_token,
+            thunderstore::commands::set_api_token,
+            thunderstore::commands::has_api_token,
+            thunderstore::commands::clear_api_token,
             thunderstore::commands::trigger_mod_fetch,
+            thunderstore::commands::get_categories,
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
             prefs::commands::zoom_window,
@@ -150,6 +141,8 @@ pub fn run() {
             profile::commands::set_custom_args,
             profile::commands::set_profile_path,
             profile::commands::forget_profile,
+            profile::commands::toggle_hidden_mod,
+            profile::commands::get_hidden_mods,
             profile::launch::commands::launch_game,
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,
@@ -208,9 +201,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
-        // TODO .plugin(tauri_plugin_oauth::Builder)
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
         .setup(setup)
         .build(tauri::generate_context!())

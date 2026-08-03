@@ -10,7 +10,7 @@
 	import SmallHeading from '$lib/components/prefs/SmallHeading.svelte';
 	import PlatformPref from '$lib/components/prefs/PlatformPref.svelte';
 
-	import type { Prefs, GamePrefs, Platform } from '$lib/types';
+	import { Backend, Backends, type GamePrefs, type Prefs } from '$lib/types';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
 
@@ -25,6 +25,8 @@
 	import FontFamilyPref from '$lib/components/prefs/FontFamilyPref.svelte';
 	import LanguagePref from '$lib/components/prefs/LanguagePref.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import BackendPref from '$lib/components/prefs/BackendPref.svelte';
+	import HiddenModsPref from '$lib/components/prefs/HiddenModsPref.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -40,8 +42,9 @@
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
 			customArgs: '',
-			platform: null,
-			showSteamLaunchOptions: false
+			showSteamLaunchOptions: false,
+			backend: Backends.All,
+			platform: null
 		};
 	});
 
@@ -129,7 +132,7 @@
 
 		<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
 
-		<ApiKeyPref />
+		<ApiKeyPref backend={Backend.Thunderstore} />
 
 		<TogglePref
 			label={m.prefs_miscellaneous_fetchMods_title()}
@@ -199,6 +202,27 @@
 			value={gamePrefs.customArgs}
 			setValue={set((value) => (gamePrefs!.customArgs = value))}
 		/>
+
+		{#if games.activeBackends.includes(Backend.Hexium)}
+			<SmallHeading>{m.backendPref_heading()}</SmallHeading>
+
+			{#if games.activeBackends.length > 1}
+				<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
+				<TogglePref
+					label={m.backendPref_other_server_title()}
+					value={!prefs.backendSkipConfirm}
+					set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
+				>
+					{m.backendPref_other_server_content()}
+				</TogglePref>
+			{/if}
+
+			<ApiKeyPref backend={Backend.Hexium} />
+		{/if}
+
+		<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
+
+		<HiddenModsPref />
 
 		{#if profiles.active}
 			<LargeHeading>{m.prefs_profileSettings_title()}</LargeHeading>

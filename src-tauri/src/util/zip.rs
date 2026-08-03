@@ -25,10 +25,7 @@ pub fn extract(src: impl Read + Seek, target: &Path) -> io::Result<()> {
             continue; // we create the necessary dirs when copying files instead
         }
 
-        let relative = match cfg!(unix) {
-            true => PathBuf::from(file.name().replace('\\', "/")),
-            false => PathBuf::from(file.name()),
-        };
+        let relative = PathBuf::from(file.name().replace('\\', "/"));
 
         if !util::fs::is_enclosed(&relative) {
             warn!(

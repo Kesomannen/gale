@@ -1,7 +1,7 @@
 use std::{borrow::Cow, env, fmt::Display, io::Cursor, sync::LazyLock};
 
 use chrono::{DateTime, Utc};
-use eyre::{bail, eyre, Context, OptionExt, Result};
+use eyre::{Context, OptionExt, Result, bail, eyre};
 use reqwest::{Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -20,7 +20,11 @@ static API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("G
     Err(_) => "https://gale.kesomannen.com/api".into(),
 });
 
-async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
+async fn request(
+    method: Method,
+    path: impl Display,
+    app: &AppHandle,
+) -> reqwest_middleware::RequestBuilder {
     let url = format!("{}{path}", *API_URL);
 
     let mut req = app.http().request(method, url);
@@ -277,8 +281,8 @@ async fn download_and_import_file(
         .bytes()
         .await?;
 
-    let mut data =
-        super::import::read_file(Cursor::new(bytes)).context("failed to read profile")?;
+    let mut data = super::import::read_file(Cursor::new(bytes), &app.lock_thunderstore())
+        .context("failed to read profile")?;
 
     if let Some(name) = override_name {
         data.manifest.name = name;

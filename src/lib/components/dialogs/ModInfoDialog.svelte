@@ -29,7 +29,7 @@
 
 <Dialog large bind:open>
 	{#await promise}
-		<Icon class="text-primary-300 animate-spin text-4xl" icon="mdi:loading" />
+		<Icon class="text-primary-300 animate-spin text-4xl" icon="ph:circle-notch" />
 	{:then value}
 		{#if value !== null}
 			<Markdown source={value} />

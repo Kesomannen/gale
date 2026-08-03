@@ -3,17 +3,22 @@ use std::{
     fs::File,
     io::{self, Cursor, Seek, Write},
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 
-use base64::{prelude::BASE64_STANDARD, Engine};
-use eyre::Context;
+use base64::{Engine, prelude::BASE64_STANDARD};
+use eyre::{Context, bail};
+use globset::{Glob, GlobBuilder, GlobSet, GlobSetBuilder};
+use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
+use tracing::info;
 use uuid::Uuid;
 use walkdir::WalkDir;
-use zip::{write::SimpleFileOptions, ZipWriter};
+use zip::{ZipWriter, write::SimpleFileOptions};
 
-use super::{install::ModInstall, Profile, Result};
+use super::{Profile, Result, install::ModInstall};
+use crate::thunderstore::Backend;
 use crate::{
     game::Game,
     state::ManagerExt,
@@ -45,6 +50,8 @@ pub struct R2Mod {
     #[serde(alias = "versionNumber")]
     pub version: R2Version,
     pub enabled: bool,
+    #[serde(default)]
+    pub source: Backend,
 }
 
 impl R2Mod {
@@ -53,7 +60,11 @@ impl R2Mod {
     }
 
     pub fn into_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
-        let borrowed_mod = thunderstore.find_ident(&self.version_ident())?;
+        // Prefer backend, otherwise fallback to generic lookup
+        let borrowed_mod = thunderstore
+            .backend(self.source)
+            .find_ident(&self.version_ident())
+            .or_else(|_| thunderstore.find_ident(&self.version_ident()))?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
     }
@@ -103,6 +114,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
                 ident,
                 version,
                 enabled,
+                source: ts_mod.id.backend,
             }
         })
         .collect();
@@ -119,11 +131,7 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
 
     write_config(
-        find_config(
-            &profile.path,
-            IncludeExtensions::Default,
-            IncludeGenerated::No,
-        ),
+        find_config(&profile.path, game.mod_loader.mod_config_dirs()),
         &profile.path,
         &mut zip,
     )?;
@@ -131,8 +139,14 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
     Ok(())
 }
 
-async fn export_code(app: &AppHandle) -> Result<Uuid> {
-    let base64 = {
+#[derive(Serialize)]
+pub struct ExportCode {
+    code: Uuid,
+    backend: Backend,
+}
+
+async fn export_code(app: &AppHandle) -> Result<ExportCode> {
+    let (backend, base64) = {
         let mut manager = app.lock_manager();
 
         let game = manager.active_game().game;
@@ -144,23 +158,42 @@ async fn export_code(app: &AppHandle) -> Result<Uuid> {
         let mut base64 = String::from(PROFILE_DATA_PREFIX);
         base64.push_str(&BASE64_STANDARD.encode(data.get_ref()));
 
-        base64
+        let backend = if profile.has_hexium_exclusive_mods(&app.lock_thunderstore()) {
+            Backend::Hexium
+        } else {
+            Backend::Thunderstore
+        };
+
+        (backend, base64)
     };
 
-    const URL: &str = "https://thunderstore.io/api/experimental/legacyprofile/create/";
+    let len = base64.len();
+
+    info!(len, "exporting profile code");
 
     let response = app
         .http()
-        .post(URL)
+        .post(backend.profile_export())
         .header("Content-Type", "application/octet-stream")
         .body(base64)
         .send()
-        .await?
-        .error_for_status()?
-        .json::<LegacyProfileCreateResponse>()
         .await?;
 
-    Ok(response.key)
+    let response = match response.status() {
+        status if status.is_success() => response.json::<LegacyProfileCreateResponse>().await?,
+        StatusCode::PAYLOAD_TOO_LARGE => {
+            bail!(
+                "profile config is too large to export: {}, please reduce the size by removing heavy and/or unneeded config files",
+                humansize::format_size(len, humansize::BINARY)
+            );
+        }
+        _ => bail!("upload failed with status: {}", response.status()),
+    };
+
+    Ok(ExportCode {
+        code: response.key,
+        backend,
+    })
 }
 
 fn write_config<P, I, W>(files: I, source: &Path, zip: &mut ZipWriter<W>) -> Result<()>
@@ -181,55 +214,45 @@ where
     Ok(())
 }
 
-const COMMON_EXTENSIONS: &[&str] = &["cfg", "txt", "json", "yml", "yaml", "ini", "xml"];
+fn find_config<'a>(root: &'a Path, config_dirs: &'a [&str]) -> impl Iterator<Item = PathBuf> + 'a {
+    static INCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
+        GlobSetBuilder::new()
+            .add(Glob::new("*.{cfg,txt,json,yml,yaml,ini}").unwrap())
+            .build()
+            .unwrap()
+    });
 
-const GENERATED_FILES: &[&str] = &[
-    "profile.json",
-    "manifest.json",
-    "mods.yml",
-    "doorstop_config.ini",
-    "snapshots",
-    "_state",
-    "MelonLoader/Dependencies/Il2CppAssemblyGenerator/Config.cfg",
-];
+    static EXCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
+        GlobSetBuilder::new()
+            .add(Glob::new("{dotnet,_state,snapshots,MelonLoader}/*").unwrap())
+            .add(Glob::new("GDWeave/{GDWeave.log,core/*,mods/*}").unwrap())
+            .add(Glob::new("mods.yml").unwrap())
+            .add(
+                GlobBuilder::new("BepInEx/plugins/*/manifest.json")
+                    .literal_separator(true)
+                    .build()
+                    .unwrap(),
+            )
+            .build()
+            .unwrap()
+    });
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum IncludeExtensions {
-    /// All extensions.
-    All,
-    /// Only common config extensions (see [`COMMON_EXTENSIONS`]).
-    #[default]
-    Default,
+    list_files(root).filter(move |path| {
+        (config_dirs.iter().any(|dir| path.starts_with(dir)) || INCLUDE_SET.is_match(path))
+            && !EXCLUDE_SET.is_match(path)
+    })
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum IncludeGenerated {
-    /// Include every file (as long as they fit [`IncludeExtensions`]).
-    Yes,
-    /// Skip common mod-manager generated files (see [`GENERATED_FILES`]).
-    No,
-}
-
-pub fn find_config(
-    root: &Path,
-    include_extensions: IncludeExtensions,
-    include_generated: IncludeGenerated,
-) -> impl Iterator<Item = PathBuf> + '_ {
+fn list_files<'a>(root: &'a Path) -> impl Iterator<Item = PathBuf> + 'a {
     WalkDir::new(root)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_file())
-        .map(move |entry| entry.into_path().strip_prefix(root).unwrap().to_path_buf())
-        .filter(move |path| {
-            matches!(include_generated, IncludeGenerated::Yes)
-                || !GENERATED_FILES
-                    .iter()
-                    .any(|exc| path.starts_with(exc) || path.ends_with(exc))
-        })
-        .filter(move |path| {
-            matches!(include_extensions, IncludeExtensions::All)
-                || path
-                    .extension()
-                    .is_some_and(|ext| COMMON_EXTENSIONS.iter().any(|inc| *inc == ext))
+        .map(move |entry| {
+            entry
+                .into_path()
+                .strip_prefix(root)
+                .expect("path should be child of root")
+                .to_path_buf()
         })
 }

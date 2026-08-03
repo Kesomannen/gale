@@ -1,5 +1,87 @@
 [
 	{
+		"name": "BONEWORKS",
+		"r2dirName": "BONEWORKS",
+		"popular": true,
+		"modLoader": {
+			"name": "MelonLoader",
+			"subdirs": [
+				{
+					"name": "Plugins",
+					"target": "Plugins",
+					"mode": "track",
+					"extension": ".plugin.dll"
+				},
+				{
+					"name": "UserData",
+					"target": "UserData",
+					"mode": "track"
+				},
+				{
+					"name": "CustomItems",
+					"target": "UserData/CustomItems",
+					"mode": "track",
+					"extension": ".melon"
+				},
+				{
+					"name": "CustomMaps",
+					"target": "UserData/CustomMaps",
+					"mode": "track",
+					"extension": ".bcm,.cma"
+				},
+				{
+					"name": "PlayerModels",
+					"target": "UserData/PlayerModels",
+					"mode": "track",
+					"extension": ".body"
+				},
+				{
+					"name": "CustomLoadScreens",
+					"target": "UserData/CustomLoadScreens",
+					"mode": "track",
+					"extension": ".load"
+				},
+				{
+					"name": "Music",
+					"target": "UserData/Music",
+					"mode": "track",
+					"extension": ".wav"
+				},
+				{
+					"name": "Food",
+					"target": "UserData/Food",
+					"mode": "track",
+					"extension": ".food"
+				},
+				{
+					"name": "Scoreworks",
+					"target": "UserData/Scoreworks",
+					"mode": "track",
+					"extension": ".sw"
+				},
+				{
+					"name": "CustomSkins",
+					"target": "UserData/CustomSkins",
+					"mode": "track",
+					"extension": ".png"
+				},
+				{
+					"name": "Grenades",
+					"target": "UserData/Grenades",
+					"mode": "track",
+					"extension": ".grenade"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 823500,
+				"dirName": "BONEWORKS/BONEWORKS"
+			},
+			"oculus": {}
+		}
+	},
+	{
 		"name": "Content Warning",
 		"popular": true,
 		"modLoader": {
@@ -69,6 +151,19 @@
 		}
 	},
 	{
+		"name": "PEAK",
+		"slug": "peak",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3527290
+			}
+		}
+	},
+	{
 		"name": "R.E.P.O.",
 		"slug": "repo",
 		"popular": true,
@@ -83,16 +178,14 @@
 		}
 	},
 	{
-		"name": "RV There Yet?",
-		"slug": "rv-there-yet",
+		"name": "ROUNDS",
 		"popular": true,
 		"modLoader": {
-			"name": "Shimloader",
-			"fileTarget": "./Ride/Binaries/Win64"
+			"name": "BepInEx"
 		},
 		"platforms": {
 			"steam": {
-				"id": 3949040
+				"id": 1557740
 			}
 		}
 	},
@@ -149,7 +242,8 @@
 			"xboxStore": {
 				"identifier": "CoffeeStainStudios.Valheim"
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "20 Minutes Till Dawn",
@@ -488,87 +582,6 @@
 		}
 	},
 	{
-		"name": "BONEWORKS",
-		"r2dirName": "BONEWORKS",
-		"modLoader": {
-			"name": "MelonLoader",
-			"subdirs": [
-				{
-					"name": "Plugins",
-					"target": "Plugins",
-					"mode": "track",
-					"extension": ".plugin.dll"
-				},
-				{
-					"name": "UserData",
-					"target": "UserData",
-					"mode": "track"
-				},
-				{
-					"name": "CustomItems",
-					"target": "UserData/CustomItems",
-					"mode": "track",
-					"extension": ".melon"
-				},
-				{
-					"name": "CustomMaps",
-					"target": "UserData/CustomMaps",
-					"mode": "track",
-					"extension": ".bcm,.cma"
-				},
-				{
-					"name": "PlayerModels",
-					"target": "UserData/PlayerModels",
-					"mode": "track",
-					"extension": ".body"
-				},
-				{
-					"name": "CustomLoadScreens",
-					"target": "UserData/CustomLoadScreens",
-					"mode": "track",
-					"extension": ".load"
-				},
-				{
-					"name": "Music",
-					"target": "UserData/Music",
-					"mode": "track",
-					"extension": ".wav"
-				},
-				{
-					"name": "Food",
-					"target": "UserData/Food",
-					"mode": "track",
-					"extension": ".food"
-				},
-				{
-					"name": "Scoreworks",
-					"target": "UserData/Scoreworks",
-					"mode": "track",
-					"extension": ".sw"
-				},
-				{
-					"name": "CustomSkins",
-					"target": "UserData/CustomSkins",
-					"mode": "track",
-					"extension": ".png"
-				},
-				{
-					"name": "Grenades",
-					"target": "UserData/Grenades",
-					"mode": "track",
-					"extension": ".grenade"
-				}
-			]
-		},
-		"platforms": {
-			"steam": {
-				"id": 823500,
-				"dirName": "BONEWORKS/BONEWORKS"
-			},
-			"oculus": {}
-		}
-	},
-	{
 		"name": "Back to the Dawn",
 		"modLoader": {
 			"name": "BepInEx"
@@ -659,6 +672,22 @@
 		"platforms": {
 			"steam": {
 				"id": 1331550
+			}
+		}
+	},
+	{
+		"name": "Bloons TD 6",
+		"slug": "bloons-td-6",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 960090,
+				"dirName": "BloonsTD6"
+			},
+			"epicGames": {
+				"identifier": "7786b355a13b47a6b3915335117cd0b2"
 			}
 		}
 	},
@@ -1170,6 +1199,19 @@
 		}
 	},
 	{
+		"name": "Goblin Cleanup",
+		"slug": "goblin-cleanup",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "GoblinCleanupModding-BepInExPack_GoblinCleanup"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2748340
+			}
+		}
+	},
+	{
 		"name": "Goodbye Volcano High",
 		"modLoader": {
 			"name": "BepInEx"
@@ -1262,9 +1304,7 @@
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
 			"fileTarget": "./Ship",
-			"files": [
-				"d3d12.dll"
-			]
+			"files": ["d3d12.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -1391,6 +1431,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1092790
+			}
+		}
+	},
+	{
+		"name": "Inside The Backrooms",
+		"slug": "inside-the-backrooms",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1987080
 			}
 		}
 	},
@@ -1824,18 +1876,6 @@
 		}
 	},
 	{
-		"name": "PEAK",
-		"slug": "peak",
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 3527290
-			}
-		}
-	},
-	{
 		"name": "PIGFACE",
 		"slug": "pigface",
 		"modLoader": {
@@ -1941,6 +1981,21 @@
 		}
 	},
 	{
+		"name": "Pikuniku",
+		"slug": "pikuniku",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 572890
+			},
+			"epicGames": {
+				"identifier": "48619f5656da446abccb727b78cda644"
+			}
+		}
+	},
+	{
 		"name": "Pit of Goblin",
 		"slug": "pit-of-goblin",
 		"modLoader": {
@@ -2012,17 +2067,6 @@
 		}
 	},
 	{
-		"name": "ROUNDS",
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 1557740
-			}
-		}
-	},
-	{
 		"name": "RUMBLE",
 		"modLoader": {
 			"name": "MelonLoader"
@@ -2030,6 +2074,19 @@
 		"platforms": {
 			"steam": {
 				"id": 890550
+			}
+		}
+	},
+	{
+		"name": "RV There Yet?",
+		"slug": "rv-there-yet",
+		"modLoader": {
+			"name": "Shimloader",
+			"fileTarget": "./Ride/Binaries/Win64"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3949040
 			}
 		}
 	},
@@ -2084,9 +2141,7 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": [
-				"version.dll"
-			]
+			"files": ["version.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -2153,6 +2208,18 @@
 		"platforms": {
 			"steam": {
 				"id": 2124120
+			}
+		}
+	},
+	{
+		"name": "SUPERHOT",
+		"slug": "superhot",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 322500
 			}
 		}
 	},
@@ -2225,6 +2292,18 @@
 		}
 	},
 	{
+		"name": "Shift At Midnight",
+		"slug": "shift-at-midnight",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3722330
+			}
+		}
+	},
+	{
 		"name": "Skul: The Hero Slayer",
 		"slug": "skul-the-hero-slayer",
 		"modLoader": {
@@ -2259,6 +2338,18 @@
 			"steam": {
 				"id": 2765860,
 				"dirName": "Slipstream Rogue Space"
+			}
+		}
+	},
+	{
+		"name": "Smushi Come Home",
+		"slug": "smushi-come-home",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1740300
 			}
 		}
 	},
@@ -2429,7 +2520,8 @@
 			"steam": {
 				"id": 2080690
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Super Battle Golf",
@@ -2477,6 +2569,23 @@
 				"id": 2709570
 			}
 		}
+	},
+	{
+		"name": "Survival: Fountain of Youth",
+		"slug": "sfoy",
+		"modLoader": {
+			"name": "BepInEx",
+			"packageName": "Legacy_Modding-BepInExPack_SFOY"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1967630
+			},
+			"epicGames": {
+				"identifier": "3842cb79cc4146c7ae33f3ede64ca484"
+			}
+		},
+		"backends": ["Hexium"]
 	},
 	{
 		"name": "TABS",

@@ -4,7 +4,7 @@
 [![Discord](https://img.shields.io/discord/1288196347597688912?style=flat&label=discord)](https://discord.gg/sfuWXRfeTt)
 [![GitHub License](https://img.shields.io/github/license/Kesomannen/gale?style=flat)](https://github.com/Kesomannen/gale?tab=GPL-3.0-1-ov-file#readme)
 
-The modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [Svelte](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
+A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [Svelte](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
 ## Features
 
@@ -45,20 +45,26 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
     <b>Scoop</b>
   </summary>
   
-  Gale is available as an independently hosted [Scoop](https://scoop.sh/) app:
+  Gale is available as a [Scoop](https://scoop.sh/) app in the official [games bucket](https://github.com/Calinou/scoop-games):
 
-  ```powershell
-  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
-  ```
-  
-  To update, run:
-  
-  ```powershell
-  scoop uninstall gale
-  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
-  ```
+```powershell
+scoop bucket add games
+scoop install gale
+```
 
-  > Efforts are in progress to submit the app to the [Scoop games bucket](https://github.com/Calinou/scoop-games/pull/1756) to make installation and updating more straightforward.
+</details>
+
+<details>
+  <summary>
+    <b>WinGet</b>
+  </summary>
+  
+  Gale is available as a [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/) application:
+
+```powershell
+winget install Kesomannen.Gale
+```
+
 </details>
 
 > [!NOTE]
@@ -74,26 +80,32 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
     <b>Arch</b>
   </summary>
   
-  Gale is available as a **community-maintained** [AUR package](https://aur.archlinux.org/packages/gale-bin).
+  Gale is available as a **community-maintained** AUR package: [gale](https://aur.archlinux.org/packages/gale) (from source) and [gale-bin](https://aur.archlinux.org/packages/gale-bin) (prebuilt).
   
   Example installation command:
   
   ```bash
   yay -S gale-bin
   ```
-</details>
 
+> [!WARN]
+> **Do not** use the in-app updater, instead update the app via the AUR.
+
+</details>
 
 <details>
   <summary>
     <b>Debian</b>
   </summary>
 
-  Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
 
-  ```bash
-  sudo dpkg -i Gale_X.X.X_x64_en-US.deb
-  ```
+```bash
+sudo dpkg -i Gale_X.X.X_x64_en-US.deb
+```
+
+Updating Gale can be done from the in-app updater UI.
+
 </details>
 
 <details>
@@ -101,11 +113,14 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
     <b>Fedora</b>
   </summary>
 
-  Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
 
-  ```bash
-  sudo rpm -i Gale_X.X.X_x64_en-US.rpm
-  ```
+```bash
+sudo rpm -i Gale_X.X.X_x64_en-US.rpm
+```
+
+Updating Gale can be done from the in-app updater UI.
+
 </details>
 
 <details>
@@ -113,11 +128,14 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
     <b>Flatpak</b>
   </summary>
 
-  Gale is available as an independently hosted Flatpak package:
+Gale is available as an independently hosted Flatpak package:
 
-  ```bash
-  flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
-  ```
+```bash
+flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
+```
+
+Updating the app can be done with `flatpak update com.kesomannen.gale`.
+
 </details>
 
 <details>
@@ -125,12 +143,15 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
     <b>AppImage</b>
   </summary>
 
-  Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
-  
-  ```bash
-  chmod +x Gale_X.X.X_x64_en-US.AppImage
-  ./Gale_X.X.X_x64_en-US.AppImage
-  ```
+Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
+
+```bash
+chmod +x Gale_X.X.X_x64_en-US.AppImage
+./Gale_X.X.X_x64_en-US.AppImage
+```
+
+Updating Gale can be done from the in-app updater UI.
+
 </details>
 
 ---
@@ -159,7 +180,7 @@ _Modpack export_
 
 Material icons licensed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
-Thanks to Ebkr for helping to navigate the thunderstore API and BepInEx, and of course making the original mod manager!
+Thanks to Ebkr for helping to navigate the Thunderstore API and BepInEx, and of course making the original mod manager!
 
 ---
 

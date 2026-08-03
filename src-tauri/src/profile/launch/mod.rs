@@ -91,7 +91,8 @@ impl ManagedGame {
             command.args(args.split_whitespace());
         }
 
-        info!("launching {} with command {:?}", self.game.slug, command);
+        info!(game = %self.game.slug, ?command, "launching");
+
         do_launch(command, app, launch_mode)?;
 
         Ok(())

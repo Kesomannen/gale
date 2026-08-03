@@ -1,7 +1,7 @@
 use std::{fmt::Debug, future::Future, path::PathBuf};
 
 use eyre::{Context, OptionExt, Result};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
@@ -27,16 +27,21 @@ pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
 
     if url.starts_with("ror2mm://") {
         handle_inner_task(app.clone(), handle_r2_install(url, app));
+    } else if url.starts_with("gale://install/") {
+        handle_inner_task(app.clone(), handle_gale_install(url, app));
     } else if url.starts_with("gale://auth/callback") {
         handle_inner_task(app.clone(), async move {
-            profile::sync::auth::handle_callback(url, &app).await
+            profile::sync::auth::handle_callback(url, &app)
         });
     } else if url.starts_with("gale://profile/import") {
         handle_inner_task(app.clone(), import_profile_code(url, app));
     } else if url.starts_with("gale://profile/sync/clone") {
         handle_inner_task(app.clone(), clone_sync_profile(url, app));
     } else if url.ends_with("r2z") {
-        handle_inner_task(app.clone(), async move { import_profile_file(&url, &app) });
+        handle_inner_task(
+            app.clone(),
+            async move { import_profile_file(&url, &app).await },
+        );
     } else {
         warn!("unsupported deep link protocol: {}", url);
         return false;
@@ -57,28 +62,57 @@ where
     });
 }
 
-async fn handle_r2_install(url: String, app: AppHandle) -> Result<()> {
-    thunderstore::wait_for_fetch(&app).await;
+struct InstallPackage<'a> {
+    owner: &'a str,
+    name: &'a str,
+    version: &'a str,
+}
 
-    let (owner, name, version) = url
-        .strip_prefix("ror2mm://v1/install/thunderstore.io/")
-        .and_then(|path| {
-            let mut split = path.split('/');
+impl<'a> InstallPackage<'a> {
+    fn split(string: &'a str) -> Option<Self> {
+        let mut split = string.split('/');
+        let (owner, name, version) = (split.next()?, split.next()?, split.next()?);
 
-            Some((split.next()?, split.next()?, split.next()?))
+        Some(Self {
+            owner,
+            name,
+            version,
         })
+    }
+}
+
+async fn handle_r2_install(url: String, app: AppHandle) -> Result<()> {
+    let package = url
+        .strip_prefix("ror2mm://v1/install/thunderstore.io/")
+        .and_then(InstallPackage::split)
         .ok_or_eyre("invalid package url")?;
 
+    handle_install(package, app).await
+}
+
+async fn handle_gale_install(url: String, app: AppHandle) -> Result<()> {
+    let package = url
+        .strip_prefix("gale://install/hexium/")
+        .or_else(|| url.strip_prefix("gale://install/thunderstore/"))
+        .and_then(InstallPackage::split)
+        .ok_or_eyre("invalid package url")?;
+
+    handle_install(package, app).await
+}
+
+async fn handle_install(package: InstallPackage<'_>, app: AppHandle) -> Result<()> {
+    thunderstore::wait_for_fetch(&app).await;
+
     let thunderstore = app.lock_thunderstore();
-    let borrowed_mod = thunderstore.find_mod(owner, name, version)?;
+    let borrowed_mod = thunderstore.find_mod(package.owner, package.name, package.version)?;
     let frontend_mod = borrowed_mod.into_frontend(None);
 
-    app.emit("install_mod", frontend_mod)?;
+    app.emit_buffered("install_mod", &frontend_mod);
 
     Ok(())
 }
 
-fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
+async fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
     let path = PathBuf::from(url);
 
     info!(
@@ -86,9 +120,11 @@ fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
         path.display()
     );
 
-    let import_data = profile::import::read_file_at_path(path)?;
+    thunderstore::wait_for_fetch(app).await;
 
-    app.emit("import_profile", FrontendImportData::new(import_data, app))?;
+    let import_data = profile::import::read_file_at_path(path, &app.lock_thunderstore())?;
+
+    app.emit_buffered("import_profile", &FrontendImportData::new(import_data, app));
 
     Ok(())
 }
@@ -99,9 +135,14 @@ async fn import_profile_code(url: String, app: AppHandle) -> Result<()> {
         .ok_or_eyre("invalid url format")
         .and_then(|str| Uuid::parse_str(str).context("invalid UUID"))?;
 
+    thunderstore::wait_for_fetch(&app).await;
+
     let import_data = profile::import::read_code(key, &app).await?;
 
-    app.emit("import_profile", FrontendImportData::new(import_data, &app))?;
+    app.emit_buffered(
+        "import_profile",
+        &FrontendImportData::new(import_data, &app),
+    );
 
     Ok(())
 }
@@ -113,7 +154,7 @@ async fn clone_sync_profile(url: String, app: AppHandle) -> Result<()> {
 
     let import_data = profile::sync::read_profile(id, &app).await?;
 
-    app.emit("import_profile", import_data)?;
+    app.emit_buffered("import_profile", &import_data);
 
     Ok(())
 }

@@ -5,38 +5,71 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import IconButton from '../ui/IconButton.svelte';
+	import { pushInfoToast } from '$lib/toast';
+	import { Backend, type ExportCode } from '$lib/types';
+	import InfoBox from '$lib/components/ui/InfoBox.svelte';
 
 	let isOpen = $state(false);
-	let codePromise: Promise<string> | null = $state(null);
+	let code = $state<ExportCode | null>(null);
 
 	export async function open() {
-		codePromise = api.profile.export.code();
-		isOpen = true;
-
 		try {
-			let code = await codePromise;
-			await writeText(code);
+			code = null;
+			isOpen = true;
+			code = await api.profile.export.code();
 		} catch (e) {
 			isOpen = false;
 		}
 	}
+
+	async function copyCode() {
+		if (!code) return;
+
+		await writeText(code.code);
+
+		pushInfoToast({
+			message: m.exportCodeDialog_copyCode_message()
+		});
+	}
 </script>
 
 <Dialog title={m.exportCodeDialog_title()} bind:open={isOpen}>
-	<p class="flex-center text-primary-400 mb-1 flex">
-		{#await codePromise}
-			<Spinner class="text-lg" />
-			{m.exportCodeDialog_content_1({
-				name: profiles.active?.name ?? m.exportCodeDialog_content_unknown()
-			})}
-		{:then}
-			{m.exportCodeDialog_content_2()}
-		{/await}
-	</p>
+	<div class="text-primary-300 mt-1 space-y-1">
+		{#if code}
+			<div>
+				{m.exportCodeDialog_done()}
+			</div>
 
-	{#await codePromise then code}
-		<code class="bg-primary-900 text-primary-400 rounded-sm px-3 py-1 text-lg">
-			{code}
-		</code>
-	{/await}
+			<div>
+				<button
+					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
+					onclick={copyCode}
+				>
+					{code.code}
+				</button>
+
+				<IconButton
+					icon="mdi:content-copy"
+					label={m.exportCodeDialog_copyCode_label()}
+					onclick={copyCode}
+				/>
+			</div>
+
+			{#if code.backend !== Backend.Thunderstore}
+				<InfoBox type="info">
+					{m.exportCodeDialog_galeExclusive()}
+				</InfoBox>
+			{/if}
+		{:else}
+			<div class="flex items-center gap-1">
+				<Spinner class="text-lg" />
+				<span>
+					{m.exportCodeDialog_loading({
+						name: profiles.active?.name ?? m.exportCodeDialog_content_unknown()
+					})}
+				</span>
+			</div>
+		{/if}
+	</div>
 </Dialog>
