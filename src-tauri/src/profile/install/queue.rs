@@ -5,18 +5,18 @@ use std::{
     io::Cursor,
     iter,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Mutex, MutexGuard,
+        atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant},
 };
 
-use eyre::{bail, eyre, Context, Result};
+use eyre::{Context, Result, bail, eyre};
 use futures_util::StreamExt;
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
-use tokio::sync::{futures::Notified, oneshot, Notify};
+use tokio::sync::{Notify, futures::Notified, oneshot};
 use tracing::warn;
 use uuid::Uuid;
 use zip::ZipArchive;
@@ -63,8 +63,8 @@ impl InstallQueue {
         self.cancel.store(true, Ordering::SeqCst);
     }
 
-    pub fn handle(&'_ self) -> InstallQueueHandle<'_> {
-        InstallQueueHandle {
+    pub fn lock(&'_ self) -> InstallQueueLock<'_> {
+        InstallQueueLock {
             state: self.state.lock().unwrap(),
             queue: self,
         }
@@ -81,7 +81,7 @@ impl InstallQueue {
         options: InstallOptions,
         app: &AppHandle,
     ) -> impl Future<Output = InstallResult<()>> {
-        self.handle().push_batch(mods, profile_id, options, app)
+        self.lock().push_batch(mods, profile_id, options, app)
     }
 
     /// Queue mods to be installed, along with their dependencies. Returns a future that resolves
@@ -99,18 +99,18 @@ impl InstallQueue {
         allow_multiple: bool,
         app: &AppHandle,
     ) -> Result<impl Future<Output = InstallResult<()>>> {
-        self.handle()
+        self.lock()
             .push_with_deps(mods, profile_id, options, allow_multiple, app)
     }
 }
 
 /// A RAII guard for the inner state of the [`InstallQueue`].
-pub struct InstallQueueHandle<'a> {
+pub struct InstallQueueLock<'a> {
     state: MutexGuard<'a, State>,
     queue: &'a InstallQueue,
 }
 
-impl<'a> InstallQueueHandle<'a> {
+impl<'a> InstallQueueLock<'a> {
     /// Whether any mods are currently being installed.
     pub fn is_processing(&self) -> bool {
         self.state.processing.is_some()
@@ -142,13 +142,16 @@ impl<'a> InstallQueueHandle<'a> {
             })
     }
 
-    fn push_batch(
+    fn push_batch<I>(
         &mut self,
-        mods: impl IntoIterator<Item = ModInstall>,
+        mods: I,
         profile_id: i64,
         options: InstallOptions,
         app: &AppHandle,
-    ) -> impl Future<Output = InstallResult<()>> {
+    ) -> impl Future<Output = InstallResult<()>> + use<I>
+    where
+        I: IntoIterator<Item = ModInstall>,
+    {
         let (tx, rx) = oneshot::channel();
 
         let mods = mods
@@ -157,7 +160,7 @@ impl<'a> InstallQueueHandle<'a> {
             .collect_vec();
 
         let mod_count = mods.len();
-        let bytes = mods.iter().map(|install| install.file_size).sum();
+        let bytes = mods.iter().map(|install| install.file_size as i64).sum();
 
         let batch = InstallBatch {
             mods,
@@ -186,7 +189,7 @@ impl<'a> InstallQueueHandle<'a> {
             match rx.await {
                 Ok(Ok(())) => Ok(()),
                 Ok(Err(err)) => Err(err),
-                Err(err) => Err(InstallError::Err(eyre!(err))),
+                Err(err) => Err(InstallError::Error(eyre!(err))),
             }
         }
     }
@@ -198,7 +201,7 @@ impl<'a> InstallQueueHandle<'a> {
         options: InstallOptions,
         allow_multiple: bool,
         app: &AppHandle,
-    ) -> Result<impl Future<Output = InstallResult<()>>> {
+    ) -> Result<impl Future<Output = InstallResult<()>> + use<>> {
         let mods = {
             let manager = app.lock_manager();
             let thunderstore = app.lock_thunderstore();
@@ -260,7 +263,7 @@ impl InstallBatch {
             // if we succeeded or was cancelled we don't care either ...
             Err(Ok(_)) => (),
             Err(Err(InstallError::Cancelled)) => (),
-            Err(Err(InstallError::Err(err))) => {
+            Err(Err(InstallError::Error(err))) => {
                 // ... but on errors we want to log the error and notify the frontend.
                 logger::log_webview_err("Failed to install batch", err, app);
             }
@@ -281,7 +284,7 @@ async fn handle_queue(app: AppHandle) {
         emit(InstallEvent::Show, &app);
 
         loop {
-            let batch = queue.handle().pop_next();
+            let batch = queue.lock().pop_next();
 
             match batch {
                 Some(batch) => {
@@ -308,7 +311,7 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
     for (i, install) in batch.mods.iter().enumerate() {
         result = handle_install(&batch, i, cancel, app).await;
 
-        match &result {
+        match result {
             Ok(()) => (),
             Err(InstallError::Cancelled) => {
                 rollback_batch(&batch, app, i).unwrap_or_else(|err| {
@@ -316,7 +319,7 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
                 });
 
                 // cancel all pending bathes
-                let mut handle = app.install_queue().handle();
+                let mut handle = app.install_queue().lock();
                 for batch in handle.state.pending.drain(..) {
                     batch.complete(Err(InstallError::Cancelled), app);
                 }
@@ -324,13 +327,13 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
                 reason = HideReason::Cancelled;
                 break;
             }
-            Err(InstallError::Err(_)) => {
+            Err(InstallError::Error(err)) => {
                 rollback_batch(&batch, app, i)
                     .unwrap_or_else(|err| warn!("failed to rollback failed installation: {err}",));
 
-                result = result
-                    .wrap_err_with(|| format!("failed to install {}", install.ident))
-                    .map_err(InstallError::Err);
+                result = Err(InstallError::Error(
+                    err.wrap_err(format!("failed to install {}", install.ident)),
+                ));
 
                 reason = HideReason::Error;
                 break;
@@ -363,7 +366,7 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
                     });
             }
 
-            profile.save(&app, true)?;
+            profile.save(app, true)?;
             Ok(())
         }
     }
@@ -378,8 +381,11 @@ async fn handle_install(
     match try_cache_install(batch, index, app)? {
         CacheStatus::Hit => Ok(()),
         CacheStatus::Miss => {
-            let bytes = download(&batch.mods[index], cancel, &batch.options, app).await?;
-            install_from_download(bytes, batch, index, cancel, app)?;
+            let bytes = download(&batch.mods[index], cancel, &batch.options, app)
+                .await
+                .context("error while downloading")?;
+            install_from_download(bytes, batch, index, cancel, app)
+                .context("error while installing")?;
 
             Ok(())
         }
@@ -418,12 +424,12 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
 
     install.clone().insert_into(profile)?;
 
-    profile.save(&app, true)?;
+    profile.save(app, true)?;
 
     emit(
         InstallEvent::AddProgress {
             mods: 1,
-            bytes: install.file_size,
+            bytes: install.file_size as i64,
         },
         app,
     );
@@ -447,35 +453,78 @@ async fn download(
         install.ident.path()
     );
 
+    const MAX_RETRIES: usize = 3;
+    const INITIAL_BACKOFF: Duration = Duration::from_secs(2);
+
+    let mut response = Vec::with_capacity(install.file_size as usize);
+    let mut retries = 0;
+    let mut backoff = INITIAL_BACKOFF;
+
+    loop {
+        match try_download(&mut response, &url, cancel, options, app).await {
+            Ok(()) => break Ok(response),
+            Err(InstallError::Cancelled) => return Err(InstallError::Cancelled),
+            Err(InstallError::Error(err)) => {
+                if retries >= MAX_RETRIES {
+                    break Err(InstallError::Error(err.wrap_err("max retries exceeded")));
+                }
+
+                emit(
+                    InstallEvent::AddProgress {
+                        mods: 0,
+                        bytes: -(response.len() as i64),
+                    },
+                    app,
+                );
+
+                response.clear();
+
+                retries += 1;
+
+                warn!(attempt = retries, err = ?err, "download failed, retrying in {backoff:?}");
+
+                tokio::time::sleep(backoff).await;
+                backoff *= 2;
+            }
+        }
+    }
+}
+
+async fn try_download(
+    buf: &mut Vec<u8>,
+    url: &str,
+    cancel: &AtomicBool,
+    options: &InstallOptions,
+    app: &AppHandle,
+) -> InstallResult<()> {
+    const UPDATE_DELAY: Duration = Duration::from_millis(100);
+
     let mut stream = app
         .http()
         .get(url)
         .send()
         .await
         .and_then(|response| response.error_for_status())
-        .map_err(|err| eyre!(err))?
+        .context("failed to send request")?
         .bytes_stream();
 
-    let mut response = Vec::with_capacity(install.file_size as usize);
-
-    const UPDATE_DELAY: Duration = Duration::from_millis(100);
     let mut last_update = Instant::now();
-    let mut last_size_update = 0u64;
+    let mut last_size_update = 0i64;
 
     while let Some(item) = stream.next().await {
-        let item = item.map_err(eyre::Report::new)?;
-        response.extend_from_slice(&item);
+        let item = item.context("failed to read chunk from stream")?;
+        buf.extend_from_slice(&item);
 
         if last_update.elapsed() >= UPDATE_DELAY {
             last_update = Instant::now();
             emit(
                 InstallEvent::AddProgress {
                     mods: 0,
-                    bytes: response.len() as u64 - last_size_update,
+                    bytes: buf.len() as i64 - last_size_update,
                 },
                 app,
             );
-            last_size_update = response.len() as u64;
+            last_size_update = buf.len() as i64;
 
             check_cancel(cancel, options)?;
         }
@@ -484,12 +533,12 @@ async fn download(
     emit(
         InstallEvent::AddProgress {
             mods: 0,
-            bytes: response.len() as u64 - last_size_update,
+            bytes: buf.len() as i64 - last_size_update,
         },
         app,
     );
 
-    Ok(response)
+    Ok(())
 }
 
 fn install_from_download(
@@ -550,7 +599,7 @@ fn install_from_download(
     installer.install(&cache_path, package_name, profile)?;
     install.clone().insert_into(profile)?;
 
-    profile.save(&app, true)?;
+    profile.save(app, true)?;
 
     emit(InstallEvent::AddProgress { mods: 1, bytes: 0 }, app);
 
@@ -569,12 +618,12 @@ enum InstallEvent<'a> {
     #[serde(rename_all = "camelCase")]
     AddCount {
         mods: usize,
-        bytes: u64,
+        bytes: i64,
     },
     #[serde(rename_all = "camelCase")]
     AddProgress {
         mods: usize,
-        bytes: u64,
+        bytes: i64,
     },
     #[serde(rename_all = "camelCase")]
     SetTask {

@@ -11,22 +11,57 @@
 	import games from '$lib/state/game.svelte';
 	import InstallPopover from './InstallPopover.svelte';
 	import { message } from '@tauri-apps/plugin-dialog';
+	import { m } from '$lib/paraglide/messages';
 	import { gameIconSrc, timeSince } from '$lib/util';
 	import type { LaunchOption } from '$lib/types';
+	import { DropdownMenu } from 'bits-ui';
+	import DropdownArrow from '../ui/DropdownArrow.svelte';
+	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
+	import type { ContextItem } from '$lib/types';
+	import { PersistedState } from 'runed';
+
+	type Mode = 'vanilla' | 'modded';
+
+	const labels: Record<Mode, string> = {
+		vanilla: m.toolBar_launch_vanilla(),
+		modded: m.toolBar_launch_modded()
+	};
+
+	const launchDropdownItems: ContextItem[] = [
+		{
+			label: labels['vanilla'],
+			onclick: () => {
+				mode.current = 'vanilla';
+				launchGame();
+			}
+		},
+		{
+			label: labels['modded'],
+			onclick: () => {
+				mode.current = 'modded';
+				launchGame();
+			}
+		}
+	];
 
 	let launchDialogOpen = $state(false);
+	let launchDropdownOpen = $state(false);
 	let gamesOpen = $state(false);
 	let launchOptionsDialogOpen = $state(false);
 	let launchOptions = $state<LaunchOption[]>([]);
+
+	const mode = new PersistedState<Mode>('launchMode', 'modded');
 
 	let timeSinceGamesUpdate = $derived.by(() => {
 		gamesOpen; // refresh whenever the dialog is opened
 		return timeSince(games.lastUpdated);
 	});
 
+	const activeGameName = $derived(games.active?.name ?? m.unknown());
+
 	async function launchGame() {
 		if (await api.profile.install.hasPendingInstallations()) {
-			await message('Please wait for mod installations to complete before launching.');
+			await message(m.toolBar_launchGame_message());
 			return;
 		}
 
@@ -63,7 +98,7 @@
 	async function doLaunch(args?: string) {
 		launchDialogOpen = true;
 		try {
-			await api.profile.launch.launchGame(args);
+			await api.profile.launch.launchGame(mode.current === 'vanilla', args);
 		} catch {
 			launchDialogOpen = false;
 		}
@@ -75,13 +110,27 @@
 </script>
 
 <div class="border-primary-600 bg-primary-900 flex h-12 shrink-0 flex-row border-t border-b">
-	<button
-		class="text-accent-400 hover:text-accent-400 border-primary-600 hover:bg-primary-800 flex shrink-0 items-center border-r pr-8 pl-6 font-semibold"
-		onclick={launchGame}
+	<div
+		class="text-accent-500 *:hover:text-accent-400 border-primary-600 *:hover:bg-primary-800 flex shrink-0 items-stretch border-r font-semibold"
 	>
-		<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
-		Launch game
-	</button>
+		<button onclick={() => launchGame()} class="flex items-center pr-4 pl-6">
+			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
+			<span>
+				{labels[mode.current]}
+			</span>
+		</button>
+
+		<DropdownMenu.Root bind:open={launchDropdownOpen}>
+			<DropdownMenu.Trigger class="px-3">
+				<DropdownArrow open={launchDropdownOpen} />
+			</DropdownMenu.Trigger>
+			<ContextMenuContent
+				type="dropdown"
+				items={launchDropdownItems}
+				class="max-h-90 overflow-y-auto text-base"
+			/>
+		</DropdownMenu.Root>
+	</div>
 
 	<button
 		onclick={() => (gamesOpen = !gamesOpen)}
@@ -107,16 +156,23 @@
 	<Updater />
 </div>
 
-<Dialog title="Launching {games.active?.name}..." bind:open={launchDialogOpen}>
+<Dialog
+	title={(mode.current === 'vanilla'
+		? m.toolBar_dialog_launch_vanilla_title
+		: m.toolBar_dialog_launch_modded_title)({ name: activeGameName })}
+	bind:open={launchDialogOpen}
+>
 	<p class="text-primary-400">
-		This might take a few minutes depending on the size of your profile.
+		{#if mode.current === 'modded'}
+			{m.toolBar_dialog_launch_modded_content()}
+		{/if}
 	</p>
 </Dialog>
 
-<Dialog title="Select game to mod" bind:open={gamesOpen}>
+<Dialog title={m.toolBar_dialog_games_title()} bind:open={gamesOpen}>
 	<GameSelect onselect={() => (gamesOpen = false)} />
 	<div class="text-primary-400 my-1 text-center text-sm">
-		Last updated {timeSinceGamesUpdate} ago
+		{m.toolBar_dialog_games_lastUpdated({ time: timeSinceGamesUpdate })}
 	</div>
 </Dialog>
 

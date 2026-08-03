@@ -4,7 +4,7 @@
 	import type { Snippet } from 'svelte';
 	import games from '$lib/state/game.svelte';
 
-	const itemHeight = 66;
+	const itemHeight = 98;
 
 	type Props = {
 		mods: Mod[];
@@ -27,7 +27,6 @@
 	let listStart = $state(0);
 	let listEnd = $state(0);
 	let virtualList: VirtualList<Mod, string> | null = $state(null);
-	let list: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
 		if (listEnd > mods.length - 4 && mods.length === maxCount) {
@@ -52,15 +51,6 @@
 			selected = null;
 		}
 	}
-
-	function onscroll() {
-		if (!list) return;
-
-		let scrollTop = list.scrollTop;
-		let visibleCount = Math.ceil(list.clientHeight / itemHeight);
-
-		listEnd = Math.min(mods.length, Math.floor(scrollTop / itemHeight) + visibleCount);
-	}
 </script>
 
 {#if mods.length === 0}
@@ -69,7 +59,6 @@
 	</div>
 {:else}
 	<VirtualList
-		itemHeight={66}
 		items={mods}
 		rowId={(mod) => mod.uuid}
 		bind:this={virtualList}

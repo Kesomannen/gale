@@ -6,12 +6,13 @@
 	import { getFont, setFont } from '$lib/theme';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 
 	let fonts: string[] = $state([]);
 	let value = $state(getFont());
 
 	onMount(async () => {
-		fonts = ['Nunito Sans', ...(await api.prefs.getSystemFonts())];
+		fonts = ['Inter', ...(await api.prefs.getSystemFonts())];
 	});
 
 	$effect(() => {
@@ -20,15 +21,15 @@
 </script>
 
 <div class="flex items-center">
-	<Label>Font family</Label>
+	<Label>{m.fontFamilyPref_title()}</Label>
 
 	<Combobox
 		items={selectItems(fonts)}
 		type="single"
 		triggerClass="grow"
-		placeholder="Search for a font..."
+		placeholder={m.fontFamilyPref_placeholder()}
 		bind:value
 	/>
 
-	<ResetButton onclick={() => (value = 'Nunito Sans')} class="ml-1" />
+	<ResetButton onclick={() => (value = 'Inter')} class="ml-1" />
 </div>

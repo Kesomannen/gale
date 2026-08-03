@@ -2,7 +2,6 @@
 
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/Kesomannen/GaleModManager?style=flat)](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/)
 [![Discord](https://img.shields.io/discord/1288196347597688912?style=flat&label=discord)](https://discord.gg/sfuWXRfeTt)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Fkesomannen.com%2Fgale&up_message=online&down_message=offline&style=flat)](https://kesomannen.com/gale)
 [![GitHub License](https://img.shields.io/github/license/Kesomannen/gale?style=flat)](https://github.com/Kesomannen/gale?tab=GPL-3.0-1-ov-file#readme)
 
 The modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [Svelte](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
@@ -13,7 +12,7 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 - An intuitive and responsive interface
 - Tiny download size and resource usage
 - Feature-rich mod config editor
-- Automatic profile syncing (beta)
+- Automatic profile syncing
 
 [...and more](https://github.com/Kesomannen/gale/wiki/Features)
 
@@ -21,17 +20,46 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 ### Windows
 
-**From Thunderstore**
+<details>
+  <summary>
+    <b>Manual (Thunderstore)</b>
+  </summary>
+  
+  - Go to the [Thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and click _Manual Download_.
+  - Extract the downloaded .zip file (for example by right-clicking and choosing _Extract All_).
+  - Run the `Gale_X.X.X_x64_en-US.msi` file inside of the extracted folder.
+</details>
 
-- Go to the [Thunderstore page](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/) and click _Manual Download_.
-- Extract the downloaded .zip file (for example by right-clicking and choosing _Extract All_).
-- Run the `Gale_X.X.X_x64_en-US.msi` file inside of the extracted folder.
+<details>
+  <summary>
+    <b>Manual (Github)</b>
+  </summary>
+  
+  - Go to [Releases](https://github.com/Kesomannen/gale/releases).
+  - Download the `Gale_X.X.X_x64_en-US.msi` file for your desired version (the latest is recommended).
+  - Run the downloaded file.
+</details>
 
-**From Github**
+<details>
+  <summary>
+    <b>Scoop</b>
+  </summary>
+  
+  Gale is available as an independently hosted [Scoop](https://scoop.sh/) app:
 
-- Go to [Releases](https://github.com/Kesomannen/gale/releases).
-- Download the `Gale_X.X.X_x64_en-US.msi` file for your desired version (the latest is recommended).
-- Run the downloaded file.
+  ```powershell
+  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
+  ```
+  
+  To update, run:
+  
+  ```powershell
+  scoop uninstall gale
+  scoop install https://raw.githubusercontent.com/Kesomannen/scoop-games/refs/heads/master/bucket/gale.json
+  ```
+
+  > Efforts are in progress to submit the app to the [Scoop games bucket](https://github.com/Calinou/scoop-games/pull/1756) to make installation and updating more straightforward.
+</details>
 
 > [!NOTE]
 > You might get a prompt saying "Windows has protected your PC". In this case, click `More Info` and `Run Anyway`.
@@ -41,10 +69,73 @@ The modern and lightweight mod manager for [Thunderstore](https://thunderstore.i
 
 ### Linux
 
-AppImages, .rpm and .deb files are available in [Releases](https://github.com/Kesomannen/gale/releases).
-You can also get it through the community-maintained [AUR package](https://aur.archlinux.org/packages/gale-bin).
+<details>
+  <summary>
+    <b>Arch</b>
+  </summary>
+  
+  Gale is available as a **community-maintained** [AUR package](https://aur.archlinux.org/packages/gale-bin).
+  
+  Example installation command:
+  
+  ```bash
+  yay -S gale-bin
+  ```
+</details>
 
-Want to build it yourself? See the [wiki](https://github.com/Kesomannen/gale/wiki/building-from-source).
+
+<details>
+  <summary>
+    <b>Debian</b>
+  </summary>
+
+  Gale is available as a .deb package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+
+  ```bash
+  sudo dpkg -i Gale_X.X.X_x64_en-US.deb
+  ```
+</details>
+
+<details>
+  <summary>
+    <b>Fedora</b>
+  </summary>
+
+  Gale is available as a .rpm package in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, install with:
+
+  ```bash
+  sudo rpm -i Gale_X.X.X_x64_en-US.rpm
+  ```
+</details>
+
+<details>
+  <summary>
+    <b>Flatpak</b>
+  </summary>
+
+  Gale is available as an independently hosted Flatpak package:
+
+  ```bash
+  flatpak install https://kesomannen.com/com.kesomannen.gale.flatpakref
+  ```
+</details>
+
+<details>
+  <summary>
+    <b>AppImage</b>
+  </summary>
+
+  Distribution-agnostic AppImages are available in [Releases](https://github.com/Kesomannen/gale/releases). After downloading, make the file executable and run it:
+  
+  ```bash
+  chmod +x Gale_X.X.X_x64_en-US.AppImage
+  ./Gale_X.X.X_x64_en-US.AppImage
+  ```
+</details>
+
+---
+
+Want to build it from source? See the [wiki](https://github.com/Kesomannen/gale/wiki/building-from-source).
 
 ## Screenshots
 

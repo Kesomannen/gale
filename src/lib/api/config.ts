@@ -1,5 +1,5 @@
 import { invoke } from '$lib/invoke';
-import type { ConfigEntryId, ConfigFile, ConfigValue } from '$lib/types';
+import type { BaseConfigFile, ConfigEntryId, ConfigFile, ConfigValue } from '$lib/types';
 
 const idToArgs = (id: ConfigEntryId) => ({
 	file: id.file.relativePath,
@@ -17,7 +17,11 @@ export const resetEntry = (id: ConfigEntryId) =>
 	invoke<ConfigValue>('reset_config_entry', {
 		...idToArgs(id)
 	});
-export const openFile = (file: ConfigFile) =>
+export const resetAll = (file: BaseConfigFile) =>
+	invoke('reset_config_file', {
+		file: file.relativePath
+	});
+export const openFile = (file: BaseConfigFile) =>
 	invoke('open_config_file', { file: file.relativePath });
-export const deleteFile = (file: ConfigFile) =>
+export const deleteFile = (file: BaseConfigFile) =>
 	invoke('delete_config_file', { file: file.relativePath });

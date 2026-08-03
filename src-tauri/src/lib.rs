@@ -4,7 +4,6 @@ use itertools::Itertools;
 use state::ManagerExt;
 use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_dialog::DialogExt;
 use tracing::{error, info, warn};
 
 #[cfg(target_os = "linux")]
@@ -24,17 +23,22 @@ mod util;
 
 fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     info!(
-        "gale v{} running on {}",
-        env!("CARGO_PKG_VERSION"),
-        std::env::consts::OS,
+        version = env!("CARGO_PKG_VERSION"),
+        os = std::env::consts::OS,
     );
 
     if let Err(err) = state::setup(app.handle()) {
-        error!("setup error: {:?}", err);
+        error!("setup error: {err:?}");
 
-        app.dialog()
-            .message(format!("Failed to launch Gale: {err:?}"))
-            .blocking_show();
+        // Linux dialog often won't work before the event loop starts and instead hangs the application
+        #[cfg(target_os = "windows")]
+        {
+            use tauri_plugin_dialog::DialogExt;
+
+            app.dialog()
+                .message(format!("Failed to launch Gale: {err:?}"))
+                .blocking_show();
+        }
 
         return Err(err.into());
     }
@@ -77,7 +81,7 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
 
 fn event_handler(app: &AppHandle, event: RunEvent) {
     if let RunEvent::ExitRequested { api, .. } = event {
-        if !app.install_queue().handle().is_processing() {
+        if !app.install_queue().lock().is_processing() {
             return;
         }
 
@@ -93,6 +97,11 @@ fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
     }
 }
 
+#[tauri::command]
+fn is_flatpak() -> bool {
+    util::is_flatpak()
+}
+
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
         eprintln!("failed to set up logger: {err:#}");
@@ -100,6 +109,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            is_flatpak,
             logger::open_gale_log,
             logger::log_err,
             state::is_first_run,
@@ -138,6 +148,8 @@ pub fn run() {
             profile::commands::create_desktop_shortcut,
             profile::commands::get_local_markdown,
             profile::commands::set_custom_args,
+            profile::commands::set_profile_path,
+            profile::commands::forget_profile,
             profile::launch::commands::launch_game,
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,
@@ -151,6 +163,7 @@ pub fn run() {
             profile::update::commands::change_mod_version,
             profile::update::commands::update_mods,
             profile::update::commands::ignore_update,
+            profile::update::commands::ignore_package_updates,
             profile::import::commands::import_profile,
             profile::import::commands::read_profile_code,
             profile::import::commands::read_profile_file,
@@ -167,6 +180,7 @@ pub fn run() {
             profile::export::commands::set_pack_args,
             profile::export::commands::generate_changelog,
             profile::export::commands::copy_dependency_strings,
+            profile::export::commands::export_dependency_strings,
             profile::export::commands::copy_debug_info,
             profile::sync::commands::read_sync_profile,
             profile::sync::commands::create_sync_profile,
@@ -183,6 +197,7 @@ pub fn run() {
             config::commands::get_config_files,
             config::commands::set_config_entry,
             config::commands::reset_config_entry,
+            config::commands::reset_config_file,
             config::commands::open_config_file,
             config::commands::delete_config_file,
         ])

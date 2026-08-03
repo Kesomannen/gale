@@ -8,7 +8,7 @@
 		type ColorCategory,
 		type Color
 	} from '$lib/theme';
-	import { capitalize, selectItems } from '$lib/util';
+	import { selectItems } from '$lib/util';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Icon from '@iconify/svelte';
 	import ResetButton from '../ui/ResetButton.svelte';
@@ -16,6 +16,7 @@
 	import Info from '../ui/Info.svelte';
 	import type { Snippet } from 'svelte';
 	import clsx from 'clsx';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		category: ColorCategory;
@@ -29,6 +30,32 @@
 
 	const selectOptions = ['custom', ...Object.keys(defaultColors)];
 
+	const colorNames = {
+		amber: m.colorPref_color_amber,
+		blue: m.colorPref_color_blue,
+		custom: m.colorPref_color_custom,
+		cyan: m.colorPref_color_cyan,
+		emerald: m.colorPref_color_emerald,
+		fuchsia: m.colorPref_color_fuchsia,
+		gray: m.colorPref_color_gray,
+		green: m.colorPref_color_green,
+		indigo: m.colorPref_color_indigo,
+		lime: m.colorPref_color_lime,
+		neutral: m.colorPref_color_neutral,
+		orange: m.colorPref_color_orange,
+		pink: m.colorPref_color_pink,
+		purple: m.colorPref_color_purple,
+		red: m.colorPref_color_red,
+		rose: m.colorPref_color_rose,
+		sky: m.colorPref_color_sky,
+		slate: m.colorPref_color_slate,
+		stone: m.colorPref_color_stone,
+		teal: m.colorPref_color_teal,
+		violet: m.colorPref_color_violet,
+		yellow: m.colorPref_color_yellow,
+		zinc: m.colorPref_color_zinc
+	};
+
 	function set(color: Color) {
 		value = color;
 		setColor(category, color);
@@ -36,7 +63,7 @@
 </script>
 
 <div class="flex items-center">
-	<Label>{capitalize(category)} color</Label>
+	<Label>{m[`colorPref_title_${category}`]()}</Label>
 
 	<Info>
 		{@render children()}
@@ -54,7 +81,7 @@
 						: { type: 'default', name: selectValue }
 				)
 		}
-		items={selectItems(selectOptions, capitalize)}
+		items={selectItems(selectOptions, (item) => colorNames[item as keyof typeof colorNames]())}
 	>
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(value)}
@@ -64,7 +91,7 @@
 			</div>
 		{/snippet}
 
-		{#snippet item({ label, value })}
+		{#snippet item({ value })}
 			{@render colorIcon(
 				value === 'custom'
 					? { type: 'custom', hex: '' }

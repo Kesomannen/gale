@@ -1,6 +1,198 @@
 # Changelog
 
-## Unreleased
+## 1.16.0 (2026-06-22)
+
+### Changed
+
+- Made Inter the default font instead of Nunito Sans
+- Redesigned config page
+  - Removed per-file section dropdown in favor of showing all entries in one list
+  - Added in-file search bar
+  - Added button to reset all entries in a file
+- Show version and author instead of description in profile mod list
+- Show downloads and time since last update in Thunderstore mod list
+- Various other UI changes
+- Mod downloads are now retried up to 3 times if there is a network error
+
+### Fixed
+
+- Normalized locale names
+- Dates and duration being translated incorrectly most of the time
+- Improved linking between mods and config files
+- Profile shortcuts created with the previous version not working
+- Whitespace and newlines being stripped from config entry descriptions
+- Reduced log spam from network requests
+- UNIX argument parsing being used on Windows, causing paths with backslashes to require extra escaping
+- Resonite mods not loading on Linux due to Z: path prefixes 
+
+## 1.15.1 (2026-06-18)
+
+### Fixed
+
+- Clicking `Update All` freezing the app
+
+## 1.15.0 (2026-06-17)
+
+### Added
+
+- Russian translation (auto-generated)
+- Ability to ignore all future updates for a mod, instead of just a single version
+
+### Changed
+
+- Upgraded rust edition and version
+- Reworked custom launch arguments
+  - Arguments are now entered as one string instead of a list
+    - This might break some existing arguments, so please check after updating
+  - Added support for custom environment variables
+    - Written as `VARIABLE=value` in the arguments field
+  - Added support for command prefixes
+    - Similar to Steam, type `%command%` in the arguments field to specify a placeholder for the standard launch command
+    - This allows tools like `wine` and `protontricks` to be used with Gale directly
+- Steam is now launched via the `steam.sh` script on Linux, when available
+- Tweaked log levels and added better logging support for external libraries
+
+### Fixed
+
+- Improved Swedish locale
+- Improve error message when database has been modified by a newer version of Gale
+- Hades II mod loader files being placed in the root game directory instead of the nested `Ship` directory
+- The shimloader proxy DLL `dwmapi.dll` not being added to `WINEDLLOVERRIDES`, leading to Windows UE games launching unmodded on Linux
+- The `WINEDLLOVERRIDES` environment variable is now automatically set during launch when Proton/Wine is detected
+- Improved `Copy launch arguments` option to better handle special characters and quotes
+- Readded version to profile mod list items
+
+## 1.14.0 (2026-06-10)
+
+### Added
+
+- Vanilla launch option
+
+### Fixed
+
+- Profile mod list order not saving between restarts
+- Improved performance of profile mod list
+
+## 1.13.7 (2026-06-09)
+
+### Fixed
+
+- Settings screen showing blank
+- Release pipeline
+
+## 1.13.6 (2026-06-08)
+
+### Added
+
+- Preferred version to dependants dialog
+
+### Changed
+
+- Minor UI tweaks
+
+### Fixed
+
+- Improved mod reordering with better scrolling and animations
+- Crash when installing some manually modified cached mods
+- Badges in markdown rendering on separate lines
+- Zoom-in hotkey unclear when the + and = keys are shared
+- Pluralization issues
+
+## 1.13.5 (2026-06-05)
+
+### Added
+
+- French and Traditional Chinese translations
+
+### Fixed
+
+- Installation rules for new Silksong BepInEx package
+- Installation rules for MelonLoader plugins
+
+## 1.13.4 (2026-05-12)
+
+### Added
+
+- Flatpak distribution
+
+### Fixed
+
+- Thunderstore API token not persisting on Linux
+
+## 1.13.3 (2026-05-05)
+
+### Fixed
+
+- UI flashing after changing locale setting on Linux
+
+## 1.13.2 (2026-04-25)
+
+### Changed
+
+- Downgraded reqwest version to try and fix mod download errors
+
+## 1.13.1 (2026-04-22)
+
+### Added
+
+- Option to export mod list to file, rather than copy to clipboard
+
+### Changed
+
+- A stack trace is now logged when a command fails
+
+### Fixed
+
+- Profile sync socket connection being closed due to invalid HTTP version
+
+## 1.13.0 (2026-02-26)
+
+### Added
+
+- Missing profiles dialog for when gale detects profiles that have been manually moved or deleted
+  - The previous behaviour was to automatically wipe these profiles from the database
+  - You now get the option, per profile, to either locate the profile or remove it from Gale
+
+### Changed
+
+- Tweaked verbosity level to hide excessive debug logs
+
+### Fixed
+
+- Typo in notification
+- Required shimloader files being put in the wrong directory
+- Shimloader .pak being put in the `mod` directory rather than `pak`
+- Profile sync live updates not working due to incorrect HTTP version
+
+## 1.12.0 (2026-02-05)
+
+### Added
+
+- More locales:
+  - Brazilian Portugese
+  - Polish
+  - Spanish
+
+### Fixed
+
+- Duplicate mods causing the profile screen to freeze the UI (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Replaced some unlocalized text (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Weird text appearing in the unknown-mods banner
+- Launch mode settings not persisting after switching tabs
+
+## 1.11.1 (2025-11-03)
+
+### Fixed
+
+- Config page not working for some profiles (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Various localization issues (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+
+## 1.11.0 (2025-11-02)
+
+### Added
+
+- I18n support (thanks [@TianMengLucky](https://github.com/TianMengLucky))
+- Chinese and Swedish localization
 
 ### Changed
 
@@ -9,6 +201,8 @@
 ### Fixed
 
 - Sync profiles not being deleted
+- Direct launch executing the crash handler for some games
+- The name of the profile below being shown when a profile is deleted
 
 ## 1.10.0 (2025-09-27)
 
@@ -91,6 +285,7 @@
 - Support for Len's Island and Mage Arena
 - Two deep link endpoints:
   - `gale://profile/import/{key}`
+
   - `gale://profile/sync/clone/{id}`
 
 ### Fixed
@@ -490,7 +685,7 @@
   - Subterror
   - STRAFTAT
 
-## Fixed
+### Fixed
 
 - ReturnOfModding mods being installed incorrectly
 - Launch mode defaulting to `Direct` instead of `Launcher` for first time users
@@ -518,7 +713,7 @@
 
 ## 1.1.4 (2024-11-19)
 
-## Added
+### Added
 
 - Config support to WEBFISHING (TackleBox)
 

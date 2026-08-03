@@ -32,7 +32,8 @@ class GamesState {
 			const response = await fetch(url);
 
 			if (!response.ok) {
-				throw new Error(await response.text());
+				const message = await response.text();
+				throw new Error(`${response.status} ${response.statusText}: ${message}`);
 			}
 
 			const data = (await response.json()) as FiltersResponse;
@@ -41,7 +42,7 @@ class GamesState {
 			pushToast({
 				type: 'error',
 				name: 'Failed to fetch categories',
-				message: JSON.stringify(err)
+				message: err instanceof Error ? err.message : String(err)
 			});
 		}
 	};

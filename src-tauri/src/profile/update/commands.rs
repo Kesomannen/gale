@@ -22,7 +22,18 @@ pub fn ignore_update(version_uuid: Uuid, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     let profile = manager.active_profile_mut();
-    profile.ignored_updates.insert(version_uuid);
+    profile.ignored_version_updates.insert(version_uuid);
+    profile.save(&app, true)?;
+
+    Ok(())
+}
+
+#[command]
+pub fn ignore_package_updates(package_uuid: Uuid, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+
+    let profile = manager.active_profile_mut();
+    profile.ignored_package_updates.insert(package_uuid);
     profile.save(&app, true)?;
 
     Ok(())

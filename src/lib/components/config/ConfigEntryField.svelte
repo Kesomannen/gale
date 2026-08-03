@@ -10,7 +10,8 @@
 	import { isNum } from '$lib/config';
 	import Info from '$lib/components/ui/Info.svelte';
 	import ColorConfig from './ColorConfig.svelte';
-	import { toSentenceCase } from 'js-convert-case';
+	import { toSentenceCase } from '$lib/i18n';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		entryId: ConfigEntryId;
@@ -27,7 +28,7 @@
 				return val.content;
 			case 'int':
 			case 'float':
-				return val.content.value.toString();
+				return val.content.value?.toString() ?? 'NaN';
 			case 'enum':
 				return val.content.options[val.content.index];
 			case 'flags':
@@ -58,7 +59,7 @@
 </script>
 
 <!-- odd:bg-[#1b2433] -->
-<div class="text-primary-300 flex items-center py-0.5 pr-4 pl-6">
+<div class="text-primary-300 odd:bg-primary-900/30 flex items-center px-3 py-1.5">
 	<div class="text-primary-300 w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left">
 		{toSentenceCase(entry.name)}
 	</div>
@@ -70,21 +71,21 @@
 		</h4>
 
 		{#if entry.description}
-			<p class="mb-1">
+			<p class="mb-1 whitespace-pre-wrap">
 				{entry.description}
 			</p>
 		{/if}
 
 		{#if entry.default}
-			<p class="break-words">
-				<span class="text-primary-100 font-medium">Default: </span>
+			<p class="wrap-break-word">
+				<span class="text-primary-100 font-medium">{m.configEntryField_default()}</span>
 				{valueToString(entry.default)}
 			</p>
 		{/if}
 
 		{#if (value.type === 'int' || value.type === 'float') && value.content.range !== null}
 			<p>
-				<span class="font-medium text-white">Range: </span>
+				<span class="font-medium text-white">{m.configEntryField_range()}</span>
 				{value.content.range.start} - {value.content.range.end}
 			</p>
 		{/if}

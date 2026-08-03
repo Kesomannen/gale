@@ -14,6 +14,7 @@
 	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems = [...defaultContextItems];
@@ -88,11 +89,11 @@
 </script>
 
 <div class="flex grow overflow-hidden">
-	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
+	<div class="flex w-[60%] grow flex-col overflow-hidden px-4 pt-4">
 		<ModListFilters {sortOptions} queryArgs={modQuery.current} />
 
 		{#if locked}
-			<ProfileLockedBanner class="mr-4 mb-1" />
+			<ProfileLockedBanner class="mb-1" />
 		{/if}
 
 		<ModList
@@ -104,15 +105,15 @@
 		>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
-					<div class="mt-4 text-lg">No matching mods found</div>
-					<div class="text-primary-400">Try to adjust your search query/filters</div>
+					<div class="mt-4 text-lg">{m.browse_modList_content_1()}</div>
+					<div class="text-primary-400">{m.browse_modList_content_2()}</div>
 				{/if}
 			{/snippet}
 
 			{#snippet item({ mod, isSelected })}
 				<ModListItem
 					{mod}
-					{isSelected}
+					selected={isSelected}
 					{contextItems}
 					locked={profiles.activeLocked}
 					oninstall={() => installLatest(mod)}

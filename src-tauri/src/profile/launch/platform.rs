@@ -3,13 +3,13 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
-use tracing::{info, warn};
+use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
+use tracing::info;
 
+use crate::util;
 use crate::{
-    game::{platform::Platform, Game},
+    game::{Game, platform::Platform},
     prefs::Prefs,
-    util::fs::PathExt,
 };
 
 pub fn create_launch_command(
@@ -31,24 +31,21 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
         bail!("{} is not available on Steam", game.name)
     };
 
-    #[cfg(target_os = "linux")]
-    if let Some(proxy_dll) = game.mod_loader.proxy_dll() {
-        use super::linux;
-        use tracing::warn;
+    let mut command = create_base_steam_command()?;
 
-        if linux::is_proton(game_dir).unwrap_or_else(|err| {
-            warn!("failed to determine if game uses proton: {:#}", err);
-            false
-        }) {
-            linux::ensure_wine_override(steam.id as u64, proxy_dll, game_dir).unwrap_or_else(
-                |err| {
-                    warn!("failed to ensure wine dll override: {:#}", err);
-                },
-            );
-        }
+    if util::is_flatpak() {
+        use tracing::debug;
+
+        debug!("flatpak detected, wrapping command with flatpak-spawn");
+
+        let mut wrapper = Command::new("flatpak-spawn");
+        wrapper
+            .arg("--host")
+            .arg(command.get_program())
+            .args(command.get_args());
+        command = wrapper;
     }
 
-    let mut command = create_base_steam_command()?;
     command.arg("-applaunch").arg(steam.id.to_string());
 
     Ok(command)
@@ -56,6 +53,9 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
 
 #[cfg(target_os = "windows")]
 fn create_base_steam_command() -> Result<Command> {
+    use crate::util::fs::PathExt;
+    use tracing::warn;
+
     let path = match read_steam_registry() {
         Ok(install_dir) => {
             let exe_path = install_dir.join("steam.exe");
@@ -68,7 +68,9 @@ fn create_base_steam_command() -> Result<Command> {
             exe_path
         }
         Err(err) => {
-            warn!("failed to read steam installation path from registry: {err:#}, using fallback path");
+            warn!(
+                "failed to read steam installation path from registry: {err:#}, using fallback path"
+            );
 
             r"C:\Program Files (x86)\Steam\steam.exe".into()
         }
@@ -81,9 +83,42 @@ fn create_base_steam_command() -> Result<Command> {
     Ok(Command::new(path))
 }
 
+#[cfg(target_os = "windows")]
+fn read_steam_registry() -> Result<PathBuf> {
+    use tracing::debug;
+    use winreg::RegKey;
+    use winreg::enums::*;
+
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
+
+    debug!("reading InstallPath from {key:?}");
+
+    let path: String = key.get_value("InstallPath")?;
+
+    Ok(PathBuf::from(path))
+}
+
 #[cfg(target_os = "linux")]
 fn create_base_steam_command() -> Result<Command> {
+    use crate::util::fs::PathExt;
     use tracing::debug;
+
+    // return Ok(Command::new("/home/keso/.local/share/Steam/steam.sh"));
+
+    debug!("checking for steam.sh script in steam installation directory");
+
+    match locate_steam_script() {
+        Ok(path) => {
+            info!("found steam.sh script at {}", path.display());
+            return Ok(Command::new(path));
+        }
+        Err(err) => {
+            debug!("failed to locate steam.sh script: {:#}", err);
+        }
+    };
+
+    debug!("checking for steam system installation with which");
 
     if let Ok(path) = which::which("steam") {
         info!("found steam installation via which: {}", path.display());
@@ -116,20 +151,26 @@ fn create_base_steam_command() -> Result<Command> {
     Ok(Command::new(path))
 }
 
-#[cfg(target_os = "windows")]
-fn read_steam_registry() -> Result<PathBuf> {
-    use tracing::debug;
-    use winreg::enums::*;
-    use winreg::RegKey;
+#[cfg(target_os = "linux")]
+fn locate_steam_script() -> Result<PathBuf> {
+    use crate::util::fs::PathExt;
 
-    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
-    let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
+    steamlocate::locate()
+        .context("failed to locate steam installation")
+        .and_then(|steam_dir| {
+            use eyre::eyre;
 
-    debug!("reading InstallPath from {key:?}");
-
-    let path: String = key.get_value("InstallPath")?;
-
-    Ok(PathBuf::from(path))
+            steam_dir
+                .path()
+                .join("steam.sh")
+                .exists_or_none()
+                .ok_or_else(|| {
+                    eyre!(
+                        "steam.sh not present in steam install at {}",
+                        steam_dir.path().display()
+                    )
+                })
+        })
 }
 
 pub fn get_steam_launch_options(app_id: u32) -> Result<serde_json::Value> {
@@ -229,7 +270,7 @@ fn steam_game_dir(game: Game) -> Result<PathBuf> {
 fn xbox_game_dir(game: Game) -> Result<PathBuf> {
     use std::process::Command;
 
-    use eyre::{ensure, Context};
+    use eyre::{Context, ensure};
 
     let Some(xbox) = &game.platforms.xbox_store else {
         bail!("{} is not available on Xbox Store", game.name)

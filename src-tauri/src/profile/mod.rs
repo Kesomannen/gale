@@ -69,13 +69,14 @@ pub struct Profile {
     pub path: PathBuf,
     pub mods: Vec<ProfileMod>,
     pub game: Game,
-    pub ignored_updates: HashSet<Uuid>,
+    pub ignored_version_updates: HashSet<Uuid>,
+    pub ignored_package_updates: HashSet<Uuid>,
     pub config_cache: ConfigCache,
     pub linked_config: HashMap<Uuid, PathBuf>,
     pub modpack: Option<ModpackArgs>,
     pub sync: Option<sync::SyncProfileData>,
-    pub custom_args: Vec<String>,
-    pub custom_args_enabled: bool,
+    pub custom_args: String,
+    pub missing: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -151,6 +152,13 @@ impl ProfileMod {
         self.kind.as_local().map(|local| (local, self.enabled))
     }
 
+    pub fn direct_dependencies<'a>(
+        &'a self,
+        thunderstore: &'a Thunderstore,
+    ) -> Option<&'a [VersionIdent]> {
+        self.kind.direct_dependencies(thunderstore)
+    }
+
     /// Finds all dependencies of this mod.
     ///
     /// See [`Thunderstore::dependencies`] for more information.
@@ -199,6 +207,20 @@ impl ProfileModKind {
         }
     }
 
+    pub fn direct_dependencies<'a>(
+        &'a self,
+        thunderstore: &'a Thunderstore,
+    ) -> Option<&'a [VersionIdent]> {
+        match self {
+            ProfileModKind::Local(local_mod) => local_mod.dependencies.as_deref(),
+            ProfileModKind::Thunderstore(ts_mod) => ts_mod
+                .id
+                .borrow(thunderstore)
+                .ok()
+                .map(|borrowed| &*borrowed.version.dependencies),
+        }
+    }
+
     /// Finds all dependencies of this mod.
     ///
     /// See [`Thunderstore::dependencies`] for more information.
@@ -206,16 +228,7 @@ impl ProfileModKind {
         &'a self,
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = BorrowedMod<'a>> {
-        let idents = match self {
-            ProfileModKind::Local(local_mod) => local_mod.dependencies.as_ref(),
-            ProfileModKind::Thunderstore(ts_mod) => ts_mod
-                .id
-                .borrow(thunderstore)
-                .map(|borrowed| &borrowed.version.dependencies)
-                .ok(),
-        };
-
-        idents
+        self.direct_dependencies(thunderstore)
             .into_iter()
             .flat_map(|deps| thunderstore.dependencies(deps))
     }
@@ -315,7 +328,7 @@ impl Profile {
             mod_count: self.mods.len(),
             sync: self.sync.clone(),
             custom_args: self.custom_args.clone(),
-            custom_args_enabled: self.custom_args_enabled,
+            missing: self.missing,
         }
     }
 
@@ -347,8 +360,8 @@ pub struct FrontendProfile {
     name: String,
     mod_count: usize,
     sync: Option<sync::SyncProfileData>,
-    custom_args: Vec<String>,
-    custom_args_enabled: bool,
+    custom_args: String,
+    missing: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -438,12 +451,10 @@ impl ManagedGame {
         self.profiles.iter_mut().find(|profile| profile.id == id)
     }
 
-    /*
     fn profile_mut(&mut self, id: i64) -> Result<&mut Profile> {
         self.profile_ok_mut(id)
             .with_context(|| format!("profile with id {id} not found"))
     }
-    */
 
     fn active_profile(&self) -> &Profile {
         self.profile(self.active_profile_id).unwrap()
@@ -539,26 +550,24 @@ impl ModManager {
 
         for saved_profile in profiles {
             let path = PathBuf::from(saved_profile.path);
+            let missing = !path.exists();
 
-            if !path.exists() {
+            if missing {
                 warn!(
                     "profile {} at {} does not exist anymore",
                     saved_profile.name,
                     path.display()
                 );
-                if let Err(err) = db.delete_profile(saved_profile.id) {
-                    warn!("failed to delete missing profile from database: {:#}", err);
-                }
-                continue;
             }
 
-            let game = game::from_slug(&saved_profile.game_slug).ok_or_else(|| {
-                eyre!(
+            let Some(game) = game::from_slug(&saved_profile.game_slug) else {
+                warn!(
                     "profile {} is in unknown game: {}",
-                    saved_profile.name,
-                    saved_profile.game_slug
-                )
-            })?;
+                    saved_profile.name, saved_profile.game_slug
+                );
+
+                continue;
+            };
 
             let profile = Profile {
                 path,
@@ -567,12 +576,13 @@ impl ModManager {
                 name: saved_profile.name,
                 mods: saved_profile.mods,
                 modpack: saved_profile.modpack,
-                ignored_updates: saved_profile.ignored_updates.unwrap_or_default(),
+                ignored_version_updates: saved_profile.ignored_updates.unwrap_or_default(),
+                ignored_package_updates: saved_profile.ignored_package_updates.unwrap_or_default(),
                 config_cache: ConfigCache::default(),
                 linked_config: HashMap::new(),
                 sync: saved_profile.sync_data,
-                custom_args: saved_profile.custom_args.unwrap_or_default(),
-                custom_args_enabled: saved_profile.custom_args_enabled.unwrap_or(false),
+                custom_args: saved_profile.custom_args,
+                missing,
             };
 
             manager
@@ -712,13 +722,18 @@ impl ModManager {
         thunderstore::cache::write_packages(&packages, self.active_game, prefs)
     }
 
-    fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) -> Result<()> {
-        let game = game::from_slug(&saved_game.slug).ok_or_else(|| {
-            eyre!(
+    fn add_saved_game(
+        &mut self,
+        base_path: &Path,
+        saved_game: db::ManagedGameData,
+    ) -> Result<bool> {
+        let Some(game) = game::from_slug(&saved_game.slug) else {
+            warn!(
                 "unknown game in save: {} (has Gale been downgraded?)",
                 saved_game.slug
-            )
-        })?;
+            );
+            return Ok(false);
+        };
 
         let managed_game = ManagedGame {
             id: saved_game.id,
@@ -730,7 +745,7 @@ impl ModManager {
         };
 
         self.games.insert(game, managed_game);
-        Ok(())
+        Ok(true)
     }
 
     pub fn save_all(&self, app: &AppHandle) -> Result<()> {

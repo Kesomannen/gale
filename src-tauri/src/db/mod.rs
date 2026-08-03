@@ -4,17 +4,17 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
-use eyre::{Context, Result};
+use eyre::{Context, Result, eyre};
 use include_dir::include_dir;
-use rusqlite::{params, types::Type as SqliteType, OptionalExtension};
-use rusqlite_migration::Migrations;
+use rusqlite::{OptionalExtension, params, types::Type as SqliteType};
+use rusqlite_migration::{MigrationDefinitionError, Migrations};
 use serde::de::DeserializeOwned;
 use tracing::{info, trace};
 use uuid::Uuid;
 
 use crate::{
     prefs::Prefs,
-    profile::{self, sync::auth::AuthCredentials, ManagedGame, ModManager, Profile},
+    profile::{self, ManagedGame, ModManager, Profile, sync::auth::AuthCredentials},
     util,
 };
 
@@ -33,9 +33,9 @@ pub fn init() -> Result<(Db, bool)> {
     let existed = path.exists();
 
     info!(
-        "connecting to database at {} (exists: {})",
-        path.display(),
-        existed
+        exists = existed,
+        path = %path.display(),
+        "opening database",
     );
 
     let mut conn = rusqlite::Connection::open(path).context("failed to connect")?;
@@ -62,7 +62,12 @@ static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migr
 fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
     let migrations = Migrations::from_directory(&MIGRATIONS_DIR)?;
 
-    migrations.to_latest(conn)?;
+    migrations.to_latest(conn).map_err(|err| match err {
+        rusqlite_migration::Error::MigrationDefinition(
+            MigrationDefinitionError::DatabaseTooFarAhead,
+        ) => eyre!("database has been modified by a newer version of Gale, please update to the latest version"),
+        _ => eyre!(err),
+    })?;
 
     Ok(())
 }
@@ -111,8 +116,8 @@ pub struct ProfileData {
     pub modpack: Option<profile::export::modpack::ModpackArgs>,
     pub ignored_updates: Option<HashSet<Uuid>>,
     pub sync_data: Option<profile::sync::SyncProfileData>,
-    pub custom_args: Option<Vec<String>>,
-    pub custom_args_enabled: Option<bool>,
+    pub custom_args: String,
+    pub ignored_package_updates: Option<HashSet<Uuid>>,
 }
 
 pub struct SaveData {
@@ -198,40 +203,54 @@ impl Db {
                     active_profile_id: row.get(3)?,
                 })
             })?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .context("failed to read games")?;
 
         let mut profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled FROM profiles",
+                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates FROM profiles",
             )?
             .query_map((), |row| {
+                let mut mods : Vec<profile::ProfileMod> = map_json_row(row, 4)?;
+                mods.dedup_by(|a, b| a.kind.uuid() == b.kind.uuid());
+
+                // custom args may be a json array of strings instead of one string
+                let custom_args = match map_json_option_row::<_, Vec<String>>(row, 8) {
+                    Ok(Some(args)) => args.join(" "),
+                    Ok(None) => String::new(),
+                    Err(_) => row.get(8)?,
+                };
+
                 Ok(ProfileData {
                     id: row.get(0)?,
                     name: row.get(1)?,
                     path: row.get(2)?,
                     game_slug: row.get(3)?,
-                    mods: map_json_row(row, 4)?,
+                    mods,
                     modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_option_row(row, 6)?,
                     sync_data: map_json_option_row(row, 7)?,
-                    custom_args: map_json_option_row(row, 8)?,
-                    custom_args_enabled: row.get(9)?,
+                    custom_args,
+                    ignored_package_updates: map_json_option_row(row, 9)?,
                 })
             })?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .context("failed to read profiles")?;
 
         profiles.sort_by(|a, b| a.name.cmp(&b.name));
 
         let prefs = conn
             .prepare("SELECT data FROM prefs")?
             .query_row((), |row| map_json_row(row, 0))
-            .optional()?
+            .optional()
+            .context("failed to read prefs")?
             .unwrap_or_default();
 
         let auth_state = conn
             .prepare("SELECT data FROM auth")?
             .query_row((), |row| map_json_option_row(row, 0))
-            .optional()?
+            .optional()
+            .context("failed to read auth")?
             .flatten();
 
         Ok((
@@ -316,7 +335,7 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, custom_args_enabled) 
+                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
@@ -327,13 +346,13 @@ impl Db {
                 .as_ref()
                 .map(serde_json::to_string)
                 .transpose()?;
-            let ignored_updates = serde_json::to_string(&profile.ignored_updates)?;
+            let ignored_updates = serde_json::to_string(&profile.ignored_version_updates)?;
             let sync_data = profile
                 .sync
                 .as_ref()
                 .map(serde_json::to_string)
                 .transpose()?;
-            let custom_args = serde_json::to_string(&profile.custom_args)?;
+            let ignored_package_updates = serde_json::to_string(&profile.ignored_package_updates)?;
 
             stmt.execute(params![
                 profile.id,
@@ -344,8 +363,8 @@ impl Db {
                 modpack,
                 ignored_updates,
                 sync_data,
-                custom_args,
-                profile.custom_args_enabled
+                profile.custom_args,
+                ignored_package_updates
             ])?;
         }
 

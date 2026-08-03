@@ -7,6 +7,8 @@ use crate::profile::install::*;
 pub struct ModLoader<'a> {
     #[serde(default)]
     pub package_name: Option<&'a str>,
+    #[serde(default)]
+    pub file_target: Option<&'a str>,
     #[serde(flatten)]
     pub kind: ModLoaderKind<'a>,
 }
@@ -55,7 +57,10 @@ impl ModLoader<'_> {
             full_name == package_name
         } else {
             match &self.kind {
-                ModLoaderKind::BepInEx { .. } => full_name.starts_with("BepInEx-BepInExPack"),
+                ModLoaderKind::BepInEx { .. } => {
+                    full_name.starts_with("BepInEx-BepInExPack")
+                        || full_name == "silksong_modding-BepInExPack_Silksong"
+                }
                 ModLoaderKind::BepisLoader { .. } => {
                     full_name == "ResoniteModding-BepisLoader"
                         || full_name == "ResoniteModding-BepInExRenderer"
@@ -154,6 +159,7 @@ impl ModLoader<'static> {
                     Subdir::tracked("UserLibs", "UserLibs").extension(".lib.dll"),
                     Subdir::tracked("Managed", "MelonLoader/Managed").extension(".managed.dll"),
                     Subdir::tracked("Mods", "Mods").extension(".dll"),
+                    Subdir::tracked("Plugins", "Plugins"),
                     Subdir::separated("ModManager", "UserData/ModManager"),
                     Subdir::tracked("MelonLoader", "MelonLoader"),
                     Subdir::tracked("Libs", "MelonLoader/Libs"),
@@ -201,7 +207,7 @@ impl ModLoader<'static> {
             (false, ModLoaderKind::Shimloader {}) => {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::flat_separated("mod", "shimloader/mod"),
-                    Subdir::flat_separated("pak", "shimloader/pak"),
+                    Subdir::flat_separated("pak", "shimloader/pak").extension(".pak"),
                     Subdir::untracked("cfg", "shimloader/cfg").mutable(),
                 ];
 
@@ -238,6 +244,7 @@ impl ModLoader<'static> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => Some("winhttp"),
             ModLoaderKind::GDWeave {} => Some("winmm"),
+            ModLoaderKind::Shimloader {} => Some("dwmapi"),
             ModLoaderKind::ReturnOfModding { files } => Some(files[0]),
             _ => None,
         }

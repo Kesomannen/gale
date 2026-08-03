@@ -9,6 +9,9 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { updateBanner } from '$lib/state/misc.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { DropdownMenu } from 'bits-ui';
+	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -36,19 +39,23 @@
 
 		await api.profile.update.mods(uuids, true);
 	}
+
+	function ignoreUpdate(update: AvailableUpdate) {
+		update.ignore = true;
+		include.delete(update);
+	}
 </script>
 
 {#if shownUpdates.length > updateBanner.threshold}
-	<div class="bg-accent-700 text-accent-100 mr-3 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
+	<div class="bg-accent-700 text-accent-100 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
 		<Icon icon="mdi:arrow-up-circle" class="mr-2 text-xl" />
-		There {shownUpdates.length === 1 ? 'is' : 'are'}
-		<b class="mx-1">{shownUpdates.length}</b>
-		{shownUpdates.length === 1 ? ' update' : ' updates'} available.
+		{m.updateAllBanner_content({ count: shownUpdates.length })}
+
 		<button
 			class="hover:text-accent-200 ml-1 font-semibold text-white hover:underline"
 			onclick={() => (dialogOpen = true)}
 		>
-			Update all?
+			{m.updateAllBanner_button()}
 		</button>
 
 		<button
@@ -60,11 +67,11 @@
 	</div>
 {/if}
 
-<ConfirmDialog title="Confirm update" bind:open={dialogOpen}>
-	Select which mods to update:
+<ConfirmDialog title={m.updateAllBanner_dialog_title()} bind:open={dialogOpen}>
+	{m.updateAllBanner_dialog_content()}
 
 	<Checklist
-		title="Update all"
+		title={m.updateAllBanner_dialog_list_title()}
 		items={shownUpdates}
 		class="mt-1"
 		maxHeight="sm"
@@ -78,21 +85,38 @@
 			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
 			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
-			<Tooltip text="Ignore this update in the 'Update all' list." side="left" sideOffset={-2}>
-				<button
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
-					onclick={() => {
-						update.ignore = true;
-						include.delete(update);
-
-						api.profile.update.ignore(update.versionUuid);
-					}}><Icon icon="mdi:notifications-off" /></button
 				>
-			</Tooltip>
+					<Icon icon="mdi:notifications-off" />
+				</DropdownMenu.Trigger>
+				<ContextMenuContent
+					type="dropdown"
+					items={[
+						{
+							label: m.updateAllBanner_dialog_list_ignore_version(),
+							onclick: () => {
+								ignoreUpdate(update);
+								api.profile.update.ignore(update.versionUuid);
+							}
+						},
+						{
+							label: m.updateAllBanner_dialog_list_ignore_package(),
+							onclick: () => {
+								ignoreUpdate(update);
+								api.profile.update.ignorePackage(update.packageUuid);
+							}
+						}
+					]}
+				/>
+			</DropdownMenu.Root>
 		{/snippet}
 	</Checklist>
 
 	{#snippet buttons()}
-		<Button color="accent" icon="mdi:download" onclick={updateAll}>Update mods</Button>
+		<Button color="accent" icon="mdi:download" onclick={updateAll}
+			>{m.updateAllBanner_dialog_button()}</Button
+		>
 	{/snippet}
 </ConfirmDialog>

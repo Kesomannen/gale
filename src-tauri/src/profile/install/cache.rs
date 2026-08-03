@@ -1,8 +1,8 @@
 use std::{collections::HashSet, fs, path::PathBuf};
 
 use eyre::{Context, Result};
-use tracing::info;
 use tauri::AppHandle;
+use tracing::info;
 
 use crate::{prefs::Prefs, state::ManagerExt, thunderstore::VersionIdent, util};
 

@@ -17,7 +17,7 @@
 	import Info from '$lib/components/ui/Info.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { discordAvatarUrl, selectItems } from '$lib/util';
+	import { selectItems } from '$lib/util';
 	import { pushInfoToast } from '$lib/toast';
 	import Select from '$lib/components/ui/Select.svelte';
 	import * as api from '$lib/api';
@@ -25,6 +25,7 @@
 	import games from '$lib/state/game.svelte';
 	import SyncAvatar from '../ui/SyncAvatar.svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const uuidRegex =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -32,10 +33,11 @@
 	let open: boolean = $state(false);
 	let data: ImportData | null = $state(null);
 
-	let key: string = $state('');
-	let name: string = $state('');
-	let loading: boolean = $state(false);
-	let importAll: boolean = $state(false);
+	let key = $state('');
+	let name = $state('');
+	let loading = $state(false);
+	let importAll = $state(false);
+	let merge = $state(false);
 	let mode: 'new' | 'overwrite' = $state('new');
 
 	let unlistenFn: UnlistenFn | undefined;
@@ -94,7 +96,7 @@
 			let profile = profiles.list.find((profile) => profile.name === name);
 
 			if (profile?.modCount ?? 0 > 0) {
-				let confirmed = await confirm(`Are you sure you want to override ${name}?`);
+				let confirmed = await confirm(m.importProfileDialog_importData_confirm({ name }));
 				if (!confirmed) return;
 			}
 		}
@@ -104,7 +106,7 @@
 		if (data.type === 'legacy') {
 			data.manifest.profileName = name;
 
-			await api.profile.import.profile(data, importAll);
+			await api.profile.import.profile(data, { importAll, merge });
 		} else {
 			await api.profile.sync.clone(data.id, name);
 		}
@@ -112,7 +114,7 @@
 		data = null;
 		importAll = false;
 
-		pushInfoToast({ message: `Imported profile ${name}.` });
+		pushInfoToast({ message: m.importProfileDialog_importData_message({ name }) });
 	}
 
 	function isAvailable(name: string) {
@@ -138,8 +140,8 @@
 		open = true;
 	}
 
-	let mods = $derived(data?.manifest.mods ?? []);
-	let nameAvailable = $derived(mode === 'overwrite' || isAvailable(name));
+	let mods = $derived.by(() => data?.manifest.mods ?? []);
+	let nameAvailable = $derived.by(() => mode === 'overwrite' || isAvailable(name));
 
 	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
@@ -149,7 +151,7 @@
 </script>
 
 <Dialog
-	title="Import profile"
+	title={m.importProfileDialog_title()}
 	bind:open
 	onclose={() => {
 		data = null;
@@ -159,24 +161,31 @@
 	{#if data === null}
 		<div class="mt-1 flex items-center gap-2">
 			<div class="grow">
-				<InputField bind:value={key} class="w-full" size="lg" placeholder="Enter import code..." />
+				<InputField
+					bind:value={key}
+					class="w-full"
+					size="lg"
+					placeholder={m.importProfileDialog_placeholder()}
+				/>
 			</div>
 
-			<Button onclick={submitKey} {loading} icon="mdi:import">Import</Button>
+			<Button onclick={submitKey} {loading} icon="mdi:import"
+				>{m.importProfileDialog_button_import()}</Button
+			>
 		</div>
 	{:else}
 		<TabsMenu
 			bind:value={mode}
 			options={[
-				{ value: 'new', label: 'Create new' },
-				{ value: 'overwrite', label: 'Overwrite existing' }
+				{ value: 'new', label: m.importProfileDialog_tabsMenu_option_new() },
+				{ value: 'overwrite', label: m.importProfileDialog_tabsMenu_option_overwrite() }
 			]}
 		>
 			<Tabs.Content value="new">
 				<div class="flex items-center">
-					<Label>Profile name</Label>
+					<Label>{m.importProfileDialog_tabsMenu_new_title()}</Label>
 
-					<Info>A unique name for the imported profile.</Info>
+					<Info>{m.importProfileDialog_tabsMenu_new_content()}</Info>
 
 					<div class="relative grow">
 						<InputField bind:value={name} class="w-full" />
@@ -184,7 +193,7 @@
 						{#if !nameAvailable}
 							<Tooltip
 								class="absolute right-2 bottom-0 h-full cursor-default text-xl text-red-500"
-								text="Profile {name} already exists!"
+								text={m.importProfileDialog_tabsMenu_new_tooltip({ name })}
 							>
 								<Icon icon="mdi:error" />
 							</Tooltip>
@@ -195,9 +204,9 @@
 
 			<Tabs.Content value="overwrite">
 				<div class="flex items-center">
-					<Label>Choose profile</Label>
+					<Label>{m.importProfileDialog_tabsMenu_overwrite_title()}</Label>
 
-					<Info>Which existing profile to overwrite with the imported one.</Info>
+					<Info>{m.importProfileDialog_tabsMenu_overwrite_content()}</Info>
 
 					<Select
 						triggerClass="grow"
@@ -211,51 +220,60 @@
 		</TabsMenu>
 
 		<details>
-			<summary class="text-primary-300 mt-2 cursor-pointer">{mods.length} mods to install</summary>
+			<summary class="text-primary-300 mt-2 cursor-pointer"
+				>{m.importProfileDialog_details_install({ length: mods.length })}</summary
+			>
 
 			<ModCardList
-				names={mods.map(
-					(mod) => `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`
-				)}
 				class="mt-2 max-h-[50vh] shrink grow"
+				mods={mods.map((mod) => ({
+					fullName: `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`
+				}))}
 			/>
 		</details>
 
 		<details>
-			<summary class="text-primary-300 mt-1 cursor-pointer">Advanced options</summary>
+			<summary class="text-primary-300 mt-1 cursor-pointer"
+				>{m.importProfileDialog_details_advancedOptions()}</summary
+			>
 
 			<div class="mt-1 flex items-center">
-				<Label>Import all files</Label>
+				<Label>{m.importProfileDialog_importAllFiles_title()}</Label>
 				<Info>
-					Import all files found in the profile, instead of just well-known config file formats.
-					This is unsafe and can let an attacker install malware on your system. <b
-						>Only enable this for trusted profiles!</b
-					>
+					{m.importProfileDialog_importAllFiles_content1()}
+					<b>{m.importProfileDialog_importAllFiles_content2()}</b>
 				</Info>
 				<Checkbox bind:checked={importAll} />
 			</div>
+
+			{#if mode === 'overwrite'}
+				<div class="mt-1 flex items-center">
+					<Label>{m.importProfileDialog_merge_title()}</Label>
+					<Info>
+						{m.importProfileDialog_merge_content()}
+					</Info>
+					<Checkbox bind:checked={merge} />
+				</div>
+			{/if}
 		</details>
 
 		{#if data.type === 'sync'}
-			<Tooltip
-				text="This profile will receive automatic updates from its owner."
-				class="cursor-help"
-			>
+			<Tooltip text={m.importProfileDialog_sync_tooltip_content()} class="cursor-help">
 				<div class="text-primary-300 mt-2 flex items-center gap-2">
 					<Icon icon="mdi:info" />
-					<div>Synced profile</div>
+					<div>{m.importProfileDialog_sync_tooltip_title()}</div>
 				</div>
 			</Tooltip>
 
 			<div class="mt-1 flex items-center gap-2">
 				<SyncAvatar user={data.owner} />
 				<div class="text-primary-300">
-					Owned by {data.owner.displayName}
+					{m.importProfileDialog_sync_owner({ name: data.owner.displayName })}
 				</div>
 			</div>
 		{:else if data.missingMods.length > 0}
 			<InfoBox type="warning">
-				<p>Contains unknown mods:</p>
+				<p>{m.importProfileDialog_unknown()}</p>
 
 				<ol class="list-disc pl-6">
 					{#each data.missingMods as mod}
@@ -273,11 +291,13 @@
 				onclick={() => {
 					open = false;
 					data = null;
-				}}>Cancel</Button
+				}}
 			>
-			<Button disabled={!nameAvailable} {loading} onclick={importData} icon="mdi:import"
-				>Import</Button
-			>
+				{m.importProfileDialog_button_cancel()}
+			</Button>
+			<Button disabled={!nameAvailable} {loading} onclick={importData} icon="mdi:import">
+				{m.importProfileDialog_button_import()}
+			</Button>
 		</div>
 	{/if}
 </Dialog>

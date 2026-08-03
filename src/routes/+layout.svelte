@@ -17,6 +17,8 @@
 	import { updateBanner } from '$lib/state/misc.svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import type { ProfileInfo, ManagedGameInfo } from '$lib/types';
+	import { refreshLanguage } from '$lib/i18n';
+	import MissingProfilesDialog from '$lib/components/dialogs/MissingProfilesDialog.svelte';
 
 	type Props = {
 		children?: Snippet;
@@ -31,11 +33,7 @@
 		refreshFont();
 		refreshColor('accent');
 		refreshColor('primary');
-
-		// workaround for https://github.com/huntabyte/bits-ui/issues/1639
-		setTimeout(() => {
-			document.body.style.pointerEvents = 'auto';
-		});
+		refreshLanguage();
 
 		$effect(() => {
 			profiles.active;
@@ -67,7 +65,7 @@
 />
 
 <Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
-	<main class="bg-primary-800 relative flex flex-col overflow-hidden">
+	<main class="bg-primary-800 relative flex flex-col">
 		<Menubar />
 		<Toolbar />
 
@@ -83,4 +81,5 @@
 
 	<InstallModDialog />
 	<WelcomeDialog />
+	<MissingProfilesDialog />
 </Tooltip.Provider>

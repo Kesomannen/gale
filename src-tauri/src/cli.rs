@@ -55,6 +55,9 @@ struct Cli {
     launch: bool,
 
     #[arg(long)]
+    vanilla: bool,
+
+    #[arg(long)]
     no_gui: bool,
 }
 
@@ -68,6 +71,7 @@ impl Cli {
             install,
             launch,
             no_gui,
+            vanilla,
         } = self;
 
         if let Some(slug) = &game {
@@ -107,12 +111,14 @@ impl Cli {
                 }
 
                 let manager = handle.lock_manager();
-                if let Err(err) = handle_launch_and_no_gui(launch, no_gui, &manager, &handle) {
+                if let Err(err) =
+                    handle_launch_and_no_gui(launch, no_gui, vanilla, &manager, &handle)
+                {
                     error!("{:#}", err);
                 }
             });
         } else {
-            handle_launch_and_no_gui(launch, no_gui, &manager, app)?;
+            handle_launch_and_no_gui(launch, no_gui, vanilla, &manager, app)?;
         }
 
         debug!("cli finished");
@@ -121,13 +127,14 @@ impl Cli {
         fn handle_launch_and_no_gui(
             launch: bool,
             no_gui: bool,
+            vanilla: bool,
             manager: &ModManager,
             app: &AppHandle,
         ) -> Result<()> {
             if launch {
                 manager
                     .active_game()
-                    .launch(&app.lock_prefs(), app)
+                    .launch(vanilla, &app.lock_prefs(), app)
                     .context("failed to launch game")?;
             }
 

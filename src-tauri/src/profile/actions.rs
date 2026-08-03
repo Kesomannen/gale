@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{anyhow, bail, ensure, Context, OptionExt, Result};
+use eyre::{anyhow, bail, ensure, Context, ContextCompat, OptionExt, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
@@ -35,13 +35,6 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     app.listen("reorder_mod", move |event| {
         if let Err(err) = handle_reorder_event(event, &handle) {
             logger::log_webview_err("Failed to reorder mod", err, &handle);
-        }
-    });
-
-    let handle = app.to_owned();
-    app.listen("finish_reorder", move |_| {
-        if let Err(err) = handle_finish_reorder_event(&handle) {
-            logger::log_webview_err("Failed to finish reordering", err, &handle);
         }
     });
 
@@ -235,12 +228,9 @@ fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
 
     let mut manager = app.lock_manager();
     manager.active_profile_mut().reorder_mod(uuid, delta)?;
+    manager.save_active_profile(app, true)?;
 
     Ok(())
-}
-
-fn handle_finish_reorder_event(app: &AppHandle) -> Result<()> {
-    app.lock_manager().save_active_profile(app, true)
 }
 
 impl ManagedGame {
@@ -313,13 +303,14 @@ impl ManagedGame {
             path,
             mods: Vec::new(),
             game: self.game,
-            ignored_updates: HashSet::new(),
+            ignored_version_updates: HashSet::new(),
             config_cache: ConfigCache::default(),
             linked_config: HashMap::new(),
             modpack: None,
             sync: None,
-            custom_args: Vec::new(),
-            custom_args_enabled: false,
+            custom_args: String::new(),
+            missing: false,
+            ignored_package_updates: HashSet::new(),
         };
 
         let index = self.target_profile_index(&profile.name);
@@ -331,37 +322,57 @@ impl ManagedGame {
     pub fn create_default_profile(&mut self, db: &Db) -> Result<()> {
         info!("creating default profile for {}", self.game.slug);
 
-        let res = self.create_profile("Default".to_owned(), None, db);
-
-        match res.map(|profile| profile.id) {
-            Ok(id) => {
-                self.active_profile_id = id;
-                Ok(())
-            }
-            Err(err) => Err(err),
-        }
+        let profile = self.create_profile("Default".to_owned(), None, db)?;
+        self.active_profile_id = profile.id;
+        Ok(())
     }
 
-    pub fn delete_profile(&mut self, index: usize, allow_delete_last: bool, db: &Db) -> Result<()> {
+    pub fn forget_profile(&mut self, id: i64, db: &Db) -> Result<()> {
+        let index = self.index_of(id).expect("profile must exist");
+
+        self.profiles.remove(index);
+
+        if id == self.active_profile_id {
+            self.shift_active_profile(index);
+        }
+
+        db.delete_profile(id)?;
+
+        if self.profiles.is_empty() {
+            self.create_default_profile(db)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn delete_profile(&mut self, id: i64, allow_delete_last: bool, db: &Db) -> Result<()> {
         ensure!(
             allow_delete_last || self.profiles.len() > 1,
             "cannot delete last profile"
         );
 
-        let profile = self.profile_at(index)?;
-        let id = profile.id;
+        let profile = self.profile(id)?;
+        let index = self.index_of(id).expect("profile must exist");
 
         fs::remove_dir_all(&profile.path)?;
         self.profiles.remove(index);
 
-        if !self.profiles.is_empty() && self.active_profile_id == id {
-            let new_index = index.saturating_sub(1).min(self.profiles.len() - 1);
-            self.active_profile_id = self.profiles[new_index].id;
+        if self.active_profile_id == id {
+            self.shift_active_profile(index);
         }
 
         db.delete_profile(id)?;
 
         Ok(())
+    }
+
+    fn shift_active_profile(&mut self, prev_index: usize) {
+        if self.profiles.is_empty() {
+            return;
+        }
+
+        let new_index = prev_index.saturating_sub(1).min(self.profiles.len() - 1);
+        self.active_profile_id = self.profiles[new_index].id;
     }
 
     pub fn duplicate_profile(
@@ -380,6 +391,7 @@ impl ManagedGame {
         import::import_config(
             &new_profile.path,
             &old_profile.path,
+            false,
             IncludeExtensions::Default,
             IncludeGenerated::Yes,
         )
@@ -394,15 +406,13 @@ impl ManagedGame {
         .context("failed to copy profile directory")?;
 
         let mods = old_profile.mods.clone();
-        let ignored_updates = old_profile.ignored_updates.clone();
+        let ignored_updates = old_profile.ignored_version_updates.clone();
         let custom_args = old_profile.custom_args.clone();
-        let custom_args_enabled = old_profile.custom_args_enabled;
 
         let new_profile = self.active_profile_mut();
         new_profile.mods = mods;
-        new_profile.ignored_updates = ignored_updates;
+        new_profile.ignored_version_updates = ignored_updates;
         new_profile.custom_args = custom_args;
-        new_profile.custom_args_enabled = custom_args_enabled;
 
         Ok(new_profile)
     }
@@ -425,7 +435,15 @@ impl ManagedGame {
             bail!("shortcut already exists");
         }
 
-        let exe_path = std::env::current_exe().context("failed to get current executable path")?;
+        let command = if util::is_flatpak() {
+            format!("flatpak run {}", util::path::APP_GUID)
+        } else {
+            std::env::current_exe()
+                .context("failed to get current executable path")?
+                .to_str()
+                .context("executable path must be UTF-8")?
+                .to_string()
+        };
 
         #[cfg(target_os = "windows")]
         {
@@ -438,10 +456,10 @@ impl ManagedGame {
                 "$ws = New-Object -ComObject WScript.Shell; \
                  $shortcut = $ws.CreateShortcut('{}'); \
                  $shortcut.TargetPath = '{}'; \
-                 $shortcut.Arguments = '--game {} --profile \"{}\" --launch --no-gui'; \
+                 $shortcut.Arguments = '--game \"{}\" --profile \"{}\" --launch --no-gui'; \
                  $shortcut.Save()",
                 shortcut_path.to_string_lossy().replace("\\", "\\\\"),
-                exe_path.to_string_lossy().replace("\\", "\\\\"),
+                command.replace("\\", "\\\\"),
                 self.game.slug,
                 profile.name
             );
@@ -460,29 +478,24 @@ impl ManagedGame {
 
         #[cfg(target_os = "linux")]
         {
+            use std::os::unix::fs::PermissionsExt;
+
             let desktop_content = format!(
                 "[Desktop Entry]\n\
                  Type=Application\n\
                  Name=Gale - {} - {}\n\
-                 Exec=\"{}\" --game {} --profile \"{}\" --launch --no-gui\n\
+                 Exec=\"{}\" --game \"{}\" --profile \"{}\" --launch --no-gui\n\
                  Icon=gale\n\
                  Terminal=false\n\
                  Categories=Game;",
-                self.game.slug,
-                profile.name,
-                exe_path.to_string_lossy(),
-                self.game.slug,
-                profile.name
+                self.game.name, profile.name, command, self.game.slug, profile.name
             );
 
             std::fs::write(&shortcut_path, desktop_content)
-                .context("Failed to write desktop file")?;
+                .context("failed to write desktop file")?;
 
-            std::fs::set_permissions(
-                &shortcut_path,
-                std::os::unix::fs::PermissionsExt::from_mode(0o755),
-            )
-            .context("Failed to set permissions on desktop file")?;
+            std::fs::set_permissions(&shortcut_path, PermissionsExt::from_mode(0o755))
+                .context("failed to set permissions on desktop file")?;
         }
 
         Ok(())

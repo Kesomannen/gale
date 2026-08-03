@@ -9,6 +9,7 @@
 	import * as api from '$lib/api';
 	import { default as profileState } from '$lib/state/profile.svelte';
 	import Spinner from './Spinner.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let path: string | null = $state(null);
 	let error = $state('');
@@ -64,8 +65,8 @@
 	}
 </script>
 
-<PathPref label="R2 data folder" type="dir" value={path} set={refresh}>
-	The data folder of your r2modman/TMM installation.
+<PathPref label={m.importR2Flow_title()} type="dir" value={path} set={refresh}>
+	{m.importR2Flow_content()}
 </PathPref>
 
 {#if loading}
@@ -78,12 +79,12 @@
 {/if}
 
 {#if importData === undefined}
-	<div class="text-primary-300">Loading...</div>
+	<div class="text-primary-300">{m.importR2Flow_content_loading()}</div>
 {:else if importData === null}
 	<div class="text-primary-300 mt-2 flex w-full items-center gap-2">
 		{#if path === null}
 			<Icon icon="mdi:warning" />
-			No installations found, please specify the path above.
+			{m.importR2Flow_content_noFound()}
 		{:else}
 			<Icon icon="mdi:error" class="shrink-0" />
 			{capitalize(error)}
@@ -94,7 +95,7 @@
 		class="mt-1"
 		maxHeight="sm"
 		items={profiles}
-		title="Include all"
+		title={m.importR2Flow_checkList_title()}
 		getLabel={(item, _) => item}
 		get={(_, index) => include[index]}
 		set={(_, index, value) => (include[index] = value)}

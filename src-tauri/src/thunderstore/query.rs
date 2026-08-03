@@ -45,7 +45,7 @@ pub enum SortOrder {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct QueryModsArgs {
-    pub max_count: usize,
+    pub max_count: Option<usize>,
     pub search_term: Option<String>,
     pub include_categories: HashSet<Intern<String>>,
     pub exclude_categories: HashSet<Intern<String>>,
@@ -282,5 +282,7 @@ where
         .collect_vec();
 
     results.sort_by(|a, b| a.cmp(b, args));
-    results.into_iter().take(args.max_count)
+    results
+        .into_iter()
+        .take(args.max_count.unwrap_or(usize::MAX))
 }

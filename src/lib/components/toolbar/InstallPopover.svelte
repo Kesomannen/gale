@@ -11,6 +11,7 @@
 	import { Tween } from 'svelte/motion';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 
 	let shown = $state(false);
 	let showCancel = $state(false);
@@ -25,14 +26,14 @@
 	let name: string | null = $state(null);
 	let task: InstallTask | null = $state(null);
 
-	let hideTimeout: number | null = $state(null);
+	let hideTimeout: NodeJS.Timeout | null = $state(null);
 
 	let taskText = $derived(
 		task
 			? {
-					download: 'Downloading ',
-					extract: 'Extracting ',
-					install: 'Installing '
+					download: m.installPopover_taskText_download(),
+					extract: m.installPopover_taskText_extract(),
+					install: m.installPopover_taskText_install()
 				}[task] + name!.replace(/_/g, ' ')
 			: null
 	);
@@ -67,7 +68,7 @@
 					if (event.payload.reason === 'done') {
 						hideDelay = 500;
 
-						taskText = 'Finishing up...';
+						taskText = m.installPopover_taskText_done();
 						shownProgress.set(1, { duration: 250, easing: expoInOut });
 					}
 
@@ -150,9 +151,14 @@
 						out:fade={dropOut}
 					>
 						<div class="text-primary-300 flex items-center justify-between font-semibold">
-							<div>Installing mods... ({completedMods}/{totalMods})</div>
+							<div>{m.installPopover_content()}({completedMods}/{totalMods})</div>
 							{#if showCancel}
-								<IconButton label="Cancel" icon="mdi:cancel" color="red" onclick={cancel} />
+								<IconButton
+									label={m.installPopover_button()}
+									icon="mdi:cancel"
+									color="red"
+									onclick={cancel}
+								/>
 							{/if}
 						</div>
 
@@ -168,7 +174,7 @@
 							class="bg-primary-900 relative mt-2 h-4 w-full overflow-hidden rounded-full"
 						>
 							<div
-								class="bg-accent-600 absolute top-0 left-0 h-full rounded-l-full"
+								class="bg-accent-700 absolute top-0 left-0 h-full rounded-l-full"
 								style="width: {shownProgress.current * 100}%"
 							></div>
 						</Progress.Root>

@@ -15,13 +15,15 @@ pub mod auth;
 pub mod commands;
 pub mod socket;
 
-const API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("GALE_SYNC_URL") {
+static API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("GALE_SYNC_URL") {
     Ok(var) => var.into(),
     Err(_) => "https://gale.kesomannen.com/api".into(),
 });
 
 async fn request(method: Method, path: impl Display, app: &AppHandle) -> reqwest::RequestBuilder {
-    let mut req = app.http().request(method, format!("{}{path}", *API_URL));
+    let url = format!("{}{path}", *API_URL);
+
+    let mut req = app.http().request(method, url);
     if let Some(token) = auth::access_token(app).await {
         req = req.bearer_auth(token);
     }
@@ -128,7 +130,7 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
             missing: false,
         });
 
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     }
 
     Ok(id)
@@ -168,7 +170,7 @@ pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
         sync_data.synced_at = response.updated_at;
         sync_data.updated_at = response.updated_at;
 
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     };
 
     Ok(())
@@ -201,7 +203,7 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
 
         profile.sync = None;
 
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     }
 
     Ok(())
@@ -254,7 +256,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
                 None => sync.missing = true,
             }
 
-            profile.save(&app, true)?;
+            profile.save(app, true)?;
 
             Ok(())
         }
@@ -296,7 +298,7 @@ async fn download_and_import_file(
         let (_, profile) = manager.profile_by_id_mut(id)?;
 
         profile.sync = Some(sync_profile);
-        profile.save(&app, true)?;
+        profile.save(app, true)?;
     }
 
     Ok(())

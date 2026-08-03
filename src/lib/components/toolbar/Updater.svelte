@@ -9,12 +9,16 @@
 	import { onMount } from 'svelte';
 	import { pushToast } from '$lib/toast';
 	import updates from '$lib/state/update.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import { isFlatpak } from '$lib/api';
 
 	let dialogOpen = $state(false);
 	let loading = $state(false);
+	let canAutoUpdate = $state(true);
 
-	onMount(() => {
+	onMount(async () => {
 		updates.refresh();
+		canAutoUpdate = !(await isFlatpak());
 	});
 
 	async function installUpdate() {
@@ -29,12 +33,12 @@
 			} else if (error instanceof Error) {
 				message = error.message;
 			} else {
-				message = 'Unknown error';
+				message = m.updater_installUpdate_message_unknown();
 			}
 
 			pushToast({
 				type: 'error',
-				name: 'Failed to update Gale',
+				name: m.updater_installUpdate_message_name(),
 				message
 			});
 		}
@@ -50,7 +54,7 @@
 
 		if (platform() !== 'windows') {
 			// on other platforms installUpdate() doesn't relaunch the app itself
-			await message('Gale will now restart in order to apply the update.');
+			await message(m.updater_update_message());
 			await relaunch();
 		}
 	}
@@ -67,25 +71,35 @@
 		{:else}
 			<Icon icon="mdi:arrow-up-circle" />
 		{/if}
-		<div class="truncate text-sm">{loading ? 'Downloading update...' : 'Update available'}</div>
+		<div class="truncate text-sm">
+			{m[`updater_content_${loading ? 'downloading' : 'available'}`]()}
+		</div>
 	</button>
 {/if}
 
-<ConfirmDialog title="App update available!" bind:open={dialogOpen}>
+<ConfirmDialog title={m.updater_confirmDialog_title()} bind:open={dialogOpen}>
 	<Dialog.Description class="text-primary-300">
 		<p>
 			{#if updates.next}
-				Version {updates.next.version} of Gale is available - you have {updates.next
-					.currentVersion}.
+				{m.updater_confirmDialog_content_next({
+					current: updates.next.currentVersion,
+					next: updates.next.version
+				})}
 			{:else}
-				There is an update available for Gale.
+				{m.updater_confirmDialog_content_available()}
 			{/if}
 
-			The update will be downloaded in the background, then the app will restart to apply it.
+			{#if canAutoUpdate}
+				{m.updater_confirmDialog_content()}
+			{:else}
+				{m.updater_confirmDialog_content_noAutoUpdate()}
+			{/if}
 		</p>
 	</Dialog.Description>
 
 	{#snippet buttons()}
-		<Button color="accent" onclick={update}>Install</Button>
+		{#if canAutoUpdate}
+			<Button color="accent" onclick={update}>{m.updater_confirmDialog_button()}</Button>
+		{/if}
 	{/snippet}
 </ConfirmDialog>

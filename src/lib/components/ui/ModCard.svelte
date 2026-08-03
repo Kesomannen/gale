@@ -1,12 +1,14 @@
 <script lang="ts">
 	import games from '$lib/state/game.svelte';
+	import type { Snippet } from 'svelte';
 
 	type Props = {
 		fullName: string;
 		showVersion?: boolean;
+		children?: Snippet;
 	};
 
-	let { fullName, showVersion = true }: Props = $props();
+	let { fullName, showVersion = true, children }: Props = $props();
 
 	let split = $derived(fullName.split('-'));
 
@@ -49,5 +51,7 @@
 				{author}
 			</a>
 		{/if}
+
+		{@render children?.()}
 	</div>
 </div>

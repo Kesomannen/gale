@@ -14,7 +14,6 @@
 		modIconSrc,
 		shortenFileSize,
 		shortenNum,
-		thunderstoreIconUrl,
 		timeSince
 	} from '$lib/util';
 
@@ -22,7 +21,10 @@
 
 	import Icon from '@iconify/svelte';
 	import { type Snippet } from 'svelte';
-	import * as api from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
+	import config from '$lib/state/config.svelte';
+	import { goto } from '$app/navigation';
+	import InfoBox from '../ui/InfoBox.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -45,7 +47,7 @@
 	let allContextItems = $derived([
 		...contextItems,
 		{
-			label: 'Close',
+			label: m.modDetails_allContextItems_close(),
 			icon: 'mdi:close',
 			onclick: onclose
 		}
@@ -67,27 +69,25 @@
 	});
 </script>
 
-<div
-	class="border-primary-600 bg-primary-700 relative flex w-[40%] min-w-72 flex-col border-l px-6 pt-6 pb-4 text-white"
->
+<div class="relative flex w-[40%] min-w-72 flex-col p-4 text-white">
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="bg-primary-700 hover:bg-primary-600 absolute right-2 mt-0.5 rounded-full p-1"
+			class="bg-primary-800 hover:bg-primary-700 absolute right-4 mt-1 rounded-full p-1"
 		>
-			<Icon class="text-primary-200 text-2xl" icon="mdi:dots-vertical" />
+			<Icon class="text-primary-200 text-3xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
-		<ModContextMenuContent style="light" {mod} {locked} items={allContextItems} type="dropdown" />
+		<ModContextMenuContent {mod} {locked} items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
 
-	<div class="light-scrollbar grow overflow-x-hidden overflow-y-auto pb-2">
-		<div class="flex flex-wrap gap-4 xl:items-center">
+	<div class="-mr-3 grow overflow-x-hidden overflow-y-auto pr-3 pb-2">
+		<div class="mb-3 flex flex-wrap gap-4 xl:items-center">
 			<img src={modIconSrc(mod)} class="max-h-30 max-w-30 rounded-lg" alt="" />
 
 			<div>
 				<svelte:element
 					this={mod.type === ModType.Remote ? 'a' : 'div'}
 					class={[
-						'pr-4 text-left text-3xl font-bold break-words text-white xl:text-4xl',
+						'pr-4 text-left text-3xl font-bold wrap-break-word text-white xl:text-4xl',
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
 					href={communityUrl(`${mod.author}/${mod.name}`)}
@@ -95,40 +95,37 @@
 				>
 
 				{#if mod.author}
-					<div class="text-primary-300 text-xl xl:text-2xl">
-						by
-						<a class="hover:underline" href={communityUrl(mod.author)} target="_blank">
-							{mod.author}
-						</a>
-					</div>
+					<a
+						class="text-primary-400 hover:text-primary-300 block text-lg hover:underline xl:text-xl"
+						href={communityUrl(mod.author)}
+						target="_blank"
+					>
+						{mod.author}
+					</a>
 				{/if}
 
 				{#if mod.version}
-					<div class="text-primary-300 text-xl xl:text-2xl">v{mod.version}</div>
+					<div class="text-primary-400 text-lg xl:text-xl">{mod.version}</div>
 				{/if}
 			</div>
 		</div>
 
-		<div class="flex flex-wrap gap-1">
-			{#if mod.isDeprecated}
-				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
-					<Icon class="mr-1 text-xl" icon="mdi:error" />
-					Deprecated
-				</div>
-			{/if}
+		{#if mod.isDeprecated}
+			<InfoBox type="warning">
+				{m.modDetails_deprecated()}
+			</InfoBox>
+		{/if}
 
-			{#if mod.containsNsfw}
-				<div class="my-1 flex items-center rounded-lg bg-red-600 px-3 py-1 text-white">
-					<Icon class="mr-1 text-xl" icon="material-symbols:explicit" />
-					Contains NSFW
-				</div>
-			{/if}
-		</div>
+		{#if mod.containsNsfw}
+			<InfoBox type="warning">
+				{m.modDetails_NSFW()}
+			</InfoBox>
+		{/if}
 
 		{#if mod.categories}
-			<div class="mt-4 mb-1 flex flex-wrap gap-1">
+			<div class="mt-2 mb-1 flex flex-wrap gap-1">
 				{#each mod.categories as category}
-					<div class="bg-primary-600 text-primary-200 rounded-full px-4 py-1">
+					<div class="bg-primary-700 text-primary-200 rounded-full px-3 py-1 text-sm">
 						{category}
 					</div>
 				{/each}
@@ -137,12 +134,12 @@
 
 		<div class="mt-2 flex items-center gap-1.5 text-lg">
 			{#if mod.rating !== null}
-				<Icon class="shrink-0 text-yellow-400" icon="mdi:star" />
-				<span class="mr-4 text-yellow-400">{shortenNum(mod.rating)}</span>
+				<Icon class="shrink-0 text-yellow-500" icon="mdi:star" />
+				<span class="mr-4 text-yellow-500">{shortenNum(mod.rating)}</span>
 			{/if}
 			{#if mod.downloads !== null}
-				<Icon class="shrink-0 text-green-400" icon="mdi:download" />
-				<span class="mr-4 text-green-400">{shortenNum(mod.downloads)}</span>
+				<Icon class="shrink-0 text-green-500" icon="mdi:download" />
+				<span class="mr-4 text-green-500">{shortenNum(mod.downloads)}</span>
 			{/if}
 			<Icon class="text-primary-400 shrink-0" icon="mdi:weight" />
 			<span class="text-primary-400">{shortenFileSize(mod.fileSize)}</span>
@@ -150,7 +147,7 @@
 
 		{#if mod.lastUpdated !== null}
 			<div class="text-primary-400 mt-1 text-lg">
-				Last updated {timeSince(new Date(mod.lastUpdated))} ago
+				{m.modDetails_lastUpdated({ time: timeSince(new Date(mod.lastUpdated)) })}
 			</div>
 		{/if}
 
@@ -163,13 +160,13 @@
 		<div class="hidden lg:block">
 			{#await readmePromise}
 				<div role="status" class="animate-pulse">
-					<div class="bg-primary-600 mt-4 h-8 w-80 rounded-xl"></div>
-					<div class="bg-primary-600 mt-6 h-3 max-w-[500px] rounded-full"></div>
-					<div class="bg-primary-600 mt-2.5 h-3 max-w-[460px] rounded-full"></div>
-					<div class="bg-primary-600 mt-2.5 mb-4 h-3 max-w-[400px] rounded-full"></div>
+					<div class="bg-primary-700 mt-4 h-8 w-80 rounded-xl"></div>
+					<div class="bg-primary-700 mt-6 h-3 max-w-125 rounded-full"></div>
+					<div class="bg-primary-700 mt-2.5 h-3 max-w-115 rounded-full"></div>
+					<div class="bg-primary-700 mt-2.5 mb-4 h-3 max-w-100 rounded-full"></div>
 				</div>
 			{:then readme}
-				<Markdown source={readme ?? 'No readme found'} />
+				<Markdown source={readme ?? m.modDetails_noFound()} />
 			{/await}
 		</div>
 	</div>
@@ -179,39 +176,51 @@
 			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
-			<a href={'/config?file=' + mod.configFile}>Edit config</a>
+			<button
+				onclick={() => {
+					const file = config.findFileByPath(mod.configFile!);
+					if (!file) {
+						console.error('Config file not found for mod', mod.configFile);
+						return;
+					}
+
+					config.selectedFile = file;
+					goto('/config');
+				}}>{m.modDetails_editConfig()}</button
+			>
 		</div>
 	{/if}
 
-	<button
-		class="group bg-primary-600 hover:bg-primary-500 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
-		onmouseenter={() => changelog.fetchMarkdown()}
-		onclick={() => (changelogOpen = true)}
-	>
-		<Icon icon="mdi:file-document" class="mr-2 text-lg" />
-		Changelog
-	</button>
+	{#snippet button(icon: string, label: string, onclick: () => void, onmouseenter?: () => void)}
+		<button
+			class="group bg-primary-700 hover:bg-primary-600 text-primary-200 mb-1 flex items-center rounded-md py-1 pr-1.5 pl-3"
+			{onmouseenter}
+			{onclick}
+		>
+			<Icon {icon} class="mr-2 text-lg" />
+			{label}
+		</button>
+	{/snippet}
 
-	<button
-		class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1.5 pl-3 text-white"
-		onmouseenter={() => readme.fetchMarkdown()}
-		onclick={() => (readmeOpen = true)}
-	>
-		<Icon icon="mdi:info" class="mr-2 text-lg" />
-		Details
-	</button>
+	{@render button(
+		'mdi:file-document',
+		m.modDetails_changeLog(),
+		() => (changelogOpen = true),
+		() => changelog.fetchMarkdown()
+	)}
+	{@render button(
+		'mdi:info',
+		m.modDetails_details(),
+		() => (readmeOpen = true),
+		() => readme.fetchMarkdown()
+	)}
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
-		<button
-			class="group bg-primary-600 hover:bg-primary-500 mt-1 flex items-center rounded-md py-1 pr-1 pl-3 text-white"
-			onclick={() => (dependenciesOpen = true)}
-		>
-			<Icon icon="material-symbols:network-node" class="mr-2 text-lg" />
-			Dependencies
-			<div class="bg-primary-500 group-hover:bg-primary-400 ml-auto rounded-md px-3 py-0.5 text-sm">
-				{mod.dependencies.length}
-			</div>
-		</button>
+		{@render button(
+			'material-symbols:network-node',
+			`${m.modDetails_dependencies()} (${mod.dependencies.length})`,
+			() => (dependenciesOpen = true)
+		)}
 	{/if}
 
 	{@render children?.()}
@@ -219,7 +228,7 @@
 
 <Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
-		<ModCardList names={mod.dependencies} class="mt-4" />
+		<ModCardList mods={mod.dependencies.map((fullName) => ({ fullName }))} class="mt-4" />
 	{/if}
 </Dialog>
 

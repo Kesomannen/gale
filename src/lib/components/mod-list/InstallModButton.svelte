@@ -8,6 +8,7 @@
 	import clsx from 'clsx';
 	import DropdownArrow from '$lib/components/ui/DropdownArrow.svelte';
 	import Spinner from '../ui/Spinner.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
 		mod: Mod;
@@ -48,7 +49,7 @@
 
 <div class="mt-2 flex text-lg text-white">
 	<button
-		class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed"
+		class="enabled:bg-accent-700 enabled:hover:bg-accent-600 disabled:bg-primary-700 disabled:text-primary-300 flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed"
 		onclick={() => {
 			install(modId);
 			loading = true;
@@ -56,16 +57,16 @@
 		{disabled}
 	>
 		{#if locked}
-			Profile locked
+			{m.installModButton_button_locked()}
 		{:else if mod.isInstalled}
-			Already installed
+			{m.installModButton_button_isInstalled()}
 		{:else if loading}
 			<Spinner />
 
-			Installing...
+			{m.installModButton_button_loading()}
 		{:else}
 			<Icon icon="mdi:download" class="align-middle text-xl" />
-			Install
+			{m.installModButton_button_install()}
 
 			{#if downloadSize}
 				({shortenFileSize(downloadSize)})
@@ -74,14 +75,13 @@
 	</button>
 	<DropdownMenu.Root bind:open={versionsOpen}>
 		<DropdownMenu.Trigger
-			class="enabled:bg-accent-600 enabled:hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed"
+			class="enabled:bg-accent-700 enabled:hover:bg-accent-600 disabled:bg-primary-700 disabled:text-primary-300 ml-0.5 gap-2 rounded-r-lg px-1.5 py-2 text-2xl disabled:cursor-not-allowed"
 			{disabled}
 		>
 			<DropdownArrow open={versionsOpen} class="text-white" />
 		</DropdownMenu.Trigger>
 		<ContextMenuContent
 			type="dropdown"
-			style="light"
 			items={contextItems}
 			class="max-h-90 overflow-y-auto text-base"
 		/>

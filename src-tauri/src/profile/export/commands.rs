@@ -19,7 +19,7 @@ use crate::{
     profile::ProfileModKind,
     state::ManagerExt,
     thunderstore::{self},
-    util::{cmd::Result, fs::PathExt},
+    util::{cmd::Result, error::IoResultExt, fs::PathExt},
 };
 
 #[command]
@@ -129,20 +129,45 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
 
 #[command]
 pub fn copy_dependency_strings(app: AppHandle) -> Result<()> {
+    let str = concat_dependency_strings(&app);
+
+    app.clipboard()
+        .write_text(str)
+        .context("failed to write to clipboard")?;
+
+    Ok(())
+}
+
+#[command]
+pub fn export_dependency_strings(app: AppHandle, directory: PathBuf) -> Result<()> {
+    let str = concat_dependency_strings(&app);
+
+    let name = {
+        let manager = app.lock_manager();
+        manager.active_profile().name.clone()
+    };
+
+    let path = directory.join(name).with_extension("txt");
+
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).fs_context("creating parent directory", parent)?;
+    }
+
+    fs::write(&path, str).fs_context("writing mod list file", &directory)?;
+    open::that(&path).fs_context("opening mod list file", &directory)?;
+
+    Ok(())
+}
+
+fn concat_dependency_strings(app: &AppHandle) -> String {
     let manager = app.lock_manager();
 
-    let content = manager
+    manager
         .active_profile()
         .mods
         .iter()
         .map(|profile_mod| profile_mod.ident())
-        .join("\n");
-
-    app.clipboard()
-        .write_text(content)
-        .context("failed to write to clipboard")?;
-
-    Ok(())
+        .join("\n")
 }
 
 #[command]

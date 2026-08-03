@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Label from '$lib/components/ui/Label.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	const options = [0.5, 0.75, 1, 1.25, 1.5];
 	const items = options.map((option) => ({
@@ -17,7 +18,7 @@
 </script>
 
 <div class="flex items-center">
-	<Label>Zoom factor</Label>
+	<Label>{m.zoomFactorPref_title()}</Label>
 
 	<Select
 		type="single"

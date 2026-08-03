@@ -5,6 +5,7 @@ use futures_util::{
     stream::{SplitSink, SplitStream},
     SinkExt, StreamExt,
 };
+use reqwest::Version;
 use reqwest_websocket::{RequestBuilderExt, WebSocket};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
@@ -20,7 +21,7 @@ use crate::{
 #[serde(tag = "event", content = "payload", rename_all = "camelCase")]
 enum ServerMessage {
     ProfileUpdated {
-        metadata: super::SyncProfileMetadata,
+        metadata: Box<super::SyncProfileMetadata>,
     },
 
     ProfileDeleted {
@@ -109,6 +110,7 @@ async fn connect(app: AppHandle, mut rx: mpsc::UnboundedReceiver<ClientMessage>)
     let socket = app
         .http()
         .get(&url)
+        .version(Version::HTTP_11) // reqwest-websocket doesn't support HTTP/2
         .upgrade()
         .send()
         .await?
@@ -158,7 +160,7 @@ async fn read(app: &AppHandle, mut receiver: SplitStream<WebSocket>) {
                     info.updated_at = metadata.updated_at;
                     info.owner = metadata.owner.clone();
 
-                    profile.save(&app, true).ok();
+                    profile.save(app, true).ok();
                 }
             }
             ServerMessage::ProfileNotFound { id } | ServerMessage::ProfileDeleted { id } => {
@@ -169,7 +171,7 @@ async fn read(app: &AppHandle, mut receiver: SplitStream<WebSocket>) {
                 for profile in sync_profiles_with_id(&mut manager, &id) {
                     profile.sync.as_mut().unwrap().missing = true;
 
-                    profile.save(&app, true).ok();
+                    profile.save(app, true).ok();
                 }
             }
             ServerMessage::Error { message } => {

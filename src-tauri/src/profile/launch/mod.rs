@@ -5,11 +5,13 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, ensure, eyre, Context, OptionExt, Result};
+use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::time::Duration;
 use tracing::{info, warn};
+use walkdir::WalkDir;
 
 use super::ManagedGame;
 use crate::{
@@ -22,6 +24,7 @@ use crate::{
     },
 };
 
+mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
 mod mod_loader;
@@ -39,6 +42,22 @@ pub enum LaunchMode {
     Direct { instances: u32, interval_secs: f32 },
 }
 
+impl LaunchMode {
+    fn instances(&self) -> u32 {
+        match self {
+            LaunchMode::Launcher => 1,
+            LaunchMode::Direct { instances, .. } => *instances,
+        }
+    }
+
+    fn interval(&self) -> Duration {
+        match self {
+            LaunchMode::Launcher => Duration::from_secs_f32(0.0),
+            LaunchMode::Direct { interval_secs, .. } => Duration::from_secs_f32(*interval_secs),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct LaunchOption {
     pub arguments: String,
@@ -48,22 +67,25 @@ pub struct LaunchOption {
 }
 
 impl ManagedGame {
-    pub fn launch(&self, prefs: &Prefs, app: &AppHandle) -> Result<()> {
-        self.launch_with_args(prefs, app, None)
+    pub fn launch(&self, vanilla: bool, prefs: &Prefs, app: &AppHandle) -> Result<()> {
+        self.launch_with_args(vanilla, None, prefs, app)
     }
 
     pub fn launch_with_args(
         &self,
+        vanilla: bool,
+        args: Option<String>,
         prefs: &Prefs,
         app: &AppHandle,
-        args: Option<String>,
     ) -> Result<()> {
-        let game_dir = locate_game_dir(self.game, prefs)?;
+        let game_dir =
+            locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
+
         if let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
 
-        let (launch_mode, mut command) = self.launch_command(&game_dir, prefs)?;
+        let (launch_mode, mut command) = self.launch_command(vanilla, &game_dir, prefs)?;
 
         if let Some(args) = args {
             command.args(args.split_whitespace());
@@ -75,7 +97,12 @@ impl ManagedGame {
         Ok(())
     }
 
-    fn launch_command(&self, game_dir: &Path, prefs: &Prefs) -> Result<(LaunchMode, Command)> {
+    fn launch_command(
+        &self,
+        vanilla: bool,
+        game_dir: &Path,
+        prefs: &Prefs,
+    ) -> Result<(LaunchMode, Command)> {
         let (launch_mode, mut platform, game_custom_args) = prefs
             .game_prefs
             .get(&*self.game.slug)
@@ -83,11 +110,7 @@ impl ManagedGame {
                 (
                     prefs.launch_mode.clone(),
                     prefs.platform,
-                    if prefs.custom_args_enabled {
-                        prefs.custom_args.as_ref()
-                    } else {
-                        None
-                    },
+                    prefs.custom_args.as_str(),
                 )
             })
             .unwrap_or_else(|| {
@@ -106,22 +129,56 @@ impl ManagedGame {
             }
             _ => None,
         }
-        .unwrap_or_else(|| exe_path(game_dir).map(Command::new))?;
-
-        if matches!(launch_mode, LaunchMode::Direct { .. }) {
-            command.current_dir(game_dir);
-        }
+        .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
 
         let profile = self.active_profile();
 
-        mod_loader::add_args(&mut command, &profile.path, &self.game.mod_loader)?;
+        if !vanilla {
+            #[cfg(target_os = "linux")]
+            let is_proton = {
+                use crate::game::platform::Platform;
+                use tracing::warn;
 
-        if let Some(custom_args) = game_custom_args {
-            command.args(custom_args);
+                let is_proton = linux::is_proton(game_dir).unwrap_or_else(|err| {
+                    warn!("failed to determine if game uses proton: {:#}", err);
+                    false
+                });
+
+                if is_proton {
+                    if let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
+                        command.env("WINEDLLOVERRIDE", format!("{proxy_dll}=n,b"));
+
+                        if let Some(steam) = &self.game.platforms.steam {
+                            if matches!(platform, Some(Platform::Steam)) {
+                                if let Err(err) =
+                                    linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
+                                {
+                                    warn!("failed to ensure wine dll override: {:#}", err);
+                                };
+                            }
+                        }
+                    }
+                }
+
+                is_proton
+            };
+
+            #[cfg(target_os = "windows")]
+            let is_proton = false;
+
+            if is_proton {
+                info!("game appears to be running under proton, using proton launch method");
+            }
+
+            let mut ctx = mod_loader::ArgsContext::new(&mut command, &profile.path, is_proton);
+            ctx.add_args(&self.game.mod_loader)?;
         }
 
-        if profile.custom_args_enabled {
-            command.args(&profile.custom_args);
+        custom_args::add_args(&mut command, game_custom_args)?;
+        custom_args::add_args(&mut command, &profile.custom_args)?;
+
+        if matches!(launch_mode, LaunchMode::Direct { .. }) {
+            command.current_dir(game_dir);
         }
 
         Ok((launch_mode, command))
@@ -130,6 +187,13 @@ impl ManagedGame {
     fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
         const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
+
+        let target_dir = game_dir.join(self.game.mod_loader.file_target.unwrap_or("."));
+        ensure!(
+            target_dir.exists(),
+            "target directory for mod loader files does not exist at {}, please check your settings",
+            target_dir.display()
+        );
 
         let entries = self
             .active_profile()
@@ -146,16 +210,16 @@ impl ManagedGame {
                 let is_file = entry.file_type().is_ok_and(|ty| ty.is_file());
                 let is_included_dir = INCLUDE_DIRS.iter().any(|dir| *dir == name);
 
-                return is_file || is_included_dir;
+                is_file || is_included_dir
             });
 
         for entry in entries {
+            let to_path = target_dir.join(entry.file_name());
             info!(
-                "copying {} to game directory",
-                entry.file_name().to_string_lossy()
+                file_name = %entry.file_name().to_string_lossy(),
+                to_path = %to_path.display(),
+                "copying to game directory",
             );
-
-            let to_path = game_dir.join(entry.file_name());
 
             if entry.file_type()?.is_file() {
                 fs::copy(entry.path(), to_path)?;
@@ -169,15 +233,12 @@ impl ManagedGame {
 }
 
 fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<()> {
-    match mode {
-        LaunchMode::Launcher | LaunchMode::Direct { instances: 1, .. } => {
+    match mode.instances() {
+        0 => bail!("instances must be greater than 0"),
+        1 => {
             command.spawn()?;
         }
-        LaunchMode::Direct { instances: 0, .. } => bail!("instances must be greater than 0"),
-        LaunchMode::Direct {
-            instances,
-            interval_secs,
-        } => {
+        instances => {
             let app = app.clone();
             tauri::async_runtime::spawn(async move {
                 for i in 0..instances {
@@ -188,7 +249,7 @@ fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<
                             &app,
                         );
                     }
-                    tokio::time::sleep(Duration::from_secs_f32(interval_secs)).await;
+                    tokio::time::sleep(mode.interval()).await;
                 }
             });
         }
@@ -233,12 +294,21 @@ fn locate_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     Ok(path)
 }
 
-fn exe_path(game_dir: &Path) -> Result<PathBuf> {
-    game_dir
-        .read_dir()?
+const IGNORED_EXES: &[&str] = &[
+    "crashpad_handler.exe",
+    "UnityCrashHandler32.exe",
+    "UnityCrashHandler64.exe",
+];
+
+fn find_executable(game_dir: &Path) -> Result<PathBuf> {
+    WalkDir::new(game_dir)
+        .into_iter()
         .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_file())
+        .sorted_by(|a, b| a.depth().cmp(&b.depth())) // prefer shallower entries
         .find(|entry| {
             let file_name = PathBuf::from(entry.file_name());
+            let file_name_str = file_name.to_string_lossy();
             let extension = file_name.extension().and_then(|ext| ext.to_str());
 
             let has_correct_extension = if cfg!(windows) {
@@ -247,9 +317,9 @@ fn exe_path(game_dir: &Path) -> Result<PathBuf> {
                 matches!(extension, Some("exe" | "sh"))
             };
 
-            has_correct_extension && !file_name.to_string_lossy().contains("UnityCrashHandler")
+            has_correct_extension && !IGNORED_EXES.contains(&&*file_name_str)
         })
-        .map(|entry| entry.path())
+        .map(|entry| entry.into_path())
         .ok_or_eyre("game executable not found")
 }
 

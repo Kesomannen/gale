@@ -22,14 +22,19 @@ fn get_core_path(package_name: &str) -> PathBuf {
     }
 }
 
-fn scan(profile: &Profile, package_name: &str) -> Result<impl Iterator<Item = PathBuf>> {
-    Ok(profile
-        .path
-        .join(get_core_path(package_name))
+fn scan(profile: &Profile, package_name: &str) -> Result<Vec<PathBuf>> {
+    let core_dir = profile.path.join(get_core_path(package_name));
+
+    if !core_dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    Ok(core_dir
         .read_dir()?
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_file()))
-        .map(|entry| entry.path()))
+        .map(|entry| entry.path())
+        .collect())
 }
 
 impl PackageInstaller for BepinexInstaller {

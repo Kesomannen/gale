@@ -6,11 +6,12 @@
 	import { expoOut } from 'svelte/easing';
 	import { fade, slide } from 'svelte/transition';
 	import IconButton from '../ui/IconButton.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	async function copyError(toast: Toast) {
 		await writeText(`${toast.name ? `${toast.name}: ` : ''}${toast.message}`);
 		pushInfoToast({
-			message: 'Error copied to clipboard.'
+			message: m.toasts_copyError_message()
 		});
 	}
 </script>
@@ -24,7 +25,7 @@
 		>
 			<div
 				class={[
-					toast.type === 'error' ? 'bg-red-600' : 'bg-accent-600',
+					toast.type === 'error' ? 'bg-red-600' : 'bg-accent-700',
 					'absolute left-0 h-full w-1.5'
 				]}
 			></div>
@@ -43,14 +44,22 @@
 						<span class="text-primary-300">{toast.name}:</span>
 					{/if}
 
-					<span class="text-primary-100 font-medium break-words">{toast.message}</span>
+					<span class="text-primary-100 font-medium wrap-break-word">{toast.message}</span>
 				</div>
 
 				{#if toast.type === 'error'}
-					<IconButton icon="mdi:content-copy" label="Copy error" onclick={() => copyError(toast)} />
+					<IconButton
+						icon="mdi:content-copy"
+						label={m.toasts_button_copy()}
+						onclick={() => copyError(toast)}
+					/>
 				{/if}
 
-				<IconButton icon="mdi:close" label="Clear toast" onclick={() => clearToast(i)} />
+				<IconButton
+					icon="mdi:close"
+					label={m.toasts_button_clear()}
+					onclick={() => clearToast(i)}
+				/>
 			</div>
 		</div>
 	{/each}

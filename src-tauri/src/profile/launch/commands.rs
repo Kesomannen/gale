@@ -1,11 +1,10 @@
 use eyre::Context;
-use itertools::Itertools;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 
 use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
 
 #[command]
-pub async fn launch_game(app: AppHandle, args: Option<String>) -> Result<()> {
+pub async fn launch_game(app: AppHandle, vanilla: bool, args: Option<String>) -> Result<()> {
     if app.lock_prefs().pull_before_launch {
         sync::pull_profile(false, &app).await?;
     }
@@ -13,7 +12,9 @@ pub async fn launch_game(app: AppHandle, args: Option<String>) -> Result<()> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 
-    manager.active_game().launch_with_args(&prefs, &app, args)?;
+    manager
+        .active_game()
+        .launch_with_args(vanilla, args, &prefs, &app)?;
 
     Ok(())
 }
@@ -23,12 +24,11 @@ pub fn get_launch_args(app: AppHandle) -> Result<String> {
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 
-    let game_dir = super::locate_game_dir(manager.active_game, &prefs)?;
-    let (_, command) = manager.active_game().launch_command(&game_dir, &prefs)?;
-    let text = command
-        .get_args()
-        .map(|arg| format!("\"{}\"", arg.to_string_lossy()))
-        .join(" ");
+    let game = manager.active_game();
+    let game_dir = super::locate_game_dir(game.game, &prefs)?;
+    let (_, command) = game.launch_command(false, &game_dir, &prefs)?;
+
+    let text = super::custom_args::join(command.get_args().map(|arg| arg.to_string_lossy()));
 
     Ok(text)
 }

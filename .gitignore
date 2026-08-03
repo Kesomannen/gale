@@ -9,4 +9,5 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .VSCodeCounter
-src-tauri/gen
+/src-tauri/gen
+PRS.md

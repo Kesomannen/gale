@@ -1,99 +1,102 @@
 <script lang="ts">
 	import type { Mod, ModContextItem } from '../../types';
 	import Icon from '@iconify/svelte';
-	import { formatModName, modIconSrc } from '$lib/util';
 	import type { MouseEventHandler } from 'svelte/elements';
-	import { ContextMenu } from 'bits-ui';
-	import { activeContextMenu } from '$lib/context';
-	import ModContextMenuContent from './ModContextMenuContent.svelte';
 	import Spinner from '../ui/Spinner.svelte';
+	import ModItemWithContext from './ModItemContext.svelte';
+	import {
+		formatModName,
+		isOutdated,
+		modIconSrc,
+		shortenFileSize,
+		shortenNum,
+		timeSince
+	} from '$lib/util';
 
 	type Props = {
 		mod: Mod;
-		isSelected: boolean;
+		selected: boolean;
 		locked: boolean;
 		contextItems: ModContextItem[];
-		onclick?: MouseEventHandler<HTMLButtonElement>;
+		onclick?: MouseEventHandler<HTMLDivElement>;
 		oninstall?: () => void;
 	};
 
-	let { mod, isSelected, locked, contextItems, onclick, oninstall }: Props = $props();
+	let { mod, selected: selected, locked, contextItems, onclick, oninstall }: Props = $props();
 
-	let contextMenuOpen = $state(false);
 	let loading = $state(false);
-
-	let descriptionClasses = $derived(
-		isSelected ? 'text-primary-300' : 'text-primary-400 group-hover:text-primary-300'
-	);
-
-	$effect(() => {
-		if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
-			contextMenuOpen = false;
-		}
-	});
 </script>
 
-<ContextMenu.Root
-	bind:open={contextMenuOpen}
-	onOpenChange={(open) => {
-		if (open) {
-			$activeContextMenu = mod.uuid;
-		} else {
-			$activeContextMenu = null;
-		}
-	}}
->
-	<ContextMenu.Trigger class="contents">
-		<button
-			class="group flex w-full rounded-lg border p-2 {isSelected
+<ModItemWithContext {mod} {locked} {contextItems}>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div
+		{onclick}
+		role="button"
+		tabindex="0"
+		class={[
+			'group my-1 flex items-center gap-4 rounded-lg border p-3',
+			selected
 				? 'border-primary-500 bg-primary-700'
-				: 'hover:bg-primary-700 border-transparent'}"
-			{onclick}
-		>
-			<img src={modIconSrc(mod)} alt={mod.name} class="size-12 rounded-sm" />
-			<div class="shrink grow overflow-hidden pl-3 text-left">
-				<div class="flex items-center gap-1 overflow-hidden">
-					<div class="shrink truncate pr-1 font-medium text-white">
-						{formatModName(mod.name)}
-					</div>
-					{#if mod.isPinned}
-						<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
-					{/if}
-					{#if mod.isDeprecated}
-						<Icon class="shrink-0 text-red-500" icon="mdi:error" />
-					{/if}
-					{#if mod.isInstalled}
-						<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
-					{/if}
-				</div>
+				: 'hover:bg-primary-700 border-primary-700 hover:border-primary-600'
+		]}
+	>
+		<img src={modIconSrc(mod)} alt={mod.name} class="size-18 rounded-lg" />
 
-				{#if mod.description !== null}
-					<div class="truncate {descriptionClasses}">
-						{mod.description}
-					</div>
+		<div class="shrink grow overflow-hidden text-left">
+			<div class="flex items-center gap-1 overflow-hidden">
+				<div class="shrink pr-1 text-lg font-medium text-white">
+					{formatModName(mod.name)}
+				</div>
+				{#if mod.isPinned}
+					<Icon class="text-primary-400 shrink-0" icon="mdi:pin" />
+				{/if}
+				{#if mod.isDeprecated}
+					<Icon class="shrink-0 text-yellow-500" icon="mdi:warning" />
+				{/if}
+				{#if mod.isInstalled}
+					<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
+				{/if}
+				{#if isOutdated(mod)}
+					<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
 				{/if}
 			</div>
 
-			{#if !mod.isInstalled && !locked}
-				<!-- svelte-ignore node_invalid_placement_ssr -->
-				<!-- we're not using ssr -->
-				<button
-					class="bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline"
-					disabled={loading}
-					onclick={(evt) => {
-						evt.stopPropagation();
-						oninstall?.();
-						loading = true;
-					}}
-				>
-					{#if loading}
-						<Spinner />
-					{:else}
-						<Icon icon="mdi:download" />
-					{/if}
-				</button>
+			{#if mod.description !== null}
+				<div class="text-primary-300 line-clamp-1 text-sm text-ellipsis lg:line-clamp-2">
+					{mod.description}
+				</div>
 			{/if}
-		</button>
-	</ContextMenu.Trigger>
-	<ModContextMenuContent type="context" style="dark" {locked} {mod} items={contextItems} />
-</ContextMenu.Root>
+
+			<div class="text-primary-300 mt-2 flex items-center gap-1 text-sm">
+				{#if mod.downloads !== null}
+					<Icon class="shrink-0" icon="mdi:download-outline" />
+					<span class="mr-4">{shortenNum(mod.downloads)}</span>
+				{/if}
+				{#if mod.lastUpdated}
+					<Icon class=" shrink-0" icon="mdi:clock-outline" />
+					<span class="">{timeSince(new Date(mod.lastUpdated))}</span>
+				{/if}
+			</div>
+		</div>
+
+		{#if !mod.isInstalled && !locked}
+			<button
+				class={[
+					'bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline'
+				]}
+				disabled={loading}
+				onclick={(evt) => {
+					evt.stopPropagation();
+					oninstall?.();
+					loading = true;
+				}}
+			>
+				{#if loading}
+					<Spinner />
+				{:else}
+					<Icon icon="mdi:download" />
+				{/if}
+			</button>
+		{/if}
+	</div>
+</ModItemWithContext>

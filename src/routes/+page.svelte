@@ -1,7 +1,15 @@
 <script lang="ts">
 	import * as api from '$lib/api';
 	import DependantsDialog from '$lib/components/dialogs/DependantsDialog.svelte';
-	import type { Mod, AvailableUpdate, Dependant, ModContextItem, SortBy } from '$lib/types';
+	import type {
+		Mod,
+		AvailableUpdate,
+		Dependant,
+		ModContextItem,
+		SortBy,
+		DependantWithVersion,
+		ListItem
+	} from '$lib/types';
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
@@ -17,6 +25,11 @@
 	import UnknownModsBanner from '$lib/components/mod-list/UnknownModsBanner.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { profileQuery } from '$lib/state/misc.svelte';
+	import { m } from '$lib/paraglide/messages';
+	import ReorderableList from '$lib/components/profile/ReorderableList.svelte';
+	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import config from '$lib/state/config.svelte';
+	import { goto } from '$app/navigation';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -32,7 +45,7 @@
 
 	const contextItems: ModContextItem[] = [
 		{
-			label: 'Uninstall',
+			label: m.page_modContextItem_uninstall(),
 			icon: 'mdi:delete',
 			onclick: (mod) =>
 				uninstall({
@@ -42,7 +55,7 @@
 			showFor: (_, profileLocked) => !profileLocked
 		},
 		{
-			label: 'Change version',
+			label: m.page_modContextItem_changeVersion(),
 			icon: 'mdi:edit',
 			onclick: () => {},
 			showFor: (mod, profileLocked) => mod.versions.length > 1 && !profileLocked,
@@ -53,25 +66,39 @@
 				}))
 		},
 		{
-			label: 'Show dependants',
+			label: m.page_modContextItem_showDependants(),
 			icon: 'mdi:source-branch',
 			onclick: openDependants
 		},
 		{
-			label: 'Open folder',
+			label: m.page_modContextItem_openFolder(),
 			icon: 'mdi:folder',
 			onclick: (mod) => api.profile.openModDir(mod.uuid)
+		},
+		{
+			label: m.modDetails_editConfig(),
+			icon: 'mdi:file-cog',
+			showFor: (mod) => mod.configFile != null,
+			onclick: (mod) => {
+				const file = config.findFileByPath(mod.configFile!);
+				if (!file) {
+					console.error('Config file not found for mod', mod.configFile);
+					return;
+				}
+
+				config.selectedFile = file;
+				goto('/config');
+			}
 		},
 		...defaultContextItems
 	];
 
 	let mods: Mod[] = $state([]);
+	let items: ListItem[] = $state([]);
 	let totalModCount = $state(0);
 	let unknownMods: Dependant[] = $state([]);
 	let updates: AvailableUpdate[] = $state([]);
 
-	let modList: ModList;
-	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
 
 	let removeDependants: DependantsDialog;
@@ -79,7 +106,7 @@
 	let enableDependencies: DependantsDialog;
 
 	let dependantsOpen = $state(false);
-	let dependants: string[] = $state([]);
+	let dependants: DependantWithVersion[] = $state([]);
 
 	let activeMod: Mod | null = $state(null);
 
@@ -90,9 +117,10 @@
 		if (refreshing) return;
 		refreshing = true;
 
-		let result = await api.profile.query({ ...profileQuery.current, maxCount });
+		let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
 
 		mods = result.mods;
+		items = result.mods.map((mod) => ({ type: 'mod', mod }));
 		totalModCount = result.totalModCount;
 		unknownMods = result.unknownMods;
 		updates = result.updates;
@@ -153,62 +181,22 @@
 		}
 	}
 
-	let reorderUuid: string;
-	let reorderPrevIndex: number;
+	async function onmove(item: ListItem, fromIndex: number, toIndex: number) {
+		if (item.type !== 'mod') return;
 
-	function ondragstart(evt: DragEvent) {
-		if (!isDragApplicable(evt)) return;
-
-		let element = evt.currentTarget as HTMLElement;
-
-		reorderUuid = element.dataset.uuid!;
-		reorderPrevIndex = parseInt(element.dataset.index!);
-
-		evt.dataTransfer!.effectAllowed = 'move';
-		evt.dataTransfer!.setData('text/html', element.outerHTML);
-	}
-
-	async function ondragover(evt: DragEvent) {
-		if (!isDragApplicable(evt)) return;
-
-		let target = evt.currentTarget as HTMLElement;
-		let newIndex = parseInt(target.dataset.index!);
-		let delta = newIndex - reorderPrevIndex;
-
-		if (delta === 0) {
-			return;
-		}
-
-		let temp = mods[reorderPrevIndex];
-		mods[reorderPrevIndex] = mods[newIndex];
-		mods[newIndex] = temp;
-
-		reorderPrevIndex = newIndex;
+		let delta = toIndex - fromIndex;
 
 		if (profileQuery.current.sortOrder === 'descending') {
 			delta *= -1; // list is reversed
 		}
 
-		await emit('reorder_mod', { uuid: reorderUuid, delta });
-	}
-
-	async function ondragend(evt: DragEvent) {
-		if (!isDragApplicable(evt)) return;
-		await emit('finish_reorder');
-	}
-
-	function isDragApplicable(evt: DragEvent) {
-		if (!reorderable || evt.dataTransfer === null) return false;
-		let items = [...evt.dataTransfer.items];
-		return items.length === 0 || items[0].kind !== 'file';
+		await emit('reorder_mod', { uuid: item.mod.uuid, delta });
 	}
 
 	$effect(() => {
-		if (maxCount > 0) {
-			profiles.active;
-			profileQuery.current;
-			refresh();
-		}
+		profiles.active;
+		profileQuery.current;
+		refresh();
 	});
 
 	let reorderable = $derived(
@@ -225,11 +213,11 @@
 </script>
 
 <div class="flex grow overflow-hidden">
-	<div class="flex w-[60%] grow flex-col overflow-hidden pt-3 pl-3">
+	<div class="flex w-[60%] grow flex-col overflow-hidden px-4 pt-4">
 		<ModListFilters {sortOptions} queryArgs={profileQuery.current} />
 
 		{#if locked}
-			<ProfileLockedBanner class="mr-4 mb-1" />
+			<ProfileLockedBanner class="mb-1" />
 		{:else}
 			<UpdateAllBanner {updates} />
 		{/if}
@@ -238,77 +226,85 @@
 			<UnknownModsBanner mods={unknownMods} {uninstall} />
 		{/if}
 
-		<ModList
-			{mods}
-			queryArgs={profileQuery.current}
-			bind:this={modList}
-			bind:maxCount
-			bind:selected={selectedMod}
-		>
-			{#snippet placeholder()}
-				{#if hasRefreshed}
-					{#if totalModCount === 0}
-						<Icon icon="ph:ghost" class="text-primary-500 mx-auto mt-4 text-9xl" />
-
-						<div class="mt-1 text-lg">No mods installed</div>
-						<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
-							>Click to <Icon icon="mdi:store-search" class="mr-0.5 ml-1 inline" inline /> Browse Thunderstore</a
-						>
-					{:else}
-						<div class="mt-4 text-lg">No matching mods found in profile</div>
-						<div class="text-primary-400">Try to adjust your search query/filters</div>
-					{/if}
-				{/if}
-			{/snippet}
-
-			{#snippet item({ mod, index, isSelected })}
-				<ProfileModListItem
-					{mod}
-					{index}
-					{isSelected}
-					{contextItems}
-					{reorderable}
-					{locked}
-					{ondragstart}
-					{ondragover}
-					{ondragend}
-					ontoggle={(newState) => toggleMod(mod, newState)}
-					onclick={() => modList.selectMod(mod)}
-				/>
-			{/snippet}
-		</ModList>
+		{#if mods.length === 0 && hasRefreshed}
+			{#if totalModCount === 0}
+				<HelpCard icon="ph:ghost" title={m.page_modList_noMods_1()}>
+					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
+						><Icon
+							icon="mdi:store-search"
+							class="mr-0.5 ml-1  inline"
+							inline
+						/>{m.page_modList_noMods_2()}</a
+					>
+				</HelpCard>
+			{:else}
+				<HelpCard class="mt-8" title={m.page_modList_noResults_1()}>
+					{m.page_modList_noResults_2()}
+				</HelpCard>
+			{/if}
+		{:else}
+			<ReorderableList bind:items {onmove} {reorderable}>
+				{#snippet mod({ mod })}
+					<ProfileModListItem
+						{mod}
+						{locked}
+						{contextItems}
+						selected={selectedMod?.uuid === mod.uuid}
+						ontoggle={(newState) => toggleMod(mod, newState)}
+						onclick={() => {
+							if (selectedMod?.uuid === mod.uuid) {
+								selectedMod = null;
+							} else {
+								selectedMod = mod;
+							}
+						}}
+					/>
+				{/snippet}
+			</ReorderableList>
+		{/if}
 	</div>
 
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
 			{#if selectedMod && isOutdated(selectedMod) && !locked}
 				<button
-					class="bg-accent-600 hover:bg-accent-500 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
+					class="bg-accent-700 hover:bg-accent-600 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
 					onclick={() => updateMod(selectedMod)}
 				>
 					<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
-					Update to {selectedMod?.versions[0].name}
+					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
 				</button>
 			{/if}
 		</ModDetails>
 	{/if}
 </div>
 
-<Dialog title="Dependants of {activeMod?.name}" bind:open={dependantsOpen}>
+<Dialog
+	title={m.page_dialog_title({ name: activeMod?.name ?? m.unknown() })}
+	bind:open={dependantsOpen}
+>
 	<div class="text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
-			No dependants found
+			{m.page_dialog_noDependants()}
 		{:else}
-			<ModCardList names={dependants} showVersion={false} />
+			<ModCardList mods={dependants} showVersion={false}>
+				{#snippet cardChildren({ mod })}
+					{#if mod.preferredVersion}
+						<div class="text-primary-400">
+							Preferred Version: {mod.preferredVersion}
+						</div>
+					{/if}
+				{/snippet}
+			</ModCardList>
 		{/if}
 	</div>
 </Dialog>
 
 <DependantsDialog
 	bind:this={removeDependants}
-	title="Confirm uninstallation"
-	verb="Uninstall"
-	description="The following mods depend on %s and will likely not work if it is uninstalled:"
+	title={m.page_dependantsDialog_uninstall_title()}
+	verb={m.page_dependantsDialog_uninstall_verb()}
+	description={m.page_dependantsDialog_uninstall_description()}
 	commandName="remove_mod"
 	onExecute={() => {
 		selectedMod = null;
@@ -318,18 +314,18 @@
 
 <DependantsDialog
 	bind:this={disableDependants}
-	title="Confirm disabling"
-	verb="Disable"
-	description="The following mods depend on %s and will likely not work if it is disabled:"
+	title={m.page_dependantsDialog_disable_title()}
+	verb={m.page_dependantsDialog_disable_verb()}
+	description={m.page_dependantsDialog_disable_description()}
 	commandName="toggle_mod"
 	onCancel={refresh}
 />
 
 <DependantsDialog
 	bind:this={enableDependencies}
-	title="Confirm enabling"
-	verb="Enable"
-	description="%s depends on the following disabled mods, and will likely not work if any of them are disabled:"
+	title={m.page_dependantsDialog_enable_title()}
+	verb={m.page_dependantsDialog_enable_verb()}
+	description={m.page_dependantsDialog_enable_description()}
 	commandName="toggle_mod"
 	onCancel={refresh}
 	positive

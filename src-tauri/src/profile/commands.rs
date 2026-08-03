@@ -1,20 +1,20 @@
 use std::path::PathBuf;
 
 use chrono::{DateTime, Utc};
-use eyre::{Context, OptionExt};
+use eyre::{Context, OptionExt, eyre};
 use itertools::Itertools;
 use serde::Serialize;
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 use tracing::warn;
 use uuid::Uuid;
 
-use super::{actions::ActionResult, Dependant, Profile};
+use super::{Dependant, Profile, actions::ActionResult};
 use crate::{
-    game::{self, platform::Platform, Game},
+    game::{self, Game, platform::Platform},
     profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{
-        cache::MarkdownKind, query::QueryModsArgs, FrontendProfileMod, Thunderstore, VersionIdent,
+        FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind, query::QueryModsArgs,
     },
     util::cmd::Result,
 };
@@ -154,7 +154,7 @@ pub struct ProfileQuery {
 pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery> {
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
-    let install_queue = app.install_queue().handle();
+    let install_queue = app.install_queue().lock();
 
     let profile = manager.active_profile();
 
@@ -166,11 +166,11 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
         .iter()
         .filter_map(|profile_mod| {
             profile
-                .check_update(profile_mod.uuid(), false, &thunderstore, &install_queue)
+                .check_update(profile_mod.uuid(), &thunderstore, &install_queue)
                 .transpose()
         })
         .map_ok(|update| {
-            let ignore = profile.ignored_updates.contains(&update.latest.uuid);
+            let ignore = profile.is_update_ignored(update.id());
 
             FrontendAvailableUpdate {
                 full_name: update.latest.ident.clone(),
@@ -200,7 +200,7 @@ pub fn is_mod_installed(uuid: Uuid, app: AppHandle) -> Result<bool> {
     let manager = app.lock_manager();
     let profile = manager.active_profile();
 
-    let result = profile.has_mod(uuid) || app.install_queue().handle().has_mod(uuid, profile.id);
+    let result = profile.has_mod(uuid) || app.install_queue().lock().has_mod(uuid, profile.id);
 
     Ok(result)
 }
@@ -221,11 +221,11 @@ pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHand
 }
 
 #[command]
-pub fn delete_profile(index: usize, app: AppHandle) -> Result<()> {
+pub fn delete_profile(id: i64, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
     let game = manager.active_game_mut();
 
-    game.delete_profile(index, false, app.db())?;
+    game.delete_profile(id, false, app.db())?;
     game.save(&app)?;
 
     game.update_window_title(&app)?;
@@ -368,15 +368,43 @@ pub fn force_toggle_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DependantWithVersion {
+    #[serde(rename = "fullName")]
+    ident: VersionIdent,
+    preferred_version: Option<String>,
+}
+
 #[command]
-pub fn get_dependants(uuid: Uuid, app: AppHandle) -> Result<Vec<VersionIdent>> {
+pub fn get_dependants(uuid: Uuid, app: AppHandle) -> Result<Vec<DependantWithVersion>> {
     let manager = app.lock_manager();
     let thunderstore = app.lock_thunderstore();
+
+    let target_mod = manager.active_profile().get_mod(uuid)?;
 
     let dependants = manager
         .active_profile()
         .dependants(uuid, &thunderstore)
-        .map(|profile_mod| profile_mod.ident().into_owned())
+        .map(|profile_mod| {
+            let preferred_version =
+                profile_mod
+                    .direct_dependencies(&thunderstore)
+                    .and_then(|direct_deps| {
+                        direct_deps
+                            .iter()
+                            .find(|dep_ident| {
+                                dep_ident.full_name() == target_mod.ident().full_name()
+                            })
+                            .map(|ident| ident.version().to_string())
+                    });
+            let ident = profile_mod.ident().into_owned();
+
+            DependantWithVersion {
+                ident,
+                preferred_version,
+            }
+        })
         .collect();
 
     Ok(dependants)
@@ -445,12 +473,41 @@ pub async fn get_local_markdown(
 }
 
 #[command]
-pub fn set_custom_args(custom_args: Vec<String>, enabled: bool, app: AppHandle) -> Result<()> {
+pub fn set_custom_args(custom_args: String, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
     let profile = manager.active_profile_mut();
     profile.custom_args = custom_args;
-    profile.custom_args_enabled = enabled;
     profile.save(&app, false)?;
     manager.save_active_game(&app)?;
+    Ok(())
+}
+
+#[command]
+pub fn set_profile_path(new_path: PathBuf, profile_id: i64, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let game = manager.active_game_mut();
+
+    if !new_path.is_dir() {
+        return Err(eyre!("provided path is not a directory").into());
+    }
+
+    let profile = game.profile_mut(profile_id)?;
+    profile.path = new_path;
+    profile.missing = false;
+
+    profile.save(&app, true)?;
+
+    Ok(())
+}
+
+#[command]
+pub fn forget_profile(profile_id: i64, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let game = manager.active_game_mut();
+
+    game.forget_profile(profile_id, app.db())?;
+
+    game.save(&app)?;
+
     Ok(())
 }

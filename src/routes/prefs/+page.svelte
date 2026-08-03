@@ -23,6 +23,8 @@
 	import games from '$lib/state/game.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import FontFamilyPref from '$lib/components/prefs/FontFamilyPref.svelte';
+	import LanguagePref from '$lib/components/prefs/LanguagePref.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -37,8 +39,7 @@
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
-			customArgs: [],
-			customArgsEnabled: false,
+			customArgs: '',
 			platform: null,
 			showSteamLaunchOptions: false
 		};
@@ -79,26 +80,33 @@
 
 <div class="mx-auto flex w-full max-w-4xl flex-col gap-1 overflow-y-auto px-6 pt-2 pb-6">
 	{#if prefs !== null && gamePrefs !== null}
-		<LargeHeading>Global settings</LargeHeading>
+		<LargeHeading>{m.prefs_global_title()}</LargeHeading>
 
-		<SmallHeading>Locations</SmallHeading>
+		<SmallHeading>{m.prefs_locations_title()}</SmallHeading>
 
 		<PathPref
-			label="Gale data folder"
+			label={m.prefs_locations_dataFolder()}
 			type="dir"
 			value={prefs.dataDir}
 			set={set((value, prefs) => (prefs.dataDir = value as string))}
 		>
-			The folder where mods and profiles are stored. Changing this will move the existing data.
+			{m.prefs_locations_dataFolder_content()}
 		</PathPref>
 
-		<SmallHeading>Appearance</SmallHeading>
+		<SmallHeading>{m.prefs_appearance_title()}</SmallHeading>
 
-		<ColorPref category="primary" default="slate">
-			The main color of the interface, including backgrounds and text.</ColorPref
+		<LanguagePref
+			value={prefs.language}
+			set={set((value, prefs) => {
+				prefs.language = value;
+			})}
+		/>
+
+		<ColorPref category="primary" default="slate"
+			>{m.prefs_appearance_color_primary_content()}</ColorPref
 		>
-		<ColorPref category="accent" default="green">
-			The color of highlighted elements, such as buttons and checkboxes</ColorPref
+		<ColorPref category="accent" default="green"
+			>{m.prefs_appearance_color_accent_content()}</ColorPref
 		>
 
 		<FontFamilyPref />
@@ -109,7 +117,7 @@
 		/>
 
 		<div class="my-1 flex items-center">
-			<Label>Use native menubar</Label>
+			<Label>{m.prefs_appearance_nativeMenubar_title()}</Label>
 
 			<Checkbox
 				checked={useNativeMenu.current}
@@ -119,34 +127,34 @@
 			/>
 		</div>
 
-		<SmallHeading>Miscellaneous</SmallHeading>
+		<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
 
 		<ApiKeyPref />
 
 		<TogglePref
-			label="Fetch mods automatically"
+			label={m.prefs_miscellaneous_fetchMods_title()}
 			value={prefs.fetchModsAutomatically}
 			set={set((value, prefs) => (prefs.fetchModsAutomatically = value))}
 		>
-			Whether to automatically fetch mods every 15 minutes. This will ensure the mod list stays
-			relatively up-to-date, but can be disabled to save bandwidth.
+			{m.prefs_miscellaneous_fetchMods_content_1()}
 			<br />
-			To manually trigger a fetch, go to <b>File &gt; Fetch mods</b>.
+			{m.prefs_miscellaneous_fetchMods_content_2()}<b
+				>{m.prefs_miscellaneous_fetchMods_content_3()}</b
+			>.
 		</TogglePref>
-
 		<TogglePref
-			label="Pull before launch"
+			label={m.prefs_miscellaneous_pullBeforeLaunch_title()}
 			value={prefs.pullBeforeLaunch}
 			set={set((value, prefs) => (prefs.pullBeforeLaunch = value))}
 		>
-			Whether to pull updates from synced profiles before launching.
+			{m.prefs_miscellaneous_pullBeforeLaunch_content()}
 		</TogglePref>
 
 		<LargeHeading>
-			{games.active?.name} settings
+			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}
 		</LargeHeading>
 
-		<SmallHeading>Locations</SmallHeading>
+		<SmallHeading>{m.prefs_gameSettings_locations_title()}</SmallHeading>
 
 		{#if platforms.length > 0}
 			<PlatformPref
@@ -156,21 +164,18 @@
 		{/if}
 
 		<PathPref
-			label={needsDirectory ? 'Location' : 'Override location'}
+			label={m[`prefs_gameSettings_locations_dirOverride_title${needsDirectory ? '_needs' : ''}`]()}
 			type="dir"
 			canClear={true}
 			value={gamePrefs.dirOverride}
 			set={set((value) => (gamePrefs!.dirOverride = value))}
 		>
-			{#if needsDirectory}
-				The location of the {games.active?.name} folder.
-			{:else}
-				Overrides the location of the {games.active?.name} folder. If unset, Gale will try to find it
-				via the specified platform instead.
-			{/if}
+			{m[`prefs_gameSettings_locations_dirOverride_content${needsDirectory ? '_needs' : ''}`]({
+				game: games.active?.name ?? m.unknown()
+			})}
 		</PathPref>
 
-		<SmallHeading>Launch</SmallHeading>
+		<SmallHeading>{m.prefs_gameSettings_launch_title()}</SmallHeading>
 
 		<LaunchModePref
 			platform={shownPlatform}
@@ -192,23 +197,17 @@
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}
-			enabled={gamePrefs.customArgsEnabled}
 			setValue={set((value) => (gamePrefs!.customArgs = value))}
-			setEnabled={set((value) => (gamePrefs!.customArgsEnabled = value))}
 		/>
 
 		{#if profiles.active}
-			<LargeHeading>Profile settings</LargeHeading>
+			<LargeHeading>{m.prefs_profileSettings_title()}</LargeHeading>
 
-			<SmallHeading>Launch</SmallHeading>
+			<SmallHeading>{m.prefs_profileSettings_launch_title()}</SmallHeading>
 
 			<CustomArgsPref
 				value={profiles.active.customArgs}
-				enabled={profiles.active.customArgsEnabled}
-				setValue={async (value) =>
-					await api.profile.setCustomArgs(value, profiles.active!.customArgsEnabled)}
-				setEnabled={async (value) =>
-					await api.profile.setCustomArgs(profiles.active!.customArgs, value)}
+				setValue={async (value) => await api.profile.setCustomArgs(value)}
 			/>
 		{/if}
 	{/if}

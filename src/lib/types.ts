@@ -44,19 +44,22 @@ export type ConfigRange = {
 
 export type ConfigFileType<T extends string, C = {}> = { type: T } & C;
 
-export type ConfigFile = { relativePath: string; displayName: string | null } & (
-	| ConfigFileType<'ok', ConfigFileData>
-	| ConfigFileType<'err', { error: string }>
-	| ConfigFileType<'unsupported'>
-);
+export type BaseConfigFile = { relativePath: string; displayName: string | null };
+
+export type ConfigFile = BaseConfigFile &
+	(
+		| ConfigFileType<'ok', ConfigFileData>
+		| ConfigFileType<'err', { error: string }>
+		| ConfigFileType<'unsupported'>
+	);
 
 export type ProfileInfo = {
 	id: number;
 	name: string;
 	modCount: number;
 	sync: SyncProfileInfo | null;
-	customArgs: string[];
-	customArgsEnabled: boolean;
+	customArgs: string;
+	missing: boolean;
 };
 
 export type SyncProfileInfo = {
@@ -153,7 +156,7 @@ export type QueryModsArgs = {
 	includeEnabled: boolean;
 	sortBy: SortBy;
 	sortOrder: SortOrder;
-	maxCount: number;
+	maxCount: number | null;
 };
 
 export type QueryModsArgsWithoutMax = Omit<QueryModsArgs, 'maxCount'>;
@@ -167,6 +170,11 @@ export type ConfigEntryId = {
 export type Dependant = {
 	fullName: string;
 	uuid: string;
+};
+
+export type DependantWithVersion = {
+	fullName: string;
+	preferredVersion: string | null;
 };
 
 export type ModId = {
@@ -291,19 +299,24 @@ export type R2ImportData = {
 	include: boolean[];
 };
 
+export type ImportOptions = {
+	importAll?: boolean;
+	merge?: boolean;
+};
+
 export type Prefs = {
 	dataDir: string;
 	cacheDir: string;
 	fetchModsAutomatically: boolean;
 	pullBeforeLaunch: boolean;
 	zoomFactor: number;
+	language: string;
 	gamePrefs: Map<string, GamePrefs>;
 };
 
 export type GamePrefs = {
 	dirOverride: string | null;
-	customArgs: string[];
-	customArgsEnabled: boolean;
+	customArgs: string;
 	launchMode: LaunchMode;
 	platform: Platform | null;
 	showSteamLaunchOptions: boolean;
@@ -356,3 +369,19 @@ export interface LaunchOption {
 	type: LaunchOptionType;
 	description?: string;
 }
+export type MissingProfileAction = { type: 'locate'; newPath: string } | { type: 'delete' };
+
+export type Folder = {
+	id: string;
+	children: ListItem[];
+};
+
+export type ListItem =
+	| {
+			type: 'mod';
+			mod: Mod;
+	  }
+	| {
+			type: 'folder';
+			folder: Folder;
+	  };
