@@ -456,20 +456,12 @@
 	"toolBar_launch_vanilla": "Starta vanilla",
 	"toolBar_launchGame_message": "Vänta tills alla modinstallationer är klara innan du startar.",
 	"unknown": "Okänd",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["Vissa modifieringar i den här profilen kunde inte lösas."],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "Vissa modifieringar i den här profilen kunde inte lösas.",
 	"unknownModsBanner_details_content": "Detaljer",
 	"unknownModsBanner_dialog_content_1": "Följande moddar kunde inte hittas av Gale.",
 	"unknownModsBanner_dialog_content_2": "De kan ha tagits bort från moddplattformen, eller installerats från en källa som du sedan dess har inaktiverat.",
 	"unknownModsBanner_ignore_content": "Ignorera",
 	"unknownModsBanner_uninstall_content": "Avinstallera",
-	"unknownModsBanner_uninstall_it": "Avinstallera det?",
-	"unknownModsBanner_uninstall_them": "Avinstallera dem?",
 	"updateAllBanner_button": "Uppdatera alla?",
 	"updateAllBanner_content": [
 		{
@@ -487,6 +479,7 @@
 	"updateAllBanner_dialog_list_ignore_version": "Ignorera den här uppdateringen",
 	"updateAllBanner_dialog_list_title": "Uppdatering vald",
 	"updateAllBanner_dialog_title": "Bekräfta",
+	"updateAllBanner_dismiss": "Avfärda",
 	"updater_confirmDialog_button": "Installera",
 	"updater_confirmDialog_content": "Uppdateringen laddas ner i bakgrunden och appen startas sedan om för att tillämpa den.",
 	"updater_confirmDialog_content_available": "Det finns en uppdatering tillgänglig för Gale.",

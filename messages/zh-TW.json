@@ -456,20 +456,12 @@
 	"toolBar_launch_vanilla": "啟動原版",
 	"toolBar_launchGame_message": "請等待模組安裝完成後再啟動。",
 	"unknown": "未知",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["此設定檔中的某些模組無法解析。"],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "此設定檔中的某些模組無法解析。",
 	"unknownModsBanner_details_content": "細節",
 	"unknownModsBanner_dialog_content_1": "Gale 找不到以下模組。",
 	"unknownModsBanner_dialog_content_2": "它們可能已從模組平台移除，或來自您後來停用的來源。",
 	"unknownModsBanner_ignore_content": "忽略",
 	"unknownModsBanner_uninstall_content": "解除安裝",
-	"unknownModsBanner_uninstall_it": "將其解除安裝？",
-	"unknownModsBanner_uninstall_them": "將它們解除安裝？",
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
@@ -487,6 +479,7 @@
 	"updateAllBanner_dialog_list_ignore_version": "忽略此更新",
 	"updateAllBanner_dialog_list_title": "更新所選",
 	"updateAllBanner_dialog_title": "確認更新",
+	"updateAllBanner_dismiss": "解僱",
 	"updater_confirmDialog_button": "安裝",
 	"updater_confirmDialog_content": "更新將在背景下載，然後應用程式將重新啟動以套用它。",
 	"updater_confirmDialog_content_available": "Gale 有可用的更新。",

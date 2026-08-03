@@ -456,20 +456,12 @@
 	"toolBar_launch_vanilla": "Iniciar vanilla",
 	"toolBar_launchGame_message": "Por favor, aguarde a instalação dos mods terminar antes de iniciar.",
 	"unknown": "Desconhecido",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["Algumas modificações neste perfil não puderam ser resolvidas."],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "Algumas modificações neste perfil não puderam ser resolvidas.",
 	"unknownModsBanner_details_content": "Detalhes",
 	"unknownModsBanner_dialog_content_1": "Gale não conseguiu encontrar os seguintes mods.",
 	"unknownModsBanner_dialog_content_2": "Eles podem ter sido removidos da plataforma de modificação ou instalados a partir de uma fonte que você desativou posteriormente.",
 	"unknownModsBanner_ignore_content": "Ignorar",
 	"unknownModsBanner_uninstall_content": "Desinstalar",
-	"unknownModsBanner_uninstall_it": "Desinstalá-lo?",
-	"unknownModsBanner_uninstall_them": "Desinstalá-los?",
 	"updateAllBanner_button": "Atualizar tudo?",
 	"updateAllBanner_content": [
 		{
@@ -487,6 +479,7 @@
 	"updateAllBanner_dialog_list_ignore_version": "Ignore esta atualização",
 	"updateAllBanner_dialog_list_title": "Atualizar selecionados",
 	"updateAllBanner_dialog_title": "Confirmar atualização",
+	"updateAllBanner_dismiss": "Liberar",
 	"updater_confirmDialog_button": "Instalar",
 	"updater_confirmDialog_content": "A atualização será baixada em segundo plano, depois o app será reiniciado para aplicá-la.",
 	"updater_confirmDialog_content_available": "Há uma atualização disponível para o Gale.",
