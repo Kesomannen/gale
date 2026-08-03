@@ -2212,6 +2212,18 @@
 		}
 	},
 	{
+		"name": "SUPERHOT",
+		"slug": "superhot",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 322500
+			}
+		}
+	},
+	{
 		"name": "Sailwind",
 		"modLoader": {
 			"name": "BepInEx"
