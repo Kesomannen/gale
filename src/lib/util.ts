@@ -112,6 +112,18 @@ export function isOutdated(mod: Mod): boolean {
 	return mod.version !== mod.versions[0].name;
 }
 
+export function hasNonReleaseUpgrade(mod: Mod): boolean {
+	if (mod.versions.length === 0) {
+		return false;
+	}
+
+	if (mod.version?.includes('-')) {
+		return false;
+	}
+
+	return mod.versions[0].name.includes('-');
+}
+
 export function communityUrl(backend: Backend, author: string, mod?: string) {
 	if (backend === Backend.Hexium) {
 		return `https://${games.active?.slug}.hexium.gg/${mod === undefined ? `teams/${author}` : `mods/${author}/${mod}`}`;

@@ -10,7 +10,7 @@
 		DependantWithVersion,
 		ListItem
 	} from '$lib/types';
-	import { isOutdated } from '$lib/util';
+	import { hasNonReleaseUpgrade, isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
@@ -270,9 +270,9 @@
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
 			{#if isOutdated(selectedMod) && !locked}
 				<Button
-					color="accent"
+					color={hasNonReleaseUpgrade(selectedMod) ? "primary" : "accent"}
 					size="lg"
-					icon="mdi:arrow-up-circle"
+					icon={hasNonReleaseUpgrade(selectedMod) ? "mdi:flask-outline" : "mdi:arrow-up-circle"}
 					class="mt-2"
 					onclick={() => updateMod(selectedMod)}
 				>

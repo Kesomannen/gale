@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Mod } from '../../types';
 	import type { MouseEventHandler } from 'svelte/elements';
-	import { formatModName, isOutdated, modIconSrc } from '$lib/util';
+	import { formatModName, hasNonReleaseUpgrade, isOutdated, modIconSrc } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
 	import type { ClassValue } from 'clsx';
@@ -55,7 +55,11 @@
 					<Icon class="mr-1 shrink-0 text-yellow-500" icon="mdi:warning" />
 				{/if}
 				{#if isOutdated(mod)}
-					<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
+					{#if hasNonReleaseUpgrade(mod)}
+						<Icon class="text-accent-200 shrink-0" icon="mdi:flask-outline" />
+					{:else}
+						<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
+					{/if}
 				{/if}
 			</div>
 
