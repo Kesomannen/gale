@@ -182,19 +182,13 @@ pub fn get_steam_launch_options(app_id: u32) -> Result<serde_json::Value> {
         .ok_or_else(|| eyre!("no launch options found for app ID {}", app_id))
 }
 
-pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
+fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
     use new_vdf_parser::appinfo_vdf_parser::open_appinfo_vdf;
     use serde_json::{Map, Value};
 
-    let steam_command = create_base_steam_command()?;
-    let steam_binary = steam_command.get_program();
-    let steam_path = Path::new(steam_binary)
-        .parent()
-        .ok_or_eyre("steam binary has no parent directory")?
-        .to_path_buf();
-    drop(steam_command);
+    let steam_dir = steamlocate::locate().context("failed to locate steam installation")?;
 
-    let appinfo_path = steam_path.join("appcache").join("appinfo.vdf");
+    let appinfo_path = steam_dir.path().join("appcache").join("appinfo.vdf");
 
     ensure!(
         appinfo_path.exists(),
@@ -210,6 +204,8 @@ pub fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
         .get("entries")
         .and_then(|e| e.as_array())
         .ok_or_eyre("no entries found in appinfo.vdf")?;
+
+    info!("{entries:#?}");
 
     entries
         .iter()

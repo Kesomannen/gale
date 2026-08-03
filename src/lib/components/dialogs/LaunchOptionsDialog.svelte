@@ -4,6 +4,7 @@
 	import { RadioGroup } from 'bits-ui';
 	import type { LaunchOption } from '$lib/types';
 	import { formatLaunchOptionName } from '$lib/util';
+	import Icon from '@iconify/svelte';
 
 	interface Props {
 		open: boolean;
@@ -68,14 +69,14 @@
 		</RadioGroup.Root>
 	</div>
 
-	<div class="text-primary-400 mt-4 text-xs">
-		You can disable this dialog by turning off "Show Steam launch options" in <a
+	<div class="text-primary-400 mt-4 text-sm">
+		You can disable this dialog by switching off "Show Steam launch options" in <a
 			href="/prefs"
 			onclick={() => (open = false)}
 			class="text-primary-400 hover:text-primary-300 underline"
 		>
 			Settings</a
-		>
+		>.
 	</div>
 
 	{#snippet buttons()}
