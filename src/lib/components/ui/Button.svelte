@@ -4,6 +4,7 @@
 
 	type Props = {
 		color?: 'accent' | 'primary' | 'red';
+		size?: 'md' | 'lg';
 		icon?: string;
 		loading?: boolean;
 	} & HTMLButtonAttributes;
@@ -11,6 +12,7 @@
 	let {
 		disabled: disabledProp,
 		color = 'accent',
+		size = 'md',
 		icon,
 		loading = false,
 		class: classProp,
@@ -26,6 +28,13 @@
 		}[color]
 	);
 
+	let sizeClasses = $derived(
+		{
+			md: 'text-base px-4 py-2',
+			lg: 'text-lg px-6 py-2.5 font-medium'
+		}[size]
+	);
+
 	let disabled = $derived(disabledProp || loading);
 	let renderedIcon = $derived(loading ? 'ph:circle-notch' : icon);
 </script>
@@ -34,13 +43,17 @@
 	class={[
 		classProp,
 		typeClass,
-		'disabled:bg-primary-700 disabled:text-primary-400 inline-flex shrink-0 items-center overflow-hidden rounded-lg px-4 py-2 text-base text-nowrap disabled:cursor-not-allowed disabled:opacity-70'
+		sizeClasses,
+		'disabled:bg-primary-700 disabled:text-primary-400 inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg text-nowrap disabled:cursor-not-allowed disabled:opacity-70'
 	]}
 	{disabled}
 	{...restProps}
 >
 	{#if renderedIcon}
-		<Icon icon={renderedIcon} class="mr-2 text-lg {loading && 'animate-spin'}" />
+		<Icon
+			icon={renderedIcon}
+			class={['mr-2', size === 'lg' ? 'text-xl' : 'text-lg', loading && 'animate-spin']}
+		/>
 	{/if}
 
 	{@render children?.()}
