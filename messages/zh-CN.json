@@ -189,6 +189,10 @@
 	"launchModePref_mode_direct": "直接运行",
 	"launchModePref_mode_launcher": "游戏平台 ({platform})",
 	"launchModePref_title": "启动模式",
+	"launchOptionsDialog_content": "选择您希望启动游戏的方式：",
+	"launchOptionsDialog_help_content_1": "您可以通过关闭“显示 Steam 启动选项”来禁用此对话框。 ",
+	"launchOptionsDialog_help_content2": "设置",
+	"launchOptionsDialog_launch": "发射",
 	"menuBar_browseImportFile_filters": "档案",
 	"menuBar_browseImportFile_title": "选择要导入的档案",
 	"menuBar_clearModCache_confirm": "您确定要删除所有缓存的模组吗？这可能会让已安装模组占用磁盘空间增加。请再三考虑后进行操作！",
@@ -409,10 +413,30 @@
 	"prefs_miscellaneous_title": "杂项",
 	"prefs_profileSettings_launch_title": "启动",
 	"prefs_profileSettings_title": "档案设置",
+	"prefs_steamLaunchOptions_content": "启用后，会在游戏启动前显示游戏开发者定义的 Steam 启动选项（如有）。\n开始游戏。这些选项可能包括不同的游戏模式，例如VR模式、安全模式等。\n专用服务器，或其他特定于游戏的启动配置。",
+	"prefs_steamLaunchOptions_title": "显示 Steam 启动选项",
 	"profileLockedBanner_content": "为防止与所有者{name}的同步失效，此档案的修改功能已被禁用。",
 	"profileLockedBanner_title": "档案已被锁定",
 	"profilesDropdown_button": "新建档案",
 	"resetConfigButton_confirm": "您确定要重置 {name} 吗？",
+	"steamLaunchOption_application": "启动{game}",
+	"steamLaunchOption_benchmark": "启动基准测试工具",
+	"steamLaunchOption_config": "启动控制器布局工具",
+	"steamLaunchOption_default": "播放{game}",
+	"steamLaunchOption_editor": "启动游戏编辑器",
+	"steamLaunchOption_manual": "显示手册",
+	"steamLaunchOption_multiplayer": "在多人模式下启动{game}",
+	"steamLaunchOption_openvroverlay": "在 Steam VR 覆盖层中启动{game}",
+	"steamLaunchOption_openxr": "以 OpenXR 模式启动{game}",
+	"steamLaunchOption_option_description": "播放{description}",
+	"steamLaunchOption_option_no_description": "玩{game} ( {type} )",
+	"steamLaunchOption_osvr": "在 OSVR 模式下启动{game}",
+	"steamLaunchOption_other": "启动{game}",
+	"steamLaunchOption_other_with_type": "启动{game} ( {type} )",
+	"steamLaunchOption_othervr": "在 Oculus VR 模式下启动{game}",
+	"steamLaunchOption_safemode": "以安全模式启动{game}",
+	"steamLaunchOption_server": "启动专用服务器",
+	"steamLaunchOption_vr": "在 Steam VR 模式下启动{game}",
 	"syncDonationNotice_button": "稍后提醒",
 	"syncDonationNotice_content_1": "档案同步功能通过赞助运营!",
 	"syncDonationNotice_content_2": "若您喜欢此功能，请考虑支持我们。",
@@ -458,9 +482,15 @@
 	"unknown": "未知",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input countPlural"],
-			"match": ["此配置文件中的某些模组无法解析。"],
-			"selectors": ["countPlural"]
+			"declarations": [
+				"input countPlural"
+			],
+			"match": [
+				"此配置文件中的某些模组无法解析。"
+			],
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_details_content": "细节",
@@ -473,12 +503,17 @@
 	"updateAllBanner_button": "更新所有?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一个更新可用。",
 				"countPlural=other": "有 {count} 个更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模组",
@@ -487,6 +522,7 @@
 	"updateAllBanner_dialog_list_ignore_version": "忽略此更新",
 	"updateAllBanner_dialog_list_title": "更新所选项",
 	"updateAllBanner_dialog_title": "更新确认",
+	"updateAllBanner_dismiss": "解雇",
 	"updater_confirmDialog_button": "安装",
 	"updater_confirmDialog_content": "更新将在后台下载，随后应用程序将重新启动以应用更新。",
 	"updater_confirmDialog_content_available": "Gale 有可用更新。",

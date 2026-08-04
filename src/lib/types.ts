@@ -380,31 +380,10 @@ export type Zoom = { factor: number } | { delta: number };
 
 export type MarkdownType = 'readme' | 'changelog';
 
-export type LaunchOptionType =
-	| 'none'
-	| 'default'
-	| 'application'
-	| 'safemode'
-	| 'multiplayer'
-	| 'config'
-	| 'vr'
-	| 'server'
-	| 'editor'
-	| 'manual'
-	| 'benchmark'
-	| 'option1'
-	| 'option2'
-	| 'option3'
-	| 'othervr'
-	| 'openvroverlay'
-	| 'osvr'
-	| 'openxr'
-	| { unknown: string };
-
 export interface LaunchOption {
 	arguments: string;
-	type: LaunchOptionType;
-	description?: string;
+	type: string | null;
+	description: string | null;
 }
 export type MissingProfileAction = { type: 'locate'; newPath: string } | { type: 'delete' };
 

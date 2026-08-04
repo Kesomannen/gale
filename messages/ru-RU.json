@@ -189,6 +189,10 @@
 	"launchModePref_mode_direct": "Прямой",
 	"launchModePref_mode_launcher": "Платформа ( {platform} )",
 	"launchModePref_title": "Режим запуска",
+	"launchOptionsDialog_content": "Выберите способ запуска игры:",
+	"launchOptionsDialog_help_content_1": "Вы можете отключить это диалоговое окно, выключив параметр \"Показать параметры запуска Steam\" в настройках. ",
+	"launchOptionsDialog_help_content2": "Настройки",
+	"launchOptionsDialog_launch": "Запуск",
 	"menuBar_browseImportFile_filters": "Файл профиля",
 	"menuBar_browseImportFile_title": "Выберите файл для импорта.",
 	"menuBar_clearModCache_confirm": "Вы уверены, что хотите удалить все кэшированные моды? Это может удвоить объем дискового пространства, занимаемого установленными модами. Продолжайте только в том случае, если вы знаете, что делаете!",
@@ -409,10 +413,30 @@
 	"prefs_miscellaneous_title": "Разнообразный",
 	"prefs_profileSettings_launch_title": "Запуск",
 	"prefs_profileSettings_title": "Настройки профиля",
+	"prefs_steamLaunchOptions_content": "При включении этой опции отображаются параметры запуска Steam, определенные разработчиком игры (если таковые имеются), перед началом игры.\nЗапуск игры. Эти параметры могут включать различные игровые режимы, такие как VR, безопасный режим и т. д.\nВыделенный сервер или другие конфигурации запуска, специфичные для игры.",
+	"prefs_steamLaunchOptions_title": "Показать параметры запуска Steam",
 	"profileLockedBanner_content": "Внесение изменений в этот профиль отключено, чтобы предотвратить рассинхронизацию с его владельцем {name} .",
 	"profileLockedBanner_title": "Профиль заблокирован",
 	"profilesDropdown_button": "Новый профиль",
 	"resetConfigButton_confirm": "Вы уверены, что хотите сбросить {name} ?",
+	"steamLaunchOption_application": "Запуск {game}",
+	"steamLaunchOption_benchmark": "Запустите инструмент для сравнения показателей.",
+	"steamLaunchOption_config": "Инструмент для создания макета контроллера запуска",
+	"steamLaunchOption_default": "Play {game}",
+	"steamLaunchOption_editor": "Запустить редактор игр",
+	"steamLaunchOption_manual": "Показать руководство",
+	"steamLaunchOption_multiplayer": "Запустите {game} в многопользовательском режиме",
+	"steamLaunchOption_openvroverlay": "Запустите {game} в оверлее Steam VR",
+	"steamLaunchOption_openxr": "Запустите {game} в режиме OpenXR",
+	"steamLaunchOption_option_description": "Play {description}",
+	"steamLaunchOption_option_no_description": "Играть {game} ( {type} )",
+	"steamLaunchOption_osvr": "Запустите {game} в режиме OSVR",
+	"steamLaunchOption_other": "Запуск {game}",
+	"steamLaunchOption_other_with_type": "Запуск {game} ( {type} )",
+	"steamLaunchOption_othervr": "Запустите {game} в режиме Oculus VR",
+	"steamLaunchOption_safemode": "Запустите {game} в безопасном режиме.",
+	"steamLaunchOption_server": "Запуск выделенного сервера",
+	"steamLaunchOption_vr": "Запустите {game} в режиме Steam VR",
 	"syncDonationNotice_button": "Напомни мне позже",
 	"syncDonationNotice_content_1": "Синхронизация профилей осуществляется за счет пожертвований!",
 	"syncDonationNotice_content_2": "Если вам нравится эта функция, пожалуйста, рассмотрите возможность оказания поддержки. ",
@@ -458,9 +482,15 @@
 	"unknown": "Неизвестный",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input countPlural"],
-			"match": ["Некоторые модификации в этом профиле не удалось разрешить."],
-			"selectors": ["countPlural"]
+			"declarations": [
+				"input countPlural"
+			],
+			"match": [
+				"Некоторые модификации в этом профиле не удалось разрешить."
+			],
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_details_content": "Подробности",
@@ -473,12 +503,17 @@
 	"updateAllBanner_button": "Обновить все?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Доступно одно обновление.",
 				"countPlural=other": "Доступны обновления {count} ."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Обновить моды",
@@ -487,6 +522,7 @@
 	"updateAllBanner_dialog_list_ignore_version": "Игнорируйте это обновление",
 	"updateAllBanner_dialog_list_title": "Обновить выбранное",
 	"updateAllBanner_dialog_title": "Подтвердить обновление",
+	"updateAllBanner_dismiss": "Увольнять",
 	"updater_confirmDialog_button": "Установить",
 	"updater_confirmDialog_content": "Обновление будет загружено в фоновом режиме, после чего приложение перезапустится для его применения.",
 	"updater_confirmDialog_content_available": "Для игры Gale доступно обновление.",

@@ -3,10 +3,10 @@ import {
 	type ConfigEntry,
 	type Game,
 	type MarkdownType,
-	type LaunchOptionType,
 	type Mod,
 	ModType,
-	ModLoader
+	ModLoader,
+	type LaunchOption
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
@@ -23,50 +23,48 @@ export function formatModName(name: string): string {
 	return name.replace(/_/g, ' ');
 }
 
-export function formatLaunchOptionName(
-	type: LaunchOptionType,
-	gameName: string,
-	description?: string
-): string {
-	switch (type) {
+export function formatLaunchOptionName(game: string, option: LaunchOption): string {
+	switch (option.type) {
 		case 'none':
 		case 'default':
-			return `Play ${gameName}`;
+			return m.steamLaunchOption_default({ game });
 		case 'application':
-			return `Launch ${gameName}`;
+			return m.steamLaunchOption_application({ game });
 		case 'safemode':
-			return `Launch ${gameName} in Safe Mode`;
+			return m.steamLaunchOption_safemode({ game });
 		case 'multiplayer':
-			return `Launch ${gameName} in Multiplayer Mode`;
+			return m.steamLaunchOption_multiplayer({ game });
 		case 'config':
-			return 'Launch Controller Layout Tool';
+			return m.steamLaunchOption_config();
 		case 'vr':
-			return `Launch ${gameName} in Steam VR Mode`;
+			return m.steamLaunchOption_vr({ game });
 		case 'server':
-			return 'Launch Dedicated Server';
+			return m.steamLaunchOption_server();
 		case 'editor':
-			return 'Launch Game Editor';
+			return m.steamLaunchOption_editor();
 		case 'manual':
-			return 'Show Manual';
+			return m.steamLaunchOption_manual();
 		case 'benchmark':
-			return 'Launch Benchmark Tool';
+			return m.steamLaunchOption_benchmark();
 		case 'option1':
 		case 'option2':
 		case 'option3':
-			return description ? `Play ${description}` : `Play ${gameName} (${type})`;
+			return option.description
+				? m.steamLaunchOption_option_description({ description: option.description })
+				: m.steamLaunchOption_option_no_description({ game, type: option.type });
 		case 'othervr':
-			return `Launch ${gameName} in Oculus VR Mode`;
+			return m.steamLaunchOption_othervr({ game });
 		case 'openvroverlay':
-			return `Launch ${gameName} as Steam VR Overlay`;
+			return m.steamLaunchOption_openvroverlay({ game });
 		case 'osvr':
-			return `Launch ${gameName} in OSVR Mode`;
+			return m.steamLaunchOption_osvr({ game });
 		case 'openxr':
-			return `Launch ${gameName} in OpenXR Mode`;
+			return m.steamLaunchOption_openxr({ game });
 		default:
-			if (typeof type === 'object' && 'unknown' in type) {
-				return `Launch ${gameName} (${type.unknown})`;
+			if (option.type) {
+				return m.steamLaunchOption_other_with_type({ game, type: option.type });
 			}
-			return `Launch ${gameName}`;
+			return m.steamLaunchOption_other({ game });
 	}
 }
 

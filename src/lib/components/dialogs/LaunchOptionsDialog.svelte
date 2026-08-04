@@ -4,7 +4,7 @@
 	import { RadioGroup } from 'bits-ui';
 	import type { LaunchOption } from '$lib/types';
 	import { formatLaunchOptionName } from '$lib/util';
-	import Icon from '@iconify/svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		open: boolean;
@@ -14,6 +14,7 @@
 	}
 
 	let { open = $bindable(), options, gameName, onselect }: Props = $props();
+
 	let selectedOption = $state<string>(options[0]?.arguments ?? '');
 
 	function launch() {
@@ -33,7 +34,7 @@
 </script>
 
 <ConfirmDialog bind:open title="Launch {gameName}" onCancel={handleCancel}>
-	<p class="text-primary-400 mb-4">Select how you want to launch the game:</p>
+	<p class="text-primary-400 mb-2">{m.launchOptionsDialog_content()}</p>
 
 	<div class="max-h-80 overflow-y-auto">
 		<RadioGroup.Root bind:value={selectedOption} class="flex flex-col gap-1">
@@ -61,7 +62,7 @@
 					</div>
 					<div class="flex text-left">
 						<div class="font-medium text-white">
-							{formatLaunchOptionName(option.type, gameName, option.description)}
+							{formatLaunchOptionName(gameName, option)}
 						</div>
 					</div>
 				</RadioGroup.Item>
@@ -70,16 +71,16 @@
 	</div>
 
 	<div class="text-primary-400 mt-4 text-sm">
-		You can disable this dialog by switching off "Show Steam launch options" in <a
+		{m.launchOptionsDialog_help_content_1()}<a
 			href="/prefs"
 			onclick={() => (open = false)}
 			class="text-primary-400 hover:text-primary-300 underline"
 		>
-			Settings</a
+			{m.launchOptionsDialog_help_content2()}</a
 		>.
 	</div>
 
 	{#snippet buttons()}
-		<Button icon="mdi:play-circle" onclick={launch}>Launch</Button>
+		<Button icon="mdi:play-circle" onclick={launch}>{m.launchOptionsDialog_launch()}</Button>
 	{/snippet}
 </ConfirmDialog>

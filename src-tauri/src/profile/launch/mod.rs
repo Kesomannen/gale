@@ -62,7 +62,7 @@ impl LaunchMode {
 pub struct LaunchOption {
     pub arguments: String,
     #[serde(rename = "type")]
-    pub launch_type: String,
+    pub launch_type: Option<String>,
     pub description: Option<String>,
 }
 
@@ -341,10 +341,10 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
                     }
                 }
 
-                let option_type = option
+                let launch_type = option
                     .get("type")
                     .and_then(|t| t.as_str())
-                    .unwrap_or("undefined");
+                    .map(|s| s.to_string());
 
                 let arguments = option
                     .get("arguments")
@@ -359,7 +359,7 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
 
                 launch_options.push(LaunchOption {
                     arguments,
-                    launch_type: option_type.to_string(),
+                    launch_type,
                     description,
                 });
             }

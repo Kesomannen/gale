@@ -189,6 +189,10 @@
 	"launchModePref_mode_direct": "Direto",
 	"launchModePref_mode_launcher": "Plataforma ({platform})",
 	"launchModePref_title": "Modo de inicialização",
+	"launchOptionsDialog_content": "Selecione como deseja iniciar o jogo:",
+	"launchOptionsDialog_help_content_1": "Você pode desativar esta caixa de diálogo desativando a opção \"Mostrar opções de inicialização do Steam\" em ",
+	"launchOptionsDialog_help_content2": "Configurações",
+	"launchOptionsDialog_launch": "Lançar",
 	"menuBar_browseImportFile_filters": "Arquivo de perfil",
 	"menuBar_browseImportFile_title": "Selecione o arquivo para importar",
 	"menuBar_clearModCache_confirm": "Tem certeza de que deseja excluir todos os mods em cache? Isso pode potencialmente dobrar o espaço em disco usado pelos mods instalados. Prossiga apenas se souber o que está fazendo!",
@@ -409,10 +413,30 @@
 	"prefs_miscellaneous_title": "Diversos",
 	"prefs_profileSettings_launch_title": "Inicialização",
 	"prefs_profileSettings_title": "Configurações do perfil",
+	"prefs_steamLaunchOptions_content": "Quando ativado, exibe as opções de inicialização do Steam definidas pelo desenvolvedor do jogo (se houver) antes do jogo começar.\nIniciando o jogo. Essas opções podem incluir diferentes modos de jogo, como VR, Modo de Segurança,\nServidor dedicado ou outras configurações de inicialização específicas para o jogo.",
+	"prefs_steamLaunchOptions_title": "Mostrar opções de inicialização do Steam",
 	"profileLockedBanner_content": "Modificações neste perfil estão desativadas para evitar dessincronização com seu proprietário {name}.",
 	"profileLockedBanner_title": "O perfil está bloqueado",
 	"profilesDropdown_button": "Novo perfil",
 	"resetConfigButton_confirm": "Tem certeza de que deseja redefinir {name}?",
+	"steamLaunchOption_application": "Lançar {game}",
+	"steamLaunchOption_benchmark": "Ferramenta de benchmark de lançamento",
+	"steamLaunchOption_config": "Ferramenta de layout do controlador de inicialização",
+	"steamLaunchOption_default": "Jogar {game}",
+	"steamLaunchOption_editor": "Iniciar editor de jogos",
+	"steamLaunchOption_manual": "Mostrar manual",
+	"steamLaunchOption_multiplayer": "Inicie {game} no modo multijogador",
+	"steamLaunchOption_openvroverlay": "Inicie {game} na sobreposição do Steam VR",
+	"steamLaunchOption_openxr": "Executar {game} no modo OpenXR",
+	"steamLaunchOption_option_description": "Reproduzir {description}",
+	"steamLaunchOption_option_no_description": "Jogar {game} ( {type} )",
+	"steamLaunchOption_osvr": "Inicie {game} no modo OSVR",
+	"steamLaunchOption_other": "Lançar {game}",
+	"steamLaunchOption_other_with_type": "Lançar {game} ( {type} )",
+	"steamLaunchOption_othervr": "Inicie {game} no modo Oculus VR",
+	"steamLaunchOption_safemode": "Inicie {game} em modo de segurança",
+	"steamLaunchOption_server": "Iniciar servidor dedicado",
+	"steamLaunchOption_vr": "Inicie {game} no modo Steam VR",
 	"syncDonationNotice_button": "Lembrar mais tarde",
 	"syncDonationNotice_content_1": "A sincronização de perfis é mantida por doações!",
 	"syncDonationNotice_content_2": "Se você gosta deste recurso, por favor considere apoiar no ",
@@ -458,9 +482,15 @@
 	"unknown": "Desconhecido",
 	"unknownModsBanner_content": [
 		{
-			"declarations": ["input countPlural"],
-			"match": ["Algumas modificações neste perfil não puderam ser resolvidas."],
-			"selectors": ["countPlural"]
+			"declarations": [
+				"input countPlural"
+			],
+			"match": [
+				"Algumas modificações neste perfil não puderam ser resolvidas."
+			],
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"unknownModsBanner_details_content": "Detalhes",
@@ -473,12 +503,17 @@
 	"updateAllBanner_button": "Atualizar tudo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Há uma atualização disponível.",
 				"countPlural=other": "Existem atualizações disponíveis {count} ."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Atualizar mods",
@@ -487,6 +522,7 @@
 	"updateAllBanner_dialog_list_ignore_version": "Ignore esta atualização",
 	"updateAllBanner_dialog_list_title": "Atualizar selecionados",
 	"updateAllBanner_dialog_title": "Confirmar atualização",
+	"updateAllBanner_dismiss": "Liberar",
 	"updater_confirmDialog_button": "Instalar",
 	"updater_confirmDialog_content": "A atualização será baixada em segundo plano, depois o app será reiniciado para aplicá-la.",
 	"updater_confirmDialog_content_available": "Há uma atualização disponível para o Gale.",

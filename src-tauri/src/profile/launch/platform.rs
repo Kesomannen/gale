@@ -205,8 +205,6 @@ fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
         .and_then(|e| e.as_array())
         .ok_or_eyre("no entries found in appinfo.vdf")?;
 
-    info!("{entries:#?}");
-
     entries
         .iter()
         .find(|entry| {

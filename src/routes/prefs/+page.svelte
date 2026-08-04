@@ -188,13 +188,11 @@
 
 		{#if gamePrefs.launchMode.type === 'launcher' && shownPlatform === 'steam'}
 			<TogglePref
-				label="Show Steam launch options"
+				label={m.prefs_steamLaunchOptions_title()}
 				value={gamePrefs.showSteamLaunchOptions}
 				set={set((value) => (gamePrefs!.showSteamLaunchOptions = value))}
 			>
-				When enabled, displays Steam launch options defined by the game developer (if any) before
-				starting the game. These options may include different game modes like VR, Safe Mode,
-				Dedicated Server, or other launch configurations specific to the game.
+				{m.prefs_steamLaunchOptions_content()}
 			</TogglePref>
 		{/if}
 

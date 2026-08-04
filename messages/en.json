@@ -189,6 +189,10 @@
 	"launchModePref_mode_direct": "Direct",
 	"launchModePref_mode_launcher": "Platform ({platform})",
 	"launchModePref_title": "Launch mode",
+	"launchOptionsDialog_content": "Select how you want to launch the game:",
+	"launchOptionsDialog_help_content_1": "You can disable this dialog by switching off \"Show Steam launch options\" in ",
+	"launchOptionsDialog_help_content2": "Settings",
+	"launchOptionsDialog_launch": "Launch",
 	"menuBar_browseImportFile_filters": "Profile file",
 	"menuBar_browseImportFile_title": "Select the file to import",
 	"menuBar_clearModCache_confirm": "Are you sure you want to delete all cached mods? This could potentially double the disk space used by installed mods. Only proceed if you know what you're doing!",
@@ -409,10 +413,30 @@
 	"prefs_miscellaneous_title": "Miscellaneous",
 	"prefs_profileSettings_launch_title": "Launch",
 	"prefs_profileSettings_title": "Profile settings",
+	"prefs_steamLaunchOptions_content": "When enabled, displays Steam launch options defined by the game developer (if any) before\n\t\t\t\tstarting the game. These options may include different game modes like VR, Safe Mode,\n\t\t\t\tDedicated Server, or other launch configurations specific to the game.",
+	"prefs_steamLaunchOptions_title": "Show Steam launch options",
 	"profileLockedBanner_content": "Modifications to this profile are disabled to prevent desyncs with its owner {name}.",
 	"profileLockedBanner_title": "Profile is locked",
 	"profilesDropdown_button": "New profile",
 	"resetConfigButton_confirm": "Are you sure you want to reset {name}?",
+	"steamLaunchOption_application": "Launch {game}",
+	"steamLaunchOption_benchmark": "Launch benchmark tool",
+	"steamLaunchOption_config": "Launch controller layout tool",
+	"steamLaunchOption_default": "Play {game}",
+	"steamLaunchOption_editor": "Launch game editor",
+	"steamLaunchOption_manual": "Show manual",
+	"steamLaunchOption_multiplayer": "Launch {game} in multiplayer mode",
+	"steamLaunchOption_openvroverlay": "Launch {game} in Steam VR overlay",
+	"steamLaunchOption_openxr": "Launch {game} in OpenXR mode",
+	"steamLaunchOption_option_description": "Play {description}",
+	"steamLaunchOption_option_no_description": "Play {game} ({type})",
+	"steamLaunchOption_osvr": "Launch {game} in OSVR mode",
+	"steamLaunchOption_other": "Launch {game}",
+	"steamLaunchOption_other_with_type": "Launch {game} ({type})",
+	"steamLaunchOption_othervr": "Launch {game} in Oculus VR mode",
+	"steamLaunchOption_safemode": "Launch {game} in safe mode",
+	"steamLaunchOption_server": "Launch dedicated server",
+	"steamLaunchOption_vr": "Launch {game} in Steam VR mode",
 	"syncDonationNotice_button": "Remind me later",
 	"syncDonationNotice_content_1": "Profile sync is run on donations!",
 	"syncDonationNotice_content_2": "If you like this feature, please consider supporting on ",
@@ -465,12 +489,17 @@
 	"updateAllBanner_button": "Update all",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",
