@@ -4,7 +4,7 @@ use itertools::Itertools;
 use state::ManagerExt;
 use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 #[cfg(target_os = "linux")]
 extern crate webkit2gtk;
@@ -53,8 +53,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let args = env::args().collect_vec();
-    if !args.is_empty() && !deep_link::handle(app.handle(), args.clone()) {
-        cli::run(args, app.handle());
+    if let Some(url) = args.get(1) {
+        if !deep_link::handle(app.handle(), url.to_owned()) {
+            cli::run(args, app.handle());
+        }
     }
 
     let handle = app.handle().to_owned();
@@ -82,7 +84,12 @@ fn event_handler(app: &AppHandle, event: RunEvent) {
 }
 
 fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
-    if !deep_link::handle(app, args.clone()) {
+    let Some(url) = args.get(1) else {
+        debug!("deep link has too few arguments");
+        return;
+    };
+
+    if !deep_link::handle(app, url.to_owned()) {
         cli::run(args, app);
     }
 }
