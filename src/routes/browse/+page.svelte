@@ -44,7 +44,6 @@
 	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
 	let installDialogOpen = $state(false);
-	let loading = $state(false);
 	let warnNoRemind = $state(false);
 
 	let installId: ModId;
@@ -95,7 +94,6 @@
 			await api.prefs.set(prefs);
 		}
 		installDialogOpen = false;
-		loading = true;
 		await api.profile.install.mod(installId);
 		await refresh();
 	}
@@ -127,10 +125,6 @@
 			profiles.active;
 			refresh();
 		}
-	});
-
-	$effect(() => {
-		loading = false;
 	});
 
 	let locked = $derived(profiles.activeLocked);
@@ -174,7 +168,7 @@
 
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			<InstallModButton mod={selectedMod} {install} {locked} {loading} />
+			<InstallModButton mod={selectedMod} {install} {locked} />
 		</ModDetails>
 	{/if}
 

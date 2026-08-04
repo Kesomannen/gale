@@ -157,6 +157,7 @@ pub fn run() {
             profile::install::commands::install_mod,
             profile::install::commands::cancel_all_installs,
             profile::install::commands::has_pending_installations,
+            profile::install::commands::is_installing,
             profile::install::commands::clear_download_cache,
             profile::install::commands::get_download_size,
             profile::update::commands::change_mod_version,
