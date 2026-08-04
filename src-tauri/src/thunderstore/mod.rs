@@ -117,7 +117,7 @@ impl Hash for ModId {
 impl ModId {
     /// Borrows the mod from [`Thunderstore`].
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
-        thunderstore.get_mod(self.package_uuid, self.version_uuid)
+        thunderstore.get_mod(self.package_uuid, self.version_uuid, self.backend)
     }
 }
 
@@ -217,11 +217,13 @@ impl Thunderstore {
         }
     }
 
-    pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> Result<BorrowedMod<'_>> {
-        self.resolve_thunderstore_vs_hexium(
-            |b| b.get_mod(package_uuid, version_uuid),
-            Self::cmp_borrowed_mod,
-        )
+    pub fn get_mod(
+        &self,
+        package_uuid: Uuid,
+        version_uuid: Uuid,
+        backend: Backend,
+    ) -> Result<BorrowedMod<'_>> {
+        self.backend(backend).get_mod(package_uuid, version_uuid)
     }
 
     pub fn find_ident(&self, ident: &VersionIdent) -> Result<BorrowedMod<'_>> {

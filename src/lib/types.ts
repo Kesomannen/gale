@@ -273,6 +273,7 @@ export type LaunchMode =
 export type AvailableUpdate = {
 	fullName: string;
 	ignore: boolean;
+	isCrossBackend: boolean;
 	updatedId: ModId;
 	old: string;
 	new: string;

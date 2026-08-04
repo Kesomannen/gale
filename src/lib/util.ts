@@ -5,7 +5,8 @@ import {
 	type MarkdownType,
 	type Mod,
 	ModType,
-	ModLoader
+	ModLoader,
+	type ModId
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
@@ -190,4 +191,12 @@ export function loaderSupportsModpacks(loader: ModLoader) {
 		case ModLoader.GDWeave:
 			return false;
 	}
+}
+
+export async function shouldWarnForeginDownload(id: ModId): Promise<boolean> {
+	if (id.backend === Backend.Thunderstore) return false;
+	if (games.activeBackends.length === 1) return false;
+
+	const prefs = await api.prefs.get();
+	return !prefs.backendSkipConfirm;
 }

@@ -12,6 +12,8 @@
 	import { m } from '$lib/paraglide/messages';
 	import { DropdownMenu } from 'bits-ui';
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
+	import ForeignDownloadDialog from '../dialogs/ForeignDownloadDialog.svelte';
+	import { shouldWarnForeginDownload } from '$lib/util';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -20,9 +22,13 @@
 	let { updates }: Props = $props();
 
 	let dialogOpen = $state(false);
+	let foreignDownloadDialogOpen = $state(false);
+
 	let include: SvelteMap<AvailableUpdate, boolean> = $state(new SvelteMap());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
+
+	let includedUpdates = $derived(shownUpdates.filter((update) => include.get(update) ?? true));
 
 	$effect(() => {
 		if (dialogOpen && shownUpdates.length === 0) {
@@ -30,10 +36,16 @@
 		}
 	});
 
+	async function onConfirmClicked() {
+		if (includedUpdates.some((update) => shouldWarnForeginDownload(update.updatedId))) {
+			foreignDownloadDialogOpen = true;
+		} else {
+			await updateAll();
+		}
+	}
+
 	async function updateAll() {
-		let packageUuids = shownUpdates
-			.filter((update) => include.get(update) ?? true)
-			.map((update) => update.updatedId.packageUuid);
+		let packageUuids = includedUpdates.map((update) => update.updatedId.packageUuid);
 
 		dialogOpen = false;
 
@@ -81,7 +93,17 @@
 		{#snippet item({ item: update })}
 			<ModCard fullName={update.fullName} showVersion={false} backend={update.updatedId.backend} />
 
-			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
+			<div class="grow"></div>
+
+			{#if update.isCrossBackend}
+				<Tooltip
+					text="This update is from a different source than the currently installed version."
+				>
+					<Icon icon="mdi:alert-circle" class="text-accent-400 mr-2 text-lg" />
+				</Tooltip>
+			{/if}
+
+			<span class="text-light text-primary-400 pl-1">{update.old}</span>
 			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
 			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
@@ -115,8 +137,15 @@
 	</Checklist>
 
 	{#snippet buttons()}
-		<Button color="accent" icon="mdi:download" onclick={updateAll}
-			>{m.updateAllBanner_dialog_button()}</Button
+		<Button
+			color="accent"
+			icon="mdi:download"
+			onclick={onConfirmClicked}
+			disabled={includedUpdates.length === 0}
+		>
+			{m.updateAllBanner_dialog_button()}</Button
 		>
 	{/snippet}
+
+	<ForeignDownloadDialog bind:open={foreignDownloadDialogOpen} onConfirm={updateAll} />
 </ConfirmDialog>
