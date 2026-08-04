@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Cross-source updates are now clearly marked in the update mods dialog
+
 ### Fixed
 
 - Mods sometimes not being installed until Gale is restarted
