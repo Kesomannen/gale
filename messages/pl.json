@@ -482,15 +482,9 @@
 	"unknown": "Nieznany",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input countPlural"
-			],
-			"match": [
-				"Niektórych modyfikacji w tym profilu nie udało się rozwiązać."
-			],
-			"selectors": [
-				"countPlural"
-			]
+			"declarations": ["input countPlural"],
+			"match": ["Niektórych modyfikacji w tym profilu nie udało się rozwiązać."],
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_details_content": "Bliższe dane",
@@ -503,17 +497,12 @@
 	"updateAllBanner_button": "Aktualizować wszystko?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Dostępna jest jedna aktualizacja.",
 				"countPlural=other": "Dostępnych jest {count} aktualizacji."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Aktualizuj mody",

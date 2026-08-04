@@ -482,15 +482,9 @@
 	"unknown": "Неизвестный",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input countPlural"
-			],
-			"match": [
-				"Некоторые модификации в этом профиле не удалось разрешить."
-			],
-			"selectors": [
-				"countPlural"
-			]
+			"declarations": ["input countPlural"],
+			"match": ["Некоторые модификации в этом профиле не удалось разрешить."],
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_details_content": "Подробности",
@@ -503,17 +497,12 @@
 	"updateAllBanner_button": "Обновить все?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Доступно одно обновление.",
 				"countPlural=other": "Доступны обновления {count} ."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Обновить моды",

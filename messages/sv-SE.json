@@ -482,15 +482,9 @@
 	"unknown": "Okänd",
 	"unknownModsBanner_content": [
 		{
-			"declarations": [
-				"input countPlural"
-			],
-			"match": [
-				"Vissa modifieringar i den här profilen kunde inte lösas."
-			],
-			"selectors": [
-				"countPlural"
-			]
+			"declarations": ["input countPlural"],
+			"match": ["Vissa modifieringar i den här profilen kunde inte lösas."],
+			"selectors": ["countPlural"]
 		}
 	],
 	"unknownModsBanner_details_content": "Detaljer",
@@ -503,17 +497,12 @@
 	"updateAllBanner_button": "Uppdatera alla?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Det finns en uppdatering tillgänglig.",
 				"countPlural=other": "Det finns {count} uppdateringar tillgängliga."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Uppdatera mods",
