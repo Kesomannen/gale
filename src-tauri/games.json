@@ -243,7 +243,10 @@
 				"identifier": "CoffeeStainStudios.Valheim"
 			}
 		},
-		"backends": ["Thunderstore", "Hexium"]
+		"backends": [
+			"Thunderstore",
+			"Hexium"
+		]
 	},
 	{
 		"name": "20 Minutes Till Dawn",
@@ -672,6 +675,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1331550
+			}
+		}
+	},
+	{
+		"name": "Big Walk",
+		"slug": "big-walk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1478500
 			}
 		}
 	},
@@ -1304,7 +1319,9 @@
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
 			"fileTarget": "./Ship",
-			"files": ["d3d12.dll"]
+			"files": [
+				"d3d12.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
@@ -2141,7 +2158,9 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": ["version.dll"]
+			"files": [
+				"version.dll"
+			]
 		},
 		"platforms": {
 			"steam": {
@@ -2521,7 +2540,10 @@
 				"id": 2080690
 			}
 		},
-		"backends": ["Thunderstore", "Hexium"]
+		"backends": [
+			"Thunderstore",
+			"Hexium"
+		]
 	},
 	{
 		"name": "Super Battle Golf",
@@ -2585,7 +2607,9 @@
 				"identifier": "3842cb79cc4146c7ae33f3ede64ca484"
 			}
 		},
-		"backends": ["Hexium"]
+		"backends": [
+			"Hexium"
+		]
 	},
 	{
 		"name": "TABS",
