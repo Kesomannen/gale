@@ -60,6 +60,7 @@ pub fn setup() -> Result<()> {
         .with_target("reqwest::connect", Level::INFO)
         .with_target("h2", Level::INFO)
         .with_target("reqwest::retry", Level::DEBUG)
+        .with_target("rustls", Level::INFO)
         .with_default(Level::TRACE);
 
     let subscriber = Registry::default()

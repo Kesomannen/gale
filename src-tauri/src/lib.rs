@@ -28,6 +28,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         os = std::env::consts::OS,
     );
 
+    if let Err(err) = rustls::crypto::aws_lc_rs::default_provider().install_default() {
+        warn!(?err, "failed to install aws_lc_rs default crypto provider");
+    }
+
     if let Err(err) = state::setup(app.handle()) {
         error!("setup error: {err:?}");
 
