@@ -108,6 +108,9 @@
 	"flagsConfig_placeholder": "Seleccionar marcadores",
 	"fontFamilyPref_placeholder": "Buscar una fuente...",
 	"fontFamilyPref_title": "Fuente",
+	"foreignDownloadDialog_content": "Estás instalando un mod desde una fuente distinta a Thunderstore. Este archivo ha sido verificado por el\nEl proveedor que lo aloja, en lugar de Thunderstore.",
+	"foreignDownloadDialog_continue": "Continuar",
+	"foreignDownloadDialog_dontShowAgain": "No volver a mostrarlo",
 	"gameSelect_content_1": "¿Falta tu juego? ",
 	"gameSelect_content_2": "Abrir un problema",
 	"gameSelect_content_3": " En nuestro Github para informarnos.",
@@ -480,20 +483,12 @@
 	"toolBar_launch_vanilla": "Iniciar vanilla",
 	"toolBar_launchGame_message": "Por favor espere a que se instalen los mods antes de iniciar.",
 	"unknown": "Desconocido",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["No se pudieron resolver algunos mods en este perfil."],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "No se pudieron resolver algunos mods en este perfil.",
 	"unknownModsBanner_details_content": "Detalles",
 	"unknownModsBanner_dialog_content_1": "Gale no pudo encontrar los siguientes mods.",
 	"unknownModsBanner_dialog_content_2": "Es posible que se hayan eliminado de la plataforma de modificación o que se hayan instalado desde una fuente que usted haya desactivado posteriormente.",
 	"unknownModsBanner_ignore_content": "Ignorar",
 	"unknownModsBanner_uninstall_content": "Desinstalar",
-	"unknownModsBanner_uninstall_it": "¿Desinstalar?",
-	"unknownModsBanner_uninstall_them": "¿Desinstalarlos?",
 	"updateAllBanner_button": "¿Actualizar todo?",
 	"updateAllBanner_content": [
 		{
@@ -509,7 +504,7 @@
 	"updateAllBanner_dialog_content": "Seleccione que mods actualizar:",
 	"updateAllBanner_dialog_list_ignore_package": "Ignora todas las actualizaciones de este mod.",
 	"updateAllBanner_dialog_list_ignore_version": "Ignora esta actualización",
-	"updateAllBanner_dialog_list_title": "Actualización seleccionada",
+	"updateAllBanner_dialog_list_title": "Seleccionar todo",
 	"updateAllBanner_dialog_title": "Confirmar actualización",
 	"updateAllBanner_dismiss": "Despedir",
 	"updater_confirmDialog_button": "Instalar",

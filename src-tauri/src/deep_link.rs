@@ -2,7 +2,7 @@ use std::{fmt::Debug, future::Future, path::PathBuf};
 
 use eyre::{Context, OptionExt, Result};
 use tauri::{AppHandle, Manager};
-use tracing::{debug, info, warn};
+use tracing::{info, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -12,12 +12,7 @@ use crate::{
     thunderstore::{self, IntoFrontendMod},
 };
 
-pub fn handle(app: &AppHandle, args: Vec<String>) -> bool {
-    let Some(url) = args.into_iter().nth(1) else {
-        debug!("deep link has too few arguments");
-        return false;
-    };
-
+pub fn handle(app: &AppHandle, url: String) -> bool {
     app.get_webview_window("main")
         .expect("app should have main window")
         .set_focus()

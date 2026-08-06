@@ -12,16 +12,16 @@
 	type Props = {
 		mod: Mod;
 		locked: boolean;
-		loading: boolean;
 		install: (mod: ModId) => void;
 	};
 
-	let { mod, locked, loading = $bindable(), install }: Props = $props();
+	let { mod, locked, install }: Props = $props();
 
 	let versionsOpen = $state(false);
 	let downloadSize: number | null = $state(null);
+	let isInstalling = $state(false);
 
-	let disabled = $derived(mod.isInstalled || locked || loading);
+	let disabled = $derived(mod.isInstalled || locked || isInstalling);
 
 	let modId = $derived({
 		packageUuid: mod.uuid,
@@ -33,7 +33,7 @@
 		mod.versions.map((version) => ({
 			label: version.name,
 			onclick: () =>
-				install({
+				doInstall({
 					packageUuid: mod.uuid,
 					versionUuid: version.uuid,
 					backend: mod.backend
@@ -43,23 +43,30 @@
 
 	$effect(() => {
 		api.profile.install.getDownloadSize(modId).then((size) => (downloadSize = size));
+		api.profile.install.isInstalling(mod.uuid).then((installing) => (isInstalling = installing));
 	});
+
+	function doInstall(modId: ModId) {
+		if (locked) return;
+		isInstalling = true;
+		install(modId);
+	}
 </script>
 
 <div class="mt-2 flex text-lg text-white">
 	<button
 		class="enabled:bg-accent-700 enabled:hover:bg-accent-600 disabled:bg-primary-700 disabled:text-primary-300 flex grow items-center justify-center gap-2 rounded-l-lg py-2 font-semibold disabled:cursor-not-allowed"
-		onclick={() => install(modId)}
+		onclick={() => doInstall(modId)}
 		{disabled}
 	>
 		{#if locked}
 			{m.installModButton_button_locked()}
-		{:else if mod.isInstalled}
-			{m.installModButton_button_isInstalled()}
-		{:else if loading}
+		{:else if isInstalling}
 			<Spinner />
 
 			{m.installModButton_button_loading()}
+		{:else if mod.isInstalled}
+			{m.installModButton_button_isInstalled()}
 		{:else}
 			<Icon icon="mdi:download" class="align-middle text-xl" />
 			{m.installModButton_button_install()}

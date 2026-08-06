@@ -15,12 +15,10 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
-	import Checkbox from '$lib/components/ui/Checkbox.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
-	import games from '$lib/state/game.svelte';
+	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
+	import { shouldWarnForeignDownload } from '$lib/util';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems: ModContextItem[] = [
@@ -43,9 +41,7 @@
 	let modList: ModList;
 	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
-	let installDialogOpen = $state(false);
-	let loading = $state(false);
-	let warnNoRemind = $state(false);
+	let foreignDownloadDialogOpen = $state(false);
 
 	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
@@ -89,25 +85,15 @@
 	}
 
 	async function doInstall() {
-		if (warnNoRemind) {
-			let prefs = await api.prefs.get();
-			prefs.backendSkipConfirm = true;
-			await api.prefs.set(prefs);
-		}
-		installDialogOpen = false;
-		loading = true;
 		await api.profile.install.mod(installId);
 		await refresh();
 	}
 
 	async function install(id: ModId) {
 		installId = id;
-		if (
-			id.backend !== Backend.Thunderstore &&
-			!(await api.prefs.get()).backendSkipConfirm &&
-			games.activeBackends.length > 1
-		) {
-			installDialogOpen = true;
+		const prefs = await api.prefs.get();
+		if (shouldWarnForeignDownload(id, prefs)) {
+			foreignDownloadDialogOpen = true;
 		} else {
 			await doInstall();
 		}
@@ -127,10 +113,6 @@
 			profiles.active;
 			refresh();
 		}
-	});
-
-	$effect(() => {
-		loading = false;
 	});
 
 	let locked = $derived(profiles.activeLocked);
@@ -174,23 +156,9 @@
 
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			<InstallModButton mod={selectedMod} {install} {locked} {loading} />
+			<InstallModButton mod={selectedMod} {install} {locked} />
 		</ModDetails>
 	{/if}
-
-	<ConfirmDialog title={m.otherServer_warn_title()} bind:open={installDialogOpen}>
-		{m.otherServer_warn_content()}
-		<div class="my-5 flex items-center">
-			<Checkbox id="neverwarninstall" bind:checked={warnNoRemind} />
-			<label class="ml-3" for="neverwarninstall">
-				{m.otherServer_warn_noremind()}
-			</label>
-		</div>
-
-		{#snippet buttons()}
-			<Button color="accent" icon="mdi:download" onclick={doInstall}>
-				{m.installModButton_button_install()}
-			</Button>
-		{/snippet}
-	</ConfirmDialog>
 </div>
+
+<ForeignDownloadDialog bind:open={foreignDownloadDialogOpen} onConfirm={doInstall} />

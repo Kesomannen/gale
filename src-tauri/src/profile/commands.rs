@@ -141,6 +141,7 @@ pub struct FrontendAvailableUpdate {
     updated_id: ModId,
     old: semver::Version,
     new: semver::Version,
+    is_cross_backend: bool,
 }
 
 #[derive(Serialize)]
@@ -172,18 +173,16 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
                 .transpose()
         })
         .map_ok(|update| {
-            let ignore = profile.is_update_ignored(update.id());
+            let ignore = profile.is_update_ignored(&update);
+            let is_cross_backend = update.current.package.backend != update.latest.package.backend;
 
             FrontendAvailableUpdate {
-                full_name: update.latest.ident.clone(),
-                updated_id: ModId {
-                    package_uuid: update.package.uuid,
-                    version_uuid: update.latest.uuid,
-                    backend: update.package.backend,
-                },
-                old: update.current.parsed_version(),
-                new: update.latest.parsed_version(),
+                full_name: update.latest.version.ident.clone(),
                 ignore,
+                is_cross_backend,
+                old: update.current.version.parsed_version(),
+                new: update.latest.version.parsed_version(),
+                updated_id: update.latest.into(),
             }
         })
         .collect::<eyre::Result<Vec<_>>>()

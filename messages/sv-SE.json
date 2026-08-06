@@ -108,6 +108,9 @@
 	"flagsConfig_placeholder": "Välj flaggor",
 	"fontFamilyPref_placeholder": "Sök efter ett typsnitt...",
 	"fontFamilyPref_title": "Typsnitt",
+	"foreignDownloadDialog_content": "Du installerar en mod från en annan källa än Thunderstore. Den här filen har verifierats av\nkällan som är värd för det, snarare än av Thunderstore.",
+	"foreignDownloadDialog_continue": "Fortsätta",
+	"foreignDownloadDialog_dontShowAgain": "Visa inte igen",
 	"gameSelect_content_1": "Saknas ditt spel? ",
 	"gameSelect_content_2": "Öppna ett ärende",
 	"gameSelect_content_3": " på vår Github för att informera oss.",
@@ -480,20 +483,12 @@
 	"toolBar_launch_vanilla": "Starta vanilla",
 	"toolBar_launchGame_message": "Vänta tills alla modinstallationer är klara innan du startar.",
 	"unknown": "Okänd",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["Vissa modifieringar i den här profilen kunde inte lösas."],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "Vissa modifieringar i den här profilen kunde inte lösas.",
 	"unknownModsBanner_details_content": "Detaljer",
 	"unknownModsBanner_dialog_content_1": "Följande moddar kunde inte hittas av Gale.",
 	"unknownModsBanner_dialog_content_2": "De kan ha tagits bort från moddplattformen, eller installerats från en källa som du sedan dess har inaktiverat.",
 	"unknownModsBanner_ignore_content": "Ignorera",
 	"unknownModsBanner_uninstall_content": "Avinstallera",
-	"unknownModsBanner_uninstall_it": "Avinstallera det?",
-	"unknownModsBanner_uninstall_them": "Avinstallera dem?",
 	"updateAllBanner_button": "Uppdatera alla?",
 	"updateAllBanner_content": [
 		{
@@ -509,7 +504,7 @@
 	"updateAllBanner_dialog_content": "Välj vilka moddar som ska uppdateras:",
 	"updateAllBanner_dialog_list_ignore_package": "Ignorera alla uppdateringar för den här modden",
 	"updateAllBanner_dialog_list_ignore_version": "Ignorera den här uppdateringen",
-	"updateAllBanner_dialog_list_title": "Uppdatering vald",
+	"updateAllBanner_dialog_list_title": "Markera alla",
 	"updateAllBanner_dialog_title": "Bekräfta",
 	"updateAllBanner_dismiss": "Avfärda",
 	"updater_confirmDialog_button": "Installera",

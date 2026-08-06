@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use tauri::{AppHandle, command};
+use uuid::Uuid;
 
 use super::{InstallOptions, ModInstall};
 use crate::{
@@ -61,6 +62,15 @@ pub fn has_pending_installations(app: AppHandle) -> Result<bool> {
     let profile_id = app.lock_manager().active_profile().id;
 
     let result = app.install_queue().lock().has_any_for_profile(profile_id);
+
+    Ok(result)
+}
+
+#[command]
+pub fn is_installing(package_uuid: Uuid, app: AppHandle) -> Result<bool> {
+    let profile_id = app.lock_manager().active_profile().id;
+
+    let result = app.install_queue().lock().has_mod(package_uuid, profile_id);
 
     Ok(result)
 }

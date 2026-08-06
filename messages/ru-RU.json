@@ -108,6 +108,9 @@
 	"flagsConfig_placeholder": "Выберите флаги",
 	"fontFamilyPref_placeholder": "Поиск шрифта...",
 	"fontFamilyPref_title": "Семейство шрифтов",
+	"foreignDownloadDialog_content": "Вы устанавливаете мод из источника, отличного от Thunderstore. Этот файл был проверен.\nОн размещается на источнике, а не через Thunderstore.",
+	"foreignDownloadDialog_continue": "Продолжать",
+	"foreignDownloadDialog_dontShowAgain": "Больше не появляйтесь.",
 	"gameSelect_content_1": "Ваша игра пропала? ",
 	"gameSelect_content_2": "Открыть вопрос",
 	"gameSelect_content_3": " Пожалуйста, сообщите нам об этом на нашем GitHub.",
@@ -480,20 +483,12 @@
 	"toolBar_launch_vanilla": "Запуск ванильной версии",
 	"toolBar_launchGame_message": "Пожалуйста, дождитесь завершения установки модов, прежде чем запускать игру.",
 	"unknown": "Неизвестный",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["Некоторые модификации в этом профиле не удалось разрешить."],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "Некоторые модификации в этом профиле не удалось разрешить.",
 	"unknownModsBanner_details_content": "Подробности",
 	"unknownModsBanner_dialog_content_1": "Следующие модификации не были найдены программой Gale.",
 	"unknownModsBanner_dialog_content_2": "Возможно, они были удалены с платформы для моддинга или установлены из источника, который вы впоследствии отключили.",
 	"unknownModsBanner_ignore_content": "Игнорировать",
 	"unknownModsBanner_uninstall_content": "Удалить",
-	"unknownModsBanner_uninstall_it": "Удалить?",
-	"unknownModsBanner_uninstall_them": "Удалить их?",
 	"updateAllBanner_button": "Обновить все?",
 	"updateAllBanner_content": [
 		{
@@ -509,7 +504,7 @@
 	"updateAllBanner_dialog_content": "Выберите, какие моды обновить:",
 	"updateAllBanner_dialog_list_ignore_package": "Игнорируйте все обновления для этого мода.",
 	"updateAllBanner_dialog_list_ignore_version": "Игнорируйте это обновление",
-	"updateAllBanner_dialog_list_title": "Обновить выбранное",
+	"updateAllBanner_dialog_list_title": "Выбрать все",
 	"updateAllBanner_dialog_title": "Подтвердить обновление",
 	"updateAllBanner_dismiss": "Увольнять",
 	"updater_confirmDialog_button": "Установить",

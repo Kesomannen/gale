@@ -108,6 +108,9 @@
 	"flagsConfig_placeholder": "Wybierz flagi",
 	"fontFamilyPref_placeholder": "Szukaj czcionki...",
 	"fontFamilyPref_title": "Rodzina czcionek",
+	"foreignDownloadDialog_content": "Instalujesz mod z innego źródła niż Thunderstore. Ten plik został zweryfikowany przez\nźródło hostujące ten produkt, a nie Thunderstore.",
+	"foreignDownloadDialog_continue": "Kontynuować",
+	"foreignDownloadDialog_dontShowAgain": "Nie pokazuj ponownie",
 	"gameSelect_content_1": "Twoja gra zaginęła? ",
 	"gameSelect_content_2": "Otwórz problem",
 	"gameSelect_content_3": " na naszym Github, aby nas o tym poinformować.",
@@ -353,7 +356,7 @@
 	"navBar_link_modpack_disabled": "Eksportuj pakiet modów (niedostępny dla obecnej gry)",
 	"navBar_link_prefs": "Ustawienia menedżera",
 	"navBar_link_profile": "Zarządzaj profilem",
-	"otherServer_warn_content": "Instalujesz ten mod z innego źródła niż Thunderstore. Ten plik został przeskanowany przez źródło, na którym się znajduje, a nie przez Thunderstore.",
+	"otherServer_warn_content": "Instalujesz mod z innego źródła niż Thunderstore. Ten plik został zweryfikowany przez źródło, które go hostuje, a nie przez Thunderstore.",
 	"otherServer_warn_noremind": "Nie pokazuj ponownie",
 	"otherServer_warn_title": "Pobierz z innego źródła",
 	"ownedSyncProfilesDialog_button_delete": "Usuń",
@@ -480,20 +483,12 @@
 	"toolBar_launch_vanilla": "Uruchom w trybie vanilla",
 	"toolBar_launchGame_message": "Poczekaj na zakończenie instalacji modów przed uruchomieniem gry.",
 	"unknown": "Nieznany",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["Niektórych modyfikacji w tym profilu nie udało się rozwiązać."],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "Niektórych modyfikacji w tym profilu nie udało się rozwiązać.",
 	"unknownModsBanner_details_content": "Bliższe dane",
 	"unknownModsBanner_dialog_content_1": "Następujące mody nie zostały znalezione przez Gale.",
 	"unknownModsBanner_dialog_content_2": "Mogły zostać usunięte z platformy moderskiej lub zainstalowane ze źródła, które od tamtej pory wyłączyłeś.",
 	"unknownModsBanner_ignore_content": "Ignorować",
 	"unknownModsBanner_uninstall_content": "Odinstaluj",
-	"unknownModsBanner_uninstall_it": "Odinstalować go?",
-	"unknownModsBanner_uninstall_them": "Odinstalować je?",
 	"updateAllBanner_button": "Aktualizować wszystko?",
 	"updateAllBanner_content": [
 		{
@@ -509,7 +504,7 @@
 	"updateAllBanner_dialog_content": "Wybierz mody do aktualizacji:",
 	"updateAllBanner_dialog_list_ignore_package": "Zignoruj wszystkie aktualizacje tego moda",
 	"updateAllBanner_dialog_list_ignore_version": "Zignoruj tę aktualizację",
-	"updateAllBanner_dialog_list_title": "Aktualizuj zaznaczone",
+	"updateAllBanner_dialog_list_title": "Zaznacz wszystko",
 	"updateAllBanner_dialog_title": "Potwierdź aktualizację",
 	"updateAllBanner_dismiss": "Odrzucać",
 	"updater_confirmDialog_button": "Instaluj",

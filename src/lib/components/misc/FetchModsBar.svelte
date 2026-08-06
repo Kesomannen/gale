@@ -23,7 +23,6 @@
 
 	onMount(() => {
 		listen<FetchEvent>('fetch_event', (evt) => {
-			console.log(evt.payload);
 			switch (evt.payload.type) {
 				case 'start':
 					backendsFetching.add(evt.payload.backend);

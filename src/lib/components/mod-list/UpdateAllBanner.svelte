@@ -12,6 +12,10 @@
 	import { m } from '$lib/paraglide/messages';
 	import { DropdownMenu } from 'bits-ui';
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
+	import IconButton from '../ui/IconButton.svelte';
+	import { shouldWarnForeignDownload } from '$lib/util';
+	import ForeignDownloadDialog from '../dialogs/ForeignDownloadDialog.svelte';
+	import ModInfoDialog from '../dialogs/ModInfoDialog.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -20,9 +24,15 @@
 	let { updates }: Props = $props();
 
 	let dialogOpen = $state(false);
+	let foreignDownloadDialogOpen = $state(false);
+
+	let changelogOpen = $state(false);
+	let changelog: string | null = $state(null);
+
 	let include: SvelteMap<AvailableUpdate, boolean> = $state(new SvelteMap());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
+	let includedUpdates = $derived(shownUpdates.filter((update) => include.get(update) ?? true));
 
 	$effect(() => {
 		if (dialogOpen && shownUpdates.length === 0) {
@@ -30,10 +40,17 @@
 		}
 	});
 
+	async function onConfirmClicked() {
+		const prefs = await api.prefs.get();
+		if (includedUpdates.some((update) => shouldWarnForeignDownload(update.updatedId, prefs))) {
+			foreignDownloadDialogOpen = true;
+		} else {
+			await updateAll();
+		}
+	}
+
 	async function updateAll() {
-		let packageUuids = shownUpdates
-			.filter((update) => include.get(update) ?? true)
-			.map((update) => update.updatedId.packageUuid);
+		let packageUuids = includedUpdates.map((update) => update.updatedId.packageUuid);
 
 		dialogOpen = false;
 
@@ -43,6 +60,11 @@
 	function ignoreUpdate(update: AvailableUpdate) {
 		update.ignore = true;
 		include.delete(update);
+	}
+
+	async function openChangelog(update: AvailableUpdate) {
+		changelog = await api.thunderstore.getMarkdown(update.updatedId, 'changelog');
+		changelogOpen = true;
 	}
 </script>
 
@@ -81,13 +103,23 @@
 		{#snippet item({ item: update })}
 			<ModCard fullName={update.fullName} showVersion={false} backend={update.updatedId.backend} />
 
-			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
+			<div class="grow"></div>
+
+			{#if update.isCrossBackend}
+				<Tooltip
+					text="This update is from a different source than the currently installed version."
+				>
+					<Icon icon="mdi:alert-circle" class="text-accent-400 mr-2 text-lg" />
+				</Tooltip>
+			{/if}
+
+			<span class="text-light text-primary-400 pl-1">{update.old}</span>
 			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
 			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger
-					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-2 rounded-sm p-1.5"
+					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-3 rounded-sm p-1.5"
 				>
 					<Icon icon="mdi:notifications-off" />
 				</DropdownMenu.Trigger>
@@ -111,12 +143,28 @@
 					]}
 				/>
 			</DropdownMenu.Root>
+
+			<IconButton
+				class="ml-0.5"
+				icon="mdi:file-document"
+				label="View changelog"
+				onclick={() => openChangelog(update)}
+			/>
 		{/snippet}
 	</Checklist>
 
 	{#snippet buttons()}
-		<Button color="accent" icon="mdi:download" onclick={updateAll}
-			>{m.updateAllBanner_dialog_button()}</Button
+		<Button
+			color="accent"
+			icon="mdi:download"
+			onclick={onConfirmClicked}
+			disabled={includedUpdates.length === 0}
+		>
+			{m.updateAllBanner_dialog_button()}</Button
 		>
 	{/snippet}
+
+	<ForeignDownloadDialog bind:open={foreignDownloadDialogOpen} onConfirm={updateAll} />
+
+	<ModInfoDialog bind:open={changelogOpen} content={changelog} type="changelog" />
 </ConfirmDialog>

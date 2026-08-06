@@ -108,6 +108,9 @@
 	"flagsConfig_placeholder": "選擇標記",
 	"fontFamilyPref_placeholder": "搜尋字型...",
 	"fontFamilyPref_title": "字型系列",
+	"foreignDownloadDialog_content": "您正在安裝一個來自 Thunderstore 以外來源的模組。該文件已通過驗證。\n它由來源託管，而不是由 Thunderstore 託管。",
+	"foreignDownloadDialog_continue": "繼續",
+	"foreignDownloadDialog_dontShowAgain": "不要再次顯示",
 	"gameSelect_content_1": "你的遊戲不見了嗎？ ",
 	"gameSelect_content_2": "提出問題",
 	"gameSelect_content_3": " 請在我們的Github倉庫中告知我們。",
@@ -480,20 +483,12 @@
 	"toolBar_launch_vanilla": "啟動原版",
 	"toolBar_launchGame_message": "請等待模組安裝完成後再啟動。",
 	"unknown": "未知",
-	"unknownModsBanner_content": [
-		{
-			"declarations": ["input countPlural"],
-			"match": ["此設定檔中的某些模組無法解析。"],
-			"selectors": ["countPlural"]
-		}
-	],
+	"unknownModsBanner_content": "此設定檔中的某些模組無法解析。",
 	"unknownModsBanner_details_content": "細節",
 	"unknownModsBanner_dialog_content_1": "Gale 找不到以下模組。",
 	"unknownModsBanner_dialog_content_2": "它們可能已從模組平台移除，或來自您後來停用的來源。",
 	"unknownModsBanner_ignore_content": "忽略",
 	"unknownModsBanner_uninstall_content": "解除安裝",
-	"unknownModsBanner_uninstall_it": "將其解除安裝？",
-	"unknownModsBanner_uninstall_them": "將它們解除安裝？",
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
@@ -509,7 +504,7 @@
 	"updateAllBanner_dialog_content": "選擇要更新的模組：",
 	"updateAllBanner_dialog_list_ignore_package": "忽略此模組的所有更新",
 	"updateAllBanner_dialog_list_ignore_version": "忽略此更新",
-	"updateAllBanner_dialog_list_title": "更新所選",
+	"updateAllBanner_dialog_list_title": "全選",
 	"updateAllBanner_dialog_title": "確認更新",
 	"updateAllBanner_dismiss": "解僱",
 	"updater_confirmDialog_button": "安裝",
