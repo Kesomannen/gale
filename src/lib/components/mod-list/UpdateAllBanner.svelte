@@ -13,9 +13,9 @@
 	import { DropdownMenu } from 'bits-ui';
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 	import IconButton from '../ui/IconButton.svelte';
-	import { open } from '@tauri-apps/plugin-shell';
-	import { communityUrl, shouldWarnForeginDownload } from '$lib/util';
+	import { shouldWarnForeignDownload } from '$lib/util';
 	import ForeignDownloadDialog from '../dialogs/ForeignDownloadDialog.svelte';
+	import ModInfoDialog from '../dialogs/ModInfoDialog.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -26,10 +26,12 @@
 	let dialogOpen = $state(false);
 	let foreignDownloadDialogOpen = $state(false);
 
+	let changelogOpen = $state(false);
+	let changelog: string | null = $state(null);
+
 	let include: SvelteMap<AvailableUpdate, boolean> = $state(new SvelteMap());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
-
 	let includedUpdates = $derived(shownUpdates.filter((update) => include.get(update) ?? true));
 
 	$effect(() => {
@@ -39,7 +41,8 @@
 	});
 
 	async function onConfirmClicked() {
-		if (includedUpdates.some((update) => shouldWarnForeginDownload(update.updatedId))) {
+		const prefs = await api.prefs.get();
+		if (includedUpdates.some((update) => shouldWarnForeignDownload(update.updatedId, prefs))) {
 			foreignDownloadDialogOpen = true;
 		} else {
 			await updateAll();
@@ -57,6 +60,11 @@
 	function ignoreUpdate(update: AvailableUpdate) {
 		update.ignore = true;
 		include.delete(update);
+	}
+
+	async function openChangelog(update: AvailableUpdate) {
+		changelog = await api.thunderstore.getMarkdown(update.updatedId, 'changelog');
+		changelogOpen = true;
 	}
 </script>
 
@@ -140,11 +148,7 @@
 				class="ml-0.5"
 				icon="mdi:file-document"
 				label="View changelog"
-				onclick={() => {
-					const [author, name] = update.fullName.split('-');
-
-					open(communityUrl(update.backend, author, name) + 'changelog');
-				}}
+				onclick={() => openChangelog(update)}
 			/>
 		{/snippet}
 	</Checklist>
@@ -161,4 +165,6 @@
 	{/snippet}
 
 	<ForeignDownloadDialog bind:open={foreignDownloadDialogOpen} onConfirm={updateAll} />
+
+	<ModInfoDialog bind:open={changelogOpen} content={changelog} type="changelog" />
 </ConfirmDialog>

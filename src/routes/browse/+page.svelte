@@ -18,7 +18,7 @@
 	import { pushInfoToast } from '$lib/toast';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
-	import { shouldWarnForeginDownload } from '$lib/util';
+	import { shouldWarnForeignDownload } from '$lib/util';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems: ModContextItem[] = [
@@ -91,7 +91,8 @@
 
 	async function install(id: ModId) {
 		installId = id;
-		if (await shouldWarnForeginDownload(id)) {
+		const prefs = await api.prefs.get();
+		if (shouldWarnForeignDownload(id, prefs)) {
 			foreignDownloadDialogOpen = true;
 		} else {
 			await doInstall();

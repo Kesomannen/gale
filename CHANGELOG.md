@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Button to view changelogs in the update mods dialog
+
 ### Changed
 
 - Cross-source updates are now clearly marked in the update mods dialog
+- Game icons are now sourced from Thunderstore rather than being bundled by Gale
 
 ### Fixed
 

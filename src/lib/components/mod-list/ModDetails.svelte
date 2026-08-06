@@ -40,10 +40,10 @@
 	let suggestionsOpen = $state(false);
 
 	let readmeOpen = $state(false);
-	let readme: ModInfoDialog;
+	let readmePromise: Promise<string | null> | null = $state(null);
 
 	let changelogOpen = $state(false);
-	let changelog: ModInfoDialog;
+	let changelogPromise: Promise<string | null> | null = $state(null);
 
 	let allContextItems = $derived([
 		...contextItems,
@@ -54,19 +54,26 @@
 		}
 	]);
 
-	let readmePromise: Promise<string | null> | null = $state(null);
-
-	function formatReadme(readme: string | null) {
-		if (readme === null) return null;
-
+	function formatReadme(readme: string) {
 		return readme
 			.split('\n')
 			.filter((line) => !line.startsWith('# '))
 			.join('\n');
 	}
 
+	function openChangelog() {
+		if (!changelogPromise) {
+			fetchChangelog();
+		}
+		changelogOpen = true;
+	}
+
+	function fetchChangelog() {
+		changelogPromise = getMarkdown(mod, 'changelog', true);
+	}
+
 	$effect(() => {
-		readmePromise = getMarkdown(mod, 'readme').then(formatReadme);
+		readmePromise = getMarkdown(mod, 'readme');
 	});
 </script>
 
@@ -179,7 +186,7 @@
 					<div class="bg-primary-700 mt-2.5 mb-4 h-3 max-w-100 rounded-full"></div>
 				</div>
 			{:then readme}
-				<Markdown source={readme ?? m.modDetails_noFound()} />
+				<Markdown source={readme ? formatReadme(readme) : m.modDetails_noFound()} />
 			{/await}
 		</div>
 	</div>
@@ -206,18 +213,8 @@
 		</button>
 	{/snippet}
 
-	{@render button(
-		'mdi:file-document',
-		m.modDetails_changeLog(),
-		() => (changelogOpen = true),
-		() => changelog.fetchMarkdown()
-	)}
-	{@render button(
-		'mdi:info',
-		m.modDetails_details(),
-		() => (readmeOpen = true),
-		() => readme.fetchMarkdown()
-	)}
+	{@render button('mdi:file-document', m.modDetails_changeLog(), openChangelog, fetchChangelog)}
+	{@render button('mdi:info', m.modDetails_details(), () => (readmeOpen = true))}
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		{@render button(
@@ -256,11 +253,10 @@
 	{/if}
 </Dialog>
 
-<ModInfoDialog bind:this={readme} bind:open={readmeOpen} {mod} type="readme" />
-<ModInfoDialog
-	bind:this={changelog}
-	bind:open={changelogOpen}
-	{mod}
-	useLatest={true}
-	type="changelog"
-/>
+{#await readmePromise then readme}
+	<ModInfoDialog bind:open={readmeOpen} content={readme} type="readme" />
+{/await}
+
+{#await changelogPromise then changelog}
+	<ModInfoDialog bind:open={changelogOpen} content={changelog} type="changelog" />
+{/await}
