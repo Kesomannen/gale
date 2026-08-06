@@ -1,4 +1,4 @@
-use tauri::{command, AppHandle};
+use tauri::{AppHandle, command};
 use uuid::Uuid;
 
 use crate::{state::ManagerExt, thunderstore::ModId, util::cmd::Result};

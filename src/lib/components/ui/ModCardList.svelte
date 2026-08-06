@@ -14,13 +14,13 @@
 	let { mods, showVersion = true, class: classProp, cardChildren }: Props = $props();
 
 	// sort by name, not author
-	$effect(() => {
-		mods.toSorted((a, b) => a.fullName.split('-')[1].localeCompare(b.fullName.split('-')[1]));
-	});
+	const sortedMods = $derived(
+		mods.toSorted((a, b) => a.fullName.split('-')[1].localeCompare(b.fullName.split('-')[1]))
+	);
 </script>
 
 <div class={[classProp, 'grid gap-3 overflow-y-auto']}>
-	{#each mods as mod (mod.fullName)}
+	{#each sortedMods as mod (mod.fullName)}
 		<ModCard fullName={mod.fullName} backend={mod.backend} {showVersion}>
 			{@render cardChildren?.({ mod })}
 		</ModCard>

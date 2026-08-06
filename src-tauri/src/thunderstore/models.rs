@@ -77,12 +77,13 @@ impl PackageListing {
 impl Hash for PackageListing {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.uuid.hash(state);
+        self.backend.hash(state);
     }
 }
 
 impl PartialEq for PackageListing {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid == other.uuid
+        self.uuid == other.uuid && self.backend == other.backend
     }
 }
 
@@ -92,6 +93,8 @@ pub struct PackageVersion {
     pub ident: VersionIdent,
     pub date_created: DateTime<Utc>,
     pub dependencies: Vec<VersionIdent>,
+    #[serde(default)]
+    pub suggestions: Vec<VersionIdent>,
     pub description: Intern<String>,
     pub downloads: u32,
     pub file_size: u64,
@@ -247,6 +250,7 @@ pub struct FrontendMod {
     pub website_url: Option<String>,
     pub donate_url: Option<String>,
     pub dependencies: Option<Vec<VersionIdent>>,
+    pub suggestions: Option<Vec<VersionIdent>>,
     pub is_pinned: bool,
     pub is_deprecated: bool,
     pub contains_nsfw: bool,
@@ -279,4 +283,17 @@ pub struct FrontendProfileMod {
 
 pub trait IntoFrontendMod {
     fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod;
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CategoryResponse {
+    pub results: Vec<PackageCategory>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PackageCategory {
+    pub name: String,
+    pub slug: String,
 }

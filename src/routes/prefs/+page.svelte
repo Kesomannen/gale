@@ -141,6 +141,14 @@
 			>.
 		</TogglePref>
 		<TogglePref
+			label={m.backendPref_other_server_title()}
+			value={!prefs.backendSkipConfirm}
+			set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
+		>
+			{m.backendPref_other_server_content()}
+		</TogglePref>
+
+		<TogglePref
 			label={m.prefs_miscellaneous_pullBeforeLaunch_title()}
 			value={prefs.pullBeforeLaunch}
 			set={set((value, prefs) => (prefs.pullBeforeLaunch = value))}
@@ -186,17 +194,12 @@
 			setValue={set((value) => (gamePrefs!.customArgs = value))}
 		/>
 
-		{#if games.active?.name == 'Valheim'}
+		{#if games.activeBackends.includes(Backend.Hexium)}
 			<SmallHeading>{m.backendPref_heading()}</SmallHeading>
 
-			<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
-			<TogglePref
-				label={m.backendPref_other_server_title()}
-				value={!prefs.backendSkipConfirm}
-				set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
-			>
-				{m.backendPref_other_server_content()}
-			</TogglePref>
+			{#if games.activeBackends.length > 1}
+				<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
+			{/if}
 
 			<ApiKeyPref backend={Backend.Hexium} />
 		{/if}

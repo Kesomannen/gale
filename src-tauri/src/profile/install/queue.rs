@@ -5,7 +5,7 @@ use std::{
     io::Cursor,
     iter,
     sync::{
-        Mutex, MutexGuard,
+        Arc, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant},
@@ -13,9 +13,10 @@ use std::{
 
 use eyre::{Context, Result, bail, eyre};
 use futures_util::StreamExt;
+use http_cache_reqwest::CacheMode;
 use itertools::Itertools;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tokio::sync::{Notify, futures::Notified, oneshot};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
@@ -42,17 +43,19 @@ struct State {
 }
 
 impl InstallQueue {
-    pub fn new(app: AppHandle) -> Self {
+    pub fn new(app: AppHandle) -> Arc<Self> {
         let cancel = AtomicBool::new(false);
 
-        tauri::async_runtime::spawn(handle_queue(app));
-
-        Self {
+        let this = Arc::new(Self {
             state: Mutex::new(State::default()),
             notify_push: Notify::new(),
             notify_empty: Notify::new(),
             cancel,
-        }
+        });
+
+        tauri::async_runtime::spawn(handle_queue(Arc::clone(&this), app));
+
+        this
     }
 
     pub fn wait_for_empty(&'_ self) -> Notified<'_> {
@@ -273,9 +276,7 @@ impl InstallBatch {
     }
 }
 
-async fn handle_queue(app: AppHandle) {
-    let queue = app.install_queue();
-
+async fn handle_queue(queue: Arc<InstallQueue>, app: AppHandle) {
     // continously wait for new batches to be pushed and process them
     loop {
         queue.notify_push.notified().await;
@@ -527,10 +528,12 @@ async fn try_download(
     let mut stream = app
         .http()
         .get(url)
+        .with_extension(CacheMode::NoStore)
         .send()
         .await
-        .and_then(|response| response.error_for_status())
         .context("failed to send request")?
+        .error_for_status()
+        .context("request failed")?
         .bytes_stream();
 
     let mut last_update = Instant::now();
@@ -688,7 +691,7 @@ impl<'a> InstallEvent<'a> {
 }
 
 fn emit(event: InstallEvent, app: &AppHandle) {
-    app.emit("install_event", event).ok();
+    app.emit_buffered("install_event", &event);
 }
 
 fn check_cancel(cancel: &AtomicBool, options: &InstallOptions) -> InstallResult<()> {

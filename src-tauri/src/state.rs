@@ -1,25 +1,29 @@
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use eyre::{Context, Result};
-use tauri::{command, AppHandle, Manager};
+use http_cache_reqwest::{CACacheManager, CacheMode, HttpCache, HttpCacheOptions};
+use serde::Serialize;
+use tauri::{AppHandle, Manager, command};
 
 use crate::{
     db::{self, Db},
+    events::EventBuffer,
     prefs::Prefs,
-    profile::{self, install::queue::InstallQueue, sync, ModManager},
+    profile::{self, ModManager, install::queue::InstallQueue, sync},
     thunderstore::{self, Thunderstore},
 };
 
 pub struct AppState {
-    pub http: reqwest::Client,
-    pub prefs: Mutex<Prefs>,
-    pub manager: Mutex<ModManager>,
-    pub thunderstore: Mutex<Thunderstore>,
-    pub db: Db,
-    pub install_queue: InstallQueue,
-    pub sync_auth: sync::auth::State,
-    pub sync_socket: sync::socket::State,
-    pub is_first_run: bool,
+    http: reqwest_middleware::ClientWithMiddleware,
+    prefs: Mutex<Prefs>,
+    manager: Mutex<ModManager>,
+    thunderstore: Mutex<Thunderstore>,
+    db: Db,
+    install_queue: Arc<InstallQueue>,
+    sync_auth: sync::auth::State,
+    sync_socket: sync::socket::State,
+    event_buffer: EventBuffer,
+    is_first_run: bool,
 }
 
 impl AppState {
@@ -37,10 +41,7 @@ impl AppState {
 }
 
 pub fn setup(app: &AppHandle) -> Result<()> {
-    let http = reqwest::Client::builder()
-        .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
-        .build()
-        .context("failed to init http client")?;
+    let http = create_http_client().context("failed to init http client")?;
 
     let (db, db_existed) = db::init().context("failed to init database")?;
 
@@ -60,6 +61,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         sync_auth: sync::auth::State::new(creds),
         sync_socket: sync::socket::State::new(app.to_owned()),
         install_queue: InstallQueue::new(app.to_owned()),
+        event_buffer: EventBuffer::new(app.to_owned()),
         is_first_run: !db_existed && !migrated,
     };
 
@@ -74,10 +76,30 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
+fn create_http_client() -> Result<reqwest_middleware::ClientWithMiddleware> {
+    let base = reqwest::Client::builder()
+        .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
+        .build()?;
+
+    let cache_path = crate::util::path::default_app_cache_dir().join("http");
+
+    let cache = http_cache_reqwest::Cache(HttpCache {
+        mode: CacheMode::NoCache,
+        manager: CACacheManager::new(cache_path, false),
+        options: HttpCacheOptions::default(),
+    });
+
+    let http = reqwest_middleware::ClientBuilder::new(base)
+        .with(cache)
+        .build();
+
+    Ok(http)
+}
+
 pub trait ManagerExt<R> {
     fn app_state(&self) -> &AppState;
 
-    fn http(&self) -> &reqwest::Client {
+    fn http(&self) -> &reqwest_middleware::ClientWithMiddleware {
         &self.app_state().http
     }
 
@@ -107,6 +129,14 @@ pub trait ManagerExt<R> {
 
     fn sync_socket(&self) -> &sync::socket::State {
         &self.app_state().sync_socket
+    }
+
+    fn event_buffer(&self) -> &EventBuffer {
+        &self.app_state().event_buffer
+    }
+
+    fn emit_buffered(&self, event: impl Into<String>, content: &impl Serialize) {
+        self.event_buffer().emit(event, content);
     }
 }
 

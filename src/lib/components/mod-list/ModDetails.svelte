@@ -37,6 +37,7 @@
 	let { mod, contextItems = [], locked, onclose, children }: Props = $props();
 
 	let dependenciesOpen = $state(false);
+	let suggestionsOpen = $state(false);
 
 	let readmeOpen = $state(false);
 	let readme: ModInfoDialog;
@@ -220,19 +221,36 @@
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		{@render button(
-			'material-symbols:network-node',
+			'mdi:dependency',
 			`${m.modDetails_dependencies()} (${mod.dependencies.length})`,
 			() => (dependenciesOpen = true)
+		)}
+	{/if}
+
+	{#if mod.suggestions !== null && mod.suggestions.length > 0}
+		{@render button(
+			'mdi:lightbulb',
+			`${m.modDetails_suggestions()} (${mod.suggestions.length})`,
+			() => (suggestionsOpen = true)
 		)}
 	{/if}
 
 	{@render children?.()}
 </div>
 
-<Dialog title="Dependencies of {mod.name}" bind:open={dependenciesOpen}>
+<Dialog title={m.modDetails_dependencies_title({ name: mod.name })} bind:open={dependenciesOpen}>
 	{#if mod.dependencies}
 		<ModCardList
 			mods={mod.dependencies.map((fullName) => ({ fullName, backend: mod.backend }))}
+			class="mt-4"
+		/>
+	{/if}
+</Dialog>
+
+<Dialog title={m.modDetails_suggestions_title({ name: mod.name })} bind:open={suggestionsOpen}>
+	{#if mod.suggestions}
+		<ModCardList
+			mods={mod.suggestions.map((fullName) => ({ fullName, backend: mod.backend }))}
 			class="mt-4"
 		/>
 	{/if}

@@ -114,6 +114,7 @@ export type Mod = {
 	websiteUrl: string | null;
 	donateUrl: string | null;
 	dependencies: string[] | null;
+	suggestions: string[] | null;
 	isPinned: boolean;
 	isDeprecated: boolean;
 	isInstalled: boolean | undefined;
@@ -204,6 +205,11 @@ export type InstallEvent =
 	| { type: 'addProgress'; mods: number; bytes: number }
 	| { type: 'setTask'; name: string; task: InstallTask };
 
+export type FetchEvent =
+	| { type: 'start'; backend: Backend }
+	| { type: 'progress'; backend: Backend; mods: number }
+	| { type: 'done'; backend: Backend };
+
 export type ModpackArgs = {
 	name: string;
 	description: string;
@@ -237,6 +243,7 @@ export type Game = {
 	favorite: boolean;
 	modLoader: ModLoader;
 	popular: boolean;
+	backends: Backend[];
 };
 
 export enum ModLoader {
@@ -266,9 +273,8 @@ export type LaunchMode =
 export type AvailableUpdate = {
 	fullName: string;
 	ignore: boolean;
-	packageUuid: string;
-	versionUuid: string;
-	backend: Backend;
+	isCrossBackend: boolean;
+	updatedId: ModId;
 	old: string;
 	new: string;
 };
@@ -314,7 +320,7 @@ type ProfileManifestMod = {
 		minor: number;
 		patch: number;
 	};
-	backend: Backend;
+	source: Backend;
 };
 
 export type R2ImportData = {

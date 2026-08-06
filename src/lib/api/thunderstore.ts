@@ -4,6 +4,7 @@ import {
 	type MarkdownType,
 	type Mod,
 	type ModId,
+	type PackageCategory,
 	type QueryModsArgs
 } from '$lib/types';
 
@@ -16,3 +17,5 @@ export const setToken = (backend: Backend, token: string) =>
 	invoke('set_api_token', { backend, token });
 export const hasToken = (backend: Backend) => invoke<boolean>('has_api_token', { backend });
 export const clearToken = (backend: Backend) => invoke('clear_api_token', { backend });
+export const getCategories = (gameSlug: string) =>
+	invoke<PackageCategory[]>('get_categories', { game: gameSlug });

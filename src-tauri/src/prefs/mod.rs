@@ -202,11 +202,20 @@ pub enum Backends {
 }
 
 impl Backends {
-    pub fn into_backend_slice(self) -> &'static [Backend] {
+    pub fn iter(&self) -> impl Iterator<Item = Backend> {
         match self {
-            Backends::All => &[Backend::Thunderstore, Backend::Hexium],
-            Backends::Thunderstore => &[Backend::Thunderstore],
-            Backends::Hexium => &[Backend::Hexium],
+            Backends::All => [Backend::Thunderstore, Backend::Hexium].iter(),
+            Backends::Thunderstore => [Backend::Thunderstore].iter(),
+            Backends::Hexium => [Backend::Hexium].iter(),
+        }.copied()
+    }
+}
+
+impl From<Backend> for Backends {
+    fn from(value: Backend) -> Self {
+        match value {
+            Backend::Thunderstore => Backends::Thunderstore,
+            Backend::Hexium => Backends::Hexium,
         }
     }
 }
@@ -355,14 +364,14 @@ impl Prefs {
         self.data_dir.join("cache")
     }
 
-    pub fn backends(&self, game: Game) -> Backends {
-        if game.slug == "valheim" {
-            self.game_prefs
+    pub fn enabled_backends(&self, game: Game) -> Backends {
+        match game.backends.as_slice() {
+            [backend] => (*backend).into(),
+            _ => self
+                .game_prefs
                 .get(&*game.slug)
                 .map(|p| p.backend)
-                .unwrap_or_default()
-        } else {
-            Backends::Thunderstore
+                .unwrap_or_default(),
         }
     }
 }

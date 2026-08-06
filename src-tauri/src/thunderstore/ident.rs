@@ -140,16 +140,33 @@ impl TryFrom<Intern<String>> for VersionIdent {
     ///
     /// This does not allocate or copy memory.
     fn try_from(value: Intern<String>) -> Result<Self, ParseError> {
+        // we parse backwards here because Thunderstore team names may include a hyphen
+
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        let version_start = indices.next_back().ok_or(ParseError)? as u32 + 1;
-        let name_start = indices.next_back().ok_or(ParseError)? as u32 + 1;
+        // semver versions may contain a hyphen
+        let mut version_start = next_segment(&mut indices)?;
+        if semver::Version::parse(&value[version_start..]).is_err() {
+            version_start = next_segment(&mut indices)?;
 
-        Ok(Self {
+            if semver::Version::parse(&value[version_start..]).is_err() {
+                return Err(ParseError);
+            }
+        }
+
+        let name_start = next_segment(&mut indices)?;
+
+        return Ok(Self {
             repr: value,
-            name_start,
-            version_start,
-        })
+            name_start: name_start as u32,
+            version_start: version_start as u32,
+        });
+
+        fn next_segment<I: Iterator<Item = usize> + DoubleEndedIterator>(
+            indicies: &mut I,
+        ) -> Result<usize, ParseError> {
+            indicies.next_back().ok_or(ParseError).map(|i| i + 1)
+        }
     }
 }
 
@@ -326,5 +343,44 @@ struct PackageIdentPath<'a>(&'a PackageIdent);
 impl Display for PackageIdentPath<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}/{}", self.0.owner(), self.0.name(),)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_package_ident() {
+        let ident = PackageIdent::from_str("owner-name").unwrap();
+        assert_eq!(ident.owner(), "owner");
+        assert_eq!(ident.name(), "name");
+
+        let ident = PackageIdent::from_str("owner-name-with-hyphen-package").unwrap();
+        assert_eq!(ident.owner(), "owner-name-with-hyphen");
+        assert_eq!(ident.name(), "package");
+    }
+
+    #[test]
+    fn parse_version_ident() {
+        let ident = VersionIdent::from_str("owner-name-1.0.0").unwrap();
+        assert_eq!(ident.owner(), "owner");
+        assert_eq!(ident.name(), "name");
+        assert_eq!(ident.version(), "1.0.0");
+
+        let ident = VersionIdent::from_str("owner-name-with-hyphen-package-1.0.0").unwrap();
+        assert_eq!(ident.owner(), "owner-name-with-hyphen");
+        assert_eq!(ident.name(), "package");
+        assert_eq!(ident.version(), "1.0.0");
+
+        let ident = VersionIdent::from_str("owner-package-1.0.0-beta.1").unwrap();
+        assert_eq!(ident.owner(), "owner");
+        assert_eq!(ident.name(), "package");
+        assert_eq!(ident.version(), "1.0.0-beta.1");
+
+        let ident = VersionIdent::from_str("owner-with-hyphen-package-1.0.0-beta.1").unwrap();
+        assert_eq!(ident.owner(), "owner-with-hyphen");
+        assert_eq!(ident.name(), "package");
+        assert_eq!(ident.version(), "1.0.0-beta.1");
     }
 }

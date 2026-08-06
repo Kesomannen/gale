@@ -9,7 +9,7 @@ use export::modpack::ModpackArgs;
 use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, ensure, eyre};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Manager};
 use tracing::{info, warn};
 use uuid::Uuid;
 
@@ -294,7 +294,7 @@ impl Profile {
             package.id.backend == Backend::Hexium
                 && thunderstore
                     .backend(Backend::Thunderstore)
-                    .find_mod(ident.owner(), ident.name(), ident.version())
+                    .find_ident(ident)
                     .is_err()
         })
     }
@@ -365,7 +365,7 @@ impl Profile {
     }
 
     pub fn notify_frontend(&self, app: &AppHandle) -> Result<()> {
-        app.emit("profile_changed", self.to_frontend())?;
+        app.emit_buffered("profile_changed", &self.to_frontend());
         Ok(())
     }
 }
@@ -532,7 +532,7 @@ impl ManagedGame {
     }
 
     pub fn save(&self, app: &AppHandle) -> Result<()> {
-        app.emit("game_changed", self.to_frontend())?;
+        app.emit_buffered("game_changed", &self.to_frontend());
 
         app.db().save_game(self)
     }
@@ -573,7 +573,7 @@ impl ModManager {
         let path = prefs.data_dir.to_path_buf();
 
         for saved_game in games {
-            manager.add_saved_game(&path, saved_game)?;
+            manager.add_saved_game(&path, saved_game);
         }
 
         for saved_profile in profiles {
@@ -672,12 +672,10 @@ impl ModManager {
     pub fn set_active_game(&mut self, game: Game, app: &AppHandle) -> Result<&ManagedGame> {
         self.ensure_game(game, true, &app.lock_prefs(), app.db())?;
 
-        if self.active_game != game {
-            self.active_game = game;
+        self.active_game = game;
 
-            let mut thunderstore = app.lock_thunderstore();
-            thunderstore.switch_game(game, app.clone());
-        }
+        let mut thunderstore = app.lock_thunderstore();
+        thunderstore.switch_game(game, app.clone());
 
         Ok(self.active_game())
     }
@@ -750,17 +748,13 @@ impl ModManager {
         thunderstore::cache::write_packages(packages, self.active_game, prefs)
     }
 
-    fn add_saved_game(
-        &mut self,
-        base_path: &Path,
-        saved_game: db::ManagedGameData,
-    ) -> Result<bool> {
+    fn add_saved_game(&mut self, base_path: &Path, saved_game: db::ManagedGameData) -> bool {
         let Some(game) = game::from_slug(&saved_game.slug) else {
             warn!(
                 "unknown game in save: {} (has Gale been downgraded?)",
                 saved_game.slug
             );
-            return Ok(false);
+            return false;
         };
 
         let managed_game = ManagedGame {
@@ -773,11 +767,11 @@ impl ModManager {
         };
 
         self.games.insert(game, managed_game);
-        Ok(true)
+        true
     }
 
     pub fn save_all(&self, app: &AppHandle) -> Result<()> {
-        app.emit("game_changed", self.active_game().to_frontend())?;
+        app.emit_buffered("game_changed", &self.active_game().to_frontend());
 
         app.db().save_all(self)
     }

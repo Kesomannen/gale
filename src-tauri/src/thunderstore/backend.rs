@@ -1,6 +1,5 @@
 use crate::{
     game::Game,
-    prefs::Prefs,
     thunderstore::{BorrowedMod, PackageIdent, PackageListing, VersionIdent, cache::MarkdownKind},
 };
 use eyre::eyre;
@@ -9,7 +8,9 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Default)]
+#[derive(
+    Serialize, Deserialize, Debug, Clone, Copy, Ord, PartialOrd, PartialEq, Eq, Hash, Default,
+)]
 pub enum Backend {
     #[default]
     Thunderstore,
@@ -27,22 +28,24 @@ impl Display for Backend {
 
 impl Backend {
     pub fn index_url(self, game: Game) -> Option<String> {
-        match self {
-            Backend::Thunderstore => Some(format!(
-                "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
-                game.slug
-            )),
-            Backend::Hexium => {
-                if game.slug == "valheim" {
-                    Some(format!(
-                        "https://{}.hexium.gg/api/v1/package-listing-index/",
-                        game.slug,
-                    ))
-                } else {
-                    None
-                }
-            }
+        if game.backends.contains(&self) {
+            Some(match self {
+                Backend::Thunderstore => format!(
+                    "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
+                    game.slug
+                ),
+                Backend::Hexium => format!(
+                    "https://{}.hexium.gg/api/v1/package-listing-index/",
+                    game.slug,
+                ),
+            })
+        } else {
+            None
         }
+    }
+
+    pub fn force_cache_markdown(self) -> bool {
+        matches!(self, Backend::Thunderstore)
     }
 
     pub fn markdown_url(self, ident: &VersionIdent, cache: MarkdownKind) -> String {
@@ -129,7 +132,20 @@ impl Backend {
         }
     }
 
-    pub fn modpack_upload_baseurl(self) -> &'static str {
+    pub fn category_url(&self, game: Game) -> String {
+        match self {
+            Backend::Thunderstore => format!(
+                "https://thunderstore.io/api/experimental/community/{}/category/",
+                game.slug
+            ),
+            Backend::Hexium => format!(
+                "https://hexium.gg/api/experimental/community/{}/category/",
+                game.slug
+            ),
+        }
+    }
+
+    pub fn modpack_upload_base_url(self) -> &'static str {
         match self {
             Backend::Thunderstore => "https://thunderstore.io/api/experimental",
             Backend::Hexium => "https://hexium.gg/api/experimental",
@@ -147,7 +163,7 @@ pub struct ThunderstoreBackend {
     // IndexMap is not used for ordering here, but for fast iteration,
     // since we iterate over all mods when resolving identifiers and querying.
     pub(super) packages: IndexMap<Uuid, PackageListing>,
-    backend: Backend,
+    pub(super) backend: Backend,
 }
 
 impl ThunderstoreBackend {
@@ -177,7 +193,7 @@ impl ThunderstoreBackend {
     pub fn get_package(&self, uuid: Uuid) -> eyre::Result<&PackageListing> {
         self.packages
             .get(&uuid)
-            .ok_or_else(|| eyre!("package with id {uuid} not found",))
+            .ok_or_else(|| eyre!("package with id {uuid} not found"))
     }
 
     /// Finds a package with the given `full_name` (formatted as `owner-name`).
@@ -185,7 +201,7 @@ impl ThunderstoreBackend {
         self.packages
             .values()
             .find(|package| package.ident.as_str() == full_name)
-            .ok_or_else(|| eyre!("package {full_name} not found",))
+            .ok_or_else(|| eyre!("package {full_name} not found"))
     }
 
     pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> eyre::Result<BorrowedMod<'_>> {
@@ -198,6 +214,10 @@ impl ThunderstoreBackend {
         })?;
 
         Ok((package, version).into())
+    }
+
+    pub fn find_ident(&self, ident: &VersionIdent) -> eyre::Result<BorrowedMod<'_>> {
+        self.find_mod(ident.owner(), ident.name(), ident.version())
     }
 
     pub fn find_mod<'a>(
@@ -225,11 +245,9 @@ impl ThunderstoreBackend {
     }
 
     /// Clear the package map.
-    pub fn clear_packages(&mut self, game: Game, prefs: &Prefs) {
+    pub fn clear_packages(&mut self) {
         self.is_fetching = false;
         self.packages_fetched = false;
         self.packages = IndexMap::new();
-
-        self.read_and_insert_cache(game, prefs, self.backend);
     }
 }

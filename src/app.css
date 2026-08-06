@@ -119,7 +119,7 @@
 			color: var(text-primary-300);
 			margin: --spacing(2) 0;
 			overflow-x: auto;
-			border-radius: 0.25rem;
+			border-radius: var(--radius-lg);
 			padding: --spacing(2);
 
 			.hljs {
@@ -130,6 +130,8 @@
 
 		code {
 			background-color: var(--color-primary-900);
+			padding: --spacing(0.5) --spacing(2);
+			border-radius: var(--radius-sm);
 		}
 
 		img {
@@ -139,25 +141,25 @@
 		table {
 			border-color: var(--color-primary-900);
 			border-width: 2px;
-			overflow-x: auto;
+			border-radius: var(--radius-lg);
 			border-collapse: collapse;
+			overflow-x: auto;
 			overflow-y: hidden;
 			max-width: 100%;
 		}
 
-		th {
-			border-color: var(--color-primary-900);
+		thead {
 			font-weight: var(--font-weight-bold);
 			background-color: var(--color-primary-900);
+			border-radius: var(--radius-lg);
 		}
 
-		tr:nth-child(2n) {
-			background-color: var(--color-primary-900);
+		tbody tr:nth-child(2n) {
+			background: color-mix(in srgb, var(--color-primary-900) 20%, transparent);
 		}
 
 		td,
 		th {
-			border-right: 2px solid var(--color-primary-900);
 			padding: --spacing(2) --spacing(4);
 			text-align: left;
 		}

@@ -4,7 +4,7 @@ use eyre::Result;
 use internment::Intern;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tracing::info;
 
 use super::{
@@ -68,7 +68,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
                 let manager = app.lock_manager();
 
                 let mods = thunderstore.query_mods(args, &manager);
-                app.emit("mod_query_result", &mods)?;
+                app.emit_buffered("mod_query_result", &mods);
 
                 if thunderstore.packages_fetched(&app, manager.active_game) {
                     info!("all packages fetched, pausing query loop");
@@ -181,20 +181,20 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             rating: Some(pkg.rating_score),
             downloads: Some(pkg.total_downloads()),
             file_size: vers.file_size,
-            website_url: match vers.website_url.is_empty() {
-                true => None,
-                false => Some(vers.website_url.to_string()),
+            website_url: if vers.website_url.is_empty() {
+                None
+            } else {
+                Some(vers.website_url.to_string())
             },
             donate_url: pkg.donation_link.clone(),
             dependencies: Some(vers.dependencies.clone()),
+            suggestions: Some(vers.suggestions.clone()),
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid,
             version_uuid: vers.uuid,
-            is_installed: profile
-                .map(|profile| profile.has_mod(pkg.uuid))
-                .unwrap_or(false),
+            is_installed: profile.is_some_and(|profile| profile.has_mod(pkg.uuid)),
             last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions

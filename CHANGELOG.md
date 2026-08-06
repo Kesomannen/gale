@@ -2,8 +2,48 @@
 
 ## Unreleased
 
+### Changed
+
+- Cross-source updates are now clearly marked in the update mods dialog
+
+### Fixed
+
+- Mods sometimes not being installed until Gale is restarted
+- Search bar being cleared after a config file is deleted
+- Clipping issues with the unknown mods banner
+- Mod card lists such as the dependencies and hidden mods dialogs not being sorted correctly
+- Icons and links in update dialog always pointing to Thunderstore
+- Install button being stuck in a disabled state after installing mods
+
+## 1.19.2 (2026-07-31)
+
+### Fixed
+
+- HTTP cache causing mod downloads to be cached twice
+
+## 1.19.1 (2026-07-27)
+
+### Fixed
+
+- Messages are now buffered before being emitted to the UI, fixing issues with events that happen on startup
+  - This fixes issues with the initial mod fetch and deep link handling among others
+- Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
+- Some mods from disabled sources remaining available due to cache from previous installations
+- Disabling a source requiring the app to be restarted
+- ANSI escape codes being written to the log file
+- Removed broken privacy policy link in about dialog
+- HTTP cache headers are now respected
+  - Thunderstore README and changelog requests are exempt from this and are always aggressively cached
+- Cards in profile mod list being unable to open with touch input (thanks [@NemGam](https://github.com/NemGam))
+
+## 1.19.0 (2026-07-20)
+
 ### Added
 
+- Hexium mod suggestions (thanks [@bwoebi](https://github.com/bwoebi))
+- Support for Hexium-only games (thanks [@bwoebi](https://github.com/bwoebi))
+  - This currently only includes Survival: Fountain of Youth
+- Notice to import profile dialog informing about importing Hexium mods
 - Context menu options to hide mods from the mod list
   - This does not prevent them from being installed or shown in the profile mod list
   - Hidden mods can be unhidden from game-specific manager settings
@@ -11,12 +51,16 @@
 ### Changed
 
 - Made error message more informative when a profile code couldn't be exported due to upload size limits
-- Small UI edits
+- Import code dialog no longer auto-pastes from the clipboard when opened
+- Minor UI changes
 
 ### Fixed
 
+- Export of Hexium mods not being respected on import (thanks [@bwoebi](https://github.com/bwoebi))
+- Improved the "fetching mods" bar behaviour when multiple download sources are enabled
 - Thunderstore mod author name linking to an invalid URL
 - Custom arguments being copied without quotes or escapes on Windows
+- Minor localization issues
 
 ## 1.18.0 (2026-07-13)
 

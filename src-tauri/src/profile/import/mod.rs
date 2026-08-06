@@ -26,7 +26,7 @@ use crate::{
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::ModId,
+    thunderstore::{Backend, ModId, Thunderstore},
     util::{self, error::IoResultExt},
 };
 
@@ -34,14 +34,13 @@ pub mod commands;
 mod local;
 mod r2modman;
 
+use super::Profile;
 pub use local::{import_local_mod, import_local_mod_base64};
 
-use super::Profile;
-
-pub fn read_file_at_path(path: PathBuf) -> Result<ImportData> {
+pub fn read_file_at_path(path: PathBuf, thunderstore: &Thunderstore) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
-    read_file(file)
+    read_file(file, thunderstore)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -52,13 +51,16 @@ pub struct ImportData {
     pub delete_after_import: bool,
 }
 
-pub fn read_file_from(path: PathBuf) -> Result<ImportData> {
+pub fn read_file_from(path: PathBuf, thunderstore: &Thunderstore) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
-    read_file(file)
+    read_file(file, thunderstore)
 }
 
-pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
+pub(super) fn read_file(
+    source: impl Read + Seek,
+    thunderstore: &Thunderstore,
+) -> Result<ImportData> {
     let temp_dir = tempdir().context("failed to create temporary directory")?;
     util::zip::extract(source, temp_dir.path())?;
 
@@ -66,8 +68,22 @@ pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
         .map(BufReader::new)
         .context("failed to open profile manifest")?;
 
-    let manifest: ProfileManifest =
+    let mut manifest: ProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
+
+    for r2mod in manifest.mods.iter_mut() {
+        // first try the backend stored in the manifest, if it's not there,
+        // then try falling back to checking any other backend and update the source as needed
+        if thunderstore
+            .backend(r2mod.source)
+            .find_ident(&r2mod.version_ident())
+            .is_err()
+        {
+            if let Ok(package) = thunderstore.find_ident(&r2mod.version_ident()) {
+                r2mod.source = package.package.backend;
+            }
+        }
+    }
 
     Ok(ImportData {
         manifest,
@@ -76,42 +92,48 @@ pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
     })
 }
 
-fn read_base64(base64: &str) -> Result<ImportData> {
+fn read_base64(base64: &str, thunderstore: &Thunderstore) -> Result<ImportData> {
     let bytes = BASE64_STANDARD
         .decode(base64)
         .context("failed to decode base64 data")?;
 
-    read_file(Cursor::new(bytes))
+    read_file(Cursor::new(bytes), thunderstore)
 }
 
 pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
-    let response = future::join_all(Backends::All.into_backend_slice().iter().map(
-        async |b| -> Result<String> {
-            Ok(app
-                .http()
-                .get(b.profile_import(&key.to_string()))
-                .send()
-                .await?
-                .error_for_status()
-                .map_err(|err| match err.status() {
-                    Some(status) if status == StatusCode::NOT_FOUND => {
-                        eyre!("profile code is expired or invalid")
-                    }
-                    _ => err.into(),
-                })?
-                .text()
-                .await?)
-        },
-    ))
+    let response = future::join_all(
+        Backends::All
+            .iter()
+            .map(async |backend| read_code_from_backend(backend, key, app).await),
+    )
     .await
     .into_iter()
     .find_or_first(|r| r.is_ok())
     .unwrap()?;
 
     match response.strip_prefix(PROFILE_DATA_PREFIX) {
-        Some(str) => read_base64(str),
+        Some(str) => read_base64(str, &app.lock_thunderstore()),
         None => Err(eyre!("invalid profile data")),
     }
+}
+
+async fn read_code_from_backend(backend: Backend, key: Uuid, app: &AppHandle) -> Result<String> {
+    let response = app
+        .http()
+        .get(backend.profile_import(&key.to_string()))
+        .send()
+        .await?
+        .error_for_status()
+        .map_err(|err| match err.status() {
+            Some(status) if status == StatusCode::NOT_FOUND => {
+                eyre!("profile code is expired or invalid")
+            }
+            _ => err.into(),
+        })?
+        .text()
+        .await?;
+
+    Ok(response)
 }
 
 #[derive(Debug, Default, Deserialize, Clone)]

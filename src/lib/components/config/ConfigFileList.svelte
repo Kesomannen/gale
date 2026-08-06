@@ -7,7 +7,11 @@
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
 
-	let searchTerm = $state('');
+	type Props = {
+		searchTerm?: string;
+	};
+
+	let { searchTerm = $bindable('') }: Props = $props();
 
 	let shownFiles = $derived(sortAndFilterFiles(searchTerm, config.files));
 

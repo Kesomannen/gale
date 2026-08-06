@@ -14,7 +14,8 @@
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 	import IconButton from '../ui/IconButton.svelte';
 	import { open } from '@tauri-apps/plugin-shell';
-	import { communityUrl } from '$lib/util';
+	import { communityUrl, shouldWarnForeginDownload } from '$lib/util';
+	import ForeignDownloadDialog from '../dialogs/ForeignDownloadDialog.svelte';
 
 	type Props = {
 		updates: AvailableUpdate[];
@@ -23,9 +24,13 @@
 	let { updates }: Props = $props();
 
 	let dialogOpen = $state(false);
+	let foreignDownloadDialogOpen = $state(false);
+
 	let include: SvelteMap<AvailableUpdate, boolean> = $state(new SvelteMap());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
+
+	let includedUpdates = $derived(shownUpdates.filter((update) => include.get(update) ?? true));
 
 	$effect(() => {
 		if (dialogOpen && shownUpdates.length === 0) {
@@ -33,14 +38,20 @@
 		}
 	});
 
+	async function onConfirmClicked() {
+		if (includedUpdates.some((update) => shouldWarnForeginDownload(update.updatedId))) {
+			foreignDownloadDialogOpen = true;
+		} else {
+			await updateAll();
+		}
+	}
+
 	async function updateAll() {
-		let uuids = shownUpdates
-			.filter((update) => include.get(update) ?? true)
-			.map((update) => update.packageUuid);
+		let packageUuids = includedUpdates.map((update) => update.updatedId.packageUuid);
 
 		dialogOpen = false;
 
-		await api.profile.update.mods(uuids, true);
+		await api.profile.update.mods(packageUuids, true);
 	}
 
 	function ignoreUpdate(update: AvailableUpdate) {
@@ -82,9 +93,19 @@
 		set={(update, _, value) => include.set(update, value)}
 	>
 		{#snippet item({ item: update })}
-			<ModCard fullName={update.fullName} showVersion={false} backend={update.backend} />
+			<ModCard fullName={update.fullName} showVersion={false} backend={update.updatedId.backend} />
 
-			<span class="text-light text-primary-400 ml-auto pl-1">{update.old}</span>
+			<div class="grow"></div>
+
+			{#if update.isCrossBackend}
+				<Tooltip
+					text="This update is from a different source than the currently installed version."
+				>
+					<Icon icon="mdi:alert-circle" class="text-accent-400 mr-2 text-lg" />
+				</Tooltip>
+			{/if}
+
+			<span class="text-light text-primary-400 pl-1">{update.old}</span>
 			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
 			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
 
@@ -101,14 +122,14 @@
 							label: m.updateAllBanner_dialog_list_ignore_version(),
 							onclick: () => {
 								ignoreUpdate(update);
-								api.profile.update.ignore(update.versionUuid);
+								api.profile.update.ignore(update.updatedId.versionUuid);
 							}
 						},
 						{
 							label: m.updateAllBanner_dialog_list_ignore_package(),
 							onclick: () => {
 								ignoreUpdate(update);
-								api.profile.update.ignorePackage(update.packageUuid);
+								api.profile.update.ignorePackage(update.updatedId.packageUuid);
 							}
 						}
 					]}
@@ -129,8 +150,15 @@
 	</Checklist>
 
 	{#snippet buttons()}
-		<Button color="accent" icon="mdi:download" onclick={updateAll}
-			>{m.updateAllBanner_dialog_button()}</Button
+		<Button
+			color="accent"
+			icon="mdi:download"
+			onclick={onConfirmClicked}
+			disabled={includedUpdates.length === 0}
+		>
+			{m.updateAllBanner_dialog_button()}</Button
 		>
 	{/snippet}
+
+	<ForeignDownloadDialog bind:open={foreignDownloadDialogOpen} onConfirm={updateAll} />
 </ConfirmDialog>

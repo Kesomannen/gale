@@ -1,6 +1,6 @@
 {
 	"name": "gale",
-	"version": "1.18.0",
+	"version": "1.19.2",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -37,12 +37,12 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@dnd-kit/dom": "^0.4.0",
 		"@dnd-kit/svelte": "^0.4.0",
 		"@tauri-apps/api": "^2.11.0",
 		"@tauri-apps/plugin-clipboard-manager": "^2.3.2",
 		"@tauri-apps/plugin-deep-link": "^2.4.6",
 		"@tauri-apps/plugin-dialog": "^2.7.0",
-		"@tauri-apps/plugin-http": "^2.5.6",
 		"@tauri-apps/plugin-os": "^2.3.2",
 		"@tauri-apps/plugin-process": "^2.3.1",
 		"@tauri-apps/plugin-shell": "^2.3.4",

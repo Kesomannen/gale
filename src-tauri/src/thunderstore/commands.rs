@@ -1,11 +1,14 @@
-use eyre::anyhow;
+use eyre::{ContextCompat, anyhow};
+use futures_util::TryFutureExt;
+use itertools::Itertools;
 use tauri::{AppHandle, command};
+use tracing::warn;
 
 use super::{Backend, models::FrontendMod, query::QueryModsArgs};
 use crate::{
-    logger,
+    game, logger,
     state::ManagerExt,
-    thunderstore::{ModId, cache::MarkdownKind},
+    thunderstore::{ModId, PackageCategory, cache::MarkdownKind},
     util::cmd::Result,
 };
 
@@ -47,7 +50,7 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
     tauri::async_runtime::spawn(async move {
         for (backend, err) in super::fetch::fetch_packages(game, write_directly, &app).await {
             logger::log_webview_err(
-                format!("error while fetching mods from {:?}", backend),
+                format!("error while fetching mods from {backend}"),
                 err,
                 &app,
             );
@@ -82,4 +85,29 @@ pub fn has_api_token(backend: Backend) -> bool {
 pub fn clear_api_token(backend: Backend) -> Result<()> {
     super::token::clear(backend)?;
     Ok(())
+}
+
+#[command]
+pub async fn get_categories(game: &str, app: AppHandle) -> Result<Vec<PackageCategory>> {
+    let game = game::from_slug(game).context("unknown game")?;
+
+    let tasks = game
+        .backends
+        .iter()
+        .map(|backend| super::get_categories(*backend, game, &app).map_err(|err| (*backend, err)));
+    let categories = futures_util::future::join_all(tasks)
+        .await
+        .into_iter()
+        .filter_map(|result| match result {
+            Ok(categories) => Some(categories),
+            Err((backend, error)) => {
+                warn!(%backend, ?error, "failed to fetch categories");
+                None
+            }
+        })
+        .flatten()
+        .unique()
+        .collect();
+
+    Ok(categories)
 }

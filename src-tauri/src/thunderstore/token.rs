@@ -1,9 +1,9 @@
 use std::sync::LazyLock;
 
+use crate::thunderstore::Backend;
 use eyre::Result;
 use keyring::Entry;
 use tracing::info;
-use crate::thunderstore::Backend;
 
 static THUNDERSTORE_ENTRY: LazyLock<keyring::Result<Entry>> =
     LazyLock::new(|| Entry::new("thunderstore", "api_token"));
@@ -38,8 +38,7 @@ pub fn set(backend: Backend, token: &str) -> Result<()> {
 pub fn clear(backend: Backend) -> Result<()> {
     info!("clearing {backend} token");
     match entry(backend)?.delete_credential() {
-        Ok(()) => Ok(()),
-        Err(keyring::Error::NoEntry) => Ok(()),
+        Ok(_) | Err(keyring::Error::NoEntry) => Ok(()),
         Err(err) => Err(err.into()),
     }
 }

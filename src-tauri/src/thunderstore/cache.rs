@@ -1,6 +1,7 @@
 use std::{fmt::Display, path::PathBuf, time::Instant};
 
 use eyre::{Context, Result};
+use http_cache_reqwest::CacheMode;
 use itertools::Itertools;
 use serde::Deserialize;
 use tauri::AppHandle;
@@ -20,7 +21,7 @@ struct MarkdownResponse {
     markdown: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub enum MarkdownKind {
     Readme,
@@ -41,35 +42,35 @@ pub async fn get_markdown(
     mod_id: ModId,
     app: &AppHandle,
 ) -> Result<Option<String>> {
-    let table = format!("{cache}_cache");
-    if let Some(cached) = app.db().get_cached(&table, mod_id.version_uuid)? {
-        return Ok(cached);
-    }
-
-    let url = {
+    let (url, cache_mode) = {
         let thunderstore = app.lock_thunderstore();
         let ident = mod_id.borrow(&thunderstore)?.ident();
-        mod_id.backend.markdown_url(ident, cache)
+
+        let cache_mode = if mod_id.backend.force_cache_markdown() {
+            CacheMode::ForceCache
+        } else {
+            CacheMode::Default
+        };
+
+        (mod_id.backend.markdown_url(ident, cache), cache_mode)
     };
 
     let response: MarkdownResponse = app
         .http()
         .get(url)
+        .with_extension(cache_mode)
         .send()
         .await?
         .error_for_status()?
         .json()
         .await?;
 
-    app.db()
-        .insert_cached(&table, mod_id.version_uuid, response.markdown.as_deref())?;
-
     Ok(response.markdown)
 }
 
 impl ThunderstoreBackend {
-    pub fn read_and_insert_cache(&mut self, game: Game, prefs: &Prefs, backend: Backend) {
-        match get_packages(game, prefs, backend) {
+    pub fn read_and_insert_cache(&mut self, game: Game, prefs: &Prefs) {
+        match get_packages(game, prefs, self.backend) {
             Ok(Some(mods)) => {
                 for package in mods {
                     self.packages.insert(package.uuid, package);

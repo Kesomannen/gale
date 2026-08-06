@@ -23,7 +23,6 @@ class ConfigState {
 		if (this.loading) return;
 		this.loading = true;
 		try {
-			console.log('Refreshing config files');
 			this.files = await api.config.getFiles();
 
 			const selectedPath = this.selectedFile?.relativePath;

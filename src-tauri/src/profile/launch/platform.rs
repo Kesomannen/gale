@@ -3,12 +3,12 @@ use std::{
     process::Command,
 };
 
-use eyre::{bail, Context, OptionExt, Result};
+use eyre::{Context, OptionExt, Result, bail};
 use tracing::info;
 
 use crate::util;
 use crate::{
-    game::{platform::Platform, Game},
+    game::{Game, platform::Platform},
     prefs::Prefs,
 };
 
@@ -68,7 +68,9 @@ fn create_base_steam_command() -> Result<Command> {
             exe_path
         }
         Err(err) => {
-            warn!("failed to read steam installation path from registry: {err:#}, using fallback path");
+            warn!(
+                "failed to read steam installation path from registry: {err:#}, using fallback path"
+            );
 
             r"C:\Program Files (x86)\Steam\steam.exe".into()
         }
@@ -84,8 +86,8 @@ fn create_base_steam_command() -> Result<Command> {
 #[cfg(target_os = "windows")]
 fn read_steam_registry() -> Result<PathBuf> {
     use tracing::debug;
-    use winreg::enums::*;
     use winreg::RegKey;
+    use winreg::enums::*;
 
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let key = hklm.open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")?;
@@ -217,7 +219,7 @@ fn steam_game_dir(game: Game) -> Result<PathBuf> {
 fn xbox_game_dir(game: Game) -> Result<PathBuf> {
     use std::process::Command;
 
-    use eyre::{ensure, Context};
+    use eyre::{Context, ensure};
 
     let Some(xbox) = &game.platforms.xbox_store else {
         bail!("{} is not available on Xbox Store", game.name)

@@ -29,6 +29,7 @@
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import config from '$lib/state/config.svelte';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -146,6 +147,11 @@
 		}
 	}
 
+	async function forceUninstall(mod: Dependant) {
+		await api.profile.forceRemoveMods([mod.uuid]);
+		selectedMod = null;
+	}
+
 	async function openDependants(mod: Mod) {
 		dependants = (await api.profile.getDependants(mod.uuid)).map((d) => ({
 			backend: mod.backend,
@@ -218,7 +224,7 @@
 		{/if}
 
 		{#if unknownMods.length > 0}
-			<UnknownModsBanner mods={unknownMods} {uninstall} />
+			<UnknownModsBanner mods={unknownMods} uninstall={forceUninstall} />
 		{/if}
 
 		{#if mods.length === 0 && hasRefreshed}
@@ -263,13 +269,15 @@
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
 			{#if isOutdated(selectedMod) && !locked}
-				<button
-					class="bg-accent-700 hover:bg-accent-600 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
+				<Button
+					color="accent"
+					size="lg"
+					icon="mdi:arrow-up-circle"
+					class="mt-2"
 					onclick={() => updateMod(selectedMod)}
 				>
-					<Icon icon="mdi:arrow-up-circle" class="align-middle text-xl" />
 					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
-				</button>
+				</Button>
 			{/if}
 		</ModDetails>
 	{/if}

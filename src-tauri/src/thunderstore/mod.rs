@@ -117,7 +117,7 @@ impl Hash for ModId {
 impl ModId {
     /// Borrows the mod from [`Thunderstore`].
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
-        thunderstore.get_mod(self.package_uuid, self.version_uuid)
+        thunderstore.get_mod(self.package_uuid, self.version_uuid, self.backend)
     }
 }
 
@@ -146,15 +146,14 @@ impl Thunderstore {
     /// Whether packages have been succesfully fetched at least one since
     /// the last call to [`Thunderstore::switch_game`].
     pub fn packages_fetched(&self, app: &AppHandle, game: Game) -> bool {
-        let backends = app.lock_prefs().backends(game);
+        let backends = app.lock_prefs().enabled_backends(game);
         backends
-            .into_backend_slice()
             .iter()
-            .all(|b| self.backend(*b).packages_fetched())
+            .all(|backend| self.backend(backend).packages_fetched())
     }
 
     pub fn deduplicate<T: Queryable>(mods: impl Iterator<Item = T>) -> impl Iterator<Item = T> {
-        mods.sorted_by(|a, b| a.full_name().cmp(&b.full_name()))
+        mods.sorted_by(|a, b| a.full_name().cmp(b.full_name()))
             .coalesce(|a, b| {
                 if a.full_name() == b.full_name() {
                     Ok(Self::cmp_borrowed_mod(a, b))
@@ -218,11 +217,13 @@ impl Thunderstore {
         }
     }
 
-    pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> Result<BorrowedMod<'_>> {
-        self.resolve_thunderstore_vs_hexium(
-            |b| b.get_mod(package_uuid, version_uuid),
-            Self::cmp_borrowed_mod,
-        )
+    pub fn get_mod(
+        &self,
+        package_uuid: Uuid,
+        version_uuid: Uuid,
+        backend: Backend,
+    ) -> Result<BorrowedMod<'_>> {
+        self.backend(backend).get_mod(package_uuid, version_uuid)
     }
 
     pub fn find_ident(&self, ident: &VersionIdent) -> Result<BorrowedMod<'_>> {
@@ -249,9 +250,17 @@ impl Thunderstore {
 
         self.is_fetching = false;
 
-        self.thunderstore_backend
-            .clear_packages(game, &app.lock_prefs());
-        self.hexium_backend.clear_packages(game, &app.lock_prefs());
+        {
+            let prefs = app.lock_prefs();
+
+            self.thunderstore_backend.clear_packages();
+            self.hexium_backend.clear_packages();
+
+            for backend in prefs.enabled_backends(game).iter() {
+                let backend = self.backend_mut(backend);
+                backend.read_and_insert_cache(game, &prefs);
+            }
+        }
 
         let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(game, app));
         self.fetch_loop_handle = Some(load_mods_handle);
@@ -327,4 +336,22 @@ impl Thunderstore {
             thunderstore: self,
         }
     }
+}
+
+async fn get_categories(
+    backend: Backend,
+    game: Game,
+    app: &AppHandle,
+) -> Result<Vec<PackageCategory>> {
+    let url = backend.category_url(game);
+    let response: CategoryResponse = app
+        .http()
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
+    Ok(response.results)
 }

@@ -14,8 +14,8 @@ use crate::{
     profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{
-        BorrowedMod, FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind,
-        query::QueryModsArgs,
+        Backend, BorrowedMod, FrontendProfileMod, ModId, Thunderstore, VersionIdent,
+        cache::MarkdownKind, query::QueryModsArgs,
     },
     util::cmd::Result,
 };
@@ -28,6 +28,7 @@ pub struct FrontendGame {
     popular: bool,
     mod_loader: &'static str,
     platforms: Vec<Platform>,
+    backends: Vec<Backend>,
 }
 
 impl From<Game> for FrontendGame {
@@ -40,6 +41,7 @@ impl From<Game> for FrontendGame {
             popular: value.popular,
             mod_loader: value.mod_loader.as_str(),
             platforms,
+            backends: value.backends.clone(),
         }
     }
 }
@@ -136,10 +138,10 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
 pub struct FrontendAvailableUpdate {
     full_name: VersionIdent,
     ignore: bool,
-    package_uuid: Uuid,
-    version_uuid: Uuid,
+    updated_id: ModId,
     old: semver::Version,
     new: semver::Version,
+    is_cross_backend: bool,
 }
 
 #[derive(Serialize)]
@@ -171,15 +173,16 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
                 .transpose()
         })
         .map_ok(|update| {
-            let ignore = profile.is_update_ignored(update.id());
+            let ignore = profile.is_update_ignored(&update);
+            let is_cross_backend = update.current.package.backend != update.latest.package.backend;
 
             FrontendAvailableUpdate {
-                full_name: update.latest.ident.clone(),
-                package_uuid: update.package.uuid,
-                version_uuid: update.latest.uuid,
-                old: update.current.parsed_version().clone(),
-                new: update.latest.parsed_version().clone(),
+                full_name: update.latest.version.ident.clone(),
                 ignore,
+                is_cross_backend,
+                old: update.current.version.parsed_version(),
+                new: update.latest.version.parsed_version(),
+                updated_id: update.latest.into(),
             }
         })
         .collect::<eyre::Result<Vec<_>>>()

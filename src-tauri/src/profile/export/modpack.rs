@@ -12,12 +12,12 @@ use image::{ImageFormat, imageops::FilterType};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use tauri::Url;
+use tauri::{AppHandle, Url};
 use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
-use crate::{game::Game, profile::Profile, thunderstore::*};
+use crate::{game::Game, profile::Profile, state::ManagerExt, thunderstore::*};
 
 /// Returns whether it's hexium-exclusive now
 pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Game) -> bool {
@@ -168,22 +168,22 @@ where
 }
 
 fn base_request(
+    app: &AppHandle,
     tail: impl Display,
     backend: Backend,
     token: impl Display,
-    client: &reqwest::Client,
-) -> reqwest::RequestBuilder {
-    let url = format!("{}/{tail}/", backend.modpack_upload_baseurl());
+) -> reqwest_middleware::RequestBuilder {
+    let url = format!("{}/{tail}/", backend.modpack_upload_base_url());
 
-    client.post(url).bearer_auth(token)
+    app.http().post(url).bearer_auth(token)
 }
 
 pub async fn publish(
+    app: &AppHandle,
     data: Bytes,
     game: Game,
     args: ModpackArgs,
     token: String,
-    client: reqwest::Client,
 ) -> Result<()> {
     ensure!(args.description.len() <= 250, "description is too long");
     ensure!(!args.readme.is_empty(), "readme cannot be empty");
@@ -196,11 +196,11 @@ pub async fn publish(
     info!("publishing modpack");
 
     let response = initiate_upload(
+        app,
         args.name.clone(),
         data.len() as u64,
         args.backend,
         &token,
-        &client,
     )
     .await
     .context("failed to initiate upload")?;
@@ -209,8 +209,8 @@ pub async fn publish(
 
     let tasks = response.upload_urls.into_iter().map(|part| {
         let data = data.clone();
-        let client = client.clone();
-        tauri::async_runtime::spawn(upload_chunk(part, data, client))
+        let app = app.clone();
+        tauri::async_runtime::spawn(async move { upload_chunk(&app, part, data).await })
     });
 
     let parts = match try_join_all(tasks)
@@ -220,18 +220,18 @@ pub async fn publish(
     {
         Ok(parts) => parts,
         Err(err) => {
-            tauri::async_runtime::spawn(async move {
-                abort_upload(&uuid, args.backend, &token, client).await
-            });
+            abort_upload(&app, &uuid, args.backend, &token)
+                .await
+                .context("failed to abort upload")?;
             return Err(err.wrap_err("failed to upload file"));
         }
     };
 
-    finish_upload(parts, &uuid, args.backend, &token, &client)
+    finish_upload(app, parts, &uuid, args.backend, &token)
         .await
         .context("failed to finalize upload")?;
 
-    submit_package(uuid, game, args, &token, &client)
+    submit_package(app, uuid, game, args, &token)
         .await
         .context("failed to submit package")?;
 
@@ -239,18 +239,18 @@ pub async fn publish(
 }
 
 async fn initiate_upload(
+    app: &AppHandle,
     name: String,
     size: u64,
     backend: Backend,
     token: &str,
-    client: &reqwest::Client,
 ) -> Result<UserMediaInitiateUploadResponse> {
     debug!(
         "initiating modpack upload for {}, size: {} bytes",
         name, size
     );
 
-    let response = base_request("usermedia/initiate-upload", backend, token, client)
+    let response = base_request(app, "usermedia/initiate-upload", backend, token)
         .json(&UserMediaInitiateUploadParams {
             filename: name,
             file_size_bytes: size,
@@ -266,16 +266,13 @@ async fn initiate_upload(
     Ok(response)
 }
 
-async fn upload_chunk(
-    part: UploadPartUrl,
-    data: Bytes,
-    client: reqwest::Client,
-) -> Result<CompletedPart> {
+async fn upload_chunk(app: &AppHandle, part: UploadPartUrl, data: Bytes) -> Result<CompletedPart> {
     let start = part.offset as usize;
     let end = start + part.length as usize;
     let chunk = data.slice(start..end);
 
-    let response = client
+    let response = app
+        .http()
         .put(&part.url)
         .body(chunk)
         .send()
@@ -298,19 +295,14 @@ async fn upload_chunk(
     })
 }
 
-async fn abort_upload(
-    uuid: &Uuid,
-    backend: Backend,
-    token: &str,
-    client: reqwest::Client,
-) -> Result<()> {
+async fn abort_upload(app: &AppHandle, uuid: &Uuid, backend: Backend, token: &str) -> Result<()> {
     info!("aborting upload");
 
     base_request(
+        app,
         format!("usermedia/{uuid}/abort-upload"),
         backend,
         token,
-        &client,
     )
     .json(&uuid)
     .send()
@@ -321,19 +313,19 @@ async fn abort_upload(
 }
 
 async fn finish_upload(
+    app: &AppHandle,
     parts: Vec<CompletedPart>,
     uuid: &Uuid,
     backend: Backend,
     token: &str,
-    client: &reqwest::Client,
 ) -> Result<()> {
     debug!("finishing upload");
 
     base_request(
+        app,
         format!("usermedia/{uuid}/finish-upload"),
         backend,
         token,
-        client,
     )
     .json(&UserMediaFinishUploadParams { parts })
     .send()
@@ -344,11 +336,11 @@ async fn finish_upload(
 }
 
 async fn submit_package(
+    app: &AppHandle,
     uuid: Uuid,
     game: Game,
     args: ModpackArgs,
     token: &str,
-    client: &reqwest::Client,
 ) -> Result<()> {
     let metadata = PackageSubmissionMetadata {
         author_name: args.author,
@@ -361,7 +353,7 @@ async fn submit_package(
 
     debug!("submitting package");
 
-    let response = base_request("submission/submit", args.backend, token, client)
+    let response = base_request(app, "submission/submit", args.backend, token)
         .json(&metadata)
         .send()
         .await?;

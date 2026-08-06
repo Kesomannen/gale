@@ -63,9 +63,12 @@ pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackInfo>> {
     let game = manager.active_game;
     let profile = manager.active_profile_mut();
 
-    let hexium_exclusive = modpack::refresh_args(profile, &*app.lock_thunderstore(), game);
+    let hexium_exclusive = modpack::refresh_args(profile, &app.lock_thunderstore(), game);
 
-    Ok(profile.modpack.clone().map(|args| ModpackInfo { args, hexium_exclusive }))
+    Ok(profile.modpack.clone().map(|args| ModpackInfo {
+        args,
+        hexium_exclusive,
+    }))
 }
 
 #[command]
@@ -130,8 +133,7 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
         (data, manager.active_game, args, token)
     };
 
-    let client = app.http().clone();
-    modpack::publish(data.into_inner().into(), game, args, token, client).await?;
+    modpack::publish(&app, data.into_inner().into(), game, args, token).await?;
 
     Ok(())
 }
