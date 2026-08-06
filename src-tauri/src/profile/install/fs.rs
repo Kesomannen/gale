@@ -12,7 +12,7 @@ use zip::ZipArchive;
 
 use crate::{
     profile::Profile,
-    util::{self, error::IoResultExt, fs::PathExt},
+    util::{self, error::IoResultExt},
 };
 
 /// Extract a package archive to `dest`, mapping files using `map_file`.
@@ -228,7 +228,7 @@ where
         }
     } else {
         let mut path = path.to_path_buf();
-        path.add_ext("old");
+        path.add_extension("old");
 
         if path.exists() {
             for_file(&path)
@@ -244,7 +244,7 @@ pub(super) fn toggle_file(path: impl AsRef<Path>, enabled: bool) -> Result<()> {
     let mut new_path = path.to_path_buf();
 
     if enabled {
-        new_path.add_ext("old");
+        new_path.add_extension("old");
     } else {
         // remove all old extensions if multiple got added somehow
         while let Some("old") = new_path.extension().and_then(|ext| ext.to_str()) {

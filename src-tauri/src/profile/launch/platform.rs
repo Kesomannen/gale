@@ -138,7 +138,7 @@ fn create_base_steam_command() -> Result<Command> {
         return Ok(command);
     }
 
-    let path = PathBuf::from("/usr/bin/steam")
+    let path = Path::new("/usr/bin/steam")
         .exists_or_none()
         .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
 

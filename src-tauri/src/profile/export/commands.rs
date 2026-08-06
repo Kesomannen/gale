@@ -19,7 +19,7 @@ use crate::{
     profile::ProfileModKind,
     state::ManagerExt,
     thunderstore,
-    util::{cmd::Result, error::IoResultExt, fs::PathExt},
+    util::{cmd::Result, error::IoResultExt},
 };
 
 #[command]
@@ -91,7 +91,7 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
 
     let mut path = dir;
     path.push(format!("{}-{}", args.name, args.version_number));
-    path.add_ext("zip");
+    path.add_extension("zip");
 
     debug!("exporting pack to {:?}", path);
 

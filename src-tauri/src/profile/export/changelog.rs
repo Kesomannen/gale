@@ -13,10 +13,7 @@ use crate::{
     game::Game,
     profile::Profile,
     thunderstore::{BorrowedMod, ModId, PackageListing, Thunderstore},
-    util::{
-        self,
-        fs::{JsonStyle, PathExt},
-    },
+    util::{self, fs::JsonStyle},
 };
 
 pub(super) fn generate_all(
@@ -174,7 +171,7 @@ impl Profile {
         fs::create_dir_all(&path)?;
 
         path.push(&args.version_number);
-        path.add_ext("json");
+        path.add_extension("json");
 
         util::fs::write_json(
             path,

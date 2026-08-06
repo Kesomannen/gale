@@ -1,5 +1,4 @@
 use std::{
-    ffi::OsStr,
     fs::{self, File},
     io::{self, BufReader, BufWriter, Read},
     path::{Path, PathBuf},
@@ -173,24 +172,17 @@ pub fn is_enclosed(path: impl AsRef<Path>) -> bool {
 
 pub trait PathExt: Sized {
     fn exists_or_none(self) -> Option<Self>;
-    fn add_ext(&mut self, extension: impl AsRef<OsStr>);
 }
 
 impl PathExt for PathBuf {
     fn exists_or_none(self) -> Option<PathBuf> {
         if self.exists() { Some(self) } else { None }
     }
+}
 
-    fn add_ext(&mut self, extension: impl AsRef<OsStr>) {
-        match self.extension() {
-            Some(ext) => {
-                let mut ext = ext.to_os_string();
-                ext.push(".");
-                ext.push(extension.as_ref());
-                self.set_extension(ext)
-            }
-            None => self.set_extension(extension.as_ref()),
-        };
+impl<'a> PathExt for &'a Path {
+    fn exists_or_none(self) -> Option<&'a Path> {
+        if self.exists() { Some(self) } else { None }
     }
 }
 
