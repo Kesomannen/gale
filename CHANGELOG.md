@@ -5,6 +5,7 @@
 ### Added
 
 - Button to view changelogs in the update mods dialog
+- Support for Steam launch options (thanks [@hazre](https://github.com/hazre))
 
 ### Changed
 
