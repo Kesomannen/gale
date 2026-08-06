@@ -6,6 +6,7 @@ import {
 	type Mod,
 	ModType,
 	ModLoader,
+	type LaunchOption,
 	type ModId,
 	type Prefs
 } from './types';
@@ -22,6 +23,51 @@ export function shortenFileSize(size: number): string {
 
 export function formatModName(name: string): string {
 	return name.replace(/_/g, ' ');
+}
+
+export function formatLaunchOptionName(game: string, option: LaunchOption): string {
+	switch (option.type) {
+		case 'none':
+		case 'default':
+			return m.steamLaunchOption_default({ game });
+		case 'application':
+			return m.steamLaunchOption_application({ game });
+		case 'safemode':
+			return m.steamLaunchOption_safemode({ game });
+		case 'multiplayer':
+			return m.steamLaunchOption_multiplayer({ game });
+		case 'config':
+			return m.steamLaunchOption_config();
+		case 'vr':
+			return m.steamLaunchOption_vr({ game });
+		case 'server':
+			return m.steamLaunchOption_server();
+		case 'editor':
+			return m.steamLaunchOption_editor();
+		case 'manual':
+			return m.steamLaunchOption_manual();
+		case 'benchmark':
+			return m.steamLaunchOption_benchmark();
+		case 'option1':
+		case 'option2':
+		case 'option3':
+			return option.description
+				? m.steamLaunchOption_option_description({ description: option.description })
+				: m.steamLaunchOption_option_no_description({ game, type: option.type });
+		case 'othervr':
+			return m.steamLaunchOption_othervr({ game });
+		case 'openvroverlay':
+			return m.steamLaunchOption_openvroverlay({ game });
+		case 'osvr':
+			return m.steamLaunchOption_osvr({ game });
+		case 'openxr':
+			return m.steamLaunchOption_openxr({ game });
+		default:
+			if (option.type) {
+				return m.steamLaunchOption_other_with_type({ game, type: option.type });
+			}
+			return m.steamLaunchOption_other({ game });
+	}
 }
 
 export function shortenNum(value: number): string {

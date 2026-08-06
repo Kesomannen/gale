@@ -207,7 +207,8 @@ impl Backends {
             Backends::All => [Backend::Thunderstore, Backend::Hexium].iter(),
             Backends::Thunderstore => [Backend::Thunderstore].iter(),
             Backends::Hexium => [Backend::Hexium].iter(),
-        }.copied()
+        }
+        .copied()
     }
 }
 
@@ -231,6 +232,7 @@ pub struct GamePrefs {
     pub custom_args: String,
     pub launch_mode: LaunchMode,
     pub platform: Option<Platform>,
+    pub show_steam_launch_options: bool,
     pub backend: Backends,
 }
 

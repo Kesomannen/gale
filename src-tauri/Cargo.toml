@@ -75,6 +75,7 @@ steamlocate = "2"
 flate2 = "1"
 font-kit = "0.14"
 internment = { version = "0.8.6", features = ["serde"] }
+new-vdf-parser = "0.1.0"
 reqwest-websocket = { version = "0.6.0", features = ["json", "middleware"] }
 tracing-log = "0.2.0"
 shell-words = "1.1.1"

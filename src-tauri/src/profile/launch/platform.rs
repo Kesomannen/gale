@@ -1,9 +1,8 @@
+use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
 use std::{
     path::{Path, PathBuf},
     process::Command,
 };
-
-use eyre::{Context, OptionExt, Result, bail};
 use tracing::info;
 
 use crate::util;
@@ -171,6 +170,51 @@ fn locate_steam_script() -> Result<PathBuf> {
                     )
                 })
         })
+}
+
+pub fn get_steam_launch_options(app_id: u32) -> Result<serde_json::Value> {
+    let app_info = get_steam_app_info(app_id)?;
+
+    app_info
+        .get("config")
+        .and_then(|config| config.get("launch"))
+        .cloned()
+        .ok_or_else(|| eyre!("no launch options found for app ID {}", app_id))
+}
+
+fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
+    use new_vdf_parser::appinfo_vdf_parser::open_appinfo_vdf;
+    use serde_json::{Map, Value};
+
+    let steam_dir = steamlocate::locate().context("failed to locate steam installation")?;
+
+    let appinfo_path = steam_dir.path().join("appcache").join("appinfo.vdf");
+
+    ensure!(
+        appinfo_path.exists(),
+        "steam appinfo.vdf not found at {}",
+        appinfo_path.display()
+    );
+
+    info!("reading Steam app info from {}", appinfo_path.display());
+
+    let appinfo_vdf: Map<String, Value> = open_appinfo_vdf(&appinfo_path);
+
+    let entries = appinfo_vdf
+        .get("entries")
+        .and_then(|e| e.as_array())
+        .ok_or_eyre("no entries found in appinfo.vdf")?;
+
+    entries
+        .iter()
+        .find(|entry| {
+            entry
+                .get("appid")
+                .and_then(|id| id.as_u64())
+                .map_or(false, |id| id == app_id as u64)
+        })
+        .cloned()
+        .ok_or_else(|| eyre!("app ID {} not found in Steam appinfo.vdf", app_id))
 }
 
 fn create_epic_command(game: Game) -> Result<Command> {

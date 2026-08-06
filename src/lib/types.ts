@@ -356,6 +356,7 @@ export type GamePrefs = {
 	customArgs: string;
 	launchMode: LaunchMode;
 	platform: Platform | null;
+	showSteamLaunchOptions: boolean;
 	backend: Backends;
 };
 
@@ -380,6 +381,11 @@ export type Zoom = { factor: number } | { delta: number };
 
 export type MarkdownType = 'readme' | 'changelog';
 
+export interface LaunchOption {
+	arguments: string;
+	type: string | null;
+	description: string | null;
+}
 export type MissingProfileAction = { type: 'locate'; newPath: string } | { type: 'delete' };
 
 export type Folder = {

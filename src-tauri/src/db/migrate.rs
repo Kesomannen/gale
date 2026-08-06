@@ -151,6 +151,7 @@ impl From<legacy::GamePrefs> for GamePrefs {
             custom_args: legacy.custom_args.into_iter().flatten().join(" "),
             launch_mode: legacy.launch_mode.into(),
             platform: legacy.platform.map(Into::into),
+            show_steam_launch_options: false,
             backend: Backends::All,
         }
     }

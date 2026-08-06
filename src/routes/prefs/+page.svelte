@@ -33,11 +33,16 @@
 
 	let gameSlug = $derived(games.active?.slug ?? '');
 
+	let shownPlatform = $derived.by(
+		() => gamePrefs?.platform ?? games.active?.platforms[0] ?? 'Unknown'
+	);
+
 	$effect(() => {
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
 			customArgs: '',
+			showSteamLaunchOptions: false,
 			backend: Backends.All,
 			platform: null
 		};
@@ -184,10 +189,20 @@
 		<SmallHeading>{m.prefs_gameSettings_launch_title()}</SmallHeading>
 
 		<LaunchModePref
-			platform={gamePrefs.platform ?? games.active?.platforms[0] ?? m.unknown()}
+			platform={shownPlatform}
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>
+
+		{#if gamePrefs.launchMode.type === 'launcher' && shownPlatform === 'steam'}
+			<TogglePref
+				label={m.prefs_steamLaunchOptions_title()}
+				value={gamePrefs.showSteamLaunchOptions}
+				set={set((value) => (gamePrefs!.showSteamLaunchOptions = value))}
+			>
+				{m.prefs_steamLaunchOptions_content()}
+			</TogglePref>
+		{/if}
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}
