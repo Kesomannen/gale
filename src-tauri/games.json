@@ -676,6 +676,18 @@
 		}
 	},
 	{
+		"name": "Big Walk",
+		"slug": "big-walk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1478500
+			}
+		}
+	},
+	{
 		"name": "Bloons TD 6",
 		"slug": "bloons-td-6",
 		"modLoader": {
