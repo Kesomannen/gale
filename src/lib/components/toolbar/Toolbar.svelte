@@ -17,7 +17,7 @@
 	import { DropdownMenu } from 'bits-ui';
 	import DropdownArrow from '../ui/DropdownArrow.svelte';
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
-	import type { ContextItem } from '$lib/types';
+	import { type ContextItem } from '$lib/types';
 	import { PersistedState } from 'runed';
 
 	type Mode = 'vanilla' | 'modded';
@@ -68,27 +68,22 @@
 		const prefs = await api.prefs.get();
 		prefs.gamePrefs = new Map(Object.entries(prefs.gamePrefs));
 		const currentGameSlug = games.active?.slug;
+		if (!currentGameSlug) return;
 
-		if (currentGameSlug) {
-			const gamePrefs = prefs.gamePrefs.get(currentGameSlug);
+		const gamePrefs = prefs.gamePrefs.get(currentGameSlug);
 
-			if (
-				gamePrefs &&
-				gamePrefs.launchMode.type === 'launcher' &&
-				gamePrefs.platform === 'steam' &&
-				gamePrefs.showSteamLaunchOptions
-			) {
-				try {
-					const options = await api.profile.launch.getSteamLaunchOptions();
+		if (
+			gamePrefs &&
+			gamePrefs.launchMode.type === 'launcher' &&
+			gamePrefs.platform === 'steam' &&
+			gamePrefs.showSteamLaunchOptions
+		) {
+			const options = await api.profile.launch.getSteamLaunchOptions();
 
-					if (options && options.length > 0) {
-						launchOptions = options;
-						launchOptionsDialogOpen = true;
-						return;
-					}
-				} catch (error) {
-					console.log('No Steam launch options available or not a Steam game');
-				}
+			if (options.length > 0) {
+				launchOptions = options;
+				launchOptionsDialogOpen = true;
+				return;
 			}
 		}
 
