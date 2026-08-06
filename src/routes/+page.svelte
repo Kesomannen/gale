@@ -14,7 +14,7 @@
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
-	import ProfileModListItem from '$lib/components/mod-list/ProfileModListItem.svelte';
+	import ProfileModCardWithContext from '$lib/components/profile/ProfileModCardWithContext.svelte';
 	import UpdateAllBanner from '$lib/components/mod-list/UpdateAllBanner.svelte';
 	import { emit } from '@tauri-apps/api/event';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
@@ -25,10 +25,9 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { profileQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import ReorderableList from '$lib/components/profile/ReorderableList.svelte';
+	import ProfileModList from '$lib/components/profile/ProfileModList.svelte';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import config from '$lib/state/config.svelte';
-	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	const sortOptions: SortBy[] = [
@@ -244,9 +243,9 @@
 				</HelpCard>
 			{/if}
 		{:else}
-			<ReorderableList bind:items {onmove} {reorderable}>
+			<ProfileModList bind:items {onmove} {reorderable}>
 				{#snippet mod({ mod, index })}
-					<ProfileModListItem
+					<ProfileModCardWithContext
 						{mod}
 						{index}
 						{locked}
@@ -262,7 +261,7 @@
 						}}
 					/>
 				{/snippet}
-			</ReorderableList>
+			</ProfileModList>
 		{/if}
 	</div>
 

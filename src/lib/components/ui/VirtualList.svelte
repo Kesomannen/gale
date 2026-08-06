@@ -190,7 +190,7 @@
 		display: block;
 	}
 
-	svelte-virtual-list-row {
+	/* svelte-virtual-list-row {
 		overflow: hidden;
-	}
+	} */
 </style>

@@ -37,8 +37,10 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@dnd-kit/dom": "^0.4.0",
-		"@dnd-kit/svelte": "^0.4.0",
+		"@dnd-kit/abstract": "^0.5.0",
+		"@dnd-kit/dom": "^0.5.0",
+		"@dnd-kit/modifiers": "^9.0.0",
+		"@dnd-kit/svelte": "^0.5.0",
 		"@tauri-apps/api": "^2.11.0",
 		"@tauri-apps/plugin-clipboard-manager": "^2.3.2",
 		"@tauri-apps/plugin-deep-link": "^2.4.6",

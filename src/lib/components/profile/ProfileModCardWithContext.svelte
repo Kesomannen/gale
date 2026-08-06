@@ -2,8 +2,8 @@
 	import type { Mod, ModContextItem } from '../../types';
 	import { Switch } from 'bits-ui';
 	import type { MouseEventHandler } from 'svelte/elements';
-	import ModItemContext from './ModItemContext.svelte';
-	import ProfileModListItemNoContext from './ProfileModListItemNoContext.svelte';
+	import ModItemContext from '../mod-list/ModItemContext.svelte';
+	import ProfileModCard from './ProfileModCard.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -19,7 +19,7 @@
 </script>
 
 <ModItemContext {mod} {locked} {contextItems}>
-	<ProfileModListItemNoContext {mod} {selected} {index} {onclick}>
+	<ProfileModCard {mod} {selected} {index} {onclick}>
 		{#snippet trailing()}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -36,5 +36,5 @@
 				</Switch.Root>
 			</div>
 		{/snippet}
-	</ProfileModListItemNoContext>
+	</ProfileModCard>
 </ModItemContext>
