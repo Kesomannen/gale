@@ -1956,7 +1956,7 @@ dependencies = [
 
 [[package]]
 name = "gale"
-version = "1.19.2"
+version = "1.20.0"
 dependencies = [
  "base64 0.22.1",
  "blake3",

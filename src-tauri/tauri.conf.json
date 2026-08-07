@@ -1,6 +1,6 @@
 {
 	"productName": "Gale",
-	"version": "1.19.2",
+	"version": "1.20.0",
 	"identifier": "com.kesomannen.gale",
 	"build": {
 		"beforeBuildCommand": "pnpm run build",
@@ -24,9 +24,7 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
-		"windows": {
-			"signCommand": "artifact-signing-cli -e https://wus2.codesigning.azure.net -a TisButAscratch -c ThisIsForGale -d Gale %1"
-		},
+		"windows": {},
 		"linux": {
 			"appimage": {
 				"files": {
