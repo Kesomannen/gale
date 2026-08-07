@@ -1,0 +1,26 @@
+<script lang="ts">
+	import { Switch } from 'bits-ui';
+
+	type Props = {
+		enabled: boolean;
+		locked?: boolean;
+		ontoggle?: (newState: boolean) => void;
+	};
+
+	let { enabled, locked = false, ontoggle }: Props = $props();
+</script>
+
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="contents" onclick={(evt) => evt.stopPropagation()}>
+	<Switch.Root
+		disabled={locked}
+		checked={enabled}
+		onCheckedChange={ontoggle}
+		class="group data-[state=checked]:bg-accent-700 data-[state=checked]:hover:bg-accent-600 bg-primary-600 hover:bg-primary-500 mr-1 flex h-6 w-12 shrink-0 rounded-full px-1 py-1"
+	>
+		<Switch.Thumb
+			class="data-[state=checked]:bg-accent-200 bg-primary-300 pointer-events-none h-full w-4 rounded-full transition-transform duration-75 ease-out data-[state=checked]:translate-x-6"
+		/>
+	</Switch.Root>
+</div>

@@ -84,7 +84,6 @@
 		...defaultContextItems
 	];
 
-	let mods: Mod[] = $state([]);
 	let items: ListItem[] = $state([]);
 	let totalModCount = $state(0);
 	let unknownMods: Dependant[] = $state([]);
@@ -108,9 +107,12 @@
 		if (refreshing) return;
 		refreshing = true;
 
+		if (hasRefreshed) return; // testing
+
+		console.log('refreshing mod list');
+
 		let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
 
-		mods = result.mods;
 		items = result.mods.map((mod) => ({ type: 'mod', mod }));
 		totalModCount = result.totalModCount;
 		unknownMods = result.unknownMods;
@@ -125,7 +127,7 @@
 		let response = await api.profile.toggleMod(mod.uuid);
 
 		if (response.type == 'done') {
-			refresh();
+			await refresh();
 			return;
 		}
 
@@ -176,9 +178,17 @@
 
 		await refresh();
 
-		if (selectedMod !== null) {
-			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
+		if (selectedMod === null) return;
+
+		const newItem = items.find(
+			(item) => item.type === 'mod' && item.mod.uuid === selectedMod!.uuid
+		);
+
+		if (!newItem || newItem.type !== 'mod') {
+			return;
 		}
+
+		selectedMod = newItem.mod;
 	}
 
 	async function onmove(item: ListItem, fromIndex: number, toIndex: number) {
@@ -194,7 +204,7 @@
 	}
 
 	$effect(() => {
-		profiles.active;
+		profiles.activeId;
 		profileQuery.current;
 		refresh();
 	});
@@ -226,7 +236,7 @@
 			<UnknownModsBanner mods={unknownMods} uninstall={forceUninstall} />
 		{/if}
 
-		{#if mods.length === 0 && hasRefreshed}
+		{#if items.length === 0 && hasRefreshed}
 			{#if totalModCount === 0}
 				<HelpCard icon="ph:ghost" title={m.page_modList_noMods_1()}>
 					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
@@ -243,25 +253,14 @@
 				</HelpCard>
 			{/if}
 		{:else}
-			<ProfileModList bind:items {onmove} {reorderable}>
-				{#snippet mod({ mod, index })}
-					<ProfileModCardWithContext
-						{mod}
-						{index}
-						{locked}
-						{contextItems}
-						selected={selectedMod?.uuid === mod.uuid}
-						ontoggle={(newState) => toggleMod(mod, newState)}
-						onclick={() => {
-							if (selectedMod?.uuid === mod.uuid) {
-								selectedMod = null;
-							} else {
-								selectedMod = mod;
-							}
-						}}
-					/>
-				{/snippet}
-			</ProfileModList>
+			<ProfileModList
+				bind:items
+				bind:selectedMod
+				{reorderable}
+				{locked}
+				modContextItems={contextItems}
+				onModToggle={(mod, newState) => toggleMod(mod, newState)}
+			/>
 		{/if}
 	</div>
 

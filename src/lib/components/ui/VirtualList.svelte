@@ -1,6 +1,4 @@
 <script lang="ts" generics="T, Key = number">
-	import { run } from 'svelte/legacy';
-
 	// (c) 2018 Rich Harris
 	// https://github.com/sveltejs/svelte-virtual-list/blob/master/LICENSE
 	import { onMount, tick, type Snippet } from 'svelte';
@@ -14,7 +12,15 @@
 		start?: number;
 		end?: number;
 		rowId?: (data: T) => Key;
-		children?: Snippet<[{ item: T; index: number }]>;
+		/**
+		 * Row keys that must stay mounted even when scrolled outside the visible window
+		 * (e.g. the row being dragged in a dnd-kit sortable list). Pinned rows are rendered
+		 * as absolutely-positioned copies so their sortable entity keeps a connected element
+		 * for the whole drag, which keeps the drag overlay and drop-target tracking working
+		 * when the row scrolls out of view.
+		 */
+		pinnedRowIds?: Key[];
+		children: Snippet<[{ item: T; index: number }]>;
 	};
 
 	let {
@@ -24,6 +30,7 @@
 		start = $bindable(0),
 		end = $bindable(0),
 		rowId,
+		pinnedRowIds = [],
 		children
 	}: Props = $props();
 
@@ -33,11 +40,62 @@
 	let viewport: HTMLElement;
 	let contents: HTMLElement;
 	let viewportHeight = $state(0);
-	let visible: { index: number; data: T }[] = $derived(
-		items.slice(start, end).map((data, i) => {
-			return { index: i + start, data };
-		})
-	);
+	// Rows whose key is in `pinnedRowIds`, regardless of the visible window. They are rendered
+	// as absolutely-positioned copies (see the template) so they never unmount while pinned.
+	let pinned: { index: number; data: T }[] = $derived.by(() => {
+		if (pinnedRowIds.length === 0) return [];
+
+		const result: { index: number; data: T }[] = [];
+		for (let i = 0; i < items.length; i++) {
+			const id = rowId ? rowId(items[i]) : i;
+			if (pinnedRowIds.includes(id as Key)) {
+				result.push({ index: i, data: items[i] });
+			}
+		}
+		return result;
+	});
+
+	// The visible window. Any pinned row inside the window is replaced by an empty spacer so it
+	// keeps occupying its slot in the flow layout (its actual content is rendered absolutely on
+	// top of that slot). Spacers are plain divs, so they are ignored by the
+	// `svelte-virtual-list-row` collection the scroll math relies on.
+	type VisibleRow = { kind: 'row'; index: number; data: T } | { kind: 'spacer'; index: number };
+	let visible: VisibleRow[] = $derived.by(() => {
+		const rows: VisibleRow[] = [];
+		if (pinnedRowIds.length === 0) {
+			for (let i = start; i < end; i++) {
+				rows.push({ kind: 'row', index: i, data: items[i] });
+			}
+			return rows;
+		}
+		for (let i = start; i < end; i++) {
+			const data = items[i];
+			const id = rowId ? rowId(data) : i;
+			if (pinnedRowIds.includes(id as Key)) {
+				rows.push({ kind: 'spacer', index: i });
+			} else {
+				rows.push({ kind: 'row', index: i, data });
+			}
+		}
+		return rows;
+	});
+
+	function rowKey(row: VisibleRow) {
+		return row.kind === 'spacer'
+			? `__dnd-pinned-spacer-${row.index}`
+			: (rowId?.(row.data) ?? row.index);
+	}
+
+	// Content-space offset of the row at `index`, used to position pinned rows absolutely within
+	// the contents element (which has `position: relative` and `padding-top: top`).
+	function contentOffset(index: number) {
+		let offset = 0;
+		for (let i = 0; i < index; i++) {
+			offset += heightMap[i] || itemHeight || average_height || 0;
+		}
+		return offset;
+	}
+
 	let mounted: boolean = $state(false);
 
 	let top = $state(0);
@@ -153,7 +211,7 @@
 	});
 
 	// whenever `items` changes, invalidate the current heightmap
-	run(() => {
+	$effect.pre(() => {
 		if (mounted) refresh(items, viewportHeight, itemHeight);
 	});
 </script>
@@ -166,13 +224,23 @@
 >
 	<svelte-virtual-list-contents
 		bind:this={contents}
-		style="padding-top: {top}px; padding-bottom: {bottom}px;"
+		style="position: relative; padding-top: {top}px; padding-bottom: {bottom}px;"
 	>
-		{#each visible as row (rowId?.(row.data) ?? row.index)}
-			<svelte-virtual-list-row>
+		{#each visible as row (rowKey(row))}
+			{#if row.kind === 'spacer'}
+				<div style="height: {(itemHeight ?? heightMap[row.index]) || 0}px;"></div>
+			{:else}
+				<svelte-virtual-list-row>
+					{@render children({ item: row.data, index: row.index })}
+				</svelte-virtual-list-row>
+			{/if}
+		{/each}
+
+		{#each pinned as row (rowId?.(row.data) ?? row.index)}
+			<div style="position: absolute; top: {contentOffset(row.index)}px; left: 0; right: 0;">
 				{#if children}{@render children({ item: row.data, index: row.index })}{:else}Missing
 					template{/if}
-			</svelte-virtual-list-row>
+			</div>
 		{/each}
 	</svelte-virtual-list-contents>
 </svelte-virtual-list-viewport>
@@ -189,8 +257,4 @@
 	svelte-virtual-list-row {
 		display: block;
 	}
-
-	/* svelte-virtual-list-row {
-		overflow: hidden;
-	} */
 </style>

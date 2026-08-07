@@ -390,7 +390,9 @@ export type MissingProfileAction = { type: 'locate'; newPath: string } | { type:
 
 export type Folder = {
 	id: string;
-	children: ListItem[];
+	name: string;
+	mods: Mod[];
+	isExpanded: boolean;
 };
 
 export type ListItem =

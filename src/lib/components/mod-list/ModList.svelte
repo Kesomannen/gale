@@ -22,7 +22,6 @@
 		item
 	}: Props = $props();
 
-	let listStart = $state(0);
 	let listEnd = $state(0);
 	let virtualList: VirtualList<Mod, string> | null = $state(null);
 
@@ -56,13 +55,7 @@
 		{@render placeholder?.()}
 	</div>
 {:else}
-	<VirtualList
-		items={mods}
-		rowId={(mod) => mod.uuid}
-		bind:this={virtualList}
-		bind:start={listStart}
-		bind:end={listEnd}
-	>
+	<VirtualList items={mods} rowId={(mod) => mod.uuid} bind:this={virtualList} bind:end={listEnd}>
 		{#snippet children({ item: mod, index })}
 			{@render item({
 				mod,

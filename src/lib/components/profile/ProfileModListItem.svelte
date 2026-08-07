@@ -4,42 +4,42 @@
 	import type { Snippet } from 'svelte';
 
 	type Props = {
-		mod: Mod;
+		id: string;
 		index: number;
 		reorderable?: boolean;
-		isGhost?: boolean;
-		dropLine?: 'before' | 'after' | null;
+		ghost?: boolean;
+		dropState?: 'before' | 'after' | 'folder' | null;
 		children?: Snippet;
 	};
 
-	let { mod, index, reorderable, isGhost = false, dropLine = null, children }: Props = $props();
+	let { id, index, reorderable, ghost = false, dropState = null, children }: Props = $props();
 
 	const sortable = createSortable({
 		get id() {
-			return mod.uuid;
+			return id;
 		},
 		get index() {
 			return index;
-		},
-		get data() {
-			return { mod };
 		},
 		get disabled() {
 			return !reorderable;
 		},
 		transition: {
-			duration: 100,
-			easing: 'cubic-bezier(0.2, 0, 0, 1)'
+			duration: 0
 		}
 	});
 </script>
 
 <div
+	{id}
 	{@attach sortable.attach}
-	id={mod.uuid}
-	class={['relative select-none', isGhost && 'opacity-55']}
+	class={[
+		'relative select-none',
+		ghost && 'opacity-55',
+		dropState === 'folder' && 'bg-accent-500/10 ring-accent-400 animate-pulse ring-2'
+	]}
 >
-	{#if dropLine === 'before'}
+	{#if dropState === 'before'}
 		<div
 			class="bg-accent-500/90 absolute inset-x-4 top-0 z-20 h-0.5 -translate-y-1/2 rounded-full"
 		></div>
@@ -47,7 +47,7 @@
 
 	{@render children?.()}
 
-	{#if dropLine === 'after'}
+	{#if dropState === 'after'}
 		<div
 			class="bg-accent-500/90 absolute inset-x-4 bottom-0 z-20 h-0.5 translate-y-1/2 rounded-full"
 		></div>

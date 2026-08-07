@@ -4,6 +4,8 @@
 	import type { MouseEventHandler } from 'svelte/elements';
 	import ModItemContext from '../mod-list/ModItemContext.svelte';
 	import ProfileModCard from './ProfileModCard.svelte';
+	import type { ClassValue } from 'clsx';
+	import ModSwitch from './ModSwitch.svelte';
 
 	type Props = {
 		mod: Mod;
@@ -11,30 +13,27 @@
 		selected: boolean;
 		contextItems: ModContextItem[];
 		locked: boolean;
+		class?: ClassValue;
 		ontoggle?: (newState: boolean) => void;
 		onclick?: MouseEventHandler<HTMLDivElement>;
 	};
 
-	let { mod, index, selected, contextItems, locked, ontoggle, onclick }: Props = $props();
+	let {
+		mod,
+		index,
+		selected,
+		contextItems,
+		locked,
+		class: classProp,
+		ontoggle,
+		onclick
+	}: Props = $props();
 </script>
 
 <ModItemContext {mod} {locked} {contextItems}>
-	<ProfileModCard {mod} {selected} {index} {onclick}>
+	<ProfileModCard {mod} {selected} {index} {onclick} class={classProp}>
 		{#snippet trailing()}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div class="contents" onclick={(evt) => evt.stopPropagation()}>
-				<Switch.Root
-					disabled={locked}
-					checked={mod.enabled ?? true}
-					onCheckedChange={ontoggle}
-					class="group data-[state=checked]:bg-accent-700 data-[state=checked]:hover:bg-accent-700 bg-primary-600 hover:bg-primary-500 mr-1 flex h-6 w-12 shrink-0 rounded-full px-1 py-1"
-				>
-					<Switch.Thumb
-						class="data-[state=checked]:bg-accent-200 bg-primary-300 pointer-events-none h-full w-4 rounded-full transition-transform duration-75 ease-out data-[state=checked]:translate-x-6"
-					/>
-				</Switch.Root>
-			</div>
+			<ModSwitch enabled={mod.enabled ?? true} {locked} {ontoggle} />
 		{/snippet}
 	</ProfileModCard>
 </ModItemContext>

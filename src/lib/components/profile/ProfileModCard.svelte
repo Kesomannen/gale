@@ -30,7 +30,7 @@
 		// can't use tailwind's odd: because the items are wrapped the virtual list item elements
 		selected ? 'bg-primary-700' : index % 2 === 1 && 'bg-primary-900/30',
 		selected ? 'border-primary-500' : 'hover:bg-primary-700 border-transparent',
-		'group text-primary-300 mx-2 grid grid-cols-[auto_3fr_1fr_auto] items-center rounded-lg border p-2 lg:grid-cols-[auto_3fr_1fr_1fr_auto]'
+		'group text-primary-300 grid grid-cols-[auto_3fr_1fr_auto] items-center rounded-lg border p-2 lg:grid-cols-[auto_3fr_1fr_1fr_auto]'
 	]}
 >
 	{#if leading}
