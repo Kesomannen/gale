@@ -189,8 +189,4 @@
 	svelte-virtual-list-row {
 		display: block;
 	}
-
-	svelte-virtual-list-row {
-		overflow: hidden;
-	}
 </style>
