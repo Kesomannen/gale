@@ -284,6 +284,7 @@ export type ProfileQuery = {
 	totalModCount: number;
 	unknownMods: Dependant[];
 	updates: AvailableUpdate[];
+	layout: LayoutItem[];
 };
 
 export type ImportData =
@@ -369,12 +370,12 @@ export type ContextItem = {
 	children?: ContextItem[];
 };
 
-export type ModContextItem = {
+export type ModContextItem<T> = {
 	label: string;
 	icon?: string;
-	showFor?: (mod: Mod, locked: boolean) => boolean;
-	onclick: (mod: Mod) => void;
-	children?: (mod: Mod) => ModContextItem[];
+	showFor?: (mod: T, locked: boolean) => boolean;
+	onclick: (mod: T) => void;
+	children?: (mod: T) => ModContextItem<T>[];
 };
 
 export type Zoom = { factor: number } | { delta: number };
@@ -395,7 +396,11 @@ export type Folder = {
 	isExpanded: boolean;
 };
 
-export type ListItem =
+export type LayoutItem =
+	| { type: 'mod'; uuid: string }
+	| { type: 'folder'; id: string; name: string; mods: string[] };
+
+export type ProfileListItem =
 	| {
 			type: 'mod';
 			mod: Mod;

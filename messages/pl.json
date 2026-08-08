@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "Odinstaluj",
 	"page_dialog_noDependants": "Nie znaleziono modów zależnych",
 	"page_dialog_title": "Mody zależne od {name}",
+	"page_folderContextDelete": "Usuń folder",
+	"page_folderContextRename": "Zmień nazwę folderu",
+	"page_folderNew": "Nowy folder",
 	"page_modContextItem_changeVersion": "Zmień wersję",
 	"page_modContextItem_donate": "Wesprzyj (Donate)",
 	"page_modContextItem_openFolder": "Otwórz folder",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "Aktualizować wszystko?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Dostępna jest jedna aktualizacja.",
 				"countPlural=other": "Dostępnych jest {count} aktualizacji."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Aktualizuj mody",

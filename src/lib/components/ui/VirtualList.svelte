@@ -62,14 +62,23 @@
 	type VisibleRow = { kind: 'row'; index: number; data: T } | { kind: 'spacer'; index: number };
 	let visible: VisibleRow[] = $derived.by(() => {
 		const rows: VisibleRow[] = [];
-		if (pinnedRowIds.length === 0) {
-			for (let i = start; i < end; i++) {
-				rows.push({ kind: 'row', index: i, data: items[i] });
-			}
-			return rows;
-		}
-		for (let i = start; i < end; i++) {
+
+		// `start`/`end` are recomputed asynchronously and can lag behind `items` when
+		// the list is replaced with a shorter one mid-scroll or mid-drag. Clamp the
+		// window to the actual array bounds and skip missing rows so the children
+		// snippet is never rendered with an undefined item.
+		const first = Math.min(Math.max(start, 0), items.length);
+		const last = Math.min(end, items.length);
+
+		for (let i = first; i < last; i++) {
 			const data = items[i];
+			if (data === undefined) continue;
+
+			if (pinnedRowIds.length === 0) {
+				rows.push({ kind: 'row', index: i, data });
+				continue;
+			}
+
 			const id = rowId ? rowId(data) : i;
 			if (pinnedRowIds.includes(id as Key)) {
 				rows.push({ kind: 'spacer', index: i });
@@ -77,6 +86,7 @@
 				rows.push({ kind: 'row', index: i, data });
 			}
 		}
+
 		return rows;
 	});
 
@@ -103,9 +113,18 @@
 	let average_height: number;
 
 	async function refresh(items: T[], viewportHeight: number, itemHeight: number | undefined) {
-		const { scrollTop } = viewport;
-
 		await tick(); // wait until the DOM is up to date
+
+		// If the list shrank below the current scroll window, `start` can point past
+		// the new array's end, leaving `end`/`bottom` stale. Reset the window so the
+		// last remaining row is shown and it gets recomputed from scratch.
+		if (start > items.length) {
+			start = Math.max(0, items.length - 1);
+			top = 0;
+			viewport.scrollTop = 0;
+		}
+
+		const { scrollTop } = viewport;
 
 		let contentHeight = top - scrollTop;
 		let i = start;

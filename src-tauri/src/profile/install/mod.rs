@@ -195,6 +195,8 @@ impl ModInstall {
             }
         };
 
+        profile.reconcile_layout();
+
         if !enabled {
             profile.force_toggle_mod(uuid)?;
         }

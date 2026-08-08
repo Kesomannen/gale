@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "卸载",
 	"page_dialog_noDependants": "没有反向依赖项",
 	"page_dialog_title": "{name} 的反向依赖项",
+	"page_folderContextDelete": "删除文件夹",
+	"page_folderContextRename": "重命名文件夹",
+	"page_folderNew": "新建文件夹",
 	"page_modContextItem_changeVersion": "切换版本",
 	"page_modContextItem_donate": "赞助",
 	"page_modContextItem_openFolder": "打开文件夹",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "更新所有?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一个更新可用。",
 				"countPlural=other": "有 {count} 个更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模组",

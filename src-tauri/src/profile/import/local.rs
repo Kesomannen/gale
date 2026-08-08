@@ -115,6 +115,7 @@ pub async fn import_local_mod(
     }
 
     profile.mods.push(ProfileMod::new_local(local_mod));
+    profile.reconcile_layout();
 
     profile.save(app, true)?;
 

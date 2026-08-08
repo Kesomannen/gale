@@ -115,6 +115,7 @@ pub struct ProfileData {
     pub path: String,
     pub game_slug: String,
     pub mods: Vec<profile::ProfileMod>,
+    pub layout: Vec<profile::layout::LayoutItem>,
     pub modpack: Option<profile::export::modpack::ModpackArgs>,
     pub ignored_updates: Option<HashSet<Uuid>>,
     pub sync_data: Option<profile::sync::SyncProfileData>,
@@ -212,7 +213,7 @@ impl Db {
 
         let mut profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates FROM profiles",
+                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates, layout FROM profiles",
             )?
             .query_map((), |row| {
                 let mut mods : Vec<profile::ProfileMod> = map_json_row(row, 4)?;
@@ -231,6 +232,7 @@ impl Db {
                     path: row.get(2)?,
                     game_slug: row.get(3)?,
                     mods,
+                    layout: map_json_row(row, 10)?,
                     modpack: map_json_option_row(row, 5)?,
                     ignored_updates: map_json_option_row(row, 6)?,
                     sync_data: map_json_option_row(row, 7)?,
@@ -343,12 +345,13 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates, layout) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
             let mods = serde_json::to_string(&profile.mods)?;
+            let layout = serde_json::to_string(&profile.layout)?;
             let modpack = profile
                 .modpack
                 .as_ref()
@@ -372,7 +375,8 @@ impl Db {
                 ignored_updates,
                 sync_data,
                 profile.custom_args,
-                ignored_package_updates
+                ignored_package_updates,
+                layout
             ])?;
         }
 

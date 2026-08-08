@@ -101,6 +101,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
                 path: path.to_string_lossy().into_owned(),
                 game_slug: game.slug.to_string(),
                 mods: profile_data.mods.into_iter().map_into().collect(),
+                layout: Vec::new(),
                 modpack: profile_data.modpack.map(Into::into),
                 ignored_updates: Some(profile_data.ignored_updates),
                 sync_data: None,

@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "解除安裝",
 	"page_dialog_noDependants": "找不到依賴項目",
 	"page_dialog_title": "{name} 的依賴項目",
+	"page_folderContextDelete": "刪除資料夾",
+	"page_folderContextRename": "重新命名資料夾",
+	"page_folderNew": "新建資料夾",
 	"page_modContextItem_changeVersion": "變更版本",
 	"page_modContextItem_donate": "贊助",
 	"page_modContextItem_openFolder": "開啟資料夾",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一個更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模組",

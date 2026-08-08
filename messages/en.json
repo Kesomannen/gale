@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "Uninstall",
 	"page_dialog_noDependants": "No dependants found",
 	"page_dialog_title": "Dependants of {name}",
+	"page_folderContextDelete": "Delete folder",
+	"page_folderContextRename": "Rename folder",
+	"page_folderNew": "New Folder",
 	"page_modContextItem_changeVersion": "Change version",
 	"page_modContextItem_donate": "Donate",
 	"page_modContextItem_openFolder": "Open folder",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "Update all",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",

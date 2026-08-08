@@ -18,6 +18,7 @@ use crate::{
     db::{self, Db},
     game::{self, Game, mod_loader::ModLoader},
     prefs::Prefs,
+    profile::layout::LayoutItem,
     state::ManagerExt,
     thunderstore::{self, Backend, BorrowedMod, ModId, Thunderstore, VersionIdent},
     util::fs::PathExt,
@@ -28,15 +29,14 @@ pub mod export;
 pub mod import;
 pub mod install;
 pub mod launch;
+pub mod layout;
 pub mod sync;
 pub mod update;
 
 mod actions;
 mod query;
 
-pub fn setup(data: db::SaveData, prefs: &Prefs, db: &Db, app: &AppHandle) -> Result<ModManager> {
-    actions::setup(app)?;
-
+pub fn setup(data: db::SaveData, prefs: &Prefs, db: &Db) -> Result<ModManager> {
     ModManager::create(data, prefs, db)
 }
 
@@ -69,6 +69,9 @@ pub struct Profile {
     pub name: String,
     pub path: PathBuf,
     pub mods: Vec<ProfileMod>,
+    /// The top-level layout of the profile mod list: an ordered sequence
+    /// of loose mods and folders (which may be empty).
+    pub layout: Vec<LayoutItem>,
     pub game: Game,
     pub ignored_version_updates: HashSet<Uuid>,
     pub ignored_package_updates: HashSet<Uuid>,
@@ -597,12 +600,13 @@ impl ModManager {
                 continue;
             };
 
-            let profile = Profile {
+            let mut profile = Profile {
                 path,
                 game,
                 id: saved_profile.id,
                 name: saved_profile.name,
                 mods: saved_profile.mods,
+                layout: saved_profile.layout,
                 modpack: saved_profile.modpack,
                 ignored_version_updates: saved_profile.ignored_updates.unwrap_or_default(),
                 ignored_package_updates: saved_profile.ignored_package_updates.unwrap_or_default(),
@@ -612,6 +616,8 @@ impl ModManager {
                 custom_args: saved_profile.custom_args,
                 missing,
             };
+
+            profile.reconcile_layout();
 
             manager
                 .ensure_game(game, false, prefs, db)?

@@ -10,7 +10,7 @@
 		mod: Mod;
 		selected: boolean;
 		locked: boolean;
-		contextItems: ModContextItem[];
+		contextItems: ModContextItem<Mod>[];
 		onclick?: MouseEventHandler<HTMLDivElement>;
 		oninstall?: () => Promise<void>;
 	};
@@ -20,7 +20,7 @@
 	let loading = $state(false);
 </script>
 
-<ModItemWithContext {mod} {locked} {contextItems}>
+<ModItemWithContext id={mod.uuid} subject={mod} {locked} {contextItems}>
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		{onclick}

@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "Удалить",
 	"page_dialog_noDependants": "Иждивенцев не обнаружено",
 	"page_dialog_title": "Зависимости {name}",
+	"page_folderContextDelete": "Удалить папку",
+	"page_folderContextRename": "Переименовать папку",
+	"page_folderNew": "Новая папка",
 	"page_modContextItem_changeVersion": "Изменить версию",
 	"page_modContextItem_donate": "Пожертвовать",
 	"page_modContextItem_openFolder": "Открыть папку",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "Обновить все?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Доступно одно обновление.",
 				"countPlural=other": "Доступны обновления {count} ."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Обновить моды",

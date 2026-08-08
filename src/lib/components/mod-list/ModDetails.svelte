@@ -28,7 +28,7 @@
 
 	type Props = {
 		mod: Mod;
-		contextItems?: ModContextItem[];
+		contextItems?: ModContextItem<Mod>[];
 		locked: boolean;
 		onclose: () => void;
 		children?: Snippet;
@@ -84,7 +84,7 @@
 		>
 			<Icon class="text-primary-200 text-3xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
-		<ModContextMenuContent {mod} {locked} items={allContextItems} type="dropdown" />
+		<ModContextMenuContent subject={mod} {locked} items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
 
 	<div class="-mr-3 grow overflow-x-hidden overflow-y-auto pr-3 pb-2">

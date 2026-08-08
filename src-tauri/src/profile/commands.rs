@@ -11,7 +11,7 @@ use uuid::Uuid;
 use super::{Dependant, Profile, actions::ActionResult};
 use crate::{
     game::{self, Game, platform::Platform},
-    profile::FrontendManagedGame,
+    profile::{FrontendManagedGame, layout::LayoutItem},
     state::ManagerExt,
     thunderstore::{
         Backend, BorrowedMod, FrontendProfileMod, ModId, Thunderstore, VersionIdent,
@@ -151,6 +151,7 @@ pub struct ProfileQuery {
     total_mod_count: usize,
     updates: Vec<FrontendAvailableUpdate>,
     unknown_mods: Vec<Dependant>,
+    layout: Vec<LayoutItem>,
 }
 
 #[command]
@@ -196,6 +197,7 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
         total_mod_count,
         updates,
         unknown_mods,
+        layout: profile.layout.clone(),
     })
 }
 
@@ -304,7 +306,7 @@ pub fn force_remove_mods(uuids: Vec<Uuid>, app: AppHandle) -> Result<()> {
 
     let profile = manager.active_profile_mut();
     for package_uuid in uuids {
-        profile.force_remove_mod(package_uuid)?;
+        profile.force_remove_mod_with_layout(package_uuid)?;
     }
 
     profile.save(&app, true)?;
@@ -336,6 +338,43 @@ pub fn set_all_mods_state(enable: bool, app: AppHandle) -> Result<usize> {
 }
 
 #[command]
+pub fn set_folder_mods_state(folder_id: Uuid, enable: bool, app: AppHandle) -> Result<usize> {
+    let mut manager = app.lock_manager();
+
+    let profile = manager.active_profile_mut();
+
+    let folder = profile
+        .folders()
+        .find(|folder| folder.id == folder_id)
+        .ok_or_eyre("folder not found in profile")?;
+
+    let mut count = 0;
+    for uuid in folder.mods.clone() {
+        if let Ok(profile_mod) = profile.get_mod(uuid) {
+            if profile_mod.enabled != enable {
+                profile.force_toggle_mod(uuid)?;
+                count += 1;
+            }
+        }
+    }
+
+    profile.save(&app, true)?;
+
+    Ok(count)
+}
+
+#[command]
+pub fn set_profile_layout(items: Vec<LayoutItem>, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+
+    let profile = manager.active_profile_mut();
+    profile.set_layout(items)?;
+    profile.save(&app, true)?;
+
+    Ok(())
+}
+
+#[command]
 pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
     let mut manager = app.lock_manager();
 
@@ -350,7 +389,7 @@ pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
     let len = uuids.len();
 
     for uuid in uuids {
-        profile.force_remove_mod(uuid)?;
+        profile.force_remove_mod_with_layout(uuid)?;
     }
 
     profile.save(&app, true)?;

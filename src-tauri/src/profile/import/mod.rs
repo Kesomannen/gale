@@ -289,7 +289,7 @@ fn incremental_update(
         // remove all extra mods
         let to_remove = current_ids.difference(&new_ids);
         for mod_id in to_remove {
-            profile.force_remove_mod(mod_id.package_uuid)?;
+            profile.force_remove_mod_with_layout(mod_id.package_uuid)?;
         }
     }
 

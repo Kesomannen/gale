@@ -375,7 +375,7 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
 
             for installed in batch.mods.iter().take(count) {
                 profile
-                    .force_remove_mod(installed.uuid())
+                    .force_remove_mod_with_layout(installed.uuid())
                     .unwrap_or_else(|err| {
                         warn!(
                             ident = %installed.ident,

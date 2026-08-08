@@ -6,18 +6,15 @@ use std::{
 
 use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, bail, ensure};
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Listener};
-use tracing::{debug, info, trace};
+use serde::Serialize;
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use super::{Dependant, ManagedGame, Profile, ProfileMod, import, install::PackageInstaller};
 use crate::{
     config::ConfigCache,
     db::Db,
-    logger,
     profile::import::ImportOptions,
-    state::ManagerExt,
     thunderstore::Thunderstore,
     util::{
         self,
@@ -25,17 +22,6 @@ use crate::{
         fs::{Overwrite, UseLinks},
     },
 };
-
-pub fn setup(app: &AppHandle) -> Result<()> {
-    let handle = app.to_owned();
-    app.listen("reorder_mod", move |event| {
-        if let Err(err) = handle_reorder_event(event, &handle) {
-            logger::log_webview_err("Failed to reorder mod", err, &handle);
-        }
-    });
-
-    Ok(())
-}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
@@ -82,10 +68,14 @@ impl Profile {
             }
         }
 
-        self.force_remove_mod(uuid)?;
+        self.force_remove_mod_with_layout(uuid)?;
         Ok(ActionResult::Done)
     }
 
+    /// Removes a mod's files and its entry from `mods`.
+    ///
+    /// Note that this does not touch the layout: callers that perform a real
+    /// uninstall are expected to call [`Self::force_remove_mod_with_layout`] instead.
     pub fn force_remove_mod(&mut self, uuid: Uuid) -> Result<()> {
         let index = self.index_of(uuid)?;
         let profile_mod = &self.mods[index];
@@ -102,6 +92,12 @@ impl Profile {
 
         self.mods.remove(index);
 
+        Ok(())
+    }
+
+    pub fn force_remove_mod_with_layout(&mut self, uuid: Uuid) -> Result<()> {
+        self.force_remove_mod(uuid)?;
+        self.remove_from_layout(uuid);
         Ok(())
     }
 
@@ -210,46 +206,6 @@ impl Profile {
     fn installer_for(&self, profile_mod: &ProfileMod) -> Box<dyn PackageInstaller> {
         self.game.mod_loader.installer_for(&profile_mod.full_name())
     }
-
-    fn reorder_mod(&mut self, uuid: Uuid, delta: i32) -> Result<()> {
-        let index = self
-            .mods
-            .iter()
-            .position(|m| m.uuid() == uuid)
-            .ok_or_eyre("mod not found in profile")?;
-
-        let target = (index as i32 + delta).clamp(0, self.mods.len() as i32 - 1) as usize;
-        let profile_mod = self.mods.remove(index);
-
-        trace!(
-            profile = %self.name,
-            full_name = %profile_mod.full_name(),
-            from = index,
-            to = target,
-            "reordering mod",
-        );
-
-        self.mods.insert(target, profile_mod);
-
-        Ok(())
-    }
-}
-
-fn handle_reorder_event(event: tauri::Event, app: &AppHandle) -> Result<()> {
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct Payload {
-        uuid: Uuid,
-        delta: i32,
-    }
-
-    let Payload { uuid, delta } = serde_json::from_str(event.payload())?;
-
-    let mut manager = app.lock_manager();
-    manager.active_profile_mut().reorder_mod(uuid, delta)?;
-    manager.save_active_profile(app, true)?;
-
-    Ok(())
 }
 
 impl ManagedGame {
@@ -321,6 +277,7 @@ impl ManagedGame {
             name,
             path,
             mods: Vec::new(),
+            layout: Vec::new(),
             game: self.game,
             ignored_version_updates: HashSet::new(),
             config_cache: ConfigCache::default(),
@@ -442,11 +399,13 @@ impl ManagedGame {
         .context("failed to copy profile directory")?;
 
         let mods = old_profile.mods.clone();
+        let layout = old_profile.layout.clone();
         let ignored_updates = old_profile.ignored_version_updates.clone();
         let custom_args = old_profile.custom_args.clone();
 
         let new_profile = self.active_profile_mut();
         new_profile.mods = mods;
+        new_profile.layout = layout;
         new_profile.ignored_version_updates = ignored_updates;
         new_profile.custom_args = custom_args;
 

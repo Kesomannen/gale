@@ -36,12 +36,13 @@
 	class={[
 		'relative select-none',
 		ghost && 'opacity-55',
-		dropState === 'folder' && 'bg-accent-500/10 ring-accent-400 animate-pulse ring-2'
+		dropState === 'folder' &&
+			'bg-accent-600/10 ring-accent-600 animate-pulse rounded-lg ring-2 ring-inset'
 	]}
 >
 	{#if dropState === 'before'}
 		<div
-			class="bg-accent-500/90 absolute inset-x-4 top-0 z-20 h-0.5 -translate-y-1/2 rounded-full"
+			class="bg-accent-600 absolute inset-x-4 top-0 z-20 h-0.5 -translate-y-1/2 rounded-full"
 		></div>
 	{/if}
 
@@ -49,7 +50,7 @@
 
 	{#if dropState === 'after'}
 		<div
-			class="bg-accent-500/90 absolute inset-x-4 bottom-0 z-20 h-0.5 translate-y-1/2 rounded-full"
+			class="bg-accent-600 absolute inset-x-4 bottom-0 z-20 h-0.5 translate-y-1/2 rounded-full"
 		></div>
 	{/if}
 </div>

@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	import { ContextMenu } from 'bits-ui';
 	import ModContextMenuContent from './ModContextMenuContent.svelte';
 	import type { Mod, ModContextItem } from '$lib/types';
@@ -6,18 +6,19 @@
 	import { activeContextMenu } from '$lib/context';
 
 	type Props = {
-		mod: Mod;
+		id: string;
+		subject: T;
 		locked: boolean;
-		contextItems: ModContextItem[];
+		contextItems: ModContextItem<T>[];
 		children?: Snippet;
 	};
 
-	let { mod, children, locked, contextItems }: Props = $props();
+	let { id, subject, children, locked, contextItems }: Props = $props();
 
 	let contextMenuOpen = $state(false);
 
 	$effect(() => {
-		if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
+		if ($activeContextMenu !== null && $activeContextMenu !== id) {
 			contextMenuOpen = false;
 		}
 	});
@@ -27,7 +28,7 @@
 	bind:open={contextMenuOpen}
 	onOpenChange={(open) => {
 		if (open) {
-			$activeContextMenu = mod.uuid;
+			$activeContextMenu = id;
 		} else {
 			$activeContextMenu = null;
 		}
@@ -36,5 +37,5 @@
 	<ContextMenu.Trigger class="contents">
 		{@render children?.()}
 	</ContextMenu.Trigger>
-	<ModContextMenuContent type="context" {locked} {mod} items={contextItems} />
+	<ModContextMenuContent type="context" {locked} {subject} items={contextItems} />
 </ContextMenu.Root>

@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "Désinstaller",
 	"page_dialog_noDependants": "Aucun mod dépendant trouvé",
 	"page_dialog_title": "Dépendants de {name}",
+	"page_folderContextDelete": "Supprimer le dossier",
+	"page_folderContextRename": "Renommer le dossier",
+	"page_folderNew": "Nouveau dossier",
 	"page_modContextItem_changeVersion": "Changer de version",
 	"page_modContextItem_donate": "Faire un don",
 	"page_modContextItem_openFolder": "Ouvrir le dossier",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "Tout mettre à jour ?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Une mise à jour est disponible.",
 				"countPlural=other": "Des mises à jour {count} sont disponibles."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Mettre à jour les mods",

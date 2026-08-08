@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "Desinstalar",
 	"page_dialog_noDependants": "Nenhum dependente encontrado",
 	"page_dialog_title": "Dependentes de {name}",
+	"page_folderContextDelete": "Excluir pasta",
+	"page_folderContextRename": "Renomear pasta",
+	"page_folderNew": "Nova pasta",
 	"page_modContextItem_changeVersion": "Alterar versão",
 	"page_modContextItem_donate": "Doar",
 	"page_modContextItem_openFolder": "Abrir pasta",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "Atualizar tudo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Há uma atualização disponível.",
 				"countPlural=other": "Existem atualizações disponíveis {count} ."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Atualizar mods",

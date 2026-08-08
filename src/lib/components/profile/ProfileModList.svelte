@@ -2,20 +2,24 @@
 	import { DragDropProvider, DragOverlay } from '@dnd-kit/svelte';
 	import { isSortable } from '@dnd-kit/svelte/sortable';
 	import { PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
-	import type { Folder, ListItem, Mod, ModContextItem } from '$lib/types';
+	import type { Folder, ProfileListItem, Mod, ModContextItem } from '$lib/types';
 	import VirtualList from '../ui/VirtualList.svelte';
 	import ProfileModCard from './ProfileModCard.svelte';
 	import ProfileModListFolderItem from './ProfileModListFolderItem.svelte';
 	import ProfileModListItem from './ProfileModListItem.svelte';
 	import ProfileModCardWithContext from './ProfileModCardWithContext.svelte';
+	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
-		items: ListItem[];
+		items: ProfileListItem[];
 		reorderable?: boolean;
 		locked?: boolean;
 		selectedMod: Mod | null;
 		onModToggle: (mod: Mod, newState: boolean) => void;
-		modContextItems: ModContextItem[];
+		onFolderToggle?: (folderId: string, newState: boolean) => void;
+		modContextItems: ModContextItem<Mod>[];
+		folderContextItems: ModContextItem<Folder>[];
+		onLayoutChange?: (items: ProfileListItem[]) => void;
 	};
 
 	let {
@@ -24,7 +28,10 @@
 		locked = false,
 		selectedMod = $bindable(),
 		onModToggle,
-		modContextItems
+		onFolderToggle,
+		modContextItems,
+		folderContextItems,
+		onLayoutChange
 	}: Props = $props();
 
 	type DragIdentifier = string | number;
@@ -38,11 +45,11 @@
 	let targetIndex = $state<number | null>(null);
 	let dropState = $state<DropState | null>(null);
 
-	function itemId(item: ListItem): string {
+	function itemId(item: ProfileListItem): string {
 		return item.type === 'folder' ? item.folder.id : item.mod.uuid;
 	}
 
-	function itemByIndex(items: ListItem[], index: number): ListItem | null {
+	function itemByIndex(items: ProfileListItem[], index: number): ProfileListItem | null {
 		if (index < 0) {
 			return null;
 		}
@@ -68,40 +75,23 @@
 		return { type: 'mod', mod };
 	}
 
-	function isTopLevelIndex(items: ListItem[], index: number): boolean {
+	function isTopLevelIndex(items: ProfileListItem[], index: number): boolean {
 		const { folderIndex } = unwrapIndex(items, index);
 		return folderIndex === null;
 	}
 
 	function unwrapIndex(
-		items: ListItem[],
+		items: ProfileListItem[],
 		index: number
 	): { folderIndex: number | null; innerIndex: number } {
-		if (index < items.length) {
+		if (index <= items.length) {
 			return { folderIndex: null, innerIndex: index };
 		}
 
-		index -= items.length;
+		index -= items.length + 1;
 		const folderIndex = Math.floor(index / items.length);
 		const innerIndex = index % items.length;
 		return { folderIndex, innerIndex };
-	}
-
-	function findItemWithId(id: DragIdentifier): ListItem | undefined {
-		for (const item of items) {
-			if (itemId(item) === id) {
-				return item;
-			}
-
-			if (item.type !== 'folder') {
-				continue;
-			}
-
-			const found = item.folder.mods.find((mod) => mod.uuid === id);
-			if (found) {
-				return { type: 'mod', mod: found };
-			}
-		}
 	}
 
 	function resetDragState() {
@@ -156,7 +146,7 @@
 		dropState = percentageY < 0.5 ? 'before' : 'after';
 	}
 
-	function insertItem(items: ListItem[], item: ListItem, index: number) {
+	function insertItem(items: ProfileListItem[], item: ProfileListItem, index: number) {
 		const { folderIndex, innerIndex } = unwrapIndex(items, index);
 
 		if (folderIndex === null) {
@@ -177,13 +167,15 @@
 		folderItem.folder.mods.splice(innerIndex, 0, item.mod);
 	}
 
-	function removeItem(items: ListItem[], index: number): ListItem | null {
+	function removeItem(items: ProfileListItem[], index: number): ProfileListItem | null {
 		const { folderIndex, innerIndex } = unwrapIndex(items, index);
 
 		if (folderIndex === null) {
+			// top-level item
 			return items.splice(innerIndex, 1)[0] ?? null;
 		}
 
+		// mod in a folder; first find the folder item
 		const folderItem = items[folderIndex];
 		if (!folderItem || folderItem.type !== 'folder') {
 			return null;
@@ -191,18 +183,6 @@
 
 		const removed = folderItem.folder.mods.splice(innerIndex, 1)[0] ?? null;
 		return removed ? { type: 'mod', mod: removed } : null;
-	}
-
-	function clearEmptyFolders(items: ListItem[]) {
-		let i = 0;
-		while (i < items.length) {
-			const item = items[i];
-			if (item.type === 'folder' && item.folder.mods.length === 0) {
-				items.splice(i, 1);
-			} else {
-				i++;
-			}
-		}
 	}
 
 	function onDragEnd(event: any) {
@@ -250,7 +230,7 @@
 
 				const folder: Folder = {
 					id: crypto.randomUUID(),
-					name: 'New Folder',
+					name: m.page_folderNew(),
 					mods: [dragged.mod, target.mod],
 					isExpanded: false
 				};
@@ -266,14 +246,11 @@
 			}
 
 			insertItem(newItems, dragged, toIndex);
-
-			// onmove?.(dragged, fromIndex, toIndex);
 		}
 
-		// we wait to clear empty folders until we are done to not shift any indices
-		clearEmptyFolders(newItems);
 		items = newItems;
 
+		onLayoutChange?.(items);
 		resetDragState();
 	}
 
@@ -323,14 +300,17 @@
 		{#snippet children({ item, index: outerIndex })}
 			{#if item.type === 'folder'}
 				<ProfileModListFolderItem
+					bind:folder={item.folder}
 					{reorderable}
+					{locked}
 					index={outerIndex}
 					ghost={draggingId === item.folder.id}
 					dropState={getDropState(outerIndex)}
-					bind:folder={item.folder}
+					contextItems={folderContextItems}
+					ontoggle={(newState) => onFolderToggle?.(item.folder.id, newState)}
 				>
 					{#snippet mod({ mod, index: innerIndex })}
-						{@render modItem((outerIndex + 1) * items.length + innerIndex, mod)}
+						{@render modItem((outerIndex + 1) * items.length + innerIndex + 1, mod)}
 					{/snippet}
 				</ProfileModListFolderItem>
 			{:else}
@@ -351,28 +331,22 @@
 </DragDropProvider>
 
 {#snippet modItem(index: number, mod: Mod)}
-	<ProfileModListItem
+	<ProfileModCardWithContext
+		{mod}
+		{locked}
 		{index}
 		{reorderable}
-		id={mod.uuid}
-		ghost={draggingId === mod.uuid}
 		dropState={getDropState(index)}
-	>
-		<ProfileModCardWithContext
-			{mod}
-			{locked}
-			{index}
-			contextItems={modContextItems}
-			class="mr-2"
-			selected={selectedMod?.uuid === mod.uuid}
-			ontoggle={(newState) => onModToggle(mod, newState)}
-			onclick={() => {
-				if (selectedMod?.uuid === mod.uuid) {
-					selectedMod = null;
-				} else {
-					selectedMod = mod;
-				}
-			}}
-		/>
-	</ProfileModListItem>
+		contextItems={modContextItems}
+		ghost={draggingId === mod.uuid}
+		selected={selectedMod?.uuid === mod.uuid}
+		ontoggle={(newState) => onModToggle(mod, newState)}
+		onclick={() => {
+			if (selectedMod?.uuid === mod.uuid) {
+				selectedMod = null;
+			} else {
+				selectedMod = mod;
+			}
+		}}
+	/>
 {/snippet}

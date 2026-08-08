@@ -21,7 +21,7 @@
 	import { shouldWarnForeignDownload } from '$lib/util';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
-	const contextItems: ModContextItem[] = [
+	const contextItems: ModContextItem<Mod>[] = [
 		{
 			label: m.browse_contextItem_hideMod(),
 			icon: 'mdi:eye-off',

@@ -139,6 +139,8 @@ pub fn run() {
             profile::commands::toggle_mod,
             profile::commands::force_toggle_mods,
             profile::commands::set_all_mods_state,
+            profile::commands::set_folder_mods_state,
+            profile::commands::set_profile_layout,
             profile::commands::remove_disabled_mods,
             profile::commands::open_profile_dir,
             profile::commands::open_mod_dir,

@@ -377,6 +377,9 @@
 	"page_dependantsDialog_uninstall_verb": "Desinstalar",
 	"page_dialog_noDependants": "No se han encontrado mods dependientes",
 	"page_dialog_title": "Dependen de {name}",
+	"page_folderContextDelete": "Eliminar carpeta",
+	"page_folderContextRename": "Cambiar el nombre de la carpeta",
+	"page_folderNew": "Nueva carpeta",
 	"page_modContextItem_changeVersion": "Cambiar versión",
 	"page_modContextItem_donate": "Donar",
 	"page_modContextItem_openFolder": "Abrir carpeta",
@@ -492,12 +495,17 @@
 	"updateAllBanner_button": "¿Actualizar todo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Hay una actualización disponible.",
 				"countPlural=other": "Hay {count} actualizaciones disponibles."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Actualizar mods",

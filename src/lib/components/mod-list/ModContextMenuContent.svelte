@@ -1,27 +1,27 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	import type { ContextItem, Mod, ModContextItem } from '$lib/types';
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
 
 	type Props = {
-		mod: Mod;
-		items: ModContextItem[];
+		subject: T;
+		items: ModContextItem<T>[];
 		type: 'dropdown' | 'context';
 		locked: boolean;
 	};
 
-	let { mod, items, type, locked }: Props = $props();
+	let { subject, items, type, locked }: Props = $props();
 
-	function mapItem(modItem: ModContextItem): ContextItem | null {
-		if (modItem.showFor && !modItem.showFor(mod, locked)) {
+	function mapItem(modItem: ModContextItem<T>): ContextItem | null {
+		if (modItem.showFor && !modItem.showFor(subject, locked)) {
 			return null;
 		}
 
 		return {
 			label: modItem.label,
 			icon: modItem.icon,
-			onclick: () => modItem.onclick(mod),
+			onclick: () => modItem.onclick(subject),
 			children: modItem
-				.children?.(mod)
+				.children?.(subject)
 				?.map(mapItem)
 				.filter((item) => item != null)
 		};
