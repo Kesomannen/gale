@@ -740,7 +740,8 @@
 				"id": 3844970,
 				"dirName": "Burglin' Gnomes"
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Carrier Deck",
