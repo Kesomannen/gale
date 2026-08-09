@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- German translation (thanks Henk deBrook)
+
 ## 1.20.0 (2026-08-07)
 
 ### Added

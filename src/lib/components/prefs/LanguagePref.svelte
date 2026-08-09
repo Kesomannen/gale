@@ -5,10 +5,12 @@
 	import { m } from '$lib/paraglide/messages';
 	import { locales } from '$lib/paraglide/runtime';
 
-	const items = locales.map((option) => ({
-		label: languageTitle[option],
-		value: option
-	}));
+	const items = locales
+		.map((option) => ({
+			label: languageTitle[option],
+			value: option
+		}))
+		.sort((a, b) => a.label.localeCompare(b.label));
 
 	type Props = {
 		value: string;
