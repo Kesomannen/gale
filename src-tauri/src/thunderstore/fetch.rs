@@ -6,16 +6,33 @@ use std::{
 };
 
 use bytes::Bytes;
-use eyre::{Context, Result};
+use eyre::{Context, Report, Result};
 use flate2::read::GzDecoder;
+use futures_util::{TryFutureExt, future};
 use indexmap::IndexMap;
-use tauri::{AppHandle, Emitter};
+use serde::Serialize;
+use tauri::AppHandle;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info, warn};
 
-use crate::{game::Game, logger, state::ManagerExt, thunderstore::PackageListing};
+use crate::{
+    game::Game,
+    logger,
+    state::ManagerExt,
+    thunderstore::{Backend, PackageListing},
+};
 
-pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
+pub async fn fetch_package_loop(game: Game, app: AppHandle) {
+    let backends = app.lock_prefs().enabled_backends(game);
+    future::join_all(
+        backends
+            .iter()
+            .map(|backend| fetch_single_package_loop(game, app.clone(), backend)),
+    )
+    .await;
+}
+
+pub(super) async fn fetch_single_package_loop(game: Game, app: AppHandle, backend: Backend) {
     const FETCH_INTERVAL: Duration = Duration::from_secs(60 * 15);
 
     let mut is_first = true;
@@ -29,25 +46,35 @@ pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
             break;
         };
 
-        if let Err(err) = loop_iter(game, &mut is_first, &app).await {
-            logger::log_webview_err("Error while fetching packages from Thunderstore", err, &app);
+        if let Err(err) = loop_iter(game, &mut is_first, &app, backend).await {
+            logger::log_webview_err(
+                format!("Error while fetching packages from {backend:?}"),
+                err,
+                &app,
+            );
         }
 
         tokio::time::sleep(FETCH_INTERVAL).await;
     }
 
-    async fn loop_iter(game: Game, is_first: &mut bool, app: &AppHandle) -> Result<()> {
+    async fn loop_iter(
+        game: Game,
+        is_first: &mut bool,
+        app: &AppHandle,
+        backend: Backend,
+    ) -> Result<()> {
         if app.lock_thunderstore().is_fetching {
             warn!("automatic fetch cancelled due to ongoing fetch");
             return Ok(());
         }
 
-        let result = fetch_packages(game, *is_first, app).await;
+        let result = fetch_single_packages(game, *is_first, app, backend).await;
 
         let mut state = app.lock_thunderstore();
-
         state.is_fetching = false;
-        state.packages_fetched |= result.is_ok();
+
+        let backend_state = state.backend_mut(backend);
+        backend_state.packages_fetched |= result.is_ok();
 
         *is_first &= result.is_err();
 
@@ -60,105 +87,143 @@ pub(super) async fn fetch_package_loop(game: Game, app: AppHandle) {
 
 const EXCLUDED_PACKAGES_STR: &str = include_str!("../../excluded_packages.txt");
 
-static EXCLUDED_PACKAGES: LazyLock<Vec<&'static str>> = LazyLock::new(|| {
-    EXCLUDED_PACKAGES_STR
-        .split('\n')
-        .map(|line| line.trim())
-        .collect()
-});
+static EXCLUDED_PACKAGES: LazyLock<Vec<&'static str>> =
+    LazyLock::new(|| EXCLUDED_PACKAGES_STR.split('\n').map(str::trim).collect());
 
 pub(super) async fn fetch_packages(
     game: Game,
     write_directly: bool,
     app: &AppHandle,
+) -> Vec<(Backend, Report)> {
+    let backends = app.lock_prefs().enabled_backends(game);
+    let result = future::join_all(backends.iter().map(|backend| {
+        fetch_single_packages(game, write_directly, app, backend).map_err(move |err| (backend, err))
+    }))
+    .await
+    .into_iter()
+    .filter_map(Result::err)
+    .collect();
+
+    let mut state = app.lock_thunderstore();
+    state.is_fetching = false;
+
+    result
+}
+
+async fn fetch_single_packages(
+    game: Game,
+    write_directly: bool,
+    app: &AppHandle,
+    backend: Backend,
 ) -> Result<()> {
     let start_time = Instant::now();
 
-    let index_url = format!(
-        "https://thunderstore.io/c/{}/api/v1/package-listing-index/",
-        game.slug
-    );
+    let Some(index_url) = backend.index_url(game) else {
+        app.lock_thunderstore()
+            .backend_mut(backend)
+            .packages_fetched = true;
+        return Ok(());
+    };
 
-    let bytes = app
-        .http()
-        .get(index_url)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
+    emit_event(FetchEvent::Start { backend }, app);
 
-    let urls: Vec<String> = serde_json::from_reader(GzDecoder::new(&bytes[..]))?;
+    let res = try_fetch(index_url, write_directly, app, backend).await;
 
-    let mut package_count = 0;
-    let mut package_buffer = IndexMap::new();
+    emit_event(FetchEvent::Done { backend }, app);
 
-    let (tx, mut rx) = mpsc::channel(urls.len());
+    return match res {
+        Ok(count) => {
+            debug!(
+                "fetched {} {:?} packages for {} in {:?}",
+                count,
+                backend,
+                game.slug,
+                start_time.elapsed()
+            );
 
-    let handle = app.to_owned();
-    tokio::spawn(async move {
-        if let Err(err) = fetch_chunks(tx, urls, handle).await {
-            error!("failed to request package listing chunks: {:#}", err);
+            Ok(())
         }
-    });
+        Err(err) => Err(err),
+    };
 
-    while let Some(chunk) = rx.recv().await {
-        let mut text = String::new();
-        let mut decoder = GzDecoder::new(&chunk[..]);
-        decoder.read_to_string(&mut text)?;
+    async fn try_fetch(
+        index_url: String,
+        write_directly: bool,
+        app: &AppHandle,
+        backend: Backend,
+    ) -> Result<usize> {
+        let bytes = app
+            .http()
+            .get(index_url)
+            .send()
+            .await?
+            .error_for_status()?
+            .bytes()
+            .await?;
 
-        let packages: Vec<PackageListing> = serde_json::from_str(&text)?;
+        let urls: Vec<String> = serde_json::from_reader(GzDecoder::new(&bytes[..]))?;
 
-        let packages = packages
-            .into_iter()
-            .filter(|package| {
-                !EXCLUDED_PACKAGES
-                    .iter()
-                    .any(|excluded| package.full_name() == *excluded)
-            })
-            .map(|package| (package.uuid, package));
+        let mut package_count = 0;
+        let mut package_buffer = IndexMap::new();
 
-        if write_directly {
-            let mut state = app.lock_thunderstore();
-            let prev_count = state.packages.len();
-            state.packages.extend(packages);
+        let (tx, mut rx) = mpsc::channel(urls.len());
 
-            package_count += state.packages.len() - prev_count;
-        } else {
-            package_buffer.extend(packages);
+        let handle = app.to_owned();
+        tokio::spawn(async move {
+            if let Err(err) = fetch_chunks(tx, urls, handle).await {
+                error!("failed to request package listing chunks: {:#}", err);
+            }
+        });
 
-            package_count = package_buffer.len();
-        };
+        while let Some(chunk) = rx.recv().await {
+            let mut text = String::new();
+            let mut decoder = GzDecoder::new(&chunk[..]);
+            decoder.read_to_string(&mut text)?;
 
-        emit_update(package_count, app);
-    }
+            let packages: Vec<PackageListing> = serde_json::from_str(&text)?;
 
-    let mut state = app.lock_thunderstore();
+            let packages = packages
+                .into_iter()
+                .filter(|package| {
+                    !EXCLUDED_PACKAGES
+                        .iter()
+                        .any(|excluded| package.full_name() == *excluded)
+                })
+                .map(|package| (package.uuid, PackageListing { backend, ..package }));
 
-    state.packages_fetched = true;
-    state.is_fetching = false;
+            let prev_package_count = package_count;
 
-    if !write_directly {
-        state.packages = package_buffer;
-    }
+            if write_directly {
+                let mut state = app.lock_thunderstore();
+                let backend_state = state.backend_mut(backend);
+                let prev_count = backend_state.packages.len();
+                backend_state.packages.extend(packages);
 
-    debug!(
-        "fetched {} packages for {} in {:?}",
-        state.packages.len(),
-        game.slug,
-        start_time.elapsed()
-    );
+                package_count += backend_state.packages.len() - prev_count;
+            } else {
+                package_buffer.extend(packages);
 
-    app.emit("status_update", None::<String>).ok();
+                package_count = package_buffer.len();
+            }
 
-    return Ok(());
+            emit_event(
+                FetchEvent::Progress {
+                    backend,
+                    mods: package_count - prev_package_count,
+                },
+                app,
+            );
+        }
 
-    fn emit_update(mods: usize, app: &AppHandle) {
-        app.emit(
-            "status_update",
-            Some(format!("Fetching mods from Thunderstore... {mods}")),
-        )
-        .ok();
+        let mut state = app.lock_thunderstore();
+        let backend_state = state.backend_mut(backend);
+        backend_state.packages_fetched = true;
+
+        if !write_directly {
+            backend_state.packages = package_buffer;
+        }
+
+        Ok(backend_state.packages.len())
     }
 
     async fn fetch_chunks(
@@ -177,9 +242,23 @@ pub(super) async fn fetch_packages(
     }
 }
 
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase", tag = "type")]
+enum FetchEvent {
+    Start { backend: Backend },
+    Progress { backend: Backend, mods: usize },
+    Done { backend: Backend },
+}
+
+fn emit_event(event: FetchEvent, app: &AppHandle) {
+    app.emit_buffered("fetch_event", &event);
+}
+
 pub async fn wait_for_fetch(app: &AppHandle) {
     loop {
-        if app.lock_thunderstore().packages_fetched() {
+        let game = app.lock_manager().active_game;
+
+        if app.lock_thunderstore().packages_fetched(app, game) {
             return;
         }
 

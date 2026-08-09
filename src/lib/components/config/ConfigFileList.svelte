@@ -3,12 +3,15 @@
 	import type { ConfigFile } from '$lib/types';
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 
-	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
 
-	let searchTerm = $state('');
+	type Props = {
+		searchTerm?: string;
+	};
+
+	let { searchTerm = $bindable('') }: Props = $props();
 
 	let shownFiles = $derived(sortAndFilterFiles(searchTerm, config.files));
 
@@ -59,15 +62,8 @@
 	{#each shownFiles ?? [] as file (file.relativePath)}
 		<ConfigFileListItem
 			{file}
-			selected={config.selectedFile == file}
 			duplicate={duplicateNames.has(file.displayName ?? '')}
 			locked={profiles.activeLocked}
-			onFileClicked={(file) => {
-				config.selectedFile = file;
-			}}
-			onDeleteClicked={() => {
-				config.deleteFile(file);
-			}}
 		/>
 	{/each}
 </div>

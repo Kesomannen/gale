@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import type { SortBy, Mod, ModId } from '$lib/types';
+	import { type SortBy, type Mod, type ModId, Backend, type ModContextItem } from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
@@ -15,16 +15,35 @@
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { pushInfoToast } from '$lib/toast';
+	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
+	import { shouldWarnForeignDownload } from '$lib/util';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
-	const contextItems = [...defaultContextItems];
+	const contextItems: ModContextItem[] = [
+		{
+			label: m.browse_contextItem_hideMod(),
+			icon: 'mdi:eye-off',
+			onclick: async (mod: Mod) => {
+				await api.profile.toggleHiddenMod(mod.uuid);
+				await refresh();
+				pushInfoToast({
+					message: m.browse_contextitem_hideMod_message({ name: mod.name })
+				});
+			}
+		},
+		...defaultContextItems
+	];
 
 	let mods: Mod[] = $state([]);
 
 	let modList: ModList;
 	let maxCount: number = $state(20);
 	let selectedMod: Mod | null = $state(null);
+	let foreignDownloadDialogOpen = $state(false);
 
+	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
 
 	onMount(() => {
@@ -60,13 +79,24 @@
 	async function installLatest(mod: Mod) {
 		await install({
 			packageUuid: mod.uuid,
-			versionUuid: mod.versions[0].uuid
+			versionUuid: mod.versions[0].uuid,
+			backend: mod.backend
 		});
 	}
 
-	async function install(id: ModId) {
-		await api.profile.install.mod(id);
+	async function doInstall() {
+		await api.profile.install.mod(installId);
 		await refresh();
+	}
+
+	async function install(id: ModId) {
+		installId = id;
+		const prefs = await api.prefs.get();
+		if (shouldWarnForeignDownload(id, prefs)) {
+			foreignDownloadDialogOpen = true;
+		} else {
+			await doInstall();
+		}
 	}
 
 	function onModClicked(evt: MouseEvent, mod: Mod) {
@@ -105,16 +135,17 @@
 		>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
-					<div class="mt-4 text-lg">{m.browse_modList_content_1()}</div>
-					<div class="text-primary-400">{m.browse_modList_content_2()}</div>
+					<HelpCard title={m.browse_modList_content_1()} icon="mdi:store-search" class="mt-4">
+						{m.browse_modList_content_2()}
+					</HelpCard>
 				{/if}
 			{/snippet}
 
 			{#snippet item({ mod, isSelected })}
 				<ModListItem
 					{mod}
-					selected={isSelected}
 					{contextItems}
+					selected={isSelected}
 					locked={profiles.activeLocked}
 					oninstall={() => installLatest(mod)}
 					onclick={(evt) => onModClicked(evt, mod)}
@@ -129,3 +160,5 @@
 		</ModDetails>
 	{/if}
 </div>
+
+<ForeignDownloadDialog bind:open={foreignDownloadDialogOpen} onConfirm={doInstall} />

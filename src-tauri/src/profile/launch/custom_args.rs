@@ -1,5 +1,5 @@
 use eyre::{Context, Result, bail};
-use std::{process::Command, str::FromStr};
+use std::{fmt::Display, process::Command, str::FromStr};
 
 pub fn add_args(command: &mut Command, custom_args: &str) -> Result<()> {
     let args: CustomArgs = custom_args.parse().context("failed to parse custom args")?;
@@ -12,7 +12,7 @@ pub fn add_args(command: &mut Command, custom_args: &str) -> Result<()> {
 pub fn join<I, S>(words: I) -> String
 where
     I: IntoIterator<Item = S>,
-    S: AsRef<str>,
+    S: AsRef<str> + Display,
 {
     #[cfg(target_os = "linux")]
     {
@@ -21,7 +21,22 @@ where
 
     #[cfg(target_os = "windows")]
     {
-        words.join(" ")
+        use itertools::Itertools;
+
+        words
+            .into_iter()
+            .map(|s| {
+                // escape and quote the argument
+                let s = s.as_ref();
+
+                if s.contains(' ') || s.contains('"') {
+                    let escaped = s.replace('"', "\\\"");
+                    format!("\"{escaped}\"")
+                } else {
+                    s.to_string()
+                }
+            })
+            .join(" ")
     }
 }
 
@@ -33,7 +48,7 @@ fn split(custom_args: &str) -> Result<Vec<String>> {
 
     #[cfg(target_os = "windows")]
     {
-        winsplit::split(custom_args).context("failed to split arguments")
+        Ok(winsplit::split(custom_args))
     }
 }
 
@@ -216,6 +231,30 @@ mod tests {
         assert_eq!(
             command.get_envs().collect_vec(),
             expected.get_envs().collect_vec()
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "linux")]
+    fn join_linux() {
+        let args = vec!["--foo", "bar baz", "something else"];
+        let joined = join(args);
+        assert_eq!(joined, "--foo 'bar baz' 'something else'");
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn join_windows() {
+        let args = vec![
+            "--foo",
+            "bar baz",
+            "something else",
+            r"C:\A\Path\With Spaces",
+        ];
+        let joined = join(args);
+        assert_eq!(
+            joined,
+            r#"--foo "bar baz" "something else" "C:\A\Path\With Spaces""#
         );
     }
 }

@@ -5,7 +5,7 @@ use std::{
     io::Cursor,
     iter,
     sync::{
-        Mutex, MutexGuard,
+        Arc, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
     },
     time::{Duration, Instant},
@@ -13,11 +13,12 @@ use std::{
 
 use eyre::{Context, Result, bail, eyre};
 use futures_util::StreamExt;
+use http_cache_reqwest::CacheMode;
 use itertools::Itertools;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tokio::sync::{Notify, futures::Notified, oneshot};
-use tracing::warn;
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 use zip::ZipArchive;
 
@@ -42,17 +43,19 @@ struct State {
 }
 
 impl InstallQueue {
-    pub fn new(app: AppHandle) -> Self {
+    pub fn new(app: AppHandle) -> Arc<Self> {
         let cancel = AtomicBool::new(false);
 
-        tauri::async_runtime::spawn(handle_queue(app));
-
-        Self {
+        let this = Arc::new(Self {
             state: Mutex::new(State::default()),
             notify_push: Notify::new(),
             notify_empty: Notify::new(),
             cancel,
-        }
+        });
+
+        tauri::async_runtime::spawn(handle_queue(Arc::clone(&this), app));
+
+        this
     }
 
     pub fn wait_for_empty(&'_ self) -> Notified<'_> {
@@ -170,6 +173,7 @@ impl<'a> InstallQueueLock<'a> {
         };
 
         if mod_count > 0 {
+            info!(len = mod_count, options = ?batch.options, "pushing batch to install queue");
             self.state.pending.push_back(batch);
             self.queue.notify_push.notify_waiters();
 
@@ -181,6 +185,7 @@ impl<'a> InstallQueueLock<'a> {
                 app,
             );
         } else {
+            info!(options = ?batch.options, "no mods to install, completing batch immediately");
             // complete the task immediately since there are no mods to install
             batch.complete(Ok(()), app);
         }
@@ -271,13 +276,13 @@ impl InstallBatch {
     }
 }
 
-async fn handle_queue(app: AppHandle) {
-    let queue = app.install_queue();
-
+async fn handle_queue(queue: Arc<InstallQueue>, app: AppHandle) {
     // continously wait for new batches to be pushed and process them
     loop {
         queue.notify_push.notified().await;
         queue.cancel.store(false, Ordering::SeqCst);
+
+        debug!("started processing batches");
 
         let mut reason = HideReason::Done;
 
@@ -293,6 +298,8 @@ async fn handle_queue(app: AppHandle) {
                 None => break,
             }
         }
+
+        debug!(?reason, "finished processing batches");
 
         emit(InstallEvent::Hide { reason }, &app);
 
@@ -329,7 +336,7 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
             }
             Err(InstallError::Error(err)) => {
                 rollback_batch(&batch, app, i)
-                    .unwrap_or_else(|err| warn!("failed to rollback failed installation: {err}",));
+                    .unwrap_or_else(|err| warn!(?err, "failed to rollback failed installation",));
 
                 result = Err(InstallError::Error(
                     err.wrap_err(format!("failed to install {}", install.ident)),
@@ -340,6 +347,8 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
             }
         }
     }
+
+    info!(len = batch.mods.len(), "completed batch");
 
     batch.complete(result, app);
     reason
@@ -354,6 +363,12 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
             Ok(())
         }
         CancelBehavior::Batch => {
+            info!(
+                batch_len = batch.mods.len(),
+                rollback_count = count,
+                "rolling back batch"
+            );
+
             let mut manager = app.lock_manager();
 
             let (_, profile) = manager.profile_by_id_mut(batch.profile_id)?;
@@ -362,7 +377,9 @@ fn rollback_batch(batch: &InstallBatch, app: &AppHandle, count: usize) -> Result
                 profile
                     .force_remove_mod(installed.uuid())
                     .unwrap_or_else(|err| {
-                        warn!("failed to delete {}: {err}", installed.ident);
+                        warn!(
+                            ident = %installed.ident,
+                            ?err, "failed to rollback installed mod");
                     });
             }
 
@@ -418,6 +435,11 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
         callback(install, profile)?;
     }
 
+    debug!(
+        ident = %install.ident,
+        "cache hit, installing from cache"
+    );
+
     let package_name = install.ident.full_name();
     let mut installer = game.mod_loader.installer_for(package_name);
     installer.install(&cache_path, package_name, profile)?;
@@ -448,9 +470,13 @@ async fn download(
         app,
     );
 
-    let url = format!(
-        "https://thunderstore.io/package/download/{}",
-        install.ident.path()
+    let url = install.id.backend.download_url(&install.ident);
+
+    debug!(
+        ident = %install.ident,
+        size = install.file_size,
+        url = %url,
+        "downloading mod"
     );
 
     const MAX_RETRIES: usize = 3;
@@ -481,7 +507,7 @@ async fn download(
 
                 retries += 1;
 
-                warn!(attempt = retries, err = ?err, "download failed, retrying in {backoff:?}");
+                warn!(attempt = retries, err = ?err, url = %url, backoff = ?backoff, "download failed, retrying");
 
                 tokio::time::sleep(backoff).await;
                 backoff *= 2;
@@ -502,10 +528,12 @@ async fn try_download(
     let mut stream = app
         .http()
         .get(url)
+        .with_extension(CacheMode::NoStore)
         .send()
         .await
-        .and_then(|response| response.error_for_status())
         .context("failed to send request")?
+        .error_for_status()
+        .context("request failed")?
         .bytes_stream();
 
     let mut last_update = Instant::now();
@@ -596,6 +624,11 @@ fn install_from_download(
         callback(install, profile)?;
     }
 
+    debug!(
+        ident = %install.ident,
+        "installing mod"
+    );
+
     installer.install(&cache_path, package_name, profile)?;
     install.clone().insert_into(profile)?;
 
@@ -658,7 +691,7 @@ impl<'a> InstallEvent<'a> {
 }
 
 fn emit(event: InstallEvent, app: &AppHandle) {
-    app.emit("install_event", event).ok();
+    app.emit_buffered("install_event", &event);
 }
 
 fn check_cancel(cancel: &AtomicBool, options: &InstallOptions) -> InstallResult<()> {

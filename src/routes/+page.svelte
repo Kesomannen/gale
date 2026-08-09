@@ -10,7 +10,6 @@
 		DependantWithVersion,
 		ListItem
 	} from '$lib/types';
-	import ModList from '$lib/components/mod-list/ModList.svelte';
 	import { isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -30,6 +29,7 @@
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import config from '$lib/state/config.svelte';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -50,7 +50,8 @@
 			onclick: (mod) =>
 				uninstall({
 					uuid: mod.uuid,
-					fullName: mod.name
+					fullName: mod.name,
+					backend: mod.backend
 				}),
 			showFor: (_, profileLocked) => !profileLocked
 		},
@@ -79,16 +80,7 @@
 			label: m.modDetails_editConfig(),
 			icon: 'ph:faders-fill',
 			showFor: (mod) => mod.configFile != null,
-			onclick: (mod) => {
-				const file = config.findFileByPath(mod.configFile!);
-				if (!file) {
-					console.error('Config file not found for mod', mod.configFile);
-					return;
-				}
-
-				config.selectedFile = file;
-				goto('/config');
-			}
+			onclick: (mod) => config.gotoModConfig(mod.configFile!)
 		},
 		...defaultContextItems
 	];
@@ -155,8 +147,16 @@
 		}
 	}
 
+	async function forceUninstall(mod: Dependant) {
+		await api.profile.forceRemoveMods([mod.uuid]);
+		selectedMod = null;
+	}
+
 	async function openDependants(mod: Mod) {
-		dependants = await api.profile.getDependants(mod.uuid);
+		dependants = (await api.profile.getDependants(mod.uuid)).map((d) => ({
+			backend: mod.backend,
+			...d
+		}));
 
 		activeMod = mod;
 		dependantsOpen = true;
@@ -170,7 +170,8 @@
 		} else {
 			await api.profile.update.changeModVersion({
 				packageUuid: mod.uuid,
-				versionUuid: versionUuid
+				versionUuid: versionUuid,
+				backend: mod.backend
 			});
 		}
 
@@ -223,7 +224,7 @@
 		{/if}
 
 		{#if unknownMods.length > 0}
-			<UnknownModsBanner mods={unknownMods} {uninstall} />
+			<UnknownModsBanner mods={unknownMods} uninstall={forceUninstall} />
 		{/if}
 
 		{#if mods.length === 0 && hasRefreshed}
@@ -238,15 +239,16 @@
 					>
 				</HelpCard>
 			{:else}
-				<HelpCard class="mt-8" title={m.page_modList_noResults_1()}>
+				<HelpCard class="mt-4" title={m.page_modList_noResults_1()} icon="mdi:magnify">
 					{m.page_modList_noResults_2()}
 				</HelpCard>
 			{/if}
 		{:else}
 			<ReorderableList bind:items {onmove} {reorderable}>
-				{#snippet mod({ mod })}
+				{#snippet mod({ mod, index })}
 					<ProfileModListItem
 						{mod}
+						{index}
 						{locked}
 						{contextItems}
 						selected={selectedMod?.uuid === mod.uuid}
@@ -266,14 +268,16 @@
 
 	{#if selectedMod}
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			{#if selectedMod && isOutdated(selectedMod) && !locked}
-				<button
-					class="bg-accent-700 hover:bg-accent-600 mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-lg font-medium"
+			{#if isOutdated(selectedMod) && !locked}
+				<Button
+					color="accent"
+					size="lg"
+					icon="mdi:arrow-up-circle"
+					class="mt-2"
 					onclick={() => updateMod(selectedMod)}
 				>
-					<Icon icon="ph:arrow-circle-up-fill" class="align-middle text-xl" />
 					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
-				</button>
+				</Button>
 			{/if}
 		</ModDetails>
 	{/if}

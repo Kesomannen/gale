@@ -1,9 +1,14 @@
 <script lang="ts">
-	import { PersistedState } from 'runed';
 	import NavbarLink from './NavbarLink.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import games from '$lib/state/game.svelte';
+	import { loaderSupportsModpacks } from '$lib/util';
 
-	const links = [
+	const modpacksDisabled = $derived(
+		!games.active || !loaderSupportsModpacks(games.active.modLoader)
+	);
+
+	const links = $derived([
 		{
 			to: '/',
 			icon: 'ph:user-circle',
@@ -21,18 +26,20 @@
 		},
 		{
 			to: '/modpack',
-			icon: 'ph:package',
-			tooltip: m.navBar_link_modpack()
+			icon: 'mdi:package-variant',
+			tooltip: modpacksDisabled ? m.navBar_link_modpack_disabled() : m.navBar_link_modpack(),
+			outline: false,
+			disabled: modpacksDisabled
 		},
 		{
 			to: '/prefs',
 			icon: 'ph:gear',
 			tooltip: m.navBar_link_prefs()
 		}
-	];
+	]);
 </script>
 
-<nav class="border-primary-600 bg-primary-900 relative flex shrink-0 flex-col gap-1.5 border-r p-3">
+<nav class="border-primary-600 bg-primary-900 relative flex shrink-0 flex-col gap-2 border-r p-3">
 	{#each links as link (link.to)}
 		<NavbarLink {...link} />
 	{/each}

@@ -7,6 +7,7 @@
 
 	type Props = {
 		mod: Mod;
+		index?: number;
 		selected: boolean;
 		contextItems: ModContextItem[];
 		locked: boolean;
@@ -14,11 +15,11 @@
 		onclick?: MouseEventHandler<HTMLDivElement>;
 	};
 
-	let { mod, selected, contextItems, locked, ontoggle, onclick }: Props = $props();
+	let { mod, index, selected, contextItems, locked, ontoggle, onclick }: Props = $props();
 </script>
 
 <ModItemContext {mod} {locked} {contextItems}>
-	<ProfileModListItemNoContext {mod} {selected} {onclick}>
+	<ProfileModListItemNoContext {mod} {selected} {index} {onclick}>
 		{#snippet trailing()}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->

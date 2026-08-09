@@ -9,13 +9,15 @@ use internment::Intern;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{PackageIdent, VersionIdent};
+use super::{Backend, PackageIdent, VersionIdent};
 use crate::{game::Game, profile::Profile};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
     #[serde(rename = "full_name")]
     pub ident: PackageIdent,
+    #[serde(default, skip_serializing)]
+    pub backend: Backend,
     pub categories: HashSet<Intern<String>>,
     pub date_created: DateTime<Utc>,
     pub date_updated: DateTime<Utc>,
@@ -64,32 +66,24 @@ impl PackageListing {
     }
 
     pub fn owner_url(&self, game: Game) -> String {
-        format!(
-            "https://thunderstore.io/c/{}/p/{}/",
-            game.slug,
-            self.owner()
-        )
+        self.backend.owner_url(self.owner(), game)
     }
 
     pub fn url(&self, game: Game) -> String {
-        format!(
-            "https://thunderstore.io/c/{}/p/{}/{}/",
-            game.slug,
-            self.owner(),
-            self.name()
-        )
+        self.backend.mod_url(&self.ident, game)
     }
 }
 
 impl Hash for PackageListing {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.uuid.hash(state);
+        self.backend.hash(state);
     }
 }
 
 impl PartialEq for PackageListing {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid == other.uuid
+        self.uuid == other.uuid && self.backend == other.backend
     }
 }
 
@@ -99,6 +93,8 @@ pub struct PackageVersion {
     pub ident: VersionIdent,
     pub date_created: DateTime<Utc>,
     pub dependencies: Vec<VersionIdent>,
+    #[serde(default)]
+    pub suggestions: Vec<VersionIdent>,
     pub description: Intern<String>,
     pub downloads: u32,
     pub file_size: u64,
@@ -254,6 +250,7 @@ pub struct FrontendMod {
     pub website_url: Option<String>,
     pub donate_url: Option<String>,
     pub dependencies: Option<Vec<VersionIdent>>,
+    pub suggestions: Option<Vec<VersionIdent>>,
     pub is_pinned: bool,
     pub is_deprecated: bool,
     pub contains_nsfw: bool,
@@ -265,6 +262,7 @@ pub struct FrontendMod {
     pub icon: Option<PathBuf>,
     #[serde(rename = "type")]
     pub kind: FrontendModKind,
+    pub backend: Backend,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -285,4 +283,17 @@ pub struct FrontendProfileMod {
 
 pub trait IntoFrontendMod {
     fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod;
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CategoryResponse {
+    pub results: Vec<PackageCategory>,
+}
+
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PackageCategory {
+    pub name: String,
+    pub slug: String,
 }

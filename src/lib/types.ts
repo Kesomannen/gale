@@ -97,6 +97,11 @@ export type GameInfo = {
 	favorites: string[];
 };
 
+export enum Backend {
+	Thunderstore = 'Thunderstore',
+	Hexium = 'Hexium'
+}
+
 export type Mod = {
 	name: string;
 	description: string | null;
@@ -109,6 +114,7 @@ export type Mod = {
 	websiteUrl: string | null;
 	donateUrl: string | null;
 	dependencies: string[] | null;
+	suggestions: string[] | null;
 	isPinned: boolean;
 	isDeprecated: boolean;
 	isInstalled: boolean | undefined;
@@ -121,6 +127,7 @@ export type Mod = {
 	enabled?: boolean | null;
 	icon: string | null;
 	configFile: string | null;
+	backend: Backend;
 };
 
 export type ModVersion = {
@@ -170,16 +177,19 @@ export type ConfigEntryId = {
 export type Dependant = {
 	fullName: string;
 	uuid: string;
+	backend: Backend;
 };
 
 export type DependantWithVersion = {
 	fullName: string;
 	preferredVersion: string | null;
+	backend: Backend;
 };
 
 export type ModId = {
 	packageUuid: string;
 	versionUuid: string;
+	backend: Backend;
 };
 
 export type ModActionResponse =
@@ -195,6 +205,11 @@ export type InstallEvent =
 	| { type: 'addProgress'; mods: number; bytes: number }
 	| { type: 'setTask'; name: string; task: InstallTask };
 
+export type FetchEvent =
+	| { type: 'start'; backend: Backend }
+	| { type: 'progress'; backend: Backend; mods: number }
+	| { type: 'done'; backend: Backend };
+
 export type ModpackArgs = {
 	name: string;
 	description: string;
@@ -208,6 +223,17 @@ export type ModpackArgs = {
 	websiteUrl: string;
 	includeDisabled: boolean;
 	includeFileMap: Map<string, boolean>;
+	backend: Backend;
+};
+
+export type ModpackInfo = {
+	args: ModpackArgs;
+	hexiumExclusive: boolean;
+};
+
+export type ExportCode = {
+	code: string;
+	backend: Backend;
 };
 
 export type Game = {
@@ -217,6 +243,7 @@ export type Game = {
 	favorite: boolean;
 	modLoader: ModLoader;
 	popular: boolean;
+	backends: Backend[];
 };
 
 export enum ModLoader {
@@ -225,7 +252,9 @@ export enum ModLoader {
 	Northstar = 'Northstar',
 	GDWeave = 'GDWeave',
 	ReturnOfModding = 'ReturnOfModding',
-	BepisLoader = 'BepisLoader'
+	BepisLoader = 'BepisLoader',
+	Shimloader = 'Shimloader',
+	Lovely = 'Lovely'
 }
 
 export type PackageCategory = {
@@ -244,8 +273,8 @@ export type LaunchMode =
 export type AvailableUpdate = {
 	fullName: string;
 	ignore: boolean;
-	packageUuid: string;
-	versionUuid: string;
+	isCrossBackend: boolean;
+	updatedId: ModId;
 	old: string;
 	new: string;
 };
@@ -291,6 +320,7 @@ type ProfileManifestMod = {
 		minor: number;
 		patch: number;
 	};
+	source: Backend;
 };
 
 export type R2ImportData = {
@@ -312,13 +342,22 @@ export type Prefs = {
 	zoomFactor: number;
 	language: string;
 	gamePrefs: Map<string, GamePrefs>;
+	backendSkipConfirm: boolean;
 };
+
+export enum Backends {
+	All = 'All',
+	Thunderstore = 'Thunderstore',
+	Hexium = 'Hexium'
+}
 
 export type GamePrefs = {
 	dirOverride: string | null;
 	customArgs: string;
 	launchMode: LaunchMode;
 	platform: Platform | null;
+	showSteamLaunchOptions: boolean;
+	backend: Backends;
 };
 
 export type Platform = 'steam' | 'epicGames' | 'oculus' | 'origin' | 'xboxStore';
@@ -342,6 +381,11 @@ export type Zoom = { factor: number } | { delta: number };
 
 export type MarkdownType = 'readme' | 'changelog';
 
+export interface LaunchOption {
+	arguments: string;
+	type: string | null;
+	description: string | null;
+}
 export type MissingProfileAction = { type: 'locate'; newPath: string } | { type: 'delete' };
 
 export type Folder = {

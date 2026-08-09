@@ -5,11 +5,14 @@ use std::{
 
 use eyre::{Context, OptionExt, Result};
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, command};
-use tracing::Level;
+use tauri::{AppHandle, command};
+use tracing::{Level, level_filters::LevelFilter};
 use tracing_subscriber::{Registry, filter::Targets, prelude::*};
 
-use crate::util::{self, fs::PathExt};
+use crate::{
+    state::ManagerExt,
+    util::{self, fs::PathExt},
+};
 
 pub const FILE_NAME: &str = "latest.log";
 
@@ -22,17 +25,13 @@ struct WebviewError<'a> {
 /// Emits an error to the webview, causing it to show an error toast and
 /// log the message properly to the log file/terminal.
 pub fn log_webview_err(name: impl AsRef<str>, error: eyre::Error, app: &AppHandle) {
-    app.emit(
+    app.emit_buffered(
         "error",
-        WebviewError {
+        &WebviewError {
             name: name.as_ref(),
             message: format!("{error:#}"),
         },
-    )
-    .unwrap_or_else(|err| {
-        tracing::warn!("failed to log error to webview:");
-        tracing::error!("{:#}", err)
-    })
+    );
 }
 
 fn log_path() -> PathBuf {
@@ -46,24 +45,32 @@ pub fn setup() -> Result<()> {
 
     tracing_log::LogTracer::init()?;
 
+    let env_filter = tracing_subscriber::EnvFilter::builder()
+        .with_default_directive(if cfg!(debug_assertions) {
+            LevelFilter::DEBUG.into()
+        } else {
+            LevelFilter::INFO.into()
+        })
+        .with_env_var("GALE_LOG")
+        .from_env_lossy();
+
     let filter = Targets::new()
         .with_target("tauri_plugin_updater", Level::INFO)
         .with_target("hyper_util::client", Level::INFO)
         .with_target("reqwest::connect", Level::INFO)
-        .with_default(Level::DEBUG);
+        .with_target("h2", Level::INFO)
+        .with_target("reqwest::retry", Level::DEBUG)
+        .with_target("rustls", Level::INFO)
+        .with_default(Level::TRACE);
 
     let subscriber = Registry::default()
+        .with(filter)
+        .with(env_filter)
+        .with(tracing_subscriber::fmt::layer())
         .with(
             tracing_subscriber::fmt::layer()
-                .with_ansi(true)
-                .with_filter(filter.clone()),
-        )
-        .with(
-            tracing_subscriber::fmt::layer()
-                .compact()
-                .with_ansi(false)
                 .with_writer(log_file)
-                .with_filter(filter),
+                .with_ansi(false),
         );
 
     tracing::subscriber::set_global_default(subscriber).context("failed to register subscriber")?;

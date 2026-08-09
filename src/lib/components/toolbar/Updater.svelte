@@ -67,7 +67,7 @@
 		onclick={() => (dialogOpen = true)}
 	>
 		{#if loading}
-			<Icon icon="ph:circle-notch-fill" class="animate-spin" />
+			<Icon icon="ph:circle-notch" class="animate-spin" />
 		{:else}
 			<Icon icon="ph:arrow-circle-up-fill" />
 		{/if}

@@ -32,7 +32,11 @@
 </script>
 
 {#snippet button()}
-	<button class={[classProp, colorClasses, 'shrink-0 rounded-sm p-1']} aria-label={label} {onclick}>
+	<button
+		class={[classProp, colorClasses, 'shrink-0 rounded-sm p-1.5']}
+		aria-label={label}
+		{onclick}
+	>
 		<Icon {icon} />
 	</button>
 {/snippet}

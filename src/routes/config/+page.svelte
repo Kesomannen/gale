@@ -11,14 +11,15 @@
 	import { m } from '$lib/paraglide/messages';
 	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
 	import config from '$lib/state/config.svelte';
-	import { untrack } from 'svelte';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
+	import { onMount } from 'svelte';
 
 	const selectedFile = $derived(config.selectedFile);
 
-	$effect(() => {
-		profiles.activeId;
-		untrack(() => config.refresh());
+	let searchTerm = $state('');
+
+	onMount(() => {
+		config.refresh();
 	});
 </script>
 
@@ -29,23 +30,36 @@
 		{#if config.loading}
 			{@render loadingSkeletons()}
 		{:else}
-			<ConfigFileList />
+			<ConfigFileList bind:searchTerm />
 		{/if}
 
-		<div class="overflow-y-auto px-6 pb-6">
+		<div class="max-w-5xl overflow-y-auto px-6 pb-6">
 			{#if profiles.activeLocked}
 				<ProfileLockedBanner class="mt-4 mb-4" />
 			{/if}
 
 			{#if selectedFile}
 				<LargeHeading class="mb-2 truncate">
-					{selectedFile.relativePath}
+					<span>{selectedFile.displayName ?? selectedFile.relativePath}</span>
+
+					{#if config.selectedSection}
+						<span class="text-primary-400 mx-1">/</span>
+						<span>{config.selectedSection.name}</span>
+					{/if}
 				</LargeHeading>
 
+				<div class="text-primary-400">
+					{selectedFile.relativePath}
+				</div>
+
 				{#if selectedFile.type === 'ok'}
-					<ConfigFileEditor file={selectedFile} locked={profiles.activeLocked} />
+					<ConfigFileEditor
+						file={selectedFile}
+						section={config.selectedSection}
+						locked={profiles.activeLocked}
+					/>
 				{:else if selectedFile.type === 'unsupported'}
-					<div class="text-primary-400 mb-1">
+					<div class="text-primary-400 mt-2 mb-1">
 						{m.config_unsupported_content()}
 					</div>
 					<Button
@@ -57,17 +71,17 @@
 						{m.config_unsupported_button()}
 					</Button>
 				{:else if selectedFile.type === 'err'}
-					<div class="text-primary-400 mb-1">
+					<div class="text-primary-400 mt-2 mb-1">
 						{m.config_err_content()}
 					</div>
-					<code class="bg-primary-900 mb-1 flex rounded-sm p-4 text-red-500">
+					<code class="bg-primary-900 mb-1 block rounded p-3 text-red-500">
 						{capitalize(selectedFile.error)}
 					</code>
 					<Button
 						class="max-w-max"
 						color="primary"
 						onclick={() => api.config.openFile(selectedFile!)}
-						icon="ph:arrow-square-out-fill"
+						icon="mdi:open-in-new"
 					>
 						{m.config_err_button()}
 					</Button>

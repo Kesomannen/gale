@@ -4,15 +4,15 @@ use eyre::Result;
 use internment::Intern;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 use tracing::info;
 
 use super::{
+    BorrowedMod, Thunderstore,
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
-    BorrowedMod,
 };
 use crate::{
-    profile::{LocalMod, Profile},
+    profile::{LocalMod, ModManager, Profile},
     state::ManagerExt,
     util,
 };
@@ -67,11 +67,10 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
             if let Some(args) = &thunderstore.current_query {
                 let manager = app.lock_manager();
 
-                let mods =
-                    query_frontend_mods(args, thunderstore.latest(), manager.active_profile());
-                app.emit("mod_query_result", &mods)?;
+                let mods = thunderstore.query_mods(args, &manager);
+                app.emit_buffered("mod_query_result", &mods);
 
-                if thunderstore.packages_fetched {
+                if thunderstore.packages_fetched(&app, manager.active_game) {
                     info!("all packages fetched, pausing query loop");
                     thunderstore.current_query = None;
                 }
@@ -88,6 +87,9 @@ pub trait Queryable {
     /// The package's full name, including the author.
     fn full_name(&self) -> &str;
 
+    /// The packages latest version.
+    fn version(&self) -> Option<semver::Version>;
+
     /// Whether the package should be included in the given query.
     fn matches(&self, args: &QueryModsArgs) -> bool;
 
@@ -103,6 +105,10 @@ pub trait Queryable {
 impl Queryable for BorrowedMod<'_> {
     fn full_name(&self) -> &str {
         self.package.ident.as_str()
+    }
+
+    fn version(&self) -> Option<semver::Version> {
+        Some(self.package.latest().parsed_version())
     }
 
     fn description(&self) -> Option<&str> {
@@ -175,20 +181,20 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             rating: Some(pkg.rating_score),
             downloads: Some(pkg.total_downloads()),
             file_size: vers.file_size,
-            website_url: match vers.website_url.is_empty() {
-                true => None,
-                false => Some(vers.website_url.to_string()),
+            website_url: if vers.website_url.is_empty() {
+                None
+            } else {
+                Some(vers.website_url.to_string())
             },
             donate_url: pkg.donation_link.clone(),
             dependencies: Some(vers.dependencies.clone()),
+            suggestions: Some(vers.suggestions.clone()),
             is_pinned: pkg.is_pinned,
             is_deprecated: pkg.is_deprecated,
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid,
             version_uuid: vers.uuid,
-            is_installed: profile
-                .map(|profile| profile.has_mod(pkg.uuid))
-                .unwrap_or(false),
+            is_installed: profile.is_some_and(|profile| profile.has_mod(pkg.uuid)),
             last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions
@@ -200,6 +206,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
                 .collect(),
             kind: FrontendModKind::Remote,
             icon: None,
+            backend: pkg.backend,
         }
     }
 }
@@ -231,20 +238,24 @@ impl IntoFrontendMod for LocalMod {
     }
 }
 
-/// Sorts and filters `mods` according to `args` and converts the
-/// results to [`FrontendMod`].
-pub fn query_frontend_mods<T, I>(
-    args: &QueryModsArgs,
-    mods: I,
-    profile: &Profile,
-) -> Vec<FrontendMod>
-where
-    T: Queryable + IntoFrontendMod,
-    I: Iterator<Item = T>,
-{
-    query_mods(args, mods)
+impl Thunderstore {
+    /// Sorts and filters `mods` according to `args` and converts the
+    /// results to [`FrontendMod`].
+    pub(super) fn query_mods(
+        &self,
+        args: &QueryModsArgs,
+        manager: &ModManager,
+    ) -> Vec<FrontendMod> {
+        let profile = manager.active_profile();
+
+        query_mods(
+            args,
+            self.latest()
+                .filter(|borrowed| !manager.hidden_mods.contains(&borrowed.package.uuid)),
+        )
         .map(|m| m.into_frontend(Some(profile)))
         .collect()
+    }
 }
 
 /// Sorts and filters `mods` according to `args`.
@@ -260,26 +271,25 @@ where
         (full, package)
     });
 
-    let mut results = mods
-        .filter(|queryable| {
-            if let Some((full_search, package_search)) = &search_terms {
-                let name_match = queryable
-                    .full_name()
-                    .to_lowercase()
-                    .contains(package_search);
+    let results = mods.filter(|queryable| {
+        if let Some((full_search, package_search)) = &search_terms {
+            let name_match = queryable
+                .full_name()
+                .to_lowercase()
+                .contains(package_search);
 
-                let description_match = queryable
-                    .description()
-                    .is_some_and(|description| description.to_lowercase().contains(full_search));
+            let description_match = queryable
+                .description()
+                .is_some_and(|description| description.to_lowercase().contains(full_search));
 
-                if !name_match && !description_match {
-                    return false;
-                }
+            if !name_match && !description_match {
+                return false;
             }
+        }
 
-            queryable.matches(args)
-        })
-        .collect_vec();
+        queryable.matches(args)
+    });
+    let mut results = Thunderstore::deduplicate(results).collect_vec();
 
     results.sort_by(|a, b| a.cmp(b, args));
     results

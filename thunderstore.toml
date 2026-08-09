@@ -4,7 +4,7 @@ repository = "https://thunderstore.io"
 [package]
 name = "GaleModManager"
 namespace = "Kesomannen"
-description = "An modern and lightweight alternative mod manager for Thunderstore."
+description = "A modern and lightweight alternative mod manager for Thunderstore."
 websiteUrl = "https://github.com/Kesomannen/gale"
 dependencies = {}
 
@@ -49,6 +49,8 @@ communities = [
     "bad-north",
     "beetleball",
     "big-ambitions",
+    "big-walk",
+    "bloons-td-6",
     "bonelab",
     "boneworks",
     "back-to-the-dawn",
@@ -92,6 +94,7 @@ communities = [
     "five-nights-at-freddys-into-the-pit",
     "football-manager-26",
     "for-the-king",
+    "goblin-cleanup",
     "gorilla-tag",
     "granny-chapter-two",
     "grey-hack",
@@ -117,6 +120,7 @@ communities = [
     "human-fall-flat",
     "i-am-your-beast",
     "inscryption",
+    "inside-the-backrooms",
     "jump-scare-mansion",
     "jump-space",
     "labyrinthine",
@@ -162,6 +166,7 @@ communities = [
     "patch-quest",
     "peaks-of-yore",
     "peglin",
+    "pikuniku",
     "pit-of-goblin",
     "plasma",
     "potion-craft",
@@ -180,7 +185,9 @@ communities = [
     "riskofrain2",
     "rogue-genesia",
     "rogue-tower",
+    "shift-at-midnight",
     "sledding-game",
+    "smushi-come-home",
     "soulcalibur-vi",
     "stolen-realm",
     "straftat",
@@ -206,6 +213,7 @@ communities = [
     "super-battle-golf",
     "super-fantasy-kingdom",
     "super-psycho-baseball",
+    "superhot",
     "supermarket-together",
     "the-farmer-was-replaced",
     "the-spell-brigade",

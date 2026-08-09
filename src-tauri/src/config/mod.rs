@@ -115,17 +115,22 @@ impl Profile {
 }
 
 impl ConfigCache {
-    pub fn refresh(&mut self, root: &Path, mod_loader: &ModLoader) {
-        let files = mod_loader
-            .mod_config_dirs()
+    pub fn refresh(&mut self, profile: &Path, mod_loader: &ModLoader) {
+        let mod_config_dirs = match mod_loader.mod_config_dirs() {
+            // list all files if no config dirs are specified
+            [] => &["."],
+            dirs => dirs,
+        };
+
+        let files = mod_config_dirs
             .iter()
             .flat_map(|config_dir_path| {
-                let config_dir = root.join(config_dir_path);
+                let config_dir = profile.join(config_dir_path);
                 WalkDir::new(&config_dir)
                     .into_iter()
                     .filter_map(Result::ok)
                     .par_bridge()
-                    .filter_map(|entry| self.read_file(entry, root, &config_dir, mod_loader))
+                    .filter_map(|entry| self.read_file(entry, profile, &config_dir, mod_loader))
                     .collect_vec_list()
                     .into_iter()
                     .flatten()

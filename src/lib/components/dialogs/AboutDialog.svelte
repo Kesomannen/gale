@@ -44,7 +44,7 @@
 			>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="ph:github-logo-fill" class="text-xl text-white" />
+			<Icon icon="mdi:github" class="text-xl text-white" />
 			<Link href="https://github.com/Kesomannen/gale">GitHub</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">

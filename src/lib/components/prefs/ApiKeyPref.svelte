@@ -6,35 +6,42 @@
 	import type { Snippet } from 'svelte';
 	import { apiKeyDialog } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import type { Backend } from '$lib/types';
 
 	type Props = {
-		field?: Snippet;
+		backend: Backend;
 	};
 
-	let { field }: Props = $props();
+	let { backend }: Props = $props();
 
 	let hasToken = $state(false);
 
 	async function refresh() {
-		hasToken = await api.thunderstore.hasToken();
+		hasToken = await api.thunderstore.hasToken(backend);
+	}
+
+	function openDialog() {
+		apiKeyDialog.open = true;
+		apiKeyDialog.backend = backend;
 	}
 
 	$effect(() => {
 		apiKeyDialog.open;
+		apiKeyDialog.backend;
 		refresh();
 	});
 </script>
 
 <div class="flex items-center">
-	<Label>{m.apiKeyPref_title()}</Label>
+	<Label>{m.apiKeyPref_title({ backend })}</Label>
 
 	<Info>
-		{m.apiKeyPref_content()}
+		{m.apiKeyPref_content({ backend })}
 	</Info>
 
 	<button
 		class="group bg-primary-900 hover:border-primary-500 relative flex grow items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
-		onclick={() => (apiKeyDialog.open = true)}
+		onclick={openDialog}
 	>
 		<div class="mr-2 rounded-sm">
 			<Icon icon="key" class="text-primary-300 group-hover:text-primary-200 align-middle" />
@@ -43,7 +50,5 @@
 		<div class="text-primary-300 group-hover:text-primary-200 truncate">
 			{m[`apiKeyPref_hasToken_${hasToken ? 'has' : 'no'}`]()}
 		</div>
-
-		{@render field?.()}
 	</button>
 </div>

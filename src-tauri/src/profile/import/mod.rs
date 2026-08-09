@@ -3,25 +3,30 @@ use std::{
     fs::{self, File},
     io::{BufReader, Cursor, Read, Seek},
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use eyre::{Context, Result, eyre};
+use futures_util::future;
+use globset::{Glob, GlobSet, GlobSetBuilder};
 use itertools::Itertools;
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::{trace, warn};
+use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
+use walkdir::WalkDir;
 
 use crate::{
+    prefs::Backends,
     profile::{
         export::{PROFILE_DATA_PREFIX, ProfileManifest},
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::ModId,
+    thunderstore::{Backend, ModId, Thunderstore},
     util::{self, error::IoResultExt},
 };
 
@@ -29,17 +34,13 @@ pub mod commands;
 mod local;
 mod r2modman;
 
+use super::Profile;
 pub use local::{import_local_mod, import_local_mod_base64};
 
-use super::{
-    Profile,
-    export::{self, IncludeExtensions, IncludeGenerated},
-};
-
-pub fn read_file_at_path(path: PathBuf) -> Result<ImportData> {
+pub fn read_file_at_path(path: PathBuf, thunderstore: &Thunderstore) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
-    read_file(file)
+    read_file(file, thunderstore)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -50,13 +51,16 @@ pub struct ImportData {
     pub delete_after_import: bool,
 }
 
-pub fn read_file_from(path: PathBuf) -> Result<ImportData> {
+pub fn read_file_from(path: PathBuf, thunderstore: &Thunderstore) -> Result<ImportData> {
     let file = File::open(&path).fs_context("opening file", &path)?;
 
-    read_file(file)
+    read_file(file, thunderstore)
 }
 
-pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
+pub(super) fn read_file(
+    source: impl Read + Seek,
+    thunderstore: &Thunderstore,
+) -> Result<ImportData> {
     let temp_dir = tempdir().context("failed to create temporary directory")?;
     util::zip::extract(source, temp_dir.path())?;
 
@@ -64,8 +68,22 @@ pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
         .map(BufReader::new)
         .context("failed to open profile manifest")?;
 
-    let manifest: ProfileManifest =
+    let mut manifest: ProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
+
+    for r2mod in manifest.mods.iter_mut() {
+        // first try the backend stored in the manifest, if it's not there,
+        // then try falling back to checking any other backend and update the source as needed
+        if thunderstore
+            .backend(r2mod.source)
+            .find_ident(&r2mod.version_ident())
+            .is_err()
+        {
+            if let Ok(package) = thunderstore.find_ident(&r2mod.version_ident()) {
+                r2mod.source = package.package.backend;
+            }
+        }
+    }
 
     Ok(ImportData {
         manifest,
@@ -74,20 +92,35 @@ pub(super) fn read_file(source: impl Read + Seek) -> Result<ImportData> {
     })
 }
 
-fn read_base64(base64: &str) -> Result<ImportData> {
+fn read_base64(base64: &str, thunderstore: &Thunderstore) -> Result<ImportData> {
     let bytes = BASE64_STANDARD
         .decode(base64)
         .context("failed to decode base64 data")?;
 
-    read_file(Cursor::new(bytes))
+    read_file(Cursor::new(bytes), thunderstore)
 }
 
 pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
+    let response = future::join_all(
+        Backends::All
+            .iter()
+            .map(async |backend| read_code_from_backend(backend, key, app).await),
+    )
+    .await
+    .into_iter()
+    .find_or_first(|r| r.is_ok())
+    .unwrap()?;
+
+    match response.strip_prefix(PROFILE_DATA_PREFIX) {
+        Some(str) => read_base64(str, &app.lock_thunderstore()),
+        None => Err(eyre!("invalid profile data")),
+    }
+}
+
+async fn read_code_from_backend(backend: Backend, key: Uuid, app: &AppHandle) -> Result<String> {
     let response = app
         .http()
-        .get(format!(
-            "https://thunderstore.io/api/experimental/legacyprofile/get/{key}/"
-        ))
+        .get(backend.profile_import(&key.to_string()))
         .send()
         .await?
         .error_for_status()
@@ -100,10 +133,7 @@ pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
         .text()
         .await?;
 
-    match response.strip_prefix(PROFILE_DATA_PREFIX) {
-        Some(str) => read_base64(str),
-        None => Err(eyre!("invalid profile data")),
-    }
+    Ok(response)
 }
 
 #[derive(Debug, Default, Deserialize, Clone)]
@@ -113,22 +143,19 @@ pub struct ImportOptions {
     merge: bool,
 }
 
-impl ImportOptions {
-    fn included_extensions(&self) -> IncludeExtensions {
-        if self.import_all {
-            IncludeExtensions::All
-        } else {
-            IncludeExtensions::Default
-        }
-    }
-}
-
 pub(super) async fn import_profile(
     data: ImportData,
     options: ImportOptions,
     install_options: InstallOptions,
     app: &AppHandle,
 ) -> Result<i64> {
+    info!(
+        name = %data.manifest.name,
+        options = ?options,
+        install_options = ?install_options,
+        "importing profile"
+    );
+
     let (profile_id, profile_path, to_install) = prepare_import(&options, data.manifest, app)?;
 
     let result = app
@@ -138,14 +165,7 @@ pub(super) async fn import_profile(
 
     let result = match result {
         Ok(()) => {
-            import_config(
-                &profile_path,
-                &data.path,
-                options.merge,
-                options.included_extensions(),
-                IncludeGenerated::No,
-            )
-            .context("error importing config")?;
+            import_config(&profile_path, &data.path, &options).context("error importing config")?;
 
             Ok(profile_id)
         }
@@ -295,31 +315,24 @@ fn incremental_update(
     Ok(to_install)
 }
 
-pub fn import_config(
-    dest: &Path,
-    src: &Path,
-    merge: bool,
-    extensions: IncludeExtensions,
-    generated: IncludeGenerated,
-) -> Result<()> {
-    let existing_files = export::find_config(dest, extensions, generated);
-    let source_files = export::find_config(src, extensions, generated);
+pub fn import_config(dest: &Path, src: &Path, options: &ImportOptions) -> Result<()> {
+    let src_files = WalkDir::new(src)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_file())
+        .map(|entry| {
+            entry
+                .into_path()
+                .strip_prefix(src)
+                .expect("path should be child of source")
+                .to_path_buf()
+        })
+        .filter(|path| options.import_all || is_always_included(path));
 
-    if !merge {
-        for file in existing_files {
-            let exists_in_src = src.join(&file).exists()
-                || file
-                    .strip_prefix("BepInEx/config")
-                    .is_ok_and(|suffix| src.join("config").join(suffix).exists());
+    debug!("importing config files from source to destination");
 
-            if !exists_in_src {
-                trace!("remove {}", file.display());
-                fs::remove_file(dest.join(&file))?;
-            }
-        }
-    }
-
-    for file in source_files {
+    for file in src_files {
         let src_path = src.join(&file);
         let dest_path = if file.starts_with("config") {
             dest.join("BepInEx").join(&file)
@@ -334,11 +347,32 @@ pub fn import_config(
         };
 
         if need_copy {
-            trace!("copy {}", file.display());
+            trace!(
+                relative_path = %file.display(),
+                "copy file"
+            );
             fs::create_dir_all(dest_path.parent().unwrap())?;
             fs::copy(src_path, dest_path)?;
+        } else {
+            trace!(
+                relative_path = %file.display(),
+                "file is identical, skipping copy"
+            );
         }
     }
 
     Ok(())
+}
+
+fn is_always_included(path: impl AsRef<Path>) -> bool {
+    static EXCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
+        GlobSetBuilder::new()
+            .add(Glob::new("export.r2x").unwrap())
+            .add(Glob::new("mods.yml").unwrap())
+            .add(Glob::new("*.{dll,exe,scr,com,pif,bat,cmd,ps1,vbs,vbe,js,jse,wsf,wsh,hta,msi,msix,sys,drv,cpl,ocx,lnk,reg,inf}").unwrap())
+            .build()
+            .unwrap()
+    });
+
+    !EXCLUDE_SET.is_match(path.as_ref())
 }

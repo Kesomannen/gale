@@ -4,8 +4,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use base64::{prelude::BASE64_STANDARD, Engine};
-use eyre::{bail, ensure, Context, Result};
+use base64::{Engine, prelude::BASE64_STANDARD};
+use eyre::{Context, Result, bail, ensure};
 use tauri::AppHandle;
 use tempfile::NamedTempFile;
 use uuid::Uuid;
@@ -14,7 +14,7 @@ use zip::ZipArchive;
 use crate::{
     game::mod_loader::{ModLoader, ModLoaderKind},
     prefs::Prefs,
-    profile::{install::InstallOptions, LocalMod, Profile, ProfileMod},
+    profile::{LocalMod, Profile, ProfileMod, install::InstallOptions},
     state::ManagerExt,
     thunderstore::PackageManifest,
     util::{self, fs::PathExt},

@@ -11,7 +11,7 @@ use crate::{
         install::{InstallResultExt, queue::InstallQueueLock},
     },
     state::ManagerExt,
-    thunderstore::{ModId, PackageListing, PackageVersion, Thunderstore},
+    thunderstore::{BorrowedMod, ModId, Thunderstore},
 };
 
 pub mod commands;
@@ -20,23 +20,13 @@ pub struct AvailableUpdate<'a> {
     pub enabled: bool,
     pub index: usize,
     pub install_time: DateTime<Utc>,
-    pub package: &'a PackageListing,
-    pub current: &'a PackageVersion,
-    pub latest: &'a PackageVersion,
-}
-
-impl<'a> AvailableUpdate<'a> {
-    pub fn id(&self) -> ModId {
-        ModId {
-            package_uuid: self.package.uuid,
-            version_uuid: self.latest.uuid,
-        }
-    }
+    pub current: BorrowedMod<'a>,
+    pub latest: BorrowedMod<'a>,
 }
 
 impl From<AvailableUpdate<'_>> for ModInstall {
     fn from(value: AvailableUpdate<'_>) -> Self {
-        ModInstall::new((value.package, value.latest))
+        ModInstall::new(value.latest)
             .with_state(value.enabled)
             .with_index(value.index)
             .with_time(value.install_time)
@@ -44,50 +34,50 @@ impl From<AvailableUpdate<'_>> for ModInstall {
 }
 
 impl Profile {
-    pub fn is_update_ignored(&self, id: ModId) -> bool {
-        self.ignored_version_updates.contains(&id.version_uuid)
-            || self.ignored_package_updates.contains(&id.package_uuid)
+    pub fn is_update_ignored(&self, update: &AvailableUpdate<'_>) -> bool {
+        let latest = &update.latest;
+
+        self.ignored_version_updates.contains(&latest.version.uuid)
+            || self.ignored_package_updates.contains(&latest.package.uuid)
     }
 
     pub fn check_update<'a>(
         &'a self,
-        package_uuid: Uuid,
+        uuid: Uuid,
         thunderstore: &'a Thunderstore,
         install_queue: &InstallQueueLock,
     ) -> Result<Option<AvailableUpdate<'a>>> {
-        if install_queue.has_mod(package_uuid, self.id) {
+        if install_queue.has_mod(uuid, self.id) {
             return Ok(None); // a new version of this mod is installing or pending
         }
 
-        let index = self.index_of(package_uuid)?;
+        let index = self.index_of(uuid)?;
         let profile_mod = &self.mods[index];
 
         let Some((ts_mod, _)) = profile_mod.as_thunderstore() else {
             return Ok(None); // local mods can't be updated
         };
 
-        let Ok(current) = ts_mod
-            .id
-            .borrow(thunderstore)
-            .map(|borrowed| borrowed.version)
-        else {
+        let Ok(current) = ts_mod.id.borrow(thunderstore) else {
             return Ok(None); // ignore missing mods
         };
 
-        let package = thunderstore.get_package(package_uuid)?;
-        let latest = package.latest();
+        let package = thunderstore.get_package(current.package.uuid)?;
+        let latest = BorrowedMod {
+            package,
+            version: package.latest(),
+        };
 
-        if current.parsed_version() >= latest.parsed_version() {
+        if current.version.parsed_version() >= latest.version.parsed_version() {
             return Ok(None);
         }
 
         Ok(Some(AvailableUpdate {
             index,
-            package,
-            current,
-            latest: package.latest(),
             enabled: profile_mod.enabled,
             install_time: profile_mod.install_time,
+            current,
+            latest,
         }))
     }
 }
@@ -130,7 +120,7 @@ pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: &AppHandl
                     .check_update(uuid, &thunderstore, &install_queue)
                     .transpose()
             })
-            .filter_ok(|update| !respect_ignored || !profile.is_update_ignored(update.id()))
+            .filter_ok(|update| !respect_ignored || !profile.is_update_ignored(update))
             .map_ok(ModInstall::from)
             .collect::<Result<Vec<_>>>()?;
 

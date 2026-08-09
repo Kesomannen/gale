@@ -4,14 +4,7 @@
 	import type { MouseEventHandler } from 'svelte/elements';
 	import Spinner from '../ui/Spinner.svelte';
 	import ModItemWithContext from './ModItemContext.svelte';
-	import {
-		formatModName,
-		isOutdated,
-		modIconSrc,
-		shortenFileSize,
-		shortenNum,
-		timeSince
-	} from '$lib/util';
+	import { formatModName, isOutdated, modIconSrc, shortenNum, timeSince } from '$lib/util';
 
 	type Props = {
 		mod: Mod;
@@ -19,7 +12,7 @@
 		locked: boolean;
 		contextItems: ModContextItem[];
 		onclick?: MouseEventHandler<HTMLDivElement>;
-		oninstall?: () => void;
+		oninstall?: () => Promise<void>;
 	};
 
 	let { mod, selected: selected, locked, contextItems, onclick, oninstall }: Props = $props();
@@ -34,7 +27,7 @@
 		role="button"
 		tabindex="0"
 		class={[
-			'group my-1 flex items-center gap-4 rounded-lg border p-3',
+			'group text-primary-400 my-1 flex items-center gap-4 rounded-lg border p-3',
 			selected
 				? 'border-primary-500 bg-primary-700'
 				: 'hover:bg-primary-700 border-primary-700 hover:border-primary-600'
@@ -44,9 +37,14 @@
 
 		<div class="shrink grow overflow-hidden text-left">
 			<div class="flex items-center gap-1 overflow-hidden">
-				<div class="shrink pr-1 text-lg font-medium text-white">
+				<div class="truncate pr-1 text-lg font-medium text-white">
 					{formatModName(mod.name)}
 				</div>
+				{#if mod.author !== null}
+					<div class="text-primary-300 truncate pr-2">
+						{mod.author}
+					</div>
+				{/if}
 				{#if mod.isPinned}
 					<Icon class="text-primary-400 shrink-0" icon="ph:push-pin-fill" />
 				{/if}
@@ -62,19 +60,19 @@
 			</div>
 
 			{#if mod.description !== null}
-				<div class="text-primary-300 line-clamp-1 text-sm text-ellipsis lg:line-clamp-2">
+				<div class="line-clamp-1 text-ellipsis lg:line-clamp-2">
 					{mod.description}
 				</div>
 			{/if}
 
-			<div class="text-primary-300 mt-2 flex items-center gap-1 text-sm">
+			<div class="mt-1 flex flex-wrap items-center gap-1">
 				{#if mod.downloads !== null}
 					<Icon class="shrink-0" icon="ph:download-simple-fill" />
 					<span class="mr-4">{shortenNum(mod.downloads)}</span>
 				{/if}
 				{#if mod.lastUpdated}
-					<Icon class=" shrink-0" icon="ph:clock-fill" />
-					<span class="">{timeSince(new Date(mod.lastUpdated))}</span>
+					<Icon class="shrink-0" icon="mdi:clock-outline" />
+					<span class="mr-2">{timeSince(new Date(mod.lastUpdated))}</span>
 				{/if}
 			</div>
 		</div>
@@ -85,10 +83,16 @@
 					'bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline'
 				]}
 				disabled={loading}
-				onclick={(evt) => {
+				onclick={async (evt) => {
 					evt.stopPropagation();
-					oninstall?.();
+					if (!oninstall) return;
+
 					loading = true;
+					try {
+						await oninstall();
+					} finally {
+						loading = false;
+					}
 				}}
 			>
 				{#if loading}

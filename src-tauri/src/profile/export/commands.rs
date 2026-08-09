@@ -4,26 +4,26 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{anyhow, Context};
+use eyre::{Context, anyhow};
 use itertools::Itertools;
-use tauri::{command, AppHandle};
+use serde::Serialize;
+use tauri::{AppHandle, command};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tracing::{debug, warn};
-use uuid::Uuid;
 
 use super::{
-    changelog,
+    ExportCode, changelog,
     modpack::{self, ModpackArgs},
 };
 use crate::{
     profile::ProfileModKind,
     state::ManagerExt,
-    thunderstore::{self},
-    util::{cmd::Result, error::IoResultExt, fs::PathExt},
+    thunderstore,
+    util::{cmd::Result, error::IoResultExt},
 };
 
 #[command]
-pub async fn export_code(app: AppHandle) -> Result<Uuid> {
+pub async fn export_code(app: AppHandle) -> Result<ExportCode> {
     let key = super::export_code(&app).await?;
 
     Ok(key)
@@ -49,14 +49,26 @@ pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
     Ok(())
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModpackInfo {
+    args: ModpackArgs,
+    hexium_exclusive: bool,
+}
+
 #[command]
-pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackArgs>> {
+pub fn get_pack_args(app: AppHandle) -> Result<Option<ModpackInfo>> {
     let mut manager = app.lock_manager();
+
+    let game = manager.active_game;
     let profile = manager.active_profile_mut();
 
-    modpack::refresh_args(profile);
+    let hexium_exclusive = modpack::refresh_args(profile, &app.lock_thunderstore(), game);
 
-    Ok(profile.modpack.clone())
+    Ok(profile.modpack.clone().map(|args| ModpackInfo {
+        args,
+        hexium_exclusive,
+    }))
 }
 
 #[command]
@@ -79,7 +91,7 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
 
     let mut path = dir;
     path.push(format!("{}-{}", args.name, args.version_number));
-    path.add_ext("zip");
+    path.add_extension("zip");
 
     debug!("exporting pack to {:?}", path);
 
@@ -105,11 +117,11 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
         let manager = app.lock_manager();
         let thunderstore = app.lock_thunderstore();
 
-        let token = thunderstore::token::get()
+        let profile = manager.active_profile();
+
+        let token = thunderstore::token::get(args.backend)
             .context("failed to get thunderstore API token")?
             .ok_or(anyhow!("no thunderstore API token found"))?;
-
-        let profile = manager.active_profile();
 
         let mut data = Cursor::new(Vec::new());
         profile.export_pack(&args, &mut data, &thunderstore)?;
@@ -121,8 +133,7 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
         (data, manager.active_game, args, token)
     };
 
-    let client = app.http().clone();
-    modpack::publish(data.into_inner().into(), game, args, token, client).await?;
+    modpack::publish(&app, data.into_inner().into(), game, args, token).await?;
 
     Ok(())
 }
