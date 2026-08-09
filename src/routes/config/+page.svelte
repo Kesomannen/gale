@@ -24,7 +24,7 @@
 </script>
 
 {#if !config.loading && config.files.length === 0}
-	<HelpCard title={m.config_noFiles()} icon="ph:folder-open-fill" class="w-full" />
+	<HelpCard title={m.config_noFiles()} icon="ph:folder-open" class="w-full" />
 {:else}
 	<div class="grid w-full grid-cols-[15rem_1fr] xl:grid-cols-[20rem_1fr]">
 		{#if config.loading}
@@ -66,7 +66,7 @@
 						class="max-w-max"
 						color="primary"
 						onclick={() => api.config.openFile(selectedFile!)}
-						icon="ph:arrow-square-out-fill"
+						icon="ph:arrow-square-out"
 					>
 						{m.config_unsupported_button()}
 					</Button>
@@ -87,7 +87,7 @@
 					</Button>
 				{/if}
 			{:else if !config.loading}
-				<HelpCard title={m.config_content()} icon="ph:faders-fill" class="h-full" />
+				<HelpCard title={m.config_content()} icon="ph:faders" class="h-full" />
 			{/if}
 		</div>
 	</div>

@@ -100,7 +100,7 @@
 									updateListContent();
 								}}
 							>
-								<Icon icon="ph:backspace-fill" />
+								<Icon icon="ph:backspace" />
 							</button>
 							<InputField
 								class="grow"

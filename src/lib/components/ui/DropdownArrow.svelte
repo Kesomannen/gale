@@ -11,7 +11,7 @@
 </script>
 
 <Icon
-	icon="ph:caret-down-fill"
+	icon="ph:caret-down"
 	class={clsx(
 		classProp,
 		open ? 'rotate-180' : 'rotate-0',

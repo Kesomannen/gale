@@ -31,7 +31,7 @@
 	}
 </script>
 
-<PathField {label} {value} onclick={browse} icon={type === 'file' ? 'ph:file-fill' : 'ph:folder-fill'}>
+<PathField {label} {value} onclick={browse} icon={type === 'file' ? 'ph:file' : 'ph:folder'}>
 	{@render children?.()}
 
 	{#snippet field()}
@@ -44,7 +44,7 @@
 					set(null);
 				}}
 			>
-				<Icon icon="ph:x-fill" />
+				<Icon icon="ph:x" />
 			</button>
 		{/if}
 	{/snippet}

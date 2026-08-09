@@ -19,7 +19,7 @@
 	{onkeydown}
 	{placeholder}
 />
-<Icon class="text-primary-400 absolute top-2 left-2.5 text-lg" icon="ph:magnifying-glass-fill" />
+<Icon class="text-primary-400 absolute top-2 left-2.5 text-lg" icon="ph:magnifying-glass" />
 
 <button
 	class="text-primary-400 hover:bg-primary-800 hover:text-primary-300 absolute top-1.25 right-1.5 rounded-md p-1 text-lg"
@@ -28,5 +28,5 @@
 		onclear?.();
 	}}
 >
-	<Icon icon="ph:x-fill" />
+	<Icon icon="ph:x" />
 </button>

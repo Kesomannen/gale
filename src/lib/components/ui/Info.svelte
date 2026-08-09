@@ -11,7 +11,7 @@
 </script>
 
 <Tooltip class="text-primary-400 cursor-help px-2 py-1" delayDuration={300}>
-	<Icon icon="ph:question-fill" />
+	<Icon icon="ph:question" />
 
 	{#snippet tooltip()}
 		{@render children?.()}

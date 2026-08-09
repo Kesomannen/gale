@@ -53,6 +53,6 @@
 	/>
 
 	{#snippet buttons()}
-		<Button icon="ph:download-simple-fill" onclick={install}>{m.installModDialog_button()}</Button>
+		<Button icon="ph:download-simple" onclick={install}>{m.installModDialog_button()}</Button>
 	{/snippet}
 </ConfirmDialog>

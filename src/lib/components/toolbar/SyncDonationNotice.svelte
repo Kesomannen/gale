@@ -27,7 +27,7 @@
 	<div class="text-primary-300">
 		{m.syncDonationNotice_content_2()}<Link href="https://ko-fi.com/kesomannen">Kofi</Link>
 
-		<Icon class="mb-1 inline" icon="ph:heart-fill" />.
+		<Icon class="mb-1 inline" icon="ph:heart" />.
 	</div>
 
 	<button
@@ -36,7 +36,7 @@
 			closedAt.current = new Date().toISOString();
 		}}
 	>
-		<Icon icon="ph:x-fill" />
+		<Icon icon="ph:x" />
 		{m.syncDonationNotice_button()}
 	</button>
 </InfoBox>

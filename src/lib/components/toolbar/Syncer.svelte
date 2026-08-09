@@ -42,22 +42,22 @@
 	let style = $derived(
 		{
 			off: {
-				icon: 'ph:cloud-slash-fill',
+				icon: 'ph:cloud-slash',
 				label: m.syncer_style_off(),
 				classes: 'text-primary-400'
 			},
 			synced: {
-				icon: 'ph:cloud-check-fill',
+				icon: 'ph:cloud-check',
 				label: m.syncer_style_synced(),
 				classes: 'text-accent-500'
 			},
 			outdated: {
-				icon: 'ph:cloud-arrow-down-fill',
+				icon: 'ph:cloud-arrow-down',
 				label: m.syncer_style_outdated(),
 				classes: 'text-yellow-400'
 			},
 			missing: {
-				icon: 'ph:cloud-x-fill',
+				icon: 'ph:cloud-x',
 				label: m.syncer_style_missing(),
 				classes: 'text-red-500 font-semibold'
 			}
@@ -66,12 +66,12 @@
 
 	const dropdownItems = [
 		{
-			icon: 'ph:database-fill',
+			icon: 'ph:database',
 			label: m.syncer_dropdownItems_showOwnedProfiles(),
 			onclick: showOwnedProfiles
 		},
 		{
-			icon: 'ph:sign-out-fill',
+			icon: 'ph:sign-out',
 			label: m.syncer_dropdownItems_login(),
 			onclick: onLoginClicked
 		}
@@ -79,12 +79,12 @@
 
 	const copyItems = [
 		{
-			icon: 'ph:clipboard-text-fill',
+			icon: 'ph:clipboard-text',
 			label: m.syncer_copyItems_copyCode(),
 			onclick: copyCode
 		},
 		{
-			icon: 'ph:link-fill',
+			icon: 'ph:link',
 			label: m.syncer_copyItems_copyLink(),
 			onclick: copyLink
 		}
@@ -218,7 +218,7 @@
 
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
-						<IconButton icon="ph:copy-simple-fill" label={m.syncer_button_copyConetnt()} />
+						<IconButton icon="ph:copy-simple" label={m.syncer_button_copyConetnt()} />
 					</DropdownMenu.Trigger>
 					<ContextMenuContent type="dropdown" items={copyItems} />
 				</DropdownMenu.Root>
@@ -232,7 +232,7 @@
 		<div class="mt-2 flex flex-wrap items-center gap-2">
 			{#if syncState !== 'missing'}
 				{#if syncState === 'outdated'}
-					<Button onclick={pull} {loading} icon="ph:cloud-arrow-down-fill"
+					<Button onclick={pull} {loading} icon="ph:cloud-arrow-down"
 						>{m.syncer_button_pull()}</Button
 					>
 				{/if}
@@ -243,13 +243,13 @@
 						{loading}
 						disabled={auth.user === null}
 						color="accent"
-						icon="ph:cloud-arrow-up-fill"
+						icon="ph:cloud-arrow-up"
 					>
 						{m.syncer_button_push()}
 					</Button>
 				{/if}
 
-				<Button onclick={refresh} {loading} color="primary" icon="ph:arrow-clockwise-fill"
+				<Button onclick={refresh} {loading} color="primary" icon="ph:arrow-clockwise"
 					>{m.syncer_button_refresh()}</Button
 				>
 			{/if}
@@ -258,13 +258,13 @@
 				onclick={disconnect}
 				{loading}
 				color={syncState === 'missing' ? 'accent' : 'primary'}
-				icon="ph:cloud-x-fill"
+				icon="ph:cloud-x"
 			>
 				{m.syncer_button_disconnect()}
 			</Button>
 		</div>
 	{:else if auth.user !== null}
-		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="ph:cloud-arrow-up-fill">
+		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="ph:cloud-arrow-up">
 			{m.syncer_button_connect()}
 		</Button>
 	{/if}
@@ -284,7 +284,7 @@
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">
-					<Icon class="text-2xl" icon="ph:dots-three-vertical-fill" />
+					<Icon class="text-2xl" icon="ph:dots-three-vertical" />
 				</DropdownMenu.Trigger>
 				<ContextMenuContent type="dropdown" items={dropdownItems} />
 			</DropdownMenu.Root>
@@ -294,7 +294,7 @@
 	<div
 		class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
 	>
-		<Icon icon="ph:question-fill" inline />
+		<Icon icon="ph:question" inline />
 
 		<a target="_blank" href="https://github.com/Kesomannen/gale/wiki/Profile-sync/"
 			>{m.syncer_content_help()}</a

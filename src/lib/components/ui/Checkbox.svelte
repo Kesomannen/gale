@@ -35,7 +35,7 @@
 		]}
 	>
 		{#if checked}
-			<Icon class="h-full w-full font-bold text-white" icon="ph:check-fill" />
+			<Icon class="h-full w-full font-bold text-white" icon="ph:check" />
 		{/if}
 	</div>
 </Checkbox.Root>

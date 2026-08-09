@@ -20,5 +20,5 @@
 		alt=""
 	/>
 {:else}
-	<Icon icon="ph:user-circle-fill" class={clsx(classProp, 'text-primary-500 block size-8 shadow-lg')} />
+	<Icon icon="ph:user-circle" class={clsx(classProp, 'text-primary-500 block size-8 shadow-lg')} />
 {/if}

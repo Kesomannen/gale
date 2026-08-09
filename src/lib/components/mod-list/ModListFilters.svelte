@@ -75,14 +75,14 @@
 <div class="mb-1.5 grid grid-cols-[2fr_2fr_1fr] gap-1.5">
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_include()}
-		icon="ph:funnel-simple-fill"
+		icon="ph:funnel-simple"
 		bind:selected={queryArgs.includeCategories}
 		bind:excluded={queryArgs.excludeCategories}
 	/>
 
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_exclude()}
-		icon="ph:funnel-simple-x-fill"
+		icon="ph:funnel-simple-x"
 		bind:selected={queryArgs.excludeCategories}
 		bind:excluded={queryArgs.includeCategories}
 	/>

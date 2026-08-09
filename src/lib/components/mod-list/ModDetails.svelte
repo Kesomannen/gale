@@ -49,7 +49,7 @@
 		...contextItems,
 		{
 			label: m.modDetails_allContextItems_close(),
-			icon: 'ph:x-fill',
+			icon: 'ph:x',
 			onclick: onclose
 		}
 	]);
@@ -82,7 +82,7 @@
 		<DropdownMenu.Trigger
 			class="bg-primary-800 hover:bg-primary-700 absolute right-4 mt-1 rounded-full p-1"
 		>
-			<Icon class="text-primary-200 text-3xl" icon="ph:dots-three-vertical-fill" />
+			<Icon class="text-primary-200 text-3xl" icon="ph:dots-three-vertical" />
 		</DropdownMenu.Trigger>
 		<ModContextMenuContent {mod} {locked} items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
@@ -151,14 +151,14 @@
 
 		<div class="mt-2 flex items-center gap-1.5 text-lg">
 			{#if mod.rating !== null}
-				<Icon class="shrink-0 text-yellow-500" icon="ph:star-fill" />
+				<Icon class="shrink-0 text-yellow-500" icon="ph:star" />
 				<span class="mr-4 text-yellow-500">{shortenNum(mod.rating)}</span>
 			{/if}
 			{#if mod.downloads !== null}
-				<Icon class="shrink-0 text-green-500" icon="ph:download-simple-fill" />
+				<Icon class="shrink-0 text-green-500" icon="ph:download-simple" />
 				<span class="mr-4 text-green-500">{shortenNum(mod.downloads)}</span>
 			{/if}
-			<Icon class="text-primary-400 shrink-0" icon="ph:hard-drives-fill" />
+			<Icon class="text-primary-400 shrink-0" icon="ph:hard-drives" />
 			<span class="text-primary-400">{shortenFileSize(mod.fileSize)}</span>
 		</div>
 
@@ -195,7 +195,7 @@
 		<div
 			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
-			<Icon class="text-xl" icon="ph:faders-fill" />
+			<Icon class="text-xl" icon="ph:faders" />
 			<button onclick={() => config.gotoModConfig(mod.configFile!)}>
 				{m.modDetails_editConfig()}
 			</button>
@@ -213,8 +213,8 @@
 		</button>
 	{/snippet}
 
-	{@render button('ph:file-fill', m.modDetails_changeLog(), openChangelog, fetchChangelog)}
-	{@render button('ph:info-fill', m.modDetails_details(), () => (readmeOpen = true))}
+	{@render button('ph:file', m.modDetails_changeLog(), openChangelog, fetchChangelog)}
+	{@render button('ph:info', m.modDetails_details(), () => (readmeOpen = true))}
 
 	{#if mod.dependencies !== null && mod.dependencies.length > 0}
 		{@render button(

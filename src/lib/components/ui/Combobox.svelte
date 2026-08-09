@@ -80,7 +80,7 @@
 										>
 
 										{#if selected}
-											<Icon icon="ph:check-fill" class="text-accent-400 ml-auto text-lg" />
+											<Icon icon="ph:check" class="text-accent-400 ml-auto text-lg" />
 										{/if}
 									{/snippet}
 								</Combobox.Item>

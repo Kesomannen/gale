@@ -40,6 +40,6 @@
 </Tooltip>
 
 {#snippet icon_()}
-	<Icon {icon} class={[hasOutline && 'hidden']} />
-	<Icon icon="{icon}-outline" class={[!hasOutline && 'hidden']} />
+	<Icon {icon} class={[!hasOutline && 'hidden']} />
+	<Icon icon="{icon}-fill" class={[hasOutline && 'hidden']} />
 {/snippet}

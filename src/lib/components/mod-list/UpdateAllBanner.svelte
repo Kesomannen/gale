@@ -70,7 +70,7 @@
 
 {#if shownUpdates.length > updateBanner.threshold}
 	<div class="bg-accent-700 text-accent-100 mb-1 flex items-center rounded-lg py-1 pr-1 pl-3">
-		<Icon icon="ph:arrow-circle-up-fill" class="mr-2 text-xl" />
+		<Icon icon="ph:arrow-circle-up" class="mr-2 text-xl" />
 		{m.updateAllBanner_content({ count: shownUpdates.length })}
 
 		<button
@@ -84,7 +84,7 @@
 			class="hover:bg-accent-600 ml-auto rounded-md p-1 text-xl"
 			onclick={() => (updateBanner.threshold = shownUpdates.length)}
 		>
-			<Icon icon="ph:x-fill" />
+			<Icon icon="ph:x" />
 		</button>
 	</div>
 {/if}
@@ -121,7 +121,7 @@
 				<DropdownMenu.Trigger
 					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-3 rounded-sm p-1.5"
 				>
-					<Icon icon="ph:bell-simple-slash-fill" />
+					<Icon icon="ph:bell-simple-slash" />
 				</DropdownMenu.Trigger>
 				<ContextMenuContent
 					type="dropdown"

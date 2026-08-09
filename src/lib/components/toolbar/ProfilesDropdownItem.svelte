@@ -40,14 +40,14 @@
 	onclick={() => profiles.setActive(index)}
 >
 	{#if profile.sync !== null}
-		<Icon icon="ph:cloud-fill" class="mr-2" />
+		<Icon icon="ph:cloud" class="mr-2" />
 	{/if}
 
 	<span class="mr-3 grow">
 		{profile.name}
 	</span>
 
-	<Icon icon="ph:check-fill" class={clsx(!isActive && 'invisible', 'text-accent-500 mx-2 text-lg')} />
+	<Icon icon="ph:check" class={clsx(!isActive && 'invisible', 'text-accent-500 mx-2 text-lg')} />
 
 	<div class="bg-primary-700 group-hover:bg-primary-600 mr-1 rounded-sm px-1.5 py-0.5 text-xs">
 		{profile.modCount}
@@ -55,7 +55,7 @@
 
 	<IconButton
 		label="Delete profile"
-		icon="ph:trash-fill"
+		icon="ph:trash"
 		color="red"
 		onclick={(evt) => {
 			evt.preventDefault();

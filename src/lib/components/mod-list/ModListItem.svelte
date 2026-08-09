@@ -46,16 +46,16 @@
 					</div>
 				{/if}
 				{#if mod.isPinned}
-					<Icon class="text-primary-400 shrink-0" icon="ph:push-pin-fill" />
+					<Icon class="text-primary-400 shrink-0" icon="ph:push-pin" />
 				{/if}
 				{#if mod.isDeprecated}
-					<Icon class="shrink-0 text-yellow-500" icon="ph:warning-fill" />
+					<Icon class="shrink-0 text-yellow-500" icon="ph:warning" />
 				{/if}
 				{#if mod.isInstalled}
-					<Icon class="text-accent-500 shrink-0" icon="ph:check-circle-fill" />
+					<Icon class="text-accent-500 shrink-0" icon="ph:check-circle" />
 				{/if}
 				{#if isOutdated(mod)}
-					<Icon class="text-accent-500 shrink-0" icon="ph:arrow-circle-up-fill" />
+					<Icon class="text-accent-500 shrink-0" icon="ph:arrow-circle-up" />
 				{/if}
 			</div>
 
@@ -67,7 +67,7 @@
 
 			<div class="mt-1 flex flex-wrap items-center gap-1">
 				{#if mod.downloads !== null}
-					<Icon class="shrink-0" icon="ph:download-simple-fill" />
+					<Icon class="shrink-0" icon="ph:download-simple" />
 					<span class="mr-4">{shortenNum(mod.downloads)}</span>
 				{/if}
 				{#if mod.lastUpdated}
@@ -98,7 +98,7 @@
 				{#if loading}
 					<Spinner />
 				{:else}
-					<Icon icon="ph:download-simple-fill" />
+					<Icon icon="ph:download-simple" />
 				{/if}
 			</button>
 		{/if}

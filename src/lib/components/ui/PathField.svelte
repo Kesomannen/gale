@@ -17,7 +17,7 @@
 	let {
 		label = null,
 		value = $bindable(),
-		icon = 'ph:folder-fill',
+		icon = 'ph:folder',
 		onclick,
 		children,
 		field

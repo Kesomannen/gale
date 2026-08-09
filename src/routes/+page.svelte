@@ -46,7 +46,7 @@
 	const contextItems: ModContextItem[] = [
 		{
 			label: m.page_modContextItem_uninstall(),
-			icon: 'ph:trash-fill',
+			icon: 'ph:trash',
 			onclick: (mod) =>
 				uninstall({
 					uuid: mod.uuid,
@@ -57,7 +57,7 @@
 		},
 		{
 			label: m.page_modContextItem_changeVersion(),
-			icon: 'ph:pencil-simple-fill',
+			icon: 'ph:pencil-simple',
 			onclick: () => {},
 			showFor: (mod, profileLocked) => mod.versions.length > 1 && !profileLocked,
 			children: (mod) =>
@@ -68,17 +68,17 @@
 		},
 		{
 			label: m.page_modContextItem_showDependants(),
-			icon: 'ph:git-branch-fill',
+			icon: 'ph:git-branch',
 			onclick: openDependants
 		},
 		{
 			label: m.page_modContextItem_openFolder(),
-			icon: 'ph:folder-fill',
+			icon: 'ph:folder',
 			onclick: (mod) => api.profile.openModDir(mod.uuid)
 		},
 		{
 			label: m.modDetails_editConfig(),
-			icon: 'ph:faders-fill',
+			icon: 'ph:faders',
 			showFor: (mod) => mod.configFile != null,
 			onclick: (mod) => config.gotoModConfig(mod.configFile!)
 		},
@@ -229,10 +229,10 @@
 
 		{#if mods.length === 0 && hasRefreshed}
 			{#if totalModCount === 0}
-				<HelpCard icon="ph:ghost-fill" title={m.page_modList_noMods_1()}>
+				<HelpCard icon="ph:ghost" title={m.page_modList_noMods_1()}>
 					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
 						><Icon
-							icon="ph:storefront-fill"
+							icon="ph:storefront"
 							class="mr-0.5 ml-1  inline"
 							inline
 						/>{m.page_modList_noMods_2()}</a

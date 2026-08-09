@@ -61,7 +61,7 @@
 	</Link>
 
 	{#snippet buttons()}
-		<Button icon="ph:pencil-simple-fill" color="accent" onclick={submit} {loading}
+		<Button icon="ph:pencil-simple" color="accent" onclick={submit} {loading}
 			>{m.apiKeyDialog_button()}</Button
 		>
 	{/snippet}

@@ -64,7 +64,7 @@
 
 										{label}
 
-										<Icon class="ml-auto text-lg" icon="ph:caret-right-fill" />
+										<Icon class="ml-auto text-lg" icon="ph:caret-right" />
 									</SubTrigger>
 									<ContextMenuContent {type} sub items={children} />
 								</Sub>

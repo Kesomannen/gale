@@ -38,7 +38,7 @@
 			GNU General Public License v3.0
 		</p>
 		<div class="mt-3 flex items-center gap-2">
-			<Icon icon="ph:file-fill" class="text-xl text-white" />
+			<Icon icon="ph:file" class="text-xl text-white" />
 			<Link href="https://github.com/Kesomannen/gale/blob/master/CHANGELOG.md"
 				>{m.aboutDialog_changelog()}</Link
 			>
@@ -48,11 +48,11 @@
 			<Link href="https://github.com/Kesomannen/gale">GitHub</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="ph:discord-logo-fill" class="text-xl text-white" />
+			<Icon icon="ph:discord-logo" class="text-xl text-white" />
 			<Link href="https://discord.gg/sfuWXRfeTt">Discord</Link>
 		</div>
 		<div class="mt-1 flex items-center gap-2">
-			<Icon icon="ph:heart-fill" class="text-xl text-white" />
+			<Icon icon="ph:heart" class="text-xl text-white" />
 			<Link href="https://ko-fi.com/kesomannen">{m.aboutDialog_donate()}</Link>
 		</div>
 		<div class="mt-3 flex items-center gap-2">
@@ -61,19 +61,19 @@
 				loading={updates.isChecking}
 				color="primary"
 				class="mr-2"
-				icon="ph:arrow-clockwise-fill"
+				icon="ph:arrow-clockwise"
 			>
 				{m.aboutDialog_checkUpdate()}
 			</Button>
 
 			{#if !updates.isChecking && checkedUpdate}
 				{#if updates.next}
-					<Icon icon="ph:arrow-circle-up-fill" class="text-accent-400 inline text-xl" />
+					<Icon icon="ph:arrow-circle-up" class="text-accent-400 inline text-xl" />
 					<span class="text-accent-400"
 						>{m.aboutDialog_newVersion({ version: updates.next.version })}</span
 					>
 				{:else}
-					<Icon icon="ph:check-fill" class="text-primary-300 text-xl" />
+					<Icon icon="ph:check" class="text-primary-300 text-xl" />
 					<span class="text-primary-300">{m.aboutDialog_latestVersion()}</span>
 				{/if}
 			{/if}

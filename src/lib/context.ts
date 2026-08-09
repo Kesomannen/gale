@@ -10,13 +10,13 @@ function openIfNotNull(url: string | null) {
 export const defaultContextItems: ModContextItem[] = [
 	{
 		label: m.page_modContextItem_openWebsite(),
-		icon: 'ph:arrow-square-out-fill',
+		icon: 'ph:arrow-square-out',
 		onclick: (mod) => openIfNotNull(mod.websiteUrl),
 		showFor: (mod) => mod.websiteUrl !== null && mod.websiteUrl.length > 0
 	},
 	{
 		label: m.page_modContextItem_donate(),
-		icon: 'ph:heart-fill',
+		icon: 'ph:heart',
 		onclick: (mod) => openIfNotNull(mod.donateUrl),
 		showFor: (mod) => mod.donateUrl !== null
 	}

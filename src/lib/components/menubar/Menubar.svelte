@@ -526,7 +526,7 @@
 			color="accent"
 			loading={profileOperationInProgress}
 			onclick={doProfileOperation}
-			icon={profileOperation === 'duplicate' ? 'ph:copy-simple-fill' : 'ph:pencil-simple-fill'}
+			icon={profileOperation === 'duplicate' ? 'ph:copy-simple' : 'ph:pencil-simple'}
 		>
 			{m[`menuBar_dialog_button_accent_${profileOperation}`]()}
 		</Button>

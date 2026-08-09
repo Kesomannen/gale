@@ -69,7 +69,7 @@
 		{#if loading}
 			<Icon icon="ph:circle-notch" class="animate-spin" />
 		{:else}
-			<Icon icon="ph:arrow-circle-up-fill" />
+			<Icon icon="ph:arrow-circle-up" />
 		{/if}
 		<div class="truncate text-sm">
 			{m[`updater_content_${loading ? 'downloading' : 'available'}`]()}
