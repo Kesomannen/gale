@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PersistedState } from 'runed';
+	import { PersistedState } from '$lib/state/persisted-state.svelte';
 	import Link from '../ui/Link.svelte';
 	import Icon from '@iconify/svelte';
 	import InfoBox from '../ui/InfoBox.svelte';

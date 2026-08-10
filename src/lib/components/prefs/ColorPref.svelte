@@ -9,7 +9,7 @@
 		type Color,
 		systemAccentColorPromise,
 		colorFallbacks
-	} from '$lib/theme';
+	} from '$lib/theme.svelte';
 	import { selectItems } from '$lib/util';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Icon from '@iconify/svelte';
@@ -27,7 +27,7 @@
 
 	let { category, children }: Props = $props();
 
-	let value = $state(getColor(category));
+	const value = $derived(getColor(category));
 
 	const selectOptions = $derived(
 		selectItems(
@@ -64,7 +64,6 @@
 	};
 
 	function set(color: Color) {
-		value = color;
 		setColor(category, color);
 	}
 

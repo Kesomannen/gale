@@ -1,5 +1,5 @@
 import { platform } from '@tauri-apps/plugin-os';
-import { PersistedState } from 'runed';
+import { PersistedState } from '$lib/state/persisted-state.svelte';
 import getPalette from 'tailwindcss-palette-generator';
 import * as api from '$lib/api';
 import type { RgbaColor } from './types';
@@ -315,6 +315,9 @@ export const colorFallbacks: Record<ColorCategory, Color> = {
 	primary: { type: 'default', name: 'gray' }
 };
 
+const accentColor = new PersistedState<Color>('accentColor', colorFallbacks.accent);
+const primaryColor = new PersistedState<Color>('primaryColor', colorFallbacks.primary);
+
 export const systemAccentColorPromise = api.prefs.getSystemAccentColor().then((color) => {
 	if (color) {
 		return rgbToHex(color);
@@ -364,48 +367,47 @@ async function getShades(
 	}
 }
 
-export async function setColor(category: ColorCategory, color: Color) {
-	let shades = await getShades(category, color);
-
+async function applyShades(category: ColorCategory, color: Color) {
+	const shades = await getShades(category, color);
 	for (const [shade, value] of Object.entries(shades)) {
 		root.style.setProperty(`--color-${category}-${shade}`, value);
 	}
+}
 
-	localStorage.setItem(category + 'Color', JSON.stringify(color));
+$effect.root(() => {
+	$effect(() => {
+		void applyShades('accent', accentColor.current);
+	});
+
+	$effect(() => {
+		void applyShades('primary', primaryColor.current);
+	});
+});
+
+export function setColor(category: ColorCategory, color: Color) {
+	(category === 'accent' ? accentColor : primaryColor).current = color;
 }
 
 export function getColor(category: ColorCategory): Color {
-	let json = localStorage.getItem(category + 'Color');
-
-	if (json === null) {
-		return colorFallbacks[category];
-	}
-
-	try {
-		return JSON.parse(json) as Color;
-	} catch (e) {
-		console.error('Failed to parse saved color', e);
-		return colorFallbacks[category];
-	}
-}
-
-export function refreshColor(category: ColorCategory) {
-	setColor(category, getColor(category));
+	return (category === 'accent' ? accentColor : primaryColor).current;
 }
 
 const defaultFont = 'Inter';
 
+const font = new PersistedState<string>('font', defaultFont);
+
+$effect.root(() => {
+	$effect(() => {
+		root.style.fontFamily = `'${font.current}', '${defaultFont}', sans-serif`;
+	});
+});
+
 export function setFont(fontFamily: string) {
-	root.style.fontFamily = `'${fontFamily}', '${defaultFont}', sans-serif`;
-	localStorage.setItem('font', fontFamily);
+	font.current = fontFamily;
 }
 
 export function getFont() {
-	return localStorage.getItem('font') ?? defaultFont;
-}
-
-export function refreshFont() {
-	setFont(getFont());
+	return font.current;
 }
 
 export const useNativeMenu = new PersistedState(
