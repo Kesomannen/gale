@@ -97,6 +97,7 @@ winreg = "0.52"
 
 [target.'cfg(target_os="linux")'.dependencies]
 webkit2gtk = "2.0.1"
+ashpd = { version = "0.13", features = ["settings"] }
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]

@@ -6,7 +6,9 @@
 		setColor,
 		type DefaultColor,
 		type ColorCategory,
-		type Color
+		type Color,
+		systemAccentColorPromise,
+		colorFallbacks
 	} from '$lib/theme';
 	import { selectItems } from '$lib/util';
 	import Select from '$lib/components/ui/Select.svelte';
@@ -15,7 +17,6 @@
 	import type { ClassValue } from 'clsx';
 	import Info from '../ui/Info.svelte';
 	import type { Snippet } from 'svelte';
-	import clsx from 'clsx';
 	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
@@ -24,11 +25,16 @@
 		children: Snippet;
 	};
 
-	let { category, default: defaultValue, children }: Props = $props();
+	let { category, children }: Props = $props();
 
 	let value = $state(getColor(category));
 
-	const selectOptions = ['custom', ...Object.keys(defaultColors)];
+	const selectOptions = $derived(
+		selectItems(
+			['custom', ...(category === 'accent' ? ['system'] : []), ...Object.keys(defaultColors)],
+			(item) => colorNames[item as keyof typeof colorNames]()
+		)
+	);
 
 	const colorNames = {
 		amber: m.colorPref_color_amber,
@@ -53,12 +59,29 @@
 		teal: m.colorPref_color_teal,
 		violet: m.colorPref_color_violet,
 		yellow: m.colorPref_color_yellow,
-		zinc: m.colorPref_color_zinc
+		zinc: m.colorPref_color_zinc,
+		system: m.colorPref_color_system
 	};
 
 	function set(color: Color) {
 		value = color;
 		setColor(category, color);
+	}
+
+	function switchColorType<T>(
+		value: Color,
+		default_: (color: DefaultColor) => T,
+		custom: (hex: string) => T,
+		system: () => T
+	): T {
+		switch (value.type) {
+			case 'default':
+				return default_(value.name);
+			case 'custom':
+				return custom(value.hex);
+			case 'system':
+				return system();
+		}
 	}
 </script>
 
@@ -72,16 +95,24 @@
 	<Select
 		type="single"
 		triggerClass="grow"
+		items={selectOptions}
 		bind:value={
-			() => (value.type === 'custom' ? 'custom' : value.name),
+			() =>
+				switchColorType(
+					value,
+					(name) => name,
+					(_) => 'custom',
+					() => 'system'
+				),
 			(selectValue) =>
 				set(
 					selectValue === 'custom'
 						? { type: 'custom', hex: '#6b7280' }
-						: { type: 'default', name: selectValue }
+						: selectValue === 'system'
+							? { type: 'system' }
+							: { type: 'default', name: selectValue as DefaultColor }
 				)
 		}
-		items={selectItems(selectOptions, (item) => colorNames[item as keyof typeof colorNames]())}
 	>
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(value)}
@@ -95,7 +126,9 @@
 			{@render colorIcon(
 				value === 'custom'
 					? { type: 'custom', hex: '' }
-					: { type: 'default', name: value as DefaultColor },
+					: value === 'system'
+						? { type: 'system' }
+						: { type: 'default', name: value as DefaultColor },
 				'mr-2'
 			)}
 		{/snippet}
@@ -112,16 +145,27 @@
 		/>
 	{/if}
 
-	<ResetButton class="ml-1" onclick={() => set({ type: 'default', name: defaultValue })} />
+	<ResetButton class="ml-1" onclick={() => set(colorFallbacks[category])} />
 </div>
 
 {#snippet colorIcon(value: Color, className?: ClassValue)}
+	<!-- {JSON.stringify(value)} -->
 	{#if value.type === 'custom'}
-		<Icon class={clsx(className, 'text-primary-400 size-4')} icon="mdi:edit" />
+		<Icon class={[className, 'text-primary-400 size-4']} icon="mdi:edit" />
+	{:else if value.type === 'system'}
+		{#await systemAccentColorPromise then color}
+			{#if color}
+				{@render colorCircle(color, className)}
+			{:else}
+				<Icon class={[className, 'text-primary-400 size-4']} icon="mdi:monitor" />
+			{/if}
+		{/await}
 	{:else}
-		<span
-			class={[className, 'inline-block size-4 rounded-full']}
-			style="background-color: {defaultColors[value.name][600]}"
-		></span>
+		{@render colorCircle(defaultColors[value.name][600], className)}
 	{/if}
+{/snippet}
+
+{#snippet colorCircle(value: string, className?: ClassValue)}
+	<span class={[className, 'inline-block size-4 rounded-full']} style="background-color: {value}"
+	></span>
 {/snippet}

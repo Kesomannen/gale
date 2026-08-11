@@ -402,3 +402,5 @@ export type ListItem =
 			type: 'folder';
 			folder: Folder;
 	  };
+
+export type RgbaColor = [number, number, number, number];

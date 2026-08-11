@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 
 pub mod cmd;
+pub mod color;
 pub mod error;
 pub mod fs;
 pub mod path;
