@@ -1,6 +1,8 @@
 import { platform } from '@tauri-apps/plugin-os';
 import { PersistedState } from 'runed';
 import getPalette from 'tailwindcss-palette-generator';
+import * as api from '$lib/api';
+import type { RgbaColor } from './types';
 
 export const defaultColors = {
 	slate: {
@@ -296,6 +298,9 @@ export type ColorCategory = 'accent' | 'primary';
 
 export type Color =
 	| {
+			type: 'system';
+	  }
+	| {
 			type: 'default';
 			name: DefaultColor;
 	  }
@@ -305,24 +310,60 @@ export type Color =
 	  };
 
 const root = document.querySelector(':root') as HTMLElement;
-const fallbacks: Record<ColorCategory, Color> = {
-	accent: { type: 'default', name: 'green' },
-	primary: { type: 'default', name: 'slate' }
+export const colorFallbacks: Record<ColorCategory, Color> = {
+	accent: { type: 'system' },
+	primary: { type: 'default', name: 'gray' }
 };
 
-export function setColor(category: ColorCategory, color: Color) {
-	let shades: { [shade: string]: string };
-
-	if (color.type === 'default') {
-		shades = defaultColors[color.name];
-	} else {
-		let palette = getPalette({
-			color: color.hex,
-			name: 'main'
-		});
-
-		shades = palette['main'];
+export const systemAccentColorPromise = api.prefs.getSystemAccentColor().then((color) => {
+	if (color) {
+		return rgbToHex(color);
 	}
+	return null;
+});
+
+function rgbToHex(color: RgbaColor): string {
+	const [r, g, b] = color;
+	return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+}
+
+async function getShades(
+	category: ColorCategory,
+	color: Color
+): Promise<{ [shade: string]: string }> {
+	switch (color.type) {
+		case 'custom':
+			let palette = getPalette({
+				color: color.hex,
+				name: 'main'
+			});
+			return palette['main'];
+
+		case 'system':
+			if (category === 'primary') {
+				console.warn('System color is not supported for primary category, falling back to default');
+				return await getShades(category, colorFallbacks[category]);
+			}
+
+			const systemColor = await systemAccentColorPromise;
+			if (systemColor) {
+				let palette = getPalette({
+					color: systemColor,
+					name: 'main'
+				});
+				return palette['main'];
+			} else {
+				console.info('System accent color is not available, falling back to default');
+				return await getShades(category, colorFallbacks[category]);
+			}
+
+		case 'default':
+			return defaultColors[color.name];
+	}
+}
+
+export async function setColor(category: ColorCategory, color: Color) {
+	let shades = await getShades(category, color);
 
 	for (const [shade, value] of Object.entries(shades)) {
 		root.style.setProperty(`--color-${category}-${shade}`, value);
@@ -335,14 +376,14 @@ export function getColor(category: ColorCategory): Color {
 	let json = localStorage.getItem(category + 'Color');
 
 	if (json === null) {
-		return fallbacks[category];
+		return colorFallbacks[category];
 	}
 
 	try {
 		return JSON.parse(json) as Color;
 	} catch (e) {
 		console.error('Failed to parse saved color', e);
-		return fallbacks[category];
+		return colorFallbacks[category];
 	}
 }
 

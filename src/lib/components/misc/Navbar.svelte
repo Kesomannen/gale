@@ -39,7 +39,7 @@
 	]);
 </script>
 
-<nav class="border-primary-600 bg-primary-900 relative flex shrink-0 flex-col gap-2 border-r p-3">
+<nav class="relative flex shrink-0 flex-col gap-2 px-3">
 	{#each links as link (link.to)}
 		<NavbarLink {...link} />
 	{/each}

@@ -1,7 +1,6 @@
-use eyre::anyhow;
-use font_kit::source::SystemSource;
+use eyre::eyre;
 use serde::Deserialize;
-use tauri::{AppHandle, Manager, Window, command};
+use tauri::{AppHandle, Manager, Window, command, window::Color};
 
 use super::Prefs;
 use crate::{
@@ -41,7 +40,7 @@ pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
         .get_webview_window("main")
         .unwrap()
         .zoom(prefs.zoom_factor as f64)
-        .map_err(|err| anyhow!(err))?;
+        .map_err(|err| eyre!(err))?;
 
     prefs.save(app.db())?;
 
@@ -50,7 +49,14 @@ pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
 
 #[command]
 pub fn get_system_fonts() -> Result<Vec<String>> {
-    let fonts = SystemSource::new().all_families().unwrap();
+    font_kit::source::SystemSource::new()
+        .all_families()
+        .map_err(|err| eyre!(err).into())
+}
 
-    Ok(fonts)
+#[command]
+pub async fn get_system_accent_color() -> Result<Option<Color>> {
+    crate::util::color::system_accent()
+        .await
+        .map_err(|err| eyre!(err).into())
 }

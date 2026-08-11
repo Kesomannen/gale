@@ -49,6 +49,7 @@
 	"colorPref_color_sky": "Himmel",
 	"colorPref_color_slate": "Skiffer",
 	"colorPref_color_stone": "Sten",
+	"colorPref_color_system": "System",
 	"colorPref_color_teal": "Turkos",
 	"colorPref_color_violet": "Violett",
 	"colorPref_color_yellow": "Gul",
@@ -495,17 +496,12 @@
 	"updateAllBanner_button": "Uppdatera alla?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Det finns en uppdatering tillgänglig.",
 				"countPlural=other": "Det finns {count} uppdateringar tillgängliga."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Uppdatera mods",

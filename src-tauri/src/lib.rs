@@ -6,9 +6,6 @@ use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tracing::{debug, error, info, warn};
 
-#[cfg(target_os = "linux")]
-extern crate webkit2gtk;
-
 mod cli;
 mod config;
 mod db;
@@ -122,6 +119,7 @@ pub fn run() {
             prefs::commands::set_prefs,
             prefs::commands::zoom_window,
             prefs::commands::get_system_fonts,
+            prefs::commands::get_system_accent_color,
             profile::commands::get_game_info,
             profile::commands::favorite_game,
             profile::commands::set_active_game,

@@ -49,6 +49,7 @@
 	"colorPref_color_sky": "Ciel",
 	"colorPref_color_slate": "Ardoise",
 	"colorPref_color_stone": "Pierre",
+	"colorPref_color_system": "Système",
 	"colorPref_color_teal": "Sarcelle",
 	"colorPref_color_violet": "Violet",
 	"colorPref_color_yellow": "Jaune",
@@ -495,17 +496,12 @@
 	"updateAllBanner_button": "Tout mettre à jour ?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Une mise à jour est disponible.",
 				"countPlural=other": "Des mises à jour {count} sont disponibles."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Mettre à jour les mods",

@@ -49,6 +49,7 @@
 	"colorPref_color_sky": "Azul cielo",
 	"colorPref_color_slate": "Pizarra",
 	"colorPref_color_stone": "Piedra",
+	"colorPref_color_system": "Sistema",
 	"colorPref_color_teal": "Turquesa",
 	"colorPref_color_violet": "Violeta",
 	"colorPref_color_yellow": "Amarillo",
@@ -495,17 +496,12 @@
 	"updateAllBanner_button": "¿Actualizar todo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Hay una actualización disponible.",
 				"countPlural=other": "Hay {count} actualizaciones disponibles."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Actualizar mods",

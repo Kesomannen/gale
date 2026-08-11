@@ -6,7 +6,6 @@
 	import VirtualList from '../ui/VirtualList.svelte';
 	import ProfileModCard from './ProfileModCard.svelte';
 	import ProfileModListFolderItem from './ProfileModListFolderItem.svelte';
-	import ProfileModListItem from './ProfileModListItem.svelte';
 	import ProfileModCardWithContext from './ProfileModCardWithContext.svelte';
 	import { m } from '$lib/paraglide/messages';
 

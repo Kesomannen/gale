@@ -104,11 +104,11 @@
 	}
 </script>
 
-<div class="border-primary-600 bg-primary-900 flex h-12 shrink-0 flex-row border-t border-b">
+<div class="flex shrink-0 items-center gap-2 px-3 py-1">
 	<div
-		class="text-accent-500 *:hover:text-accent-400 border-primary-600 *:hover:bg-primary-800 flex shrink-0 items-stretch border-r font-semibold"
+		class="text-accent-500 *:hover:text-accent-400 *:group-hover:bg-primary-800 group flex shrink-0 gap-0.5 overflow-hidden rounded-lg font-semibold *:py-2"
 	>
-		<button onclick={() => launchGame()} class="flex items-center pr-4 pl-6">
+		<button onclick={() => launchGame()} class="flex items-center pr-3 pl-6">
 			<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
 			<span>
 				{labels[mode.current]}
@@ -129,15 +129,15 @@
 
 	<button
 		onclick={() => (gamesOpen = !gamesOpen)}
-		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 items-center justify-between gap-2 border-r pr-4 pl-2 font-semibold"
+		class="group text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink-0 items-center rounded-lg px-4 py-2 font-semibold"
 	>
 		<img
 			src={games.active ? gameIconSrc(games.active) : ''}
-			class="mr-2 max-h-8 max-w-8 rounded-sm"
+			class="mr-2 size-8 rounded"
 			alt={games.active?.name}
 		/>
 
-		<div class="mr-4 hidden md:block">{games.active?.name}</div>
+		<div class="mr-4 hidden lg:block">{games.active?.name}</div>
 
 		<Icon icon="mdi:menu" class="text-primary-300 group-hover:text-primary-200  shrink-0 text-lg" />
 	</button>

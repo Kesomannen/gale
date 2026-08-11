@@ -183,9 +183,9 @@
 	]}
 	onclick={() => (mainDialogOpen = true)}
 >
-	<Icon icon={style.icon} />
+	<Icon class="text-lg md:text-base" icon={style.icon} />
 
-	<div class="truncate">{style.label}</div>
+	<div class="hidden md:block">{style.label}</div>
 </button>
 
 <OwnedSyncProfilesDialog

@@ -49,6 +49,7 @@
 	"colorPref_color_sky": "Błękitny",
 	"colorPref_color_slate": "Łupkowy",
 	"colorPref_color_stone": "Kamienny",
+	"colorPref_color_system": "System",
 	"colorPref_color_teal": "Morski",
 	"colorPref_color_violet": "Fioletowy",
 	"colorPref_color_yellow": "Żółty",
@@ -495,17 +496,12 @@
 	"updateAllBanner_button": "Aktualizować wszystko?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Dostępna jest jedna aktualizacja.",
 				"countPlural=other": "Dostępnych jest {count} aktualizacji."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Aktualizuj mody",

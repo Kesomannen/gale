@@ -15,14 +15,14 @@
 
 <DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger
-		class="group border-primary-600 text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex min-w-40 shrink items-center border-r pr-4 pl-6"
+		class="group text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex min-w-40 shrink items-center rounded-lg px-4 py-2"
 	>
 		<span class="mr-auto shrink truncate font-semibold">
 			{profiles.active?.name}
 		</span>
 
 		<div
-			class="bg-primary-800 group-hover:bg-primary-700 mr-2 ml-6 rounded-sm px-2 py-0.5 text-sm font-medium"
+			class="bg-primary-800 group-hover:bg-primary-700 mr-2 ml-6 rounded-sm px-1.5 py-1 text-xs font-medium"
 		>
 			{profiles.active?.modCount}
 		</div>

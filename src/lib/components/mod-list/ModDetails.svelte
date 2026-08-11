@@ -77,7 +77,7 @@
 	});
 </script>
 
-<div class="relative flex w-[40%] min-w-72 flex-col p-4 text-white">
+<div class="relative flex w-[40%] min-w-72 flex-col p-6 text-white">
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			class="bg-primary-800 hover:bg-primary-700 absolute right-4 mt-1 rounded-full p-1"

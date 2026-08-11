@@ -39,8 +39,7 @@ export const setAllModsState = (enable: boolean) =>
 	invoke<number>('set_all_mods_state', { enable });
 export const setFolderModsState = (folderId: string, enable: boolean) =>
 	invoke<number>('set_folder_mods_state', { folderId, enable });
-export const setProfileLayout = (items: LayoutItem[]) =>
-	invoke('set_profile_layout', { items });
+export const setProfileLayout = (items: LayoutItem[]) => invoke('set_profile_layout', { items });
 export const removeDisabledMods = () => invoke<number>('remove_disabled_mods');
 export const getDependants = (uuid: string) =>
 	invoke<{ fullName: string; preferredVersion: string | null }[]>('get_dependants', { uuid });
