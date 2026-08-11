@@ -132,6 +132,21 @@
 	export function openForCode() {
 		data = null;
 		open = true;
+		pasteFromClipboard();
+	}
+
+	const UUID_REGEX =
+		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
+
+	async function pasteFromClipboard() {
+		try {
+			const text = await readText().then((text) => text.trim());
+			if (UUID_REGEX.test(text)) {
+				key = text;
+			}
+		} catch (err) {
+			console.error('Failed to read key from clipboard:', err);
+		}
 	}
 
 	// Typescript freaks out if we use derived instead of derived.by here

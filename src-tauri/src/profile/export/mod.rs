@@ -214,7 +214,10 @@ where
     Ok(())
 }
 
-fn find_config<'a>(root: &'a Path, config_dirs: &'a [&str]) -> impl Iterator<Item = PathBuf> + 'a {
+pub(super) fn find_config<'a>(
+    root: &'a Path,
+    config_dirs: &'a [&str],
+) -> impl Iterator<Item = PathBuf> + 'a {
     static INCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
             .add(Glob::new("*.{cfg,txt,json,yml,yaml,ini}").unwrap())
@@ -243,7 +246,7 @@ fn find_config<'a>(root: &'a Path, config_dirs: &'a [&str]) -> impl Iterator<Ite
     })
 }
 
-fn list_files<'a>(root: &'a Path) -> impl Iterator<Item = PathBuf> + 'a {
+pub(super) fn list_files<'a>(root: &'a Path) -> impl Iterator<Item = PathBuf> + 'a {
     WalkDir::new(root)
         .into_iter()
         .filter_map(Result::ok)

@@ -6,6 +6,14 @@
 
 - German translation (thanks Henk deBrook)
 
+### Changed
+
+- Profile codes are not auto-pasted from the clipboard as long as the content is a valid UUID
+
+### Fixed
+
+- Profile imports and sync pulls not removed extra config files
+
 ## 1.20.0 (2026-08-07)
 
 ### Added

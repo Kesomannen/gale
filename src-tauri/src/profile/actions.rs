@@ -418,6 +418,7 @@ impl ManagedGame {
         import::import_config(
             &new_profile.path,
             &old_profile.path,
+            self.game.mod_loader.mod_config_dirs(),
             &ImportOptions::default(),
         )
         .context("failed to copy config files")?;
