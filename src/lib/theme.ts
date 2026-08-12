@@ -335,7 +335,8 @@ async function getShades(
 		case 'custom':
 			let palette = getPalette({
 				color: color.hex,
-				name: 'main'
+				name: 'main',
+				shade: 600
 			});
 			return palette['main'];
 
@@ -349,7 +350,8 @@ async function getShades(
 			if (systemColor) {
 				let palette = getPalette({
 					color: systemColor,
-					name: 'main'
+					name: 'main',
+					shade: 600
 				});
 				return palette['main'];
 			} else {

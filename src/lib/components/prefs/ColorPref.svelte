@@ -156,9 +156,8 @@
 		{#await systemAccentColorPromise then color}
 			{#if color}
 				{@render colorCircle(color, className)}
-			{:else}
-				<Icon class={[className, 'text-primary-400 size-4']} icon="mdi:monitor" />
 			{/if}
+			<Icon class={[className, 'text-primary-400 size-4']} icon="mdi:monitor" />
 		{/await}
 	{:else}
 		{@render colorCircle(defaultColors[value.name][600], className)}
