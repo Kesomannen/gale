@@ -10,9 +10,9 @@
 
 	let { entryId, locked }: Props = $props();
 
-	let value = entryId.entry.value;
-	let content = $state(value.content as ConfigNum);
-	let type = value.type as 'int' | 'float';
+	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
+	let content = $state(entryId.entry.value.content as ConfigNum);
+	let type = $derived(entryId.entry.value.type as 'int' | 'float');
 
 	function onReset(value: ConfigValue) {
 		content = value.content as ConfigNum;
