@@ -10,9 +10,10 @@
 
 	let { entryId, locked }: Props = $props();
 
+	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	let content = $state(entryId.entry.value.content as ConfigNum);
 	let range = $derived(content.range as ConfigRange);
-	let type = entryId.entry.value.type as 'int' | 'float';
+	let type = $derived(entryId.entry.value.type as 'int' | 'float');
 
 	let element: HTMLDivElement;
 

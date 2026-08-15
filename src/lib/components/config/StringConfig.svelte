@@ -15,8 +15,9 @@
 
 	let { entryId, locked }: Props = $props();
 
+	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	let content = $state(entryId.entry.value.content as string);
-	let listSeparator = getListSeparator(entryId.entry);
+	let listSeparator = $derived(getListSeparator(entryId.entry));
 
 	async function onReset(value: ConfigValue) {
 		content = value.content as string;

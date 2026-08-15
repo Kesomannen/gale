@@ -13,8 +13,8 @@
 
 	let { entryId, locked }: Props = $props();
 
-	let value = entryId.entry.value;
-	let content = $state(value.content as { indicies: number[]; options: string[] });
+	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
+	let content = $state(entryId.entry.value.content as { indicies: number[]; options: string[] });
 	let selected = $derived(content.indicies.map((index) => content.options[index]));
 
 	function onReset(newValue: ConfigValue) {

@@ -11,6 +11,7 @@
 
 	let { entryId, locked }: Props = $props();
 
+	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	let content = $state(entryId.entry.value.content as boolean);
 
 	function onReset(newValue: ConfigValue) {

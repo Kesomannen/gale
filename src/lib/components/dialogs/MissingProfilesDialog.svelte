@@ -9,7 +9,14 @@
 
 	const missingProfiles = $derived(profiles.list.filter((profile) => profile.missing));
 
-	const actions: (MissingProfileAction | null)[] = $state(missingProfiles.map(() => null));
+	// Resync selection slots when the missing list changes.
+	let actions: (MissingProfileAction | null)[] = $state([]);
+
+	$effect(() => {
+		if (actions.length !== missingProfiles.length) {
+			actions = missingProfiles.map(() => null);
+		}
+	});
 
 	async function submit() {
 		let actionsToApply = missingProfiles.map((profile, i) => ({ profile, action: actions[i] }));

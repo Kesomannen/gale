@@ -15,7 +15,7 @@
 
 	let { open = $bindable(), options, gameName, onselect }: Props = $props();
 
-	let selectedOption = $state<string>(options[0]?.arguments ?? '');
+	let selectedOption = $state('');
 
 	function launch() {
 		open = false;
