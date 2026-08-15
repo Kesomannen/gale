@@ -13,7 +13,7 @@
 		queryArgs: QueryModsArgsWithoutMax;
 	};
 
-	let { sortOptions, queryArgs }: Props = $props();
+	let { sortOptions, queryArgs = $bindable() }: Props = $props();
 
 	function getSelectedIncludes() {
 		let selected = [];
