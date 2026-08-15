@@ -112,16 +112,22 @@ export function isOutdated(mod: Mod): boolean {
 	return mod.version !== mod.versions[0].name;
 }
 
+export function isNonReleaseVersion(version: string): boolean {
+	const metadataSeparator = version.indexOf('+');
+	const versionExtraSeparator = version.indexOf('-');
+	return versionExtraSeparator > 0 && (metadataSeparator < 0 ? 1 << 30 : metadataSeparator) > versionExtraSeparator;
+}
+
 export function hasNonReleaseUpgrade(mod: Mod): boolean {
 	if (mod.versions.length === 0) {
 		return false;
 	}
 
-	if (mod.version?.includes('-')) {
+	if (isNonReleaseVersion(mod.version ?? '')) {
 		return false;
 	}
 
-	return mod.versions[0].name.includes('-');
+	return isNonReleaseVersion(mod.versions[0].name);
 }
 
 export function communityUrl(backend: Backend, author: string, mod?: string) {
