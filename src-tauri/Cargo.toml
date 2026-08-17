@@ -93,6 +93,7 @@ tokio-websockets = { version = "0.13", features = [
 rustls = { version = "0.23.43", features = ["aws_lc_rs"] }
 
 [target.'cfg(target_os="windows")'.dependencies]
+windows = { version = "0.62", features = ["UI", "UI_ViewManagement"] }
 winreg = "0.52"
 
 [target.'cfg(target_os="linux")'.dependencies]

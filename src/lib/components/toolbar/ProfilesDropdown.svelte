@@ -8,6 +8,7 @@
 	import DropdownArrow from '../ui/DropdownArrow.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import Button from '../ui/Button.svelte';
 
 	let open = $state(false);
 	let createDialogOpen = $state(false);
@@ -15,7 +16,7 @@
 
 <DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger
-		class="group text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex min-w-40 shrink items-center rounded-lg px-4 py-2"
+		class="group text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink items-center overflow-hidden rounded-lg px-4 py-2"
 	>
 		<span class="mr-auto shrink truncate font-semibold">
 			{profiles.active?.name}
@@ -35,7 +36,7 @@
 				{#if open}
 					<div
 						{...props}
-						class="border-primary-600 bg-primary-800 z-30 flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-b-lg border p-1 shadow-lg"
+						class="border-primary-600 bg-primary-800 z-30 flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-lg"
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>
@@ -43,12 +44,10 @@
 							<ProfilesDropdownItem {profile} {index} />
 						{/each}
 
-						<DropdownMenu.Item
-							class="bg-accent-700 hover:bg-accent-600 flex cursor-pointer items-center justify-center rounded-sm py-1 text-white"
-							onclick={() => (createDialogOpen = true)}
-						>
-							<Icon icon="mdi:plus" class="mr-1 text-lg" />
-							{m.profilesDropdown_button()}
+						<DropdownMenu.Item class="mt-1 flex">
+							<Button onclick={() => (createDialogOpen = true)} icon="mdi:plus" class="grow">
+								{m.profilesDropdown_button()}
+							</Button>
 						</DropdownMenu.Item>
 					</div>
 				{/if}

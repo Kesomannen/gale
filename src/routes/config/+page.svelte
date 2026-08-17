@@ -26,14 +26,14 @@
 {#if !config.loading && config.files.length === 0}
 	<HelpCard title={m.config_noFiles()} icon="mdi:folder-open-outline" class="w-full" />
 {:else}
-	<div class="grid w-full grid-cols-[15rem_1fr] xl:grid-cols-[20rem_1fr]">
+	<div class="grid w-full grid-cols-[18rem_1fr] xl:grid-cols-[min(22rem)_1fr]">
 		{#if config.loading}
 			{@render loadingSkeletons()}
 		{:else}
 			<ConfigFileList bind:searchTerm />
 		{/if}
 
-		<div class="max-w-5xl overflow-y-auto px-6 pb-6">
+		<div class="max-w-5xl overflow-y-auto p-4 pt-0 pl-2">
 			{#if profiles.activeLocked}
 				<ProfileLockedBanner class="mt-4 mb-4" />
 			{/if}

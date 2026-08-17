@@ -311,7 +311,7 @@ export type Color =
 
 const root = document.querySelector(':root') as HTMLElement;
 export const colorFallbacks: Record<ColorCategory, Color> = {
-	accent: { type: 'system' },
+	accent: { type: 'default', name: 'green' },
 	primary: { type: 'default', name: 'gray' }
 };
 
@@ -342,7 +342,6 @@ async function getShades(
 
 		case 'system':
 			if (category === 'primary') {
-				console.warn('System color is not supported for primary category, falling back to default');
 				return await getShades(category, colorFallbacks[category]);
 			}
 

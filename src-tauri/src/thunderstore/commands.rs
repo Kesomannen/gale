@@ -107,6 +107,7 @@ pub async fn get_categories(game: &str, app: AppHandle) -> Result<Vec<PackageCat
         })
         .flatten()
         .unique()
+        .sorted()
         .collect();
 
     Ok(categories)

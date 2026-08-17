@@ -54,8 +54,8 @@
 	}
 </script>
 
-<div class="overflow-x-hidden overflow-y-auto px-2 pb-4">
-	<div class="relative my-2">
+<div class="overflow-x-hidden overflow-y-auto p-4">
+	<div class="relative mb-2">
 		<SearchBar bind:value={searchTerm} placeholder={m.configFileList_placeholder()} />
 	</div>
 

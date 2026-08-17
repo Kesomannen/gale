@@ -179,7 +179,7 @@
 <button
 	class={[
 		style.classes,
-		'bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
+		'bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
 	]}
 	onclick={() => (mainDialogOpen = true)}
 >

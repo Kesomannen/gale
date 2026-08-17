@@ -11,12 +11,17 @@ pub async fn system_accent() -> Result<Option<Color>> {
         (color.red() * 255.0) as u8,
         (color.green() * 255.0) as u8,
         (color.blue() * 255.0) as u8,
-        0,
+        255,
     );
     Ok(Some(color))
 }
 
 #[cfg(target_os = "windows")]
 pub async fn system_accent() -> Result<Option<Color>> {
-    Ok(None)
+    use windows::UI::ViewManagement::{UIColorType, UISettings};
+
+    let settings = UISettings::new()?;
+    let color: windows::UI::Color = settings.GetColorValue(UIColorType::Accent)?;
+
+    Ok(Some(Color(color.R, color.G, color.B, 255)))
 }
