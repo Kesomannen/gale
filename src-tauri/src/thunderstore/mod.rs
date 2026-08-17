@@ -52,7 +52,7 @@ impl<'a> BorrowedMod<'a> {
     pub fn latest(package: &'a PackageListing) -> Self {
         Self {
             package,
-            version: package.latest(),
+            version: package.latest_released(),
         }
     }
 

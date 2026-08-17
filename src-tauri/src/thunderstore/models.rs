@@ -6,6 +6,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use internment::Intern;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -47,6 +48,14 @@ impl PackageListing {
 
     pub fn latest(&self) -> &PackageVersion {
         &self.versions[0]
+    }
+
+    pub fn latest_released(&self) -> &PackageVersion {
+        &self
+            .versions
+            .iter()
+            .find_or_first(|v| v.parsed_version().pre.is_empty())
+            .unwrap()
     }
 
     pub fn is_modpack(&self) -> bool {

@@ -4,7 +4,7 @@
 	import type { MouseEventHandler } from 'svelte/elements';
 	import Spinner from '../ui/Spinner.svelte';
 	import ModItemWithContext from './ModItemContext.svelte';
-	import { formatModName, isOutdated, modIconSrc, shortenNum, timeSince } from '$lib/util';
+	import { formatModName, hasNonReleaseUpgrade, isOutdated, modIconSrc, shortenNum, timeSince } from '$lib/util';
 
 	type Props = {
 		mod: Mod;
@@ -55,7 +55,11 @@
 					<Icon class="text-accent-500 shrink-0" icon="mdi:check-circle" />
 				{/if}
 				{#if isOutdated(mod)}
-					<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
+					{#if hasNonReleaseUpgrade(mod)}
+						<Icon class="text-accent-200 shrink-0" icon="mdi:flask-outline" />
+					{:else}
+						<Icon class="text-accent-500 shrink-0" icon="mdi:arrow-up-circle" />
+					{/if}
 				{/if}
 			</div>
 
