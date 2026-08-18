@@ -103,8 +103,6 @@ fn create_base_steam_command() -> Result<Command> {
     use crate::util::fs::PathExt;
     use tracing::debug;
 
-    // return Ok(Command::new("/home/keso/.local/share/Steam/steam.sh"));
-
     debug!("checking for steam system installation with which");
 
     if let Ok(path) = which::which("steam") {
