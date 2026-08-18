@@ -19,7 +19,7 @@
 
 	import { capitalize, fileToBase64, shortenFileSize } from '$lib/util';
 	import * as api from '$lib/api';
-	import { useNativeMenu } from '$lib/theme';
+	import { useNativeMenu } from '$lib/theme.svelte';
 
 	import { confirm, open } from '@tauri-apps/plugin-dialog';
 	import { getCurrentWindow } from '@tauri-apps/api/window';

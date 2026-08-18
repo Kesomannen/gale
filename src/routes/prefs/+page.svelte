@@ -18,7 +18,7 @@
 	import ColorPref from '$lib/components/prefs/ColorPref.svelte';
 
 	import Label from '$lib/components/ui/Label.svelte';
-	import { useNativeMenu } from '$lib/theme';
+	import { useNativeMenu } from '$lib/theme.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
 	import profiles from '$lib/state/profile.svelte';

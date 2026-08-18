@@ -213,6 +213,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
+        .plugin(tauri_plugin_store::Builder::new().build())
         .setup(setup)
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
