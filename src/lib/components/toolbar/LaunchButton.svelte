@@ -103,7 +103,7 @@
 	</button>
 
 	<DropdownMenu.Root bind:open={launchDropdownOpen}>
-		<DropdownMenu.Trigger class="px-3">
+		<DropdownMenu.Trigger class="pr-3 pl-2">
 			<DropdownArrow open={launchDropdownOpen} />
 		</DropdownMenu.Trigger>
 		<ContextMenuContent

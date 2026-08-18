@@ -111,7 +111,7 @@
 											>
 
 											{#if selected}
-												<Icon icon="mdi:check" class="text-accent-400 ml-auto text-lg" />
+												<Icon icon="mdi:check" class="text-accent-400 ml-auto shrink-0 text-lg" />
 											{/if}
 										{/snippet}
 									</Select.Item>
