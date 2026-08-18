@@ -12,7 +12,7 @@
 	import DropdownArrow from '../ui/DropdownArrow.svelte';
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 	import { type ContextItem } from '$lib/types';
-	import { PersistedState } from 'runed';
+	import { PersistedState } from '$lib/state/persisted-state.svelte';
 
 	type Mode = 'vanilla' | 'modded';
 
