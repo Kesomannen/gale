@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.21.0 (2026-08-18)
 
 ### Added
 
@@ -14,6 +14,9 @@
 - Various other UI tweaks
 - The `steam.sh` script is now only used on Linux if a Steam installation could not be found via `which` or `flatpak` (thanks [@Cloudef](https://github.com/Cloudef))
   - This was previously the highest prioritized Steam launch method on Linux
+- Mod pre-release versions are no longer treated as standard versions. Instead, you have to opt-in to install a pre-release via the version dropdown
+  - If a stable release is installed, pre-release updates will not appear in the "Update All" dialog
+  - An icon is shown next to the mod name when a pre-release upgrade is available
 
 ### Fixed
 
