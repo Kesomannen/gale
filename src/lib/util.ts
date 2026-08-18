@@ -115,7 +115,10 @@ export function isOutdated(mod: Mod): boolean {
 export function isNonReleaseVersion(version: string): boolean {
 	const metadataSeparator = version.indexOf('+');
 	const versionExtraSeparator = version.indexOf('-');
-	return versionExtraSeparator > 0 && (metadataSeparator < 0 ? 1 << 30 : metadataSeparator) > versionExtraSeparator;
+	return (
+		versionExtraSeparator > 0 &&
+		(metadataSeparator < 0 ? 1 << 30 : metadataSeparator) > versionExtraSeparator
+	);
 }
 
 export function hasNonReleaseUpgrade(mod: Mod): boolean {

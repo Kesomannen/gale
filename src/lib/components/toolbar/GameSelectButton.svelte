@@ -25,7 +25,7 @@
 		alt={games.active?.name}
 	/>
 
-	<div class="mr-4 hidden lg:block">{games.active?.name}</div>
+	<div class="mr-4 hidden md:block">{games.active?.name}</div>
 
 	<Icon icon="mdi:menu" class="text-primary-300 group-hover:text-primary-200  shrink-0 text-lg" />
 </button>

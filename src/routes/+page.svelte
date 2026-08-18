@@ -103,22 +103,31 @@
 	let activeMod: Mod | null = $state(null);
 
 	let hasRefreshed = $state(false);
-	let refreshing = false;
+
+	let refreshPromise: Promise<void> | null = $state(null);
 
 	async function refresh() {
-		if (refreshing) return;
-		refreshing = true;
+		if (refreshPromise !== null) {
+			// make sure if this function is awaited while already refreshing, we wait until
+			// the refresh is done before returning so the caller sees the fresh values
+			await refreshPromise;
+			return;
+		}
 
-		let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
+		refreshPromise = (async () => {
+			let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
 
-		mods = result.mods;
-		items = result.mods.map((mod) => ({ type: 'mod', mod }));
-		totalModCount = result.totalModCount;
-		unknownMods = result.unknownMods;
-		updates = result.updates;
+			mods = result.mods;
+			items = result.mods.map((mod) => ({ type: 'mod', mod }));
+			totalModCount = result.totalModCount;
+			unknownMods = result.unknownMods;
+			updates = result.updates;
 
-		refreshing = false;
-		hasRefreshed = true;
+			hasRefreshed = true;
+		})();
+
+		await refreshPromise;
+		refreshPromise = null;
 	}
 
 	async function toggleMod(mod: Mod, newState: boolean) {
@@ -270,11 +279,11 @@
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
 			{#if isOutdated(selectedMod) && !locked}
 				<Button
-					color={hasNonReleaseUpgrade(selectedMod) ? "primary" : "accent"}
+					color={hasNonReleaseUpgrade(selectedMod) ? 'primary' : 'accent'}
+					icon={hasNonReleaseUpgrade(selectedMod) ? 'mdi:flask-outline' : 'mdi:arrow-up-circle'}
 					size="lg"
-					icon={hasNonReleaseUpgrade(selectedMod) ? "mdi:flask-outline" : "mdi:arrow-up-circle"}
 					class="mt-2"
-					onclick={() => updateMod(selectedMod)}
+					onclick={() => updateMod(selectedMod, selectedMod?.versions[0].uuid)}
 				>
 					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
 				</Button>
