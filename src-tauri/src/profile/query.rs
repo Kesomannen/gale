@@ -60,7 +60,7 @@ impl Queryable for QueryableProfileMod<'_> {
 
         match &self.kind {
             Kind::Local(local) => <LocalMod as Queryable>::version(local),
-            Kind::Thunderstore(remote) => Some(remote.package.latest().parsed_version()),
+            Kind::Thunderstore(remote) => Some(remote.package.latest_released().parsed_version()),
         }
     }
 

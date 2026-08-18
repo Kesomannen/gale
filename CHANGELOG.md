@@ -5,14 +5,17 @@
 ### Added
 
 - German translation (thanks Henk deBrook)
+- System accent color option
 
 ### Changed
 
-- Profile codes are not auto-pasted from the clipboard as long as the content is a valid UUID
+- Profile codes are now auto-pasted from the clipboard as long as the content is a valid UUID
+- Reworked the visuals of the the toolbar and navigation rail
+- Various other UI tweaks 
 
 ### Fixed
 
-- Profile imports and sync pulls not removed extra config files
+- Profile imports and sync not removing extra config files
 
 ## 1.20.0 (2026-08-07)
 

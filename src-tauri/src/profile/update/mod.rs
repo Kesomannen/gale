@@ -63,12 +63,17 @@ impl Profile {
         };
 
         let package = thunderstore.get_package(current.package.uuid)?;
+        let current_version = current.version.parsed_version();
         let latest = BorrowedMod {
             package,
-            version: package.latest(),
+            version: if current_version.pre.is_empty() {
+                package.latest_released()
+            } else {
+                package.latest()
+            },
         };
 
-        if current.version.parsed_version() >= latest.version.parsed_version() {
+        if current_version >= latest.version.parsed_version() {
             return Ok(None);
         }
 

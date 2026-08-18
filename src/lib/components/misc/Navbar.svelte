@@ -39,8 +39,25 @@
 	]);
 </script>
 
-<nav class="relative flex shrink-0 flex-col gap-2 px-3">
+<nav class="bg-primary-900 relative flex shrink-0 flex-col gap-2 px-3">
 	{#each links as link (link.to)}
 		<NavbarLink {...link} />
 	{/each}
+
+	<!-- An inverted rounded corner to the right of the navbar to make the main content area look like it's "cut out" of the navbar and toolbar -->
+	<div class="corner-notch absolute top-0 right-0 z-10 translate-x-full"></div>
 </nav>
+
+<style>
+	.corner-notch {
+		--size: var(--radius-2xl);
+
+		height: var(--size);
+		width: var(--size);
+		background: radial-gradient(
+			circle at var(--size) var(--size),
+			transparent var(--size),
+			var(--color-primary-900) calc(var(--size) + 1px)
+		);
+	}
+</style>

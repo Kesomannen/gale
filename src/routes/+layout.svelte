@@ -63,16 +63,14 @@
 />
 
 <Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
-	<main class="bg-primary-900 relative flex flex-col">
+	<main class="bg-primary-800 relative flex flex-col">
 		<Menubar />
 		<Toolbar />
 
 		<div class="relative flex grow overflow-hidden">
 			<Navbar />
 
-			<div class="bg-primary-800 flex grow overflow-hidden rounded-tl-2xl">
-				{@render children?.()}
-			</div>
+			{@render children?.()}
 		</div>
 
 		<FetchModsBar />

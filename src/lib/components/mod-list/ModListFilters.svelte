@@ -72,7 +72,7 @@
 	/>
 </div>
 
-<div class="mb-1.5 grid grid-cols-[2fr_2fr_1fr] gap-1.5">
+<div class="mb-1.5 grid grid-cols-[2fr_2fr_auto] gap-1.5">
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_include()}
 		icon="mdi:filter"

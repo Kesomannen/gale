@@ -186,7 +186,7 @@ impl ThunderstoreBackend {
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
         self.packages.values().map(move |package| BorrowedMod {
             package,
-            version: package.latest(),
+            version: package.latest_released(),
         })
     }
 
