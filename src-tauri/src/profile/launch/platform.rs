@@ -105,18 +105,6 @@ fn create_base_steam_command() -> Result<Command> {
 
     // return Ok(Command::new("/home/keso/.local/share/Steam/steam.sh"));
 
-    debug!("checking for steam.sh script in steam installation directory");
-
-    match locate_steam_script() {
-        Ok(path) => {
-            info!("found steam.sh script at {}", path.display());
-            return Ok(Command::new(path));
-        }
-        Err(err) => {
-            debug!("failed to locate steam.sh script: {:#}", err);
-        }
-    };
-
     debug!("checking for steam system installation with which");
 
     if let Ok(path) = which::which("steam") {
@@ -137,6 +125,18 @@ fn create_base_steam_command() -> Result<Command> {
 
         return Ok(command);
     }
+
+    debug!("checking for steam.sh script in steam installation directory");
+
+    match locate_steam_script() {
+        Ok(path) => {
+            info!("found steam.sh script at {}", path.display());
+            return Ok(Command::new(path));
+        }
+        Err(err) => {
+            debug!("failed to locate steam.sh script: {:#}", err);
+        }
+    };
 
     let path = Path::new("/usr/bin/steam")
         .exists_or_none()
