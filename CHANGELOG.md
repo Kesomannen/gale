@@ -11,11 +11,14 @@
 
 - Profile codes are now auto-pasted from the clipboard as long as the content is a valid UUID
 - Reworked the visuals of the the toolbar and navigation rail
-- Various other UI tweaks 
+- Various other UI tweaks
+- The `steam.sh` script is now only used on Linux if a Steam installation could not be found via `which` or `flatpak` (thanks [@Cloudef](https://github.com/Cloudef))
+  - This was previously the highest prioritized Steam launch method on Linux
 
 ### Fixed
 
 - Profile imports and sync not removing extra config files
+- Clearing the search bar being undone upon restarting the app (thanks [@hazre](https://github.com/hazre))
 
 ## 1.20.0 (2026-08-07)
 
