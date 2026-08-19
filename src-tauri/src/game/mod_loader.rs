@@ -208,6 +208,7 @@ impl ModLoader<'static> {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::flat_separated("mod", "shimloader/mod"),
                     Subdir::flat_separated("pak", "shimloader/pak").extension(".pak"),
+                    Subdir::flat_separated("overlay", "shimloader/overlay"),
                     Subdir::untracked("cfg", "shimloader/cfg").mutable(),
                 ];
 
