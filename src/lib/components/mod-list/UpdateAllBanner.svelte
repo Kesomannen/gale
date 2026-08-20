@@ -29,10 +29,12 @@
 	let changelogOpen = $state(false);
 	let changelog: string | null = $state(null);
 
-	let include: SvelteMap<AvailableUpdate, boolean> = $state(new SvelteMap());
+	let include: SvelteMap<string, boolean> = $state(new SvelteMap());
 
 	let shownUpdates = $derived(updates.filter((update) => !update.ignore));
-	let includedUpdates = $derived(shownUpdates.filter((update) => include.get(update) ?? true));
+	let includedUpdates = $derived(
+		shownUpdates.filter((update) => include.get(update.fullName) ?? true)
+	);
 
 	$effect(() => {
 		if (dialogOpen && shownUpdates.length === 0) {
@@ -59,7 +61,7 @@
 
 	function ignoreUpdate(update: AvailableUpdate) {
 		update.ignore = true;
-		include.delete(update);
+		include.delete(update.fullName);
 	}
 
 	async function openChangelog(update: AvailableUpdate) {
@@ -97,8 +99,8 @@
 		items={shownUpdates}
 		class="mt-1"
 		maxHeight="sm"
-		get={(update, _) => include.get(update) ?? true}
-		set={(update, _, value) => include.set(update, value)}
+		get={(update, _) => include.get(update.fullName) ?? true}
+		set={(update, _, value) => include.set(update.fullName, value)}
 	>
 		{#snippet item({ item: update })}
 			<ModCard fullName={update.fullName} showVersion={false} backend={update.updatedId.backend} />
