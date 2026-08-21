@@ -59,7 +59,7 @@ export class PersistedState<T> {
 		this.#value = initialValue;
 
 		const list = instances.get(key) ?? [];
-		list.push(this as unknown as PersistedState<unknown>);
+		list.push(this as PersistedState<unknown>);
 		instances.set(key, list);
 
 		$effect.root(() => {
@@ -69,7 +69,10 @@ export class PersistedState<T> {
 				// with the initial defaults before the store has been read.
 				const value = this.#value;
 				if (loaded) {
-					void uiStore.set(this.#key, this.#serializer.serialize(value));
+					(async () => {
+						const serialized = this.#serializer.serialize(value);
+						await uiStore.set(this.#key, serialized);
+					})();
 				}
 			});
 		});

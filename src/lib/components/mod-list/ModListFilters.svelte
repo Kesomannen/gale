@@ -2,7 +2,6 @@
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 	import { selectItems } from '$lib/util';
 	import { type SortBy, type QueryModsArgsWithoutMax } from '$lib/types';
-	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toSentenceCase } from '$lib/i18n';
