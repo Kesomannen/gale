@@ -59,7 +59,7 @@ export class PersistedState<T> {
 		this.#value = initialValue;
 
 		const list = instances.get(key) ?? [];
-		list.push(this as unknown as PersistedState<unknown>);
+		list.push(this as PersistedState<unknown>);
 		instances.set(key, list);
 
 		$effect.root(() => {
