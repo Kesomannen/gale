@@ -49,14 +49,14 @@ void load();
  * Reads return the initial value until the store has loaded, then reactively swap to the persisted value. Every change (including deep mutations of nested state) is written back to the store.
  */
 export class PersistedState<T> {
-	#value = $state<T>() as T;
+	current = $state<T>() as T;
 	#key: string;
 	#serializer: Serializer<T>;
 
 	constructor(key: string, initialValue: T, options: PersistedStateOptions<T> = {}) {
 		this.#key = key;
 		this.#serializer = options.serializer ?? (DEFAULT_SERIALIZER as Serializer<T>);
-		this.#value = initialValue;
+		this.current = initialValue;
 
 		const list = instances.get(key) ?? [];
 		list.push(this as PersistedState<unknown>);
@@ -67,7 +67,7 @@ export class PersistedState<T> {
 				// Reading the value unconditionally keeps the effect subscribed;
 				// gating only the write prevents clobbering persisted values
 				// with the initial defaults before the store has been read.
-				const value = this.#value;
+				const value = this.current;
 				if (loaded) {
 					(async () => {
 						const serialized = this.#serializer.serialize(value);
@@ -78,18 +78,10 @@ export class PersistedState<T> {
 		});
 	}
 
-	get current(): T {
-		return this.#value;
-	}
-
-	set current(value: T) {
-		this.#value = value;
-	}
-
 	hydrate(value: string): void {
 		const parsed = this.#deserialize(value);
 		if (parsed !== undefined) {
-			this.#value = parsed;
+			this.current = parsed;
 		}
 	}
 
