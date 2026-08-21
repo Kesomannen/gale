@@ -116,7 +116,7 @@
 
 		pre {
 			background-color: var(--color-primary-900);
-			color: var(text-primary-300);
+			color: var(--text-primary-300);
 			margin: --spacing(2) 0;
 			overflow-x: auto;
 			border-radius: var(--radius-lg);
