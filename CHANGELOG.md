@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Turkish translation (thanks [KadrioS](https://github.com/KadrioS))
+
 ## 1.21.0 (2026-08-18)
 
 ### Added
