@@ -8,7 +8,8 @@ import {
 	ModLoader,
 	type LaunchOption,
 	type ModId,
-	type Prefs
+	type Prefs,
+	type RgbaColor
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
@@ -265,4 +266,9 @@ export function shouldWarnForeignDownload(id: ModId, prefs: Prefs): boolean {
 	if (id.backend === Backend.Thunderstore) return false;
 	if (games.activeBackends.length === 1) return false;
 	return !prefs.backendSkipConfirm;
+}
+
+export function rgbToHex(color: RgbaColor): string {
+	const [r, g, b] = color;
+	return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
 }

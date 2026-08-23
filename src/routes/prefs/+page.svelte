@@ -18,7 +18,11 @@
 	import ColorPref from '$lib/components/prefs/ColorPref.svelte';
 
 	import Label from '$lib/components/ui/Label.svelte';
-	import { useNativeMenu } from '$lib/theme.svelte';
+	import {
+		accentColorSetting,
+		primaryColorSetting as primaryColorSetting,
+		useNativeMenu
+	} from '$lib/state/theme.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
 	import profiles from '$lib/state/profile.svelte';
@@ -27,6 +31,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import BackendPref from '$lib/components/prefs/BackendPref.svelte';
 	import HiddenModsPref from '$lib/components/prefs/HiddenModsPref.svelte';
+	import ColorPrefs from '$lib/components/prefs/ColorPrefs.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -105,12 +110,7 @@
 			})}
 		/>
 
-		<ColorPref category="primary" default="slate"
-			>{m.prefs_appearance_color_primary_content()}</ColorPref
-		>
-		<ColorPref category="accent" default="green"
-			>{m.prefs_appearance_color_accent_content()}</ColorPref
-		>
+		<ColorPrefs />
 
 		<FontFamilyPref />
 

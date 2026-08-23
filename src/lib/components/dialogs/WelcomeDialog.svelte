@@ -12,6 +12,8 @@
 	import ColorPref from '../prefs/ColorPref.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { m } from '$lib/paraglide/messages';
+	import { accentColorSetting, primaryColorSetting } from '$lib/state/theme.svelte';
+	import ColorPrefs from '../prefs/ColorPrefs.svelte';
 
 	type Props = {
 		open?: boolean;
@@ -103,12 +105,7 @@
 						{m.welcomeDialog_settings_path_content()}
 					</PathPref>
 
-					<ColorPref category="primary" default="slate"
-						>{m.welcomeDialog_content_color_primary()}</ColorPref
-					>
-					<ColorPref category="accent" default="green"
-						>{m.welcomeDialog_content_color_accent()}</ColorPref
-					>
+					<ColorPrefs />
 				{/if}
 			</div>
 
