@@ -35,7 +35,7 @@
 			href={to}
 			class={[
 				active
-					? 'text-accent-600 dark:text-accent-500 dark:bg-primary-800 bg-primary-200 font-semibold'
+					? 'text-accent-600 dark:bg-primary-800 bg-primary-200 font-semibold'
 					: 'text-primary-400 hover:text-primary-500 dark:text-primary-500 dark:hover:bg-primary-800 dark:hover:text-primary-400 hover:bg-primary-200',
 				commonClasses
 			]}

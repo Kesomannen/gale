@@ -509,7 +509,7 @@
 		'mdi:window-maximize',
 		appWindow.toggleMaximize
 	)}
-	{@render button('hover:bg-red-100 dark:hover:bg-red-700', 'mdi:window-close', appWindow.close)}
+	{@render button('hover:bg-red-700', 'mdi:window-close', appWindow.close)}
 </header>
 
 <Dialog
