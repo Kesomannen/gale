@@ -41,7 +41,11 @@ export class ColorSetting {
 		this.#value = new PersistedState<Color>(`${name}Color`, defaultColor);
 		this.systemColorPromise = systemColorPromise;
 
-		void this.applyShades(this.current);
+		$effect.root(() => {
+			$effect(() => {
+				void this.applyShades(this.current);
+			});
+		});
 	}
 
 	get defaultColor(): Color {
@@ -58,7 +62,6 @@ export class ColorSetting {
 
 	set current(color: Color) {
 		this.#value.current = color;
-		void this.applyShades(color);
 	}
 
 	async applyShades(color: Color) {
