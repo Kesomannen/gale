@@ -6,14 +6,19 @@ pub async fn system_accent() -> Result<Option<Color>> {
     use ashpd::desktop::settings::Settings;
 
     let settings = Settings::new().await?;
-    let color: ashpd::desktop::Color = settings.accent_color().await?;
-    let color = Color(
-        (color.red() * 255.0) as u8,
-        (color.green() * 255.0) as u8,
-        (color.blue() * 255.0) as u8,
-        255,
-    );
-    Ok(Some(color))
+    match settings.accent_color().await {
+        Ok(color) => {
+            let color = Color(
+                (color.red() * 255.0) as u8,
+                (color.green() * 255.0) as u8,
+                (color.blue() * 255.0) as u8,
+                255,
+            );
+            Ok(Some(color))
+        }
+        Err(ashpd::Error::Portal(ashpd::PortalError::NotFound(_))) => Ok(None),
+        Err(err) => Err(err.into()),
+    }
 }
 
 #[cfg(target_os = "windows")]
