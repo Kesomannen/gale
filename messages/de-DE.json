@@ -394,6 +394,7 @@
 	"platformPref_title": "Plattform",
 	"prefs_appearance_color_accent_content": "Die Farbe hervorgehobener Elemente wie Schaltflächen und Kontrollkästchen",
 	"prefs_appearance_color_primary_content": "Die Hauptfarbe der Benutzeroberfläche, einschließlich Hintergründen und Text.",
+	"prefs_appearance_darkMode_title": "Dunkler Modus",
 	"prefs_appearance_nativeMenubar_title": "Systemeigene Menüleiste verwenden",
 	"prefs_appearance_title": "Darstellung",
 	"prefs_gameSettings_launch_title": "Starten",

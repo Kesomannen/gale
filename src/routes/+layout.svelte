@@ -18,6 +18,7 @@
 	import type { ProfileInfo, ManagedGameInfo } from '$lib/types';
 	import { refreshLanguage } from '$lib/i18n';
 	import MissingProfilesDialog from '$lib/components/dialogs/MissingProfilesDialog.svelte';
+	import { darkMode } from '$lib/state/theme.svelte';
 
 	type Props = {
 		children?: Snippet;
@@ -62,22 +63,24 @@
 	}}
 />
 
-<Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
-	<main class="bg-primary-800 relative flex flex-col">
-		<Menubar />
-		<Toolbar />
+<div class={['contents', darkMode.current && 'dark']}>
+	<Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
+		<main class="dark:bg-primary-800 relative flex flex-col bg-white">
+			<Menubar />
+			<Toolbar />
 
-		<div class="relative flex grow overflow-hidden">
-			<Navbar />
+			<div class="relative flex grow overflow-hidden">
+				<Navbar />
 
-			{@render children?.()}
-		</div>
+				{@render children?.()}
+			</div>
 
-		<FetchModsBar />
-		<Toasts />
-	</main>
+			<FetchModsBar />
+			<Toasts />
+		</main>
 
-	<InstallModDialog />
-	<WelcomeDialog />
-	<MissingProfilesDialog />
-</Tooltip.Provider>
+		<InstallModDialog />
+		<WelcomeDialog />
+		<MissingProfilesDialog />
+	</Tooltip.Provider>
+</div>

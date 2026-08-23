@@ -111,17 +111,17 @@
 				<Tooltip
 					text="This update is from a different source than the currently installed version."
 				>
-					<Icon icon="mdi:alert-circle" class="text-accent-400 mr-2 text-lg" />
+					<Icon icon="mdi:alert-circle" class="text-accent-600 dark:text-accent-400 mr-2 text-lg" />
 				</Tooltip>
 			{/if}
 
-			<span class="text-light text-primary-400 pl-1">{update.old}</span>
-			<Icon icon="mdi:arrow-right" class="text-primary-400 mx-1.5 text-lg" />
-			<span class="text-accent-400 text-lg font-semibold">{update.new}</span>
+			<span class="text-light text-primary-500 dark:text-primary-400 pl-1">{update.old}</span>
+			<Icon icon="mdi:arrow-right" class="text-primary-500 dark:text-primary-400 mx-1.5 text-lg" />
+			<span class="text-accent-600 dark:text-accent-400 text-lg font-semibold">{update.new}</span>
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger
-					class="text-primary-400 hover:bg-primary-700 hover:text-primary-200 ml-3 rounded-sm p-1.5"
+					class="text-primary-500 hover:text-primary-800 dark:text-primary-400 dark:hover:bg-primary-700 dark:hover:text-primary-200 hover:bg-primary-200 ml-3 rounded-sm p-1.5"
 				>
 					<Icon icon="mdi:notifications-off" />
 				</DropdownMenu.Trigger>

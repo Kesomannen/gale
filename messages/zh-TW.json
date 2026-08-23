@@ -395,6 +395,7 @@
 	"platformPref_title": "平台",
 	"prefs_appearance_color_accent_content": "反白醒目顯示元素的顏色，例如按鈕和核取方塊",
 	"prefs_appearance_color_primary_content": "介面的主要顏色，包含背景與文字。",
+	"prefs_appearance_darkMode_title": "深色模式",
 	"prefs_appearance_nativeMenubar_title": "使用原生選單列",
 	"prefs_appearance_title": "外觀",
 	"prefs_gameSettings_launch_title": "啟動",

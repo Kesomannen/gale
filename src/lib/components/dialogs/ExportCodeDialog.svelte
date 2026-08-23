@@ -35,7 +35,7 @@
 </script>
 
 <Dialog title={m.exportCodeDialog_title()} bind:open={isOpen}>
-	<div class="text-primary-300 mt-1 space-y-1">
+	<div class="text-primary-600 dark:text-primary-300 mt-1 space-y-1">
 		{#if code}
 			<div>
 				{m.exportCodeDialog_done()}
@@ -43,7 +43,7 @@
 
 			<div>
 				<button
-					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
+					class="text-primary-700 dark:bg-primary-900 dark:text-primary-300 rounded-md bg-primary-100 px-4 py-1 font-mono text-lg"
 					onclick={copyCode}
 				>
 					{code.code}

@@ -395,6 +395,7 @@
 	"platformPref_title": "游戏平台",
 	"prefs_appearance_color_accent_content": "高亮元素的颜色，例如按钮和复选框",
 	"prefs_appearance_color_primary_content": "界面的主色调，包括背景和文字。",
+	"prefs_appearance_darkMode_title": "深色模式",
 	"prefs_appearance_nativeMenubar_title": "使用原生菜单栏",
 	"prefs_appearance_title": "外观",
 	"prefs_gameSettings_launch_title": "启动",

@@ -17,7 +17,7 @@
 	{#if content}
 		<Markdown source={content} />
 	{:else}
-		<div class="text-primary-300 flex items-center justify-center gap-2">
+		<div class="text-primary-600 dark:text-primary-300 flex items-center justify-center gap-2">
 			{m.modInfoDialog_noFound({ type })}
 		</div>
 	{/if}

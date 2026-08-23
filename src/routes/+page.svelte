@@ -239,7 +239,9 @@
 		{#if mods.length === 0 && hasRefreshed}
 			{#if totalModCount === 0}
 				<HelpCard icon="ph:ghost" title={m.page_modList_noMods_1()}>
-					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
+					<a
+						href="/browse"
+						class="text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300 hover:underline"
 						><Icon
 							icon="mdi:store-search"
 							class="mr-0.5 ml-1  inline"
@@ -296,14 +298,14 @@
 	title={m.page_dialog_title({ name: activeMod?.name ?? m.unknown() })}
 	bind:open={dependantsOpen}
 >
-	<div class="text-primary-300 mt-4 text-center">
+	<div class="text-primary-600 dark:text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
 			{m.page_dialog_noDependants()}
 		{:else}
 			<ModCardList mods={dependants} showVersion={false}>
 				{#snippet cardChildren({ mod })}
 					{#if mod.preferredVersion}
-						<div class="text-primary-400">
+						<div class="text-primary-500 dark:text-primary-400">
 							Preferred Version: {mod.preferredVersion}
 						</div>
 					{/if}

@@ -7,11 +7,11 @@
 	import GameSelectButton from './GameSelectButton.svelte';
 </script>
 
-<div class="bg-primary-900 flex shrink-0 items-center px-3 py-2">
+<div class="dark:bg-primary-900 bg-primary-100 flex shrink-0 items-center px-3 py-2">
 	<LaunchButton />
-	<div class="border-primary-700 mx-2 h-full border-r"></div>
+	<div class="border-primary-200 dark:border-primary-700 mx-2 h-full border-r"></div>
 	<GameSelectButton />
-	<div class="border-primary-700 mx-2 h-full border-r"></div>
+	<div class="border-primary-200 dark:border-primary-700 mx-2 h-full border-r"></div>
 	<ProfilesDropdown />
 	<Syncer />
 	<InstallPopover />

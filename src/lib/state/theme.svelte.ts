@@ -1,4 +1,5 @@
 import { platform } from '@tauri-apps/plugin-os';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { PersistedState } from '$lib/state/persisted-state.svelte';
 import getPalette from 'tailwindcss-palette-generator';
 import * as api from '$lib/api';
@@ -138,3 +139,14 @@ export const useNativeMenu = new PersistedState(
 	'useNativeMenu',
 	platform() === 'windows' ? false : true
 );
+
+/** Whether the app is in dark mode. When `false`, the app uses the light theme. */
+export const darkMode = new PersistedState<boolean>('darkMode', true);
+
+export function setDarkMode(value: boolean) {
+	darkMode.current = value;
+}
+
+export function getDarkMode() {
+	return darkMode.current;
+}

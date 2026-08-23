@@ -234,7 +234,9 @@
 
 <div class="relative mx-auto flex w-full max-w-4xl flex-col gap-1.5 overflow-y-auto px-6 py-4">
 	{#if loading}
-		<div class="text-primary-200 absolute inset-0 flex items-center justify-center gap-2 text-lg">
+		<div
+			class="text-primary-700 dark:text-primary-200 absolute inset-0 flex items-center justify-center gap-2 text-lg"
+		>
 			<Spinner />
 			{loading}
 		</div>
@@ -299,15 +301,19 @@
 			>
 				{#snippet label()}
 					{#if selectedCategories.length === 0}
-						<span class="text-primary-400 truncate pl-2">{m.modpack_categories_content()}</span>
+						<span class="text-primary-500 dark:text-primary-400 truncate pl-2"
+							>{m.modpack_categories_content()}</span
+						>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
-								<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
+								<div
+									class="text-primary-700 dark:bg-primary-800 dark:text-primary-200 bg-primary-200 rounded-md py-1 pr-1 pl-3 text-sm"
+								>
 									<span class="truncate overflow-hidden">{toHeaderCase(category)}</span>
 
 									<button
-										class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
+										class="dark:hover:bg-primary-700 hover:bg-primary-300 ml-1 rounded-md px-1.5"
 										onclick={(evt) => {
 											evt.stopPropagation();
 											selectedCategories = selectedCategories.filter((cat) => cat !== category);
@@ -365,11 +371,11 @@
 			/>
 
 			<details class="mt-1">
-				<summary class="text-primary-300 cursor-pointer text-sm">
+				<summary class="text-primary-600 dark:text-primary-300 cursor-pointer text-sm">
 					{m.modpack_readme_preview()}
 				</summary>
 				<Markdown class="mt-1 px-4" source={readme} />
-				<div class="bg-primary-500 mt-4 h-0.5"></div>
+				<div class="dark:bg-primary-500 bg-primary-300 mt-4 h-0.5"></div>
 			</details>
 		</FormField>
 
@@ -389,11 +395,11 @@
 			</Button>
 
 			<details class="mt-1">
-				<summary class="text-primary-300 cursor-pointer text-sm"
+				<summary class="text-primary-600 dark:text-primary-300 cursor-pointer text-sm"
 					>{m.modpack_changeLog_preview()}</summary
 				>
 				<Markdown class="mt-1 px-4" source={changelog} />
-				<div class="bg-primary-500 mt-4 h-0.5"></div>
+				<div class="dark:bg-primary-500 bg-primary-300 mt-4 h-0.5"></div>
 			</details>
 		</FormField>
 
@@ -402,7 +408,7 @@
 			description={m.modpack_includeFiles_description()}
 		>
 			<details>
-				<summary class="text-primary-300 cursor-pointer text-sm"
+				<summary class="text-primary-600 dark:text-primary-300 cursor-pointer text-sm"
 					>{m.modpack_includeFiles_preview()}</summary
 				>
 				<InputField
@@ -424,20 +430,20 @@
 			</details>
 		</FormField>
 
-		<div class="text-primary-200 mt-1 flex items-center text-lg font-medium">
+		<div class="text-primary-700 dark:text-primary-200 mt-1 flex items-center text-lg font-medium">
 			<span class="max-w-96 grow">{m.modpack_NSFW_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={nsfw} />
 		</div>
 
-		<div class="text-primary-200 flex items-center text-lg font-medium">
+		<div class="text-primary-700 dark:text-primary-200 flex items-center text-lg font-medium">
 			<span class="max-w-96 grow">{m.modpack_disabled_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 		</div>
 
 		{#if games.activeBackends.length > 1}
-			<div class="text-primary-200 flex items-center text-lg font-medium">
+			<div class="text-primary-700 dark:text-primary-200 flex items-center text-lg font-medium">
 				<span class="max-w-96 grow">{m.modpack_upload_server()}</span>
 
 				{#if hexiumExclusive}
@@ -462,14 +468,14 @@
 <ApiKeyDialog />
 
 <Dialog bind:open={doneDialogOpen} title={m.modpack_dialog_title()}>
-	<p class="text-primary-300">
+	<p class="text-primary-600 dark:text-primary-300">
 		{m.modpack_dialog_content_1({ name, versionNumber, backend })}
 		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}">
 			{m.modpack_dialog_content_2()}
 		</Link>
 	</p>
 
-	<div class="text-primary-400 mt-2 text-sm">
+	<div class="text-primary-500 dark:text-primary-400 mt-2 text-sm">
 		{m.modpack_dialog_content_3()}
 		<br />
 		{m.modpack_dialog_content_4()}

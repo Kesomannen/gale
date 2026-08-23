@@ -395,6 +395,7 @@
 	"platformPref_title": "Plattform",
 	"prefs_appearance_color_accent_content": "Färgen på markerade element, såsom knappar och checkrutor.",
 	"prefs_appearance_color_primary_content": "Gränssnittets huvudfärg, inklusive bakgrunder och text.",
+	"prefs_appearance_darkMode_title": "Mörkt läge",
 	"prefs_appearance_nativeMenubar_title": "Använd systemets menyraden",
 	"prefs_appearance_title": "Utseende",
 	"prefs_gameSettings_launch_title": "Startalternativ",

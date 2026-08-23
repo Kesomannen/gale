@@ -42,7 +42,7 @@
 </script>
 
 {#if file.metadata}
-	<div class="text-primary-400">
+	<div class="text-primary-500 dark:text-primary-400">
 		{m.configFileEditor_metadata({
 			name: file.metadata.modName,
 			version: file.metadata.modVersion
@@ -76,7 +76,7 @@
 
 	{#each file.sections as section}
 		<button
-			class="text-accent-400 hover:text-accent-300 block hover:underline"
+			class="text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300 block hover:underline"
 			onclick={() => (config.selectedSection = section)}
 		>
 			{section.name}

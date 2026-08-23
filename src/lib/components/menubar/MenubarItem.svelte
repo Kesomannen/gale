@@ -13,13 +13,19 @@
 <Menubar.Item
 	class={[
 		key ? 'pr-4' : 'pr-10',
-		'group hover:bg-primary-700 mx-1 flex cursor-default items-center justify-between rounded py-1 pl-4 text-left'
+		'group dark:hover:bg-primary-700 hover:bg-primary-200 mx-1 flex cursor-default items-center justify-between rounded py-1 pl-4 text-left'
 	]}
 	{onclick}
 >
-	<span class="text-primary-400 group-hover:text-primary-300">{text}</span>
+	<span
+		class="text-primary-500 group-hover:text-primary-600 dark:text-primary-400 dark:group-hover:text-primary-300"
+		>{text}</span
+	>
 
 	{#if key}
-		<span class="text-primary-400 group-hover:text-primary-300 pl-6 font-mono text-sm">{key}</span>
+		<span
+			class="text-primary-500 group-hover:text-primary-600 dark:text-primary-400 dark:group-hover:text-primary-300 pl-6 font-mono text-sm"
+			>{key}</span
+		>
 	{/if}
 </Menubar.Item>

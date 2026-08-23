@@ -16,14 +16,14 @@
 
 <DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger
-		class="group text-primary-300 group-hover:text-primary-200 hover:bg-primary-800 flex shrink items-center overflow-hidden rounded-lg px-4 py-2"
+		class="group text-primary-700 group-hover:text-primary-800 dark:text-primary-300 dark:group-hover:text-primary-200 dark:hover:bg-primary-800 hover:bg-primary-200 flex shrink items-center overflow-hidden rounded-lg px-4 py-2"
 	>
 		<span class="mr-auto shrink truncate font-semibold">
 			{profiles.active?.name}
 		</span>
 
 		<div
-			class="bg-primary-800 group-hover:bg-primary-700 mr-2 ml-6 rounded-sm px-1.5 py-1 text-xs font-medium"
+			class="dark:bg-primary-800 dark:group-hover:bg-primary-700 bg-primary-200 group-hover:bg-primary-300 mr-2 ml-6 rounded-sm px-1.5 py-1 text-xs font-medium"
 		>
 			{profiles.active?.modCount}
 		</div>
@@ -36,7 +36,7 @@
 				{#if open}
 					<div
 						{...props}
-						class="border-primary-600 bg-primary-800 z-30 flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-lg"
+						class="border-primary-300 dark:border-primary-600 dark:bg-primary-800 z-30 flex max-h-[80lvh] min-w-40 flex-col gap-0.5 overflow-y-auto rounded-lg border bg-white p-1 shadow-lg"
 						in:fly={dropIn}
 						out:fade={dropOut}
 					>

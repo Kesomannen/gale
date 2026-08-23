@@ -20,7 +20,8 @@
 	const commonItemClass =
 		'flex shrink-0 cursor-default items-center truncate rounded-sm px-3 py-1 text-left';
 	const submenuClass = 'max-h-80 overflow-y-auto';
-	const itemClass = 'text-primary-400 hover:text-primary-200 hover:bg-primary-700';
+	const itemClass =
+		'text-primary-500 hover:text-primary-800 hover:bg-primary-200 dark:text-primary-400 dark:hover:text-primary-200 dark:hover:bg-primary-700';
 
 	let { Content, Item, Sub, SubTrigger } = $derived(
 		{
@@ -51,7 +52,7 @@
 							classProp,
 							sub && submenuClass,
 							commonContentClass,
-							'border-primary-600 bg-primary-800'
+							'border-primary-300 dark:border-primary-600 dark:bg-primary-800 bg-white'
 						]}
 						in:fly={dropIn}
 						out:fade={dropOut}

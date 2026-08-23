@@ -21,8 +21,14 @@
 
 	let stateClasses = $derived(
 		checked
-			? [!disabled && 'hover:bg-accent-600', 'bg-accent-700']
-			: [!disabled && 'hover:bg-primary-700', 'bg-primary-800 border border-primary-500']
+			? [
+					!disabled && 'hover:bg-accent-500 dark:hover:bg-accent-600',
+					'bg-accent-600 dark:bg-accent-700'
+				]
+			: [
+					!disabled && 'hover:bg-primary-300 dark:hover:bg-primary-700 hover:border-primary-400',
+					'bg-primary-100 border border-primary-200 dark:bg-primary-800 dark:border-primary-500'
+				]
 	);
 </script>
 
@@ -31,7 +37,7 @@
 		class={[
 			classProp,
 			stateClasses,
-			'size-6 cursor-pointer rounded-md p-1 group-data-[disabled]:cursor-default'
+			'size-6.5 cursor-pointer rounded-md p-1 group-data-disabled:cursor-default'
 		]}
 	>
 		{#if checked}

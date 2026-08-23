@@ -35,7 +35,7 @@
 
 <div
 	class={[
-		'bg-primary-800 border-primary-700 relative my-2 flex items-center overflow-hidden rounded-md border py-3 pr-2 pl-6 shadow',
+		'border-primary-200 dark:bg-primary-800 dark:border-primary-700 bg-primary-100 relative my-2 flex items-center overflow-hidden rounded-md border py-3 pr-2 pl-6 shadow',
 		classProp
 	]}
 >
@@ -43,7 +43,7 @@
 
 	<Icon class={['mr-2 shrink-0 text-xl', iconClass]} icon={iconOverride ?? icon} />
 
-	<div class="grow overflow-hidden text-white">
+	<div class="text-primary-900 grow overflow-hidden dark:text-white">
 		{@render children()}
 	</div>
 </div>

@@ -395,6 +395,7 @@
 	"platformPref_title": "Plateforme",
 	"prefs_appearance_color_accent_content": "La couleur des éléments mis en évidence, comme les boutons et les cases à cocher",
 	"prefs_appearance_color_primary_content": "La couleur principale de l'interface, incluant les arrière-plans et le texte.",
+	"prefs_appearance_darkMode_title": "Mode sombre",
 	"prefs_appearance_nativeMenubar_title": "Utiliser la barre de menu native",
 	"prefs_appearance_title": "Apparence",
 	"prefs_gameSettings_launch_title": "Lancement",

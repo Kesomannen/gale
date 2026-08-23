@@ -44,12 +44,12 @@
 			off: {
 				icon: 'mdi:cloud-off',
 				label: m.syncer_style_off(),
-				classes: 'text-primary-400'
+				classes: 'text-primary-500 dark:text-primary-400'
 			},
 			synced: {
 				icon: 'mdi:cloud-check-variant',
 				label: m.syncer_style_synced(),
-				classes: 'text-accent-500'
+				classes: 'text-accent-600 dark:text-accent-500'
 			},
 			outdated: {
 				icon: 'mdi:cloud-refresh-variant',
@@ -179,7 +179,7 @@
 <button
 	class={[
 		style.classes,
-		'bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
+		'dark:bg-primary-800 dark:hover:bg-primary-700 bg-primary-200 hover:bg-primary-300 mx-2 my-auto flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
 	]}
 	onclick={() => (mainDialogOpen = true)}
 >
@@ -200,7 +200,7 @@
 	{#if syncInfo}
 		{#if syncState !== 'missing'}
 			{#if !isOwner}
-				<div class="text-primary-300 mt-2 flex items-center gap-2">
+				<div class="text-primary-600 dark:text-primary-300 mt-2 flex items-center gap-2">
 					<SyncAvatar user={syncInfo.owner} />
 					<div>
 						{m.syncer_content_1()}{syncInfo.owner.displayName}
@@ -210,7 +210,7 @@
 
 			<div class="mt-2 flex items-center gap-2">
 				<button
-					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
+					class="text-primary-600 dark:bg-primary-900 dark:text-primary-300 bg-primary-100 rounded-md px-4 py-1 font-mono text-lg"
 					onclick={copyCode}
 				>
 					{syncInfo.id}
@@ -269,7 +269,7 @@
 		</Button>
 	{/if}
 
-	<div class="text-primary-300 mt-4 flex items-center gap-1">
+	<div class="text-primary-600 dark:text-primary-300 mt-4 flex items-center gap-1">
 		{#if auth.user === null}
 			<Button
 				onclick={onLoginClicked}
@@ -283,7 +283,9 @@
 			<SyncAvatar user={auth.user} />
 
 			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">
+				<DropdownMenu.Trigger
+					class="dark:bg-primary-800 dark:hover:bg-primary-700 bg-primary-200 hover:bg-primary-300 rounded-full p-1"
+				>
 					<Icon class="text-2xl" icon="mdi:dots-vertical" />
 				</DropdownMenu.Trigger>
 				<ContextMenuContent type="dropdown" items={dropdownItems} />
@@ -292,7 +294,7 @@
 	</div>
 
 	<div
-		class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
+		class="text-primary-500 hover:text-accent-600 dark:text-primary-400 dark:hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
 	>
 		<Icon icon="mdi:help-circle" inline />
 

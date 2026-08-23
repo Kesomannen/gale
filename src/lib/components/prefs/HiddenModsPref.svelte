@@ -64,7 +64,7 @@
 	</Info>
 
 	<button
-		class="group bg-primary-900 enabled:hover:border-primary-500 text-primary-300 relative flex grow items-center gap-2 truncate rounded-lg border border-transparent px-3 py-1 disabled:cursor-not-allowed disabled:opacity-70"
+		class="group enabled:hover:border-primary-400 text-primary-600 dark:bg-primary-900 dark:enabled:hover:border-primary-500 dark:text-primary-300 bg-primary-100 relative flex grow items-center gap-2 truncate rounded-lg border border-transparent px-3 py-1 disabled:cursor-not-allowed disabled:opacity-70"
 		disabled={!hasHiddenMods}
 		onclick={() => (dialogOpen = true)}
 	>

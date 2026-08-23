@@ -79,7 +79,7 @@
 />
 
 <div
-	class="group bg-primary-900 h-5 grow rounded-full py-1 pr-2 pl-1"
+	class="group dark:bg-primary-900 bg-primary-200 h-5 grow rounded-full py-1 pr-2 pl-1"
 	role="slider"
 	aria-valuemin={range.start}
 	aria-valuemax={range.end}
@@ -141,7 +141,7 @@
 
 		inputString = content.value.toString();
 	}}
-	class="focus:ring-accent-500 bg-primary-900 text-primary-300 placeholder-primary-400 enabled:hover:ring-primary-500 disabled:text-primary-400 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 focus:ring-2 focus:outline-hidden enabled:hover:ring-1"
+	class="focus:ring-accent-600 text-primary-700 placeholder-primary-500 enabled:hover:ring-primary-400 disabled:text-primary-500 dark:focus:ring-accent-500 dark:bg-primary-900 dark:text-primary-300 dark:placeholder-primary-400 dark:enabled:hover:ring-primary-500 dark:disabled:text-primary-400 bg-primary-100 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 focus:ring-2 focus:outline-hidden enabled:hover:ring-1"
 />
 
 <ResetConfigButton {entryId} {locked} {onReset} />

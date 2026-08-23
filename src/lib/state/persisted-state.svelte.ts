@@ -1,4 +1,5 @@
 import { LazyStore } from '@tauri-apps/plugin-store';
+import { tick } from 'svelte';
 
 const uiStore = new LazyStore('ui-state.json', { autoSave: true });
 
@@ -35,6 +36,9 @@ async function load(): Promise<void> {
 				instance.hydrate(value);
 			}
 		}
+		// Allow all the $effect callbacks triggered by the hydration to run before we mark the store as loaded,
+		// otherwise `loaded` may be set to true before the persisted values have been applied, causing the initial defaults to overwrite them.
+		await tick();
 		loaded = true;
 	} catch (error) {
 		console.error('Error when loading persisted store', error);

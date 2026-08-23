@@ -5,12 +5,12 @@
 </script>
 
 <ColorPref
-	label={m.colorPref_title_accent()}
+	label={m.colorPref_title_primary()}
 	setting={primaryColorSetting}
 	initialCustomColor="#6b7280">{m.prefs_appearance_color_primary_content()}</ColorPref
 >
 <ColorPref
-	label={m.colorPref_title_primary()}
+	label={m.colorPref_title_accent()}
 	setting={accentColorSetting}
 	initialCustomColor="#16a34a">{m.prefs_appearance_color_accent_content()}</ColorPref
 >

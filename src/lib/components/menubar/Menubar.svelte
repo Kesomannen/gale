@@ -469,7 +469,7 @@
 
 <header
 	data-tauri-drag-region
-	class="bg-primary-800 flex h-9 shrink-0"
+	class="dark:bg-primary-800 bg-primary-white flex h-9 shrink-0"
 	class:hidden={useNativeMenu.current}
 >
 	<Menubar.Root class="flex items-center py-1">
@@ -488,14 +488,28 @@
 	</Menubar.Root>
 
 	{#snippet button(className: string, icon: string, onclick: () => void)}
-		<button class={[className, 'group hover:bg-primary-700 px-4']} {onclick}>
-			<Icon {icon} class="text-primary-400 group-hover:text-white" />
+		<button
+			class={[className, 'group dark:hover:bg-primary-700 hover:bg-primary-200 px-4']}
+			{onclick}
+		>
+			<Icon
+				{icon}
+				class="text-primary-500 group-hover:text-primary-900 dark:text-primary-400 dark:group-hover:text-white"
+			/>
 		</button>
 	{/snippet}
 
-	{@render button('hover:bg-primary-700 ml-auto', 'mdi:window-minimize', appWindow.minimize)}
-	{@render button('hover:bg-primary-700', 'mdi:window-maximize', appWindow.toggleMaximize)}
-	{@render button('hover:bg-red-700', 'mdi:window-close', appWindow.close)}
+	{@render button(
+		'hover:bg-primary-200 ml-auto dark:hover:bg-primary-700',
+		'mdi:window-minimize',
+		appWindow.minimize
+	)}
+	{@render button(
+		'hover:bg-primary-200 dark:hover:bg-primary-700',
+		'mdi:window-maximize',
+		appWindow.toggleMaximize
+	)}
+	{@render button('hover:bg-red-100 dark:hover:bg-red-700', 'mdi:window-close', appWindow.close)}
 </header>
 
 <Dialog
@@ -503,7 +517,7 @@
 	canClose={!profileOperationInProgress}
 	bind:open={profileOperationOpen}
 >
-	<p class="text-primary-300 mb-1">
+	<p class="text-primary-600 dark:text-primary-300 mb-1">
 		{m[`menuBar_dialog_content_${profileOperation}`]()}
 	</p>
 

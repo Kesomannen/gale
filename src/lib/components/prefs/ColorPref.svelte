@@ -107,7 +107,7 @@
 		{#snippet label({ defaultLabel })}
 			{@render colorIcon(setting.current)}
 
-			<div class="text-primary-300">
+			<div class="text-primary-600 dark:text-primary-300">
 				{defaultLabel}
 			</div>
 		{/snippet}
@@ -140,13 +140,16 @@
 
 {#snippet colorIcon(value: Color, className?: ClassValue)}
 	{#if value.type === 'custom'}
-		<Icon class={[className, 'text-primary-400 size-4']} icon="mdi:edit" />
+		<Icon class={[className, 'text-primary-500 dark:text-primary-400 size-4']} icon="mdi:edit" />
 	{:else if value.type === 'system'}
 		{#await setting.systemColorPromise then color}
 			{#if color}
 				{@render colorCircle(color, className)}
 			{/if}
-			<Icon class={[className, 'text-primary-400 size-4']} icon="mdi:monitor" />
+			<Icon
+				class={[className, 'text-primary-500 dark:text-primary-400 size-4']}
+				icon="mdi:monitor"
+			/>
 		{/await}
 	{:else}
 		{@render colorCircle(DEFAULT_COLORS[value.name][600], className)}

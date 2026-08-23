@@ -395,6 +395,7 @@
 	"platformPref_title": "Платформа",
 	"prefs_appearance_color_accent_content": "Цвет выделенных элементов, таких как кнопки и флажки.",
 	"prefs_appearance_color_primary_content": "Основной цвет интерфейса, включая фон и текст.",
+	"prefs_appearance_darkMode_title": "Тёмная тема",
 	"prefs_appearance_nativeMenubar_title": "Используйте стандартную панель меню.",
 	"prefs_appearance_title": "Появление",
 	"prefs_gameSettings_launch_title": "Запуск",

@@ -233,7 +233,7 @@
 		</TabsMenu>
 
 		<details>
-			<summary class="text-primary-300 mt-2 cursor-pointer"
+			<summary class="text-primary-600 dark:text-primary-300 mt-2 cursor-pointer"
 				>{m.importProfileDialog_details_install({ length: mods.length })}</summary
 			>
 
@@ -247,7 +247,7 @@
 		</details>
 
 		<details>
-			<summary class="text-primary-300 mt-1 cursor-pointer"
+			<summary class="text-primary-600 dark:text-primary-300 mt-1 cursor-pointer"
 				>{m.importProfileDialog_details_advancedOptions()}</summary
 			>
 
@@ -273,7 +273,7 @@
 
 		{#if data.type === 'sync'}
 			<Tooltip text={m.importProfileDialog_sync_tooltip_content()} class="cursor-help">
-				<div class="text-primary-300 mt-2 flex items-center gap-2">
+				<div class="text-primary-600 dark:text-primary-300 mt-2 flex items-center gap-2">
 					<Icon icon="mdi:info" />
 					<div>{m.importProfileDialog_sync_tooltip_title()}</div>
 				</div>
@@ -281,7 +281,7 @@
 
 			<div class="mt-1 flex items-center gap-2">
 				<SyncAvatar user={data.owner} />
-				<div class="text-primary-300">
+				<div class="text-primary-600 dark:text-primary-300">
 					{m.importProfileDialog_sync_owner({ name: data.owner.displayName })}
 				</div>
 			</div>

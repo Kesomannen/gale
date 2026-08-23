@@ -75,11 +75,12 @@
 					<div
 						class={[
 							large ? 'max-w-240' : 'max-w-140',
-							'border-primary-600 bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
+							'border-primary-300 dark:border-primary-600 dark:bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border bg-white p-6 shadow-xl'
 						]}
 					>
 						{#if title}
-							<Dialog.Title class="w-full pr-10 text-2xl font-bold wrap-break-word text-white"
+							<Dialog.Title
+								class="text-primary-900 w-full pr-10 text-2xl font-bold wrap-break-word dark:text-white"
 								>{title}</Dialog.Title
 							>
 						{/if}
@@ -88,7 +89,7 @@
 
 						{#if canClose}
 							<button
-								class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
+								class="text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:bg-primary-700 dark:hover:text-primary-300 hover:bg-primary-200 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
 								onclick={close}
 							>
 								<Icon icon="mdi:close" />

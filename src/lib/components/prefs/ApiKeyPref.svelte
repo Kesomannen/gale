@@ -40,17 +40,19 @@
 	</Info>
 
 	<button
-		class="group bg-primary-900 hover:border-primary-500 relative flex grow items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
+		class="group hover:border-primary-400 dark:bg-primary-900 dark:hover:border-primary-500 bg-primary-100 relative flex grow items-center truncate rounded-lg border border-transparent px-3 py-1 text-right"
 		onclick={openDialog}
 	>
 		<div class="mr-2 rounded-sm">
 			<Icon
 				icon={hasToken ? 'mdi:key' : 'mdi:key-remove'}
-				class="text-primary-300 group-hover:text-primary-200 align-middle"
+				class="text-primary-600 group-hover:text-primary-700 dark:text-primary-300 dark:group-hover:text-primary-200 align-middle"
 			/>
 		</div>
 
-		<div class="text-primary-300 group-hover:text-primary-200 truncate">
+		<div
+			class="text-primary-600 group-hover:text-primary-700 dark:text-primary-300 dark:group-hover:text-primary-200 truncate"
+		>
 			{m[`apiKeyPref_hasToken_${hasToken ? 'has' : 'no'}`]()}
 		</div>
 	</button>

@@ -21,7 +21,8 @@
 	import {
 		accentColorSetting,
 		primaryColorSetting as primaryColorSetting,
-		useNativeMenu
+		useNativeMenu,
+		darkMode
 	} from '$lib/state/theme.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
@@ -118,6 +119,17 @@
 			value={prefs.zoomFactor}
 			set={set((value, prefs) => (prefs.zoomFactor = value))}
 		/>
+
+		<div class="my-1 flex items-center">
+			<Label>{m.prefs_appearance_darkMode_title()}</Label>
+
+			<Checkbox
+				checked={darkMode.current}
+				onCheckedChange={(value) => {
+					darkMode.current = value;
+				}}
+			/>
+		</div>
 
 		<div class="my-1 flex items-center">
 			<Label>{m.prefs_appearance_nativeMenubar_title()}</Label>

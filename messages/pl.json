@@ -395,6 +395,7 @@
 	"platformPref_title": "Platforma",
 	"prefs_appearance_color_accent_content": "Kolor wyróżnionych elementów, takich jak przyciski i pola wyboru.",
 	"prefs_appearance_color_primary_content": "Główny kolor interfejsu, w tym tła i tekstu.",
+	"prefs_appearance_darkMode_title": "Tryb ciemny",
 	"prefs_appearance_nativeMenubar_title": "Używaj systemowego paska menu",
 	"prefs_appearance_title": "Wygląd",
 	"prefs_gameSettings_launch_title": "Uruchamianie",

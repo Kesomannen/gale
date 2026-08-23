@@ -39,7 +39,7 @@
 	]);
 </script>
 
-<nav class="bg-primary-900 relative flex shrink-0 flex-col gap-2 px-3">
+<nav class="dark:bg-primary-900 bg-primary-100 relative flex shrink-0 flex-col gap-2 px-3">
 	{#each links as link (link.to)}
 		<NavbarLink {...link} />
 	{/each}
@@ -54,6 +54,14 @@
 
 		height: var(--size);
 		width: var(--size);
+		background: radial-gradient(
+			circle at var(--size) var(--size),
+			transparent var(--size),
+			var(--color-primary-100) calc(var(--size) + 1px)
+		);
+	}
+
+	:global(.dark) .corner-notch {
 		background: radial-gradient(
 			circle at var(--size) var(--size),
 			transparent var(--size),

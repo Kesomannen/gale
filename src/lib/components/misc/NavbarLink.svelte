@@ -21,7 +21,13 @@
 
 <Tooltip text={tooltip} side="right">
 	{#if disabled}
-		<button disabled class={[commonClasses, 'text-primary-500 cursor-not-allowed opacity-50']}>
+		<button
+			disabled
+			class={[
+				commonClasses,
+				'text-primary-300 dark:text-primary-500 cursor-not-allowed opacity-50'
+			]}
+		>
 			{@render icon_()}
 		</button>
 	{:else}
@@ -29,8 +35,8 @@
 			href={to}
 			class={[
 				active
-					? 'text-accent-500 bg-primary-800 font-semibold'
-					: 'text-primary-500 hover:bg-primary-800 hover:text-primary-400',
+					? 'text-accent-600 dark:text-accent-500 dark:bg-primary-800 bg-primary-200 font-semibold'
+					: 'text-primary-400 hover:text-primary-500 dark:text-primary-500 dark:hover:bg-primary-800 dark:hover:text-primary-400 hover:bg-primary-200',
 				commonClasses
 			]}
 		>

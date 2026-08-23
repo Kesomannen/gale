@@ -63,10 +63,12 @@
 				evt.preventDefault();
 			}}
 			class={[
-				file.type === 'ok' && 'text-primary-200',
-				file.type === 'unsupported' && 'text-primary-400',
+				file.type === 'ok' && 'text-primary-700 dark:text-primary-200',
+				file.type === 'unsupported' && 'text-primary-500 dark:text-primary-400',
 				file.type === 'err' && 'text-red-500',
-				config.selectedFile === file ? 'bg-primary-700' : 'hover:bg-primary-700',
+				config.selectedFile === file
+					? 'dark:bg-primary-700 bg-primary-100'
+					: 'dark:hover:bg-primary-700 hover:bg-primary-50',
 				'group flex h-8 w-full items-center overflow-hidden rounded pr-1 pl-2'
 			]}
 		>
@@ -83,7 +85,7 @@
 				&#x200E;
 				{fileLabel.name}
 				{#if fileLabel.disambiguator}
-					<span class="text-primary-400">
+					<span class="text-primary-500 dark:text-primary-400">
 						({fileLabel.disambiguator})
 					</span>
 				{/if}
@@ -111,11 +113,13 @@
 				/>
 			{/if}
 		</Collapsible.Trigger>
-		<Collapsible.Content class="text-primary-300 mb-1">
+		<Collapsible.Content class="text-primary-600 dark:text-primary-300 mb-1">
 			{#each shownSections as section}
 				<button
 					class={[
-						config.selectedSection === section ? 'bg-primary-700' : 'hover:bg-primary-700',
+						config.selectedSection === section
+							? 'dark:bg-primary-700 bg-primary-100'
+							: 'dark:hover:bg-primary-700 hover:bg-primary-50',
 						'block w-full truncate rounded py-0.5 pr-2 pl-10 text-left'
 					]}
 					onclick={() => {

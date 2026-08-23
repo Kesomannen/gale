@@ -93,7 +93,7 @@
 </script>
 
 <div
-	class="text-accent-500 *:hover:text-accent-400 *:group-hover:bg-primary-800 group flex shrink-0 gap-0.5 overflow-hidden rounded-lg font-semibold *:py-2"
+	class="text-accent-600 *:hover:text-accent-500 group dark:text-accent-500 dark:*:hover:text-accent-400 dark:*:group-hover:bg-primary-800 *:group-hover:bg-primary-200 flex shrink-0 gap-0.5 overflow-hidden rounded-lg font-semibold *:py-2"
 >
 	<button onclick={() => launchGame()} class="flex items-center pr-2 pl-4">
 		<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
@@ -120,7 +120,7 @@
 		: m.toolBar_dialog_launch_modded_title)({ name: activeGameName })}
 	bind:open={launchDialogOpen}
 >
-	<p class="text-primary-400">
+	<p class="text-primary-500 dark:text-primary-400">
 		{#if mode.current === 'modded'}
 			{m.toolBar_dialog_launch_modded_content()}
 		{/if}

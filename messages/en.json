@@ -395,6 +395,7 @@
 	"platformPref_title": "Platform",
 	"prefs_appearance_color_accent_content": "The color of highlighted elements, such as buttons and checkboxes",
 	"prefs_appearance_color_primary_content": "The main color of the interface, including backgrounds and text.",
+	"prefs_appearance_darkMode_title": "Dark mode",
 	"prefs_appearance_nativeMenubar_title": "Use native menubar",
 	"prefs_appearance_title": "Appearance",
 	"prefs_gameSettings_launch_title": "Launch",
