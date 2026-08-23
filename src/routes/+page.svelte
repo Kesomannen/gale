@@ -220,11 +220,6 @@
 	);
 
 	let locked = $derived(profiles.activeLocked);
-
-	$effect(() => {
-		profileQuery.current;
-		console.log('Profile query changed');
-	});
 </script>
 
 <div class="flex grow overflow-hidden">

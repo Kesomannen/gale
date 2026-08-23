@@ -57,8 +57,6 @@ export class PersistedState<T> {
 	#key: string;
 	#serializer: Serializer<T>;
 
-	#destroyEffect;
-
 	constructor(key: string, initialValue: T, options: PersistedStateOptions<T> = {}) {
 		this.#key = key;
 		this.#serializer = options.serializer ?? (DEFAULT_SERIALIZER as Serializer<T>);
@@ -68,14 +66,14 @@ export class PersistedState<T> {
 		list.push(this as PersistedState<unknown>);
 		instances.set(key, list);
 
-		this.#destroyEffect = $effect.root(() => {
-			$inspect(() => {
+		$effect.root(() => {
+			$effect(() => {
 				// Reading the value unconditionally keeps the effect subscribed;
 				// gating only the write prevents clobbering persisted values
 				// with the initial defaults before the store has been read.
 				const value = this.current;
+				const serialized = this.#serializer.serialize(value);
 				if (loaded) {
-					const serialized = this.#serializer.serialize(value);
 					void uiStore.set(this.#key, serialized);
 				}
 			});
