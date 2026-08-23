@@ -4,7 +4,14 @@
 
 ### Added
 
+- Light mode setting
 - Turkish translation (thanks [KadrioS](https://github.com/KadrioS))
+
+### Fixed
+
+- Mod list filters not being saved between sessions
+- Missing Linux accent color causing an error upon startup
+- Checkboxes in the update mods dialog being impossible to uncheck
 
 ## 1.21.0 (2026-08-18)
 
