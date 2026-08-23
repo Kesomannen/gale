@@ -473,7 +473,11 @@
 	class:hidden={useNativeMenu.current}
 >
 	<Menubar.Root class="flex items-center py-1">
-		<img src="favicon.png" alt="Gale logo" class="mr-2 ml-4 h-5 w-5 opacity-50" />
+		<div
+			class="bg-primary-400/80 mr-2 ml-6 size-5 mask-contain mask-no-repeat"
+			style="mask-image: url('/favicon.png');"
+		></div>
+
 		{#each submenus as submenu}
 			<MenubarMenu label={submenu.text}>
 				{#each submenu.items as item}

@@ -1,11 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.22.0 (2026-08-23)
 
 ### Added
 
 - Light mode setting
 - Turkish translation (thanks [KadrioS](https://github.com/KadrioS))
+
+### Changed
+
+- Minor UI tweaks
 
 ### Fixed
 
