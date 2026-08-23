@@ -143,6 +143,12 @@ export const useNativeMenu = new PersistedState(
 /** Whether the app is in dark mode. When `false`, the app uses the light theme. */
 export const darkMode = new PersistedState<boolean>('darkMode', true);
 
+$effect.root(() => {
+	$effect(() => {
+		root.classList.toggle('dark', darkMode.current);
+	});
+});
+
 export function setDarkMode(value: boolean) {
 	darkMode.current = value;
 }

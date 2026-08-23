@@ -63,24 +63,22 @@
 	}}
 />
 
-<div class={['contents', darkMode.current && 'dark']}>
-	<Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
-		<main class="dark:bg-primary-800 relative flex flex-col bg-white">
-			<Menubar />
-			<Toolbar />
+<Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
+	<main class="dark:bg-primary-800 relative flex flex-col bg-white">
+		<Menubar />
+		<Toolbar />
 
-			<div class="relative flex grow overflow-hidden">
-				<Navbar />
+		<div class="relative flex grow overflow-hidden">
+			<Navbar />
 
-				{@render children?.()}
-			</div>
+			{@render children?.()}
+		</div>
 
-			<FetchModsBar />
-			<Toasts />
-		</main>
+		<FetchModsBar />
+		<Toasts />
+	</main>
 
-		<InstallModDialog />
-		<WelcomeDialog />
-		<MissingProfilesDialog />
-	</Tooltip.Provider>
-</div>
+	<InstallModDialog />
+	<WelcomeDialog />
+	<MissingProfilesDialog />
+</Tooltip.Provider>
