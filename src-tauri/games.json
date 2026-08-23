@@ -1412,6 +1412,18 @@
 		}
 	},
 	{
+		"name": "How to Fish",
+		"slug": "how-to-fish",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4001890
+			}
+		}
+	},
+	{
 		"name": "Human Fall Flat",
 		"slug": "human-fall-flat",
 		"modLoader": {
