@@ -1421,7 +1421,8 @@
 			"steam": {
 				"id": 4001890
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Human Fall Flat",
