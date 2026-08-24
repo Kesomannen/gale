@@ -290,7 +290,7 @@ async fn download_and_import_file(
 
     let id = super::import::import_profile(
         data,
-        ImportOptions::default(),
+        ImportOptions::default().ignore_missing_mods(true),
         InstallOptions::default(),
         app,
     )

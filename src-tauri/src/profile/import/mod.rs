@@ -141,6 +141,24 @@ async fn read_code_from_backend(backend: Backend, key: Uuid, app: &AppHandle) ->
 pub struct ImportOptions {
     import_all: bool,
     merge: bool,
+    ignore_missing_mods: bool,
+}
+
+impl ImportOptions {
+    // pub fn import_all(mut self, import_all: bool) -> Self {
+    //     self.import_all = import_all;
+    //     self
+    // }
+
+    // pub fn merge(mut self, merge: bool) -> Self {
+    //     self.merge = merge;
+    //     self
+    // }
+
+    pub fn ignore_missing_mods(mut self, ignore_missing_mods: bool) -> Self {
+        self.ignore_missing_mods = ignore_missing_mods;
+        self
+    }
 }
 
 pub(super) async fn import_profile(
@@ -215,7 +233,18 @@ fn prepare_import(
 
     let installs = mods
         .into_iter()
-        .map(|r2_mod| r2_mod.into_install(&thunderstore))
+        .filter_map(|r2_mod| match r2_mod.into_install(&thunderstore) {
+            Ok(install) => Some(Ok(install)),
+            Err(err) if options.ignore_missing_mods => {
+                warn!(
+                    ?err,
+                    ident = %r2_mod.version_ident(),
+                    "ignoring missing mod during import",
+                );
+                None
+            }
+            Err(err) => Some(Err(err)),
+        })
         .collect::<Result<Vec<_>>>()?;
 
     let game = manager.active_game_mut();
