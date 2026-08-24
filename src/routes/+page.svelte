@@ -30,6 +30,7 @@
 	import config from '$lib/state/config.svelte';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { untrack } from 'svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -206,7 +207,7 @@
 	$effect(() => {
 		profiles.active;
 		profileQuery.current;
-		refresh();
+		untrack(() => refresh());
 	});
 
 	let reorderable = $derived(
