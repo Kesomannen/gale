@@ -300,11 +300,17 @@ pub struct CategoryResponse {
     pub results: Vec<PackageCategory>,
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, PartialOrd)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PackageCategory {
     pub name: String,
     pub slug: String,
+}
+
+impl PartialOrd for PackageCategory {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Ord for PackageCategory {

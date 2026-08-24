@@ -10,7 +10,6 @@ use std::{
 };
 use tauri::AppHandle;
 use tokio_util::sync::CancellationToken;
-use tracing::debug;
 use uuid::Uuid;
 
 use crate::{game::Game, state::ManagerExt, thunderstore::query::Queryable};
