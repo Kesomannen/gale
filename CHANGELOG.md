@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.22.1 (2026-08-24)
 
 ### Changed
 
@@ -9,6 +9,7 @@
 ### Fixed
 
 - Switching game while fetching mods causing the mod lists to be mixed
+- An infinite loop causing the app to constantly consume CPU in the background
 
 ## 1.22.0 (2026-08-23)
 
