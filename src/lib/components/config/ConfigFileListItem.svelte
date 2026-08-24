@@ -69,7 +69,7 @@
 				config.selectedFile === file
 					? 'dark:bg-primary-700 bg-primary-100'
 					: 'dark:hover:bg-primary-700 hover:bg-primary-50',
-				'group flex h-8 w-full items-center overflow-hidden rounded pr-1 pl-2'
+				'group flex h-9 w-full items-center overflow-hidden rounded-lg pr-1 pl-2'
 			]}
 		>
 			{#if file.type === 'ok'}
@@ -120,7 +120,7 @@
 						config.selectedSection === section
 							? 'dark:bg-primary-700 bg-primary-100'
 							: 'dark:hover:bg-primary-700 hover:bg-primary-50',
-						'block w-full truncate rounded py-0.5 pr-2 pl-10 text-left'
+						'block w-full truncate rounded-lg py-0.5 pr-2 pl-10 text-left'
 					]}
 					onclick={() => {
 						config.selectedFile = file;

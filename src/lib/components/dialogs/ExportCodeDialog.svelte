@@ -43,7 +43,7 @@
 
 			<div>
 				<button
-					class="text-primary-700 dark:bg-primary-900 dark:text-primary-300 rounded-md bg-primary-100 px-4 py-1 font-mono text-lg"
+					class="text-primary-700 dark:bg-primary-900 dark:text-primary-300 bg-primary-100 rounded-md px-4 py-1 font-mono text-lg"
 					onclick={copyCode}
 				>
 					{code.code}
