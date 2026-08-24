@@ -106,17 +106,15 @@ impl ManagedGame {
     ) -> Result<(LaunchMode, Command)> {
         let (launch_mode, mut platform, game_custom_args) = prefs
             .game_prefs
-            .get(&*self.game.slug)
-            .map(|prefs| {
+            .get(&*self.game.slug).map_or_else(|| {
+                info!("game prefs not set, using default settings");
+                Default::default()
+            }, |prefs| {
                 (
                     prefs.launch_mode.clone(),
                     prefs.platform,
                     prefs.custom_args.as_str(),
                 )
-            })
-            .unwrap_or_else(|| {
-                info!("game prefs not set, using default settings");
-                Default::default()
             });
 
         // if the game has a platform but the setting is unset, fill it in
@@ -145,21 +143,18 @@ impl ManagedGame {
                     false
                 });
 
-                if is_proton {
-                    if let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
+                if is_proton
+                    && let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
                         command.env("WINEDLLOVERRIDE", format!("{proxy_dll}=n,b"));
 
-                        if let Some(steam) = &self.game.platforms.steam {
-                            if matches!(platform, Some(Platform::Steam)) {
-                                if let Err(err) =
+                        if let Some(steam) = &self.game.platforms.steam
+                            && matches!(platform, Some(Platform::Steam))
+                                && let Err(err) =
                                     linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
                                 {
                                     warn!("failed to ensure wine dll override: {:#}", err);
-                                };
-                            }
-                        }
+                                }
                     }
-                }
 
                 is_proton
             };
@@ -200,7 +195,7 @@ impl ManagedGame {
             .active_profile()
             .path
             .read_dir()?
-            .filter_map(|entry| entry.ok())
+            .filter_map(std::result::Result::ok)
             .filter(|entry| {
                 let name = entry.file_name();
 
@@ -254,7 +249,7 @@ fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<
                 }
             });
         }
-    };
+    }
 
     Ok(())
 }
@@ -268,7 +263,7 @@ fn locate_game_dir(game: Game, prefs: &Prefs) -> Result<PathBuf> {
     }) = game_prefs
     {
         info!("using game directory override at {}", path.display());
-        path.to_path_buf()
+        path.clone()
     } else {
         let platform = game_prefs
             .and_then(|prefs| prefs.platform)
@@ -320,7 +315,7 @@ fn find_executable(game_dir: &Path) -> Result<PathBuf> {
 
             has_correct_extension && !IGNORED_EXES.contains(&&*file_name_str)
         })
-        .map(|entry| entry.into_path())
+        .map(walkdir::DirEntry::into_path)
         .ok_or_eyre("game executable not found")
 }
 
@@ -331,20 +326,19 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
     let mut launch_options = Vec::new();
 
     if let Some(options_obj) = raw_options.as_object() {
-        for (_, option_value) in options_obj.iter() {
+        for (_, option_value) in options_obj {
             if let Some(option) = option_value.as_object() {
                 // TODO: Figure out how to properly filter by active beta branch.
                 // Need to find where Steam stores info about which beta branch is active for an app.
-                if let Some(config) = option.get("config") {
-                    if config.get("BetaKey").is_some() {
+                if let Some(config) = option.get("config")
+                    && config.get("BetaKey").is_some() {
                         continue;
                     }
-                }
 
                 let launch_type = option
                     .get("type")
                     .and_then(|t| t.as_str())
-                    .map(|s| s.to_string());
+                    .map(std::string::ToString::to_string);
 
                 let arguments = option
                     .get("arguments")
@@ -355,7 +349,7 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
                 let description = option
                     .get("description")
                     .and_then(|d| d.as_str())
-                    .map(|s| s.to_string());
+                    .map(std::string::ToString::to_string);
 
                 launch_options.push(LaunchOption {
                     arguments,

@@ -70,7 +70,7 @@ pub fn reset_config_file(file: &Path, app: AppHandle) -> Result<()> {
     match &mut file.kind {
         AnyFileKind::BepInEx(file) => file.reset_all()?,
         _ => return Err(eyre!("unsupported for this format").into()),
-    };
+    }
 
     file.write(&profile.path).context("failed to write file")?;
     Ok(())

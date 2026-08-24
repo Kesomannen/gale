@@ -190,7 +190,7 @@ async fn write(
         send_queued_message(&mut sender, msg).await;
     }
 
-    info!("stopping socket write task: channel was closed")
+    info!("stopping socket write task: channel was closed");
 }
 
 async fn send_queued_message(

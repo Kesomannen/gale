@@ -54,10 +54,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let args = env::args().collect_vec();
-    if let Some(url) = args.get(1) {
-        if !deep_link::handle(app.handle(), url.to_owned()) {
-            cli::run(args, app.handle());
-        }
+    if let Some(url) = args.get(1)
+        && !deep_link::handle(app.handle(), url.to_owned())
+    {
+        cli::run(args, app.handle());
     }
 
     let handle = app.handle().to_owned();
@@ -100,6 +100,10 @@ fn is_flatpak() -> bool {
     util::is_flatpak()
 }
 
+#[clippy::allow(
+    clippy::too_many_lines,
+    reason = "tauri's generate_handler macro cannot be split"
+)]
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
         eprintln!("failed to set up logger: {err:#}");

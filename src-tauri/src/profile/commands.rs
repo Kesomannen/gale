@@ -62,10 +62,7 @@ pub fn get_game_info(app: AppHandle) -> GameInfo {
     let favorites = manager
         .games
         .iter()
-        .filter_map(|(game, managed_game)| match managed_game.favorite {
-            true => Some(&*game.slug),
-            false => None,
-        })
+        .filter_map(|(game, managed_game)| if managed_game.favorite { Some(&*game.slug) } else { None })
         .collect();
 
     GameInfo {
@@ -321,7 +318,7 @@ pub fn set_all_mods_state(enable: bool, app: AppHandle) -> Result<usize> {
         .mods
         .iter()
         .filter(|profile_mod| profile_mod.enabled != enable)
-        .map(|profile_mod| profile_mod.uuid())
+        .map(super::ProfileMod::uuid)
         .collect_vec();
 
     let count = uuids.len();
@@ -344,7 +341,7 @@ pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
         .mods
         .iter()
         .filter(|profile_mod| !profile_mod.enabled)
-        .map(|profile_mod| profile_mod.uuid())
+        .map(super::ProfileMod::uuid)
         .collect_vec();
 
     let len = uuids.len();

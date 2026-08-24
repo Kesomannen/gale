@@ -116,30 +116,25 @@ pub(super) fn generate_latest(
     let current_mods = borrow_mods(profile.mods_to_pack(args).cloned(), thunderstore);
 
     let version_header = format!("## {}", args.version_number);
-    let index = match args.changelog.find(&version_header) {
-        Some(index) => {
-            // if there's an existing diff, replace it
-            let offset = index + version_header.len();
+    let index = if let Some(index) = args.changelog.find(&version_header) {
+        // if there's an existing diff, replace it
+        let offset = index + version_header.len();
 
-            // find the next version header to see where the old diff ends
-            let next_index = args.changelog[offset..]
-                .find("\n## ")
-                .map(|next_index| next_index + offset)
-                .unwrap_or_else(|| args.changelog.len());
+        // find the next version header to see where the old diff ends
+        let next_index = args.changelog[offset..]
+            .find("\n## ").map_or_else(|| args.changelog.len(), |next_index| next_index + offset);
 
-            args.changelog.drain(index..next_index);
+        args.changelog.drain(index..next_index);
 
-            index
-        }
-        None => {
-            // if there's no existing diff, insert a new one right below the header
-            const HEADER: &str = "# Changelog\n\n";
+        index
+    } else {
+        // if there's no existing diff, insert a new one right below the header
+        const HEADER: &str = "# Changelog\n\n";
 
-            args.changelog
-                .find(HEADER)
-                .map(|index| index + HEADER.len())
-                .unwrap_or_default()
-        }
+        args.changelog
+            .find(HEADER)
+            .map(|index| index + HEADER.len())
+            .unwrap_or_default()
     };
 
     let mut diff = generate_diff(&old_mods, &current_mods, game);
@@ -188,20 +183,16 @@ impl Profile {
         }
 
         let iter = path.read_dir()?.filter_map(Result::ok).filter_map(|entry| {
-            match entry
+            if let Ok(version) = entry
                 .file_name()
                 .to_string_lossy()
                 .trim_end_matches(".json")
-                .parse::<semver::Version>()
-            {
-                Ok(version) => Some((entry, version)),
-                _ => {
-                    warn!(
-                        "snapshot file is not a valid version (at {})",
-                        entry.path().display()
-                    );
-                    None
-                }
+                .parse::<semver::Version>() { Some((entry, version)) } else {
+                warn!(
+                    "snapshot file is not a valid version (at {})",
+                    entry.path().display()
+                );
+                None
             }
         });
 

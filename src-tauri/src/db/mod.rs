@@ -63,12 +63,9 @@ static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migr
 fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
     let migrations = Migrations::from_directory(&MIGRATIONS_DIR)?;
 
-    migrations.to_latest(conn).map_err(|err| match err {
-        rusqlite_migration::Error::MigrationDefinition(
+    migrations.to_latest(conn).map_err(|err| if let rusqlite_migration::Error::MigrationDefinition(
             MigrationDefinitionError::DatabaseTooFarAhead,
-        ) => eyre!("database has been modified by a newer version of Gale, please update to the latest version"),
-        _ => eyre!(err),
-    })?;
+        ) = err { eyre!("database has been modified by a newer version of Gale, please update to the latest version") } else { eyre!(err) })?;
 
     Ok(())
 }

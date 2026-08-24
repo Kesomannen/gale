@@ -59,7 +59,7 @@ impl R2Mod {
         self.ident.with_version(&self.version)
     }
 
-    pub fn into_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
+    pub fn to_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
         // Prefer backend, otherwise fallback to generic lookup
         let borrowed_mod = thunderstore
             .backend(self.source)
@@ -123,8 +123,8 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
         name: profile.name.clone(),
         game: Some(game.slug.to_string()),
         mods,
-        ignored_version_updates: profile.ignored_version_updates.iter().cloned().collect(),
-        ignored_package_updates: profile.ignored_package_updates.iter().cloned().collect(),
+        ignored_version_updates: profile.ignored_version_updates.iter().copied().collect(),
+        ignored_package_updates: profile.ignored_package_updates.iter().copied().collect(),
     };
 
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
@@ -246,7 +246,7 @@ pub(super) fn find_config<'a>(
     })
 }
 
-pub(super) fn list_files<'a>(root: &'a Path) -> impl Iterator<Item = PathBuf> + 'a {
+pub(super) fn list_files(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
     WalkDir::new(root)
         .into_iter()
         .filter_map(Result::ok)

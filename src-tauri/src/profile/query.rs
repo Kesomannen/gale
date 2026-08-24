@@ -119,17 +119,14 @@ impl Profile {
             .iter()
             .enumerate()
             .filter_map(|(index, profile_mod)| {
-                match QueryableProfileMod::create(profile_mod, index, thunderstore) {
-                    Ok(queryable) => Some(queryable),
-                    Err(_) => {
-                        warn!(
-                            "unknown mod: {} while querying {}",
-                            profile_mod.ident(),
-                            self.name
-                        );
-                        unknown.push(Dependant::from(profile_mod));
-                        None
-                    }
+                if let Ok(queryable) = QueryableProfileMod::create(profile_mod, index, thunderstore) { Some(queryable) } else {
+                    warn!(
+                        "unknown mod: {} while querying {}",
+                        profile_mod.ident(),
+                        self.name
+                    );
+                    unknown.push(Dependant::from(profile_mod));
+                    None
                 }
             });
 
@@ -162,7 +159,7 @@ impl Queryable for LocalMod {
     }
 
     fn version(&self) -> Option<semver::Version> {
-        self.version.as_ref().cloned()
+        self.version.clone()
     }
 
     fn description(&self) -> Option<&str> {

@@ -51,7 +51,7 @@ impl PackageListing {
     }
 
     pub fn latest_released(&self) -> &PackageVersion {
-        &self
+        self
             .versions
             .iter()
             .find_or_first(|v| v.parsed_version().pre.is_empty())

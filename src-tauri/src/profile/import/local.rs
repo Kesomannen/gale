@@ -56,7 +56,7 @@ pub async fn import_local_mod(
                 .lock_thunderstore()
                 .dependencies(deps)
                 .filter(|dep| !profile.has_mod(dep.package.uuid))
-                .map(|borrowed| borrowed.into())
+                .map(std::convert::Into::into)
                 .collect::<Vec<_>>();
 
             (profile.id, mods)

@@ -39,7 +39,7 @@ async fn fetch_single_package_loop(
     backend: Backend,
     cancel_token: &CancellationToken,
 ) {
-    const FETCH_INTERVAL: Duration = Duration::from_secs(60 * 15);
+    const FETCH_INTERVAL: Duration = Duration::from_mins(15);
 
     let mut is_first = true;
 
@@ -50,7 +50,7 @@ async fn fetch_single_package_loop(
         if !fetch_automatically && !is_first {
             info!("automatic fetch cancelled by user setting");
             break;
-        };
+        }
 
         if let Err(err) = loop_iter(game, &mut is_first, &app, backend, cancel_token).await {
             logger::log_webview_err(
@@ -61,11 +61,11 @@ async fn fetch_single_package_loop(
         }
 
         tokio::select! {
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("fetch loop cancelled while waiting for next iteration");
                 break;
             }
-            _ = tokio::time::sleep(FETCH_INTERVAL) => {}
+            () = tokio::time::sleep(FETCH_INTERVAL) => {}
         }
     }
 
@@ -172,7 +172,7 @@ async fn fetch_single_packages(
     ) -> Result<usize> {
         let bytes = tokio::select! {
             biased;
-            _ = cancel_token.cancelled() => {
+            () = cancel_token.cancelled() => {
                 debug!("fetch cancelled while fetching packages for {}", backend);
                 return Ok(0);
             }
@@ -201,7 +201,7 @@ async fn fetch_single_packages(
         loop {
             tokio::select! {
                 biased;
-                _ = cancel_token.cancelled() => {
+                () = cancel_token.cancelled() => {
                     debug!("fetch cancelled while fetching packages for {}", backend);
                     chunk_fetcher.abort();
                     return Ok(0);

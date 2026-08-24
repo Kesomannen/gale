@@ -87,10 +87,10 @@ pub(super) async fn import(path: PathBuf, include: &[bool], app: &AppHandle) -> 
 
                 game.delete_profile(profile.id, true, app.db())
                     .unwrap_or_else(|_| {
-                        warn!("failed to delete possibly corrupted profile '{}'", name)
+                        warn!("failed to delete possibly corrupted profile '{}'", name);
                     });
             }
-        };
+        }
     }
 
     Ok(())
@@ -114,7 +114,7 @@ fn find_profiles(mut path: PathBuf, app: &AppHandle) -> Result<impl Iterator<Ite
     Ok(path
         .read_dir()
         .fs_context("reading profiles directory", &path)?
-        .filter_map(|entry| entry.ok())
+        .filter_map(std::result::Result::ok)
         .filter(|entry| entry.file_type().unwrap().is_dir())
         .map(|entry| entry.path()))
 }
@@ -177,11 +177,7 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
 }
 
 fn find_path() -> Option<PathBuf> {
-    let parent_dir = match cfg!(target_os = "linux") {
-        // r2modman uses the config dir instead of the data dir on linux.
-        true => dirs_next::config_dir(),
-        false => dirs_next::data_dir(),
-    }
+    let parent_dir = if cfg!(target_os = "linux") { dirs_next::config_dir() } else { dirs_next::data_dir() }
     .unwrap();
 
     parent_dir

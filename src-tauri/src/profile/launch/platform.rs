@@ -134,7 +134,7 @@ fn create_base_steam_command() -> Result<Command> {
         Err(err) => {
             debug!("failed to locate steam.sh script: {:#}", err);
         }
-    };
+    }
 
     let path = Path::new("/usr/bin/steam")
         .exists_or_none()
@@ -208,8 +208,7 @@ fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
         .find(|entry| {
             entry
                 .get("appid")
-                .and_then(|id| id.as_u64())
-                .map_or(false, |id| id == app_id as u64)
+                .and_then(serde_json::Value::as_u64) == Some(u64::from(app_id))
         })
         .cloned()
         .ok_or_else(|| eyre!("app ID {} not found in Steam appinfo.vdf", app_id))

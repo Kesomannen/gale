@@ -71,17 +71,16 @@ pub(super) fn read_file(
     let mut manifest: ProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
 
-    for r2mod in manifest.mods.iter_mut() {
+    for r2mod in &mut manifest.mods {
         // first try the backend stored in the manifest, if it's not there,
         // then try falling back to checking any other backend and update the source as needed
         if thunderstore
             .backend(r2mod.source)
             .find_ident(&r2mod.version_ident())
             .is_err()
+            && let Ok(package) = thunderstore.find_ident(&r2mod.version_ident())
         {
-            if let Ok(package) = thunderstore.find_ident(&r2mod.version_ident()) {
-                r2mod.source = package.package.backend;
-            }
+            r2mod.source = package.package.backend;
         }
     }
 
@@ -108,7 +107,7 @@ pub async fn read_code(key: Uuid, app: &AppHandle) -> Result<ImportData> {
     )
     .await
     .into_iter()
-    .find_or_first(|r| r.is_ok())
+    .find_or_first(std::result::Result::is_ok)
     .unwrap()?;
 
     match response.strip_prefix(PROFILE_DATA_PREFIX) {
@@ -233,7 +232,7 @@ fn prepare_import(
 
     let installs = mods
         .into_iter()
-        .filter_map(|r2_mod| match r2_mod.into_install(&thunderstore) {
+        .filter_map(|r2_mod| match r2_mod.to_install(&thunderstore) {
             Ok(install) => Some(Ok(install)),
             Err(err) if options.ignore_missing_mods => {
                 warn!(
@@ -249,19 +248,16 @@ fn prepare_import(
 
     let game = manager.active_game_mut();
 
-    let (profile, to_install) = match game.find_profile_index(&name) {
-        Some(profile_index) => {
-            // overwrite an existing profile
-            let profile = game.set_active_profile(profile_index)?;
-            let to_install = incremental_update(options.merge, installs, profile)?.collect_vec();
+    let (profile, to_install) = if let Some(profile_index) = game.find_profile_index(&name) {
+        // overwrite an existing profile
+        let profile = game.set_active_profile(profile_index)?;
+        let to_install = incremental_update(options.merge, installs, profile)?.collect_vec();
 
-            (profile, to_install)
-        }
-        None => {
-            let profile = game.create_profile(name, None, app.db())?;
+        (profile, to_install)
+    } else {
+        let profile = game.create_profile(name, None, app.db())?;
 
-            (profile, installs)
-        }
+        (profile, installs)
     };
 
     profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
@@ -285,7 +281,7 @@ fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
         managed_game.delete_profile(profile_id, false, app.db())?;
         managed_game.save(app)?;
     } else {
-        warn!("import failed for last profile")
+        warn!("import failed for last profile");
     }
 
     Ok(())
@@ -372,7 +368,7 @@ pub fn import_config(
                 relative_path = %extra_file.display(),
                 "removing extra config file"
             );
-            fs::remove_file(extra_path).fs_context("removing extra config file", &extra_file)?;
+            fs::remove_file(extra_path).fs_context("removing extra config file", extra_file)?;
         }
     }
 

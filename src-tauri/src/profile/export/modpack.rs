@@ -17,7 +17,7 @@ use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
-use crate::{game::Game, profile::Profile, state::ManagerExt, thunderstore::*};
+use crate::{game::Game, profile::Profile, state::ManagerExt, thunderstore::{Thunderstore, Backend, ModId, PackageManifest, UserMediaInitiateUploadResponse, UserMediaInitiateUploadParams, UploadPartUrl, CompletedPart, UserMediaFinishUploadParams, PackageSubmissionMetadata}};
 
 /// Returns whether it's hexium-exclusive now
 pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Game) -> bool {
@@ -220,7 +220,7 @@ pub async fn publish(
     {
         Ok(parts) => parts,
         Err(err) => {
-            abort_upload(&app, &uuid, args.backend, &token)
+            abort_upload(app, &uuid, args.backend, &token)
                 .await
                 .context("failed to abort upload")?;
             return Err(err.wrap_err("failed to upload file"));
@@ -364,11 +364,10 @@ async fn submit_package(
         return Ok(());
     }
 
-    if status == StatusCode::BAD_REQUEST {
-        if let Ok(Some(err)) = handle_bad_request(response).await {
+    if status == StatusCode::BAD_REQUEST
+        && let Ok(Some(err)) = handle_bad_request(response).await {
             bail!("{}", err)
         }
-    }
 
     bail!("unexpected error: {}", status);
 
@@ -410,16 +409,10 @@ impl ReqwestResponseExt for reqwest::Response {
     where
         F: FnOnce(StatusCode) -> Option<eyre::Error>,
     {
-        self.error_for_status().map_err(|err| match err.status() {
-            Some(status) => match status {
-                StatusCode::UNAUTHORIZED => eyre!("thunderstore API token is invalid"),
-                _ => match f(status) {
-                    Some(err) => err,
-                    None => eyre!(err),
-                },
-            },
-            None => eyre!(err),
-        })
+        self.error_for_status().map_err(|err| if let Some(status) = err.status() { match status {
+            StatusCode::UNAUTHORIZED => eyre!("thunderstore API token is invalid"),
+            _ => if let Some(err) = f(status) { err } else { eyre!(err) },
+        } } else { eyre!(err) })
     }
 
     fn map_auth_err(self) -> eyre::Result<reqwest::Response> {

@@ -30,7 +30,7 @@ pub fn run(args: Vec<String>, app: &AppHandle) {
             } else {
                 logger::log_webview_err("Failed to run cli", err, app);
             }
-        })
+        });
 }
 
 #[derive(Debug, Parser)]
@@ -101,7 +101,7 @@ impl Cli {
             let handle = app.to_owned();
             tauri::async_runtime::spawn(async move {
                 if let Err(err) = install_local_mod(path, &handle).await {
-                    error!("failed to install mod from cli: {:#}", err)
+                    error!("failed to install mod from cli: {:#}", err);
                 }
 
                 let manager = handle.lock_manager();

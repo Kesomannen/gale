@@ -92,7 +92,7 @@ impl TryFrom<frontend::Value> for Value {
             frontend::Value::String(str) => Value::String(str),
             frontend::Value::Int(num) => Value::Number(num.value.into()),
             frontend::Value::Float(num) => {
-                let value = Number::from_f64(num.value as f64)
+                let value = Number::from_f64(f64::from(num.value))
                     .ok_or_eyre("cannot serialize NaN or infinite value")?;
                 Value::Number(value)
             }
