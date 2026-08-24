@@ -247,14 +247,11 @@ impl Thunderstore {
 
     /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
     pub fn switch_game(&mut self, game: Game, app: AppHandle) {
-        debug!("cancelling fetch tasks");
         self.fetch_cancel_token.cancel();
 
         self.is_fetching = false;
 
         {
-            debug!("clearing package map");
-
             self.thunderstore_backend.clear_packages();
             self.hexium_backend.clear_packages();
 
