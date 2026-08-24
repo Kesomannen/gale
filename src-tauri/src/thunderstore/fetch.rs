@@ -13,7 +13,8 @@ use indexmap::IndexMap;
 use serde::Serialize;
 use tauri::AppHandle;
 use tokio::sync::mpsc;
-use tracing::{debug, error, info, warn};
+use tokio_util::sync::CancellationToken;
+use tracing::{debug, error, info, trace, warn};
 
 use crate::{
     game::Game,
@@ -22,17 +23,22 @@ use crate::{
     thunderstore::{Backend, PackageListing},
 };
 
-pub async fn fetch_package_loop(game: Game, app: AppHandle) {
+pub async fn fetch_package_loop(game: Game, app: AppHandle, cancel_token: CancellationToken) {
     let backends = app.lock_prefs().enabled_backends(game);
     future::join_all(
         backends
             .iter()
-            .map(|backend| fetch_single_package_loop(game, app.clone(), backend)),
+            .map(|backend| fetch_single_package_loop(game, app.clone(), backend, &cancel_token)),
     )
     .await;
 }
 
-pub(super) async fn fetch_single_package_loop(game: Game, app: AppHandle, backend: Backend) {
+async fn fetch_single_package_loop(
+    game: Game,
+    app: AppHandle,
+    backend: Backend,
+    cancel_token: &CancellationToken,
+) {
     const FETCH_INTERVAL: Duration = Duration::from_secs(60 * 15);
 
     let mut is_first = true;
@@ -46,7 +52,7 @@ pub(super) async fn fetch_single_package_loop(game: Game, app: AppHandle, backen
             break;
         };
 
-        if let Err(err) = loop_iter(game, &mut is_first, &app, backend).await {
+        if let Err(err) = loop_iter(game, &mut is_first, &app, backend, cancel_token).await {
             logger::log_webview_err(
                 format!("Error while fetching packages from {backend:?}"),
                 err,
@@ -54,7 +60,13 @@ pub(super) async fn fetch_single_package_loop(game: Game, app: AppHandle, backen
             );
         }
 
-        tokio::time::sleep(FETCH_INTERVAL).await;
+        tokio::select! {
+            _ = cancel_token.cancelled() => {
+                debug!("fetch loop cancelled while waiting for next iteration");
+                break;
+            }
+            _ = tokio::time::sleep(FETCH_INTERVAL) => {}
+        }
     }
 
     async fn loop_iter(
@@ -62,13 +74,14 @@ pub(super) async fn fetch_single_package_loop(game: Game, app: AppHandle, backen
         is_first: &mut bool,
         app: &AppHandle,
         backend: Backend,
+        cancel_token: &CancellationToken,
     ) -> Result<()> {
         if app.lock_thunderstore().is_fetching {
             warn!("automatic fetch cancelled due to ongoing fetch");
             return Ok(());
         }
 
-        let result = fetch_single_packages(game, *is_first, app, backend).await;
+        let result = fetch_single_packages(game, *is_first, app, backend, cancel_token).await;
 
         let mut state = app.lock_thunderstore();
         state.is_fetching = false;
@@ -94,10 +107,12 @@ pub(super) async fn fetch_packages(
     game: Game,
     write_directly: bool,
     app: &AppHandle,
+    cancel_token: &CancellationToken,
 ) -> Vec<(Backend, Report)> {
     let backends = app.lock_prefs().enabled_backends(game);
     let result = future::join_all(backends.iter().map(|backend| {
-        fetch_single_packages(game, write_directly, app, backend).map_err(move |err| (backend, err))
+        fetch_single_packages(game, write_directly, app, backend, cancel_token)
+            .map_err(move |err| (backend, err))
     }))
     .await
     .into_iter()
@@ -115,6 +130,7 @@ async fn fetch_single_packages(
     write_directly: bool,
     app: &AppHandle,
     backend: Backend,
+    cancel_token: &CancellationToken,
 ) -> Result<()> {
     let start_time = Instant::now();
 
@@ -127,11 +143,11 @@ async fn fetch_single_packages(
 
     emit_event(FetchEvent::Start { backend }, app);
 
-    let res = try_fetch(index_url, write_directly, app, backend).await;
+    let result = try_fetch(index_url, write_directly, app, backend, game, cancel_token).await;
 
     emit_event(FetchEvent::Done { backend }, app);
 
-    return match res {
+    match result {
         Ok(count) => {
             debug!(
                 "fetched {} {:?} packages for {} in {:?}",
@@ -141,87 +157,126 @@ async fn fetch_single_packages(
                 start_time.elapsed()
             );
 
-            Ok(())
+            return Ok(());
         }
-        Err(err) => Err(err),
-    };
+        Err(err) => return Err(err),
+    }
 
     async fn try_fetch(
         index_url: String,
         write_directly: bool,
         app: &AppHandle,
         backend: Backend,
+        game: Game,
+        cancel_token: &CancellationToken,
     ) -> Result<usize> {
-        let bytes = app
-            .http()
-            .get(index_url)
-            .send()
-            .await?
-            .error_for_status()?
-            .bytes()
-            .await?;
+        let bytes = tokio::select! {
+            biased;
+            _ = cancel_token.cancelled() => {
+                debug!("fetch cancelled while fetching packages for {}", backend);
+                return Ok(0);
+            }
+            res = async {
+                let response = app.http().get(&index_url).send().await?;
+                let bytes = response.error_for_status()?.bytes().await?;
+
+                Ok::<_, reqwest_middleware::Error>(bytes)
+            } => res?,
+        };
 
         let urls: Vec<String> = serde_json::from_reader(GzDecoder::new(&bytes[..]))?;
 
         let mut package_count = 0;
         let mut package_buffer = IndexMap::new();
 
-        let (tx, mut rx) = mpsc::channel(urls.len());
+        let (tx, mut rx) = mpsc::channel(4);
 
         let handle = app.to_owned();
-        tokio::spawn(async move {
+        let chunk_fetcher = tokio::spawn(async move {
             if let Err(err) = fetch_chunks(tx, urls, handle).await {
-                error!("failed to request package listing chunks: {:#}", err);
+                error!("failed to request package listing chunks: {err:#}");
             }
         });
 
-        while let Some(chunk) = rx.recv().await {
-            let mut text = String::new();
-            let mut decoder = GzDecoder::new(&chunk[..]);
-            decoder.read_to_string(&mut text)?;
+        loop {
+            tokio::select! {
+                biased;
+                _ = cancel_token.cancelled() => {
+                    debug!("fetch cancelled while fetching packages for {}", backend);
+                    chunk_fetcher.abort();
+                    return Ok(0);
+                }
+                chunk = rx.recv() => {
+                    let Some(chunk) = chunk else {
+                        break;
+                    };
 
-            let packages: Vec<PackageListing> = serde_json::from_str(&text)?;
+                    let mut text = String::new();
+                    let mut decoder = GzDecoder::new(&chunk[..]);
+                    decoder.read_to_string(&mut text)?;
 
-            let packages = packages
-                .into_iter()
-                .filter(|package| {
-                    !EXCLUDED_PACKAGES
-                        .iter()
-                        .any(|excluded| package.full_name() == *excluded)
-                })
-                .map(|package| (package.uuid, PackageListing { backend, ..package }));
+                    let packages: Vec<PackageListing> = serde_json::from_str(&text)?;
 
-            let prev_package_count = package_count;
+                    let packages = packages
+                        .into_iter()
+                        .filter(|package| {
+                            !EXCLUDED_PACKAGES
+                                .iter()
+                                .any(|excluded| package.full_name() == *excluded)
+                        })
+                        .map(|package| (package.uuid, PackageListing { backend, ..package }));
 
-            if write_directly {
-                let mut state = app.lock_thunderstore();
-                let backend_state = state.backend_mut(backend);
-                let prev_count = backend_state.packages.len();
-                backend_state.packages.extend(packages);
+                    let prev_package_count = package_count;
 
-                package_count += backend_state.packages.len() - prev_count;
-            } else {
-                package_buffer.extend(packages);
+                    if write_directly {
+                        let mut state = app.lock_thunderstore();
 
-                package_count = package_buffer.len();
+                        if state.game != Some(game) {
+                            debug!("stopping fetch because the active game has changed");
+                            return Ok(0);
+                        }
+
+                        let backend_state = state.backend_mut(backend);
+                        let prev_count = backend_state.packages.len();
+                        backend_state.packages.extend(packages);
+
+                        package_count += backend_state.packages.len() - prev_count;
+                    } else {
+                        package_buffer.extend(packages);
+
+                        package_count = package_buffer.len();
+                    }
+
+                    let batch_size = package_count - prev_package_count;
+
+                    trace!(len = batch_size, index_url, "received package batch");
+
+                    emit_event(
+                        FetchEvent::Progress {
+                            backend,
+                            mods: batch_size,
+                        },
+                        app,
+                    );
+                }
             }
-
-            emit_event(
-                FetchEvent::Progress {
-                    backend,
-                    mods: package_count - prev_package_count,
-                },
-                app,
-            );
         }
 
         let mut state = app.lock_thunderstore();
+
+        if state.game != Some(game) {
+            debug!("stopping fetch because the active game has changed");
+            return Ok(0);
+        }
+
         let backend_state = state.backend_mut(backend);
         backend_state.packages_fetched = true;
 
         if !write_directly {
             backend_state.packages = package_buffer;
         }
+
+        chunk_fetcher.abort();
 
         Ok(backend_state.packages.len())
     }

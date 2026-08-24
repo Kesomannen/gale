@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Missing mods are now ignored when importing sync profiles
+
+### Fixed
+
+- Switching game while fetching mods causing the mod lists to be mixed
+
 ## 1.22.0 (2026-08-23)
 
 ### Added
