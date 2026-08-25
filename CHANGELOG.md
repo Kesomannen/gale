@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.22.2 (2026-08-25)
+
+### Fixed
+
+- Mod list filters not updating until the page is refreshed
+
 ## 1.22.1 (2026-08-24)
 
 ### Changed

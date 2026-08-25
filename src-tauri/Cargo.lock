@@ -1970,7 +1970,7 @@ dependencies = [
 
 [[package]]
 name = "gale"
-version = "1.22.1"
+version = "1.22.2"
 dependencies = [
  "ashpd",
  "base64 0.22.1",

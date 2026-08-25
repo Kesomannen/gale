@@ -206,7 +206,8 @@
 
 	$effect(() => {
 		profiles.active;
-		profileQuery.current;
+		// read all fields of profileQuery.current to trigger the effect when any of them change
+		JSON.stringify(profileQuery.current);
 		untrack(() => refresh());
 	});
 

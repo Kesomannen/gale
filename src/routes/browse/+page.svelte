@@ -4,7 +4,7 @@
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import ModListItem from '$lib/components/mod-list/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
@@ -108,10 +108,11 @@
 	}
 
 	$effect(() => {
+		profiles.active;
+		// read all fields of modQuery.current to trigger the effect when any of them change
+		JSON.stringify(modQuery.current);
 		if (maxCount > 0) {
-			modQuery.current;
-			profiles.active;
-			refresh();
+			untrack(() => refresh());
 		}
 	});
 
