@@ -13,7 +13,6 @@ use std::{
 
 use eyre::{Context, Result, bail, eyre};
 use futures_util::StreamExt;
-use http_cache_reqwest::CacheMode;
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::AppHandle;
@@ -528,7 +527,6 @@ async fn try_download(
     let mut stream = app
         .http()
         .get(url)
-        .with_extension(CacheMode::NoStore)
         .send()
         .await
         .context("failed to send request")?

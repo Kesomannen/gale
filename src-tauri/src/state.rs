@@ -84,7 +84,7 @@ fn create_http_client() -> Result<reqwest_middleware::ClientWithMiddleware> {
     let cache_path = crate::util::path::default_app_cache_dir().join("http");
 
     let cache = http_cache_reqwest::Cache(HttpCache {
-        mode: CacheMode::NoCache,
+        mode: CacheMode::NoStore,
         manager: CACacheManager::new(cache_path, false),
         options: HttpCacheOptions::default(),
     });
