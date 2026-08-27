@@ -2,10 +2,31 @@
 
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
 	button:not(:disabled),
 	[role='button']:not(:disabled) {
 		cursor: pointer;
+	}
+
+	body {
+		overflow: hidden;
+		position: fixed;
+		width: 100vw;
+		height: 100vh;
+	}
+
+	main {
+		height: 100vh;
+	}
+
+	* {
+		scrollbar-color: var(--color-primary-300) var(--color-white);
+	}
+
+	.dark * {
+		scrollbar-color: var(--color-primary-500) var(--color-primary-800);
 	}
 }
 
@@ -38,26 +59,131 @@
 }
 
 @layer components {
-	body {
-		overflow: hidden;
-		position: fixed;
-		width: 100vw;
-		height: 100vh;
-	}
-
-	main {
-		height: 100vh;
-	}
-
-	* {
-		scrollbar-color: var(--color-primary-500) var(--color-primary-800);
-	}
-
-	.light-scrollbar {
-		scrollbar-color: var(--color-primary-400) var(--color-primary-700);
-	}
-
 	.markdown {
+		color: var(--color-primary-700);
+
+		h1,
+		h2 {
+			border-bottom: 1px solid var(--color-primary-300);
+			padding: --spacing(4) 0 --spacing(1) 0;
+			margin-bottom: --spacing(3);
+		}
+
+		h1 {
+			font-weight: var(--font-weight-bold);
+			font-size: var(--text-3xl);
+			color: var(--color-primary-900);
+		}
+
+		h2 {
+			font-weight: var(--font-weight-semibold);
+			font-size: var(--text-2xl);
+			color: var(--color-primary-800);
+		}
+
+		h3 {
+			font-weight: var(--font-weight-semibold);
+			font-size: var(--text-xl);
+			padding: --spacing(2) 0 --spacing(1) 0;
+		}
+
+		h4 {
+			font-weight: var(--font-weight-medium);
+			font-size: var(--text-lg);
+			padding: --spacing(1) 0 --spacing(0.5) 0;
+		}
+
+		a {
+			color: var(--color-accent-600);
+
+			&:hover {
+				color: var(--color-accent-700);
+				text-decoration-line: underline;
+			}
+
+			img {
+				display: inline;
+			}
+		}
+
+		p {
+			margin: --spacing(3) 0;
+		}
+
+		li {
+			margin: --spacing(1) 0 --spacing(1) --spacing(8);
+			list-style-type: disc;
+			padding-left: calc(var(--spacing) * 0.5);
+		}
+
+		pre {
+			background-color: var(--color-slate-100);
+			color: var(--color-slate-700);
+			margin: --spacing(2) 0;
+			overflow-x: auto;
+			border-radius: var(--radius-lg);
+			padding: --spacing(2);
+
+			.hljs {
+				padding: 0;
+				background-color: var(--color-slate-100) !important;
+			}
+		}
+
+		code {
+			background-color: var(--color-slate-100);
+			padding: --spacing(0.5) --spacing(2);
+			border-radius: var(--radius-sm);
+		}
+
+		img {
+			margin: --spacing(2) 0;
+		}
+
+		table {
+			border-color: var(--color-slate-200);
+			border-width: 2px;
+			border-radius: var(--radius-lg);
+			border-collapse: collapse;
+			overflow-x: auto;
+			overflow-y: hidden;
+			max-width: 100%;
+		}
+
+		thead {
+			font-weight: var(--font-weight-bold);
+			background-color: var(--color-slate-100);
+			border-radius: var(--radius-lg);
+		}
+
+		tbody tr:nth-child(2n) {
+			background: color-mix(in srgb, var(--color-slate-200) 50%, transparent);
+		}
+
+		td,
+		th {
+			padding: --spacing(2) --spacing(4);
+			text-align: left;
+		}
+
+		hr {
+			border-color: var(--color-primary-300);
+			margin: --spacing(4) 0;
+		}
+
+		blockquote {
+			border-left: 4px solid var(--color-primary-300);
+			color: var(--color-primary-600);
+			margin: --spacing(3) 0;
+			padding-left: --spacing(3);
+		}
+
+		summary {
+			cursor: pointer;
+		}
+	}
+
+	.dark .markdown {
 		color: var(--color-primary-100);
 
 		h1,
@@ -79,18 +205,6 @@
 			color: var(--color-primary-100);
 		}
 
-		h3 {
-			font-weight: var(--font-weight-semibold);
-			font-size: var(--text-xl);
-			padding: --spacing(2) 0 --spacing(1) 0;
-		}
-
-		h4 {
-			font-weight: var(--font-weight-medium);
-			font-size: var(--text-lg);
-			padding: --spacing(1) 0 --spacing(0.5) 0;
-		}
-
 		a {
 			color: var(--color-accent-400);
 
@@ -104,19 +218,9 @@
 			}
 		}
 
-		p {
-			margin: --spacing(3) 0;
-		}
-
-		li {
-			margin: --spacing(1) 0 --spacing(1) --spacing(8);
-			list-style-type: disc;
-			padding-left: calc(var(--spacing) * 0.5);
-		}
-
 		pre {
 			background-color: var(--color-primary-900);
-			color: var(text-primary-300);
+			color: var(--text-primary-300);
 			margin: --spacing(2) 0;
 			overflow-x: auto;
 			border-radius: var(--radius-lg);
@@ -134,56 +238,35 @@
 			border-radius: var(--radius-sm);
 		}
 
-		img {
-			margin: --spacing(2) 0;
-		}
-
 		table {
 			border-color: var(--color-primary-900);
-			border-width: 2px;
-			border-radius: var(--radius-lg);
-			border-collapse: collapse;
-			overflow-x: auto;
-			overflow-y: hidden;
-			max-width: 100%;
 		}
 
 		thead {
-			font-weight: var(--font-weight-bold);
 			background-color: var(--color-primary-900);
-			border-radius: var(--radius-lg);
 		}
 
 		tbody tr:nth-child(2n) {
 			background: color-mix(in srgb, var(--color-primary-900) 20%, transparent);
 		}
 
-		td,
-		th {
-			padding: --spacing(2) --spacing(4);
-			text-align: left;
-		}
-
 		hr {
 			border-color: var(--color-primary-500);
-			margin: --spacing(4) 0;
 		}
 
 		blockquote {
 			border-left: 4px solid var(--color-primary-600);
 			color: var(--text-primary-400);
-			margin: --spacing(3) 0;
-			padding-left: --spacing(3);
-		}
-
-		summary {
-			cursor: pointer;
 		}
 	}
 
 	code {
-		background-color: var(--color-primary-900);
+		background-color: var(--color-slate-100);
 		padding: 0 --spacing(1);
 		font-size: var(--text-sm);
+	}
+
+	.dark code {
+		background-color: var(--color-primary-900);
 	}
 }

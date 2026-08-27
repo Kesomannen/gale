@@ -3,7 +3,7 @@
 	import Combobox from '$lib/components/ui/Combobox.svelte';
 	import ResetButton from '$lib/components/ui/ResetButton.svelte';
 	import { selectItems } from '$lib/util';
-	import { getFont, setFont } from '$lib/theme';
+	import { getFont, setFont } from '$lib/state/theme.svelte';
 	import { onMount } from 'svelte';
 	import * as api from '$lib/api';
 	import { m } from '$lib/paraglide/messages';

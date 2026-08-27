@@ -26,7 +26,7 @@
 </InfoBox>
 
 <Dialog bind:open={dialogOpen} title="Unknown mods">
-	<div class="text-primary-300 mb-3">
+	<div class="text-primary-600 dark:text-primary-300 mb-3">
 		{m.unknownModsBanner_dialog_content_1()}
 		<br />
 		{m.unknownModsBanner_dialog_content_2()}

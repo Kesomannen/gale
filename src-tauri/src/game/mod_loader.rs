@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::profile::install::*;
+use crate::profile::install::{Subdir, PackageInstaller, BepinexInstaller, SubdirInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, ShimloaderInstaller};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -208,6 +208,7 @@ impl ModLoader<'static> {
                 const SUBDIRS: &[Subdir] = &[
                     Subdir::flat_separated("mod", "shimloader/mod"),
                     Subdir::flat_separated("pak", "shimloader/pak").extension(".pak"),
+                    Subdir::flat_separated("overlay", "shimloader/overlay"),
                     Subdir::untracked("cfg", "shimloader/cfg").mutable(),
                 ];
 

@@ -1,6 +1,6 @@
 {
 	"productName": "Gale",
-	"version": "1.19.2",
+	"version": "1.22.2",
 	"identifier": "com.kesomannen.gale",
 	"build": {
 		"beforeBuildCommand": "pnpm run build",
@@ -24,9 +24,7 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
-		"windows": {
-			"signCommand": "artifact-signing-cli -e https://wus2.codesigning.azure.net -a TisButAscratch -c ThisIsForGale -d Gale %1"
-		},
+		"windows": {},
 		"linux": {
 			"appimage": {
 				"files": {
@@ -47,7 +45,9 @@
 		"resources": [],
 		"fileAssociations": [
 			{
-				"ext": ["r2z"],
+				"ext": [
+					"r2z"
+				],
 				"mimeType": "application/x-r2z"
 			}
 		]
@@ -61,7 +61,10 @@
 		},
 		"deep-link": {
 			"desktop": {
-				"schemes": ["ror2mm", "gale"]
+				"schemes": [
+					"ror2mm",
+					"gale"
+				]
 			}
 		}
 	},
@@ -84,7 +87,9 @@
 			"csp": "default-src * ipc: http://ipc.localhost; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' https://storage.ko-fi.com; font-src https://fonts.gstatic.com",
 			"assetProtocol": {
 				"enable": true,
-				"scope": ["**"]
+				"scope": [
+					"**"
+				]
 			}
 		}
 	}

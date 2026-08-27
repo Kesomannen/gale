@@ -65,7 +65,7 @@
 			{/each}
 		{:else}
 			<HelpCard title={m.gameSelect_title()} icon="mdi:magnify">
-				<div class="text-primary-400 mt-2 max-w-140 text-sm">
+				<div class="text-primary-500 dark:text-primary-400 mt-2 max-w-140 text-sm">
 					{m.gameSelect_content_1()}
 					<Link href="https://github.com/Kesomannen/ModManager/issues/new"
 						>{m.gameSelect_content_2()}</Link

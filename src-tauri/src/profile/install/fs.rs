@@ -201,8 +201,8 @@ where
 pub(super) fn uninstall_any(path: impl AsRef<Path>) -> Result<()> {
     for_any(
         path.as_ref(),
-        |path| fs::remove_dir_all(path).map_err(|err| err.into()),
-        |path| fs::remove_file(path).map_err(|err| err.into()),
+        |path| fs::remove_dir_all(path).map_err(std::convert::Into::into),
+        |path| fs::remove_file(path).map_err(std::convert::Into::into),
     )
 }
 

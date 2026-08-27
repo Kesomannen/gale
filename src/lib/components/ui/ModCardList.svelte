@@ -20,7 +20,7 @@
 </script>
 
 <div class={[classProp, 'grid gap-3 overflow-y-auto']}>
-	{#each sortedMods as mod (mod.fullName)}
+	{#each sortedMods as mod}
 		<ModCard fullName={mod.fullName} backend={mod.backend} {showVersion}>
 			{@render cardChildren?.({ mod })}
 		</ModCard>

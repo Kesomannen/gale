@@ -12,6 +12,8 @@
 	import ColorPref from '../prefs/ColorPref.svelte';
 	import { invoke } from '@tauri-apps/api/core';
 	import { m } from '$lib/paraglide/messages';
+	import { accentColorSetting, primaryColorSetting } from '$lib/state/theme.svelte';
+	import ColorPrefs from '../prefs/ColorPrefs.svelte';
 
 	type Props = {
 		open?: boolean;
@@ -60,7 +62,7 @@
 </script>
 
 <Dialog title={m.welcomeDialog_title()} canClose={stage === 'end'} bind:open>
-	<div class="text-primary-300">
+	<div class="text-primary-600 dark:text-primary-300">
 		{#if stage === 'gameSelect'}
 			{m.welcomeDialog_content_gameSelect()}
 			<GameSelect onselect={onSelectGame} />
@@ -103,12 +105,7 @@
 						{m.welcomeDialog_settings_path_content()}
 					</PathPref>
 
-					<ColorPref category="primary" default="slate"
-						>{m.welcomeDialog_content_color_primary()}</ColorPref
-					>
-					<ColorPref category="accent" default="green"
-						>{m.welcomeDialog_content_color_accent()}</ColorPref
-					>
+					<ColorPrefs />
 				{/if}
 			</div>
 
@@ -131,7 +128,7 @@
 				<a
 					href="https://discord.gg/sfuWXRfeTt"
 					target="_blank"
-					class="text-accent-400 hover:underline"
+					class="text-accent-600 hover:text-accent-700 dark:text-accent-400 hover:underline"
 				>
 					{m.welcomeDialog_content_end_3()}
 				</a>.

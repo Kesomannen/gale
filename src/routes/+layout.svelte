@@ -9,7 +9,6 @@
 	import Toasts from '$lib/components/misc/Toasts.svelte';
 
 	import { onMount, type Snippet } from 'svelte';
-	import { refreshColor, refreshFont } from '$lib/theme';
 	import InstallModDialog from '$lib/components/dialogs/InstallModDialog.svelte';
 	import WelcomeDialog from '$lib/components/dialogs/WelcomeDialog.svelte';
 	import Navbar from '$lib/components/misc/Navbar.svelte';
@@ -19,6 +18,7 @@
 	import type { ProfileInfo, ManagedGameInfo } from '$lib/types';
 	import { refreshLanguage } from '$lib/i18n';
 	import MissingProfilesDialog from '$lib/components/dialogs/MissingProfilesDialog.svelte';
+	import { darkMode } from '$lib/state/theme.svelte';
 
 	type Props = {
 		children?: Snippet;
@@ -30,9 +30,6 @@
 	let unlistenGames: UnlistenFn | null;
 
 	onMount(() => {
-		refreshFont();
-		refreshColor('accent');
-		refreshColor('primary');
 		refreshLanguage();
 
 		$effect(() => {
@@ -67,7 +64,7 @@
 />
 
 <Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
-	<main class="bg-primary-900 relative flex flex-col">
+	<main class="dark:bg-primary-800 relative flex flex-col bg-white">
 		<Menubar />
 		<Toolbar />
 

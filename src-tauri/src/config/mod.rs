@@ -141,7 +141,7 @@ impl ConfigCache {
             match index {
                 Some(index) => self.0[index] = file,
                 None => self.0.push(file),
-            };
+            }
         }
 
         self.resolve_duplicate_names();
@@ -163,7 +163,7 @@ impl ConfigCache {
             .strip_prefix(root)
             .expect("file path should be a child of root")
             .to_string_lossy()
-            .replace("\\", "/")
+            .replace('\\', "/")
             .into();
 
         let curr_index = self
@@ -243,7 +243,7 @@ impl ConfigCache {
         };
         if modified > curr_file.read_time {
             return true;
-        };
+        }
 
         false
     }

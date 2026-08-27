@@ -398,6 +398,7 @@
 	"platformPref_title": "Plataforma",
 	"prefs_appearance_color_accent_content": "A cor dos elementos destacados, como botões e caixas de seleção",
 	"prefs_appearance_color_primary_content": "A cor principal da interface, incluindo fundos e texto.",
+	"prefs_appearance_darkMode_title": "Modo escuro",
 	"prefs_appearance_nativeMenubar_title": "Usar barra de menu nativa",
 	"prefs_appearance_title": "Aparência",
 	"prefs_gameSettings_launch_title": "Inicialização",

@@ -39,7 +39,7 @@ pub fn zoom_window(value: Zoom, window: Window, app: AppHandle) -> Result<()> {
     window
         .get_webview_window("main")
         .unwrap()
-        .zoom(prefs.zoom_factor as f64)
+        .zoom(f64::from(prefs.zoom_factor))
         .map_err(|err| eyre!(err))?;
 
     prefs.save(app.db())?;

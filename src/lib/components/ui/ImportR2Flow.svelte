@@ -71,7 +71,7 @@
 
 {#if loading}
 	<div
-		class="text-primary-300 absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60 text-xl"
+		class="text-primary-300 dark:text-primary-300 absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/60 text-xl"
 		transition:fade={{ duration: 50 }}
 	>
 		<Spinner />
@@ -79,9 +79,9 @@
 {/if}
 
 {#if importData === undefined}
-	<div class="text-primary-300">{m.importR2Flow_content_loading()}</div>
+	<div class="text-primary-600 dark:text-primary-300">{m.importR2Flow_content_loading()}</div>
 {:else if importData === null}
-	<div class="text-primary-300 mt-2 flex w-full items-center gap-2">
+	<div class="text-primary-600 dark:text-primary-300 mt-2 flex w-full items-center gap-2">
 		{#if path === null}
 			<Icon icon="mdi:warning" />
 			{m.importR2Flow_content_noFound()}

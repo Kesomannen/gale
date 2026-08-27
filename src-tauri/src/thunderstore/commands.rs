@@ -48,7 +48,11 @@ pub fn trigger_mod_fetch(app: AppHandle) -> Result<()> {
     };
 
     tauri::async_runtime::spawn(async move {
-        for (backend, err) in super::fetch::fetch_packages(game, write_directly, &app).await {
+        let cancel_token = app.lock_thunderstore().fetch_cancel_token.clone();
+
+        for (backend, err) in
+            super::fetch::fetch_packages(game, write_directly, &app, &cancel_token).await
+        {
             logger::log_webview_err(
                 format!("error while fetching mods from {backend}"),
                 err,
@@ -107,6 +111,7 @@ pub async fn get_categories(game: &str, app: AppHandle) -> Result<Vec<PackageCat
         })
         .flatten()
         .unique()
+        .sorted()
         .collect();
 
     Ok(categories)

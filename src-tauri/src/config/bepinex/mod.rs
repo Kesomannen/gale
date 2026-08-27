@@ -182,7 +182,7 @@ impl Entry {
         frontend::Entry {
             name: self.name.clone(),
             description: self.description.clone(),
-            default: self.default_value.clone().map(|value| value.into()),
+            default: self.default_value.clone().map(std::convert::Into::into),
             value: self.value.clone().into(),
         }
     }

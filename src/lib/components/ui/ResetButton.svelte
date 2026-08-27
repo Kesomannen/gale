@@ -13,7 +13,7 @@
 	{...restProps}
 	class={[
 		classProp,
-		'text-primary-400 disabled:text-primary-500 enabled:hover:bg-primary-700 enabled:hover:text-primary-300 flex items-center gap-2 rounded-md p-1.5 disabled:cursor-not-allowed'
+		'text-primary-500 disabled:text-primary-400 enabled:hover:text-primary-700 dark:text-primary-400 dark:disabled:text-primary-500 dark:enabled:hover:bg-primary-700 dark:enabled:hover:text-primary-300 enabled:hover:bg-primary-200 flex items-center gap-2 rounded-md p-1.5 disabled:cursor-not-allowed'
 	]}
 >
 	<Icon icon="mdi:refresh" class="text-lg" />

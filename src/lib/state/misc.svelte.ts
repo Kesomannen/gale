@@ -1,5 +1,5 @@
 import { Backend, type ConfigEntryId, type QueryModsArgsWithoutMax } from '$lib/types';
-import { PersistedState } from 'runed';
+import { PersistedState } from '$lib/state/persisted-state.svelte';
 
 export const apiKeyDialog = $state({
 	open: false,

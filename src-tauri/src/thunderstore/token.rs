@@ -38,7 +38,7 @@ pub fn set(backend: Backend, token: &str) -> Result<()> {
 pub fn clear(backend: Backend) -> Result<()> {
     info!("clearing {backend} token");
     match entry(backend)?.delete_credential() {
-        Ok(_) | Err(keyring::Error::NoEntry) => Ok(()),
+        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
         Err(err) => Err(err.into()),
     }
 }

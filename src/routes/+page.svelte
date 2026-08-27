@@ -12,7 +12,7 @@
 		LayoutItem,
 		Folder
 	} from '$lib/types';
-	import { isOutdated } from '$lib/util';
+	import { hasNonReleaseUpgrade, isOutdated } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
@@ -30,6 +30,7 @@
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import config from '$lib/state/config.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { untrack } from 'svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -123,34 +124,41 @@
 	let activeMod: Mod | null = $state(null);
 
 	let hasRefreshed = $state(false);
-	let refreshing = false;
+
+	let refreshPromise: Promise<void> | null = $state(null);
 
 	async function refresh() {
-		if (refreshing) return;
-		refreshing = true;
+		if (refreshPromise !== null) {
+			// make sure if this function is awaited while already refreshing, we wait until
+			// the refresh is done before returning so the caller sees the fresh values
+			await refreshPromise;
+			return;
+		}
 
-		console.log('Refreshing profile mod list');
+		refreshPromise = (async () => {
+			let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
 
-		let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
+			// preserve the expanded/collapsed state of folders across refreshes
+			const prevExpanded = new Map(
+				items
+					.filter((item) => item.type === 'folder')
+					.map((item) => [item.folder.id, item.folder.isExpanded])
+			);
 
-		// preserve the expanded/collapsed state of folders across refreshes
-		const prevExpanded = new Map(
-			items
-				.filter((item) => item.type === 'folder')
-				.map((item) => [item.folder.id, item.folder.isExpanded])
-		);
+			// if the list is filtered in some way, show the flat mod list,
+			// otherwise show the custom layout with folders
+			items = reorderable
+				? buildItems(result.mods, result.layout, prevExpanded)
+				: result.mods.map((mod) => ({ type: 'mod', mod }));
+			totalModCount = result.totalModCount;
+			unknownMods = result.unknownMods;
+			updates = result.updates;
 
-		// if the list is filtered in some way, show the flat mod list,
-		// otherwise show the custom layout with folders
-		items = reorderable
-			? buildItems(result.mods, result.layout, prevExpanded)
-			: result.mods.map((mod) => ({ type: 'mod', mod }));
-		totalModCount = result.totalModCount;
-		unknownMods = result.unknownMods;
-		updates = result.updates;
+			hasRefreshed = true;
+		})();
 
-		refreshing = false;
-		hasRefreshed = true;
+		await refreshPromise;
+		refreshPromise = null;
 	}
 
 	/// Rebuilds the displayed `ListItem[]` from the query result and the profile layout.
@@ -308,8 +316,9 @@
 
 	$effect(() => {
 		profiles.active;
-		profileQuery.current;
-		refresh();
+		// read all fields of profileQuery.current to trigger the effect when any of them change
+		JSON.stringify(profileQuery.current);
+		untrack(() => refresh());
 	});
 
 	let reorderable = $derived(
@@ -328,7 +337,7 @@
 
 <div class="flex grow">
 	<div class="flex w-[60%] grow flex-col px-4 pt-4">
-		<ModListFilters {sortOptions} queryArgs={profileQuery.current} />
+		<ModListFilters {sortOptions} bind:queryArgs={profileQuery.current} />
 
 		{#if locked}
 			<ProfileLockedBanner class="mb-1" />
@@ -343,7 +352,9 @@
 		{#if items.length === 0 && hasRefreshed}
 			{#if totalModCount === 0}
 				<HelpCard icon="ph:ghost" title={m.page_modList_noMods_1()}>
-					<a href="/browse" class="text-accent-400 hover:text-accent-300 hover:underline"
+					<a
+						href="/browse"
+						class="text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300 hover:underline"
 						><Icon
 							icon="mdi:store-search"
 							class="mr-0.5 ml-1  inline"
@@ -380,11 +391,11 @@
 		>
 			{#if isOutdated(selectedMod) && !locked}
 				<Button
-					color="accent"
+					color={hasNonReleaseUpgrade(selectedMod) ? 'primary' : 'accent'}
+					icon={hasNonReleaseUpgrade(selectedMod) ? 'mdi:flask-outline' : 'mdi:arrow-up-circle'}
 					size="lg"
-					icon="mdi:arrow-up-circle"
 					class="mt-2"
-					onclick={() => updateMod(selectedMod)}
+					onclick={() => updateMod(selectedMod, selectedMod?.versions[0].uuid)}
 				>
 					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
 				</Button>
@@ -397,14 +408,14 @@
 	title={m.page_dialog_title({ name: activeMod?.name ?? m.unknown() })}
 	bind:open={dependantsOpen}
 >
-	<div class="text-primary-300 mt-4 text-center">
+	<div class="text-primary-600 dark:text-primary-300 mt-4 text-center">
 		{#if dependants.length === 0}
 			{m.page_dialog_noDependants()}
 		{:else}
 			<ModCardList mods={dependants} showVersion={false}>
 				{#snippet cardChildren({ mod })}
 					{#if mod.preferredVersion}
-						<div class="text-primary-400">
+						<div class="text-primary-500 dark:text-primary-400">
 							Preferred Version: {mod.preferredVersion}
 						</div>
 					{/if}

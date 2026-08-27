@@ -69,7 +69,7 @@ impl AuthCredentials {
     }
 }
 
-const OAUTH_TIMEOUT: Duration = Duration::from_secs(60);
+const OAUTH_TIMEOUT: Duration = Duration::from_mins(1);
 
 pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
     let url = format!("{}/auth/login", *super::API_URL);
@@ -106,7 +106,7 @@ pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
 
          Ok(user)
         }
-        _ = tokio::time::sleep(OAUTH_TIMEOUT) => {
+        () = tokio::time::sleep(OAUTH_TIMEOUT) => {
             Err(eyre!("auth callback timed out"))
         }
     }
@@ -127,7 +127,7 @@ struct JwtPayload {
 }
 
 fn decode_jwt(token: &str) -> Result<JwtPayload> {
-    let payload = token.split(".").nth(1).ok_or_eyre("token is malformed")?;
+    let payload = token.split('.').nth(1).ok_or_eyre("token is malformed")?;
 
     let bytes = BASE64_URL_SAFE_NO_PAD
         .decode(payload)

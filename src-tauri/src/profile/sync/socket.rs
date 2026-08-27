@@ -5,8 +5,6 @@ use futures_util::{
     SinkExt, StreamExt,
     stream::{SplitSink, SplitStream},
 };
-use reqwest::Version;
-use reqwest_websocket::{Upgrade, WebSocket};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::mpsc;
@@ -16,6 +14,9 @@ use crate::{
     profile::{ModManager, Profile},
     state::ManagerExt,
 };
+
+type WebSocket =
+    tokio_websockets::WebSocketStream<tokio_websockets::MaybeTlsStream<tokio::net::TcpStream>>;
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(tag = "event", content = "payload", rename_all = "camelCase")]
@@ -58,7 +59,7 @@ impl State {
 
         tauri::async_runtime::spawn(async move {
             if let Err(err) = connect(app, rx).await {
-                error!("failed to connect to sync server: {err:#}");
+                error!(?err, "failed to connect to sync server");
             }
         });
 
@@ -107,14 +108,9 @@ async fn connect(app: AppHandle, mut rx: mpsc::UnboundedReceiver<ClientMessage>)
 
     info!("connecting to sync server socket at {url}");
 
-    let socket = app
-        .http()
-        .get(&url)
-        .version(Version::HTTP_11) // reqwest-websocket doesn't support HTTP/2
-        .upgrade()
-        .send()
-        .await?
-        .into_websocket()
+    let (socket, _response) = tokio_websockets::ClientBuilder::new()
+        .uri(&url)?
+        .connect()
         .await?;
 
     let (mut sender, receiver) = socket.split();
@@ -141,7 +137,12 @@ async fn read(app: &AppHandle, mut receiver: SplitStream<WebSocket>) {
             }
         };
 
-        let msg: ServerMessage = match item.json() {
+        let Some(text) = item.as_text() else {
+            warn!("got non-text message from socket, ignoring");
+            continue;
+        };
+
+        let msg: ServerMessage = match serde_json::from_str(text) {
             Ok(msg) => msg,
             Err(err) => {
                 error!("failed to deserialize message: {err}");
@@ -182,24 +183,24 @@ async fn read(app: &AppHandle, mut receiver: SplitStream<WebSocket>) {
 }
 
 async fn write(
-    mut sender: SplitSink<WebSocket, reqwest_websocket::Message>,
+    mut sender: SplitSink<WebSocket, tokio_websockets::Message>,
     mut rx: mpsc::UnboundedReceiver<ClientMessage>,
 ) {
     while let Some(msg) = rx.recv().await {
         send_queued_message(&mut sender, msg).await;
     }
 
-    info!("stopping socket write task: channel was closed")
+    info!("stopping socket write task: channel was closed");
 }
 
 async fn send_queued_message(
-    sender: &mut SplitSink<WebSocket, reqwest_websocket::Message>,
+    sender: &mut SplitSink<WebSocket, tokio_websockets::Message>,
     msg: ClientMessage,
 ) {
     debug!("sending {msg:?}");
 
     let msg = match serde_json::to_string(&msg) {
-        Ok(str) => reqwest_websocket::Message::Text(str),
+        Ok(str) => tokio_websockets::Message::text(str),
         Err(err) => {
             warn!("failed to serialize socket message: {err}");
             return;

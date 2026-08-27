@@ -26,14 +26,14 @@
 {#if !config.loading && config.files.length === 0}
 	<HelpCard title={m.config_noFiles()} icon="mdi:folder-open-outline" class="w-full" />
 {:else}
-	<div class="grid w-full grid-cols-[15rem_1fr] xl:grid-cols-[20rem_1fr]">
+	<div class="grid w-full grid-cols-[18rem_1fr] xl:grid-cols-[min(22rem)_1fr]">
 		{#if config.loading}
 			{@render loadingSkeletons()}
 		{:else}
 			<ConfigFileList bind:searchTerm />
 		{/if}
 
-		<div class="max-w-5xl overflow-y-auto px-6 pb-6">
+		<div class="max-w-5xl overflow-y-auto p-4 pt-0 pl-2">
 			{#if profiles.activeLocked}
 				<ProfileLockedBanner class="mt-4 mb-4" />
 			{/if}
@@ -43,12 +43,12 @@
 					<span>{selectedFile.displayName ?? selectedFile.relativePath}</span>
 
 					{#if config.selectedSection}
-						<span class="text-primary-400 mx-1">/</span>
+						<span class="text-primary-500 dark:text-primary-400 mx-1">/</span>
 						<span>{config.selectedSection.name}</span>
 					{/if}
 				</LargeHeading>
 
-				<div class="text-primary-400">
+				<div class="text-primary-500 dark:text-primary-400">
 					{selectedFile.relativePath}
 				</div>
 
@@ -59,7 +59,7 @@
 						locked={profiles.activeLocked}
 					/>
 				{:else if selectedFile.type === 'unsupported'}
-					<div class="text-primary-400 mt-2 mb-1">
+					<div class="text-primary-500 dark:text-primary-400 mt-2 mb-1">
 						{m.config_unsupported_content()}
 					</div>
 					<Button
@@ -71,10 +71,10 @@
 						{m.config_unsupported_button()}
 					</Button>
 				{:else if selectedFile.type === 'err'}
-					<div class="text-primary-400 mt-2 mb-1">
+					<div class="text-primary-500 dark:text-primary-400 mt-2 mb-1">
 						{m.config_err_content()}
 					</div>
-					<code class="bg-primary-900 mb-1 block rounded p-3 text-red-500">
+					<code class="dark:bg-primary-900 bg-primary-100 mb-1 block rounded p-3 text-red-500">
 						{capitalize(selectedFile.error)}
 					</code>
 					<Button
@@ -98,7 +98,7 @@
 		{#each [0.9, 1, 0.8, 0.7] as width1, i (i)}
 			{#each [0.8, 1, 0.7, 0.6, 0.9] as width2, j (j)}
 				<div
-					class="bg-primary-700 h-7 animate-pulse rounded"
+					class="dark:bg-primary-700 bg-primary-200 h-7 animate-pulse rounded"
 					style="width: {width1 * width2 * 100}%;"
 				></div>
 			{/each}

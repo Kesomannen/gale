@@ -15,7 +15,7 @@
 
 	let { open = $bindable(), options, gameName, onselect }: Props = $props();
 
-	let selectedOption = $state<string>(options[0]?.arguments ?? '');
+	let selectedOption = $state('');
 
 	function launch() {
 		open = false;
@@ -34,7 +34,7 @@
 </script>
 
 <ConfirmDialog bind:open title="Launch {gameName}" onCancel={handleCancel}>
-	<p class="text-primary-400 mb-2">{m.launchOptionsDialog_content()}</p>
+	<p class="text-primary-500 dark:text-primary-400 mb-2">{m.launchOptionsDialog_content()}</p>
 
 	<div class="max-h-80 overflow-y-auto">
 		<RadioGroup.Root bind:value={selectedOption} class="flex flex-col gap-1">
@@ -44,24 +44,26 @@
 					class={[
 						'flex cursor-pointer items-center rounded-lg border p-3',
 						selectedOption === option.arguments
-							? 'border-primary-500 bg-primary-700'
-							: 'hover:bg-primary-700 border-transparent'
+							? 'border-primary-500 dark:border-primary-500 dark:bg-primary-700 bg-primary-200'
+							: 'dark:hover:bg-primary-700 hover:bg-primary-200 border-transparent'
 					]}
 				>
 					<div class="mr-3 flex h-5 w-5 items-center justify-center">
 						<div
 							class={[
 								'flex h-4 w-4 items-center justify-center rounded-full border-2',
-								selectedOption === option.arguments ? 'border-accent-400' : 'border-primary-400'
+								selectedOption === option.arguments
+									? 'border-accent-600 dark:border-accent-400'
+									: 'border-primary-400'
 							]}
 						>
 							{#if selectedOption === option.arguments}
-								<div class="bg-accent-400 h-2 w-2 rounded-full"></div>
+								<div class="bg-accent-600 dark:bg-accent-400 h-2 w-2 rounded-full"></div>
 							{/if}
 						</div>
 					</div>
 					<div class="flex text-left">
-						<div class="font-medium text-white">
+						<div class="text-primary-900 font-medium dark:text-white">
 							{formatLaunchOptionName(gameName, option)}
 						</div>
 					</div>
@@ -70,11 +72,11 @@
 		</RadioGroup.Root>
 	</div>
 
-	<div class="text-primary-400 mt-4 text-sm">
+	<div class="text-primary-500 dark:text-primary-400 mt-4 text-sm">
 		{m.launchOptionsDialog_help_content_1()}<a
 			href="/prefs"
 			onclick={() => (open = false)}
-			class="text-primary-400 hover:text-primary-300 underline"
+			class="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 underline"
 		>
 			{m.launchOptionsDialog_help_content2()}</a
 		>.

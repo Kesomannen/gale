@@ -15,7 +15,7 @@
 <div
 	class={[
 		classProp,
-		'bg-primary-700 text-primary-300 flex items-center rounded-lg py-1.5 pr-1 pl-3'
+		'bg-primary-700 dark:text-primary-300 flex items-center rounded-lg py-1.5 pr-1 pl-3 text-white'
 	]}
 >
 	<Icon icon="mdi:lock" class="mr-2 text-xl" />

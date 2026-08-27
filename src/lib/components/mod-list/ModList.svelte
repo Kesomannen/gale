@@ -51,7 +51,7 @@
 </script>
 
 {#if mods.length === 0}
-	<div class="text-primary-300 text-center">
+	<div class="text-primary-600 dark:text-primary-300 text-center">
 		{@render placeholder?.()}
 	</div>
 {:else}

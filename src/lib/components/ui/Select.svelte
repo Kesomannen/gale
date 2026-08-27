@@ -58,11 +58,11 @@
 	<Select.Trigger
 		class={[
 			triggerClass,
-			'group bg-primary-900 enabled:hover:border-primary-500 flex items-center gap-2 overflow-hidden rounded-lg border border-transparent py-1 pr-2 pl-3'
+			'group enabled:hover:border-primary-400 dark:bg-primary-900 dark:enabled:hover:border-primary-500 bg-primary-100 flex items-center gap-2 overflow-hidden rounded-lg border border-transparent py-1 pr-2 pl-3'
 		]}
 	>
 		{#if icon}
-			<Icon class="text-primary-400 shrink-0 text-lg" {icon} />
+			<Icon class="text-primary-500 dark:text-primary-400 shrink-0 text-lg" {icon} />
 		{/if}
 
 		{#if label && typeof label !== 'string'}
@@ -70,15 +70,20 @@
 		{:else}
 			<div
 				class={[
-					label || selectedLabel ? 'text-primary-300' : 'text-primary-400',
-					'group-disabled:text-primary-400 shrink grow truncate text-left'
+					label || selectedLabel
+						? 'text-primary-700 dark:text-primary-300'
+						: 'text-primary-500 dark:text-primary-400',
+					'group-disabled:text-primary-500 dark:group-disabled:text-primary-400 shrink grow truncate text-left'
 				]}
 			>
 				{label ?? selectedLabel ?? placeholder}
 			</div>
 		{/if}
 
-		<DropdownArrow {open} class="text-primary-400 group-disabled:text-primary-500 ml-auto" />
+		<DropdownArrow
+			{open}
+			class="text-primary-500 group-disabled:text-primary-500 dark:text-primary-400 dark:group-disabled:text-primary-500 ml-auto"
+		/>
 	</Select.Trigger>
 	<Select.Portal>
 		<Select.Content forceMount {avoidCollisions}>
@@ -87,7 +92,7 @@
 					{#if open}
 						<div
 							{...props}
-							class="border-primary-600 bg-primary-800 flex max-h-96 w-(--bits-select-anchor-width) gap-0.5 overflow-y-auto rounded-lg border p-1 shadow-xl"
+							class="border-primary-300 dark:border-primary-600 dark:bg-primary-800 flex max-h-96 w-(--bits-select-anchor-width) gap-0.5 overflow-y-auto rounded-lg border bg-white p-1 shadow-xl"
 							in:fly={dropIn}
 							out:fade={dropOut}
 						>
@@ -95,7 +100,7 @@
 								{#each items as item, i (i + item.value)}
 									<Select.Item
 										{...item}
-										class="hover:bg-primary-700 hover:text-primary-200 group flex w-full cursor-default items-center rounded-md px-3 py-1"
+										class="hover:text-primary-800 group dark:hover:bg-primary-700 dark:hover:text-primary-200 hover:bg-primary-200 flex w-full cursor-default items-center rounded-md px-3 py-1"
 									>
 										{#snippet children({ selected })}
 											{#if itemSnippet}
@@ -105,13 +110,16 @@
 											<span
 												class={[
 													selected
-														? 'text-primary-300'
-														: 'text-primary-400 group-hover:text-primary-300'
+														? 'text-primary-700 dark:text-primary-300'
+														: 'text-primary-500 group-hover:text-primary-700 dark:text-primary-400 dark:group-hover:text-primary-300'
 												]}>{item.label}</span
 											>
 
 											{#if selected}
-												<Icon icon="mdi:check" class="text-accent-400 ml-auto text-lg" />
+												<Icon
+													icon="mdi:check"
+													class="text-accent-600 dark:text-accent-400 ml-auto shrink-0 text-lg"
+												/>
 											{/if}
 										{/snippet}
 									</Select.Item>

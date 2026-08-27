@@ -58,15 +58,19 @@
 	let typeName = $derived(getTypeName(value));
 </script>
 
-<div class="text-primary-300 even:bg-primary-900/30 flex items-center px-3 py-1.5">
-	<div class="text-primary-300 w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left">
+<div
+	class="text-primary-600 dark:text-primary-300 dark:even:bg-primary-900/30 even:bg-primary-50 flex items-center rounded-md px-3 py-1.5"
+>
+	<div
+		class="text-primary-600 dark:text-primary-300 w-[45%] min-w-52 shrink-0 cursor-auto truncate pr-2 text-left"
+	>
 		{toSentenceCase(entry.name)}
 	</div>
 
 	<Info>
 		<h4>
-			<span class="text-lg font-semibold text-white">{entry.name}</span>
-			<span class="text-primary-400 ml-1"> ({typeName})</span>
+			<span class="text-primary-900 text-lg font-semibold dark:text-white">{entry.name}</span>
+			<span class="text-primary-500 dark:text-primary-400 ml-1"> ({typeName})</span>
 		</h4>
 
 		{#if entry.description}
@@ -77,14 +81,18 @@
 
 		{#if entry.default}
 			<p class="wrap-break-word">
-				<span class="text-primary-100 font-medium">{m.configEntryField_default()}</span>
+				<span class="text-primary-900 dark:text-primary-100 font-medium"
+					>{m.configEntryField_default()}</span
+				>
 				{valueToString(entry.default)}
 			</p>
 		{/if}
 
 		{#if (value.type === 'int' || value.type === 'float') && value.content.range !== null}
 			<p>
-				<span class="font-medium text-white">{m.configEntryField_range()}</span>
+				<span class="text-primary-900 font-medium dark:text-white"
+					>{m.configEntryField_range()}</span
+				>
 				{value.content.range.start} - {value.content.range.end}
 			</p>
 		{/if}

@@ -26,8 +26,15 @@
 	}: Props = $props();
 </script>
 
-<div class={[classProp, 'border-primary-900 relative overflow-hidden rounded-lg border']}>
-	<label class="bg-primary-900 flex w-full items-center px-4 py-2.5 font-medium text-white">
+<div
+	class={[
+		classProp,
+		'border-primary-200 dark:border-primary-900 relative overflow-hidden rounded-lg border'
+	]}
+>
+	<label
+		class="text-primary-900 dark:bg-primary-900 bg-primary-100 flex w-full items-center px-4 py-2.5 font-medium dark:text-white"
+	>
 		<Checkbox
 			class="mr-3"
 			checked={items.every((item, i) => get(item, i))}
@@ -42,7 +49,9 @@
 		class:max-h-96={maxHeight === 'sm'}
 	>
 		{#each items as item, i}
-			<div class="text-primary-300 even:bg-primary-900/30 flex items-center px-4 py-2">
+			<div
+				class="text-primary-700 dark:text-primary-300 dark:even:bg-primary-900/30 even:bg-primary-100 flex items-center px-4 py-2"
+			>
 				<Checkbox
 					class="mr-3"
 					checked={get(item, i)}

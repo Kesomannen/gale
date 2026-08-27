@@ -21,6 +21,7 @@
 		"updater:allow-check",
 		"dialog:default",
 		"shell:default",
-		"os:allow-locale"
+		"os:allow-locale",
+		"store:default"
 	]
 }

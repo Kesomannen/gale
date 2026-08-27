@@ -13,7 +13,6 @@ use std::{
 
 use eyre::{Context, Result, bail, eyre};
 use futures_util::StreamExt;
-use http_cache_reqwest::CacheMode;
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::AppHandle;
@@ -113,7 +112,7 @@ pub struct InstallQueueLock<'a> {
     queue: &'a InstallQueue,
 }
 
-impl<'a> InstallQueueLock<'a> {
+impl InstallQueueLock<'_> {
     /// Whether any mods are currently being installed.
     pub fn is_processing(&self) -> bool {
         self.state.processing.is_some()
@@ -233,7 +232,7 @@ impl<'a> InstallQueueLock<'a> {
                 .context("failed to resolve dependencies")?;
 
             mods.into_iter()
-                .unique_by(|install| install.uuid()) // remove duplicate dependencies
+                .unique_by(super::ModInstall::uuid) // remove duplicate dependencies
                 .rev() // install dependencies first
                 .collect_vec()
         };
@@ -246,7 +245,7 @@ impl<'a> InstallQueueLock<'a> {
         self.state.processing = next.as_ref().map(|batch| {
             (
                 batch.profile_id,
-                batch.mods.iter().map(|install| install.uuid()).collect(),
+                batch.mods.iter().map(super::ModInstall::uuid).collect(),
             )
         });
         next
@@ -263,10 +262,10 @@ pub struct InstallBatch {
 impl InstallBatch {
     fn complete(self, result: InstallResult<()>, app: &AppHandle) {
         match self.on_complete.send(result) {
-            Ok(_) => (),
+            Ok(()) => (),
             // The receiver was dropped (meaning the original caller doesn't care anymore), however
             // if we succeeded or was cancelled we don't care either ...
-            Err(Ok(_)) => (),
+            Err(Ok(())) => (),
             Err(Err(InstallError::Cancelled)) => (),
             Err(Err(InstallError::Error(err))) => {
                 // ... but on errors we want to log the error and notify the frontend.
@@ -322,7 +321,7 @@ async fn handle_batch(batch: InstallBatch, cancel: &AtomicBool, app: &AppHandle)
             Ok(()) => (),
             Err(InstallError::Cancelled) => {
                 rollback_batch(&batch, app, i).unwrap_or_else(|err| {
-                    warn!("failed to rollback cancelled installation: {}", err)
+                    warn!("failed to rollback cancelled installation: {}", err);
                 });
 
                 // cancel all pending bathes
@@ -528,7 +527,6 @@ async fn try_download(
     let mut stream = app
         .http()
         .get(url)
-        .with_extension(CacheMode::NoStore)
         .send()
         .await
         .context("failed to send request")?

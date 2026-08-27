@@ -1,6 +1,63 @@
 # Changelog
 
-## Unreleased
+## 1.22.2 (2026-08-25)
+
+### Fixed
+
+- Mod list filters not updating until the page is refreshed
+
+## 1.22.1 (2026-08-24)
+
+### Changed
+
+- Missing mods are now ignored when importing sync profiles
+
+### Fixed
+
+- Switching game while fetching mods causing the mod lists to be mixed
+- An infinite loop causing the app to constantly consume CPU in the background
+
+## 1.22.0 (2026-08-23)
+
+### Added
+
+- Light mode setting
+- Turkish translation (thanks [KadrioS](https://github.com/KadrioS))
+
+### Changed
+
+- Minor UI tweaks
+
+### Fixed
+
+- Mod list filters not being saved between sessions
+- Missing Linux accent color causing an error upon startup
+- Checkboxes in the update mods dialog being impossible to uncheck
+
+## 1.21.0 (2026-08-18)
+
+### Added
+
+- German translation (thanks Henk deBrook)
+- System accent color option
+
+### Changed
+
+- Profile codes are now auto-pasted from the clipboard as long as the content is a valid UUID
+- Reworked the visuals of the the toolbar and navigation rail
+- Various other UI tweaks
+- The `steam.sh` script is now only used on Linux if a Steam installation could not be found via `which` or `flatpak` (thanks [@Cloudef](https://github.com/Cloudef))
+  - This was previously the highest prioritized Steam launch method on Linux
+- Mod pre-release versions are no longer treated as standard versions. Instead, you have to opt-in to install a pre-release via the version dropdown
+  - If a stable release is installed, pre-release updates will not appear in the "Update All" dialog
+  - An icon is shown next to the mod name when a pre-release upgrade is available
+
+### Fixed
+
+- Profile imports and sync not removing extra config files
+- Clearing the search bar being undone upon restarting the app (thanks [@hazre](https://github.com/hazre))
+
+## 1.20.0 (2026-08-07)
 
 ### Added
 
@@ -20,6 +77,8 @@
 - Mod card lists such as the dependencies and hidden mods dialogs not being sorted correctly
 - Icons and links in update dialog always pointing to Thunderstore
 - Install button being stuck in a disabled state after installing mods
+- Sync socket failing to connect due to unsupported HTTP version
+- Minor UI fixes
 
 ## 1.19.2 (2026-07-31)
 

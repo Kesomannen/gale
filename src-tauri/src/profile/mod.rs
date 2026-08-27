@@ -409,7 +409,7 @@ pub struct LocalMod {
 
 impl LocalMod {
     pub fn ident(&self) -> VersionIdent {
-        let version = self.version.as_ref().map(|vers| vers.to_string());
+        let version = self.version.as_ref().map(std::string::ToString::to_string);
 
         VersionIdent::new(
             self.author.as_deref().unwrap_or(""),
@@ -546,7 +546,7 @@ impl ManagedGame {
             profiles: self
                 .profiles
                 .iter()
-                .map(|profile| profile.to_frontend())
+                .map(Profile::to_frontend)
                 .collect(),
         }
     }
@@ -736,7 +736,7 @@ impl ModManager {
             warn!(
                 "failed to create default profile for {}: {:#}",
                 game.slug, err
-            )
+            );
         }
 
         self.games.insert(game, managed);

@@ -103,20 +103,6 @@ fn create_base_steam_command() -> Result<Command> {
     use crate::util::fs::PathExt;
     use tracing::debug;
 
-    // return Ok(Command::new("/home/keso/.local/share/Steam/steam.sh"));
-
-    debug!("checking for steam.sh script in steam installation directory");
-
-    match locate_steam_script() {
-        Ok(path) => {
-            info!("found steam.sh script at {}", path.display());
-            return Ok(Command::new(path));
-        }
-        Err(err) => {
-            debug!("failed to locate steam.sh script: {:#}", err);
-        }
-    };
-
     debug!("checking for steam system installation with which");
 
     if let Ok(path) = which::which("steam") {
@@ -136,6 +122,18 @@ fn create_base_steam_command() -> Result<Command> {
         command.args(["run", "com.valvesoftware.Steam"]);
 
         return Ok(command);
+    }
+
+    debug!("checking for steam.sh script in steam installation directory");
+
+    match locate_steam_script() {
+        Ok(path) => {
+            info!("found steam.sh script at {}", path.display());
+            return Ok(Command::new(path));
+        }
+        Err(err) => {
+            debug!("failed to locate steam.sh script: {:#}", err);
+        }
     }
 
     let path = Path::new("/usr/bin/steam")
@@ -210,8 +208,7 @@ fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
         .find(|entry| {
             entry
                 .get("appid")
-                .and_then(|id| id.as_u64())
-                .map_or(false, |id| id == app_id as u64)
+                .and_then(serde_json::Value::as_u64) == Some(u64::from(app_id))
         })
         .cloned()
         .ok_or_else(|| eyre!("app ID {} not found in Steam appinfo.vdf", app_id))

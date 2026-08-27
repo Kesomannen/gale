@@ -35,7 +35,7 @@ impl<'a> ArgsContext<'a> {
             .map_err(|path| eyre!("path is not valid UTF-8: {}", path.display()))?;
 
         if self.is_proton {
-            Ok(format!("Z:{}", str_path))
+            Ok(format!("Z:{str_path}"))
         } else {
             Ok(str_path)
         }
@@ -91,7 +91,7 @@ impl<'a> ArgsContext<'a> {
                     .arg(preloader_path);
             }
             Err(err) => {
-                warn!(err = ?err, "failed to find BepInEx preloader, launching without doorstep")
+                warn!(err = ?err, "failed to find BepInEx preloader, launching without doorstep");
             }
         }
 
@@ -118,7 +118,7 @@ impl<'a> ArgsContext<'a> {
         let result = core_dir
             .read_dir()
             .context("failed to read BepInEx core directory. Is BepInEx installed?")?
-            .filter_map(|entry| entry.ok())
+            .filter_map(std::result::Result::ok)
             .find(|entry| {
                 let file_name = entry.file_name();
                 PRELOADER_NAMES.iter().any(|name| file_name == **name)

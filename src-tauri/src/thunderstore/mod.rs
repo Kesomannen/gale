@@ -8,7 +8,8 @@ use std::{
     iter::FusedIterator,
     str::{self},
 };
-use tauri::{AppHandle, async_runtime::JoinHandle};
+use tauri::AppHandle;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
 use crate::{game::Game, state::ManagerExt, thunderstore::query::Queryable};
@@ -52,7 +53,7 @@ impl<'a> BorrowedMod<'a> {
     pub fn latest(package: &'a PackageListing) -> Self {
         Self {
             package,
-            version: package.latest(),
+            version: package.latest_released(),
         }
     }
 
@@ -123,8 +124,8 @@ impl ModId {
 
 /// Registry of Thunderstore mods for the active game.
 pub struct Thunderstore {
-    /// A handle to the current [`fetch_package_loop`] task.
-    fetch_loop_handle: Option<JoinHandle<()>>,
+    game: Option<Game>,
+    fetch_cancel_token: CancellationToken,
     /// Whether a [`fetch_mods`] task is currently running.
     is_fetching: bool,
     current_query: Option<QueryModsArgs>,
@@ -135,7 +136,8 @@ pub struct Thunderstore {
 impl Thunderstore {
     pub fn new() -> Self {
         Self {
-            fetch_loop_handle: None,
+            game: None,
+            fetch_cancel_token: CancellationToken::new(),
             is_fetching: false,
             current_query: None,
             thunderstore_backend: ThunderstoreBackend::new(Backend::Thunderstore),
@@ -244,17 +246,15 @@ impl Thunderstore {
 
     /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
     pub fn switch_game(&mut self, game: Game, app: AppHandle) {
-        if let Some(handle) = self.fetch_loop_handle.take() {
-            handle.abort();
-        }
+        self.fetch_cancel_token.cancel();
 
         self.is_fetching = false;
 
         {
-            let prefs = app.lock_prefs();
-
             self.thunderstore_backend.clear_packages();
             self.hexium_backend.clear_packages();
+
+            let prefs = app.lock_prefs();
 
             for backend in prefs.enabled_backends(game).iter() {
                 let backend = self.backend_mut(backend);
@@ -262,8 +262,15 @@ impl Thunderstore {
             }
         }
 
-        let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(game, app));
-        self.fetch_loop_handle = Some(load_mods_handle);
+        self.game = Some(game);
+
+        self.fetch_cancel_token = CancellationToken::new();
+
+        tauri::async_runtime::spawn(fetch::fetch_package_loop(
+            game,
+            app,
+            self.fetch_cancel_token.clone(),
+        ));
     }
 
     pub fn backend(&self, backend: Backend) -> &ThunderstoreBackend {

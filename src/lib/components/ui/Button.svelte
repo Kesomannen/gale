@@ -22,12 +22,13 @@
 
 	let typeClass = $derived(
 		{
-			accent: 'enabled:hover:bg-accent-600 bg-accent-700 font-medium text-white',
-			primary: 'enabled:hover:bg-primary-600 bg-primary-700 text-primary-200',
+			accent:
+				'dark:enabled:hover:bg-accent-600 dark:bg-accent-700 enabled:hover:bg-accent-500 bg-accent-600 font-medium text-white',
+			primary:
+				'enabled:hover:bg-primary-300 bg-primary-200 text-primary-700 dark:enabled:hover:bg-primary-600 dark:bg-primary-700 dark:text-primary-200',
 			red: 'enabled:hover:bg-red-600 bg-red-700 text-white'
 		}[color]
 	);
-
 	let sizeClasses = $derived(
 		{
 			md: 'text-base px-4 py-2',
@@ -44,7 +45,7 @@
 		classProp,
 		typeClass,
 		sizeClasses,
-		'disabled:bg-primary-700 disabled:text-primary-400 inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg text-nowrap disabled:cursor-not-allowed disabled:opacity-70'
+		'disabled:text-primary-500 dark:disabled:bg-primary-700 dark:disabled:text-primary-400 disabled:bg-primary-300 inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg text-nowrap disabled:cursor-not-allowed disabled:opacity-70'
 	]}
 	{disabled}
 	{...restProps}

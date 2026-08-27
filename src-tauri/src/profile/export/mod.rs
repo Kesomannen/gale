@@ -59,7 +59,7 @@ impl R2Mod {
         self.ident.with_version(&self.version)
     }
 
-    pub fn into_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
+    pub fn to_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
         // Prefer backend, otherwise fallback to generic lookup
         let borrowed_mod = thunderstore
             .backend(self.source)
@@ -123,8 +123,8 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
         name: profile.name.clone(),
         game: Some(game.slug.to_string()),
         mods,
-        ignored_version_updates: profile.ignored_version_updates.iter().cloned().collect(),
-        ignored_package_updates: profile.ignored_package_updates.iter().cloned().collect(),
+        ignored_version_updates: profile.ignored_version_updates.iter().copied().collect(),
+        ignored_package_updates: profile.ignored_package_updates.iter().copied().collect(),
     };
 
     zip.start_file("export.r2x", SimpleFileOptions::default())?;
@@ -214,7 +214,10 @@ where
     Ok(())
 }
 
-fn find_config<'a>(root: &'a Path, config_dirs: &'a [&str]) -> impl Iterator<Item = PathBuf> + 'a {
+pub(super) fn find_config<'a>(
+    root: &'a Path,
+    config_dirs: &'a [&str],
+) -> impl Iterator<Item = PathBuf> + 'a {
     static INCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
             .add(Glob::new("*.{cfg,txt,json,yml,yaml,ini}").unwrap())
@@ -243,7 +246,7 @@ fn find_config<'a>(root: &'a Path, config_dirs: &'a [&str]) -> impl Iterator<Ite
     })
 }
 
-fn list_files<'a>(root: &'a Path) -> impl Iterator<Item = PathBuf> + 'a {
+pub(super) fn list_files(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
     WalkDir::new(root)
         .into_iter()
         .filter_map(Result::ok)

@@ -1,0 +1,97 @@
+import { LazyStore } from '@tauri-apps/plugin-store';
+import { tick } from 'svelte';
+
+const uiStore = new LazyStore('ui-state.json', { autoSave: true });
+
+type Serializer<T> = {
+	serialize: (value: T) => string;
+	deserialize: (value: string) => T | undefined;
+};
+
+type PersistedStateOptions<T> = {
+	/**
+	 * The serializer to use.
+	 *
+	 * @default { serialize: JSON.stringify, deserialize: JSON.parse }
+	 */
+	serializer?: Serializer<T>;
+};
+
+const DEFAULT_SERIALIZER: Serializer<unknown> = {
+	serialize: JSON.stringify,
+	deserialize: JSON.parse
+};
+
+const instances = new Map<string, PersistedState<unknown>[]>();
+
+// Writes are gated on this so the constructor's eager effect cannot overwrite
+// persisted values with the initial defaults before the store has been read.
+let loaded = false;
+
+async function load(): Promise<void> {
+	try {
+		await uiStore.init();
+		for (const [key, value] of await uiStore.entries<string>()) {
+			for (const instance of instances.get(key) ?? []) {
+				instance.hydrate(value);
+			}
+		}
+		// Allow all the $effect callbacks triggered by the hydration to run before we mark the store as loaded,
+		// otherwise `loaded` may be set to true before the persisted values have been applied, causing the initial defaults to overwrite them.
+		await tick();
+		loaded = true;
+	} catch (error) {
+		console.error('Error when loading persisted store', error);
+	}
+}
+
+void load();
+
+/**
+ * Reactive state persisted to the Tauri store (`ui-state.json`).
+ *
+ * Reads return the initial value until the store has loaded, then reactively swap to the persisted value. Every change (including deep mutations of nested state) is written back to the store.
+ */
+export class PersistedState<T> {
+	current: T;
+	#key: string;
+	#serializer: Serializer<T>;
+
+	constructor(key: string, initialValue: T, options: PersistedStateOptions<T> = {}) {
+		this.#key = key;
+		this.#serializer = options.serializer ?? (DEFAULT_SERIALIZER as Serializer<T>);
+		this.current = $state(initialValue);
+
+		const list = instances.get(key) ?? [];
+		list.push(this as PersistedState<unknown>);
+		instances.set(key, list);
+
+		$effect.root(() => {
+			$effect(() => {
+				// Reading the value unconditionally keeps the effect subscribed;
+				// gating only the write prevents clobbering persisted values
+				// with the initial defaults before the store has been read.
+				const value = this.current;
+				const serialized = this.#serializer.serialize(value);
+				if (loaded) {
+					void uiStore.set(this.#key, serialized);
+				}
+			});
+		});
+	}
+
+	hydrate(value: string): void {
+		const parsed = this.#deserialize(value);
+		if (parsed !== undefined) {
+			this.current = parsed;
+		}
+	}
+
+	#deserialize(value: string): T | undefined {
+		try {
+			return this.#serializer.deserialize(value);
+		} catch (error) {
+			console.error(`Error when parsing persisted store value for "${this.#key}"`, error);
+		}
+	}
+}

@@ -33,12 +33,9 @@ impl FrontendImportData {
         inner
             .manifest
             .mods
-            .retain(|r2_mod| match r2_mod.into_install(&thunderstore) {
-                Ok(_) => true,
-                Err(_) => {
-                    missing_mods.push(r2_mod.version_ident());
-                    false
-                }
+            .retain(|r2_mod| if let Ok(_) = r2_mod.to_install(&thunderstore) { true } else {
+                missing_mods.push(r2_mod.version_ident());
+                false
             });
 
         Self {

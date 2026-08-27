@@ -25,6 +25,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         os = std::env::consts::OS,
     );
 
+    if let Err(err) = rustls::crypto::aws_lc_rs::default_provider().install_default() {
+        warn!(?err, "failed to install aws_lc_rs default crypto provider");
+    }
+
     if let Err(err) = state::setup(app.handle()) {
         error!("setup error: {err:?}");
 
@@ -50,10 +54,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let args = env::args().collect_vec();
-    if let Some(url) = args.get(1) {
-        if !deep_link::handle(app.handle(), url.to_owned()) {
-            cli::run(args, app.handle());
-        }
+    if let Some(url) = args.get(1)
+        && !deep_link::handle(app.handle(), url.to_owned())
+    {
+        cli::run(args, app.handle());
     }
 
     let handle = app.handle().to_owned();
@@ -96,6 +100,10 @@ fn is_flatpak() -> bool {
     util::is_flatpak()
 }
 
+#[clippy::allow(
+    clippy::too_many_lines,
+    reason = "tauri's generate_handler macro cannot be split"
+)]
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
         eprintln!("failed to set up logger: {err:#}");
@@ -211,6 +219,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
+        .plugin(tauri_plugin_store::Builder::new().build())
         .setup(setup)
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

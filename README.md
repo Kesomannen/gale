@@ -4,11 +4,11 @@
 [![Discord](https://img.shields.io/discord/1288196347597688912?style=flat&label=discord)](https://discord.gg/sfuWXRfeTt)
 [![GitHub License](https://img.shields.io/github/license/Kesomannen/gale?style=flat)](https://github.com/Kesomannen/gale?tab=GPL-3.0-1-ov-file#readme)
 
-A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io), built with [Svelte](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
+A powerful mod manager for [Thunderstore](https://thunderstore.io), built with [Svelte](https://kit.svelte.dev/) and [Tauri](https://tauri.app/).
 
 ## Features
 
-- Support for all 150+ games on Thunderstore, including Lethal Company, R.E.P.O and Risk Of Rain 2
+- Support for 150+ games on Thunderstore and Hexium, including Lethal Company, R.E.P.O and Risk Of Rain 2
 - An intuitive and responsive interface
 - Tiny download size and resource usage
 - Feature-rich mod config editor
@@ -17,6 +17,9 @@ A modern and lightweight mod manager for [Thunderstore](https://thunderstore.io)
 [...and more](https://github.com/Kesomannen/gale/wiki/Features)
 
 ## Installation
+
+> [!WARNING]
+> The only official sources for Gale are [Github](https://github.com/Kesomannen/gale) and [Thunderstore](https://thunderstore.io/c/lethal-company/p/Kesomannen/GaleModManager/). Any other website claiming to provide an official download is not legit. Particularly, **galemodmanager.com** is unofficial and provides a severly outdated version of the app!
 
 ### Windows
 

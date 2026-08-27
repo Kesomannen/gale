@@ -40,7 +40,7 @@
 	<div class="shrink overflow-hidden pl-3 text-left">
 		<div class="flex gap-2">
 			<a
-				class="shrink truncate font-medium text-white hover:underline"
+				class="text-primary-900 shrink truncate font-medium hover:underline dark:text-white"
 				href={modLink}
 				target="_blank"
 				rel="noopener noreferrer"
@@ -49,14 +49,18 @@
 			</a>
 
 			{#if showVersion && version !== null}
-				<span class=" text-primary-400 shrink-0">
+				<span class=" text-primary-500 dark:text-primary-400 shrink-0">
 					{version}
 				</span>
 			{/if}
 		</div>
 
 		{#if author !== null}
-			<a class="text-primary-400 truncate hover:underline" href={authorLink} target="_blank">
+			<a
+				class="text-primary-500 dark:text-primary-400 truncate hover:underline"
+				href={authorLink}
+				target="_blank"
+			>
 				{author}
 			</a>
 		{/if}

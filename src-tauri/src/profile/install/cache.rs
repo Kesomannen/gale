@@ -62,7 +62,7 @@ pub(super) fn prepare_soft_clear(app: AppHandle) -> Result<Vec<PathBuf>> {
 
         let versions = fs::read_dir(&path)
             .with_context(|| format!("failed to read cache for {}", &package_name))?
-            .filter_map(|entry| entry.ok());
+            .filter_map(std::result::Result::ok);
 
         for entry in versions {
             let path = entry.path();

@@ -8,7 +8,8 @@ import {
 	ModLoader,
 	type LaunchOption,
 	type ModId,
-	type Prefs
+	type Prefs,
+	type RgbaColor
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
@@ -110,6 +111,27 @@ export function isOutdated(mod: Mod): boolean {
 	}
 
 	return mod.version !== mod.versions[0].name;
+}
+
+export function isNonReleaseVersion(version: string): boolean {
+	const metadataSeparator = version.indexOf('+');
+	const versionExtraSeparator = version.indexOf('-');
+	return (
+		versionExtraSeparator > 0 &&
+		(metadataSeparator < 0 ? 1 << 30 : metadataSeparator) > versionExtraSeparator
+	);
+}
+
+export function hasNonReleaseUpgrade(mod: Mod): boolean {
+	if (mod.versions.length === 0) {
+		return false;
+	}
+
+	if (isNonReleaseVersion(mod.version ?? '')) {
+		return false;
+	}
+
+	return isNonReleaseVersion(mod.versions[0].name);
 }
 
 export function communityUrl(backend: Backend, author: string, mod?: string) {
@@ -244,4 +266,9 @@ export function shouldWarnForeignDownload(id: ModId, prefs: Prefs): boolean {
 	if (id.backend === Backend.Thunderstore) return false;
 	if (games.activeBackends.length === 1) return false;
 	return !prefs.backendSkipConfirm;
+}
+
+export function rgbToHex(color: RgbaColor): string {
+	const [r, g, b] = color;
+	return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
 }

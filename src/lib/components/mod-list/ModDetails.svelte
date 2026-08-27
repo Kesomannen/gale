@@ -77,12 +77,12 @@
 	});
 </script>
 
-<div class="relative flex w-[40%] min-w-72 flex-col p-6 text-white">
+<div class="text-primary-900 relative flex w-[40%] min-w-72 flex-col p-4 pl-2 dark:text-white">
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class="bg-primary-800 hover:bg-primary-700 absolute right-4 mt-1 rounded-full p-1"
+			class="dark:hover:bg-primary-700 hover:bg-primary-100 absolute right-4 mt-1 rounded-full p-1"
 		>
-			<Icon class="text-primary-200 text-3xl" icon="mdi:dots-vertical" />
+			<Icon class="text-primary-700 dark:text-primary-200 text-3xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
 		<ModContextMenuContent subject={mod} {locked} items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
@@ -95,7 +95,7 @@
 				<svelte:element
 					this={mod.type === ModType.Remote ? 'a' : 'div'}
 					class={[
-						'block pr-4 text-left text-3xl font-bold text-white xl:text-4xl',
+						'text-primary-900 block pr-4 text-left text-3xl font-bold xl:text-4xl dark:text-white',
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
 					href={communityUrl(mod.backend, mod.author ?? '', mod.name)}
@@ -104,7 +104,7 @@
 
 				{#if mod.author}
 					<a
-						class="text-primary-400 hover:text-primary-300 block text-lg hover:underline xl:text-xl"
+						class="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 block text-lg hover:underline xl:text-xl"
 						href={communityUrl(mod.backend, mod.author)}
 						target="_blank"
 					>
@@ -113,7 +113,7 @@
 				{/if}
 
 				{#if mod.version}
-					<div class="text-primary-400 text-lg xl:text-xl">{mod.version}</div>
+					<div class="text-primary-500 dark:text-primary-400 text-lg xl:text-xl">{mod.version}</div>
 				{/if}
 			</div>
 		</div>
@@ -134,7 +134,7 @@
 			<div class="mt-2 mb-1 flex flex-wrap gap-1">
 				{#if mod.backend === Backend.Hexium}
 					<div
-						class="text-primary-200 rounded-full border border-[#965dbe] bg-[#331b72] px-3 text-sm"
+						class="dark:text-primary-200 rounded-full border border-[#965dbe] bg-[#331b72] px-3 text-sm text-white"
 						style="padding-block: calc(var(--spacing) - 2px);"
 					>
 						<img src="hexium.ico" alt="" class="inline h-4" />
@@ -142,7 +142,9 @@
 					</div>
 				{/if}
 				{#each mod.categories as category}
-					<div class="bg-primary-700 text-primary-200 rounded-full px-3 py-1 text-sm">
+					<div
+						class="dark:bg-primary-700 dark:text-primary-200 text-primary-700 bg-primary-200 rounded-full px-3 py-1 text-sm"
+					>
 						{category}
 					</div>
 				{/each}
@@ -155,16 +157,16 @@
 				<span class="mr-4 text-yellow-500">{shortenNum(mod.rating)}</span>
 			{/if}
 			{#if mod.downloads !== null}
-				<Icon class="shrink-0 text-green-500" icon="mdi:download" />
-				<span class="mr-4 text-green-500">{shortenNum(mod.downloads)}</span>
+				<Icon class="shrink-0 text-green-600 dark:text-green-500" icon="mdi:download" />
+				<span class="mr-4 text-green-600 dark:text-green-500">{shortenNum(mod.downloads)}</span>
 			{/if}
-			<Icon class="text-primary-400 shrink-0" icon="mdi:weight" />
-			<span class="text-primary-400">{shortenFileSize(mod.fileSize)}</span>
+			<Icon class="text-primary-500 dark:text-primary-400 shrink-0" icon="mdi:weight" />
+			<span class="text-primary-500 dark:text-primary-400">{shortenFileSize(mod.fileSize)}</span>
 		</div>
 
 		{#if mod.lastUpdated !== null}
 			<Tooltip
-				class="text-primary-400 border-primary-400 mt-1 mb-1 border-b border-dashed text-lg"
+				class="text-primary-500 border-primary-400 dark:text-primary-400 mt-1 mb-1 border-b border-dashed text-lg"
 				text={new Date(mod.lastUpdated).toLocaleString()}
 			>
 				{m.modDetails_lastUpdated({ time: timeSince(new Date(mod.lastUpdated)) })}
@@ -172,7 +174,7 @@
 		{/if}
 
 		{#if mod.description !== null}
-			<p class="text-primary-300 mt-2 text-xl lg:hidden">
+			<p class="text-primary-600 dark:text-primary-300 mt-2 text-xl lg:hidden">
 				{mod.description}
 			</p>
 		{/if}
@@ -180,10 +182,12 @@
 		<div class="hidden lg:block">
 			{#await readmePromise}
 				<div role="status" class="animate-pulse">
-					<div class="bg-primary-700 mt-4 h-8 w-80 rounded-xl"></div>
-					<div class="bg-primary-700 mt-6 h-3 max-w-125 rounded-full"></div>
-					<div class="bg-primary-700 mt-2.5 h-3 max-w-115 rounded-full"></div>
-					<div class="bg-primary-700 mt-2.5 mb-4 h-3 max-w-100 rounded-full"></div>
+					<div class="dark:bg-primary-700 bg-primary-200 mt-4 h-8 w-80 rounded-xl"></div>
+					<div class="dark:bg-primary-700 bg-primary-200 mt-6 h-3 max-w-125 rounded-full"></div>
+					<div class="dark:bg-primary-700 bg-primary-200 mt-2.5 h-3 max-w-115 rounded-full"></div>
+					<div
+						class="dark:bg-primary-700 bg-primary-200 mt-2.5 mb-4 h-3 max-w-100 rounded-full"
+					></div>
 				</div>
 			{:then readme}
 				<Markdown source={readme ? formatReadme(readme) : m.modDetails_noFound()} />
@@ -193,7 +197,7 @@
 
 	{#if mod.configFile}
 		<div
-			class="text-accent-400 hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
+			class="text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
 			<button onclick={() => config.gotoModConfig(mod.configFile!)}>
@@ -204,7 +208,7 @@
 
 	{#snippet button(icon: string, label: string, onclick: () => void, onmouseenter?: () => void)}
 		<button
-			class="group bg-primary-700 hover:bg-primary-600 text-primary-200 mb-1 flex items-center rounded-md py-1 pr-1.5 pl-3"
+			class="group dark:bg-primary-700 dark:hover:bg-primary-600 dark:text-primary-200 text-primary-700 bg-primary-200 hover:bg-primary-300 mb-1 flex items-center rounded-md py-1 pr-1.5 pl-3"
 			{onmouseenter}
 			{onclick}
 		>

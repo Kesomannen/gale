@@ -174,7 +174,7 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             categories: Some(
                 pkg.categories
                     .iter()
-                    .map(|intern| intern.to_string())
+                    .map(std::string::ToString::to_string)
                     .collect(),
             ),
             author: Some(pkg.owner().to_owned()),
