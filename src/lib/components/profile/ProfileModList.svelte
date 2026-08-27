@@ -8,16 +8,17 @@
 	import ProfileModListFolderItem from './ProfileModListFolderItem.svelte';
 	import ProfileModCardWithContext from './ProfileModCardWithContext.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import ProfileFolderCard from './ProfileFolderCard.svelte';
 
 	type Props = {
 		items: ProfileListItem[];
 		reorderable?: boolean;
 		locked?: boolean;
 		selectedMod: Mod | null;
-		onModToggle: (mod: Mod, newState: boolean) => void;
-		onFolderToggle?: (folderId: string, newState: boolean) => void;
 		modContextItems: ModContextItem<Mod>[];
 		folderContextItems: ModContextItem<Folder>[];
+		onModToggle: (mod: Mod, newState: boolean) => void;
+		onFolderToggle?: (folderId: string, newState: boolean) => void;
 		onLayoutChange?: (items: ProfileListItem[]) => void;
 	};
 
@@ -26,10 +27,10 @@
 		reorderable,
 		locked = false,
 		selectedMod = $bindable(),
-		onModToggle,
-		onFolderToggle,
 		modContextItems,
 		folderContextItems,
+		onModToggle,
+		onFolderToggle,
 		onLayoutChange
 	}: Props = $props();
 
@@ -37,67 +38,57 @@
 	type DropState = 'before' | 'after' | 'folder';
 
 	let draggingId = $state<DragIdentifier | null>(null);
-	let draggingIndex = $state<number | null>(null);
+	let targetId = $state<DragIdentifier | null>(null);
 
-	const draggingItem = $derived(draggingIndex === null ? null : itemByIndex(items, draggingIndex));
+	const draggingItem = $derived(draggingId === null ? null : findItem(items, draggingId));
 
-	let targetIndex = $state<number | null>(null);
 	let dropState = $state<DropState | null>(null);
+
+	const totalItems = $derived(
+		items.reduce((count, item) => {
+			if (item.type === 'folder') {
+				return count + 1 + item.folder.mods.length;
+			}
+			return count + 1;
+		}, 0)
+	);
 
 	function itemId(item: ProfileListItem): string {
 		return item.type === 'folder' ? item.folder.id : item.mod.uuid;
 	}
 
-	function itemByIndex(items: ProfileListItem[], index: number): ProfileListItem | null {
-		if (index < 0) {
-			return null;
+	type ItemWithLocation =
+		| { type: 'folder'; index: number; folder: Folder }
+		| { type: 'mod'; folderIndex: number | null; innerIndex: number; mod: Mod };
+
+	function findItem(items: ProfileListItem[], id: DragIdentifier): ItemWithLocation | null {
+		for (let i = 0; i < items.length; i++) {
+			const item = items[i];
+			if (item.type === 'folder') {
+				if (item.folder.id === id) {
+					return { type: 'folder', index: i, folder: item.folder };
+				}
+
+				const modIndex = item.folder.mods.findIndex((mod) => mod.uuid === id);
+				if (modIndex !== -1) {
+					return {
+						type: 'mod',
+						folderIndex: i,
+						innerIndex: modIndex,
+						mod: item.folder.mods[modIndex]
+					};
+				}
+			} else if (item.mod.uuid === id) {
+				return { type: 'mod', folderIndex: null, innerIndex: i, mod: item.mod };
+			}
 		}
 
-		const { folderIndex, innerIndex } = unwrapIndex(items, index);
-
-		if (folderIndex == null) {
-			// top-level item
-			return items[index] ?? null;
-		}
-
-		// mod in a folder
-		const folderItem = items[folderIndex];
-		if (!folderItem || folderItem.type !== 'folder') {
-			return null;
-		}
-
-		const mod = folderItem.folder.mods[innerIndex];
-		if (!mod) {
-			return null;
-		}
-
-		return { type: 'mod', mod };
-	}
-
-	function isTopLevelIndex(items: ProfileListItem[], index: number): boolean {
-		const { folderIndex } = unwrapIndex(items, index);
-		return folderIndex === null;
-	}
-
-	function unwrapIndex(
-		items: ProfileListItem[],
-		index: number
-	): { folderIndex: number | null; innerIndex: number } {
-		if (index <= items.length) {
-			return { folderIndex: null, innerIndex: index };
-		}
-
-		index -= items.length + 1;
-		const folderIndex = Math.floor(index / items.length);
-		const innerIndex = index % items.length;
-		return { folderIndex, innerIndex };
+		return null;
 	}
 
 	function resetDragState() {
 		draggingId = null;
-		draggingIndex = null;
-
-		targetIndex = null;
+		targetId = null;
 		dropState = null;
 	}
 
@@ -110,8 +101,6 @@
 		}
 
 		draggingId = source.id;
-		draggingIndex = source.index;
-		// draggingIndex = items.findIndex((item) => itemId(item) === source.id);
 	}
 
 	function onDragMove(event: any) {
@@ -127,15 +116,13 @@
 			return;
 		}
 
-		targetIndex = target.index;
+		targetId = target.id;
 
 		const rect = targetElement.getBoundingClientRect();
 		const percentageY = (pointerY - rect.top) / rect.height;
 		const isInCenter = percentageY > 0.35 && percentageY < 0.65;
 
-		const { folderIndex: targetFolderIndex } = unwrapIndex(items, targetIndex);
-
-		if (draggingItem.type === 'mod' && targetFolderIndex === null && isInCenter) {
+		if (draggingItem.type === 'mod' && isInCenter) {
 			// dragging a mod over the middle of another top-level item
 			// if the item is a folder, we will drop it into the folder, otherwise we create a new one
 			dropState = 'folder';
@@ -145,106 +132,120 @@
 		dropState = percentageY < 0.5 ? 'before' : 'after';
 	}
 
-	function insertItem(items: ProfileListItem[], item: ProfileListItem, index: number) {
-		const { folderIndex, innerIndex } = unwrapIndex(items, index);
-
-		if (folderIndex === null) {
-			items.splice(innerIndex, 0, item);
-			return;
+	function removeItem(items: ProfileListItem[], item: ItemWithLocation) {
+		if (item.type === 'folder') {
+			items.splice(item.index, 1);
+		} else if (item.folderIndex === null) {
+			// top-level mod
+			items.splice(item.innerIndex, 1);
+		} else {
+			const folderItem = items[item.folderIndex];
+			if (folderItem.type !== 'folder') {
+				console.warn('Expected folder item at index', item.folderIndex);
+				return;
+			}
+			folderItem.folder.mods.splice(item.innerIndex, 1);
 		}
-
-		if (item.type !== 'mod') {
-			// nested folders are not allowed
-			return;
-		}
-
-		const folderItem = items[folderIndex];
-		if (!folderItem || folderItem.type !== 'folder') {
-			return;
-		}
-
-		folderItem.folder.mods.splice(innerIndex, 0, item.mod);
 	}
 
-	function removeItem(items: ProfileListItem[], index: number): ProfileListItem | null {
-		const { folderIndex, innerIndex } = unwrapIndex(items, index);
-
-		if (folderIndex === null) {
-			// top-level item
-			return items.splice(innerIndex, 1)[0] ?? null;
+	function insertItem(items: ProfileListItem[], item: ItemWithLocation) {
+		if (item.type === 'folder') {
+			items.splice(item.index, 0, { type: 'folder', folder: item.folder });
+		} else if (item.folderIndex === null) {
+			// top-level mod
+			items.splice(item.innerIndex, 0, { type: 'mod', mod: item.mod });
+		} else {
+			const folderItem = items[item.folderIndex];
+			if (folderItem.type !== 'folder') {
+				console.warn('Expected folder item at index', item.folderIndex);
+				return;
+			}
+			folderItem.folder.mods.splice(item.innerIndex, 0, item.mod);
 		}
-
-		// mod in a folder; first find the folder item
-		const folderItem = items[folderIndex];
-		if (!folderItem || folderItem.type !== 'folder') {
-			return null;
-		}
-
-		const removed = folderItem.folder.mods.splice(innerIndex, 1)[0] ?? null;
-		return removed ? { type: 'mod', mod: removed } : null;
 	}
 
 	function onDragEnd(event: any) {
-		if (event.canceled || draggingIndex === null || targetIndex === null) {
+		if (
+			event.canceled ||
+			draggingId === null ||
+			draggingItem === null ||
+			targetId === null ||
+			dropState === null
+		) {
 			resetDragState();
 			return;
 		}
 
-		const fromIndex = draggingIndex;
-		let toIndex = getFinalDropIndex(fromIndex, targetIndex, dropState);
+		const newItems = $state.snapshot(items);
 
-		if (fromIndex === toIndex) {
+		// remove the dragged item from its original location
+		removeItem(newItems, draggingItem);
+
+		let targetItem = findItem(newItems, targetId);
+		if (!targetItem) {
+			console.warn('Target item not found after removing dragged item');
 			resetDragState();
 			return;
 		}
-
-		const newItems = [...items];
 
 		if (dropState === 'folder') {
-			// if hovering a mod, create a new folder
-			// if hovering a folder, move the dragged mod into the folder
-
-			// the target is guaranteed to be a top-level item as nested folders are not allowed
-			const target = newItems[toIndex];
-
-			// the draggedItem can be nested in a folder
-			const dragged = removeItem(newItems, fromIndex);
-			if (!dragged || dragged.type !== 'mod') {
+			// nested folders are not supported
+			if (draggingItem.type !== 'mod') {
+				console.warn('Dragging item is not a mod, cannot drop into folder');
 				resetDragState();
 				return;
 			}
 
-			if (target.type === 'folder') {
-				// move the dragged mod into the target folder
-				target.folder.mods.push(dragged.mod);
+			if (targetItem.type === 'folder') {
+				// drop into folder operation; move the dragged mod into the target folder
+				targetItem.folder.mods.push(draggingItem.mod);
 			} else {
-				// create a new folder with the dragged mod and the target mod
-				// remove the target item to replace it with a folder
-				if (isTopLevelIndex(newItems, fromIndex) && fromIndex < toIndex) {
-					// if the dragged item is above the target,
-					// we need to adjust the index since we just removed the dragged item from the list
-					toIndex--;
+				// create a new folder at the location of the target item,
+				// and move both the dragged mod and the target mod into it
+
+				// removing the dragged item from the list may have changed the location of the target item, so we need to recalculate it
+				targetItem = findItem(newItems, targetId);
+				if (targetItem === null || targetItem.type !== 'mod' || targetItem.folderIndex !== null) {
+					console.warn('Target item not found or is not a mod after recalculation');
+					resetDragState();
+					return;
 				}
-				newItems.splice(toIndex, 1);
+
+				// replace the target item with a new folder
+				newItems.splice(targetItem.innerIndex, 1);
 
 				const folder: Folder = {
 					id: crypto.randomUUID(),
 					name: m.page_folderNew(),
-					mods: [dragged.mod, target.mod],
+					mods: [draggingItem.mod, targetItem.mod],
 					isExpanded: false
 				};
 
-				newItems.splice(toIndex, 0, { type: 'folder', folder });
+				newItems.splice(targetItem.innerIndex, 0, { type: 'folder', folder });
 			}
 		} else {
-			// reorder the item by removing it from the list and inserting it at the new index
-			const dragged = removeItem(newItems, fromIndex);
-			if (!dragged) {
-				resetDragState();
-				return;
+			// calculate the new ItemWithLocation for the dragged item based on the drop state
+			let newItem: ItemWithLocation;
+
+			const targetInnerIndex =
+				targetItem.type === 'folder' ? targetItem.index : targetItem.innerIndex;
+
+			if (draggingItem.type === 'folder') {
+				newItem = {
+					type: 'folder',
+					index: adjustDropIndex(targetInnerIndex, dropState),
+					folder: draggingItem.folder
+				};
+			} else {
+				newItem = {
+					type: 'mod',
+					folderIndex: targetItem.type === 'folder' ? null : targetItem.folderIndex,
+					innerIndex: adjustDropIndex(targetInnerIndex, dropState),
+					mod: draggingItem.mod
+				};
 			}
 
-			insertItem(newItems, dragged, toIndex);
+			insertItem(newItems, newItem);
 		}
 
 		items = newItems;
@@ -253,26 +254,19 @@
 		resetDragState();
 	}
 
-	function getFinalDropIndex(
-		fromIndex: number,
-		targetIndex: number,
-		state: DropState | null
-	): number {
-		if (state === 'folder') {
-			return targetIndex;
+	function adjustDropIndex(index: number, state: DropState): number {
+		if (state === 'after') {
+			return index + 1;
 		}
-		if (state === 'before') {
-			return fromIndex < targetIndex ? targetIndex - 1 : targetIndex;
-		}
-		return fromIndex < targetIndex ? targetIndex : targetIndex + 1;
+		return index;
 	}
 
-	function getDropState(index: number): DropState | null {
-		if (targetIndex === null || draggingIndex === null || targetIndex === draggingIndex) {
+	function getDropState(id: DragIdentifier): DropState | null {
+		if (targetId === null || draggingId === null) {
 			return null;
 		}
 
-		if (targetIndex === index) {
+		if (id === targetId) {
 			return dropState;
 		}
 
@@ -304,12 +298,12 @@
 					{locked}
 					index={outerIndex}
 					ghost={draggingId === item.folder.id}
-					dropState={getDropState(outerIndex)}
+					dropState={getDropState(item.folder.id)}
 					contextItems={folderContextItems}
 					ontoggle={(newState) => onFolderToggle?.(item.folder.id, newState)}
 				>
 					{#snippet mod({ mod, index: innerIndex })}
-						{@render modItem((outerIndex + 1) * items.length + innerIndex + 1, mod)}
+						{@render modItem(outerIndex * totalItems + innerIndex, mod)}
 					{/snippet}
 				</ProfileModListFolderItem>
 			{:else}
@@ -321,7 +315,7 @@
 	<DragOverlay dropAnimation={{ duration: 150, easing: 'cubic-bezier(0.5, 1, 0.89, 1)' }}>
 		{#if draggingItem}
 			{#if draggingItem.type === 'folder'}
-				<div>folder</div>
+				<ProfileFolderCard folder={draggingItem.folder} />
 			{:else}
 				<ProfileModCard mod={draggingItem.mod} />
 			{/if}
@@ -335,7 +329,7 @@
 		{locked}
 		{index}
 		{reorderable}
-		dropState={getDropState(index)}
+		dropState={getDropState(mod.uuid)}
 		contextItems={modContextItems}
 		ghost={draggingId === mod.uuid}
 		selected={selectedMod?.uuid === mod.uuid}

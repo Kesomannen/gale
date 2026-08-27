@@ -73,22 +73,6 @@
 				return system();
 		}
 	}
-
-	function switchColorType<T>(
-		value: Color,
-		default_: (color: DefaultColor) => T,
-		custom: (hex: string) => T,
-		system: () => T
-	): T {
-		switch (value.type) {
-			case 'default':
-				return default_(value.name);
-			case 'custom':
-				return custom(value.hex);
-			case 'system':
-				return system();
-		}
-	}
 </script>
 
 <div class="flex items-center">
