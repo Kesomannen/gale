@@ -1419,7 +1419,8 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 4001890
+				"id": 4001890,
+				"dirName": "How to Fish/How to Fish"
 			}
 		},
 		"backends": ["Thunderstore", "Hexium"]
