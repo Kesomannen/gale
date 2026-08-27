@@ -87,11 +87,17 @@ pub fn copy_contents(
     Ok(())
 }
 
-pub fn get_directory_size(path: impl AsRef<Path>) -> u64 {
+pub fn directory_size(path: impl AsRef<Path>) -> u64 {
     WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
-        .map(|entry| if entry.file_type().is_file() { entry.metadata().map_or(0, |meta| meta.len()) } else { 0 })
+        .map(|entry| {
+            if entry.file_type().is_file() {
+                entry.metadata().map_or(0, |meta| meta.len())
+            } else {
+                0
+            }
+        })
         .sum()
 }
 

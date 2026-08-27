@@ -93,6 +93,10 @@ tokio-websockets = { version = "0.13", features = [
 ] }
 rustls = { version = "0.23.43", features = ["aws_lc_rs"] }
 tokio-util = "0.7.19"
+cacache = { version = "13.1", default-features = false, features = [
+    "tokio-runtime",
+    "mmap",
+] }
 
 [target.'cfg(target_os="windows")'.dependencies]
 windows = { version = "0.62", features = ["UI", "UI_ViewManagement"] }

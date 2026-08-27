@@ -4,6 +4,7 @@ use eyre::{Context, Result};
 use http_cache_reqwest::{CACacheManager, CacheMode, HttpCache, HttpCacheOptions};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, command};
+use tracing::{error, info};
 
 use crate::{
     db::{self, Db},
@@ -81,19 +82,37 @@ fn create_http_client() -> Result<reqwest_middleware::ClientWithMiddleware> {
         .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
         .build()?;
 
-    let cache_path = crate::util::path::default_app_cache_dir().join("http");
-
-    let cache = http_cache_reqwest::Cache(HttpCache {
-        mode: CacheMode::NoStore,
-        manager: CACacheManager::new(cache_path, false),
-        options: HttpCacheOptions::default(),
-    });
-
     let http = reqwest_middleware::ClientBuilder::new(base)
-        .with(cache)
+        .with(create_http_cache())
         .build();
 
     Ok(http)
+}
+
+const MAX_HTTP_CACHE_SIZE: u64 = 1024 * 1024 * 100; // 100 MB
+
+fn create_http_cache() -> http_cache_reqwest::Cache<CACacheManager> {
+    let cache_path = crate::util::path::default_app_cache_dir().join("http");
+
+    let size = crate::util::fs::directory_size(&cache_path);
+
+    if size > MAX_HTTP_CACHE_SIZE {
+        info!(
+            size,
+            max_size = MAX_HTTP_CACHE_SIZE,
+            path = %cache_path.display(),
+            "removing http cache because it exceeds the maximum size"
+        );
+        if let Err(err) = cacache::clear_sync(&cache_path) {
+            error!(?err, "failed to clear http cache");
+        }
+    }
+
+    http_cache_reqwest::Cache(HttpCache {
+        mode: CacheMode::NoStore,
+        manager: CACacheManager::new(cache_path, true),
+        options: HttpCacheOptions::default(),
+    })
 }
 
 pub trait ManagerExt<R> {
