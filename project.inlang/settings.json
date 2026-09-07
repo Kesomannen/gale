@@ -12,7 +12,8 @@
 		"fr-FR",
 		"ru-RU",
 		"de-DE",
-		"tr-TR"
+		"tr-TR",
+		"az-AZ"
 	],
 	"modules": [
 		"https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js",
