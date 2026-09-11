@@ -64,6 +64,7 @@ impl Profile {
 
         let package = thunderstore.get_package(current.package.uuid)?;
         let current_version = current.version.parsed_version();
+
         let latest = BorrowedMod {
             package,
             version: if current_version.pre.is_empty() {
