@@ -265,6 +265,11 @@ export type ExportCodeResult = ExportResult<{ code: string; backend: Backend }>;
 export type SyncCreateResult = ExportResult<{ id: string }>;
 export type SyncPushResult = SyncCreateResult;
 
+export type DedicatedServerInfo = {
+	platforms: Platform[];
+	defaultPort: number;
+};
+
 export type Game = {
 	name: string;
 	slug: string;
@@ -273,6 +278,7 @@ export type Game = {
 	modLoader: ModLoader;
 	popular: boolean;
 	backends: Backend[];
+	dedicatedServer: DedicatedServerInfo | null;
 };
 
 export enum ModLoader {
