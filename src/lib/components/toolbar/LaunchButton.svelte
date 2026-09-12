@@ -13,34 +13,51 @@
 	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 	import { type ContextItem } from '$lib/types';
 	import { PersistedState } from '$lib/state/persisted-state.svelte';
+	import DedicatedServerDialog from '$lib/components/dialogs/DedicatedServerDialog.svelte';
 
-	type Mode = 'vanilla' | 'modded';
+	type Mode = 'vanilla' | 'modded' | 'server';
 
 	const labels: Record<Mode, string> = {
 		vanilla: m.toolBar_launch_vanilla(),
-		modded: m.toolBar_launch_modded()
+		modded: m.toolBar_launch_modded(),
+		server: m.toolBar_launch_server()
 	};
 
-	const launchDropdownItems: ContextItem[] = [
-		{
-			label: labels['vanilla'],
-			onclick: () => {
-				mode.current = 'vanilla';
-				launchGame();
+	const launchDropdownItems = $derived.by(() => {
+		const items: ContextItem[] = [
+			{
+				label: labels.vanilla,
+				onclick: () => {
+					mode.current = 'vanilla';
+					launchGame();
+				}
+			},
+			{
+				label: labels.modded,
+				onclick: () => {
+					mode.current = 'modded';
+					launchGame();
+				}
 			}
-		},
-		{
-			label: labels['modded'],
-			onclick: () => {
-				mode.current = 'modded';
-				launchGame();
-			}
+		];
+
+		if (games.active?.dedicatedServer) {
+			items.push({
+				label: labels.server,
+				onclick: () => {
+					mode.current = 'server';
+					dedicatedServerDialogOpen = true;
+				}
+			});
 		}
-	];
+
+		return items;
+	});
 
 	let launchDialogOpen = $state(false);
 	let launchDropdownOpen = $state(false);
 	let launchOptionsDialogOpen = $state(false);
+	let dedicatedServerDialogOpen = $state(false);
 	let launchOptions = $state<LaunchOption[]>([]);
 
 	const mode = new PersistedState<Mode>('launchMode', 'modded');
@@ -48,6 +65,11 @@
 	const activeGameName = $derived(games.active?.name ?? m.unknown());
 
 	async function launchGame() {
+		if (mode.current === 'server') {
+			dedicatedServerDialogOpen = true;
+			return;
+		}
+
 		if (await api.profile.install.hasPendingInstallations()) {
 			await message(m.toolBar_launchGame_message());
 			return;
@@ -90,6 +112,12 @@
 	function handleLaunchOptionSelect(args: string) {
 		doLaunch(args);
 	}
+
+	$effect(() => {
+		if (mode.current === 'server' && !games.active?.dedicatedServer) {
+			mode.current = 'modded';
+		}
+	});
 </script>
 
 <div
@@ -135,3 +163,5 @@
 	gameName={games.active?.name ?? ''}
 	onselect={handleLaunchOptionSelect}
 />
+
+<DedicatedServerDialog bind:open={dedicatedServerDialogOpen} />

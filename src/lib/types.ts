@@ -274,6 +274,11 @@ export type ExportCode = {
 	backend: Backend;
 };
 
+export type DedicatedServerInfo = {
+	platforms: Platform[];
+	defaultPort: number;
+};
+
 export type Game = {
 	name: string;
 	slug: string;
@@ -282,6 +287,7 @@ export type Game = {
 	modLoader: ModLoader;
 	popular: boolean;
 	backends: Backend[];
+	dedicatedServer: DedicatedServerInfo | null;
 };
 
 export enum ModLoader {

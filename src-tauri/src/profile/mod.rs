@@ -28,6 +28,7 @@ pub mod export;
 pub mod import;
 pub mod install;
 pub mod launch;
+pub mod server;
 pub mod sync;
 pub mod update;
 
@@ -77,6 +78,7 @@ pub struct Profile {
     pub modpack: Option<ModpackArgs>,
     pub sync: Option<sync::SyncProfileData>,
     pub custom_args: String,
+    pub server_settings: server::config::DedicatedServerSettings,
     pub missing: bool,
 }
 
@@ -606,6 +608,7 @@ impl ModManager {
                 linked_config: HashMap::new(),
                 sync: saved_profile.sync_data,
                 custom_args: saved_profile.custom_args,
+                server_settings: saved_profile.server_settings,
                 missing,
             };
 
