@@ -117,6 +117,7 @@ pub struct ProfileData {
     pub sync_data: Option<profile::sync::SyncProfileData>,
     pub custom_args: String,
     pub ignored_package_updates: Option<HashSet<Uuid>>,
+    pub server_settings: profile::server::config::DedicatedServerSettings,
 }
 
 pub struct SaveData {
@@ -209,7 +210,7 @@ impl Db {
 
         let mut profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates FROM profiles",
+                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates, server_settings FROM profiles",
             )?
             .query_map((), |row| {
                 let mut mods : Vec<profile::ProfileMod> = map_json_row(row, 4)?;
@@ -233,6 +234,7 @@ impl Db {
                     sync_data: map_json_option_row(row, 7)?,
                     custom_args,
                     ignored_package_updates: map_json_option_row(row, 9)?,
+                    server_settings: map_json_option_row(row, 10)?.unwrap_or_default(),
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()
@@ -340,8 +342,8 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates, server_settings)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
@@ -358,6 +360,7 @@ impl Db {
                 .map(serde_json::to_string)
                 .transpose()?;
             let ignored_package_updates = serde_json::to_string(&profile.ignored_package_updates)?;
+            let server_settings = serde_json::to_string(&profile.server_settings)?;
 
             stmt.execute(params![
                 profile.id,
@@ -369,7 +372,8 @@ impl Db {
                 ignored_updates,
                 sync_data,
                 profile.custom_args,
-                ignored_package_updates
+                ignored_package_updates,
+                server_settings
             ])?;
         }
 

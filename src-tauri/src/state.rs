@@ -10,7 +10,7 @@ use crate::{
     db::{self, Db},
     events::EventBuffer,
     prefs::Prefs,
-    profile::{self, ModManager, install::queue::InstallQueue, sync},
+    profile::{self, ModManager, install::queue::InstallQueue, server::runtime::ServerRuntime, sync},
     thunderstore::{self, Thunderstore},
 };
 
@@ -25,6 +25,7 @@ pub struct AppState {
     sync_socket: sync::socket::State,
     event_buffer: EventBuffer,
     is_first_run: bool,
+    server_runtime: Mutex<ServerRuntime>,
 }
 
 impl AppState {
@@ -38,6 +39,10 @@ impl AppState {
 
     pub fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.thunderstore.lock().unwrap()
+    }
+
+    pub fn lock_server_runtime(&self) -> MutexGuard<'_, ServerRuntime> {
+        self.server_runtime.lock().unwrap()
     }
 }
 
@@ -64,6 +69,7 @@ pub fn setup(app: &AppHandle) -> Result<()> {
         install_queue: InstallQueue::new(app.to_owned()),
         event_buffer: EventBuffer::new(app.to_owned()),
         is_first_run: !db_existed && !migrated,
+        server_runtime: Mutex::new(ServerRuntime::default()),
     };
 
     app.manage(state);
@@ -132,6 +138,9 @@ pub trait ManagerExt<R> {
 
     fn lock_thunderstore(&self) -> MutexGuard<'_, Thunderstore> {
         self.app_state().lock_thunderstore()
+    }
+    fn lock_server_runtime(&self) -> MutexGuard<'_, ServerRuntime> {
+        self.app_state().lock_server_runtime()
     }
 
     fn db(&self) -> &Db {

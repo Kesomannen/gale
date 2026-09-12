@@ -1,6 +1,7 @@
 import * as api from '$lib/api';
 import type { ProfileInfo, ManagedGameInfo } from '$lib/types';
 import auth from './auth.svelte';
+import server from './server.svelte';
 
 class ProfilesState {
 	list: ProfileInfo[] = $state([]);
@@ -12,6 +13,7 @@ class ProfilesState {
 
 	activeLocked = $derived.by(() => {
 		if (this.active === null) return false;
+		if (server.isProfileLocked(this.active.id)) return true;
 		if (this.active.sync === null) return false;
 		if (auth.user === null) return true;
 
