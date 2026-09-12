@@ -899,6 +899,21 @@
 		}
 	},
 	{
+		"name": "Cuphead",
+		"slug": "cuphead",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 268910
+			},
+			"xboxStore": {
+				"identifier": "StudioMDHR.20872A364DAA1"
+			}
+		}
+	},
+	{
 		"name": "Cursed Words",
 		"slug": "cursed-words",
 		"modLoader": {
