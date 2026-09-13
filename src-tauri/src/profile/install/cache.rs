@@ -1,8 +1,8 @@
-use std::{collections::HashSet, fs, path::PathBuf};
+use std::{collections::HashSet, fs, path::{Path, PathBuf}};
 
 use eyre::{Context, Result};
 use tauri::AppHandle;
-use tracing::info;
+use tracing::{info, warn};
 
 use crate::{prefs::Prefs, state::ManagerExt, thunderstore::VersionIdent, util};
 
@@ -80,11 +80,29 @@ pub(super) fn prepare_soft_clear(app: AppHandle) -> Result<Vec<PathBuf>> {
     Ok(to_remove)
 }
 
+fn is_empty_dir(path: &Path) -> bool {
+    path.read_dir()
+        .is_ok_and(|mut entries| entries.next().is_none())
+}
+
 pub(super) fn do_soft_clear(paths: Vec<PathBuf>) -> Result<()> {
     let count = paths.len();
 
     for path in paths {
+        let package_dir = path.parent().map(Path::to_path_buf);
+
         fs::remove_dir_all(path)?;
+
+        // Clearing the last version of a mod leaves its package directory behind
+        let Some(dir) = package_dir else { continue };
+
+        if !is_empty_dir(&dir) {
+            continue;
+        }
+
+        if let Err(err) = fs::remove_dir(&dir) {
+            warn!("failed to remove empty cache directory {dir:?}: {err}");
+        }
     }
 
     info!("cleared {} mods from cache", count);
