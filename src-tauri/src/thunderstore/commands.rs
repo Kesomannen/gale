@@ -110,7 +110,7 @@ pub async fn get_categories(game: &str, app: AppHandle) -> Result<Vec<PackageCat
             }
         })
         .flatten()
-        .unique()
+        .unique_by(|category| category.name.clone())
         .sorted()
         .collect();
 
