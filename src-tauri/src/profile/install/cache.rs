@@ -1,4 +1,8 @@
-use std::{collections::HashSet, fs, path::{Path, PathBuf}};
+use std::{
+    collections::HashSet,
+    fs,
+    path::{Path, PathBuf},
+};
 
 use eyre::{Context, Result};
 use tauri::AppHandle;
@@ -89,18 +93,20 @@ pub(super) fn do_soft_clear(paths: Vec<PathBuf>) -> Result<()> {
     let count = paths.len();
 
     for path in paths {
-        let package_dir = path.parent().map(Path::to_path_buf);
+        let package_dir = path.parent();
 
-        fs::remove_dir_all(path)?;
+        fs::remove_dir_all(&path)?;
 
         // Clearing the last version of a mod leaves its package directory behind
-        let Some(dir) = package_dir else { continue };
+        let Some(dir) = package_dir else {
+            continue;
+        };
 
-        if !is_empty_dir(&dir) {
+        if !is_empty_dir(dir) {
             continue;
         }
 
-        if let Err(err) = fs::remove_dir(&dir) {
+        if let Err(err) = fs::remove_dir(dir) {
             warn!("failed to remove empty cache directory {dir:?}: {err}");
         }
     }
