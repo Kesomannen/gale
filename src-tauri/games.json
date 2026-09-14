@@ -241,6 +241,14 @@
 				"identifier": "CoffeeStainStudios.Valheim"
 			}
 		},
+		"dedicatedServer": {
+			"platforms": {
+				"steam": {
+					"id": 896660
+				}
+			},
+			"defaultPort": 2456
+		},
 		"backends": ["Thunderstore", "Hexium"]
 	},
 	{

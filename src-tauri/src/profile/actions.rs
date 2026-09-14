@@ -311,6 +311,7 @@ impl ManagedGame {
             modpack: None,
             sync: None,
             custom_args: String::new(),
+            server_settings: crate::profile::server::config::DedicatedServerSettings::default(),
             missing: false,
             ignored_package_updates: HashSet::new(),
         };
