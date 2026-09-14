@@ -97,7 +97,7 @@ fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
 
 #[tauri::command]
 fn is_flatpak() -> bool {
-    util::is_flatpak()
+    util::flatpak::is_flatpak()
 }
 
 #[clippy::allow(

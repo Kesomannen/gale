@@ -77,9 +77,10 @@ impl Profile {
 
     pub fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
         if self.get_mod(uuid)?.enabled
-            && let Some(dependants) = self.check_dependants(uuid, true, thunderstore) {
-                return Ok(ActionResult::Confirm { dependants });
-            }
+            && let Some(dependants) = self.check_dependants(uuid, true, thunderstore)
+        {
+            return Ok(ActionResult::Confirm { dependants });
+        }
 
         self.force_remove_mod(uuid)?;
         Ok(ActionResult::Done)
@@ -105,9 +106,15 @@ impl Profile {
     }
 
     pub fn toggle_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
-        let dependants = if self.get_mod(uuid)?.enabled { self.check_dependants(uuid, false, thunderstore) } else { self.check_dependencies(uuid, thunderstore) };
+        let dependants = if self.get_mod(uuid)?.enabled {
+            self.check_dependants(uuid, false, thunderstore)
+        } else {
+            self.check_dependencies(uuid, thunderstore)
+        };
 
-        if let Some(dependants) = dependants { Ok(ActionResult::Confirm { dependants }) } else {
+        if let Some(dependants) = dependants {
+            Ok(ActionResult::Confirm { dependants })
+        } else {
             self.force_toggle_mod(uuid)?;
             Ok(ActionResult::Done)
         }
@@ -157,7 +164,11 @@ impl Profile {
             .map_into()
             .collect_vec();
 
-        if dependants.is_empty() { None } else { Some(dependants) }
+        if dependants.is_empty() {
+            None
+        } else {
+            Some(dependants)
+        }
     }
 
     /// Finds disabled dependencies in the profile.
@@ -177,7 +188,11 @@ impl Profile {
             .map_into()
             .collect_vec();
 
-        if disabled_deps.is_empty() { None } else { Some(disabled_deps) }
+        if disabled_deps.is_empty() {
+            None
+        } else {
+            Some(disabled_deps)
+        }
     }
 
     pub fn open_mod_dir(&self, uuid: Uuid) -> Result<()> {
@@ -455,7 +470,7 @@ impl ManagedGame {
             bail!("shortcut already exists");
         }
 
-        let command = if util::is_flatpak() {
+        let command = if util::flatpak::is_flatpak() {
             format!("flatpak run {}", util::path::APP_GUID)
         } else {
             std::env::current_exe()

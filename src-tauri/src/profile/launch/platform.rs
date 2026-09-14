@@ -32,20 +32,9 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
 
     let mut command = create_base_steam_command()?;
 
-    if util::is_flatpak() {
-        use tracing::debug;
-
-        debug!("flatpak detected, wrapping command with flatpak-spawn");
-
-        let mut wrapper = Command::new("flatpak-spawn");
-        wrapper
-            .arg("--host")
-            .arg(command.get_program())
-            .args(command.get_args());
-        command = wrapper;
-    }
-
     command.arg("-applaunch").arg(steam.id.to_string());
+
+    util::flatpak::wrap_command_if_needed(&mut command);
 
     Ok(command)
 }
@@ -113,15 +102,28 @@ fn create_base_steam_command() -> Result<Command> {
     let mut flatpak_check = Command::new("flatpak");
     flatpak_check.args(["info", "com.valvesoftware.Steam"]);
 
+    util::flatpak::wrap_command_if_needed(&mut flatpak_check);
+
     debug!("checking for steam flatpak installation with command {flatpak_check:?}");
 
-    if flatpak_check.status().is_ok_and(|status| status.success()) {
-        info!("using flatpak steam installation");
+    match flatpak_check.output() {
+        Ok(output) if output.status.success() => {
+            info!("using flatpak steam installation");
 
-        let mut command = Command::new("flatpak");
-        command.args(["run", "com.valvesoftware.Steam"]);
+            let mut command = Command::new("flatpak");
+            command.args(["run", "com.valvesoftware.Steam"]);
 
-        return Ok(command);
+            return Ok(command);
+        }
+        Ok(output) => {
+            debug!(
+                "flatpak check returned with error code {:?}",
+                output.status.code()
+            );
+        }
+        Err(err) => {
+            debug!("failed to run flatpak check: {:#}", err);
+        }
     }
 
     debug!("checking for steam.sh script in steam installation directory");
@@ -206,9 +208,7 @@ fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
     entries
         .iter()
         .find(|entry| {
-            entry
-                .get("appid")
-                .and_then(serde_json::Value::as_u64) == Some(u64::from(app_id))
+            entry.get("appid").and_then(serde_json::Value::as_u64) == Some(u64::from(app_id))
         })
         .cloned()
         .ok_or_else(|| eyre!("app ID {} not found in Steam appinfo.vdf", app_id))
