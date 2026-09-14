@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use tauri::{AppHandle, command};
 use uuid::Uuid;
 
@@ -6,30 +5,9 @@ use super::{InstallOptions, ModInstall};
 use crate::{
     profile::install::InstallResultExt,
     state::ManagerExt,
-    thunderstore::{ModId, Thunderstore},
+    thunderstore::ModId,
     util::{self, cmd::Result},
 };
-
-#[command]
-pub async fn install_all_mods(app: AppHandle) -> Result<()> {
-    let profile_id = app.lock_manager().active_profile().id;
-
-    let mods = Thunderstore::deduplicate(app.lock_thunderstore().latest())
-        .map(ModInstall::new)
-        .collect_vec();
-
-    app.install_queue()
-        .install(
-            mods,
-            profile_id,
-            InstallOptions::default().cancel_individually(),
-            &app,
-        )
-        .await
-        .ignore_cancel()?;
-
-    Ok(())
-}
 
 #[command]
 pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
