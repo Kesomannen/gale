@@ -15,6 +15,8 @@
 
 - HTTP request cache growing larger each time mods are fetched
 - String-based version comparison in update logic causing some updates to not be considered (tjanks [@bwoebi](https://github.com/bwoebi))
+- Some Thunderstore-specific language in UI text
+- Incompatibility when both Gale and Steam are installed as Flatpaks
 
 ## 1.22.2 (2026-08-25)
 

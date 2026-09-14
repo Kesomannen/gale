@@ -24,6 +24,7 @@
 	import { apiKeyDialog } from '$lib/state/misc.svelte';
 	import { m, modpack_button_export, modpack_includeFiles_title } from '$lib/paraglide/messages';
 	import Info from '$lib/components/ui/Info.svelte';
+	import { communityUrl } from '$lib/util';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -470,7 +471,7 @@
 <Dialog bind:open={doneDialogOpen} title={m.modpack_dialog_title()}>
 	<p class="text-primary-600 dark:text-primary-300">
 		{m.modpack_dialog_content_1({ name, versionNumber, backend })}
-		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}">
+		<Link href={communityUrl(backend, author, name)}>
 			{m.modpack_dialog_content_2()}
 		</Link>
 	</p>
