@@ -386,7 +386,7 @@
 	"page_modContextItem_uninstall": "Kaldır",
 	"page_modDetails_button": "{version} sürümüne güncelle",
 	"page_modList_noMods_1": "Kurulu mod yok",
-	"page_modList_noMods_2": "Thunderstore'a göz atmak için tıklayın",
+	"page_modList_noMods_2": "Modlara göz atmak için tıklayın",
 	"page_modList_noResults_1": "Profilde eşleşen mod bulunamadı",
 	"page_modList_noResults_2": "Arama sorgunuzu/filtrelerinizi ayarlamayı deneyin",
 	"pathField_noset": "Ayarlanmamış",
@@ -494,12 +494,17 @@
 	"updateAllBanner_button": "Tümünü güncelle",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Bir güncelleme mevcut.",
 				"countPlural=other": "{count} güncelleme mevcut."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Modları güncelle",

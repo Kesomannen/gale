@@ -386,7 +386,7 @@
 	"page_modContextItem_uninstall": "Удалить",
 	"page_modDetails_button": "Обновить до {version}",
 	"page_modList_noMods_1": "Моды не установлены.",
-	"page_modList_noMods_2": "Нажмите, чтобы просмотреть Thunderstore",
+	"page_modList_noMods_2": "Нажмите, чтобы просмотреть моды",
 	"page_modList_noResults_1": "В профиле не найдено подходящих модификаций.",
 	"page_modList_noResults_2": "Попробуйте скорректировать поисковый запрос/фильтры.",
 	"pathField_noset": "Не задано",
@@ -494,12 +494,17 @@
 	"updateAllBanner_button": "Обновить все?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Доступно одно обновление.",
 				"countPlural=other": "Доступны обновления {count} ."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Обновить моды",

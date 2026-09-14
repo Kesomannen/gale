@@ -386,7 +386,7 @@
 	"page_modContextItem_uninstall": "Sil",
 	"page_modDetails_button": "{version} versiyasına yenilə",
 	"page_modList_noMods_1": "Quraşdırılmış mod yoxdur",
-	"page_modList_noMods_2": "Thunderstore-a baxmaq üçün klikləyin",
+	"page_modList_noMods_2": "Modlara baxmaq üçün klikləyin",
 	"page_modList_noResults_1": "Profildə uyğun mod tapılmadı",
 	"page_modList_noResults_2": "Axtarış sorğunuzu və ya süzgəcləri dəyişməyə çalışın",
 	"pathField_noset": "Təyin edilməyib",
@@ -494,12 +494,17 @@
 	"updateAllBanner_button": "Hamısını yenilə",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Bir yeniləmə mövcuddur.",
 				"countPlural=other": "{count} yeniləmə mövcuddur."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Modları yenilə",

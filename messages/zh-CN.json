@@ -386,7 +386,7 @@
 	"page_modContextItem_uninstall": "卸载",
 	"page_modDetails_button": "更新到 {version}",
 	"page_modList_noMods_1": "没有安装任何模组",
-	"page_modList_noMods_2": "点击浏览 Thunderstore",
+	"page_modList_noMods_2": "点击浏览模组",
 	"page_modList_noResults_1": "在档案中没找到任何符合条件的模组",
 	"page_modList_noResults_2": "尝试调整搜索条件",
 	"pathField_noset": "未设置",
@@ -494,12 +494,17 @@
 	"updateAllBanner_button": "更新所有",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一个更新可用。",
 				"countPlural=other": "有 {count} 个更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模组",

@@ -386,7 +386,7 @@
 	"page_modContextItem_uninstall": "Desinstalar",
 	"page_modDetails_button": "Atualizar para {version}",
 	"page_modList_noMods_1": "Nenhum mod instalado.",
-	"page_modList_noMods_2": "Clique para navegar na Thunderstore",
+	"page_modList_noMods_2": "Clique para navegar pelos mods",
 	"page_modList_noResults_1": "Nenhum mod correspondente encontrado no perfil",
 	"page_modList_noResults_2": "Tente ajustar sua busca ou filtros",
 	"pathField_noset": "Não definido",
@@ -494,12 +494,17 @@
 	"updateAllBanner_button": "Atualizar tudo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Há uma atualização disponível.",
 				"countPlural=other": "Existem atualizações disponíveis {count} ."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Atualizar mods",

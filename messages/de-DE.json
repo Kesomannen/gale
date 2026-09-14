@@ -49,6 +49,7 @@
 	"colorPref_color_sky": "Himmelblau",
 	"colorPref_color_slate": "Schiefer",
 	"colorPref_color_stone": "Stein",
+	"colorPref_color_system": "System",
 	"colorPref_color_teal": "Türkis",
 	"colorPref_color_violet": "Violett",
 	"colorPref_color_yellow": "Gelb",
@@ -385,7 +386,7 @@
 	"page_modContextItem_uninstall": "Deinstallieren",
 	"page_modDetails_button": "Auf {version} aktualisieren",
 	"page_modList_noMods_1": "Keine Mods installiert",
-	"page_modList_noMods_2": "Klicken, um Thunderstore zu durchsuchen",
+	"page_modList_noMods_2": "Hier klicken, um Mods anzusehen",
 	"page_modList_noResults_1": "Keine passenden Mods im Profil gefunden",
 	"page_modList_noResults_2": "Versuche, deine Suchanfrage oder Filter anzupassen",
 	"pathField_noset": "Nicht festgelegt",
@@ -493,12 +494,17 @@
 	"updateAllBanner_button": "Alle aktualisieren",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Es ist ein Update verfügbar.",
 				"countPlural=other": "Es sind {count} Updates verfügbar."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Mods aktualisieren",

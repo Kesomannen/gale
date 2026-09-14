@@ -386,7 +386,7 @@
 	"page_modContextItem_uninstall": "解除安裝",
 	"page_modDetails_button": "更新至 {version}",
 	"page_modList_noMods_1": "未安裝模組。",
-	"page_modList_noMods_2": "點擊瀏覽 Thunderstore",
+	"page_modList_noMods_2": "點選瀏覽模組",
 	"page_modList_noResults_1": "在設定檔中找不到符合的模組",
 	"page_modList_noResults_2": "請嘗試調整您的搜尋字詞/篩選條件",
 	"pathField_noset": "未設定",
@@ -494,12 +494,17 @@
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "有一個更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模組",

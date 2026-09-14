@@ -386,7 +386,7 @@
 	"page_modContextItem_uninstall": "Avinstallera",
 	"page_modDetails_button": "Uppdatera till {version}",
 	"page_modList_noMods_1": "Inga moddar installerade.",
-	"page_modList_noMods_2": "Klicka för att bläddra Thunderstore",
+	"page_modList_noMods_2": "Klicka för att bläddra bland moddar",
 	"page_modList_noResults_1": "Inga matchande moddar hittades i profilen",
 	"page_modList_noResults_2": "Justera din sökning och/eller filter",
 	"pathField_noset": "Inte satt",
@@ -494,12 +494,17 @@
 	"updateAllBanner_button": "Uppdatera alla?",
 	"updateAllBanner_content": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
 			"match": {
 				"countPlural=one": "Det finns en uppdatering tillgänglig.",
 				"countPlural=other": "Det finns {count} uppdateringar tillgängliga."
 			},
-			"selectors": ["countPlural"]
+			"selectors": [
+				"countPlural"
+			]
 		}
 	],
 	"updateAllBanner_dialog_button": "Uppdatera mods",
