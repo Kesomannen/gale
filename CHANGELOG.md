@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Azerbaijani translation (thanks [@Jamal](https://github.com/jamalkamaladdin))
+
+### Changed
+
+- HTTP request cache now has a max size of 100 MB
+  - Upon reaching the limit, the whole cache is cleared
+
+### Fixed
+
+- HTTP request cache growing larger each time mods are fetched
+- String-based version comparison in update logic causing some updates to not be considered (tjanks [@bwoebi](https://github.com/bwoebi))
+
 ## 1.22.2 (2026-08-25)
 
 ### Fixed
