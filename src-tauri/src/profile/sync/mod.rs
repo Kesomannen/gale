@@ -111,33 +111,22 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
         bytes.into_inner()
     };
 
-    let response: CreateSyncProfileResponse = request(Method::POST, "/profile", app)
-        .await
-        .body(bytes)
-        .send()
-        .await?
-        .error_for_status()?
-        .json()
-        .await?;
+    let response = upload_profile_file(app, bytes, Method::POST, "/profile").await?;
 
-    let id = response.id.clone();
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
 
-    {
-        let mut manager = app.lock_manager();
-        let profile = manager.active_profile_mut();
+    profile.sync = Some(SyncProfileData {
+        id: response.id.clone(),
+        owner: user,
+        synced_at: response.updated_at,
+        updated_at: response.updated_at,
+        missing: false,
+    });
 
-        profile.sync = Some(SyncProfileData {
-            id: id.clone(),
-            owner: user,
-            synced_at: response.updated_at,
-            updated_at: response.updated_at,
-            missing: false,
-        });
+    profile.save(app, true)?;
 
-        profile.save(app, true)?;
-    }
-
-    Ok(id)
+    Ok(response.id)
 }
 
 pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
@@ -157,27 +146,45 @@ pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
         (id, bytes.into_inner())
     };
 
-    let response: CreateSyncProfileResponse = request(Method::PUT, format!("/profile/{id}"), app)
+    let response: CreateSyncProfileResponse =
+        upload_profile_file(app, bytes, Method::PUT, format!("/profile/{id}")).await?;
+
+    let mut manager = app.lock_manager();
+    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
+    let sync_data = profile.sync.as_mut().unwrap();
+
+    sync_data.synced_at = response.updated_at;
+    sync_data.updated_at = response.updated_at;
+
+    profile.save(app, true)?;
+
+    Ok(())
+}
+
+async fn upload_profile_file(
+    app: &AppHandle,
+    bytes: Vec<u8>,
+    method: Method,
+    endpoint: impl Display,
+) -> Result<CreateSyncProfileResponse> {
+    let len = bytes.len();
+    let res = request(method, endpoint, app)
         .await
         .body(bytes)
         .send()
-        .await?
-        .error_for_status()?
-        .json()
         .await?;
 
-    {
-        let mut manager = app.lock_manager();
-        let (_, profile) = manager.profile_by_id_mut(profile_id)?;
-        let sync_data = profile.sync.as_mut().unwrap();
-
-        sync_data.synced_at = response.updated_at;
-        sync_data.updated_at = response.updated_at;
-
-        profile.save(app, true)?;
-    };
-
-    Ok(())
+    if res.status().is_success() {
+        let response = res.json().await?;
+        Ok(response)
+    } else if res.status() == StatusCode::PAYLOAD_TOO_LARGE {
+        bail!(
+            "profile config is too large to upload: {}, please reduce the size by removing heavy and/or unneeded config files",
+            humansize::format_size(len, humansize::BINARY)
+        );
+    } else {
+        bail!("upload failed with status: {}", res.status());
+    }
 }
 
 async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
