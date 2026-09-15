@@ -93,7 +93,7 @@
 </script>
 
 <div
-	class="text-accent-600 *:hover:text-accent-500 group dark:*:group-hover:bg-primary-800 *:group-hover:bg-primary-200 flex shrink-0 gap-0.5 overflow-hidden rounded-lg font-semibold *:py-2"
+	class="text-accent-500 *:hover:text-accent-400 group dark:*:group-hover:bg-primary-800 *:group-hover:bg-primary-200 flex shrink-0 gap-0.5 overflow-hidden rounded-lg font-semibold *:py-2"
 >
 	<button onclick={() => launchGame()} class="flex items-center pr-2 pl-4">
 		<Icon icon="mdi:play-circle" class="mr-2 text-xl" />
@@ -106,11 +106,13 @@
 		<DropdownMenu.Trigger class="pr-3 pl-2">
 			<DropdownArrow open={launchDropdownOpen} />
 		</DropdownMenu.Trigger>
-		<ContextMenuContent
-			type="dropdown"
-			items={launchDropdownItems}
-			class="max-h-90 overflow-y-auto text-base"
-		/>
+		<DropdownMenu.Portal>
+			<ContextMenuContent
+				type="dropdown"
+				items={launchDropdownItems}
+				class="max-h-90 overflow-y-auto text-base"
+			/>
+		</DropdownMenu.Portal>
 	</DropdownMenu.Root>
 </div>
 
