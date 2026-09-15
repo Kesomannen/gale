@@ -10,6 +10,7 @@
 
 - HTTP request cache now has a max size of 100 MB
   - Upon reaching the limit, the whole cache is cleared
+- Empty folders are now removed when unused mods are cleared from the cache
 
 ### Fixed
 
