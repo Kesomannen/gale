@@ -4,13 +4,13 @@
 
 ### Added
 
-- Azerbaijani translation (thanks [@Jamal](https://github.com/jamalkamaladdin))
+- Azerbaijani translation (thanks [@jamalkamaladdin](https://github.com/jamalkamaladdin))
 
 ### Changed
 
 - HTTP request cache now has a max size of 100 MB
   - Upon reaching the limit, the whole cache is cleared
-- Empty folders are now removed when unused mods are cleared from the cache
+- Empty folders are now removed when unused mods are cleared from the cache  (thanks [@jamalkamaladdin](https://github.com/jamalkamaladdin))
 
 ### Fixed
 
