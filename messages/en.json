@@ -469,7 +469,7 @@
 	"syncer_dropdownItems_showOwnedProfiles": "Show owned profiles",
 	"syncer_onLoginClicked_message": "Signed in with Discord as {name}.",
 	"syncer_pull_message": "Pulled changes from synced profile.",
-	"syncer_preserveExtras_content": "Keep installed mods and configuration files that are not included in the synced profile when pulling updates.",
+	"syncer_preserveExtras_content": "Allow local mod changes and keep installed mods and configuration files that are not included in the synced profile when pulling updates.",
 	"syncer_preserveExtras_title": "Keep additional mods",
 	"syncer_push_message": "Pushed update to synced profile.",
 	"syncer_refresh_message": "Refreshed synced profile status.",

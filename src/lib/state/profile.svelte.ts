@@ -13,6 +13,7 @@ class ProfilesState {
 	activeLocked = $derived.by(() => {
 		if (this.active === null) return false;
 		if (this.active.sync === null) return false;
+		if (this.active.sync.preserveExtras) return false;
 		if (auth.user === null) return true;
 
 		return this.active.sync.owner.discordId != auth.user.discordId;
