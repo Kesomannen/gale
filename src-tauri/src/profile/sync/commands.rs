@@ -35,6 +35,13 @@ pub async fn clone_sync_profile(id: String, name: String, app: AppHandle) -> Res
 }
 
 #[command]
+pub fn set_sync_preserve_extras(preserve_extras: bool, app: AppHandle) -> Result<()> {
+    super::set_preserve_extras(preserve_extras, &app)?;
+
+    Ok(())
+}
+
+#[command]
 pub async fn disconnect_sync_profile(delete: bool, app: AppHandle) -> Result<()> {
     super::disconnect_profile(delete, &app).await?;
 

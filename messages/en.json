@@ -469,6 +469,8 @@
 	"syncer_dropdownItems_showOwnedProfiles": "Show owned profiles",
 	"syncer_onLoginClicked_message": "Signed in with Discord as {name}.",
 	"syncer_pull_message": "Pulled changes from synced profile.",
+	"syncer_preserveExtras_content": "Keep installed mods and configuration files that are not included in the synced profile when pulling updates.",
+	"syncer_preserveExtras_title": "Keep additional mods",
 	"syncer_push_message": "Pushed update to synced profile.",
 	"syncer_refresh_message": "Refreshed synced profile status.",
 	"syncer_style_missing": "Sync error",
@@ -497,17 +499,12 @@
 	"updateAllBanner_button": "Update all",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",

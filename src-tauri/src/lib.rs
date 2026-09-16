@@ -196,6 +196,7 @@ pub fn run() {
             profile::sync::commands::clone_sync_profile,
             profile::sync::commands::pull_sync_profile,
             profile::sync::commands::fetch_sync_profile,
+            profile::sync::commands::set_sync_preserve_extras,
             profile::sync::commands::get_owned_sync_profiles,
             profile::sync::commands::login,
             profile::sync::commands::logout,

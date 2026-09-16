@@ -149,10 +149,10 @@ impl ImportOptions {
     //     self
     // }
 
-    // pub fn merge(mut self, merge: bool) -> Self {
-    //     self.merge = merge;
-    //     self
-    // }
+    pub fn merge(mut self, merge: bool) -> Self {
+        self.merge = merge;
+        self
+    }
 
     pub fn ignore_missing_mods(mut self, ignore_missing_mods: bool) -> Self {
         self.ignore_missing_mods = ignore_missing_mods;
@@ -415,4 +415,70 @@ fn is_always_imported(path: impl AsRef<Path>) -> bool {
     });
 
     !EXCLUDE_SET.is_match(path.as_ref())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const CONFIG_DIRS: &[&str] = &["BepInEx/config"];
+
+    fn config_path(root: &Path, name: &str) -> PathBuf {
+        root.join("BepInEx").join("config").join(name)
+    }
+
+    fn write_config(root: &Path, name: &str, contents: &str) {
+        let path = config_path(root, name);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, contents).unwrap();
+    }
+
+    #[test]
+    fn profile_import_removes_extra_config_by_default() {
+        let source = tempdir().unwrap();
+        let destination = tempdir().unwrap();
+        write_config(source.path(), "baseline.cfg", "new baseline");
+        write_config(destination.path(), "baseline.cfg", "old baseline");
+        write_config(destination.path(), "greylist.cfg", "player settings");
+
+        import_config(
+            destination.path(),
+            source.path(),
+            CONFIG_DIRS,
+            &ImportOptions::default(),
+        )
+        .unwrap();
+
+        assert_eq!(
+            fs::read_to_string(config_path(destination.path(), "baseline.cfg")).unwrap(),
+            "new baseline"
+        );
+        assert!(!config_path(destination.path(), "greylist.cfg").exists());
+    }
+
+    #[test]
+    fn merged_profile_import_preserves_extra_config() {
+        let source = tempdir().unwrap();
+        let destination = tempdir().unwrap();
+        write_config(source.path(), "baseline.cfg", "new baseline");
+        write_config(destination.path(), "baseline.cfg", "old baseline");
+        write_config(destination.path(), "greylist.cfg", "player settings");
+
+        import_config(
+            destination.path(),
+            source.path(),
+            CONFIG_DIRS,
+            &ImportOptions::default().merge(true),
+        )
+        .unwrap();
+
+        assert_eq!(
+            fs::read_to_string(config_path(destination.path(), "baseline.cfg")).unwrap(),
+            "new baseline"
+        );
+        assert_eq!(
+            fs::read_to_string(config_path(destination.path(), "greylist.cfg")).unwrap(),
+            "player settings"
+        );
+    }
 }
