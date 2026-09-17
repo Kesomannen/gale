@@ -1,7 +1,13 @@
 <script lang="ts">
-	import type { Mod } from '../../types';
+	import type { AvailableUpdate, Mod } from '../../types';
 	import type { MouseEventHandler } from 'svelte/elements';
-	import { formatModName, hasNonReleaseUpgrade, isOutdated, modIconSrc } from '$lib/util';
+	import {
+		formatModName,
+		hasNonReleaseUpgrade,
+		isNonReleaseVersion,
+		isOutdated,
+		modIconSrc
+	} from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
 	import type { ClassValue } from 'clsx';
@@ -14,9 +20,19 @@
 		onclick?: MouseEventHandler<HTMLDivElement>;
 		leading?: Snippet;
 		trailing?: Snippet;
+		update?: AvailableUpdate;
 	};
 
-	let { mod, index = 0, class: classProp, selected, onclick, leading, trailing }: Props = $props();
+	let {
+		mod,
+		index = 0,
+		class: classProp,
+		selected,
+		onclick,
+		leading,
+		trailing,
+		update
+	}: Props = $props();
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -63,8 +79,8 @@
 				{#if mod.isDeprecated}
 					<Icon class="mr-1 shrink-0 text-yellow-500" icon="mdi:warning" />
 				{/if}
-				{#if isOutdated(mod)}
-					{#if hasNonReleaseUpgrade(mod)}
+				{#if update}
+					{#if isNonReleaseVersion(update.new)}
 						<Icon class="text-accent-700 dark:text-accent-200 shrink-0" icon="mdi:flask-outline" />
 					{:else}
 						<Icon

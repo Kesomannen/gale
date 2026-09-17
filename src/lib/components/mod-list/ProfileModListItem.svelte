@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Mod, ModContextItem } from '../../types';
+	import type { AvailableUpdate, Mod, ModContextItem } from '../../types';
 	import { Switch } from 'bits-ui';
 	import type { MouseEventHandler } from 'svelte/elements';
 	import ModItemContext from './ModItemContext.svelte';
@@ -13,13 +13,14 @@
 		locked: boolean;
 		ontoggle?: (newState: boolean) => void;
 		onclick?: MouseEventHandler<HTMLDivElement>;
+		update?: AvailableUpdate;
 	};
 
-	let { mod, index, selected, contextItems, locked, ontoggle, onclick }: Props = $props();
+	let { mod, index, selected, contextItems, locked, ontoggle, onclick, update }: Props = $props();
 </script>
 
 <ModItemContext {mod} {locked} {contextItems}>
-	<ProfileModListItemNoContext {mod} {selected} {index} {onclick}>
+	<ProfileModListItemNoContext {mod} {selected} {index} {onclick} {update}>
 		{#snippet trailing()}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->

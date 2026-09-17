@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Cross-platform updates not being displayed on the mod card, only in the "Update All" dialog
+
 ## 1.22.3 (2026-09-16)
 
 ### Added
