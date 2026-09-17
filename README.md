@@ -16,6 +16,10 @@ A powerful mod manager for [Thunderstore](https://thunderstore.io), built with [
 
 [...and more](https://github.com/Kesomannen/gale/wiki/Features)
 
+### Selective profile sync compatibility
+
+Selective profile sync requires this fork for both profile owners and subscribers. Standard Gale imports sync archives as complete profiles and may overwrite or delete personalized local configuration files. Do not subscribe to a selectively synced profile with standard Gale.
+
 ## Installation
 
 > [!WARNING]

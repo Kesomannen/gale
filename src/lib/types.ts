@@ -85,6 +85,37 @@ export type SyncUser = {
 	avatar: string | null;
 };
 
+export type SyncPublishMode =
+	| { kind: 'mods' }
+	| { kind: 'config'; files: string[] }
+	| { kind: 'both'; files: string[] };
+
+export type SyncConfigFileStatus = 'new' | 'modified' | 'published';
+
+export type SyncConfigFileInfo = {
+	path: string;
+	size: number;
+	status: SyncConfigFileStatus;
+};
+
+export type PendingSyncConfigReason = 'modifiedLocally' | 'deletedLocally';
+
+export type PendingSyncConfigUpdate = {
+	path: string;
+	reason: PendingSyncConfigReason;
+	declined: boolean;
+};
+
+export type SyncConfigApplyReport = {
+	installed: string[];
+	pending: PendingSyncConfigUpdate[];
+};
+
+export type SyncPullReport = {
+	modsUpdated: boolean;
+	config: SyncConfigApplyReport;
+};
+
 export type ManagedGameInfo = {
 	profiles: ProfileInfo[];
 	activeId: number;

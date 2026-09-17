@@ -1,13 +1,14 @@
 use std::{
+    collections::BTreeMap,
     fmt::Display,
-    fs::File,
+    fs::{self, File},
     io::{self, Cursor, Seek, Write},
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
     sync::LazyLock,
 };
 
 use base64::{Engine, prelude::BASE64_STANDARD};
-use eyre::{Context, bail};
+use eyre::{Context, OptionExt, bail, ensure};
 use globset::{Glob, GlobBuilder, GlobSet, GlobSetBuilder};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -41,6 +42,8 @@ pub struct ProfileManifest {
     pub ignored_version_updates: Vec<Uuid>,
     #[serde(default)]
     pub ignored_package_updates: Vec<Uuid>,
+    #[serde(default, rename = "galeSync", skip_serializing_if = "Option::is_none")]
+    pub sync: Option<SyncManifest>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -94,11 +97,233 @@ impl From<semver::Version> for R2Version {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncManifest {
+    pub version: u32,
+    pub mods_revision: ModRevision,
+    pub config: BTreeMap<ConfigPath, SyncFileEntry>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct SyncFileEntry {
+    pub hash: ContentHash,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct ConfigPath(String);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct ContentHash(String);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct ModRevision(String);
+
+impl ConfigPath {
+    pub fn as_path(&self) -> &Path {
+        Path::new(&self.0)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl Display for ConfigPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl TryFrom<String> for ConfigPath {
+    type Error = eyre::Report;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        ensure!(!value.is_empty(), "config path is empty");
+        ensure!(
+            !value.contains(['\\', '\0', ':']),
+            "config path contains a forbidden character"
+        );
+
+        let path = Path::new(&value);
+
+        ensure!(
+            path.components()
+                .all(|component| matches!(component, Component::Normal(_))),
+            "config path must consist of normal components only"
+        );
+        ensure!(
+            !value.eq_ignore_ascii_case("export.r2x"),
+            "config path is the profile manifest"
+        );
+        ensure!(
+            !path
+                .components()
+                .next()
+                .and_then(|component| component.as_os_str().to_str())
+                .is_some_and(|component| component.eq_ignore_ascii_case("_state")),
+            "config path is inside the state directory"
+        );
+
+        Ok(Self(value))
+    }
+}
+
+impl TryFrom<&str> for ConfigPath {
+    type Error = eyre::Report;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::try_from(value.to_owned())
+    }
+}
+
+impl From<ConfigPath> for String {
+    fn from(value: ConfigPath) -> Self {
+        value.0
+    }
+}
+
+fn is_valid_hash_str(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+impl ContentHash {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    pub(crate) fn from_hash(hash: blake3::Hash) -> Self {
+        Self(hash.to_hex().to_string())
+    }
+}
+
+impl TryFrom<String> for ContentHash {
+    type Error = eyre::Report;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        ensure!(is_valid_hash_str(&value), "invalid content hash");
+        Ok(Self(value))
+    }
+}
+
+impl TryFrom<&str> for ContentHash {
+    type Error = eyre::Report;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::try_from(value.to_owned())
+    }
+}
+
+impl From<ContentHash> for String {
+    fn from(value: ContentHash) -> Self {
+        value.0
+    }
+}
+
+impl ModRevision {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    pub(crate) fn from_hash(hash: blake3::Hash) -> Self {
+        Self(hash.to_hex().to_string())
+    }
+}
+
+impl TryFrom<String> for ModRevision {
+    type Error = eyre::Report;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        ensure!(is_valid_hash_str(&value), "invalid revision hash");
+        Ok(Self(value))
+    }
+}
+
+impl TryFrom<&str> for ModRevision {
+    type Error = eyre::Report;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Self::try_from(value.to_owned())
+    }
+}
+
+impl From<ModRevision> for String {
+    fn from(value: ModRevision) -> Self {
+        value.0
+    }
+}
+
+pub fn manifest_revision(manifest: &ProfileManifest) -> Result<ModRevision> {
+    #[derive(Serialize)]
+    struct RevisionMod<'a> {
+        ident: &'a PackageIdent,
+        major: u64,
+        minor: u64,
+        patch: u64,
+        enabled: bool,
+        source: Backend,
+    }
+
+    #[derive(Serialize)]
+    struct RevisionManifest<'a> {
+        game: Option<&'a str>,
+        mods: Vec<RevisionMod<'a>>,
+        ignored_version_updates: Vec<Uuid>,
+        ignored_package_updates: Vec<Uuid>,
+    }
+
+    let mut mods: Vec<RevisionMod> = manifest
+        .mods
+        .iter()
+        .map(|r2_mod| RevisionMod {
+            ident: &r2_mod.ident,
+            major: r2_mod.version.major,
+            minor: r2_mod.version.minor,
+            patch: r2_mod.version.patch,
+            enabled: r2_mod.enabled,
+            source: r2_mod.source,
+        })
+        .collect();
+
+    mods.sort_by(|a, b| {
+        (a.source, a.ident, a.major, a.minor, a.patch, a.enabled)
+            .cmp(&(b.source, b.ident, b.major, b.minor, b.patch, b.enabled))
+    });
+
+    let mut ignored_version_updates = manifest.ignored_version_updates.clone();
+    ignored_version_updates.sort();
+
+    let mut ignored_package_updates = manifest.ignored_package_updates.clone();
+    ignored_package_updates.sort();
+
+    let canonical = RevisionManifest {
+        game: manifest.game.as_deref(),
+        mods,
+        ignored_version_updates,
+        ignored_package_updates,
+    };
+
+    let bytes = serde_json::to_vec(&canonical).context("failed to serialize revision manifest")?;
+
+    Ok(ModRevision::from_hash(blake3::hash(&bytes)))
+}
+
 pub const PROFILE_DATA_PREFIX: &str = "#r2modman\n";
 
 pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Game) -> Result<()> {
-    let mut zip = ZipWriter::new(writer);
+    let manifest = build_manifest(profile, game);
+    let config = collect_config_files(&profile.path, game.mod_loader.mod_config_dirs())?;
 
+    write_archive(&manifest, &config, writer)
+}
+
+pub(super) fn build_manifest(profile: &Profile, game: Game) -> ProfileManifest {
     let mods = profile
         .thunderstore_mods()
         .map(|(ts_mod, enabled)| {
@@ -119,22 +344,69 @@ pub(super) fn export_zip(profile: &Profile, writer: impl Write + Seek, game: Gam
         })
         .collect();
 
-    let manifest = ProfileManifest {
+    ProfileManifest {
         name: profile.name.clone(),
         game: Some(game.slug.to_string()),
         mods,
         ignored_version_updates: profile.ignored_version_updates.iter().copied().collect(),
         ignored_package_updates: profile.ignored_package_updates.iter().copied().collect(),
-    };
+        sync: None,
+    }
+}
 
-    zip.start_file("export.r2x", SimpleFileOptions::default())?;
-    serde_yaml::to_writer(&mut zip, &manifest).context("failed to write profile manifest")?;
+pub(super) fn collect_config_files(
+    root: &Path,
+    config_dirs: &[&str],
+) -> Result<BTreeMap<ConfigPath, Vec<u8>>> {
+    let mut files = BTreeMap::new();
 
-    write_config(
-        find_config(&profile.path, game.mod_loader.mod_config_dirs()),
-        &profile.path,
-        &mut zip,
-    )?;
+    for file in find_config(root, config_dirs) {
+        let path = file
+            .components()
+            .map(|component| {
+                component
+                    .as_os_str()
+                    .to_str()
+                    .ok_or_eyre("config path is not valid UTF-8")
+            })
+            .collect::<Result<Vec<_>>>()?
+            .join("/");
+
+        let path = ConfigPath::try_from(path)
+            .with_context(|| format!("invalid config path: {}", file.display()))?;
+
+        let bytes = fs::read(root.join(&file))
+            .with_context(|| format!("failed to read config file: {}", file.display()))?;
+
+        ensure!(
+            files.insert(path, bytes).is_none(),
+            "duplicate config file: {}",
+            file.display()
+        );
+    }
+
+    Ok(files)
+}
+
+pub(super) fn write_archive(
+    manifest: &ProfileManifest,
+    config: &BTreeMap<ConfigPath, Vec<u8>>,
+    writer: impl Write + Seek,
+) -> Result<()> {
+    let mut zip = ZipWriter::new(writer);
+
+    zip.start_file("export.r2x", SimpleFileOptions::default())
+        .context("failed to create manifest entry")?;
+    serde_yaml::to_writer(&mut zip, manifest).context("failed to write profile manifest")?;
+
+    for (path, bytes) in config {
+        zip.start_file(path.as_str(), SimpleFileOptions::default())
+            .with_context(|| format!("failed to create archive entry: {path}"))?;
+        zip.write_all(bytes)
+            .with_context(|| format!("failed to write archive entry: {path}"))?;
+    }
+
+    zip.finish().context("failed to finish archive")?;
 
     Ok(())
 }
@@ -258,4 +530,265 @@ pub(super) fn list_files(root: &Path) -> impl Iterator<Item = PathBuf> + '_ {
                 .expect("path should be child of root")
                 .to_path_buf()
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::tempdir;
+
+    use super::*;
+    use crate::profile::sync::archive::{self, SyncArchiveFormat};
+
+    fn r2_mod(
+        name: &str,
+        major: u64,
+        minor: u64,
+        patch: u64,
+        enabled: bool,
+        source: Backend,
+    ) -> R2Mod {
+        R2Mod {
+            ident: PackageIdent::from(("Author", name)),
+            version: R2Version {
+                major,
+                minor,
+                patch,
+            },
+            enabled,
+            source,
+        }
+    }
+
+    fn base_manifest() -> ProfileManifest {
+        ProfileManifest {
+            name: "Base".to_owned(),
+            mods: vec![
+                r2_mod("ModA", 1, 2, 3, true, Backend::Thunderstore),
+                r2_mod("ModB", 4, 5, 6, false, Backend::Hexium),
+            ],
+            game: Some("risk-of-rain-2".to_owned()),
+            ignored_version_updates: vec![Uuid::from_u128(0x01), Uuid::from_u128(0x02)],
+            ignored_package_updates: vec![Uuid::from_u128(0x03), Uuid::from_u128(0x04)],
+            sync: None,
+        }
+    }
+
+    #[test]
+    fn revision_ignores_mod_and_uuid_order() {
+        let base = base_manifest();
+        let mut reordered = base.clone();
+        reordered.mods.reverse();
+        reordered.ignored_version_updates.reverse();
+        reordered.ignored_package_updates.reverse();
+
+        assert_eq!(
+            manifest_revision(&base).unwrap(),
+            manifest_revision(&reordered).unwrap()
+        );
+    }
+
+    #[test]
+    fn revision_changes_per_field() {
+        let base = base_manifest();
+        let base_revision = manifest_revision(&base).unwrap();
+
+        let mut changed = base.clone();
+        changed.game = Some("among-us".to_owned());
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.mods[0].ident = PackageIdent::from(("Author", "OtherMod"));
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.mods[0].version.major += 1;
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.mods[0].version.minor += 1;
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.mods[0].version.patch += 1;
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.mods[0].enabled = false;
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.mods[0].source = Backend::Hexium;
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.ignored_version_updates[0] = Uuid::from_u128(0xff);
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+
+        let mut changed = base.clone();
+        changed.ignored_package_updates[0] = Uuid::from_u128(0xee);
+        assert_ne!(manifest_revision(&changed).unwrap(), base_revision);
+    }
+
+    #[test]
+    fn revision_ignores_name_and_sync() {
+        let base = base_manifest();
+        let base_revision = manifest_revision(&base).unwrap();
+
+        let mut renamed = base.clone();
+        renamed.name = "Other".to_owned();
+        assert_eq!(manifest_revision(&renamed).unwrap(), base_revision);
+
+        let mut synced = base.clone();
+        synced.sync = Some(SyncManifest {
+            version: 1,
+            mods_revision: base_revision.clone(),
+            config: BTreeMap::new(),
+        });
+        assert_eq!(manifest_revision(&synced).unwrap(), base_revision);
+    }
+
+    #[test]
+    fn config_path_validation() {
+        let valid = ConfigPath::try_from("BepInEx/config/example.cfg").unwrap();
+        assert_eq!(valid.as_path(), Path::new("BepInEx/config/example.cfg"));
+
+        for invalid in [
+            "",
+            "BepInEx\\config\\example.cfg",
+            "/absolute",
+            "C:/absolute",
+            ".",
+            "./a",
+            "a/../b",
+            "../a",
+            "export.r2x",
+            "Export.r2x",
+            "_state/x",
+            "_STATE/x",
+        ] {
+            assert!(ConfigPath::try_from(invalid).is_err(), "{invalid}");
+        }
+    }
+
+    #[test]
+    fn hash_newtypes_validate_and_roundtrip() {
+        let hash = blake3::hash(b"test");
+        let hex = hash.to_hex().to_string();
+
+        let content_hash = ContentHash::try_from(hex.clone()).unwrap();
+        assert_eq!(content_hash.as_str(), hex);
+        assert_eq!(ContentHash::from_hash(hash), content_hash);
+
+        let revision = ModRevision::try_from(hex.clone()).unwrap();
+        assert_eq!(revision.as_str(), hex);
+        assert_eq!(ModRevision::from_hash(hash), revision);
+
+        for invalid in [
+            "a".repeat(63),
+            "a".repeat(65),
+            "A".repeat(64),
+            "g".repeat(64),
+        ] {
+            assert!(ContentHash::try_from(invalid.clone()).is_err(), "{invalid}");
+            assert!(ModRevision::try_from(invalid).is_err());
+        }
+
+        let serialized = serde_json::to_string(&content_hash).unwrap();
+        assert_eq!(serialized, format!("\"{hex}\""));
+        assert_eq!(
+            serde_json::from_str::<ContentHash>(&serialized).unwrap(),
+            content_hash
+        );
+        assert!(serde_json::from_str::<ContentHash>("\"ABC\"").is_err());
+    }
+
+    #[test]
+    fn manifest_sync_yaml_roundtrip() {
+        let mut manifest = base_manifest();
+        manifest.sync = Some(SyncManifest {
+            version: 1,
+            mods_revision: manifest_revision(&manifest).unwrap(),
+            config: BTreeMap::from([(
+                ConfigPath::try_from("BepInEx/config/example.cfg").unwrap(),
+                SyncFileEntry {
+                    hash: ContentHash::from_hash(blake3::hash(b"cfg")),
+                },
+            )]),
+        });
+
+        let yaml = serde_yaml::to_string(&manifest).unwrap();
+        assert!(yaml.contains("galeSync"));
+
+        let parsed: ProfileManifest = serde_yaml::from_str(&yaml).unwrap();
+        assert_eq!(parsed.sync, manifest.sync);
+
+        let yaml = serde_yaml::to_string(&base_manifest()).unwrap();
+        assert!(!yaml.contains("galeSync"));
+
+        let parsed: ProfileManifest = serde_yaml::from_str(&yaml).unwrap();
+        assert!(parsed.sync.is_none());
+    }
+
+    #[test]
+    fn write_archive_legacy_validates() {
+        let manifest = base_manifest();
+        let path = ConfigPath::try_from("BepInEx/config/example.cfg").unwrap();
+        let config = BTreeMap::from([(path.clone(), b"data".to_vec())]);
+
+        let mut cursor = Cursor::new(Vec::new());
+        write_archive(&manifest, &config, &mut cursor).unwrap();
+
+        let validated = archive::validate(cursor.get_ref()).unwrap();
+        assert!(matches!(validated.format, SyncArchiveFormat::Legacy));
+        assert_eq!(validated.config[&path].bytes, b"data");
+    }
+
+    #[test]
+    fn write_archive_selective_validates() {
+        let mut manifest = base_manifest();
+        let path = ConfigPath::try_from("BepInEx/config/example.cfg").unwrap();
+        let bytes = b"custom".to_vec();
+
+        manifest.sync = Some(SyncManifest {
+            version: 1,
+            mods_revision: manifest_revision(&manifest).unwrap(),
+            config: BTreeMap::from([(
+                path.clone(),
+                SyncFileEntry {
+                    hash: ContentHash::from_hash(blake3::hash(&bytes)),
+                },
+            )]),
+        });
+
+        let config = BTreeMap::from([(path.clone(), bytes.clone())]);
+
+        let mut cursor = Cursor::new(Vec::new());
+        write_archive(&manifest, &config, &mut cursor).unwrap();
+
+        let validated = archive::validate(cursor.get_ref()).unwrap();
+        assert!(matches!(validated.format, SyncArchiveFormat::Selective(_)));
+        assert_eq!(validated.config[&path].bytes, bytes);
+    }
+
+    #[test]
+    fn collect_config_files_reads_nested_configs() {
+        let root = tempdir().unwrap();
+        let nested = root.path().join("BepInEx/config/sub");
+        fs::create_dir_all(&nested).unwrap();
+        fs::write(root.path().join("BepInEx/config/example.cfg"), "settings").unwrap();
+        fs::write(nested.join("nested.cfg"), "nested").unwrap();
+        fs::write(root.path().join("binary.bin"), b"\x00\x01").unwrap();
+
+        let files = collect_config_files(root.path(), &["BepInEx/config"]).unwrap();
+
+        assert_eq!(files.len(), 2);
+        assert_eq!(
+            files[&ConfigPath::try_from("BepInEx/config/example.cfg").unwrap()],
+            b"settings"
+        );
+        assert_eq!(
+            files[&ConfigPath::try_from("BepInEx/config/sub/nested.cfg").unwrap()],
+            b"nested"
+        );
+    }
 }

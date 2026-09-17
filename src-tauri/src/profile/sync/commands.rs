@@ -2,7 +2,13 @@ use tauri::{AppHandle, command};
 
 use crate::{state::ManagerExt, util::cmd::Result};
 
-use super::{ListedSyncProfile, SyncProfileMetadata, auth};
+use super::{
+    ListedSyncProfile, PullReport, SyncProfileMetadata,
+    apply::PendingConfigUpdate,
+    auth,
+    publish::{PublishMode, SyncConfigFileInfo},
+};
+use crate::profile::export::ConfigPath;
 
 #[command]
 pub async fn read_sync_profile(id: String, app: AppHandle) -> Result<SyncProfileMetadata> {
@@ -28,6 +34,24 @@ pub async fn push_sync_profile(app: AppHandle) -> Result<()> {
 }
 
 #[command]
+pub async fn publish_sync_profile(mode: PublishMode, app: AppHandle) -> Result<()> {
+    let id = app.lock_manager().active_profile().id;
+
+    super::publish::publish_profile(&app, id, mode).await?;
+
+    Ok(())
+}
+
+#[command]
+pub async fn get_sync_config_files(app: AppHandle) -> Result<Vec<SyncConfigFileInfo>> {
+    let id = app.lock_manager().active_profile().id;
+
+    let files = super::publish::list_config_files(&app, id).await?;
+
+    Ok(files)
+}
+
+#[command]
 pub async fn clone_sync_profile(id: String, name: String, app: AppHandle) -> Result<()> {
     super::clone_profile(&id, Some(name), &app).await?;
 
@@ -49,10 +73,10 @@ pub async fn delete_sync_profile(id: String, app: AppHandle) -> Result<()> {
 }
 
 #[command]
-pub async fn pull_sync_profile(app: AppHandle) -> Result<()> {
-    super::pull_profile(false, &app).await?;
+pub async fn pull_sync_profile(app: AppHandle) -> Result<PullReport> {
+    let report = super::pull_profile(false, &app).await?;
 
-    Ok(())
+    Ok(report)
 }
 
 #[command]
@@ -60,6 +84,27 @@ pub async fn fetch_sync_profile(app: AppHandle) -> Result<()> {
     super::pull_profile(true, &app).await?;
 
     Ok(())
+}
+
+#[command]
+pub async fn get_pending_sync_config(app: AppHandle) -> Result<Vec<PendingConfigUpdate>> {
+    let items = super::pending_config_items(&app);
+
+    Ok(items)
+}
+
+#[command]
+pub async fn decline_sync_config(files: Vec<ConfigPath>, app: AppHandle) -> Result<()> {
+    super::decline_selected_config(&files, &app)?;
+
+    Ok(())
+}
+
+#[command]
+pub async fn apply_sync_config(files: Vec<ConfigPath>, app: AppHandle) -> Result<Vec<ConfigPath>> {
+    let written = super::apply_selected_config(files, &app).await?;
+
+    Ok(written)
 }
 
 #[command]

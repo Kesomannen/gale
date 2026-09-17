@@ -442,9 +442,36 @@
 	"steamLaunchOption_safemode": "Launch {game} in safe mode",
 	"steamLaunchOption_server": "Launch dedicated server",
 	"steamLaunchOption_vr": "Launch {game} in Steam VR mode",
+	"syncConfigReviewDialog_apply": "Apply selected",
+	"syncConfigReviewDialog_applyMessage": "Applied selected config updates.",
+	"syncConfigReviewDialog_decline": "Decline selected",
+	"syncConfigReviewDialog_declineMessage": "Declined selected config updates.",
+	"syncConfigReviewDialog_declined": "Declined",
+	"syncConfigReviewDialog_empty": "No pending config updates.",
+	"syncConfigReviewDialog_reason_deletedLocally": "Locally deleted",
+	"syncConfigReviewDialog_reason_modifiedLocally": "Locally modified",
+	"syncConfigReviewDialog_restoreConfirm": "Locally deleted config files to restore: {count}. Continue?",
+	"syncConfigReviewDialog_title": "Config updates",
 	"syncDonationNotice_button": "Remind me later",
 	"syncDonationNotice_content_1": "Profile sync is run on donations!",
 	"syncDonationNotice_content_2": "If you like this feature, please consider supporting on ",
+	"syncPublishDialog_clear": "Clear",
+	"syncPublishDialog_configHeading": "Config files",
+	"syncPublishDialog_empty": "No config files found in this profile.",
+	"syncPublishDialog_modeDescription_both": "Update the mod list and publish the selected config files.",
+	"syncPublishDialog_modeDescription_config": "Publish only the selected config files. The mod list stays unchanged.",
+	"syncPublishDialog_modeDescription_mods": "Update only the mod list. Previously published configs stay unchanged.",
+	"syncPublishDialog_mode_both": "Mods and configs",
+	"syncPublishDialog_mode_config": "Configs only",
+	"syncPublishDialog_mode_mods": "Mods only",
+	"syncPublishDialog_selectChanged": "Select changed/new",
+	"syncPublishDialog_status_modified": "modified",
+	"syncPublishDialog_status_new": "new",
+	"syncPublishDialog_status_published": "published",
+	"syncPublishDialog_submit": "Publish",
+	"syncPublishDialog_successMessage": "Published update to synced profile.",
+	"syncPublishDialog_title": "Publish update",
+	"syncPublishDialog_warning": "Standard Gale does not support selective sync and may overwrite these configs. Subscribers must use this fork to receive them correctly.",
 	"syncer_button_connect": "Connect",
 	"syncer_button_copyConetnt": "Copy to clipboard",
 	"syncer_button_disconnect": "Disconnect",
@@ -452,6 +479,7 @@
 	"syncer_button_pull": "Pull update",
 	"syncer_button_push": "Push update",
 	"syncer_button_refresh": "Refresh",
+	"syncer_button_reviewConfig": "Review config updates ({count})",
 	"syncer_connect_message": "Created synced profile.",
 	"syncer_content_1": "Owned by ",
 	"syncer_content_2": "This profile has been deleted and can no longer receive updates or be imported.",
@@ -465,6 +493,7 @@
 	"syncer_dropdownItems_login": "Sign out",
 	"syncer_dropdownItems_showOwnedProfiles": "Show owned profiles",
 	"syncer_onLoginClicked_message": "Signed in with Discord as {name}.",
+	"syncer_pendingConfigToast": "Config updates needing review: {count}.",
 	"syncer_pull_message": "Pulled changes from synced profile.",
 	"syncer_push_message": "Pushed update to synced profile.",
 	"syncer_refresh_message": "Refreshed synced profile status.",
@@ -494,17 +523,12 @@
 	"updateAllBanner_button": "Update all",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",

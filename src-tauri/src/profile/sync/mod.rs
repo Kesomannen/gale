@@ -1,18 +1,26 @@
-use std::{borrow::Cow, env, fmt::Display, io::Cursor, sync::LazyLock};
+use std::{borrow::Cow, collections::BTreeMap, env, fmt::Display, path::Component, sync::LazyLock};
 
 use chrono::{DateTime, Utc};
-use eyre::{Context, OptionExt, Result, bail, eyre};
+use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
 use reqwest::{Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
+use tracing::warn;
 
+use super::export::{
+    ConfigPath, ContentHash, ModRevision, ProfileManifest, SyncFileEntry, SyncManifest,
+    manifest_revision,
+};
 use crate::{
     profile::{import::ImportOptions, install::InstallOptions},
     state::ManagerExt,
 };
 
+mod apply;
+pub(super) mod archive;
 pub mod auth;
 pub mod commands;
+mod publish;
 pub mod socket;
 
 static API_URL: LazyLock<Cow<'static, str>> = LazyLock::new(|| match env::var("GALE_SYNC_URL") {
@@ -50,7 +58,7 @@ pub struct SyncProfileMetadata {
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
     owner: auth::User,
-    manifest: super::export::ProfileManifest,
+    manifest: ProfileManifest,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -62,6 +70,49 @@ pub struct SyncProfileData {
     updated_at: DateTime<Utc>,
     #[serde(default)]
     missing: bool,
+    #[serde(default)]
+    pub published: Option<PublishedState>,
+    #[serde(default)]
+    pub applied: Option<AppliedState>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PublishedState {
+    pub manifest: ProfileManifest,
+    pub mods_revision: ModRevision,
+    pub config: BTreeMap<ConfigPath, ContentHash>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AppliedState {
+    pub mods_revision: Option<ModRevision>,
+    pub latest: Option<SyncManifest>,
+    pub config: BTreeMap<ConfigPath, AppliedFile>,
+    pub pending: BTreeMap<ConfigPath, PendingConfigReason>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AppliedFile {
+    pub applied: Option<ContentHash>,
+    pub written: Option<ContentHash>,
+    pub declined: Option<ContentHash>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum PendingConfigReason {
+    ModifiedLocally,
+    DeletedLocally,
+}
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct PullReport {
+    pub mods_updated: bool,
+    pub config: apply::ConfigApplyReport,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -90,75 +141,27 @@ impl From<SyncProfileMetadata> for SyncProfileData {
             synced_at: value.updated_at,
             updated_at: value.updated_at,
             missing: false,
+            published: None,
+            applied: None,
         }
     }
 }
 
 async fn create_profile(app: &AppHandle) -> Result<String> {
-    let Some(user) = auth::user_info(app) else {
-        bail!("not logged in");
-    };
-
-    let bytes = {
-        let manager = app.lock_manager();
-        let game = manager.active_game();
-        let profile = game.active_profile();
-
-        let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(profile, &mut bytes, game.game)
-            .context("failed to export profile")?;
-
-        bytes.into_inner()
-    };
-
-    let response = upload_profile_file(app, bytes, Method::POST, "/profile").await?;
-
-    let mut manager = app.lock_manager();
-    let profile = manager.active_profile_mut();
-
-    profile.sync = Some(SyncProfileData {
-        id: response.id.clone(),
-        owner: user,
-        synced_at: response.updated_at,
-        updated_at: response.updated_at,
-        missing: false,
-    });
-
-    profile.save(app, true)?;
-
-    Ok(response.id)
+    publish::create_profile(app).await
 }
 
 pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
-    let (id, bytes) = {
+    let files = {
         let manager = app.lock_manager();
         let (game, profile) = manager.profile_by_id(profile_id)?;
 
-        let id = profile
-            .sync
-            .as_ref()
-            .map(|data| data.id.clone())
-            .ok_or_eyre("profile is not synced")?;
-
-        let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(profile, &mut bytes, game).context("failed to export profile")?;
-
-        (id, bytes.into_inner())
+        super::export::collect_config_files(&profile.path, game.mod_loader.mod_config_dirs())?
+            .into_keys()
+            .collect()
     };
 
-    let response: CreateSyncProfileResponse =
-        upload_profile_file(app, bytes, Method::PUT, format!("/profile/{id}")).await?;
-
-    let mut manager = app.lock_manager();
-    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
-    let sync_data = profile.sync.as_mut().unwrap();
-
-    sync_data.synced_at = response.updated_at;
-    sync_data.updated_at = response.updated_at;
-
-    profile.save(app, true)?;
-
-    Ok(())
+    publish::publish_profile(app, profile_id, publish::PublishMode::Both { files }).await
 }
 
 async fn upload_profile_file(
@@ -220,13 +223,282 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle) -> Result<()> {
-    let metadata = read_profile(id, app).await?;
-
-    download_and_import_file(override_name, metadata.into(), app).await
+struct NormalizedArchive<'a> {
+    manifest: ProfileManifest,
+    config: Cow<'a, BTreeMap<ConfigPath, archive::ValidatedConfigFile>>,
+    latest: SyncManifest,
+    selective: bool,
 }
 
-pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
+fn normalize_legacy_path(path: &ConfigPath) -> Result<ConfigPath> {
+    let mut components = path.as_path().components();
+    let Some(Component::Normal(first)) = components.next() else {
+        bail!("invalid config path: {path}");
+    };
+
+    if first.to_str() != Some("config") {
+        return Ok(path.clone());
+    }
+
+    let mut mapped = String::from("BepInEx/config");
+    for component in components {
+        let Component::Normal(part) = component else {
+            bail!("invalid config path: {path}");
+        };
+        let part = part.to_str().ok_or_eyre("config path is not valid UTF-8")?;
+        mapped.push('/');
+        mapped.push_str(part);
+    }
+
+    ConfigPath::try_from(mapped)
+}
+
+fn normalize_archive(archive: &archive::ValidatedSyncArchive) -> Result<NormalizedArchive<'_>> {
+    let mut manifest = archive.manifest.clone();
+
+    let (config, latest, selective) = match &archive.format {
+        archive::SyncArchiveFormat::Selective(sync) => {
+            (Cow::Borrowed(&archive.config), sync.clone(), true)
+        }
+        archive::SyncArchiveFormat::Legacy => {
+            let mut config: BTreeMap<ConfigPath, archive::ValidatedConfigFile> = BTreeMap::new();
+            for (path, file) in &archive.config {
+                let normalized = normalize_legacy_path(path)?;
+                ensure!(
+                    config.keys().all(|existing| !existing
+                        .as_str()
+                        .eq_ignore_ascii_case(normalized.as_str())),
+                    "config paths collide after legacy normalization: {normalized}"
+                );
+                config.insert(normalized, file.clone());
+            }
+
+            let latest = SyncManifest {
+                version: 1,
+                mods_revision: manifest_revision(&manifest)?,
+                config: config
+                    .iter()
+                    .map(|(path, file)| {
+                        (
+                            path.clone(),
+                            SyncFileEntry {
+                                hash: file.hash.clone(),
+                            },
+                        )
+                    })
+                    .collect(),
+            };
+
+            (Cow::Owned(config), latest, false)
+        }
+    };
+
+    manifest.sync = None;
+
+    Ok(NormalizedArchive {
+        manifest,
+        config,
+        latest,
+        selective,
+    })
+}
+
+fn preseed_migration(state: &mut AppliedState, latest: &SyncManifest, existed: bool) {
+    if !existed {
+        return;
+    }
+
+    for path in latest.config.keys() {
+        state.config.entry(path.clone()).or_default();
+    }
+}
+
+async fn apply_archive(
+    archive: &archive::ValidatedSyncArchive,
+    normalized: NormalizedArchive<'_>,
+    metadata: SyncProfileMetadata,
+    override_name: Option<String>,
+    clone: bool,
+    profile_id: Option<i64>,
+    app: &AppHandle,
+) -> Result<PullReport> {
+    let mut manifest = normalized.manifest;
+    if let Some(name) = override_name {
+        manifest.name = name;
+    }
+    let latest = normalized.latest;
+
+    let (prior_sync, existed, existing_dir, game) = {
+        let manager = app.lock_manager();
+
+        let resolved = match profile_id {
+            Some(id) => Some(manager.profile_by_id(id)?),
+            None => {
+                let game = manager.active_game();
+                game.find_profile_index(&manifest.name)
+                    .map(|index| (game.game, &game.profiles[index]))
+            }
+        };
+
+        match resolved {
+            Some((game, profile)) => (profile.sync.clone(), true, Some(profile.path.clone()), game),
+            None => (None, false, None, manager.active_game().game),
+        }
+    };
+
+    if clone && profile_id.is_none() && existed {
+        ensure_clone_target(prior_sync.as_ref(), &metadata.id, &manifest.name)?;
+    }
+
+    let mut applied = prior_sync
+        .as_ref()
+        .and_then(|sync| sync.applied.clone())
+        .unwrap_or_default();
+    let applied_was_none = prior_sync
+        .as_ref()
+        .is_none_or(|sync| sync.applied.is_none());
+    let prior_sync_id = prior_sync.as_ref().map(|sync| sync.id.clone());
+    let was_owner = prior_sync
+        .as_ref()
+        .is_some_and(|sync| sync.published.is_some());
+
+    let selective = normalized.selective;
+    let needs_install = clone || applied.mods_revision.as_ref() != Some(&latest.mods_revision);
+
+    let before = if needs_install && existed {
+        apply::snapshot_config(
+            existing_dir.as_ref().unwrap(),
+            game.mod_loader.mod_config_dirs(),
+        )?
+    } else {
+        BTreeMap::new()
+    };
+
+    let (imported, target_id, profile_dir, created) = if needs_install {
+        super::import::resolve_manifest_sources(&mut manifest, &app.lock_thunderstore());
+
+        let imported = super::import::import_manifest(
+            manifest,
+            ImportOptions::default().ignore_missing_mods(!selective),
+            InstallOptions::default(),
+            app,
+        )
+        .await
+        .context("failed to import synced profile")?;
+
+        let target_id = imported.id;
+        let profile_dir = imported.path.clone();
+        let created = imported.created;
+        (Some(imported), target_id, profile_dir, created)
+    } else {
+        (None, profile_id.unwrap(), existing_dir.unwrap(), false)
+    };
+
+    let result = async {
+        if let (Some(id), Some(imported)) = (profile_id, imported.as_ref()) {
+            ensure!(imported.id == id, "synced profile changed during apply");
+        }
+
+        let mut report = PullReport::default();
+
+        if let Some(imported) = &imported {
+            let after =
+                apply::snapshot_config(&imported.path, imported.game.mod_loader.mod_config_dirs())?;
+            apply::record_installer_written(&before, &after, &mut applied);
+            applied.mods_revision = Some(latest.mods_revision.clone());
+            report.mods_updated = true;
+        }
+
+        if applied_was_none {
+            preseed_migration(&mut applied, &latest, existed);
+        }
+
+        applied.latest = Some(latest);
+        report.config =
+            apply::apply_available_config(&profile_dir, &normalized.config, &mut applied)?;
+
+        let published = if was_owner {
+            Some(publish::adopt_publication(&profile_dir, archive)?)
+        } else {
+            None
+        };
+
+        {
+            let mut manager = app.lock_manager();
+            let (_, profile) = manager.profile_by_id_mut(target_id)?;
+
+            let current_sync_id = profile.sync.as_ref().map(|sync| sync.id.clone());
+            ensure!(
+                current_sync_id == prior_sync_id,
+                "profile sync target changed during apply"
+            );
+
+            profile.sync = Some(SyncProfileData {
+                id: metadata.id,
+                owner: metadata.owner,
+                synced_at: metadata.updated_at,
+                updated_at: metadata.updated_at,
+                missing: false,
+                published,
+                applied: Some(applied),
+            });
+            profile.save(app, true)?;
+        }
+
+        Ok::<_, eyre::Report>(report)
+    }
+    .await;
+
+    let report = match result {
+        Ok(report) => report,
+        Err(err) => {
+            if created {
+                super::import::cleanup_failed_profile(target_id, app).unwrap_or_else(|err| {
+                    warn!(
+                        "failed to remove profile after failed or cancelled apply: {}",
+                        err
+                    );
+                });
+            }
+            return Err(err);
+        }
+    };
+
+    let pending: Vec<apply::PendingConfigUpdate> = report
+        .config
+        .pending
+        .iter()
+        .filter(|item| !item.declined)
+        .cloned()
+        .collect();
+    if !pending.is_empty() {
+        app.emit_buffered("sync_config_pending", &pending);
+    }
+
+    Ok(report)
+}
+
+async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle) -> Result<()> {
+    let metadata = read_profile(id, app).await?;
+    let bytes = download_profile_bytes(id, app).await?;
+    let validated = archive::validate(&bytes).context("sync archive failed validation")?;
+    let normalized = normalize_archive(&validated)?;
+
+    apply_archive(
+        &validated,
+        normalized,
+        metadata,
+        override_name,
+        true,
+        None,
+        app,
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<PullReport> {
     let (id, profile_id, name, synced_at) = {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
@@ -239,7 +511,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
                 profile.name.clone(),
                 data.synced_at,
             ),
-            None => return Ok(()),
+            None => return Ok(PullReport::default()),
         }
     };
 
@@ -247,20 +519,35 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
 
     match metadata {
         Some(metadata) if !dry_run && metadata.updated_at > synced_at => {
-            download_and_import_file(Some(name), metadata.into(), app).await
+            let bytes = download_profile_bytes(&id, app).await?;
+            let validated = archive::validate(&bytes).context("sync archive failed validation")?;
+            let normalized = normalize_archive(&validated)?;
+
+            apply_archive(
+                &validated,
+                normalized,
+                metadata,
+                Some(name),
+                false,
+                Some(profile_id),
+                app,
+            )
+            .await
         }
         metadata => {
             let mut manager = app.lock_manager();
             let (_, profile) = manager.profile_by_id_mut(profile_id)?;
 
             let Some(sync) = profile.sync.as_mut() else {
-                return Ok(());
+                return Ok(PullReport::default());
             };
 
             match metadata {
                 Some(metadata) => {
                     *sync = SyncProfileData {
                         synced_at: sync.synced_at,
+                        published: sync.published.clone(),
+                        applied: sync.applied.clone(),
                         ..metadata.into()
                     };
                 }
@@ -269,18 +556,110 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
 
             profile.save(app, true)?;
 
-            Ok(())
+            Ok(PullReport::default())
         }
     }
 }
 
-async fn download_and_import_file(
-    override_name: Option<String>,
-    sync_profile: SyncProfileData,
-    app: &AppHandle,
+fn pending_config_items(app: &AppHandle) -> Vec<apply::PendingConfigUpdate> {
+    let manager = app.lock_manager();
+    manager
+        .active_profile()
+        .sync
+        .as_ref()
+        .and_then(|sync| sync.applied.as_ref())
+        .map(apply::review_items)
+        .unwrap_or_default()
+}
+
+fn decline_selected_config(files: &[ConfigPath], app: &AppHandle) -> Result<()> {
+    let (profile_id, sync_id, mut applied) = {
+        let manager = app.lock_manager();
+        let profile = manager.active_profile();
+        let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
+        let applied = sync.applied.clone().ok_or_eyre("no applied sync state")?;
+        (profile.id, sync.id.clone(), applied)
+    };
+
+    apply::decline_selected(&mut applied, files)?;
+
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+    ensure!(
+        profile.id == profile_id,
+        "active profile changed during decline"
+    );
+    let Some(sync) = profile.sync.as_mut() else {
+        bail!("profile is no longer synced");
+    };
+    ensure!(
+        sync.id == sync_id,
+        "profile sync target changed during decline"
+    );
+    sync.applied = Some(applied);
+    profile.save(app, true)
+}
+
+fn ensure_clone_target(
+    existing: Option<&SyncProfileData>,
+    remote_id: &str,
+    name: &str,
 ) -> Result<()> {
-    let path = format!("/profile/{}", sync_profile.id);
-    let bytes = request(Method::GET, path, app)
+    if existing.map(|sync| sync.id.as_str()) != Some(remote_id) {
+        bail!(
+            "a profile named '{name}' already exists and is not linked to sync profile {remote_id}"
+        );
+    }
+    Ok(())
+}
+
+fn ensure_latest(applied: &AppliedState, latest: &SyncManifest) -> Result<()> {
+    ensure!(
+        applied.latest.as_ref() == Some(latest),
+        "published sync revision changed; pull the latest update before applying config"
+    );
+    Ok(())
+}
+
+async fn apply_selected_config(files: Vec<ConfigPath>, app: &AppHandle) -> Result<Vec<ConfigPath>> {
+    let (profile_id, profile_dir, sync_id, mut applied) = {
+        let manager = app.lock_manager();
+        let profile = manager.active_profile();
+        let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
+        let applied = sync.applied.clone().ok_or_eyre("no applied sync state")?;
+        (profile.id, profile.path.clone(), sync.id.clone(), applied)
+    };
+
+    let bytes = download_profile_bytes(&sync_id, app).await?;
+    let validated = archive::validate(&bytes).context("sync archive failed validation")?;
+    let normalized = normalize_archive(&validated)?;
+    ensure_latest(&applied, &normalized.latest)?;
+
+    let written = apply::apply_selected(&profile_dir, &normalized.config, &mut applied, &files)?;
+
+    {
+        let mut manager = app.lock_manager();
+        let profile = manager.active_profile_mut();
+        ensure!(
+            profile.id == profile_id,
+            "active profile changed during apply"
+        );
+        let Some(sync) = profile.sync.as_mut() else {
+            bail!("profile is no longer synced");
+        };
+        ensure!(
+            sync.id == sync_id,
+            "profile sync target changed during apply"
+        );
+        sync.applied = Some(applied);
+        profile.save(app, true)?;
+    }
+
+    Ok(written)
+}
+
+pub(super) async fn download_profile_bytes(id: &str, app: &AppHandle) -> Result<Vec<u8>> {
+    let bytes = request(Method::GET, format!("/profile/{id}"), app)
         .await
         .send()
         .await?
@@ -288,31 +667,7 @@ async fn download_and_import_file(
         .bytes()
         .await?;
 
-    let mut data = super::import::read_file(Cursor::new(bytes), &app.lock_thunderstore())
-        .context("failed to read profile")?;
-
-    if let Some(name) = override_name {
-        data.manifest.name = name;
-    }
-
-    let id = super::import::import_profile(
-        data,
-        ImportOptions::default().ignore_missing_mods(true),
-        InstallOptions::default(),
-        app,
-    )
-    .await
-    .context("failed to import profile")?;
-
-    {
-        let mut manager = app.lock_manager();
-        let (_, profile) = manager.profile_by_id_mut(id)?;
-
-        profile.sync = Some(sync_profile);
-        profile.save(app, true)?;
-    }
-
-    Ok(())
+    Ok(bytes.to_vec())
 }
 
 async fn delete_profile(id: &str, app: &AppHandle) -> Result<()> {
@@ -358,4 +713,466 @@ async fn get_owned_profiles(app: &AppHandle) -> Result<Vec<ListedSyncProfile>> {
         .await?;
 
     Ok(user.profiles.unwrap_or_default())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::*;
+    use crate::{
+        profile::export::{R2Mod, R2Version},
+        thunderstore::{Backend, PackageIdent},
+    };
+
+    fn config_path(path: &str) -> ConfigPath {
+        ConfigPath::try_from(path.to_owned()).unwrap()
+    }
+
+    fn hash(bytes: &[u8]) -> ContentHash {
+        ContentHash::from_hash(blake3::hash(bytes))
+    }
+
+    fn vfile(bytes: &[u8]) -> archive::ValidatedConfigFile {
+        archive::ValidatedConfigFile {
+            hash: hash(bytes),
+            bytes: bytes.to_vec(),
+        }
+    }
+
+    fn base_manifest() -> ProfileManifest {
+        ProfileManifest {
+            name: "Test".to_owned(),
+            mods: vec![R2Mod {
+                ident: PackageIdent::from(("Author", "Mod")),
+                version: R2Version {
+                    major: 1,
+                    minor: 0,
+                    patch: 0,
+                },
+                enabled: true,
+                source: Backend::Thunderstore,
+            }],
+            game: Some("risk-of-rain-2".to_owned()),
+            ignored_version_updates: Vec::new(),
+            ignored_package_updates: Vec::new(),
+            sync: None,
+        }
+    }
+
+    fn validated_archive(
+        manifest: ProfileManifest,
+        format: archive::SyncArchiveFormat,
+        entries: &[(&str, &[u8])],
+    ) -> archive::ValidatedSyncArchive {
+        archive::ValidatedSyncArchive {
+            manifest,
+            format,
+            config: entries
+                .iter()
+                .map(|&(path, bytes)| (config_path(path), vfile(bytes)))
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn legacy_normalization_maps_config_dir() {
+        let validated = validated_archive(
+            base_manifest(),
+            archive::SyncArchiveFormat::Legacy,
+            &[("config/a.cfg", b"data"), ("other/file.cfg", b"keep")],
+        );
+
+        let normalized = normalize_archive(&validated).unwrap();
+
+        assert!(normalized.manifest.sync.is_none());
+        assert!(
+            normalized
+                .config
+                .contains_key(&config_path("BepInEx/config/a.cfg"))
+        );
+        assert_eq!(
+            normalized
+                .config
+                .get(&config_path("BepInEx/config/a.cfg"))
+                .unwrap()
+                .bytes,
+            b"data"
+        );
+        assert!(
+            normalized
+                .config
+                .contains_key(&config_path("other/file.cfg"))
+        );
+
+        assert_eq!(normalized.latest.version, 1);
+        assert_eq!(
+            normalized.latest.mods_revision,
+            manifest_revision(&normalized.manifest).unwrap()
+        );
+        assert_eq!(
+            normalized.latest.config[&config_path("BepInEx/config/a.cfg")].hash,
+            hash(b"data")
+        );
+        assert_eq!(
+            normalized.latest.config[&config_path("other/file.cfg")].hash,
+            hash(b"keep")
+        );
+    }
+
+    #[test]
+    fn legacy_normalization_rejects_collisions() {
+        for entries in [
+            [
+                ("config/a.cfg", b"x".as_slice()),
+                ("BepInEx/config/a.cfg", b"y".as_slice()),
+            ],
+            [
+                ("config/A.cfg", b"x".as_slice()),
+                ("BepInEx/config/a.cfg", b"y".as_slice()),
+            ],
+        ] {
+            let validated = validated_archive(
+                base_manifest(),
+                archive::SyncArchiveFormat::Legacy,
+                &entries,
+            );
+            assert!(normalize_archive(&validated).is_err());
+        }
+    }
+
+    #[test]
+    fn selective_normalization_preserves_exact() {
+        let mut manifest = base_manifest();
+        manifest.sync = Some(SyncManifest {
+            version: 1,
+            mods_revision: manifest_revision(&manifest).unwrap(),
+            config: BTreeMap::from([(
+                config_path("config/x.cfg"),
+                SyncFileEntry {
+                    hash: hash(b"data"),
+                },
+            )]),
+        });
+        let sync = manifest.sync.clone().unwrap();
+
+        let validated = archive::ValidatedSyncArchive {
+            manifest,
+            format: archive::SyncArchiveFormat::Selective(sync.clone()),
+            config: BTreeMap::from([(config_path("config/x.cfg"), vfile(b"data"))]),
+        };
+
+        let normalized = normalize_archive(&validated).unwrap();
+
+        assert!(normalized.manifest.sync.is_none());
+        assert!(normalized.config.contains_key(&config_path("config/x.cfg")));
+        assert!(
+            !normalized
+                .config
+                .contains_key(&config_path("BepInEx/config/x.cfg"))
+        );
+        assert_eq!(normalized.latest, sync);
+    }
+
+    #[test]
+    fn migration_preseed_only_for_existing() {
+        let latest = SyncManifest {
+            version: 1,
+            mods_revision: ModRevision::from_hash(blake3::hash(b"rev")),
+            config: BTreeMap::from([(
+                config_path("a.cfg"),
+                SyncFileEntry {
+                    hash: hash(b"remote"),
+                },
+            )]),
+        };
+
+        let mut state = AppliedState::default();
+        preseed_migration(&mut state, &latest, true);
+        assert!(state.config.contains_key(&config_path("a.cfg")));
+
+        let mut state = AppliedState::default();
+        preseed_migration(&mut state, &latest, false);
+        assert!(state.config.is_empty());
+    }
+
+    #[test]
+    fn normalization_sets_selective_flag() {
+        let legacy = validated_archive(base_manifest(), archive::SyncArchiveFormat::Legacy, &[]);
+        assert!(!normalize_archive(&legacy).unwrap().selective);
+
+        let mut manifest = base_manifest();
+        manifest.sync = Some(SyncManifest {
+            version: 1,
+            mods_revision: manifest_revision(&manifest).unwrap(),
+            config: BTreeMap::new(),
+        });
+        let sync = manifest.sync.clone().unwrap();
+        let selective = archive::ValidatedSyncArchive {
+            manifest,
+            format: archive::SyncArchiveFormat::Selective(sync),
+            config: BTreeMap::new(),
+        };
+        assert!(normalize_archive(&selective).unwrap().selective);
+    }
+
+    #[test]
+    fn apply_requires_exact_latest_revision() {
+        let latest = SyncManifest {
+            version: 1,
+            mods_revision: ModRevision::from_hash(blake3::hash(b"rev")),
+            config: BTreeMap::from([
+                (
+                    config_path("a.cfg"),
+                    SyncFileEntry {
+                        hash: hash(b"remote"),
+                    },
+                ),
+                (
+                    config_path("unselected.cfg"),
+                    SyncFileEntry {
+                        hash: hash(b"other"),
+                    },
+                ),
+            ]),
+        };
+
+        let mut applied = AppliedState::default();
+        applied.latest = Some(latest.clone());
+        assert!(ensure_latest(&applied, &latest).is_ok());
+
+        let mut changed = latest.clone();
+        changed.mods_revision = ModRevision::from_hash(blake3::hash(b"new-rev"));
+        assert!(ensure_latest(&applied, &changed).is_err());
+
+        let mut changed = latest.clone();
+        changed
+            .config
+            .get_mut(&config_path("unselected.cfg"))
+            .unwrap()
+            .hash = hash(b"changed");
+        assert!(ensure_latest(&applied, &changed).is_err());
+    }
+
+    #[test]
+    fn clone_rejects_unrelated_existing_profile() {
+        fn sync_data(id: &str) -> SyncProfileData {
+            let now = Utc::now();
+            SyncProfileData {
+                id: id.to_owned(),
+                owner: auth::User {
+                    discord_id: "1".to_owned(),
+                    name: "user".to_owned(),
+                    display_name: "User".to_owned(),
+                    avatar: None,
+                },
+                synced_at: now,
+                updated_at: now,
+                missing: false,
+                published: None,
+                applied: None,
+            }
+        }
+
+        assert!(ensure_clone_target(None, "remote-id", "Test").is_err());
+
+        let unrelated = sync_data("other-id");
+        assert!(ensure_clone_target(Some(&unrelated), "remote-id", "Test").is_err());
+
+        let linked = sync_data("remote-id");
+        assert!(ensure_clone_target(Some(&linked), "remote-id", "Test").is_ok());
+    }
+
+    fn build_selective_archive(
+        mut manifest: ProfileManifest,
+        config: BTreeMap<ConfigPath, Vec<u8>>,
+    ) -> archive::ValidatedSyncArchive {
+        manifest.sync = Some(SyncManifest {
+            version: 1,
+            mods_revision: manifest_revision(&manifest).unwrap(),
+            config: config
+                .iter()
+                .map(|(path, bytes)| (path.clone(), SyncFileEntry { hash: hash(bytes) }))
+                .collect(),
+        });
+
+        let mut bytes = Vec::new();
+        super::super::export::write_archive(&manifest, &config, std::io::Cursor::new(&mut bytes))
+            .unwrap();
+        archive::validate(&bytes).unwrap()
+    }
+
+    #[test]
+    #[ignore = "requires GALE_E2E_PROFILE with a populated Valheim profile"]
+    fn deep_north_selective_sync_e2e() {
+        let source = env::var("GALE_E2E_PROFILE")
+            .expect("GALE_E2E_PROFILE must point to a populated Valheim profile");
+        let source = Path::new(&source);
+        let subscriber = tempfile::tempdir().unwrap();
+        let subscriber = subscriber.path();
+
+        let corpus =
+            super::super::export::collect_config_files(source, &["BepInEx/config"]).unwrap();
+        assert!(
+            corpus.len() >= 2,
+            "expected at least 2 config files in {source:?}"
+        );
+
+        fn publish(
+            subscriber: &Path,
+            state: &mut AppliedState,
+            manifest: ProfileManifest,
+            config: BTreeMap<ConfigPath, Vec<u8>>,
+        ) -> apply::ConfigApplyReport {
+            let validated = build_selective_archive(manifest, config);
+            let normalized = normalize_archive(&validated).unwrap();
+            state.latest = Some(normalized.latest);
+            apply::apply_available_config(subscriber, &normalized.config, state).unwrap()
+        }
+
+        let mut state = AppliedState::default();
+
+        let manifest = base_manifest();
+        let report = publish(subscriber, &mut state, manifest.clone(), corpus.clone());
+        for (path, bytes) in &corpus {
+            assert!(report.installed.contains(path), "{path} not installed");
+            assert_eq!(
+                std::fs::read(subscriber.join(path.as_str())).unwrap(),
+                *bytes
+            );
+        }
+
+        let first = corpus.keys().next().unwrap().clone();
+        std::fs::write(subscriber.join(first.as_str()), b"player-custom").unwrap();
+
+        let mut mod_only = manifest.clone();
+        mod_only.mods[0].enabled = false;
+        publish(subscriber, &mut state, mod_only, corpus.clone());
+        assert_eq!(
+            std::fs::read(subscriber.join(first.as_str())).unwrap(),
+            b"player-custom"
+        );
+        assert!(!state.pending.contains_key(&first));
+
+        let mut owner_v2 = corpus.clone();
+        owner_v2.insert(first.clone(), b"owner-v2".to_vec());
+        publish(subscriber, &mut state, manifest.clone(), owner_v2.clone());
+        assert_eq!(
+            std::fs::read(subscriber.join(first.as_str())).unwrap(),
+            b"player-custom"
+        );
+        assert_eq!(state.pending[&first], PendingConfigReason::ModifiedLocally);
+        assert!(
+            !apply::review_items(&state)
+                .iter()
+                .find(|u| u.path == first)
+                .unwrap()
+                .declined
+        );
+
+        apply::decline_selected(&mut state, &[first.clone()]).unwrap();
+        publish(subscriber, &mut state, manifest.clone(), owner_v2.clone());
+        assert_eq!(
+            std::fs::read(subscriber.join(first.as_str())).unwrap(),
+            b"player-custom"
+        );
+        assert!(
+            apply::review_items(&state)
+                .iter()
+                .find(|u| u.path == first)
+                .unwrap()
+                .declined
+        );
+
+        let validated = build_selective_archive(manifest.clone(), owner_v2.clone());
+        let normalized = normalize_archive(&validated).unwrap();
+        apply::apply_selected(subscriber, &normalized.config, &mut state, &[first.clone()])
+            .unwrap();
+        assert_eq!(
+            std::fs::read(subscriber.join(first.as_str())).unwrap(),
+            b"owner-v2"
+        );
+        assert!(!state.pending.contains_key(&first));
+        assert!(state.config[&first].declined.is_none());
+
+        let second = corpus.keys().nth(1).unwrap().clone();
+        std::fs::remove_file(subscriber.join(second.as_str())).unwrap();
+
+        let mut deleted_v2 = owner_v2.clone();
+        deleted_v2.insert(second.clone(), b"owner-v2-deleted".to_vec());
+        publish(subscriber, &mut state, manifest.clone(), deleted_v2.clone());
+        assert!(!subscriber.join(second.as_str()).exists());
+        assert_eq!(state.pending[&second], PendingConfigReason::DeletedLocally);
+
+        apply::decline_selected(&mut state, &[second.clone()]).unwrap();
+        publish(subscriber, &mut state, manifest.clone(), deleted_v2.clone());
+        assert!(!subscriber.join(second.as_str()).exists());
+        assert!(
+            apply::review_items(&state)
+                .iter()
+                .find(|u| u.path == second)
+                .unwrap()
+                .declined
+        );
+
+        let validated = build_selective_archive(manifest.clone(), deleted_v2.clone());
+        let normalized = normalize_archive(&validated).unwrap();
+        apply::apply_selected(
+            subscriber,
+            &normalized.config,
+            &mut state,
+            &[second.clone()],
+        )
+        .unwrap();
+        assert_eq!(
+            std::fs::read(subscriber.join(second.as_str())).unwrap(),
+            b"owner-v2-deleted"
+        );
+
+        let game_dirs: &[&str] = &["BepInEx/config"];
+        let before = apply::snapshot_config(subscriber, game_dirs).unwrap();
+        let new_mod = config_path("BepInEx/config/deep-north-e2e-new-mod.cfg");
+        std::fs::create_dir_all(subscriber.join("BepInEx/config")).unwrap();
+        std::fs::write(subscriber.join(new_mod.as_str()), b"package-default").unwrap();
+        let after = apply::snapshot_config(subscriber, game_dirs).unwrap();
+        apply::record_installer_written(&before, &after, &mut state);
+
+        let mut with_new_mod = deleted_v2.clone();
+        with_new_mod.insert(new_mod.clone(), b"owner-baseline".to_vec());
+        publish(
+            subscriber,
+            &mut state,
+            manifest.clone(),
+            with_new_mod.clone(),
+        );
+        assert_eq!(
+            std::fs::read(subscriber.join(new_mod.as_str())).unwrap(),
+            b"owner-baseline"
+        );
+        assert_eq!(
+            state.config[&new_mod].applied,
+            Some(hash(b"owner-baseline"))
+        );
+
+        let extra = config_path("BepInEx/config/deep-north-e2e-extra.cfg");
+        std::fs::write(subscriber.join(extra.as_str()), b"extra-local").unwrap();
+        publish(
+            subscriber,
+            &mut state,
+            manifest.clone(),
+            with_new_mod.clone(),
+        );
+        assert_eq!(
+            std::fs::read(subscriber.join(extra.as_str())).unwrap(),
+            b"extra-local"
+        );
+
+        let mut removed = with_new_mod.clone();
+        let removed_path = removed.keys().next().unwrap().clone();
+        removed.remove(&removed_path);
+        let removed_target = subscriber.join(removed_path.as_str());
+        assert!(removed_target.exists());
+        publish(subscriber, &mut state, manifest.clone(), removed);
+        assert!(removed_target.exists());
+    }
 }

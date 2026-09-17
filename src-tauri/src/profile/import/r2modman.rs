@@ -168,6 +168,7 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
             game: None,
             ignored_version_updates: Vec::new(),
             ignored_package_updates: Vec::new(),
+            sync: None,
         },
         path: profile_dir,
         delete_after_import: false,

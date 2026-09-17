@@ -3,13 +3,17 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import SyncAvatar from '$lib/components/ui/SyncAvatar.svelte';
 	import * as api from '$lib/api';
-	import type { ListedSyncProfile } from '$lib/types';
+	import type { ListedSyncProfile, PendingSyncConfigUpdate } from '$lib/types';
 	import { pushInfoToast } from '$lib/toast';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
 	import { DropdownMenu } from 'bits-ui';
 	import OwnedSyncProfilesDialog from '../dialogs/OwnedSyncProfilesDialog.svelte';
+	import SyncPublishDialog from '../dialogs/SyncPublishDialog.svelte';
+	import SyncConfigReviewDialog from '../dialogs/SyncConfigReviewDialog.svelte';
+	import { onMount } from 'svelte';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import auth from '$lib/state/auth.svelte';
@@ -26,6 +30,10 @@
 
 	let profilesDialogOpen = $state(false);
 	let syncProfiles: ListedSyncProfile[] = $state([]);
+
+	let publishDialogOpen = $state(false);
+	let reviewDialogOpen = $state(false);
+	let pendingUpdates: PendingSyncConfigUpdate[] = $state([]);
 
 	let syncInfo = $derived(profiles.active?.sync ?? null);
 	let isOwner = $derived(syncInfo?.owner.discordId == auth.user?.discordId);
@@ -110,13 +118,64 @@
 		await wrapApiCall(api.profile.sync.create, m.syncer_connect_message());
 	}
 
-	async function push() {
-		await wrapApiCall(api.profile.sync.push, m.syncer_push_message());
+	async function pull() {
+		let key = activeKey();
+		loading = true;
+		try {
+			await api.profile.sync.pull();
+			await refreshPending(key);
+			pushInfoToast({ message: m.syncer_pull_message() });
+		} finally {
+			loading = false;
+		}
 	}
 
-	async function pull() {
-		await wrapApiCall(api.profile.sync.pull, m.syncer_pull_message());
+	function activeKey(): string | undefined {
+		let active = profiles.active;
+		return active?.sync?.id === undefined ? undefined : `${active.id}:${active.sync.id}`;
 	}
+
+	async function refreshPending(key: string | undefined = activeKey()) {
+		if (key === undefined) {
+			pendingUpdates = [];
+			return;
+		}
+
+		try {
+			let updates = await api.profile.sync.getPendingConfig();
+			if (activeKey() === key) {
+				pendingUpdates = updates;
+			}
+		} catch {}
+	}
+
+	let lastSyncKey: string | undefined;
+
+	$effect(() => {
+		let key = activeKey();
+		if (key === lastSyncKey) return;
+		lastSyncKey = key;
+		pendingUpdates = [];
+
+		if (key === undefined) {
+			return;
+		}
+
+		refreshPending(key);
+	});
+
+	onMount(() => {
+		let unlisten: UnlistenFn | null = null;
+
+		listen<PendingSyncConfigUpdate[]>('sync_config_pending', (evt) => {
+			refreshPending();
+			pushInfoToast({
+				message: m.syncer_pendingConfigToast({ count: evt.payload.length })
+			});
+		}).then((callback) => (unlisten = callback));
+
+		return () => unlisten?.();
+	});
 
 	async function refresh() {
 		await wrapApiCall(api.profile.sync.fetch, m.syncer_refresh_message());
@@ -181,11 +240,22 @@
 		style.classes,
 		'dark:bg-primary-800 dark:hover:bg-primary-700 bg-primary-200 hover:bg-primary-300 mx-2 my-auto flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
 	]}
-	onclick={() => (mainDialogOpen = true)}
+	onclick={() => {
+		mainDialogOpen = true;
+		refreshPending();
+	}}
 >
 	<Icon class="text-lg md:text-base" icon={style.icon} />
 
 	<div class="hidden md:block">{style.label}</div>
+
+	{#if pendingUpdates.length > 0}
+		<span
+			class="bg-accent-600 rounded-full px-1.5 py-0.5 text-xs leading-none font-medium text-white"
+		>
+			{pendingUpdates.length}
+		</span>
+	{/if}
 </button>
 
 <OwnedSyncProfilesDialog
@@ -230,6 +300,16 @@
 		{/if}
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">
+			{#if pendingUpdates.length > 0}
+				<Button
+					onclick={() => (reviewDialogOpen = true)}
+					color="primary"
+					icon="mdi:file-document-edit"
+				>
+					{m.syncer_button_reviewConfig({ count: pendingUpdates.length })}
+				</Button>
+			{/if}
+
 			{#if syncState !== 'missing'}
 				{#if syncState === 'outdated'}
 					<Button onclick={pull} {loading} icon="mdi:cloud-download"
@@ -239,7 +319,7 @@
 
 				{#if isOwner}
 					<Button
-						onclick={push}
+						onclick={() => (publishDialogOpen = true)}
 						{loading}
 						disabled={auth.user === null}
 						color="accent"
@@ -303,3 +383,11 @@
 		>
 	</div>
 </Dialog>
+
+<SyncPublishDialog bind:open={publishDialogOpen} onPublished={() => refreshPending()} />
+
+<SyncConfigReviewDialog
+	bind:open={reviewDialogOpen}
+	updates={pendingUpdates}
+	onChanged={() => refreshPending()}
+/>

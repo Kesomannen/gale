@@ -71,6 +71,19 @@ pub(super) fn read_file(
     let mut manifest: ProfileManifest =
         serde_yaml::from_reader(reader).context("failed to read profile manifest")?;
 
+    resolve_manifest_sources(&mut manifest, thunderstore);
+
+    Ok(ImportData {
+        manifest,
+        path: temp_dir.keep(),
+        delete_after_import: true,
+    })
+}
+
+pub(super) fn resolve_manifest_sources(
+    manifest: &mut ProfileManifest,
+    thunderstore: &Thunderstore,
+) {
     for r2mod in &mut manifest.mods {
         // first try the backend stored in the manifest, if it's not there,
         // then try falling back to checking any other backend and update the source as needed
@@ -83,12 +96,6 @@ pub(super) fn read_file(
             r2mod.source = package.package.backend;
         }
     }
-
-    Ok(ImportData {
-        manifest,
-        path: temp_dir.keep(),
-        delete_after_import: true,
-    })
 }
 
 fn read_base64(base64: &str, thunderstore: &Thunderstore) -> Result<ImportData> {
@@ -160,6 +167,47 @@ impl ImportOptions {
     }
 }
 
+pub(super) struct ImportedProfile {
+    pub id: i64,
+    pub path: PathBuf,
+    pub game: Game,
+    pub created: bool,
+}
+
+pub(super) async fn import_manifest(
+    manifest: ProfileManifest,
+    options: ImportOptions,
+    install_options: InstallOptions,
+    app: &AppHandle,
+) -> Result<ImportedProfile> {
+    let (id, path, game, to_install, created) = prepare_import(&options, manifest, app)?;
+
+    match app
+        .install_queue()
+        .install(to_install, id, install_options, app)
+        .await
+    {
+        Ok(()) => Ok(ImportedProfile {
+            id,
+            path,
+            game,
+            created,
+        }),
+        Err(err) => {
+            if created {
+                cleanup_failed_profile(id, app).unwrap_or_else(|err| {
+                    warn!(
+                        "failed to remove profile after failed or cancelled import: {}",
+                        err
+                    );
+                });
+            }
+
+            Err(err.into())
+        }
+    }
+}
+
 pub(super) async fn import_profile(
     data: ImportData,
     options: ImportOptions,
@@ -173,36 +221,30 @@ pub(super) async fn import_profile(
         "importing profile"
     );
 
-    let (profile_id, profile_path, game, to_install) =
-        prepare_import(&options, data.manifest, app)?;
+    let result = match import_manifest(data.manifest, options.clone(), install_options, app).await {
+        Ok(imported) => match import_config(
+            &imported.path,
+            &data.path,
+            imported.game.mod_loader.mod_config_dirs(),
+            &options,
+        )
+        .context("error importing config")
+        {
+            Ok(()) => Ok(imported.id),
+            Err(err) => {
+                if imported.created {
+                    cleanup_failed_profile(imported.id, app).unwrap_or_else(|err| {
+                        warn!(
+                            "failed to remove profile after failed or cancelled import: {}",
+                            err
+                        );
+                    });
+                }
 
-    let result = app
-        .install_queue()
-        .install(to_install, profile_id, install_options, app)
-        .await;
-
-    let result = match result {
-        Ok(()) => {
-            import_config(
-                &profile_path,
-                &data.path,
-                game.mod_loader.mod_config_dirs(),
-                &options,
-            )
-            .context("error importing config")?;
-
-            Ok(profile_id)
-        }
-        Err(err) => {
-            cleanup_failed_profile(profile_id, app).unwrap_or_else(|err| {
-                warn!(
-                    "failed to remove profile after failed or cancelled import: {}",
-                    err
-                );
-            });
-
-            Err(err.into())
-        }
+                Err(err)
+            }
+        },
+        Err(err) => Err(err),
     };
 
     if data.delete_after_import {
@@ -218,7 +260,7 @@ fn prepare_import(
     options: &ImportOptions,
     manifest: ProfileManifest,
     app: &AppHandle,
-) -> Result<(i64, PathBuf, Game, Vec<ModInstall>)> {
+) -> Result<(i64, PathBuf, Game, Vec<ModInstall>, bool)> {
     let ProfileManifest {
         name,
         mods,
@@ -248,16 +290,17 @@ fn prepare_import(
 
     let game = manager.active_game_mut();
 
-    let (profile, to_install) = if let Some(profile_index) = game.find_profile_index(&name) {
+    let (profile, to_install, created) = if let Some(profile_index) = game.find_profile_index(&name)
+    {
         // overwrite an existing profile
         let profile = game.set_active_profile(profile_index)?;
         let to_install = incremental_update(options.merge, installs, profile)?.collect_vec();
 
-        (profile, to_install)
+        (profile, to_install, false)
     } else {
         let profile = game.create_profile(name, None, app.db())?;
 
-        (profile, installs)
+        (profile, installs, true)
     };
 
     profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
@@ -268,10 +311,10 @@ fn prepare_import(
 
     game.save(app)?;
 
-    Ok((id, path, game.game, to_install))
+    Ok((id, path, game.game, to_install, created))
 }
 
-fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
+pub(super) fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
     let (game, _) = manager.profile_by_id(profile_id)?;

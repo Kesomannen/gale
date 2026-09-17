@@ -455,6 +455,7 @@ impl PackageInstaller for SubdirInstaller<'_> {
             let conflict = match subdir.mode {
                 // this should never happen
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => ConflictResolution::Skip,
+                SubdirMode::None if subdir.mutable && exists => ConflictResolution::Skip,
                 SubdirMode::None => ConflictResolution::Overwrite,
                 SubdirMode::Track => {
                     state
@@ -537,5 +538,98 @@ impl PackageInstaller for SubdirInstaller<'_> {
 
             path
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::tempdir;
+
+    use super::*;
+    use crate::{config::ConfigCache, game};
+
+    fn profile_at(path: &Path) -> Profile {
+        Profile {
+            id: 0,
+            name: "Test".to_owned(),
+            path: path.to_owned(),
+            mods: Vec::new(),
+            game: game::from_slug("among-us").unwrap(),
+            ignored_version_updates: Default::default(),
+            ignored_package_updates: Default::default(),
+            config_cache: ConfigCache::default(),
+            linked_config: Default::default(),
+            modpack: None,
+            sync: None,
+            custom_args: String::new(),
+            missing: false,
+        }
+    }
+
+    fn write_src_config(src: &Path, contents: &str) {
+        let dir = src.join("BepInEx/config");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("example.cfg"), contents).unwrap();
+    }
+
+    #[test]
+    fn mutable_untracked_subdir_preserves_customized_file_on_update() {
+        let src = tempdir().unwrap();
+        let dest = tempdir().unwrap();
+        write_src_config(src.path(), "package-v1");
+
+        let subdirs = [Subdir::untracked("config", "BepInEx/config").mutable()];
+        let profile = profile_at(dest.path());
+        let target = dest.path().join("BepInEx/config/example.cfg");
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+        assert_eq!(fs::read_to_string(&target).unwrap(), "package-v1");
+
+        fs::write(&target, "custom").unwrap();
+        write_src_config(src.path(), "package-v2");
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+        assert_eq!(fs::read_to_string(&target).unwrap(), "custom");
+    }
+
+    #[test]
+    fn mutable_untracked_subdir_installs_new_file() {
+        let src = tempdir().unwrap();
+        let dest = tempdir().unwrap();
+        write_src_config(src.path(), "package");
+
+        let subdirs = [Subdir::untracked("config", "BepInEx/config").mutable()];
+        let profile = profile_at(dest.path());
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+
+        let target = dest.path().join("BepInEx/config/example.cfg");
+        assert_eq!(fs::read_to_string(&target).unwrap(), "package");
+    }
+
+    #[test]
+    fn untracked_subdir_overwrites_existing_file() {
+        let src = tempdir().unwrap();
+        let dest = tempdir().unwrap();
+        write_src_config(src.path(), "package");
+
+        let target = dest.path().join("BepInEx/config/example.cfg");
+        fs::create_dir_all(target.parent().unwrap()).unwrap();
+        fs::write(&target, "custom").unwrap();
+
+        let subdirs = [Subdir::untracked("config", "BepInEx/config")];
+        let profile = profile_at(dest.path());
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+
+        assert_eq!(fs::read_to_string(&target).unwrap(), "package");
     }
 }
