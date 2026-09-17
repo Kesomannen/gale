@@ -73,17 +73,64 @@ impl R2Mod {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[serde(try_from = "RawR2Version", into = "RawR2Version")]
 pub struct R2Version {
     pub major: u64,
     pub minor: u64,
     pub patch: u64,
+    pub pre: semver::Prerelease,
+    pub build: semver::BuildMetadata,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawR2Version {
+    major: u64,
+    minor: u64,
+    patch: u64,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pre: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    build: String,
+}
+
+impl TryFrom<RawR2Version> for R2Version {
+    type Error = semver::Error;
+
+    fn try_from(raw: RawR2Version) -> Result<Self, Self::Error> {
+        Ok(Self {
+            major: raw.major,
+            minor: raw.minor,
+            patch: raw.patch,
+            pre: semver::Prerelease::new(&raw.pre)?,
+            build: semver::BuildMetadata::new(&raw.build)?,
+        })
+    }
+}
+
+impl From<R2Version> for RawR2Version {
+    fn from(version: R2Version) -> Self {
+        Self {
+            major: version.major,
+            minor: version.minor,
+            patch: version.patch,
+            pre: version.pre.as_str().to_owned(),
+            build: version.build.as_str().to_owned(),
+        }
+    }
 }
 
 impl Display for R2Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?;
+        if !self.pre.is_empty() {
+            write!(f, "-{}", self.pre)?;
+        }
+        if !self.build.is_empty() {
+            write!(f, "+{}", self.build)?;
+        }
+        Ok(())
     }
 }
 
@@ -93,6 +140,20 @@ impl From<semver::Version> for R2Version {
             major: value.major,
             minor: value.minor,
             patch: value.patch,
+            pre: value.pre,
+            build: value.build,
+        }
+    }
+}
+
+impl From<R2Version> for semver::Version {
+    fn from(value: R2Version) -> Self {
+        Self {
+            major: value.major,
+            minor: value.minor,
+            patch: value.patch,
+            pre: value.pre,
+            build: value.build,
         }
     }
 }
@@ -266,6 +327,10 @@ pub fn manifest_revision(manifest: &ProfileManifest) -> Result<ModRevision> {
         major: u64,
         minor: u64,
         patch: u64,
+        #[serde(skip_serializing_if = "str::is_empty")]
+        pre: &'a str,
+        #[serde(skip_serializing_if = "str::is_empty")]
+        build: &'a str,
         enabled: bool,
         source: Backend,
     }
@@ -286,14 +351,20 @@ pub fn manifest_revision(manifest: &ProfileManifest) -> Result<ModRevision> {
             major: r2_mod.version.major,
             minor: r2_mod.version.minor,
             patch: r2_mod.version.patch,
+            pre: r2_mod.version.pre.as_str(),
+            build: r2_mod.version.build.as_str(),
             enabled: r2_mod.enabled,
             source: r2_mod.source,
         })
         .collect();
 
     mods.sort_by(|a, b| {
-        (a.source, a.ident, a.major, a.minor, a.patch, a.enabled)
-            .cmp(&(b.source, b.ident, b.major, b.minor, b.patch, b.enabled))
+        (
+            a.source, a.ident, a.major, a.minor, a.patch, a.pre, a.build, a.enabled,
+        )
+            .cmp(&(
+                b.source, b.ident, b.major, b.minor, b.patch, b.pre, b.build, b.enabled,
+            ))
     });
 
     let mut ignored_version_updates = manifest.ignored_version_updates.clone();
@@ -549,11 +620,7 @@ mod tests {
     ) -> R2Mod {
         R2Mod {
             ident: PackageIdent::from(("Author", name)),
-            version: R2Version {
-                major,
-                minor,
-                patch,
-            },
+            version: semver::Version::new(major, minor, patch).into(),
             enabled,
             source,
         }
@@ -790,5 +857,115 @@ mod tests {
             files[&ConfigPath::try_from("BepInEx/config/sub/nested.cfg").unwrap()],
             b"nested"
         );
+    }
+
+    #[test]
+    fn r2_version_preserves_prerelease_and_build() {
+        let beta = R2Version::from(semver::Version::parse("2.0.14-beta.2").unwrap());
+        assert_eq!(beta.to_string(), "2.0.14-beta.2");
+
+        let json = serde_json::to_string(&beta).unwrap();
+        assert!(json.contains("\"pre\":\"beta.2\""));
+        assert!(!json.contains("\"build\""));
+        assert_eq!(serde_json::from_str::<R2Version>(&json).unwrap(), beta);
+
+        let build = R2Version::from(semver::Version::parse("2.0.14+build.7").unwrap());
+        let json = serde_json::to_string(&build).unwrap();
+        assert!(json.contains("\"build\":\"build.7\""));
+        assert_eq!(serde_json::from_str::<R2Version>(&json).unwrap(), build);
+
+        let legacy: R2Version =
+            serde_json::from_str(r#"{"major":2,"minor":0,"patch":14}"#).unwrap();
+        assert_eq!(legacy.to_string(), "2.0.14");
+        assert!(legacy.pre.is_empty() && legacy.build.is_empty());
+
+        let mmp = R2Version::from(semver::Version::new(2, 0, 14));
+        assert_eq!(
+            serde_json::to_string(&mmp).unwrap(),
+            r#"{"major":2,"minor":0,"patch":14}"#
+        );
+
+        assert!(
+            serde_json::from_str::<R2Version>(
+                r#"{"major":1,"minor":0,"patch":0,"pre":"not valid!"}"#
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn version_ident_preserves_prerelease() {
+        let r2_mod = R2Mod {
+            ident: PackageIdent::from(("ArgusMagnus", "ServersideQoL")),
+            version: semver::Version::parse("2.0.14-beta.2").unwrap().into(),
+            enabled: true,
+            source: Backend::Thunderstore,
+        };
+
+        let ident = r2_mod.version_ident();
+        assert_eq!(ident.to_string(), "ArgusMagnus-ServersideQoL-2.0.14-beta.2");
+        assert_eq!(ident.version(), "2.0.14-beta.2");
+    }
+
+    #[test]
+    fn revision_differentiates_prerelease_and_build() {
+        let mut base = base_manifest();
+        base.mods[0].version = semver::Version::parse("2.0.14-beta.2").unwrap().into();
+        let base_revision = manifest_revision(&base).unwrap();
+
+        for version in ["2.0.14", "2.0.14-beta.1", "2.0.14-beta.3", "2.0.14+build.1"] {
+            let mut changed = base.clone();
+            changed.mods[0].version = semver::Version::parse(version).unwrap().into();
+            assert_ne!(
+                manifest_revision(&changed).unwrap(),
+                base_revision,
+                "{version}"
+            );
+        }
+
+        let mut mmp = base.clone();
+        mmp.mods[0].version = semver::Version::new(2, 0, 14).into();
+        let mut parsed = base.clone();
+        parsed.mods[0].version = semver::Version::parse("2.0.14").unwrap().into();
+        assert_eq!(
+            manifest_revision(&mmp).unwrap(),
+            manifest_revision(&parsed).unwrap()
+        );
+    }
+
+    #[test]
+    fn archive_round_trip_preserves_prerelease_version() {
+        let mut manifest = base_manifest();
+        manifest.mods[0] = R2Mod {
+            ident: PackageIdent::from(("ArgusMagnus", "ServersideQoL")),
+            version: semver::Version::parse("2.0.14-beta.2").unwrap().into(),
+            enabled: true,
+            source: Backend::Thunderstore,
+        };
+
+        manifest.sync = Some(SyncManifest {
+            version: 1,
+            mods_revision: manifest_revision(&manifest).unwrap(),
+            config: BTreeMap::new(),
+        });
+
+        let mut cursor = Cursor::new(Vec::new());
+        write_archive(&manifest, &BTreeMap::new(), &mut cursor).unwrap();
+
+        let validated = archive::validate(cursor.get_ref()).unwrap();
+        assert!(matches!(validated.format, SyncArchiveFormat::Selective(_)));
+
+        let parsed_mod = &validated.manifest.mods[0];
+        assert_eq!(
+            parsed_mod.version_ident().to_string(),
+            "ArgusMagnus-ServersideQoL-2.0.14-beta.2"
+        );
+
+        let mods_revision = validated.manifest.sync.unwrap().mods_revision;
+        assert_eq!(mods_revision, manifest_revision(&manifest).unwrap());
+
+        let mut mmp = manifest.clone();
+        mmp.mods[0].version = semver::Version::new(2, 0, 14).into();
+        assert_ne!(mods_revision, manifest_revision(&mmp).unwrap());
     }
 }

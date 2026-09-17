@@ -494,7 +494,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        profile::export::{R2Mod, R2Version},
+        profile::export::R2Mod,
         thunderstore::{Backend, PackageIdent},
     };
 
@@ -507,11 +507,7 @@ mod tests {
             name: "Test".to_owned(),
             mods: vec![R2Mod {
                 ident: PackageIdent::from(("Author", "Mod")),
-                version: R2Version {
-                    major: 1,
-                    minor: 0,
-                    patch: 0,
-                },
+                version: semver::Version::new(1, 0, 0).into(),
                 enabled: true,
                 source: Backend::Thunderstore,
             }],

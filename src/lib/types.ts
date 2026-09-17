@@ -350,6 +350,8 @@ type ProfileManifestMod = {
 		major: number;
 		minor: number;
 		patch: number;
+		pre?: string;
+		build?: string;
 	};
 	source: Backend;
 };
