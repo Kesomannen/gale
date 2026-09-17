@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- Download retries now use range queries to pick up where the last requested failed, instead of restarting the entire download
+
 ### Fixed
 
 - Cross-platform updates not being displayed on the mod card, only in the "Update All" dialog
