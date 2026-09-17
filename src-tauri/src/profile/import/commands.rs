@@ -30,13 +30,14 @@ impl FrontendImportData {
         let thunderstore = app.lock_thunderstore();
         let mut missing_mods = Vec::new();
 
-        inner
-            .manifest
-            .mods
-            .retain(|r2_mod| if let Ok(_) = r2_mod.to_install(&thunderstore) { true } else {
+        inner.manifest.mods.retain(|r2_mod| {
+            if r2_mod.to_install(&thunderstore).is_ok() {
+                true
+            } else {
                 missing_mods.push(r2_mod.version_ident());
                 false
-            });
+            }
+        });
 
         Self {
             inner,

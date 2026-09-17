@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::{
+    sync::{Arc, Mutex, MutexGuard},
+    time::Duration,
+};
 
 use eyre::{Context, Result};
 use http_cache_reqwest::{CACacheManager, CacheMode, HttpCache, HttpCacheOptions};
@@ -77,9 +80,16 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
+const READ_TIMEOUT: Duration = Duration::from_secs(30);
+
 fn create_http_client() -> Result<reqwest_middleware::ClientWithMiddleware> {
     let base = reqwest::Client::builder()
         .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
+        // without these, a stalled connection would hang the request (and thus the
+        // install queue) indefinitely, instead of failing so that we can retry it
+        .connect_timeout(CONNECT_TIMEOUT)
+        .read_timeout(READ_TIMEOUT)
         .build()?;
 
     let http = reqwest_middleware::ClientBuilder::new(base)

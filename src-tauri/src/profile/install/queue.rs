@@ -8,22 +8,22 @@ use std::{
         Arc, Mutex, MutexGuard,
         atomic::{AtomicBool, Ordering},
     },
-    time::{Duration, Instant},
 };
 
 use eyre::{Context, Result, bail, eyre};
-use futures_util::StreamExt;
 use itertools::Itertools;
-use serde::Serialize;
 use tauri::AppHandle;
 use tokio::sync::{Notify, futures::Notified, oneshot};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 use zip::ZipArchive;
 
-use crate::{logger, state::ManagerExt, thunderstore::VersionIdent, util::error::IoResultExt};
+use crate::{logger, state::ManagerExt, util::error::IoResultExt};
 
-use super::{CancelBehavior, InstallError, InstallOptions, InstallResult, ModInstall};
+use super::{
+    CancelBehavior, HideReason, InstallError, InstallEvent, InstallOptions, InstallResult,
+    InstallTask, ModInstall, check_cancel, emit,
+};
 
 pub struct InstallQueue {
     state: Mutex<State>,
@@ -397,7 +397,7 @@ async fn handle_install(
     match try_cache_install(batch, index, app)? {
         CacheStatus::Hit => Ok(()),
         CacheStatus::Miss => {
-            let bytes = download(&batch.mods[index], cancel, &batch.options, app)
+            let bytes = super::download::download(&batch.mods[index], cancel, &batch.options, app)
                 .await
                 .context("error while downloading")?;
             install_from_download(bytes, batch, index, cancel, app)
@@ -456,115 +456,6 @@ fn try_cache_install(batch: &InstallBatch, index: usize, app: &AppHandle) -> Res
     );
 
     Ok(CacheStatus::Hit)
-}
-
-async fn download(
-    install: &ModInstall,
-    cancel: &AtomicBool,
-    options: &InstallOptions,
-    app: &AppHandle,
-) -> InstallResult<Vec<u8>> {
-    emit(
-        InstallEvent::set_task(&install.ident, InstallTask::Download),
-        app,
-    );
-
-    let url = install.id.backend.download_url(&install.ident);
-
-    debug!(
-        ident = %install.ident,
-        size = install.file_size,
-        url = %url,
-        "downloading mod"
-    );
-
-    const MAX_RETRIES: usize = 3;
-    const INITIAL_BACKOFF: Duration = Duration::from_secs(2);
-
-    let mut response = Vec::with_capacity(install.file_size as usize);
-    let mut retries = 0;
-    let mut backoff = INITIAL_BACKOFF;
-
-    loop {
-        match try_download(&mut response, &url, cancel, options, app).await {
-            Ok(()) => break Ok(response),
-            Err(InstallError::Cancelled) => return Err(InstallError::Cancelled),
-            Err(InstallError::Error(err)) => {
-                if retries >= MAX_RETRIES {
-                    break Err(InstallError::Error(err.wrap_err("max retries exceeded")));
-                }
-
-                emit(
-                    InstallEvent::AddProgress {
-                        mods: 0,
-                        bytes: -(response.len() as i64),
-                    },
-                    app,
-                );
-
-                response.clear();
-
-                retries += 1;
-
-                warn!(attempt = retries, err = ?err, url = %url, backoff = ?backoff, "download failed, retrying");
-
-                tokio::time::sleep(backoff).await;
-                backoff *= 2;
-            }
-        }
-    }
-}
-
-async fn try_download(
-    buf: &mut Vec<u8>,
-    url: &str,
-    cancel: &AtomicBool,
-    options: &InstallOptions,
-    app: &AppHandle,
-) -> InstallResult<()> {
-    const UPDATE_DELAY: Duration = Duration::from_millis(100);
-
-    let mut stream = app
-        .http()
-        .get(url)
-        .send()
-        .await
-        .context("failed to send request")?
-        .error_for_status()
-        .context("request failed")?
-        .bytes_stream();
-
-    let mut last_update = Instant::now();
-    let mut last_size_update = 0i64;
-
-    while let Some(item) = stream.next().await {
-        let item = item.context("failed to read chunk from stream")?;
-        buf.extend_from_slice(&item);
-
-        if last_update.elapsed() >= UPDATE_DELAY {
-            last_update = Instant::now();
-            emit(
-                InstallEvent::AddProgress {
-                    mods: 0,
-                    bytes: buf.len() as i64 - last_size_update,
-                },
-                app,
-            );
-            last_size_update = buf.len() as i64;
-
-            check_cancel(cancel, options)?;
-        }
-    }
-
-    emit(
-        InstallEvent::AddProgress {
-            mods: 0,
-            bytes: buf.len() as i64 - last_size_update,
-        },
-        app,
-    );
-
-    Ok(())
 }
 
 fn install_from_download(
@@ -635,74 +526,4 @@ fn install_from_download(
     emit(InstallEvent::AddProgress { mods: 1, bytes: 0 }, app);
 
     Ok(())
-}
-
-/// Events sent to the frontend to keep track of installation progress.
-#[derive(Debug, Serialize, Clone)]
-#[serde(rename_all = "camelCase", tag = "type")]
-enum InstallEvent<'a> {
-    Show,
-    #[serde(rename_all = "camelCase")]
-    Hide {
-        reason: HideReason,
-    },
-    #[serde(rename_all = "camelCase")]
-    AddCount {
-        mods: usize,
-        bytes: i64,
-    },
-    #[serde(rename_all = "camelCase")]
-    AddProgress {
-        mods: usize,
-        bytes: i64,
-    },
-    #[serde(rename_all = "camelCase")]
-    SetTask {
-        name: &'a str,
-        task: InstallTask,
-    },
-}
-
-#[derive(Debug, Serialize, Clone, Copy)]
-#[serde(rename_all = "camelCase")]
-enum HideReason {
-    Done,
-    Error,
-    Cancelled,
-}
-
-#[derive(Debug, Serialize, Clone, Copy)]
-#[serde(rename_all = "camelCase")]
-enum InstallTask {
-    Download,
-    Extract,
-    Install,
-}
-
-impl<'a> InstallEvent<'a> {
-    fn set_task(ident: &'a VersionIdent, task: InstallTask) -> Self {
-        Self::SetTask {
-            name: ident.name(),
-            task,
-        }
-    }
-}
-
-fn emit(event: InstallEvent, app: &AppHandle) {
-    app.emit_buffered("install_event", &event);
-}
-
-fn check_cancel(cancel: &AtomicBool, options: &InstallOptions) -> InstallResult<()> {
-    if cancel.load(Ordering::SeqCst) {
-        if options.cancel_behavior == CancelBehavior::Prevent {
-            warn!("attempted to cancel uncancellable batch");
-            cancel.store(false, Ordering::SeqCst);
-
-            Ok(())
-        } else {
-            Err(InstallError::Cancelled)
-        }
-    } else {
-        Ok(())
-    }
 }

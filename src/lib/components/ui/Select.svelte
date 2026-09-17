@@ -73,7 +73,7 @@
 					label || selectedLabel
 						? 'text-primary-700 dark:text-primary-300'
 						: 'text-primary-500 dark:text-primary-400',
-					'group-disabled:text-primary-500 dark:group-disabled:text-primary-400 shrink grow overflow-hidden text-left'
+					'group-disabled:text-primary-500 dark:group-disabled:text-primary-400 shrink grow overflow-hidden text-left text-nowrap'
 				]}
 			>
 				{label ?? selectedLabel ?? placeholder}
@@ -109,7 +109,7 @@
 
 											<span
 												class={[
-													'overflow-hidden',
+													'overflow-hidden text-nowrap',
 													selected
 														? 'text-primary-700 dark:text-primary-300'
 														: 'text-primary-500 group-hover:text-primary-700 dark:text-primary-400 dark:group-hover:text-primary-300'
