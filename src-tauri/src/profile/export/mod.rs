@@ -211,12 +211,18 @@ impl TryFrom<String> for ConfigPath {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         ensure!(!value.is_empty(), "config path is empty");
         ensure!(
-            !value.contains(['\\', '\0', ':', '<', '>', '|', '?', '*']),
+            !value.contains(['\\', '\0', ':', '<', '>', '|', '?', '*', '"']),
             "config path contains a forbidden character"
         );
         ensure!(
             !value.chars().any(char::is_control),
             "config path contains a control character"
+        );
+        // Path::components() collapses repeated separators, so check the raw
+        // text for empty segments before normalizing
+        ensure!(
+            !value.split('/').any(|segment| segment.is_empty()),
+            "config path contains an empty segment"
         );
 
         let path = Path::new(&value);
@@ -768,6 +774,11 @@ mod tests {
             "a?b",
             "a*b",
             "a\u{7}b",
+            "a\"b",
+            "a//b.cfg",
+            "a//",
+            "//a.cfg",
+            "a/b/",
             "dir./x.cfg",
             "dir /x.cfg",
             "con.cfg",

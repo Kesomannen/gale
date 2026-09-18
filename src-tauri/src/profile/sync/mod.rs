@@ -3,6 +3,7 @@ use std::{
     collections::BTreeMap,
     env,
     fmt::Display,
+    fs,
     path::{Component, Path},
     sync::LazyLock,
 };
@@ -501,7 +502,7 @@ async fn apply_archive(
         BTreeMap::new()
     };
 
-    let (imported, target_id, profile_dir, created, expected_mods) = if needs_install {
+    let (mut imported, target_id, profile_dir, created, expected_mods) = if needs_install {
         super::import::resolve_manifest_sources(&mut manifest, &app.lock_thunderstore());
         let expected_mods = selective.then(|| manifest.mods.clone());
 
@@ -543,6 +544,12 @@ async fn apply_archive(
     } else {
         None
     };
+
+    // keep the backed-up originals until the new state is committed and
+    // verified; restored below if the commit fails
+    let mut pending_revert = imported
+        .as_mut()
+        .and_then(|imported| imported.revert.take());
 
     let result = (|| -> Result<PullReport> {
         if let (Some(id), Some(imported)) = (profile_id, imported.as_ref()) {
@@ -645,6 +652,23 @@ async fn apply_archive(
         }
     })();
 
+    // the install succeeded but the commit didn't; put the original mods back.
+    // if restoration itself fails the backups stay in the revert dir
+    let result = match result {
+        Err(err) => match pending_revert.take() {
+            Some(revert) => match super::import::restore_imported_profile(target_id, revert, app) {
+                Ok(()) => Err(err),
+                Err(restore_err) => Err(err.wrap_err(format!(
+                    "failed to restore the previous mod set; \
+                     backed-up files are preserved in {}: {restore_err:#}",
+                    super::import::revert_dir(&profile_dir).display()
+                ))),
+            },
+            None => Err(err),
+        },
+        Ok(report) => Ok(report),
+    };
+
     // review state may have changed even when the apply itself failed
     app.emit_buffered(
         "sync_config_review_changed",
@@ -667,6 +691,18 @@ async fn apply_archive(
             return Err(err);
         }
     };
+
+    // the pulled state is committed and verified; the backed-up originals
+    // are no longer needed
+    let revert_dir = super::import::revert_dir(&profile_dir);
+    if revert_dir.exists() {
+        fs::remove_dir_all(&revert_dir).unwrap_or_else(|err| {
+            warn!(
+                "failed to remove revert dir {}: {err}",
+                revert_dir.display()
+            );
+        });
+    }
 
     if !report.config.pending.is_empty() {
         app.emit_buffered(
