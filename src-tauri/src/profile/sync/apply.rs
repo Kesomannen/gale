@@ -8,22 +8,36 @@ use std::{
 use eyre::{Context, OptionExt, Result, bail, ensure};
 use serde::Serialize;
 
-use super::{AppliedState, PendingConfigReason, archive};
+use super::{AppliedState, ConfigUpdatePolicy, PendingConfigReason, archive};
 use crate::profile::export::{self, ConfigPath, ContentHash};
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct PendingConfigUpdate {
+pub struct ConfigReviewItem {
     pub path: ConfigPath,
     pub reason: PendingConfigReason,
-    pub declined: bool,
+}
+
+#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfigPolicyEntry {
+    pub path: ConfigPath,
+    pub policy: ConfigUpdatePolicy,
+}
+
+#[derive(Debug, Serialize, Clone, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfigReviewState {
+    pub pending: Vec<ConfigReviewItem>,
+    pub declined: Vec<ConfigReviewItem>,
+    pub policies: Vec<ConfigPolicyEntry>,
 }
 
 #[derive(Debug, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigApplyReport {
     pub installed: Vec<ConfigPath>,
-    pub pending: Vec<PendingConfigUpdate>,
+    pub pending: Vec<ConfigReviewItem>,
 }
 
 pub(super) fn snapshot_config(
@@ -169,7 +183,9 @@ fn record_applied(state: &mut AppliedState, path: &ConfigPath, hash: ContentHash
     record.applied = Some(hash.clone());
     record.written = Some(hash);
     record.declined = None;
+    record.policy_set_at = None;
     state.pending.remove(path);
+    state.declined.remove(path);
 }
 
 pub(super) fn apply_available_config(
@@ -178,6 +194,7 @@ pub(super) fn apply_available_config(
     state: &mut AppliedState,
 ) -> Result<ConfigApplyReport> {
     state.pending.retain(|path, _| config.contains_key(path));
+    state.declined.retain(|path, _| config.contains_key(path));
 
     let mut report = ConfigApplyReport::default();
 
@@ -197,90 +214,232 @@ pub(super) fn apply_available_config(
         };
         let hash = file.hash.clone();
 
+        let prev = state.config.get(path);
+        let prev_applied = prev.and_then(|record| record.applied.as_ref());
+        let prev_written = prev.and_then(|record| record.written.as_ref());
+        let prev_declined = prev.and_then(|record| record.declined.as_ref());
+        let policy = prev.map(|record| record.policy).unwrap_or_default();
+        let policy = if prev.and_then(|record| record.policy_set_at.as_ref()) == Some(&hash) {
+            ConfigUpdatePolicy::Ask
+        } else {
+            policy
+        };
+
         if local.as_ref() == Some(&hash) {
             record_applied(state, path, hash);
             continue;
         }
 
-        if state
-            .config
-            .get(path)
-            .and_then(|record| record.declined.as_ref())
-            == Some(&hash)
-        {
+        if prev_applied == Some(&hash) {
+            state.pending.remove(path);
+            state.declined.remove(path);
+            continue;
+        }
+
+        if prev_declined == Some(&hash) {
+            state.pending.remove(path);
             let reason = if local.is_none() {
                 PendingConfigReason::DeletedLocally
             } else {
                 PendingConfigReason::ModifiedLocally
             };
-            state.pending.entry(path.clone()).or_insert(reason);
+            state.declined.insert(path.clone(), reason);
             continue;
         }
 
-        match local {
-            None => {
-                if state.config.contains_key(path) {
-                    state
-                        .pending
-                        .insert(path.clone(), PendingConfigReason::DeletedLocally);
-                    continue;
-                }
+        state.declined.remove(path);
 
+        match local {
+            None if prev.is_none() => {
                 write_validated(&target, file)?;
                 record_applied(state, path, hash);
                 report.installed.push(path.clone());
             }
-            Some(local_hash) => {
-                let record = state.config.get(path);
-
-                if record.and_then(|r| r.applied.as_ref()) == Some(&hash) {
+            None => match policy {
+                ConfigUpdatePolicy::AlwaysKeep => {
                     state.pending.remove(path);
-                    continue;
+                    let record = state.config.entry(path.clone()).or_default();
+                    record.declined = Some(hash);
+                    record.policy_set_at = None;
+                    state
+                        .declined
+                        .insert(path.clone(), PendingConfigReason::DeletedLocally);
                 }
-
-                if record.and_then(|r| r.written.as_ref()) == Some(&local_hash) {
+                ConfigUpdatePolicy::Ask | ConfigUpdatePolicy::AlwaysApply => {
+                    state
+                        .pending
+                        .insert(path.clone(), PendingConfigReason::DeletedLocally);
+                }
+            },
+            Some(local_hash) => match policy {
+                ConfigUpdatePolicy::AlwaysApply => {
                     write_validated(&target, file)?;
                     record_applied(state, path, hash);
                     report.installed.push(path.clone());
-                    continue;
                 }
+                ConfigUpdatePolicy::AlwaysKeep => {
+                    state.pending.remove(path);
+                    let record = state.config.entry(path.clone()).or_default();
+                    record.declined = Some(hash);
+                    record.policy_set_at = None;
+                    state
+                        .declined
+                        .insert(path.clone(), PendingConfigReason::ModifiedLocally);
+                }
+                ConfigUpdatePolicy::Ask => {
+                    if prev_applied.is_none()
+                        && prev_declined.is_none()
+                        && prev_written == Some(&local_hash)
+                    {
+                        write_validated(&target, file)?;
+                        record_applied(state, path, hash);
+                        report.installed.push(path.clone());
+                    } else {
+                        state
+                            .pending
+                            .insert(path.clone(), PendingConfigReason::ModifiedLocally);
+                    }
+                }
+            },
+        }
 
-                state
-                    .pending
-                    .insert(path.clone(), PendingConfigReason::ModifiedLocally);
-            }
+        if state.pending.contains_key(path)
+            && let Some(record) = state.config.get_mut(path)
+        {
+            record.declined = None;
         }
     }
 
-    report.pending = review_items(state);
+    report.pending = review_items(state).pending;
     Ok(report)
 }
 
-pub(super) fn review_items(state: &AppliedState) -> Vec<PendingConfigUpdate> {
-    state
+pub(super) fn preserve_pending_policy_boundaries(state: &mut AppliedState) {
+    let Some(latest) = state.latest.as_ref() else {
+        return;
+    };
+
+    for path in state.pending.keys() {
+        let Some(record) = state.config.get_mut(path) else {
+            continue;
+        };
+        if record.policy == ConfigUpdatePolicy::Ask || record.policy_set_at.is_some() {
+            continue;
+        }
+        if let Some(entry) = latest.config.get(path) {
+            record.policy_set_at = Some(entry.hash.clone());
+        }
+    }
+}
+
+pub(super) fn review_items(state: &AppliedState) -> ConfigReviewState {
+    let published = |path: &ConfigPath| {
+        state
+            .latest
+            .as_ref()
+            .is_some_and(|latest| latest.config.contains_key(path))
+    };
+
+    let item = |(path, reason): (&ConfigPath, &PendingConfigReason)| ConfigReviewItem {
+        path: path.clone(),
+        reason: *reason,
+    };
+
+    let legacy_declined = |path: &ConfigPath| {
+        state
+            .latest
+            .as_ref()
+            .and_then(|latest| latest.config.get(path))
+            .map(|entry| &entry.hash)
+            == state
+                .config
+                .get(path)
+                .and_then(|record| record.declined.as_ref())
+    };
+
+    let pending = state
         .pending
         .iter()
-        .filter(|(path, _)| {
-            state
-                .latest
-                .as_ref()
-                .is_some_and(|latest| latest.config.contains_key(*path))
-        })
-        .map(|(path, reason)| {
-            let declined = state
-                .latest
-                .as_ref()
-                .and_then(|latest| latest.config.get(path))
-                .zip(state.config.get(path).and_then(|r| r.declined.as_ref()))
-                .is_some_and(|(entry, declined)| entry.hash == *declined);
+        .filter(|(path, _)| published(path) && !legacy_declined(path))
+        .map(item)
+        .collect();
 
-            PendingConfigUpdate {
+    let mut declined: Vec<ConfigReviewItem> = state
+        .declined
+        .iter()
+        .filter(|(path, _)| published(path))
+        .map(item)
+        .collect();
+
+    for (path, reason) in state
+        .pending
+        .iter()
+        .filter(|(path, _)| published(path) && legacy_declined(path))
+    {
+        if !state.declined.contains_key(path) {
+            declined.push(ConfigReviewItem {
                 path: path.clone(),
                 reason: *reason,
-                declined,
-            }
+            });
+        }
+    }
+
+    declined.sort_by(|a, b| a.path.cmp(&b.path));
+
+    let policies = state
+        .latest
+        .as_ref()
+        .map(|latest| {
+            latest
+                .config
+                .keys()
+                .map(|path| ConfigPolicyEntry {
+                    path: path.clone(),
+                    policy: state
+                        .config
+                        .get(path)
+                        .map(|record| record.policy)
+                        .unwrap_or_default(),
+                })
+                .collect()
         })
-        .collect()
+        .unwrap_or_default();
+
+    ConfigReviewState {
+        pending,
+        declined,
+        policies,
+    }
+}
+
+fn local_review_reason(profile_dir: &Path, path: &ConfigPath) -> Result<PendingConfigReason> {
+    let target = checked_target(profile_dir, path)?;
+    match fs::symlink_metadata(&target) {
+        Ok(metadata) if metadata.is_file() => Ok(PendingConfigReason::ModifiedLocally),
+        Ok(_) => bail!(
+            "synced config path is not a regular file: {}",
+            target.display()
+        ),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => {
+            Ok(PendingConfigReason::DeletedLocally)
+        }
+        Err(err) => {
+            Err(err).with_context(|| format!("failed to inspect config path: {}", target.display()))
+        }
+    }
+}
+
+pub(super) fn current_review_items(
+    profile_dir: &Path,
+    state: &AppliedState,
+) -> Result<ConfigReviewState> {
+    let mut review = review_items(state);
+
+    for item in review.pending.iter_mut().chain(review.declined.iter_mut()) {
+        item.reason = local_review_reason(profile_dir, &item.path)?;
+    }
+
+    Ok(review)
 }
 
 pub(super) fn apply_selected(
@@ -288,12 +447,26 @@ pub(super) fn apply_selected(
     config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
     state: &mut AppliedState,
     files: &[ConfigPath],
+    restore_deleted: &[ConfigPath],
+    remember: bool,
 ) -> Result<Vec<ConfigPath>> {
     let mut seen = HashSet::new();
     for path in files {
         ensure!(
             seen.insert(path.clone()),
             "duplicate selected config path: {path}"
+        );
+    }
+
+    let mut restored = HashSet::new();
+    for path in restore_deleted {
+        ensure!(
+            restored.insert(path.clone()),
+            "duplicate restore entry: {path}"
+        );
+        ensure!(
+            seen.contains(path),
+            "restore entry was not selected: {path}"
         );
     }
 
@@ -317,20 +490,37 @@ pub(super) fn apply_selected(
         }
     }
 
-    let mut written = Vec::with_capacity(files.len());
+    let mut targets = Vec::with_capacity(files.len());
     for path in files {
+        let reason = local_review_reason(profile_dir, path)?;
+        ensure!(
+            reason != PendingConfigReason::DeletedLocally || restored.contains(path),
+            "config file was deleted locally; confirm restoring it: {path}"
+        );
+        targets.push(checked_target(profile_dir, path)?);
+    }
+
+    let mut written = Vec::with_capacity(files.len());
+    for (path, target) in files.iter().zip(targets) {
         let file = &config[path];
         let hash = file.hash.clone();
 
-        write_validated(&checked_target(profile_dir, path)?, file)?;
+        write_validated(&target, file)?;
         record_applied(state, path, hash);
+        if remember {
+            state.config.entry(path.clone()).or_default().policy = ConfigUpdatePolicy::AlwaysApply;
+        }
         written.push(path.clone());
     }
 
     Ok(written)
 }
 
-pub(super) fn decline_selected(state: &mut AppliedState, files: &[ConfigPath]) -> Result<()> {
+pub(super) fn decline_selected(
+    state: &mut AppliedState,
+    files: &[ConfigPath],
+    remember: bool,
+) -> Result<()> {
     let mut seen = HashSet::new();
     for path in files {
         ensure!(
@@ -350,18 +540,47 @@ pub(super) fn decline_selected(state: &mut AppliedState, files: &[ConfigPath]) -
                 .config
                 .get(path)
                 .ok_or_eyre("selected config file is no longer published: {path}")?;
-            ensure!(
-                state.pending.contains_key(path),
-                "config file is not pending review: {path}"
-            );
-            entries.push((path.clone(), advertised.hash.clone()));
+            let reason = *state
+                .pending
+                .get(path)
+                .ok_or_eyre("config file is not pending review: {path}")?;
+            entries.push((path.clone(), advertised.hash.clone(), reason));
         }
     }
 
-    for (path, hash) in entries {
-        state.config.entry(path).or_default().declined = Some(hash);
+    for (path, hash, reason) in entries {
+        state.pending.remove(&path);
+        state.declined.insert(path.clone(), reason);
+
+        let record = state.config.entry(path).or_default();
+        record.declined = Some(hash);
+        if remember {
+            record.policy = ConfigUpdatePolicy::AlwaysKeep;
+            record.policy_set_at = None;
+        }
     }
 
+    Ok(())
+}
+
+pub(super) fn set_policy(
+    state: &mut AppliedState,
+    path: &ConfigPath,
+    policy: ConfigUpdatePolicy,
+) -> Result<()> {
+    let current = state
+        .latest
+        .as_ref()
+        .and_then(|latest| latest.config.get(path))
+        .map(|entry| entry.hash.clone())
+        .ok_or_eyre(format!("config file is not published: {path}"))?;
+
+    let record = state.config.entry(path.clone()).or_default();
+    record.policy = policy;
+    record.policy_set_at = match policy {
+        ConfigUpdatePolicy::Ask => None,
+        ConfigUpdatePolicy::AlwaysApply | ConfigUpdatePolicy::AlwaysKeep => Some(current),
+    };
     Ok(())
 }
 
@@ -372,7 +591,7 @@ mod tests {
     use super::*;
     use crate::profile::{
         export::{ModRevision, SyncFileEntry, SyncManifest},
-        sync::AppliedFile,
+        sync::{AppliedFile, ConfigUpdatePolicy},
     };
 
     fn path(path: &str) -> ConfigPath {
@@ -417,12 +636,26 @@ mod tests {
         applied: Option<ContentHash>,
         written: Option<ContentHash>,
         declined: Option<ContentHash>,
+        policy: ConfigUpdatePolicy,
     ) -> AppliedFile {
         AppliedFile {
             applied,
             written,
             declined,
+            policy,
+            policy_set_at: None,
         }
+    }
+
+    fn receive(
+        dir: &Path,
+        state: &mut AppliedState,
+        entries: &[(&str, &[u8])],
+    ) -> ConfigApplyReport {
+        preserve_pending_policy_boundaries(state);
+        state.latest = Some(latest(entries));
+        let config = archive_map(entries);
+        apply_available_config(dir, &config, state).unwrap()
     }
 
     #[test]
@@ -450,9 +683,10 @@ mod tests {
         write(dir.path(), &p, b"local");
 
         let mut state = AppliedState::default();
-        state
-            .config
-            .insert(p.clone(), applied_file(None, None, Some(hash(b"remote"))));
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, Some(hash(b"remote")), ConfigUpdatePolicy::Ask),
+        );
         state
             .pending
             .insert(p.clone(), PendingConfigReason::ModifiedLocally);
@@ -463,12 +697,16 @@ mod tests {
 
         assert!(report.installed.is_empty());
         assert_eq!(fs::read(dir.path().join(p.as_path())).unwrap(), b"local");
-        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert!(!state.pending.contains_key(&p));
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
 
         let review = review_items(&state);
-        assert_eq!(review.len(), 1);
-        assert!(review[0].declined);
-        assert_eq!(review[0].reason, PendingConfigReason::ModifiedLocally);
+        assert!(review.pending.is_empty());
+        assert_eq!(review.declined.len(), 1);
+        assert_eq!(
+            review.declined[0].reason,
+            PendingConfigReason::ModifiedLocally
+        );
     }
 
     #[test]
@@ -480,7 +718,12 @@ mod tests {
         let mut state = AppliedState::default();
         state.config.insert(
             p.clone(),
-            applied_file(Some(hash(b"remote")), Some(hash(b"remote")), None),
+            applied_file(
+                Some(hash(b"remote")),
+                Some(hash(b"remote")),
+                None,
+                ConfigUpdatePolicy::Ask,
+            ),
         );
         state
             .pending
@@ -516,7 +759,12 @@ mod tests {
         let mut state = AppliedState::default();
         state.config.insert(
             p.clone(),
-            applied_file(Some(hash(b"old")), Some(hash(b"old")), None),
+            applied_file(
+                Some(hash(b"old")),
+                Some(hash(b"old")),
+                None,
+                ConfigUpdatePolicy::Ask,
+            ),
         );
 
         let config = archive_map(&[("a.cfg", b"remote")]);
@@ -528,7 +776,35 @@ mod tests {
     }
 
     #[test]
-    fn untouched_written_file_auto_updates() {
+    fn installer_default_accepts_initial_baseline() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"package-default");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(
+                None,
+                Some(hash(b"package-default")),
+                None,
+                ConfigUpdatePolicy::Ask,
+            ),
+        );
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"remote")]);
+
+        assert_eq!(report.installed, vec![p.clone()]);
+        assert_eq!(fs::read(dir.path().join(p.as_path())).unwrap(), b"remote");
+        let record = &state.config[&p];
+        assert_eq!(record.applied, Some(hash(b"remote")));
+        assert_eq!(record.written, Some(hash(b"remote")));
+        assert!(state.pending.is_empty());
+        assert!(state.declined.is_empty());
+    }
+
+    #[test]
+    fn ask_policy_prompts_after_previously_applied_untouched_file() {
         let dir = tempdir().unwrap();
         let p = path("a.cfg");
         write(dir.path(), &p, b"v1");
@@ -536,18 +812,19 @@ mod tests {
         let mut state = AppliedState::default();
         state.config.insert(
             p.clone(),
-            applied_file(Some(hash(b"v1")), Some(hash(b"v1")), None),
+            applied_file(
+                Some(hash(b"v1")),
+                Some(hash(b"v1")),
+                None,
+                ConfigUpdatePolicy::Ask,
+            ),
         );
 
-        let config = archive_map(&[("a.cfg", b"v2")]);
-        let report = apply_available_config(dir.path(), &config, &mut state).unwrap();
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"v2")]);
 
-        assert_eq!(report.installed, vec![p.clone()]);
-        assert_eq!(fs::read(dir.path().join(p.as_path())).unwrap(), b"v2");
-        let record = &state.config[&p];
-        assert_eq!(record.applied, Some(hash(b"v2")));
-        assert_eq!(record.written, Some(hash(b"v2")));
-        assert!(state.pending.is_empty());
+        assert!(report.installed.is_empty());
+        assert_eq!(fs::read(dir.path().join(p.as_path())).unwrap(), b"v1");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
     }
 
     #[test]
@@ -604,7 +881,7 @@ mod tests {
         let mut state = AppliedState::default();
         state.config.insert(
             path("a.cfg"),
-            applied_file(Some(hash(b"applied")), None, None),
+            applied_file(Some(hash(b"applied")), None, None, ConfigUpdatePolicy::Ask),
         );
 
         record_installer_written(&before, &after, &mut state);
@@ -622,37 +899,91 @@ mod tests {
 
         let mut state = AppliedState::default();
         state.latest = Some(latest(&[("a.cfg", b"remote"), ("b.cfg", b"bee")]));
-        state
-            .config
-            .insert(p.clone(), applied_file(None, None, Some(hash(b"remote"))));
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, Some(hash(b"remote")), ConfigUpdatePolicy::Ask),
+        );
         state
             .pending
             .insert(p.clone(), PendingConfigReason::ModifiedLocally);
 
         let config = archive_map(&[("a.cfg", b"remote"), ("b.cfg", b"bee")]);
 
-        assert!(apply_selected(dir.path(), &config, &mut state, &[p.clone(), p.clone()]).is_err());
-        assert!(apply_selected(dir.path(), &config, &mut state, &[path("nope.cfg")]).is_err());
+        assert!(
+            apply_selected(
+                dir.path(),
+                &config,
+                &mut state,
+                &[p.clone(), p.clone()],
+                &[],
+                false
+            )
+            .is_err()
+        );
+        assert!(
+            apply_selected(
+                dir.path(),
+                &config,
+                &mut state,
+                &[path("nope.cfg")],
+                &[],
+                false
+            )
+            .is_err()
+        );
 
         let mut bad = vfile(b"remote");
         bad.hash = hash(b"other");
         let bad_config = BTreeMap::from([(p.clone(), bad), (path("b.cfg"), vfile(b"bee"))]);
-        assert!(apply_selected(dir.path(), &bad_config, &mut state, &[p.clone()]).is_err());
+        assert!(
+            apply_selected(
+                dir.path(),
+                &bad_config,
+                &mut state,
+                &[p.clone()],
+                &[],
+                false
+            )
+            .is_err()
+        );
 
         let partial = archive_map(&[("a.cfg", b"remote")]);
-        assert!(apply_selected(dir.path(), &partial, &mut state, &[path("b.cfg")]).is_err());
+        assert!(
+            apply_selected(
+                dir.path(),
+                &partial,
+                &mut state,
+                &[path("b.cfg")],
+                &[],
+                false
+            )
+            .is_err()
+        );
 
         let mut no_latest = AppliedState::default();
-        assert!(apply_selected(dir.path(), &config, &mut no_latest, &[p.clone()]).is_err());
+        assert!(
+            apply_selected(
+                dir.path(),
+                &config,
+                &mut no_latest,
+                &[p.clone()],
+                &[],
+                false
+            )
+            .is_err()
+        );
 
-        let written = apply_selected(dir.path(), &config, &mut state, &[p.clone()]).unwrap();
+        let written =
+            apply_selected(dir.path(), &config, &mut state, &[p.clone()], &[], false).unwrap();
         assert_eq!(written, vec![p.clone()]);
         assert_eq!(fs::read(dir.path().join(p.as_path())).unwrap(), b"remote");
         let record = &state.config[&p];
         assert_eq!(record.applied, Some(hash(b"remote")));
         assert_eq!(record.written, Some(hash(b"remote")));
         assert!(record.declined.is_none());
+        assert_eq!(record.policy, ConfigUpdatePolicy::Ask);
         assert!(!state.pending.contains_key(&p));
+        assert!(state.declined.is_empty());
     }
 
     #[test]
@@ -666,23 +997,29 @@ mod tests {
             .pending
             .insert(p.clone(), PendingConfigReason::ModifiedLocally);
 
-        assert!(decline_selected(&mut state, &[p.clone(), p.clone()]).is_err());
-        assert!(decline_selected(&mut state, &[q.clone()]).is_err());
-        assert!(decline_selected(&mut state, &[path("nope.cfg")]).is_err());
+        assert!(decline_selected(&mut state, &[p.clone(), p.clone()], false).is_err());
+        assert!(decline_selected(&mut state, &[q.clone()], false).is_err());
+        assert!(decline_selected(&mut state, &[path("nope.cfg")], false).is_err());
 
         let mut no_latest = AppliedState::default();
         no_latest
             .pending
             .insert(p.clone(), PendingConfigReason::ModifiedLocally);
-        assert!(decline_selected(&mut no_latest, &[p.clone()]).is_err());
+        assert!(decline_selected(&mut no_latest, &[p.clone()], false).is_err());
 
-        decline_selected(&mut state, &[p.clone()]).unwrap();
+        decline_selected(&mut state, &[p.clone()], false).unwrap();
         assert_eq!(state.config[&p].declined, Some(hash(b"remote")));
-        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::Ask);
+        assert!(!state.pending.contains_key(&p));
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
 
         let review = review_items(&state);
-        assert_eq!(review.len(), 1);
-        assert!(review[0].declined);
+        assert!(review.pending.is_empty());
+        assert_eq!(review.declined.len(), 1);
+        assert_eq!(
+            review.declined[0].reason,
+            PendingConfigReason::ModifiedLocally
+        );
     }
 
     #[test]
@@ -693,13 +1030,16 @@ mod tests {
 
         let mut state = AppliedState::default();
         state.latest = Some(latest(&[("a.cfg", b"v1")]));
-        state
-            .config
-            .insert(p.clone(), applied_file(None, None, Some(hash(b"v1"))));
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, Some(hash(b"v1")), ConfigUpdatePolicy::Ask),
+        );
         state
             .pending
             .insert(p.clone(), PendingConfigReason::ModifiedLocally);
-        assert!(review_items(&state)[0].declined);
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 0);
+        assert_eq!(review.declined.len(), 1);
 
         state.latest = Some(latest(&[("a.cfg", b"v2")]));
         let config = archive_map(&[("a.cfg", b"v2")]);
@@ -707,9 +1047,11 @@ mod tests {
 
         assert_eq!(fs::read(dir.path().join(p.as_path())).unwrap(), b"local");
         assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert!(state.declined.is_empty());
+        assert!(state.config[&p].declined.is_none());
         let review = review_items(&state);
-        assert_eq!(review.len(), 1);
-        assert!(!review[0].declined);
+        assert_eq!(review.pending.len(), 1);
+        assert!(review.declined.is_empty());
     }
 
     #[test]
@@ -870,5 +1212,639 @@ mod tests {
         );
         assert_eq!(fs::read(&taken).unwrap(), b"sentinel");
         assert_eq!(fs::read(&target).unwrap(), b"original");
+    }
+
+    fn read_file(dir: &Path, p: &ConfigPath) -> Vec<u8> {
+        fs::read(dir.join(p.as_path())).unwrap()
+    }
+
+    fn round_trip(state: &AppliedState) -> AppliedState {
+        let json = serde_json::to_string(state).unwrap();
+        serde_json::from_str(&json).unwrap()
+    }
+
+    #[test]
+    fn ask_policy_prompts_after_accepting_a_then_b_and_c() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert_eq!(report.pending.len(), 1);
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"A"));
+
+        let config = archive_map(&[("a.cfg", b"A")]);
+        apply_selected(dir.path(), &config, &mut state, &[p.clone()], &[], false).unwrap();
+        assert_eq!(read_file(dir.path(), &p), b"A");
+
+        let mut state = round_trip(&state);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"B"));
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"A");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert!(state.declined.is_empty());
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::Ask);
+
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 1);
+        assert!(review.declined.is_empty());
+
+        let config = archive_map(&[("a.cfg", b"B")]);
+        apply_selected(dir.path(), &config, &mut state, &[p.clone()], &[], false).unwrap();
+        assert_eq!(read_file(dir.path(), &p), b"B");
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"C")]);
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"C"));
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"B");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+    }
+
+    #[test]
+    fn ask_policy_prompts_after_declining_a_then_b_and_c() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+
+        decline_selected(&mut state, &[p.clone()], false).unwrap();
+        assert!(state.pending.is_empty());
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.config[&p].declined, Some(hash(b"A")));
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::Ask);
+
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 0);
+        assert_eq!(review.declined.len(), 1);
+
+        let mut state = round_trip(&state);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"B"));
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert!(state.declined.is_empty());
+
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 1);
+        assert_eq!(review.declined.len(), 0);
+
+        decline_selected(&mut state, &[p.clone()], false).unwrap();
+        assert_eq!(state.config[&p].declined, Some(hash(b"B")));
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::Ask);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"C")]);
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"C"));
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert!(state.declined.is_empty());
+    }
+
+    #[test]
+    fn always_apply_persists_and_applies_b_and_c() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+
+        let config = archive_map(&[("a.cfg", b"A")]);
+        apply_selected(dir.path(), &config, &mut state, &[p.clone()], &[], true).unwrap();
+        assert_eq!(read_file(dir.path(), &p), b"A");
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::AlwaysApply);
+
+        let mut state = round_trip(&state);
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::AlwaysApply);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert_eq!(report.installed, vec![p.clone()]);
+        assert_eq!(read_file(dir.path(), &p), b"B");
+        let review = review_items(&state);
+        assert!(review.pending.is_empty());
+        assert!(review.declined.is_empty());
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"C")]);
+        assert_eq!(report.installed, vec![p.clone()]);
+        assert_eq!(read_file(dir.path(), &p), b"C");
+        let review = review_items(&state);
+        assert!(review.pending.is_empty());
+        assert!(review.declined.is_empty());
+    }
+
+    #[test]
+    fn always_keep_persists_and_keeps_b_and_c() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        decline_selected(&mut state, &[p.clone()], true).unwrap();
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::AlwaysKeep);
+        assert_eq!(state.config[&p].declined, Some(hash(b"A")));
+
+        let mut state = round_trip(&state);
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::AlwaysKeep);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert!(state.pending.is_empty());
+        assert_eq!(state.config[&p].declined, Some(hash(b"B")));
+        let review = review_items(&state);
+        assert!(review.pending.is_empty());
+        assert_eq!(review.declined.len(), 1);
+        assert_eq!(review.declined[0].path, p);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"C")]);
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert!(state.pending.is_empty());
+        assert_eq!(state.config[&p].declined, Some(hash(b"C")));
+        let review = review_items(&state);
+        assert!(review.pending.is_empty());
+        assert_eq!(review.declined.len(), 1);
+
+        let config = archive_map(&[("a.cfg", b"C")]);
+        apply_selected(dir.path(), &config, &mut state, &[p.clone()], &[], false).unwrap();
+        assert_eq!(read_file(dir.path(), &p), b"C");
+        assert!(state.declined.is_empty());
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::AlwaysKeep);
+    }
+
+    #[test]
+    fn always_apply_still_prompts_before_restoring_deleted_file() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"A");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(
+                Some(hash(b"A")),
+                Some(hash(b"A")),
+                None,
+                ConfigUpdatePolicy::AlwaysApply,
+            ),
+        );
+        fs::remove_file(dir.path().join(p.as_path())).unwrap();
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"B"));
+        assert!(report.installed.is_empty());
+        assert!(!dir.path().join(p.as_path()).exists());
+        assert_eq!(state.pending[&p], PendingConfigReason::DeletedLocally);
+    }
+
+    #[test]
+    fn legacy_applied_state_defaults_to_ask_policy() {
+        let p = path("a.cfg");
+        let applied = hash(b"old");
+        let json = format!(
+            r#"{{"config":{{"a.cfg":{{"applied":"{}","written":null,"declined":null}}}},"pending":{{"a.cfg":"modifiedLocally"}}}}"#,
+            applied.as_str()
+        );
+
+        let state: AppliedState = serde_json::from_str(&json).unwrap();
+        assert!(state.declined.is_empty());
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::Ask);
+        assert_eq!(state.config[&p].policy_set_at, None);
+        assert_eq!(state.config[&p].applied, Some(applied.clone()));
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+
+        let state = round_trip(&state);
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::Ask);
+        assert_eq!(state.config[&p].applied, Some(applied));
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+    }
+
+    #[test]
+    fn policy_can_be_changed_later_and_persists() {
+        let p = path("a.cfg");
+
+        let mut state = AppliedState::default();
+        state.latest = Some(latest(&[("a.cfg", b"remote")]));
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::AlwaysApply).unwrap();
+
+        let mut state = round_trip(&state);
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::AlwaysApply);
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::Ask).unwrap();
+
+        let mut state = round_trip(&state);
+        assert_eq!(state.config[&p].policy, ConfigUpdatePolicy::Ask);
+
+        assert!(
+            set_policy(
+                &mut state,
+                &path("unpublished.cfg"),
+                ConfigUpdatePolicy::AlwaysKeep
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn legacy_declined_state_is_reported_only_as_declined_without_pull() {
+        let remote = hash(b"A");
+        let mods = ModRevision::from_hash(blake3::hash(b"rev"));
+
+        let json = format!(
+            r#"{{"latest":{{"version":1,"modsRevision":"{mods}","config":{{"a.cfg":{{"hash":"{remote}"}}}}}},"config":{{"a.cfg":{{"applied":null,"written":null,"declined":"{remote}"}}}},"pending":{{"a.cfg":"modifiedLocally"}}}}"#,
+            mods = mods.as_str(),
+            remote = remote.as_str(),
+        );
+
+        let state: AppliedState = serde_json::from_str(&json).unwrap();
+        assert!(state.declined.is_empty());
+
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 0);
+        assert_eq!(
+            review.declined,
+            vec![ConfigReviewItem {
+                path: path("a.cfg"),
+                reason: PendingConfigReason::ModifiedLocally,
+            }]
+        );
+        assert_eq!(state.config[&path("a.cfg")].policy, ConfigUpdatePolicy::Ask);
+    }
+
+    #[test]
+    fn declined_reason_tracks_local_deletion_on_repeat_pull() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+
+        decline_selected(&mut state, &[p.clone()], false).unwrap();
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
+
+        fs::remove_file(dir.path().join(p.as_path())).unwrap();
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+
+        assert_eq!(state.declined[&p], PendingConfigReason::DeletedLocally);
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 0);
+        assert_eq!(review.declined.len(), 1);
+        assert_eq!(
+            review.declined[0].reason,
+            PendingConfigReason::DeletedLocally
+        );
+    }
+
+    #[test]
+    fn always_keep_new_revision_replaces_pending_with_declined() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::AlwaysKeep).unwrap();
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"B"));
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert!(state.pending.is_empty());
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.config[&p].declined, Some(hash(b"B")));
+
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 0);
+        assert_eq!(review.declined.len(), 1);
+    }
+
+    #[test]
+    fn policy_screen_changes_start_after_current_revision() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        let q = path("b.cfg");
+        write(dir.path(), &p, b"custom-a");
+        write(dir.path(), &q, b"custom-b");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+        state.config.insert(
+            q.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A"), ("b.cfg", b"A")]);
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.pending[&q], PendingConfigReason::ModifiedLocally);
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::AlwaysApply).unwrap();
+        set_policy(&mut state, &q, ConfigUpdatePolicy::AlwaysKeep).unwrap();
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"A"), ("b.cfg", b"A")]);
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom-a");
+        assert_eq!(read_file(dir.path(), &q), b"custom-b");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.pending[&q], PendingConfigReason::ModifiedLocally);
+        assert!(state.declined.is_empty());
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B"), ("b.cfg", b"B")]);
+        assert_eq!(report.installed, vec![p.clone()]);
+        assert_eq!(state.latest.as_ref().unwrap().config[&p].hash, hash(b"B"));
+        assert_eq!(state.latest.as_ref().unwrap().config[&q].hash, hash(b"B"));
+        assert_eq!(read_file(dir.path(), &p), b"B");
+        assert_eq!(read_file(dir.path(), &q), b"custom-b");
+        assert!(state.pending.is_empty());
+        assert_eq!(state.declined[&q], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.config[&q].declined, Some(hash(b"B")));
+
+        let review = review_items(&state);
+        assert_eq!(review.pending.len(), 0);
+        assert_eq!(review.declined.len(), 1);
+        assert_eq!(review.declined[0].path, q);
+    }
+
+    #[test]
+    fn current_review_items_reflects_filesystem_changes_without_pull() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        decline_selected(&mut state, &[p.clone()], false).unwrap();
+
+        let review = current_review_items(dir.path(), &state).unwrap();
+        assert_eq!(review.declined.len(), 1);
+        assert_eq!(
+            review.declined[0].reason,
+            PendingConfigReason::ModifiedLocally
+        );
+
+        fs::remove_file(dir.path().join(p.as_path())).unwrap();
+
+        let review = current_review_items(dir.path(), &state).unwrap();
+        assert_eq!(review.declined.len(), 1);
+        assert_eq!(
+            review.declined[0].reason,
+            PendingConfigReason::DeletedLocally
+        );
+    }
+
+    #[test]
+    fn apply_selected_requires_exact_deleted_file_confirmation() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        let q = path("b.cfg");
+        write(dir.path(), &q, b"local-b");
+
+        let mut state = AppliedState::default();
+        state.latest = Some(latest(&[("a.cfg", b"A"), ("b.cfg", b"B")]));
+        state
+            .pending
+            .insert(p.clone(), PendingConfigReason::DeletedLocally);
+        state
+            .pending
+            .insert(q.clone(), PendingConfigReason::ModifiedLocally);
+
+        let config = archive_map(&[("a.cfg", b"A"), ("b.cfg", b"B")]);
+
+        assert!(apply_selected(dir.path(), &config, &mut state, &[p.clone()], &[], false).is_err());
+        assert!(!dir.path().join(p.as_path()).exists());
+
+        assert!(
+            apply_selected(
+                dir.path(),
+                &config,
+                &mut state,
+                &[q.clone()],
+                &[p.clone()],
+                false
+            )
+            .is_err()
+        );
+        assert_eq!(read_file(dir.path(), &q), b"local-b");
+
+        let written = apply_selected(
+            dir.path(),
+            &config,
+            &mut state,
+            &[p.clone()],
+            &[p.clone()],
+            false,
+        )
+        .unwrap();
+        assert_eq!(written, vec![p.clone()]);
+        assert_eq!(read_file(dir.path(), &p), b"A");
+    }
+
+    #[test]
+    fn same_applied_revision_does_not_restore_deleted_file() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"A");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(
+                Some(hash(b"A")),
+                Some(hash(b"A")),
+                None,
+                ConfigUpdatePolicy::Ask,
+            ),
+        );
+
+        fs::remove_file(dir.path().join(p.as_path())).unwrap();
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert!(report.installed.is_empty());
+        assert!(!dir.path().join(p.as_path()).exists());
+        assert!(state.pending.is_empty());
+        assert!(state.declined.is_empty());
+    }
+
+    #[test]
+    fn declined_to_always_apply_keeps_current_and_applies_next() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        decline_selected(&mut state, &[p.clone()], false).unwrap();
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::AlwaysApply).unwrap();
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert!(state.pending.is_empty());
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert_eq!(report.installed, vec![p.clone()]);
+        assert_eq!(read_file(dir.path(), &p), b"B");
+        assert!(state.pending.is_empty());
+        assert!(state.declined.is_empty());
+    }
+
+    #[test]
+    fn declined_to_ask_keeps_current_and_prompts_on_next() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"custom");
+
+        let mut state = AppliedState::default();
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::Ask),
+        );
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        decline_selected(&mut state, &[p.clone()], false).unwrap();
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::Ask).unwrap();
+
+        receive(dir.path(), &mut state, &[("a.cfg", b"A")]);
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert!(state.pending.is_empty());
+        assert_eq!(state.declined[&p], PendingConfigReason::ModifiedLocally);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B")]);
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert!(state.declined.is_empty());
+    }
+
+    #[test]
+    fn policy_set_at_round_trips_and_defaults_to_none() {
+        let p = path("a.cfg");
+
+        let mut state = AppliedState::default();
+        state.latest = Some(latest(&[("a.cfg", b"A")]));
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::AlwaysApply).unwrap();
+        assert_eq!(state.config[&p].policy_set_at, Some(hash(b"A")));
+
+        let mut state = round_trip(&state);
+        assert_eq!(state.config[&p].policy_set_at, Some(hash(b"A")));
+
+        set_policy(&mut state, &p, ConfigUpdatePolicy::Ask).unwrap();
+        assert_eq!(state.config[&p].policy_set_at, None);
+
+        let state = round_trip(&state);
+        assert_eq!(state.config[&p].policy_set_at, None);
+    }
+
+    #[test]
+    fn legacy_pending_automatic_policies_start_after_current_revision() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        let q = path("b.cfg");
+        write(dir.path(), &p, b"custom-a");
+        write(dir.path(), &q, b"custom-b");
+
+        let mut state = AppliedState::default();
+        state.latest = Some(latest(&[("a.cfg", b"A"), ("b.cfg", b"A")]));
+        state.config.insert(
+            p.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::AlwaysApply),
+        );
+        state.config.insert(
+            q.clone(),
+            applied_file(None, None, None, ConfigUpdatePolicy::AlwaysKeep),
+        );
+        state
+            .pending
+            .insert(p.clone(), PendingConfigReason::ModifiedLocally);
+        state
+            .pending
+            .insert(q.clone(), PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.config[&p].policy_set_at, None);
+        assert_eq!(state.config[&q].policy_set_at, None);
+
+        let mut state = round_trip(&state);
+        assert_eq!(state.config[&p].policy_set_at, None);
+        assert_eq!(state.config[&q].policy_set_at, None);
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"A"), ("b.cfg", b"A")]);
+        assert!(report.installed.is_empty());
+        assert_eq!(read_file(dir.path(), &p), b"custom-a");
+        assert_eq!(read_file(dir.path(), &q), b"custom-b");
+        assert_eq!(state.pending[&p], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.pending[&q], PendingConfigReason::ModifiedLocally);
+        assert!(state.declined.is_empty());
+
+        let report = receive(dir.path(), &mut state, &[("a.cfg", b"B"), ("b.cfg", b"B")]);
+        assert_eq!(report.installed, vec![p.clone()]);
+        assert_eq!(read_file(dir.path(), &p), b"B");
+        assert_eq!(read_file(dir.path(), &q), b"custom-b");
+        assert!(state.pending.is_empty());
+        assert_eq!(state.declined[&q], PendingConfigReason::ModifiedLocally);
+        assert_eq!(state.config[&q].declined, Some(hash(b"B")));
     }
 }

@@ -3,7 +3,7 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import SyncAvatar from '$lib/components/ui/SyncAvatar.svelte';
 	import * as api from '$lib/api';
-	import type { ListedSyncProfile, PendingSyncConfigUpdate } from '$lib/types';
+	import type { ListedSyncProfile, SyncConfigReviewItem, SyncConfigReviewState } from '$lib/types';
 	import { pushInfoToast } from '$lib/toast';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -33,7 +33,8 @@
 
 	let publishDialogOpen = $state(false);
 	let reviewDialogOpen = $state(false);
-	let pendingUpdates: PendingSyncConfigUpdate[] = $state([]);
+	let reviewMode: 'pending' | 'declined' | 'policies' = $state('pending');
+	let reviewState: SyncConfigReviewState = $state({ pending: [], declined: [], policies: [] });
 
 	let syncInfo = $derived(profiles.active?.sync ?? null);
 	let isOwner = $derived(syncInfo?.owner.discordId == auth.user?.discordId);
@@ -137,14 +138,14 @@
 
 	async function refreshPending(key: string | undefined = activeKey()) {
 		if (key === undefined) {
-			pendingUpdates = [];
+			reviewState = { pending: [], declined: [], policies: [] };
 			return;
 		}
 
 		try {
 			let updates = await api.profile.sync.getPendingConfig();
 			if (activeKey() === key) {
-				pendingUpdates = updates;
+				reviewState = updates;
 			}
 		} catch {}
 	}
@@ -155,7 +156,9 @@
 		let key = activeKey();
 		if (key === lastSyncKey) return;
 		lastSyncKey = key;
-		pendingUpdates = [];
+		reviewDialogOpen = false;
+		reviewMode = 'pending';
+		reviewState = { pending: [], declined: [], policies: [] };
 
 		if (key === undefined) {
 			return;
@@ -165,16 +168,23 @@
 	});
 
 	onMount(() => {
-		let unlisten: UnlistenFn | null = null;
+		let unlistenPending: UnlistenFn | null = null;
+		let unlistenReview: UnlistenFn | null = null;
 
-		listen<PendingSyncConfigUpdate[]>('sync_config_pending', (evt) => {
-			refreshPending();
+		listen<SyncConfigReviewItem[]>('sync_config_pending', (evt) => {
 			pushInfoToast({
 				message: m.syncer_pendingConfigToast({ count: evt.payload.length })
 			});
-		}).then((callback) => (unlisten = callback));
+		}).then((callback) => (unlistenPending = callback));
 
-		return () => unlisten?.();
+		listen('sync_config_review_changed', () => {
+			refreshPending();
+		}).then((callback) => (unlistenReview = callback));
+
+		return () => {
+			unlistenPending?.();
+			unlistenReview?.();
+		};
 	});
 
 	async function refresh() {
@@ -249,11 +259,11 @@
 
 	<div class="hidden md:block">{style.label}</div>
 
-	{#if pendingUpdates.length > 0}
+	{#if reviewState.pending.length > 0}
 		<span
 			class="bg-accent-600 rounded-full px-1.5 py-0.5 text-xs leading-none font-medium text-white"
 		>
-			{pendingUpdates.length}
+			{reviewState.pending.length}
 		</span>
 	{/if}
 </button>
@@ -300,13 +310,42 @@
 		{/if}
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">
-			{#if pendingUpdates.length > 0}
+			{#if reviewState.pending.length > 0}
 				<Button
-					onclick={() => (reviewDialogOpen = true)}
+					onclick={() => {
+						reviewMode = 'pending';
+						reviewDialogOpen = true;
+					}}
 					color="primary"
 					icon="mdi:file-document-edit"
 				>
-					{m.syncer_button_reviewConfig({ count: pendingUpdates.length })}
+					{m.syncer_button_reviewConfig({ count: reviewState.pending.length })}
+				</Button>
+			{/if}
+
+			{#if reviewState.declined.length > 0}
+				<Button
+					onclick={() => {
+						reviewMode = 'declined';
+						reviewDialogOpen = true;
+					}}
+					color="primary"
+					icon="mdi:file-document-remove"
+				>
+					{m.syncer_button_declinedConfig({ count: reviewState.declined.length })}
+				</Button>
+			{/if}
+
+			{#if reviewState.policies.length > 0}
+				<Button
+					onclick={() => {
+						reviewMode = 'policies';
+						reviewDialogOpen = true;
+					}}
+					color="primary"
+					icon="mdi:tune"
+				>
+					{m.syncer_button_configPolicies()}
 				</Button>
 			{/if}
 
@@ -388,6 +427,7 @@
 
 <SyncConfigReviewDialog
 	bind:open={reviewDialogOpen}
-	updates={pendingUpdates}
+	updates={reviewState}
+	mode={reviewMode}
 	onChanged={() => refreshPending()}
 />

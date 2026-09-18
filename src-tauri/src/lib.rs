@@ -201,6 +201,7 @@ pub fn run() {
             profile::sync::commands::get_pending_sync_config,
             profile::sync::commands::decline_sync_config,
             profile::sync::commands::apply_sync_config,
+            profile::sync::commands::set_sync_config_policy,
             profile::sync::commands::get_owned_sync_profiles,
             profile::sync::commands::login,
             profile::sync::commands::logout,

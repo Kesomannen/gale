@@ -91,6 +91,8 @@ pub struct AppliedState {
     pub latest: Option<SyncManifest>,
     pub config: BTreeMap<ConfigPath, AppliedFile>,
     pub pending: BTreeMap<ConfigPath, PendingConfigReason>,
+    #[serde(default)]
+    pub declined: BTreeMap<ConfigPath, PendingConfigReason>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -99,6 +101,19 @@ pub struct AppliedFile {
     pub applied: Option<ContentHash>,
     pub written: Option<ContentHash>,
     pub declined: Option<ContentHash>,
+    #[serde(default)]
+    pub policy: ConfigUpdatePolicy,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy_set_at: Option<ContentHash>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ConfigUpdatePolicy {
+    #[default]
+    Ask,
+    AlwaysApply,
+    AlwaysKeep,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
@@ -413,6 +428,7 @@ async fn apply_archive(
             preseed_migration(&mut applied, &latest, existed);
         }
 
+        apply::preserve_pending_policy_boundaries(&mut applied);
         applied.latest = Some(latest);
         report.config =
             apply::apply_available_config(&profile_dir, &normalized.config, &mut applied)?;
@@ -464,15 +480,10 @@ async fn apply_archive(
         }
     };
 
-    let pending: Vec<apply::PendingConfigUpdate> = report
-        .config
-        .pending
-        .iter()
-        .filter(|item| !item.declined)
-        .cloned()
-        .collect();
-    if !pending.is_empty() {
-        app.emit_buffered("sync_config_pending", &pending);
+    app.emit_buffered("sync_config_review_changed", &());
+
+    if !report.config.pending.is_empty() {
+        app.emit_buffered("sync_config_pending", &report.config.pending);
     }
 
     Ok(report)
@@ -561,18 +572,18 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<PullReport> 
     }
 }
 
-fn pending_config_items(app: &AppHandle) -> Vec<apply::PendingConfigUpdate> {
+fn pending_config_items(app: &AppHandle) -> Result<apply::ConfigReviewState> {
     let manager = app.lock_manager();
-    manager
-        .active_profile()
-        .sync
-        .as_ref()
-        .and_then(|sync| sync.applied.as_ref())
-        .map(apply::review_items)
-        .unwrap_or_default()
+    let profile = manager.active_profile();
+
+    let Some(applied) = profile.sync.as_ref().and_then(|sync| sync.applied.as_ref()) else {
+        return Ok(apply::ConfigReviewState::default());
+    };
+
+    apply::current_review_items(&profile.path, applied)
 }
 
-fn decline_selected_config(files: &[ConfigPath], app: &AppHandle) -> Result<()> {
+fn decline_selected_config(files: &[ConfigPath], remember: bool, app: &AppHandle) -> Result<()> {
     let (profile_id, sync_id, mut applied) = {
         let manager = app.lock_manager();
         let profile = manager.active_profile();
@@ -581,7 +592,7 @@ fn decline_selected_config(files: &[ConfigPath], app: &AppHandle) -> Result<()> 
         (profile.id, sync.id.clone(), applied)
     };
 
-    apply::decline_selected(&mut applied, files)?;
+    apply::decline_selected(&mut applied, files, remember)?;
 
     let mut manager = app.lock_manager();
     let profile = manager.active_profile_mut();
@@ -595,6 +606,34 @@ fn decline_selected_config(files: &[ConfigPath], app: &AppHandle) -> Result<()> 
     ensure!(
         sync.id == sync_id,
         "profile sync target changed during decline"
+    );
+    sync.applied = Some(applied);
+    profile.save(app, true)
+}
+
+fn set_config_policy(file: ConfigPath, policy: ConfigUpdatePolicy, app: &AppHandle) -> Result<()> {
+    let (profile_id, sync_id, mut applied) = {
+        let manager = app.lock_manager();
+        let profile = manager.active_profile();
+        let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
+        let applied = sync.applied.clone().ok_or_eyre("no applied sync state")?;
+        (profile.id, sync.id.clone(), applied)
+    };
+
+    apply::set_policy(&mut applied, &file, policy)?;
+
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+    ensure!(
+        profile.id == profile_id,
+        "active profile changed during policy update"
+    );
+    let Some(sync) = profile.sync.as_mut() else {
+        bail!("profile is no longer synced");
+    };
+    ensure!(
+        sync.id == sync_id,
+        "profile sync target changed during policy update"
     );
     sync.applied = Some(applied);
     profile.save(app, true)
@@ -621,7 +660,12 @@ fn ensure_latest(applied: &AppliedState, latest: &SyncManifest) -> Result<()> {
     Ok(())
 }
 
-async fn apply_selected_config(files: Vec<ConfigPath>, app: &AppHandle) -> Result<Vec<ConfigPath>> {
+async fn apply_selected_config(
+    files: Vec<ConfigPath>,
+    remember: bool,
+    restore_deleted: Vec<ConfigPath>,
+    app: &AppHandle,
+) -> Result<Vec<ConfigPath>> {
     let (profile_id, profile_dir, sync_id, mut applied) = {
         let manager = app.lock_manager();
         let profile = manager.active_profile();
@@ -635,7 +679,14 @@ async fn apply_selected_config(files: Vec<ConfigPath>, app: &AppHandle) -> Resul
     let normalized = normalize_archive(&validated)?;
     ensure_latest(&applied, &normalized.latest)?;
 
-    let written = apply::apply_selected(&profile_dir, &normalized.config, &mut applied, &files)?;
+    let written = apply::apply_selected(
+        &profile_dir,
+        &normalized.config,
+        &mut applied,
+        &files,
+        &restore_deleted,
+        remember,
+    )?;
 
     {
         let mut manager = app.lock_manager();
@@ -1058,15 +1109,11 @@ mod tests {
             b"player-custom"
         );
         assert_eq!(state.pending[&first], PendingConfigReason::ModifiedLocally);
-        assert!(
-            !apply::review_items(&state)
-                .iter()
-                .find(|u| u.path == first)
-                .unwrap()
-                .declined
-        );
+        let review = apply::review_items(&state);
+        assert!(review.pending.iter().any(|u| u.path == first));
+        assert!(!review.declined.iter().any(|u| u.path == first));
 
-        apply::decline_selected(&mut state, &[first.clone()]).unwrap();
+        apply::decline_selected(&mut state, &[first.clone()], false).unwrap();
         publish(subscriber, &mut state, manifest.clone(), owner_v2.clone());
         assert_eq!(
             std::fs::read(subscriber.join(first.as_str())).unwrap(),
@@ -1074,21 +1121,28 @@ mod tests {
         );
         assert!(
             apply::review_items(&state)
-                .iter()
-                .find(|u| u.path == first)
-                .unwrap()
                 .declined
+                .iter()
+                .any(|u| u.path == first)
         );
 
         let validated = build_selective_archive(manifest.clone(), owner_v2.clone());
         let normalized = normalize_archive(&validated).unwrap();
-        apply::apply_selected(subscriber, &normalized.config, &mut state, &[first.clone()])
-            .unwrap();
+        apply::apply_selected(
+            subscriber,
+            &normalized.config,
+            &mut state,
+            &[first.clone()],
+            &[],
+            false,
+        )
+        .unwrap();
         assert_eq!(
             std::fs::read(subscriber.join(first.as_str())).unwrap(),
             b"owner-v2"
         );
         assert!(!state.pending.contains_key(&first));
+        assert!(!state.declined.contains_key(&first));
         assert!(state.config[&first].declined.is_none());
 
         let second = corpus.keys().nth(1).unwrap().clone();
@@ -1100,15 +1154,14 @@ mod tests {
         assert!(!subscriber.join(second.as_str()).exists());
         assert_eq!(state.pending[&second], PendingConfigReason::DeletedLocally);
 
-        apply::decline_selected(&mut state, &[second.clone()]).unwrap();
+        apply::decline_selected(&mut state, &[second.clone()], false).unwrap();
         publish(subscriber, &mut state, manifest.clone(), deleted_v2.clone());
         assert!(!subscriber.join(second.as_str()).exists());
         assert!(
             apply::review_items(&state)
-                .iter()
-                .find(|u| u.path == second)
-                .unwrap()
                 .declined
+                .iter()
+                .any(|u| u.path == second)
         );
 
         let validated = build_selective_archive(manifest.clone(), deleted_v2.clone());
@@ -1118,6 +1171,8 @@ mod tests {
             &normalized.config,
             &mut state,
             &[second.clone()],
+            &[second.clone()],
+            false,
         )
         .unwrap();
         assert_eq!(

@@ -100,15 +100,27 @@ export type SyncConfigFileInfo = {
 
 export type PendingSyncConfigReason = 'modifiedLocally' | 'deletedLocally';
 
-export type PendingSyncConfigUpdate = {
+export type SyncConfigUpdatePolicy = 'ask' | 'alwaysApply' | 'alwaysKeep';
+
+export type SyncConfigReviewItem = {
 	path: string;
 	reason: PendingSyncConfigReason;
-	declined: boolean;
+};
+
+export type SyncConfigPolicyEntry = {
+	path: string;
+	policy: SyncConfigUpdatePolicy;
+};
+
+export type SyncConfigReviewState = {
+	pending: SyncConfigReviewItem[];
+	declined: SyncConfigReviewItem[];
+	policies: SyncConfigPolicyEntry[];
 };
 
 export type SyncConfigApplyReport = {
 	installed: string[];
-	pending: PendingSyncConfigUpdate[];
+	pending: SyncConfigReviewItem[];
 };
 
 export type SyncPullReport = {

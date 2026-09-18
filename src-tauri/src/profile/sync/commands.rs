@@ -3,8 +3,8 @@ use tauri::{AppHandle, command};
 use crate::{state::ManagerExt, util::cmd::Result};
 
 use super::{
-    ListedSyncProfile, PullReport, SyncProfileMetadata,
-    apply::PendingConfigUpdate,
+    ConfigUpdatePolicy, ListedSyncProfile, PullReport, SyncProfileMetadata,
+    apply::ConfigReviewState,
     auth,
     publish::{PublishMode, SyncConfigFileInfo},
 };
@@ -87,24 +87,44 @@ pub async fn fetch_sync_profile(app: AppHandle) -> Result<()> {
 }
 
 #[command]
-pub async fn get_pending_sync_config(app: AppHandle) -> Result<Vec<PendingConfigUpdate>> {
-    let items = super::pending_config_items(&app);
+pub async fn get_pending_sync_config(app: AppHandle) -> Result<ConfigReviewState> {
+    let items = super::pending_config_items(&app)?;
 
     Ok(items)
 }
 
 #[command]
-pub async fn decline_sync_config(files: Vec<ConfigPath>, app: AppHandle) -> Result<()> {
-    super::decline_selected_config(&files, &app)?;
+pub async fn decline_sync_config(
+    files: Vec<ConfigPath>,
+    remember: bool,
+    app: AppHandle,
+) -> Result<()> {
+    super::decline_selected_config(&files, remember, &app)?;
 
     Ok(())
 }
 
 #[command]
-pub async fn apply_sync_config(files: Vec<ConfigPath>, app: AppHandle) -> Result<Vec<ConfigPath>> {
-    let written = super::apply_selected_config(files, &app).await?;
+pub async fn apply_sync_config(
+    files: Vec<ConfigPath>,
+    remember: bool,
+    restore_deleted: Vec<ConfigPath>,
+    app: AppHandle,
+) -> Result<Vec<ConfigPath>> {
+    let written = super::apply_selected_config(files, remember, restore_deleted, &app).await?;
 
     Ok(written)
+}
+
+#[command]
+pub async fn set_sync_config_policy(
+    file: ConfigPath,
+    policy: ConfigUpdatePolicy,
+    app: AppHandle,
+) -> Result<()> {
+    super::set_config_policy(file, policy, &app)?;
+
+    Ok(())
 }
 
 #[command]

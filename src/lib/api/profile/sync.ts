@@ -1,8 +1,9 @@
 import { invoke } from '$lib/invoke';
 import type {
 	ListedSyncProfile,
-	PendingSyncConfigUpdate,
 	SyncConfigFileInfo,
+	SyncConfigReviewState,
+	SyncConfigUpdatePolicy,
 	SyncImportData,
 	SyncPublishMode,
 	SyncPullReport,
@@ -19,9 +20,13 @@ export const disconnect = (del: boolean) => invoke('disconnect_sync_profile', { 
 export const deleteProfile = (id: string) => invoke('delete_sync_profile', { id });
 export const pull = () => invoke<SyncPullReport>('pull_sync_profile');
 export const fetch = () => invoke('fetch_sync_profile');
-export const getPendingConfig = () => invoke<PendingSyncConfigUpdate[]>('get_pending_sync_config');
-export const declineConfig = (files: string[]) => invoke('decline_sync_config', { files });
-export const applyConfig = (files: string[]) => invoke<string[]>('apply_sync_config', { files });
+export const getPendingConfig = () => invoke<SyncConfigReviewState>('get_pending_sync_config');
+export const declineConfig = (files: string[], remember: boolean) =>
+	invoke('decline_sync_config', { files, remember });
+export const applyConfig = (files: string[], remember: boolean, restoreDeleted: string[]) =>
+	invoke<string[]>('apply_sync_config', { files, remember, restoreDeleted });
+export const setConfigPolicy = (file: string, policy: SyncConfigUpdatePolicy) =>
+	invoke('set_sync_config_policy', { file, policy });
 export const getOwned = () => invoke<ListedSyncProfile[]>('get_owned_sync_profiles');
 export const login = () => invoke<SyncUser>('login');
 export const logout = () => invoke('logout');
