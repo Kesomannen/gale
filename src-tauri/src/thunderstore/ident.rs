@@ -144,15 +144,14 @@ impl TryFrom<Intern<String>> for VersionIdent {
 
         let mut indices = value.match_indices('-').map(|(i, _)| i);
 
-        // semver versions may contain a hyphen
-        let mut version_start = next_segment(&mut indices)?;
-        if semver::Version::parse(&value[version_start..]).is_err() {
-            version_start = next_segment(&mut indices)?;
-
-            if semver::Version::parse(&value[version_start..]).is_err() {
-                return Err(ParseError);
+        // semver versions may themselves contain hyphens, so keep stepping
+        // left until a candidate parses or the string runs out
+        let version_start = loop {
+            let start = next_segment(&mut indices)?;
+            if semver::Version::parse(&value[start..]).is_ok() {
+                break start;
             }
-        }
+        };
 
         let name_start = next_segment(&mut indices)?;
 
@@ -382,5 +381,25 @@ mod tests {
         assert_eq!(ident.owner(), "owner-with-hyphen");
         assert_eq!(ident.name(), "package");
         assert_eq!(ident.version(), "1.0.0-beta.1");
+
+        // versions containing hyphens need more than two candidates
+        let ident = VersionIdent::from_str("owner-package-1.0.0-alpha-1").unwrap();
+        assert_eq!(ident.owner(), "owner");
+        assert_eq!(ident.name(), "package");
+        assert_eq!(ident.version(), "1.0.0-alpha-1");
+
+        let ident = VersionIdent::from_str("owner-package-1.0.0+build-01").unwrap();
+        assert_eq!(ident.owner(), "owner");
+        assert_eq!(ident.name(), "package");
+        assert_eq!(ident.version(), "1.0.0+build-01");
+
+        let ident =
+            VersionIdent::from_str("owner-with-hyphen-package-1.0.0-alpha-1+build-2").unwrap();
+        assert_eq!(ident.owner(), "owner-with-hyphen");
+        assert_eq!(ident.name(), "package");
+        assert_eq!(ident.version(), "1.0.0-alpha-1+build-2");
+
+        assert!(VersionIdent::from_str("owner-package").is_err());
+        assert!(VersionIdent::from_str("owner-package-1.0").is_err());
     }
 }
