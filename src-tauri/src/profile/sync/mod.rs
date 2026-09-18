@@ -90,6 +90,10 @@ pub struct SyncProfileData {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishedState {
+    /// The remote `updated_at` revision this publication snapshot represents.
+    /// `None` for records written before revision tracking — treated as stale.
+    #[serde(default)]
+    pub revision: Option<DateTime<Utc>>,
     pub manifest: ProfileManifest,
     pub mods_revision: ModRevision,
     pub config: BTreeMap<ConfigPath, ContentHash>,
@@ -173,8 +177,8 @@ impl From<SyncProfileMetadata> for SyncProfileData {
     }
 }
 
-async fn create_profile(app: &AppHandle) -> Result<String> {
-    publish::create_profile(app).await
+async fn create_profile(app: &AppHandle, profile_id: i64) -> Result<String> {
+    publish::create_profile(app, profile_id).await
 }
 
 pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
@@ -249,7 +253,7 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-struct NormalizedArchive<'a> {
+pub(super) struct NormalizedArchive<'a> {
     manifest: ProfileManifest,
     config: Cow<'a, BTreeMap<ConfigPath, archive::ValidatedConfigFile>>,
     latest: SyncManifest,
@@ -408,7 +412,6 @@ fn mod_set_matches(profile: &Profile, expected: &[R2Mod]) -> bool {
 }
 
 async fn apply_archive(
-    archive: &archive::ValidatedSyncArchive,
     normalized: NormalizedArchive<'_>,
     metadata: SyncProfileMetadata,
     override_name: Option<String>,
@@ -416,11 +419,11 @@ async fn apply_archive(
     target: ImportTarget,
     app: &AppHandle,
 ) -> Result<PullReport> {
-    let mut manifest = normalized.manifest;
+    let mut manifest = normalized.manifest.clone();
     if let Some(name) = override_name {
         manifest.name = name;
     }
-    let latest = normalized.latest;
+    let latest = normalized.latest.clone();
 
     let profile_id = match &target {
         ImportTarget::Existing(id) => Some(*id),
@@ -515,6 +518,15 @@ async fn apply_archive(
         )
     };
 
+    // Serialize the owner's snapshot adoption against local publishes. The
+    // guard is taken before queue/manager locks so the order matches
+    // publish_profile's publication -> manager ordering.
+    let _publication = if was_owner {
+        Some(publish::publication_guard().await)
+    } else {
+        None
+    };
+
     let result = (|| -> Result<PullReport> {
         if let (Some(id), Some(imported)) = (profile_id, imported.as_ref()) {
             ensure!(imported.id == id, "synced profile changed during apply");
@@ -530,7 +542,11 @@ async fn apply_archive(
         };
 
         let published = if was_owner {
-            Some(publish::adopt_publication(&profile_dir, archive)?)
+            Some(publish::adopt_publication(
+                &profile_dir,
+                &normalized,
+                Some(metadata.updated_at),
+            )?)
         } else {
             None
         };
@@ -648,7 +664,6 @@ async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle)
     let normalized = normalize_archive(&validated)?;
 
     apply_archive(
-        &validated,
         normalized,
         metadata,
         override_name,
@@ -687,7 +702,6 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<PullReport> 
             let normalized = normalize_archive(&validated)?;
 
             apply_archive(
-                &validated,
                 normalized,
                 metadata,
                 Some(name),

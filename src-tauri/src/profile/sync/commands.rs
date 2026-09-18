@@ -18,8 +18,8 @@ pub async fn read_sync_profile(id: String, app: AppHandle) -> Result<SyncProfile
 }
 
 #[command]
-pub async fn create_sync_profile(app: AppHandle) -> Result<String> {
-    let id = super::create_profile(&app).await?;
+pub async fn create_sync_profile(profile_id: i64, app: AppHandle) -> Result<String> {
+    let id = super::create_profile(&app, profile_id).await?;
 
     Ok(id)
 }

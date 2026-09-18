@@ -3,6 +3,7 @@ use std::{
     fs,
     io::Cursor,
     path::{Path, PathBuf},
+    sync::LazyLock,
 };
 
 use chrono::{DateTime, Utc};
@@ -10,10 +11,12 @@ use eyre::{Context, OptionExt, Result, bail, ensure};
 use reqwest::Method;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
+use tokio::sync::{Mutex, MutexGuard};
+use tracing::warn;
 
 use super::{
-    PublishedState, SyncProfileData, archive, auth, download_profile_bytes, get_profile_meta,
-    upload_profile_file,
+    NormalizedArchive, PublishedState, SyncProfileData, archive, auth, delete_profile,
+    download_profile_bytes, get_profile_meta, normalize_archive, upload_profile_file,
 };
 use crate::{
     profile::export::{
@@ -25,6 +28,15 @@ use crate::{
 
 const SNAPSHOT_DIR: &str = "_state/sync";
 const STAGING_DIR: &str = "_state/sync-staging";
+
+/// Serializes every local operation that touches the remote publication or the
+/// local snapshot. There is a single designated publisher, so one process-level
+/// lock is sufficient; separate clients may still race last-writer-wins.
+static PUBLISH_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
+
+pub(super) async fn publication_guard() -> MutexGuard<'static, ()> {
+    PUBLISH_LOCK.lock().await
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -58,7 +70,10 @@ fn staging_dir(profile_dir: &Path) -> PathBuf {
     profile_dir.join(STAGING_DIR)
 }
 
-fn published_state(archive: &archive::ValidatedSyncArchive) -> Result<PublishedState> {
+fn published_state(
+    archive: &archive::ValidatedSyncArchive,
+    revision: Option<DateTime<Utc>>,
+) -> Result<PublishedState> {
     let mut manifest = archive.manifest.clone();
     let mods_revision = match &archive.format {
         archive::SyncArchiveFormat::Selective(sync) => sync.mods_revision.clone(),
@@ -73,6 +88,7 @@ fn published_state(archive: &archive::ValidatedSyncArchive) -> Result<PublishedS
         .collect();
 
     Ok(PublishedState {
+        revision,
         manifest,
         mods_revision,
         config,
@@ -109,19 +125,35 @@ fn needs_reconcile(
         return Ok(true);
     };
 
-    if remote_updated_at != data.synced_at {
+    // the snapshot must represent the latest remote revision; records written
+    // before revision tracking have None and reconcile once to heal
+    if published.revision != Some(remote_updated_at) {
         return Ok(true);
     }
 
     Ok(!snapshot_consistent(published, profile_dir)?)
 }
 
+/// Adopts a downloaded remote publication as the local snapshot, using the
+/// normalized archive so legacy `config/` entries are stored under their
+/// canonical `BepInEx/config/` paths.
 pub(super) fn adopt_publication(
     profile_dir: &Path,
-    validated: &archive::ValidatedSyncArchive,
+    normalized: &NormalizedArchive,
+    revision: Option<DateTime<Utc>>,
 ) -> Result<PublishedState> {
-    let state = published_state(validated)?;
-    let config: BTreeMap<_, _> = validated
+    let state = PublishedState {
+        revision,
+        manifest: normalized.manifest.clone(),
+        mods_revision: normalized.latest.mods_revision.clone(),
+        config: normalized
+            .config
+            .iter()
+            .map(|(path, file)| (path.clone(), file.hash.clone()))
+            .collect(),
+    };
+
+    let config: BTreeMap<_, _> = normalized
         .config
         .iter()
         .map(|(path, file)| (path.clone(), file.bytes.clone()))
@@ -265,12 +297,17 @@ fn build_publication(
     let bytes = writer.into_inner();
 
     let validated = archive::validate(&bytes).context("generated archive failed validation")?;
-    let state = published_state(&validated)?;
+    let state = published_state(&validated, None)?;
 
     Ok((bytes, state))
 }
 
 pub(super) async fn reconcile_published(app: &AppHandle, profile_id: i64) -> Result<()> {
+    let _guard = publication_guard().await;
+    reconcile_published_inner(app, profile_id).await
+}
+
+async fn reconcile_published_inner(app: &AppHandle, profile_id: i64) -> Result<()> {
     let (sync_id, profile_dir, data) = {
         let manager = app.lock_manager();
         let (_, profile) = manager.profile_by_id(profile_id)?;
@@ -305,7 +342,9 @@ pub(super) async fn reconcile_published(app: &AppHandle, profile_id: i64) -> Res
 
     let bytes = download_profile_bytes(&sync_id, app).await?;
     let validated = archive::validate(&bytes).context("remote sync archive failed validation")?;
-    let state = adopt_publication(&profile_dir, &validated)?;
+    let normalized =
+        normalize_archive(&validated).context("remote sync archive failed normalization")?;
+    let state = adopt_publication(&profile_dir, &normalized, Some(metadata.updated_at))?;
 
     {
         let mut manager = app.lock_manager();
@@ -318,9 +357,10 @@ pub(super) async fn reconcile_published(app: &AppHandle, profile_id: i64) -> Res
             "synced profile changed during reconcile"
         );
 
+        // refreshing the publication snapshot says nothing about what has been
+        // applied locally, so synced_at is left untouched
         sync.published = Some(state);
         sync.owner = metadata.owner;
-        sync.synced_at = metadata.updated_at;
         sync.updated_at = metadata.updated_at;
         sync.missing = false;
         profile.save(app, true)?;
@@ -334,13 +374,25 @@ pub(super) async fn publish_profile(
     profile_id: i64,
     mode: PublishMode,
 ) -> Result<()> {
-    reconcile_published(app, profile_id).await?;
+    let _guard = publication_guard().await;
+    reconcile_published_inner(app, profile_id).await?;
 
     let (profile_dir, profile_name, sync_id, published, live_manifest, live_config) = {
         let manager = app.lock_manager();
         let (game, profile) = manager.profile_by_id(profile_id)?;
 
         let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
+
+        // publishing mods on top of remote changes that haven't been applied
+        // locally would silently revert them
+        if matches!(mode, PublishMode::Mods | PublishMode::Both { .. }) {
+            ensure!(
+                sync.synced_at >= sync.updated_at,
+                "remote revision {} has not been applied to this profile; pull before publishing mods",
+                sync.updated_at,
+            );
+        }
+
         let published = sync
             .published
             .clone()
@@ -366,7 +418,7 @@ pub(super) async fn publish_profile(
         &live_config,
     )?;
 
-    let (bytes, state) = build_publication(&profile_name, manifest, &config)?;
+    let (bytes, mut state) = build_publication(&profile_name, manifest, &config)?;
 
     stage_snapshot(&config, &profile_dir)?;
 
@@ -378,6 +430,7 @@ pub(super) async fn publish_profile(
                 return Err(err);
             }
         };
+    state.revision = Some(response.updated_at);
 
     promote_snapshot(&profile_dir)?;
 
@@ -396,18 +449,18 @@ pub(super) async fn publish_profile(
     Ok(())
 }
 
-pub(super) async fn create_profile(app: &AppHandle) -> Result<String> {
+pub(super) async fn create_profile(app: &AppHandle, profile_id: i64) -> Result<String> {
+    let _guard = publication_guard().await;
+
     let Some(user) = auth::user_info(app) else {
         bail!("not logged in");
     };
 
-    let (profile_id, profile_dir, profile_name, manifest, config) = {
+    let (profile_dir, profile_name, manifest, config) = {
         let manager = app.lock_manager();
-        let game = manager.active_game().game;
-        let profile = manager.active_profile();
+        let (game, profile) = manager.profile_by_id(profile_id)?;
 
         (
-            profile.id,
             profile.path.clone(),
             profile.name.clone(),
             export::build_manifest(profile, game),
@@ -415,7 +468,7 @@ pub(super) async fn create_profile(app: &AppHandle) -> Result<String> {
         )
     };
 
-    let (bytes, state) = build_publication(&profile_name, manifest, &config)?;
+    let (bytes, mut state) = build_publication(&profile_name, manifest, &config)?;
 
     stage_snapshot(&config, &profile_dir)?;
 
@@ -426,10 +479,11 @@ pub(super) async fn create_profile(app: &AppHandle) -> Result<String> {
             return Err(err);
         }
     };
+    state.revision = Some(response.updated_at);
 
-    promote_snapshot(&profile_dir)?;
-
-    {
+    // link the remote id before promoting the snapshot so a later failure
+    // leaves a handle to clean up instead of an untracked remote profile
+    let saved = {
         let mut manager = app.lock_manager();
         let (_, profile) = manager.profile_by_id_mut(profile_id)?;
 
@@ -442,7 +496,24 @@ pub(super) async fn create_profile(app: &AppHandle) -> Result<String> {
             published: Some(state),
             applied: None,
         });
-        profile.save(app, true)?;
+        profile.save(app, true)
+    };
+
+    if let Err(err) = saved {
+        if let Err(cleanup_err) = delete_profile(&response.id, app).await {
+            warn!(
+                "failed to delete orphaned remote profile {}: {cleanup_err:#}",
+                response.id
+            );
+        }
+        remove_staging(&profile_dir);
+        return Err(err);
+    }
+
+    if let Err(err) = promote_snapshot(&profile_dir) {
+        // the remote id is already linked; a missing snapshot heals through
+        // reconcile instead of leaving the remote profile orphaned
+        warn!("failed to promote publication snapshot: {err:#}");
     }
 
     Ok(response.id)
@@ -521,6 +592,7 @@ mod tests {
     fn published_state_with(config: &[(&str, &[u8])]) -> PublishedState {
         let manifest = base_manifest();
         PublishedState {
+            revision: None,
             mods_revision: manifest_revision(&manifest).unwrap(),
             manifest,
             config: config
@@ -558,7 +630,7 @@ mod tests {
         export::write_archive(&manifest, &config, &mut writer).unwrap();
 
         let validated = archive::validate(writer.get_ref()).unwrap();
-        let state = published_state(&validated).unwrap();
+        let state = published_state(&validated, None).unwrap();
 
         assert!(state.manifest.sync.is_none());
         assert_eq!(
@@ -579,7 +651,7 @@ mod tests {
         export::write_archive(&manifest, &config, &mut writer).unwrap();
 
         let validated = archive::validate(writer.get_ref()).unwrap();
-        let state = published_state(&validated).unwrap();
+        let state = published_state(&validated, None).unwrap();
 
         assert!(state.manifest.sync.is_none());
         assert_eq!(
@@ -805,12 +877,21 @@ mod tests {
 
         assert!(needs_reconcile(&data, now, dir.path()).unwrap());
 
-        data.published = Some(published_state_with(&[("a.cfg", b"data")]));
+        data.published = Some(PublishedState {
+            revision: Some(now),
+            ..published_state_with(&[("a.cfg", b"data")])
+        });
         assert!(needs_reconcile(&data, now, dir.path()).unwrap());
 
         write_file(dir.path().join(SNAPSHOT_DIR).join("a.cfg"), b"data");
         assert!(!needs_reconcile(&data, now, dir.path()).unwrap());
 
+        // a remote notification bumps updated_at without touching the snapshot;
+        // the snapshot's own revision is what determines staleness
+        assert!(needs_reconcile(&data, now + chrono::Duration::seconds(1), dir.path()).unwrap());
+
+        data.synced_at = now + chrono::Duration::seconds(1);
+        data.updated_at = now + chrono::Duration::seconds(1);
         assert!(needs_reconcile(&data, now + chrono::Duration::seconds(1), dir.path()).unwrap());
     }
 }
