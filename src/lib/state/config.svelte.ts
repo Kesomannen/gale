@@ -13,6 +13,7 @@ class ConfigState {
 	constructor() {
 		$effect.root(() => {
 			$effect(() => {
+				// Whenever the user switches active profiles, refresh.
 				profiles.activeId;
 				untrack(() => this.refresh());
 			});
@@ -21,13 +22,17 @@ class ConfigState {
 
 	async refresh() {
 		if (this.loading) return;
+		console.log('Refreshing config files...');
 		this.loading = true;
 		try {
 			this.files = await api.config.getFiles();
 
-			const selectedPath = this.selectedFile?.relativePath;
-			if (selectedPath) {
-				this.selectedFile = this.findFileByPath(selectedPath);
+			if (this.selectedFile) {
+				this.selectedFile = this.findFileByPath(this.selectedFile.relativePath);
+			}
+
+			if (this.selectedFile && this.selectedSection) {
+				this.selectedSection = this.findSectionByName(this.selectedFile, this.selectedSection.name);
 			}
 		} finally {
 			this.loading = false;
@@ -47,6 +52,11 @@ class ConfigState {
 
 	findFileByPath(path: string): ConfigFile | null {
 		return this.files.find((f) => f.relativePath === path) ?? null;
+	}
+
+	findSectionByName(file: ConfigFile, name: string): ConfigSection | null {
+		if (file.type !== 'ok') return null;
+		return file.sections.find((s) => s.name === name) ?? null;
 	}
 
 	gotoModConfig(relativePath: string) {

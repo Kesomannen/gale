@@ -61,7 +61,7 @@ pub struct SyncProfileData {
     synced_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
     #[serde(default)]
-    missing: bool,
+    pub missing: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

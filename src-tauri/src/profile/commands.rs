@@ -62,7 +62,13 @@ pub fn get_game_info(app: AppHandle) -> GameInfo {
     let favorites = manager
         .games
         .iter()
-        .filter_map(|(game, managed_game)| if managed_game.favorite { Some(&*game.slug) } else { None })
+        .filter_map(|(game, managed_game)| {
+            if managed_game.favorite {
+                Some(&*game.slug)
+            } else {
+                None
+            }
+        })
         .collect();
 
     GameInfo {
@@ -121,6 +127,18 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
     app.sync_socket().unsubscribe(game.active_profile());
 
     game.set_active_profile(index)?;
+
+    let profile = game.active_profile_mut();
+
+    if profile.sync.as_ref().is_some_and(|sync| !sync.missing) {
+        let app_clone = app.clone();
+
+        tauri::async_runtime::spawn(async move {
+            if let Err(err) = super::sync::pull_profile(true, &app_clone).await {
+                warn!(?err, "failed to refresh sync after profile switch");
+            }
+        });
+    }
 
     app.sync_socket().subscribe(game.active_profile());
 

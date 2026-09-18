@@ -2,13 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- Copy link context menu option to copy a mod's Thunderstore or Hexium URL
+
 ### Changed
 
-- Download retries now use range queries to pick up where the last requested failed, instead of restarting the entire download
+- Download retries now use range queries to pick up where the last request failed, instead of restarting the entire download
 
 ### Fixed
 
 - Cross-platform updates not being displayed on the mod card, only in the "Update All" dialog
+- Sync status not being refresh when switching to a profile
+- Deleted config files remaining in the config editor until the app is restarted
+- Sync donation notice reappearing each time the dialog is opened
+- Config file editor sometimes becoming stale after switching profiles
 
 ## 1.22.3 (2026-09-16)
 

@@ -379,6 +379,8 @@
 	"page_dialog_noDependants": "No dependants found",
 	"page_dialog_title": "Dependants of {name}",
 	"page_modContextItem_changeVersion": "Change version",
+	"page_modContextItem_copyLink": "Copy link",
+	"page_modContextItem_copyLink_message": "Copied mod link to clipboard.",
 	"page_modContextItem_donate": "Donate",
 	"page_modContextItem_openFolder": "Open folder",
 	"page_modContextItem_openWebsite": "Open website",

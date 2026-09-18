@@ -73,11 +73,22 @@ export class PersistedState<T> {
 				// with the initial defaults before the store has been read.
 				const value = this.current;
 				const serialized = this.#serializer.serialize(value);
+				console.log(`Persisting store value for ${this.#key} (loaded: ${loaded}): ${serialized}`);
 				if (loaded) {
 					void uiStore.set(this.#key, serialized);
 				}
 			});
 		});
+	}
+
+	destroy(): void {
+		const list = instances.get(this.#key);
+		if (!list) return;
+
+		const index = list.indexOf(this as PersistedState<unknown>);
+		if (index !== -1) {
+			list.splice(index, 1);
+		}
 	}
 
 	hydrate(value: string): void {

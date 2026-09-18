@@ -17,6 +17,8 @@
 	import InfoBox from '../ui/InfoBox.svelte';
 	import SyncDonationNotice from './SyncDonationNotice.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import config from '$lib/state/config.svelte';
+	import { PersistedState } from '$lib/state/persisted-state.svelte';
 
 	type State = 'off' | 'synced' | 'outdated' | 'missing';
 
@@ -38,6 +40,8 @@
 					? 'outdated'
 					: 'synced') as State
 	);
+
+	let donationClosedAt = new PersistedState<string | null>('donationClosedAt', null);
 
 	let style = $derived(
 		{
@@ -116,6 +120,7 @@
 
 	async function pull() {
 		await wrapApiCall(api.profile.sync.pull, m.syncer_pull_message());
+		config.refresh();
 	}
 
 	async function refresh() {
@@ -195,7 +200,7 @@
 />
 
 <Dialog bind:open={mainDialogOpen} title={m.syncer_title()}>
-	<SyncDonationNotice show={syncInfo !== null} />
+	<SyncDonationNotice show={syncInfo !== null} bind:closedAt={donationClosedAt.current} />
 
 	{#if syncInfo}
 		{#if syncState !== 'missing'}
