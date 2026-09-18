@@ -7,7 +7,7 @@ use std::{
 };
 
 use base64::{Engine, prelude::BASE64_STANDARD};
-use eyre::{Context, Result, eyre};
+use eyre::{Context, OptionExt, Result, bail, eyre};
 use futures_util::future;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use itertools::Itertools;
@@ -22,8 +22,9 @@ use crate::{
     game::Game,
     prefs::Backends,
     profile::{
+        ProfileMod,
         export::{PROFILE_DATA_PREFIX, ProfileManifest},
-        install::{InstallOptions, ModInstall},
+        install::{InstallOptions, ModInstall, restore_package_state},
     },
     state::ManagerExt,
     thunderstore::{Backend, ModId, Thunderstore},
@@ -174,25 +175,48 @@ pub(super) struct ImportedProfile {
     pub created: bool,
 }
 
+/// Which profile a manifest import should target.
+#[derive(Debug)]
+pub(super) enum ImportTarget {
+    /// Apply the import to this exact profile id. Never activates it.
+    Existing(i64),
+    /// Resolve the manifest's profile name inside this game.
+    Named { game: Game },
+}
+
 pub(super) async fn import_manifest(
     manifest: ProfileManifest,
+    target: ImportTarget,
     options: ImportOptions,
     install_options: InstallOptions,
     app: &AppHandle,
 ) -> Result<ImportedProfile> {
-    let (id, path, game, to_install, created) = prepare_import(&options, manifest, app)?;
+    wait_for_profile_installs(&target, &manifest.name, app).await;
+
+    let (id, path, game, to_install, created, revert) =
+        prepare_import(&options, manifest, target, app)?;
 
     match app
         .install_queue()
         .install(to_install, id, install_options, app)
         .await
     {
-        Ok(()) => Ok(ImportedProfile {
-            id,
-            path,
-            game,
-            created,
-        }),
+        Ok(()) => {
+            // the install succeeded; backed-up files are no longer needed
+            let dir = revert_dir(&path);
+            if dir.exists() {
+                fs::remove_dir_all(&dir).unwrap_or_else(|err| {
+                    warn!("failed to remove revert dir {}: {err}", dir.display());
+                });
+            }
+
+            Ok(ImportedProfile {
+                id,
+                path,
+                game,
+                created,
+            })
+        }
         Err(err) => {
             if created {
                 cleanup_failed_profile(id, app).unwrap_or_else(|err| {
@@ -201,6 +225,12 @@ pub(super) async fn import_manifest(
                         err
                     );
                 });
+            } else if let Some(revert) = revert {
+                if let Err(restore_err) = restore_imported_profile(id, revert, app) {
+                    return Err(eyre::eyre!(err).wrap_err(format!(
+                        "failed to restore the previous mod set: {restore_err:#}"
+                    )));
+                }
             }
 
             Err(err.into())
@@ -221,7 +251,16 @@ pub(super) async fn import_profile(
         "importing profile"
     );
 
-    let result = match import_manifest(data.manifest, options.clone(), install_options, app).await {
+    let game = app.lock_manager().active_game().game;
+    let result = match import_manifest(
+        data.manifest,
+        ImportTarget::Named { game },
+        options.clone(),
+        install_options,
+        app,
+    )
+    .await
+    {
         Ok(imported) => match import_config(
             &imported.path,
             &data.path,
@@ -259,8 +298,16 @@ pub(super) async fn import_profile(
 fn prepare_import(
     options: &ImportOptions,
     manifest: ProfileManifest,
+    target: ImportTarget,
     app: &AppHandle,
-) -> Result<(i64, PathBuf, Game, Vec<ModInstall>, bool)> {
+) -> Result<(
+    i64,
+    PathBuf,
+    Game,
+    Vec<ModInstall>,
+    bool,
+    Option<ImportRevert>,
+)> {
     let ProfileManifest {
         name,
         mods,
@@ -288,30 +335,68 @@ fn prepare_import(
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let game = manager.active_game_mut();
+    let (id, path, game, to_install, created, revert) = match target {
+        ImportTarget::Existing(profile_id) => {
+            let (game, profile) = manager.profile_by_id_mut(profile_id)?;
 
-    let (profile, to_install, created) = if let Some(profile_index) = game.find_profile_index(&name)
-    {
-        // overwrite an existing profile
-        let profile = game.set_active_profile(profile_index)?;
-        let to_install = incremental_update(options.merge, installs, profile)?.collect_vec();
+            let (to_install, revert) = incremental_update(options.merge, installs, profile)?;
 
-        (profile, to_install, false)
-    } else {
-        let profile = game.create_profile(name, None, app.db())?;
+            profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
+            profile.ignored_package_updates = ignored_package_updates.into_iter().collect();
 
-        (profile, installs, true)
+            let result = (
+                profile.id,
+                profile.path.clone(),
+                game,
+                to_install,
+                false,
+                Some(revert),
+            );
+            profile.save(app, true)?;
+
+            result
+        }
+        ImportTarget::Named { game } => {
+            let game = manager
+                .games
+                .get_mut(&game)
+                .ok_or_eyre("target game is not managed")?;
+
+            let (profile, to_install, created, revert) = if let Some(profile_index) =
+                game.find_profile_index(&name)
+            {
+                // overwrite an existing profile
+                let profile = game.set_active_profile(profile_index)?;
+                let (to_install, revert) = incremental_update(options.merge, installs, profile)?;
+
+                (profile, to_install, false, Some(revert))
+            } else {
+                (
+                    game.create_profile(name, None, app.db())?,
+                    installs,
+                    true,
+                    None,
+                )
+            };
+
+            profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
+            profile.ignored_package_updates = ignored_package_updates.into_iter().collect();
+
+            let result = (
+                profile.id,
+                profile.path.clone(),
+                game.game,
+                to_install,
+                created,
+                revert,
+            );
+            game.save(app)?;
+
+            result
+        }
     };
 
-    profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
-    profile.ignored_package_updates = ignored_package_updates.into_iter().collect();
-
-    let id = profile.id;
-    let path = profile.path.clone();
-
-    game.save(app)?;
-
-    Ok((id, path, game.game, to_install, created))
+    Ok((id, path, game, to_install, created, revert))
 }
 
 pub(super) fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result<()> {
@@ -330,11 +415,228 @@ pub(super) fn cleanup_failed_profile(profile_id: i64, app: &AppHandle) -> Result
     Ok(())
 }
 
+/// Everything needed to undo an [`incremental_update`] after the install batch fails.
+///
+/// Removed mods' files are moved aside into `_state/revert` rather than deleted,
+/// so restoring them is a pure filesystem replay with no network dependency.
+#[derive(Default)]
+pub(super) struct ImportRevert {
+    removed: Vec<RemovedModBackup>,
+    toggled: Vec<Uuid>,
+}
+
+struct RemovedModBackup {
+    profile_mod: ProfileMod,
+    index: usize,
+    /// Profile-relative paths moved into `revert_dir/<uuid>/`.
+    paths: Vec<PathBuf>,
+    /// `_state/<full_name>.json` was copied into the revert dir.
+    has_pkg_state: bool,
+}
+
+fn revert_dir(profile_path: &Path) -> PathBuf {
+    profile_path.join("_state").join("revert")
+}
+
+fn package_state_path(full_name: &str, profile: &Profile) -> PathBuf {
+    profile
+        .path
+        .join("_state")
+        .join(format!("{full_name}.json"))
+}
+
+/// Moves a removed mod's files into the revert dir, then removes the mod.
+///
+/// The uninstall afterwards still runs its bookkeeping (Track-mode state
+/// cleanup) on the now-missing files.
+fn backup_removed_mod(
+    profile: &mut Profile,
+    package_uuid: Uuid,
+    revert: &mut ImportRevert,
+) -> Result<()> {
+    let index = profile.index_of(package_uuid)?;
+    let profile_mod = profile.mods[index].clone();
+    let full_name = profile_mod.full_name().into_owned();
+
+    let installer = profile.game.mod_loader.installer_for(&full_name);
+    let mod_revert_dir = revert_dir(&profile.path).join(package_uuid.to_string());
+
+    let mut paths = Vec::new();
+    for path in installer.installed_paths(&profile_mod, profile)? {
+        // disabled files live under a `.old` suffix; move both variants if present
+        for candidate in [path.clone(), with_old_extension(&path)] {
+            if fs::symlink_metadata(&candidate).is_err() {
+                continue;
+            }
+
+            let rel = candidate
+                .strip_prefix(&profile.path)
+                .with_context(|| {
+                    format!(
+                        "mod file {} is outside the profile directory",
+                        candidate.display()
+                    )
+                })?
+                .to_path_buf();
+            let dest = mod_revert_dir.join(&rel);
+
+            fs::create_dir_all(dest.parent().unwrap())?;
+            fs::rename(&candidate, &dest)
+                .with_context(|| format!("failed to back up mod file {}", candidate.display()))?;
+            paths.push(rel);
+        }
+    }
+
+    // copy, don't move: `uninstall` still needs the original for Track-mode cleanup
+    let state_file = package_state_path(&full_name, profile);
+    let has_pkg_state = state_file.is_file();
+    if has_pkg_state {
+        fs::create_dir_all(&mod_revert_dir)?;
+        fs::copy(&state_file, mod_revert_dir.join("pkg_state.json"))?;
+    }
+
+    profile.force_remove_mod(package_uuid)?;
+
+    revert.removed.push(RemovedModBackup {
+        profile_mod,
+        index,
+        paths,
+        has_pkg_state,
+    });
+
+    Ok(())
+}
+
+fn with_old_extension(path: &Path) -> PathBuf {
+    let mut path = path.to_path_buf();
+    path.add_extension("old");
+    path
+}
+
+/// Replays an [`ImportRevert`] on a profile: moves backed-up files back and
+/// restores mod records and toggles.
+///
+/// Mods whose files can't be moved back stay removed (a degraded but
+/// consistent state) and are reported in the returned error. The revert dir is
+/// only cleaned up when every mod was restored.
+fn restore_revert(profile: &mut Profile, revert: ImportRevert) -> Result<()> {
+    let revert_dir = revert_dir(&profile.path);
+
+    let mut unrestored = Vec::new();
+
+    // undo removals in reverse order: each backup's index is the mod's position
+    // in the list *after* the mods removed before it were taken out, so
+    // reinserting last-removed-first reconstructs the original order
+    for backup in revert.removed.into_iter().rev() {
+        let uuid = backup.profile_mod.uuid();
+        let full_name = backup.profile_mod.full_name().into_owned();
+        let mod_revert_dir = revert_dir.join(uuid.to_string());
+
+        let mut failed = false;
+        for rel in &backup.paths {
+            let src = mod_revert_dir.join(rel);
+            let dest = profile.path.join(rel);
+
+            if let Err(err) =
+                fs::create_dir_all(dest.parent().unwrap()).and_then(|_| fs::rename(&src, &dest))
+            {
+                warn!(
+                    %full_name,
+                    path = %rel.display(),
+                    "failed to restore backed-up mod file: {err}"
+                );
+                failed = true;
+            }
+        }
+
+        if failed {
+            unrestored.push(full_name);
+            continue;
+        }
+
+        if backup.has_pkg_state {
+            let backup_file = mod_revert_dir.join("pkg_state.json");
+            restore_package_state(profile, &full_name, &backup_file).unwrap_or_else(|err| {
+                warn!(%full_name, "failed to restore tracked mod files: {err:#}");
+            });
+        }
+
+        profile
+            .mods
+            .insert(backup.index.min(profile.mods.len()), backup.profile_mod);
+    }
+
+    for uuid in revert.toggled {
+        profile
+            .force_toggle_mod(uuid)
+            .unwrap_or_else(|err| warn!(%uuid, "failed to restore mod state: {err}"));
+    }
+
+    if unrestored.is_empty() {
+        fs::remove_dir_all(&revert_dir).unwrap_or_else(|err| {
+            warn!(
+                "failed to remove revert dir {}: {err}",
+                revert_dir.display()
+            );
+        });
+        Ok(())
+    } else {
+        // keep the revert dir so the files can be recovered manually
+        bail!(
+            "failed to restore mod(s): {}; backed-up files were left in {}",
+            unrestored.join(", "),
+            revert_dir.display()
+        );
+    }
+}
+
+fn restore_imported_profile(profile_id: i64, revert: ImportRevert, app: &AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
+
+    let result = restore_revert(profile, revert);
+    profile.save(app, true)?;
+    result
+}
+
+/// Waits until the install queue has no pending or in-flight work for the
+/// target profile, so a stale queued install can't satisfy or conflict with
+/// the import.
+async fn wait_for_profile_installs(target: &ImportTarget, name: &str, app: &AppHandle) {
+    let profile_id = match target {
+        ImportTarget::Existing(id) => Some(*id),
+        ImportTarget::Named { game } => {
+            let manager = app.lock_manager();
+            manager
+                .games
+                .get(game)
+                .and_then(|game| game.find_profile_index(name))
+                .map(|index| manager.games[game].profiles[index].id)
+        }
+    };
+
+    let Some(profile_id) = profile_id else {
+        return;
+    };
+
+    loop {
+        let notified = app.install_queue().wait_for_batch();
+        tokio::pin!(notified);
+        notified.as_mut().enable();
+
+        if !app.install_queue().lock().has_any_for_profile(profile_id) {
+            break;
+        }
+
+        notified.await;
+    }
+}
+
 fn incremental_update(
     merge: bool,
     installs: impl IntoIterator<Item = ModInstall>,
     profile: &mut Profile,
-) -> Result<impl Iterator<Item = ModInstall>> {
+) -> Result<(Vec<ModInstall>, ImportRevert)> {
     let current_mods: HashMap<ModId, bool> = profile
         .thunderstore_mods()
         .map(|(ts_mod, enabled)| (ts_mod.id.clone(), enabled))
@@ -349,30 +651,53 @@ fn incremental_update(
 
     let new_ids: HashSet<&ModId> = new_mods.keys().collect();
 
-    if merge {
-        // remove only version mismatches
-        let to_remove = current_mods.keys().filter(|id| {
-            new_mods.values().any(|install| {
-                install.mod_id().package_uuid == id.package_uuid
-                    && install.mod_id().version_uuid != id.version_uuid
-            })
-        });
-        for mod_id in to_remove {
-            profile.force_remove_mod(mod_id.package_uuid)?;
-        }
-    } else {
-        // remove all extra mods
-        let to_remove = current_ids.difference(&new_ids);
-        for mod_id in to_remove {
-            profile.force_remove_mod(mod_id.package_uuid)?;
+    let revert_dir = revert_dir(&profile.path);
+    if revert_dir.exists() {
+        if revert_dir.read_dir()?.next().is_none() {
+            fs::remove_dir(&revert_dir)?;
+        } else {
+            bail!(
+                "a previous sync import left backed-up mod files at {}; \
+                 inspect or remove it manually before retrying",
+                revert_dir.display()
+            );
         }
     }
 
-    let to_toggle = current_ids
+    let mut revert = ImportRevert::default();
+
+    let remove_mods: Vec<Uuid> = if merge {
+        // remove only version mismatches
+        current_mods
+            .keys()
+            .filter(|id| {
+                new_mods.values().any(|install| {
+                    install.mod_id().package_uuid == id.package_uuid
+                        && install.mod_id().version_uuid != id.version_uuid
+                })
+            })
+            .map(|id| id.package_uuid)
+            .collect()
+    } else {
+        // remove all extra mods
+        current_ids
+            .difference(&new_ids)
+            .map(|id| id.package_uuid)
+            .collect()
+    };
+
+    for uuid in remove_mods {
+        backup_removed_mod(profile, uuid, &mut revert)?;
+    }
+
+    let to_toggle: Vec<Uuid> = current_ids
         .intersection(&new_ids)
-        .filter(|id| *current_mods.get(*id).unwrap() != new_mods.get(id).unwrap().enabled());
-    for mod_id in to_toggle {
-        profile.force_toggle_mod(mod_id.package_uuid)?;
+        .filter(|id| *current_mods.get(*id).unwrap() != new_mods.get(id).unwrap().enabled())
+        .map(|id| id.package_uuid)
+        .collect();
+    for uuid in to_toggle {
+        profile.force_toggle_mod(uuid)?;
+        revert.toggled.push(uuid);
     }
 
     // we have to clone and collect the ids because new_ids.difference() borrows new_mods,
@@ -385,9 +710,10 @@ fn incremental_update(
 
     let to_install = ids_to_install
         .into_iter()
-        .map(move |id| new_mods.remove(&id).unwrap());
+        .map(move |id| new_mods.remove(&id).unwrap())
+        .collect();
 
-    Ok(to_install)
+    Ok((to_install, revert))
 }
 
 #[tracing::instrument(skip_all, fields(dest = %dest.display(), src = %src.display()))]
@@ -458,4 +784,220 @@ fn is_always_imported(path: impl AsRef<Path>) -> bool {
     });
 
     !EXCLUDE_SET.is_match(path.as_ref())
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::tempdir;
+
+    use super::*;
+    use crate::{
+        config::ConfigCache,
+        game,
+        profile::{ProfileModKind, ThunderstoreMod},
+    };
+
+    fn mod_id(seed: u128) -> ModId {
+        ModId {
+            package_uuid: Uuid::from_u128(seed),
+            version_uuid: Uuid::from_u128(seed + 0x1000),
+            backend: Backend::Thunderstore,
+        }
+    }
+
+    fn ts_mod(ident: &str, id: ModId, enabled: bool) -> ProfileMod {
+        let mut profile_mod = ProfileMod::new(ProfileModKind::Thunderstore(ThunderstoreMod {
+            ident: ident.parse().unwrap(),
+            id,
+        }));
+        profile_mod.enabled = enabled;
+        profile_mod
+    }
+
+    fn profile_at(path: &Path, mods: Vec<ProfileMod>) -> Profile {
+        Profile {
+            id: 0,
+            name: "Test".to_owned(),
+            path: path.to_owned(),
+            mods,
+            game: game::from_slug("among-us").unwrap(),
+            ignored_version_updates: Default::default(),
+            ignored_package_updates: Default::default(),
+            config_cache: ConfigCache::default(),
+            linked_config: Default::default(),
+            modpack: None,
+            sync: None,
+            custom_args: String::new(),
+            missing: false,
+        }
+    }
+
+    #[test]
+    fn incremental_update_removes_extras_and_toggles() {
+        let dir = tempdir().unwrap();
+
+        let id_a1 = mod_id(1);
+        let id_a2 = ModId {
+            package_uuid: id_a1.package_uuid,
+            version_uuid: Uuid::from_u128(0xA2),
+            backend: Backend::Thunderstore,
+        };
+        let id_b = mod_id(2);
+        let id_c = mod_id(3);
+
+        let mut profile = profile_at(
+            dir.path(),
+            vec![
+                ts_mod("Author-ModA-1.0.0", id_a1.clone(), true),
+                ts_mod("Author-ModB-1.0.0", id_b.clone(), true),
+                ts_mod("Author-ModC-1.0.0", id_c.clone(), true),
+            ],
+        );
+
+        let installs = vec![
+            ModInstall::test(
+                "Author-ModA-2.0.0",
+                id_a2.package_uuid,
+                id_a2.version_uuid,
+                true,
+            ),
+            ModInstall::test(
+                "Author-ModC-1.0.0",
+                id_c.package_uuid,
+                id_c.version_uuid,
+                false,
+            ),
+        ];
+
+        let (to_install, revert) = incremental_update(false, installs, &mut profile).unwrap();
+
+        // A v1 and B were removed, C was toggled off
+        assert_eq!(profile.mods.len(), 1);
+        assert_eq!(profile.mods[0].uuid(), id_c.package_uuid);
+        assert!(!profile.mods[0].enabled);
+
+        let mut removed: Vec<_> = revert
+            .removed
+            .iter()
+            .map(|backup| backup.profile_mod.uuid())
+            .collect();
+        removed.sort();
+        assert_eq!(removed, vec![id_a1.package_uuid, id_b.package_uuid]);
+        assert_eq!(revert.toggled, vec![id_c.package_uuid]);
+
+        assert_eq!(to_install.len(), 1);
+        assert_eq!(to_install[0].uuid(), id_a2.package_uuid);
+    }
+
+    #[test]
+    fn revert_restores_removed_mods_and_files() {
+        let dir = tempdir().unwrap();
+        let id = mod_id(1);
+        let ident = "Author-Mod-1.0.0";
+        let package_name = "Author-Mod";
+
+        let mut profile = profile_at(dir.path(), vec![ts_mod(ident, id.clone(), true)]);
+
+        let plugin_dir = dir.path().join("BepInEx/plugins").join(package_name);
+        fs::create_dir_all(&plugin_dir).unwrap();
+        fs::write(plugin_dir.join("plugin.dll"), b"data").unwrap();
+
+        let mut revert = ImportRevert::default();
+        backup_removed_mod(&mut profile, id.package_uuid, &mut revert).unwrap();
+
+        assert!(profile.mods.is_empty());
+        assert!(!plugin_dir.exists());
+        assert!(
+            revert_dir(dir.path())
+                .join(id.package_uuid.to_string())
+                .join("BepInEx/plugins/Author-Mod/plugin.dll")
+                .is_file()
+        );
+
+        restore_revert(&mut profile, revert).unwrap();
+
+        assert_eq!(fs::read(plugin_dir.join("plugin.dll")).unwrap(), b"data");
+        assert_eq!(profile.mods.len(), 1);
+        assert_eq!(profile.mods[0].uuid(), id.package_uuid);
+        assert!(profile.mods[0].enabled);
+        assert!(!revert_dir(dir.path()).exists());
+    }
+
+    #[test]
+    fn revert_restores_record_order() {
+        let dir = tempdir().unwrap();
+        let id_a = mod_id(1);
+        let id_b = mod_id(2);
+
+        let mut profile = profile_at(
+            dir.path(),
+            vec![
+                ts_mod("Author-ModA-1.0.0", id_a.clone(), true),
+                ts_mod("Author-ModB-1.0.0", id_b.clone(), true),
+            ],
+        );
+
+        let mut revert = ImportRevert::default();
+        backup_removed_mod(&mut profile, id_a.package_uuid, &mut revert).unwrap();
+        backup_removed_mod(&mut profile, id_b.package_uuid, &mut revert).unwrap();
+        assert!(profile.mods.is_empty());
+
+        restore_revert(&mut profile, revert).unwrap();
+
+        let names: Vec<_> = profile
+            .mods
+            .iter()
+            .map(|m| m.full_name().into_owned())
+            .collect();
+        assert_eq!(names, ["Author-ModA", "Author-ModB"]);
+    }
+
+    #[test]
+    fn revert_restore_reports_obstructed_targets() {
+        let dir = tempdir().unwrap();
+        let id = mod_id(1);
+
+        let mut profile = profile_at(
+            dir.path(),
+            vec![ts_mod("Author-Mod-1.0.0", id.clone(), true)],
+        );
+
+        let plugin_dir = dir.path().join("BepInEx/plugins/Author-Mod");
+        fs::create_dir_all(&plugin_dir).unwrap();
+        fs::write(plugin_dir.join("plugin.dll"), b"data").unwrap();
+
+        let mut revert = ImportRevert::default();
+        backup_removed_mod(&mut profile, id.package_uuid, &mut revert).unwrap();
+
+        // obstruct the restore target: an occupied dir where the mod's dir must go
+        fs::create_dir_all(&plugin_dir).unwrap();
+        fs::write(plugin_dir.join("obstruction"), b"x").unwrap();
+
+        let result = restore_revert(&mut profile, revert);
+
+        assert!(result.is_err());
+        // the mod stays removed and its backup is preserved for manual recovery
+        assert!(profile.mods.is_empty());
+        assert!(revert_dir(dir.path()).exists());
+    }
+
+    #[test]
+    fn incremental_update_aborts_on_nonempty_revert_dir() {
+        let dir = tempdir().unwrap();
+        let revert_dir = revert_dir(dir.path());
+        fs::create_dir_all(&revert_dir).unwrap();
+        fs::write(revert_dir.join("leftover"), b"data").unwrap();
+
+        let mut profile = profile_at(
+            dir.path(),
+            vec![ts_mod("Author-Mod-1.0.0", mod_id(1), true)],
+        );
+
+        let result = incremental_update(false, Vec::new(), &mut profile);
+
+        assert!(result.is_err());
+        // the leftover backup is preserved, not silently deleted
+        assert!(revert_dir.join("leftover").is_file());
+        assert_eq!(profile.mods.len(), 1);
+    }
 }

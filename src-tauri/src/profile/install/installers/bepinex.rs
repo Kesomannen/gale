@@ -79,6 +79,10 @@ impl PackageInstaller for BepinexInstaller {
         Ok(())
     }
 
+    fn installed_paths(&self, profile_mod: &ProfileMod, profile: &Profile) -> Result<Vec<PathBuf>> {
+        scan(profile, &profile_mod.full_name())
+    }
+
     fn mod_dir(&self, package_name: &str, profile: &Profile) -> Option<PathBuf> {
         Some(profile.path.join(get_core_path(package_name)))
     }

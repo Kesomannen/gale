@@ -209,6 +209,25 @@ impl From<BorrowedMod<'_>> for ModInstall {
     }
 }
 
+#[cfg(test)]
+impl ModInstall {
+    /// Builds a `ModInstall` for tests without needing a [`BorrowedMod`].
+    pub fn test(ident: &str, package_uuid: Uuid, version_uuid: Uuid, enabled: bool) -> Self {
+        Self {
+            id: ModId {
+                package_uuid,
+                version_uuid,
+                backend: crate::thunderstore::Backend::Thunderstore,
+            },
+            ident: ident.parse().unwrap(),
+            file_size: 0,
+            enabled,
+            index: None,
+            install_time: None,
+        }
+    }
+}
+
 pub type InstallResult<T> = std::result::Result<T, InstallError>;
 
 #[derive(Debug)]

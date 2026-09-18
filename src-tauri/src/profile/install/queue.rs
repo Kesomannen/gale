@@ -31,6 +31,8 @@ pub struct InstallQueue {
     notify_push: Notify,
     /// Notified when all batches have been completed.
     notify_empty: Notify,
+    /// Notified when any single batch has been completed.
+    notify_batch_done: Notify,
     cancel: AtomicBool,
 }
 
@@ -49,6 +51,7 @@ impl InstallQueue {
             state: Mutex::new(State::default()),
             notify_push: Notify::new(),
             notify_empty: Notify::new(),
+            notify_batch_done: Notify::new(),
             cancel,
         });
 
@@ -59,6 +62,13 @@ impl InstallQueue {
 
     pub fn wait_for_empty(&'_ self) -> Notified<'_> {
         self.notify_empty.notified()
+    }
+
+    /// Returns a future that resolves when any batch finishes processing.
+    ///
+    /// Use [`Notified::enable`] to subscribe before checking queue state.
+    pub fn wait_for_batch(&'_ self) -> Notified<'_> {
+        self.notify_batch_done.notified()
     }
 
     pub fn cancel_all(&self) {
@@ -293,6 +303,7 @@ async fn handle_queue(queue: Arc<InstallQueue>, app: AppHandle) {
             match batch {
                 Some(batch) => {
                     reason = handle_batch(batch, &queue.cancel, &app).await;
+                    queue.notify_batch_done.notify_waiters();
                 }
                 None => break,
             }

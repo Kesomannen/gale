@@ -15,11 +15,15 @@ use tauri::AppHandle;
 use tracing::warn;
 
 use super::export::{
-    ConfigPath, ContentHash, ModRevision, ProfileManifest, SyncFileEntry, SyncManifest,
+    ConfigPath, ContentHash, ModRevision, ProfileManifest, R2Mod, SyncFileEntry, SyncManifest,
     manifest_revision,
 };
 use crate::{
-    profile::{import::ImportOptions, install::InstallOptions},
+    profile::{
+        Profile,
+        import::{ImportOptions, ImportTarget},
+        install::InstallOptions,
+    },
     state::ManagerExt,
 };
 
@@ -335,13 +339,47 @@ fn preseed_migration(state: &mut AppliedState, latest: &SyncManifest, existed: b
     }
 }
 
+/// Whether the profile's installed thunderstore mods exactly match the
+/// manifest, by (owner, name, version, enabled) tuples.
+fn mod_set_matches(profile: &Profile, expected: &[R2Mod]) -> bool {
+    let mut installed: Vec<_> = profile
+        .thunderstore_mods()
+        .map(|(ts_mod, enabled)| {
+            let (owner, name, version) = ts_mod.ident.split();
+            (
+                owner.to_owned(),
+                name.to_owned(),
+                version.to_owned(),
+                enabled,
+            )
+        })
+        .collect();
+    installed.sort();
+
+    let mut expected: Vec<_> = expected
+        .iter()
+        .map(|r2_mod| {
+            let ident = r2_mod.version_ident();
+            (
+                ident.owner().to_owned(),
+                ident.name().to_owned(),
+                ident.version().to_owned(),
+                r2_mod.enabled,
+            )
+        })
+        .collect();
+    expected.sort();
+
+    installed == expected
+}
+
 async fn apply_archive(
     archive: &archive::ValidatedSyncArchive,
     normalized: NormalizedArchive<'_>,
     metadata: SyncProfileMetadata,
     override_name: Option<String>,
     clone: bool,
-    profile_id: Option<i64>,
+    target: ImportTarget,
     app: &AppHandle,
 ) -> Result<PullReport> {
     let mut manifest = normalized.manifest;
@@ -350,21 +388,36 @@ async fn apply_archive(
     }
     let latest = normalized.latest;
 
+    let profile_id = match &target {
+        ImportTarget::Existing(id) => Some(*id),
+        ImportTarget::Named { .. } => None,
+    };
+
     let (prior_sync, existed, existing_dir, game) = {
         let manager = app.lock_manager();
 
-        let resolved = match profile_id {
-            Some(id) => Some(manager.profile_by_id(id)?),
-            None => {
-                let game = manager.active_game();
-                game.find_profile_index(&manifest.name)
-                    .map(|index| (game.game, &game.profiles[index]))
+        match &target {
+            ImportTarget::Existing(id) => {
+                let (game, profile) = manager.profile_by_id(*id)?;
+                (profile.sync.clone(), true, Some(profile.path.clone()), game)
             }
-        };
+            ImportTarget::Named { game } => {
+                let resolved = manager
+                    .games
+                    .get(game)
+                    .and_then(|game| game.find_profile_index(&manifest.name))
+                    .map(|index| &manager.games[game].profiles[index]);
 
-        match resolved {
-            Some((game, profile)) => (profile.sync.clone(), true, Some(profile.path.clone()), game),
-            None => (None, false, None, manager.active_game().game),
+                match resolved {
+                    Some(profile) => (
+                        profile.sync.clone(),
+                        true,
+                        Some(profile.path.clone()),
+                        *game,
+                    ),
+                    None => (None, false, None, *game),
+                }
+            }
         }
     };
 
@@ -396,11 +449,13 @@ async fn apply_archive(
         BTreeMap::new()
     };
 
-    let (imported, target_id, profile_dir, created) = if needs_install {
+    let (imported, target_id, profile_dir, created, expected_mods) = if needs_install {
         super::import::resolve_manifest_sources(&mut manifest, &app.lock_thunderstore());
+        let expected_mods = selective.then(|| manifest.mods.clone());
 
         let imported = super::import::import_manifest(
             manifest,
+            target,
             ImportOptions::default().ignore_missing_mods(!selective),
             InstallOptions::default(),
             app,
@@ -411,15 +466,34 @@ async fn apply_archive(
         let target_id = imported.id;
         let profile_dir = imported.path.clone();
         let created = imported.created;
-        (Some(imported), target_id, profile_dir, created)
+        (
+            Some(imported),
+            target_id,
+            profile_dir,
+            created,
+            expected_mods,
+        )
     } else {
-        (None, profile_id.unwrap(), existing_dir.unwrap(), false)
+        (
+            None,
+            profile_id.unwrap(),
+            existing_dir.unwrap(),
+            false,
+            None,
+        )
     };
 
     let result = async {
         if let (Some(id), Some(imported)) = (profile_id, imported.as_ref()) {
             ensure!(imported.id == id, "synced profile changed during apply");
         }
+
+        // reject rather than overwrite: a foreign install queued or running for
+        // this profile would make the installed set diverge after verification
+        ensure!(
+            !app.install_queue().lock().has_any_for_profile(target_id),
+            "another install is queued for this profile"
+        );
 
         let mut report = PullReport::default();
 
@@ -455,6 +529,13 @@ async fn apply_archive(
                 current_sync_id == prior_sync_id,
                 "profile sync target changed during apply"
             );
+
+            if let Some(expected) = &expected_mods {
+                ensure!(
+                    mod_set_matches(profile, expected),
+                    "installed mod set does not match the synced manifest"
+                );
+            }
 
             profile.sync = Some(SyncProfileData {
                 id: metadata.id,
@@ -497,6 +578,10 @@ async fn apply_archive(
 }
 
 async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle) -> Result<()> {
+    // capture the target game before any awaits so a mid-download switch
+    // can't redirect the clone into another game
+    let game = app.lock_manager().active_game().game;
+
     let metadata = read_profile(id, app).await?;
     let bytes = download_profile_bytes(id, app).await?;
     let validated = archive::validate(&bytes).context("sync archive failed validation")?;
@@ -508,7 +593,7 @@ async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle)
         metadata,
         override_name,
         true,
-        None,
+        ImportTarget::Named { game },
         app,
     )
     .await?;
@@ -547,7 +632,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<PullReport> 
                 metadata,
                 Some(name),
                 false,
-                Some(profile_id),
+                ImportTarget::Existing(profile_id),
                 app,
             )
             .await
@@ -817,7 +902,7 @@ mod tests {
     use super::*;
     use crate::{
         profile::export::R2Mod,
-        thunderstore::{Backend, PackageIdent},
+        thunderstore::{Backend, ModId, PackageIdent},
     };
 
     fn config_path(path: &str) -> ConfigPath {
@@ -1425,5 +1510,70 @@ mod tests {
         assert_eq!(applied.config[&p].applied, Some(hash(b"A")));
         assert_eq!(applied.config[&q].applied, Some(hash(b"B")));
         assert!(applied.pending.is_empty());
+    }
+
+    fn mod_id(seed: u128) -> ModId {
+        ModId {
+            package_uuid: uuid::Uuid::from_u128(seed),
+            version_uuid: uuid::Uuid::from_u128(seed + 0x1000),
+            backend: Backend::Thunderstore,
+        }
+    }
+
+    fn ts_mod(ident: &str, id: ModId, enabled: bool) -> crate::profile::ProfileMod {
+        let mut profile_mod = crate::profile::ProfileMod::new(
+            crate::profile::ProfileModKind::Thunderstore(crate::profile::ThunderstoreMod {
+                ident: ident.parse().unwrap(),
+                id,
+            }),
+        );
+        profile_mod.enabled = enabled;
+        profile_mod
+    }
+
+    fn profile_with_mods(mods: Vec<crate::profile::ProfileMod>) -> Profile {
+        Profile {
+            id: 0,
+            name: "Test".to_owned(),
+            path: Path::new("").to_owned(),
+            mods,
+            game: crate::game::from_slug("among-us").unwrap(),
+            ignored_version_updates: Default::default(),
+            ignored_package_updates: Default::default(),
+            config_cache: Default::default(),
+            linked_config: Default::default(),
+            modpack: None,
+            sync: None,
+            custom_args: String::new(),
+            missing: false,
+        }
+    }
+
+    #[test]
+    fn mod_set_matches_requires_exact_set() {
+        let id = mod_id(1);
+        let expected = vec![R2Mod {
+            ident: PackageIdent::from(("Author", "Mod")),
+            version: semver::Version::new(1, 0, 0).into(),
+            enabled: true,
+            source: Backend::Thunderstore,
+        }];
+
+        let profile = profile_with_mods(vec![ts_mod("Author-Mod-1.0.0", id.clone(), true)]);
+        assert!(mod_set_matches(&profile, &expected));
+
+        let profile = profile_with_mods(vec![ts_mod("Author-Mod-1.0.1", id.clone(), true)]);
+        assert!(!mod_set_matches(&profile, &expected));
+
+        let profile = profile_with_mods(vec![ts_mod("Author-Mod-1.0.0", id.clone(), false)]);
+        assert!(!mod_set_matches(&profile, &expected));
+
+        let profile = profile_with_mods(vec![
+            ts_mod("Author-Mod-1.0.0", id.clone(), true),
+            ts_mod("Other-Pkg-1.0.0", mod_id(2), true),
+        ]);
+        assert!(!mod_set_matches(&profile, &expected));
+
+        assert!(!mod_set_matches(&profile_with_mods(vec![]), &expected));
     }
 }
