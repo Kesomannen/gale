@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
+	import config from '$lib/state/config.svelte';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import ResetButton from '$lib/components/ui/ResetButton.svelte';
@@ -29,7 +30,8 @@
 			if (!confirmed) return;
 		}
 
-		let result = await api.config.resetEntry(entryId);
+		if (config.profileId === null) return;
+		let result = await api.config.resetEntry(entryId, config.profileId);
 
 		entryId.entry.value = result;
 		onReset(result);

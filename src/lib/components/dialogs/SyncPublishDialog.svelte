@@ -14,12 +14,13 @@
 
 	type Props = {
 		open: boolean;
+		profileId: number;
 		onPublished: () => void;
 	};
 
 	type Mode = 'mods' | 'config' | 'both';
 
-	let { open = $bindable(), onPublished }: Props = $props();
+	let { open = $bindable(), profileId, onPublished }: Props = $props();
 
 	let mode: Mode = $state('both');
 	let files: SyncConfigFileInfo[] = $state([]);
@@ -54,9 +55,13 @@
 	});
 
 	async function loadFiles() {
+		const id = profileId;
 		filesLoading = true;
 		try {
-			files = await api.profile.sync.getConfigFiles();
+			const loaded = await api.profile.sync.getConfigFiles(id);
+			// discard the response if the dialog was repinned while loading
+			if (id !== profileId) return;
+			files = loaded;
 			selected = new SvelteSet(
 				files.filter((file) => file.status !== 'published').map((file) => file.path)
 			);
@@ -80,7 +85,7 @@
 			let publishMode: SyncPublishMode =
 				mode === 'mods' ? { kind: 'mods' } : { kind: mode, files: [...selected] };
 
-			await api.profile.sync.publish(publishMode);
+			await api.profile.sync.publish(publishMode, profileId);
 			pushInfoToast({ message: m.syncPublishDialog_successMessage() });
 			open = false;
 			onPublished();

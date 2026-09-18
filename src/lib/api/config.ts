@@ -7,21 +7,25 @@ const idToArgs = (id: ConfigEntryId) => ({
 	entry: id.entry.name
 });
 
-export const getFiles = () => invoke<ConfigFile[]>('get_config_files');
-export const setEntry = (id: ConfigEntryId, value: ConfigValue) =>
+export const getFiles = (profileId: number) =>
+	invoke<ConfigFile[]>('get_config_files', { profileId });
+export const setEntry = (id: ConfigEntryId, value: ConfigValue, profileId: number) =>
 	invoke('set_config_entry', {
 		...idToArgs(id),
-		value
+		value,
+		profileId
 	});
-export const resetEntry = (id: ConfigEntryId) =>
+export const resetEntry = (id: ConfigEntryId, profileId: number) =>
 	invoke<ConfigValue>('reset_config_entry', {
-		...idToArgs(id)
+		...idToArgs(id),
+		profileId
 	});
-export const resetAll = (file: BaseConfigFile) =>
+export const resetAll = (file: BaseConfigFile, profileId: number) =>
 	invoke('reset_config_file', {
-		file: file.relativePath
+		file: file.relativePath,
+		profileId
 	});
-export const openFile = (file: BaseConfigFile) =>
-	invoke('open_config_file', { file: file.relativePath });
-export const deleteFile = (file: BaseConfigFile) =>
-	invoke('delete_config_file', { file: file.relativePath });
+export const openFile = (file: BaseConfigFile, profileId: number) =>
+	invoke('open_config_file', { file: file.relativePath, profileId });
+export const deleteFile = (file: BaseConfigFile, profileId: number) =>
+	invoke('delete_config_file', { file: file.relativePath, profileId });

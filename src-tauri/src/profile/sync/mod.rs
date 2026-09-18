@@ -145,6 +145,19 @@ pub struct PullReport {
     pub config: apply::ConfigApplyReport,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ReviewChangedEvent {
+    profile_id: i64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PendingConfigEvent {
+    profile_id: i64,
+    pending: Vec<apply::ConfigReviewItem>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct FullUserInfo {
@@ -220,10 +233,10 @@ async fn upload_profile_file(
     }
 }
 
-async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
+async fn disconnect_profile(delete: bool, profile_id: i64, app: &AppHandle) -> Result<()> {
     let (id, is_owner) = {
-        let mut manager = app.lock_manager();
-        let profile = manager.active_profile_mut();
+        let manager = app.lock_manager();
+        let (_, profile) = manager.profile_by_id(profile_id)?;
 
         let (id, owner_discord_id) = profile
             .sync
@@ -243,8 +256,12 @@ async fn disconnect_profile(delete: bool, app: &AppHandle) -> Result<()> {
 
     {
         let mut manager = app.lock_manager();
-        let profile = manager.active_profile_mut();
+        let (_, profile) = manager.profile_by_id_mut(profile_id)?;
 
+        ensure!(
+            profile.sync.as_ref().map(|sync| sync.id.as_str()) == Some(id.as_str()),
+            "profile sync target changed during disconnect"
+        );
         profile.sync = None;
 
         profile.save(app, true)?;
@@ -629,7 +646,12 @@ async fn apply_archive(
     })();
 
     // review state may have changed even when the apply itself failed
-    app.emit_buffered("sync_config_review_changed", &());
+    app.emit_buffered(
+        "sync_config_review_changed",
+        &ReviewChangedEvent {
+            profile_id: target_id,
+        },
+    );
 
     let report = match result {
         Ok(report) => report,
@@ -647,7 +669,13 @@ async fn apply_archive(
     };
 
     if !report.config.pending.is_empty() {
-        app.emit_buffered("sync_config_pending", &report.config.pending);
+        app.emit_buffered(
+            "sync_config_pending",
+            &PendingConfigEvent {
+                profile_id: target_id,
+                pending: report.config.pending.clone(),
+            },
+        );
     }
 
     Ok(report)
@@ -676,19 +704,14 @@ async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle)
     Ok(())
 }
 
-pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<PullReport> {
-    let (id, profile_id, name, synced_at) = {
-        let mut manager = app.lock_manager();
-        let profile = manager.active_profile_mut();
+pub async fn pull_profile(dry_run: bool, profile_id: i64, app: &AppHandle) -> Result<PullReport> {
+    let (id, name, synced_at) = {
+        let manager = app.lock_manager();
+        let (_, profile) = manager.profile_by_id(profile_id)?;
 
         match &profile.sync {
             Some(data) if data.missing => bail!("cannot pull from missing profile"),
-            Some(data) => (
-                data.id.clone(),
-                profile.id,
-                profile.name.clone(),
-                data.synced_at,
-            ),
+            Some(data) => (data.id.clone(), profile.name.clone(), data.synced_at),
             None => return Ok(PullReport::default()),
         }
     };
@@ -738,9 +761,9 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<PullReport> 
     }
 }
 
-fn pending_config_items(app: &AppHandle) -> Result<apply::ConfigReviewState> {
+fn pending_config_items(profile_id: i64, app: &AppHandle) -> Result<apply::ConfigReviewState> {
     let mut manager = app.lock_manager();
-    let profile = manager.active_profile_mut();
+    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
 
     let Some(applied) = profile.sync.as_ref().and_then(|sync| sync.applied.as_ref()) else {
         return Ok(apply::ConfigReviewState::default());
@@ -756,23 +779,24 @@ fn pending_config_items(app: &AppHandle) -> Result<apply::ConfigReviewState> {
     apply::current_review_items(&profile.path, &applied)
 }
 
-fn decline_selected_config(files: &[ConfigPath], remember: bool, app: &AppHandle) -> Result<()> {
-    let (profile_id, sync_id, mut applied) = {
+fn decline_selected_config(
+    files: &[ConfigPath],
+    remember: bool,
+    profile_id: i64,
+    app: &AppHandle,
+) -> Result<()> {
+    let (sync_id, mut applied) = {
         let manager = app.lock_manager();
-        let profile = manager.active_profile();
+        let (_, profile) = manager.profile_by_id(profile_id)?;
         let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
         let applied = sync.applied.clone().ok_or_eyre("no applied sync state")?;
-        (profile.id, sync.id.clone(), applied)
+        (sync.id.clone(), applied)
     };
 
     apply::decline_selected(&mut applied, files, remember)?;
 
     let mut manager = app.lock_manager();
-    let profile = manager.active_profile_mut();
-    ensure!(
-        profile.id == profile_id,
-        "active profile changed during decline"
-    );
+    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
     let Some(sync) = profile.sync.as_mut() else {
         bail!("profile is no longer synced");
     };
@@ -784,23 +808,24 @@ fn decline_selected_config(files: &[ConfigPath], remember: bool, app: &AppHandle
     profile.save(app, true)
 }
 
-fn set_config_policy(file: ConfigPath, policy: ConfigUpdatePolicy, app: &AppHandle) -> Result<()> {
-    let (profile_id, sync_id, mut applied) = {
+fn set_config_policy(
+    file: ConfigPath,
+    policy: ConfigUpdatePolicy,
+    profile_id: i64,
+    app: &AppHandle,
+) -> Result<()> {
+    let (sync_id, mut applied) = {
         let manager = app.lock_manager();
-        let profile = manager.active_profile();
+        let (_, profile) = manager.profile_by_id(profile_id)?;
         let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
         let applied = sync.applied.clone().ok_or_eyre("no applied sync state")?;
-        (profile.id, sync.id.clone(), applied)
+        (sync.id.clone(), applied)
     };
 
     apply::set_policy(&mut applied, &file, policy)?;
 
     let mut manager = app.lock_manager();
-    let profile = manager.active_profile_mut();
-    ensure!(
-        profile.id == profile_id,
-        "active profile changed during policy update"
-    );
+    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
     let Some(sync) = profile.sync.as_mut() else {
         bail!("profile is no longer synced");
     };
@@ -834,15 +859,9 @@ fn ensure_latest(applied: &AppliedState, latest: &SyncManifest) -> Result<()> {
 }
 
 fn sync_apply_target<'a>(
-    active_profile_id: i64,
     sync: &'a mut Option<SyncProfileData>,
-    expected_profile_id: i64,
     expected_sync_id: &str,
 ) -> Result<&'a mut SyncProfileData> {
-    ensure!(
-        active_profile_id == expected_profile_id,
-        "active profile changed during apply"
-    );
     let Some(sync) = sync.as_mut() else {
         bail!("profile is no longer synced");
     };
@@ -885,13 +904,14 @@ async fn apply_selected_config(
     files: Vec<ConfigPath>,
     remember: bool,
     restore_deleted: Vec<ConfigPath>,
+    profile_id: i64,
     app: &AppHandle,
 ) -> Result<Vec<ConfigPath>> {
-    let (profile_id, sync_id) = {
+    let sync_id = {
         let manager = app.lock_manager();
-        let profile = manager.active_profile();
+        let (_, profile) = manager.profile_by_id(profile_id)?;
         let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
-        (profile.id, sync.id.clone())
+        sync.id.clone()
     };
 
     let bytes = download_profile_bytes(&sync_id, app).await?;
@@ -899,9 +919,9 @@ async fn apply_selected_config(
     let normalized = normalize_archive(&validated)?;
 
     let mut manager = app.lock_manager();
-    let profile = manager.active_profile_mut();
+    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
     let profile_dir = profile.path.clone();
-    let sync = sync_apply_target(profile.id, &mut profile.sync, profile_id, &sync_id)?;
+    let sync = sync_apply_target(&mut profile.sync, &sync_id)?;
 
     let apply_result = apply_selected_and_record(
         &profile_dir,
@@ -917,7 +937,10 @@ async fn apply_selected_config(
     profile.save(app, true)?;
 
     // review state may have changed even when the apply itself failed
-    app.emit_buffered("sync_config_review_changed", &());
+    app.emit_buffered(
+        "sync_config_review_changed",
+        &ReviewChangedEvent { profile_id },
+    );
 
     apply_result
 }
@@ -1485,7 +1508,7 @@ mod tests {
         let mut sync_slot = Some(sync_data("sync-id", applied));
         let config = BTreeMap::from([(p.clone(), vfile(b"A"))]);
 
-        let result = sync_apply_target(2, &mut sync_slot, 1, "sync-id").and_then(|sync| {
+        let result = sync_apply_target(&mut sync_slot, "other-sync").and_then(|sync| {
             apply_selected_and_record(
                 dir.path(),
                 &config,

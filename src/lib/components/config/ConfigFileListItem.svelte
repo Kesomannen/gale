@@ -48,7 +48,8 @@
 	}
 
 	async function openFile() {
-		await api.config.openFile(file);
+		if (config.profileId === null) return;
+		await api.config.openFile(file, config.profileId);
 	}
 </script>
 

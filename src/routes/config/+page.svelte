@@ -16,6 +16,11 @@
 
 	let searchTerm = $state('');
 
+	function openFile(file: NonNullable<typeof selectedFile>) {
+		if (config.profileId === null) return;
+		api.config.openFile(file, config.profileId);
+	}
+
 	onMount(() => {
 		config.refresh();
 	});
@@ -55,7 +60,7 @@
 					<Button
 						class="max-w-max"
 						color="primary"
-						onclick={() => api.config.openFile(selectedFile!)}
+						onclick={() => openFile(selectedFile!)}
 						icon="mdi:open-in-new"
 					>
 						{m.config_unsupported_button()}
@@ -70,7 +75,7 @@
 					<Button
 						class="max-w-max"
 						color="primary"
-						onclick={() => api.config.openFile(selectedFile!)}
+						onclick={() => openFile(selectedFile!)}
 						icon="mdi:open-in-new"
 					>
 						{m.config_err_button()}

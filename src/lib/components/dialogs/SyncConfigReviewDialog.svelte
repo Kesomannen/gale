@@ -15,12 +15,13 @@
 
 	type Props = {
 		open: boolean;
+		profileId: number;
 		updates: SyncConfigReviewState;
 		mode: Mode;
 		onChanged: () => void | Promise<void>;
 	};
 
-	let { open = $bindable(), updates, mode, onChanged }: Props = $props();
+	let { open = $bindable(), profileId, updates, mode, onChanged }: Props = $props();
 
 	let selected: SvelteSet<string> = $state(new SvelteSet());
 	let remember = $state(false);
@@ -66,7 +67,7 @@
 	async function applySelected() {
 		let files = [...selected];
 
-		let current = await api.profile.sync.getPendingConfig();
+		let current = await api.profile.sync.getPendingConfig(profileId);
 		let list = mode === 'pending' ? current.pending : current.declined;
 
 		if (files.some((path) => !list.some((item) => item.path === path))) {
@@ -88,7 +89,7 @@
 
 		loading = true;
 		try {
-			await api.profile.sync.applyConfig(files, remember, restoreDeleted);
+			await api.profile.sync.applyConfig(files, remember, restoreDeleted, profileId);
 			pushInfoToast({ message: m.syncConfigReviewDialog_applyMessage() });
 			selected = new SvelteSet();
 			await onChanged();
@@ -100,7 +101,7 @@
 	async function declineSelected() {
 		loading = true;
 		try {
-			await api.profile.sync.declineConfig([...selected], remember);
+			await api.profile.sync.declineConfig([...selected], remember, profileId);
 			pushInfoToast({ message: m.syncConfigReviewDialog_declineMessage() });
 			selected = new SvelteSet();
 			await onChanged();
@@ -112,7 +113,7 @@
 	async function setPolicy(path: string, policy: string) {
 		loading = true;
 		try {
-			await api.profile.sync.setConfigPolicy(path, policy as SyncConfigUpdatePolicy);
+			await api.profile.sync.setConfigPolicy(path, policy as SyncConfigUpdatePolicy, profileId);
 			await onChanged();
 		} finally {
 			loading = false;

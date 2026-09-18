@@ -9,39 +9,61 @@ class ConfigState {
 	selectedFile: ConfigFile | null = $state(null);
 	selectedSection: ConfigSection | null = $state(null);
 	loading = $state(false);
+	profileId: number | null = $state(null);
+	private generation = 0;
 
 	constructor() {
 		$effect.root(() => {
 			$effect(() => {
-				profiles.activeId;
-				untrack(() => this.refresh());
+				const activeId = profiles.activeId;
+				untrack(() => {
+					// clear state for the previous profile immediately so a
+					// switch can't show or mutate the wrong profile's config
+					this.files = [];
+					this.selectedFile = null;
+					this.selectedSection = null;
+					this.profileId = activeId;
+					this.refresh();
+				});
 			});
 		});
 	}
 
 	async refresh() {
-		if (this.loading) return;
+		const profileId = this.profileId;
+		if (profileId === null) {
+			this.files = [];
+			return;
+		}
+
+		const generation = ++this.generation;
 		this.loading = true;
 		try {
-			this.files = await api.config.getFiles();
+			const files = await api.config.getFiles(profileId);
+			// a newer refresh or a profile switch makes this response stale
+			if (generation !== this.generation || this.profileId !== profileId) return;
+
+			this.files = files;
 
 			const selectedPath = this.selectedFile?.relativePath;
 			if (selectedPath) {
 				this.selectedFile = this.findFileByPath(selectedPath);
 			}
 		} finally {
-			this.loading = false;
+			if (generation === this.generation) this.loading = false;
 		}
 	}
 
 	async deleteFile(file: BaseConfigFile) {
-		await api.config.deleteFile(file);
+		if (this.profileId === null) return;
+		await api.config.deleteFile(file, this.profileId);
 		if (this.selectedFile === file) this.selectedFile = null;
 		await this.refresh();
 	}
 
 	async resetFile(file: BaseConfigFile) {
-		await api.config.resetAll(file);
+		if (this.profileId === null) return;
+		await api.config.resetAll(file, this.profileId);
 		await this.refresh();
 	}
 

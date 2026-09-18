@@ -25,28 +25,29 @@ pub async fn create_sync_profile(profile_id: i64, app: AppHandle) -> Result<Stri
 }
 
 #[command]
-pub async fn push_sync_profile(app: AppHandle) -> Result<()> {
-    let id = app.lock_manager().active_profile().id;
-
-    super::push_profile(&app, id).await?;
+pub async fn push_sync_profile(profile_id: i64, app: AppHandle) -> Result<()> {
+    super::push_profile(&app, profile_id).await?;
 
     Ok(())
 }
 
 #[command]
-pub async fn publish_sync_profile(mode: PublishMode, app: AppHandle) -> Result<()> {
-    let id = app.lock_manager().active_profile().id;
-
-    super::publish::publish_profile(&app, id, mode).await?;
+pub async fn publish_sync_profile(
+    mode: PublishMode,
+    profile_id: i64,
+    app: AppHandle,
+) -> Result<()> {
+    super::publish::publish_profile(&app, profile_id, mode).await?;
 
     Ok(())
 }
 
 #[command]
-pub async fn get_sync_config_files(app: AppHandle) -> Result<Vec<SyncConfigFileInfo>> {
-    let id = app.lock_manager().active_profile().id;
-
-    let files = super::publish::list_config_files(&app, id).await?;
+pub async fn get_sync_config_files(
+    profile_id: i64,
+    app: AppHandle,
+) -> Result<Vec<SyncConfigFileInfo>> {
+    let files = super::publish::list_config_files(&app, profile_id).await?;
 
     Ok(files)
 }
@@ -59,8 +60,8 @@ pub async fn clone_sync_profile(id: String, name: String, app: AppHandle) -> Res
 }
 
 #[command]
-pub async fn disconnect_sync_profile(delete: bool, app: AppHandle) -> Result<()> {
-    super::disconnect_profile(delete, &app).await?;
+pub async fn disconnect_sync_profile(delete: bool, profile_id: i64, app: AppHandle) -> Result<()> {
+    super::disconnect_profile(delete, profile_id, &app).await?;
 
     Ok(())
 }
@@ -73,22 +74,22 @@ pub async fn delete_sync_profile(id: String, app: AppHandle) -> Result<()> {
 }
 
 #[command]
-pub async fn pull_sync_profile(app: AppHandle) -> Result<PullReport> {
-    let report = super::pull_profile(false, &app).await?;
+pub async fn pull_sync_profile(profile_id: i64, app: AppHandle) -> Result<PullReport> {
+    let report = super::pull_profile(false, profile_id, &app).await?;
 
     Ok(report)
 }
 
 #[command]
-pub async fn fetch_sync_profile(app: AppHandle) -> Result<()> {
-    super::pull_profile(true, &app).await?;
+pub async fn fetch_sync_profile(profile_id: i64, app: AppHandle) -> Result<()> {
+    super::pull_profile(true, profile_id, &app).await?;
 
     Ok(())
 }
 
 #[command]
-pub async fn get_pending_sync_config(app: AppHandle) -> Result<ConfigReviewState> {
-    let items = super::pending_config_items(&app)?;
+pub async fn get_pending_sync_config(profile_id: i64, app: AppHandle) -> Result<ConfigReviewState> {
+    let items = super::pending_config_items(profile_id, &app)?;
 
     Ok(items)
 }
@@ -97,9 +98,10 @@ pub async fn get_pending_sync_config(app: AppHandle) -> Result<ConfigReviewState
 pub async fn decline_sync_config(
     files: Vec<ConfigPath>,
     remember: bool,
+    profile_id: i64,
     app: AppHandle,
 ) -> Result<()> {
-    super::decline_selected_config(&files, remember, &app)?;
+    super::decline_selected_config(&files, remember, profile_id, &app)?;
 
     Ok(())
 }
@@ -109,9 +111,11 @@ pub async fn apply_sync_config(
     files: Vec<ConfigPath>,
     remember: bool,
     restore_deleted: Vec<ConfigPath>,
+    profile_id: i64,
     app: AppHandle,
 ) -> Result<Vec<ConfigPath>> {
-    let written = super::apply_selected_config(files, remember, restore_deleted, &app).await?;
+    let written =
+        super::apply_selected_config(files, remember, restore_deleted, profile_id, &app).await?;
 
     Ok(written)
 }
@@ -120,9 +124,10 @@ pub async fn apply_sync_config(
 pub async fn set_sync_config_policy(
     file: ConfigPath,
     policy: ConfigUpdatePolicy,
+    profile_id: i64,
     app: AppHandle,
 ) -> Result<()> {
-    super::set_config_policy(file, policy, &app)?;
+    super::set_config_policy(file, policy, profile_id, &app)?;
 
     Ok(())
 }
