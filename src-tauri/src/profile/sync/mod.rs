@@ -1,4 +1,11 @@
-use std::{borrow::Cow, collections::BTreeMap, env, fmt::Display, path::Component, sync::LazyLock};
+use std::{
+    borrow::Cow,
+    collections::BTreeMap,
+    env,
+    fmt::Display,
+    path::{Component, Path},
+    sync::LazyLock,
+};
 
 use chrono::{DateTime, Utc};
 use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
@@ -660,53 +667,90 @@ fn ensure_latest(applied: &AppliedState, latest: &SyncManifest) -> Result<()> {
     Ok(())
 }
 
+fn sync_apply_target<'a>(
+    active_profile_id: i64,
+    sync: &'a mut Option<SyncProfileData>,
+    expected_profile_id: i64,
+    expected_sync_id: &str,
+) -> Result<&'a mut SyncProfileData> {
+    ensure!(
+        active_profile_id == expected_profile_id,
+        "active profile changed during apply"
+    );
+    let Some(sync) = sync.as_mut() else {
+        bail!("profile is no longer synced");
+    };
+    ensure!(
+        sync.id == expected_sync_id,
+        "profile sync target changed during apply"
+    );
+    Ok(sync)
+}
+
+fn apply_selected_and_record<F>(
+    profile_dir: &Path,
+    config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
+    latest: &SyncManifest,
+    sync: &mut SyncProfileData,
+    files: &[ConfigPath],
+    restore_deleted: &[ConfigPath],
+    remember: bool,
+    write: F,
+) -> Result<Vec<ConfigPath>>
+where
+    F: FnMut(&Path, &archive::ValidatedConfigFile) -> Result<()>,
+{
+    let mut applied = sync.applied.clone().ok_or_eyre("no applied sync state")?;
+    ensure_latest(&applied, latest)?;
+    let result = apply::apply_selected_with_writer(
+        profile_dir,
+        config,
+        &mut applied,
+        files,
+        restore_deleted,
+        remember,
+        write,
+    );
+    sync.applied = Some(applied);
+    result
+}
+
 async fn apply_selected_config(
     files: Vec<ConfigPath>,
     remember: bool,
     restore_deleted: Vec<ConfigPath>,
     app: &AppHandle,
 ) -> Result<Vec<ConfigPath>> {
-    let (profile_id, profile_dir, sync_id, mut applied) = {
+    let (profile_id, sync_id) = {
         let manager = app.lock_manager();
         let profile = manager.active_profile();
         let sync = profile.sync.as_ref().ok_or_eyre("profile is not synced")?;
-        let applied = sync.applied.clone().ok_or_eyre("no applied sync state")?;
-        (profile.id, profile.path.clone(), sync.id.clone(), applied)
+        (profile.id, sync.id.clone())
     };
 
     let bytes = download_profile_bytes(&sync_id, app).await?;
     let validated = archive::validate(&bytes).context("sync archive failed validation")?;
     let normalized = normalize_archive(&validated)?;
-    ensure_latest(&applied, &normalized.latest)?;
 
-    let written = apply::apply_selected(
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+    let profile_dir = profile.path.clone();
+    let sync = sync_apply_target(profile.id, &mut profile.sync, profile_id, &sync_id)?;
+
+    let apply_result = apply_selected_and_record(
         &profile_dir,
         &normalized.config,
-        &mut applied,
+        &normalized.latest,
+        sync,
         &files,
         &restore_deleted,
         remember,
-    )?;
+        apply::write_validated,
+    );
 
-    {
-        let mut manager = app.lock_manager();
-        let profile = manager.active_profile_mut();
-        ensure!(
-            profile.id == profile_id,
-            "active profile changed during apply"
-        );
-        let Some(sync) = profile.sync.as_mut() else {
-            bail!("profile is no longer synced");
-        };
-        ensure!(
-            sync.id == sync_id,
-            "profile sync target changed during apply"
-        );
-        sync.applied = Some(applied);
-        profile.save(app, true)?;
-    }
+    profile.save(app, true)?;
 
-    Ok(written)
+    apply_result
 }
 
 pub(super) async fn download_profile_bytes(id: &str, app: &AppHandle) -> Result<Vec<u8>> {
@@ -1225,5 +1269,161 @@ mod tests {
         assert!(removed_target.exists());
         publish(subscriber, &mut state, manifest.clone(), removed);
         assert!(removed_target.exists());
+    }
+
+    fn latest(entries: &[(&str, &[u8])]) -> SyncManifest {
+        SyncManifest {
+            version: 1,
+            mods_revision: ModRevision::from_hash(blake3::hash(b"rev")),
+            config: entries
+                .iter()
+                .map(|&(p, b)| (config_path(p), SyncFileEntry { hash: hash(b) }))
+                .collect(),
+        }
+    }
+
+    fn sync_data(id: &str, applied: AppliedState) -> SyncProfileData {
+        SyncProfileData {
+            id: id.to_owned(),
+            owner: auth::User {
+                discord_id: "1".to_owned(),
+                name: "u".to_owned(),
+                display_name: "u".to_owned(),
+                avatar: None,
+            },
+            synced_at: Utc::now(),
+            updated_at: Utc::now(),
+            missing: false,
+            published: None,
+            applied: Some(applied),
+        }
+    }
+
+    #[test]
+    fn apply_selected_gates_writes_on_profile_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = config_path("a.cfg");
+        std::fs::write(dir.path().join(p.as_str()), b"local").unwrap();
+
+        let latest_manifest = latest(&[("a.cfg", b"A")]);
+        let mut applied = AppliedState {
+            latest: Some(latest_manifest.clone()),
+            ..AppliedState::default()
+        };
+        applied
+            .pending
+            .insert(p.clone(), PendingConfigReason::ModifiedLocally);
+        let mut sync_slot = Some(sync_data("sync-id", applied));
+        let config = BTreeMap::from([(p.clone(), vfile(b"A"))]);
+
+        let result = sync_apply_target(2, &mut sync_slot, 1, "sync-id").and_then(|sync| {
+            apply_selected_and_record(
+                dir.path(),
+                &config,
+                &latest_manifest,
+                sync,
+                &[p.clone()],
+                &[],
+                false,
+                apply::write_validated,
+            )
+        });
+
+        assert!(result.is_err());
+        assert_eq!(
+            std::fs::read(dir.path().join(p.as_str())).unwrap(),
+            b"local"
+        );
+        assert!(
+            sync_slot
+                .as_ref()
+                .unwrap()
+                .applied
+                .as_ref()
+                .unwrap()
+                .pending
+                .contains_key(&p)
+        );
+    }
+
+    #[test]
+    fn apply_selected_and_record_persists_partial_state_on_write_failure() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = config_path("a.cfg");
+        let q = config_path("b.cfg");
+        std::fs::write(dir.path().join(p.as_str()), b"local-a").unwrap();
+        std::fs::write(dir.path().join(q.as_str()), b"local-b").unwrap();
+
+        let latest_manifest = latest(&[("a.cfg", b"A"), ("b.cfg", b"B")]);
+        let mut applied = AppliedState {
+            latest: Some(latest_manifest.clone()),
+            ..AppliedState::default()
+        };
+        applied
+            .pending
+            .insert(p.clone(), PendingConfigReason::ModifiedLocally);
+        applied
+            .pending
+            .insert(q.clone(), PendingConfigReason::ModifiedLocally);
+        let mut sync = sync_data("sync-id", applied);
+        let config = BTreeMap::from([(p.clone(), vfile(b"A")), (q.clone(), vfile(b"B"))]);
+
+        let mut calls = 0;
+        let result = apply_selected_and_record(
+            dir.path(),
+            &config,
+            &latest_manifest,
+            &mut sync,
+            &[p.clone(), q.clone()],
+            &[],
+            false,
+            |target, file| {
+                calls += 1;
+                if calls == 2 {
+                    Err(eyre::eyre!("controlled second-write failure"))
+                } else {
+                    apply::write_validated(target, file)
+                }
+            },
+        );
+
+        assert!(result.is_err());
+        assert_eq!(std::fs::read(dir.path().join(p.as_str())).unwrap(), b"A");
+        assert_eq!(
+            std::fs::read(dir.path().join(q.as_str())).unwrap(),
+            b"local-b"
+        );
+
+        let applied = sync.applied.as_ref().unwrap();
+        assert_eq!(applied.config[&p].applied, Some(hash(b"A")));
+        assert_eq!(applied.config[&p].written, Some(hash(b"A")));
+        assert!(!applied.pending.contains_key(&p));
+        assert_eq!(applied.pending[&q], PendingConfigReason::ModifiedLocally);
+
+        let mut sync: SyncProfileData =
+            serde_json::from_str(&serde_json::to_string(&sync).unwrap()).unwrap();
+        assert_eq!(
+            sync.applied.as_ref().unwrap().pending[&q],
+            PendingConfigReason::ModifiedLocally
+        );
+
+        let written = apply_selected_and_record(
+            dir.path(),
+            &config,
+            &latest_manifest,
+            &mut sync,
+            &[p.clone(), q.clone()],
+            &[],
+            false,
+            apply::write_validated,
+        )
+        .unwrap();
+        assert_eq!(written, vec![p.clone(), q.clone()]);
+        assert_eq!(std::fs::read(dir.path().join(p.as_str())).unwrap(), b"A");
+        assert_eq!(std::fs::read(dir.path().join(q.as_str())).unwrap(), b"B");
+        let applied = sync.applied.as_ref().unwrap();
+        assert_eq!(applied.config[&p].applied, Some(hash(b"A")));
+        assert_eq!(applied.config[&q].applied, Some(hash(b"B")));
+        assert!(applied.pending.is_empty());
     }
 }

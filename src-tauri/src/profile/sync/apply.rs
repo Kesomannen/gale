@@ -86,7 +86,7 @@ fn checked_target(profile_dir: &Path, path: &ConfigPath) -> Result<PathBuf> {
     Ok(target)
 }
 
-fn write_validated(target: &Path, file: &archive::ValidatedConfigFile) -> Result<()> {
+pub(super) fn write_validated(target: &Path, file: &archive::ValidatedConfigFile) -> Result<()> {
     ensure!(
         file.hash == ContentHash::from_hash(blake3::hash(&file.bytes)),
         "validated config bytes do not match their hash: {}",
@@ -442,6 +442,7 @@ pub(super) fn current_review_items(
     Ok(review)
 }
 
+#[cfg(test)]
 pub(super) fn apply_selected(
     profile_dir: &Path,
     config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
@@ -450,6 +451,29 @@ pub(super) fn apply_selected(
     restore_deleted: &[ConfigPath],
     remember: bool,
 ) -> Result<Vec<ConfigPath>> {
+    apply_selected_with_writer(
+        profile_dir,
+        config,
+        state,
+        files,
+        restore_deleted,
+        remember,
+        write_validated,
+    )
+}
+
+pub(super) fn apply_selected_with_writer<F>(
+    profile_dir: &Path,
+    config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
+    state: &mut AppliedState,
+    files: &[ConfigPath],
+    restore_deleted: &[ConfigPath],
+    remember: bool,
+    mut write: F,
+) -> Result<Vec<ConfigPath>>
+where
+    F: FnMut(&Path, &archive::ValidatedConfigFile) -> Result<()>,
+{
     let mut seen = HashSet::new();
     for path in files {
         ensure!(
@@ -505,7 +529,7 @@ pub(super) fn apply_selected(
         let file = &config[path];
         let hash = file.hash.clone();
 
-        write_validated(&target, file)?;
+        write(&target, file)?;
         record_applied(state, path, hash);
         if remember {
             state.config.entry(path.clone()).or_default().policy = ConfigUpdatePolicy::AlwaysApply;
