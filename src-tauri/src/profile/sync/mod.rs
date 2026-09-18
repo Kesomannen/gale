@@ -339,6 +339,40 @@ fn preseed_migration(state: &mut AppliedState, latest: &SyncManifest, existed: b
     }
 }
 
+/// Applies the config side of a sync archive to `applied`, mutating the state
+/// and the profile's config files together.
+///
+/// Partial progress stays in `applied` when a file fails, so the caller must
+/// persist it even on error.
+fn apply_to_state(
+    applied: &mut AppliedState,
+    profile_dir: &Path,
+    config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
+    latest: SyncManifest,
+    before: &BTreeMap<ConfigPath, ContentHash>,
+    after: Option<&BTreeMap<ConfigPath, ContentHash>>,
+    existed: bool,
+    applied_was_none: bool,
+) -> Result<PullReport> {
+    let mut report = PullReport::default();
+
+    if let Some(after) = after {
+        apply::record_installer_written(before, after, applied);
+        applied.mods_revision = Some(latest.mods_revision.clone());
+        report.mods_updated = true;
+    }
+
+    if applied_was_none {
+        preseed_migration(applied, &latest, existed);
+    }
+
+    apply::preserve_pending_policy_boundaries(applied);
+    applied.latest = Some(latest);
+    report.config = apply::apply_available_config(profile_dir, config, applied)?;
+
+    Ok(report)
+}
+
 /// Whether the profile's installed thunderstore mods exactly match the
 /// manifest, by (owner, name, version, enabled) tuples.
 fn mod_set_matches(profile: &Profile, expected: &[R2Mod]) -> bool {
@@ -425,20 +459,18 @@ async fn apply_archive(
         ensure_clone_target(prior_sync.as_ref(), &metadata.id, &manifest.name)?;
     }
 
-    let mut applied = prior_sync
-        .as_ref()
-        .and_then(|sync| sync.applied.clone())
-        .unwrap_or_default();
-    let applied_was_none = prior_sync
-        .as_ref()
-        .is_none_or(|sync| sync.applied.is_none());
     let prior_sync_id = prior_sync.as_ref().map(|sync| sync.id.clone());
     let was_owner = prior_sync
         .as_ref()
         .is_some_and(|sync| sync.published.is_some());
 
     let selective = normalized.selective;
-    let needs_install = clone || applied.mods_revision.as_ref() != Some(&latest.mods_revision);
+    let needs_install = clone
+        || prior_sync
+            .as_ref()
+            .and_then(|sync| sync.applied.as_ref())
+            .and_then(|applied| applied.mods_revision.as_ref())
+            != Some(&latest.mods_revision);
 
     let before = if needs_install && existed {
         apply::snapshot_config(
@@ -483,36 +515,19 @@ async fn apply_archive(
         )
     };
 
-    let result = async {
+    let result = (|| -> Result<PullReport> {
         if let (Some(id), Some(imported)) = (profile_id, imported.as_ref()) {
             ensure!(imported.id == id, "synced profile changed during apply");
         }
 
-        // reject rather than overwrite: a foreign install queued or running for
-        // this profile would make the installed set diverge after verification
-        ensure!(
-            !app.install_queue().lock().has_any_for_profile(target_id),
-            "another install is queued for this profile"
-        );
-
-        let mut report = PullReport::default();
-
-        if let Some(imported) = &imported {
-            let after =
-                apply::snapshot_config(&imported.path, imported.game.mod_loader.mod_config_dirs())?;
-            apply::record_installer_written(&before, &after, &mut applied);
-            applied.mods_revision = Some(latest.mods_revision.clone());
-            report.mods_updated = true;
-        }
-
-        if applied_was_none {
-            preseed_migration(&mut applied, &latest, existed);
-        }
-
-        apply::preserve_pending_policy_boundaries(&mut applied);
-        applied.latest = Some(latest);
-        report.config =
-            apply::apply_available_config(&profile_dir, &normalized.config, &mut applied)?;
+        let after = if let Some(imported) = &imported {
+            Some(apply::snapshot_config(
+                &imported.path,
+                imported.game.mod_loader.mod_config_dirs(),
+            )?)
+        } else {
+            None
+        };
 
         let published = if was_owner {
             Some(publish::adopt_publication(&profile_dir, archive)?)
@@ -520,38 +535,85 @@ async fn apply_archive(
             None
         };
 
-        {
-            let mut manager = app.lock_manager();
-            let (_, profile) = manager.profile_by_id_mut(target_id)?;
+        // hold the queue lock through the commit so no foreign install for
+        // this profile can be queued or start between the checks and the
+        // state write (queue -> manager is the established lock order)
+        let queue = app.install_queue();
+        let queue = queue.lock();
+        ensure!(
+            !queue.has_any_for_profile(target_id),
+            "another install is queued for this profile"
+        );
 
-            let current_sync_id = profile.sync.as_ref().map(|sync| sync.id.clone());
+        let mut manager = app.lock_manager();
+        let (_, profile) = manager.profile_by_id_mut(target_id)?;
+
+        let current_sync_id = profile.sync.as_ref().map(|sync| sync.id.clone());
+        ensure!(
+            current_sync_id == prior_sync_id,
+            "profile sync target changed during apply"
+        );
+
+        if let Some(expected) = &expected_mods {
             ensure!(
-                current_sync_id == prior_sync_id,
-                "profile sync target changed during apply"
+                mod_set_matches(profile, expected),
+                "installed mod set does not match the synced manifest"
             );
-
-            if let Some(expected) = &expected_mods {
-                ensure!(
-                    mod_set_matches(profile, expected),
-                    "installed mod set does not match the synced manifest"
-                );
-            }
-
-            profile.sync = Some(SyncProfileData {
-                id: metadata.id,
-                owner: metadata.owner,
-                synced_at: metadata.updated_at,
-                updated_at: metadata.updated_at,
-                missing: false,
-                published,
-                applied: Some(applied),
-            });
-            profile.save(app, true)?;
         }
 
-        Ok::<_, eyre::Report>(report)
-    }
-    .await;
+        // clone fresh inside the lock so decisions made while the pull was
+        // running (declines, policies) aren't overwritten
+        let applied_was_none = profile
+            .sync
+            .as_ref()
+            .is_none_or(|sync| sync.applied.is_none());
+        let mut applied = profile
+            .sync
+            .as_ref()
+            .and_then(|sync| sync.applied.clone())
+            .unwrap_or_default();
+
+        match apply_to_state(
+            &mut applied,
+            &profile_dir,
+            &normalized.config,
+            latest,
+            &before,
+            after.as_ref(),
+            existed,
+            applied_was_none,
+        ) {
+            Ok(report) => {
+                profile.sync = Some(SyncProfileData {
+                    id: metadata.id,
+                    owner: metadata.owner,
+                    synced_at: metadata.updated_at,
+                    updated_at: metadata.updated_at,
+                    missing: false,
+                    published,
+                    applied: Some(applied),
+                });
+                profile.save(app, true)?;
+                Ok(report)
+            }
+            Err(err) => {
+                // persist partial progress and the adopted publication so a
+                // retry resumes from accurate state
+                let sync = profile
+                    .sync
+                    .get_or_insert_with(|| SyncProfileData::from(metadata.clone()));
+                sync.applied = Some(applied);
+                if published.is_some() {
+                    sync.published = published;
+                }
+                profile.save(app, true)?;
+                Err(err)
+            }
+        }
+    })();
+
+    // review state may have changed even when the apply itself failed
+    app.emit_buffered("sync_config_review_changed", &());
 
     let report = match result {
         Ok(report) => report,
@@ -567,8 +629,6 @@ async fn apply_archive(
             return Err(err);
         }
     };
-
-    app.emit_buffered("sync_config_review_changed", &());
 
     if !report.config.pending.is_empty() {
         app.emit_buffered("sync_config_pending", &report.config.pending);
@@ -665,14 +725,21 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<PullReport> 
 }
 
 fn pending_config_items(app: &AppHandle) -> Result<apply::ConfigReviewState> {
-    let manager = app.lock_manager();
-    let profile = manager.active_profile();
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
 
     let Some(applied) = profile.sync.as_ref().and_then(|sync| sync.applied.as_ref()) else {
         return Ok(apply::ConfigReviewState::default());
     };
 
-    apply::current_review_items(&profile.path, applied)
+    // a file hand-edited to match the published revision is no longer pending
+    let mut applied = applied.clone();
+    if apply::reconcile_review_state(&profile.path, &mut applied)? {
+        profile.sync.as_mut().unwrap().applied = Some(applied.clone());
+        profile.save(app, true)?;
+    }
+
+    apply::current_review_items(&profile.path, &applied)
 }
 
 fn decline_selected_config(files: &[ConfigPath], remember: bool, app: &AppHandle) -> Result<()> {
@@ -834,6 +901,9 @@ async fn apply_selected_config(
     );
 
     profile.save(app, true)?;
+
+    // review state may have changed even when the apply itself failed
+    app.emit_buffered("sync_config_review_changed", &());
 
     apply_result
 }
@@ -1575,5 +1645,55 @@ mod tests {
         assert!(!mod_set_matches(&profile, &expected));
 
         assert!(!mod_set_matches(&profile_with_mods(vec![]), &expected));
+    }
+
+    #[test]
+    fn apply_to_state_persists_partial_progress() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = config_path("a.cfg");
+        let q = config_path("b.cfg");
+
+        // obstruct b.cfg's target so its write fails after a.cfg succeeded
+        std::fs::create_dir_all(dir.path().join("b.cfg")).unwrap();
+
+        let latest_manifest = latest(&[("a.cfg", b"A"), ("b.cfg", b"B")]);
+        let config = BTreeMap::from([(p.clone(), vfile(b"A")), (q.clone(), vfile(b"B"))]);
+        let before = BTreeMap::new();
+
+        let mut applied = AppliedState::default();
+        let result = apply_to_state(
+            &mut applied,
+            dir.path(),
+            &config,
+            latest_manifest.clone(),
+            &before,
+            None,
+            false,
+            true,
+        );
+
+        assert!(result.is_err());
+        // a.cfg was written and recorded before b.cfg failed
+        assert_eq!(std::fs::read(dir.path().join("a.cfg")).unwrap(), b"A");
+        assert_eq!(applied.config[&p].applied, Some(hash(b"A")));
+        assert_eq!(applied.latest, Some(latest_manifest.clone()));
+
+        // retrying after removing the obstruction applies b.cfg
+        std::fs::remove_dir(dir.path().join("b.cfg")).unwrap();
+        let report = apply_to_state(
+            &mut applied,
+            dir.path(),
+            &config,
+            latest_manifest,
+            &before,
+            None,
+            false,
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(std::fs::read(dir.path().join("b.cfg")).unwrap(), b"B");
+        assert_eq!(applied.config[&q].applied, Some(hash(b"B")));
+        assert_eq!(report.config.installed, vec![q]);
     }
 }

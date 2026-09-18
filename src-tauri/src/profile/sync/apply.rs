@@ -196,17 +196,24 @@ pub(super) fn apply_available_config(
     state.pending.retain(|path, _| config.contains_key(path));
     state.declined.retain(|path, _| config.contains_key(path));
 
+    // resolve every target first, so an unsafe path can't slip in after
+    // earlier files were already written
+    let targets: BTreeMap<&ConfigPath, PathBuf> = config
+        .keys()
+        .map(|path| checked_target(profile_dir, path).map(|target| (path, target)))
+        .collect::<Result<_>>()?;
+
     let mut report = ConfigApplyReport::default();
 
     for (path, file) in config {
-        let target = checked_target(profile_dir, path)?;
+        let target = &targets[path];
         let local = if target.exists() {
             ensure!(
                 target.is_file(),
                 "synced config path is not a regular file: {}",
                 target.display()
             );
-            let bytes = fs::read(&target)
+            let bytes = fs::read(target)
                 .with_context(|| format!("failed to read config file: {}", target.display()))?;
             Some(ContentHash::from_hash(blake3::hash(&bytes)))
         } else {
@@ -251,7 +258,7 @@ pub(super) fn apply_available_config(
 
         match local {
             None if prev.is_none() => {
-                write_validated(&target, file)?;
+                write_validated(target, file)?;
                 record_applied(state, path, hash);
                 report.installed.push(path.clone());
             }
@@ -273,7 +280,7 @@ pub(super) fn apply_available_config(
             },
             Some(local_hash) => match policy {
                 ConfigUpdatePolicy::AlwaysApply => {
-                    write_validated(&target, file)?;
+                    write_validated(target, file)?;
                     record_applied(state, path, hash);
                     report.installed.push(path.clone());
                 }
@@ -291,7 +298,7 @@ pub(super) fn apply_available_config(
                         && prev_declined.is_none()
                         && prev_written == Some(&local_hash)
                     {
-                        write_validated(&target, file)?;
+                        write_validated(target, file)?;
                         record_applied(state, path, hash);
                         report.installed.push(path.clone());
                     } else {
@@ -440,6 +447,50 @@ pub(super) fn current_review_items(
     }
 
     Ok(review)
+}
+
+/// Clears review entries for files whose local bytes now match the published
+/// revision, e.g. after the user hand-edited a config into the published
+/// state. Returns whether any state changed.
+///
+/// Missing files are skipped (they're still legitimately pending), while
+/// other read errors propagate.
+pub(super) fn reconcile_review_state(profile_dir: &Path, state: &mut AppliedState) -> Result<bool> {
+    let Some(latest) = state.latest.as_ref() else {
+        return Ok(false);
+    };
+
+    let candidates: Vec<(ConfigPath, ContentHash)> = state
+        .pending
+        .keys()
+        .chain(state.declined.keys())
+        .filter_map(|path| {
+            latest
+                .config
+                .get(path)
+                .map(|entry| (path.clone(), entry.hash.clone()))
+        })
+        .collect();
+
+    let mut changed = false;
+    for (path, hash) in candidates {
+        let target = checked_target(profile_dir, &path)?;
+        let bytes = match fs::read(&target) {
+            Ok(bytes) => bytes,
+            Err(err) if err.kind() == io::ErrorKind::NotFound => continue,
+            Err(err) => {
+                return Err(err)
+                    .with_context(|| format!("failed to read config file: {}", target.display()));
+            }
+        };
+
+        if ContentHash::from_hash(blake3::hash(&bytes)) == hash {
+            record_applied(state, &path, hash);
+            changed = true;
+        }
+    }
+
+    Ok(changed)
 }
 
 #[cfg(test)]
@@ -1870,5 +1921,83 @@ mod tests {
         assert!(state.pending.is_empty());
         assert_eq!(state.declined[&q], PendingConfigReason::ModifiedLocally);
         assert_eq!(state.config[&q].declined, Some(hash(b"B")));
+    }
+
+    #[test]
+    fn reconcile_clears_converged_pending_file() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"A");
+
+        let mut state = AppliedState {
+            latest: Some(latest(&[("a.cfg", b"A")])),
+            ..AppliedState::default()
+        };
+        state
+            .pending
+            .insert(p.clone(), PendingConfigReason::ModifiedLocally);
+
+        assert!(reconcile_review_state(dir.path(), &mut state).unwrap());
+        assert!(!state.pending.contains_key(&p));
+        assert_eq!(state.config[&p].applied, Some(hash(b"A")));
+        assert!(!reconcile_review_state(dir.path(), &mut state).unwrap());
+    }
+
+    #[test]
+    fn reconcile_clears_converged_declined_file() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        write(dir.path(), &p, b"A");
+
+        let mut state = AppliedState {
+            latest: Some(latest(&[("a.cfg", b"A")])),
+            ..AppliedState::default()
+        };
+        state
+            .declined
+            .insert(p.clone(), PendingConfigReason::ModifiedLocally);
+
+        assert!(reconcile_review_state(dir.path(), &mut state).unwrap());
+        assert!(!state.declined.contains_key(&p));
+        assert_eq!(state.config[&p].applied, Some(hash(b"A")));
+    }
+
+    #[test]
+    fn reconcile_skips_diverged_and_missing_files() {
+        let dir = tempdir().unwrap();
+        let p = path("a.cfg");
+        let q = path("b.cfg");
+        write(dir.path(), &p, b"diverged");
+
+        let mut state = AppliedState {
+            latest: Some(latest(&[("a.cfg", b"A"), ("b.cfg", b"B")])),
+            ..AppliedState::default()
+        };
+        state
+            .pending
+            .insert(p.clone(), PendingConfigReason::ModifiedLocally);
+        state
+            .pending
+            .insert(q.clone(), PendingConfigReason::DeletedLocally);
+
+        assert!(!reconcile_review_state(dir.path(), &mut state).unwrap());
+        assert!(state.pending.contains_key(&p));
+        assert!(state.pending.contains_key(&q));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn apply_available_validates_all_targets_before_writing() {
+        let dir = tempdir().unwrap();
+        let outside = tempdir().unwrap();
+        std::os::unix::fs::symlink(outside.path(), dir.path().join("link")).unwrap();
+
+        let config = archive_map(&[("a.cfg", b"A"), ("link/b.cfg", b"B")]);
+        let mut state = AppliedState::default();
+        let result = apply_available_config(dir.path(), &config, &mut state);
+
+        assert!(result.is_err());
+        // no file was written before the unsafe path was rejected
+        assert!(!dir.path().join("a.cfg").exists());
     }
 }
