@@ -945,16 +945,34 @@ async fn apply_selected_config(
     apply_result
 }
 
+/// Sync archives are a manifest plus text config files; anything larger is
+/// malformed or hostile.
+const MAX_DOWNLOAD_BYTES: usize = 16 * 1024 * 1024;
+
 pub(super) async fn download_profile_bytes(id: &str, app: &AppHandle) -> Result<Vec<u8>> {
-    let bytes = request(Method::GET, format!("/profile/{id}"), app)
+    let mut response = request(Method::GET, format!("/profile/{id}"), app)
         .await
         .send()
         .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
+        .error_for_status()?;
 
-    Ok(bytes.to_vec())
+    if let Some(len) = response.content_length() {
+        ensure!(
+            len <= MAX_DOWNLOAD_BYTES as u64,
+            "sync archive exceeds the download size limit"
+        );
+    }
+
+    let mut bytes = Vec::new();
+    while let Some(chunk) = response.chunk().await? {
+        ensure!(
+            bytes.len() + chunk.len() <= MAX_DOWNLOAD_BYTES,
+            "sync archive exceeds the download size limit"
+        );
+        bytes.extend_from_slice(&chunk);
+    }
+
+    Ok(bytes)
 }
 
 async fn delete_profile(id: &str, app: &AppHandle) -> Result<()> {

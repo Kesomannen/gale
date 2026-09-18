@@ -171,6 +171,12 @@ pub struct SyncFileEntry {
     pub hash: ContentHash,
 }
 
+/// DOS device names Windows reserves regardless of extension.
+const DEVICE_NAMES: &[&str] = &[
+    "con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8",
+    "com9", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
+];
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub struct ConfigPath(String);
@@ -205,8 +211,12 @@ impl TryFrom<String> for ConfigPath {
     fn try_from(value: String) -> Result<Self, Self::Error> {
         ensure!(!value.is_empty(), "config path is empty");
         ensure!(
-            !value.contains(['\\', '\0', ':']),
+            !value.contains(['\\', '\0', ':', '<', '>', '|', '?', '*']),
             "config path contains a forbidden character"
+        );
+        ensure!(
+            !value.chars().any(char::is_control),
+            "config path contains a control character"
         );
 
         let path = Path::new(&value);
@@ -228,6 +238,26 @@ impl TryFrom<String> for ConfigPath {
                 .is_some_and(|component| component.eq_ignore_ascii_case("_state")),
             "config path is inside the state directory"
         );
+
+        // names Windows silently rewrites or reserves can't round-trip to a
+        // subscriber's filesystem
+        for component in path.components() {
+            let name = component
+                .as_os_str()
+                .to_str()
+                .ok_or_eyre("config path is not valid UTF-8")?;
+
+            ensure!(
+                !name.ends_with(['.', ' ']),
+                "config path component ends with '.' or ' ': {name}"
+            );
+
+            let stem = name.split('.').next().unwrap_or(name);
+            ensure!(
+                !DEVICE_NAMES.contains(&stem.to_ascii_lowercase().as_str()),
+                "config path contains a reserved device name: {name}"
+            );
+        }
 
         Ok(Self(value))
     }
@@ -732,6 +762,19 @@ mod tests {
             "Export.r2x",
             "_state/x",
             "_STATE/x",
+            "a<b",
+            "a>b",
+            "a|b",
+            "a?b",
+            "a*b",
+            "a\u{7}b",
+            "dir./x.cfg",
+            "dir /x.cfg",
+            "con.cfg",
+            "CON",
+            "aux/x.cfg",
+            "com1/x.cfg",
+            "lpt9/x.cfg",
         ] {
             assert!(ConfigPath::try_from(invalid).is_err(), "{invalid}");
         }

@@ -11,6 +11,24 @@ use crate::profile::export::{
     ConfigPath, ContentHash, ProfileManifest, SyncManifest, manifest_revision,
 };
 
+/// Conventional resource limits: sync archives carry a manifest and text
+/// config files, so anything larger is malformed or malicious.
+const MAX_ENTRIES: usize = 2048;
+const MAX_ENTRY_BYTES: u64 = 16 * 1024 * 1024;
+const MAX_TOTAL_BYTES: u64 = 256 * 1024 * 1024;
+
+/// Config sync must never write executable payloads into a profile.
+const EXECUTABLE_EXTENSIONS: &[&str] = &[
+    "exe", "dll", "so", "dylib", "bat", "cmd", "com", "scr", "ps1", "vbs", "msi", "jar", "sh",
+];
+
+fn is_executable_path(path: &ConfigPath) -> bool {
+    path.as_path()
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| EXECUTABLE_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str()))
+}
+
 #[derive(Debug)]
 pub(crate) enum SyncArchiveFormat {
     Selective(SyncManifest),
@@ -32,6 +50,12 @@ pub(crate) struct ValidatedSyncArchive {
 
 pub(crate) fn validate(bytes: &[u8]) -> Result<ValidatedSyncArchive> {
     let names = central_directory_names(bytes)?;
+
+    ensure!(
+        names.len() <= MAX_ENTRIES,
+        "archive has too many entries: {}",
+        names.len()
+    );
 
     let mut archive = ZipArchive::new(Cursor::new(bytes)).context("failed to open sync archive")?;
     ensure!(
@@ -66,10 +90,13 @@ pub(crate) fn validate(bytes: &[u8]) -> Result<ValidatedSyncArchive> {
         let path = if name == "export.r2x" {
             None
         } else {
-            Some(
-                ConfigPath::try_from(name.to_owned())
-                    .with_context(|| format!("invalid archive entry path: {name}"))?,
-            )
+            let path = ConfigPath::try_from(name.to_owned())
+                .with_context(|| format!("invalid archive entry path: {name}"))?;
+            ensure!(
+                !is_executable_path(&path),
+                "archive entry has an executable extension: {name}"
+            );
+            Some(path)
         };
 
         let key = path.as_ref().map_or("export.r2x", ConfigPath::as_str);
@@ -91,9 +118,15 @@ pub(crate) fn validate(bytes: &[u8]) -> Result<ValidatedSyncArchive> {
         serde_yaml::from_slice(&bytes).context("failed to parse profile manifest")?
     };
 
+    let mut total_bytes = 0u64;
     let mut payloads: BTreeMap<ConfigPath, Vec<u8>> = BTreeMap::new();
     for (index, path) in entries {
         let bytes = read_entry(&mut archive, index)?;
+        total_bytes += bytes.len() as u64;
+        ensure!(
+            total_bytes <= MAX_TOTAL_BYTES,
+            "archive contents exceed the total size limit"
+        );
         payloads.insert(path, bytes);
     }
 
@@ -229,13 +262,26 @@ fn central_directory_names(bytes: &[u8]) -> Result<Vec<&[u8]>> {
 }
 
 fn read_entry(archive: &mut ZipArchive<Cursor<&[u8]>>, index: usize) -> Result<Vec<u8>> {
-    let mut entry = archive
+    let entry = archive
         .by_index(index)
         .context("failed to read archive entry")?;
+    ensure!(
+        entry.size() <= MAX_ENTRY_BYTES,
+        "archive entry exceeds the size limit: {}",
+        entry.name()
+    );
+
+    // a lying header is still bounded by the take limit
     let mut bytes = Vec::new();
-    entry
+    let read = entry
+        .take(MAX_ENTRY_BYTES + 1)
         .read_to_end(&mut bytes)
         .context("failed to read archive entry contents")?;
+    ensure!(
+        read as u64 <= MAX_ENTRY_BYTES,
+        "archive entry exceeds the size limit"
+    );
+
     Ok(bytes)
 }
 
@@ -585,6 +631,55 @@ mod tests {
 
         let yaml = manifest_yaml(&manifest);
         let archive = zip_files(&[("export.r2x", yaml.as_slice())]);
+        assert!(validate(&archive).is_err());
+    }
+
+    #[test]
+    fn rejects_executable_entries() {
+        let yaml = manifest_yaml(&base_manifest());
+        for name in [
+            "BepInEx/plugins/evil.dll",
+            "BepInEx/config/run.exe",
+            "BepInEx/config/SCRIPT.PS1",
+            "BepInEx/config/lib.so",
+        ] {
+            let archive = zip_files(&[("export.r2x", yaml.as_slice()), (name, b"x")]);
+            assert!(validate(&archive).is_err(), "{name}");
+        }
+
+        // selective archives reject them too, even when advertised
+        let manifest = selective_manifest(&[("BepInEx/plugins/evil.dll", b"x")]);
+        let yaml = manifest_yaml(&manifest);
+        let archive = zip_files(&[
+            ("export.r2x", yaml.as_slice()),
+            ("BepInEx/plugins/evil.dll", b"x"),
+        ]);
+        assert!(validate(&archive).is_err());
+    }
+
+    #[test]
+    fn rejects_too_many_entries() {
+        let yaml = manifest_yaml(&base_manifest());
+        let mut entries: Vec<(&str, &[u8])> = vec![("export.r2x", yaml.as_slice())];
+        let names: Vec<String> = (0..MAX_ENTRIES)
+            .map(|i| format!("BepInEx/config/f{i}.cfg"))
+            .collect();
+        for name in &names {
+            entries.push((name.as_str(), b"x"));
+        }
+
+        let archive = zip_files(&entries);
+        assert!(validate(&archive).is_err());
+    }
+
+    #[test]
+    fn rejects_oversized_entry() {
+        let yaml = manifest_yaml(&base_manifest());
+        let big = vec![0u8; MAX_ENTRY_BYTES as usize + 1];
+        let archive = zip_files(&[
+            ("export.r2x", yaml.as_slice()),
+            ("BepInEx/config/big.cfg", big.as_slice()),
+        ]);
         assert!(validate(&archive).is_err());
     }
 }
