@@ -17,7 +17,7 @@ use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
-use crate::{game::Game, profile::Profile, state::ManagerExt, thunderstore::{Thunderstore, Backend, ModId, PackageManifest, UserMediaInitiateUploadResponse, UserMediaInitiateUploadParams, UploadPartUrl, CompletedPart, UserMediaFinishUploadParams, PackageSubmissionMetadata}};
+use crate::{game::Game, profile::Profile, state::ManagerExt, thunderstore::{Thunderstore, Backend, ModId, PackageManifest, UserMediaInitiateUploadResponse, UserMediaInitiateUploadParams, UploadPartUrl, CompletedPart, UploadSubmissionResult, UserMediaFinishUploadParams, PackageSubmissionMetadata}};
 
 /// Returns whether it's hexium-exclusive now
 pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Game) -> bool {
@@ -184,7 +184,7 @@ pub async fn publish(
     game: Game,
     args: ModpackArgs,
     token: String,
-) -> Result<()> {
+) -> Result<UploadSubmissionResult> {
     ensure!(args.description.len() <= 250, "description is too long");
     ensure!(!args.readme.is_empty(), "readme cannot be empty");
     ensure!(!args.author.is_empty(), "author cannot be empty");
@@ -233,9 +233,7 @@ pub async fn publish(
 
     submit_package(app, uuid, game, args, &token)
         .await
-        .context("failed to submit package")?;
-
-    Ok(())
+        .context("failed to submit package")
 }
 
 async fn initiate_upload(
@@ -341,7 +339,7 @@ async fn submit_package(
     game: Game,
     args: ModpackArgs,
     token: &str,
-) -> Result<()> {
+) -> Result<UploadSubmissionResult> {
     let metadata = PackageSubmissionMetadata {
         author_name: args.author,
         has_nsfw_content: args.nsfw,
@@ -361,7 +359,7 @@ async fn submit_package(
     let status = response.status();
 
     if response.status().is_success() {
-        return Ok(());
+        return Ok(response.json::<UploadSubmissionResult>().await?);
     }
 
     if status == StatusCode::BAD_REQUEST

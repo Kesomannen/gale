@@ -322,6 +322,7 @@
 	"modpack_dialog_content_2": "Click here to view its page on the website.",
 	"modpack_dialog_content_3": "The changes may take up to an hour to appear in Gale and other mod managers.",
 	"modpack_dialog_content_4": "To publish a new update, increment the version number and publish the modpack again.",
+	"modpack_dialog_content_hidden": "By default, your modpack is hidden from other users. Visit the {backend} website to unhide it, so that your friends can search for it.",
 	"modpack_dialog_title": "Modpack upload complete",
 	"modpack_disabled_title": "Include disabled mods",
 	"modpack_exportToFile_loading": "Exporting modpack to file...",

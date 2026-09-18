@@ -10,7 +10,7 @@
 	import ApiKeyDialog from '$lib/components/dialogs/ApiKeyDialog.svelte';
 
 	import * as api from '$lib/api';
-	import { Backend, type ModpackArgs } from '$lib/types';
+	import { Backend, type ModpackArgs, type UploadSubmissionResult } from '$lib/types';
 	import { open } from '@tauri-apps/plugin-dialog';
 
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -44,6 +44,7 @@
 	let backend: Backend = $state(Backend.Thunderstore);
 
 	let doneDialogOpen = $state(false);
+	let uploadResult: UploadSubmissionResult = $state({});
 	let loading: string | null = $state(null);
 
 	let includeFiles = $state(new SvelteMap<string, boolean>());
@@ -163,7 +164,7 @@
 
 		loading = m.modpack_uploadToServer_loading({ backend });
 		try {
-			await api.profile.export.uploadPack(args());
+			uploadResult = await api.profile.export.uploadPack(args());
 			doneDialogOpen = true;
 		} finally {
 			loading = null;
@@ -475,6 +476,12 @@
 			{m.modpack_dialog_content_2()}
 		</Link>
 	</p>
+
+	{#if uploadResult?.hidden}
+		<p class="text-primary-800 dark:text-primary-200">
+			{m.modpack_dialog_content_hidden({ backend })}
+		</p>
+	{/if}
 
 	<div class="text-primary-500 dark:text-primary-400 mt-2 text-sm">
 		{m.modpack_dialog_content_3()}

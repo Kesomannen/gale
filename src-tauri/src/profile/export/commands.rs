@@ -18,7 +18,7 @@ use super::{
 use crate::{
     profile::ProfileModKind,
     state::ManagerExt,
-    thunderstore,
+    thunderstore::{self, UploadSubmissionResult},
     util::{cmd::Result, error::IoResultExt},
 };
 
@@ -112,7 +112,7 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
 }
 
 #[command]
-pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
+pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<UploadSubmissionResult> {
     let (data, game, args, token) = {
         let manager = app.lock_manager();
         let thunderstore = app.lock_thunderstore();
@@ -133,9 +133,7 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<()> {
         (data, manager.active_game, args, token)
     };
 
-    modpack::publish(&app, data.into_inner().into(), game, args, token).await?;
-
-    Ok(())
+    Ok(modpack::publish(&app, data.into_inner().into(), game, args, token).await?)
 }
 
 #[command]

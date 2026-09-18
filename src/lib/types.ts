@@ -334,6 +334,10 @@ export type ImportOptions = {
 	merge?: boolean;
 };
 
+export type UploadSubmissionResult = {
+	hidden?: boolean;
+};
+
 export type Prefs = {
 	dataDir: string;
 	cacheDir: string;
