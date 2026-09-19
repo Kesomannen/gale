@@ -6,7 +6,8 @@ export const file = (dir: string) => invoke('export_file', { dir });
 export const getPackArgs = () => invoke<ModpackInfo>('get_pack_args');
 export const setPackArgs = (args: ModpackArgs) => invoke('set_pack_args', { args });
 export const exportPack = (dir: string, args: ModpackArgs) => invoke('export_pack', { dir, args });
-export const uploadPack = (args: ModpackArgs) => invoke<UploadSubmissionResult>('upload_pack', { args });
+export const uploadPack = (args: ModpackArgs) =>
+	invoke<UploadSubmissionResult>('upload_pack', { args });
 export const copyDependencyStrings = () => invoke('copy_dependency_strings');
 export const exportDependencyStrings = (directory: string) =>
 	invoke('export_dependency_strings', { directory });
