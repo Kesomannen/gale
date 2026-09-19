@@ -117,7 +117,7 @@ pub struct ProfileData {
     pub sync_data: Option<profile::sync::SyncProfileData>,
     pub custom_args: String,
     pub ignored_package_updates: Option<HashSet<Uuid>>,
-    pub server_settings: profile::server::config::DedicatedServerSettings,
+    pub server_settings: Option<profile::server::settings::ProfileServerSettings>,
 }
 
 pub struct SaveData {
@@ -234,7 +234,7 @@ impl Db {
                     sync_data: map_json_option_row(row, 7)?,
                     custom_args,
                     ignored_package_updates: map_json_option_row(row, 9)?,
-                    server_settings: map_json_option_row(row, 10)?.unwrap_or_default(),
+                    server_settings: map_json_option_row(row, 10)?,
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()
@@ -360,7 +360,11 @@ impl Db {
                 .map(serde_json::to_string)
                 .transpose()?;
             let ignored_package_updates = serde_json::to_string(&profile.ignored_package_updates)?;
-            let server_settings = serde_json::to_string(&profile.server_settings)?;
+            let server_settings = profile
+                .server_settings
+                .as_ref()
+                .map(serde_json::to_string)
+                .transpose()?;
 
             stmt.execute(params![
                 profile.id,

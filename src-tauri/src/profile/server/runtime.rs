@@ -1,13 +1,16 @@
-use std::{
-    path::PathBuf,
-    process::Child,
-    sync::{Arc, Mutex},
-};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
-use eyre::{Result, ensure};
+use eyre::Result;
 use serde::Serialize;
+use tauri::{AppHandle, Emitter};
+use tokio::sync::Mutex;
+use tracing::{info, warn};
 
-pub type SharedChild = Arc<Mutex<Child>>;
+use crate::{game::Game, state::ManagerExt};
+
+pub type SharedChild = Arc<Mutex<tokio::process::Child>>;
+
+const PROCESS_POLL_INTERVAL: Duration = Duration::from_millis(500);
 
 #[derive(Default)]
 pub struct ServerRuntime {
@@ -16,7 +19,7 @@ pub struct ServerRuntime {
 
 struct RunningServer {
     profile_id: i64,
-    game_slug: String,
+    game: Game,
     server_dir: PathBuf,
     pid: u32,
     child: SharedChild,
@@ -54,7 +57,7 @@ impl ServerRuntime {
         match &self.running {
             Some(running) => ServerStatus::Running {
                 profile_id: running.profile_id,
-                game_slug: running.game_slug.clone(),
+                game_slug: running.game.slug.to_string(),
                 pid: running.pid,
                 server_dir: running.server_dir.clone(),
             },
@@ -72,23 +75,19 @@ impl ServerRuntime {
     pub fn register(
         &mut self,
         profile_id: i64,
-        game_slug: String,
+        game: Game,
         server_dir: PathBuf,
+        pid: u32,
         child: SharedChild,
     ) -> Result<ServerStatus> {
-        ensure!(
+        eyre::ensure!(
             self.running.is_none(),
             "a Gale-managed dedicated server is already running"
         );
 
-        let pid = child
-            .lock()
-            .expect("server child process mutex poisoned")
-            .id();
-
         self.running = Some(RunningServer {
             profile_id,
-            game_slug,
+            game,
             server_dir,
             pid,
             child,
@@ -97,38 +96,76 @@ impl ServerRuntime {
         Ok(self.status())
     }
 
-    // An old watcher must not clear a newer server.
-    pub fn clear_if_pid(&mut self, pid: u32) -> Option<i64> {
+    /// An old watcher must not clear a newer server.
+    pub fn clear_if_pid(&mut self, pid: u32) -> bool {
         let matches = self
             .running
             .as_ref()
             .is_some_and(|running| running.pid == pid);
 
-        if !matches {
-            return None;
-        }
-
-        self.running.take().map(|running| running.profile_id)
+        matches && self.running.take().is_some()
     }
 
-    pub fn force_stop(&mut self) -> Result<Option<i64>> {
-        let Some(running) = self.running.take() else {
-            return Ok(None);
+    /// Takes ownership of the running child so the caller can kill it without
+    /// holding the runtime lock across an await.
+    pub fn take(&mut self) -> Option<SharedChild> {
+        self.running.take().map(|running| running.child)
+    }
+}
+
+/// Watches the server process and updates the runtime when it exits.
+///
+/// Runs as a tokio task instead of a std thread: the lock is only held for
+/// the non-blocking `try_wait` call, so `take`/`kill` can still proceed.
+pub fn watch(app: AppHandle, child: SharedChild, pid: u32) {
+    tauri::async_runtime::spawn(async move {
+        let result = loop {
+            let status = {
+                let mut child = child.lock().await;
+                child.try_wait()
+            };
+
+            match status {
+                Ok(Some(status)) => break Ok(status),
+                Ok(None) => tokio::time::sleep(PROCESS_POLL_INTERVAL).await,
+                Err(err) => break Err(err),
+            }
         };
 
-        let profile_id = running.profile_id;
-
-        let mut child = running
-            .child
-            .lock()
-            .expect("server child process mutex poisoned");
-
-        if child.try_wait()?.is_none() {
-            child.kill()?;
-            let _ = child.wait();
+        match result {
+            Ok(status) => info!(pid, ?status, "dedicated server exited"),
+            Err(err) => warn!(pid, ?err, "failed to query dedicated server process"),
         }
 
-        Ok(Some(profile_id))
+        let mut runtime = app.lock_server_runtime();
+        if runtime.clear_if_pid(pid) {
+            emit_status(&app, &runtime.status());
+        }
+    });
+}
+
+/// Kills the process behind `child` and reports the stopped status.
+///
+/// Expects the runtime entry to have been removed already via [`ServerRuntime::take`].
+pub async fn kill(app: AppHandle, child: SharedChild) -> Result<()> {
+    let status = {
+        let mut child = child.lock().await;
+        child.kill().await
+    };
+
+    if let Err(err) = status {
+        warn!(?err, "failed to kill dedicated server process");
+    }
+
+    let status = app.lock_server_runtime().status();
+    emit_status(&app, &status);
+
+    Ok(())
+}
+
+pub fn emit_status(app: &AppHandle, status: &ServerStatus) {
+    if let Err(err) = app.emit("server_status_changed", status) {
+        warn!(?err, "failed to emit dedicated server status");
     }
 }
 

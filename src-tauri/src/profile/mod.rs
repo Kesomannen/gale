@@ -78,7 +78,7 @@ pub struct Profile {
     pub modpack: Option<ModpackArgs>,
     pub sync: Option<sync::SyncProfileData>,
     pub custom_args: String,
-    pub server_settings: server::config::DedicatedServerSettings,
+    pub server_settings: Option<server::settings::ProfileServerSettings>,
     pub missing: bool,
 }
 

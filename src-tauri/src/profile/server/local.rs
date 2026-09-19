@@ -1,85 +1,69 @@
-use std::{
-    path::PathBuf,
-    process::{Child, Command},
-};
+use std::path::PathBuf;
 
 use eyre::{Context, OptionExt, Result};
 use tracing::info;
 
+use super::{args, settings::LocalServerSettings};
 use crate::{
-    game::platform::Platform,
+    game::{Game, platform::Platform},
     prefs::Prefs,
-    profile::{ManagedGame, launch, server::config::DedicatedServerSettings},
+    profile::{ManagedGame, Profile, launch},
 };
 
 pub struct LocalServerProcess {
-    pub child: Child,
+    pub child: tokio::process::Child,
     pub server_dir: PathBuf,
     pub profile_id: i64,
-    pub game_slug: String,
+    pub game: Game,
 }
 
+/// Launches a dedicated server on this machine for `profile`.
+///
+/// The caller is expected to have validated `settings` with
+/// [`args::validate_game_args`] already; this only resolves the installation,
+/// applies arguments and spawns the process.
 pub fn launch(
     game: &ManagedGame,
-    settings: &DedicatedServerSettings,
+    profile: &Profile,
+    settings: &LocalServerSettings,
     password: &str,
     prefs: &Prefs,
 ) -> Result<LocalServerProcess> {
-    settings.validate_local(password)?;
-
-    let dedicated = game
-        .game
-        .dedicated_server
-        .as_ref()
-        .ok_or_eyre("this game does not define a dedicated server")?;
+    if game.game.dedicated_server.is_none() {
+        eyre::bail!("this game does not define a dedicated server");
+    }
 
     let (server_dir, server_platform) = locate_server_dir(game, prefs)?;
     let executable = launch::find_executable(&server_dir)
         .context("failed to locate dedicated server executable")?;
 
-    game.copy_required_files(&server_dir)
+    game.copy_required_files(&server_dir, &profile.path)
         .context("failed to prepare mod loader files for dedicated server")?;
 
-    let profile = game.active_profile();
-    let mut command = Command::new(&executable);
+    let mut command = std::process::Command::new(&executable);
 
+    // The dedicated server executable runs outside Steam, so it needs the
+    // app id in the environment for Steamworks to initialize.
     if matches!(server_platform, Platform::Steam)
         && let Some(steam) = &game.game.platforms.steam
     {
         command.env("SteamAppId", steam.id.to_string());
     }
 
-    command
-        .current_dir(&server_dir)
-        .arg("-nographics")
-        .arg("-batchmode")
-        .arg("-name")
-        .arg(settings.server_name.trim())
-        .arg("-port")
-        .arg(settings.port.to_string())
-        .arg("-world")
-        .arg(settings.world.trim())
-        .arg("-public")
-        .arg(if settings.public_server { "1" } else { "0" });
+    command.current_dir(&server_dir);
 
-    if !password.is_empty() {
-        command.arg("-password").arg(password);
-    }
-
-    if settings.crossplay {
-        command.arg("-crossplay");
-    }
+    args::apply_game_args(&mut command, game.game, settings, password)?;
 
     game.apply_mod_loader_args(
         &mut command,
         &server_dir,
         Some(server_platform),
-        &dedicated.platforms,
+        &profile.path,
     )
     .context("failed to configure mod loader")?;
 
-    if !settings.extra_args.trim().is_empty() {
-        launch::apply_custom_args(&mut command, &settings.extra_args)
+    if !settings.extra_args.is_empty() {
+        launch::custom_args::add_args(&mut command, &settings.extra_args)
             .context("failed to apply dedicated server launch arguments")?;
     }
 
@@ -87,6 +71,8 @@ pub fn launch(
     {
         use std::os::windows::process::CommandExt;
 
+        // Give the server its own console window so its log stays visible
+        // instead of dying silently with Gale.
         const CREATE_NEW_CONSOLE: u32 = 0x0000_0010;
 
         command.creation_flags(CREATE_NEW_CONSOLE);
@@ -100,7 +86,7 @@ pub fn launch(
         "launching dedicated server"
     );
 
-    let child = command
+    let child = tokio::process::Command::from(command)
         .spawn()
         .context("failed to start dedicated server")?;
 
@@ -108,11 +94,11 @@ pub fn launch(
         child,
         server_dir,
         profile_id: profile.id,
-        game_slug: game.game.slug.to_string(),
+        game: game.game,
     })
 }
 
-pub(crate) fn locate_server_dir(game: &ManagedGame, prefs: &Prefs) -> Result<(PathBuf, Platform)> {
+pub fn locate_server_dir(game: &ManagedGame, prefs: &Prefs) -> Result<(PathBuf, Platform)> {
     let dedicated = game
         .game
         .dedicated_server

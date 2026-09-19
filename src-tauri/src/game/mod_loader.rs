@@ -244,6 +244,41 @@ impl ModLoader<'static> {
         }
     }
 
+    /// Profile subdirectories a dedicated server should mirror: the mod
+    /// install targets plus config directories. The loader's own payload
+    /// directories are deliberately excluded — mirroring them could delete a
+    /// host-managed loader. Loaders without dedicated-server deployment
+    /// support return `None`.
+    pub fn server_mirror_dirs(&self) -> Option<Vec<&'static str>> {
+        match &self.kind {
+            ModLoaderKind::BepInEx { extra_subdirs } => Some(
+                [
+                    "BepInEx/plugins",
+                    "BepInEx/patchers",
+                    "BepInEx/monomod",
+                    "BepInEx/config",
+                ]
+                .into_iter()
+                .chain(extra_subdirs.iter().map(|subdir| subdir.target))
+                .collect(),
+            ),
+            ModLoaderKind::BepisLoader { extra_subdirs } => Some(
+                [
+                    "BepInEx/plugins",
+                    "BepInEx/patchers",
+                    "BepInEx/monomod",
+                    "BepInEx/config",
+                    "Renderer/BepInEx/plugins",
+                    "Renderer/BepInEx/config",
+                ]
+                .into_iter()
+                .chain(extra_subdirs.iter().map(|subdir| subdir.target))
+                .collect(),
+            ),
+            _ => None,
+        }
+    }
+
     pub fn proxy_dll(&'static self) -> Option<&'static str> {
         match &self.kind {
             ModLoaderKind::BepInEx { .. } => Some("winhttp"),

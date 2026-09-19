@@ -1,5 +1,5 @@
 use std::{
-    io::{Cursor, Read},
+    io::{Cursor, Read, Write},
     net::{TcpStream, ToSocketAddrs},
     path::Path,
     sync::Arc,
@@ -9,7 +9,7 @@ use std::{
 use base64::{Engine, engine::general_purpose::STANDARD_NO_PAD};
 use eyre::{Context, OptionExt, Result, bail, ensure};
 use serde::Serialize;
-use ssh2::{Error as SshError, ErrorCode, HashType, RenameFlags, Session, Sftp};
+use ssh2::{Error as SshError, ErrorCode, HashType, RenameFlags, Sftp};
 use suppaftp::rustls::{
     ClientConfig, DigitallySignedStruct, Error as TlsError, RootCertStore, SignatureScheme,
     client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier},
@@ -17,10 +17,13 @@ use suppaftp::rustls::{
 };
 use suppaftp::{FtpError, RustlsConnector, RustlsFtpStream, Status};
 
-use super::config::{RemoteAuthentication, RemoteProtocol, RemoteServerSettings};
+use super::{
+    paths::RemotePath,
+    settings::{RemoteAuthentication, RemoteProtocol, RemoteServerSettings},
+};
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
-const SSH_TIMEOUT_MS: u32 = 15_000;
+const SSH_TIMEOUT: Duration = Duration::from_millis(15_000);
 const SFTP_NO_SUCH_FILE: i32 = 2;
 
 #[derive(Debug, Clone, Serialize)]
@@ -36,25 +39,25 @@ pub enum ConnectionTestResult {
     CertificateUntrusted,
 }
 
-pub(crate) enum ConnectionAttempt {
+pub enum ConnectionAttempt {
     Connected(RemoteConnection),
     HostKeyUntrusted { fingerprint: String },
     CertificateUntrusted,
 }
 
-pub(crate) struct RemoteConnection {
+pub struct RemoteConnection {
     client: RemoteClient,
     pub fingerprint: Option<String>,
     pub encrypted: bool,
 }
 
-pub(crate) struct RemoteEntry {
+pub struct RemoteEntry {
     pub name: String,
     pub is_directory: bool,
 }
 
 enum RemoteClient {
-    Sftp { sftp: Sftp, _session: Session },
+    Sftp { sftp: Sftp, _session: ssh2::Session },
     Ftp(RustlsFtpStream),
 }
 
@@ -102,17 +105,15 @@ pub fn test_connection(
     settings: &RemoteServerSettings,
     password: &str,
 ) -> Result<ConnectionTestResult> {
-    match connect(settings, password)? {
-        ConnectionAttempt::Connected(connection) => {
-            let mut connection = connection;
-            connection
-                .check_directory(&settings.server_directory)
-                .with_context(|| {
-                    format!(
-                        "connected successfully, but server directory '{}' could not be accessed",
-                        settings.server_directory
-                    )
-                })?;
+    match RemoteConnection::connect(settings, password)? {
+        ConnectionAttempt::Connected(mut connection) => {
+            let directory = settings.server_directory()?;
+            connection.check_directory(&directory).with_context(|| {
+                format!(
+                    "connected successfully, but server directory '{}' could not be accessed",
+                    settings.server_directory
+                )
+            })?;
 
             Ok(ConnectionTestResult::Connected {
                 fingerprint: connection.fingerprint,
@@ -126,115 +127,115 @@ pub fn test_connection(
     }
 }
 
-pub(crate) fn connect(
-    settings: &RemoteServerSettings,
-    password: &str,
-) -> Result<ConnectionAttempt> {
-    settings.validate()?;
-
-    if settings.protocol != RemoteProtocol::Sftp {
-        return match connect_ftp(settings, password) {
-            Ok(connection) => Ok(ConnectionAttempt::Connected(connection)),
-            Err(error)
-                if settings.protocol != RemoteProtocol::Sftp
-                    && settings.trusted_invalid_certificate_host.as_deref()
-                        != Some(settings.host.trim())
-                    && is_untrusted_certificate_error(&error) =>
-            {
-                Ok(ConnectionAttempt::CertificateUntrusted)
-            }
-            Err(error) => Err(error),
-        };
-    }
-
-    let mut session = connect_tcp(settings)?;
-    session.handshake().context("SSH handshake failed")?;
-
-    let fingerprint = host_key_fingerprint(&session)?;
-
-    match settings.trusted_host_key.as_deref() {
-        Some(expected) => ensure!(
-            expected == fingerprint,
-            "SSH host key has changed. Expected {expected}, received {fingerprint}. Refusing to send credentials."
-        ),
-        None => return Ok(ConnectionAttempt::HostKeyUntrusted { fingerprint }),
-    }
-
-    authenticate(&session, settings, password)?;
-
-    let sftp = session
-        .sftp()
-        .context("connected over SSH, but the server did not provide an SFTP subsystem")?;
-
-    Ok(ConnectionAttempt::Connected(RemoteConnection {
-        client: RemoteClient::Sftp {
-            sftp,
-            _session: session,
-        },
-        fingerprint: Some(fingerprint),
-        encrypted: true,
-    }))
-}
-
-fn connect_ftp(settings: &RemoteServerSettings, password: &str) -> Result<RemoteConnection> {
-    ensure!(!password.is_empty(), "FTP password is required");
-    let address = format!("{}:{}", settings.host.trim(), settings.port);
-    let stream = RustlsFtpStream::connect(address.as_str())
-        .with_context(|| format!("failed to connect to {}", settings.host))?;
-    let trust_invalid =
-        settings.trusted_invalid_certificate_host.as_deref() == Some(settings.host.trim());
-    let roots = RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let mut connector = ClientConfig::builder()
-        .with_root_certificates(roots)
-        .with_no_client_auth();
-    if trust_invalid {
-        connector
-            .dangerous()
-            .set_certificate_verifier(Arc::new(TrustAnyCertificate));
-    }
-    let (mut stream, encrypted) = match stream.into_secure(
-        RustlsConnector::from(Arc::new(connector)),
-        settings.host.trim(),
-    ) {
-        Ok(stream) => (stream, true),
-        Err(error)
-            if settings.protocol == RemoteProtocol::Ftp && is_ftp_tls_unsupported(&error) =>
-        {
-            (
-                RustlsFtpStream::connect(address.as_str())
-                    .with_context(|| format!("failed to reconnect to {}", settings.host))?,
-                false,
-            )
-        }
-        Err(error) => return Err(error).context("FTPS TLS negotiation failed"),
-    };
-    stream
-        .login(settings.username.trim(), password)
-        .context("FTP authentication failed")?;
-
-    Ok(RemoteConnection {
-        client: RemoteClient::Ftp(stream),
-        fingerprint: None,
-        encrypted,
-    })
-}
-
 impl RemoteConnection {
+    /// Connects and authenticates against the remote server.
+    ///
+    /// `settings` is expected to have passed [`RemoteServerSettings::validate`]
+    /// already; this is the transport layer, so it only parses the paths it
+    /// actually needs.
+    pub fn connect(settings: &RemoteServerSettings, password: &str) -> Result<ConnectionAttempt> {
+        if settings.protocol != RemoteProtocol::Sftp {
+            return match Self::connect_ftp(settings, password) {
+                Ok(connection) => Ok(ConnectionAttempt::Connected(connection)),
+                Err(error)
+                    if settings.trusted_invalid_certificate_host.as_deref()
+                        != Some(settings.host.trim())
+                        && is_untrusted_certificate_error(&error) =>
+                {
+                    Ok(ConnectionAttempt::CertificateUntrusted)
+                }
+                Err(error) => Err(error),
+            };
+        }
+
+        let mut session = connect_tcp(settings)?;
+        session.handshake().context("SSH handshake failed")?;
+
+        let fingerprint = host_key_fingerprint(&session)?;
+
+        match settings.trusted_host_key.as_deref() {
+            Some(expected) => ensure!(
+                expected == fingerprint,
+                "SSH host key has changed. Expected {expected}, received {fingerprint}. Refusing to send credentials."
+            ),
+            None => return Ok(ConnectionAttempt::HostKeyUntrusted { fingerprint }),
+        }
+
+        authenticate(&session, settings, password)?;
+
+        let sftp = session
+            .sftp()
+            .context("connected over SSH, but the server did not provide an SFTP subsystem")?;
+
+        Ok(ConnectionAttempt::Connected(RemoteConnection {
+            client: RemoteClient::Sftp {
+                sftp,
+                _session: session,
+            },
+            fingerprint: Some(fingerprint),
+            encrypted: true,
+        }))
+    }
+
+    fn connect_ftp(settings: &RemoteServerSettings, password: &str) -> Result<RemoteConnection> {
+        ensure!(!password.is_empty(), "FTP password is required");
+
+        let address = format!("{}:{}", settings.host.trim(), settings.port);
+        let stream = RustlsFtpStream::connect(address.as_str())
+            .with_context(|| format!("failed to connect to {}", settings.host))?;
+
+        let roots = RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+        let mut connector = ClientConfig::builder()
+            .with_root_certificates(roots)
+            .with_no_client_auth();
+
+        // The user may choose to trust a host whose certificate cannot be
+        // verified (self-signed certs are common on game hosts).
+        let trust_invalid =
+            settings.trusted_invalid_certificate_host.as_deref() == Some(settings.host.trim());
+        if trust_invalid {
+            connector
+                .dangerous()
+                .set_certificate_verifier(Arc::new(TrustAnyCertificate));
+        }
+
+        let (mut stream, encrypted) = match stream.into_secure(
+            RustlsConnector::from(Arc::new(connector)),
+            settings.host.trim(),
+        ) {
+            Ok(stream) => (stream, true),
+            // Plain FTP servers reject AUTH TLS entirely; reconnect and stay
+            // unencrypted instead of failing.
+            Err(error)
+                if settings.protocol == RemoteProtocol::Ftp && is_ftp_tls_unsupported(&error) =>
+            {
+                (
+                    RustlsFtpStream::connect(address.as_str())
+                        .with_context(|| format!("failed to reconnect to {}", settings.host))?,
+                    false,
+                )
+            }
+            Err(error) => return Err(error).context("FTPS TLS negotiation failed"),
+        };
+
+        stream
+            .login(settings.username.trim(), password)
+            .context("FTP authentication failed")?;
+
+        Ok(RemoteConnection {
+            client: RemoteClient::Ftp(stream),
+            fingerprint: None,
+            encrypted,
+        })
+    }
+
     pub fn supports_atomic_replace(&self) -> bool {
         matches!(self.client, RemoteClient::Sftp { .. })
     }
 
-    pub fn list_directory(&mut self, path: &str) -> Result<Vec<String>> {
-        Ok(self
-            .list_directory_entries(path)?
-            .into_iter()
-            .map(|entry| entry.name)
-            .collect())
-    }
-
-    pub fn list_directory_entries(&mut self, path: &str) -> Result<Vec<RemoteEntry>> {
+    pub fn list_directory_entries(&mut self, path: &RemotePath) -> Result<Vec<RemoteEntry>> {
         match &mut self.client {
-            RemoteClient::Sftp { sftp, .. } => match sftp.readdir(Path::new(path)) {
+            RemoteClient::Sftp { sftp, .. } => match sftp.readdir(Path::new(path.as_str())) {
                 Ok(entries) => Ok(entries
                     .into_iter()
                     .filter_map(|(path, stat)| {
@@ -247,7 +248,7 @@ impl RemoteConnection {
                 Err(err) if is_sftp_not_found(&err) => Ok(Vec::new()),
                 Err(err) => Err(err.into()),
             },
-            RemoteClient::Ftp(ftp) => match ftp.list(Some(path)) {
+            RemoteClient::Ftp(ftp) => match ftp.list(Some(path.as_str())) {
                 Ok(entries) => ftp_list_entries(entries),
                 Err(err) if is_ftp_not_found(&err) => Ok(Vec::new()),
                 Err(err) => Err(err.into()),
@@ -255,30 +256,31 @@ impl RemoteConnection {
         }
     }
 
-    pub fn check_directory(&mut self, path: &str) -> Result<()> {
+    pub fn check_directory(&mut self, path: &RemotePath) -> Result<()> {
         match &mut self.client {
             RemoteClient::Sftp { sftp, .. } => {
-                sftp.stat(Path::new(path)).map(|_| ()).map_err(Into::into)
+                sftp.stat(Path::new(path.as_str()))?;
+                Ok(())
             }
             RemoteClient::Ftp(ftp) => {
                 let original = ftp.pwd()?;
-                ftp.cwd(path)?;
+                ftp.cwd(path.as_str())?;
                 ftp.cwd(original)?;
                 Ok(())
             }
         }
     }
 
-    pub fn directory_exists(&mut self, path: &str) -> Result<bool> {
+    pub fn directory_exists(&mut self, path: &RemotePath) -> Result<bool> {
         match &mut self.client {
-            RemoteClient::Sftp { sftp, .. } => match sftp.stat(Path::new(path)) {
+            RemoteClient::Sftp { sftp, .. } => match sftp.stat(Path::new(path.as_str())) {
                 Ok(stat) => Ok(stat.is_dir()),
                 Err(err) if is_sftp_not_found(&err) => Ok(false),
                 Err(err) => Err(err.into()),
             },
             RemoteClient::Ftp(ftp) => {
                 let original = ftp.pwd()?;
-                match ftp.cwd(path) {
+                match ftp.cwd(path.as_str()) {
                     Ok(()) => {
                         ftp.cwd(original)?;
                         Ok(true)
@@ -293,9 +295,9 @@ impl RemoteConnection {
         }
     }
 
-    pub fn read_file(&mut self, path: &str) -> Result<Option<Vec<u8>>> {
+    pub fn read_file(&mut self, path: &RemotePath) -> Result<Option<Vec<u8>>> {
         match &mut self.client {
-            RemoteClient::Sftp { sftp, .. } => match sftp.open(Path::new(path)) {
+            RemoteClient::Sftp { sftp, .. } => match sftp.open(Path::new(path.as_str())) {
                 Ok(mut file) => {
                     let mut bytes = Vec::new();
                     file.read_to_end(&mut bytes)?;
@@ -304,7 +306,7 @@ impl RemoteConnection {
                 Err(err) if is_sftp_not_found(&err) => Ok(None),
                 Err(err) => Err(err.into()),
             },
-            RemoteClient::Ftp(ftp) => match ftp.retr_as_buffer(path) {
+            RemoteClient::Ftp(ftp) => match ftp.retr_as_buffer(path.as_str()) {
                 Ok(bytes) => Ok(Some(bytes.into_inner())),
                 Err(err) if is_ftp_not_found(&err) => Ok(None),
                 Err(err) => Err(err.into()),
@@ -312,66 +314,74 @@ impl RemoteConnection {
         }
     }
 
-    pub fn write_file(&mut self, path: &str, bytes: &[u8]) -> Result<()> {
+    pub fn write_file(&mut self, path: &RemotePath, bytes: &[u8]) -> Result<()> {
         match &mut self.client {
             RemoteClient::Sftp { sftp, .. } => {
-                use std::io::Write;
-                let mut file = sftp.create(Path::new(path))?;
+                let mut file = sftp.create(Path::new(path.as_str()))?;
                 file.write_all(bytes)?;
                 file.flush()?;
                 Ok(())
             }
             RemoteClient::Ftp(ftp) => {
-                ftp.put_file(path, &mut Cursor::new(bytes))?;
+                ftp.put_file(path.as_str(), &mut Cursor::new(bytes))?;
                 Ok(())
             }
         }
     }
 
-    pub fn remove_file(&mut self, path: &str) -> Result<bool> {
+    pub fn remove_file(&mut self, path: &RemotePath) -> Result<bool> {
         match &mut self.client {
-            RemoteClient::Sftp { sftp, .. } => match sftp.unlink(Path::new(path)) {
+            RemoteClient::Sftp { sftp, .. } => match sftp.unlink(Path::new(path.as_str())) {
                 Ok(()) => Ok(true),
                 Err(err) if is_sftp_not_found(&err) => Ok(false),
                 Err(err) => Err(err.into()),
             },
-            RemoteClient::Ftp(ftp) => match ftp.rm(path) {
+            RemoteClient::Ftp(ftp) => match ftp.rm(path.as_str()) {
                 Ok(()) => Ok(true),
                 Err(err) => Err(err.into()),
             },
         }
     }
 
-    pub fn remove_directory(&mut self, path: &str) -> Result<()> {
+    pub fn remove_directory(&mut self, path: &RemotePath) -> Result<()> {
         match &mut self.client {
-            RemoteClient::Sftp { sftp, .. } => sftp.rmdir(Path::new(path)).map_err(Into::into),
-            RemoteClient::Ftp(ftp) => ftp.rmdir(path).map_err(Into::into),
+            RemoteClient::Sftp { sftp, .. } => {
+                sftp.rmdir(Path::new(path.as_str()))?;
+                Ok(())
+            }
+            RemoteClient::Ftp(ftp) => ftp.rmdir(path.as_str()).map_err(Into::into),
         }
     }
 
-    pub fn ensure_directory(&mut self, path: &str) -> Result<()> {
+    pub fn ensure_directory(&mut self, path: &RemotePath) -> Result<()> {
         match &mut self.client {
-            RemoteClient::Sftp { sftp, .. } => match sftp.stat(Path::new(path)) {
+            RemoteClient::Sftp { sftp, .. } => match sftp.stat(Path::new(path.as_str())) {
                 Ok(_) => Ok(()),
                 Err(err) if is_sftp_not_found(&err) => {
-                    sftp.mkdir(Path::new(path), 0o755).map_err(Into::into)
+                    sftp.mkdir(Path::new(path.as_str()), 0o755)?;
+                    Ok(())
                 }
                 Err(err) => Err(err.into()),
             },
             RemoteClient::Ftp(ftp) => {
                 let original = ftp.pwd()?;
-                if ftp.cwd(path).is_ok() {
+                if ftp.cwd(path.as_str()).is_ok() {
                     ftp.cwd(original)?;
                     return Ok(());
                 }
                 ftp.cwd(&original)?;
-                ftp.mkdir(path)?;
+                ftp.mkdir(path.as_str())?;
                 Ok(())
             }
         }
     }
 
-    pub fn rename_file(&mut self, from: &str, to: &str, overwrite: bool) -> Result<()> {
+    pub fn rename_file(
+        &mut self,
+        from: &RemotePath,
+        to: &RemotePath,
+        overwrite: bool,
+    ) -> Result<()> {
         match &mut self.client {
             RemoteClient::Sftp { sftp, .. } => {
                 let flags = if overwrite {
@@ -379,30 +389,112 @@ impl RemoteConnection {
                 } else {
                     RenameFlags::empty()
                 };
-                sftp.rename(Path::new(from), Path::new(to), Some(flags))?;
+                sftp.rename(
+                    Path::new(from.as_str()),
+                    Path::new(to.as_str()),
+                    Some(flags),
+                )?;
                 Ok(())
             }
             RemoteClient::Ftp(ftp) => {
-                ftp.rename(from, to)?;
+                ftp.rename(from.as_str(), to.as_str())?;
                 Ok(())
             }
         }
     }
 
-    pub fn file_exists(&mut self, path: &str) -> Result<bool> {
+    pub fn file_exists(&mut self, path: &RemotePath) -> Result<bool> {
         match &mut self.client {
-            RemoteClient::Sftp { sftp, .. } => match sftp.stat(Path::new(path)) {
+            RemoteClient::Sftp { sftp, .. } => match sftp.stat(Path::new(path.as_str())) {
                 Ok(_) => Ok(true),
                 Err(err) if is_sftp_not_found(&err) => Ok(false),
                 Err(err) => Err(err.into()),
             },
-            RemoteClient::Ftp(ftp) => match ftp.size(path) {
+            RemoteClient::Ftp(ftp) => match ftp.size(path.as_str()) {
                 Ok(_) => Ok(true),
                 Err(err) if is_ftp_not_found(&err) => Ok(false),
                 Err(err) => Err(err.into()),
             },
         }
     }
+}
+
+fn connect_tcp(settings: &RemoteServerSettings) -> Result<ssh2::Session> {
+    let address = format!("{}:{}", settings.host.trim(), settings.port);
+    let addresses = address
+        .to_socket_addrs()
+        .with_context(|| format!("failed to resolve {}", settings.host))?
+        .collect::<Vec<_>>();
+
+    ensure!(!addresses.is_empty(), "host resolved to no addresses");
+
+    let mut last_error = None;
+
+    for address in addresses {
+        match TcpStream::connect_timeout(&address, CONNECT_TIMEOUT) {
+            Ok(stream) => {
+                stream.set_read_timeout(Some(CONNECT_TIMEOUT)).ok();
+                stream.set_write_timeout(Some(CONNECT_TIMEOUT)).ok();
+
+                let mut session = ssh2::Session::new().context("failed to create SSH session")?;
+                session.set_tcp_stream(stream);
+                session.set_timeout(SSH_TIMEOUT.as_millis() as u32);
+
+                return Ok(session);
+            }
+            Err(err) => last_error = Some(err),
+        }
+    }
+
+    bail!(
+        "failed to connect to {}: {}",
+        address,
+        last_error
+            .map(|error| error.to_string())
+            .unwrap_or_else(|| "unknown network error".to_owned())
+    )
+}
+
+fn host_key_fingerprint(session: &ssh2::Session) -> Result<String> {
+    let hash = session
+        .host_key_hash(HashType::Sha256)
+        .ok_or_eyre("server did not provide a SHA256 host-key fingerprint")?;
+
+    Ok(format!("SHA256:{}", STANDARD_NO_PAD.encode(hash)))
+}
+
+fn authenticate(
+    session: &ssh2::Session,
+    settings: &RemoteServerSettings,
+    credential: &str,
+) -> Result<()> {
+    match settings.authentication {
+        RemoteAuthentication::Password => {
+            ensure!(!credential.is_empty(), "SFTP password is required");
+            session
+                .userauth_password(&settings.username, credential)
+                .context("SSH password authentication failed")?;
+        }
+        RemoteAuthentication::PrivateKey => {
+            let private_key = Path::new(&settings.private_key_path);
+            ensure!(private_key.is_file(), "SSH private key file does not exist");
+            session
+                .userauth_pubkey_file(
+                    &settings.username,
+                    None,
+                    private_key,
+                    (!credential.is_empty()).then_some(credential),
+                )
+                .context("SSH private-key authentication failed")?;
+        }
+        RemoteAuthentication::Agent => session
+            .userauth_agent(&settings.username)
+            .context("SSH agent authentication failed")?,
+    }
+
+    ensure!(session.authenticated(), "SSH authentication was rejected");
+
+    Ok(())
 }
 
 fn is_sftp_not_found(error: &SshError) -> bool {
@@ -490,82 +582,4 @@ mod tests {
 
         assert!(is_untrusted_certificate_error(&error));
     }
-}
-
-fn connect_tcp(settings: &RemoteServerSettings) -> Result<Session> {
-    let address = format!("{}:{}", settings.host.trim(), settings.port);
-    let addresses = address
-        .to_socket_addrs()
-        .with_context(|| format!("failed to resolve {}", settings.host))?
-        .collect::<Vec<_>>();
-
-    ensure!(!addresses.is_empty(), "host resolved to no addresses");
-
-    let mut last_error = None;
-
-    for address in addresses {
-        match TcpStream::connect_timeout(&address, CONNECT_TIMEOUT) {
-            Ok(stream) => {
-                stream.set_read_timeout(Some(CONNECT_TIMEOUT)).ok();
-                stream.set_write_timeout(Some(CONNECT_TIMEOUT)).ok();
-
-                let mut session = Session::new().context("failed to create SSH session")?;
-                session.set_tcp_stream(stream);
-                session.set_timeout(SSH_TIMEOUT_MS);
-
-                return Ok(session);
-            }
-            Err(err) => last_error = Some(err),
-        }
-    }
-
-    bail!(
-        "failed to connect to {}: {}",
-        address,
-        last_error
-            .map(|error| error.to_string())
-            .unwrap_or_else(|| "unknown network error".to_owned())
-    )
-}
-
-fn host_key_fingerprint(session: &Session) -> Result<String> {
-    let hash = session
-        .host_key_hash(HashType::Sha256)
-        .ok_or_eyre("server did not provide a SHA256 host-key fingerprint")?;
-
-    Ok(format!("SHA256:{}", STANDARD_NO_PAD.encode(hash)))
-}
-
-fn authenticate(
-    session: &Session,
-    settings: &RemoteServerSettings,
-    credential: &str,
-) -> Result<()> {
-    match settings.authentication {
-        RemoteAuthentication::Password => {
-            ensure!(!credential.is_empty(), "SFTP password is required");
-            session
-                .userauth_password(&settings.username, credential)
-                .context("SSH password authentication failed")?;
-        }
-        RemoteAuthentication::PrivateKey => {
-            let private_key = Path::new(&settings.private_key_path);
-            ensure!(private_key.is_file(), "SSH private key file does not exist");
-            session
-                .userauth_pubkey_file(
-                    &settings.username,
-                    None,
-                    private_key,
-                    (!credential.is_empty()).then_some(credential),
-                )
-                .context("SSH private-key authentication failed")?;
-        }
-        RemoteAuthentication::Agent => session
-            .userauth_agent(&settings.username)
-            .context("SSH agent authentication failed")?,
-    }
-
-    ensure!(session.authenticated(), "SSH authentication was rejected");
-
-    Ok(())
 }

@@ -15,10 +15,7 @@ use walkdir::WalkDir;
 
 use super::ManagedGame;
 use crate::{
-    game::{
-        Game,
-        platform::{Platform, Platforms},
-    },
+    game::{Game, platform::Platform},
     logger::log_webview_err,
     prefs::{GamePrefs, Prefs},
     util::{
@@ -27,11 +24,11 @@ use crate::{
     },
 };
 
-mod custom_args;
+pub mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
 mod mod_loader;
-pub(crate) mod platform;
+pub mod platform;
 
 pub mod commands;
 
@@ -84,7 +81,9 @@ impl ManagedGame {
         let game_dir =
             locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
 
-        if let Err(err) = self.copy_required_files(&game_dir) {
+        let profile = self.active_profile();
+
+        if let Err(err) = self.copy_required_files(&game_dir, &profile.path) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
 
@@ -135,11 +134,12 @@ impl ManagedGame {
         }
         .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
 
+        let profile = self.active_profile();
+
         if !vanilla {
-            self.apply_mod_loader_args(&mut command, game_dir, platform, &self.game.platforms)?;
+            self.apply_mod_loader_args(&mut command, game_dir, platform, &profile.path)?;
         }
 
-        let profile = self.active_profile();
         custom_args::add_args(&mut command, game_custom_args)?;
         custom_args::add_args(&mut command, &profile.custom_args)?;
 
@@ -150,7 +150,7 @@ impl ManagedGame {
         Ok((launch_mode, command))
     }
 
-    pub(crate) fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
+    pub fn copy_required_files(&self, game_dir: &Path, profile_dir: &Path) -> Result<()> {
         const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
 
@@ -161,9 +161,7 @@ impl ManagedGame {
             target_dir.display()
         );
 
-        let entries = self
-            .active_profile()
-            .path
+        let entries = profile_dir
             .read_dir()?
             .filter_map(std::result::Result::ok)
             .filter(|entry| {
@@ -198,12 +196,12 @@ impl ManagedGame {
     }
 
     #[cfg_attr(target_os = "windows", allow(unused_variables))]
-    pub(crate) fn apply_mod_loader_args(
+    pub fn apply_mod_loader_args(
         &self,
         command: &mut Command,
         target_dir: &Path,
         platform: Option<Platform>,
-        platforms: &Platforms<'_>,
+        profile_dir: &Path,
     ) -> Result<()> {
         #[cfg(target_os = "linux")]
         let is_proton = {
@@ -216,7 +214,7 @@ impl ManagedGame {
                 command.env("WINEDLLOVERRIDE", format!("{proxy_dll}=n,b"));
 
                 if matches!(platform, Some(Platform::Steam))
-                    && let Some(steam) = &platforms.steam
+                    && let Some(steam) = &self.game.platforms.steam
                     && let Err(err) = linux::ensure_wine_override(steam.id, proxy_dll, target_dir)
                 {
                     warn!("failed to ensure wine dll override: {err:#}");
@@ -233,8 +231,7 @@ impl ManagedGame {
             info!("target appears to be running under Proton");
         }
 
-        let profile = self.active_profile();
-        let mut ctx = mod_loader::ArgsContext::new(command, &profile.path, is_proton);
+        let mut ctx = mod_loader::ArgsContext::new(command, profile_dir, is_proton);
 
         ctx.add_args(&self.game.mod_loader)
     }
@@ -308,7 +305,7 @@ const IGNORED_EXES: &[&str] = &[
     "UnityCrashHandler64.exe",
 ];
 
-pub(crate) fn find_executable(game_dir: &Path) -> Result<PathBuf> {
+pub fn find_executable(game_dir: &Path) -> Result<PathBuf> {
     WalkDir::new(game_dir)
         .into_iter()
         .filter_map(Result::ok)
@@ -374,8 +371,4 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
     }
 
     Ok(launch_options)
-}
-
-pub(crate) fn apply_custom_args(command: &mut Command, args: &str) -> Result<()> {
-    custom_args::add_args(command, args)
 }

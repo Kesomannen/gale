@@ -2,6 +2,8 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+use super::paths::DeployPathBuf;
+
 pub const FILE_NAME: &str = ".gale-server-manifest.json";
 pub const VERSION: u32 = 1;
 
@@ -12,56 +14,23 @@ pub struct ManifestEntry {
     pub size: u64,
 }
 
+/// Records which remote files Gale deployed and therefore owns.
+///
+/// Only files listed here may be removed from the server, and only files
+/// inside the spec's mirror directories are considered for removal on sight;
+/// everything else is removed solely because a previous manifest recorded it.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct DeploymentManifest {
     pub version: u32,
-    pub old_files_cleaned: bool,
-    pub files: BTreeMap<String, ManifestEntry>,
+    pub files: BTreeMap<DeployPathBuf, ManifestEntry>,
 }
 
 impl Default for DeploymentManifest {
     fn default() -> Self {
         Self {
             version: VERSION,
-            old_files_cleaned: false,
             files: BTreeMap::new(),
-        }
-    }
-}
-
-pub fn is_safe_relative_path(path: &str) -> bool {
-    !path.is_empty()
-        && !path.starts_with('/')
-        && !path.contains('\\')
-        && !path.contains('\0')
-        && path
-            .split('/')
-            .all(|component| !component.is_empty() && component != "." && component != "..")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::is_safe_relative_path;
-
-    #[test]
-    fn accepts_profile_paths() {
-        assert!(is_safe_relative_path("BepInEx/plugins/Example.dll"));
-        assert!(is_safe_relative_path("doorstop_config.ini"));
-    }
-
-    #[test]
-    fn rejects_paths_that_can_escape_the_server_directory() {
-        for path in [
-            "",
-            "/etc/passwd",
-            "../outside",
-            "inside/../outside",
-            "inside//file",
-            "inside\\..\\outside",
-            "./file",
-        ] {
-            assert!(!is_safe_relative_path(path), "accepted {path:?}");
         }
     }
 }

@@ -628,6 +628,7 @@ mod tests {
             modpack: None,
             sync: None,
             custom_args: String::new(),
+            server_settings: None,
             missing: false,
         }
     }
