@@ -18,8 +18,7 @@ use crate::{
     util,
 };
 
-/// Everything needed to undo an [`incremental_update`](super::incremental_update)
-/// after the install batch fails.
+/// Everything needed to undo an [`incremental_update`](super::incremental_update) after the install batch fails.
 ///
 /// Removed mods' files are moved aside into `_state/revert` rather than deleted,
 /// so restoring them is a pure filesystem replay with no network dependency.
@@ -27,8 +26,8 @@ use crate::{
 pub(crate) struct ImportRevert {
     pub(super) removed: Vec<RemovedModBackup>,
     pub(super) toggled: Vec<Uuid>,
-    /// Profile-relative paths claimed by the mods being installed. A file or
-    /// dir under one of these that appears while the originals are moved aside
+    /// Profile-relative paths claimed by the mods being installed.
+    /// A file or dir under one of these that appears while the originals are moved aside
     /// is a remnant of the failed install and may be removed during restore.
     pub(super) replacement_paths: HashSet<PathBuf>,
 }
