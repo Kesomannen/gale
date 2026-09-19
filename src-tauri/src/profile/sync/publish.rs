@@ -20,7 +20,7 @@ use super::{
 };
 use crate::{
     profile::export::{
-        self, ConfigPath, ContentHash, ProfileManifest, SyncFileEntry, SyncManifest,
+        self, ConfigPath, ContentHash, ModRevision, ProfileManifest, SyncFileEntry, SyncManifest,
         manifest_revision,
     },
     state::ManagerExt,
@@ -71,28 +71,21 @@ fn staging_dir(profile_dir: &Path) -> PathBuf {
 }
 
 fn published_state(
-    archive: &archive::ValidatedSyncArchive,
     revision: Option<DateTime<Utc>>,
-) -> Result<PublishedState> {
-    let mut manifest = archive.manifest.clone();
-    let mods_revision = match &archive.format {
-        archive::SyncArchiveFormat::Selective(sync) => sync.mods_revision.clone(),
-        archive::SyncArchiveFormat::Legacy => manifest_revision(&manifest)?,
-    };
+    mut manifest: ProfileManifest,
+    mods_revision: ModRevision,
+    config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
+) -> PublishedState {
     manifest.sync = None;
-
-    let config = archive
-        .config
-        .iter()
-        .map(|(path, file)| (path.clone(), file.hash.clone()))
-        .collect();
-
-    Ok(PublishedState {
+    PublishedState {
         revision,
         manifest,
         mods_revision,
-        config,
-    })
+        config: config
+            .iter()
+            .map(|(path, file)| (path.clone(), file.hash.clone()))
+            .collect(),
+    }
 }
 
 fn snapshot_consistent(published: &PublishedState, profile_dir: &Path) -> Result<bool> {
@@ -142,16 +135,12 @@ pub(super) fn adopt_publication(
     normalized: &NormalizedArchive,
     revision: Option<DateTime<Utc>>,
 ) -> Result<PublishedState> {
-    let state = PublishedState {
+    let state = published_state(
         revision,
-        manifest: normalized.manifest.clone(),
-        mods_revision: normalized.latest.mods_revision.clone(),
-        config: normalized
-            .config
-            .iter()
-            .map(|(path, file)| (path.clone(), file.hash.clone()))
-            .collect(),
-    };
+        normalized.manifest.clone(),
+        normalized.latest.mods_revision.clone(),
+        &normalized.config,
+    );
 
     let config: BTreeMap<_, _> = normalized
         .config
@@ -297,7 +286,12 @@ fn build_publication(
     let bytes = writer.into_inner();
 
     let validated = archive::validate(&bytes).context("generated archive failed validation")?;
-    let state = published_state(&validated, None)?;
+    let state = published_state(
+        None,
+        validated.manifest.clone(),
+        validated.mods_revision()?,
+        &validated.config,
+    );
 
     Ok((bytes, state))
 }
@@ -630,7 +624,12 @@ mod tests {
         export::write_archive(&manifest, &config, &mut writer).unwrap();
 
         let validated = archive::validate(writer.get_ref()).unwrap();
-        let state = published_state(&validated, None).unwrap();
+        let state = published_state(
+            None,
+            validated.manifest.clone(),
+            validated.mods_revision().unwrap(),
+            &validated.config,
+        );
 
         assert!(state.manifest.sync.is_none());
         assert_eq!(
@@ -651,7 +650,12 @@ mod tests {
         export::write_archive(&manifest, &config, &mut writer).unwrap();
 
         let validated = archive::validate(writer.get_ref()).unwrap();
-        let state = published_state(&validated, None).unwrap();
+        let state = published_state(
+            None,
+            validated.manifest.clone(),
+            validated.mods_revision().unwrap(),
+            &validated.config,
+        );
 
         assert!(state.manifest.sync.is_none());
         assert_eq!(

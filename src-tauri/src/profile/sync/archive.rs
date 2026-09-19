@@ -8,7 +8,7 @@ use eyre::{Context, OptionExt, Result, ensure};
 use zip::ZipArchive;
 
 use crate::profile::export::{
-    ConfigPath, ContentHash, ProfileManifest, SyncManifest, manifest_revision,
+    ConfigPath, ContentHash, ModRevision, ProfileManifest, SyncManifest, manifest_revision,
 };
 
 /// Conventional resource limits: sync archives carry a manifest and text
@@ -46,6 +46,17 @@ pub(crate) struct ValidatedSyncArchive {
     pub manifest: ProfileManifest,
     pub format: SyncArchiveFormat,
     pub config: BTreeMap<ConfigPath, ValidatedConfigFile>,
+}
+
+impl ValidatedSyncArchive {
+    /// The mods revision this archive advertises: the recorded revision for
+    /// selective archives, derived from the manifest for legacy ones.
+    pub fn mods_revision(&self) -> Result<ModRevision> {
+        match &self.format {
+            SyncArchiveFormat::Selective(sync) => Ok(sync.mods_revision.clone()),
+            SyncArchiveFormat::Legacy => manifest_revision(&self.manifest),
+        }
+    }
 }
 
 pub(crate) fn validate(bytes: &[u8]) -> Result<ValidatedSyncArchive> {

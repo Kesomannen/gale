@@ -8,7 +8,7 @@ use std::{
 use eyre::{Context, OptionExt, Result, bail, ensure};
 use serde::Serialize;
 
-use super::{AppliedState, ConfigUpdatePolicy, PendingConfigReason, archive};
+use super::{AppliedFile, AppliedState, ConfigUpdatePolicy, PendingConfigReason, archive};
 use crate::profile::export::{self, ConfigPath, ContentHash};
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq)]
@@ -188,6 +188,96 @@ fn record_applied(state: &mut AppliedState, path: &ConfigPath, hash: ContentHash
     state.declined.remove(path);
 }
 
+/// What a pull should do with one advertised config file.
+#[derive(Debug, PartialEq, Eq)]
+enum ConfigAction {
+    /// Local bytes already match the published hash; just record it.
+    Record,
+    /// The published revision was already applied or declined; the local
+    /// divergence is the subscriber's own state, so leave everything alone.
+    Keep,
+    /// Write the published bytes and record them as applied.
+    Write,
+    /// Mark the file declined for this revision.
+    Decline(PendingConfigReason),
+    /// Mark the file pending a per-file user decision.
+    Pend(PendingConfigReason),
+}
+
+fn local_reason(local: Option<&ContentHash>) -> PendingConfigReason {
+    match local {
+        Some(_) => PendingConfigReason::ModifiedLocally,
+        None => PendingConfigReason::DeletedLocally,
+    }
+}
+
+fn decide(
+    local: Option<&ContentHash>,
+    remote: &ContentHash,
+    prev: Option<&AppliedFile>,
+) -> ConfigAction {
+    if local == Some(remote) {
+        return ConfigAction::Record;
+    }
+
+    let applied = prev.and_then(|record| record.applied.as_ref());
+    let declined = prev.and_then(|record| record.declined.as_ref());
+    let written = prev.and_then(|record| record.written.as_ref());
+
+    if applied == Some(remote) {
+        return ConfigAction::Keep;
+    }
+    if declined == Some(remote) {
+        return ConfigAction::Decline(local_reason(local));
+    }
+
+    // a policy set at the currently advertised hash governs updates, not the
+    // conflict it was created under
+    let policy = match prev {
+        Some(record) if record.policy_set_at.as_ref() != Some(remote) => record.policy,
+        _ => ConfigUpdatePolicy::Ask,
+    };
+
+    match (local, policy) {
+        // a published file the subscriber never saw
+        (None, _) if prev.is_none() => ConfigAction::Write,
+        (None, ConfigUpdatePolicy::AlwaysKeep) => {
+            ConfigAction::Decline(PendingConfigReason::DeletedLocally)
+        }
+        (None, _) => ConfigAction::Pend(PendingConfigReason::DeletedLocally),
+        (Some(_), ConfigUpdatePolicy::AlwaysApply) => ConfigAction::Write,
+        (Some(_), ConfigUpdatePolicy::AlwaysKeep) => {
+            ConfigAction::Decline(PendingConfigReason::ModifiedLocally)
+        }
+        // the local file only differs because an installer wrote it; it was
+        // never applied, declined or edited by the user
+        (Some(local_hash), ConfigUpdatePolicy::Ask)
+            if applied.is_none() && declined.is_none() && written == Some(local_hash) =>
+        {
+            ConfigAction::Write
+        }
+        (Some(_), ConfigUpdatePolicy::Ask) => {
+            ConfigAction::Pend(PendingConfigReason::ModifiedLocally)
+        }
+    }
+}
+
+fn record_declined(
+    state: &mut AppliedState,
+    path: &ConfigPath,
+    hash: ContentHash,
+    reason: PendingConfigReason,
+) {
+    state.pending.remove(path);
+    state.declined.insert(path.clone(), reason);
+
+    let record = state.config.entry(path.clone()).or_default();
+    if record.declined.as_ref() != Some(&hash) {
+        record.declined = Some(hash);
+        record.policy_set_at = None;
+    }
+}
+
 pub(super) fn apply_available_config(
     profile_dir: &Path,
     config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
@@ -221,99 +311,25 @@ pub(super) fn apply_available_config(
         };
         let hash = file.hash.clone();
 
-        let prev = state.config.get(path);
-        let prev_applied = prev.and_then(|record| record.applied.as_ref());
-        let prev_written = prev.and_then(|record| record.written.as_ref());
-        let prev_declined = prev.and_then(|record| record.declined.as_ref());
-        let policy = prev.map(|record| record.policy).unwrap_or_default();
-        let policy = if prev.and_then(|record| record.policy_set_at.as_ref()) == Some(&hash) {
-            ConfigUpdatePolicy::Ask
-        } else {
-            policy
-        };
-
-        if local.as_ref() == Some(&hash) {
-            record_applied(state, path, hash);
-            continue;
-        }
-
-        if prev_applied == Some(&hash) {
-            state.pending.remove(path);
-            state.declined.remove(path);
-            continue;
-        }
-
-        if prev_declined == Some(&hash) {
-            state.pending.remove(path);
-            let reason = if local.is_none() {
-                PendingConfigReason::DeletedLocally
-            } else {
-                PendingConfigReason::ModifiedLocally
-            };
-            state.declined.insert(path.clone(), reason);
-            continue;
-        }
-
-        state.declined.remove(path);
-
-        match local {
-            None if prev.is_none() => {
+        match decide(local.as_ref(), &hash, state.config.get(path)) {
+            ConfigAction::Record => record_applied(state, path, hash),
+            ConfigAction::Keep => {
+                state.pending.remove(path);
+                state.declined.remove(path);
+            }
+            ConfigAction::Write => {
                 write_validated(target, file)?;
                 record_applied(state, path, hash);
                 report.installed.push(path.clone());
             }
-            None => match policy {
-                ConfigUpdatePolicy::AlwaysKeep => {
-                    state.pending.remove(path);
-                    let record = state.config.entry(path.clone()).or_default();
-                    record.declined = Some(hash);
-                    record.policy_set_at = None;
-                    state
-                        .declined
-                        .insert(path.clone(), PendingConfigReason::DeletedLocally);
+            ConfigAction::Decline(reason) => record_declined(state, path, hash, reason),
+            ConfigAction::Pend(reason) => {
+                state.declined.remove(path);
+                state.pending.insert(path.clone(), reason);
+                if let Some(record) = state.config.get_mut(path) {
+                    record.declined = None;
                 }
-                ConfigUpdatePolicy::Ask | ConfigUpdatePolicy::AlwaysApply => {
-                    state
-                        .pending
-                        .insert(path.clone(), PendingConfigReason::DeletedLocally);
-                }
-            },
-            Some(local_hash) => match policy {
-                ConfigUpdatePolicy::AlwaysApply => {
-                    write_validated(target, file)?;
-                    record_applied(state, path, hash);
-                    report.installed.push(path.clone());
-                }
-                ConfigUpdatePolicy::AlwaysKeep => {
-                    state.pending.remove(path);
-                    let record = state.config.entry(path.clone()).or_default();
-                    record.declined = Some(hash);
-                    record.policy_set_at = None;
-                    state
-                        .declined
-                        .insert(path.clone(), PendingConfigReason::ModifiedLocally);
-                }
-                ConfigUpdatePolicy::Ask => {
-                    if prev_applied.is_none()
-                        && prev_declined.is_none()
-                        && prev_written == Some(&local_hash)
-                    {
-                        write_validated(target, file)?;
-                        record_applied(state, path, hash);
-                        report.installed.push(path.clone());
-                    } else {
-                        state
-                            .pending
-                            .insert(path.clone(), PendingConfigReason::ModifiedLocally);
-                    }
-                }
-            },
-        }
-
-        if state.pending.contains_key(path)
-            && let Some(record) = state.config.get_mut(path)
-        {
-            record.declined = None;
+            }
         }
     }
 
@@ -502,7 +518,7 @@ pub(super) fn apply_selected(
     restore_deleted: &[ConfigPath],
     remember: bool,
 ) -> Result<Vec<ConfigPath>> {
-    apply_selected_with_writer(
+    apply_selected_with(
         profile_dir,
         config,
         state,
@@ -513,7 +529,10 @@ pub(super) fn apply_selected(
     )
 }
 
-pub(super) fn apply_selected_with_writer<F>(
+/// `write` is a seam for tests that inject write failures; production always
+/// uses [`write_validated`].
+#[allow(clippy::too_many_arguments)]
+pub(super) fn apply_selected_with<F>(
     profile_dir: &Path,
     config: &BTreeMap<ConfigPath, archive::ValidatedConfigFile>,
     state: &mut AppliedState,

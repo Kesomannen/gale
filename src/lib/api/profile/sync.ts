@@ -1,20 +1,19 @@
 import { invoke } from '$lib/invoke';
 import type {
 	ListedSyncProfile,
+	SyncConfigApplyReport,
 	SyncConfigFileInfo,
 	SyncConfigReviewState,
 	SyncConfigUpdatePolicy,
 	SyncImportData,
 	SyncPublishMode,
-	SyncPullReport,
 	SyncUser
 } from '$lib/types';
 
 export const read = (id: string) => invoke<SyncImportData>('read_sync_profile', { id });
 export const create = (profileId: number) => invoke<string>('create_sync_profile', { profileId });
-export const push = (profileId: number) => invoke('push_sync_profile', { profileId });
-export const publish = (mode: SyncPublishMode, profileId: number) =>
-	invoke('publish_sync_profile', { mode, profileId });
+export const push = (mode: SyncPublishMode, profileId: number) =>
+	invoke('push_sync_profile', { mode, profileId });
 export const getConfigFiles = (profileId: number) =>
 	invoke<SyncConfigFileInfo[]>('get_sync_config_files', { profileId });
 export const clone = (id: string, name: string) => invoke('clone_sync_profile', { id, name });
@@ -22,7 +21,7 @@ export const disconnect = (del: boolean, profileId: number) =>
 	invoke('disconnect_sync_profile', { delete: del, profileId });
 export const deleteProfile = (id: string) => invoke('delete_sync_profile', { id });
 export const pull = (profileId: number) =>
-	invoke<SyncPullReport>('pull_sync_profile', { profileId });
+	invoke<SyncConfigApplyReport>('pull_sync_profile', { profileId });
 export const fetch = (profileId: number) => invoke('fetch_sync_profile', { profileId });
 export const getPendingConfig = (profileId: number) =>
 	invoke<SyncConfigReviewState>('get_pending_sync_config', { profileId });

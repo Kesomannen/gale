@@ -123,11 +123,6 @@ export type SyncConfigApplyReport = {
 	pending: SyncConfigReviewItem[];
 };
 
-export type SyncPullReport = {
-	modsUpdated: boolean;
-	config: SyncConfigApplyReport;
-};
-
 export type ManagedGameInfo = {
 	profiles: ProfileInfo[];
 	activeId: number;

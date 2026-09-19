@@ -54,6 +54,9 @@
 		}
 	});
 
+	const changedPaths = () =>
+		files.filter((file) => file.status !== 'published').map((file) => file.path);
+
 	async function loadFiles() {
 		const id = profileId;
 		filesLoading = true;
@@ -62,9 +65,7 @@
 			// discard the response if the dialog was repinned while loading
 			if (id !== profileId) return;
 			files = loaded;
-			selected = new SvelteSet(
-				files.filter((file) => file.status !== 'published').map((file) => file.path)
-			);
+			selected = new SvelteSet(changedPaths());
 		} catch {
 			files = [];
 			selected = new SvelteSet();
@@ -74,9 +75,7 @@
 	}
 
 	function selectChanged() {
-		selected = new SvelteSet(
-			files.filter((file) => file.status !== 'published').map((file) => file.path)
-		);
+		selected = new SvelteSet(changedPaths());
 	}
 
 	async function publish() {
@@ -85,7 +84,7 @@
 			let publishMode: SyncPublishMode =
 				mode === 'mods' ? { kind: 'mods' } : { kind: mode, files: [...selected] };
 
-			await api.profile.sync.publish(publishMode, profileId);
+			await api.profile.sync.push(publishMode, profileId);
 			pushInfoToast({ message: m.syncPublishDialog_successMessage() });
 			open = false;
 			onPublished();

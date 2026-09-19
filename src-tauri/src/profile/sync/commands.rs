@@ -3,8 +3,8 @@ use tauri::{AppHandle, command};
 use crate::{state::ManagerExt, util::cmd::Result};
 
 use super::{
-    ConfigUpdatePolicy, ListedSyncProfile, PullReport, SyncProfileMetadata,
-    apply::ConfigReviewState,
+    ConfigUpdatePolicy, ListedSyncProfile, SyncProfileMetadata,
+    apply::{ConfigApplyReport, ConfigReviewState},
     auth,
     publish::{PublishMode, SyncConfigFileInfo},
 };
@@ -19,24 +19,13 @@ pub async fn read_sync_profile(id: String, app: AppHandle) -> Result<SyncProfile
 
 #[command]
 pub async fn create_sync_profile(profile_id: i64, app: AppHandle) -> Result<String> {
-    let id = super::create_profile(&app, profile_id).await?;
+    let id = super::publish::create_profile(&app, profile_id).await?;
 
     Ok(id)
 }
 
 #[command]
-pub async fn push_sync_profile(profile_id: i64, app: AppHandle) -> Result<()> {
-    super::push_profile(&app, profile_id).await?;
-
-    Ok(())
-}
-
-#[command]
-pub async fn publish_sync_profile(
-    mode: PublishMode,
-    profile_id: i64,
-    app: AppHandle,
-) -> Result<()> {
+pub async fn push_sync_profile(mode: PublishMode, profile_id: i64, app: AppHandle) -> Result<()> {
     super::publish::publish_profile(&app, profile_id, mode).await?;
 
     Ok(())
@@ -74,7 +63,7 @@ pub async fn delete_sync_profile(id: String, app: AppHandle) -> Result<()> {
 }
 
 #[command]
-pub async fn pull_sync_profile(profile_id: i64, app: AppHandle) -> Result<PullReport> {
+pub async fn pull_sync_profile(profile_id: i64, app: AppHandle) -> Result<ConfigApplyReport> {
     let report = super::pull_profile(false, profile_id, &app).await?;
 
     Ok(report)
