@@ -69,8 +69,10 @@ pub async fn launch_dedicated_server(
     request: LaunchDedicatedServerRequest,
     app: AppHandle,
 ) -> Result<ServerStatus> {
+    let profile_id = active_profile_id(&app);
+
     if app.lock_prefs().pull_before_launch {
-        sync::pull_profile(false, &app).await?;
+        sync::pull_profile(false, profile_id, &app).await?;
     }
 
     ensure_no_pending_installs(&app)?;
@@ -82,8 +84,6 @@ pub async fn launch_dedicated_server(
             return Err(eyre::eyre!("a Gale-managed dedicated server is already running").into());
         }
     }
-
-    let profile_id = active_profile_id(&app);
     let password = password_for_request(profile_id, ServerSecret::GamePassword, &request.password)?;
     request.settings.validate_local(&password)?;
     save_settings(&app, request.settings.clone())?;
