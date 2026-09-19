@@ -23,8 +23,8 @@ use crate::{
     state::ManagerExt,
     thunderstore::{
         Backend, CompletedPart, ModId, PackageManifest, PackageSubmissionMetadata, Thunderstore,
-        UploadPartUrl, UserMediaFinishUploadParams, UserMediaInitiateUploadParams,
-        UserMediaInitiateUploadResponse,
+        UploadPartUrl, UploadSubmissionResult, UserMediaFinishUploadParams,
+        UserMediaInitiateUploadParams, UserMediaInitiateUploadResponse,
     },
 };
 
@@ -193,7 +193,7 @@ pub async fn publish(
     game: Game,
     args: ModpackArgs,
     token: String,
-) -> Result<()> {
+) -> Result<UploadSubmissionResult> {
     ensure!(args.description.len() <= 250, "description is too long");
     ensure!(!args.readme.is_empty(), "readme cannot be empty");
     ensure!(!args.author.is_empty(), "author cannot be empty");
@@ -242,9 +242,7 @@ pub async fn publish(
 
     submit_package(app, uuid, game, args, &token)
         .await
-        .context("failed to submit package")?;
-
-    Ok(())
+        .context("failed to submit package")
 }
 
 async fn initiate_upload(
@@ -350,7 +348,7 @@ async fn submit_package(
     game: Game,
     args: ModpackArgs,
     token: &str,
-) -> Result<()> {
+) -> Result<UploadSubmissionResult> {
     let metadata = PackageSubmissionMetadata {
         author_name: args.author,
         has_nsfw_content: args.nsfw,
@@ -370,7 +368,7 @@ async fn submit_package(
     let status = response.status();
 
     if response.status().is_success() {
-        return Ok(());
+        return Ok(response.json::<UploadSubmissionResult>().await?);
     }
 
     if status == StatusCode::BAD_REQUEST

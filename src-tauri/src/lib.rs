@@ -100,7 +100,7 @@ fn is_flatpak() -> bool {
     util::flatpak::is_flatpak()
 }
 
-#[clippy::allow(
+#[allow(
     clippy::too_many_lines,
     reason = "tauri's generate_handler macro cannot be split"
 )]

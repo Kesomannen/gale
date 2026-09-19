@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { PersistedState } from '$lib/state/persisted-state.svelte';
 	import Link from '../ui/Link.svelte';
 	import Icon from '@iconify/svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
@@ -7,17 +6,15 @@
 
 	type Props = {
 		show?: boolean;
+		closedAt: string | null;
 	};
 
-	let { show: showProp = true }: Props = $props();
+	let { show: showProp = true, closedAt = $bindable() }: Props = $props();
 
 	const closeDuration = 1000 * 60 * 60 * 24 * 7; // 1 week
 
-	let closedAt = new PersistedState<string | null>('donationClosedAt', null);
-
 	let show = $derived(
-		showProp &&
-			(!closedAt.current || Date.now() - new Date(closedAt.current).getTime() > closeDuration)
+		showProp && (!closedAt || Date.now() - new Date(closedAt).getTime() > closeDuration)
 	);
 </script>
 
@@ -35,7 +32,7 @@
 	<button
 		class="text-primary-500 hover:text-accent-600 dark:text-primary-400 dark:hover:text-accent-400 mt-2 flex items-center gap-1 text-sm hover:underline"
 		onclick={() => {
-			closedAt.current = new Date().toISOString();
+			closedAt = new Date().toISOString();
 		}}
 	>
 		<Icon icon="mdi:close" />

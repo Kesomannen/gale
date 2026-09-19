@@ -116,6 +116,8 @@ impl Profile {
 
 impl ConfigCache {
     pub fn refresh(&mut self, profile: &Path, mod_loader: &ModLoader) {
+        self.clear_removed_files(profile);
+
         let mod_config_dirs = match mod_loader.mod_config_dirs() {
             // list all files if no config dirs are specified
             [] => &["."],
@@ -246,6 +248,11 @@ impl ConfigCache {
         }
 
         false
+    }
+
+    fn clear_removed_files(&mut self, profile: &Path) {
+        self.0
+            .retain(|file| profile.join(&file.relative_path).exists());
     }
 
     fn resolve_duplicate_names(&mut self) {

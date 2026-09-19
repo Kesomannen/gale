@@ -8,9 +8,15 @@
 		ModContextItem,
 		SortBy,
 		DependantWithVersion,
-		ListItem
+		ListItem,
+		Backend
 	} from '$lib/types';
-	import { hasNonReleaseUpgrade, isOutdated } from '$lib/util';
+	import {
+		hasNonReleaseUpgrade,
+		isNonReleaseVersion,
+		isOutdated,
+		shouldWarnForeignDownload
+	} from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
@@ -28,9 +34,9 @@
 	import ReorderableList from '$lib/components/profile/ReorderableList.svelte';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import config from '$lib/state/config.svelte';
-	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { untrack } from 'svelte';
+	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -90,7 +96,8 @@
 	let items: ListItem[] = $state([]);
 	let totalModCount = $state(0);
 	let unknownMods: Dependant[] = $state([]);
-	let updates: AvailableUpdate[] = $state([]);
+	// map from package uuids to updates
+	let updates: Map<string, AvailableUpdate> = $state(new Map());
 
 	let selectedMod: Mod | null = $state(null);
 
@@ -107,6 +114,8 @@
 
 	let refreshPromise: Promise<void> | null = $state(null);
 
+	let foreignDownloadDialogOpen = $state(false);
+
 	async function refresh() {
 		if (refreshPromise !== null) {
 			// make sure if this function is awaited while already refreshing, we wait until
@@ -116,13 +125,17 @@
 		}
 
 		refreshPromise = (async () => {
-			let result = await api.profile.query({ ...profileQuery.current, maxCount: null });
+			const result = await api.profile.query({ ...profileQuery.current, maxCount: null });
+
+			const updateMap = new Map(
+				result.updates.map((update) => [update.updatedId.packageUuid, update])
+			);
 
 			mods = result.mods;
 			items = result.mods.map((mod) => ({ type: 'mod', mod }));
 			totalModCount = result.totalModCount;
 			unknownMods = result.unknownMods;
-			updates = result.updates;
+			updates = updateMap;
 
 			hasRefreshed = true;
 		})();
@@ -175,7 +188,7 @@
 	async function updateMod(mod: Mod | null, versionUuid?: string) {
 		if (mod === null) return;
 
-		if (versionUuid === undefined) {
+		if (!versionUuid) {
 			await api.profile.update.mods([mod.uuid], false);
 		} else {
 			await api.profile.update.changeModVersion({
@@ -231,7 +244,7 @@
 		{#if locked}
 			<ProfileLockedBanner class="mb-1" />
 		{:else}
-			<UpdateAllBanner {updates} />
+			<UpdateAllBanner updates={updates.values().toArray()} />
 		{/if}
 
 		{#if unknownMods.length > 0}
@@ -264,6 +277,7 @@
 						{index}
 						{locked}
 						{contextItems}
+						update={updates.get(mod.uuid)}
 						selected={selectedMod?.uuid === mod.uuid}
 						ontoggle={(newState) => toggleMod(mod, newState)}
 						onclick={() => {
@@ -280,16 +294,27 @@
 	</div>
 
 	{#if selectedMod}
+		{@const update = updates.get(selectedMod.uuid)}
+
 		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			{#if isOutdated(selectedMod) && !locked}
+			{#if update && !locked}
+				{@const isPrerelease = isNonReleaseVersion(update?.new)}
+
 				<Button
-					color={hasNonReleaseUpgrade(selectedMod) ? 'primary' : 'accent'}
-					icon={hasNonReleaseUpgrade(selectedMod) ? 'mdi:flask-outline' : 'mdi:arrow-up-circle'}
+					color={isPrerelease ? 'primary' : 'accent'}
+					icon={isPrerelease ? 'mdi:flask-outline' : 'mdi:arrow-up-circle'}
 					size="lg"
 					class="mt-2"
-					onclick={() => updateMod(selectedMod, selectedMod?.versions[0].uuid)}
+					onclick={async () => {
+						const prefs = await api.prefs.get();
+						if (shouldWarnForeignDownload(update.updatedId, prefs)) {
+							foreignDownloadDialogOpen = true;
+						} else {
+							updateMod(selectedMod);
+						}
+					}}
 				>
-					{m.page_modDetails_button({ version: selectedMod.versions[0].name })}
+					{m.page_modDetails_button({ version: update.new })}
 				</Button>
 			{/if}
 		</ModDetails>
@@ -346,4 +371,9 @@
 	commandName="toggle_mod"
 	onCancel={refresh}
 	positive
+/>
+
+<ForeignDownloadDialog
+	bind:open={foreignDownloadDialogOpen}
+	onConfirm={() => updateMod(selectedMod)}
 />

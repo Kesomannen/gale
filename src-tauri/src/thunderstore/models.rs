@@ -218,6 +218,11 @@ pub struct UserMediaFinishUploadParams {
     pub parts: Vec<CompletedPart>,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct UploadSubmissionResult {
+    pub hidden: Option<bool>,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CompletedPart {
     #[serde(rename = "ETag")]

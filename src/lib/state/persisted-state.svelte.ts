@@ -80,6 +80,16 @@ export class PersistedState<T> {
 		});
 	}
 
+	destroy(): void {
+		const list = instances.get(this.#key);
+		if (!list) return;
+
+		const index = list.indexOf(this as PersistedState<unknown>);
+		if (index !== -1) {
+			list.splice(index, 1);
+		}
+	}
+
 	hydrate(value: string): void {
 		const parsed = this.#deserialize(value);
 		if (parsed !== undefined) {
