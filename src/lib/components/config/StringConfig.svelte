@@ -10,10 +10,9 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 	};
 
-	let { entryId, locked }: Props = $props();
+	let { entryId }: Props = $props();
 
 	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	let content = $state(entryId.entry.value.content as string);
@@ -44,11 +43,10 @@
 		bind:value={content}
 		onchange={submit}
 		spellcheck="false"
-		disabled={locked}
 		class="w-full {showExpandButton && 'pr-8'}"
 	/>
 
-	{#if showExpandButton && !locked}
+	{#if showExpandButton}
 		<button
 			class="text-primary-500 dark:bg-primary-900 dark:text-primary-400 dark:hover:bg-primary-800 bg-primary-100 hover:bg-primary-200 absolute top-1 right-1 rounded-lg p-1 text-lg"
 			onclick={() => (config.expandedEntry = entryId)}
@@ -57,4 +55,4 @@
 		</button>
 	{/if}
 </div>
-<ResetConfigButton {entryId} {locked} {onReset} />
+<ResetConfigButton {entryId} {onReset} />

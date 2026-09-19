@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as api from '$lib/api';
 	import { capitalize } from '$lib/util';
+	import { openConfigFile } from '$lib/config';
 	import ExpandedConfigEntryDialog from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 
 	import Button from '$lib/components/ui/Button.svelte';
@@ -15,11 +15,6 @@
 	const selectedFile = $derived(config.selectedFile);
 
 	let searchTerm = $state('');
-
-	function openFile(file: NonNullable<typeof selectedFile>) {
-		if (config.profileId === null) return;
-		api.config.openFile(file, config.profileId);
-	}
 
 	onMount(() => {
 		config.refresh();
@@ -52,7 +47,7 @@
 				</div>
 
 				{#if selectedFile.type === 'ok'}
-					<ConfigFileEditor file={selectedFile} section={config.selectedSection} locked={false} />
+					<ConfigFileEditor file={selectedFile} section={config.selectedSection} />
 				{:else if selectedFile.type === 'unsupported'}
 					<div class="text-primary-500 dark:text-primary-400 mt-2 mb-1">
 						{m.config_unsupported_content()}
@@ -60,7 +55,7 @@
 					<Button
 						class="max-w-max"
 						color="primary"
-						onclick={() => openFile(selectedFile!)}
+						onclick={() => openConfigFile(selectedFile!)}
 						icon="mdi:open-in-new"
 					>
 						{m.config_unsupported_button()}
@@ -75,7 +70,7 @@
 					<Button
 						class="max-w-max"
 						color="primary"
-						onclick={() => openFile(selectedFile!)}
+						onclick={() => openConfigFile(selectedFile!)}
 						icon="mdi:open-in-new"
 					>
 						{m.config_err_button()}

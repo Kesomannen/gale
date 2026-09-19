@@ -59,10 +59,6 @@
 	</div>
 
 	{#each shownFiles ?? [] as file (file.relativePath)}
-		<ConfigFileListItem
-			{file}
-			duplicate={duplicateNames.has(file.displayName ?? '')}
-			locked={false}
-		/>
+		<ConfigFileListItem {file} duplicate={duplicateNames.has(file.displayName ?? '')} />
 	{/each}
 </div>

@@ -8,11 +8,10 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 		onReset: (value: ConfigValue) => void;
 	};
 
-	let { entryId = $bindable(), locked, onReset }: Props = $props();
+	let { entryId = $bindable(), onReset }: Props = $props();
 
 	function shouldConfirm(value: ConfigValue) {
 		switch (value.type) {
@@ -38,4 +37,4 @@
 	}
 </script>
 
-<ResetButton disabled={locked} {onclick} class="ml-1" />
+<ResetButton {onclick} class="ml-1" />

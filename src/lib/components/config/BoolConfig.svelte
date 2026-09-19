@@ -6,10 +6,9 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 	};
 
-	let { entryId, locked }: Props = $props();
+	let { entryId }: Props = $props();
 
 	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	let content = $state(entryId.entry.value.content as boolean);
@@ -25,6 +24,6 @@
 </script>
 
 <div class="flex grow items-center">
-	<Checkbox bind:checked={content} onCheckedChange={onValueChanged} disabled={locked} />
+	<Checkbox bind:checked={content} onCheckedChange={onValueChanged} />
 </div>
-<ResetConfigButton {entryId} {locked} {onReset} />
+<ResetConfigButton {entryId} {onReset} />

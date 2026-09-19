@@ -15,10 +15,9 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 	};
 
-	let { entryId, locked }: Props = $props();
+	let { entryId }: Props = $props();
 
 	function valueToString(val: ConfigValue) {
 		switch (val.type) {
@@ -100,21 +99,21 @@
 
 	{#if value.type === 'string'}
 		{#if isValidHex(value.content)}
-			<ColorConfig {entryId} {locked} />
+			<ColorConfig {entryId} />
 		{:else}
-			<StringConfig {entryId} {locked} />
+			<StringConfig {entryId} />
 		{/if}
 	{:else if value.type === 'enum'}
-		<EnumConfig {entryId} {locked} />
+		<EnumConfig {entryId} />
 	{:else if value.type === 'flags'}
-		<FlagsConfig {entryId} {locked} />
+		<FlagsConfig {entryId} />
 	{:else if value.type === 'bool'}
-		<BoolConfig {entryId} {locked} />
+		<BoolConfig {entryId} />
 	{:else if isNum(value)}
 		{#if value.content.range !== null}
-			<SliderConfig {entryId} {locked} />
+			<SliderConfig {entryId} />
 		{:else}
-			<NumberInputConfig {entryId} {locked} />
+			<NumberInputConfig {entryId} />
 		{/if}
 	{/if}
 </div>

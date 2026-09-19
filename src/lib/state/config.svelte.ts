@@ -41,6 +41,7 @@ class ConfigState {
 		try {
 			const files = await api.config.getFiles(profileId);
 			// a newer refresh or a profile switch makes this response stale
+			// (a switch to no profile returns before bumping the generation)
 			if (generation !== this.generation || this.profileId !== profileId) return;
 
 			this.files = files;

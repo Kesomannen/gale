@@ -7,10 +7,9 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 	};
 
-	let { entryId, locked }: Props = $props();
+	let { entryId }: Props = $props();
 
 	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	let content = $state(entryId.entry.value.content as { index: number; options: string[] });
@@ -39,6 +38,5 @@
 	items={selectItems(content.options)}
 	bind:value={selected}
 	{onValueChange}
-	disabled={locked}
 />
-<ResetConfigButton {entryId} {onReset} {locked} />
+<ResetConfigButton {entryId} {onReset} />
