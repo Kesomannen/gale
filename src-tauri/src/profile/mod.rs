@@ -540,11 +540,7 @@ impl ManagedGame {
     fn to_frontend(&self) -> FrontendManagedGame {
         FrontendManagedGame {
             active_id: self.active_profile_id,
-            profiles: self
-                .profiles
-                .iter()
-                .map(Profile::to_frontend)
-                .collect(),
+            profiles: self.profiles.iter().map(Profile::to_frontend).collect(),
         }
     }
 }

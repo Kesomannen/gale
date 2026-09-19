@@ -62,7 +62,13 @@ pub fn get_game_info(app: AppHandle) -> GameInfo {
     let favorites = manager
         .games
         .iter()
-        .filter_map(|(game, managed_game)| if managed_game.favorite { Some(&*game.slug) } else { None })
+        .filter_map(|(game, managed_game)| {
+            if managed_game.favorite {
+                Some(&*game.slug)
+            } else {
+                None
+            }
+        })
         .collect();
 
     GameInfo {

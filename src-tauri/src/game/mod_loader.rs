@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::profile::install::{Subdir, PackageInstaller, BepinexInstaller, SubdirInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, ShimloaderInstaller};
+use crate::profile::install::{
+    BepinexInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, PackageInstaller,
+    ShimloaderInstaller, Subdir, SubdirInstaller,
+};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

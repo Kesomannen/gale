@@ -178,7 +178,11 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
 }
 
 fn find_path() -> Option<PathBuf> {
-    let parent_dir = if cfg!(target_os = "linux") { dirs_next::config_dir() } else { dirs_next::data_dir() }
+    let parent_dir = if cfg!(target_os = "linux") {
+        dirs_next::config_dir()
+    } else {
+        dirs_next::data_dir()
+    }
     .unwrap();
 
     parent_dir
