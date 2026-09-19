@@ -1,7 +1,11 @@
 use eyre::Context;
 use tauri::{AppHandle, command};
 
-use crate::{profile::{server, sync}, state::ManagerExt, util::cmd::Result};
+use crate::{
+    profile::{server, sync},
+    state::ManagerExt,
+    util::cmd::Result,
+};
 
 #[command]
 pub async fn launch_game(app: AppHandle, vanilla: bool, args: Option<String>) -> Result<()> {

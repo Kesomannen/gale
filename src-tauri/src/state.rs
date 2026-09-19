@@ -13,7 +13,9 @@ use crate::{
     db::{self, Db},
     events::EventBuffer,
     prefs::Prefs,
-    profile::{self, ModManager, install::queue::InstallQueue, server::runtime::ServerRuntime, sync},
+    profile::{
+        self, ModManager, install::queue::InstallQueue, server::runtime::ServerRuntime, sync,
+    },
     thunderstore::{self, Thunderstore},
 };
 

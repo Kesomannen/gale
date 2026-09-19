@@ -1,6 +1,12 @@
-use std::collections::BTreeMap;
+use std::{
+    collections::BTreeMap,
+    path::{Component, Path, PathBuf},
+};
 
-use serde::{Deserialize, Serialize};
+use eyre::{Result as EyreResult, ensure};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de, ser};
+
+use crate::util;
 
 pub const FILE_NAME: &str = ".gale-server-manifest.json";
 pub const VERSION: u32 = 1;
@@ -16,52 +22,141 @@ pub struct ManifestEntry {
 #[serde(default, rename_all = "camelCase")]
 pub struct DeploymentManifest {
     pub version: u32,
-    pub old_files_cleaned: bool,
-    pub files: BTreeMap<String, ManifestEntry>,
+    #[serde(
+        serialize_with = "serialize_files",
+        deserialize_with = "deserialize_files"
+    )]
+    pub files: BTreeMap<PathBuf, ManifestEntry>,
 }
 
 impl Default for DeploymentManifest {
     fn default() -> Self {
         Self {
             version: VERSION,
-            old_files_cleaned: false,
             files: BTreeMap::new(),
         }
     }
 }
 
-pub fn is_safe_relative_path(path: &str) -> bool {
-    !path.is_empty()
-        && !path.starts_with('/')
-        && !path.contains('\\')
-        && !path.contains('\0')
-        && path
-            .split('/')
-            .all(|component| !component.is_empty() && component != "." && component != "..")
+pub fn normalize_relative_path(path: &Path) -> EyreResult<PathBuf> {
+    ensure!(
+        !path.as_os_str().is_empty() && util::fs::is_enclosed(path),
+        "unsafe relative path: {}",
+        path.display()
+    );
+    ensure!(path.to_str().is_some(), "path is not valid Unicode");
+
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                normalized.pop();
+            }
+            Component::Normal(component) => normalized.push(component),
+            Component::Prefix(_) | Component::RootDir => unreachable!(),
+        }
+    }
+
+    ensure!(!normalized.as_os_str().is_empty(), "relative path is empty");
+
+    Ok(normalized)
+}
+
+fn serialize_files<S>(
+    files: &BTreeMap<PathBuf, ManifestEntry>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let files = files
+        .iter()
+        .map(|(path, entry)| {
+            let path = path
+                .to_str()
+                .ok_or_else(|| ser::Error::custom("manifest path is not valid Unicode"))?
+                .replace('\\', "/");
+
+            Ok((path, entry))
+        })
+        .collect::<std::result::Result<BTreeMap<_, _>, S::Error>>()?;
+
+    files.serialize(serializer)
+}
+
+fn deserialize_files<'de, D>(
+    deserializer: D,
+) -> std::result::Result<BTreeMap<PathBuf, ManifestEntry>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    BTreeMap::<String, ManifestEntry>::deserialize(deserializer)?
+        .into_iter()
+        .map(|(path, entry)| {
+            let path = path.replace('\\', "/");
+            normalize_relative_path(Path::new(&path))
+                .map(|path| (path, entry))
+                .map_err(de::Error::custom)
+        })
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::is_safe_relative_path;
+    use std::{collections::BTreeMap, path::PathBuf};
+
+    use super::{DeploymentManifest, ManifestEntry};
 
     #[test]
-    fn accepts_profile_paths() {
-        assert!(is_safe_relative_path("BepInEx/plugins/Example.dll"));
-        assert!(is_safe_relative_path("doorstop_config.ini"));
+    fn normalizes_manifest_paths() {
+        let manifest: DeploymentManifest = serde_json::from_value(serde_json::json!({
+            "version": 1,
+            "files": {
+                "./BepInEx\\plugins/../config\\Test.cfg": {
+                    "hash": "hash",
+                    "size": 1
+                }
+            }
+        }))
+        .unwrap();
+
+        assert!(
+            manifest
+                .files
+                .contains_key(&PathBuf::from("BepInEx/config/Test.cfg"))
+        );
     }
 
     #[test]
-    fn rejects_paths_that_can_escape_the_server_directory() {
-        for path in [
-            "",
-            "/etc/passwd",
-            "../outside",
-            "inside/../outside",
-            "inside//file",
-            "inside\\..\\outside",
-            "./file",
-        ] {
-            assert!(!is_safe_relative_path(path), "accepted {path:?}");
-        }
+    fn rejects_manifest_paths_outside_the_profile() {
+        let result = serde_json::from_value::<DeploymentManifest>(serde_json::json!({
+            "version": 1,
+            "files": {
+                "../outside.dll": {
+                    "hash": "hash",
+                    "size": 1
+                }
+            }
+        }));
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn serializes_manifest_paths_with_forward_slashes() {
+        let manifest = DeploymentManifest {
+            files: BTreeMap::from([(
+                PathBuf::from(r"BepInEx\plugins\Test.dll"),
+                ManifestEntry {
+                    hash: "hash".to_owned(),
+                    size: 1,
+                },
+            )]),
+            ..DeploymentManifest::default()
+        };
+        let value = serde_json::to_value(manifest).unwrap();
+
+        assert!(value["files"].get("BepInEx/plugins/Test.dll").is_some());
     }
 }

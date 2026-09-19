@@ -255,7 +255,7 @@ pub fn create_profile(name: String, override_path: Option<PathBuf>, app: AppHand
 
 #[command]
 pub fn delete_profile(id: i64, app: AppHandle) -> Result<()> {
-    server::ensure_active_profile_unlocked(&app)?;
+    server::ensure_profile_unlocked(&app, id)?;
 
     let mut manager = app.lock_manager();
     let game = manager.active_game_mut();
@@ -533,6 +533,8 @@ pub fn set_custom_args(custom_args: String, app: AppHandle) -> Result<()> {
 
 #[command]
 pub fn set_profile_path(new_path: PathBuf, profile_id: i64, app: AppHandle) -> Result<()> {
+    server::ensure_profile_unlocked(&app, profile_id)?;
+
     let mut manager = app.lock_manager();
     let game = manager.active_game_mut();
 
@@ -551,6 +553,8 @@ pub fn set_profile_path(new_path: PathBuf, profile_id: i64, app: AppHandle) -> R
 
 #[command]
 pub fn forget_profile(profile_id: i64, app: AppHandle) -> Result<()> {
+    server::ensure_profile_unlocked(&app, profile_id)?;
+
     let mut manager = app.lock_manager();
     let game = manager.active_game_mut();
 

@@ -161,6 +161,12 @@ pub struct DedicatedServer<'a> {
     pub platforms: Platforms<'a>,
 
     pub default_port: u16,
+
+    #[serde(borrow, default)]
+    pub client_only_categories: Vec<&'a str>,
+
+    #[serde(borrow, default)]
+    pub server_categories: Vec<&'a str>,
 }
 
 #[derive(Deserialize, Debug)]
