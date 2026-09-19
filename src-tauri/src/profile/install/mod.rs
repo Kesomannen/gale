@@ -171,23 +171,22 @@ impl ModInstall {
         self.enabled
     }
 
+    /// The `ProfileMod` record this install would add to the profile.
+    pub fn profile_mod(&self) -> ProfileMod {
+        ProfileMod::new_at(
+            self.install_time.unwrap_or_else(Utc::now),
+            ProfileModKind::Thunderstore(ThunderstoreMod {
+                ident: self.ident.clone(),
+                id: self.id.clone(),
+            }),
+        )
+    }
+
     fn insert_into(self, profile: &mut Profile) -> Result<()> {
-        let ModInstall {
-            id,
-            ident,
-            enabled,
-            index,
-            install_time,
-            ..
-        } = self;
-
-        let uuid = id.package_uuid;
-        let install_time = install_time.unwrap_or_else(Utc::now);
-
-        let profile_mod = ProfileMod::new_at(
-            install_time,
-            ProfileModKind::Thunderstore(ThunderstoreMod { ident, id }),
-        );
+        let uuid = self.uuid();
+        let enabled = self.enabled;
+        let index = self.index;
+        let profile_mod = self.profile_mod();
 
         match index {
             Some(index) if index < profile.mods.len() => {
@@ -209,6 +208,25 @@ impl ModInstall {
 impl From<BorrowedMod<'_>> for ModInstall {
     fn from(borrowed_mod: BorrowedMod<'_>) -> Self {
         Self::new(borrowed_mod)
+    }
+}
+
+#[cfg(test)]
+impl ModInstall {
+    /// Builds a `ModInstall` for tests without needing a [`BorrowedMod`].
+    pub fn test(ident: &str, package_uuid: Uuid, version_uuid: Uuid, enabled: bool) -> Self {
+        Self {
+            id: ModId {
+                package_uuid,
+                version_uuid,
+                backend: crate::thunderstore::Backend::Thunderstore,
+            },
+            ident: ident.parse().unwrap(),
+            file_size: 0,
+            enabled,
+            index: None,
+            install_time: None,
+        }
     }
 }
 

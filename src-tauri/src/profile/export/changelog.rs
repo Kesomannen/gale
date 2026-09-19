@@ -122,7 +122,8 @@ pub(super) fn generate_latest(
 
         // find the next version header to see where the old diff ends
         let next_index = args.changelog[offset..]
-            .find("\n## ").map_or_else(|| args.changelog.len(), |next_index| next_index + offset);
+            .find("\n## ")
+            .map_or_else(|| args.changelog.len(), |next_index| next_index + offset);
 
         args.changelog.drain(index..next_index);
 
@@ -187,7 +188,10 @@ impl Profile {
                 .file_name()
                 .to_string_lossy()
                 .trim_end_matches(".json")
-                .parse::<semver::Version>() { Some((entry, version)) } else {
+                .parse::<semver::Version>()
+            {
+                Some((entry, version))
+            } else {
                 warn!(
                     "snapshot file is not a valid version (at {})",
                     entry.path().display()

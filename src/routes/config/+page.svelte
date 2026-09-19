@@ -1,13 +1,11 @@
 <script lang="ts">
-	import * as api from '$lib/api';
 	import { capitalize } from '$lib/util';
+	import { openConfigFile } from '$lib/config';
 	import ExpandedConfigEntryDialog from '$lib/components/dialogs/ExpandedConfigEntryDialog.svelte';
 
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfigFileEditor from '$lib/components/config/ConfigFileEditor.svelte';
-	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
 	import ConfigFileList from '$lib/components/config/ConfigFileList.svelte';
-	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import LargeHeading from '$lib/components/prefs/LargeHeading.svelte';
 	import config from '$lib/state/config.svelte';
@@ -34,10 +32,6 @@
 		{/if}
 
 		<div class="max-w-5xl overflow-y-auto p-4 pt-0 pl-2">
-			{#if profiles.activeLocked}
-				<ProfileLockedBanner class="mt-4 mb-4" />
-			{/if}
-
 			{#if selectedFile}
 				<LargeHeading class="mb-2 truncate">
 					<span>{selectedFile.displayName ?? selectedFile.relativePath}</span>
@@ -53,11 +47,7 @@
 				</div>
 
 				{#if selectedFile.type === 'ok'}
-					<ConfigFileEditor
-						file={selectedFile}
-						section={config.selectedSection}
-						locked={profiles.activeLocked}
-					/>
+					<ConfigFileEditor file={selectedFile} section={config.selectedSection} />
 				{:else if selectedFile.type === 'unsupported'}
 					<div class="text-primary-500 dark:text-primary-400 mt-2 mb-1">
 						{m.config_unsupported_content()}
@@ -65,7 +55,7 @@
 					<Button
 						class="max-w-max"
 						color="primary"
-						onclick={() => api.config.openFile(selectedFile!)}
+						onclick={() => openConfigFile(selectedFile!)}
 						icon="mdi:open-in-new"
 					>
 						{m.config_unsupported_button()}
@@ -80,7 +70,7 @@
 					<Button
 						class="max-w-max"
 						color="primary"
-						onclick={() => api.config.openFile(selectedFile!)}
+						onclick={() => openConfigFile(selectedFile!)}
 						icon="mdi:open-in-new"
 					>
 						{m.config_err_button()}

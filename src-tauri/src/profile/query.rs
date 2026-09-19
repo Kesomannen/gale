@@ -119,7 +119,10 @@ impl Profile {
             .iter()
             .enumerate()
             .filter_map(|(index, profile_mod)| {
-                if let Ok(queryable) = QueryableProfileMod::create(profile_mod, index, thunderstore) { Some(queryable) } else {
+                if let Ok(queryable) = QueryableProfileMod::create(profile_mod, index, thunderstore)
+                {
+                    Some(queryable)
+                } else {
                     warn!(
                         "unknown mod: {} while querying {}",
                         profile_mod.ident(),

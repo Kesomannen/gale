@@ -3,13 +3,17 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import SyncAvatar from '$lib/components/ui/SyncAvatar.svelte';
 	import * as api from '$lib/api';
-	import type { ListedSyncProfile } from '$lib/types';
+	import type { ListedSyncProfile, SyncConfigReviewItem, SyncConfigReviewState } from '$lib/types';
 	import { pushInfoToast } from '$lib/toast';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { ask } from '@tauri-apps/plugin-dialog';
 	import { DropdownMenu } from 'bits-ui';
 	import OwnedSyncProfilesDialog from '../dialogs/OwnedSyncProfilesDialog.svelte';
+	import SyncPublishDialog from '../dialogs/SyncPublishDialog.svelte';
+	import SyncConfigReviewDialog from '../dialogs/SyncConfigReviewDialog.svelte';
+	import { onMount } from 'svelte';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import ContextMenuContent from '$lib/components/ui/ContextMenuContent.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import auth from '$lib/state/auth.svelte';
@@ -28,6 +32,14 @@
 
 	let profilesDialogOpen = $state(false);
 	let syncProfiles: ListedSyncProfile[] = $state([]);
+
+	let publishDialogOpen = $state(false);
+	let reviewDialogOpen = $state(false);
+	// captured when a dialog opens so its commands stay pinned to the profile
+	// the user was looking at, even if the active profile changes mid-operation
+	let syncDialogProfileId: number | null = $state(null);
+	let reviewMode: 'pending' | 'declined' | 'policies' = $state('pending');
+	let reviewState: SyncConfigReviewState = $state({ pending: [], declined: [], policies: [] });
 
 	let syncInfo = $derived(profiles.active?.sync ?? null);
 	let isOwner = $derived(syncInfo?.owner.discordId == auth.user?.discordId);
@@ -111,28 +123,106 @@
 	}
 
 	async function connect() {
-		await wrapApiCall(api.profile.sync.create, m.syncer_connect_message());
-	}
-
-	async function push() {
-		await wrapApiCall(api.profile.sync.push, m.syncer_push_message());
+		const profileId = profiles.active?.id;
+		if (profileId === undefined) return;
+		await wrapApiCall(() => api.profile.sync.create(profileId), m.syncer_connect_message());
 	}
 
 	async function pull() {
-		await wrapApiCall(api.profile.sync.pull, m.syncer_pull_message());
-		config.refresh();
+		let key = activeKey();
+		const profileId = profiles.active?.id;
+		if (profileId === undefined) return;
+		loading = true;
+		try {
+			await api.profile.sync.pull(profileId);
+			await refreshPending(key);
+			config.refresh();
+			pushInfoToast({ message: m.syncer_pull_message() });
+		} finally {
+			loading = false;
+		}
 	}
 
+	function activeKey(): string | undefined {
+		let active = profiles.active;
+		return active?.sync?.id === undefined ? undefined : `${active.id}:${active.sync.id}`;
+	}
+
+	async function refreshPending(key: string | undefined = activeKey()) {
+		if (key === undefined) {
+			reviewState = { pending: [], declined: [], policies: [] };
+			return;
+		}
+
+		const profileId = profiles.active?.id;
+		if (profileId === undefined) return;
+
+		try {
+			let updates = await api.profile.sync.getPendingConfig(profileId);
+			if (activeKey() === key) {
+				reviewState = updates;
+			}
+		} catch {}
+	}
+
+	let lastSyncKey: string | undefined;
+
+	$effect(() => {
+		let key = activeKey();
+		if (key === lastSyncKey) return;
+		lastSyncKey = key;
+		reviewDialogOpen = false;
+		publishDialogOpen = false;
+		syncDialogProfileId = null;
+		reviewMode = 'pending';
+		reviewState = { pending: [], declined: [], policies: [] };
+
+		if (key === undefined) {
+			return;
+		}
+
+		refreshPending(key);
+	});
+
+	onMount(() => {
+		let unlistenPending: UnlistenFn | null = null;
+		let unlistenReview: UnlistenFn | null = null;
+
+		listen<{ profileId: number; pending: SyncConfigReviewItem[] }>('sync_config_pending', (evt) => {
+			if (evt.payload.profileId !== profiles.active?.id) return;
+			pushInfoToast({
+				message: m.syncer_pendingConfigToast({ count: evt.payload.pending.length })
+			});
+		}).then((callback) => (unlistenPending = callback));
+
+		listen<{ profileId: number }>('sync_config_review_changed', (evt) => {
+			if (evt.payload.profileId !== profiles.active?.id) return;
+			refreshPending();
+		}).then((callback) => (unlistenReview = callback));
+
+		return () => {
+			unlistenPending?.();
+			unlistenReview?.();
+		};
+	});
+
 	async function refresh() {
-		await wrapApiCall(api.profile.sync.fetch, m.syncer_refresh_message());
+		const profileId = profiles.active?.id;
+		if (profileId === undefined) return;
+		await wrapApiCall(() => api.profile.sync.fetch(profileId), m.syncer_refresh_message());
 	}
 
 	async function disconnect() {
+		// capture before the confirmation dialog so the operation stays pinned
+		// to the profile that was active when it was clicked
+		const profileId = profiles.active?.id;
+		if (profileId === undefined) return;
+
 		let deleteFromRemote =
 			isOwner && syncState !== 'missing' && (await ask(m.syncer_disconnect_ask()));
 
 		await wrapApiCall(
-			() => api.profile.sync.disconnect(deleteFromRemote),
+			() => api.profile.sync.disconnect(deleteFromRemote, profileId),
 			m.syncer_disconnect_message()
 		);
 	}
@@ -186,11 +276,22 @@
 		style.classes,
 		'dark:bg-primary-800 dark:hover:bg-primary-700 bg-primary-200 hover:bg-primary-300 mx-2 my-auto flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
 	]}
-	onclick={() => (mainDialogOpen = true)}
+	onclick={() => {
+		mainDialogOpen = true;
+		refreshPending();
+	}}
 >
 	<Icon class="text-lg md:text-base" icon={style.icon} />
 
 	<div class="hidden md:block">{style.label}</div>
+
+	{#if reviewState.pending.length > 0}
+		<span
+			class="bg-accent-600 rounded-full px-1.5 py-0.5 text-xs leading-none font-medium text-white"
+		>
+			{reviewState.pending.length}
+		</span>
+	{/if}
 </button>
 
 <OwnedSyncProfilesDialog
@@ -235,6 +336,48 @@
 		{/if}
 
 		<div class="mt-2 flex flex-wrap items-center gap-2">
+			{#if reviewState.pending.length > 0}
+				<Button
+					onclick={() => {
+						reviewMode = 'pending';
+						syncDialogProfileId = profiles.active?.id ?? null;
+						reviewDialogOpen = true;
+					}}
+					color="primary"
+					icon="mdi:file-document-edit"
+				>
+					{m.syncer_button_reviewConfig({ count: reviewState.pending.length })}
+				</Button>
+			{/if}
+
+			{#if reviewState.declined.length > 0}
+				<Button
+					onclick={() => {
+						reviewMode = 'declined';
+						syncDialogProfileId = profiles.active?.id ?? null;
+						reviewDialogOpen = true;
+					}}
+					color="primary"
+					icon="mdi:file-document-remove"
+				>
+					{m.syncer_button_declinedConfig({ count: reviewState.declined.length })}
+				</Button>
+			{/if}
+
+			{#if reviewState.policies.length > 0}
+				<Button
+					onclick={() => {
+						reviewMode = 'policies';
+						syncDialogProfileId = profiles.active?.id ?? null;
+						reviewDialogOpen = true;
+					}}
+					color="primary"
+					icon="mdi:tune"
+				>
+					{m.syncer_button_configPolicies()}
+				</Button>
+			{/if}
+
 			{#if syncState !== 'missing'}
 				{#if syncState === 'outdated'}
 					<Button onclick={pull} {loading} icon="mdi:cloud-download"
@@ -244,7 +387,10 @@
 
 				{#if isOwner}
 					<Button
-						onclick={push}
+						onclick={() => {
+							syncDialogProfileId = profiles.active?.id ?? null;
+							publishDialogOpen = true;
+						}}
 						{loading}
 						disabled={auth.user === null}
 						color="accent"
@@ -308,3 +454,19 @@
 		>
 	</div>
 </Dialog>
+
+{#if syncDialogProfileId !== null}
+	<SyncPublishDialog
+		bind:open={publishDialogOpen}
+		profileId={syncDialogProfileId}
+		onPublished={() => refreshPending()}
+	/>
+
+	<SyncConfigReviewDialog
+		bind:open={reviewDialogOpen}
+		profileId={syncDialogProfileId}
+		updates={reviewState}
+		mode={reviewMode}
+		onChanged={() => refreshPending()}
+	/>
+{/if}

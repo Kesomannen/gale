@@ -12,10 +12,9 @@
 	type Props = {
 		file: ConfigFileData;
 		section: ConfigSection | null;
-		locked: boolean;
 	};
 
-	let { file, section, locked }: Props = $props();
+	let { file, section }: Props = $props();
 
 	let search = $state('');
 
@@ -61,7 +60,6 @@
 
 	{#each filteredEntries as entry (entry)}
 		<ConfigEntryField
-			{locked}
 			entryId={{
 				file,
 				section,

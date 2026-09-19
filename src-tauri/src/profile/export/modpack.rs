@@ -17,7 +17,16 @@ use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
-use crate::{game::Game, profile::Profile, state::ManagerExt, thunderstore::{Thunderstore, Backend, ModId, PackageManifest, UserMediaInitiateUploadResponse, UserMediaInitiateUploadParams, UploadPartUrl, CompletedPart, UploadSubmissionResult, UserMediaFinishUploadParams, PackageSubmissionMetadata}};
+use crate::{
+    game::Game,
+    profile::Profile,
+    state::ManagerExt,
+    thunderstore::{
+        Backend, CompletedPart, ModId, PackageManifest, PackageSubmissionMetadata, Thunderstore,
+        UploadPartUrl, UploadSubmissionResult, UserMediaFinishUploadParams,
+        UserMediaInitiateUploadParams, UserMediaInitiateUploadResponse,
+    },
+};
 
 /// Returns whether it's hexium-exclusive now
 pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Game) -> bool {
@@ -363,9 +372,10 @@ async fn submit_package(
     }
 
     if status == StatusCode::BAD_REQUEST
-        && let Ok(Some(err)) = handle_bad_request(response).await {
-            bail!("{}", err)
-        }
+        && let Ok(Some(err)) = handle_bad_request(response).await
+    {
+        bail!("{}", err)
+    }
 
     bail!("unexpected error: {}", status);
 
@@ -407,10 +417,22 @@ impl ReqwestResponseExt for reqwest::Response {
     where
         F: FnOnce(StatusCode) -> Option<eyre::Error>,
     {
-        self.error_for_status().map_err(|err| if let Some(status) = err.status() { match status {
-            StatusCode::UNAUTHORIZED => eyre!("thunderstore API token is invalid"),
-            _ => if let Some(err) = f(status) { err } else { eyre!(err) },
-        } } else { eyre!(err) })
+        self.error_for_status().map_err(|err| {
+            if let Some(status) = err.status() {
+                match status {
+                    StatusCode::UNAUTHORIZED => eyre!("thunderstore API token is invalid"),
+                    _ => {
+                        if let Some(err) = f(status) {
+                            err
+                        } else {
+                            eyre!(err)
+                        }
+                    }
+                }
+            } else {
+                eyre!(err)
+            }
+        })
     }
 
     fn map_auth_err(self) -> eyre::Result<reqwest::Response> {

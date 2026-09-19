@@ -4,12 +4,30 @@ use eyre::{Context, eyre};
 use tauri::{AppHandle, command};
 
 use super::{AnyFileKind, frontend};
-use crate::{state::ManagerExt, util::cmd::Result};
+use crate::{
+    profile::{ModManager, Profile},
+    state::ManagerExt,
+    util::cmd::Result,
+};
+
+// The config cache is populated for the active profile only, so a request
+// pinned to a profile that is no longer active is rejected rather than
+// silently applied to the wrong one.
+fn active_profile_guarded<'m>(
+    manager: &'m mut ModManager,
+    profile_id: i64,
+) -> Result<&'m mut Profile> {
+    let profile = manager.active_profile_mut();
+    if profile.id != profile_id {
+        return Err(eyre!("active profile changed while the config editor was open").into());
+    }
+    Ok(profile)
+}
 
 #[command]
-pub fn get_config_files(app: AppHandle) -> Result<Vec<frontend::File>> {
+pub fn get_config_files(profile_id: i64, app: AppHandle) -> Result<Vec<frontend::File>> {
     let mut manager = app.lock_manager();
-    let profile = manager.active_profile_mut();
+    let profile = active_profile_guarded(&mut manager, profile_id)?;
 
     profile.refresh_config();
 
@@ -22,11 +40,12 @@ pub fn set_config_entry(
     section: &str,
     entry: &str,
     value: frontend::Value,
+    profile_id: i64,
     app: AppHandle,
 ) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    let profile = manager.active_profile_mut();
+    let profile = active_profile_guarded(&mut manager, profile_id)?;
     let file = profile.config_cache.find_file(file)?;
 
     match &mut file.kind {
@@ -44,11 +63,12 @@ pub fn reset_config_entry(
     file: &Path,
     section: &str,
     entry: &str,
+    profile_id: i64,
     app: AppHandle,
 ) -> Result<frontend::Value> {
     let mut manager = app.lock_manager();
 
-    let profile = manager.active_profile_mut();
+    let profile = active_profile_guarded(&mut manager, profile_id)?;
     let file = profile.config_cache.find_file(file)?;
 
     let value = match &mut file.kind {
@@ -61,10 +81,10 @@ pub fn reset_config_entry(
 }
 
 #[command]
-pub fn reset_config_file(file: &Path, app: AppHandle) -> Result<()> {
+pub fn reset_config_file(file: &Path, profile_id: i64, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    let profile = manager.active_profile_mut();
+    let profile = active_profile_guarded(&mut manager, profile_id)?;
     let file = profile.config_cache.find_file(file)?;
 
     match &mut file.kind {
@@ -77,10 +97,10 @@ pub fn reset_config_file(file: &Path, app: AppHandle) -> Result<()> {
 }
 
 #[command]
-pub fn open_config_file(file: &Path, app: AppHandle) -> Result<()> {
-    let manager = app.lock_manager();
+pub fn open_config_file(file: &Path, profile_id: i64, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
 
-    let profile = manager.active_profile();
+    let profile = active_profile_guarded(&mut manager, profile_id)?;
     let path = profile.path.join(file);
     open::that(&path)
         .with_context(|| format!("failed to open config file at {}", path.display()))?;
@@ -89,10 +109,10 @@ pub fn open_config_file(file: &Path, app: AppHandle) -> Result<()> {
 }
 
 #[command]
-pub fn delete_config_file(file: &Path, app: AppHandle) -> Result<()> {
+pub fn delete_config_file(file: &Path, profile_id: i64, app: AppHandle) -> Result<()> {
     let mut manager = app.lock_manager();
 
-    let profile = manager.active_profile_mut();
+    let profile = active_profile_guarded(&mut manager, profile_id)?;
 
     let Some(index) = profile
         .config_cache

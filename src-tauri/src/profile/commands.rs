@@ -132,9 +132,10 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
 
     if profile.sync.as_ref().is_some_and(|sync| !sync.missing) {
         let app_clone = app.clone();
+        let profile_id = profile.id;
 
         tauri::async_runtime::spawn(async move {
-            if let Err(err) = super::sync::pull_profile(true, &app_clone).await {
+            if let Err(err) = super::sync::pull_profile(true, profile_id, &app_clone).await {
                 warn!(?err, "failed to refresh sync after profile switch");
             }
         });

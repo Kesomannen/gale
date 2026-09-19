@@ -206,9 +206,10 @@ impl<'a> SubdirInstaller<'a> {
         use std::path::Component;
 
         if let Some(str) = relative_path.to_str()
-            && self.ignored_files.contains(&str) {
-                return Ok(None);
-            }
+            && self.ignored_files.contains(&str)
+        {
+            return Ok(None);
+        }
 
         // find a subdir in the file path, ex.
         // MyFolder/plugins/MyMod.dll
@@ -224,9 +225,10 @@ impl<'a> SubdirInstaller<'a> {
                 Some(Component::Normal(name)) => {
                     prev.push(name);
                     if let Some(name) = name.to_str()
-                        && let Some(subdir) = self.match_subdir(name) {
-                            break subdir; // found a subdir
-                        }
+                        && let Some(subdir) = self.match_subdir(name)
+                    {
+                        break subdir; // found a subdir
+                    }
                 }
                 // remove the previous parent
                 Some(Component::ParentDir) => {
@@ -455,6 +457,7 @@ impl PackageInstaller for SubdirInstaller<'_> {
             let conflict = match subdir.mode {
                 // this should never happen
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => ConflictResolution::Skip,
+                SubdirMode::None if subdir.mutable && exists => ConflictResolution::Skip,
                 SubdirMode::None => ConflictResolution::Overwrite,
                 SubdirMode::Track => {
                     state
@@ -465,12 +468,11 @@ impl PackageInstaller for SubdirInstaller<'_> {
                     let profile_state =
                         profile_state.get_or_insert_with(|| ProfileStateHandle::new(profile));
 
-                    if exists
-                        && let Some(owner) = profile_state.file_map().get(relative_path) {
-                            let mut package = PackageStateHandle::new(owner, profile);
-                            package.files().retain(|file| file != relative_path);
-                            package.commit()?;
-                        }
+                    if exists && let Some(owner) = profile_state.file_map().get(relative_path) {
+                        let mut package = PackageStateHandle::new(owner, profile);
+                        package.files().retain(|file| file != relative_path);
+                        package.commit()?;
+                    }
 
                     profile_state
                         .file_map()
@@ -528,6 +530,15 @@ impl PackageInstaller for SubdirInstaller<'_> {
         Ok(())
     }
 
+    fn installed_paths(&self, profile_mod: &ProfileMod, profile: &Profile) -> Result<Vec<PathBuf>> {
+        let mut paths = Vec::new();
+        self.scan_mod(profile_mod, profile, |path| {
+            paths.push(path.to_path_buf());
+            Ok(())
+        })?;
+        Ok(paths)
+    }
+
     fn mod_dir(&self, package_name: &str, profile: &Profile) -> Option<PathBuf> {
         self.default_subdir.map(|index| {
             let mut path = profile.path.clone();
@@ -537,5 +548,169 @@ impl PackageInstaller for SubdirInstaller<'_> {
 
             path
         })
+    }
+}
+
+/// Restores a package's tracked-file bookkeeping after its files were moved
+/// aside and back, e.g. by import rollback.
+///
+/// `backup` is a copy of the mod's `_state/<package_name>.json` taken before
+/// removal. The file is rewritten and its entries are merged back into the
+/// profile registry.
+pub fn restore_package_state(profile: &Profile, package_name: &str, backup: &Path) -> Result<()> {
+    let state: PackageState = util::fs::read_json(backup)
+        .with_context(|| format!("failed to read backed-up state file: {}", backup.display()))?;
+
+    let mut package = PackageStateHandle::new(package_name, profile);
+    *package.files() = state.files.clone();
+    package.commit()?;
+
+    let mut registry = ProfileStateHandle::new(profile);
+    let map = registry.file_map();
+    for file in state.files {
+        map.insert(file, package_name.to_owned());
+    }
+    registry.commit()
+}
+
+#[cfg(test)]
+mod tests {
+    use tempfile::tempdir;
+
+    use super::*;
+    use crate::{config::ConfigCache, game};
+
+    fn profile_at(path: &Path) -> Profile {
+        Profile {
+            id: 0,
+            name: "Test".to_owned(),
+            path: path.to_owned(),
+            mods: Vec::new(),
+            game: game::from_slug("among-us").unwrap(),
+            ignored_version_updates: Default::default(),
+            ignored_package_updates: Default::default(),
+            config_cache: ConfigCache::default(),
+            linked_config: Default::default(),
+            modpack: None,
+            sync: None,
+            custom_args: String::new(),
+            missing: false,
+        }
+    }
+
+    fn write_src_config(src: &Path, contents: &str) {
+        let dir = src.join("BepInEx/config");
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("example.cfg"), contents).unwrap();
+    }
+
+    #[test]
+    fn mutable_untracked_subdir_preserves_customized_file_on_update() {
+        let src = tempdir().unwrap();
+        let dest = tempdir().unwrap();
+        write_src_config(src.path(), "package-v1");
+
+        let subdirs = [Subdir::untracked("config", "BepInEx/config").mutable()];
+        let profile = profile_at(dest.path());
+        let target = dest.path().join("BepInEx/config/example.cfg");
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+        assert_eq!(fs::read_to_string(&target).unwrap(), "package-v1");
+
+        fs::write(&target, "custom").unwrap();
+        write_src_config(src.path(), "package-v2");
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+        assert_eq!(fs::read_to_string(&target).unwrap(), "custom");
+    }
+
+    #[test]
+    fn mutable_untracked_subdir_installs_new_file() {
+        let src = tempdir().unwrap();
+        let dest = tempdir().unwrap();
+        write_src_config(src.path(), "package");
+
+        let subdirs = [Subdir::untracked("config", "BepInEx/config").mutable()];
+        let profile = profile_at(dest.path());
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+
+        let target = dest.path().join("BepInEx/config/example.cfg");
+        assert_eq!(fs::read_to_string(&target).unwrap(), "package");
+    }
+
+    #[test]
+    fn installed_paths_covers_uninstall_targets() {
+        let dest = tempdir().unwrap();
+        let profile = profile_at(dest.path());
+
+        let subdirs = [
+            Subdir::separated("plugins", "BepInEx/plugins"),
+            Subdir::tracked("core", "BepInEx/core"),
+            Subdir::untracked("config", "BepInEx/config").mutable(),
+        ];
+
+        let profile_mod = crate::profile::ProfileMod::new(
+            crate::profile::ProfileModKind::Thunderstore(crate::profile::ThunderstoreMod {
+                ident: "Author-Mod-1.0.0".parse().unwrap(),
+                id: crate::thunderstore::ModId {
+                    package_uuid: uuid::Uuid::from_u128(1),
+                    version_uuid: uuid::Uuid::from_u128(2),
+                    backend: crate::thunderstore::Backend::Thunderstore,
+                },
+            }),
+        );
+
+        let tracked_rel = Path::new("BepInEx/core/tracked.dll");
+        fs::create_dir_all(dest.path().join("BepInEx/core")).unwrap();
+        fs::write(dest.path().join(tracked_rel), b"x").unwrap();
+        let mut package = PackageStateHandle::new("Author-Mod", &profile);
+        package.files().push(tracked_rel.to_owned());
+        package.commit().unwrap();
+
+        let paths = SubdirInstaller::new(&subdirs)
+            .installed_paths(&profile_mod, &profile)
+            .unwrap();
+
+        assert!(
+            paths.contains(&dest.path().join("BepInEx/plugins/Author-Mod")),
+            "separated mod dir missing: {paths:?}"
+        );
+        assert!(
+            paths.contains(&dest.path().join(tracked_rel)),
+            "tracked file missing: {paths:?}"
+        );
+        assert!(
+            !paths
+                .iter()
+                .any(|p| p.starts_with(dest.path().join("BepInEx/config"))),
+            "untracked subdir must not be owned: {paths:?}"
+        );
+    }
+
+    #[test]
+    fn untracked_subdir_overwrites_existing_file() {
+        let src = tempdir().unwrap();
+        let dest = tempdir().unwrap();
+        write_src_config(src.path(), "package");
+
+        let target = dest.path().join("BepInEx/config/example.cfg");
+        fs::create_dir_all(target.parent().unwrap()).unwrap();
+        fs::write(&target, "custom").unwrap();
+
+        let subdirs = [Subdir::untracked("config", "BepInEx/config")];
+        let profile = profile_at(dest.path());
+
+        SubdirInstaller::new(&subdirs)
+            .install(src.path(), "Author-Mod", &profile)
+            .unwrap();
+
+        assert_eq!(fs::read_to_string(&target).unwrap(), "package");
     }
 }

@@ -6,7 +6,8 @@ use crate::{profile::sync, state::ManagerExt, util::cmd::Result};
 #[command]
 pub async fn launch_game(app: AppHandle, vanilla: bool, args: Option<String>) -> Result<()> {
     if app.lock_prefs().pull_before_launch {
-        sync::pull_profile(false, &app).await?;
+        let profile_id = app.lock_manager().active_profile().id;
+        sync::pull_profile(false, profile_id, &app).await?;
     }
 
     let prefs = app.lock_prefs();

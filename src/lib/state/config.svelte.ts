@@ -9,23 +9,42 @@ class ConfigState {
 	selectedFile: ConfigFile | null = $state(null);
 	selectedSection: ConfigSection | null = $state(null);
 	loading = $state(false);
+	profileId: number | null = $state(null);
+	private generation = 0;
 
 	constructor() {
 		$effect.root(() => {
 			$effect(() => {
-				// Whenever the user switches active profiles, refresh.
-				profiles.activeId;
-				untrack(() => this.refresh());
+				const activeId = profiles.activeId;
+				untrack(() => {
+					// clear state for the previous profile immediately so a
+					// switch can't show or mutate the wrong profile's config
+					this.files = [];
+					this.selectedFile = null;
+					this.selectedSection = null;
+					this.profileId = activeId;
+					this.refresh();
+				});
 			});
 		});
 	}
 
 	async refresh() {
-		if (this.loading) return;
-		console.log('Refreshing config files...');
+		const profileId = this.profileId;
+		if (profileId === null) {
+			this.files = [];
+			return;
+		}
+
+		const generation = ++this.generation;
 		this.loading = true;
 		try {
-			this.files = await api.config.getFiles();
+			const files = await api.config.getFiles(profileId);
+			// a newer refresh or a profile switch makes this response stale
+			// (a switch to no profile returns before bumping the generation)
+			if (generation !== this.generation || this.profileId !== profileId) return;
+
+			this.files = files;
 
 			if (this.selectedFile) {
 				this.selectedFile = this.findFileByPath(this.selectedFile.relativePath);
@@ -35,18 +54,20 @@ class ConfigState {
 				this.selectedSection = this.findSectionByName(this.selectedFile, this.selectedSection.name);
 			}
 		} finally {
-			this.loading = false;
+			if (generation === this.generation) this.loading = false;
 		}
 	}
 
 	async deleteFile(file: BaseConfigFile) {
-		await api.config.deleteFile(file);
+		if (this.profileId === null) return;
+		await api.config.deleteFile(file, this.profileId);
 		if (this.selectedFile === file) this.selectedFile = null;
 		await this.refresh();
 	}
 
 	async resetFile(file: BaseConfigFile) {
-		await api.config.resetAll(file);
+		if (this.profileId === null) return;
+		await api.config.resetAll(file, this.profileId);
 		await this.refresh();
 	}
 

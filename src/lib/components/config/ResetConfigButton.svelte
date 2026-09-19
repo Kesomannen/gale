@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as api from '$lib/api';
+	import config from '$lib/state/config.svelte';
 	import type { ConfigEntryId, ConfigValue } from '$lib/types';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 	import ResetButton from '$lib/components/ui/ResetButton.svelte';
@@ -7,11 +8,10 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 		onReset: (value: ConfigValue) => void;
 	};
 
-	let { entryId = $bindable(), locked, onReset }: Props = $props();
+	let { entryId = $bindable(), onReset }: Props = $props();
 
 	function shouldConfirm(value: ConfigValue) {
 		switch (value.type) {
@@ -29,11 +29,12 @@
 			if (!confirmed) return;
 		}
 
-		let result = await api.config.resetEntry(entryId);
+		if (config.profileId === null) return;
+		let result = await api.config.resetEntry(entryId, config.profileId);
 
 		entryId.entry.value = result;
 		onReset(result);
 	}
 </script>
 
-<ResetButton disabled={locked} {onclick} class="ml-1" />
+<ResetButton {onclick} class="ml-1" />

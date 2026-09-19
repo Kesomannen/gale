@@ -14,6 +14,8 @@ use crate::profile::{
 
 pub struct ShimloaderInstaller;
 
+const LOADER_FILES: &[&str] = &["dwmapi.dll", "UE4SS.dll", "UE4SS-settings.ini"];
+
 impl PackageInstaller for ShimloaderInstaller {
     fn extract(&mut self, archive: PackageZip, _package_name: &str, dest: PathBuf) -> Result<()> {
         fs::create_dir_all(dest.join("shimloader").join("cfg"))
@@ -62,7 +64,7 @@ impl PackageInstaller for ShimloaderInstaller {
         _profile_mod: &ProfileMod,
         profile: &Profile,
     ) -> Result<()> {
-        for file in ["dwmapi.dll", "UE4SS.dll", "UE4SS-settings.ini"] {
+        for file in LOADER_FILES {
             install::fs::toggle_file(profile.path.join(file), enabled).ok();
         }
 
@@ -70,10 +72,21 @@ impl PackageInstaller for ShimloaderInstaller {
     }
 
     fn uninstall(&mut self, _profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        for file in ["dwmapi.dll", "UE4SS.dll", "UE4SS-settings.ini"] {
+        for file in LOADER_FILES {
             fs::remove_file(profile.path.join(file)).ok();
         }
 
         Ok(())
+    }
+
+    fn installed_paths(
+        &self,
+        _profile_mod: &ProfileMod,
+        profile: &Profile,
+    ) -> Result<Vec<PathBuf>> {
+        Ok(LOADER_FILES
+            .iter()
+            .map(|file| profile.path.join(file))
+            .collect())
     }
 }

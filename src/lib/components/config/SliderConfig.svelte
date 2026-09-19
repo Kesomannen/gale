@@ -5,10 +5,9 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 	};
 
-	let { entryId, locked }: Props = $props();
+	let { entryId }: Props = $props();
 
 	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	let content = $state(entryId.entry.value.content as ConfigNum);
@@ -84,12 +83,9 @@
 	aria-valuemin={range.start}
 	aria-valuemax={range.end}
 	aria-valuenow={content.value}
-	aria-disabled={locked}
 	tabindex="0"
 	bind:this={element}
 	onkeydown={(e) => {
-		if (locked) return;
-
 		if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
 			content.value = Math.max(range.start, content.value - 1);
 		} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
@@ -99,14 +95,12 @@
 		inputString = content.value.toFixed(decimals);
 	}}
 	onmousedown={(evt) => {
-		if (locked) return;
-
 		isDragging = true;
 		calculateNewValue(evt.clientX);
 	}}
 >
 	<div
-		class={[!locked && 'group-hover:bg-primary-600', 'relative h-full min-w-1 rounded-l-full']}
+		class="group-hover:bg-primary-600 relative h-full min-w-1 rounded-l-full"
 		style="width: {fillPercent}%;"
 		class:bg-primary-700={!isDragging}
 		class:bg-primary-600={isDragging}
@@ -122,10 +116,8 @@
 
 <input
 	type="number"
-	disabled={locked}
 	bind:value={inputString}
 	onchange={() => {
-		if (locked) return;
 		let newValue = parseFloat(inputString);
 
 		if (!isNaN(newValue)) {
@@ -144,7 +136,7 @@
 	class="focus:ring-accent-600 text-primary-700 placeholder-primary-500 enabled:hover:ring-primary-400 disabled:text-primary-500 dark:focus:ring-accent-500 dark:bg-primary-900 dark:text-primary-300 dark:placeholder-primary-400 dark:enabled:hover:ring-primary-500 dark:disabled:text-primary-400 bg-primary-100 ml-3 w-1/6 min-w-0 shrink rounded-lg px-3 py-1 focus:ring-2 focus:outline-hidden enabled:hover:ring-1"
 />
 
-<ResetConfigButton {entryId} {locked} {onReset} />
+<ResetConfigButton {entryId} {onReset} />
 
 <style>
 	input[type='number']::-webkit-inner-spin-button,

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as api from '$lib/api';
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
+	import { openConfigFile } from '$lib/config';
 	import type { ConfigFile } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -12,10 +12,9 @@
 	type Props = {
 		file: ConfigFile;
 		duplicate: boolean;
-		locked: boolean;
 	};
 
-	let { file, duplicate, locked }: Props = $props();
+	let { file, duplicate }: Props = $props();
 
 	let open = $state(false);
 
@@ -45,10 +44,6 @@
 		if (!confirmed) return;
 
 		await config.deleteFile(file);
-	}
-
-	async function openFile() {
-		await api.config.openFile(file);
 	}
 </script>
 
@@ -97,21 +92,19 @@
 				class="mr-0.5 ml-2 hidden group-hover:block"
 				onclick={(evt) => {
 					evt.preventDefault();
-					openFile();
+					openConfigFile(file);
 				}}
 			/>
 
-			{#if !locked}
-				<IconButton
-					label={m.configFileListItem_button_deleteFile()}
-					icon="mdi:delete"
-					class="hidden group-hover:block"
-					onclick={(evt) => {
-						evt.preventDefault();
-						deleteFile();
-					}}
-				/>
-			{/if}
+			<IconButton
+				label={m.configFileListItem_button_deleteFile()}
+				icon="mdi:delete"
+				class="hidden group-hover:block"
+				onclick={(evt) => {
+					evt.preventDefault();
+					deleteFile();
+				}}
+			/>
 		</Collapsible.Trigger>
 		<Collapsible.Content class="text-primary-600 dark:text-primary-300 mb-1">
 			{#each shownSections as section}

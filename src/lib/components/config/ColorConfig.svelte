@@ -6,10 +6,9 @@
 
 	type Props = {
 		entryId: ConfigEntryId;
-		locked: boolean;
 	};
 
-	let { entryId, locked }: Props = $props();
+	let { entryId }: Props = $props();
 
 	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
 	const content = entryId.entry.value.content as string;
@@ -30,5 +29,5 @@
 	}
 </script>
 
-<input type="color" class="grow" disabled={locked} bind:value={hexCode} onchange={submit} />
-<ResetConfigButton {entryId} {onReset} {locked} />
+<input type="color" class="grow" bind:value={hexCode} onchange={submit} />
+<ResetConfigButton {entryId} {onReset} />

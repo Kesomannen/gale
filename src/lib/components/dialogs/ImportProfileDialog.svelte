@@ -117,6 +117,11 @@
 		return !profiles.list.some((profile) => profile.name === name);
 	}
 
+	function modVersion(mod: ImportData['manifest']['mods'][number]) {
+		const { major, minor, patch, pre, build } = mod.version;
+		return `${major}.${minor}.${patch}${pre ? `-${pre}` : ''}${build ? `+${build}` : ''}`;
+	}
+
 	export async function openFor(importData: ImportData) {
 		data = importData;
 
@@ -240,7 +245,7 @@
 			<ModCardList
 				class="mt-2 max-h-[50vh] shrink grow"
 				mods={mods.map((mod) => ({
-					fullName: `${mod.name}-${mod.version.major}.${mod.version.minor}.${mod.version.patch}`,
+					fullName: `${mod.name}-${modVersion(mod)}`,
 					backend: mod.source
 				}))}
 			/>

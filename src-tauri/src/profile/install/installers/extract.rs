@@ -71,4 +71,12 @@ impl PackageInstaller for ExtractInstaller<'_> {
 
         Ok(())
     }
+
+    fn installed_paths(
+        &self,
+        _profile_mod: &ProfileMod,
+        profile: &Profile,
+    ) -> Result<Vec<PathBuf>> {
+        Ok(self.scan_mod(profile).collect())
+    }
 }

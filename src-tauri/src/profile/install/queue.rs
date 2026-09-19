@@ -31,6 +31,8 @@ pub struct InstallQueue {
     notify_push: Notify,
     /// Notified when all batches have been completed.
     notify_empty: Notify,
+    /// Notified when any single batch has been completed.
+    notify_batch_done: Notify,
     cancel: AtomicBool,
 }
 
@@ -49,6 +51,7 @@ impl InstallQueue {
             state: Mutex::new(State::default()),
             notify_push: Notify::new(),
             notify_empty: Notify::new(),
+            notify_batch_done: Notify::new(),
             cancel,
         });
 
@@ -59,6 +62,13 @@ impl InstallQueue {
 
     pub fn wait_for_empty(&'_ self) -> Notified<'_> {
         self.notify_empty.notified()
+    }
+
+    /// Returns a future that resolves when any batch finishes processing.
+    ///
+    /// Use [`Notified::enable`] to subscribe before checking queue state.
+    pub fn wait_for_batch(&'_ self) -> Notified<'_> {
+        self.notify_batch_done.notified()
     }
 
     pub fn cancel_all(&self) {
@@ -248,6 +258,11 @@ impl InstallQueueLock<'_> {
                 batch.mods.iter().map(super::ModInstall::uuid).collect(),
             )
         });
+
+        // notify after `processing` changes so a waiter can never see a completed batch as still running
+        // also covers the final transition that clears `processing` when the queue drains
+        self.queue.notify_batch_done.notify_waiters();
+
         next
     }
 }
@@ -526,4 +541,84 @@ fn install_from_download(
     emit(InstallEvent::AddProgress { mods: 1, bytes: 0 }, app);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use futures_util::FutureExt;
+
+    use super::*;
+
+    fn test_queue() -> InstallQueue {
+        InstallQueue {
+            state: Mutex::new(State::default()),
+            notify_push: Notify::new(),
+            notify_empty: Notify::new(),
+            notify_batch_done: Notify::new(),
+            cancel: AtomicBool::new(false),
+        }
+    }
+
+    fn batch(profile_id: i64) -> (InstallBatch, oneshot::Receiver<InstallResult<()>>) {
+        let (tx, rx) = oneshot::channel();
+        (
+            InstallBatch {
+                mods: Vec::new(),
+                options: InstallOptions::default(),
+                profile_id,
+                on_complete: tx,
+            },
+            rx,
+        )
+    }
+
+    // Regression test for the final batch hang: `processing` only clears on the next `pop_next`,
+    // so the notification has to fire on that transition and not just after `handle_batch` returns.
+    #[test]
+    fn pop_next_notifies_when_processing_clears() {
+        let queue = test_queue();
+
+        let (batch, _rx) = batch(7);
+        queue.lock().state.pending.push_back(batch);
+
+        let started = queue.lock().pop_next();
+        assert!(started.is_some());
+        assert!(queue.lock().has_any_for_profile(7));
+
+        let notified = queue.wait_for_batch();
+        tokio::pin!(notified);
+        notified.as_mut().enable();
+
+        // the last pop clears `processing`; the waiter gets notified so it
+        // doesn't see the completed batch as still running and wait forever
+        assert!(queue.lock().pop_next().is_none());
+        assert!(!queue.lock().has_any_for_profile(7));
+        assert!(notified.as_mut().now_or_never().is_some());
+    }
+
+    #[test]
+    fn pop_next_notifies_when_next_batch_starts() {
+        let queue = test_queue();
+
+        let (first, _rx1) = batch(7);
+        let (second, _rx2) = batch(8);
+        let mut lock = queue.lock();
+        lock.state.pending.push_back(first);
+        lock.state.pending.push_back(second);
+        drop(lock);
+
+        queue.lock().pop_next().unwrap();
+        assert!(queue.lock().has_any_for_profile(7));
+
+        let notified = queue.wait_for_batch();
+        tokio::pin!(notified);
+        notified.as_mut().enable();
+
+        // the transition to the next batch also notifies, so a waiter on the
+        // finished batch doesn't stall until the new batch completes
+        assert!(queue.lock().pop_next().is_some());
+        assert!(!queue.lock().has_any_for_profile(7));
+        assert!(queue.lock().has_any_for_profile(8));
+        assert!(notified.as_mut().now_or_never().is_some());
+    }
 }
