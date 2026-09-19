@@ -8,12 +8,15 @@ use super::{Backend, models::FrontendMod, query::QueryModsArgs};
 use crate::{
     game, logger,
     state::ManagerExt,
-    thunderstore::{ModId, PackageCategory, cache::MarkdownKind},
+    thunderstore::{DeduplicatedMod, ModId, PackageCategory, cache::MarkdownKind},
     util::cmd::Result,
 };
 
 #[command]
-pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMod> {
+pub fn query_thunderstore(
+    args: QueryModsArgs,
+    app: AppHandle,
+) -> Vec<DeduplicatedMod<FrontendMod>> {
     let manager = app.lock_manager();
     let mut thunderstore = app.lock_thunderstore();
 

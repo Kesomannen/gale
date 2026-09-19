@@ -1,6 +1,7 @@
 import { invoke } from '$lib/invoke';
 import {
 	type Backend,
+	type DeduplicatedMod,
 	type MarkdownType,
 	type Mod,
 	type ModId,
@@ -8,7 +9,8 @@ import {
 	type QueryModsArgs
 } from '$lib/types';
 
-export const query = (args: QueryModsArgs) => invoke<Mod[]>('query_thunderstore', { args });
+export const query = (args: QueryModsArgs) =>
+	invoke<DeduplicatedMod<Mod>[]>('query_thunderstore', { args });
 export const stopQuerying = () => invoke('stop_querying_thunderstore');
 export const triggerModFetch = () => invoke('trigger_mod_fetch');
 export const getMarkdown = (id: ModId, type: MarkdownType) =>

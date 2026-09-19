@@ -9,7 +9,7 @@ use crate::{
     logger,
     profile::{self, import::commands::FrontendImportData},
     state::ManagerExt,
-    thunderstore::{self, IntoFrontendMod},
+    thunderstore::{self, Backend, IntoFrontendMod},
 };
 
 pub fn handle(app: &AppHandle, url: String) -> bool {
@@ -61,17 +61,19 @@ struct InstallPackage<'a> {
     owner: &'a str,
     name: &'a str,
     version: &'a str,
+    backend: Backend,
 }
 
 impl<'a> InstallPackage<'a> {
-    fn split(string: &'a str) -> Option<Self> {
-        let mut split = string.split('/');
+    fn parse(path: &'a str, backend: Backend) -> Option<Self> {
+        let mut split = path.split('/');
         let (owner, name, version) = (split.next()?, split.next()?, split.next()?);
 
         Some(Self {
             owner,
             name,
             version,
+            backend,
         })
     }
 }
@@ -79,7 +81,7 @@ impl<'a> InstallPackage<'a> {
 async fn handle_r2_install(url: String, app: AppHandle) -> Result<()> {
     let package = url
         .strip_prefix("ror2mm://v1/install/thunderstore.io/")
-        .and_then(InstallPackage::split)
+        .and_then(|path| InstallPackage::parse(path, Backend::Thunderstore))
         .ok_or_eyre("invalid package url")?;
 
     handle_install(package, app).await
@@ -87,9 +89,13 @@ async fn handle_r2_install(url: String, app: AppHandle) -> Result<()> {
 
 async fn handle_gale_install(url: String, app: AppHandle) -> Result<()> {
     let package = url
-        .strip_prefix("gale://install/hexium/")
-        .or_else(|| url.strip_prefix("gale://install/thunderstore/"))
-        .and_then(InstallPackage::split)
+        .strip_prefix("gale://install/")
+        .and_then(|rest| {
+            let (platform, package_path) = rest.split_once('/')?;
+            let backend = platform.parse::<Backend>().ok()?;
+
+            InstallPackage::parse(package_path, backend)
+        })
         .ok_or_eyre("invalid package url")?;
 
     handle_install(package, app).await
@@ -99,7 +105,12 @@ async fn handle_install(package: InstallPackage<'_>, app: AppHandle) -> Result<(
     thunderstore::wait_for_fetch(&app).await;
 
     let thunderstore = app.lock_thunderstore();
-    let borrowed_mod = thunderstore.find_mod(package.owner, package.name, package.version)?;
+    let borrowed_mod = thunderstore.find_mod(
+        package.owner,
+        package.name,
+        package.version,
+        package.backend,
+    )?;
     let frontend_mod = borrowed_mod.into_frontend(None);
 
     app.emit_buffered("install_mod", &frontend_mod);

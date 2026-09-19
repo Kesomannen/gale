@@ -31,10 +31,11 @@
 		contextItems?: ModContextItem[];
 		locked: boolean;
 		onclose: () => void;
+		header?: Snippet;
 		children?: Snippet;
 	};
 
-	let { mod, contextItems = [], locked, onclose, children }: Props = $props();
+	let { mod, contextItems = [], locked, onclose, header, children }: Props = $props();
 
 	let dependenciesOpen = $state(false);
 	let suggestionsOpen = $state(false);
@@ -117,6 +118,8 @@
 				{/if}
 			</div>
 		</div>
+
+		{@render header?.()}
 
 		{#if mod.isDeprecated}
 			<InfoBox type="warning">

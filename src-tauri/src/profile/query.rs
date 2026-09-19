@@ -50,8 +50,8 @@ impl Queryable for QueryableProfileMod<'_> {
         use QueryableProfileModKind as Kind;
 
         match &self.kind {
-            Kind::Local(local) => &local.name,
-            Kind::Thunderstore(remote) => remote.package.ident.as_str(),
+            Kind::Local(local) => local.full_name(),
+            Kind::Thunderstore(remote) => remote.full_name(),
         }
     }
 
@@ -59,8 +59,8 @@ impl Queryable for QueryableProfileMod<'_> {
         use QueryableProfileModKind as Kind;
 
         match &self.kind {
-            Kind::Local(local) => <LocalMod as Queryable>::version(local),
-            Kind::Thunderstore(remote) => Some(remote.package.latest_released().parsed_version()),
+            Kind::Local(local) => local.version(),
+            Kind::Thunderstore(remote) => Some(remote.version.parsed_version()),
         }
     }
 
@@ -104,6 +104,15 @@ impl Queryable for QueryableProfileMod<'_> {
             (_, Kind::Local(_)) => Ordering::Greater,
         }
     }
+
+    fn backend(&self) -> thunderstore::Backend {
+        use QueryableProfileModKind as Kind;
+
+        match &self.kind {
+            Kind::Local(local) => local.backend(),
+            Kind::Thunderstore(remote) => remote.backend(),
+        }
+    }
 }
 
 impl Profile {
@@ -119,7 +128,10 @@ impl Profile {
             .iter()
             .enumerate()
             .filter_map(|(index, profile_mod)| {
-                if let Ok(queryable) = QueryableProfileMod::create(profile_mod, index, thunderstore) { Some(queryable) } else {
+                if let Ok(queryable) = QueryableProfileMod::create(profile_mod, index, thunderstore)
+                {
+                    Some(queryable)
+                } else {
                     warn!(
                         "unknown mod: {} while querying {}",
                         profile_mod.ident(),
@@ -130,7 +142,7 @@ impl Profile {
                 }
             });
 
-        let found = thunderstore::query::query_mods(args, mods)
+        let found = thunderstore::query::query_mods(args, mods, true)
             .map(|queryable| {
                 let (data, uuid) = match queryable.kind {
                     QueryableProfileModKind::Local(local) => {
@@ -186,5 +198,9 @@ impl Queryable for LocalMod {
             SortOrder::Ascending => order,
             SortOrder::Descending => order.reverse(),
         }
+    }
+
+    fn backend(&self) -> thunderstore::Backend {
+        thunderstore::Backend::Thunderstore
     }
 }

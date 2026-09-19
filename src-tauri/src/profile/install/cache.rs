@@ -8,7 +8,12 @@ use eyre::{Context, Result};
 use tauri::AppHandle;
 use tracing::{info, warn};
 
-use crate::{prefs::Prefs, state::ManagerExt, thunderstore::VersionIdent, util};
+use crate::{
+    prefs::Prefs,
+    state::ManagerExt,
+    thunderstore::{FromBackend, VersionIdent},
+    util,
+};
 
 pub(super) fn path(ident: &VersionIdent, prefs: &Prefs) -> PathBuf {
     let mut path = prefs.cache_dir();
@@ -59,7 +64,10 @@ pub(super) fn prepare_soft_clear(app: AppHandle) -> Result<Vec<PathBuf>> {
 
         let package_name = util::fs::file_name_owned(&path);
 
-        if thunderstore.find_package(&package_name).is_err() {
+        if thunderstore
+            .find_package(&package_name, FromBackend::Any)
+            .is_err()
+        {
             // package from a game other than the loaded one, skip
             continue;
         }

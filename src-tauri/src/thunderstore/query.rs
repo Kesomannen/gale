@@ -1,6 +1,7 @@
 use std::{cmp::Ordering, collections::HashSet, time::Duration};
 
 use eyre::Result;
+use indexmap::IndexMap;
 use internment::Intern;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -8,7 +9,7 @@ use tauri::AppHandle;
 use tracing::info;
 
 use super::{
-    BorrowedMod, Thunderstore,
+    Backend, BorrowedMod, DeduplicatedMod, Thunderstore,
     models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
 };
 use crate::{
@@ -96,9 +97,17 @@ pub trait Queryable {
     /// Whether the package should rank higher than `other` in the given query.
     fn cmp(&self, other: &Self, args: &QueryModsArgs) -> Ordering;
 
+    /// The backend the package belongs to.
+    fn backend(&self) -> Backend;
+
     /// A longer description of the package.
     fn description(&self) -> Option<&str> {
         None
+    }
+
+    /// Whether the package is deprecated.
+    fn is_deprecated(&self) -> bool {
+        false
     }
 }
 
@@ -160,6 +169,10 @@ impl Queryable for BorrowedMod<'_> {
                 SortOrder::Descending => order.reverse(),
             }
         })
+    }
+
+    fn backend(&self) -> Backend {
+        self.package.backend
     }
 }
 
@@ -245,54 +258,86 @@ impl Thunderstore {
         &self,
         args: &QueryModsArgs,
         manager: &ModManager,
-    ) -> Vec<FrontendMod> {
+    ) -> Vec<DeduplicatedMod<FrontendMod>> {
+        let included_mods = self
+            .latest()
+            .filter(|borrowed| !manager.hidden_mods.contains(&borrowed.package.uuid));
+
+        let results = query_mods(args, included_mods, false);
+
         let profile = manager.active_profile();
 
-        query_mods(
-            args,
-            self.latest()
-                .filter(|borrowed| !manager.hidden_mods.contains(&borrowed.package.uuid)),
-        )
-        .map(|m| m.into_frontend(Some(profile)))
-        .collect()
+        deduplicate_results(results, args.max_count)
+            .map(|deduplicated| {
+                deduplicated.map(|backend_mod| backend_mod.into_frontend(Some(profile)))
+            })
+            .collect()
     }
 }
 
 /// Sorts and filters `mods` according to `args`.
-pub fn query_mods<'a, T, I>(args: &QueryModsArgs, mods: I) -> impl Iterator<Item = T> + 'a
+pub fn query_mods<'a, T, I>(
+    args: &QueryModsArgs,
+    mods: I,
+    use_max_count: bool,
+) -> impl Iterator<Item = T> + 'a
 where
     T: Queryable + 'a,
     I: Iterator<Item = T> + 'a,
 {
     let search_terms = args.search_term.as_ref().map(|str| {
-        let full = str.to_lowercase().trim().to_owned();
-        let package = full.replace(' ', "_");
+        let description_query = str.to_lowercase().trim().to_owned();
+        let package_query = description_query.replace(' ', "_");
         // search for packages with underscores and descriptions with spaces
-        (full, package)
+        (description_query, package_query)
     });
 
-    let results = mods.filter(|queryable| {
-        if let Some((full_search, package_search)) = &search_terms {
-            let name_match = queryable
-                .full_name()
-                .to_lowercase()
-                .contains(package_search);
+    let mut results = mods
+        .filter(|queryable| {
+            if let Some((description_query, package_query)) = &search_terms {
+                let name_match = queryable.full_name().to_lowercase().contains(package_query);
 
-            let description_match = queryable
-                .description()
-                .is_some_and(|description| description.to_lowercase().contains(full_search));
+                let description_match = queryable.description().is_some_and(|description| {
+                    description.to_lowercase().contains(description_query)
+                });
 
-            if !name_match && !description_match {
-                return false;
+                if !name_match && !description_match {
+                    return false;
+                }
             }
-        }
 
-        queryable.matches(args)
-    });
-    let mut results = Thunderstore::deduplicate(results).collect_vec();
+            queryable.matches(args)
+        })
+        .collect_vec();
 
     results.sort_by(|a, b| a.cmp(b, args));
-    results
-        .into_iter()
-        .take(args.max_count.unwrap_or(usize::MAX))
+
+    results.into_iter().take(if use_max_count {
+        args.max_count.unwrap_or(usize::MAX)
+    } else {
+        usize::MAX
+    })
+}
+
+fn deduplicate_results<T>(
+    mut results: impl Iterator<Item = T>,
+    max_count: Option<usize>,
+) -> impl Iterator<Item = DeduplicatedMod<T>>
+where
+    T: Queryable,
+{
+    let mut deduped_mods: IndexMap<String, DeduplicatedMod<T>> = IndexMap::new();
+
+    while max_count.is_none_or(|max_count| deduped_mods.len() < max_count) {
+        let Some(result) = results.next() else {
+            break;
+        };
+
+        deduped_mods
+            .entry(result.full_name().to_string())
+            .or_default()
+            .set(result.backend(), result);
+    }
+
+    deduped_mods.into_values()
 }

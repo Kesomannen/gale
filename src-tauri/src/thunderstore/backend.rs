@@ -5,7 +5,10 @@ use crate::{
 use eyre::eyre;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 use uuid::Uuid;
 
 #[derive(
@@ -23,6 +26,18 @@ impl Display for Backend {
             Backend::Thunderstore => "thunderstore",
             Backend::Hexium => "hexium",
         })
+    }
+}
+
+impl FromStr for Backend {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "thunderstore" => Ok(Self::Thunderstore),
+            "hexium" => Ok(Self::Hexium),
+            _ => Err(()),
+        }
     }
 }
 

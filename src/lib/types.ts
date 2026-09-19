@@ -130,6 +130,11 @@ export type Mod = {
 	backend: Backend;
 };
 
+export type DeduplicatedMod<T> = {
+	thunderstore: T | null;
+	hexium: T | null;
+};
+
 export type ModVersion = {
 	name: string;
 	uuid: string;

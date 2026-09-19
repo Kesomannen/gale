@@ -14,7 +14,7 @@ use crate::{
     profile::FrontendManagedGame,
     state::ManagerExt,
     thunderstore::{
-        Backend, BorrowedMod, FrontendProfileMod, ModId, Thunderstore, VersionIdent,
+        Backend, BorrowedMod, FromBackend, FrontendProfileMod, ModId, Thunderstore, VersionIdent,
         cache::MarkdownKind, query::QueryModsArgs,
     },
     util::cmd::Result,
@@ -555,7 +555,7 @@ pub fn get_hidden_mods(app: AppHandle) -> Result<Vec<Dependant>> {
         .hidden_mods
         .iter()
         .filter_map(|uuid| {
-            let package = thunderstore.get_package(*uuid).ok()?;
+            let package = thunderstore.get_package(*uuid, FromBackend::Any).ok()?;
             Some(Dependant::from(BorrowedMod::latest(package)))
         })
         .collect();

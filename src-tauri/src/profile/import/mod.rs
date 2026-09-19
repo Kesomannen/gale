@@ -15,7 +15,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::{info, trace, warn};
+use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -26,7 +26,7 @@ use crate::{
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::{Backend, ModId, Thunderstore},
+    thunderstore::{Backend, FromBackend, ModId, Thunderstore},
     util::{self, error::IoResultExt},
 };
 
@@ -74,13 +74,20 @@ pub(super) fn read_file(
     for r2mod in &mut manifest.mods {
         // first try the backend stored in the manifest, if it's not there,
         // then try falling back to checking any other backend and update the source as needed
-        if thunderstore
-            .backend(r2mod.source)
-            .find_ident(&r2mod.version_ident())
-            .is_err()
-            && let Ok(package) = thunderstore.find_ident(&r2mod.version_ident())
-        {
-            r2mod.source = package.package.backend;
+        match thunderstore.find_ident(&r2mod.version_ident(), FromBackend::Prefer(r2mod.source)) {
+            Ok(found) if found.package.backend == r2mod.source => (),
+            Ok(found) => {
+                warn!(
+                    ident = %r2mod.version_ident(),
+                    source = ?r2mod.source,
+                    found_backend = ?found.package.backend,
+                    "import mod was not found in the expected backend, falling back",
+                );
+                r2mod.source = found.package.backend;
+            }
+            Err(err) => {
+                debug!(?err, "import mod was not found");
+            }
         }
     }
 

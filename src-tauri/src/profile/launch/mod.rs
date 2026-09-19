@@ -104,18 +104,20 @@ impl ManagedGame {
         game_dir: &Path,
         prefs: &Prefs,
     ) -> Result<(LaunchMode, Command)> {
-        let (launch_mode, mut platform, game_custom_args) = prefs
-            .game_prefs
-            .get(&*self.game.slug).map_or_else(|| {
-                info!("game prefs not set, using default settings");
-                Default::default()
-            }, |prefs| {
-                (
-                    prefs.launch_mode.clone(),
-                    prefs.platform,
-                    prefs.custom_args.as_str(),
-                )
-            });
+        let (launch_mode, mut platform, game_custom_args) =
+            prefs.game_prefs.get(&*self.game.slug).map_or_else(
+                || {
+                    info!("game prefs not set, using default settings");
+                    Default::default()
+                },
+                |prefs| {
+                    (
+                        prefs.launch_mode.clone(),
+                        prefs.platform,
+                        prefs.custom_args.as_str(),
+                    )
+                },
+            );
 
         // if the game has a platform but the setting is unset, fill it in
         platform = platform.or_else(|| self.game.platforms.iter().next());
@@ -143,18 +145,16 @@ impl ManagedGame {
                     false
                 });
 
-                if is_proton
-                    && let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
-                        command.env("WINEDLLOVERRIDE", format!("{proxy_dll}=n,b"));
+                if is_proton && let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
+                    command.env("WINEDLLOVERRIDES", format!("{proxy_dll}=n,b"));
 
-                        if let Some(steam) = &self.game.platforms.steam
-                            && matches!(platform, Some(Platform::Steam))
-                                && let Err(err) =
-                                    linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
-                                {
-                                    warn!("failed to ensure wine dll override: {:#}", err);
-                                }
+                    if let Some(steam) = &self.game.platforms.steam
+                        && matches!(platform, Some(Platform::Steam))
+                        && let Err(err) = linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
+                    {
+                        warn!("failed to ensure wine dll override: {:#}", err);
                     }
+                }
 
                 is_proton
             };
@@ -331,9 +331,10 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
                 // TODO: Figure out how to properly filter by active beta branch.
                 // Need to find where Steam stores info about which beta branch is active for an app.
                 if let Some(config) = option.get("config")
-                    && config.get("BetaKey").is_some() {
-                        continue;
-                    }
+                    && config.get("BetaKey").is_some()
+                {
+                    continue;
+                }
 
                 let launch_type = option
                     .get("type")

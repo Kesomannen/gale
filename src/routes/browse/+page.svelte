@@ -1,6 +1,13 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import { type SortBy, type Mod, type ModId, Backend, type ModContextItem } from '$lib/types';
+	import {
+		type SortBy,
+		type Mod,
+		type ModId,
+		Backend,
+		type ModContextItem,
+		type DeduplicatedMod
+	} from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
@@ -19,6 +26,7 @@
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
 	import { shouldWarnForeignDownload } from '$lib/util';
+	import DeduplicatedModDetails from '$lib/components/mod-list/DeduplicatedModDetails.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems: ModContextItem[] = [
@@ -36,18 +44,29 @@
 		...defaultContextItems
 	];
 
-	let mods: Mod[] = $state([]);
+	let mods: DeduplicatedMod<Mod>[] = $state([]);
 
-	let modList: ModList;
 	let maxCount: number = $state(20);
-	let selectedMod: Mod | null = $state(null);
+	let selectedMod: DeduplicatedMod<Mod> | null = $state(null);
 	let foreignDownloadDialogOpen = $state(false);
 
 	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
 
+	const listedMods = $derived(
+		mods.map((mod) => {
+			if (mod.thunderstore) {
+				return mod.thunderstore;
+			} else if (mod.hexium) {
+				return mod.hexium;
+			} else {
+				throw new Error('Mod is missing both thunderstore and hexium data');
+			}
+		})
+	);
+
 	onMount(() => {
-		listen<Mod[]>('mod_query_result', (evt) => {
+		listen<DeduplicatedMod<Mod>[]>('mod_query_result', (evt) => {
 			mods = evt.payload;
 		}).then((unlisten) => {
 			unlistenFromQuery = unlisten;
@@ -62,6 +81,14 @@
 	let hasRefreshed = $state(false);
 	let refreshing = false;
 
+	function deduplicatedUuid(mod: DeduplicatedMod<Mod>) {
+		return mod.thunderstore?.uuid ?? mod.hexium?.uuid;
+	}
+
+	function findModByUuid(uuid: string | undefined) {
+		return mods.find((mod) => deduplicatedUuid(mod) === uuid) ?? null;
+	}
+
 	async function refresh() {
 		if (refreshing) return;
 		refreshing = true;
@@ -69,7 +96,7 @@
 		mods = await api.thunderstore.query({ ...modQuery.current, maxCount });
 		if (selectedMod) {
 			// isInstalled might have changed
-			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
+			selectedMod = findModByUuid(deduplicatedUuid(selectedMod));
 		}
 
 		refreshing = false;
@@ -101,9 +128,11 @@
 
 	function onModClicked(evt: MouseEvent, mod: Mod) {
 		if (evt.ctrlKey) {
-			installLatest(mod);
+			//installLatest(mod);
+		} else if (selectedMod && deduplicatedUuid(selectedMod) === mod.uuid) {
+			selectedMod = null;
 		} else {
-			modList.selectMod(mod);
+			selectedMod = findModByUuid(mod.uuid);
 		}
 	}
 
@@ -127,13 +156,7 @@
 			<ProfileLockedBanner class="mb-1" />
 		{/if}
 
-		<ModList
-			{mods}
-			queryArgs={modQuery.current}
-			bind:this={modList}
-			bind:maxCount
-			bind:selected={selectedMod}
-		>
+		<ModList mods={listedMods} queryArgs={modQuery.current} bind:maxCount>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
 					<HelpCard title={m.browse_modList_content_1()} icon="mdi:store-search" class="mt-4">
@@ -142,11 +165,11 @@
 				{/if}
 			{/snippet}
 
-			{#snippet item({ mod, isSelected })}
+			{#snippet item({ mod })}
 				<ModListItem
 					{mod}
 					{contextItems}
-					selected={isSelected}
+					selected={selectedMod !== null && deduplicatedUuid(selectedMod) === mod.uuid}
 					locked={profiles.activeLocked}
 					oninstall={() => installLatest(mod)}
 					onclick={(evt) => onModClicked(evt, mod)}
@@ -156,9 +179,16 @@
 	</div>
 
 	{#if selectedMod}
-		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			<InstallModButton mod={selectedMod} {install} {locked} />
-		</ModDetails>
+		<DeduplicatedModDetails
+			mod={selectedMod}
+			{locked}
+			{contextItems}
+			onclose={() => (selectedMod = null)}
+		>
+			{#snippet children({ mod })}
+				<InstallModButton {mod} {install} {locked} />
+			{/snippet}
+		</DeduplicatedModDetails>
 	{/if}
 </div>
 

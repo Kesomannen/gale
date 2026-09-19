@@ -64,7 +64,7 @@ impl R2Mod {
         let borrowed_mod = thunderstore
             .backend(self.source)
             .find_ident(&self.version_ident())
-            .or_else(|_| thunderstore.find_ident(&self.version_ident()))?;
+            .or_else(|_| thunderstore.find_ident(&self.version_ident(), self.source))?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
     }

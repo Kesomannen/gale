@@ -13,10 +13,10 @@ use zip::ZipArchive;
 
 use crate::{
     game::mod_loader::{ModLoader, ModLoaderKind},
-    prefs::Prefs,
+    prefs::{Backends, Prefs},
     profile::{LocalMod, Profile, ProfileMod, install::InstallOptions},
     state::ManagerExt,
-    thunderstore::PackageManifest,
+    thunderstore::{Backend, PackageManifest},
     util::{self, fs::PathExt},
 };
 
@@ -50,11 +50,21 @@ pub async fn import_local_mod(
     if let Some(deps) = &local_mod.dependencies {
         let (profile_id, mods) = {
             let manager = app.lock_manager();
+            let prefs = app.lock_prefs();
+
             let profile = manager.active_profile();
+
+            let dependency_backend = match prefs.enabled_backends(manager.active_game) {
+                Backends::All => Backend::default(),
+                Backends::Thunderstore => Backend::Thunderstore,
+                Backends::Hexium => Backend::Hexium,
+            };
+
+            let deps_with_backend = deps.iter().map(|ident| (ident, dependency_backend));
 
             let mods = app
                 .lock_thunderstore()
-                .dependencies(deps)
+                .dependencies(deps_with_backend)
                 .filter(|dep| !profile.has_mod(dep.package.uuid))
                 .map(std::convert::Into::into)
                 .collect::<Vec<_>>();

@@ -2,25 +2,16 @@
 	import VirtualList from '$lib/components/ui/VirtualList.svelte';
 	import type { Mod, QueryModsArgsWithoutMax } from '$lib/types';
 	import type { Snippet } from 'svelte';
-	import games from '$lib/state/game.svelte';
 
 	type Props = {
 		mods: Mod[];
 		maxCount: number;
 		queryArgs: QueryModsArgsWithoutMax;
-		selected: Mod | null;
 		placeholder?: Snippet;
-		item: Snippet<[{ mod: Mod; index: number; isSelected: boolean }]>;
+		item: Snippet<[{ mod: Mod; index: number }]>;
 	};
 
-	let {
-		mods,
-		maxCount = $bindable(20),
-		queryArgs,
-		selected = $bindable(),
-		placeholder,
-		item
-	}: Props = $props();
+	let { mods, maxCount = $bindable(20), queryArgs, placeholder, item }: Props = $props();
 
 	let listStart = $state(0);
 	let listEnd = $state(0);
@@ -33,22 +24,9 @@
 	});
 
 	$effect(() => {
-		queryArgs;
+		JSON.stringify(queryArgs);
 		virtualList?.scrollTo(0);
 	});
-
-	$effect(() => {
-		games.active;
-		selected = null;
-	});
-
-	export function selectMod(mod: Mod) {
-		if (selected === null || selected.uuid !== mod.uuid) {
-			selected = mod;
-		} else {
-			selected = null;
-		}
-	}
 </script>
 
 {#if mods.length === 0}
@@ -66,8 +44,7 @@
 		{#snippet children({ item: mod, index })}
 			{@render item({
 				mod,
-				index,
-				isSelected: selected?.uuid === mod.uuid
+				index
 			})}
 		{/snippet}
 	</VirtualList>
