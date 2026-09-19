@@ -241,10 +241,7 @@
 				"identifier": "CoffeeStainStudios.Valheim"
 			}
 		},
-		"backends": [
-			"Thunderstore",
-			"Hexium"
-		]
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "20 Minutes Till Dawn",
@@ -729,10 +726,7 @@
 				"id": 3844970
 			}
 		},
-		"backends": [
-			"Thunderstore",
-			"Hexium"
-		]
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Carrier Deck",
@@ -1324,9 +1318,7 @@
 			"name": "ReturnOfModding",
 			"packageName": "Hell2Modding-Hell2Modding",
 			"fileTarget": "./Ship",
-			"files": [
-				"d3d12.dll"
-			]
+			"files": ["d3d12.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -1428,10 +1420,7 @@
 				"id": 4001890
 			}
 		},
-		"backends": [
-			"Thunderstore",
-			"Hexium"
-		]
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Human Fall Flat",
@@ -2177,9 +2166,7 @@
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
-			"files": [
-				"version.dll"
-			]
+			"files": ["version.dll"]
 		},
 		"platforms": {
 			"steam": {
@@ -2553,10 +2540,7 @@
 				"id": 2080690
 			}
 		},
-		"backends": [
-			"Thunderstore",
-			"Hexium"
-		]
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Super Battle Golf",
@@ -2620,9 +2604,7 @@
 				"identifier": "3842cb79cc4146c7ae33f3ede64ca484"
 			}
 		},
-		"backends": [
-			"Hexium"
-		]
+		"backends": ["Hexium"]
 	},
 	{
 		"name": "TABS",

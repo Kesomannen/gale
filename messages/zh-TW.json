@@ -494,17 +494,12 @@
 	"updateAllBanner_button": "全部更新？",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "有一個更新可用。",
 				"countPlural=other": "有{count}更新可用。"
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "更新模組",
