@@ -1,7 +1,7 @@
 import { listen } from '@tauri-apps/api/event';
 
 import * as api from '$lib/api';
-import type { DedicatedServerStatus } from '$lib/api/profile/server';
+import type { DedicatedServerStatus } from '$lib/types';
 
 class ServerState {
 	status: DedicatedServerStatus = $state({

@@ -14,6 +14,7 @@
 	import { type ContextItem } from '$lib/types';
 	import { PersistedState } from '$lib/state/persisted-state.svelte';
 	import DedicatedServerDialog from '$lib/components/dialogs/DedicatedServerDialog.svelte';
+	import { pushInfoToast } from '$lib/toast';
 
 	type Mode = 'vanilla' | 'modded' | 'server';
 
@@ -66,7 +67,7 @@
 
 	async function launchGame() {
 		if (mode.current === 'server') {
-			dedicatedServerDialogOpen = true;
+			await launchServer();
 			return;
 		}
 
@@ -98,6 +99,24 @@
 		}
 
 		await doLaunch();
+	}
+
+	/// An already-configured server launches immediately; first-time setup
+	/// opens the settings dialog instead.
+	async function launchServer() {
+		const settings = await api.profile.server.getSettings();
+
+		if (settings === null || settings.serverName.trim() === '') {
+			dedicatedServerDialogOpen = true;
+			return;
+		}
+
+		try {
+			await api.profile.server.launch(null, '', true);
+			pushInfoToast({ message: m.toolBar_launchServer_started() });
+		} catch {
+			// invoke already reports the failure as an error toast.
+		}
 	}
 
 	async function doLaunch(args?: string) {

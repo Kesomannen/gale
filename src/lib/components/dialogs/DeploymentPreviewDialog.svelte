@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import type { RemoteDeploymentPreviewResult } from '$lib/api/profile/server';
+	import type { RemoteDeploymentPreviewResult } from '$lib/types';
 	import DeploymentStats from './DeploymentStats.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import InfoBox from '$lib/components/ui/InfoBox.svelte';
@@ -43,25 +43,6 @@
 
 		{#if preview.removeFiles.length > 0}
 			<InfoBox type="warning" class="mt-4">{m.deploymentPreview_removalInfo()}</InfoBox>
-		{/if}
-
-		{#if preview.skippedClientOnlyMods.length > 0}
-			<InfoBox icon="mdi:monitor" class="mt-4">
-				<div class="min-w-0 grow">
-					<div class="font-medium">{m.deploymentPreview_clientOnlyTitle()}</div>
-					<p class="mt-1 text-sm">
-						{m.deploymentPreview_clientOnlyContent({ count: preview.skippedClientOnlyMods.length })}
-					</p>
-					<details class="mt-2 text-sm">
-						<summary class="cursor-pointer font-medium">{m.deploymentPreview_showMods()}</summary>
-						<ul class="mt-1 max-h-32 overflow-auto pl-5">
-							{#each preview.skippedClientOnlyMods as mod}
-								<li class="list-disc py-0.5 wrap-anywhere">{mod}</li>
-							{/each}
-						</ul>
-					</details>
-				</div>
-			</InfoBox>
 		{/if}
 
 		<details class="mt-4">

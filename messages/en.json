@@ -145,23 +145,11 @@
 	"dedicatedServerDialog_world": "World",
 	"dedicatedServerDialog_worldPlaceholder": "Dedicated",
 	"deploymentPreview_cancel": "Cancel",
-	"deploymentPreview_clientOnlyContent": [
-		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"match": {
-				"countPlural=one": "One client-only mod won't be copied to this server.",
-				"countPlural=other": "{count} client-only mods won't be copied to this server."
-			},
-			"selectors": ["countPlural"]
-		}
-	],
-	"deploymentPreview_clientOnlyTitle": "Not needed on the server",
 	"deploymentPreview_content": "Review what Gale will change before deploying to the server.",
 	"deploymentPreview_deploy": "Deploy changes",
 	"deploymentPreview_fileChanges": "View file changes ({count})",
-	"deploymentPreview_removalInfo": "These files currently exist on the server but not in this profile. Gale will remove them so BepInEx plugins, patchers, and configs match; everything else is left alone.",
+	"deploymentPreview_removalInfo": "These files currently exist on the server but not in this profile. Gale will remove them so the mod loader plugins, patchers, and configs match; everything else is left alone.",
 	"deploymentPreview_removals": "Removals",
-	"deploymentPreview_showMods": "Show mods",
 	"deploymentPreview_title": "Review deployment",
 	"deploymentPreview_uploads": "Uploads",
 	"deploymentResult_cleanupContent": "The profile uploaded successfully, but the server did not allow Gale to remove some items.",
@@ -526,6 +514,10 @@
 	"prefs_miscellaneous_pullBeforeLaunch_content": "Whether to pull updates from synced profiles before launching.",
 	"prefs_miscellaneous_pullBeforeLaunch_title": "Pull before launch",
 	"prefs_miscellaneous_title": "Miscellaneous",
+	"dedicatedServerPref_configure": "Configure",
+	"dedicatedServerPref_content": "Launch a dedicated server on this machine or deploy this profile's mods and config to a remote server.",
+	"dedicatedServerPref_title": "Dedicated server",
+	"prefs_profileSettings_dedicatedServer_title": "Dedicated server",
 	"prefs_profileSettings_launch_title": "Launch",
 	"prefs_profileSettings_title": "Profile settings",
 	"prefs_steamLaunchOptions_content": "When enabled, displays Steam launch options defined by the game developer (if any) before\n\t\t\t\tstarting the game. These options may include different game modes like VR, Safe Mode,\n\t\t\t\tDedicated Server, or other launch configurations specific to the game.",
@@ -631,7 +623,8 @@
 	"toolBar_dialog_launch_vanilla_title": "Launching vanilla {name}...",
 	"toolBar_launch_modded": "Launch modded",
 	"toolBar_launch_vanilla": "Launch vanilla",
-	"toolBar_launch_server": "Launch dedicated server",
+	"toolBar_launch_server": "Launch server",
+	"toolBar_launchServer_started": "Server launched.",
 	"toolBar_launchGame_message": "Please wait for mod installations to complete before launching.",
 	"unknown": "Unknown",
 	"unknownModsBanner_content": "Some mods in this profile could not be resolved.",

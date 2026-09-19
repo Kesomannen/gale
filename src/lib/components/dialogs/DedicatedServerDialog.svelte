@@ -13,7 +13,7 @@
 	import DeploymentResultDialog from './DeploymentResultDialog.svelte';
 	import * as api from '$lib/api';
 	import type {
-		DedicatedServerSettings,
+		ProfileServerSettings,
 		RemoteAuthentication,
 		RemoteConnectionTestResult,
 		RemoteDeploymentPreviewResult,
@@ -22,13 +22,14 @@
 		RemoteProtocol,
 		RemoteServerSettings,
 		ServerLocation
-	} from '$lib/api/profile/server';
+	} from '$lib/types';
 	import games from '$lib/state/game.svelte';
 	import { Progress, Tabs } from 'bits-ui';
 	import { confirm, message, open as openDialog } from '@tauri-apps/plugin-dialog';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { onDestroy, onMount } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { pushInfoToast } from '$lib/toast';
 
 	const DEFAULT_SFTP_PORT = '22';
 	const DEFAULT_FTP_PORT = '21';
@@ -90,11 +91,37 @@
 		if (!initialized) void loadSettings();
 	});
 
+	/// Initial settings built from the active game, for profiles that have
+	/// never configured a dedicated server.
+	function defaultSettings(): ProfileServerSettings {
+		const game = games.active;
+		return {
+			location: 'local',
+			serverName: game ? `${game.name} Server` : 'Dedicated Server',
+			world: game?.slug === 'valheim' ? 'Dedicated' : '',
+			port: game?.dedicatedServer?.defaultPort || FALLBACK_SERVER_PORT,
+			publicServer: true,
+			crossplay: false,
+			extraArgs: '',
+			remote: {
+				protocol: 'sftp',
+				host: '',
+				port: Number(DEFAULT_SFTP_PORT),
+				username: '',
+				serverDirectory: '',
+				authentication: 'password',
+				privateKeyPath: '',
+				trustedHostKey: null,
+				trustedInvalidCertificateHost: null
+			}
+		};
+	}
+
 	async function loadSettings() {
 		initialized = true;
 		loadingSettings = true;
 		try {
-			const value = await api.profile.server.getSettings();
+			const value = (await api.profile.server.getSettings()) ?? defaultSettings();
 			location = value.location;
 			serverName = value.serverName;
 			worldName = value.world;
@@ -167,7 +194,7 @@
 		if (typeof selected === 'string') privateKeyPath = selected;
 	}
 
-	function settings(): DedicatedServerSettings {
+	function settings(): ProfileServerSettings {
 		return {
 			location,
 			serverName: serverName.trim(),
@@ -237,7 +264,7 @@
 		saving = true;
 		try {
 			await api.profile.server.setSettings(current);
-			await message(m.dedicatedServerDialog_saved());
+			pushInfoToast({ message: m.dedicatedServerDialog_saved() });
 		} finally {
 			saving = false;
 		}
@@ -268,7 +295,6 @@
 				)
 			);
 			if (!result || result.status !== 'connected') return;
-			await api.profile.server.setSettings(current);
 			await message(
 				!result.encrypted
 					? m.dedicatedServerDialog_connectionPlain({ host: remoteHost })
@@ -312,7 +338,6 @@
 				api.profile.server.deployRemote(current.remote, remotePassword, rememberRemotePassword)
 			);
 			if (!result) return;
-			await api.profile.server.setSettings(current);
 			if (result.status === 'deployed') deploymentResultDialog.openFor(result);
 		} finally {
 			deploying = false;

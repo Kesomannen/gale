@@ -2,7 +2,7 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Icon from '@iconify/svelte';
-	import type { RemoteDeploymentResult } from '$lib/api/profile/server';
+	import type { RemoteDeploymentResult } from '$lib/types';
 	import DeploymentStats from './DeploymentStats.svelte';
 	import { m } from '$lib/paraglide/messages';
 	import InfoBox from '$lib/components/ui/InfoBox.svelte';
