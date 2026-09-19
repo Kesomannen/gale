@@ -236,10 +236,17 @@ fn create_epic_command(game: Game) -> Result<Command> {
 }
 
 pub fn locate_game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf> {
-    locate_dir(platform, &game.platforms, game.name)
+    match platform {
+        Some(Platform::Steam) => steam_dir(&game.platforms, &game.slug),
+        #[cfg(windows)]
+        Some(Platform::XboxStore) => xbox_dir(&game.platforms, game.name, &game.slug),
+        #[cfg(windows)]
+        Some(Platform::EpicGames) => epic_dir(&game.platforms, game.name),
+        _ => bail!("game directory not found - you may need to specify it in the settings"),
+    }
 }
 
-pub(crate) fn locate_dir(
+pub fn locate_dir(
     platform: Option<Platform>,
     platforms: &Platforms<'_>,
     display_name: &str,
@@ -247,7 +254,7 @@ pub(crate) fn locate_dir(
     match platform {
         Some(Platform::Steam) => steam_dir(platforms, display_name),
         #[cfg(windows)]
-        Some(Platform::XboxStore) => xbox_dir(platforms, display_name),
+        Some(Platform::XboxStore) => xbox_dir(platforms, display_name, display_name),
         #[cfg(windows)]
         Some(Platform::EpicGames) => epic_dir(platforms, display_name),
         _ => bail!(
@@ -261,19 +268,16 @@ fn steam_dir(platforms: &Platforms<'_>, display_name: &str) -> Result<PathBuf> {
         bail!("{display_name} is not available on Steam");
     };
 
-    let steam_dir = steamlocate::SteamDir::locate().context("failed to find Steam installation")?;
-    let (app, library) = steam_dir.find_app(steam.id)?.ok_or_else(|| {
-        eyre!(
-            "could not find Steam app {} ({display_name}); is it installed?",
-            steam.id
-        )
-    })?;
+    let steam_dir = steamlocate::SteamDir::locate().context("failed to find steam install")?;
+    let (app, lib) = steam_dir
+        .find_app(steam.id)?
+        .ok_or_eyre("could not find app in steam library, is the game not installed?")?;
 
-    Ok(library.resolve_app_dir(&app))
+    Ok(lib.resolve_app_dir(&app))
 }
 
 #[cfg(windows)]
-fn xbox_dir(platforms: &Platforms<'_>, display_name: &str) -> Result<PathBuf> {
+fn xbox_dir(platforms: &Platforms<'_>, display_name: &str, log_name: &str) -> Result<PathBuf> {
     use std::process::Command;
 
     use eyre::{Context, ensure};
@@ -294,7 +298,7 @@ fn xbox_dir(platforms: &Platforms<'_>, display_name: &str) -> Result<PathBuf> {
         "InstallLocation",
     ]);
 
-    info!("querying path for {display_name} with command {query:?}");
+    info!("querying path for {} with command {:?}", log_name, query);
 
     let out = query.output()?;
 
@@ -304,9 +308,9 @@ fn xbox_dir(platforms: &Platforms<'_>, display_name: &str) -> Result<PathBuf> {
         out.status.code().unwrap_or(-1)
     );
 
-    let value = String::from_utf8(out.stdout).context("query returned invalid UTF-8")?;
+    let str = String::from_utf8(out.stdout).context("query returned invalid UTF-8")?;
 
-    Ok(PathBuf::from(value.trim()))
+    Ok(PathBuf::from(str))
 }
 
 #[cfg(windows)]
