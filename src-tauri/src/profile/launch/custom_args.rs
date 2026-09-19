@@ -66,7 +66,7 @@ fn split(custom_args: &str) -> Result<Vec<String>> {
 struct CustomArgs {
     args: Vec<String>,
     env: Vec<(String, String)>,
-    prefix: Option<String>,
+    prefix: Vec<String>,
 }
 
 impl CustomArgs {
@@ -75,8 +75,9 @@ impl CustomArgs {
             command.env(key, value);
         }
 
-        if let Some(prefix) = &self.prefix {
-            let mut new_command = Command::new(prefix);
+        if let [prefix_cmd, prefix_args @ ..] = &*self.prefix {
+            let mut new_command = Command::new(prefix_cmd);
+            new_command.args(prefix_args);
             new_command.arg(command.get_program());
             new_command.args(command.get_args());
             for (key, value) in command.get_envs() {
@@ -101,15 +102,14 @@ impl FromStr for CustomArgs {
 
         let mut args = Vec::new();
         let mut env = Vec::new();
-        let mut prefix = None;
+        let mut prefix = Vec::new();
 
         for word in words {
             if word == "%command%" {
-                if prefix.is_some() {
+                if !prefix.is_empty() {
                     bail!("multiple %command% placeholders are not allowed");
                 }
-                prefix = Some(args.join(" "));
-                args.clear();
+                prefix.append(&mut args);
             } else if let Some((key, value)) = word.split_once('=') {
                 env.push((key.to_string(), value.to_string()));
             } else {
@@ -127,14 +127,14 @@ mod tests {
 
     use super::*;
 
-    fn new_args(args: Vec<&str>, env: Vec<(&str, &str)>, prefix: Option<&str>) -> CustomArgs {
+    fn new_args(args: Vec<&str>, env: Vec<(&str, &str)>, prefix: Vec<&str>) -> CustomArgs {
         CustomArgs {
             args: args.into_iter().map(String::from).collect(),
             env: env
                 .into_iter()
                 .map(|(k, v)| (k.to_string(), v.to_string()))
                 .collect(),
-            prefix: prefix.map(String::from),
+            prefix: prefix.iter().map(|s| s.to_string()).collect(),
         }
     }
 
@@ -148,14 +148,14 @@ mod tests {
     #[test]
     fn simple_args() {
         let result = CustomArgs::from_str("--foo bar").unwrap();
-        let expected = new_args(vec!["--foo", "bar"], vec![], None);
+        let expected = new_args(vec!["--foo", "bar"], vec![], vec![]);
         assert_eq!(result, expected);
     }
 
     #[test]
     fn quoted_args() {
         let result = CustomArgs::from_str(r#"--foo "bar baz""#).unwrap();
-        let expected = new_args(vec!["--foo", "bar baz"], vec![], None);
+        let expected = new_args(vec!["--foo", "bar baz"], vec![], vec![]);
         assert_eq!(result, expected);
     }
 
@@ -165,7 +165,7 @@ mod tests {
         let expected = new_args(
             vec!["--baz", "qux"],
             vec![("FOO", "bar"), ("WINE", "yes")],
-            None,
+            vec![],
         );
         assert_eq!(result, expected);
     }
@@ -173,14 +173,25 @@ mod tests {
     #[test]
     fn quoted_env_vars() {
         let result = CustomArgs::from_str(r#"FOO="bar baz" --qux quux"#).unwrap();
-        let expected = new_args(vec!["--qux", "quux"], vec![("FOO", "bar baz")], None);
+        let expected = new_args(vec!["--qux", "quux"], vec![("FOO", "bar baz")], vec![]);
         assert_eq!(result, expected);
     }
 
     #[test]
     fn prefix() {
         let result = CustomArgs::from_str("protontricks %command% --foo").unwrap();
-        let expected = new_args(vec!["--foo"], vec![], Some("protontricks"));
+        let expected = new_args(vec!["--foo"], vec![], vec!["protontricks"]);
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn prefix_multi() {
+        let result = CustomArgs::from_str("env -u DISPLAY mangohud %command% --foo").unwrap();
+        let expected = new_args(
+            vec!["--foo"],
+            vec![],
+            vec!["env", "-u", "DISPLAY", "mangohud"],
+        );
         assert_eq!(result, expected);
     }
 
@@ -199,7 +210,7 @@ mod tests {
         let expected = new_args(
             vec!["--foo", "bar baz", "something else"],
             vec![("FOO", "bar"), ("BAZ", "qux quux")],
-            Some("protontricks"),
+            vec!["protontricks"],
         );
         assert_eq!(result, expected);
     }
@@ -209,7 +220,7 @@ mod tests {
         let custom_args = new_args(
             vec!["--foo", "bar baz"],
             vec![("FOO", "bar")],
-            Some("protontricks"),
+            vec!["protontricks"],
         );
 
         let mut command = Command::new("game_executable --original-arg");
@@ -219,6 +230,37 @@ mod tests {
 
         let mut expected = Command::new("protontricks");
         expected
+            .arg("game_executable --original-arg")
+            .args(["--foo", "bar baz"])
+            .env("FOO", "bar");
+
+        assert_eq!(command.get_program(), expected.get_program());
+        assert_eq!(
+            command.get_args().collect_vec(),
+            expected.get_args().collect_vec()
+        );
+        assert_eq!(
+            command.get_envs().collect_vec(),
+            expected.get_envs().collect_vec()
+        );
+    }
+
+    #[test]
+    fn apply_prefix_multi() {
+        let custom_args = new_args(
+            vec!["--foo", "bar baz"],
+            vec![("FOO", "bar")],
+            vec!["env", "-u", "DISPLAY", "mangohud"],
+        );
+
+        let mut command = Command::new("game_executable --original-arg");
+        custom_args.apply(&mut command);
+
+        println!("{command:#?}\n{custom_args:#?}");
+
+        let mut expected = Command::new("env");
+        expected
+            .args(["-u", "DISPLAY", "mangohud"])
             .arg("game_executable --original-arg")
             .args(["--foo", "bar baz"])
             .env("FOO", "bar");
