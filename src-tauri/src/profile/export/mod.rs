@@ -181,13 +181,49 @@ const DEVICE_NAMES: &[&str] = &[
 #[serde(try_from = "String", into = "String")]
 pub struct ConfigPath(String);
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(try_from = "String", into = "String")]
-pub struct ContentHash(String);
+macro_rules! hex_newtype {
+    ($name:ident, $err:literal) => {
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+        #[serde(try_from = "String", into = "String")]
+        pub struct $name(String);
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(try_from = "String", into = "String")]
-pub struct ModRevision(String);
+        impl $name {
+            pub fn as_str(&self) -> &str {
+                &self.0
+            }
+
+            pub(crate) fn from_hash(hash: blake3::Hash) -> Self {
+                Self(hash.to_hex().to_string())
+            }
+        }
+
+        impl TryFrom<String> for $name {
+            type Error = eyre::Report;
+
+            fn try_from(value: String) -> Result<Self, Self::Error> {
+                ensure!(is_valid_hash_str(&value), $err);
+                Ok(Self(value))
+            }
+        }
+
+        impl TryFrom<&str> for $name {
+            type Error = eyre::Report;
+
+            fn try_from(value: &str) -> Result<Self, Self::Error> {
+                Self::try_from(value.to_owned())
+            }
+        }
+
+        impl From<$name> for String {
+            fn from(value: $name) -> Self {
+                value.0
+            }
+        }
+    };
+}
+
+hex_newtype!(ContentHash, "invalid content hash");
+hex_newtype!(ModRevision, "invalid revision hash");
 
 impl ConfigPath {
     pub fn as_path(&self) -> &Path {
@@ -288,72 +324,6 @@ fn is_valid_hash_str(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-}
-
-impl ContentHash {
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    pub(crate) fn from_hash(hash: blake3::Hash) -> Self {
-        Self(hash.to_hex().to_string())
-    }
-}
-
-impl TryFrom<String> for ContentHash {
-    type Error = eyre::Report;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        ensure!(is_valid_hash_str(&value), "invalid content hash");
-        Ok(Self(value))
-    }
-}
-
-impl TryFrom<&str> for ContentHash {
-    type Error = eyre::Report;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::try_from(value.to_owned())
-    }
-}
-
-impl From<ContentHash> for String {
-    fn from(value: ContentHash) -> Self {
-        value.0
-    }
-}
-
-impl ModRevision {
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    pub(crate) fn from_hash(hash: blake3::Hash) -> Self {
-        Self(hash.to_hex().to_string())
-    }
-}
-
-impl TryFrom<String> for ModRevision {
-    type Error = eyre::Report;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        ensure!(is_valid_hash_str(&value), "invalid revision hash");
-        Ok(Self(value))
-    }
-}
-
-impl TryFrom<&str> for ModRevision {
-    type Error = eyre::Report;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Self::try_from(value.to_owned())
-    }
-}
-
-impl From<ModRevision> for String {
-    fn from(value: ModRevision) -> Self {
-        value.0
-    }
 }
 
 pub fn manifest_revision(manifest: &ProfileManifest) -> Result<ModRevision> {
