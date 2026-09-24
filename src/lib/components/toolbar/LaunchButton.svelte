@@ -114,7 +114,7 @@
 	}
 
 	$effect(() => {
-		if (mode.current === 'server' && !games.active?.dedicatedServer) {
+		if (mode.current === 'server' && games.active && !games.active.dedicatedServer) {
 			mode.current = 'modded';
 		}
 	});

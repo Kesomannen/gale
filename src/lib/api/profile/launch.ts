@@ -3,8 +3,6 @@ import type { LaunchOption } from '$lib/types';
 
 export const launchGame = (vanilla: boolean, args?: string) =>
 	invoke('launch_game', { vanilla, args });
-export const launchServer = (vanilla: boolean, args?: string) =>
-	invoke('launch_server', { vanilla, args });
 export const getArgs = () => invoke<string>('get_launch_args');
 export const openGameDir = () => invoke('open_game_dir');
 export const getSteamLaunchOptions = () => invoke<LaunchOption[]>('get_steam_launch_options');

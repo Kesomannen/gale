@@ -22,8 +22,10 @@
 	<span class="mr-auto">{m.profileLockedBanner_title()}</span>
 
 	<Info
-		>{m.profileLockedBanner_content({
-			name: profiles.active?.sync?.owner.displayName ?? m.unknown()
-		})}</Info
+		>{profiles.serverLocked
+			? m.profileLockedBanner_serverContent()
+			: m.profileLockedBanner_content({
+					name: profiles.active?.sync?.owner.displayName ?? m.unknown()
+				})}</Info
 	>
 </div>

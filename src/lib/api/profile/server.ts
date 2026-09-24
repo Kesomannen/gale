@@ -1,137 +1,38 @@
 import { invoke } from '$lib/invoke';
+import type {
+	DedicatedServerStatus,
+	ProfileServerSettings,
+	RemoteConnectionTestResult,
+	RemoteDeploymentPreviewResult,
+	RemoteDeploymentResult,
+	RemoteDeploymentSelection
+} from '$lib/types';
 
-export type ServerLocation = 'local' | 'remote';
-export type RemoteAuthentication = 'password' | 'privateKey' | 'agent';
-export type RemoteProtocol = 'sftp' | 'ftp' | 'ftps';
+export const getSettings = () =>
+	invoke<ProfileServerSettings | null>('get_dedicated_server_settings');
 
-export type RemoteServerSettings = {
-	protocol: RemoteProtocol;
-	host: string;
-	port: number;
-	username: string;
-	serverDirectory: string;
-	authentication: RemoteAuthentication;
-	privateKeyPath: string;
-	trustedHostKey: string | null;
-	trustedInvalidCertificateHost: string | null;
-};
+export const setSettings = (
+	settings: ProfileServerSettings,
+	gamePassword: string,
+	remoteCredential: string
+) => invoke('set_dedicated_server_settings', { settings, gamePassword, remoteCredential });
 
-export type DedicatedServerSettings = {
-	location: ServerLocation;
-	serverName: string;
-	world: string;
-	port: number;
-	publicServer: boolean;
-	crossplay: boolean;
-	extraArgs: string;
-	remote: RemoteServerSettings;
-};
+export const launch = (settings: ProfileServerSettings) =>
+	invoke<DedicatedServerStatus>('launch_dedicated_server', { settings });
 
-export type RemoteConnectionTestResult =
-	| { status: 'connected'; fingerprint: string | null; encrypted: boolean }
-	| { status: 'hostKeyUntrusted'; fingerprint: string }
-	| { status: 'certificateUntrusted' };
+export const testRemoteConnection = (settings: ProfileServerSettings) =>
+	invoke<RemoteConnectionTestResult>('test_remote_server_connection', { settings });
 
-export type RemoteDeploymentResult =
-	| { status: 'hostKeyUntrusted'; fingerprint: string }
-	| { status: 'certificateUntrusted' }
-	| {
-			status: 'deployed';
-			fingerprint: string | null;
-			uploadedFiles: number;
-			uploadedBytes: number;
-			removedFiles: number;
-			unchangedFiles: number;
-			skippedClientOnlyMods: string[];
-			cleanupWarnings: string[];
-	  };
+export const deployRemote = (
+	settings: ProfileServerSettings,
+	selection: RemoteDeploymentSelection
+) => invoke<RemoteDeploymentResult>('deploy_remote_server', { settings, selection });
 
-export type RemoteDeploymentPreviewResult =
-	| { status: 'hostKeyUntrusted'; fingerprint: string }
-	| { status: 'certificateUntrusted' }
-	| {
-			status: 'preview';
-			fingerprint: string | null;
-			uploadFiles: string[];
-			uploadBytes: number;
-			removeFiles: string[];
-			unchangedFiles: number;
-			skippedClientOnlyMods: string[];
-	  };
+export const previewRemoteDeployment = (settings: ProfileServerSettings) =>
+	invoke<RemoteDeploymentPreviewResult>('preview_remote_server_deployment', { settings });
 
-export type RemoteDeploymentProgress = {
-	completed: number;
-	total: number;
-	path: string;
-	operation: 'upload' | 'remove';
-};
+export const getStatus = () => invoke<DedicatedServerStatus>('get_dedicated_server_status');
 
-export type DedicatedServerStatus =
-	| { state: 'stopped' }
-	| {
-			state: 'running';
-			profileId: number;
-			gameSlug: string;
-			pid: number;
-			serverDir: string;
-	  };
+export const openDir = () => invoke('open_dedicated_server_dir');
 
-export function getSettings() {
-	return invoke<DedicatedServerSettings>('get_dedicated_server_settings');
-}
-
-export function setSettings(settings: DedicatedServerSettings) {
-	return invoke('set_dedicated_server_settings', { settings });
-}
-
-export function launch(
-	settings: DedicatedServerSettings,
-	password: string,
-	rememberPassword: boolean
-) {
-	return invoke<DedicatedServerStatus>('launch_dedicated_server', {
-		request: { settings, password, rememberPassword }
-	});
-}
-
-export function testRemoteConnection(
-	settings: RemoteServerSettings,
-	password: string,
-	rememberPassword: boolean
-) {
-	return invoke<RemoteConnectionTestResult>('test_remote_server_connection', {
-		request: { settings, password, rememberPassword }
-	});
-}
-
-export function deployRemote(
-	settings: RemoteServerSettings,
-	password: string,
-	rememberPassword: boolean
-) {
-	return invoke<RemoteDeploymentResult>('deploy_remote_server', {
-		request: { settings, password, rememberPassword }
-	});
-}
-
-export function previewRemoteDeployment(
-	settings: RemoteServerSettings,
-	password: string,
-	rememberPassword: boolean
-) {
-	return invoke<RemoteDeploymentPreviewResult>('preview_remote_server_deployment', {
-		request: { settings, password, rememberPassword }
-	});
-}
-
-export function getStatus() {
-	return invoke<DedicatedServerStatus>('get_dedicated_server_status');
-}
-
-export function openDir() {
-	return invoke('open_dedicated_server_dir');
-}
-
-export function forceStop() {
-	return invoke('force_stop_dedicated_server');
-}
+export const forceStop = () => invoke('force_stop_dedicated_server');
