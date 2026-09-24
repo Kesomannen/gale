@@ -227,6 +227,7 @@ mod tests {
                 custom_args: String::new(),
                 server_settings: None,
                 missing: false,
+                excluded_export_files: HashSet::new(),
             }],
             favorite: false,
             active_profile_id: 1,

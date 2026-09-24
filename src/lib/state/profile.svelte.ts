@@ -10,10 +10,11 @@ class ProfilesState {
 	active: ProfileInfo | null = $derived(
 		this.list.find((profile) => profile.id === this.activeId) ?? null
 	);
+	serverLocked = $derived(this.active !== null && server.isProfileLocked(this.active.id));
 
 	activeLocked = $derived.by(() => {
 		if (this.active === null) return false;
-		if (server.isProfileLocked(this.active.id)) return true;
+		if (this.serverLocked) return true;
 		if (this.active.sync === null) return false;
 		if (auth.user === null) return true;
 

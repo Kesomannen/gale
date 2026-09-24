@@ -248,12 +248,8 @@
 				}
 			},
 			"defaultPort": 2456,
-			"clientOnlyCategories": [
-				"Client-side"
-			],
-			"serverCategories": [
-				"Server-side"
-			]
+			"clientOnlyCategories": ["Client-side"],
+			"serverCategories": ["Server-side"]
 		},
 		"backends": ["Thunderstore", "Hexium"]
 	},
