@@ -15,7 +15,7 @@
 - `Copy debug info` now sorts the mod list alphabetically
 - The custom launch argument fields now support prefixes with arguments, similarly to Steam's custom arguments (thanks [@avnyu](https://github.com/avnyu))
   - For example, this now supports cases like `cmd --arg %command%`. Previously `cmd --arg` would be treated as a single executable
-  - Includes a **breaking change**: words containing a `=` (such as `--opt=value` or `ENV=value`) were previously always passed as an environment variable. After this change, only valid environment variable names will be treated as such (meaning `--opt=value` will now be passed as an argument). 
+  - **Includes a breaking change**: words containing a `=` (such as `--opt=value` or `ENV=value`) were previously always passed as environment variables. After this change, only valid environment variable names will be treated as such (meaning `--opt=value` will now be passed as an argument).
 
 ### Fixed
 
@@ -40,7 +40,7 @@
 ### Fixed
 
 - HTTP request cache growing larger each time mods are fetched
-- String-based version comparison in update logic causing some updates to not be considered (tjanks [@bwoebi](https://github.com/bwoebi))
+- String-based version comparison in update logic causing some updates to not be considered (thanks [@bwoebi](https://github.com/bwoebi))
 - Some Thunderstore-specific language in UI text
 - Incompatibility when both Gale and Steam are installed as Flatpaks
 - Duplicate categories appearing on games with both Thunderstore and Hexium
