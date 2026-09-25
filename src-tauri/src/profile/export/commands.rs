@@ -188,23 +188,34 @@ pub fn copy_debug_info(app: AppHandle) -> Result<()> {
         .log_path()
         .and_then(|path| fs::read_to_string(path).map_err(|err| anyhow!(err)));
 
+    let mods = profile
+        .mods
+        .iter()
+        .map(|profile_mod| {
+            let source = match &profile_mod.kind {
+                ProfileModKind::Thunderstore(ts_mod) => &ts_mod.id.backend.to_string(),
+                ProfileModKind::Local(_) => "local",
+            };
+
+            let ident = profile_mod.ident();
+
+            format!(
+                "{} by {} v{} [{}]",
+                ident.name(),
+                ident.owner(),
+                ident.version(),
+                source
+            )
+        })
+        .sorted()
+        .join("\n");
+
     let content = format!(
         "OS: {}\nGale version: {}\n\nMods ({}):\n{}\n\nLatest log:\n{}",
         std::env::consts::OS,
         env!("CARGO_PKG_VERSION"),
         profile.mods.len(),
-        profile
-            .mods
-            .iter()
-            .map(|profile_mod| {
-                let ty = match &profile_mod.kind {
-                    ProfileModKind::Thunderstore(_) => "thunderstore",
-                    ProfileModKind::Local(_) => "local",
-                };
-
-                format!("{} [{}]", profile_mod.ident(), ty)
-            })
-            .join("\n"),
+        mods,
         match log {
             Ok(log) => log,
             Err(err) => format!("failed to read log: {err}"),
