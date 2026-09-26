@@ -59,7 +59,10 @@ impl PackageListing {
     }
 
     pub fn is_modpack(&self) -> bool {
-        self.categories.iter().any(|str| **str == "Modpacks")
+        // the category is called "Modpacks" on Thunderstore and "Modpack" on Hexium
+        self.categories
+            .iter()
+            .any(|str| matches!(str.as_str(), "Modpacks" | "Modpack"))
     }
 
     pub fn get_version(&self, uuid: Uuid) -> Option<&PackageVersion> {
