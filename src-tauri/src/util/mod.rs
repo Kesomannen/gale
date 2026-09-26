@@ -8,6 +8,8 @@ pub mod error;
 pub mod flatpak;
 pub mod fs;
 pub mod path;
+#[cfg(target_os = "linux")]
+pub mod webkit;
 pub mod window;
 pub mod zip;
 
