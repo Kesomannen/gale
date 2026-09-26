@@ -192,7 +192,9 @@ impl Thunderstore {
         thunderstore: &'a PackageListing,
         hexium: &'a PackageListing,
     ) -> &'a PackageListing {
-        if thunderstore.latest().parsed_version() >= hexium.latest().parsed_version() {
+        if thunderstore.latest().parsed_version() >= hexium.latest().parsed_version()
+            && (!thunderstore.is_deprecated || hexium.is_deprecated)
+        {
             thunderstore
         } else {
             hexium
