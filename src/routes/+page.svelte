@@ -37,6 +37,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { untrack } from 'svelte';
 	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
+	import ModpackUpdateDialog from '$lib/components/dialogs/ModpackUpdateDialog.svelte';
 
 	const sortOptions: SortBy[] = [
 		'custom',
@@ -104,6 +105,7 @@
 	let removeDependants: DependantsDialog;
 	let disableDependants: DependantsDialog;
 	let enableDependencies: DependantsDialog;
+	let modpackUpdateDialog: ModpackUpdateDialog;
 
 	let dependantsOpen = $state(false);
 	let dependants: DependantWithVersion[] = $state([]);
@@ -188,16 +190,24 @@
 	async function updateMod(mod: Mod | null, versionUuid?: string) {
 		if (mod === null) return;
 
+		if (await modpackUpdateDialog.openFor(mod, versionUuid, updates.get(mod.uuid))) return;
+
 		if (!versionUuid) {
 			await api.profile.update.mods([mod.uuid], false);
 		} else {
-			await api.profile.update.changeModVersion({
-				packageUuid: mod.uuid,
-				versionUuid: versionUuid,
-				backend: mod.backend
-			});
+			await api.profile.update.changeModVersions([
+				{
+					packageUuid: mod.uuid,
+					versionUuid: versionUuid,
+					backend: mod.backend
+				}
+			]);
 		}
 
+		await onUpdated();
+	}
+
+	async function onUpdated() {
 		await refresh();
 
 		if (selectedMod !== null) {
@@ -377,3 +387,5 @@
 	bind:open={foreignDownloadDialogOpen}
 	onConfirm={() => updateMod(selectedMod)}
 />
+
+<ModpackUpdateDialog bind:this={modpackUpdateDialog} {onUpdated} />

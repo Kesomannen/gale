@@ -173,6 +173,14 @@
 			{m.prefs_miscellaneous_pullBeforeLaunch_content()}
 		</TogglePref>
 
+		<TogglePref
+			label={m.prefs_miscellaneous_promptModpackVersions_title()}
+			value={prefs.promptModpackVersions}
+			set={set((value, prefs) => (prefs.promptModpackVersions = value))}
+		>
+			{m.prefs_miscellaneous_promptModpackVersions_content()}
+		</TogglePref>
+
 		<LargeHeading>
 			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}
 		</LargeHeading>

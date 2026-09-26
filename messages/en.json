@@ -299,6 +299,31 @@
 	"modListFilters_options_rating": "Rating",
 	"modListFilters_searchBar_placeholder": "Search for mods...",
 	"modListFilters_select_title": "Include",
+	"modpackUpdateDialog_ahead": "The installed version is newer than the one in the modpack.",
+	"modpackUpdateDialog_button_confirm": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"match": {
+				"countPlural=one": "Update with one mod",
+				"countPlural=other": "Update with {count} mods"
+			},
+			"selectors": [
+				"countPlural"
+			]
+		}
+	],
+	"modpackUpdateDialog_button_modpackOnly": "Only the modpack",
+	"modpackUpdateDialog_changelog": "View changelog",
+	"modpackUpdateDialog_changes_title": "Change to the modpack versions",
+	"modpackUpdateDialog_conflict": "{modpack} specifies a different version of this mod.",
+	"modpackUpdateDialog_content": "{name} {from} → {to} specifies different versions of some installed mods. Select the ones to change along with the modpack.",
+	"modpackUpdateDialog_dontShowAgain": "Don't offer this again (modpacks will be updated without changing other mods)",
+	"modpackUpdateDialog_ignored": "Updates to this mod are ignored.",
+	"modpackUpdateDialog_rollback": "The modpack rolled this mod back to an older version.",
+	"modpackUpdateDialog_title": "Update modpack",
 	"modpack_author_description": "The name of the {backend} team connected to your API token.",
 	"modpack_author_placeholder": "Enter author...",
 	"modpack_author_title": "Author",
@@ -416,6 +441,8 @@
 	"prefs_miscellaneous_fetchMods_content_2": "To manually trigger a fetch, go to ",
 	"prefs_miscellaneous_fetchMods_content_3": "File > Fetch mods",
 	"prefs_miscellaneous_fetchMods_title": "Fetch mods automatically",
+	"prefs_miscellaneous_promptModpackVersions_content": "When updating a modpack, offer to change installed mods to the versions it specifies.",
+	"prefs_miscellaneous_promptModpackVersions_title": "Offer modpack versions",
 	"prefs_miscellaneous_pullBeforeLaunch_content": "Whether to pull updates from synced profiles before launching.",
 	"prefs_miscellaneous_pullBeforeLaunch_title": "Pull before launch",
 	"prefs_miscellaneous_title": "Miscellaneous",

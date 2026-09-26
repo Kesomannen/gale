@@ -189,6 +189,7 @@ pub struct Prefs {
     pub pull_before_launch: bool,
     pub language: String,
     pub backend_skip_confirm: bool,
+    pub prompt_modpack_versions: bool,
 
     pub game_prefs: HashMap<String, GamePrefs>,
 }
@@ -252,6 +253,7 @@ impl Default for Prefs {
             zoom_factor: 1.0,
             language: "en".to_string(),
             backend_skip_confirm: false,
+            prompt_modpack_versions: true,
 
             game_prefs: HashMap::new(),
         }
@@ -321,6 +323,7 @@ impl Prefs {
         self.fetch_mods_automatically = value.fetch_mods_automatically;
         self.pull_before_launch = value.pull_before_launch;
         self.backend_skip_confirm = value.backend_skip_confirm;
+        self.prompt_modpack_versions = value.prompt_modpack_versions;
 
         self.save(app.db()).context("failed save prefs")
     }

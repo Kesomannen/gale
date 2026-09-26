@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use eyre::Context;
 use itertools::Itertools;
 use tauri::AppHandle;
+use tracing::warn;
 use uuid::Uuid;
 
 use super::install::{InstallOptions, ModInstall};
@@ -15,6 +16,7 @@ use crate::{
 };
 
 pub mod commands;
+pub mod modpack;
 
 pub struct AvailableUpdate<'a> {
     pub enabled: bool,
@@ -88,27 +90,43 @@ impl Profile {
     }
 }
 
-pub async fn change_version(mod_id: ModId, app: &AppHandle) -> Result<()> {
-    let (profile_id, install) = {
+/// Installs specific versions of mods in the active profile, replacing the current ones.
+pub async fn change_versions(mod_ids: Vec<ModId>, app: &AppHandle) -> Result<()> {
+    let (profile_id, installs) = {
         let manager = app.lock_manager();
         let thunderstore = app.lock_thunderstore();
 
         let profile = manager.active_profile();
 
-        let index = profile.index_of(mod_id.package_uuid)?;
-        let enabled = profile.mods[index].enabled;
-        let install_time = profile.mods[index].install_time;
+        let installs = mod_ids
+            .into_iter()
+            .filter_map(|mod_id| {
+                let Ok(index) = profile.index_of(mod_id.package_uuid) else {
+                    warn!(
+                        ?mod_id,
+                        "mod was removed from the profile, skipping version change"
+                    );
+                    return None;
+                };
 
-        (
-            profile.id,
-            ModInstall::try_from_id(mod_id, &thunderstore)?
-                .with_state(enabled)
-                .with_index(index)
-                .with_time(install_time),
-        )
+                let enabled = profile.mods[index].enabled;
+                let install_time = profile.mods[index].install_time;
+
+                Some(
+                    ModInstall::try_from_id(mod_id, &thunderstore).map(|install| {
+                        install
+                            .with_state(enabled)
+                            .with_index(index)
+                            .with_time(install_time)
+                    }),
+                )
+            })
+            .collect::<Result<Vec<_>>>()?;
+
+        (profile.id, installs)
     };
 
-    install_updates(vec![install], profile_id, app).await
+    install_updates(installs, profile_id, app).await
 }
 
 pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: &AppHandle) -> Result<()> {

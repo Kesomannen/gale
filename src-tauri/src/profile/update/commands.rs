@@ -1,13 +1,30 @@
 use tauri::{AppHandle, command};
 use uuid::Uuid;
 
+use super::modpack::ModpackChange;
 use crate::{state::ManagerExt, thunderstore::ModId, util::cmd::Result};
 
 #[command]
-pub async fn change_mod_version(id: ModId, app: AppHandle) -> Result<()> {
-    super::change_version(id, &app).await?;
+pub async fn change_mod_versions(ids: Vec<ModId>, app: AppHandle) -> Result<()> {
+    super::change_versions(ids, &app).await?;
 
     Ok(())
+}
+
+#[command]
+pub async fn get_modpack_changes(id: ModId, app: AppHandle) -> Result<Vec<ModpackChange>> {
+    let manager = app.lock_manager();
+    let thunderstore = app.lock_thunderstore();
+    let install_queue = app.install_queue().lock();
+
+    let profile = manager.active_profile();
+    if install_queue.has_mod(id.package_uuid, profile.id) {
+        return Ok(Vec::new()); // the modpack is already being updated
+    }
+
+    let target = id.borrow(&thunderstore)?;
+
+    Ok(profile.modpack_changes(target, &thunderstore))
 }
 
 #[command]

@@ -279,6 +279,19 @@ export type AvailableUpdate = {
 	new: string;
 };
 
+export type ModpackChangeKind = 'upgrade' | 'rollback' | 'ahead';
+
+export type ModpackChange = {
+	fullName: string;
+	id: ModId;
+	old: string;
+	new: string;
+	kind: ModpackChangeKind;
+	conflict: { name: string; version: string } | null;
+	ignored: boolean;
+	recommended: boolean;
+};
+
 export type ProfileQuery = {
 	mods: Mod[];
 	totalModCount: number;
@@ -347,6 +360,7 @@ export type Prefs = {
 	language: string;
 	gamePrefs: Map<string, GamePrefs>;
 	backendSkipConfirm: boolean;
+	promptModpackVersions: boolean;
 };
 
 export enum Backends {
