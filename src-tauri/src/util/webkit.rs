@@ -1,6 +1,6 @@
 use std::{env, path::Path};
 
-use tracing::info;
+use tracing::{debug, info};
 
 const DISABLE_DMABUF_RENDERER: &str = "WEBKIT_DISABLE_DMABUF_RENDERER";
 
@@ -23,10 +23,15 @@ pub unsafe fn apply_workarounds() {
 
     // unlike /sys/module/nvidia, this is also visible inside the flatpak sandbox
     if !Path::new("/proc/driver/nvidia/version").exists() {
+        debug!("NVIDIA driver not detected, keeping WebKit DMA-BUF renderer enabled");
         return;
     }
 
-    info!("NVIDIA driver detected, disabling WebKit DMA-BUF renderer");
+    info!(
+        "NVIDIA driver detected, disabling WebKit DMA-BUF renderer to prevent crashes on launch. \
+         This turns off GPU acceleration of the UI, which may degrade performance. \
+         To enable it again, set {DISABLE_DMABUF_RENDERER}=0"
+    );
 
     // SAFETY: guaranteed by the caller
     unsafe { env::set_var(DISABLE_DMABUF_RENDERER, "1") };
