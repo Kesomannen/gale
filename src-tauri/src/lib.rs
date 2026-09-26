@@ -109,6 +109,12 @@ pub fn run() {
         eprintln!("failed to set up logger: {err:#}");
     });
 
+    // SAFETY: no other threads have been spawned yet
+    #[cfg(target_os = "linux")]
+    unsafe {
+        util::webkit::apply_workarounds();
+    }
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             is_flatpak,
