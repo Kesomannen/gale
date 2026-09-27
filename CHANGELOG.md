@@ -5,10 +5,17 @@
 ### Added
 
 - Copy link context menu option to copy a mod's Thunderstore or Hexium URL
+- Ukrainian translation (thanks [@VoronUA1](https://github.com/VoronUA1))
+- Note in the modpack upload dialog in case the modpack was uploaded as a hidden mod (thanks [@bwoebi](https://github.com/bwoebi))
 
 ### Changed
 
 - Download retries now use range queries to pick up where the last request failed, instead of restarting the entire download
+- `Copy debug info` now prints mod names in a more human-readable format instead of the raw dependency strings
+- `Copy debug info` now sorts the mod list alphabetically
+- The custom launch argument fields now support prefixes with arguments, similarly to Steam's custom arguments (thanks [@avnyu](https://github.com/avnyu))
+  - For example, this now supports cases like `cmd --arg %command%`. Previously `cmd --arg` would be treated as a single executable
+  - **Includes a breaking change**: words containing a `=` (such as `--opt=value` or `ENV=value`) were previously always passed as environment variables. After this change, only valid environment variable names will be treated as such (meaning `--opt=value` will now be passed as an argument).
 
 ### Fixed
 
@@ -28,12 +35,12 @@
 
 - HTTP request cache now has a max size of 100 MB
   - Upon reaching the limit, the whole cache is cleared
-- Empty folders are now removed when unused mods are cleared from the cache  (thanks [@jamalkamaladdin](https://github.com/jamalkamaladdin))
+- Empty folders are now removed when unused mods are cleared from the cache (thanks [@jamalkamaladdin](https://github.com/jamalkamaladdin))
 
 ### Fixed
 
 - HTTP request cache growing larger each time mods are fetched
-- String-based version comparison in update logic causing some updates to not be considered (tjanks [@bwoebi](https://github.com/bwoebi))
+- String-based version comparison in update logic causing some updates to not be considered (thanks [@bwoebi](https://github.com/bwoebi))
 - Some Thunderstore-specific language in UI text
 - Incompatibility when both Gale and Steam are installed as Flatpaks
 - Duplicate categories appearing on games with both Thunderstore and Hexium
