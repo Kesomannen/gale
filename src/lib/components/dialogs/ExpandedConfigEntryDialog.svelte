@@ -67,6 +67,7 @@
 >
 	{#if config.expandedEntry && config.expandedEntry.entry.value.type === 'string'}
 		<TabsMenu
+			class="my-1"
 			bind:value={mode}
 			options={[
 				{

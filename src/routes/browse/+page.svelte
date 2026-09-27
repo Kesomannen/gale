@@ -6,7 +6,8 @@
 		type ModId,
 		Backend,
 		type ModContextItem,
-		type DeduplicatedMod
+		type DeduplicatedMod,
+		type BrowsedMod
 	} from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
@@ -25,7 +26,12 @@
 	import { pushInfoToast } from '$lib/toast';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
-	import { shouldWarnForeignDownload } from '$lib/util';
+	import {
+		extractDeduplicatedMod,
+		getPreferredBackend,
+		resolveModContextItems,
+		shouldWarnForeignDownload
+	} from '$lib/util';
 	import DeduplicatedModDetails from '$lib/components/mod-list/DeduplicatedModDetails.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
@@ -44,29 +50,17 @@
 		...defaultContextItems
 	];
 
-	let mods: DeduplicatedMod<Mod>[] = $state([]);
+	let mods: BrowsedMod[] = $state([]);
 
 	let maxCount: number = $state(20);
-	let selectedMod: DeduplicatedMod<Mod> | null = $state(null);
+	let selectedMod: BrowsedMod | null = $state(null);
 	let foreignDownloadDialogOpen = $state(false);
 
 	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
 
-	const listedMods = $derived(
-		mods.map((mod) => {
-			if (mod.thunderstore) {
-				return mod.thunderstore;
-			} else if (mod.hexium) {
-				return mod.hexium;
-			} else {
-				throw new Error('Mod is missing both thunderstore and hexium data');
-			}
-		})
-	);
-
 	onMount(() => {
-		listen<DeduplicatedMod<Mod>[]>('mod_query_result', (evt) => {
+		listen<BrowsedMod[]>('mod_query_result', (evt) => {
 			mods = evt.payload;
 		}).then((unlisten) => {
 			unlistenFromQuery = unlisten;
@@ -81,12 +75,12 @@
 	let hasRefreshed = $state(false);
 	let refreshing = false;
 
-	function deduplicatedUuid(mod: DeduplicatedMod<Mod>) {
-		return mod.thunderstore?.uuid ?? mod.hexium?.uuid;
+	function itemUuid(item: BrowsedMod) {
+		return item.data.thunderstore?.uuid ?? item.data.hexium?.uuid;
 	}
 
-	function findModByUuid(uuid: string | undefined) {
-		return mods.find((mod) => deduplicatedUuid(mod) === uuid) ?? null;
+	function findItemByUuid(uuid: string | undefined) {
+		return mods.find((mod) => itemUuid(mod) === uuid) ?? null;
 	}
 
 	async function refresh() {
@@ -96,7 +90,7 @@
 		mods = await api.thunderstore.query({ ...modQuery.current, maxCount });
 		if (selectedMod) {
 			// isInstalled might have changed
-			selectedMod = findModByUuid(deduplicatedUuid(selectedMod));
+			selectedMod = findItemByUuid(itemUuid(selectedMod));
 		}
 
 		refreshing = false;
@@ -129,10 +123,10 @@
 	function onModClicked(evt: MouseEvent, mod: Mod) {
 		if (evt.ctrlKey) {
 			//installLatest(mod);
-		} else if (selectedMod && deduplicatedUuid(selectedMod) === mod.uuid) {
+		} else if (selectedMod && itemUuid(selectedMod) === mod.uuid) {
 			selectedMod = null;
 		} else {
-			selectedMod = findModByUuid(mod.uuid);
+			selectedMod = findItemByUuid(mod.uuid);
 		}
 	}
 
@@ -156,7 +150,7 @@
 			<ProfileLockedBanner class="mb-1" />
 		{/if}
 
-		<ModList mods={listedMods} queryArgs={modQuery.current} bind:maxCount>
+		<ModList {mods} queryArgs={modQuery.current} bind:maxCount>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
 					<HelpCard title={m.browse_modList_content_1()} icon="mdi:store-search" class="mt-4">
@@ -166,13 +160,16 @@
 			{/snippet}
 
 			{#snippet item({ mod })}
+				{@const shownMod = extractDeduplicatedMod(mod.data, getPreferredBackend(mod.data))!}
+
 				<ModListItem
-					{mod}
+					mod={shownMod}
+					isInstalled={mod.isInstalled}
 					{contextItems}
-					selected={selectedMod !== null && deduplicatedUuid(selectedMod) === mod.uuid}
+					selected={selectedMod !== null && itemUuid(selectedMod) === shownMod.uuid}
 					locked={profiles.activeLocked}
-					oninstall={() => installLatest(mod)}
-					onclick={(evt) => onModClicked(evt, mod)}
+					oninstall={() => installLatest(shownMod)}
+					onclick={(evt) => onModClicked(evt, shownMod)}
 				/>
 			{/snippet}
 		</ModList>
@@ -180,13 +177,13 @@
 
 	{#if selectedMod}
 		<DeduplicatedModDetails
-			mod={selectedMod}
 			{locked}
+			mod={selectedMod.data}
 			{contextItems}
 			onclose={() => (selectedMod = null)}
 		>
 			{#snippet children({ mod })}
-				<InstallModButton {mod} {install} {locked} />
+				<InstallModButton {mod} isInstalled={selectedMod?.isInstalled} {install} {locked} />
 			{/snippet}
 		</DeduplicatedModDetails>
 	{/if}

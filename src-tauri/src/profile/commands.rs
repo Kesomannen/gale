@@ -11,11 +11,11 @@ use uuid::Uuid;
 use super::{Dependant, Profile, actions::ActionResult};
 use crate::{
     game::{self, Game, platform::Platform},
-    profile::FrontendManagedGame,
+    profile::{FrontendManagedGame, query::FrontendProfileMod},
     state::ManagerExt,
     thunderstore::{
-        Backend, BorrowedMod, FromBackend, FrontendProfileMod, ModId, Thunderstore, VersionIdent,
-        cache::MarkdownKind, query::QueryModsArgs,
+        Backend, BorrowedMod, FromBackend, ModId, Thunderstore, VersionIdent, cache::MarkdownKind,
+        query::QueryModsArgs,
     },
     util::cmd::Result,
 };

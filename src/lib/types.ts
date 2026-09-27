@@ -117,22 +117,37 @@ export type Mod = {
 	suggestions: string[] | null;
 	isPinned: boolean;
 	isDeprecated: boolean;
-	isInstalled: boolean | undefined;
 	containsNsfw: boolean;
 	uuid: string;
 	versionUuid: string;
 	lastUpdated: string | null;
 	versions: ModVersion[];
 	type: ModType;
-	enabled?: boolean | null;
 	icon: string | null;
-	configFile: string | null;
 	backend: Backend;
 };
 
 export type DeduplicatedMod<T> = {
 	thunderstore: T | null;
 	hexium: T | null;
+};
+
+export type BrowsedMod = {
+	isInstalled: boolean;
+	data: DeduplicatedMod<Mod>;
+};
+
+export type ProfileMod = {
+	enabled: boolean;
+	configFile: string | null;
+	alternateBackend: AlternateBackendInfo | null;
+	data: Mod;
+};
+
+export type AlternateBackendInfo = {
+	backend: Backend;
+	latestVersion: string;
+	latestVersionUuid: string;
 };
 
 export type ModVersion = {
@@ -285,7 +300,7 @@ export type AvailableUpdate = {
 };
 
 export type ProfileQuery = {
-	mods: Mod[];
+	mods: ProfileMod[];
 	totalModCount: number;
 	unknownMods: Dependant[];
 	updates: AvailableUpdate[];
@@ -378,12 +393,12 @@ export type ContextItem = {
 	children?: ContextItem[];
 };
 
-export type ModContextItem = {
+export type ModContextItem<T = Mod> = {
 	label: string;
 	icon?: string;
-	showFor?: (mod: Mod, locked: boolean) => boolean;
-	onclick: (mod: Mod) => void;
-	children?: (mod: Mod) => ModContextItem[];
+	showFor?: (mod: T, locked: boolean) => boolean;
+	onclick: (mod: T) => void;
+	children?: (mod: T) => ModContextItem<T>[];
 };
 
 export type Zoom = { factor: number } | { delta: number };
@@ -405,7 +420,7 @@ export type Folder = {
 export type ListItem =
 	| {
 			type: 'mod';
-			mod: Mod;
+			mod: ProfileMod;
 	  }
 	| {
 			type: 'folder';

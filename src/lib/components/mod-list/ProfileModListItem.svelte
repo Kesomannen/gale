@@ -1,15 +1,15 @@
 <script lang="ts">
-	import type { AvailableUpdate, Mod, ModContextItem } from '../../types';
+	import type { AvailableUpdate, Mod, ModContextItem, ProfileMod } from '../../types';
 	import { Switch } from 'bits-ui';
 	import type { MouseEventHandler } from 'svelte/elements';
 	import ModItemContext from './ModItemContext.svelte';
 	import ProfileModListItemNoContext from './ProfileModListItemNoContext.svelte';
 
 	type Props = {
-		mod: Mod;
+		mod: ProfileMod;
 		index?: number;
 		selected: boolean;
-		contextItems: ModContextItem[];
+		contextItems: ModContextItem<ProfileMod>[];
 		locked: boolean;
 		ontoggle?: (newState: boolean) => void;
 		onclick?: MouseEventHandler<HTMLDivElement>;
@@ -19,7 +19,7 @@
 	let { mod, index, selected, contextItems, locked, ontoggle, onclick, update }: Props = $props();
 </script>
 
-<ModItemContext {mod} {locked} {contextItems}>
+<ModItemContext uuid={mod.data.uuid} {mod} {locked} {contextItems}>
 	<ProfileModListItemNoContext {mod} {selected} {index} {onclick} {update}>
 		{#snippet trailing()}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -27,7 +27,7 @@
 			<div class="contents" onclick={(evt) => evt.stopPropagation()}>
 				<Switch.Root
 					disabled={locked}
-					checked={mod.enabled ?? true}
+					checked={mod.enabled}
 					onCheckedChange={ontoggle}
 					class="group dark:data-[state=checked]:bg-accent-700 dark:data-[state=checked]:hover:bg-accent-600 dark:bg-primary-600 dark:hover:bg-primary-500 data-[state=checked]:bg-accent-500 data-[state=checked]:hover:bg-accent-400 bg-primary-500 hover:bg-primary-400 mr-1 flex h-6 w-12 shrink-0 rounded-full px-1 py-1"
 				>

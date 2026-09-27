@@ -1,21 +1,22 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	import VirtualList from '$lib/components/ui/VirtualList.svelte';
 	import type { Mod, QueryModsArgsWithoutMax } from '$lib/types';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
-		mods: Mod[];
+		mods: T[];
 		maxCount: number;
 		queryArgs: QueryModsArgsWithoutMax;
 		placeholder?: Snippet;
-		item: Snippet<[{ mod: Mod; index: number }]>;
+		item: Snippet<[{ mod: T; index: number }]>;
+		rowId?: (mod: T) => string;
 	};
 
-	let { mods, maxCount = $bindable(20), queryArgs, placeholder, item }: Props = $props();
+	let { mods, maxCount = $bindable(20), queryArgs, placeholder, item, rowId }: Props = $props();
 
 	let listStart = $state(0);
 	let listEnd = $state(0);
-	let virtualList: VirtualList<Mod, string> | null = $state(null);
+	let virtualList: VirtualList<T, string> | null = $state(null);
 
 	$effect(() => {
 		if (listEnd > mods.length - 4 && mods.length === maxCount) {
@@ -35,8 +36,8 @@
 	</div>
 {:else}
 	<VirtualList
+		{rowId}
 		items={mods}
-		rowId={(mod) => mod.uuid}
 		bind:this={virtualList}
 		bind:start={listStart}
 		bind:end={listEnd}

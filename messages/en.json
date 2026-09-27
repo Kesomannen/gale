@@ -270,7 +270,7 @@
 	"modDetails_changeLog": "Changelog",
 	"modDetails_dependencies": "Dependencies",
 	"modDetails_dependencies_title": "Dependencies of {name}",
-	"modDetails_deprecated": "This mod has been marked as deprecated, and it's suggested another alternative is used. ",
+	"modDetails_deprecated": "This mod has been marked as deprecated.",
 	"modDetails_details": "Details",
 	"modDetails_editConfig": "Edit config",
 	"modDetails_lastUpdated": "Last updated {time}",
@@ -494,20 +494,15 @@
 	"unknownModsBanner_dialog_content_2": "They may have been removed from the modding platform, or installed from a source you have since disabled.",
 	"unknownModsBanner_ignore_content": "Ignore",
 	"unknownModsBanner_uninstall_content": "Uninstall",
-	"updateAllBanner_button": "Update all",
+	"updateAllBanner_button": "Click to review.",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",

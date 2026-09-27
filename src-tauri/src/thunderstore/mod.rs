@@ -121,14 +121,15 @@ impl Hash for ModId {
 impl ModId {
     /// Borrows the mod from [`Thunderstore`].
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
-        thunderstore.get_mod(
-            self.package_uuid,
-            self.version_uuid,
-            FromBackend::Only(self.backend),
-        )
+        thunderstore.get_mod(self.package_uuid, self.version_uuid, self.backend)
     }
 }
 
+/// A mod that exists on one or both backends.
+///
+/// Mod UUIDs on Hexium mimic those on Thunderstore, so we can deduplicate mods from each
+/// by UUID. This struct is then used by the frontend to display a single combined mod entry for
+/// each unique mod.
 #[derive(Debug, Serialize)]
 pub struct DeduplicatedMod<T> {
     pub thunderstore: Option<T>,
@@ -148,6 +149,10 @@ impl<T> DeduplicatedMod<T> {
             thunderstore: self.thunderstore.map(&mut f),
             hexium: self.hexium.map(f),
         }
+    }
+
+    fn first(&self) -> Option<&T> {
+        self.thunderstore.as_ref().or(self.hexium.as_ref())
     }
 }
 
@@ -177,7 +182,8 @@ pub enum FromBackend {
     /// Use any backend that has the mod with no preference. This currently prefers Thunderstore,
     /// but that may change at any time.
     Any,
-    /// Always prefer the given backend, but fall back to the other if the mod is not found.
+    /// Always prefer the given backend even if the mod is older on that backend,
+    /// but fall back to the other if the mod is not found.
     Prefer(Backend),
     /// Check both backends for the mod. If both backends have the mod, prefer the one with the higher version
     /// and deprecation status. If only one backend has the mod, use that one.
@@ -252,8 +258,7 @@ impl Thunderstore {
             (Ok(preferred), Ok(fallback)) if matches!(from, FromBackend::PreferIfEqual(_)) => {
                 Ok(cmp(preferred, fallback))
             }
-            (Ok(preferred), Ok(_)) => Ok(preferred),
-            (Ok(preferred), Err(_)) => Ok(preferred),
+            (Ok(preferred), _) => Ok(preferred),
             (Err(_), Ok(fallback)) => Ok(fallback),
             (Err(e), Err(_)) => Err(e),
         }
@@ -286,6 +291,11 @@ impl Thunderstore {
         }
     }
 
+    /// Compares two packages to determine which one should be preferred when
+    /// FromBackend::PreferIfEqual is used.
+    ///
+    /// Deprecation status is first checked (deprecated packages are always ordered
+    /// less than non-deprecated ones), and then the version is compared (higher versions are preferred).
     fn cmp_packages(
         a_deprecated: bool,
         a_version: Option<&semver::Version>,
@@ -410,8 +420,11 @@ impl<'a> Iterator for Dependencies<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let (current_ident, current_backend) = self.queue.pop_front()?;
-            let Ok(current) = self.thunderstore.find_ident(current_ident, current_backend) else {
+            let (current_ident, preferred_backend) = self.queue.pop_front()?;
+            let Ok(current) = self
+                .thunderstore
+                .find_ident(current_ident, FromBackend::Prefer(preferred_backend))
+            else {
                 continue;
             };
 
@@ -420,7 +433,7 @@ impl<'a> Iterator for Dependencies<'a> {
                     continue;
                 }
 
-                self.queue.push_back((dependency, current_backend));
+                self.queue.push_back((dependency, current.package.backend));
             }
 
             break Some(current);
@@ -436,7 +449,15 @@ impl Thunderstore {
     ///
     /// Duplicates of the same package are removed. The specific
     /// version of a package that is chosen depends on which
-    /// is encountered first.
+    /// is encountered first in the search.
+    ///
+    /// The second element in the tuple is the backend to prefer
+    /// when searching for the dependency. If the dependency is not found
+    /// on that backend, the other backend will be used instead.
+    ///
+    /// Backends are propagated from the parent mod to its dependencies,
+    /// so if a mod is not found on the preferred backend, its dependencies
+    /// will also be searched on the other backend.
     pub fn dependencies<'a>(
         &'a self,
         dependencies: impl IntoIterator<Item = (&'a VersionIdent, Backend)>,

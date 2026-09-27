@@ -27,7 +27,7 @@
 	import InfoBox from '../ui/InfoBox.svelte';
 	import { m } from '$lib/paraglide/messages';
 
-	const uuidRegex =
+	const UUID_REGEX =
 		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
 
 	let open: boolean = $state(false);
@@ -64,7 +64,7 @@
 	async function submitKey() {
 		loading = true;
 
-		let type = uuidRegex.test(key.trim()) ? 'legacy' : 'sync';
+		let type = UUID_REGEX.test(key.trim()) ? 'legacy' : 'sync';
 
 		try {
 			if (type === 'legacy') {
@@ -135,9 +135,6 @@
 		pasteFromClipboard();
 	}
 
-	const UUID_REGEX =
-		/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
-
 	async function pasteFromClipboard() {
 		try {
 			const text = await readText().then((text) => text.trim());
@@ -188,6 +185,7 @@
 		</div>
 	{:else}
 		<TabsMenu
+			class="my-1"
 			bind:value={mode}
 			options={[
 				{ value: 'new', label: m.importProfileDialog_tabsMenu_option_new() },

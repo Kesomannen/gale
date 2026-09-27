@@ -9,7 +9,7 @@ use crate::{
     logger,
     profile::{self, import::commands::FrontendImportData},
     state::ManagerExt,
-    thunderstore::{self, Backend, IntoFrontendMod},
+    thunderstore::{self, Backend, FrontendMod},
 };
 
 pub fn handle(app: &AppHandle, url: String) -> bool {
@@ -111,9 +111,8 @@ async fn handle_install(package: InstallPackage<'_>, app: AppHandle) -> Result<(
         package.version,
         package.backend,
     )?;
-    let frontend_mod = borrowed_mod.into_frontend(None);
 
-    app.emit_buffered("install_mod", &frontend_mod);
+    app.emit_buffered("install_mod", &FrontendMod::from(borrowed_mod));
 
     Ok(())
 }

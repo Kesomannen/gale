@@ -1,12 +1,14 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, path::PathBuf};
 
 use chrono::{DateTime, Utc};
 use eyre::Result;
+use serde::Serialize;
 use tracing::warn;
+use uuid::Uuid;
 
 use super::{Dependant, LocalMod, Profile, ProfileMod, ProfileModKind};
 use crate::thunderstore::{
-    self, BorrowedMod, FrontendProfileMod, IntoFrontendMod, Thunderstore,
+    self, Backend, BorrowedMod, FrontendMod, Thunderstore,
     query::{QueryModsArgs, Queryable, SortBy, SortOrder},
 };
 
@@ -46,6 +48,13 @@ impl<'a> QueryableProfileMod<'a> {
 }
 
 impl Queryable for QueryableProfileMod<'_> {
+    fn uuid(&self) -> Uuid {
+        match &self.kind {
+            QueryableProfileModKind::Local(local) => local.uuid(),
+            QueryableProfileModKind::Thunderstore(remote) => remote.uuid(),
+        }
+    }
+
     fn full_name(&self) -> &str {
         use QueryableProfileModKind as Kind;
 
@@ -115,6 +124,25 @@ impl Queryable for QueryableProfileMod<'_> {
     }
 }
 
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendProfileMod {
+    pub enabled: bool,
+    pub config_file: Option<PathBuf>,
+    /// Whether the mod is also available on another backend. If so, the frontend
+    /// can display a context option to switch to the other backend.
+    pub alternate_backend: Option<AlternateBackend>,
+    pub data: FrontendMod,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AlternateBackend {
+    pub backend: Backend,
+    pub latest_version: String,
+    pub latest_version_uuid: Uuid,
+}
+
 impl Profile {
     pub(super) fn query_mods(
         &self,
@@ -142,30 +170,55 @@ impl Profile {
                 }
             });
 
-        let found = thunderstore::query::query_mods(args, mods, true)
+        let query_result = thunderstore::query::query_mods(args, mods)
+            .into_iter()
+            .take(args.max_count.unwrap_or(usize::MAX))
             .map(|queryable| {
-                let (data, uuid) = match queryable.kind {
+                let (data, uuid, alternate_backend) = match queryable.kind {
                     QueryableProfileModKind::Local(local) => {
-                        (local.clone().into_frontend(Some(self)), local.uuid)
+                        (FrontendMod::from(local.clone()), local.uuid, None)
                     }
                     QueryableProfileModKind::Thunderstore(remote) => {
-                        (remote.into_frontend(Some(self)), remote.package.uuid)
+                        // check if the mod also exists on the other backend
+                        let alternate_backend = remote.backend().other();
+                        let alternate_backend = thunderstore
+                            .get_package(remote.package.uuid, alternate_backend)
+                            .ok()
+                            .map(|pkg| {
+                                let latest = pkg.latest_released();
+                                AlternateBackend {
+                                    backend: alternate_backend,
+                                    latest_version: latest.version().to_string(),
+                                    latest_version_uuid: latest.uuid,
+                                }
+                            });
+
+                        (
+                            FrontendMod::from(remote),
+                            remote.package.uuid,
+                            alternate_backend,
+                        )
                     }
                 };
 
                 FrontendProfileMod {
                     data,
                     enabled: queryable.enabled,
+                    alternate_backend,
                     config_file: self.linked_config.get(&uuid).cloned(),
                 }
             })
             .collect();
 
-        (found, unknown)
+        (query_result, unknown)
     }
 }
 
 impl Queryable for LocalMod {
+    fn uuid(&self) -> Uuid {
+        self.uuid
+    }
+
     fn full_name(&self) -> &str {
         &self.name
     }

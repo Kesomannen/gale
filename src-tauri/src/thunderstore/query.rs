@@ -7,13 +7,14 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tracing::info;
+use uuid::Uuid;
 
 use super::{
     Backend, BorrowedMod, DeduplicatedMod, Thunderstore,
-    models::{FrontendMod, FrontendModKind, FrontendVersion, IntoFrontendMod},
+    models::{FrontendMod, FrontendModKind, FrontendVersion},
 };
 use crate::{
-    profile::{LocalMod, ModManager, Profile},
+    profile::{LocalMod, ModManager},
     state::ManagerExt,
     util,
 };
@@ -68,7 +69,7 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
             if let Some(args) = &thunderstore.current_query {
                 let manager = app.lock_manager();
 
-                let mods = thunderstore.query_mods(args, &manager);
+                let mods = thunderstore.query_mods(args, &manager).collect_vec();
                 app.emit_buffered("mod_query_result", &mods);
 
                 if thunderstore.packages_fetched(&app, manager.active_game) {
@@ -85,6 +86,11 @@ pub async fn query_loop(app: AppHandle) -> Result<()> {
 /// Abstracts logic needed for `query_mods`, allowing it to be reused
 /// for both Thunderstore and profile querying.
 pub trait Queryable {
+    /// The package's UUID.
+    ///
+    /// This is not unique across backends, but should be unique for every package within a backend.
+    fn uuid(&self) -> uuid::Uuid;
+
     /// The package's full name, including the author.
     fn full_name(&self) -> &str;
 
@@ -112,6 +118,10 @@ pub trait Queryable {
 }
 
 impl Queryable for BorrowedMod<'_> {
+    fn uuid(&self) -> uuid::Uuid {
+        self.package.uuid
+    }
+
     fn full_name(&self) -> &str {
         self.package.ident.as_str()
     }
@@ -176,10 +186,10 @@ impl Queryable for BorrowedMod<'_> {
     }
 }
 
-impl IntoFrontendMod for BorrowedMod<'_> {
-    fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod {
-        let pkg = self.package;
-        let vers = pkg.get_version(self.version.uuid).unwrap();
+impl From<BorrowedMod<'_>> for FrontendMod {
+    fn from(borrowed_mod: BorrowedMod<'_>) -> FrontendMod {
+        let pkg = borrowed_mod.package;
+        let vers = pkg.get_version(borrowed_mod.version.uuid).unwrap();
         FrontendMod {
             name: pkg.name().to_owned(),
             description: Some(vers.description.to_string()),
@@ -207,7 +217,6 @@ impl IntoFrontendMod for BorrowedMod<'_> {
             contains_nsfw: pkg.has_nsfw_content,
             uuid: pkg.uuid,
             version_uuid: vers.uuid,
-            is_installed: profile.is_some_and(|profile| profile.has_mod(pkg.uuid)),
             last_updated: Some(pkg.versions[0].date_created.to_rfc3339()),
             versions: pkg
                 .versions
@@ -224,8 +233,8 @@ impl IntoFrontendMod for BorrowedMod<'_> {
     }
 }
 
-impl IntoFrontendMod for LocalMod {
-    fn into_frontend(self, _profile: Option<&Profile>) -> FrontendMod {
+impl From<LocalMod> for FrontendMod {
+    fn from(local_mod: LocalMod) -> FrontendMod {
         let LocalMod {
             name,
             description,
@@ -235,7 +244,7 @@ impl IntoFrontendMod for LocalMod {
             dependencies,
             icon,
             ..
-        } = self;
+        } = local_mod;
 
         FrontendMod {
             name,
@@ -251,6 +260,13 @@ impl IntoFrontendMod for LocalMod {
     }
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModListQueryItem {
+    pub is_installed: bool,
+    pub data: DeduplicatedMod<FrontendMod>,
+}
+
 impl Thunderstore {
     /// Sorts and filters `mods` according to `args` and converts the
     /// results to [`FrontendMod`].
@@ -258,29 +274,33 @@ impl Thunderstore {
         &self,
         args: &QueryModsArgs,
         manager: &ModManager,
-    ) -> Vec<DeduplicatedMod<FrontendMod>> {
+    ) -> impl Iterator<Item = ModListQueryItem> {
         let included_mods = self
             .latest()
             .filter(|borrowed| !manager.hidden_mods.contains(&borrowed.package.uuid));
 
-        let results = query_mods(args, included_mods, false);
+        let results = query_mods(args, included_mods);
 
         let profile = manager.active_profile();
 
-        deduplicate_results(results, args.max_count)
-            .map(|deduplicated| {
-                deduplicated.map(|backend_mod| backend_mod.into_frontend(Some(profile)))
-            })
-            .collect()
+        deduplicate_results(results, args.max_count.unwrap_or(usize::MAX)).map(|deduplicated| {
+            let deduplicated = deduplicated.map(|backend_mod| FrontendMod::from(backend_mod));
+            let is_installed = deduplicated
+                .first()
+                .map_or(false, |m| profile.has_mod(m.uuid));
+
+            ModListQueryItem {
+                is_installed,
+                data: deduplicated,
+            }
+        })
     }
 }
 
 /// Sorts and filters `mods` according to `args`.
-pub fn query_mods<'a, T, I>(
-    args: &QueryModsArgs,
-    mods: I,
-    use_max_count: bool,
-) -> impl Iterator<Item = T> + 'a
+/// Does **not** limit the number of results according to `args.max_count`.
+/// Limiting is instead left up to the caller to handle.
+pub fn query_mods<'a, T, I>(args: &QueryModsArgs, mods: I) -> Vec<T>
 where
     T: Queryable + 'a,
     I: Iterator<Item = T> + 'a,
@@ -312,31 +332,38 @@ where
 
     results.sort_by(|a, b| a.cmp(b, args));
 
-    results.into_iter().take(if use_max_count {
-        args.max_count.unwrap_or(usize::MAX)
-    } else {
-        usize::MAX
-    })
+    results
 }
 
+/// Combine query results from multiple backends into a single list of [`DeduplicatedMod`], merging by UUID.
 fn deduplicate_results<T>(
-    mut results: impl Iterator<Item = T>,
-    max_count: Option<usize>,
+    results: impl IntoIterator<Item = T>,
+    max_count: usize,
 ) -> impl Iterator<Item = DeduplicatedMod<T>>
 where
     T: Queryable,
 {
-    let mut deduped_mods: IndexMap<String, DeduplicatedMod<T>> = IndexMap::new();
+    use indexmap::map::Entry;
 
-    while max_count.is_none_or(|max_count| deduped_mods.len() < max_count) {
-        let Some(result) = results.next() else {
-            break;
-        };
+    let mut deduped_mods: IndexMap<Uuid, DeduplicatedMod<T>> = IndexMap::new();
 
-        deduped_mods
-            .entry(result.full_name().to_string())
-            .or_default()
-            .set(result.backend(), result);
+    // We need to loop through all results as packages from different sources
+    // might be ranked differently, and we want to make sure we get every duplicate.
+    for result in results {
+        let accepting_new_mods = deduped_mods.len() < max_count;
+        let entry = deduped_mods.entry(result.uuid());
+
+        match entry {
+            Entry::Occupied(mut occupied_entry) => {
+                occupied_entry.get_mut().set(result.backend(), result);
+            }
+            Entry::Vacant(entry) if accepting_new_mods => {
+                let mut deduplicated_mod = DeduplicatedMod::default();
+                deduplicated_mod.set(result.backend(), result);
+                entry.insert(deduplicated_mod);
+            }
+            Entry::Vacant(_) => (),
+        }
     }
 
     deduped_mods.into_values()

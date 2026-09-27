@@ -42,6 +42,13 @@ impl FromStr for Backend {
 }
 
 impl Backend {
+    pub fn other(self) -> Self {
+        match self {
+            Backend::Thunderstore => Backend::Hexium,
+            Backend::Hexium => Backend::Thunderstore,
+        }
+    }
+
     pub fn index_url(self, game: Game) -> Option<String> {
         if game.backends.contains(&self) {
             Some(match self {

@@ -3,14 +3,14 @@
 	import { isSortable } from '@dnd-kit/svelte/sortable';
 	import { PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
 	import ReorderableMod from './ReorderableMod.svelte';
-	import type { ListItem, Mod } from '$lib/types';
+	import type { ListItem, ProfileMod } from '$lib/types';
 	import type { Snippet } from 'svelte';
 	import VirtualList from '../ui/VirtualList.svelte';
 	import ProfileModListItemNoContext from '../mod-list/ProfileModListItemNoContext.svelte';
 
 	type Props = {
 		items: ListItem[];
-		mod: Snippet<[{ mod: Mod; index: number }]>;
+		mod: Snippet<[{ mod: ProfileMod; index: number }]>;
 		onmove?: (item: ListItem, fromIndex: number, toIndex: number) => void;
 		reorderable?: boolean;
 	};
@@ -20,7 +20,7 @@
 	let hovering: ListItem | null = $state(null);
 
 	function itemId(item: ListItem) {
-		return item.type === 'folder' ? item.folder.id : item.mod.uuid;
+		return item.type === 'folder' ? item.folder.id : item.mod.data.uuid;
 	}
 
 	function onDragOver(event: any) {
@@ -62,7 +62,7 @@
 			{#if item.type === 'folder'}
 				<!-- <ReorderableFolder folder={item.folder} {index} {hovered} /> -->
 			{:else}
-				<ReorderableMod mod={item.mod} {index} {hovered} disabled={!reorderable}>
+				<ReorderableMod mod={item.mod.data} {index} {hovered} disabled={!reorderable}>
 					{@render mod({ mod: item.mod, index })}
 				</ReorderableMod>
 			{/if}
