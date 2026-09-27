@@ -35,6 +35,7 @@ pub enum ModLoaderKind<'a> {
     ReturnOfModding {
         files: Vec<&'a str>,
     },
+    Nucleus {},
 }
 
 impl ModLoader<'_> {
@@ -48,10 +49,11 @@ impl ModLoader<'_> {
             ModLoaderKind::Shimloader {} => "Shimloader",
             ModLoaderKind::Lovely {} => "Lovely",
             ModLoaderKind::ReturnOfModding { .. } => "ReturnOfModding",
+            ModLoaderKind::Nucleus { .. } => "Nucleus",
         }
     }
 
-    /// Checks for the mod loader's own package on Thunderstore.
+    /// Checks for the mod loader's own package on Thunderstore and Hexium.
     fn is_loader_package(&self, full_name: &str) -> bool {
         if let Some(package_name) = self.package_name {
             full_name == package_name
@@ -73,6 +75,7 @@ impl ModLoader<'_> {
                 ModLoaderKind::ReturnOfModding { .. } => {
                     full_name == "ReturnOfModding-ReturnOfModding"
                 }
+                ModLoaderKind::Nucleus {} => full_name == "u0068-Nucleus",
             }
         }
     }
@@ -87,6 +90,7 @@ impl ModLoader<'_> {
             ModLoaderKind::Shimloader {} => None,
             ModLoaderKind::Lovely {} => Some("mods/lovely/log"),
             ModLoaderKind::ReturnOfModding { .. } => None,
+            ModLoaderKind::Nucleus {} => Some("mod_log.txt"),
         }
     }
 
@@ -100,6 +104,7 @@ impl ModLoader<'_> {
             ModLoaderKind::Shimloader {} => &["shimloader/cfg"],
             ModLoaderKind::Lovely {} => &[],
             ModLoaderKind::ReturnOfModding { .. } => &["ReturnOfModding/config"],
+            ModLoaderKind::Nucleus {} => &[],
         }
     }
 }
@@ -234,6 +239,17 @@ impl ModLoader<'static> {
                 Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
             }
             (false, ModLoaderKind::Lovely {}) => {
+                const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
+
+                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+            }
+
+            (true, ModLoaderKind::Nucleus {}) => {
+                const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
+
+                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
+            }
+            (false, ModLoaderKind::Nucleus {}) => {
                 const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
 
                 Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
