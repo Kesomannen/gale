@@ -236,7 +236,7 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_nucleus_args(&mut self) -> Result<()> {
-        let path = self.format_path(self.profile_dir.join("mods/Nucleus/Nucleus.dll"))?;
+        let path = self.format_path(self.profile_dir.join("Nucleus.dll"))?;
 
         self.command.arg("--customdll").arg(path);
 

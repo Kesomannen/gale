@@ -245,7 +245,7 @@ impl ModLoader<'static> {
             }
 
             (true, ModLoaderKind::Nucleus {}) => {
-                const FILES: &[&str] = &["mods/Nucleus/Nucleus.dll"];
+                const FILES: &[&str] = &["Nucleus.dll"];
 
                 Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
             }
