@@ -27,6 +27,7 @@
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import { pushInfoToast, pushToast } from '$lib/toast';
 	import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/menu';
+	import { platform } from '@tauri-apps/plugin-os';
 	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
 
@@ -44,6 +45,45 @@
 	let aboutOpen = $state(false);
 
 	let menu: Menu | null = $state(null);
+	// macOS only: app + Edit menus to keep Cmd+Q/C/V working while the native menu is off
+	let minimalMenu: Menu | null = $state(null);
+
+	const isMacOS = platform() === 'macos';
+
+	// macOS expects an application menu (About/Hide/Quit) and an Edit menu made of
+	// predefined items; without them Cmd+Q, Cmd+C and Cmd+V do nothing.
+	async function macSubmenus() {
+		const predefined = (item: NonNullable<Parameters<typeof PredefinedMenuItem.new>[0]>['item']) =>
+			PredefinedMenuItem.new({ item });
+
+		const app = await Submenu.new({
+			text: 'Gale',
+			items: [
+				await MenuItem.new({ text: 'About Gale', action: () => (aboutOpen = true) }),
+				await predefined('Separator'),
+				await predefined('Hide'),
+				await predefined('HideOthers'),
+				await predefined('ShowAll'),
+				await predefined('Separator'),
+				await PredefinedMenuItem.new({ item: 'Quit', text: 'Quit Gale' })
+			]
+		});
+
+		const edit = await Submenu.new({
+			text: 'Edit',
+			items: [
+				await predefined('Undo'),
+				await predefined('Redo'),
+				await predefined('Separator'),
+				await predefined('Cut'),
+				await predefined('Copy'),
+				await predefined('Paste'),
+				await predefined('SelectAll')
+			]
+		});
+
+		return { app, edit };
+	}
 
 	const submenus = [
 		{
@@ -402,6 +442,8 @@
 
 			if (useNativeMenu.current) {
 				menu.setAsAppMenu();
+			} else if (minimalMenu) {
+				minimalMenu.setAsAppMenu();
 			} else {
 				Menu.new().then((menu) => menu.setAsAppMenu());
 			}
@@ -447,13 +489,25 @@
 									? separator
 									: await MenuItem.new({
 											action: item.onclick,
-											...item
+											...item,
+											accelerator: isMacOS
+												? (item as any).accelerator?.replace(/^Ctrl\+/, 'CmdOrCtrl+')
+												: (item as any).accelerator
 										})
 							)
 						)
 					})
 			)
 		);
+
+		if (isMacOS) {
+			const { app, edit } = await macSubmenus();
+			nativeMenus.splice(0, 0, app);
+			nativeMenus.splice(2, 0, edit);
+
+			const minimal = await macSubmenus();
+			minimalMenu = await Menu.new({ items: [minimal.app, minimal.edit] });
+		}
 
 		menu = await Menu.new({
 			items: nativeMenus
