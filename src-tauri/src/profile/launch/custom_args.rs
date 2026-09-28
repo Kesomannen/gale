@@ -305,8 +305,8 @@ mod tests {
     }
 
     #[test]
-    #[cfg(target_os = "linux")]
-    fn join_linux() {
+    #[cfg(unix)]
+    fn join_unix() {
         let args = vec!["--foo", "bar baz", "something else"];
         let joined = join(args);
         assert_eq!(joined, "--foo 'bar baz' 'something else'");

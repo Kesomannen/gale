@@ -545,10 +545,7 @@ impl ManagedGame {
         {
             use std::os::unix::fs::PermissionsExt;
 
-            let script = format!(
-                "#!/bin/sh\nexec \"{}\" --game \"{}\" --profile \"{}\" --launch --no-gui\n",
-                command, self.game.slug, profile.name
-            );
+            let script = macos_shortcut_script(&command, &self.game.slug, &profile.name);
 
             std::fs::write(&shortcut_path, script).context("failed to write shortcut script")?;
 
@@ -557,5 +554,44 @@ impl ManagedGame {
         }
 
         Ok(())
+    }
+}
+
+/// Builds the `.command` script that launches a profile from the desktop.
+///
+/// The arguments are shell-quoted so that `$`, backticks and other metacharacters
+/// in the profile name are passed through literally instead of being expanded.
+#[cfg(target_os = "macos")]
+fn macos_shortcut_script(exe: &str, slug: &str, profile: &str) -> String {
+    let line = shell_words::join([
+        exe,
+        "--game",
+        slug,
+        "--profile",
+        profile,
+        "--launch",
+        "--no-gui",
+    ]);
+
+    format!("#!/bin/sh\nexec {line}\n")
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn macos_shortcut_script_quotes_metacharacters() {
+        let script = macos_shortcut_script(
+            "/Applications/Gale Dev.app/Contents/MacOS/gale",
+            "valheim",
+            "$(touch /tmp/pwned) `id` mods",
+        );
+
+        assert_eq!(
+            script,
+            "#!/bin/sh\nexec '/Applications/Gale Dev.app/Contents/MacOS/gale' --game valheim \
+             --profile '$(touch /tmp/pwned) `id` mods' --launch --no-gui\n"
+        );
     }
 }

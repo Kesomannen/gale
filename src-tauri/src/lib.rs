@@ -45,12 +45,34 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         return Err(err.into());
     }
 
-    if let Err(err) = app.deep_link().register("ror2mm") {
-        warn!("failed to register ror2mm deep link protocol: {:#}", err);
+    // macOS registers the schemes through the bundle's Info.plist instead
+    #[cfg(any(windows, target_os = "linux"))]
+    {
+        if let Err(err) = app.deep_link().register("ror2mm") {
+            warn!("failed to register ror2mm deep link protocol: {:#}", err);
+        }
+
+        if let Err(err) = app.deep_link().register("gale") {
+            warn!("failed to register gale deep link protocol: {:#}", err);
+        }
     }
 
-    if let Err(err) = app.deep_link().register("gale") {
-        warn!("failed to register gale deep link protocol: {:#}", err);
+    // LaunchServices delivers URL and .r2z opens as `RunEvent::Opened` rather than
+    // through argv, which the deep-link plugin turns into a `deep-link://new-url` event.
+    #[cfg(target_os = "macos")]
+    {
+        // On a cold start the `Opened` event can fire either before or after setup.
+        // The plugin only stores it for `get_current` on that event, and a listener only
+        // sees events emitted after it's registered, so each URL reaches exactly one path.
+        match app.deep_link().get_current() {
+            Ok(Some(urls)) => handle_opened_urls(app.handle(), urls),
+            Ok(None) => {}
+            Err(err) => warn!("failed to get current deep link: {:#}", err),
+        }
+
+        let handle = app.handle().to_owned();
+        app.deep_link()
+            .on_open_url(move |event| handle_opened_urls(&handle, event.urls()));
     }
 
     let args = env::args().collect_vec();
@@ -81,6 +103,36 @@ fn event_handler(app: &AppHandle, event: RunEvent) {
         api.prevent_exit();
 
         tauri::async_runtime::spawn(profile::install::handle_exit(app.to_owned()));
+    }
+}
+
+/// Forwards URLs from a macOS `RunEvent::Opened` to [`deep_link::handle`].
+#[cfg(target_os = "macos")]
+fn handle_opened_urls(app: &AppHandle, urls: Vec<tauri::Url>) {
+    for url in urls {
+        // the auth callback carries tokens in its query, so never log the full URL
+        info!(
+            scheme = url.scheme(),
+            host = url.host_str(),
+            path = url.path(),
+            "received deep link"
+        );
+
+        // double-clicked .r2z files arrive as file:// URLs, but `deep_link::handle`
+        // expects a plain path for those
+        let url = if url.scheme() == "file" {
+            match url.to_file_path() {
+                Ok(path) => path.to_string_lossy().into_owned(),
+                Err(()) => {
+                    warn!("failed to convert deep link to file path: {url}");
+                    continue;
+                }
+            }
+        } else {
+            url.to_string()
+        };
+
+        deep_link::handle(app, url);
     }
 }
 

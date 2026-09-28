@@ -56,6 +56,7 @@ chrono = { version = "0.4", features = ["serde"] }
 keyring = { version = "3", features = [
     "windows-native",
     "linux-native-sync-persistent",
+    "apple-native",
 ] }
 dirs-next = "2"
 trash = "5"
@@ -105,6 +106,13 @@ winreg = "0.52"
 [target.'cfg(target_os="linux")'.dependencies]
 webkit2gtk = "2.0.1"
 ashpd = { version = "0.13", features = ["settings"] }
+
+[target.'cfg(target_os="macos")'.dependencies]
+objc2-web-kit = { version = "0.3.2", default-features = false, features = [
+    "WKWebView",
+    "objc2-app-kit",
+    "objc2-core-foundation",
+] }
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]

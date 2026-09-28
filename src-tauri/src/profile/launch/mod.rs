@@ -297,7 +297,7 @@ const IGNORED_EXES: &[&str] = &[
 ];
 
 fn find_executable(game_dir: &Path) -> Result<PathBuf> {
-    WalkDir::new(game_dir)
+    let found = WalkDir::new(game_dir)
         .into_iter()
         .filter_map(Result::ok)
         .filter(|entry| entry.file_type().is_file())
@@ -315,8 +315,57 @@ fn find_executable(game_dir: &Path) -> Result<PathBuf> {
 
             has_correct_extension && !IGNORED_EXES.contains(&&*file_name_str)
         })
-        .map(walkdir::DirEntry::into_path)
-        .ok_or_eyre("game executable not found")
+        .map(walkdir::DirEntry::into_path);
+
+    // native macOS games ship as an app bundle, whose executable has no extension.
+    // only fall back to it, since a mod loader's launch script (e.g. BepInEx's
+    // run_bepinex.sh) must take precedence to inject the doorstop
+    #[cfg(target_os = "macos")]
+    let found = found.or_else(|| find_app_bundle_executable(game_dir));
+
+    found.ok_or_eyre("game executable not found")
+}
+
+/// Resolves `<bundle>.app/Contents/MacOS/<executable>` for the first app bundle
+/// at the top level of `game_dir`. Without parsing Info.plist, the executable is
+/// the file named after the bundle (`Valheim.app` -> `Valheim`, case-insensitive),
+/// or else the first one sorted by name.
+#[cfg(target_os = "macos")]
+fn find_app_bundle_executable(game_dir: &Path) -> Option<PathBuf> {
+    game_dir
+        .read_dir()
+        .ok()?
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_dir()))
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("app"))
+        })
+        .sorted()
+        .find_map(|bundle| {
+            let stem = bundle.file_stem()?;
+
+            let candidates = bundle
+                .join("Contents")
+                .join("MacOS")
+                .read_dir()
+                .ok()?
+                .filter_map(Result::ok)
+                .filter(|entry| entry.file_type().is_ok_and(|ty| ty.is_file()))
+                .map(|entry| entry.path())
+                .sorted()
+                .collect_vec();
+
+            candidates
+                .iter()
+                .find(|path| {
+                    path.file_name()
+                        .is_some_and(|name| name.eq_ignore_ascii_case(stem))
+                })
+                .or_else(|| candidates.first())
+                .cloned()
+        })
 }
 
 pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
@@ -362,4 +411,84 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
     }
 
     Ok(launch_options)
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use tempfile::{TempDir, tempdir};
+
+    use super::*;
+
+    fn touch(path: PathBuf) -> PathBuf {
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(&path, b"").unwrap();
+        path
+    }
+
+    fn game_dir() -> TempDir {
+        tempdir().unwrap()
+    }
+
+    #[test]
+    fn app_bundle_single_executable() {
+        let dir = game_dir();
+        let exe = touch(dir.path().join("Foo.app/Contents/MacOS/Foo"));
+
+        assert_eq!(find_executable(dir.path()).unwrap(), exe);
+    }
+
+    #[test]
+    fn app_bundle_prefers_executable_named_after_bundle() {
+        let dir = game_dir();
+        // sorts before "valheim" but is not the main executable
+        touch(dir.path().join("Valheim.app/Contents/MacOS/UnityPlayer"));
+        let exe = touch(dir.path().join("Valheim.app/Contents/MacOS/valheim"));
+
+        assert_eq!(find_executable(dir.path()).unwrap(), exe);
+    }
+
+    #[test]
+    fn app_bundle_falls_back_to_first_sorted() {
+        let dir = game_dir();
+        let exe = touch(dir.path().join("Foo.app/Contents/MacOS/a_game"));
+        touch(dir.path().join("Foo.app/Contents/MacOS/b_helper"));
+
+        assert_eq!(find_executable(dir.path()).unwrap(), exe);
+    }
+
+    #[test]
+    fn app_bundle_skips_directory_named_like_executable() {
+        let dir = game_dir();
+        fs::create_dir_all(dir.path().join("Foo.app/Contents/MacOS/Foo")).unwrap();
+        let exe = touch(dir.path().join("Foo.app/Contents/MacOS/Bar"));
+
+        assert_eq!(find_executable(dir.path()).unwrap(), exe);
+    }
+
+    #[test]
+    fn shell_script_at_top_level() {
+        let dir = game_dir();
+        let script = touch(dir.path().join("start_game.sh"));
+
+        assert_eq!(find_executable(dir.path()).unwrap(), script);
+    }
+
+    #[test]
+    fn shell_script_preferred_over_app_bundle() {
+        let dir = game_dir();
+        let script = touch(dir.path().join("run_bepinex.sh"));
+        touch(dir.path().join("Foo.app/Contents/MacOS/Foo"));
+
+        assert_eq!(find_executable(dir.path()).unwrap(), script);
+    }
+
+    #[test]
+    fn nothing_found() {
+        let dir = game_dir();
+        touch(dir.path().join("readme.txt"));
+        // a .app that is a plain file, not a bundle
+        touch(dir.path().join("Foo.app"));
+
+        assert!(find_executable(dir.path()).is_err());
+    }
 }
