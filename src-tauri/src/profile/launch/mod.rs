@@ -159,7 +159,7 @@ impl ManagedGame {
                 is_proton
             };
 
-            #[cfg(target_os = "windows")]
+            #[cfg(any(target_os = "windows", target_os = "macos"))]
             let is_proton = false;
 
             if is_proton {

@@ -87,6 +87,33 @@ fn read_steam_registry() -> Result<PathBuf> {
     Ok(PathBuf::from(path))
 }
 
+#[cfg(target_os = "macos")]
+fn create_base_steam_command() -> Result<Command> {
+    use crate::util::fs::PathExt;
+    use tracing::debug;
+
+    const BUNDLE_SUFFIX: &str = "Steam.app/Contents/MacOS/steam_osx";
+
+    debug!("checking for steam app bundle");
+
+    let mut candidates = vec![Path::new("/Applications").join(BUNDLE_SUFFIX)];
+
+    if let Some(home) = std::env::var_os("HOME") {
+        candidates.push(Path::new(&home).join("Applications").join(BUNDLE_SUFFIX));
+    }
+
+    for candidate in candidates {
+        if let Some(path) = candidate.exists_or_none() {
+            info!("found steam installation at {}", path.display());
+            return Ok(Command::new(path));
+        }
+    }
+
+    Err(eyre!(
+        "failed to find Steam installation, is it not installed?"
+    ))
+}
+
 #[cfg(target_os = "linux")]
 fn create_base_steam_command() -> Result<Command> {
     use crate::util::fs::PathExt;

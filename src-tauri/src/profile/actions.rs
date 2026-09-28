@@ -468,6 +468,12 @@ impl ManagedGame {
         let shortcut_path =
             desktop_path.join(format!("gale-{}-{}.desktop", self.game.name, profile.name));
 
+        #[cfg(target_os = "macos")]
+        let shortcut_path = desktop_path.join(format!(
+            "Gale - {} - {}.command",
+            self.game.name, profile.name
+        ));
+
         if shortcut_path.exists() {
             bail!("shortcut already exists");
         }
@@ -533,6 +539,21 @@ impl ManagedGame {
 
             std::fs::set_permissions(&shortcut_path, PermissionsExt::from_mode(0o755))
                 .context("failed to set permissions on desktop file")?;
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            let script = format!(
+                "#!/bin/sh\nexec \"{}\" --game \"{}\" --profile \"{}\" --launch --no-gui\n",
+                command, self.game.slug, profile.name
+            );
+
+            std::fs::write(&shortcut_path, script).context("failed to write shortcut script")?;
+
+            std::fs::set_permissions(&shortcut_path, PermissionsExt::from_mode(0o755))
+                .context("failed to set permissions on shortcut script")?;
         }
 
         Ok(())

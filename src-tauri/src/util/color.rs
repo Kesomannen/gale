@@ -21,6 +21,11 @@ pub async fn system_accent() -> Result<Option<Color>> {
     }
 }
 
+#[cfg(target_os = "macos")]
+pub async fn system_accent() -> Result<Option<Color>> {
+    Ok(None)
+}
+
 #[cfg(target_os = "windows")]
 pub async fn system_accent() -> Result<Option<Color>> {
     use windows::UI::ViewManagement::{UIColorType, UISettings};
