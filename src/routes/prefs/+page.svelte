@@ -171,6 +171,22 @@
 			{m.prefs_miscellaneous_pullBeforeLaunch_content()}
 		</TogglePref>
 
+		{#if platform() === 'macos'}
+			<TogglePref
+				label={m.prefs_miscellaneous_macosAllowResign_title()}
+				value={prefs.macosAllowResign}
+				set={set((value, prefs) => (prefs.macosAllowResign = value))}
+			>
+				{m.prefs_miscellaneous_macosAllowResign_content_1()}
+				<br />
+				{m.prefs_miscellaneous_macosAllowResign_content_2()}
+				<br />
+				{m.prefs_miscellaneous_macosAllowResign_content_3()}<b
+					>{m.prefs_miscellaneous_macosAllowResign_content_4()}</b
+				>.
+			</TogglePref>
+		{/if}
+
 		<LargeHeading>
 			{m.prefs_gameSettings_title({ game: games.active?.name ?? m.unknown() })}
 		</LargeHeading>

@@ -189,6 +189,11 @@ pub struct Prefs {
     pub pull_before_launch: bool,
     pub language: String,
     pub backend_skip_confirm: bool,
+    /// Lets Gale replace a game's hardened-runtime signature with an ad-hoc one
+    /// so that BepInEx can load (see `profile::launch::macos`). Off until the
+    /// user opts in, since it modifies the game's files.
+    #[cfg(target_os = "macos")]
+    pub macos_allow_resign: bool,
 
     pub game_prefs: HashMap<String, GamePrefs>,
 }
@@ -252,6 +257,8 @@ impl Default for Prefs {
             zoom_factor: 1.0,
             language: "en".to_string(),
             backend_skip_confirm: false,
+            #[cfg(target_os = "macos")]
+            macos_allow_resign: false,
 
             game_prefs: HashMap::new(),
         }
@@ -321,6 +328,10 @@ impl Prefs {
         self.fetch_mods_automatically = value.fetch_mods_automatically;
         self.pull_before_launch = value.pull_before_launch;
         self.backend_skip_confirm = value.backend_skip_confirm;
+        #[cfg(target_os = "macos")]
+        {
+            self.macos_allow_resign = value.macos_allow_resign;
+        }
 
         self.save(app.db()).context("failed save prefs")
     }

@@ -360,6 +360,7 @@ impl Profile {
             sync: self.sync.clone(),
             custom_args: self.custom_args.clone(),
             missing: self.missing,
+            path: self.path.to_string_lossy().into_owned(),
         }
     }
 
@@ -393,6 +394,7 @@ pub struct FrontendProfile {
     sync: Option<sync::SyncProfileData>,
     custom_args: String,
     missing: bool,
+    path: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]

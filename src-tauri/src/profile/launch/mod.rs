@@ -1,6 +1,7 @@
 use core::str;
+#[cfg(not(target_os = "macos"))]
+use std::fs;
 use std::{
-    fs,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -14,19 +15,22 @@ use tracing::{info, warn};
 use walkdir::WalkDir;
 
 use super::ManagedGame;
+#[cfg(not(target_os = "macos"))]
+use crate::util::{
+    self,
+    fs::{Overwrite, UseLinks},
+};
 use crate::{
     game::Game,
     logger::log_webview_err,
     prefs::{GamePrefs, Prefs},
-    util::{
-        self,
-        fs::{Overwrite, UseLinks},
-    },
 };
 
 mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "macos")]
+pub(crate) mod macos;
 mod mod_loader;
 mod platform;
 
@@ -81,6 +85,15 @@ impl ManagedGame {
         let game_dir =
             locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
 
+        // the launch command has already run `macos::prepare_launch` (launcher,
+        // doorstop download, signature check) without holding any lock; this
+        // repeats it synchronously for the CLI, which launches while holding
+        // the prefs and manager locks, and is a cheap no-op after the command
+        #[cfg(target_os = "macos")]
+        if !vanilla && self.uses_bepinex() {
+            macos::ensure_ready_blocking(self, &game_dir, prefs, app)?;
+        }
+
         if let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
@@ -122,17 +135,31 @@ impl ManagedGame {
         // if the game has a platform but the setting is unset, fill it in
         platform = platform.or_else(|| self.game.platforms.iter().next());
 
-        let mut command = match (&launch_mode, platform) {
+        let launcher_command = match (&launch_mode, platform) {
             // If the setting is `Launcher` and we have a platform, use the platform-specific
             // launch command (if there is one). Otherwise, fall back to direct execution.
             (LaunchMode::Launcher, Some(platform)) => {
                 platform::create_launch_command(game_dir, platform, self.game, prefs).transpose()
             }
             _ => None,
-        }
-        .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
+        };
+
+        #[cfg(target_os = "macos")]
+        let via_launcher = launcher_command.is_some();
+
+        let mut command =
+            launcher_command.unwrap_or_else(|| self.direct_command(vanilla, game_dir))?;
 
         let profile = self.active_profile();
+
+        // On macOS a launcher (Steam) runs the game through the profile's
+        // run_bepinex.sh if the user's launch options say so, no matter who
+        // started it, and that script injects doorstop unless told otherwise.
+        // Direct vanilla launches never go through the script.
+        #[cfg(target_os = "macos")]
+        if vanilla && via_launcher && self.uses_bepinex() {
+            disable_doorstop_args(&mut command);
+        }
 
         if !vanilla {
             #[cfg(target_os = "linux")]
@@ -180,6 +207,62 @@ impl ManagedGame {
         Ok((launch_mode, command))
     }
 
+    /// The command for running the game's executable directly, without a launcher.
+    #[cfg(not(target_os = "macos"))]
+    fn direct_command(&self, _vanilla: bool, game_dir: &Path) -> Result<Command> {
+        find_executable(game_dir).map(Command::new)
+    }
+
+    /// The command for running the game's executable directly, without a launcher.
+    ///
+    /// For a modded BepInEx game this runs the profile's launcher script with the
+    /// executable as its first argument, since that is what injects doorstop on
+    /// macOS. Native games ship as app bundles, so the bundle's executable is
+    /// preferred over any script the game directory happens to contain (such as
+    /// a BepInExPack start script left there by an older version of Gale or by
+    /// another mod manager), for vanilla and modded launches alike.
+    #[cfg(target_os = "macos")]
+    fn direct_command(&self, vanilla: bool, game_dir: &Path) -> Result<Command> {
+        let executable = match find_app_bundle_executable(game_dir) {
+            Some(executable) => executable,
+            None => find_executable(game_dir)?,
+        };
+
+        if vanilla || !self.uses_bepinex() {
+            return Ok(Command::new(executable));
+        }
+
+        // Run the launcher through the interpreter: macOS refuses to exec a shell
+        // script directly from an app process (Steam hits the same restriction).
+        let mut command = Command::new("/bin/sh");
+        command
+            .arg(macos::launcher_path(&self.active_profile().path))
+            .arg(executable);
+
+        Ok(command)
+    }
+
+    #[cfg(target_os = "macos")]
+    fn uses_bepinex(&self) -> bool {
+        use crate::game::mod_loader::ModLoaderKind;
+
+        matches!(self.game.mod_loader.kind, ModLoaderKind::BepInEx { .. })
+    }
+
+    /// On macOS the launcher and doorstop live in the profile and nothing is
+    /// copied into the game directory. Copying BepInExPack's files there is
+    /// useless (its dylib is x86_64-only) and interferes with other launchers.
+    #[cfg(target_os = "macos")]
+    fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
+        info!(
+            game_dir = %game_dir.display(),
+            "not copying mod loader files into the game directory on macOS"
+        );
+
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "macos"))]
     fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
         const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
@@ -226,6 +309,15 @@ impl ManagedGame {
 
         Ok(())
     }
+}
+
+/// Tells the profile's `run_bepinex.sh` (doorstop 4 argument spelling, which is
+/// what the script parses) to leave doorstop disabled. The script strips the
+/// pair from the game's arguments; if the launch never reaches the script, the
+/// game ignores them like any other doorstop argument.
+#[cfg(target_os = "macos")]
+fn disable_doorstop_args(command: &mut Command) {
+    command.args(["--doorstop-enabled", "false"]);
 }
 
 fn do_launch(mut command: Command, app: &AppHandle, mode: LaunchMode) -> Result<()> {
@@ -415,6 +507,8 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
 
 #[cfg(all(test, target_os = "macos"))]
 mod tests {
+    use std::fs;
+
     use tempfile::{TempDir, tempdir};
 
     use super::*;
@@ -490,5 +584,185 @@ mod tests {
         touch(dir.path().join("Foo.app"));
 
         assert!(find_executable(dir.path()).is_err());
+    }
+
+    fn managed_game(slug: &str, profile_dir: &Path) -> ManagedGame {
+        use std::collections::{HashMap, HashSet};
+
+        use crate::{config::ConfigCache, profile::Profile};
+
+        let game = crate::game::from_slug(slug).unwrap();
+
+        let profile = Profile {
+            id: 1,
+            name: "test".to_owned(),
+            path: profile_dir.to_path_buf(),
+            mods: Vec::new(),
+            game,
+            ignored_version_updates: HashSet::new(),
+            ignored_package_updates: HashSet::new(),
+            config_cache: ConfigCache::default(),
+            linked_config: HashMap::new(),
+            modpack: None,
+            sync: None,
+            custom_args: String::new(),
+            missing: false,
+        };
+
+        ManagedGame {
+            id: 1,
+            game,
+            path: profile_dir.parent().unwrap().to_path_buf(),
+            profiles: vec![profile],
+            favorite: false,
+            active_profile_id: 1,
+        }
+    }
+
+    #[test]
+    fn direct_command_wraps_bundle_executable_with_launcher() {
+        let dir = game_dir();
+        let exe = touch(dir.path().join("Valheim.app/Contents/MacOS/Valheim"));
+        // left behind in the game directory by an older version or another manager
+        touch(dir.path().join("start_game_bepinex.sh"));
+        let profile = tempdir().unwrap();
+        let game = managed_game("valheim", profile.path());
+
+        let command = game.direct_command(false, dir.path()).unwrap();
+
+        assert_eq!(command.get_program(), "/bin/sh");
+        assert_eq!(
+            command.get_args().collect_vec(),
+            vec![
+                macos::launcher_path(profile.path()).as_os_str(),
+                exe.as_os_str()
+            ]
+        );
+    }
+
+    #[test]
+    fn direct_command_vanilla_runs_executable_itself() {
+        let dir = game_dir();
+        let exe = touch(dir.path().join("Valheim.app/Contents/MacOS/Valheim"));
+        let profile = tempdir().unwrap();
+        let game = managed_game("valheim", profile.path());
+
+        let command = game.direct_command(true, dir.path()).unwrap();
+
+        assert_eq!(command.get_program(), exe.as_os_str());
+        assert_eq!(command.get_args().count(), 0);
+    }
+
+    #[test]
+    fn direct_command_vanilla_ignores_stray_bepinex_script() {
+        let dir = game_dir();
+        let exe = touch(dir.path().join("Valheim.app/Contents/MacOS/Valheim"));
+        // copied into the game directory by pre-macOS-port launches; running it
+        // would inject BepInExPack's doorstop instead of starting the vanilla game
+        touch(dir.path().join("start_game_bepinex.sh"));
+        touch(dir.path().join("run_bepinex.sh"));
+        let profile = tempdir().unwrap();
+        let game = managed_game("valheim", profile.path());
+
+        let command = game.direct_command(true, dir.path()).unwrap();
+
+        assert_eq!(command.get_program(), exe.as_os_str());
+        assert_eq!(command.get_args().count(), 0);
+    }
+
+    #[test]
+    fn direct_command_vanilla_falls_back_to_script_without_bundle() {
+        let dir = game_dir();
+        let script = touch(dir.path().join("start_game.sh"));
+        let profile = tempdir().unwrap();
+        let game = managed_game("valheim", profile.path());
+
+        let command = game.direct_command(true, dir.path()).unwrap();
+
+        assert_eq!(command.get_program(), script.as_os_str());
+    }
+
+    fn prefs_with(slug: &str, launch_mode: LaunchMode) -> Prefs {
+        let mut prefs = Prefs::default();
+        prefs.game_prefs.insert(
+            slug.to_owned(),
+            GamePrefs {
+                launch_mode,
+                ..Default::default()
+            },
+        );
+        prefs
+    }
+
+    #[test]
+    fn disable_doorstop_args_uses_doorstop_4_spelling() {
+        let mut command = Command::new("steam_osx");
+        disable_doorstop_args(&mut command);
+
+        assert_eq!(
+            command.get_args().collect_vec(),
+            vec!["--doorstop-enabled", "false"]
+        );
+    }
+
+    #[test]
+    fn launch_command_direct_vanilla_has_no_doorstop_args() {
+        let dir = game_dir();
+        let exe = touch(dir.path().join("Valheim.app/Contents/MacOS/Valheim"));
+        let profile = tempdir().unwrap();
+        let game = managed_game("valheim", profile.path());
+        let prefs = prefs_with(
+            "valheim",
+            LaunchMode::Direct {
+                instances: 1,
+                interval_secs: 0.0,
+            },
+        );
+
+        let (_, command) = game.launch_command(true, dir.path(), &prefs).unwrap();
+
+        assert_eq!(command.get_program(), exe.as_os_str());
+        assert_eq!(command.get_args().count(), 0);
+    }
+
+    #[test]
+    fn launch_command_steam_vanilla_disables_doorstop() {
+        // needs a Steam install to build the launcher command
+        if platform::create_launch_command(
+            Path::new("/"),
+            crate::game::platform::Platform::Steam,
+            crate::game::from_slug("valheim").unwrap(),
+            &Prefs::default(),
+        )
+        .is_err()
+        {
+            eprintln!("skipping: Steam is not installed");
+            return;
+        }
+
+        let dir = game_dir();
+        touch(dir.path().join("Valheim.app/Contents/MacOS/Valheim"));
+        let profile = tempdir().unwrap();
+        let game = managed_game("valheim", profile.path());
+        let prefs = prefs_with("valheim", LaunchMode::Launcher);
+
+        let (_, command) = game.launch_command(true, dir.path(), &prefs).unwrap();
+
+        let args = command.get_args().collect_vec();
+        assert!(args.ends_with(&[
+            std::ffi::OsStr::new("--doorstop-enabled"),
+            std::ffi::OsStr::new("false")
+        ]));
+
+        // and a modded launch through the same launcher still enables it
+        touch(profile.path().join("BepInEx/core/BepInEx.Preloader.dll"));
+        fs::write(profile.path().join(".doorstop_version"), "4").unwrap();
+
+        let (_, modded) = game.launch_command(false, dir.path(), &prefs).unwrap();
+
+        let args = modded.get_args().collect_vec();
+        assert!(args.contains(&std::ffi::OsStr::new("--doorstop-enabled")));
+        assert!(args.contains(&std::ffi::OsStr::new("true")));
+        assert!(!args.contains(&std::ffi::OsStr::new("false")));
     }
 }

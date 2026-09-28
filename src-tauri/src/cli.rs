@@ -104,6 +104,16 @@ impl Cli {
                     error!("failed to install mod from cli: {:#}", err);
                 }
 
+                // may download doorstop or re-sign the game, so it runs before
+                // the manager lock is taken, like the launch command does
+                #[cfg(target_os = "macos")]
+                if launch
+                    && let Err(err) = profile::launch::macos::prepare_launch(vanilla, &handle).await
+                {
+                    error!("failed to prepare launch: {:#}", err);
+                    return;
+                }
+
                 let manager = handle.lock_manager();
                 if let Err(err) =
                     handle_launch_and_no_gui(launch, no_gui, vanilla, &manager, &handle)

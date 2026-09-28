@@ -60,6 +60,7 @@ export type ProfileInfo = {
 	sync: SyncProfileInfo | null;
 	customArgs: string;
 	missing: boolean;
+	path: string;
 };
 
 export type SyncProfileInfo = {
@@ -372,6 +373,7 @@ export type Prefs = {
 	cacheDir: string;
 	fetchModsAutomatically: boolean;
 	pullBeforeLaunch: boolean;
+	macosAllowResign: boolean;
 	zoomFactor: number;
 	language: string;
 	gamePrefs: Map<string, GamePrefs>;

@@ -2,12 +2,17 @@
 	import Label from '$lib/components/ui/Label.svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
 
-	import type { LaunchMode } from '$lib/types';
+	import { ModLoader, type LaunchMode } from '$lib/types';
 	import Info from '$lib/components/ui/Info.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toHeaderCase } from 'js-convert-case';
 	import games from '$lib/state/game.svelte';
+	import profiles from '$lib/state/profile.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import { platform as osPlatform } from '@tauri-apps/plugin-os';
+	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+	import { pushInfoToast } from '$lib/toast';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	type Props = {
 		platform: string;
@@ -44,6 +49,19 @@
 	}
 
 	let platforms = $derived(games.active?.platforms ?? []);
+
+	// macOS only: Steam must run Gale's launcher script for BepInEx to inject.
+	// The script lives in the active profile's directory (also reachable via
+	// File > Open profile folder), so the launch option is built from its path.
+	const isMacOS = osPlatform() === 'macos';
+	let macLaunchOption = $derived(
+		`/bin/sh "${profiles.active?.path ?? m.launchModePref_macos_profilePathPlaceholder()}/run_bepinex.sh" %command%`
+	);
+
+	async function copyMacLaunchOption() {
+		await writeText(macLaunchOption);
+		pushInfoToast({ message: m.launchModePref_macos_copied() });
+	}
 </script>
 
 <div class="flex items-center">
@@ -70,6 +88,21 @@
 		{onValueChange}
 	/>
 </div>
+
+{#if isMacOS && value.type === 'launcher' && games.active?.modLoader === ModLoader.BepInEx}
+	<div class="text-primary-700 dark:text-primary-300 mt-1 mb-2 text-sm">
+		<p>{m.launchModePref_macos_note()}</p>
+		<div class="mt-1.5 flex items-center gap-2">
+			<code
+				class="text-primary-700 dark:bg-primary-900 dark:text-primary-300 bg-primary-100 min-w-0 grow truncate rounded-md px-3 py-1 font-mono"
+				>{macLaunchOption}</code
+			>
+			<Button color="primary" icon="mdi:content-copy" onclick={copyMacLaunchOption}>
+				{m.launchModePref_macos_copy()}
+			</Button>
+		</div>
+	</div>
+{/if}
 
 <div class="flex items-center">
 	<Label>{m.launchModePref_instance_title()}</Label>

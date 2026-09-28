@@ -14,6 +14,46 @@ use crate::profile::{
 
 pub struct BepinexInstaller;
 
+/// Sets up Gale's launcher and the universal doorstop in the profile, which
+/// BepInEx needs to load on macOS. Failures are only logged: the launch path
+/// does the same setup again and reports errors there.
+#[cfg(target_os = "macos")]
+fn macos_post_install(profile_dir: &Path) {
+    use std::time::Duration;
+
+    use tracing::warn;
+
+    use crate::profile::launch::macos;
+
+    const HTTP_TIMEOUT: Duration = Duration::from_secs(30);
+
+    if let Err(err) = macos::ensure_launcher(profile_dir) {
+        warn!("failed to write macOS BepInEx launcher: {:#}", err);
+    }
+
+    let profile_dir = profile_dir.to_path_buf();
+    tauri::async_runtime::spawn(async move {
+        // mirror the app client's timeouts (state.rs): without them a stalled
+        // connection would park this task forever instead of failing and logging
+        let base = match reqwest::Client::builder()
+            .connect_timeout(HTTP_TIMEOUT)
+            .read_timeout(HTTP_TIMEOUT)
+            .build()
+        {
+            Ok(client) => client,
+            Err(err) => {
+                warn!("failed to build HTTP client for macOS doorstop: {:#}", err);
+                return;
+            }
+        };
+        let http = reqwest_middleware::ClientBuilder::new(base).build();
+
+        if let Err(err) = macos::ensure_doorstop_with(&profile_dir, &http).await {
+            warn!("failed to set up doorstop for macOS: {:#}", err);
+        }
+    });
+}
+
 fn get_core_path(package_name: &str) -> PathBuf {
     const CORE_PATH: &str = "BepInEx/core";
     match package_name {
@@ -60,7 +100,12 @@ impl PackageInstaller for BepinexInstaller {
             } else {
                 Ok((FileInstallMethod::Link, ConflictResolution::Overwrite))
             }
-        })
+        })?;
+
+        #[cfg(target_os = "macos")]
+        macos_post_install(&profile.path);
+
+        Ok(())
     }
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {

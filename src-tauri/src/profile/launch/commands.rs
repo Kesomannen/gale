@@ -9,6 +9,10 @@ pub async fn launch_game(app: AppHandle, vanilla: bool, args: Option<String>) ->
         sync::pull_profile(false, &app).await?;
     }
 
+    // may download doorstop or re-sign the game, so it runs before any lock is held
+    #[cfg(target_os = "macos")]
+    super::macos::prepare_launch(vanilla, &app).await?;
+
     let prefs = app.lock_prefs();
     let manager = app.lock_manager();
 
