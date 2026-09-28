@@ -360,16 +360,62 @@ pub fn strip_hardened_runtime(app_bundle: &Path) -> Result<()> {
 
     if !output.status.success() {
         bail!(
-            "codesign failed to re-sign {} ({}): {}",
-            app_bundle.display(),
-            output.status,
-            String::from_utf8_lossy(&output.stderr).trim()
+            "{}",
+            resign_failure_message(
+                app_bundle,
+                &output.status.to_string(),
+                &String::from_utf8_lossy(&output.stderr)
+            )
         );
     }
 
     info!(bundle = %app_bundle.display(), "re-signed game ad hoc");
 
     Ok(())
+}
+
+/// The user-facing error for a failed `codesign`. Modifying another app's bundle
+/// needs the App Management permission (macOS 13+); without it codesign fails
+/// with "Operation not permitted", which needs a pointer rather than raw output.
+fn resign_failure_message(app_bundle: &Path, status: &str, stderr: &str) -> String {
+    let stderr = stderr.trim();
+
+    if stderr.contains("Operation not permitted") {
+        format!(
+            "macOS blocked Gale from re-signing {}: grant Gale \"App Management\" in \
+             System Settings > Privacy & Security > App Management, then launch again",
+            app_bundle.display()
+        )
+    } else {
+        format!(
+            "codesign failed to re-sign {} ({}): {}",
+            app_bundle.display(),
+            status,
+            stderr
+        )
+    }
+}
+
+#[cfg(test)]
+mod resign_message_tests {
+    use super::*;
+
+    #[test]
+    fn permission_denied_points_at_app_management() {
+        let msg = resign_failure_message(
+            Path::new("/Games/Valheim.app"),
+            "exit status: 1",
+            "/Games/Valheim.app: replacing existing signature\n/Games/Valheim.app: Operation not permitted\nIn subcomponent: /Games/Valheim.app/Contents/PlugIns/X.bundle",
+        );
+        assert!(msg.contains("App Management"), "{msg}");
+        assert!(msg.starts_with("macOS blocked Gale from re-signing /Games/Valheim.app"));
+    }
+
+    #[test]
+    fn other_failures_keep_codesign_output() {
+        let msg = resign_failure_message(Path::new("/Games/X.app"), "exit status: 1", "  bad things  ");
+        assert_eq!(msg, "codesign failed to re-sign /Games/X.app (exit status: 1): bad things");
+    }
 }
 
 /// The `.app` bundle that `executable` lives in, if any.
