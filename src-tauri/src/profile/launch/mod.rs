@@ -166,7 +166,7 @@ impl ManagedGame {
                 info!("game appears to be running under proton, using proton launch method");
             }
 
-            let mut ctx = mod_loader::ArgsContext::new(&mut command, &profile.path, is_proton);
+            let mut ctx = mod_loader::ArgsContext::new(&mut command, profile, is_proton);
             ctx.add_args(&self.game.mod_loader)?;
         }
 

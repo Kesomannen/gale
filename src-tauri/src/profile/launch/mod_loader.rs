@@ -12,17 +12,33 @@ use crate::{
     util::error::IoResultExt,
 };
 
+use crate::profile::Profile;
+
 pub struct ArgsContext<'a> {
     command: &'a mut Command,
+    profile: &'a Profile,
     profile_dir: &'a Path,
     is_proton: bool,
 }
 
+// A minimal version of R2ModMan's ManifestV2 struct
+// To let us pass ordered mods to mod loaders that already support R2ModMan's format instead of inventing a new one
+#[derive(serde::Serialize)]
+struct R2OrderedMod {
+    name: String,
+    enabled: bool,
+}
+
 impl<'a> ArgsContext<'a> {
-    pub fn new(command: &'a mut Command, profile_dir: &'a Path, is_proton: bool) -> Self {
+    pub fn new(
+        command: &'a mut Command,
+        profile: &'a Profile,
+        is_proton: bool,
+    ) -> Self {
         Self {
             command,
-            profile_dir,
+            profile,
+            profile_dir: &profile.path, // I'm keeping profile_dir to keep this change less invasive
             is_proton,
         }
     }
@@ -235,7 +251,30 @@ impl<'a> ArgsContext<'a> {
         Ok(())
     }
 
+    // Write a minimal R2ModMan-style mods.yml for passing mod load order to R2ModMan-based mod loaders
+    fn write_mod_order(&self) -> Result<()> {
+        let mods: Vec<R2OrderedMod> = self
+            .profile
+            .mods
+            .iter()
+            .map(|m| R2OrderedMod {
+                name: m.full_name().into_owned(),
+                enabled: m.enabled,
+            })
+            .collect();
+
+        let yaml = serde_yaml::to_string(&mods)
+            .context("failed to serialize ordered mod")?;
+
+        fs::write(self.profile_dir.join("mods.yml"), yaml)
+            .context("failed to write mods.yml")?;
+
+        Ok(())
+    }
+
     fn add_nucleus_args(&mut self) -> Result<()> {
+        self.write_mod_order()?;
+
         let path = self.format_path(self.profile_dir.join("mods/u0068-Nucleus/Nucleus.dll"))?;
 
         self.command.arg("--customdll").arg(path);
