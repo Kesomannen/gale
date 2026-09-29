@@ -326,6 +326,7 @@ impl ManagedGame {
             modpack: None,
             sync: None,
             custom_args: String::new(),
+            server_settings: None,
             missing: false,
             ignored_package_updates: HashSet::new(),
         };

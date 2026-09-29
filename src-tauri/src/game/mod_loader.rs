@@ -1,6 +1,11 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
-use crate::profile::install::{Subdir, PackageInstaller, BepinexInstaller, SubdirInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, ShimloaderInstaller};
+use crate::profile::install::{
+    BepinexInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, PackageInstaller,
+    ShimloaderInstaller, Subdir, SubdirInstaller,
+};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -35,6 +40,15 @@ pub enum ModLoaderKind<'a> {
     ReturnOfModding {
         files: Vec<&'a str>,
     },
+}
+
+#[derive(Debug, Clone)]
+pub struct ServerDeployment {
+    pub loader_root: PathBuf,
+    pub managed_directories: Vec<PathBuf>,
+    pub preserve_untracked_directories: Vec<PathBuf>,
+    pub manifest_directory: PathBuf,
+    pub excluded_globs: &'static [&'static str],
 }
 
 impl ModLoader<'_> {
@@ -100,6 +114,29 @@ impl ModLoader<'_> {
             ModLoaderKind::Shimloader {} => &["shimloader/cfg"],
             ModLoaderKind::Lovely {} => &[],
             ModLoaderKind::ReturnOfModding { .. } => &["ReturnOfModding/config"],
+        }
+    }
+
+    pub fn server_deployment(&self) -> Option<ServerDeployment> {
+        match &self.kind {
+            ModLoaderKind::BepInEx { .. } | ModLoaderKind::BepisLoader { .. } => {
+                Some(ServerDeployment {
+                    loader_root: "BepInEx".into(),
+                    managed_directories: vec![
+                        "BepInEx/plugins".into(),
+                        "BepInEx/patchers".into(),
+                        "BepInEx/config".into(),
+                    ],
+                    preserve_untracked_directories: vec!["BepInEx/config".into()],
+                    manifest_directory: "BepInEx/config".into(),
+                    excluded_globs: &[
+                        "BepInEx/{cache,DumpedAssemblies,interop}/**",
+                        "BepInEx/LogOutput.log",
+                        "BepInEx/plugins/*/{README.md,CHANGELOG.md,icon.png}",
+                    ],
+                })
+            }
+            _ => None,
         }
     }
 }

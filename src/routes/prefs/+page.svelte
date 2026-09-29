@@ -33,6 +33,7 @@
 	import BackendPref from '$lib/components/prefs/BackendPref.svelte';
 	import HiddenModsPref from '$lib/components/prefs/HiddenModsPref.svelte';
 	import ColorPrefs from '$lib/components/prefs/ColorPrefs.svelte';
+	import ServerSettingsPref from '$lib/components/prefs/ServerSettingsPref.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -244,6 +245,10 @@
 				value={profiles.active.customArgs}
 				setValue={async (value) => await api.profile.setCustomArgs(value)}
 			/>
+
+			{#if games.active?.dedicatedServer}
+				<ServerSettingsPref />
+			{/if}
 		{/if}
 	{/if}
 </div>
