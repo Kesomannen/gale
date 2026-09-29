@@ -19,6 +19,9 @@
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
 	import { PersistedState } from '$lib/state/persisted-state.svelte';
+	import Checkbox from '../ui/Checkbox.svelte';
+	import Label from '../ui/Label.svelte';
+	import Info from '../ui/Info.svelte';
 
 	type State = 'off' | 'synced' | 'outdated' | 'missing';
 
@@ -125,6 +128,10 @@
 
 	async function refresh() {
 		await wrapApiCall(api.profile.sync.fetch, m.syncer_refresh_message());
+	}
+
+	async function setPreserveExtras(preserveExtras: boolean) {
+		await wrapApiCall(() => api.profile.sync.setPreserveExtras(preserveExtras));
 	}
 
 	async function disconnect() {
@@ -267,6 +274,16 @@
 			>
 				{m.syncer_button_disconnect()}
 			</Button>
+		</div>
+
+		<div class="mt-3 flex items-center">
+			<Label>{m.syncer_preserveExtras_title()}</Label>
+			<Info>{m.syncer_preserveExtras_content()}</Info>
+			<Checkbox
+				checked={syncInfo.preserveExtras}
+				disabled={loading}
+				onCheckedChange={setPreserveExtras}
+			/>
 		</div>
 	{:else if auth.user !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">

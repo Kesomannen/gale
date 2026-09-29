@@ -9,6 +9,8 @@ export const disconnect = (del: boolean) => invoke('disconnect_sync_profile', { 
 export const deleteProfile = (id: string) => invoke('delete_sync_profile', { id });
 export const pull = () => invoke('pull_sync_profile');
 export const fetch = () => invoke('fetch_sync_profile');
+export const setPreserveExtras = (preserveExtras: boolean) =>
+	invoke('set_sync_preserve_extras', { preserveExtras });
 export const getOwned = () => invoke<ListedSyncProfile[]>('get_owned_sync_profiles');
 export const login = () => invoke<SyncUser>('login');
 export const logout = () => invoke('logout');

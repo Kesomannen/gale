@@ -62,6 +62,8 @@ pub struct SyncProfileData {
     updated_at: DateTime<Utc>,
     #[serde(default)]
     pub missing: bool,
+    #[serde(default)]
+    preserve_extras: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -90,6 +92,7 @@ impl From<SyncProfileMetadata> for SyncProfileData {
             synced_at: value.updated_at,
             updated_at: value.updated_at,
             missing: false,
+            preserve_extras: false,
         }
     }
 }
@@ -122,6 +125,7 @@ async fn create_profile(app: &AppHandle) -> Result<String> {
         synced_at: response.updated_at,
         updated_at: response.updated_at,
         missing: false,
+        preserve_extras: false,
     });
 
     profile.save(app, true)?;
@@ -227,7 +231,7 @@ async fn clone_profile(id: &str, override_name: Option<String>, app: &AppHandle)
 }
 
 pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
-    let (id, profile_id, name, synced_at) = {
+    let (id, profile_id, name, synced_at, preserve_extras) = {
         let mut manager = app.lock_manager();
         let profile = manager.active_profile_mut();
 
@@ -238,6 +242,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
                 profile.id,
                 profile.name.clone(),
                 data.synced_at,
+                data.preserve_extras,
             ),
             None => return Ok(()),
         }
@@ -247,7 +252,10 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
 
     match metadata {
         Some(metadata) if !dry_run && metadata.updated_at > synced_at => {
-            download_and_import_file(Some(name), metadata.into(), app).await
+            let mut sync_profile: SyncProfileData = metadata.into();
+            sync_profile.preserve_extras = preserve_extras;
+
+            download_and_import_file(Some(name), sync_profile, app).await
         }
         metadata => {
             let mut manager = app.lock_manager();
@@ -261,6 +269,7 @@ pub async fn pull_profile(dry_run: bool, app: &AppHandle) -> Result<()> {
                 Some(metadata) => {
                     *sync = SyncProfileData {
                         synced_at: sync.synced_at,
+                        preserve_extras: sync.preserve_extras,
                         ..metadata.into()
                     };
                 }
@@ -295,9 +304,12 @@ async fn download_and_import_file(
         data.manifest.name = name;
     }
 
+    let preserve_extras = sync_profile.preserve_extras;
     let id = super::import::import_profile(
         data,
-        ImportOptions::default().ignore_missing_mods(true),
+        ImportOptions::default()
+            .ignore_missing_mods(true)
+            .merge(preserve_extras),
         InstallOptions::default(),
         app,
     )
@@ -311,6 +323,17 @@ async fn download_and_import_file(
         profile.sync = Some(sync_profile);
         profile.save(app, true)?;
     }
+
+    Ok(())
+}
+
+fn set_preserve_extras(preserve_extras: bool, app: &AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+    let sync = profile.sync.as_mut().ok_or_eyre("profile is not synced")?;
+
+    sync.preserve_extras = preserve_extras;
+    profile.save(app, true)?;
 
     Ok(())
 }
@@ -358,4 +381,46 @@ async fn get_owned_profiles(app: &AppHandle) -> Result<Vec<ListedSyncProfile>> {
         .await?;
 
     Ok(user.profiles.unwrap_or_default())
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    fn stored_sync_data() -> serde_json::Value {
+        json!({
+            "id": "ABC123",
+            "owner": {
+                "discordId": "1234",
+                "name": "owner",
+                "displayName": "Owner",
+                "avatar": null
+            },
+            "syncedAt": "2026-09-16T00:00:00Z",
+            "updatedAt": "2026-09-16T00:00:00Z",
+            "missing": false
+        })
+    }
+
+    #[test]
+    fn existing_sync_profiles_keep_delete_extras_behavior() {
+        let sync: SyncProfileData = serde_json::from_value(stored_sync_data()).unwrap();
+
+        assert!(!sync.preserve_extras);
+    }
+
+    #[test]
+    fn preserve_extras_setting_is_stored_locally() {
+        let mut value = stored_sync_data();
+        value["preserveExtras"] = json!(true);
+        let sync: SyncProfileData = serde_json::from_value(value).unwrap();
+
+        assert!(sync.preserve_extras);
+        assert_eq!(
+            serde_json::to_value(sync).unwrap()["preserveExtras"],
+            json!(true)
+        );
+    }
 }
