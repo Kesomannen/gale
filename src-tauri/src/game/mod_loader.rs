@@ -245,13 +245,11 @@ impl ModLoader<'static> {
             }
 
             (true, ModLoaderKind::Nucleus {}) => {
-                const FILES: &[&str] = &["Nucleus.dll"];
-
-                Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
+                const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
+                Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
             }
             (false, ModLoaderKind::Nucleus {}) => {
                 const SUBDIRS: &[Subdir] = &[Subdir::separated("", "mods")];
-
                 Box::new(SubdirInstaller::new(SUBDIRS).with_default(0))
             }
         }
