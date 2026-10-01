@@ -15,15 +15,9 @@
 	import * as api from '$lib/api';
 
 	import { platform } from '@tauri-apps/plugin-os';
-	import ColorPref from '$lib/components/prefs/ColorPref.svelte';
 
 	import Label from '$lib/components/ui/Label.svelte';
-	import {
-		accentColorSetting,
-		primaryColorSetting as primaryColorSetting,
-		useNativeMenu,
-		darkMode
-	} from '$lib/state/theme.svelte';
+	import { useNativeMenu, darkMode } from '$lib/state/theme.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
 	import profiles from '$lib/state/profile.svelte';
@@ -33,6 +27,8 @@
 	import BackendPref from '$lib/components/prefs/BackendPref.svelte';
 	import HiddenModsPref from '$lib/components/prefs/HiddenModsPref.svelte';
 	import ColorPrefs from '$lib/components/prefs/ColorPrefs.svelte';
+	import ExportFilesDialog from '$lib/components/dialogs/ExportFilesDialog.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -42,6 +38,8 @@
 	let shownPlatform = $derived.by(
 		() => gamePrefs?.platform ?? games.active?.platforms[0] ?? 'Unknown'
 	);
+
+	let exportFilesDialogOpen = $state(false);
 
 	$effect(() => {
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
@@ -244,8 +242,32 @@
 				value={profiles.active.customArgs}
 				setValue={async (value) => await api.profile.setCustomArgs(value)}
 			/>
+
+			<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
+
+			<div class="flex items-center">
+				<Label>{m.prefs_exportedCodeFiles_title()}</Label>
+				<Button icon="mdi:cog" color="primary" onclick={() => (exportFilesDialogOpen = true)}
+					>{m.prefs_exportedCodeFiles_button()}</Button
+				>
+			</div>
 		{/if}
 	{/if}
 </div>
 
 <ApiKeyDialog />
+
+<ExportFilesDialog
+	title={m.prefs_exportedCodeFiles_dialog_title()}
+	bind:open={exportFilesDialogOpen}
+>
+	{#snippet description()}
+		{m.prefs_exportedCodeFiles_dialog_content()}
+	{/snippet}
+
+	{#snippet buttons()}
+		<Button icon="mdi:check" color="accent" onclick={() => (exportFilesDialogOpen = false)}>
+			{m.prefs_exportedCodeFiles_dialog_button()}
+		</Button>
+	{/snippet}
+</ExportFilesDialog>

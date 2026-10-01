@@ -94,71 +94,90 @@ impl From<SyncProfileMetadata> for SyncProfileData {
     }
 }
 
-async fn create_profile(app: &AppHandle) -> Result<String> {
+enum Upload {
+    Success(CreateSyncProfileResponse),
+    TooLarge { size: usize },
+}
+
+async fn create_profile(app: &AppHandle) -> Result<Upload> {
     let Some(user) = auth::user_info(app) else {
         bail!("not logged in");
     };
 
-    let bytes = {
+    let profile_id = {
         let manager = app.lock_manager();
-        let game = manager.active_game();
-        let profile = game.active_profile();
-
-        let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(profile, &mut bytes, game.game)
-            .context("failed to export profile")?;
-
-        bytes.into_inner()
+        manager.active_profile().id
     };
 
-    let response = upload_profile_file(app, bytes, Method::POST, "/profile").await?;
+    let writer = Cursor::new(Vec::new());
+    let bytes = super::export::export_zip(app, profile_id, writer)
+        .await
+        .context("failed to export profile")?
+        .into_inner();
 
-    let mut manager = app.lock_manager();
-    let profile = manager.active_profile_mut();
+    let upload = upload_profile_file(app, bytes, Method::POST, "/profile").await?;
 
-    profile.sync = Some(SyncProfileData {
-        id: response.id.clone(),
-        owner: user,
-        synced_at: response.updated_at,
-        updated_at: response.updated_at,
-        missing: false,
-    });
+    match &upload {
+        Upload::Success(response) => {
+            let mut manager = app.lock_manager();
+            let profile = manager.active_profile_mut();
 
-    profile.save(app, true)?;
+            let id = response.id.clone();
 
-    Ok(response.id)
+            profile.sync = Some(SyncProfileData {
+                id,
+                owner: user,
+                synced_at: response.updated_at,
+                updated_at: response.updated_at,
+                missing: false,
+            });
+
+            profile.save(app, true)?;
+        }
+        Upload::TooLarge { .. } => (),
+    }
+
+    Ok(upload)
 }
 
-pub async fn push_profile(app: &AppHandle, profile_id: i64) -> Result<()> {
-    let (id, bytes) = {
+async fn push_profile(app: &AppHandle) -> Result<Upload> {
+    let (sync_id, profile_id) = {
         let manager = app.lock_manager();
-        let (game, profile) = manager.profile_by_id(profile_id)?;
+        let profile = manager.active_profile();
 
-        let id = profile
+        let sync_id = profile
             .sync
             .as_ref()
             .map(|data| data.id.clone())
             .ok_or_eyre("profile is not synced")?;
 
-        let mut bytes = Cursor::new(Vec::new());
-        super::export::export_zip(profile, &mut bytes, game).context("failed to export profile")?;
-
-        (id, bytes.into_inner())
+        (sync_id, profile.id)
     };
 
-    let response: CreateSyncProfileResponse =
-        upload_profile_file(app, bytes, Method::PUT, format!("/profile/{id}")).await?;
+    let writer = Cursor::new(Vec::new());
+    let bytes = super::export::export_zip(app, profile_id, writer)
+        .await
+        .context("failed to export profile")?
+        .into_inner();
 
-    let mut manager = app.lock_manager();
-    let (_, profile) = manager.profile_by_id_mut(profile_id)?;
-    let sync_data = profile.sync.as_mut().unwrap();
+    let upload: Upload =
+        upload_profile_file(app, bytes, Method::PUT, format!("/profile/{sync_id}")).await?;
 
-    sync_data.synced_at = response.updated_at;
-    sync_data.updated_at = response.updated_at;
+    match &upload {
+        Upload::Success(response) => {
+            let mut manager = app.lock_manager();
+            let (_, profile) = manager.profile_by_id_mut(profile_id)?;
+            let sync_data = profile.sync.as_mut().unwrap();
 
-    profile.save(app, true)?;
+            sync_data.synced_at = response.updated_at;
+            sync_data.updated_at = response.updated_at;
 
-    Ok(())
+            profile.save(app, true)?;
+        }
+        Upload::TooLarge { .. } => (),
+    }
+
+    Ok(upload)
 }
 
 async fn upload_profile_file(
@@ -166,8 +185,8 @@ async fn upload_profile_file(
     bytes: Vec<u8>,
     method: Method,
     endpoint: impl Display,
-) -> Result<CreateSyncProfileResponse> {
-    let len = bytes.len();
+) -> Result<Upload> {
+    let size = bytes.len();
     let res = request(method, endpoint, app)
         .await
         .body(bytes)
@@ -176,12 +195,9 @@ async fn upload_profile_file(
 
     if res.status().is_success() {
         let response = res.json().await?;
-        Ok(response)
+        Ok(Upload::Success(response))
     } else if res.status() == StatusCode::PAYLOAD_TOO_LARGE {
-        bail!(
-            "profile config is too large to upload: {}, please reduce the size by removing heavy and/or unneeded config files",
-            humansize::format_size(len, humansize::BINARY)
-        );
+        Ok(Upload::TooLarge { size })
     } else {
         bail!("upload failed with status: {}", res.status());
     }

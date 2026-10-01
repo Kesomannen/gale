@@ -43,13 +43,9 @@
 		{title}
 	</label>
 
-	<div
-		class="overflow-x-hidden"
-		class:overflow-y-auto={maxHeight !== 'none'}
-		class:max-h-96={maxHeight === 'sm'}
-	>
+	<div class="overflow-x-hidden overflow-y-auto" class:max-h-96={maxHeight === 'sm'}>
 		{#each items as item, i}
-			<div
+			<label
 				class="text-primary-700 dark:text-primary-300 dark:even:bg-primary-900/30 even:bg-primary-100 flex items-center px-4 py-2"
 			>
 				<Checkbox
@@ -61,7 +57,7 @@
 				{#if itemSnippet}{@render itemSnippet({ item, index: i })}{:else}
 					{getLabel(item, i)}
 				{/if}
-			</div>
+			</label>
 		{/each}
 	</div>
 </div>

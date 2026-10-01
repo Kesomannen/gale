@@ -52,7 +52,7 @@
 							classProp,
 							sub && submenuClass,
 							commonContentClass,
-							'border-primary-300 dark:border-primary-600 dark:bg-primary-800 bg-white'
+							'border-primary-300 dark:border-primary-600 dark:bg-primary-800 bg-white font-normal'
 						]}
 						in:fly={dropIn}
 						out:fade={dropOut}

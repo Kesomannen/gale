@@ -104,7 +104,14 @@
 	"exportCodeDialog_done": "Export complete! Click the code to copy it to your clipboard:",
 	"exportCodeDialog_galeExclusive": "This profile contains mods which are not available on Thunderstore. This code may only be imported with Gale.",
 	"exportCodeDialog_loading": "Exporting {name}...",
+	"exportCodeDialog_sizeLimit_button_cancel": "Cancel",
+	"exportCodeDialog_sizeLimit_button_retry": "Retry",
+	"exportCodeDialog_sizeLimit_content": "The size of your config files exceeds the export limit. Review the list below and uncheck large but unnecessary files. Note that those files will not be shared with others who import the profile code.",
+	"exportCodeDialog_sizeLimit_title": "Export file size limit hit",
 	"exportCodeDialog_title": "Export as code",
+	"exportFilesDialog_list_title": "Include all",
+	"exportFilesDialog_noFiles": "No config files found",
+	"exportFilesDialog_totalSize": "Total size: ~{size}",
 	"fetchModsBar_content": "Fetching mods from {backends}...",
 	"flagsConfig_placeholder": "Select flags",
 	"fontFamilyPref_placeholder": "Search for a font...",
@@ -401,6 +408,11 @@
 	"prefs_appearance_darkMode_title": "Dark mode",
 	"prefs_appearance_nativeMenubar_title": "Use native menubar",
 	"prefs_appearance_title": "Appearance",
+	"prefs_exportedCodeFiles_button": "Configure",
+	"prefs_exportedCodeFiles_dialog_button": "Done",
+	"prefs_exportedCodeFiles_dialog_content": "Only the checked files will be included in profile exports and shared with those who import.",
+	"prefs_exportedCodeFiles_dialog_title": "Manage exported files",
+	"prefs_exportedCodeFiles_title": "Exported config files",
 	"prefs_gameSettings_launch_title": "Launch",
 	"prefs_gameSettings_locations_dirOverride_content": "Overrides the location of the {game} folder. If unset, Gale will try to find it via the specified platform instead.",
 	"prefs_gameSettings_locations_dirOverride_content_needs": "The location of the {game} folder.",
@@ -452,6 +464,7 @@
 	"syncer_button_copyConetnt": "Copy to clipboard",
 	"syncer_button_disconnect": "Disconnect",
 	"syncer_button_login": "Sign in with Discord",
+	"syncer_button_manageFiles": "Manage config files",
 	"syncer_button_pull": "Pull update",
 	"syncer_button_push": "Push update",
 	"syncer_button_refresh": "Refresh",
@@ -467,6 +480,11 @@
 	"syncer_disconnect_message": "Disconnected synced profile.",
 	"syncer_dropdownItems_login": "Sign out",
 	"syncer_dropdownItems_showOwnedProfiles": "Show owned profiles",
+	"syncer_manageFiles_button_done": "Done",
+	"syncer_manageFiles_content": "Only the checked config files will be synced to the users of the profile.",
+	"syncer_manageFiles_sizeLimit_content": "The size of your config files exceeds the share limit. Review the list below and uncheck large but unnecessary files. Note that those files will not be shared with others who import the profile code.",
+	"syncer_manageFiles_sizeLimit_title": "Profile size limit hit",
+	"syncer_manageFiles_title": "Manage synced files",
 	"syncer_onLoginClicked_message": "Signed in with Discord as {name}.",
 	"syncer_pull_message": "Pulled changes from synced profile.",
 	"syncer_push_message": "Pushed update to synced profile.",
@@ -497,17 +515,12 @@
 	"updateAllBanner_button": "Update all",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "There is one update available.",
 				"countPlural=other": "There are {count} updates available."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Update mods",

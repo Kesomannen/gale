@@ -7,6 +7,7 @@
 - Copy link context menu option to copy a mod's Thunderstore or Hexium URL
 - Ukrainian translation (thanks [@VoronUA1](https://github.com/VoronUA1))
 - Note in the modpack upload dialog in case the modpack was uploaded as a hidden mod (thanks [@bwoebi](https://github.com/bwoebi))
+- Ability to configure which files are included in code exports and synced profiles
 
 ### Changed
 
@@ -44,6 +45,7 @@
 - Some Thunderstore-specific language in UI text
 - Incompatibility when both Gale and Steam are installed as Flatpaks
 - Duplicate categories appearing on games with both Thunderstore and Hexium
+- The UI sometimes becoming unresponsive while exporting a profile code or file
 
 ## 1.22.2 (2026-08-25)
 
