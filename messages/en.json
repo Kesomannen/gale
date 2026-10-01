@@ -512,7 +512,7 @@
 	"unknownModsBanner_dialog_content_2": "They may have been removed from the modding platform, or installed from a source you have since disabled.",
 	"unknownModsBanner_ignore_content": "Ignore",
 	"unknownModsBanner_uninstall_content": "Uninstall",
-	"updateAllBanner_button": "Update all",
+	"updateAllBanner_button": "Review updates",
 	"updateAllBanner_content": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
