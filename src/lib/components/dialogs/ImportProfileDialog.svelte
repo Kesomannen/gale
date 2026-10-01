@@ -38,6 +38,7 @@
 	let loading = $state(false);
 	let importAll = $state(false);
 	let merge = $state(false);
+	let ignoreConfigs = $state(false);
 	let mode: 'new' | 'overwrite' = $state('new');
 
 	let unlistenFn: UnlistenFn | undefined;
@@ -102,7 +103,7 @@
 		if (data.type === 'legacy') {
 			data.manifest.profileName = name;
 
-			await api.profile.import.profile(data, { importAll, merge });
+			await api.profile.import.profile(data, { importAll, merge, ignoreConfigs });
 		} else {
 			await api.profile.sync.clone(data.id, name);
 		}
@@ -255,7 +256,25 @@
 					{m.importProfileDialog_importAllFiles_content1()}
 					<b>{m.importProfileDialog_importAllFiles_content2()}</b>
 				</Info>
-				<Checkbox bind:checked={importAll} />
+				<Checkbox
+					bind:checked={importAll}
+					onCheckedChange={(checked) => {
+						if (checked) ignoreConfigs = false;
+					}}
+				/>
+			</div>
+
+			<div class="mt-1 flex items-center">
+				<Label>{m.importProfileDialog_ignoreConfigs_title()}</Label>
+				<Info>
+					{m.importProfileDialog_ignoreConfigs_content()}
+				</Info>
+				<Checkbox
+					bind:checked={ignoreConfigs}
+					onCheckedChange={(checked) => {
+						if (checked) importAll = false;
+					}}
+				/>
 			</div>
 
 			{#if mode === 'overwrite'}

@@ -137,6 +137,8 @@
 	"importProfileDialog_details_advancedOptions": "Advanced options",
 	"importProfileDialog_details_install": "{length} mods to install",
 	"importProfileDialog_hexium_warning": "This profile contains Hexium mods. Importing the profile will download mods that have not been verified by Thunderstore.",
+	"importProfileDialog_ignoreConfigs_content": "Import mods only. Local config files are left unchanged.",
+	"importProfileDialog_ignoreConfigs_title": "Ignore config files",
 	"importProfileDialog_importAllFiles_content1": "Import all files found in the profile, instead of just well-known config file formats. This is unsafe and can let an attacker install malware on your system. ",
 	"importProfileDialog_importAllFiles_content2": "Only enable this for trusted profiles!",
 	"importProfileDialog_importAllFiles_title": "Import all files",

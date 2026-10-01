@@ -148,6 +148,7 @@ pub struct ImportOptions {
     import_all: bool,
     merge: bool,
     ignore_missing_mods: bool,
+    ignore_configs: bool,
 }
 
 impl ImportOptions {
@@ -190,17 +191,19 @@ pub(super) async fn import_profile(
 
     let result = match result {
         Ok(()) => {
-            let manager = app.lock_manager();
-            let (_, profile) = manager.profile_by_id(profile_id)?;
+            if !options.ignore_configs {
+                let manager = app.lock_manager();
+                let (_, profile) = manager.profile_by_id(profile_id)?;
 
-            import_config(
-                &profile_path,
-                &data.path,
-                game.mod_loader.mod_config_dirs(),
-                |path| !profile.excluded_export_files.contains(path),
-                &options,
-            )
-            .context("error importing config")?;
+                import_config(
+                    &profile_path,
+                    &data.path,
+                    game.mod_loader.mod_config_dirs(),
+                    |path| !profile.excluded_export_files.contains(path),
+                    &options,
+                )
+                .context("error importing config")?;
+            }
 
             Ok(profile_id)
         }
