@@ -17,6 +17,7 @@
 - The custom launch argument fields now support prefixes with arguments, similarly to Steam's custom arguments (thanks [@avnyu](https://github.com/avnyu))
   - For example, this now supports cases like `cmd --arg %command%`. Previously `cmd --arg` would be treated as a single executable
   - **Includes a breaking change**: words containing a `=` (such as `--opt=value` or `ENV=value`) were previously always passed as environment variables. After this change, only valid environment variable names will be treated as such (meaning `--opt=value` will now be passed as an argument).
+- Massively improved Russian translation
 
 ### Fixed
 
@@ -25,6 +26,7 @@
 - Deleted config files remaining in the config editor until the app is restarted
 - Sync donation notice reappearing each time the dialog is opened
 - Config file editor sometimes becoming stale after switching profiles
+- `WEBKIT_DISABLE_DMABUF_RENDERER=1` is now automatically set on Linux when an NVIDIA GPU is detected, which should fix issues with rendering on certain systems
 
 ## 1.22.3 (2026-09-16)
 
