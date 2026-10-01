@@ -497,17 +497,12 @@
 	"updateAllBanner_button": "Оновити всі",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Доступне одне оновлення.",
 				"countPlural=other": "Доступно {count} оновлень."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Оновити моди",

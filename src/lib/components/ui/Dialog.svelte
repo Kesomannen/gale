@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
-	import { fade, fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	import { expoOut, linear, quadIn, sineIn } from 'svelte/easing';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
@@ -52,12 +51,13 @@
 >
 	<Dialog.Portal>
 		<Dialog.Overlay forceMount class="pointer-events-none" data-tauri-drag-region={!canClose}>
-			{#snippet child({ props, open })}
+			{#snippet child({ props: { style, ...props }, open })}
 				{#if open}
 					<div
 						{...props}
 						transition:fade={{ duration: 80 }}
-						class="fixed inset-0 z-0 rounded-lg bg-black/60"
+						class="fixed inset-0 z-0 rounded-lg"
+						style="background-color: rgba(0, 0, 0, calc(60%/(var(--bits-dialog-depth) + var(--bits-dialog-nested-count) + 1))); {style}"
 					></div>
 				{/if}
 			{/snippet}
@@ -67,11 +67,7 @@
 			class="pointer-events-none"
 		>
 			{#if open}
-				<div
-					class="pointer-events-none fixed inset-0 flex items-center justify-center"
-					in:fly={{ duration: 200, easing: expoOut, y: 8 }}
-					out:fly={{ duration: 50, easing: linear, y: 5 }}
-				>
+				<div class="pointer-events-none fixed inset-0 flex items-center justify-center">
 					<div
 						class={[
 							large ? 'max-w-240' : 'max-w-140',

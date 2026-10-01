@@ -109,6 +109,12 @@ pub fn run() {
         eprintln!("failed to set up logger: {err:#}");
     });
 
+    // SAFETY: no other threads have been spawned yet
+    #[cfg(target_os = "linux")]
+    unsafe {
+        util::webkit::apply_workarounds();
+    }
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             is_flatpak,
@@ -188,6 +194,8 @@ pub fn run() {
             profile::export::commands::copy_dependency_strings,
             profile::export::commands::export_dependency_strings,
             profile::export::commands::copy_debug_info,
+            profile::export::commands::list_export_files,
+            profile::export::commands::set_excluded_export_files,
             profile::sync::commands::read_sync_profile,
             profile::sync::commands::create_sync_profile,
             profile::sync::commands::disconnect_sync_profile,

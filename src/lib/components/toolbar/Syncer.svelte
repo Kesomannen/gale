@@ -3,7 +3,7 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import SyncAvatar from '$lib/components/ui/SyncAvatar.svelte';
 	import * as api from '$lib/api';
-	import type { ListedSyncProfile } from '$lib/types';
+	import type { ListedSyncProfile, SyncCreateResult } from '$lib/types';
 	import { pushInfoToast } from '$lib/toast';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -19,6 +19,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
 	import { PersistedState } from '$lib/state/persisted-state.svelte';
+	import ExportFilesDialog from '../dialogs/ExportFilesDialog.svelte';
 
 	type State = 'off' | 'synced' | 'outdated' | 'missing';
 
@@ -42,6 +43,9 @@
 	);
 
 	let donationClosedAt = new PersistedState<string | null>('donationClosedAt', null);
+
+	let manageFilesDialogOpen = $state(false);
+	let exportTooLarge = $state(false);
 
 	let style = $derived(
 		{
@@ -110,12 +114,25 @@
 		}
 	}
 
+	async function handleCreateResult(result: SyncCreateResult) {
+		if (result.type === 'success') return true;
+		exportTooLarge = true;
+		manageFilesDialogOpen = true;
+		return false;
+	}
+
 	async function connect() {
-		await wrapApiCall(api.profile.sync.create, m.syncer_connect_message());
+		await wrapApiCall(async () => {
+			const result = await api.profile.sync.create();
+			return handleCreateResult(result);
+		}, m.syncer_connect_message());
 	}
 
 	async function push() {
-		await wrapApiCall(api.profile.sync.push, m.syncer_push_message());
+		await wrapApiCall(async () => {
+			const result = await api.profile.sync.push();
+			return handleCreateResult(result);
+		}, m.syncer_push_message());
 	}
 
 	async function pull() {
@@ -152,7 +169,9 @@
 	async function wrapApiCall(call: () => Promise<any>, message?: string) {
 		loading = true;
 		try {
-			await call();
+			if ((await call()) === false) {
+				return;
+			}
 			if (message) {
 				pushInfoToast({ message });
 			}
@@ -268,6 +287,17 @@
 				{m.syncer_button_disconnect()}
 			</Button>
 		</div>
+
+		<div class="mt-2">
+			<Button
+				onclick={() => (manageFilesDialogOpen = true)}
+				disabled={auth.user === null}
+				color="primary"
+				icon="mdi:cog"
+			>
+				{m.syncer_button_manageFiles()}
+			</Button>
+		</div>
 	{:else if auth.user !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
 			{m.syncer_button_connect()}
@@ -308,3 +338,22 @@
 		>
 	</div>
 </Dialog>
+
+<ExportFilesDialog
+	title={exportTooLarge ? m.syncer_manageFiles_sizeLimit_title() : m.syncer_manageFiles_title()}
+	bind:open={manageFilesDialogOpen}
+>
+	{#snippet description()}
+		{#if exportTooLarge}
+			{m.syncer_manageFiles_sizeLimit_content()}
+		{:else}
+			{m.syncer_manageFiles_content()}
+		{/if}
+	{/snippet}
+
+	{#snippet buttons()}
+		<Button icon="mdi:check" color="accent" onclick={() => (manageFilesDialogOpen = false)}>
+			{m.syncer_manageFiles_button_done()}
+		</Button>
+	{/snippet}
+</ExportFilesDialog>
