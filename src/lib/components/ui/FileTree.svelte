@@ -168,6 +168,8 @@
 		if (size >= 10 * 1024 * 1024) return 'font-medium text-primary-700 dark:text-primary-200';
 		// 1 MiB
 		if (size >= 1024 * 1024) return 'font-medium text-primary-700 dark:text-primary-200';
+		// 100 KiB
+		if (size >= 100 * 1024) return 'text-primary-600 dark:text-primary-300';
 		return 'text-primary-500 dark:text-primary-400';
 	}
 
