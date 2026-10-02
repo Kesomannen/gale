@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.23.0 (2026-10-02)
 
 ### Added
 
@@ -13,6 +13,7 @@
 - Mod context menu option to switch between sources
 - Ability to configure which files are included in code exports and synced profiles
   - A dialog is now opened if a profile export was rejected due to size limits, instead of a standard error message
+- Support for the Nucleus mod loader (thanks [@u0068](https://github.com/u0068))
 
 ### Changed
 

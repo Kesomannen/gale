@@ -4,9 +4,7 @@
 		type SortBy,
 		type Mod,
 		type ModId,
-		Backend,
 		type ModContextItem,
-		type DeduplicatedMod,
 		type BrowsedMod
 	} from '$lib/types';
 
@@ -16,7 +14,6 @@
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import ModListItem from '$lib/components/mod-list/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
-	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
 	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
 	import { defaultContextItems } from '$lib/context';
 	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
@@ -29,7 +26,6 @@
 	import {
 		extractDeduplicatedMod,
 		getPreferredBackend,
-		resolveModContextItems,
 		shouldWarnForeignDownload
 	} from '$lib/util';
 	import DeduplicatedModDetails from '$lib/components/mod-list/DeduplicatedModDetails.svelte';
@@ -122,7 +118,7 @@
 
 	function onModClicked(evt: MouseEvent, mod: Mod) {
 		if (evt.ctrlKey) {
-			//installLatest(mod);
+			installLatest(mod);
 		} else if (selectedMod && itemUuid(selectedMod) === mod.uuid) {
 			selectedMod = null;
 		} else {
