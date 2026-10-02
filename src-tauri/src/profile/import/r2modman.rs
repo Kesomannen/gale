@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     fs::{self},
     path::PathBuf,
 };
@@ -168,6 +169,7 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
             game: None,
             ignored_version_updates: Vec::new(),
             ignored_package_updates: Vec::new(),
+            excluded_files: HashSet::new(),
         },
         path: profile_dir,
         delete_after_import: false,
@@ -177,7 +179,11 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
 }
 
 fn find_path() -> Option<PathBuf> {
-    let parent_dir = if cfg!(target_os = "linux") { dirs_next::config_dir() } else { dirs_next::data_dir() }
+    let parent_dir = if cfg!(target_os = "linux") {
+        dirs_next::config_dir()
+    } else {
+        dirs_next::data_dir()
+    }
     .unwrap();
 
     parent_dir

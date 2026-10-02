@@ -12,6 +12,7 @@
 		confirmClose?: { message: string } | null;
 		canClose?: boolean;
 		large?: boolean;
+		noscroll?: boolean;
 		onclose?: () => void;
 		children?: Snippet;
 	};
@@ -22,6 +23,7 @@
 		confirmClose = null,
 		canClose = true,
 		large = false,
+		noscroll = false,
 		onclose,
 		children
 	}: Props = $props();
@@ -71,7 +73,8 @@
 					<div
 						class={[
 							large ? 'max-w-240' : 'max-w-140',
-							'border-primary-300 dark:border-primary-600 dark:bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border bg-white p-6 shadow-xl'
+							noscroll ? 'flex flex-col overflow-y-hidden' : 'overflow-y-auto',
+							'border-primary-300 dark:border-primary-600 dark:bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden rounded-xl border bg-white p-6 shadow-xl'
 						]}
 					>
 						{#if title}

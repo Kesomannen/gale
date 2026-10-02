@@ -8,6 +8,7 @@
 
 	type Props = {
 		mod: Mod;
+		combinedDownloads?: number;
 		isInstalled?: boolean;
 		selected?: boolean;
 		locked?: boolean;
@@ -18,6 +19,7 @@
 
 	let {
 		mod,
+		combinedDownloads,
 		isInstalled = false,
 		selected = false,
 		locked = false,
@@ -27,6 +29,8 @@
 	}: Props = $props();
 
 	let loading = $state(false);
+
+	let downloads = $derived(combinedDownloads ?? mod.downloads ?? 0);
 </script>
 
 <ModItemWithContext uuid={mod.uuid} {mod} {locked} {contextItems}>
@@ -72,10 +76,8 @@
 			{/if}
 
 			<div class="mt-1 flex flex-wrap items-center gap-1">
-				{#if mod.downloads !== null}
-					<Icon class="shrink-0" icon="mdi:download-outline" />
-					<span class="mr-4">{shortenNum(mod.downloads)}</span>
-				{/if}
+				<Icon class="shrink-0" icon="mdi:download-outline" />
+				<span class="mr-4">{shortenNum(downloads)}</span>
 				{#if mod.lastUpdated}
 					<Icon class="shrink-0" icon="mdi:clock-outline" />
 					<span class="mr-2">{timeSince(new Date(mod.lastUpdated))}</span>

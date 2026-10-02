@@ -7,6 +7,7 @@
 	import type { Snippet } from 'svelte';
 	import { m } from '$lib/paraglide/messages';
 	import HelpCard from '../ui/HelpCard.svelte';
+	import profiles from '$lib/state/profile.svelte';
 
 	type Props = {
 		open: boolean;
@@ -41,9 +42,14 @@
 			});
 		}
 	});
+
+	$effect(() => {
+		profiles.activeId;
+		files = null;
+	});
 </script>
 
-<Dialog {title} open={open && files !== null} onclose={() => (open = false)}>
+<Dialog {title} open={open && files !== null} onclose={() => (open = false)} large noscroll>
 	<p class="text-gray-700 dark:text-gray-300">
 		{@render description?.()}
 	</p>
@@ -60,8 +66,11 @@
 					file.included = checked;
 					save();
 				}}
+				setAll={(checked) => {
+					sortedFiles.forEach((file) => (file.included = checked));
+					save();
+				}}
 				class="mt-2"
-				maxHeight="sm"
 			>
 				{#snippet item({ item: file })}
 					<div class="w-1/2 truncate" style="direction: rtl;" title={file.path}>

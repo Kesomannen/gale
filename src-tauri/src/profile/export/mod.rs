@@ -42,6 +42,8 @@ pub struct ProfileManifest {
     pub ignored_version_updates: Vec<Uuid>,
     #[serde(default)]
     pub ignored_package_updates: Vec<Uuid>,
+    #[serde(default)]
+    pub excluded_files: HashSet<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -138,13 +140,7 @@ fn prepare_export(profile: &Profile) -> Result<(ProfileManifest, Vec<PathBuf>)> 
         })
         .collect();
 
-    let manifest = ProfileManifest {
-        name: profile.name.clone(),
-        game: Some(profile.game.slug.to_string()),
-        mods,
-        ignored_version_updates: profile.ignored_version_updates.iter().copied().collect(),
-        ignored_package_updates: profile.ignored_package_updates.iter().copied().collect(),
-    };
+    let mut excluded_files = HashSet::new();
 
     let config_paths = list_export_files(profile)
         .filter_ok(|file| {
@@ -152,11 +148,21 @@ fn prepare_export(profile: &Profile) -> Result<(ProfileManifest, Vec<PathBuf>)> 
                 true
             } else {
                 trace!(path = %file.path.display(), "excluding file from export");
+                excluded_files.insert(file.path.to_string_lossy().replace("\\", "/"));
                 false
             }
         })
-        .map_ok(|file| profile.path.join(file.path))
+        .map_ok(|file| file.path)
         .collect::<Result<Vec<_>>>()?;
+
+    let manifest = ProfileManifest {
+        name: profile.name.clone(),
+        game: Some(profile.game.slug.to_string()),
+        mods,
+        ignored_version_updates: profile.ignored_version_updates.iter().copied().collect(),
+        ignored_package_updates: profile.ignored_package_updates.iter().copied().collect(),
+        excluded_files,
+    };
 
     Ok((manifest, config_paths))
 }
@@ -322,10 +328,13 @@ where
     Ok(())
 }
 
-pub(super) fn find_config<'a>(
+pub(super) fn find_config<'a, P>(
     root: &'a Path,
-    config_dirs: &'a [&str],
-) -> impl Iterator<Item = PathBuf> + 'a {
+    config_dirs: &'a [P],
+) -> impl Iterator<Item = PathBuf> + 'a
+where
+    P: AsRef<Path> + 'a,
+{
     static INCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
             .add(Glob::new("*.{cfg,txt,json,yml,yaml,ini}").unwrap())

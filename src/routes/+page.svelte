@@ -39,6 +39,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { untrack } from 'svelte';
 	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
+	import { pushInfoToast } from '$lib/toast';
 
 	const sortOptions: SortBy[] = [
 		'custom',

@@ -161,11 +161,14 @@
 
 			{#snippet item({ mod })}
 				{@const shownMod = extractDeduplicatedMod(mod.data, getPreferredBackend(mod.data))!}
+				{@const combinedDownloads =
+					(mod.data.hexium?.downloads ?? 0) + (mod.data.thunderstore?.downloads ?? 0)}
 
 				<ModListItem
+					{contextItems}
+					{combinedDownloads}
 					mod={shownMod}
 					isInstalled={mod.isInstalled}
-					{contextItems}
 					selected={selectedMod !== null && itemUuid(selectedMod) === shownMod.uuid}
 					locked={profiles.activeLocked}
 					oninstall={() => installLatest(shownMod)}

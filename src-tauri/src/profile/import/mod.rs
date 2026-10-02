@@ -180,6 +180,9 @@ pub(super) async fn import_profile(
         "importing profile"
     );
 
+    // we import config files later, but by then the manifest is already consumed
+    let excluded_files = data.manifest.excluded_files.clone();
+
     let (profile_id, profile_path, game, to_install) =
         prepare_import(&options, data.manifest, app)?;
 
@@ -194,6 +197,10 @@ pub(super) async fn import_profile(
                 &profile_path,
                 &data.path,
                 game.mod_loader.mod_config_dirs(),
+                |path| {
+                    path.to_str()
+                        .is_some_and(|str| !excluded_files.contains(str))
+                },
                 &options,
             )
             .context("error importing config")?;
@@ -355,20 +362,28 @@ fn incremental_update(
 }
 
 #[tracing::instrument(skip_all, fields(dest = %dest.display(), src = %src.display()))]
-pub fn import_config(
+pub fn import_config<P, F>(
     dest: &Path,
     src: &Path,
-    config_dirs: &[&str],
+    config_dirs: &[P],
+    mut exclude_dest_files: F,
     options: &ImportOptions,
-) -> Result<()> {
+) -> Result<()>
+where
+    P: AsRef<Path>,
+    F: FnMut(&Path) -> bool,
+{
     let src_files: HashSet<PathBuf> = super::export::list_files(src)
         .filter(|path| options.import_all || is_always_imported(path))
         .collect();
 
-    let dest_files: HashSet<PathBuf> = super::export::find_config(dest, config_dirs).collect();
+    let dest_files: HashSet<PathBuf> = super::export::find_config(dest, config_dirs)
+        .filter(|file| exclude_dest_files(file))
+        .collect();
 
     if !options.merge {
         // remove existing extra config files that are not in the imported profile
+        // and were not explicitly ignored by the dest_files_filter
         for extra_file in dest_files.difference(&src_files) {
             let extra_path = dest.join(extra_file);
             trace!(
