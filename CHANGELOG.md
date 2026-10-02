@@ -31,7 +31,6 @@
 - The current version of a mod is no longer shown in the "Change version" context menu
 - # Minor UI changes
 - Massively improved Russian translation
-  > > > > > > > master
 
 ### Fixed
 
