@@ -180,9 +180,6 @@ pub(super) async fn import_profile(
         "importing profile"
     );
 
-    // we import config files later, but by then the manifest is already consumed
-    let excluded_files = data.manifest.excluded_files.clone();
-
     let (profile_id, profile_path, game, to_install) =
         prepare_import(&options, data.manifest, app)?;
 
@@ -193,14 +190,14 @@ pub(super) async fn import_profile(
 
     let result = match result {
         Ok(()) => {
+            let manager = app.lock_manager();
+            let (_, profile) = manager.profile_by_id(profile_id)?;
+
             import_config(
                 &profile_path,
                 &data.path,
                 game.mod_loader.mod_config_dirs(),
-                |path| {
-                    path.to_str()
-                        .is_some_and(|str| !excluded_files.contains(str))
-                },
+                |path| !profile.excluded_export_files.contains(path),
                 &options,
             )
             .context("error importing config")?;
@@ -274,8 +271,13 @@ fn prepare_import(
         (profile, installs)
     };
 
-    profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
-    profile.ignored_package_updates = ignored_package_updates.into_iter().collect();
+    profile.ignored_version_updates = ignored_version_updates;
+    profile.ignored_package_updates = ignored_package_updates;
+    profile.excluded_export_files = manifest
+        .excluded_files
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
 
     let id = profile.id;
     let path = profile.path.clone();
@@ -366,7 +368,7 @@ pub fn import_config<P, F>(
     dest: &Path,
     src: &Path,
     config_dirs: &[P],
-    mut exclude_dest_files: F,
+    mut dest_files_filter: F,
     options: &ImportOptions,
 ) -> Result<()>
 where
@@ -378,7 +380,7 @@ where
         .collect();
 
     let dest_files: HashSet<PathBuf> = super::export::find_config(dest, config_dirs)
-        .filter(|file| exclude_dest_files(file))
+        .filter(|file| dest_files_filter(file))
         .collect();
 
     if !options.merge {
