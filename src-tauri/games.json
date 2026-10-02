@@ -2057,6 +2057,22 @@
 		}
 	},
 	{
+		"name": "Primordialis",
+		"slug": "primordialis",
+		"modLoader": {
+			"name": "Nucleus",
+			"packageName": "u0068-Nucleus"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3011360
+			}
+		},
+		"backends": [
+			"Hexium"
+		]
+	},
+	{
 		"name": "Project Arrhythmia",
 		"slug": "project-arrhythmia",
 		"modLoader": {
