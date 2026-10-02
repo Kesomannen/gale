@@ -28,6 +28,48 @@
 	.dark * {
 		scrollbar-color: var(--color-primary-500) var(--color-primary-800);
 	}
+
+	/*
+	 * WebKitGTK draws scrollbars styled with scrollbar-color (and its default ones) above everything
+	 * else, so they show through dialogs. Scrollbars styled with the pseudo-elements are drawn in order,
+	 * but the pseudo-elements are ignored unless scrollbar-color is auto.
+	 */
+	.webkitgtk * {
+		scrollbar-color: auto;
+	}
+
+	.webkitgtk ::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+		background-color: var(--color-white);
+	}
+
+	.webkitgtk ::-webkit-scrollbar-thumb {
+		border: 2px solid transparent;
+		border-radius: 5px;
+		background-clip: content-box;
+		background-color: var(--color-primary-300);
+	}
+
+	.webkitgtk ::-webkit-scrollbar-thumb:hover {
+		background-color: var(--color-primary-400);
+	}
+
+	.webkitgtk ::-webkit-scrollbar-corner {
+		background-color: transparent;
+	}
+
+	.webkitgtk.dark ::-webkit-scrollbar {
+		background-color: var(--color-primary-800);
+	}
+
+	.webkitgtk.dark ::-webkit-scrollbar-thumb {
+		background-color: var(--color-primary-500);
+	}
+
+	.webkitgtk.dark ::-webkit-scrollbar-thumb:hover {
+		background-color: var(--color-primary-400);
+	}
 }
 
 @theme {
