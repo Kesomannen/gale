@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { shortenFileSize } from '$lib/util';
-	import Checklist from '../ui/Checklist.svelte';
+	import FileTree from '../ui/FileTree.svelte';
 	import Dialog from '../ui/Dialog.svelte';
 	import type { ExportFile } from '$lib/types';
 	import * as api from '$lib/api';
@@ -20,10 +20,8 @@
 
 	let files: ExportFile[] | null = $state(null);
 
-	const sortedFiles = $derived.by(() => files?.toSorted((a, b) => b.size - a.size) ?? []);
-
-	const totalSize = $derived.by(() =>
-		sortedFiles.filter((file) => file.included).reduce((sum, file) => sum + file.size, 0)
+	const totalSize = $derived.by(
+		() => files?.filter((file) => file.included).reduce((sum, file) => sum + file.size, 0) ?? 0
 	);
 
 	async function save() {
@@ -50,7 +48,7 @@
 </script>
 
 <Dialog {title} open={open && files !== null} onclose={() => (open = false)} large noscroll>
-	<p class="text-gray-700 dark:text-gray-300">
+	<p class="shrink-0 text-gray-700 dark:text-gray-300">
 		{@render description?.()}
 	</p>
 
@@ -58,39 +56,30 @@
 		{#if files.length === 0}
 			<HelpCard class="mt-2" title={m.exportFilesDialog_noFiles()} icon="mdi:search" />
 		{:else}
-			<Checklist
+			<FileTree
 				title={m.exportFilesDialog_list_title()}
-				items={sortedFiles}
+				items={files}
+				getPath={(file) => file.path}
+				getSize={(file) => file.size}
 				get={(file) => file.included}
-				set={(file, _, checked) => {
+				set={(file, checked) => {
 					file.included = checked;
 					save();
 				}}
-				setAll={(checked) => {
-					sortedFiles.forEach((file) => (file.included = checked));
+				setMany={(files, checked) => {
+					files.forEach((file) => (file.included = checked));
 					save();
 				}}
 				class="mt-2"
-			>
-				{#snippet item({ item: file })}
-					<div class="w-1/2 truncate" style="direction: rtl;" title={file.path}>
-						&#x200E; {file.path}
-					</div>
-					<div class="mx-auto font-medium">{shortenFileSize(file.size)}</div>
-				{/snippet}
-			</Checklist>
+			/>
 
-			<div>
-				{#if sortedFiles.length > 0}
-					<div class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-						{m.exportFilesDialog_totalSize({ size: shortenFileSize(totalSize) })}
-					</div>
-				{/if}
+			<div class="mt-2 shrink-0 text-center text-sm text-gray-600 dark:text-gray-400">
+				{m.exportFilesDialog_totalSize({ size: shortenFileSize(totalSize) })}
 			</div>
 		{/if}
 	{/if}
 
-	<div class="mt-2 flex items-center justify-end gap-1">
+	<div class="mt-2 flex shrink-0 items-center justify-end gap-1">
 		{@render buttons?.()}
 	</div>
 </Dialog>

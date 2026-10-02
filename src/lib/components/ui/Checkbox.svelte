@@ -6,6 +6,7 @@
 	type Props = {
 		id?: string;
 		checked?: boolean;
+		indeterminate?: boolean;
 		disabled?: boolean;
 		onCheckedChange?: (newValue: boolean) => void;
 		class?: ClassValue;
@@ -14,13 +15,14 @@
 	let {
 		id,
 		checked = $bindable(false),
+		indeterminate = false,
 		disabled = false,
 		onCheckedChange,
 		class: classProp
 	}: Props = $props();
 
 	let stateClasses = $derived(
-		checked
+		checked || indeterminate
 			? [
 					!disabled && 'hover:bg-accent-500 dark:hover:bg-accent-600',
 					'bg-accent-600 dark:bg-accent-700'
@@ -32,7 +34,7 @@
 	);
 </script>
 
-<Checkbox.Root {id} {disabled} bind:checked {onCheckedChange} class="group">
+<Checkbox.Root {id} {disabled} bind:checked {indeterminate} {onCheckedChange} class="group">
 	<div
 		class={[
 			classProp,
@@ -40,7 +42,9 @@
 			'size-6.5 cursor-pointer rounded-md p-1 group-data-disabled:cursor-default'
 		]}
 	>
-		{#if checked}
+		{#if indeterminate}
+			<Icon class="h-full w-full font-bold text-white" icon="mdi:minus" />
+		{:else if checked}
 			<Icon class="h-full w-full font-bold text-white" icon="mdi:check" />
 		{/if}
 	</div>

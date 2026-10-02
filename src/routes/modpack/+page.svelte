@@ -14,7 +14,7 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 
 	import Dialog from '$lib/components/ui/Dialog.svelte';
-	import Checklist from '$lib/components/ui/Checklist.svelte';
+	import FileTree from '$lib/components/ui/FileTree.svelte';
 	import ResizableInputField from '$lib/components/ui/ResizableInputField.svelte';
 	import { toHeaderCase } from 'js-convert-case';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
@@ -409,43 +409,44 @@
 			label={m.modpack_includeFiles_title({ count: includedFileCount, size: includeFiles?.size })}
 			description={m.modpack_includeFiles_description()}
 		>
-			<details>
-				<summary class="text-primary-600 dark:text-primary-300 cursor-pointer text-sm"
-					>{m.modpack_includeFiles_preview()}</summary
-				>
-				<InputField
-					bind:value={includedFilesSearch}
-					class="mt-2 w-full"
-					placeholder={m.modpack_includeFiles_placeholder()}
-				/>
-				<Checklist
-					class="mt-2"
-					title={m.modpack_includeFiles_list_title()}
-					items={shownFileIncludes}
-					getLabel={(item) => item}
-					get={(item) => includeFiles.get(item) ?? false}
-					set={(item, _, value) => {
-						includeFiles.set(item, value);
-						includeFiles = includeFiles;
-					}}
-				/>
-			</details>
+			<InputField
+				bind:value={includedFilesSearch}
+				class="mt-2 w-full"
+				placeholder={m.modpack_includeFiles_placeholder()}
+			/>
+
+			<FileTree
+				class="mt-2"
+				title={m.modpack_includeFiles_list_title()}
+				items={shownFileIncludes}
+				maxHeight="md"
+				getPath={(item) => item}
+				get={(item) => includeFiles.get(item) ?? false}
+				set={(item, value) => {
+					includeFiles.set(item, value);
+					includeFiles = includeFiles;
+				}}
+				setMany={(paths, value) => {
+					for (const path of paths) includeFiles.set(path, value);
+					includeFiles = includeFiles;
+				}}
+			/>
 		</FormField>
 
-		<div class="text-primary-700 dark:text-primary-200 mt-1 flex items-center text-lg font-medium">
+		<div class="text-primary-700 dark:text-primary-200 mt-1 flex items-center">
 			<span class="max-w-96 grow">{m.modpack_NSFW_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={nsfw} />
 		</div>
 
-		<div class="text-primary-700 dark:text-primary-200 flex items-center text-lg font-medium">
+		<div class="text-primary-700 dark:text-primary-200 flex items-center">
 			<span class="max-w-96 grow">{m.modpack_disabled_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 		</div>
 
 		{#if games.activeBackends.length > 1}
-			<div class="text-primary-700 dark:text-primary-200 flex items-center text-lg font-medium">
+			<div class="text-primary-700 dark:text-primary-200 flex items-center">
 				<span class="max-w-96 grow">{m.modpack_upload_server()}</span>
 
 				{#if hexiumExclusive}

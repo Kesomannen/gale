@@ -1,6 +1,7 @@
 <script lang="ts" generics="T">
 	import type { ClassValue } from 'clsx';
 	import Checkbox from './Checkbox.svelte';
+	import ChecklistShell from './ChecklistShell.svelte';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
@@ -29,33 +30,19 @@
 		item: itemSnippet
 	}: Props = $props();
 
-	function toggleAll() {
-		const allChecked = items.every((item, i) => get(item, i));
+	const allIncluded = $derived(items.every((item, i) => get(item, i)));
+	const anyIncluded = $derived(items.some((item, i) => get(item, i)));
+
+	function toggleAll(value: boolean) {
 		if (setAll) {
-			setAll(!allChecked);
+			setAll(value);
 		} else {
-			items.forEach((item, i) => set(item, i, !allChecked));
+			items.forEach((item, i) => set(item, i, value));
 		}
 	}
 </script>
 
-<div
-	class={[
-		classProp,
-		'border-primary-200 dark:border-primary-900 relative flex flex-col overflow-hidden rounded-lg border'
-	]}
->
-	<label
-		class="text-primary-900 dark:bg-primary-900 bg-primary-100 flex w-full shrink-0 items-center px-4 py-2.5 font-medium dark:text-white"
-	>
-		<Checkbox
-			class="mr-3"
-			checked={items.every((item, i) => get(item, i))}
-			onCheckedChange={toggleAll}
-		/>
-		{title}
-	</label>
-
+<ChecklistShell class={classProp} {title} {allIncluded} {anyIncluded} onToggleAll={toggleAll}>
 	<div class="overflow-auto" class:max-h-96={maxHeight === 'sm'}>
 		{#each items as item, i}
 			<label
@@ -73,4 +60,4 @@
 			</label>
 		{/each}
 	</div>
-</div>
+</ChecklistShell>

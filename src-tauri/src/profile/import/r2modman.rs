@@ -1,5 +1,4 @@
 use std::{
-    collections::HashSet,
     fs::{self},
     path::PathBuf,
 };
@@ -163,14 +162,7 @@ fn prepare_import(mut profile_dir: PathBuf, app: &AppHandle) -> Result<Option<Im
     }
 
     let import = ImportData {
-        manifest: ProfileManifest {
-            name,
-            mods,
-            game: None,
-            ignored_version_updates: Vec::new(),
-            ignored_package_updates: Vec::new(),
-            excluded_files: HashSet::new(),
-        },
+        manifest: ProfileManifest::new(name, mods),
         path: profile_dir,
         delete_after_import: false,
     };

@@ -25,6 +25,8 @@
 				exporting = true;
 				result = await api.profile.export.code();
 			}
+		} catch (error) {
+			isOpen = false;
 		} finally {
 			exporting = false;
 		}

@@ -20,7 +20,7 @@ use walkdir::WalkDir;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
 use super::{Profile, Result, install::ModInstall};
-use crate::thunderstore::Backend;
+use crate::thunderstore::{Backend, FromBackend};
 use crate::{
     state::ManagerExt,
     thunderstore::{LegacyProfileCreateResponse, PackageIdent, Thunderstore, VersionIdent},
@@ -39,11 +39,27 @@ pub struct ProfileManifest {
     #[serde(default, rename = "community")]
     pub game: Option<String>,
     #[serde(default, rename = "ignoredUpdates")]
-    pub ignored_version_updates: Vec<Uuid>,
+    pub ignored_version_updates: HashSet<Uuid>,
     #[serde(default)]
-    pub ignored_package_updates: Vec<Uuid>,
+    pub ignored_package_updates: HashSet<Uuid>,
+    /// File paths could be exported from one OS to another so paths need to be normalized
+    /// to use forward slashes, which is not guaranteed by PathBuf on Windows, so we use
+    /// strings instead.
     #[serde(default)]
     pub excluded_files: HashSet<String>,
+}
+
+impl ProfileManifest {
+    pub fn new(name: String, mods: Vec<R2Mod>) -> Self {
+        Self {
+            name,
+            mods,
+            game: None,
+            ignored_version_updates: HashSet::new(),
+            ignored_package_updates: HashSet::new(),
+            excluded_files: HashSet::new(),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -63,11 +79,9 @@ impl R2Mod {
     }
 
     pub fn to_install(&self, thunderstore: &Thunderstore) -> Result<ModInstall> {
-        // Prefer backend, otherwise fallback to generic lookup
-        let borrowed_mod = thunderstore
-            .backend(self.source)
-            .find_ident(&self.version_ident())
-            .or_else(|_| thunderstore.find_ident(&self.version_ident(), self.source))?;
+        // prefer to use the source specified in the manifest, but fall back to the other source if it's not available
+        let borrowed_mod =
+            thunderstore.find_ident(&self.version_ident(), FromBackend::Prefer(self.source))?;
 
         Ok(ModInstall::new(borrowed_mod).with_state(self.enabled))
     }
@@ -159,8 +173,8 @@ fn prepare_export(profile: &Profile) -> Result<(ProfileManifest, Vec<PathBuf>)> 
         name: profile.name.clone(),
         game: Some(profile.game.slug.to_string()),
         mods,
-        ignored_version_updates: profile.ignored_version_updates.iter().copied().collect(),
-        ignored_package_updates: profile.ignored_package_updates.iter().copied().collect(),
+        ignored_version_updates: profile.ignored_version_updates.clone(),
+        ignored_package_updates: profile.ignored_package_updates.clone(),
         excluded_files,
     };
 
