@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.23.1 (2026-10-03)
+
+### Fixed
+
+- Updated webkit versions and altered AppImage build to fix issues with white screens on Linux (thanks [@arrowmaster](https://github.com/arrowmaster))
+
 ## 1.23.0 (2026-10-02)
 
 ### Added
