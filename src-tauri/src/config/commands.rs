@@ -82,7 +82,7 @@ pub fn open_config_file(file: &Path, app: AppHandle) -> Result<()> {
 
     let profile = manager.active_profile();
     let path = profile.path.join(file);
-    open::that(&path)
+    open::that_detached(&path)
         .with_context(|| format!("failed to open config file at {}", path.display()))?;
 
     Ok(())

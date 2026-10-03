@@ -434,7 +434,7 @@ pub fn open_profile_dir(app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
     let path = &manager.active_profile().path;
-    open::that(path).context("failed to open directory")?;
+    open::that_detached(path).context("failed to open directory")?;
 
     Ok(())
 }

@@ -202,7 +202,7 @@ impl Profile {
             .installer_for(profile_mod)
             .mod_dir(&profile_mod.full_name(), self)
         {
-            open::that(path)?;
+            open::that_detached(path)?;
             Ok(())
         } else {
             Err(anyhow!("mod does not have a directory to open"))

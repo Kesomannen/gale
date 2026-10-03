@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- File and URL open actions freezing the app in some environments
+
 ## 1.23.1 (2026-10-03)
 
 ### Fixed

@@ -62,7 +62,7 @@ pub async fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
     let writer = BufWriter::new(file);
     super::export_zip(&app, profile_id, writer).await?;
 
-    open::that(export_path.parent().unwrap()).ok();
+    open::that_detached(export_path.parent().unwrap()).ok();
 
     Ok(())
 }
@@ -124,7 +124,7 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
         warn!("failed to take profile snapshot: {}", err);
     }
 
-    open::that(path).ok();
+    open::that_detached(path).ok();
 
     Ok(())
 }
@@ -181,7 +181,7 @@ pub fn export_dependency_strings(app: AppHandle, directory: PathBuf) -> Result<(
     }
 
     fs::write(&path, str).fs_context("writing mod list file", &directory)?;
-    open::that(&path).fs_context("opening mod list file", &directory)?;
+    open::that_detached(&path).fs_context("opening mod list file", &directory)?;
 
     Ok(())
 }
