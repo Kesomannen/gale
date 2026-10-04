@@ -1,3 +1,4 @@
+use serde::Serialize;
 use tauri::{AppHandle, command};
 
 use crate::{state::ManagerExt, util::cmd::Result};
@@ -11,20 +12,32 @@ pub async fn read_sync_profile(id: String, app: AppHandle) -> Result<SyncProfile
     Ok(meta)
 }
 
-#[command]
-pub async fn create_sync_profile(app: AppHandle) -> Result<String> {
-    let id = super::create_profile(&app).await?;
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum UploadResult {
+    Success { id: String },
+    TooLarge { size: usize },
+}
 
-    Ok(id)
+impl From<super::Upload> for UploadResult {
+    fn from(value: super::Upload) -> Self {
+        match value {
+            super::Upload::Success(response) => UploadResult::Success { id: response.id },
+            super::Upload::TooLarge { size } => UploadResult::TooLarge { size },
+        }
+    }
 }
 
 #[command]
-pub async fn push_sync_profile(app: AppHandle) -> Result<()> {
-    let id = app.lock_manager().active_profile().id;
+pub async fn create_sync_profile(app: AppHandle) -> Result<UploadResult> {
+    let upload = super::create_profile(&app).await?;
+    Ok(upload.into())
+}
 
-    super::push_profile(&app, id).await?;
-
-    Ok(())
+#[command]
+pub async fn push_sync_profile(app: AppHandle) -> Result<UploadResult> {
+    let upload = super::push_profile(&app).await?;
+    Ok(upload.into())
 }
 
 #[command]

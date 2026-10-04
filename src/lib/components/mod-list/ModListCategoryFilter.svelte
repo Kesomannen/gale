@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Select from '$lib/components/ui/Select.svelte';
 	import games from '$lib/state/game.svelte';
+	import Icon from '@iconify/svelte';
 
 	type Props = {
 		selected: string[];
@@ -27,7 +28,7 @@
 			<div class="mr-2 flex flex-wrap gap-1">
 				{#each selected as category}
 					<div
-						class="text-primary-700 dark:bg-primary-800 dark:text-primary-200 bg-primary-200 overflow-hidden rounded-lg py-0.5 pr-0.5 pl-2 text-sm"
+						class="text-primary-700 dark:bg-primary-800 dark:text-primary-200 bg-primary-200 flex items-center justify-stretch overflow-hidden rounded-lg py-0.5 pr-0.5 pl-2 text-sm"
 					>
 						<span class="truncate overflow-hidden">{category}</span>
 
@@ -38,7 +39,7 @@
 								selected = selected.filter((cat) => cat !== category);
 							}}
 						>
-							x
+							<Icon icon="mdi:close" />
 						</button>
 					</div>
 				{/each}

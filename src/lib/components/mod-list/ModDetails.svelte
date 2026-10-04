@@ -4,9 +4,8 @@
 
 	import ModInfoDialog from '../dialogs/ModInfoDialog.svelte';
 	import ModCardList from '../ui/ModCardList.svelte';
-	import ModContextMenuContent from './ModContextMenuContent.svelte';
 
-	import { Backend, type Mod, type ModContextItem, ModType } from '$lib/types';
+	import { type ContextItem, type Mod, ModType } from '$lib/types';
 	import {
 		communityUrl,
 		formatModName,
@@ -25,16 +24,28 @@
 	import config from '$lib/state/config.svelte';
 	import InfoBox from '../ui/InfoBox.svelte';
 	import Tooltip from '../ui/Tooltip.svelte';
+	import games from '$lib/state/game.svelte';
+	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 
 	type Props = {
 		mod: Mod;
-		contextItems?: ModContextItem[];
-		locked: boolean;
+		contextItems?: ContextItem[];
 		onclose: () => void;
+		header?: Snippet;
 		children?: Snippet;
+		hideBackend?: boolean;
+		configFile?: string | null;
 	};
 
-	let { mod, contextItems = [], locked, onclose, children }: Props = $props();
+	let {
+		mod,
+		contextItems = [],
+		onclose,
+		header,
+		children,
+		hideBackend: hideBackendProp,
+		configFile
+	}: Props = $props();
 
 	let dependenciesOpen = $state(false);
 	let suggestionsOpen = $state(false);
@@ -53,6 +64,8 @@
 			onclick: onclose
 		}
 	]);
+
+	const showBackend = $derived(!hideBackendProp && games.activeBackends.length > 1);
 
 	function formatReadme(readme: string) {
 		return readme
@@ -84,18 +97,18 @@
 		>
 			<Icon class="text-primary-700 dark:text-primary-200 text-3xl" icon="mdi:dots-vertical" />
 		</DropdownMenu.Trigger>
-		<ModContextMenuContent {mod} {locked} items={allContextItems} type="dropdown" />
+		<ContextMenuContent items={allContextItems} type="dropdown" />
 	</DropdownMenu.Root>
 
-	<div class="-mr-3 grow overflow-x-hidden overflow-y-auto pr-3 pb-2">
-		<div class="mb-3 flex flex-wrap gap-4 xl:items-center">
+	<div class="-mr-3 grow overflow-x-hidden overflow-y-scroll pr-3 pb-2">
+		<div class="mb-3 flex flex-col gap-4 xl:flex-row xl:items-center">
 			<img src={modIconSrc(mod)} class="max-h-30 max-w-30 rounded-lg" alt="" />
 
 			<div>
 				<svelte:element
 					this={mod.type === ModType.Remote ? 'a' : 'div'}
 					class={[
-						'text-primary-900 block pr-4 text-left text-3xl font-bold xl:text-4xl dark:text-white',
+						'text-primary-900 block pr-4 text-left text-2xl font-semibold xl:text-4xl xl:font-bold dark:text-white',
 						mod.type === ModType.Remote && 'hover:underline'
 					]}
 					href={communityUrl(mod.backend, mod.author ?? '', mod.name)}
@@ -118,6 +131,8 @@
 			</div>
 		</div>
 
+		{@render header?.()}
+
 		{#if mod.isDeprecated}
 			<InfoBox type="warning">
 				{m.modDetails_deprecated()}
@@ -130,17 +145,8 @@
 			</InfoBox>
 		{/if}
 
-		{#if mod.categories || mod.backend === Backend.Hexium}
+		{#if mod.categories && mod.categories.length > 0}
 			<div class="mt-2 mb-1 flex flex-wrap gap-1">
-				{#if mod.backend === Backend.Hexium}
-					<div
-						class="dark:text-primary-200 rounded-full border border-[#965dbe] bg-[#331b72] px-3 text-sm text-white"
-						style="padding-block: calc(var(--spacing) - 2px);"
-					>
-						<img src="hexium.ico" alt="" class="inline h-4" />
-						Hexium
-					</div>
-				{/if}
 				{#each mod.categories as category}
 					<div
 						class="dark:bg-primary-700 dark:text-primary-200 text-primary-700 bg-primary-200 rounded-full px-3 py-1 text-sm"
@@ -151,7 +157,7 @@
 			</div>
 		{/if}
 
-		<div class="mt-2 flex items-center gap-1.5 text-lg">
+		<div class="mt-3 flex items-center gap-1.5 text-lg">
 			{#if mod.rating !== null}
 				<Icon class="shrink-0 text-yellow-500" icon="mdi:star" />
 				<span class="mr-4 text-yellow-500">{shortenNum(mod.rating)}</span>
@@ -164,17 +170,31 @@
 			<span class="text-primary-500 dark:text-primary-400">{shortenFileSize(mod.fileSize)}</span>
 		</div>
 
-		{#if mod.lastUpdated !== null}
-			<Tooltip
-				class="text-primary-500 border-primary-400 dark:text-primary-400 mt-1 mb-1 border-b border-dashed text-lg"
-				text={new Date(mod.lastUpdated).toLocaleString()}
+		{#if showBackend || mod.lastUpdated}
+			<div
+				class="text-primary-500 dark:text-primary-400 mt-1.5 mb-3 flex flex-wrap items-center gap-x-2"
 			>
-				{m.modDetails_lastUpdated({ time: timeSince(new Date(mod.lastUpdated)) })}
-			</Tooltip>
+				{#if showBackend}
+					<span>{mod.backend}</span>
+				{/if}
+
+				{#if showBackend && mod.lastUpdated}
+					<span>•</span>
+				{/if}
+
+				{#if mod.lastUpdated}
+					<Tooltip
+						class="border-primary-400 border-b border-dashed"
+						text={new Date(mod.lastUpdated).toLocaleString()}
+					>
+						{m.modDetails_lastUpdated({ time: timeSince(new Date(mod.lastUpdated)) })}
+					</Tooltip>
+				{/if}
+			</div>
 		{/if}
 
 		{#if mod.description !== null}
-			<p class="text-primary-600 dark:text-primary-300 mt-2 text-xl lg:hidden">
+			<p class="text-primary-600 dark:text-primary-300 text-xl lg:hidden">
 				{mod.description}
 			</p>
 		{/if}
@@ -195,12 +215,12 @@
 		</div>
 	</div>
 
-	{#if mod.configFile}
+	{#if configFile}
 		<div
 			class="text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300 my-2 flex items-center gap-2 text-lg hover:underline"
 		>
 			<Icon class="text-xl" icon="mdi:file-cog" />
-			<button onclick={() => config.gotoModConfig(mod.configFile!)}>
+			<button onclick={() => config.gotoModConfig(configFile)}>
 				{m.modDetails_editConfig()}
 			</button>
 		</div>

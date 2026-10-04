@@ -39,7 +39,7 @@ pub fn open_game_dir(app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
     let path = super::locate_game_dir(manager.active_game, &prefs)?;
-    open::that(path).context("failed to open directory")?;
+    open::that_detached(path).context("failed to open directory")?;
 
     Ok(())
 }

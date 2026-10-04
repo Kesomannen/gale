@@ -15,7 +15,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tempfile::tempdir;
-use tracing::{info, trace, warn};
+use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -26,7 +26,7 @@ use crate::{
         install::{InstallOptions, ModInstall},
     },
     state::ManagerExt,
-    thunderstore::{Backend, ModId, Thunderstore},
+    thunderstore::{Backend, FromBackend, ModId, Thunderstore},
     util::{self, error::IoResultExt},
 };
 
@@ -74,13 +74,20 @@ pub(super) fn read_file(
     for r2mod in &mut manifest.mods {
         // first try the backend stored in the manifest, if it's not there,
         // then try falling back to checking any other backend and update the source as needed
-        if thunderstore
-            .backend(r2mod.source)
-            .find_ident(&r2mod.version_ident())
-            .is_err()
-            && let Ok(package) = thunderstore.find_ident(&r2mod.version_ident())
-        {
-            r2mod.source = package.package.backend;
+        match thunderstore.find_ident(&r2mod.version_ident(), FromBackend::Prefer(r2mod.source)) {
+            Ok(found) if found.package.backend == r2mod.source => (),
+            Ok(found) => {
+                warn!(
+                    ident = %r2mod.version_ident(),
+                    source = ?r2mod.source,
+                    found_backend = ?found.package.backend,
+                    "import mod was not found in the expected backend, falling back",
+                );
+                r2mod.source = found.package.backend;
+            }
+            Err(err) => {
+                debug!(?err, "import mod was not found");
+            }
         }
     }
 
@@ -183,10 +190,14 @@ pub(super) async fn import_profile(
 
     let result = match result {
         Ok(()) => {
+            let manager = app.lock_manager();
+            let (_, profile) = manager.profile_by_id(profile_id)?;
+
             import_config(
                 &profile_path,
                 &data.path,
                 game.mod_loader.mod_config_dirs(),
+                |path| !profile.excluded_export_files.contains(path),
                 &options,
             )
             .context("error importing config")?;
@@ -260,8 +271,13 @@ fn prepare_import(
         (profile, installs)
     };
 
-    profile.ignored_version_updates = ignored_version_updates.into_iter().collect();
-    profile.ignored_package_updates = ignored_package_updates.into_iter().collect();
+    profile.ignored_version_updates = ignored_version_updates;
+    profile.ignored_package_updates = ignored_package_updates;
+    profile.excluded_export_files = manifest
+        .excluded_files
+        .into_iter()
+        .map(PathBuf::from)
+        .collect();
 
     let id = profile.id;
     let path = profile.path.clone();
@@ -348,20 +364,28 @@ fn incremental_update(
 }
 
 #[tracing::instrument(skip_all, fields(dest = %dest.display(), src = %src.display()))]
-pub fn import_config(
+pub fn import_config<P, F>(
     dest: &Path,
     src: &Path,
-    config_dirs: &[&str],
+    config_dirs: &[P],
+    mut dest_files_filter: F,
     options: &ImportOptions,
-) -> Result<()> {
+) -> Result<()>
+where
+    P: AsRef<Path>,
+    F: FnMut(&Path) -> bool,
+{
     let src_files: HashSet<PathBuf> = super::export::list_files(src)
         .filter(|path| options.import_all || is_always_imported(path))
         .collect();
 
-    let dest_files: HashSet<PathBuf> = super::export::find_config(dest, config_dirs).collect();
+    let dest_files: HashSet<PathBuf> = super::export::find_config(dest, config_dirs)
+        .filter(|file| dest_files_filter(file))
+        .collect();
 
     if !options.merge {
         // remove existing extra config files that are not in the imported profile
+        // and were not explicitly ignored by the dest_files_filter
         for extra_file in dest_files.difference(&src_files) {
             let extra_path = dest.join(extra_file);
             trace!(
@@ -445,6 +469,7 @@ mod tests {
             destination.path(),
             source.path(),
             CONFIG_DIRS,
+            |_| true,
             &ImportOptions::default(),
         )
         .unwrap();
@@ -468,6 +493,7 @@ mod tests {
             destination.path(),
             source.path(),
             CONFIG_DIRS,
+            |_| true,
             &ImportOptions::default().merge(true),
         )
         .unwrap();

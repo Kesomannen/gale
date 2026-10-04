@@ -175,7 +175,7 @@
 	"installPopover_taskText_download": "Завантаження ",
 	"installPopover_taskText_extract": "Розпакування ",
 	"installPopover_taskText_install": "Встановлення ",
-	"language_name": "Українська",
+	"language_name": "Українська (Україна)",
 	"languagePref_title": "Мова",
 	"launchModePref_content_1": "Визначає спосіб запуску гри.",
 	"launchModePref_content_2": "Лаунчер:",
@@ -497,17 +497,12 @@
 	"updateAllBanner_button": "Оновити всі",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Доступне одне оновлення.",
 				"countPlural=other": "Доступно {count} оновлень."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Оновити моди",

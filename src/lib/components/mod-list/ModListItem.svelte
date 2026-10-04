@@ -8,19 +8,32 @@
 
 	type Props = {
 		mod: Mod;
-		selected: boolean;
-		locked: boolean;
+		combinedDownloads?: number;
+		isInstalled?: boolean;
+		selected?: boolean;
+		locked?: boolean;
 		contextItems: ModContextItem[];
 		onclick?: MouseEventHandler<HTMLDivElement>;
 		oninstall?: () => Promise<void>;
 	};
 
-	let { mod, selected: selected, locked, contextItems, onclick, oninstall }: Props = $props();
+	let {
+		mod,
+		combinedDownloads,
+		isInstalled = false,
+		selected = false,
+		locked = false,
+		contextItems,
+		onclick,
+		oninstall
+	}: Props = $props();
 
 	let loading = $state(false);
+
+	let downloads = $derived(combinedDownloads ?? mod.downloads ?? 0);
 </script>
 
-<ModItemWithContext {mod} {locked} {contextItems}>
+<ModItemWithContext uuid={mod.uuid} {mod} {locked} {contextItems}>
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		{onclick}
@@ -51,7 +64,7 @@
 				{#if mod.isDeprecated}
 					<Icon class="shrink-0 text-yellow-500" icon="mdi:warning" />
 				{/if}
-				{#if mod.isInstalled}
+				{#if isInstalled}
 					<Icon class="text-accent-600 dark:text-accent-500 shrink-0" icon="mdi:check-circle" />
 				{/if}
 			</div>
@@ -63,10 +76,8 @@
 			{/if}
 
 			<div class="mt-1 flex flex-wrap items-center gap-1">
-				{#if mod.downloads !== null}
-					<Icon class="shrink-0" icon="mdi:download-outline" />
-					<span class="mr-4">{shortenNum(mod.downloads)}</span>
-				{/if}
+				<Icon class="shrink-0" icon="mdi:download-outline" />
+				<span class="mr-4">{shortenNum(downloads)}</span>
 				{#if mod.lastUpdated}
 					<Icon class="shrink-0" icon="mdi:clock-outline" />
 					<span class="mr-2">{timeSince(new Date(mod.lastUpdated))}</span>
@@ -74,7 +85,7 @@
 			</div>
 		</div>
 
-		{#if !mod.isInstalled && !locked}
+		{#if !isInstalled && !locked}
 			<button
 				class={[
 					'bg-accent-600 hover:bg-accent-500 disabled:bg-primary-600 dark:disabled:text-primary-300 mt-0.5 mr-0.5 ml-2 hidden rounded-lg p-2.5 align-middle text-2xl text-white group-hover:inline'

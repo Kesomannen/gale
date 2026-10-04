@@ -202,7 +202,7 @@ impl Profile {
             .installer_for(profile_mod)
             .mod_dir(&profile_mod.full_name(), self)
         {
-            open::that(path)?;
+            open::that_detached(path)?;
             Ok(())
         } else {
             Err(anyhow!("mod does not have a directory to open"))
@@ -328,6 +328,7 @@ impl ManagedGame {
             custom_args: String::new(),
             missing: false,
             ignored_package_updates: HashSet::new(),
+            excluded_export_files: HashSet::new(),
         };
 
         let index = self.target_profile_index(&profile.name);
@@ -417,6 +418,7 @@ impl ManagedGame {
             &new_profile.path,
             &old_profile.path,
             self.game.mod_loader.mod_config_dirs(),
+            |_| true,
             &ImportOptions::default(),
         )
         .context("failed to copy config files")?;

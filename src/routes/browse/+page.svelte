@@ -1,6 +1,12 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import { type SortBy, type Mod, type ModId, Backend, type ModContextItem } from '$lib/types';
+	import {
+		type SortBy,
+		type Mod,
+		type ModId,
+		type ModContextItem,
+		type BrowsedMod
+	} from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
@@ -8,7 +14,6 @@
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import ModListItem from '$lib/components/mod-list/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
-	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
 	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
 	import { defaultContextItems } from '$lib/context';
 	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
@@ -18,7 +23,12 @@
 	import { pushInfoToast } from '$lib/toast';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
 	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
-	import { shouldWarnForeignDownload } from '$lib/util';
+	import {
+		extractDeduplicatedMod,
+		getPreferredBackend,
+		shouldWarnForeignDownload
+	} from '$lib/util';
+	import DeduplicatedModDetails from '$lib/components/mod-list/DeduplicatedModDetails.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems: ModContextItem[] = [
@@ -36,18 +46,17 @@
 		...defaultContextItems
 	];
 
-	let mods: Mod[] = $state([]);
+	let mods: BrowsedMod[] = $state([]);
 
-	let modList: ModList;
 	let maxCount: number = $state(20);
-	let selectedMod: Mod | null = $state(null);
+	let selectedMod: BrowsedMod | null = $state(null);
 	let foreignDownloadDialogOpen = $state(false);
 
 	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
 
 	onMount(() => {
-		listen<Mod[]>('mod_query_result', (evt) => {
+		listen<BrowsedMod[]>('mod_query_result', (evt) => {
 			mods = evt.payload;
 		}).then((unlisten) => {
 			unlistenFromQuery = unlisten;
@@ -62,6 +71,14 @@
 	let hasRefreshed = $state(false);
 	let refreshing = false;
 
+	function itemUuid(item: BrowsedMod) {
+		return item.data.thunderstore?.uuid ?? item.data.hexium?.uuid;
+	}
+
+	function findItemByUuid(uuid: string | undefined) {
+		return mods.find((mod) => itemUuid(mod) === uuid) ?? null;
+	}
+
 	async function refresh() {
 		if (refreshing) return;
 		refreshing = true;
@@ -69,7 +86,7 @@
 		mods = await api.thunderstore.query({ ...modQuery.current, maxCount });
 		if (selectedMod) {
 			// isInstalled might have changed
-			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
+			selectedMod = findItemByUuid(itemUuid(selectedMod));
 		}
 
 		refreshing = false;
@@ -102,8 +119,10 @@
 	function onModClicked(evt: MouseEvent, mod: Mod) {
 		if (evt.ctrlKey) {
 			installLatest(mod);
+		} else if (selectedMod && itemUuid(selectedMod) === mod.uuid) {
+			selectedMod = null;
 		} else {
-			modList.selectMod(mod);
+			selectedMod = findItemByUuid(mod.uuid);
 		}
 	}
 
@@ -127,13 +146,7 @@
 			<ProfileLockedBanner class="mb-1" />
 		{/if}
 
-		<ModList
-			{mods}
-			queryArgs={modQuery.current}
-			bind:this={modList}
-			bind:maxCount
-			bind:selected={selectedMod}
-		>
+		<ModList {mods} queryArgs={modQuery.current} bind:maxCount>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
 					<HelpCard title={m.browse_modList_content_1()} icon="mdi:store-search" class="mt-4">
@@ -142,23 +155,36 @@
 				{/if}
 			{/snippet}
 
-			{#snippet item({ mod, isSelected })}
+			{#snippet item({ mod })}
+				{@const shownMod = extractDeduplicatedMod(mod.data, getPreferredBackend(mod.data))!}
+				{@const combinedDownloads =
+					(mod.data.hexium?.downloads ?? 0) + (mod.data.thunderstore?.downloads ?? 0)}
+
 				<ModListItem
-					{mod}
 					{contextItems}
-					selected={isSelected}
+					{combinedDownloads}
+					mod={shownMod}
+					isInstalled={mod.isInstalled}
+					selected={selectedMod !== null && itemUuid(selectedMod) === shownMod.uuid}
 					locked={profiles.activeLocked}
-					oninstall={() => installLatest(mod)}
-					onclick={(evt) => onModClicked(evt, mod)}
+					oninstall={() => installLatest(shownMod)}
+					onclick={(evt) => onModClicked(evt, shownMod)}
 				/>
 			{/snippet}
 		</ModList>
 	</div>
 
 	{#if selectedMod}
-		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			<InstallModButton mod={selectedMod} {install} {locked} />
-		</ModDetails>
+		<DeduplicatedModDetails
+			{locked}
+			mod={selectedMod.data}
+			{contextItems}
+			onclose={() => (selectedMod = null)}
+		>
+			{#snippet children({ mod })}
+				<InstallModButton {mod} isInstalled={selectedMod?.isInstalled} {install} {locked} />
+			{/snippet}
+		</DeduplicatedModDetails>
 	{/if}
 </div>
 

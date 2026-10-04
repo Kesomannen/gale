@@ -494,17 +494,12 @@
 	"updateAllBanner_button": "Hamısını yenilə",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Bir yeniləmə mövcuddur.",
 				"countPlural=other": "{count} yeniləmə mövcuddur."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Modları yenilə",

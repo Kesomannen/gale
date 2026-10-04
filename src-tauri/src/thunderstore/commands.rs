@@ -4,21 +4,21 @@ use itertools::Itertools;
 use tauri::{AppHandle, command};
 use tracing::warn;
 
-use super::{Backend, models::FrontendMod, query::QueryModsArgs};
+use super::{Backend, query::QueryModsArgs};
 use crate::{
     game, logger,
     state::ManagerExt,
-    thunderstore::{ModId, PackageCategory, cache::MarkdownKind},
+    thunderstore::{ModId, PackageCategory, cache::MarkdownKind, query::ModListQueryItem},
     util::cmd::Result,
 };
 
 #[command]
-pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<FrontendMod> {
+pub fn query_thunderstore(args: QueryModsArgs, app: AppHandle) -> Vec<ModListQueryItem> {
     let manager = app.lock_manager();
     let mut thunderstore = app.lock_thunderstore();
 
     // return some results immediately...
-    let result = thunderstore.query_mods(&args, &manager);
+    let result = thunderstore.query_mods(&args, &manager).collect_vec();
 
     // ...then if we still have packages to fetch, continue fetching and returning new results in the background
     if !thunderstore.packages_fetched(&app, manager.active_game) {

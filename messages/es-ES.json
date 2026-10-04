@@ -494,17 +494,12 @@
 	"updateAllBanner_button": "¿Actualizar todo?",
 	"updateAllBanner_content": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
 			"match": {
 				"countPlural=one": "Hay una actualización disponible.",
 				"countPlural=other": "Hay {count} actualizaciones disponibles."
 			},
-			"selectors": [
-				"countPlural"
-			]
+			"selectors": ["countPlural"]
 		}
 	],
 	"updateAllBanner_dialog_button": "Actualizar mods",

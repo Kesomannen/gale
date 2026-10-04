@@ -11,7 +11,7 @@ use crate::{
         install::{InstallResultExt, queue::InstallQueueLock},
     },
     state::ManagerExt,
-    thunderstore::{BorrowedMod, ModId, Thunderstore},
+    thunderstore::{BorrowedMod, FromBackend, ModId, Thunderstore},
 };
 
 pub mod commands;
@@ -62,7 +62,10 @@ impl Profile {
             return Ok(None); // ignore missing mods
         };
 
-        let package = thunderstore.get_package(current.package.uuid)?;
+        let package = thunderstore.get_package(
+            current.package.uuid,
+            FromBackend::PreferIfEqual(current.package.backend),
+        )?;
         let current_version = current.version.parsed_version();
 
         let latest = BorrowedMod {

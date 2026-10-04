@@ -73,7 +73,7 @@ const OAUTH_TIMEOUT: Duration = Duration::from_mins(1);
 
 pub async fn login_with_oauth(app: &AppHandle) -> Result<User> {
     let url = format!("{}/auth/login", *super::API_URL);
-    open::that(url).context("failed to open url in browser")?;
+    open::that_detached(url).context("failed to open url in browser")?;
 
     let mut channel = app.sync_auth().callback_channel.subscribe();
 

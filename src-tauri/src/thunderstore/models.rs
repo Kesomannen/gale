@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::{Backend, PackageIdent, VersionIdent};
-use crate::{game::Game, profile::Profile};
+use crate::game::Game;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
@@ -51,8 +51,7 @@ impl PackageListing {
     }
 
     pub fn latest_released(&self) -> &PackageVersion {
-        self
-            .versions
+        self.versions
             .iter()
             .find_or_first(|v| v.parsed_version().pre.is_empty())
             .unwrap()
@@ -270,7 +269,6 @@ pub struct FrontendMod {
     pub contains_nsfw: bool,
     pub uuid: Uuid,
     pub version_uuid: Uuid,
-    pub is_installed: bool,
     pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,
     pub icon: Option<PathBuf>,
@@ -284,19 +282,6 @@ pub struct FrontendMod {
 pub struct FrontendVersion {
     pub name: semver::Version,
     pub uuid: Uuid,
-}
-
-#[derive(Debug, Serialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct FrontendProfileMod {
-    pub enabled: bool,
-    pub config_file: Option<PathBuf>,
-    #[serde(flatten)]
-    pub data: FrontendMod,
-}
-
-pub trait IntoFrontendMod {
-    fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod;
 }
 
 #[derive(Debug, Deserialize)]

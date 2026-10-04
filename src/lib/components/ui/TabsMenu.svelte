@@ -6,14 +6,18 @@
 		value: string;
 		options: { value: string; label: string }[];
 		children?: Snippet;
+		class?: string;
 	};
 
-	let { value = $bindable(), options, children }: Props = $props();
+	let { value = $bindable(), options, children, class: classProp }: Props = $props();
 </script>
 
 <Tabs.Root bind:value>
 	<Tabs.List
-		class="text-primary-700 dark:bg-primary-900 dark:text-primary-300 bg-primary-100 my-1 flex gap-1 rounded-xl p-1"
+		class={[
+			classProp,
+			'text-primary-700 dark:bg-primary-900 dark:text-primary-300 bg-primary-100 flex gap-1 rounded-xl p-1'
+		]}
 	>
 		{#each options as option}
 			<Tabs.Trigger

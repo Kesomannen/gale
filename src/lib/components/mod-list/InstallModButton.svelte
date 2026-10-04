@@ -11,17 +11,18 @@
 
 	type Props = {
 		mod: Mod;
-		locked: boolean;
+		isInstalled?: boolean;
+		locked?: boolean;
 		install: (mod: ModId) => void;
 	};
 
-	let { mod, locked, install }: Props = $props();
+	let { mod, locked = false, isInstalled = false, install }: Props = $props();
 
 	let versionsOpen = $state(false);
 	let downloadSize: number | null = $state(null);
 	let isInstalling = $state(false);
 
-	let disabled = $derived(mod.isInstalled || locked || isInstalling);
+	let disabled = $derived(isInstalled || locked || isInstalling);
 
 	let modId = $derived({
 		packageUuid: mod.uuid,
@@ -65,7 +66,7 @@
 			<Spinner />
 
 			{m.installModButton_button_loading()}
-		{:else if mod.isInstalled}
+		{:else if isInstalled}
 			{m.installModButton_button_isInstalled()}
 		{:else}
 			<Icon icon="mdi:download" class="align-middle text-xl" />

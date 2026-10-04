@@ -78,6 +78,7 @@ pub struct Profile {
     pub sync: Option<sync::SyncProfileData>,
     pub custom_args: String,
     pub missing: bool,
+    pub excluded_export_files: HashSet<PathBuf>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -242,7 +243,13 @@ impl ProfileModKind {
     ) -> impl Iterator<Item = BorrowedMod<'a>> {
         self.direct_dependencies(thunderstore)
             .into_iter()
-            .flat_map(|deps| thunderstore.dependencies(deps))
+            .flat_map(|dependency_idents| {
+                thunderstore.dependencies(
+                    dependency_idents
+                        .iter()
+                        .map(|ident| (ident, self.backend())),
+                )
+            })
     }
 }
 
@@ -325,11 +332,11 @@ impl Profile {
     /// out those already installed.
     fn missing_deps<'a>(
         &'a self,
-        idents: impl IntoIterator<Item = &'a VersionIdent>,
+        dependencies: impl IntoIterator<Item = (&'a VersionIdent, Backend)>,
         thunderstore: &'a Thunderstore,
     ) -> impl Iterator<Item = BorrowedMod<'a>> + 'a {
         thunderstore
-            .dependencies(idents)
+            .dependencies(dependencies)
             .filter(|dep| !self.has_mod(dep.package.uuid))
     }
 
@@ -540,11 +547,7 @@ impl ManagedGame {
     fn to_frontend(&self) -> FrontendManagedGame {
         FrontendManagedGame {
             active_id: self.active_profile_id,
-            profiles: self
-                .profiles
-                .iter()
-                .map(Profile::to_frontend)
-                .collect(),
+            profiles: self.profiles.iter().map(Profile::to_frontend).collect(),
         }
     }
 }
@@ -611,6 +614,7 @@ impl ModManager {
                 sync: saved_profile.sync_data,
                 custom_args: saved_profile.custom_args,
                 missing,
+                excluded_export_files: saved_profile.excluded_export_files.unwrap_or_default(),
             };
 
             manager

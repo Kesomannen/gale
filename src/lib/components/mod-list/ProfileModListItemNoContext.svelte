@@ -1,19 +1,13 @@
 <script lang="ts">
-	import type { AvailableUpdate, Mod } from '../../types';
+	import type { AvailableUpdate, Mod, ProfileMod } from '../../types';
 	import type { MouseEventHandler } from 'svelte/elements';
-	import {
-		formatModName,
-		hasNonReleaseUpgrade,
-		isNonReleaseVersion,
-		isOutdated,
-		modIconSrc
-	} from '$lib/util';
+	import { formatModName, isNonReleaseVersion, modIconSrc } from '$lib/util';
 	import Icon from '@iconify/svelte';
 	import type { Snippet } from 'svelte';
 	import type { ClassValue } from 'clsx';
 
 	type Props = {
-		mod: Mod;
+		mod: ProfileMod;
 		index?: number;
 		class?: ClassValue;
 		selected?: boolean;
@@ -60,7 +54,7 @@
 	{/if}
 
 	<div class="flex items-center overflow-hidden">
-		<img src={modIconSrc(mod)} alt={mod.name} class="mr-3 size-12 rounded-md" />
+		<img src={modIconSrc(mod.data)} alt={mod.data.name} class="mr-3 size-12 rounded-md" />
 
 		<div class="mr-2 shrink overflow-hidden">
 			<div
@@ -71,12 +65,12 @@
 					'dark:text-white'
 				]}
 			>
-				<span class="mr-2 truncate">{formatModName(mod.name)}</span>
+				<span class="mr-2 truncate">{formatModName(mod.data.name)}</span>
 
-				{#if mod.isPinned}
+				{#if mod.data.isPinned}
 					<Icon class="text-primary-500 dark:text-primary-400 mr-1 shrink-0" icon="mdi:pin" />
 				{/if}
-				{#if mod.isDeprecated}
+				{#if mod.data.isDeprecated}
 					<Icon class="mr-1 shrink-0 text-yellow-500" icon="mdi:warning" />
 				{/if}
 				{#if update}
@@ -91,20 +85,20 @@
 				{/if}
 			</div>
 
-			{#if mod.description}
+			{#if mod.data.description}
 				<div class="text-primary-500 dark:text-primary-400 truncate text-sm">
-					{mod.description}
+					{mod.data.description}
 				</div>
 			{/if}
 		</div>
 	</div>
 
 	<div class="hidden overflow-hidden lg:block">
-		{mod.author}
+		{mod.data.author}
 	</div>
 
 	<div>
-		{mod.version}
+		{mod.data.version}
 	</div>
 
 	{#if trailing}

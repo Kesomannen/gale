@@ -1,50 +1,68 @@
 use std::{
+    collections::HashSet,
     fs,
     io::{BufWriter, Cursor},
     path::PathBuf,
 };
 
-use eyre::{Context, anyhow};
+use eyre::{Context, eyre};
 use itertools::Itertools;
 use serde::Serialize;
 use tauri::{AppHandle, command};
 use tauri_plugin_clipboard_manager::ClipboardExt;
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use super::{
-    ExportCode, changelog,
+    changelog,
     modpack::{self, ModpackArgs},
 };
 use crate::{
-    profile::ProfileModKind,
+    profile::{
+        ProfileModKind,
+        export::{ExportFile, ExportedCode},
+    },
     state::ManagerExt,
     thunderstore::{self, UploadSubmissionResult},
     util::{cmd::Result, error::IoResultExt},
 };
 
-#[command]
-pub async fn export_code(app: AppHandle) -> Result<ExportCode> {
-    let key = super::export_code(&app).await?;
-
-    Ok(key)
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum ExportCodeReport {
+    Success(ExportedCode),
+    TooLarge { size: usize },
 }
 
 #[command]
-pub fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
-    let manager = app.lock_manager();
+pub async fn export_code(app: AppHandle) -> Result<ExportCodeReport> {
+    info!("exporting profile code");
+    match super::export_code(&app).await {
+        Ok(code) => Ok(ExportCodeReport::Success(code)),
+        Err(super::ExportCodeError::TooLarge { size }) => Ok(ExportCodeReport::TooLarge { size }),
+        Err(err) => Err(err.into()),
+    }
+}
 
-    let game = manager.active_game().game;
-    let profile = manager.active_profile();
+#[command]
+pub async fn export_file(dir: PathBuf, app: AppHandle) -> Result<()> {
+    let (export_path, profile_id) = {
+        let manager = app.lock_manager();
 
-    let mut path = dir;
-    path.push(&profile.name);
-    path.set_extension("r2z");
+        let profile = manager.active_profile();
 
-    let file = fs::File::create(&path).map_err(|err| anyhow!(err))?;
+        let mut path = dir;
+        path.push(&profile.name);
+        path.set_extension("r2z");
+
+        (path, profile.id)
+    };
+
+    let file = fs::File::create(&export_path).map_err(|err| eyre!(err))?;
+
     let writer = BufWriter::new(file);
-    super::export_zip(manager.active_profile(), writer, game)?;
+    super::export_zip(&app, profile_id, writer).await?;
 
-    open::that(path.parent().unwrap()).ok();
+    open::that_detached(export_path.parent().unwrap()).ok();
 
     Ok(())
 }
@@ -106,7 +124,7 @@ pub fn export_pack(dir: PathBuf, args: ModpackArgs, app: AppHandle) -> Result<()
         warn!("failed to take profile snapshot: {}", err);
     }
 
-    open::that(path).ok();
+    open::that_detached(path).ok();
 
     Ok(())
 }
@@ -121,7 +139,7 @@ pub async fn upload_pack(args: ModpackArgs, app: AppHandle) -> Result<UploadSubm
 
         let token = thunderstore::token::get(args.backend)
             .context("failed to get thunderstore API token")?
-            .ok_or(anyhow!("no thunderstore API token found"))?;
+            .ok_or(eyre!("no thunderstore API token found"))?;
 
         let mut data = Cursor::new(Vec::new());
         profile.export_pack(&args, &mut data, &thunderstore)?;
@@ -163,7 +181,7 @@ pub fn export_dependency_strings(app: AppHandle, directory: PathBuf) -> Result<(
     }
 
     fs::write(&path, str).fs_context("writing mod list file", &directory)?;
-    open::that(&path).fs_context("opening mod list file", &directory)?;
+    open::that_detached(&path).fs_context("opening mod list file", &directory)?;
 
     Ok(())
 }
@@ -186,7 +204,7 @@ pub fn copy_debug_info(app: AppHandle) -> Result<()> {
 
     let log = profile
         .log_path()
-        .and_then(|path| fs::read_to_string(path).map_err(|err| anyhow!(err)));
+        .and_then(|path| fs::read_to_string(path).map_err(|err| eyre!(err)));
 
     let mods = profile
         .mods
@@ -253,4 +271,28 @@ pub fn generate_changelog(mut args: ModpackArgs, all: bool, app: AppHandle) -> R
 
         Ok(args.changelog)
     }
+}
+
+#[command]
+pub fn list_export_files(app: AppHandle) -> Result<Vec<ExportFile>> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+
+    super::refresh_excluded_export_files(profile)?;
+    profile.save(&app, false)?;
+
+    let files = super::list_export_files(profile).collect::<eyre::Result<Vec<_>>>()?;
+
+    Ok(files)
+}
+
+#[command]
+pub fn set_excluded_export_files(app: AppHandle, excluded_files: HashSet<PathBuf>) -> Result<()> {
+    let mut manager = app.lock_manager();
+    let profile = manager.active_profile_mut();
+
+    profile.excluded_export_files = excluded_files;
+    profile.save(&app, false)?;
+
+    Ok(())
 }

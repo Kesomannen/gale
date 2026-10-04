@@ -11,11 +11,11 @@ use uuid::Uuid;
 use super::{Dependant, Profile, actions::ActionResult};
 use crate::{
     game::{self, Game, platform::Platform},
-    profile::FrontendManagedGame,
+    profile::{FrontendManagedGame, query::FrontendProfileMod},
     state::ManagerExt,
     thunderstore::{
-        Backend, BorrowedMod, FrontendProfileMod, ModId, Thunderstore, VersionIdent,
-        cache::MarkdownKind, query::QueryModsArgs,
+        Backend, BorrowedMod, FromBackend, ModId, Thunderstore, VersionIdent, cache::MarkdownKind,
+        query::QueryModsArgs,
     },
     util::cmd::Result,
 };
@@ -434,7 +434,7 @@ pub fn open_profile_dir(app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
     let path = &manager.active_profile().path;
-    open::that(path).context("failed to open directory")?;
+    open::that_detached(path).context("failed to open directory")?;
 
     Ok(())
 }
@@ -555,7 +555,7 @@ pub fn get_hidden_mods(app: AppHandle) -> Result<Vec<Dependant>> {
         .hidden_mods
         .iter()
         .filter_map(|uuid| {
-            let package = thunderstore.get_package(*uuid).ok()?;
+            let package = thunderstore.get_package(*uuid, FromBackend::Any).ok()?;
             Some(Dependant::from(BorrowedMod::latest(package)))
         })
         .collect();
