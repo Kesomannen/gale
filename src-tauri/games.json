@@ -1288,6 +1288,18 @@
 		}
 	},
 	{
+		"name": "Graveyard Keeper 2",
+		"slug": "graveyard-keeper-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4358690
+			}
+		}
+	},
+	{
 		"name": "Grey Hack",
 		"slug": "grey-hack",
 		"modLoader": {
