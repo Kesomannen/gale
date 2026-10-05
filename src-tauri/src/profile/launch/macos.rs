@@ -10,6 +10,10 @@
 //! Nothing is copied into the game directory; Steam runs the launcher through
 //! the game's launch options (`/bin/sh "<profile>/run_bepinex.sh" %command%`) and Gale's
 //! direct launch mode runs it itself.
+//!
+//! On Apple Silicon the launcher runs the native slice of the game, except for
+//! modded Unity 6 Mono games, which doorstop can only hook under Rosetta (see
+//! [`needs_rosetta`]).
 
 use std::{
     fs,
@@ -162,6 +166,7 @@ pub fn ensure_ready_blocking(
     app: &AppHandle,
 ) -> Result<()> {
     ensure_injectable(game.game.name, game_dir, prefs.macos_allow_resign)?;
+    ensure_rosetta_if_needed(game.game.name, game_dir)?;
 
     let profile_dir = &game.active_profile().path;
 
@@ -208,7 +213,8 @@ pub async fn prepare_launch(vanilla: bool, app: &AppHandle) -> Result<()> {
     };
 
     tauri::async_runtime::spawn_blocking(move || {
-        ensure_injectable(&game_name, &game_dir, allow_resign)
+        ensure_injectable(&game_name, &game_dir, allow_resign)?;
+        ensure_rosetta_if_needed(&game_name, &game_dir)
     })
     .await
     .map_err(|err| eyre!("signature check did not complete: {err}"))??;
@@ -469,6 +475,103 @@ fn ensure_injectable(game_name: &str, game_dir: &Path, allow_resign: bool) -> Re
     );
 
     Ok(())
+}
+
+// --- Rosetta ----------------------------------------------------------------
+//
+// UnityDoorstop cannot hook the Mono runtime of Unity 6 on arm64
+// (NeighTools/UnityDoorstop#108), so the launcher script runs the x86_64 slice
+// of a modded Unity 6 Mono game under Rosetta. Rosetta is not installed by
+// default (and macOS updates have been seen to remove it), and without it Steam
+// only reports "OS Error 0", so check up front and say what to do.
+
+/// The major Unity version (e.g. 6000) from an Info.plist `CFBundleGetInfoString`
+/// such as `Unity Player version 6000.0.75f1 (26349cd2a5c8). (c) ...`.
+fn parse_unity_major(info: &str) -> Option<u32> {
+    const PREFIX: &str = "Unity Player version ";
+
+    let rest = &info[info.find(PREFIX)? + PREFIX.len()..];
+    rest.split('.').next()?.parse().ok()
+}
+
+/// Whether the launcher script will run this game under Rosetta for a modded
+/// launch. Must agree with `pick_arch` in `run_bepinex.sh`.
+fn needs_rosetta(executable: &Path) -> bool {
+    if !cfg!(target_arch = "aarch64") {
+        return false;
+    }
+
+    let Some(contents) = app_bundle_of(executable).map(|bundle| bundle.join("Contents")) else {
+        return false;
+    };
+
+    if !contents.join("Frameworks/libmonobdwgc-2.0.dylib").is_file() {
+        return false;
+    }
+
+    Command::new("/usr/bin/defaults")
+        .arg("read")
+        .arg(contents.join("Info"))
+        .arg("CFBundleGetInfoString")
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .and_then(|output| parse_unity_major(&String::from_utf8_lossy(&output.stdout)))
+        .is_some_and(|major| major >= 6000)
+}
+
+fn rosetta_installed() -> bool {
+    Command::new("/usr/bin/arch")
+        .args(["-x86_64", "/usr/bin/true"])
+        .output()
+        .is_ok_and(|output| output.status.success())
+}
+
+fn ensure_rosetta_if_needed(game_name: &str, game_dir: &Path) -> Result<()> {
+    let Some(executable) = super::find_app_bundle_executable(game_dir) else {
+        return Ok(());
+    };
+
+    if !needs_rosetta(&executable) {
+        return Ok(());
+    }
+
+    debug!(path = %executable.display(), "Unity 6 Mono game, launching under Rosetta");
+
+    ensure!(
+        rosetta_installed(),
+        "{game_name} runs on Unity 6, which BepInEx can only load into under Rosetta on Apple \
+         Silicon, and Rosetta is not installed. Install it by running this in Terminal, then \
+         launch again:\n\nsoftwareupdate --install-rosetta --agree-to-license"
+    );
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod rosetta_tests {
+    use super::*;
+
+    #[test]
+    fn parses_unity_6_version() {
+        let info = "Unity Player version 6000.0.75f1 (26349cd2a5c8). (c) 2005-2026 Unity \
+                    Technologies. All rights reserved.";
+        assert_eq!(parse_unity_major(info), Some(6000));
+    }
+
+    #[test]
+    fn parses_older_unity_version() {
+        assert_eq!(
+            parse_unity_major("Unity Player version 2022.3.62f1 (abc)"),
+            Some(2022)
+        );
+    }
+
+    #[test]
+    fn ignores_non_unity_info() {
+        assert_eq!(parse_unity_major("Foo 1.0, Copyright Bar"), None);
+        assert_eq!(parse_unity_major(""), None);
+    }
 }
 
 fn extract_dylib(zip_bytes: &[u8]) -> Result<Vec<u8>> {
@@ -867,6 +970,96 @@ mod tests {
 
         assert!(!output.status.success());
         assert!(String::from_utf8_lossy(&output.stderr).contains("libdoorstop.dylib"));
+    }
+
+    /// Turns the fake game into what the launcher treats as a Unity 6 Mono game.
+    fn make_unity_6_mono(bundle: &Path) {
+        let contents = bundle.join("Contents");
+        fs::create_dir_all(contents.join("Frameworks")).unwrap();
+        fs::write(contents.join("Frameworks/libmonobdwgc-2.0.dylib"), b"").unwrap();
+        fs::write(
+            contents.join("Info.plist"),
+            r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict><key>CFBundleExecutable</key><string>Foo</string><key>CFBundleGetInfoString</key><string>Unity Player version 6000.0.75f1 (26349cd2a5c8).</string></dict></plist>"#,
+        )
+        .unwrap();
+    }
+
+    fn last_launch_log(profile_dir: &Path) -> String {
+        fs::read_to_string(profile_dir.join("gale_launch.log"))
+            .unwrap()
+            .lines()
+            .last()
+            .unwrap()
+            .to_owned()
+    }
+
+    fn can_test_rosetta() -> bool {
+        cfg!(target_arch = "aarch64") && rosetta_installed()
+    }
+
+    #[test]
+    fn launcher_runs_modded_unity_6_mono_under_rosetta() {
+        if !can_test_rosetta() {
+            return;
+        }
+
+        let profile = fake_profile();
+        let game_dir = tempdir().unwrap();
+        let bundle = fake_game(game_dir.path());
+        make_unity_6_mono(&bundle);
+
+        let lines = run_launcher(profile.path(), &bundle, &["--doorstop-enabled", "true"]);
+
+        assert_eq!(lines[0], "1");
+        assert!(last_launch_log(profile.path()).contains("arch=x86_64"));
+    }
+
+    #[test]
+    fn launcher_runs_vanilla_unity_6_natively() {
+        if !cfg!(target_arch = "aarch64") {
+            return;
+        }
+
+        let profile = fake_profile();
+        let game_dir = tempdir().unwrap();
+        let bundle = fake_game(game_dir.path());
+        make_unity_6_mono(&bundle);
+
+        run_launcher(profile.path(), &bundle, &["--doorstop-enabled", "false"]);
+
+        assert!(last_launch_log(profile.path()).contains("arch=native"));
+    }
+
+    #[test]
+    fn launcher_runs_other_games_natively() {
+        if !cfg!(target_arch = "aarch64") {
+            return;
+        }
+
+        let profile = fake_profile();
+        let game_dir = tempdir().unwrap();
+        let bundle = fake_game(game_dir.path());
+
+        run_launcher(profile.path(), &bundle, &[]);
+
+        assert!(last_launch_log(profile.path()).contains("arch=native"));
+    }
+
+    #[test]
+    fn needs_rosetta_matches_launcher() {
+        if !cfg!(target_arch = "aarch64") {
+            return;
+        }
+
+        let game_dir = tempdir().unwrap();
+        let bundle = fake_game(game_dir.path());
+        let exe = bundle.join("Contents/MacOS/Foo");
+        assert!(!needs_rosetta(&exe));
+
+        make_unity_6_mono(&bundle);
+        assert!(needs_rosetta(&exe));
     }
 
     #[test]

@@ -3,6 +3,9 @@
 # on every launch, so do not edit it. To launch through Steam, set the game's
 # launch options to:   /bin/sh "<path to this script>" %command%
 # (Steam on macOS refuses to exec a script directly, so name the interpreter.)
+#
+# GALE_MACOS_ARCH picks the slice of a universal game to run on Apple Silicon:
+# `auto` (the default), `native` or `x86_64`. See pick_arch below.
 set -u
 
 BASEDIR=$(cd "$(dirname "$0")" && pwd -P)
@@ -73,18 +76,48 @@ if [ "$enabled" = 1 ]; then
     export DYLD_INSERT_LIBRARIES="$doorstop${DYLD_INSERT_LIBRARIES:+:$DYLD_INSERT_LIBRARIES}"
 fi
 
-log "exec $exe (cwd $game_dir) enabled=$enabled target=$target args=$*"
-cd "$game_dir" || die "cannot enter $game_dir"
+# UnityDoorstop cannot hook the Mono runtime of Unity 6 on arm64
+# (NeighTools/UnityDoorstop#108), so a modded Unity 6 Mono game has to run its
+# x86_64 slice under Rosetta. Everything else runs natively.
+pick_arch() {
+    case "${GALE_MACOS_ARCH:-auto}" in
+        native|arm64) echo native; return ;;
+        x86_64|rosetta) echo x86_64; return ;;
+    esac
+    [ "$enabled" = 1 ] || { echo native; return; }
+    contents=${exe%/MacOS/*}
+    [ -f "$contents/Frameworks/libmonobdwgc-2.0.dylib" ] || { echo native; return; }
+    info=$(defaults read "$contents/Info" CFBundleGetInfoString 2>/dev/null) || info=
+    major=$(printf '%s\n' "$info" | sed -n 's/.*Unity Player version \([0-9][0-9]*\)\..*/\1/p' | head -n 1)
+    if [ -n "$major" ] && [ "$major" -ge 6000 ]; then echo x86_64; else echo native; fi
+}
 
 if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = 1 ]; then
-    # On Apple Silicon, run the native slice even when the parent process (Steam)
-    # is x86_64. arch strips DYLD_* from the environment, so pass back via -e
-    # whichever of them are set (none on a vanilla launch).
-    export ARCHPREFERENCE=arm64,x86_64
+    arch=$(pick_arch)
+    log "exec $exe (cwd $game_dir) enabled=$enabled arch=$arch target=$target args=$*"
+    cd "$game_dir" || die "cannot enter $game_dir"
+
+    if [ "$arch" = x86_64 ]; then
+        arch -x86_64 /usr/bin/true 2>/dev/null \
+            || die "this game needs Rosetta 2 to run with mods. Install it with: softwareupdate --install-rosetta --agree-to-license"
+        export ARCHPREFERENCE=x86_64
+        flag=-x86_64
+    else
+        # Run the native slice even when the parent process (Steam) is x86_64.
+        export ARCHPREFERENCE=arm64,x86_64
+        flag=
+    fi
+
+    # arch is an arm64e system binary, so DYLD_* in its own environment would be
+    # injected into arch itself (NeighTools/UnityDoorstop#107). Hand them to the
+    # game through -e only.
     set -- "$exe" "$@"
     [ -n "${DYLD_LIBRARY_PATH:-}" ] && set -- -e "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH" "$@"
     [ -n "${DYLD_INSERT_LIBRARIES:-}" ] && set -- -e "DYLD_INSERT_LIBRARIES=$DYLD_INSERT_LIBRARIES" "$@"
-    exec arch "$@"
+    unset DYLD_LIBRARY_PATH DYLD_INSERT_LIBRARIES
+    exec arch $flag "$@"
 else
+    log "exec $exe (cwd $game_dir) enabled=$enabled target=$target args=$*"
+    cd "$game_dir" || die "cannot enter $game_dir"
     exec "$exe" "$@"
 fi

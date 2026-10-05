@@ -607,6 +607,7 @@ mod tests {
             sync: None,
             custom_args: String::new(),
             missing: false,
+            excluded_export_files: HashSet::new(),
         };
 
         ManagedGame {
