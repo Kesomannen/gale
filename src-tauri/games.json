@@ -1822,6 +1822,18 @@
 		}
 	},
 	{
+		"name": "Nivalis Nights",
+		"slug": "nivalis-nights",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1488490
+			}
+		}
+	},
+	{
 		"name": "Odd Remedy",
 		"slug": "odd-remedy",
 		"modLoader": {
