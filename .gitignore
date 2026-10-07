@@ -11,3 +11,10 @@ vite.config.ts.timestamp-*
 .VSCodeCounter
 /src-tauri/gen
 PRS.md
+
+# nix, devenv, and direnv
+/result
+.devenv*
+.direnv/
+devenv.local.nix
+devenv.local.yaml
