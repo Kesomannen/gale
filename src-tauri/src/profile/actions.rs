@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
 };
 
-use eyre::{Context, ContextCompat, OptionExt, Result, anyhow, bail, ensure};
+use eyre::{Context, OptionExt, Result, anyhow, bail, ensure};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Listener};
@@ -468,6 +468,10 @@ impl ManagedGame {
         let shortcut_path =
             desktop_path.join(format!("gale-{}-{}.desktop", self.game.name, profile.name));
 
+        #[cfg(target_os = "macos")]
+        let shortcut_path =
+            desktop_path.join(format!("gale-{}-{}.app", self.game.name, profile.name));
+
         if shortcut_path.exists() {
             bail!("shortcut already exists");
         }
@@ -477,9 +481,9 @@ impl ManagedGame {
         } else {
             std::env::current_exe()
                 .context("failed to get current executable path")?
-                .to_str()
-                .context("executable path must be UTF-8")?
-                .to_string()
+                .into_os_string()
+                .into_string()
+                .map_err(|_| eyre::eyre!("executable path must be UTF-8"))?
         };
 
         #[cfg(target_os = "windows")]
@@ -533,6 +537,42 @@ impl ManagedGame {
 
             std::fs::set_permissions(&shortcut_path, PermissionsExt::from_mode(0o755))
                 .context("failed to set permissions on desktop file")?;
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            let contents = shortcut_path.join("Contents");
+            let macos = contents.join("MacOS");
+            std::fs::create_dir_all(&macos).context("failed to create shortcut bundle")?;
+            std::fs::write(
+                contents.join("Info.plist"),
+                r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>launch</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleName</key><string>Gale profile</string>
+</dict></plist>
+"#,
+            ).context("failed to write shortcut metadata")?;
+            let script = format!(
+                "#!/bin/sh\nexec {}\n",
+                super::launch::custom_args::join([
+                    command.as_str(),
+                    "--game",
+                    &self.game.slug,
+                    "--profile",
+                    profile.name.as_str(),
+                    "--launch",
+                    "--no-gui",
+                ])
+            );
+            let launcher = macos.join("launch");
+            std::fs::write(&launcher, script).context("failed to write shortcut launcher")?;
+            std::fs::set_permissions(&launcher, PermissionsExt::from_mode(0o755))
+                .context("failed to set shortcut permissions")?;
         }
 
         Ok(())
