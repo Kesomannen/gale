@@ -1,8 +1,8 @@
 use std::{fmt::Debug, future::Future, path::PathBuf};
 
 use eyre::{Context, OptionExt, Result};
-use tauri::{AppHandle, Manager};
-use tracing::{info, warn};
+use tauri::{AppHandle, Manager, Url};
+use tracing::{debug, info, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -12,11 +12,28 @@ use crate::{
     thunderstore::{self, Backend, FrontendMod},
 };
 
+pub fn handle_urls(app: &AppHandle, urls: Vec<Url>) -> bool {
+    let mut handled = false;
+    for url in urls {
+        handled |= handle(app, url.to_string());
+    }
+    handled
+}
+
 pub fn handle(app: &AppHandle, url: String) -> bool {
-    app.get_webview_window("main")
-        .expect("app should have main window")
-        .set_focus()
-        .ok();
+    debug!("handling deep link URL: {}", url);
+
+    // Normalize URLs before dispatch so the individual handlers accept both forms.
+    let url = if let Some(path) = url.strip_prefix("gale:///") {
+        format!("gale://{path}")
+    } else {
+        url
+    };
+    if let Some(window) = app.get_webview_window("main") {
+        window.show().ok();
+        window.unminimize().ok();
+        window.set_focus().ok();
+    }
 
     let app = app.to_owned();
 
@@ -118,7 +135,7 @@ async fn handle_install(package: InstallPackage<'_>, app: AppHandle) -> Result<(
 }
 
 async fn import_profile_file(url: &str, app: &AppHandle) -> Result<()> {
-    let path = PathBuf::from(url);
+    let path = profile_file_path(url)?;
 
     info!(
         "importing profile file from deep link at {}",
@@ -162,4 +179,36 @@ async fn clone_sync_profile(url: String, app: AppHandle) -> Result<()> {
     app.emit_buffered("import_profile", &import_data);
 
     Ok(())
+}
+
+fn profile_file_path(url: &str) -> Result<PathBuf> {
+    if url.starts_with("file:") {
+        Url::parse(url)?
+            .to_file_path()
+            .map_err(|_| eyre::eyre!("invalid profile file URL"))
+    } else {
+        Ok(PathBuf::from(url))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(unix)]
+    fn profile_file_urls_decode_spaces_and_unicode() {
+        assert_eq!(
+            profile_file_path("file:///tmp/My%20Profile%20%C3%A9.r2z").unwrap(),
+            PathBuf::from("/tmp/My Profile é.r2z")
+        );
+    }
+
+    #[test]
+    fn profile_file_paths_accept_cli_paths() {
+        assert_eq!(
+            profile_file_path("/tmp/My Profile.r2z").unwrap(),
+            PathBuf::from("/tmp/My Profile.r2z")
+        );
+    }
 }
