@@ -8,6 +8,7 @@
 		checked?: boolean;
 		indeterminate?: boolean;
 		disabled?: boolean;
+		size?: 'sm' | 'md';
 		onCheckedChange?: (newValue: boolean) => void;
 		class?: ClassValue;
 	};
@@ -17,6 +18,7 @@
 		checked = $bindable(false),
 		indeterminate = false,
 		disabled = false,
+		size = 'md',
 		onCheckedChange,
 		class: classProp
 	}: Props = $props();
@@ -32,6 +34,7 @@
 					'bg-primary-100 border border-primary-200 dark:bg-primary-800 dark:border-primary-500'
 				]
 	);
+	let sizeClasses = $derived(size === 'sm' ? 'size-5 rounded-sm p-0.5' : 'size-6.5 rounded-md p-1');
 </script>
 
 <Checkbox.Root {id} {disabled} bind:checked {indeterminate} {onCheckedChange} class="group">
@@ -39,7 +42,8 @@
 		class={[
 			classProp,
 			stateClasses,
-			'size-6.5 cursor-pointer rounded-md p-1 group-data-disabled:cursor-default'
+			sizeClasses,
+			'cursor-pointer group-data-disabled:cursor-default'
 		]}
 	>
 		{#if indeterminate}

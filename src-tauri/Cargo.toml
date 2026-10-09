@@ -79,6 +79,9 @@ internment = { version = "0.8.6", features = ["serde"] }
 new-vdf-parser = "0.1.0"
 tracing-log = "0.2.0"
 shell-words = "1.1.1"
+ssh2 = "0.9.6"
+suppaftp = { version = "11", features = ["rustls-aws-lc-rs"] }
+webpki-roots = "1"
 winsplit = "0.1.0"
 globset = "0.4.18"
 humansize = "2.1.3"
