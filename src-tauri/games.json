@@ -1275,6 +1275,18 @@
 		}
 	},
 	{
+		"name": "Graveyard Keeper 2",
+		"slug": "graveyard-keeper-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4358690
+			}
+		}
+	},
+	{
 		"name": "Green Hell VR",
 		"modLoader": {
 			"name": "BepInEx",
@@ -1285,18 +1297,6 @@
 				"id": 1782330
 			},
 			"oculus": {}
-		}
-	},
-	{
-		"name": "Graveyard Keeper 2",
-		"slug": "graveyard-keeper-2",
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 4358690
-			}
 		}
 	},
 	{
@@ -1455,6 +1455,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1876590
+			}
+		}
+	},
+	{
+		"name": "In Falsus",
+		"slug": "in-falsus",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3971950
 			}
 		}
 	},
@@ -2092,9 +2104,7 @@
 				"id": 3011360
 			}
 		},
-		"backends": [
-			"Hexium"
-		]
+		"backends": ["Hexium"]
 	},
 	{
 		"name": "Project Arrhythmia",
