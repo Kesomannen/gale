@@ -269,7 +269,10 @@
 		{/if}
 
 		{#if unknownMods.length > 0}
-			<UnknownModsBanner mods={unknownMods} uninstallAll={forceUninstall} />
+			<UnknownModsBanner
+				mods={unknownMods}
+				onUninstall={() => forceUninstall(...unknownMods.map((uuid) => uuid.uuid))}
+			/>
 		{/if}
 
 		{#if mods.length === 0 && hasRefreshed}

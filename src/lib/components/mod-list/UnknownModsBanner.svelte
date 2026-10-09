@@ -8,10 +8,10 @@
 
 	type Props = {
 		mods: Dependant[];
-		uninstallAll: () => Promise<void>;
+		onUninstall: () => Promise<void>;
 	};
 
-	let { mods, uninstallAll }: Props = $props();
+	let { mods, onUninstall }: Props = $props();
 
 	let dialogOpen = $state(false);
 </script>
@@ -42,7 +42,7 @@
 			icon="mdi:trash"
 			color="primary"
 			onclick={async () => {
-				await uninstallAll();
+				await onUninstall();
 				dialogOpen = false;
 			}}
 		>
