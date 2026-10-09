@@ -5,13 +5,12 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
-use eyre::{Context, Result, bail, eyre};
+use eyre::{Context, Result, bail};
 use include_dir::include_dir;
-use itertools::Itertools;
 use rusqlite::{OptionalExtension, params, types::Type as SqliteType};
-use rusqlite_migration::{MigrationDefinitionError, Migrations, SchemaVersion};
+use rusqlite_migration::{Migrations, SchemaVersion};
 use serde::de::DeserializeOwned;
-use tracing::{debug, info, trace, warn};
+use tracing::{debug, info, trace};
 use uuid::Uuid;
 
 use crate::{
