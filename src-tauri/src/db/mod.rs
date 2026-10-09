@@ -5,12 +5,13 @@ use std::{
     sync::{Mutex, MutexGuard},
 };
 
-use eyre::{Context, Result, eyre};
+use eyre::{Context, Result, bail, eyre};
 use include_dir::include_dir;
+use itertools::Itertools;
 use rusqlite::{OptionalExtension, params, types::Type as SqliteType};
-use rusqlite_migration::{MigrationDefinitionError, Migrations};
+use rusqlite_migration::{MigrationDefinitionError, Migrations, SchemaVersion};
 use serde::de::DeserializeOwned;
-use tracing::{info, trace};
+use tracing::{debug, info, trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -64,9 +65,36 @@ static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migr
 fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
     let migrations = Migrations::from_directory(&MIGRATIONS_DIR)?;
 
-    migrations.to_latest(conn).map_err(|err| if let rusqlite_migration::Error::MigrationDefinition(
-            MigrationDefinitionError::DatabaseTooFarAhead,
-        ) = err { eyre!("database has been modified by a newer version of Gale, please update to the latest version") } else { eyre!(err) })?;
+    let latest_version = MIGRATIONS_DIR.dirs().count();
+
+    let current_version = match migrations
+        .current_version(conn)
+        .context("failed to get current database version")?
+    {
+        SchemaVersion::NoneSet => {
+            debug!("database has no version set");
+            0usize
+        }
+        SchemaVersion::Inside(version) => version.into(),
+        SchemaVersion::Outside(_) => bail!(
+            "database has been modified by a newer version of Gale, please update to the latest version"
+        ),
+    };
+
+    if latest_version == current_version {
+        debug!(version = latest_version, "database is up to date");
+        return Ok(());
+    }
+
+    if let Some(db_path) = conn.path() {
+        let backup_path = PathBuf::from(db_path).with_added_extension("bak");
+        debug!(path = %backup_path.display(), "creating backup of database before migration");
+
+        std::fs::copy(db_path, &backup_path)
+            .context("failed to create backup of database before migration")?;
+    }
+
+    migrations.to_version(conn, latest_version)?;
 
     Ok(())
 }
