@@ -25,6 +25,8 @@ jobs:
             args: ''
           - platform: windows-latest
             args: '--bundles msi'
+          - platform: 'macos-latest'
+            args: '--bundles dmg'
 
     runs-on: ${{ matrix.platform }}
     steps:

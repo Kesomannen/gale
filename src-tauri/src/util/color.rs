@@ -30,3 +30,19 @@ pub async fn system_accent() -> Result<Option<Color>> {
 
     Ok(Some(Color(color.R, color.G, color.B, 255)))
 }
+
+#[cfg(target_os = "macos")]
+pub async fn system_accent() -> Result<Option<Color>> {
+    use objc2_app_kit::{NSColor, NSColorSpace};
+
+    let color = NSColor::controlAccentColor();
+    let Some(color) = color.colorUsingColorSpace(&NSColorSpace::sRGBColorSpace()) else {
+        return Ok(None);
+    };
+    Ok(Some(Color(
+        (color.redComponent() * 255.0).round() as u8,
+        (color.greenComponent() * 255.0).round() as u8,
+        (color.blueComponent() * 255.0).round() as u8,
+        255,
+    )))
+}

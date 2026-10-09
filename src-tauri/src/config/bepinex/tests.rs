@@ -206,8 +206,26 @@ fn check_to_string() {
 
 #[test]
 fn check_from_string() {
-    let left = de::from_reader(TEST_STR.as_bytes()).unwrap();
-    let right = test_file();
+    let mut left = de::from_reader(TEST_STR.as_bytes()).unwrap();
+    let mut right = test_file();
+
+    // NaN is unequal to itself. Check it explicitly, then compare the remaining
+    // fields (including the numeric ranges and entry metadata) normally.
+    for file in [&mut left, &mut right] {
+        let EntryKind::Normal(entry) = &mut file.sections[1].entries[1] else {
+            panic!("expected a normal float entry");
+        };
+        let Value::Single(value) = &mut entry.value else {
+            panic!("expected a Single value");
+        };
+        assert!(value.value.is_nan());
+        value.value = 0.0;
+        let Some(Value::Single(default)) = &mut entry.default_value else {
+            panic!("expected a Single default value");
+        };
+        assert!(default.value.is_nan());
+        default.value = 0.0;
+    }
 
     assert_eq!(left, right);
 }
