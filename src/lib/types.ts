@@ -68,6 +68,7 @@ export type SyncProfileInfo = {
 	syncedAt: string;
 	updatedAt: string;
 	missing: boolean;
+	preserveExtras: boolean;
 };
 
 export type ListedSyncProfile = {
