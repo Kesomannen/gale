@@ -76,6 +76,21 @@ winget install Kesomannen.Gale
 > [!TIP]
 > If you're unsure about the safety of this app, I would suggest running it through a service like [VirusTotal](https://www.virustotal.com).
 
+### macOS
+
+<details>
+  <summary>
+    <b>Manual (Github)</b>
+  </summary>
+
+  - Go to [Releases](https://github.com/Kesomannen/gale/releases).
+  - Download the `.dmg` file for your desired version (the latest is recommended).
+
+</details>
+
+> [!NOTE]
+> If macOS blocks Gale because the developer cannot be verified, first confirm you downloaded it from the official release page. After attempting to open Gale, go to `System Settings` → `Privacy & Security`, click `Open Anyway`, and confirm the prompt. See [Apple's instructions](https://support.apple.com/102445) for details.
+
 ### Linux
 
 <details>

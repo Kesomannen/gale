@@ -54,6 +54,7 @@ base64 = "0.22"
 heck = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 keyring = { version = "3", features = [
+    "apple-native",
     "windows-native",
     "linux-native-sync-persistent",
 ] }
@@ -101,6 +102,10 @@ cacache = { version = "13.1", default-features = false, features = [
 [target.'cfg(target_os="windows")'.dependencies]
 windows = { version = "0.62", features = ["UI", "UI_ViewManagement"] }
 winreg = "0.52"
+
+[target.'cfg(target_os="macos")'.dependencies]
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSColor", "NSColorSpace", "objc2-core-foundation"] }
+plist = "1"
 
 [target.'cfg(target_os="linux")'.dependencies]
 webkit2gtk = "2.0.1"
