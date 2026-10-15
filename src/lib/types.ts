@@ -361,6 +361,7 @@ export type R2ImportData = {
 export type ImportOptions = {
 	importAll?: boolean;
 	merge?: boolean;
+	ignoreConfigs?: boolean;
 };
 
 export type UploadSubmissionResult = {
