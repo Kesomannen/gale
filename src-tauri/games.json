@@ -3113,5 +3113,18 @@
 				"id": 3121110
 			}
 		}
+	},
+	{
+		"name": "over the hill",
+		"slug": "over-the-hill",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2929250
+			}
+		},
+		"backends": ["Hexium"]
 	}
 ]
