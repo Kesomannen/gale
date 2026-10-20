@@ -1060,6 +1060,19 @@
 		}
 	},
 	{
+		"name": "Emberville",
+		"slug": "emberville",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2295170
+			}
+		},
+		"backends": ["Hexium"]
+	},
+	{
 		"name": "Enter the Gungeon",
 		"modLoader": {
 			"name": "BepInEx"
