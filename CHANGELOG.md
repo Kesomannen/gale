@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Option to manage local mods and keep additional mods and config files when updating synced profiles
+
 ### Fixed
 
 - File and URL open actions freezing the app in some environments
@@ -16,7 +20,6 @@
 
 ### Added
 
-- Option to manage local mods and keep additional mods and config files when updating synced profiles
 - Copy link context menu option to copy a mod's Thunderstore or Hexium URL
 - Ukrainian translation (thanks [@VoronUA1](https://github.com/VoronUA1))
 - Note in the modpack upload dialog in case the modpack was uploaded as a hidden mod (thanks [@bwoebi](https://github.com/bwoebi))
