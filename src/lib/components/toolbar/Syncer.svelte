@@ -295,16 +295,6 @@
 			</Button>
 		</div>
 
-		<div class="mt-3 flex items-center">
-			<Label>{m.syncer_preserveExtras_title()}</Label>
-			<Info>{m.syncer_preserveExtras_content()}</Info>
-			<Checkbox
-				checked={syncInfo.preserveExtras}
-				disabled={loading}
-				onCheckedChange={setPreserveExtras}
-			/>
-		</div>
-
 		<div class="mt-2">
 			<Button
 				onclick={() => (manageFilesDialogOpen = true)}
@@ -315,6 +305,18 @@
 				{m.syncer_button_manageFiles()}
 			</Button>
 		</div>
+
+		{#if !isOwner}
+			<div class="mt-3 flex items-center">
+				<Label>{m.syncer_preserveExtras_title()}</Label>
+				<Info>{m.syncer_preserveExtras_content()}</Info>
+				<Checkbox
+					checked={syncInfo.preserveExtras}
+					disabled={loading}
+					onCheckedChange={setPreserveExtras}
+				/>
+			</div>
+		{/if}
 	{:else if auth.user !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
 			{m.syncer_button_connect()}
