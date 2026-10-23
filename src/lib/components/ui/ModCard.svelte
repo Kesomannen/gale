@@ -31,7 +31,9 @@
 			: `https://thunderstore.io/c/${games.active?.slug}/p/${author}/${name}/`
 	);
 	let iconUrl = $derived(
-		backend === Backend.Hexium ? hexiumIconUrl('' + author, name) : thunderstoreIconUrl(fullName)
+		backend === Backend.Hexium
+			? hexiumIconUrl(author ?? '', name, version ?? '')
+			: thunderstoreIconUrl(fullName)
 	);
 </script>
 

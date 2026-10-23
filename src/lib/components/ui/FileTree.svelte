@@ -222,7 +222,7 @@
 						onCheckedChange={(value) => toggleDir(node, value)}
 					/>
 
-					<button class="flex items-center gap-1.5" onclick={() => toggleExpand(node.path)}>
+					<button class="flex grow items-center gap-1.5" onclick={() => toggleExpand(node.path)}>
 						<DropdownArrow {open} />
 						<Icon
 							icon={open ? 'mdi:folder-open' : 'mdi:folder'}
@@ -246,7 +246,7 @@
 						onCheckedChange={(value) => set(entry.item, value)}
 					/>
 
-					<span class="min-w-0 flex-1 truncate" title={entry.path}>{entry.name}</span>
+					<span class="grow truncate" title={entry.path}>{entry.name}</span>
 
 					{#if getSize}
 						{@render sizeLabel(getSize(entry.item))}

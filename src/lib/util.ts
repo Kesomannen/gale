@@ -192,7 +192,7 @@ export function modIconSrc(mod: Mod, enabled?: boolean) {
 			let fullName = `${mod.author}-${mod.name}-${mod.version}`;
 			return thunderstoreIconUrl(fullName);
 		} else {
-			return hexiumIconUrl(mod.author ?? '', mod.name);
+			return hexiumIconUrl(mod.author ?? '', mod.name, mod.version ?? '');
 		}
 	} else if (mod.icon !== null) {
 		let path = enabled === false ? mod.icon + '.old' : mod.icon;
@@ -214,8 +214,8 @@ export function thunderstoreIconUrl(fullName: string) {
 	return `https://gcdn.thunderstore.io/live/repository/icons/${fullName}.png`;
 }
 
-export function hexiumIconUrl(pkg: string, name: string) {
-	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png`;
+export function hexiumIconUrl(pkg: string, name: string, version: string) {
+	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png?${version}`;
 }
 
 export function capitalize(str: string): string {

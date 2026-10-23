@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.23.2 (2026-10-14)
+
+### Changed
+
+- A backup of the database is now created before running migrations
+- Minor UI changes
 
 ### Added
 
@@ -9,6 +14,10 @@
 ### Fixed
 
 - File and URL open actions freezing the app in some environments
+- Scrollbars always being drawn on top of other elements on some Linux systems
+- `Uninstall` button on the unknown mods banner not working
+- Hexium mod icons being cached too aggressively, causing them to not update when the mod icon is updated
+- Author not being displayed for locally imported mods (thanks [@MarkN2000](https://github.com/MarkN2000))
 
 ## 1.23.1 (2026-10-03)
 

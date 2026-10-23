@@ -237,6 +237,7 @@ impl From<LocalMod> for FrontendMod {
     fn from(local_mod: LocalMod) -> FrontendMod {
         let LocalMod {
             name,
+            author,
             description,
             version,
             file_size,
@@ -248,6 +249,7 @@ impl From<LocalMod> for FrontendMod {
 
         FrontendMod {
             name,
+            author,
             description,
             version,
             file_size,
