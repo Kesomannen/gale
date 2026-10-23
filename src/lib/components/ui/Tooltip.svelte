@@ -50,7 +50,7 @@
 			<div {...wrapperProps}>
 				{#if open}
 					<div
-						class="border-primary-600 bg-primary-800 text-primary-300 relative z-50 max-w-lg rounded-lg border px-4 py-2 shadow-md"
+						class="border-primary-300 text-primary-700 dark:border-primary-600 dark:bg-primary-800 dark:text-primary-300 relative z-50 max-w-lg rounded-lg border bg-white px-4 py-2 shadow-md"
 						{...props}
 						in:fly={dropInTo(distance)}
 						out:fade={dropOutFrom(distance)}

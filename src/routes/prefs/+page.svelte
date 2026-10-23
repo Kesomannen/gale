@@ -15,10 +15,9 @@
 	import * as api from '$lib/api';
 
 	import { platform } from '@tauri-apps/plugin-os';
-	import ColorPref from '$lib/components/prefs/ColorPref.svelte';
 
 	import Label from '$lib/components/ui/Label.svelte';
-	import { useNativeMenu } from '$lib/theme';
+	import { useNativeMenu, darkMode } from '$lib/state/theme.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import games from '$lib/state/game.svelte';
 	import profiles from '$lib/state/profile.svelte';
@@ -27,17 +26,27 @@
 	import { m } from '$lib/paraglide/messages';
 	import BackendPref from '$lib/components/prefs/BackendPref.svelte';
 	import HiddenModsPref from '$lib/components/prefs/HiddenModsPref.svelte';
+	import ColorPrefs from '$lib/components/prefs/ColorPrefs.svelte';
+	import ExportFilesDialog from '$lib/components/dialogs/ExportFilesDialog.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
 
 	let gameSlug = $derived(games.active?.slug ?? '');
 
+	let shownPlatform = $derived.by(
+		() => gamePrefs?.platform ?? games.active?.platforms[0] ?? 'Unknown'
+	);
+
+	let exportFilesDialogOpen = $state(false);
+
 	$effect(() => {
 		gamePrefs = prefs?.gamePrefs.get(gameSlug) ?? {
 			launchMode: { type: 'launcher' },
 			dirOverride: null,
 			customArgs: '',
+			showSteamLaunchOptions: false,
 			backend: Backends.All,
 			platform: null
 		};
@@ -100,12 +109,7 @@
 			})}
 		/>
 
-		<ColorPref category="primary" default="slate"
-			>{m.prefs_appearance_color_primary_content()}</ColorPref
-		>
-		<ColorPref category="accent" default="green"
-			>{m.prefs_appearance_color_accent_content()}</ColorPref
-		>
+		<ColorPrefs />
 
 		<FontFamilyPref />
 
@@ -113,6 +117,17 @@
 			value={prefs.zoomFactor}
 			set={set((value, prefs) => (prefs.zoomFactor = value))}
 		/>
+
+		<div class="my-1 flex items-center">
+			<Label>{m.prefs_appearance_darkMode_title()}</Label>
+
+			<Checkbox
+				checked={darkMode.current}
+				onCheckedChange={(value) => {
+					darkMode.current = value;
+				}}
+			/>
+		</div>
 
 		<div class="my-1 flex items-center">
 			<Label>{m.prefs_appearance_nativeMenubar_title()}</Label>
@@ -140,6 +155,14 @@
 				>{m.prefs_miscellaneous_fetchMods_content_3()}</b
 			>.
 		</TogglePref>
+		<TogglePref
+			label={m.backendPref_other_server_title()}
+			value={!prefs.backendSkipConfirm}
+			set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
+		>
+			{m.backendPref_other_server_content()}
+		</TogglePref>
+
 		<TogglePref
 			label={m.prefs_miscellaneous_pullBeforeLaunch_title()}
 			value={prefs.pullBeforeLaunch}
@@ -176,10 +199,20 @@
 		<SmallHeading>{m.prefs_gameSettings_launch_title()}</SmallHeading>
 
 		<LaunchModePref
-			platform={gamePrefs.platform ?? games.active?.platforms[0] ?? m.unknown()}
+			platform={shownPlatform}
 			value={gamePrefs.launchMode}
 			set={set((value) => (gamePrefs!.launchMode = value))}
 		/>
+
+		{#if gamePrefs.launchMode.type === 'launcher' && shownPlatform === 'steam'}
+			<TogglePref
+				label={m.prefs_steamLaunchOptions_title()}
+				value={gamePrefs.showSteamLaunchOptions}
+				set={set((value) => (gamePrefs!.showSteamLaunchOptions = value))}
+			>
+				{m.prefs_steamLaunchOptions_content()}
+			</TogglePref>
+		{/if}
 
 		<CustomArgsPref
 			value={gamePrefs.customArgs}
@@ -191,13 +224,6 @@
 
 			{#if games.activeBackends.length > 1}
 				<BackendPref value={gamePrefs.backend} set={set((value) => (gamePrefs!.backend = value))} />
-				<TogglePref
-					label={m.backendPref_other_server_title()}
-					value={!prefs.backendSkipConfirm}
-					set={set((value, prefs) => (prefs.backendSkipConfirm = !value))}
-				>
-					{m.backendPref_other_server_content()}
-				</TogglePref>
 			{/if}
 
 			<ApiKeyPref backend={Backend.Hexium} />
@@ -216,8 +242,32 @@
 				value={profiles.active.customArgs}
 				setValue={async (value) => await api.profile.setCustomArgs(value)}
 			/>
+
+			<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
+
+			<div class="flex items-center">
+				<Label>{m.prefs_exportedCodeFiles_title()}</Label>
+				<Button icon="mdi:cog" color="primary" onclick={() => (exportFilesDialogOpen = true)}
+					>{m.prefs_exportedCodeFiles_button()}</Button
+				>
+			</div>
 		{/if}
 	{/if}
 </div>
 
 <ApiKeyDialog />
+
+<ExportFilesDialog
+	title={m.prefs_exportedCodeFiles_dialog_title()}
+	bind:open={exportFilesDialogOpen}
+>
+	{#snippet description()}
+		{m.prefs_exportedCodeFiles_dialog_content()}
+	{/snippet}
+
+	{#snippet buttons()}
+		<Button icon="mdi:check" color="accent" onclick={() => (exportFilesDialogOpen = false)}>
+			{m.prefs_exportedCodeFiles_dialog_button()}
+		</Button>
+	{/snippet}
+</ExportFilesDialog>

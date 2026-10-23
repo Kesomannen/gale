@@ -11,10 +11,10 @@ use uuid::Uuid;
 use super::{Dependant, Profile, actions::ActionResult};
 use crate::{
     game::{self, Game, platform::Platform},
-    profile::FrontendManagedGame,
+    profile::{FrontendManagedGame, query::FrontendProfileMod},
     state::ManagerExt,
     thunderstore::{
-        Backend, BorrowedMod, FrontendProfileMod, Thunderstore, VersionIdent, cache::MarkdownKind,
+        Backend, BorrowedMod, FromBackend, ModId, Thunderstore, VersionIdent, cache::MarkdownKind,
         query::QueryModsArgs,
     },
     util::cmd::Result,
@@ -62,9 +62,12 @@ pub fn get_game_info(app: AppHandle) -> GameInfo {
     let favorites = manager
         .games
         .iter()
-        .filter_map(|(game, managed_game)| match managed_game.favorite {
-            true => Some(&*game.slug),
-            false => None,
+        .filter_map(|(game, managed_game)| {
+            if managed_game.favorite {
+                Some(&*game.slug)
+            } else {
+                None
+            }
         })
         .collect();
 
@@ -125,6 +128,18 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
 
     game.set_active_profile(index)?;
 
+    let profile = game.active_profile_mut();
+
+    if profile.sync.as_ref().is_some_and(|sync| !sync.missing) {
+        let app_clone = app.clone();
+
+        tauri::async_runtime::spawn(async move {
+            if let Err(err) = super::sync::pull_profile(true, &app_clone).await {
+                warn!(?err, "failed to refresh sync after profile switch");
+            }
+        });
+    }
+
     app.sync_socket().subscribe(game.active_profile());
 
     game.save(&app)?;
@@ -138,10 +153,10 @@ pub async fn set_active_profile(index: usize, app: AppHandle) -> Result<()> {
 pub struct FrontendAvailableUpdate {
     full_name: VersionIdent,
     ignore: bool,
-    package_uuid: Uuid,
-    version_uuid: Uuid,
+    updated_id: ModId,
     old: semver::Version,
     new: semver::Version,
+    is_cross_backend: bool,
 }
 
 #[derive(Serialize)]
@@ -173,15 +188,16 @@ pub fn query_profile(args: QueryModsArgs, app: AppHandle) -> Result<ProfileQuery
                 .transpose()
         })
         .map_ok(|update| {
-            let ignore = profile.is_update_ignored(update.id());
+            let ignore = profile.is_update_ignored(&update);
+            let is_cross_backend = update.current.package.backend != update.latest.package.backend;
 
             FrontendAvailableUpdate {
-                full_name: update.latest.ident.clone(),
-                package_uuid: update.package.uuid,
-                version_uuid: update.latest.uuid,
-                old: update.current.parsed_version().clone(),
-                new: update.latest.parsed_version().clone(),
+                full_name: update.latest.version.ident.clone(),
                 ignore,
+                is_cross_backend,
+                old: update.current.version.parsed_version(),
+                new: update.latest.version.parsed_version(),
+                updated_id: update.latest.into(),
             }
         })
         .collect::<eyre::Result<Vec<_>>>()
@@ -320,7 +336,7 @@ pub fn set_all_mods_state(enable: bool, app: AppHandle) -> Result<usize> {
         .mods
         .iter()
         .filter(|profile_mod| profile_mod.enabled != enable)
-        .map(|profile_mod| profile_mod.uuid())
+        .map(super::ProfileMod::uuid)
         .collect_vec();
 
     let count = uuids.len();
@@ -343,7 +359,7 @@ pub fn remove_disabled_mods(app: AppHandle) -> Result<usize> {
         .mods
         .iter()
         .filter(|profile_mod| !profile_mod.enabled)
-        .map(|profile_mod| profile_mod.uuid())
+        .map(super::ProfileMod::uuid)
         .collect_vec();
 
     let len = uuids.len();
@@ -418,7 +434,7 @@ pub fn open_profile_dir(app: AppHandle) -> Result<()> {
     let manager = app.lock_manager();
 
     let path = &manager.active_profile().path;
-    open::that(path).context("failed to open directory")?;
+    open::that_detached(path).context("failed to open directory")?;
 
     Ok(())
 }
@@ -539,7 +555,7 @@ pub fn get_hidden_mods(app: AppHandle) -> Result<Vec<Dependant>> {
         .hidden_mods
         .iter()
         .filter_map(|uuid| {
-            let package = thunderstore.get_package(*uuid).ok()?;
+            let package = thunderstore.get_package(*uuid, FromBackend::Any).ok()?;
             Some(Dependant::from(BorrowedMod::latest(package)))
         })
         .collect();

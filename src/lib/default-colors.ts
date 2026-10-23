@@ -1,8 +1,4 @@
-import { platform } from '@tauri-apps/plugin-os';
-import { PersistedState } from 'runed';
-import getPalette from 'tailwindcss-palette-generator';
-
-export const defaultColors = {
+export const DEFAULT_COLORS = {
 	slate: {
 		50: 'oklch(0.984 0.003 247.858)',
 		100: 'oklch(0.968 0.007 247.896)',
@@ -291,81 +287,4 @@ export const defaultColors = {
 	}
 } as const;
 
-export type DefaultColor = keyof typeof defaultColors;
-export type ColorCategory = 'accent' | 'primary';
-
-export type Color =
-	| {
-			type: 'default';
-			name: DefaultColor;
-	  }
-	| {
-			type: 'custom';
-			hex: string;
-	  };
-
-const root = document.querySelector(':root') as HTMLElement;
-const fallbacks: Record<ColorCategory, Color> = {
-	accent: { type: 'default', name: 'green' },
-	primary: { type: 'default', name: 'slate' }
-};
-
-export function setColor(category: ColorCategory, color: Color) {
-	let shades: { [shade: string]: string };
-
-	if (color.type === 'default') {
-		shades = defaultColors[color.name];
-	} else {
-		let palette = getPalette({
-			color: color.hex,
-			name: 'main'
-		});
-
-		shades = palette['main'];
-	}
-
-	for (const [shade, value] of Object.entries(shades)) {
-		root.style.setProperty(`--color-${category}-${shade}`, value);
-	}
-
-	localStorage.setItem(category + 'Color', JSON.stringify(color));
-}
-
-export function getColor(category: ColorCategory): Color {
-	let json = localStorage.getItem(category + 'Color');
-
-	if (json === null) {
-		return fallbacks[category];
-	}
-
-	try {
-		return JSON.parse(json) as Color;
-	} catch (e) {
-		console.error('Failed to parse saved color', e);
-		return fallbacks[category];
-	}
-}
-
-export function refreshColor(category: ColorCategory) {
-	setColor(category, getColor(category));
-}
-
-const defaultFont = 'Inter';
-
-export function setFont(fontFamily: string) {
-	root.style.fontFamily = `'${fontFamily}', '${defaultFont}', sans-serif`;
-	localStorage.setItem('font', fontFamily);
-}
-
-export function getFont() {
-	return localStorage.getItem('font') ?? defaultFont;
-}
-
-export function refreshFont() {
-	setFont(getFont());
-}
-
-export const useNativeMenu = new PersistedState(
-	'useNativeMenu',
-	platform() === 'windows' ? false : true
-);
+export type DefaultColor = keyof typeof DEFAULT_COLORS;

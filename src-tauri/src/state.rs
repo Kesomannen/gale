@@ -1,9 +1,13 @@
-use std::sync::{Mutex, MutexGuard};
+use std::{
+    sync::{Arc, Mutex, MutexGuard},
+    time::Duration,
+};
 
 use eyre::{Context, Result};
 use http_cache_reqwest::{CACacheManager, CacheMode, HttpCache, HttpCacheOptions};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, command};
+use tracing::{error, info};
 
 use crate::{
     db::{self, Db},
@@ -14,16 +18,16 @@ use crate::{
 };
 
 pub struct AppState {
-    pub http: reqwest_middleware::ClientWithMiddleware,
-    pub prefs: Mutex<Prefs>,
-    pub manager: Mutex<ModManager>,
-    pub thunderstore: Mutex<Thunderstore>,
-    pub db: Db,
-    pub install_queue: InstallQueue,
-    pub sync_auth: sync::auth::State,
-    pub sync_socket: sync::socket::State,
-    pub event_buffer: EventBuffer,
-    pub is_first_run: bool,
+    http: reqwest_middleware::ClientWithMiddleware,
+    prefs: Mutex<Prefs>,
+    manager: Mutex<ModManager>,
+    thunderstore: Mutex<Thunderstore>,
+    db: Db,
+    install_queue: Arc<InstallQueue>,
+    sync_auth: sync::auth::State,
+    sync_socket: sync::socket::State,
+    event_buffer: EventBuffer,
+    is_first_run: bool,
 }
 
 impl AppState {
@@ -76,24 +80,49 @@ pub fn setup(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
+const READ_TIMEOUT: Duration = Duration::from_secs(30);
+
 fn create_http_client() -> Result<reqwest_middleware::ClientWithMiddleware> {
     let base = reqwest::Client::builder()
         .user_agent(concat!("Kesomannen-Gale/", env!("CARGO_PKG_VERSION")))
+        // without these, a stalled connection would hang the request (and thus the
+        // install queue) indefinitely, instead of failing so that we can retry it
+        .connect_timeout(CONNECT_TIMEOUT)
+        .read_timeout(READ_TIMEOUT)
         .build()?;
 
-    let cache_path = crate::util::path::default_app_cache_dir().join("http");
-
-    let cache = http_cache_reqwest::Cache(HttpCache {
-        mode: CacheMode::NoCache,
-        manager: CACacheManager::new(cache_path, false),
-        options: HttpCacheOptions::default(),
-    });
-
     let http = reqwest_middleware::ClientBuilder::new(base)
-        .with(cache)
+        .with(create_http_cache())
         .build();
 
     Ok(http)
+}
+
+const MAX_HTTP_CACHE_SIZE: u64 = 1024 * 1024 * 100; // 100 MB
+
+fn create_http_cache() -> http_cache_reqwest::Cache<CACacheManager> {
+    let cache_path = crate::util::path::default_app_cache_dir().join("http");
+
+    let size = crate::util::fs::directory_size(&cache_path);
+
+    if size > MAX_HTTP_CACHE_SIZE {
+        info!(
+            size,
+            max_size = MAX_HTTP_CACHE_SIZE,
+            path = %cache_path.display(),
+            "removing http cache because it exceeds the maximum size"
+        );
+        if let Err(err) = cacache::clear_sync(&cache_path) {
+            error!(?err, "failed to clear http cache");
+        }
+    }
+
+    http_cache_reqwest::Cache(HttpCache {
+        mode: CacheMode::NoStore,
+        manager: CACacheManager::new(cache_path, true),
+        options: HttpCacheOptions::default(),
+    })
 }
 
 pub trait ManagerExt<R> {

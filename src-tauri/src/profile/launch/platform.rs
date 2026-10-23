@@ -1,9 +1,8 @@
+use eyre::{Context, OptionExt, Result, bail, ensure, eyre};
 use std::{
     path::{Path, PathBuf},
     process::Command,
 };
-
-use eyre::{Context, OptionExt, Result, bail};
 use tracing::info;
 
 use crate::util;
@@ -33,20 +32,9 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
 
     let mut command = create_base_steam_command()?;
 
-    if util::is_flatpak() {
-        use tracing::debug;
-
-        debug!("flatpak detected, wrapping command with flatpak-spawn");
-
-        let mut wrapper = Command::new("flatpak-spawn");
-        wrapper
-            .arg("--host")
-            .arg(command.get_program())
-            .args(command.get_args());
-        command = wrapper;
-    }
-
     command.arg("-applaunch").arg(steam.id.to_string());
+
+    util::flatpak::wrap_command_if_needed(&mut command);
 
     Ok(command)
 }
@@ -104,7 +92,39 @@ fn create_base_steam_command() -> Result<Command> {
     use crate::util::fs::PathExt;
     use tracing::debug;
 
-    // return Ok(Command::new("/home/keso/.local/share/Steam/steam.sh"));
+    debug!("checking for steam system installation with which");
+
+    if let Ok(path) = which::which("steam") {
+        info!("found steam installation via which: {}", path.display());
+        return Ok(Command::new(path));
+    }
+
+    let mut flatpak_check = Command::new("flatpak");
+    flatpak_check.args(["info", "com.valvesoftware.Steam"]);
+
+    util::flatpak::wrap_command_if_needed(&mut flatpak_check);
+
+    debug!("checking for steam flatpak installation with command {flatpak_check:?}");
+
+    match flatpak_check.output() {
+        Ok(output) if output.status.success() => {
+            info!("using flatpak steam installation");
+
+            let mut command = Command::new("flatpak");
+            command.args(["run", "com.valvesoftware.Steam"]);
+
+            return Ok(command);
+        }
+        Ok(output) => {
+            debug!(
+                "flatpak check returned with error code {:?}",
+                output.status.code()
+            );
+        }
+        Err(err) => {
+            debug!("failed to run flatpak check: {:#}", err);
+        }
+    }
 
     debug!("checking for steam.sh script in steam installation directory");
 
@@ -116,30 +136,9 @@ fn create_base_steam_command() -> Result<Command> {
         Err(err) => {
             debug!("failed to locate steam.sh script: {:#}", err);
         }
-    };
-
-    debug!("checking for steam system installation with which");
-
-    if let Ok(path) = which::which("steam") {
-        info!("found steam installation via which: {}", path.display());
-        return Ok(Command::new(path));
     }
 
-    let mut flatpak_check = Command::new("flatpak");
-    flatpak_check.args(["info", "com.valvesoftware.Steam"]);
-
-    debug!("checking for steam flatpak installation with command {flatpak_check:?}");
-
-    if flatpak_check.status().is_ok_and(|status| status.success()) {
-        info!("using flatpak steam installation");
-
-        let mut command = Command::new("flatpak");
-        command.args(["run", "com.valvesoftware.Steam"]);
-
-        return Ok(command);
-    }
-
-    let path = PathBuf::from("/usr/bin/steam")
+    let path = Path::new("/usr/bin/steam")
         .exists_or_none()
         .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
 
@@ -171,6 +170,48 @@ fn locate_steam_script() -> Result<PathBuf> {
                     )
                 })
         })
+}
+
+pub fn get_steam_launch_options(app_id: u32) -> Result<serde_json::Value> {
+    let app_info = get_steam_app_info(app_id)?;
+
+    app_info
+        .get("config")
+        .and_then(|config| config.get("launch"))
+        .cloned()
+        .ok_or_else(|| eyre!("no launch options found for app ID {}", app_id))
+}
+
+fn get_steam_app_info(app_id: u32) -> Result<serde_json::Value> {
+    use new_vdf_parser::appinfo_vdf_parser::open_appinfo_vdf;
+    use serde_json::{Map, Value};
+
+    let steam_dir = steamlocate::locate().context("failed to locate steam installation")?;
+
+    let appinfo_path = steam_dir.path().join("appcache").join("appinfo.vdf");
+
+    ensure!(
+        appinfo_path.exists(),
+        "steam appinfo.vdf not found at {}",
+        appinfo_path.display()
+    );
+
+    info!("reading Steam app info from {}", appinfo_path.display());
+
+    let appinfo_vdf: Map<String, Value> = open_appinfo_vdf(&appinfo_path);
+
+    let entries = appinfo_vdf
+        .get("entries")
+        .and_then(|e| e.as_array())
+        .ok_or_eyre("no entries found in appinfo.vdf")?;
+
+    entries
+        .iter()
+        .find(|entry| {
+            entry.get("appid").and_then(serde_json::Value::as_u64) == Some(u64::from(app_id))
+        })
+        .cloned()
+        .ok_or_else(|| eyre!("app ID {} not found in Steam appinfo.vdf", app_id))
 }
 
 fn create_epic_command(game: Game) -> Result<Command> {

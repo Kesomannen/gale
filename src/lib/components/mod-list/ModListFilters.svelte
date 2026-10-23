@@ -2,7 +2,6 @@
 	import SearchBar from '$lib/components/ui/SearchBar.svelte';
 	import { selectItems } from '$lib/util';
 	import { type SortBy, type QueryModsArgsWithoutMax } from '$lib/types';
-	import type { Writable } from 'svelte/store';
 	import ModListCategoryFilter from './ModListCategoryFilter.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import { toSentenceCase } from '$lib/i18n';
@@ -13,7 +12,7 @@
 		queryArgs: QueryModsArgsWithoutMax;
 	};
 
-	let { sortOptions, queryArgs }: Props = $props();
+	let { sortOptions, queryArgs = $bindable() }: Props = $props();
 
 	function getSelectedIncludes() {
 		let selected = [];
@@ -72,7 +71,7 @@
 	/>
 </div>
 
-<div class="mb-1.5 grid grid-cols-[2fr_2fr_1fr] gap-1.5">
+<div class="mb-1.5 grid grid-cols-[2fr_2fr_auto] gap-1.5">
 	<ModListCategoryFilter
 		label={m.modListFilters_filter_include()}
 		icon="mdi:filter"

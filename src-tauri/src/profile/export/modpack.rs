@@ -17,7 +17,16 @@ use tracing::{debug, info, trace};
 use uuid::Uuid;
 use zip::{ZipWriter, write::SimpleFileOptions};
 
-use crate::{game::Game, profile::Profile, state::ManagerExt, thunderstore::*};
+use crate::{
+    game::Game,
+    profile::Profile,
+    state::ManagerExt,
+    thunderstore::{
+        Backend, CompletedPart, ModId, PackageManifest, PackageSubmissionMetadata, Thunderstore,
+        UploadPartUrl, UploadSubmissionResult, UserMediaFinishUploadParams,
+        UserMediaInitiateUploadParams, UserMediaInitiateUploadResponse,
+    },
+};
 
 /// Returns whether it's hexium-exclusive now
 pub fn refresh_args(profile: &mut Profile, thunderstore: &Thunderstore, game: Game) -> bool {
@@ -146,6 +155,7 @@ impl Profile {
                 .map(|(file, _)| file),
             &self.path,
             &mut zip,
+            SimpleFileOptions::default(),
         )?;
 
         Ok(())
@@ -173,7 +183,7 @@ fn base_request(
     backend: Backend,
     token: impl Display,
 ) -> reqwest_middleware::RequestBuilder {
-    let url = format!("{}/{tail}/", backend.modpack_upload_baseurl());
+    let url = format!("{}/{tail}/", backend.modpack_upload_base_url());
 
     app.http().post(url).bearer_auth(token)
 }
@@ -184,7 +194,7 @@ pub async fn publish(
     game: Game,
     args: ModpackArgs,
     token: String,
-) -> Result<()> {
+) -> Result<UploadSubmissionResult> {
     ensure!(args.description.len() <= 250, "description is too long");
     ensure!(!args.readme.is_empty(), "readme cannot be empty");
     ensure!(!args.author.is_empty(), "author cannot be empty");
@@ -220,7 +230,7 @@ pub async fn publish(
     {
         Ok(parts) => parts,
         Err(err) => {
-            abort_upload(&app, &uuid, args.backend, &token)
+            abort_upload(app, &uuid, args.backend, &token)
                 .await
                 .context("failed to abort upload")?;
             return Err(err.wrap_err("failed to upload file"));
@@ -233,9 +243,7 @@ pub async fn publish(
 
     submit_package(app, uuid, game, args, &token)
         .await
-        .context("failed to submit package")?;
-
-    Ok(())
+        .context("failed to submit package")
 }
 
 async fn initiate_upload(
@@ -341,7 +349,7 @@ async fn submit_package(
     game: Game,
     args: ModpackArgs,
     token: &str,
-) -> Result<()> {
+) -> Result<UploadSubmissionResult> {
     let metadata = PackageSubmissionMetadata {
         author_name: args.author,
         has_nsfw_content: args.nsfw,
@@ -361,13 +369,13 @@ async fn submit_package(
     let status = response.status();
 
     if response.status().is_success() {
-        return Ok(());
+        return Ok(response.json::<UploadSubmissionResult>().await?);
     }
 
-    if status == StatusCode::BAD_REQUEST {
-        if let Ok(Some(err)) = handle_bad_request(response).await {
-            bail!("{}", err)
-        }
+    if status == StatusCode::BAD_REQUEST
+        && let Ok(Some(err)) = handle_bad_request(response).await
+    {
+        bail!("{}", err)
     }
 
     bail!("unexpected error: {}", status);
@@ -410,15 +418,21 @@ impl ReqwestResponseExt for reqwest::Response {
     where
         F: FnOnce(StatusCode) -> Option<eyre::Error>,
     {
-        self.error_for_status().map_err(|err| match err.status() {
-            Some(status) => match status {
-                StatusCode::UNAUTHORIZED => eyre!("thunderstore API token is invalid"),
-                _ => match f(status) {
-                    Some(err) => err,
-                    None => eyre!(err),
-                },
-            },
-            None => eyre!(err),
+        self.error_for_status().map_err(|err| {
+            if let Some(status) = err.status() {
+                match status {
+                    StatusCode::UNAUTHORIZED => eyre!("thunderstore API token is invalid"),
+                    _ => {
+                        if let Some(err) = f(status) {
+                            err
+                        } else {
+                            eyre!(err)
+                        }
+                    }
+                }
+            } else {
+                eyre!(err)
+            }
         })
     }
 

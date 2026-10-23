@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { Dialog } from 'bits-ui';
-	import { fade, fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	import { expoOut, linear, quadIn, sineIn } from 'svelte/easing';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
@@ -13,6 +12,7 @@
 		confirmClose?: { message: string } | null;
 		canClose?: boolean;
 		large?: boolean;
+		noscroll?: boolean;
 		onclose?: () => void;
 		children?: Snippet;
 	};
@@ -23,6 +23,7 @@
 		confirmClose = null,
 		canClose = true,
 		large = false,
+		noscroll = false,
 		onclose,
 		children
 	}: Props = $props();
@@ -52,12 +53,13 @@
 >
 	<Dialog.Portal>
 		<Dialog.Overlay forceMount class="pointer-events-none" data-tauri-drag-region={!canClose}>
-			{#snippet child({ props, open })}
+			{#snippet child({ props: { style, ...props }, open })}
 				{#if open}
 					<div
 						{...props}
 						transition:fade={{ duration: 80 }}
-						class="fixed inset-0 z-0 rounded-lg bg-black/60"
+						class="fixed inset-0 z-0 rounded-lg"
+						style="background-color: rgba(0, 0, 0, calc(60%/(var(--bits-dialog-depth) + var(--bits-dialog-nested-count) + 1))); {style}"
 					></div>
 				{/if}
 			{/snippet}
@@ -67,19 +69,17 @@
 			class="pointer-events-none"
 		>
 			{#if open}
-				<div
-					class="pointer-events-none fixed inset-0 flex items-center justify-center"
-					in:fly={{ duration: 200, easing: expoOut, y: 8 }}
-					out:fly={{ duration: 50, easing: linear, y: 5 }}
-				>
+				<div class="pointer-events-none fixed inset-0 flex items-center justify-center">
 					<div
 						class={[
 							large ? 'max-w-240' : 'max-w-140',
-							'border-primary-600 bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden overflow-y-auto rounded-xl border p-6 shadow-xl'
+							noscroll ? 'flex flex-col overflow-y-hidden' : 'overflow-y-auto',
+							'border-primary-300 dark:border-primary-600 dark:bg-primary-800 pointer-events-auto relative z-30 max-h-[85%] w-[85%] overflow-x-hidden rounded-xl border bg-white p-6 shadow-xl'
 						]}
 					>
 						{#if title}
-							<Dialog.Title class="w-full pr-10 text-2xl font-bold wrap-break-word text-white"
+							<Dialog.Title
+								class="text-primary-900 w-full pr-10 text-2xl font-bold wrap-break-word dark:text-white"
 								>{title}</Dialog.Title
 							>
 						{/if}
@@ -88,7 +88,7 @@
 
 						{#if canClose}
 							<button
-								class="text-primary-400 hover:bg-primary-700 hover:text-primary-300 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
+								class="text-primary-500 hover:text-primary-700 dark:text-primary-400 dark:hover:bg-primary-700 dark:hover:text-primary-300 hover:bg-primary-200 absolute top-5 right-5 rounded-md p-0.5 text-3xl"
 								onclick={close}
 							>
 								<Icon icon="mdi:close" />

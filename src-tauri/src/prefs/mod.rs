@@ -78,7 +78,7 @@ impl DirPref {
         fs::remove_dir(&new_value)?;
 
         match fs::rename(&self.value, &new_value) {
-            Ok(_) => {
+            Ok(()) => {
                 info!("renaming succeeded");
 
                 if !self.keep_files.is_empty() {
@@ -207,7 +207,8 @@ impl Backends {
             Backends::All => [Backend::Thunderstore, Backend::Hexium].iter(),
             Backends::Thunderstore => [Backend::Thunderstore].iter(),
             Backends::Hexium => [Backend::Hexium].iter(),
-        }.copied()
+        }
+        .copied()
     }
 }
 
@@ -231,6 +232,7 @@ pub struct GamePrefs {
     pub custom_args: String,
     pub launch_mode: LaunchMode,
     pub platform: Option<Platform>,
+    pub show_steam_launch_options: bool,
     pub backend: Backends,
 }
 
@@ -267,7 +269,7 @@ impl Prefs {
         ]);
 
         let window = app.get_webview_window("main").unwrap();
-        window.zoom(self.zoom_factor as f64).ok();
+        window.zoom(f64::from(self.zoom_factor)).ok();
 
         self.save(db)?;
 
@@ -310,7 +312,7 @@ impl Prefs {
         if self.zoom_factor != value.zoom_factor {
             let window = app.get_webview_window("main").unwrap();
             window
-                .zoom(value.zoom_factor as f64)
+                .zoom(f64::from(value.zoom_factor))
                 .context("failed to set zoom level")?;
         }
         self.zoom_factor = value.zoom_factor;

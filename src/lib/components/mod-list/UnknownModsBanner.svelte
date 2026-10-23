@@ -8,10 +8,10 @@
 
 	type Props = {
 		mods: Dependant[];
-		uninstall: (mod: Dependant) => void;
+		onUninstall: () => Promise<void>;
 	};
 
-	let { mods, uninstall }: Props = $props();
+	let { mods, onUninstall }: Props = $props();
 
 	let dialogOpen = $state(false);
 </script>
@@ -26,7 +26,7 @@
 </InfoBox>
 
 <Dialog bind:open={dialogOpen} title="Unknown mods">
-	<div class="text-primary-300 mb-3">
+	<div class="text-primary-600 dark:text-primary-300 mb-3">
 		{m.unknownModsBanner_dialog_content_1()}
 		<br />
 		{m.unknownModsBanner_dialog_content_2()}
@@ -41,8 +41,8 @@
 		<Button
 			icon="mdi:trash"
 			color="primary"
-			onclick={() => {
-				mods.forEach(uninstall);
+			onclick={async () => {
+				await onUninstall();
 				dialogOpen = false;
 			}}
 		>

@@ -13,12 +13,12 @@
 
 <div class="my-1 invalid:mx-5">
 	<div class="mb-[-3px] pl-0.5">
-		<span class="text-primary-100 text-lg font-medium">{label}</span>
+		<span class="text-primary-900 dark:text-primary-100 text-lg font-medium">{label}</span>
 		{#if required}
-			<span class="text-red-400">*</span>
+			<span class="text-red-500 dark:text-red-400">*</span>
 		{/if}
 	</div>
-	<p class="text-primary-300 pb-1 pl-0.5">{description}</p>
+	<p class="text-primary-600 dark:text-primary-300 pb-1 pl-0.5">{description}</p>
 
 	{@render children?.()}
 </div>

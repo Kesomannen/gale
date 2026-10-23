@@ -29,7 +29,7 @@
 </script>
 
 <Dialog bind:open title={m.importR2Dialog_title()} canClose={!loading}>
-	<div class="text-primary-300 mb-2">
+	<div class="text-primary-600 dark:text-primary-300 mb-2">
 		<p>
 			{m.importR2Dialog_content_1()}<b>{m.importR2Dialog_content_2()}</b
 			>{m.importR2Dialog_content_3()}

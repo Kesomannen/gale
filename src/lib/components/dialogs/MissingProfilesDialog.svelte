@@ -9,7 +9,14 @@
 
 	const missingProfiles = $derived(profiles.list.filter((profile) => profile.missing));
 
-	const actions: (MissingProfileAction | null)[] = $state(missingProfiles.map(() => null));
+	// Resync selection slots when the missing list changes.
+	let actions: (MissingProfileAction | null)[] = $state([]);
+
+	$effect(() => {
+		if (actions.length !== missingProfiles.length) {
+			actions = missingProfiles.map(() => null);
+		}
+	});
 
 	async function submit() {
 		let actionsToApply = missingProfiles.map((profile, i) => ({ profile, action: actions[i] }));
@@ -37,7 +44,7 @@
 </script>
 
 <Dialog open={missingProfiles.length > 0} canClose={false} title="Missing Profiles">
-	<div class="text-primary-300 mb-2">
+	<div class="text-primary-600 dark:text-primary-300 mb-2">
 		<p class="mb-2">
 			Gale detected missing profiles while loading. This can happen if you moved or deleted profiles
 			from outside Gale.
@@ -45,7 +52,9 @@
 		<p>Please resolve each missing profile before continuing.</p>
 	</div>
 
-	<div class="border-primary-900 relative overflow-hidden rounded-lg border-2">
+	<div
+		class="border-primary-200 dark:border-primary-900 relative overflow-hidden rounded-lg border-2"
+	>
 		{#each missingProfiles as profile, i (profile.id)}
 			<MissingProfileItem
 				{profile}

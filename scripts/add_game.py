@@ -89,23 +89,6 @@ def get_steam_app_id(game_name):
     return None
 
 
-def resize_and_optimize_icon(icon_path):
-    with Image.open(icon_path) as img:
-        img.thumbnail((256, 256))
-
-        name, _ = path.splitext(icon_path)
-        new_name = name + ".webp"
-        new_path = path.join(path.dirname(icon_path), new_name)
-
-        cprint(f"Saving {new_path}", "grey")
-
-        img.save(new_path, format="webp", optimize=True)
-
-    if not icon_path.endswith("webp"):
-        cprint(f"Removing {icon_path}", "grey")
-        os.remove(icon_path)
-
-
 def insert_into_thunderstore_toml(slug):
     toml_path = path.join(path.dirname(__file__), "..", "thunderstore.toml")
 
@@ -196,32 +179,6 @@ if __name__ == "__main__":
             platforms[new_platform] = {}
 
         all_platforms.remove(new_platform)
-
-    print(
-        f"Add a square image to {bold('images/games')} with the name {bold(slug)} (png, jpg and webp supported)"
-    )
-    while True:
-        input("(press enter to continue)\n")
-
-        found = False
-        for ext in ["png", "jpg", "jpeg", "webp"]:
-            icon_path = path.join(
-                __file__, "..", "..", "images", "games", f"{slug}.{ext}"
-            )
-            icon_path = path.realpath(icon_path)
-            cprint(f"Checking for icon at {icon_path}", "grey")
-
-            if path.isfile(icon_path):
-                print("Icon found, resizing and optimizing...")
-                resize_and_optimize_icon(icon_path)
-
-                found = True
-                break
-
-        if found:
-            break
-
-        cprint("Icon not found, try a gain", "red")
 
     game = {
         "name": name,

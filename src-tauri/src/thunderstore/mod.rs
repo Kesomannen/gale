@@ -1,14 +1,15 @@
 use eyre::Result;
-use itertools::Itertools;
 use query::QueryModsArgs;
 use serde::{Deserialize, Serialize};
 use std::{
+    cmp::Ordering,
     collections::{HashSet, VecDeque},
     hash::Hash,
     iter::FusedIterator,
     str::{self},
 };
-use tauri::{AppHandle, async_runtime::JoinHandle};
+use tauri::AppHandle;
+use tokio_util::sync::CancellationToken;
 use uuid::Uuid;
 
 use crate::{game::Game, state::ManagerExt, thunderstore::query::Queryable};
@@ -52,7 +53,7 @@ impl<'a> BorrowedMod<'a> {
     pub fn latest(package: &'a PackageListing) -> Self {
         Self {
             package,
-            version: package.latest(),
+            version: package.latest_released(),
         }
     }
 
@@ -60,8 +61,11 @@ impl<'a> BorrowedMod<'a> {
         &self.version.ident
     }
 
-    pub fn dependencies(&self) -> impl Iterator<Item = &'a VersionIdent> + 'a + use<'a> {
-        self.version.dependencies.iter()
+    pub fn dependencies(&self) -> impl Iterator<Item = (&'a VersionIdent, Backend)> + 'a + use<'a> {
+        self.version
+            .dependencies
+            .iter()
+            .map(|ident| (ident, self.package.backend))
     }
 }
 
@@ -117,14 +121,54 @@ impl Hash for ModId {
 impl ModId {
     /// Borrows the mod from [`Thunderstore`].
     pub fn borrow<'a>(&self, thunderstore: &'a Thunderstore) -> Result<BorrowedMod<'a>> {
-        thunderstore.get_mod(self.package_uuid, self.version_uuid)
+        thunderstore.get_mod(self.package_uuid, self.version_uuid, self.backend)
+    }
+}
+
+/// A mod that exists on one or both backends.
+///
+/// Mod UUIDs on Hexium mimic those on Thunderstore, so we can deduplicate mods from each
+/// by UUID. This struct is then used by the frontend to display a single combined mod entry for
+/// each unique mod.
+#[derive(Debug, Serialize)]
+pub struct DeduplicatedMod<T> {
+    pub thunderstore: Option<T>,
+    pub hexium: Option<T>,
+}
+
+impl<T> DeduplicatedMod<T> {
+    fn set(&mut self, backend: Backend, value: T) {
+        match backend {
+            Backend::Thunderstore => self.thunderstore = Some(value),
+            Backend::Hexium => self.hexium = Some(value),
+        }
+    }
+
+    pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> DeduplicatedMod<U> {
+        DeduplicatedMod {
+            thunderstore: self.thunderstore.map(&mut f),
+            hexium: self.hexium.map(f),
+        }
+    }
+
+    fn first(&self) -> Option<&T> {
+        self.thunderstore.as_ref().or(self.hexium.as_ref())
+    }
+}
+
+impl<T> Default for DeduplicatedMod<T> {
+    fn default() -> Self {
+        Self {
+            thunderstore: None,
+            hexium: None,
+        }
     }
 }
 
 /// Registry of Thunderstore mods for the active game.
 pub struct Thunderstore {
-    /// A handle to the current [`fetch_package_loop`] task.
-    fetch_loop_handle: Option<JoinHandle<()>>,
+    game: Option<Game>,
+    fetch_cancel_token: CancellationToken,
     /// Whether a [`fetch_mods`] task is currently running.
     is_fetching: bool,
     current_query: Option<QueryModsArgs>,
@@ -132,10 +176,42 @@ pub struct Thunderstore {
     hexium_backend: ThunderstoreBackend,
 }
 
+/// Specifies which backend to use when searching for a mod using a uuid or identifier.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FromBackend {
+    /// Use any backend that has the mod with no preference. This currently prefers Thunderstore,
+    /// but that may change at any time.
+    Any,
+    /// Always prefer the given backend even if the mod is older on that backend,
+    /// but fall back to the other if the mod is not found.
+    Prefer(Backend),
+    /// Check both backends for the mod. If both backends have the mod, prefer the one with the higher version
+    /// and deprecation status. If only one backend has the mod, use that one.
+    PreferIfEqual(Backend),
+    /// Only use the given backend. If the mod is not found there, return an error.
+    Only(Backend),
+}
+
+impl From<Backend> for FromBackend {
+    fn from(backend: Backend) -> Self {
+        Self::Only(backend)
+    }
+}
+
+impl From<Option<Backend>> for FromBackend {
+    fn from(option: Option<Backend>) -> Self {
+        match option {
+            Some(backend) => Self::Only(backend),
+            None => Self::Any,
+        }
+    }
+}
+
 impl Thunderstore {
     pub fn new() -> Self {
         Self {
-            fetch_loop_handle: None,
+            game: None,
+            fetch_cancel_token: CancellationToken::new(),
             is_fetching: false,
             current_query: None,
             thunderstore_backend: ThunderstoreBackend::new(Backend::Thunderstore),
@@ -152,17 +228,6 @@ impl Thunderstore {
             .all(|backend| self.backend(backend).packages_fetched())
     }
 
-    pub fn deduplicate<T: Queryable>(mods: impl Iterator<Item = T>) -> impl Iterator<Item = T> {
-        mods.sorted_by(|a, b| a.full_name().cmp(b.full_name()))
-            .coalesce(|a, b| {
-                if a.full_name() == b.full_name() {
-                    Ok(Self::cmp_borrowed_mod(a, b))
-                } else {
-                    Err((a, b))
-                }
-            })
-    }
-
     /// Returns an iterator over the latest versions of every package.
     /// Without deduplication, usable for filtering. Call [`Thunderstore::deduplicate`] afterwards.
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
@@ -175,57 +240,114 @@ impl Thunderstore {
         &'a self,
         f: impl Fn(&'a ThunderstoreBackend) -> Result<R>,
         cmp: impl Fn(R, R) -> R,
+        from: FromBackend,
     ) -> Result<R> {
-        let thunderstore = f(&self.thunderstore_backend);
-        let hexium = f(&self.hexium_backend);
-        match (thunderstore, hexium) {
-            (Ok(thunderstore), Ok(hexium)) => Ok(cmp(thunderstore, hexium)),
-            (Ok(thunderstore), Err(_)) => Ok(thunderstore),
-            (Err(_), Ok(hexium)) => Ok(hexium),
+        let (preferred, fallback) = match from {
+            FromBackend::Prefer(Backend::Hexium) | FromBackend::PreferIfEqual(Backend::Hexium) => {
+                (&self.hexium_backend, &self.thunderstore_backend)
+            }
+            FromBackend::Any
+            | FromBackend::Prefer(Backend::Thunderstore)
+            | FromBackend::PreferIfEqual(Backend::Thunderstore) => {
+                (&self.thunderstore_backend, &self.hexium_backend)
+            }
+            FromBackend::Only(backend) => return f(self.backend(backend)),
+        };
+
+        match (f(preferred), f(fallback)) {
+            (Ok(preferred), Ok(fallback)) if matches!(from, FromBackend::PreferIfEqual(_)) => {
+                Ok(cmp(preferred, fallback))
+            }
+            (Ok(preferred), _) => Ok(preferred),
+            (Err(_), Ok(fallback)) => Ok(fallback),
             (Err(e), Err(_)) => Err(e),
         }
     }
 
     fn cmp_package_listing<'a>(
-        thunderstore: &'a PackageListing,
-        hexium: &'a PackageListing,
+        preferred: &'a PackageListing,
+        fallback: &'a PackageListing,
     ) -> &'a PackageListing {
-        if thunderstore.latest().version() >= hexium.latest().version() {
-            thunderstore
-        } else {
-            hexium
+        match Self::cmp_packages(
+            preferred.is_deprecated,
+            Some(&preferred.latest().parsed_version()),
+            fallback.is_deprecated,
+            Some(&fallback.latest().parsed_version()),
+        ) {
+            Ordering::Less => fallback,
+            _ => preferred,
         }
     }
 
-    pub fn get_package(&self, uuid: Uuid) -> Result<&PackageListing> {
-        self.resolve_thunderstore_vs_hexium(|b| b.get_package(uuid), Self::cmp_package_listing)
+    fn cmp_queryable<T: Queryable>(preferred: T, fallback: T) -> T {
+        match Self::cmp_packages(
+            preferred.is_deprecated(),
+            preferred.version().as_ref(),
+            fallback.is_deprecated(),
+            fallback.version().as_ref(),
+        ) {
+            Ordering::Less => fallback,
+            _ => preferred,
+        }
+    }
+
+    /// Compares two packages to determine which one should be preferred when
+    /// FromBackend::PreferIfEqual is used.
+    ///
+    /// Deprecation status is first checked (deprecated packages are always ordered
+    /// less than non-deprecated ones), and then the version is compared (higher versions are preferred).
+    fn cmp_packages(
+        a_deprecated: bool,
+        a_version: Option<&semver::Version>,
+        b_deprecated: bool,
+        b_version: Option<&semver::Version>,
+    ) -> Ordering {
+        a_deprecated
+            .cmp(&b_deprecated)
+            .reverse()
+            .then_with(|| a_version.cmp(&b_version))
+    }
+
+    pub fn get_package(&self, uuid: Uuid, from: impl Into<FromBackend>) -> Result<&PackageListing> {
+        self.resolve_thunderstore_vs_hexium(
+            |b| b.get_package(uuid),
+            Self::cmp_package_listing,
+            from.into(),
+        )
     }
 
     /// Finds a package with the given `full_name` (formatted as `owner-name`).
-    pub fn find_package(&self, full_name: &str) -> Result<&PackageListing> {
+    pub fn find_package(
+        &self,
+        full_name: &str,
+        from: impl Into<FromBackend>,
+    ) -> Result<&PackageListing> {
         self.resolve_thunderstore_vs_hexium(
             |b| b.find_package(full_name),
             Self::cmp_package_listing,
+            from.into(),
         )
     }
 
-    fn cmp_borrowed_mod<T: Queryable>(thunderstore: T, hexium: T) -> T {
-        if thunderstore.version() >= hexium.version() {
-            thunderstore
-        } else {
-            hexium
-        }
-    }
-
-    pub fn get_mod(&self, package_uuid: Uuid, version_uuid: Uuid) -> Result<BorrowedMod<'_>> {
+    pub fn get_mod(
+        &self,
+        package_uuid: Uuid,
+        version_uuid: Uuid,
+        from: impl Into<FromBackend>,
+    ) -> Result<BorrowedMod<'_>> {
         self.resolve_thunderstore_vs_hexium(
             |b| b.get_mod(package_uuid, version_uuid),
-            Self::cmp_borrowed_mod,
+            Self::cmp_queryable,
+            from.into(),
         )
     }
 
-    pub fn find_ident(&self, ident: &VersionIdent) -> Result<BorrowedMod<'_>> {
-        self.find_mod(ident.owner(), ident.name(), ident.version())
+    pub fn find_ident(
+        &self,
+        ident: &VersionIdent,
+        from: impl Into<FromBackend>,
+    ) -> Result<BorrowedMod<'_>> {
+        self.find_mod(ident.owner(), ident.name(), ident.version(), from.into())
     }
 
     pub fn find_mod<'a>(
@@ -233,26 +355,26 @@ impl Thunderstore {
         owner: &str,
         name: &str,
         version: &str,
+        from: impl Into<FromBackend>,
     ) -> Result<BorrowedMod<'a>> {
         self.resolve_thunderstore_vs_hexium(
             |b| b.find_mod(owner, name, version),
-            Self::cmp_borrowed_mod,
+            Self::cmp_queryable,
+            from.into(),
         )
     }
 
     /// Switches the active game, clearing the package map and aborting ongoing fetch tasks.
     pub fn switch_game(&mut self, game: Game, app: AppHandle) {
-        if let Some(handle) = self.fetch_loop_handle.take() {
-            handle.abort();
-        }
+        self.fetch_cancel_token.cancel();
 
         self.is_fetching = false;
 
         {
-            let prefs = app.lock_prefs();
-
             self.thunderstore_backend.clear_packages();
             self.hexium_backend.clear_packages();
+
+            let prefs = app.lock_prefs();
 
             for backend in prefs.enabled_backends(game).iter() {
                 let backend = self.backend_mut(backend);
@@ -260,8 +382,15 @@ impl Thunderstore {
             }
         }
 
-        let load_mods_handle = tauri::async_runtime::spawn(fetch::fetch_package_loop(game, app));
-        self.fetch_loop_handle = Some(load_mods_handle);
+        self.game = Some(game);
+
+        self.fetch_cancel_token = CancellationToken::new();
+
+        tauri::async_runtime::spawn(fetch::fetch_package_loop(
+            game,
+            app,
+            self.fetch_cancel_token.clone(),
+        ));
     }
 
     pub fn backend(&self, backend: Backend) -> &ThunderstoreBackend {
@@ -281,7 +410,7 @@ impl Thunderstore {
 
 /// See [`Thunderstore::dependencies`].
 pub struct Dependencies<'a> {
-    queue: VecDeque<&'a VersionIdent>,
+    queue: VecDeque<(&'a VersionIdent, Backend)>,
     visited: HashSet<&'a str>,
     thunderstore: &'a Thunderstore,
 }
@@ -291,8 +420,11 @@ impl<'a> Iterator for Dependencies<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let current = self.queue.pop_front()?;
-            let Ok(current) = self.thunderstore.find_ident(current) else {
+            let (current_ident, preferred_backend) = self.queue.pop_front()?;
+            let Ok(current) = self
+                .thunderstore
+                .find_ident(current_ident, FromBackend::Prefer(preferred_backend))
+            else {
                 continue;
             };
 
@@ -301,7 +433,7 @@ impl<'a> Iterator for Dependencies<'a> {
                     continue;
                 }
 
-                self.queue.push_back(dependency);
+                self.queue.push_back((dependency, current.package.backend));
             }
 
             break Some(current);
@@ -317,15 +449,23 @@ impl Thunderstore {
     ///
     /// Duplicates of the same package are removed. The specific
     /// version of a package that is chosen depends on which
-    /// is encountered first.
+    /// is encountered first in the search.
+    ///
+    /// The second element in the tuple is the backend to prefer
+    /// when searching for the dependency. If the dependency is not found
+    /// on that backend, the other backend will be used instead.
+    ///
+    /// Backends are propagated from the parent mod to its dependencies,
+    /// so if a mod is not found on the preferred backend, its dependencies
+    /// will also be searched on the other backend.
     pub fn dependencies<'a>(
         &'a self,
-        idents: impl IntoIterator<Item = &'a VersionIdent>,
+        dependencies: impl IntoIterator<Item = (&'a VersionIdent, Backend)>,
     ) -> Dependencies<'a> {
-        let queue = idents.into_iter().collect::<VecDeque<_>>();
+        let queue = dependencies.into_iter().collect::<VecDeque<_>>();
         let mut visited = HashSet::with_capacity(queue.len());
-        for item in &queue {
-            visited.insert(item.full_name());
+        for (ident, _) in &queue {
+            visited.insert(ident.full_name());
         }
 
         Dependencies {
@@ -334,4 +474,22 @@ impl Thunderstore {
             thunderstore: self,
         }
     }
+}
+
+async fn get_categories(
+    backend: Backend,
+    game: Game,
+    app: &AppHandle,
+) -> Result<Vec<PackageCategory>> {
+    let url = backend.category_url(game);
+    let response: CategoryResponse = app
+        .http()
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?;
+
+    Ok(response.results)
 }

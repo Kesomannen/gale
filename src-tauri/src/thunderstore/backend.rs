@@ -5,7 +5,10 @@ use crate::{
 use eyre::eyre;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 use uuid::Uuid;
 
 #[derive(
@@ -26,7 +29,26 @@ impl Display for Backend {
     }
 }
 
+impl FromStr for Backend {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "thunderstore" => Ok(Self::Thunderstore),
+            "hexium" => Ok(Self::Hexium),
+            _ => Err(()),
+        }
+    }
+}
+
 impl Backend {
+    pub fn other(self) -> Self {
+        match self {
+            Backend::Thunderstore => Backend::Hexium,
+            Backend::Hexium => Backend::Thunderstore,
+        }
+    }
+
     pub fn index_url(self, game: Game) -> Option<String> {
         if game.backends.contains(&self) {
             Some(match self {
@@ -132,7 +154,20 @@ impl Backend {
         }
     }
 
-    pub fn modpack_upload_baseurl(self) -> &'static str {
+    pub fn category_url(&self, game: Game) -> String {
+        match self {
+            Backend::Thunderstore => format!(
+                "https://thunderstore.io/api/experimental/community/{}/category/",
+                game.slug
+            ),
+            Backend::Hexium => format!(
+                "https://hexium.gg/api/experimental/community/{}/category/",
+                game.slug
+            ),
+        }
+    }
+
+    pub fn modpack_upload_base_url(self) -> &'static str {
         match self {
             Backend::Thunderstore => "https://thunderstore.io/api/experimental",
             Backend::Hexium => "https://hexium.gg/api/experimental",
@@ -173,7 +208,7 @@ impl ThunderstoreBackend {
     pub fn latest(&self) -> impl Iterator<Item = BorrowedMod<'_>> {
         self.packages.values().map(move |package| BorrowedMod {
             package,
-            version: package.latest(),
+            version: package.latest_released(),
         })
     }
 

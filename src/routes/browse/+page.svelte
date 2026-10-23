@@ -1,26 +1,34 @@
 <script lang="ts">
 	import * as api from '$lib/api';
-	import { type SortBy, type Mod, type ModId, Backend, type ModContextItem } from '$lib/types';
+	import {
+		type SortBy,
+		type Mod,
+		type ModId,
+		type ModContextItem,
+		type BrowsedMod
+	} from '$lib/types';
 
 	import ModList from '$lib/components/mod-list/ModList.svelte';
 
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import ModListItem from '$lib/components/mod-list/ModListItem.svelte';
 	import ProfileLockedBanner from '$lib/components/mod-list/ProfileLockedBanner.svelte';
-	import ModDetails from '$lib/components/mod-list/ModDetails.svelte';
 	import ModListFilters from '$lib/components/mod-list/ModListFilters.svelte';
 	import { defaultContextItems } from '$lib/context';
 	import InstallModButton from '$lib/components/mod-list/InstallModButton.svelte';
 	import profiles from '$lib/state/profile.svelte';
 	import { modQuery } from '$lib/state/misc.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
-	import Checkbox from '$lib/components/ui/Checkbox.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import { pushInfoToast } from '$lib/toast';
 	import HelpCard from '$lib/components/ui/HelpCard.svelte';
-	import games from '$lib/state/game.svelte';
+	import ForeignDownloadDialog from '$lib/components/dialogs/ForeignDownloadDialog.svelte';
+	import {
+		extractDeduplicatedMod,
+		getPreferredBackend,
+		shouldWarnForeignDownload
+	} from '$lib/util';
+	import DeduplicatedModDetails from '$lib/components/mod-list/DeduplicatedModDetails.svelte';
 
 	const sortOptions: SortBy[] = ['lastUpdated', 'newest', 'rating', 'downloads'];
 	const contextItems: ModContextItem[] = [
@@ -38,20 +46,17 @@
 		...defaultContextItems
 	];
 
-	let mods: Mod[] = $state([]);
+	let mods: BrowsedMod[] = $state([]);
 
-	let modList: ModList;
 	let maxCount: number = $state(20);
-	let selectedMod: Mod | null = $state(null);
-	let installDialogOpen = $state(false);
-	let loading = $state(false);
-	let warnNoRemind = $state(false);
+	let selectedMod: BrowsedMod | null = $state(null);
+	let foreignDownloadDialogOpen = $state(false);
 
 	let installId: ModId;
 	let unlistenFromQuery: UnlistenFn | undefined;
 
 	onMount(() => {
-		listen<Mod[]>('mod_query_result', (evt) => {
+		listen<BrowsedMod[]>('mod_query_result', (evt) => {
 			mods = evt.payload;
 		}).then((unlisten) => {
 			unlistenFromQuery = unlisten;
@@ -66,6 +71,14 @@
 	let hasRefreshed = $state(false);
 	let refreshing = false;
 
+	function itemUuid(item: BrowsedMod) {
+		return item.data.thunderstore?.uuid ?? item.data.hexium?.uuid;
+	}
+
+	function findItemByUuid(uuid: string | undefined) {
+		return mods.find((mod) => itemUuid(mod) === uuid) ?? null;
+	}
+
 	async function refresh() {
 		if (refreshing) return;
 		refreshing = true;
@@ -73,7 +86,7 @@
 		mods = await api.thunderstore.query({ ...modQuery.current, maxCount });
 		if (selectedMod) {
 			// isInstalled might have changed
-			selectedMod = mods.find((mod) => mod.uuid === selectedMod!.uuid) ?? null;
+			selectedMod = findItemByUuid(itemUuid(selectedMod));
 		}
 
 		refreshing = false;
@@ -89,25 +102,15 @@
 	}
 
 	async function doInstall() {
-		if (warnNoRemind) {
-			let prefs = await api.prefs.get();
-			prefs.backendSkipConfirm = true;
-			await api.prefs.set(prefs);
-		}
-		installDialogOpen = false;
-		loading = true;
 		await api.profile.install.mod(installId);
 		await refresh();
 	}
 
 	async function install(id: ModId) {
 		installId = id;
-		if (
-			id.backend !== Backend.Thunderstore &&
-			!(await api.prefs.get()).backendSkipConfirm &&
-			games.activeBackends.length > 1
-		) {
-			installDialogOpen = true;
+		const prefs = await api.prefs.get();
+		if (shouldWarnForeignDownload(id, prefs)) {
+			foreignDownloadDialogOpen = true;
 		} else {
 			await doInstall();
 		}
@@ -116,21 +119,20 @@
 	function onModClicked(evt: MouseEvent, mod: Mod) {
 		if (evt.ctrlKey) {
 			installLatest(mod);
+		} else if (selectedMod && itemUuid(selectedMod) === mod.uuid) {
+			selectedMod = null;
 		} else {
-			modList.selectMod(mod);
+			selectedMod = findItemByUuid(mod.uuid);
 		}
 	}
 
 	$effect(() => {
+		profiles.active;
+		// read all fields of modQuery.current to trigger the effect when any of them change
+		JSON.stringify(modQuery.current);
 		if (maxCount > 0) {
-			modQuery.current;
-			profiles.active;
-			refresh();
+			untrack(() => refresh());
 		}
-	});
-
-	$effect(() => {
-		loading = false;
 	});
 
 	let locked = $derived(profiles.activeLocked);
@@ -138,19 +140,13 @@
 
 <div class="flex grow overflow-hidden">
 	<div class="flex w-[60%] grow flex-col overflow-hidden px-4 pt-4">
-		<ModListFilters {sortOptions} queryArgs={modQuery.current} />
+		<ModListFilters {sortOptions} bind:queryArgs={modQuery.current} />
 
 		{#if locked}
 			<ProfileLockedBanner class="mb-1" />
 		{/if}
 
-		<ModList
-			{mods}
-			queryArgs={modQuery.current}
-			bind:this={modList}
-			bind:maxCount
-			bind:selected={selectedMod}
-		>
+		<ModList {mods} queryArgs={modQuery.current} bind:maxCount>
 			{#snippet placeholder()}
 				{#if hasRefreshed}
 					<HelpCard title={m.browse_modList_content_1()} icon="mdi:store-search" class="mt-4">
@@ -159,38 +155,37 @@
 				{/if}
 			{/snippet}
 
-			{#snippet item({ mod, isSelected })}
+			{#snippet item({ mod })}
+				{@const shownMod = extractDeduplicatedMod(mod.data, getPreferredBackend(mod.data))!}
+				{@const combinedDownloads =
+					(mod.data.hexium?.downloads ?? 0) + (mod.data.thunderstore?.downloads ?? 0)}
+
 				<ModListItem
-					{mod}
 					{contextItems}
-					selected={isSelected}
+					{combinedDownloads}
+					mod={shownMod}
+					isInstalled={mod.isInstalled}
+					selected={selectedMod !== null && itemUuid(selectedMod) === shownMod.uuid}
 					locked={profiles.activeLocked}
-					oninstall={() => installLatest(mod)}
-					onclick={(evt) => onModClicked(evt, mod)}
+					oninstall={() => installLatest(shownMod)}
+					onclick={(evt) => onModClicked(evt, shownMod)}
 				/>
 			{/snippet}
 		</ModList>
 	</div>
 
 	{#if selectedMod}
-		<ModDetails {locked} mod={selectedMod} {contextItems} onclose={() => (selectedMod = null)}>
-			<InstallModButton mod={selectedMod} {install} {locked} {loading} />
-		</ModDetails>
+		<DeduplicatedModDetails
+			{locked}
+			mod={selectedMod.data}
+			{contextItems}
+			onclose={() => (selectedMod = null)}
+		>
+			{#snippet children({ mod })}
+				<InstallModButton {mod} isInstalled={selectedMod?.isInstalled} {install} {locked} />
+			{/snippet}
+		</DeduplicatedModDetails>
 	{/if}
-
-	<ConfirmDialog title={m.otherServer_warn_title()} bind:open={installDialogOpen}>
-		{m.otherServer_warn_content()}
-		<div class="my-5 flex items-center">
-			<Checkbox id="neverwarninstall" bind:checked={warnNoRemind} />
-			<label class="ml-3" for="neverwarninstall">
-				{m.otherServer_warn_noremind()}
-			</label>
-		</div>
-
-		{#snippet buttons()}
-			<Button color="accent" icon="mdi:download" onclick={doInstall}>
-				{m.installModButton_button_install()}
-			</Button>
-		{/snippet}
-	</ConfirmDialog>
 </div>
+
+<ForeignDownloadDialog bind:open={foreignDownloadDialogOpen} onConfirm={doInstall} />

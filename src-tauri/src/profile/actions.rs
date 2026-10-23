@@ -76,10 +76,10 @@ impl Profile {
     }
 
     pub fn remove_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
-        if self.get_mod(uuid)?.enabled {
-            if let Some(dependants) = self.check_dependants(uuid, true, thunderstore) {
-                return Ok(ActionResult::Confirm { dependants });
-            }
+        if self.get_mod(uuid)?.enabled
+            && let Some(dependants) = self.check_dependants(uuid, true, thunderstore)
+        {
+            return Ok(ActionResult::Confirm { dependants });
         }
 
         self.force_remove_mod(uuid)?;
@@ -106,17 +106,17 @@ impl Profile {
     }
 
     pub fn toggle_mod(&mut self, uuid: Uuid, thunderstore: &Thunderstore) -> Result<ActionResult> {
-        let dependants = match self.get_mod(uuid)?.enabled {
-            true => self.check_dependants(uuid, false, thunderstore),
-            false => self.check_dependencies(uuid, thunderstore),
+        let dependants = if self.get_mod(uuid)?.enabled {
+            self.check_dependants(uuid, false, thunderstore)
+        } else {
+            self.check_dependencies(uuid, thunderstore)
         };
 
-        match dependants {
-            Some(dependants) => Ok(ActionResult::Confirm { dependants }),
-            None => {
-                self.force_toggle_mod(uuid)?;
-                Ok(ActionResult::Done)
-            }
+        if let Some(dependants) = dependants {
+            Ok(ActionResult::Confirm { dependants })
+        } else {
+            self.force_toggle_mod(uuid)?;
+            Ok(ActionResult::Done)
         }
     }
 
@@ -164,9 +164,10 @@ impl Profile {
             .map_into()
             .collect_vec();
 
-        match dependants.is_empty() {
-            true => None,
-            false => Some(dependants),
+        if dependants.is_empty() {
+            None
+        } else {
+            Some(dependants)
         }
     }
 
@@ -187,9 +188,10 @@ impl Profile {
             .map_into()
             .collect_vec();
 
-        match disabled_deps.is_empty() {
-            true => None,
-            false => Some(disabled_deps),
+        if disabled_deps.is_empty() {
+            None
+        } else {
+            Some(disabled_deps)
         }
     }
 
@@ -200,7 +202,7 @@ impl Profile {
             .installer_for(profile_mod)
             .mod_dir(&profile_mod.full_name(), self)
         {
-            open::that(path)?;
+            open::that_detached(path)?;
             Ok(())
         } else {
             Err(anyhow!("mod does not have a directory to open"))
@@ -257,8 +259,7 @@ impl ManagedGame {
         self.profiles
             .iter()
             .find_position(|profile| *profile.name > *name)
-            .map(|(i, _)| i)
-            .unwrap_or(self.profiles.len())
+            .map_or(self.profiles.len(), |(i, _)| i)
     }
 
     pub fn create_profile(
@@ -279,30 +280,27 @@ impl ManagedGame {
             name
         );
 
-        let path = match override_path {
-            Some(path) => {
-                ensure!(
-                    path.read_dir()?.next().is_none(),
-                    "profile directory is not empty"
-                );
+        let path = if let Some(path) = override_path {
+            ensure!(
+                path.read_dir()?.next().is_none(),
+                "profile directory is not empty"
+            );
 
-                path
-            }
-            None => {
-                let mut path = self.path.join("profiles");
-                path.push(&name);
+            path
+        } else {
+            let mut path = self.path.join("profiles");
+            path.push(&name);
 
-                // if the directory is empty, remove and replace it
-                fs::remove_dir(&path).ok();
+            // if the directory is empty, remove and replace it
+            fs::remove_dir(&path).ok();
 
-                ensure!(
-                    !path.exists(),
-                    "profile already exists at {}",
-                    path.display()
-                );
+            ensure!(
+                !path.exists(),
+                "profile already exists at {}",
+                path.display()
+            );
 
-                path
-            }
+            path
         };
 
         fs::create_dir_all(&path).fs_context("creating profile directory", &path)?;
@@ -330,6 +328,7 @@ impl ManagedGame {
             custom_args: String::new(),
             missing: false,
             ignored_package_updates: HashSet::new(),
+            excluded_export_files: HashSet::new(),
         };
 
         let index = self.target_profile_index(&profile.name);
@@ -418,6 +417,8 @@ impl ManagedGame {
         import::import_config(
             &new_profile.path,
             &old_profile.path,
+            self.game.mod_loader.mod_config_dirs(),
+            |_| true,
             &ImportOptions::default(),
         )
         .context("failed to copy config files")?;
@@ -471,7 +472,7 @@ impl ManagedGame {
             bail!("shortcut already exists");
         }
 
-        let command = if util::is_flatpak() {
+        let command = if util::flatpak::is_flatpak() {
             format!("flatpak run {}", util::path::APP_GUID)
         } else {
             std::env::current_exe()

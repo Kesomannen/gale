@@ -1,34 +1,13 @@
-use itertools::Itertools;
 use tauri::{AppHandle, command};
+use uuid::Uuid;
 
 use super::{InstallOptions, ModInstall};
 use crate::{
     profile::install::InstallResultExt,
     state::ManagerExt,
-    thunderstore::{ModId, Thunderstore},
+    thunderstore::ModId,
     util::{self, cmd::Result},
 };
-
-#[command]
-pub async fn install_all_mods(app: AppHandle) -> Result<()> {
-    let profile_id = app.lock_manager().active_profile().id;
-
-    let mods = Thunderstore::deduplicate(app.lock_thunderstore().latest())
-        .map(ModInstall::new)
-        .collect_vec();
-
-    app.install_queue()
-        .install(
-            mods,
-            profile_id,
-            InstallOptions::default().cancel_individually(),
-            &app,
-        )
-        .await
-        .ignore_cancel()?;
-
-    Ok(())
-}
 
 #[command]
 pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
@@ -51,7 +30,7 @@ pub async fn install_mod(id: ModId, app: AppHandle) -> Result<()> {
 
 #[command]
 pub fn cancel_all_installs(app: AppHandle) -> Result<()> {
-    app.app_state().install_queue.cancel_all();
+    app.install_queue().cancel_all();
 
     Ok(())
 }
@@ -66,11 +45,20 @@ pub fn has_pending_installations(app: AppHandle) -> Result<bool> {
 }
 
 #[command]
+pub fn is_installing(package_uuid: Uuid, app: AppHandle) -> Result<bool> {
+    let profile_id = app.lock_manager().active_profile().id;
+
+    let result = app.install_queue().lock().has_mod(package_uuid, profile_id);
+
+    Ok(result)
+}
+
+#[command]
 pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     if soft {
         let paths = super::cache::prepare_soft_clear(app)?;
 
-        let size = paths.iter().map(util::fs::get_directory_size).sum();
+        let size = paths.iter().map(util::fs::directory_size).sum();
 
         tauri::async_runtime::spawn_blocking(|| super::cache::do_soft_clear(paths)).await??;
 
@@ -78,7 +66,7 @@ pub async fn clear_download_cache(soft: bool, app: AppHandle) -> Result<u64> {
     } else {
         let path = app.lock_prefs().cache_dir();
 
-        let size = util::fs::get_directory_size(&path);
+        let size = util::fs::directory_size(&path);
 
         tauri::async_runtime::spawn_blocking(|| super::cache::clear(path)).await??;
 

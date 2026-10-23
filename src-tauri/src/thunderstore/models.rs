@@ -6,11 +6,12 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use internment::Intern;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::{Backend, PackageIdent, VersionIdent};
-use crate::{game::Game, profile::Profile};
+use crate::game::Game;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq)]
 pub struct PackageListing {
@@ -47,6 +48,13 @@ impl PackageListing {
 
     pub fn latest(&self) -> &PackageVersion {
         &self.versions[0]
+    }
+
+    pub fn latest_released(&self) -> &PackageVersion {
+        self.versions
+            .iter()
+            .find_or_first(|v| v.parsed_version().pre.is_empty())
+            .unwrap()
     }
 
     pub fn is_modpack(&self) -> bool {
@@ -210,6 +218,11 @@ pub struct UserMediaFinishUploadParams {
     pub parts: Vec<CompletedPart>,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct UploadSubmissionResult {
+    pub hidden: Option<bool>,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CompletedPart {
     #[serde(rename = "ETag")]
@@ -256,7 +269,6 @@ pub struct FrontendMod {
     pub contains_nsfw: bool,
     pub uuid: Uuid,
     pub version_uuid: Uuid,
-    pub is_installed: bool,
     pub last_updated: Option<String>,
     pub versions: Vec<FrontendVersion>,
     pub icon: Option<PathBuf>,
@@ -272,15 +284,27 @@ pub struct FrontendVersion {
     pub uuid: Uuid,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FrontendProfileMod {
-    pub enabled: bool,
-    pub config_file: Option<PathBuf>,
-    #[serde(flatten)]
-    pub data: FrontendMod,
+pub struct CategoryResponse {
+    pub results: Vec<PackageCategory>,
 }
 
-pub trait IntoFrontendMod {
-    fn into_frontend(self, profile: Option<&Profile>) -> FrontendMod;
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PackageCategory {
+    pub name: String,
+    pub slug: String,
+}
+
+impl PartialOrd for PackageCategory {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for PackageCategory {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.name.cmp(&other.name)
+    }
 }

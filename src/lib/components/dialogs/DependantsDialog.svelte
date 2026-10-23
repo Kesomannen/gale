@@ -3,7 +3,7 @@
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { invoke } from '$lib/invoke';
 	import ModCardList from '$lib/components/ui/ModCardList.svelte';
-	import type { Dependant, Mod } from '$lib/types';
+	import type { Dependant, Mod, ProfileMod } from '$lib/types';
 	import { m } from '$lib/paraglide/messages';
 
 	type Props = {
@@ -31,14 +31,9 @@
 	let open: boolean = $state(false);
 	let dependants: Dependant[] = $state([]);
 
-	export function openFor(_mod: Dependant | Mod, _dependants: Dependant[]) {
-		if ('fullName' in _mod) {
-			name = _mod.fullName;
-		} else {
-			name = _mod.name;
-		}
-
-		uuid = _mod.uuid;
+	export function openFor(mod: Mod, _dependants: Dependant[]) {
+		name = mod.name;
+		uuid = mod.uuid;
 		dependants = _dependants;
 		open = true;
 	}

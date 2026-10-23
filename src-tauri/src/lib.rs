@@ -4,10 +4,7 @@ use itertools::Itertools;
 use state::ManagerExt;
 use tauri::{App, AppHandle, RunEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
-use tracing::{error, info, warn};
-
-#[cfg(target_os = "linux")]
-extern crate webkit2gtk;
+use tracing::{debug, error, info, warn};
 
 mod cli;
 mod config;
@@ -27,6 +24,10 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         version = env!("CARGO_PKG_VERSION"),
         os = std::env::consts::OS,
     );
+
+    if let Err(err) = rustls::crypto::aws_lc_rs::default_provider().install_default() {
+        warn!(?err, "failed to install aws_lc_rs default crypto provider");
+    }
 
     if let Err(err) = state::setup(app.handle()) {
         error!("setup error: {err:?}");
@@ -53,7 +54,9 @@ fn setup(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let args = env::args().collect_vec();
-    if !args.is_empty() && !deep_link::handle(app.handle(), args.clone()) {
+    if let Some(url) = args.get(1)
+        && !deep_link::handle(app.handle(), url.to_owned())
+    {
         cli::run(args, app.handle());
     }
 
@@ -82,20 +85,35 @@ fn event_handler(app: &AppHandle, event: RunEvent) {
 }
 
 fn handle_single_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
-    if !deep_link::handle(app, args.clone()) {
+    let Some(url) = args.get(1) else {
+        debug!("deep link has too few arguments");
+        return;
+    };
+
+    if !deep_link::handle(app, url.to_owned()) {
         cli::run(args, app);
     }
 }
 
 #[tauri::command]
 fn is_flatpak() -> bool {
-    util::is_flatpak()
+    util::flatpak::is_flatpak()
 }
 
+#[allow(
+    clippy::too_many_lines,
+    reason = "tauri's generate_handler macro cannot be split"
+)]
 pub fn run() {
     logger::setup().unwrap_or_else(|err| {
         eprintln!("failed to set up logger: {err:#}");
     });
+
+    // SAFETY: no other threads have been spawned yet
+    #[cfg(target_os = "linux")]
+    unsafe {
+        util::webkit::apply_workarounds();
+    }
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
@@ -110,10 +128,12 @@ pub fn run() {
             thunderstore::commands::has_api_token,
             thunderstore::commands::clear_api_token,
             thunderstore::commands::trigger_mod_fetch,
+            thunderstore::commands::get_categories,
             prefs::commands::get_prefs,
             prefs::commands::set_prefs,
             prefs::commands::zoom_window,
             prefs::commands::get_system_fonts,
+            prefs::commands::get_system_accent_color,
             profile::commands::get_game_info,
             profile::commands::favorite_game,
             profile::commands::set_active_game,
@@ -145,10 +165,11 @@ pub fn run() {
             profile::launch::commands::launch_game,
             profile::launch::commands::get_launch_args,
             profile::launch::commands::open_game_dir,
-            profile::install::commands::install_all_mods,
+            profile::launch::commands::get_steam_launch_options,
             profile::install::commands::install_mod,
             profile::install::commands::cancel_all_installs,
             profile::install::commands::has_pending_installations,
+            profile::install::commands::is_installing,
             profile::install::commands::clear_download_cache,
             profile::install::commands::get_download_size,
             profile::update::commands::change_mod_version,
@@ -173,6 +194,8 @@ pub fn run() {
             profile::export::commands::copy_dependency_strings,
             profile::export::commands::export_dependency_strings,
             profile::export::commands::copy_debug_info,
+            profile::export::commands::list_export_files,
+            profile::export::commands::set_excluded_export_files,
             profile::sync::commands::read_sync_profile,
             profile::sync::commands::create_sync_profile,
             profile::sync::commands::disconnect_sync_profile,
@@ -199,9 +222,9 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
-        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(handle_single_instance))
+        .plugin(tauri_plugin_store::Builder::new().build())
         .setup(setup)
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

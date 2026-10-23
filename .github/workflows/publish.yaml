@@ -53,12 +53,22 @@ jobs:
         run: |
           sudo apt update;
           sudo apt-get install -y libappindicator3-dev librsvg2-dev libudev-dev patchelf \
-            libwebkit2gtk-4.1-0=2.44.0-2 \
-            libwebkit2gtk-4.1-dev=2.44.0-2 \
-            libjavascriptcoregtk-4.1-0=2.44.0-2 \
-            libjavascriptcoregtk-4.1-dev=2.44.0-2 \
-            gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
-            gir1.2-webkit2-4.1=2.44.0-2
+            libwebkit2gtk-4.1-0 \
+            libwebkit2gtk-4.1-dev \
+            libjavascriptcoregtk-4.1-0 \
+            libjavascriptcoregtk-4.1-dev \
+            gir1.2-javascriptcoregtk-4.1 \
+            gir1.2-webkit2-4.1
+
+      - name: Use a linuxdeploy that leaves libwayland-client to the host
+        if: matrix.platform == 'ubuntu-24.04'
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.cache/tauri
+          curl -fsSL -o ~/.cache/tauri/linuxdeploy-x86_64.AppImage \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20251107-1/linuxdeploy-x86_64.AppImage
+          echo "c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d  $HOME/.cache/tauri/linuxdeploy-x86_64.AppImage" | sha256sum -c
+          chmod +x ~/.cache/tauri/linuxdeploy-x86_64.AppImage
 
       - name: Build Tauri app and upload artifacts
         uses: tauri-apps/tauri-action@v0

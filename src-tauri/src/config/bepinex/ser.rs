@@ -38,7 +38,7 @@ impl<W: Write> Serializer<W> {
         writeln!(self, "[{}]", section.name)?;
         writeln!(self)?;
 
-        for entry in section.entries.iter() {
+        for entry in &section.entries {
             self.write_entry_kind(entry)?;
         }
 
@@ -157,7 +157,7 @@ pub fn to_writer<W: Write>(file: &File, writer: W) -> io::Result<()> {
         serializer.write_metadata(metadata)?;
     }
 
-    for section in file.sections.iter() {
+    for section in &file.sections {
         serializer.write_section(section)?;
     }
 

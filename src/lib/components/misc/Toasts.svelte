@@ -19,7 +19,7 @@
 <div class="absolute bottom-0 z-50 flex w-full flex-col items-end gap-1 p-2">
 	{#each $toasts as toast, i (toast.id)}
 		<div
-			class="bg-primary-800 border-primary-700 relative max-w-3xl overflow-hidden rounded-md border shadow-xl"
+			class="border-primary-200 dark:bg-primary-800 dark:border-primary-700 relative max-w-3xl overflow-hidden rounded-md border bg-white shadow-xl"
 			in:slide={{ duration: 150, easing: expoOut }}
 			out:fade={{ duration: 50 }}
 		>
@@ -41,10 +41,12 @@
 
 				<div class="mr-4 grow overflow-hidden">
 					{#if toast.name}
-						<span class="text-primary-300">{toast.name}:</span>
+						<span class="text-primary-600 dark:text-primary-300">{toast.name}:</span>
 					{/if}
 
-					<span class="text-primary-100 font-medium wrap-break-word">{toast.message}</span>
+					<span class="text-primary-900 dark:text-primary-100 font-medium wrap-break-word"
+						>{toast.message}</span
+					>
 				</div>
 
 				{#if toast.type === 'error'}

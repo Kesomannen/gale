@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process, time::Duration};
+use std::{path::PathBuf, process};
 
 use clap::Parser;
 use eyre::{Context, OptionExt, Result, eyre};
@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub fn run(args: Vec<String>, app: &AppHandle) {
-    info!("running cli with args: {:?}", args);
+    info!("running cli with args: {args:?}");
 
     let no_gui = args.iter().any(|arg| arg == "--no-gui");
     if no_gui {
@@ -28,15 +28,9 @@ pub fn run(args: Vec<String>, app: &AppHandle) {
                 error!("failed to run cli: {:#}", err);
                 process::exit(1);
             } else {
-                let handle = app.to_owned();
-                tauri::async_runtime::spawn(async move {
-                    // janky but we need to wait for the webview to start
-                    tokio::time::sleep(Duration::from_secs(1)).await;
-
-                    logger::log_webview_err("Failed to run cli", err, &handle);
-                });
+                logger::log_webview_err("Failed to run cli", err, app);
             }
-        })
+        });
 }
 
 #[derive(Debug, Parser)]
@@ -107,7 +101,7 @@ impl Cli {
             let handle = app.to_owned();
             tauri::async_runtime::spawn(async move {
                 if let Err(err) = install_local_mod(path, &handle).await {
-                    error!("failed to install mod from cli: {:#}", err)
+                    error!("failed to install mod from cli: {:#}", err);
                 }
 
                 let manager = handle.lock_manager();

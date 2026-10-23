@@ -4,5 +4,5 @@ fn main() {
         chrono::Utc::now().to_rfc3339()
     );
 
-    tauri_build::build()
+    tauri_build::build();
 }

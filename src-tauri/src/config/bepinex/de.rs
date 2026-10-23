@@ -8,7 +8,7 @@ use eyre::{Context, OptionExt, Result, anyhow, bail, ensure};
 use itertools::Itertools;
 use serde::Serialize;
 
-use super::*;
+use super::{Num, File, Section, Metadata, Entry, Value, EntryKind};
 
 pub const FLAGS_MESSAGE: &str =
     "# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)";
@@ -54,7 +54,7 @@ pub fn from_reader(reader: impl BufRead) -> Result<File> {
     };
 
     match parser.parse() {
-        Ok(_) => {
+        Ok(()) => {
             let Parser {
                 sections, metadata, ..
             } = parser;
@@ -138,22 +138,19 @@ impl EntryBuilder {
     }
 
     fn parse_enum(string: String, options: Vec<String>, is_flags: bool) -> Value {
-        match is_flags {
-            true => Value::Flags {
-                indicies: string
-                    .split(", ")
-                    .filter_map(|value| options.iter().position(|opt| opt == value))
-                    .collect(),
-                options,
-            },
-            false => Value::Enum {
-                index: options
-                    .iter()
-                    .position(|opt| *opt == string)
-                    .unwrap_or_default(),
-                options,
-            },
-        }
+        if is_flags { Value::Flags {
+            indicies: string
+                .split(", ")
+                .filter_map(|value| options.iter().position(|opt| opt == value))
+                .collect(),
+            options,
+        } } else { Value::Enum {
+            index: options
+                .iter()
+                .position(|opt| *opt == string)
+                .unwrap_or_default(),
+            options,
+        } }
     }
 
     fn parse_simple_value(
@@ -339,7 +336,7 @@ impl<R: Read + BufRead> Parser<R> {
     }
 
     fn parse_orphaned_entry<'a>(&mut self, line: &'a str) -> Result<(&'a str, &'a str)> {
-        line.split_once("=")
+        line.split_once('=')
             .ok_or(anyhow!("expected entry name"))
             .map(|(name, value)| (name.trim(), value.trim()))
     }

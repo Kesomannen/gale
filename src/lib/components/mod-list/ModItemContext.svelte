@@ -1,33 +1,29 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	import { ContextMenu } from 'bits-ui';
-	import ModContextMenuContent from './ModContextMenuContent.svelte';
 	import type { Mod, ModContextItem } from '$lib/types';
 	import type { Snippet } from 'svelte';
 	import { activeContextMenu } from '$lib/context';
+	import { resolveModContextItems } from '$lib/util';
+	import ContextMenuContent from '../ui/ContextMenuContent.svelte';
 
 	type Props = {
-		mod: Mod;
+		uuid: string;
+		mod: T;
 		locked: boolean;
-		contextItems: ModContextItem[];
+		contextItems: ModContextItem<T>[];
 		children?: Snippet;
 	};
 
-	let { mod, children, locked, contextItems }: Props = $props();
+	let { uuid, mod, children, locked, contextItems }: Props = $props();
 
-	let contextMenuOpen = $state(false);
-
-	$effect(() => {
-		if ($activeContextMenu !== null && $activeContextMenu !== mod.uuid) {
-			contextMenuOpen = false;
-		}
-	});
+	let contextMenuOpen = $derived($activeContextMenu === uuid);
 </script>
 
 <ContextMenu.Root
-	bind:open={contextMenuOpen}
-	onOpenChange={(open) => {
-		if (open) {
-			$activeContextMenu = mod.uuid;
+	open={contextMenuOpen}
+	onOpenChange={(newOpen) => {
+		if (newOpen) {
+			$activeContextMenu = uuid;
 		} else {
 			$activeContextMenu = null;
 		}
@@ -36,5 +32,5 @@
 	<ContextMenu.Trigger class="contents">
 		{@render children?.()}
 	</ContextMenu.Trigger>
-	<ModContextMenuContent type="context" {locked} {mod} items={contextItems} />
+	<ContextMenuContent type="context" items={resolveModContextItems(contextItems, mod, locked)} />
 </ContextMenu.Root>

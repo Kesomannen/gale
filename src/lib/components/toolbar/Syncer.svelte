@@ -3,7 +3,7 @@
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import SyncAvatar from '$lib/components/ui/SyncAvatar.svelte';
 	import * as api from '$lib/api';
-	import type { ListedSyncProfile } from '$lib/types';
+	import type { ListedSyncProfile, SyncCreateResult } from '$lib/types';
 	import { pushInfoToast } from '$lib/toast';
 	import Icon from '@iconify/svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
@@ -17,6 +17,9 @@
 	import InfoBox from '../ui/InfoBox.svelte';
 	import SyncDonationNotice from './SyncDonationNotice.svelte';
 	import { m } from '$lib/paraglide/messages';
+	import config from '$lib/state/config.svelte';
+	import { PersistedState } from '$lib/state/persisted-state.svelte';
+	import ExportFilesDialog from '../dialogs/ExportFilesDialog.svelte';
 
 	type State = 'off' | 'synced' | 'outdated' | 'missing';
 
@@ -39,17 +42,22 @@
 					: 'synced') as State
 	);
 
+	let donationClosedAt = new PersistedState<string | null>('donationClosedAt', null);
+
+	let manageFilesDialogOpen = $state(false);
+	let exportTooLarge = $state(false);
+
 	let style = $derived(
 		{
 			off: {
 				icon: 'mdi:cloud-off',
 				label: m.syncer_style_off(),
-				classes: 'text-primary-400'
+				classes: 'text-primary-500 dark:text-primary-400'
 			},
 			synced: {
 				icon: 'mdi:cloud-check-variant',
 				label: m.syncer_style_synced(),
-				classes: 'text-accent-500'
+				classes: 'text-accent-600 dark:text-accent-500'
 			},
 			outdated: {
 				icon: 'mdi:cloud-refresh-variant',
@@ -106,16 +114,30 @@
 		}
 	}
 
+	async function handleCreateResult(result: SyncCreateResult) {
+		if (result.type === 'success') return true;
+		exportTooLarge = true;
+		manageFilesDialogOpen = true;
+		return false;
+	}
+
 	async function connect() {
-		await wrapApiCall(api.profile.sync.create, m.syncer_connect_message());
+		await wrapApiCall(async () => {
+			const result = await api.profile.sync.create();
+			return handleCreateResult(result);
+		}, m.syncer_connect_message());
 	}
 
 	async function push() {
-		await wrapApiCall(api.profile.sync.push, m.syncer_push_message());
+		await wrapApiCall(async () => {
+			const result = await api.profile.sync.push();
+			return handleCreateResult(result);
+		}, m.syncer_push_message());
 	}
 
 	async function pull() {
 		await wrapApiCall(api.profile.sync.pull, m.syncer_pull_message());
+		config.refresh();
 	}
 
 	async function refresh() {
@@ -147,7 +169,9 @@
 	async function wrapApiCall(call: () => Promise<any>, message?: string) {
 		loading = true;
 		try {
-			await call();
+			if ((await call()) === false) {
+				return;
+			}
 			if (message) {
 				pushInfoToast({ message });
 			}
@@ -179,13 +203,13 @@
 <button
 	class={[
 		style.classes,
-		'bg-primary-800 hover:bg-primary-700 mx-2 my-auto flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
+		'dark:bg-primary-800 dark:hover:bg-primary-700 bg-primary-200 hover:bg-primary-300 mx-2 my-auto flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-sm'
 	]}
 	onclick={() => (mainDialogOpen = true)}
 >
-	<Icon icon={style.icon} />
+	<Icon class="text-lg md:text-base" icon={style.icon} />
 
-	<div class="truncate">{style.label}</div>
+	<div class="hidden md:block">{style.label}</div>
 </button>
 
 <OwnedSyncProfilesDialog
@@ -195,12 +219,12 @@
 />
 
 <Dialog bind:open={mainDialogOpen} title={m.syncer_title()}>
-	<SyncDonationNotice show={syncInfo !== null} />
+	<SyncDonationNotice show={syncInfo !== null} bind:closedAt={donationClosedAt.current} />
 
 	{#if syncInfo}
 		{#if syncState !== 'missing'}
 			{#if !isOwner}
-				<div class="text-primary-300 mt-2 flex items-center gap-2">
+				<div class="text-primary-600 dark:text-primary-300 mt-2 flex items-center gap-2">
 					<SyncAvatar user={syncInfo.owner} />
 					<div>
 						{m.syncer_content_1()}{syncInfo.owner.displayName}
@@ -210,7 +234,7 @@
 
 			<div class="mt-2 flex items-center gap-2">
 				<button
-					class="bg-primary-900 text-primary-300 rounded-md px-4 py-1 font-mono text-lg"
+					class="text-primary-600 dark:bg-primary-900 dark:text-primary-300 bg-primary-100 rounded-md px-4 py-1 font-mono text-lg"
 					onclick={copyCode}
 				>
 					{syncInfo.id}
@@ -263,13 +287,24 @@
 				{m.syncer_button_disconnect()}
 			</Button>
 		</div>
+
+		<div class="mt-2">
+			<Button
+				onclick={() => (manageFilesDialogOpen = true)}
+				disabled={auth.user === null}
+				color="primary"
+				icon="mdi:cog"
+			>
+				{m.syncer_button_manageFiles()}
+			</Button>
+		</div>
 	{:else if auth.user !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
 			{m.syncer_button_connect()}
 		</Button>
 	{/if}
 
-	<div class="text-primary-300 mt-4 flex items-center gap-1">
+	<div class="text-primary-600 dark:text-primary-300 mt-4 flex items-center gap-1">
 		{#if auth.user === null}
 			<Button
 				onclick={onLoginClicked}
@@ -283,7 +318,9 @@
 			<SyncAvatar user={auth.user} />
 
 			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class="bg-primary-800 hover:bg-primary-700 rounded-full p-1">
+				<DropdownMenu.Trigger
+					class="dark:bg-primary-800 dark:hover:bg-primary-700 bg-primary-200 hover:bg-primary-300 rounded-full p-1"
+				>
 					<Icon class="text-2xl" icon="mdi:dots-vertical" />
 				</DropdownMenu.Trigger>
 				<ContextMenuContent type="dropdown" items={dropdownItems} />
@@ -292,7 +329,7 @@
 	</div>
 
 	<div
-		class="text-primary-400 hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
+		class="text-primary-500 hover:text-accent-600 dark:text-primary-400 dark:hover:text-accent-400 mt-4 flex max-w-max items-center gap-1 text-sm hover:underline"
 	>
 		<Icon icon="mdi:help-circle" inline />
 
@@ -301,3 +338,22 @@
 		>
 	</div>
 </Dialog>
+
+<ExportFilesDialog
+	title={exportTooLarge ? m.syncer_manageFiles_sizeLimit_title() : m.syncer_manageFiles_title()}
+	bind:open={manageFilesDialogOpen}
+>
+	{#snippet description()}
+		{#if exportTooLarge}
+			{m.syncer_manageFiles_sizeLimit_content()}
+		{:else}
+			{m.syncer_manageFiles_content()}
+		{/if}
+	{/snippet}
+
+	{#snippet buttons()}
+		<Button icon="mdi:check" color="accent" onclick={() => (manageFilesDialogOpen = false)}>
+			{m.syncer_manageFiles_button_done()}
+		</Button>
+	{/snippet}
+</ExportFilesDialog>

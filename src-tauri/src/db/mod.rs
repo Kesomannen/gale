@@ -1,15 +1,16 @@
 use std::{
     collections::HashSet,
     env, iter,
+    path::PathBuf,
     sync::{Mutex, MutexGuard},
 };
 
-use eyre::{Context, Result, eyre};
+use eyre::{Context, Result, bail};
 use include_dir::include_dir;
 use rusqlite::{OptionalExtension, params, types::Type as SqliteType};
-use rusqlite_migration::{MigrationDefinitionError, Migrations};
+use rusqlite_migration::{Migrations, SchemaVersion};
 use serde::de::DeserializeOwned;
-use tracing::{info, trace};
+use tracing::{debug, info, trace};
 use uuid::Uuid;
 
 use crate::{
@@ -63,12 +64,36 @@ static MIGRATIONS_DIR: include_dir::Dir = include_dir!("$CARGO_MANIFEST_DIR/migr
 fn run_migrations(conn: &mut rusqlite::Connection) -> Result<()> {
     let migrations = Migrations::from_directory(&MIGRATIONS_DIR)?;
 
-    migrations.to_latest(conn).map_err(|err| match err {
-        rusqlite_migration::Error::MigrationDefinition(
-            MigrationDefinitionError::DatabaseTooFarAhead,
-        ) => eyre!("database has been modified by a newer version of Gale, please update to the latest version"),
-        _ => eyre!(err),
-    })?;
+    let latest_version = MIGRATIONS_DIR.dirs().count();
+
+    let current_version = match migrations
+        .current_version(conn)
+        .context("failed to get current database version")?
+    {
+        SchemaVersion::NoneSet => {
+            debug!("database has no version set");
+            0usize
+        }
+        SchemaVersion::Inside(version) => version.into(),
+        SchemaVersion::Outside(_) => bail!(
+            "database has been modified by a newer version of Gale, please update to the latest version"
+        ),
+    };
+
+    if latest_version == current_version {
+        debug!(version = latest_version, "database is up to date");
+        return Ok(());
+    }
+
+    if let Some(db_path) = conn.path() {
+        let backup_path = PathBuf::from(db_path).with_added_extension("bak");
+        debug!(path = %backup_path.display(), "creating backup of database before migration");
+
+        std::fs::copy(db_path, &backup_path)
+            .context("failed to create backup of database before migration")?;
+    }
+
+    migrations.to_version(conn, latest_version)?;
 
     Ok(())
 }
@@ -120,6 +145,7 @@ pub struct ProfileData {
     pub sync_data: Option<profile::sync::SyncProfileData>,
     pub custom_args: String,
     pub ignored_package_updates: Option<HashSet<Uuid>>,
+    pub excluded_export_files: Option<HashSet<PathBuf>>,
 }
 
 pub struct SaveData {
@@ -212,10 +238,22 @@ impl Db {
 
         let mut profiles = conn
             .prepare(
-                "SELECT id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates FROM profiles",
+                "SELECT
+                    id,
+                    name,
+                    path,
+                    game_slug,
+                    mods,
+                    modpack,
+                    ignored_updates,
+                    sync_data,
+                    custom_args,
+                    ignored_package_updates,
+                    excluded_export_files
+                FROM profiles",
             )?
             .query_map((), |row| {
-                let mut mods : Vec<profile::ProfileMod> = map_json_row(row, 4)?;
+                let mut mods: Vec<profile::ProfileMod> = map_json_row(row, 4)?;
                 mods.dedup_by(|a, b| a.kind.uuid() == b.kind.uuid());
 
                 // custom args may be a json array of strings instead of one string
@@ -236,6 +274,7 @@ impl Db {
                     sync_data: map_json_option_row(row, 7)?,
                     custom_args,
                     ignored_package_updates: map_json_option_row(row, 9)?,
+                    excluded_export_files: map_json_option_row(row, 10)?,
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()
@@ -343,8 +382,20 @@ impl Db {
     ) -> Result<()> {
         let mut stmt = tx.prepare(
             "INSERT OR REPLACE INTO profiles 
-                (id, name, path, game_slug, mods, modpack, ignored_updates, sync_data, custom_args, ignored_package_updates) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    id,
+                    name,
+                    path,
+                    game_slug,
+                    mods,
+                    modpack,
+                    ignored_updates,
+                    sync_data,
+                    custom_args,
+                    ignored_package_updates,
+                    excluded_export_files
+                ) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
@@ -361,6 +412,7 @@ impl Db {
                 .map(serde_json::to_string)
                 .transpose()?;
             let ignored_package_updates = serde_json::to_string(&profile.ignored_package_updates)?;
+            let excluded_export_files = serde_json::to_string(&profile.excluded_export_files)?;
 
             stmt.execute(params![
                 profile.id,
@@ -372,7 +424,8 @@ impl Db {
                 ignored_updates,
                 sync_data,
                 profile.custom_args,
-                ignored_package_updates
+                ignored_package_updates,
+                excluded_export_files,
             ])?;
         }
 

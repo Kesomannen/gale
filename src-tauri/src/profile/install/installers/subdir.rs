@@ -22,7 +22,7 @@ use crate::{
 };
 
 /// A configurable mod installer based on r2modman's install rules:
-/// https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package
+/// <https://github.com/ebkr/r2modmanPlus/wiki/Structuring-your-Thunderstore-package>
 pub struct SubdirInstaller<'a> {
     subdirs: &'a [Subdir<'a>],
     extra_subdirs: &'a [Subdir<'a>],
@@ -196,7 +196,7 @@ impl<'a> SubdirInstaller<'a> {
         components
     }
 
-    /// Map a file in the mod archive (at relative_path) to the target path relative to the profile's root.
+    /// Map a file in the mod archive (at `relative_path`) to the target path relative to the profile's root.
     /// Ok(None) means a file should be ignored
     fn map_file<'p>(
         &self,
@@ -205,11 +205,10 @@ impl<'a> SubdirInstaller<'a> {
     ) -> Result<Option<Cow<'p, Path>>> {
         use std::path::Component;
 
-        if let Some(str) = relative_path.to_str() {
-            if self.ignored_files.contains(&str) {
+        if let Some(str) = relative_path.to_str()
+            && self.ignored_files.contains(&str) {
                 return Ok(None);
             }
-        }
 
         // find a subdir in the file path, ex.
         // MyFolder/plugins/MyMod.dll
@@ -224,11 +223,10 @@ impl<'a> SubdirInstaller<'a> {
             match components.next() {
                 Some(Component::Normal(name)) => {
                     prev.push(name);
-                    if let Some(name) = name.to_str() {
-                        if let Some(subdir) = self.match_subdir(name) {
+                    if let Some(name) = name.to_str()
+                        && let Some(subdir) = self.match_subdir(name) {
                             break subdir; // found a subdir
                         }
-                    }
                 }
                 // remove the previous parent
                 Some(Component::ParentDir) => {
@@ -312,7 +310,7 @@ impl<'a> SubdirInstaller<'a> {
         for subdir in self.subdirs() {
             match subdir.mode {
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => {
-                    let mut path = profile.path.to_path_buf();
+                    let mut path = profile.path.clone();
                     // ex. BepInEx/plugins
                     path.push(subdir.target);
                     // ex. BepInEx/plugins/Author-CoolMod
@@ -330,7 +328,7 @@ impl<'a> SubdirInstaller<'a> {
                 }
                 SubdirMode::Track => (), // we have already scanned tracked files
                 SubdirMode::None => (), // we can't know which files in the subdir belong to this mod; ignore
-            };
+            }
         }
 
         Ok(scanned_tracked_files)
@@ -349,7 +347,7 @@ impl<'a> SubdirInstaller<'a> {
  */
 
 fn state_file_path(name: &str, profile: &Profile) -> PathBuf {
-    let mut path = profile.path.to_path_buf();
+    let mut path = profile.path.clone();
 
     path.push("_state");
     path.push(name);
@@ -467,13 +465,12 @@ impl PackageInstaller for SubdirInstaller<'_> {
                     let profile_state =
                         profile_state.get_or_insert_with(|| ProfileStateHandle::new(profile));
 
-                    if exists {
-                        if let Some(owner) = profile_state.file_map().get(relative_path) {
+                    if exists
+                        && let Some(owner) = profile_state.file_map().get(relative_path) {
                             let mut package = PackageStateHandle::new(owner, profile);
                             package.files().retain(|file| file != relative_path);
                             package.commit()?;
                         }
-                    }
 
                     profile_state
                         .file_map()
@@ -533,7 +530,7 @@ impl PackageInstaller for SubdirInstaller<'_> {
 
     fn mod_dir(&self, package_name: &str, profile: &Profile) -> Option<PathBuf> {
         self.default_subdir.map(|index| {
-            let mut path = profile.path.to_path_buf();
+            let mut path = profile.path.clone();
 
             path.push(self.subdirs[index].target);
             path.push(package_name);

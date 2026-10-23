@@ -42,7 +42,7 @@
 </script>
 
 <ConfirmDialog bind:open title={m.installModDialog_title({ name: mod?.name ?? m.unknown() })}>
-	<p class="text-primary-300">{m.installModDialog_content()}</p>
+	<p class="text-primary-600 dark:text-primary-300">{m.installModDialog_content()}</p>
 
 	<Select
 		triggerClass="w-full"

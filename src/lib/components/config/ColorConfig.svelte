@@ -11,8 +11,9 @@
 
 	let { entryId, locked }: Props = $props();
 
-	let content = entryId.entry.value.content as string;
-	let hasHashtag = content.startsWith('#');
+	// svelte-ignore state_referenced_locally (local editing state seeded from prop)
+	const content = entryId.entry.value.content as string;
+	const hasHashtag = content.startsWith('#');
 
 	let hexCode = $state(hasHashtag ? content : `#${content}`);
 
@@ -22,11 +23,9 @@
 	}
 
 	async function submit() {
-		content = hasHashtag ? hexCode : hexCode.slice(1);
-
 		await setConfigEntry(entryId, {
 			type: 'string',
-			content
+			content: hasHashtag ? hexCode : hexCode.slice(1)
 		});
 	}
 </script>

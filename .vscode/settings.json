@@ -1,3 +1,36 @@
 {
-	"files.eol": "\n"
+	"files.eol": "\n",
+	"files.watcherExclude": {
+		"**/src-tauri/target/**": true,
+		"**/src-tauri/gen/**": true,
+		"**/.svelte-kit/**": true,
+		"**/build/**": true,
+		"**/src/lib/paraglide/**": true
+	},
+	"search.exclude": {
+		"**/src-tauri/target": true,
+		"**/.svelte-kit": true,
+		"**/build": true,
+		"**/src/lib/paraglide": true
+	},
+	"files.exclude": { "**/src-tauri/target": true },
+	"tailwindCSS.files.exclude": [
+		"**/.git/**",
+		"**/node_modules/**",
+		"**/.hg/**",
+		"**/.svn/**",
+		"**/src-tauri/**",
+		"**/build/**",
+		"**/.svelte-kit/**",
+		"**/src/lib/paraglide/**"
+	],
+	"js/ts.tsserver.watchOptions": {
+		"excludeDirectories": [
+			"**/node_modules",
+			"**/src-tauri/target",
+			"**/.svelte-kit",
+			"**/build",
+			"**/src/lib/paraglide"
+		]
+	}
 }

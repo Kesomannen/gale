@@ -116,6 +116,8 @@ impl Profile {
 
 impl ConfigCache {
     pub fn refresh(&mut self, profile: &Path, mod_loader: &ModLoader) {
+        self.clear_removed_files(profile);
+
         let mod_config_dirs = match mod_loader.mod_config_dirs() {
             // list all files if no config dirs are specified
             [] => &["."],
@@ -141,7 +143,7 @@ impl ConfigCache {
             match index {
                 Some(index) => self.0[index] = file,
                 None => self.0.push(file),
-            };
+            }
         }
 
         self.resolve_duplicate_names();
@@ -163,7 +165,7 @@ impl ConfigCache {
             .strip_prefix(root)
             .expect("file path should be a child of root")
             .to_string_lossy()
-            .replace("\\", "/")
+            .replace('\\', "/")
             .into();
 
         let curr_index = self
@@ -243,9 +245,14 @@ impl ConfigCache {
         };
         if modified > curr_file.read_time {
             return true;
-        };
+        }
 
         false
+    }
+
+    fn clear_removed_files(&mut self, profile: &Path) {
+        self.0
+            .retain(|file| profile.join(&file.relative_path).exists());
     }
 
     fn resolve_duplicate_names(&mut self) {

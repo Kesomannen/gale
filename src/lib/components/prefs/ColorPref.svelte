@@ -1,13 +1,6 @@
 <script lang="ts">
 	import Label from '$lib/components/ui/Label.svelte';
-	import {
-		defaultColors,
-		getColor,
-		setColor,
-		type DefaultColor,
-		type ColorCategory,
-		type Color
-	} from '$lib/theme';
+	import { type Color, ColorSetting } from '$lib/state/theme.svelte';
 	import { selectItems } from '$lib/util';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Icon from '@iconify/svelte';
@@ -15,20 +8,24 @@
 	import type { ClassValue } from 'clsx';
 	import Info from '../ui/Info.svelte';
 	import type { Snippet } from 'svelte';
-	import clsx from 'clsx';
 	import { m } from '$lib/paraglide/messages';
+	import { DEFAULT_COLORS, type DefaultColor } from '$lib/default-colors';
 
 	type Props = {
-		category: ColorCategory;
-		default: DefaultColor;
+		label: string;
+		setting: ColorSetting;
+		initialCustomColor: string;
 		children: Snippet;
 	};
 
-	let { category, default: defaultValue, children }: Props = $props();
+	let { label, setting, initialCustomColor, children }: Props = $props();
 
-	let value = $state(getColor(category));
-
-	const selectOptions = ['custom', ...Object.keys(defaultColors)];
+	const selectOptions = $derived(
+		selectItems(
+			['custom', ...(setting.hasSystemColor ? ['system'] : []), ...Object.keys(DEFAULT_COLORS)],
+			(item) => colorNames[item as keyof typeof colorNames]()
+		)
+	);
 
 	const colorNames = {
 		amber: m.colorPref_color_amber,
@@ -53,17 +50,33 @@
 		teal: m.colorPref_color_teal,
 		violet: m.colorPref_color_violet,
 		yellow: m.colorPref_color_yellow,
-		zinc: m.colorPref_color_zinc
+		zinc: m.colorPref_color_zinc,
+		system: m.colorPref_color_system
 	};
 
 	function set(color: Color) {
-		value = color;
-		setColor(category, color);
+		setting.current = color;
+	}
+
+	function switchColorType<T>(
+		value: Color,
+		default_: (color: DefaultColor) => T,
+		custom: (hex: string) => T,
+		system: () => T
+	): T {
+		switch (value.type) {
+			case 'default':
+				return default_(value.name);
+			case 'custom':
+				return custom(value.hex);
+			case 'system':
+				return system();
+		}
 	}
 </script>
 
 <div class="flex items-center">
-	<Label>{m[`colorPref_title_${category}`]()}</Label>
+	<Label>{label}</Label>
 
 	<Info>
 		{@render children()}
@@ -72,21 +85,29 @@
 	<Select
 		type="single"
 		triggerClass="grow"
+		items={selectOptions}
 		bind:value={
-			() => (value.type === 'custom' ? 'custom' : value.name),
+			() =>
+				switchColorType(
+					setting.current,
+					(name) => name,
+					(_) => 'custom',
+					() => 'system'
+				),
 			(selectValue) =>
 				set(
 					selectValue === 'custom'
 						? { type: 'custom', hex: '#6b7280' }
-						: { type: 'default', name: selectValue }
+						: selectValue === 'system'
+							? { type: 'system' }
+							: { type: 'default', name: selectValue as DefaultColor }
 				)
 		}
-		items={selectItems(selectOptions, (item) => colorNames[item as keyof typeof colorNames]())}
 	>
 		{#snippet label({ defaultLabel })}
-			{@render colorIcon(value)}
+			{@render colorIcon(setting.current)}
 
-			<div class="text-primary-300">
+			<div class="text-primary-600 dark:text-primary-300">
 				{defaultLabel}
 			</div>
 		{/snippet}
@@ -95,33 +116,47 @@
 			{@render colorIcon(
 				value === 'custom'
 					? { type: 'custom', hex: '' }
-					: { type: 'default', name: value as DefaultColor },
+					: value === 'system'
+						? { type: 'system' }
+						: { type: 'default', name: value as DefaultColor },
 				'mr-2'
 			)}
 		{/snippet}
 	</Select>
 
-	{#if value.type === 'custom'}
+	{#if setting.current.type === 'custom'}
 		<input
 			type="color"
 			class="ml-1 h-full grow"
 			bind:value={
-				() => (value.type === 'custom' ? value.hex : '#6b7280'),
+				() => (setting.current.type === 'custom' ? setting.current.hex : initialCustomColor),
 				(hex) => set({ type: 'custom', hex })
 			}
 		/>
 	{/if}
 
-	<ResetButton class="ml-1" onclick={() => set({ type: 'default', name: defaultValue })} />
+	<ResetButton class="ml-1" onclick={() => set(setting.defaultColor)} />
 </div>
 
 {#snippet colorIcon(value: Color, className?: ClassValue)}
 	{#if value.type === 'custom'}
-		<Icon class={clsx(className, 'text-primary-400 size-4')} icon="mdi:edit" />
+		<Icon class={[className, 'text-primary-500 dark:text-primary-400 size-4']} icon="mdi:edit" />
+	{:else if value.type === 'system'}
+		{#await setting.systemColorPromise then color}
+			{#if color}
+				{@render colorCircle(color, className)}
+			{/if}
+			<Icon
+				class={[className, 'text-primary-500 dark:text-primary-400 size-4']}
+				icon="mdi:monitor"
+			/>
+		{/await}
 	{:else}
-		<span
-			class={[className, 'inline-block size-4 rounded-full']}
-			style="background-color: {defaultColors[value.name][600]}"
-		></span>
+		{@render colorCircle(DEFAULT_COLORS[value.name][600], className)}
 	{/if}
+{/snippet}
+
+{#snippet colorCircle(value: string, className?: ClassValue)}
+	<span class={[className, 'inline-block size-4 rounded-full']} style="background-color: {value}"
+	></span>
 {/snippet}

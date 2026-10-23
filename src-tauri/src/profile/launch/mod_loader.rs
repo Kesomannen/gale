@@ -35,7 +35,7 @@ impl<'a> ArgsContext<'a> {
             .map_err(|path| eyre!("path is not valid UTF-8: {}", path.display()))?;
 
         if self.is_proton {
-            Ok(format!("Z:{}", str_path))
+            Ok(format!("Z:{str_path}"))
         } else {
             Ok(str_path)
         }
@@ -51,6 +51,7 @@ impl<'a> ArgsContext<'a> {
             ModLoaderKind::Shimloader {} => self.add_shimloader_args(),
             ModLoaderKind::Lovely {} => self.add_lovely_args(),
             ModLoaderKind::ReturnOfModding { .. } => self.add_return_of_modding_args(),
+            ModLoaderKind::Nucleus {} => self.add_nucleus_args(),
         }
     }
 
@@ -91,7 +92,7 @@ impl<'a> ArgsContext<'a> {
                     .arg(preloader_path);
             }
             Err(err) => {
-                warn!(err = ?err, "failed to find BepInEx preloader, launching without doorstep")
+                warn!(err = ?err, "failed to find BepInEx preloader, launching without doorstep");
             }
         }
 
@@ -118,7 +119,7 @@ impl<'a> ArgsContext<'a> {
         let result = core_dir
             .read_dir()
             .context("failed to read BepInEx core directory. Is BepInEx installed?")?
-            .filter_map(|entry| entry.ok())
+            .filter_map(std::result::Result::ok)
             .find(|entry| {
                 let file_name = entry.file_name();
                 PRELOADER_NAMES.iter().any(|name| file_name == **name)
@@ -230,6 +231,14 @@ impl<'a> ArgsContext<'a> {
         let path = self.format_path(self.profile_dir)?;
 
         self.command.arg("--rom_modding_root_folder").arg(path);
+
+        Ok(())
+    }
+
+    fn add_nucleus_args(&mut self) -> Result<()> {
+        let path = self.format_path(self.profile_dir.join("mods/u0068-Nucleus/Nucleus.dll"))?;
+
+        self.command.arg("--customdll").arg(path);
 
         Ok(())
     }

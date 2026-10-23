@@ -10,9 +10,8 @@ pub fn is_proton(game_dir: &Path) -> Result<bool> {
     if game_dir.join(".forceproton").exists() {
         debug!(".forceproton file found");
         return Ok(true);
-    } else {
-        debug!(".forceproton file not found");
     }
+    debug!(".forceproton file not found");
 
     let has_exe = game_dir
         .read_dir()?
@@ -50,7 +49,7 @@ pub fn ensure_wine_override(steam_id: u32, proxy_dll: &str, game_dir: &Path) -> 
 
     let new_text = reg_add_in_section(
         &text,
-        r#"[Software\\Wine\\DllOverrides]"#,
+        r"[Software\\Wine\\DllOverrides]",
         proxy_dll,
         "native,builtin",
     );
@@ -86,10 +85,10 @@ fn reg_add_in_section(reg: &str, section: &str, key: &str, value: &str) -> Strin
     trace!("section ends at line {}", end);
 
     for i in begin..end {
-        if lines[i].starts_with(&format!("\"{}\"", key)) {
+        if lines[i].starts_with(&format!("\"{key}\"")) {
             debug!("found existing key in wine registry, replacing it");
 
-            let line = format!("\"{}\"=\"{}\"", key, value);
+            let line = format!("\"{key}\"=\"{value}\"");
             lines[i] = &line;
 
             return lines.join("\n");
@@ -98,7 +97,7 @@ fn reg_add_in_section(reg: &str, section: &str, key: &str, value: &str) -> Strin
 
     debug!("adding key to wine registry");
 
-    let line = format!("\"{}\"=\"{}\"", key, value);
+    let line = format!("\"{key}\"=\"{value}\"");
     lines.insert(end, &line);
     lines.join("\n")
 }

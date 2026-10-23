@@ -9,3 +9,5 @@ export const clearDownloadCache = (soft: boolean) =>
 export const getDownloadSize = (modId: ModId) =>
 	invoke<number>('get_download_size', { modRef: modId });
 export const hasPendingInstallations = () => invoke<boolean>('has_pending_installations');
+export const isInstalling = (packageUuid: string) =>
+	invoke<boolean>('is_installing', { packageUuid });

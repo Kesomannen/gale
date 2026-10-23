@@ -9,7 +9,6 @@
 	import Toasts from '$lib/components/misc/Toasts.svelte';
 
 	import { onMount, type Snippet } from 'svelte';
-	import { refreshColor, refreshFont } from '$lib/theme';
 	import InstallModDialog from '$lib/components/dialogs/InstallModDialog.svelte';
 	import WelcomeDialog from '$lib/components/dialogs/WelcomeDialog.svelte';
 	import Navbar from '$lib/components/misc/Navbar.svelte';
@@ -30,13 +29,10 @@
 	let unlistenGames: UnlistenFn | null;
 
 	onMount(() => {
-		refreshFont();
-		refreshColor('accent');
-		refreshColor('primary');
 		refreshLanguage();
 
 		$effect(() => {
-			profiles.active;
+			profiles.activeId;
 			updateBanner.threshold = 0;
 		});
 
@@ -67,7 +63,7 @@
 />
 
 <Tooltip.Provider skipDelayDuration={1} disableCloseOnTriggerClick>
-	<main class="bg-primary-800 relative flex flex-col">
+	<main class="dark:bg-primary-800 relative flex flex-col bg-white">
 		<Menubar />
 		<Toolbar />
 

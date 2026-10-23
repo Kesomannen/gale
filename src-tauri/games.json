@@ -1,5 +1,86 @@
 [
 	{
+		"name": "BONEWORKS",
+		"r2dirName": "BONEWORKS",
+		"popular": true,
+		"modLoader": {
+			"name": "MelonLoader",
+			"subdirs": [
+				{
+					"name": "Plugins",
+					"target": "Plugins",
+					"mode": "track",
+					"extension": ".plugin.dll"
+				},
+				{
+					"name": "UserData",
+					"target": "UserData",
+					"mode": "track"
+				},
+				{
+					"name": "CustomItems",
+					"target": "UserData/CustomItems",
+					"mode": "track",
+					"extension": ".melon"
+				},
+				{
+					"name": "CustomMaps",
+					"target": "UserData/CustomMaps",
+					"mode": "track",
+					"extension": ".bcm,.cma"
+				},
+				{
+					"name": "PlayerModels",
+					"target": "UserData/PlayerModels",
+					"mode": "track",
+					"extension": ".body"
+				},
+				{
+					"name": "CustomLoadScreens",
+					"target": "UserData/CustomLoadScreens",
+					"mode": "track",
+					"extension": ".load"
+				},
+				{
+					"name": "Music",
+					"target": "UserData/Music",
+					"mode": "track",
+					"extension": ".wav"
+				},
+				{
+					"name": "Food",
+					"target": "UserData/Food",
+					"mode": "track",
+					"extension": ".food"
+				},
+				{
+					"name": "Scoreworks",
+					"target": "UserData/Scoreworks",
+					"mode": "track",
+					"extension": ".sw"
+				},
+				{
+					"name": "CustomSkins",
+					"target": "UserData/CustomSkins",
+					"mode": "track",
+					"extension": ".png"
+				},
+				{
+					"name": "Grenades",
+					"target": "UserData/Grenades",
+					"mode": "track",
+					"extension": ".grenade"
+				}
+			]
+		},
+		"platforms": {
+			"steam": {
+				"id": 823500
+			},
+			"oculus": {}
+		}
+	},
+	{
 		"name": "Content Warning",
 		"popular": true,
 		"modLoader": {
@@ -69,6 +150,19 @@
 		}
 	},
 	{
+		"name": "PEAK",
+		"slug": "peak",
+		"popular": true,
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3527290
+			}
+		}
+	},
+	{
 		"name": "R.E.P.O.",
 		"slug": "repo",
 		"popular": true,
@@ -77,21 +171,19 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3241660,
-				"dirName": "REPO"
+				"id": 3241660
 			}
 		}
 	},
 	{
-		"name": "RV There Yet?",
-		"slug": "rv-there-yet",
+		"name": "ROUNDS",
+		"popular": true,
 		"modLoader": {
-			"name": "Shimloader",
-			"fileTarget": "./Ride/Binaries/Win64"
+			"name": "BepInEx"
 		},
 		"platforms": {
 			"steam": {
-				"id": 3949040
+				"id": 1557740
 			}
 		}
 	},
@@ -159,8 +251,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1966900,
-				"dirName": "20MinuteTillDawn"
+				"id": 1966900
 			},
 			"epicGames": {
 				"identifier": "4656facc740742a39e265b026e13d075"
@@ -175,8 +266,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2784470,
-				"dirName": "9Kings"
+				"id": 2784470
 			}
 		}
 	},
@@ -199,8 +289,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1584840,
-				"dirName": "AGAINST_steam"
+				"id": 1584840
 			}
 		}
 	},
@@ -212,8 +301,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2773280,
-				"dirName": "ANEURISMIV"
+				"id": 2773280
 			}
 		}
 	},
@@ -293,8 +381,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2051980,
-				"dirName": "Aloft Demo"
+				"id": 2051980
 			}
 		}
 	},
@@ -355,8 +442,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1887840,
-				"dirName": "AnotherCrabsTreasure"
+				"id": 1887840
 			}
 		}
 	},
@@ -403,8 +489,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1125390,
-				"dirName": "Atrio The Dark Wild"
+				"id": 1125390
 			}
 		}
 	},
@@ -488,96 +573,13 @@
 		}
 	},
 	{
-		"name": "BONEWORKS",
-		"r2dirName": "BONEWORKS",
-		"popular": true,
-		"modLoader": {
-			"name": "MelonLoader",
-			"subdirs": [
-				{
-					"name": "Plugins",
-					"target": "Plugins",
-					"mode": "track",
-					"extension": ".plugin.dll"
-				},
-				{
-					"name": "UserData",
-					"target": "UserData",
-					"mode": "track"
-				},
-				{
-					"name": "CustomItems",
-					"target": "UserData/CustomItems",
-					"mode": "track",
-					"extension": ".melon"
-				},
-				{
-					"name": "CustomMaps",
-					"target": "UserData/CustomMaps",
-					"mode": "track",
-					"extension": ".bcm,.cma"
-				},
-				{
-					"name": "PlayerModels",
-					"target": "UserData/PlayerModels",
-					"mode": "track",
-					"extension": ".body"
-				},
-				{
-					"name": "CustomLoadScreens",
-					"target": "UserData/CustomLoadScreens",
-					"mode": "track",
-					"extension": ".load"
-				},
-				{
-					"name": "Music",
-					"target": "UserData/Music",
-					"mode": "track",
-					"extension": ".wav"
-				},
-				{
-					"name": "Food",
-					"target": "UserData/Food",
-					"mode": "track",
-					"extension": ".food"
-				},
-				{
-					"name": "Scoreworks",
-					"target": "UserData/Scoreworks",
-					"mode": "track",
-					"extension": ".sw"
-				},
-				{
-					"name": "CustomSkins",
-					"target": "UserData/CustomSkins",
-					"mode": "track",
-					"extension": ".png"
-				},
-				{
-					"name": "Grenades",
-					"target": "UserData/Grenades",
-					"mode": "track",
-					"extension": ".grenade"
-				}
-			]
-		},
-		"platforms": {
-			"steam": {
-				"id": 823500,
-				"dirName": "BONEWORKS/BONEWORKS"
-			},
-			"oculus": {}
-		}
-	},
-	{
 		"name": "Back to the Dawn",
 		"modLoader": {
 			"name": "BepInEx"
 		},
 		"platforms": {
 			"steam": {
-				"id": 1735700,
-				"dirName": "MetalHeadGames"
+				"id": 1735700
 			}
 		}
 	},
@@ -623,8 +625,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3821880,
-				"dirName": "BeetleBall Playtest"
+				"id": 3821880
 			}
 		}
 	},
@@ -635,8 +636,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1170230,
-				"dirName": "Below The Stone"
+				"id": 1170230
 			}
 		}
 	},
@@ -664,6 +664,18 @@
 		}
 	},
 	{
+		"name": "Big Walk",
+		"slug": "big-walk",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1478500
+			}
+		}
+	},
+	{
 		"name": "Bloons TD 6",
 		"slug": "bloons-td-6",
 		"modLoader": {
@@ -671,8 +683,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 960090,
-				"dirName": "BloonsTD6"
+				"id": 960090
 			},
 			"epicGames": {
 				"identifier": "7786b355a13b47a6b3915335117cd0b2"
@@ -686,8 +697,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1353230,
-				"dirName": "BombRushCyberfunk"
+				"id": 1353230
 			},
 			"xboxStore": {
 				"identifier": "TeamReptile.BombRushCyberfunk"
@@ -713,10 +723,10 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3844970,
-				"dirName": "Burglin' Gnomes"
+				"id": 3844970
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Carrier Deck",
@@ -772,8 +782,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 949230,
-				"dirName": "Cities Skylines II"
+				"id": 949230
 			},
 			"xboxStore": {
 				"identifier": "ParadoxInteractive.CitiesSkylinesII-PCEdition"
@@ -850,8 +859,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2258670,
-				"dirName": "Crawlspace 2"
+				"id": 2258670
 			}
 		}
 	},
@@ -875,8 +883,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2564910,
-				"dirName": "CRYO"
+				"id": 2564910
 			}
 		}
 	},
@@ -892,6 +899,21 @@
 		}
 	},
 	{
+		"name": "Cuphead",
+		"slug": "cuphead",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 268910
+			},
+			"xboxStore": {
+				"identifier": "StudioMDHR.20872A364DAA1"
+			}
+		}
+	},
+	{
 		"name": "Cursed Words",
 		"slug": "cursed-words",
 		"modLoader": {
@@ -899,8 +921,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3856460,
-				"dirName": "Cursed Words Demo"
+				"id": 3856460
 			}
 		}
 	},
@@ -912,8 +933,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1091320,
-				"dirName": "DEPO"
+				"id": 1091320
 			}
 		}
 	},
@@ -936,8 +956,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 519860,
-				"dirName": "Dusk"
+				"id": 519860
 			}
 		}
 	},
@@ -961,8 +980,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2321470,
-				"dirName": "Deep Rock Survivor"
+				"id": 2321470
 			}
 		}
 	},
@@ -1025,8 +1043,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2134320,
-				"dirName": "ENA-4-DreamBBQ"
+				"id": 2134320
 			}
 		}
 	},
@@ -1041,6 +1058,19 @@
 				"id": 3293010
 			}
 		}
+	},
+	{
+		"name": "Emberville",
+		"slug": "emberville",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2295170
+			}
+		},
+		"backends": ["Hexium"]
 	},
 	{
 		"name": "Enter the Gungeon",
@@ -1170,8 +1200,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2908480,
-				"dirName": "Gladio Mori Demo"
+				"id": 2908480
 			}
 		}
 	},
@@ -1235,6 +1264,18 @@
 		}
 	},
 	{
+		"name": "Grain Rot",
+		"slug": "grain-rot",
+		"modLoader": {
+			"name": "Shimloader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4450620
+			}
+		}
+	},
+	{
 		"name": "Granny: Chapter 2",
 		"slug": "granny-chapter-two",
 		"modLoader": {
@@ -1242,8 +1283,19 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1205040,
-				"dirName": "Granny Chapter Two"
+				"id": 1205040
+			}
+		}
+	},
+	{
+		"name": "Graveyard Keeper 2",
+		"slug": "graveyard-keeper-2",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4358690
 			}
 		}
 	},
@@ -1280,8 +1332,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3400930,
-				"dirName": "GuiltyasSock"
+				"id": 3400930
 			}
 		}
 	},
@@ -1339,8 +1390,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1030300,
-				"dirName": "Hollow Knight Silksong"
+				"id": 1030300
 			},
 			"xboxStore": {
 				"identifier": "TeamCherry.HollowKnightSilksong"
@@ -1355,8 +1405,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 382560,
-				"dirName": "Hot Lava/archive/build"
+				"id": 382560
 			}
 		}
 	},
@@ -1368,8 +1417,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2503770,
-				"dirName": "\u543e\u4eca\u6709\u4e16\u5bb6"
+				"id": 2503770
 			}
 		}
 	},
@@ -1381,10 +1429,23 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 283160,
-				"dirName": "DyingSun"
+				"id": 283160
 			}
 		}
+	},
+	{
+		"name": "How to Fish",
+		"slug": "how-to-fish",
+		"modLoader": {
+			"name": "BepInEx",
+			"fileTarget": "./How to Fish"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4001890
+			}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Human Fall Flat",
@@ -1394,8 +1455,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 477160,
-				"dirName": "Human"
+				"id": 477160
 			}
 		}
 	},
@@ -1408,6 +1468,30 @@
 		"platforms": {
 			"steam": {
 				"id": 1876590
+			}
+		}
+	},
+	{
+		"name": "In Falsus",
+		"slug": "in-falsus",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3971950
+			}
+		}
+	},
+	{
+		"name": "Inferno Protocol",
+		"slug": "inferno-protocol",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3908940
 			}
 		}
 	},
@@ -1442,8 +1526,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1757300,
-				"dirName": "JumpSpace"
+				"id": 1757300
 			}
 		}
 	},
@@ -1491,8 +1574,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 553310,
-				"dirName": "LLBlaze"
+				"id": 553310
 			}
 		}
 	},
@@ -1516,8 +1598,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1931180,
-				"dirName": "Wild Skies"
+				"id": 1931180
 			}
 		}
 	},
@@ -1599,8 +1680,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3404470,
-				"dirName": "Animal Spa"
+				"id": 3404470
 			}
 		}
 	},
@@ -1694,8 +1774,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2200780,
-				"dirName": "My dream setup/MDS"
+				"id": 2200780
 			}
 		}
 	},
@@ -1780,6 +1859,18 @@
 		}
 	},
 	{
+		"name": "Nivalis Nights",
+		"slug": "nivalis-nights",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1488490
+			}
+		}
+	},
+	{
 		"name": "Odd Remedy",
 		"slug": "odd-remedy",
 		"modLoader": {
@@ -1787,8 +1878,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1745680,
-				"dirName": "OddRemedy"
+				"id": 1745680
 			}
 		}
 	},
@@ -1812,8 +1902,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 3707400,
-				"dirName": "On-Together"
+				"id": 3707400
 			}
 		}
 	},
@@ -1864,19 +1953,6 @@
 		}
 	},
 	{
-		"name": "PEAK",
-		"slug": "peak",
-		"popular": true,
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 3527290
-			}
-		}
-	},
-	{
 		"name": "PIGFACE",
 		"slug": "pigface",
 		"modLoader": {
@@ -1896,8 +1972,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1905940,
-				"dirName": "PaintingVr"
+				"id": 1905940
 			}
 		}
 	},
@@ -2031,6 +2106,20 @@
 		}
 	},
 	{
+		"name": "Primordialis",
+		"slug": "primordialis",
+		"modLoader": {
+			"name": "Nucleus",
+			"packageName": "u0068-Nucleus"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3011360
+			}
+		},
+		"backends": ["Hexium"]
+	},
+	{
 		"name": "Project Arrhythmia",
 		"slug": "project-arrhythmia",
 		"modLoader": {
@@ -2050,8 +2139,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 252870,
-				"dirName": "PULSARLostColony"
+				"id": 252870
 			}
 		}
 	},
@@ -2068,18 +2156,6 @@
 		}
 	},
 	{
-		"name": "ROUNDS",
-		"popular": true,
-		"modLoader": {
-			"name": "BepInEx"
-		},
-		"platforms": {
-			"steam": {
-				"id": 1557740
-			}
-		}
-	},
-	{
 		"name": "RUMBLE",
 		"modLoader": {
 			"name": "MelonLoader"
@@ -2087,6 +2163,19 @@
 		"platforms": {
 			"steam": {
 				"id": 890550
+			}
+		}
+	},
+	{
+		"name": "RV There Yet?",
+		"slug": "rv-there-yet",
+		"modLoader": {
+			"name": "Shimloader",
+			"fileTarget": "./Ride/Binaries/Win64"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3949040
 			}
 		}
 	},
@@ -2132,8 +2221,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 653530,
-				"dirName": "ObraDinn"
+				"id": 653530
 			}
 		}
 	},
@@ -2157,8 +2245,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2067920,
-				"dirName": "Rogue Genesia"
+				"id": 2067920
 			}
 		}
 	},
@@ -2182,8 +2269,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 544750,
-				"dirName": "SoulcaliburVI"
+				"id": 544750
 			}
 		}
 	},
@@ -2208,6 +2294,18 @@
 		"platforms": {
 			"steam": {
 				"id": 2124120
+			}
+		}
+	},
+	{
+		"name": "SUPERHOT",
+		"slug": "superhot",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 322500
 			}
 		}
 	},
@@ -2292,6 +2390,18 @@
 		}
 	},
 	{
+		"name": "Shift At Midnight",
+		"slug": "shift-at-midnight",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 3722330
+			}
+		}
+	},
+	{
 		"name": "Skul: The Hero Slayer",
 		"slug": "skul-the-hero-slayer",
 		"modLoader": {
@@ -2299,8 +2409,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1147560,
-				"dirName": "Skul"
+				"id": 1147560
 			}
 		}
 	},
@@ -2324,8 +2433,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 2765860,
-				"dirName": "Slipstream Rogue Space"
+				"id": 2765860
 			}
 		}
 	},
@@ -2349,8 +2457,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 867210,
-				"dirName": "SongsOfConquest"
+				"id": 867210
 			}
 		}
 	},
@@ -2455,8 +2562,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 848450,
-				"dirName": "SubnauticaZero"
+				"id": 848450
 			},
 			"xboxStore": {
 				"identifier": "UnknownWorldsEntertainmen.SubnauticaBelowZero"
@@ -2508,7 +2614,8 @@
 			"steam": {
 				"id": 2080690
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Super Battle Golf",
@@ -2574,7 +2681,6 @@
 		},
 		"backends": ["Hexium"]
 	},
-
 	{
 		"name": "TABS",
 		"slug": "totally-accurate-battle-simulator",
@@ -2583,8 +2689,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 508440,
-				"dirName": "Totally Accurate Battle Simulator"
+				"id": 508440
 			},
 			"epicGames": {
 				"identifier": "Driftfish"
@@ -2726,8 +2831,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1140150,
-				"dirName": "LBoL"
+				"id": 1140150
 			}
 		}
 	},
@@ -2738,8 +2842,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1059990,
-				"dirName": "TromboneChamp"
+				"id": 1059990
 			}
 		}
 	},
@@ -2790,8 +2893,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1604030,
-				"dirName": "VRising"
+				"id": 1604030
 			}
 		}
 	},
@@ -2892,8 +2994,7 @@
 		},
 		"platforms": {
 			"steam": {
-				"id": 1730700,
-				"dirName": "WLKRR"
+				"id": 1730700
 			}
 		}
 	},
@@ -2967,6 +3068,18 @@
 		}
 	},
 	{
+		"name": "Wobbly Life",
+		"slug": "wobbly-life",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1211020
+			}
+		}
+	},
+	{
 		"name": "Word Play",
 		"slug": "word-play",
 		"modLoader": {
@@ -3012,5 +3125,18 @@
 				"id": 3121110
 			}
 		}
+	},
+	{
+		"name": "over the hill",
+		"slug": "over-the-hill",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2929250
+			}
+		},
+		"backends": ["Hexium"]
 	}
 ]

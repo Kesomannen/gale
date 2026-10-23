@@ -5,7 +5,14 @@ import {
 	type MarkdownType,
 	type Mod,
 	ModType,
-	ModLoader
+	ModLoader,
+	type LaunchOption,
+	type ModId,
+	type Prefs,
+	type RgbaColor,
+	type DeduplicatedMod,
+	type ModContextItem,
+	type ContextItem
 } from './types';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import games from './state/game.svelte';
@@ -20,6 +27,51 @@ export function shortenFileSize(size: number): string {
 
 export function formatModName(name: string): string {
 	return name.replace(/_/g, ' ');
+}
+
+export function formatLaunchOptionName(game: string, option: LaunchOption): string {
+	switch (option.type) {
+		case 'none':
+		case 'default':
+			return m.steamLaunchOption_default({ game });
+		case 'application':
+			return m.steamLaunchOption_application({ game });
+		case 'safemode':
+			return m.steamLaunchOption_safemode({ game });
+		case 'multiplayer':
+			return m.steamLaunchOption_multiplayer({ game });
+		case 'config':
+			return m.steamLaunchOption_config();
+		case 'vr':
+			return m.steamLaunchOption_vr({ game });
+		case 'server':
+			return m.steamLaunchOption_server();
+		case 'editor':
+			return m.steamLaunchOption_editor();
+		case 'manual':
+			return m.steamLaunchOption_manual();
+		case 'benchmark':
+			return m.steamLaunchOption_benchmark();
+		case 'option1':
+		case 'option2':
+		case 'option3':
+			return option.description
+				? m.steamLaunchOption_option_description({ description: option.description })
+				: m.steamLaunchOption_option_no_description({ game, type: option.type });
+		case 'othervr':
+			return m.steamLaunchOption_othervr({ game });
+		case 'openvroverlay':
+			return m.steamLaunchOption_openvroverlay({ game });
+		case 'osvr':
+			return m.steamLaunchOption_osvr({ game });
+		case 'openxr':
+			return m.steamLaunchOption_openxr({ game });
+		default:
+			if (option.type) {
+				return m.steamLaunchOption_other_with_type({ game, type: option.type });
+			}
+			return m.steamLaunchOption_other({ game });
+	}
 }
 
 export function shortenNum(value: number): string {
@@ -56,12 +108,74 @@ export function timeSince(date: Date | string): string {
 	return m.util_timeSince_interval_null();
 }
 
+export function compareVersions(v1: string, v2: string): number {
+	const v1Parts = v1.split('.').map(Number);
+	const v2Parts = v2.split('.').map(Number);
+
+	for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+		const part1 = v1Parts[i] ?? 0;
+		const part2 = v2Parts[i] ?? 0;
+
+		if (part1 > part2) return 1;
+		if (part1 < part2) return -1;
+	}
+
+	return 0;
+}
+
+export function getPreferredBackend({ hexium, thunderstore }: DeduplicatedMod<Mod>): Backend {
+	if (hexium && !thunderstore) return Backend.Hexium;
+	if (!hexium && thunderstore) return Backend.Thunderstore;
+
+	if (hexium?.isDeprecated && !thunderstore?.isDeprecated) return Backend.Thunderstore;
+	if (!hexium?.isDeprecated && thunderstore?.isDeprecated) return Backend.Hexium;
+
+	const versionCmp = compareVersions(thunderstore?.version ?? '', hexium?.version ?? '');
+	if (versionCmp > 0) return Backend.Thunderstore;
+	if (versionCmp < 0) return Backend.Hexium;
+
+	return Backend.Thunderstore;
+}
+
+export function extractDeduplicatedMod<T>(
+	deduplicated: DeduplicatedMod<T>,
+	backend: Backend
+): T | null {
+	switch (backend) {
+		case Backend.Thunderstore:
+			return deduplicated.thunderstore;
+		case Backend.Hexium:
+			return deduplicated.hexium;
+	}
+}
+
 export function isOutdated(mod: Mod): boolean {
 	if (mod.versions.length === 0) {
 		return false;
 	}
 
 	return mod.version !== mod.versions[0].name;
+}
+
+export function isNonReleaseVersion(version: string): boolean {
+	const metadataSeparator = version.indexOf('+');
+	const versionExtraSeparator = version.indexOf('-');
+	return (
+		versionExtraSeparator > 0 &&
+		(metadataSeparator < 0 ? 1 << 30 : metadataSeparator) > versionExtraSeparator
+	);
+}
+
+export function hasNonReleaseUpgrade(mod: Mod): boolean {
+	if (mod.versions.length === 0) {
+		return false;
+	}
+
+	if (isNonReleaseVersion(mod.version ?? '')) {
+		return false;
+	}
+
+	return isNonReleaseVersion(mod.versions[0].name);
 }
 
 export function communityUrl(backend: Backend, author: string, mod?: string) {
@@ -72,16 +186,16 @@ export function communityUrl(backend: Backend, author: string, mod?: string) {
 	}
 }
 
-export function modIconSrc(mod: Mod) {
+export function modIconSrc(mod: Mod, enabled?: boolean) {
 	if (mod.type === 'remote') {
 		if (mod.backend === Backend.Thunderstore) {
 			let fullName = `${mod.author}-${mod.name}-${mod.version}`;
 			return thunderstoreIconUrl(fullName);
 		} else {
-			return hexiumIconUrl(mod.author ?? '', mod.name);
+			return hexiumIconUrl(mod.author ?? '', mod.name, mod.version ?? '');
 		}
 	} else if (mod.icon !== null) {
-		let path = mod.enabled === false ? mod.icon + '.old' : mod.icon;
+		let path = enabled === false ? mod.icon + '.old' : mod.icon;
 		return convertFileSrc(path);
 	} else {
 		return `games/${games.active?.slug}.webp`;
@@ -89,15 +203,19 @@ export function modIconSrc(mod: Mod) {
 }
 
 export function gameIconSrc(game: Game) {
-	return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
+	if (game.backends.length === 1 && game.backends[0] === Backend.Thunderstore) {
+		return `https://gcdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
+	} else {
+		return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
+	}
 }
 
 export function thunderstoreIconUrl(fullName: string) {
 	return `https://gcdn.thunderstore.io/live/repository/icons/${fullName}.png`;
 }
 
-export function hexiumIconUrl(pkg: string, name: string) {
-	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png`;
+export function hexiumIconUrl(pkg: string, name: string, version: string) {
+	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png?${version}`;
 }
 
 export function capitalize(str: string): string {
@@ -186,4 +304,59 @@ export function loaderSupportsModpacks(loader: ModLoader) {
 		case ModLoader.GDWeave:
 			return false;
 	}
+}
+
+export function shouldWarnForeignDownload(id: ModId, prefs: Prefs): boolean {
+	if (id.backend === Backend.Thunderstore) return false;
+	if (games.activeBackends.length === 1) return false;
+	return !prefs.backendSkipConfirm;
+}
+
+export function rgbToHex(color: RgbaColor): string {
+	const [r, g, b] = color;
+	return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+}
+
+export function mapModContextItem<T, U>(
+	item: ModContextItem<T>,
+	mapItem: (item: U) => T
+): ModContextItem<U> {
+	return {
+		label: item.label,
+		icon: item.icon,
+		showFor: item.showFor ? (mod, locked) => item.showFor!(mapItem(mod), locked) : undefined,
+		onclick: (mod) => item.onclick(mapItem(mod)),
+		children: item.children
+			? (mod) => item.children!(mapItem(mod)).map((child) => mapModContextItem(child, mapItem))
+			: undefined
+	};
+}
+
+export function resolveModContextItems<T>(
+	items: ModContextItem<T>[],
+	mod: T,
+	locked: boolean
+): ContextItem[] {
+	return items
+		.map((item) => resolveModContextItem(item, mod, locked))
+		.filter((item) => item !== null);
+}
+
+export function resolveModContextItem<T>(
+	item: ModContextItem<T>,
+	mod: T,
+	locked: boolean
+): ContextItem | null {
+	if (item.showFor && !item.showFor(mod, locked)) {
+		return null;
+	}
+
+	const children = item.children?.(mod);
+
+	return {
+		label: item.label,
+		icon: item.icon,
+		onclick: () => item.onclick(mod),
+		children: children ? resolveModContextItems(children, mod, locked) : undefined
+	};
 }

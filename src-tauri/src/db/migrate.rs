@@ -106,6 +106,7 @@ fn read_manager_data(prefs: &Prefs) -> Result<SaveData> {
                 sync_data: None,
                 custom_args: String::new(),
                 ignored_package_updates: None,
+                excluded_export_files: None,
             });
 
             if data.active_profile_index == index {
@@ -151,6 +152,7 @@ impl From<legacy::GamePrefs> for GamePrefs {
             custom_args: legacy.custom_args.into_iter().flatten().join(" "),
             launch_mode: legacy.launch_mode.into(),
             platform: legacy.platform.map(Into::into),
+            show_steam_launch_options: false,
             backend: Backends::All,
         }
     }

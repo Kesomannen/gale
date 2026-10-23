@@ -3,9 +3,13 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 
 pub mod cmd;
+pub mod color;
 pub mod error;
+pub mod flatpak;
 pub mod fs;
 pub mod path;
+#[cfg(target_os = "linux")]
+pub mod webkit;
 pub mod window;
 pub mod zip;
 
@@ -21,8 +25,4 @@ pub fn cmp_ignore_case(a: impl AsRef<str>, b: impl AsRef<str>) -> Ordering {
         })
         .find(|&ordering| ordering != Ordering::Equal)
         .unwrap_or(Ordering::Equal)
-}
-
-pub fn is_flatpak() -> bool {
-    cfg!(target_os = "linux") && std::env::var("container").is_ok()
 }

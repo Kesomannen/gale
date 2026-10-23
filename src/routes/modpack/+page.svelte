@@ -10,11 +10,11 @@
 	import ApiKeyDialog from '$lib/components/dialogs/ApiKeyDialog.svelte';
 
 	import * as api from '$lib/api';
-	import { Backend, type ModpackArgs } from '$lib/types';
+	import { Backend, type ModpackArgs, type UploadSubmissionResult } from '$lib/types';
 	import { open } from '@tauri-apps/plugin-dialog';
 
 	import Dialog from '$lib/components/ui/Dialog.svelte';
-	import Checklist from '$lib/components/ui/Checklist.svelte';
+	import FileTree from '$lib/components/ui/FileTree.svelte';
 	import ResizableInputField from '$lib/components/ui/ResizableInputField.svelte';
 	import { toHeaderCase } from 'js-convert-case';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
@@ -24,6 +24,7 @@
 	import { apiKeyDialog } from '$lib/state/misc.svelte';
 	import { m, modpack_button_export, modpack_includeFiles_title } from '$lib/paraglide/messages';
 	import Info from '$lib/components/ui/Info.svelte';
+	import { communityUrl } from '$lib/util';
 
 	const URL_PATTERN =
 		'[Hh][Tt][Tt][Pp][Ss]?://(?:(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)(?:.(?:[a-zA-Z\u00a1-\uffff0-9]+-?)*[a-zA-Z\u00a1-\uffff0-9]+)*(?:.(?:[a-zA-Z\u00a1-\uffff]{2,}))(?::d{2,5})?(?:/[^s]*)?';
@@ -43,6 +44,7 @@
 	let backend: Backend = $state(Backend.Thunderstore);
 
 	let doneDialogOpen = $state(false);
+	let uploadResult: UploadSubmissionResult = $state({});
 	let loading: string | null = $state(null);
 
 	let includeFiles = $state(new SvelteMap<string, boolean>());
@@ -162,7 +164,7 @@
 
 		loading = m.modpack_uploadToServer_loading({ backend });
 		try {
-			await api.profile.export.uploadPack(args());
+			uploadResult = await api.profile.export.uploadPack(args());
 			doneDialogOpen = true;
 		} finally {
 			loading = null;
@@ -234,7 +236,9 @@
 
 <div class="relative mx-auto flex w-full max-w-4xl flex-col gap-1.5 overflow-y-auto px-6 py-4">
 	{#if loading}
-		<div class="text-primary-200 absolute inset-0 flex items-center justify-center gap-2 text-lg">
+		<div
+			class="text-primary-700 dark:text-primary-200 absolute inset-0 flex items-center justify-center gap-2 text-lg"
+		>
 			<Spinner />
 			{loading}
 		</div>
@@ -299,15 +303,19 @@
 			>
 				{#snippet label()}
 					{#if selectedCategories.length === 0}
-						<span class="text-primary-400 truncate pl-2">{m.modpack_categories_content()}</span>
+						<span class="text-primary-500 dark:text-primary-400 truncate pl-2"
+							>{m.modpack_categories_content()}</span
+						>
 					{:else}
 						<div class="flex flex-wrap gap-1">
 							{#each selectedCategories as category}
-								<div class="bg-primary-800 text-primary-200 rounded-md py-1 pr-1 pl-3 text-sm">
+								<div
+									class="text-primary-700 dark:bg-primary-800 dark:text-primary-200 bg-primary-200 rounded-md py-1 pr-1 pl-3 text-sm"
+								>
 									<span class="truncate overflow-hidden">{toHeaderCase(category)}</span>
 
 									<button
-										class="hover:bg-primary-700 ml-1 rounded-md px-1.5"
+										class="dark:hover:bg-primary-700 hover:bg-primary-300 ml-1 rounded-md px-1.5"
 										onclick={(evt) => {
 											evt.stopPropagation();
 											selectedCategories = selectedCategories.filter((cat) => cat !== category);
@@ -365,11 +373,11 @@
 			/>
 
 			<details class="mt-1">
-				<summary class="text-primary-300 cursor-pointer text-sm">
+				<summary class="text-primary-600 dark:text-primary-300 cursor-pointer text-sm">
 					{m.modpack_readme_preview()}
 				</summary>
 				<Markdown class="mt-1 px-4" source={readme} />
-				<div class="bg-primary-500 mt-4 h-0.5"></div>
+				<div class="dark:bg-primary-500 bg-primary-300 mt-4 h-0.5"></div>
 			</details>
 		</FormField>
 
@@ -389,11 +397,11 @@
 			</Button>
 
 			<details class="mt-1">
-				<summary class="text-primary-300 cursor-pointer text-sm"
+				<summary class="text-primary-600 dark:text-primary-300 cursor-pointer text-sm"
 					>{m.modpack_changeLog_preview()}</summary
 				>
 				<Markdown class="mt-1 px-4" source={changelog} />
-				<div class="bg-primary-500 mt-4 h-0.5"></div>
+				<div class="dark:bg-primary-500 bg-primary-300 mt-4 h-0.5"></div>
 			</details>
 		</FormField>
 
@@ -401,43 +409,44 @@
 			label={m.modpack_includeFiles_title({ count: includedFileCount, size: includeFiles?.size })}
 			description={m.modpack_includeFiles_description()}
 		>
-			<details>
-				<summary class="text-primary-300 cursor-pointer text-sm"
-					>{m.modpack_includeFiles_preview()}</summary
-				>
-				<InputField
-					bind:value={includedFilesSearch}
-					class="mt-2 w-full"
-					placeholder={m.modpack_includeFiles_placeholder()}
-				/>
-				<Checklist
-					class="mt-2"
-					title={m.modpack_includeFiles_list_title()}
-					items={shownFileIncludes}
-					getLabel={(item) => item}
-					get={(item) => includeFiles.get(item) ?? false}
-					set={(item, _, value) => {
-						includeFiles.set(item, value);
-						includeFiles = includeFiles;
-					}}
-				/>
-			</details>
+			<InputField
+				bind:value={includedFilesSearch}
+				class="mt-2 w-full"
+				placeholder={m.modpack_includeFiles_placeholder()}
+			/>
+
+			<FileTree
+				class="mt-2"
+				title={m.modpack_includeFiles_list_title()}
+				items={shownFileIncludes}
+				maxHeight="md"
+				getPath={(item) => item}
+				get={(item) => includeFiles.get(item) ?? false}
+				set={(item, value) => {
+					includeFiles.set(item, value);
+					includeFiles = includeFiles;
+				}}
+				setMany={(paths, value) => {
+					for (const path of paths) includeFiles.set(path, value);
+					includeFiles = includeFiles;
+				}}
+			/>
 		</FormField>
 
-		<div class="text-primary-200 mt-1 flex items-center text-lg font-medium">
+		<div class="text-primary-700 dark:text-primary-200 mt-1 flex items-center">
 			<span class="max-w-96 grow">{m.modpack_NSFW_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={nsfw} />
 		</div>
 
-		<div class="text-primary-200 flex items-center text-lg font-medium">
+		<div class="text-primary-700 dark:text-primary-200 flex items-center">
 			<span class="max-w-96 grow">{m.modpack_disabled_title()}</span>
 
 			<Checkbox onCheckedChange={saveArgs} bind:checked={includeDisabled} />
 		</div>
 
 		{#if games.activeBackends.length > 1}
-			<div class="text-primary-200 flex items-center text-lg font-medium">
+			<div class="text-primary-700 dark:text-primary-200 flex items-center">
 				<span class="max-w-96 grow">{m.modpack_upload_server()}</span>
 
 				{#if hexiumExclusive}
@@ -462,14 +471,20 @@
 <ApiKeyDialog />
 
 <Dialog bind:open={doneDialogOpen} title={m.modpack_dialog_title()}>
-	<p class="text-primary-300">
+	<p class="text-primary-600 dark:text-primary-300">
 		{m.modpack_dialog_content_1({ name, versionNumber, backend })}
-		<Link href="https://thunderstore.io/c/{games.active?.slug}/p/{author}/{name}">
+		<Link href={communityUrl(backend, author, name)}>
 			{m.modpack_dialog_content_2()}
 		</Link>
 	</p>
 
-	<div class="text-primary-400 mt-2 text-sm">
+	{#if uploadResult?.hidden}
+		<p class="text-primary-800 dark:text-primary-200">
+			{m.modpack_dialog_content_hidden({ backend })}
+		</p>
+	{/if}
+
+	<div class="text-primary-500 dark:text-primary-400 mt-2 text-sm">
 		{m.modpack_dialog_content_3()}
 		<br />
 		{m.modpack_dialog_content_4()}

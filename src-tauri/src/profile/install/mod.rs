@@ -3,22 +3,24 @@
 /// Installation in Gale happens like the following:
 ///
 /// 1) The mod ZIP is downloaded from Thunderstore and extracted according to the modloader-specific rules.
-/// This is handled by [`PackageInstaller::extract`], implemented in the respective `installers` submodules.
+///    This is handled by [`PackageInstaller::extract`], implemented in the respective `installers` submodules.
 /// 2) The extracted files are placed into `<data directory>/cache/<author-name>/<version>`.
 /// 3) The files are copied to the profile folder (at the same relative path). Most files are copied using
-/// hard links, but ones that are expected to change are properly cloned. This is also implemented in the
-/// respective `installers` submodules.
+///    hard links, but ones that are expected to change are properly cloned. This is also implemented in the
+///    respective `installers` submodules.
 ///
 /// If the cache is hit, we skip directly to step 3). This process is orchestrated in the `queue` module.
 ///
 /// Modules:
 /// - `cache`: functions related to locating and clearing the mod download cache
+/// - `download`: downloads mod archives, retrying and resuming interrupted downloads
 /// - `fs`: utility file system functions for common installer tasks such as extraction
 /// - `queue`: handles the queue of mod installations, orchestrating the other modules
 /// - `installers`: contains installers handle the modloader-specific file placement
 use std::{
     fmt::{Debug, Display},
     iter, process,
+    sync::atomic::{AtomicBool, Ordering},
 };
 
 use chrono::{DateTime, Utc};
@@ -40,6 +42,7 @@ use crate::{
 
 mod cache;
 pub mod commands;
+mod download;
 mod fs;
 mod installers;
 pub use installers::*;
@@ -193,7 +196,7 @@ impl ModInstall {
             _ => {
                 profile.mods.push(profile_mod);
             }
-        };
+        }
 
         if !enabled {
             profile.force_toggle_mod(uuid)?;
@@ -311,4 +314,74 @@ pub async fn handle_exit(app: AppHandle) {
 
     wait_for_install.await;
     process::exit(0);
+}
+
+/// Events sent to the frontend to keep track of installation progress.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase", tag = "type")]
+enum InstallEvent<'a> {
+    Show,
+    #[serde(rename_all = "camelCase")]
+    Hide {
+        reason: HideReason,
+    },
+    #[serde(rename_all = "camelCase")]
+    AddCount {
+        mods: usize,
+        bytes: i64,
+    },
+    #[serde(rename_all = "camelCase")]
+    AddProgress {
+        mods: usize,
+        bytes: i64,
+    },
+    #[serde(rename_all = "camelCase")]
+    SetTask {
+        name: &'a str,
+        task: InstallTask,
+    },
+}
+
+#[derive(Debug, Serialize, Clone, Copy)]
+#[serde(rename_all = "camelCase")]
+enum HideReason {
+    Done,
+    Error,
+    Cancelled,
+}
+
+#[derive(Debug, Serialize, Clone, Copy)]
+#[serde(rename_all = "camelCase")]
+enum InstallTask {
+    Download,
+    Extract,
+    Install,
+}
+
+impl<'a> InstallEvent<'a> {
+    fn set_task(ident: &'a VersionIdent, task: InstallTask) -> Self {
+        Self::SetTask {
+            name: ident.name(),
+            task,
+        }
+    }
+}
+
+fn emit(event: InstallEvent, app: &AppHandle) {
+    app.emit_buffered("install_event", &event);
+}
+
+fn check_cancel(cancel: &AtomicBool, options: &InstallOptions) -> InstallResult<()> {
+    if cancel.load(Ordering::SeqCst) {
+        if options.cancel_behavior == CancelBehavior::Prevent {
+            warn!("attempted to cancel uncancellable batch");
+            cancel.store(false, Ordering::SeqCst);
+
+            Ok(())
+        } else {
+            Err(InstallError::Cancelled)
+        }
+    } else {
+        Ok(())
+    }
 }

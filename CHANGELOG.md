@@ -1,5 +1,178 @@
 # Changelog
 
+## 1.23.2 (2026-10-14)
+
+### Changed
+
+- A backup of the database is now created before running migrations
+- Minor UI changes
+
+### Fixed
+
+- File and URL open actions freezing the app in some environments
+- Scrollbars always being drawn on top of other elements on some Linux systems
+- `Uninstall` button on the unknown mods banner not working
+- Hexium mod icons being cached too aggressively, causing them to not update when the mod icon is updated
+- Author not being displayed for locally imported mods (thanks [@MarkN2000](https://github.com/MarkN2000))
+
+## 1.23.1 (2026-10-03)
+
+### Fixed
+
+- Updated webkit versions and altered AppImage build to fix issues with white screens on Linux (thanks [@arrowmaster](https://github.com/arrowmaster))
+
+## 1.23.0 (2026-10-02)
+
+### Added
+
+- Copy link context menu option to copy a mod's Thunderstore or Hexium URL
+- Ukrainian translation (thanks [@VoronUA1](https://github.com/VoronUA1))
+- Note in the modpack upload dialog in case the modpack was uploaded as a hidden mod (thanks [@bwoebi](https://github.com/bwoebi))
+- Option to view both the Thunderstore and Hexium versions of a mod in the mod details menu, when possible
+  - Clicking the "Install" button will install the version from the currently selected source
+  - The previous behavior was to always pick whichever source had a higher version number; this is now picked as the default option instead of being forced
+- Mod context menu option to switch between sources
+- Ability to configure which files are included in code exports and synced profiles
+  - A dialog is now opened if a profile export was rejected due to size limits, instead of a standard error message
+- Support for the Nucleus mod loader (thanks [@u0068](https://github.com/u0068))
+
+### Changed
+
+- Download retries now use range queries to pick up where the last request failed, instead of restarting the entire download
+- `Copy debug info` now prints mod names in a more human-readable format instead of the raw dependency strings
+- `Copy debug info` now sorts the mod list alphabetically
+- The custom launch argument fields now support prefixes with arguments, similarly to Steam's custom arguments (thanks [@avnyu](https://github.com/avnyu))
+  - For example, this now supports cases like `cmd --arg %command%`. Previously `cmd --arg` would be treated as a single executable
+  - **Includes a breaking change**: words containing a `=` (such as `--opt=value` or `ENV=value`) were previously always passed as environment variables. After this change, only valid environment variable names will be treated as such (meaning `--opt=value` will now be passed as an argument).
+- The dependency solver now always prefers the source of the installed mod for dependencies
+  - This means dependencies of Thunderstore mods will always be installed from Thunderstore and vice versa, as long as the dependency string is found on that platform
+  - If the dependency is already in the profile, it will be used regardless of source
+- When considering which source to prioritize for a mod, deprecation status is now taken into account
+  - Deprecated mod sources will always be overriden by non-deprecated mods, even if the non-deprecated version has a lower or equal version number
+- The current version of a mod is no longer shown in the "Change version" context menu
+- Minor UI changes
+
+### Fixed
+
+- Cross-platform updates not being displayed on the mod card, only in the "Update All" dialog
+- Sync status not being refresh when switching to a profile
+- Deleted config files remaining in the config editor until the app is restarted
+- Sync donation notice reappearing each time the dialog is opened
+- Config file editor sometimes becoming stale after switching profiles
+- `gale://` and `ror2mm://` deep links installing from an automatically determined source instead of the source specified in the link
+  - This means the "Install with mod manager" buttons on the Thunderstore and Hexium sites will now always install from the correct source
+- Mods from profile imports sometimes being installed from the incorrect source
+- `WEBKIT_DISABLE_DMABUF_RENDERER=1` is now automatically set on Linux when an NVIDIA GPU is detected, which should fix issues with rendering on certain systems
+- UI sometimes freezing when exporting a large profile code or file
+- Massively improved Russian translation
+
+## 1.22.3 (2026-09-16)
+
+### Added
+
+- Azerbaijani translation (thanks [@jamalkamaladdin](https://github.com/jamalkamaladdin))
+
+### Changed
+
+- HTTP request cache now has a max size of 100 MB
+  - Upon reaching the limit, the whole cache is cleared
+- Empty folders are now removed when unused mods are cleared from the cache (thanks [@jamalkamaladdin](https://github.com/jamalkamaladdin))
+
+### Fixed
+
+- HTTP request cache growing larger each time mods are fetched
+- String-based version comparison in update logic causing some updates to not be considered (thanks [@bwoebi](https://github.com/bwoebi))
+- Some Thunderstore-specific language in UI text
+- Incompatibility when both Gale and Steam are installed as Flatpaks
+- Duplicate categories appearing on games with both Thunderstore and Hexium
+- The UI sometimes becoming unresponsive while exporting a profile code or file
+
+## 1.22.2 (2026-08-25)
+
+### Fixed
+
+- Mod list filters not updating until the page is refreshed
+
+## 1.22.1 (2026-08-24)
+
+### Changed
+
+- Missing mods are now ignored when importing sync profiles
+
+### Fixed
+
+- Switching game while fetching mods causing the mod lists to be mixed
+- An infinite loop causing the app to constantly consume CPU in the background
+
+## 1.22.0 (2026-08-23)
+
+### Added
+
+- Light mode setting
+- Turkish translation (thanks [KadrioS](https://github.com/KadrioS))
+
+### Changed
+
+- Minor UI tweaks
+
+### Fixed
+
+- Mod list filters not being saved between sessions
+- Missing Linux accent color causing an error upon startup
+- Checkboxes in the update mods dialog being impossible to uncheck
+
+## 1.21.0 (2026-08-18)
+
+### Added
+
+- German translation (thanks Henk deBrook)
+- System accent color option
+
+### Changed
+
+- Profile codes are now auto-pasted from the clipboard as long as the content is a valid UUID
+- Reworked the visuals of the the toolbar and navigation rail
+- Various other UI tweaks
+- The `steam.sh` script is now only used on Linux if a Steam installation could not be found via `which` or `flatpak` (thanks [@Cloudef](https://github.com/Cloudef))
+  - This was previously the highest prioritized Steam launch method on Linux
+- Mod pre-release versions are no longer treated as standard versions. Instead, you have to opt-in to install a pre-release via the version dropdown
+  - If a stable release is installed, pre-release updates will not appear in the "Update All" dialog
+  - An icon is shown next to the mod name when a pre-release upgrade is available
+
+### Fixed
+
+- Profile imports and sync not removing extra config files
+- Clearing the search bar being undone upon restarting the app (thanks [@hazre](https://github.com/hazre))
+
+## 1.20.0 (2026-08-07)
+
+### Added
+
+- Button to view changelogs in the update dialog
+- Support for Steam launch options (thanks [@hazre](https://github.com/hazre))
+
+### Changed
+
+- Cross-source updates are now clearly marked in the update mods dialog
+- Game icons are now sourced from Thunderstore rather than being bundled by Gale
+
+### Fixed
+
+- Mods sometimes not being installed until Gale is restarted
+- Search bar being cleared after a config file is deleted
+- Clipping issues with the unknown mods banner
+- Mod card lists such as the dependencies and hidden mods dialogs not being sorted correctly
+- Icons and links in update dialog always pointing to Thunderstore
+- Install button being stuck in a disabled state after installing mods
+- Sync socket failing to connect due to unsupported HTTP version
+- Minor UI fixes
+
+## 1.19.2 (2026-07-31)
+
+### Fixed
+
+- HTTP cache causing mod downloads to be cached twice
+
 ## 1.19.1 (2026-07-27)
 
 ### Fixed
@@ -8,6 +181,7 @@
   - This fixes issues with the initial mod fetch and deep link handling among others
 - Improved Simplified Chinese translation (thanks [@lostone-zc](https://github.com/lostone-zc))
 - Some mods from disabled sources remaining available due to cache from previous installations
+- Disabling a source requiring the app to be restarted
 - ANSI escape codes being written to the log file
 - Removed broken privacy policy link in about dialog
 - HTTP cache headers are now respected

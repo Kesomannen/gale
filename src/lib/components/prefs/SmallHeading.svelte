@@ -10,6 +10,6 @@
 	let { children, class: classProp }: Props = $props();
 </script>
 
-<h3 class={[classProp, 'text-primary-100 mt-4 text-lg font-semibold']}>
+<h3 class={[classProp, 'text-primary-900 dark:text-primary-100 mt-4 text-lg font-semibold']}>
 	{@render children?.()}
 </h3>

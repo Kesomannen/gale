@@ -63,11 +63,13 @@
 				evt.preventDefault();
 			}}
 			class={[
-				file.type === 'ok' && 'text-primary-200',
-				file.type === 'unsupported' && 'text-primary-400',
+				file.type === 'ok' && 'text-primary-700 dark:text-primary-200',
+				file.type === 'unsupported' && 'text-primary-500 dark:text-primary-400',
 				file.type === 'err' && 'text-red-500',
-				config.selectedFile === file ? 'bg-primary-700' : 'hover:bg-primary-700',
-				'group flex w-full items-center overflow-hidden rounded px-2 py-1'
+				config.selectedFile === file
+					? 'dark:bg-primary-700 bg-primary-100'
+					: 'dark:hover:bg-primary-700 hover:bg-primary-50',
+				'group flex h-9 w-full items-center overflow-hidden rounded-lg pr-1 pl-2'
 			]}
 		>
 			{#if file.type === 'ok'}
@@ -83,7 +85,7 @@
 				&#x200E;
 				{fileLabel.name}
 				{#if fileLabel.disambiguator}
-					<span class="text-primary-400">
+					<span class="text-primary-500 dark:text-primary-400">
 						({fileLabel.disambiguator})
 					</span>
 				{/if}
@@ -92,7 +94,7 @@
 			<IconButton
 				label={m.configFileListItem_button_openFile()}
 				icon="mdi:open-in-new"
-				class="mr-1 ml-2 hidden group-hover:block"
+				class="mr-0.5 ml-2 hidden group-hover:block"
 				onclick={(evt) => {
 					evt.preventDefault();
 					openFile();
@@ -111,12 +113,14 @@
 				/>
 			{/if}
 		</Collapsible.Trigger>
-		<Collapsible.Content class="text-primary-300 mb-1">
+		<Collapsible.Content class="text-primary-600 dark:text-primary-300 mb-1">
 			{#each shownSections as section}
 				<button
 					class={[
-						config.selectedSection === section ? 'bg-primary-700' : 'hover:bg-primary-700',
-						'block w-full truncate rounded py-0.5 pr-2 pl-10 text-left'
+						config.selectedSection === section
+							? 'dark:bg-primary-700 bg-primary-100'
+							: 'dark:hover:bg-primary-700 hover:bg-primary-50',
+						'block w-full truncate rounded-lg py-0.5 pr-2 pl-10 text-left'
 					]}
 					onclick={() => {
 						config.selectedFile = file;
