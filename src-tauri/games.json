@@ -2223,6 +2223,18 @@
 		}
 	},
 	{
+		"name": "Scam With Your Friends",
+		"slug": "scam-with-your-friends",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4954910
+			}
+		}
+	},
+	{
 		"name": "Schedule I",
 		"slug": "schedule-i",
 		"modLoader": {
