@@ -32,6 +32,17 @@ fn create_steam_command(game_dir: &Path, game: Game, prefs: &Prefs) -> Result<Co
 
     let mut command = create_base_steam_command()?;
 
+    #[cfg(target_os = "macos")]
+    {
+        // TODO: how to get mods to load? The following command works, but seems to not align with Gale's other platforms
+        /*
+         * arch -x86_64 ~/Library/Application\ Support/com.kesomannen.gale/valheim/profiles/Default/start_game_bepinex.sh \
+         *   ~/Library/Application\ Support/Steam/steamapps/common/Valheim/Valheim.app \
+         *   --doorstop-enabled true \
+         *   --doorstop-target-assembly "/Users/dudeofawesome/Library/Application Support/com.kesomannen.gale/valheim/profiles/Default/BepInEx/core/BepInEx.Preloader.dll"
+         */
+    }
+
     command.arg("-applaunch").arg(steam.id.to_string());
 
     util::flatpak::wrap_command_if_needed(&mut command);
@@ -85,6 +96,23 @@ fn read_steam_registry() -> Result<PathBuf> {
     let path: String = key.get_value("InstallPath")?;
 
     Ok(PathBuf::from(path))
+}
+
+#[cfg(target_os = "macos")]
+fn create_base_steam_command() -> Result<Command> {
+    use crate::util::fs::PathExt;
+
+    let path = which::which("steam").unwrap_or_else(|_| {
+        PathBuf::from("/Applications/Steam.app/Contents/MacOS/steam_osx")
+    });
+
+    let path = path
+        .exists_or_none()
+        .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
+
+    info!("using steam installation at {}", path.display());
+
+    Ok(Command::new(path))
 }
 
 #[cfg(target_os = "linux")]
