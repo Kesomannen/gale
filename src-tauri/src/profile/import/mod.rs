@@ -145,10 +145,9 @@ async fn read_code_from_backend(backend: Backend, key: Uuid, app: &AppHandle) ->
 #[derive(Debug, Default, Deserialize, Clone)]
 #[serde(default, rename_all = "camelCase")]
 pub struct ImportOptions {
-    import_all: bool,
+    configs: ImportConfigOption,
     merge: bool,
     ignore_missing_mods: bool,
-    ignore_configs: bool,
 }
 
 impl ImportOptions {
@@ -166,6 +165,14 @@ impl ImportOptions {
         self.ignore_missing_mods = ignore_missing_mods;
         self
     }
+}
+
+#[derive(Debug, Default, Deserialize, Clone, PartialEq, Eq)]
+pub enum ImportConfigOption {
+    All,
+    #[default]
+    Safe,
+    None,
 }
 
 pub(super) async fn import_profile(
@@ -191,7 +198,7 @@ pub(super) async fn import_profile(
 
     let result = match result {
         Ok(()) => {
-            if !options.ignore_configs {
+            if options.configs != ImportConfigOption::None {
                 let manager = app.lock_manager();
                 let (_, profile) = manager.profile_by_id(profile_id)?;
 
@@ -379,7 +386,7 @@ where
     F: FnMut(&Path) -> bool,
 {
     let src_files: HashSet<PathBuf> = super::export::list_files(src)
-        .filter(|path| options.import_all || is_always_imported(path))
+        .filter(|path| options.configs == ImportConfigOption::All || is_always_imported(path))
         .collect();
 
     let dest_files: HashSet<PathBuf> = super::export::find_config(dest, config_dirs)
