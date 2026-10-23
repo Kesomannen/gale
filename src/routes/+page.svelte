@@ -255,7 +255,7 @@
 			profileQuery.current.includeDisabled
 	);
 
-	let locked = $derived(profiles.activeLocked);
+	let locked = $derived(profiles.activeModsLocked);
 </script>
 
 <div class="flex grow overflow-hidden">
@@ -268,7 +268,7 @@
 			<UpdateAllBanner updates={updates.values().toArray()} />
 		{/if}
 
-		{#if unknownMods.length > 0}
+		{#if unknownMods.length > 0 && !locked}
 			<UnknownModsBanner
 				mods={unknownMods}
 				onUninstall={() => forceUninstall(...unknownMods.map((uuid) => uuid.uuid))}

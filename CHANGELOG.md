@@ -7,6 +7,10 @@
 - A backup of the database is now created before running migrations
 - Minor UI changes
 
+### Added
+
+- Option to manage local mods and keep additional mods and config files when updating synced profiles
+
 ### Fixed
 
 - File and URL open actions freezing the app in some environments
