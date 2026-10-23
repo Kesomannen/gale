@@ -10,14 +10,15 @@ class ProfilesState {
 		this.list.find((profile) => profile.id === this.activeId) ?? null
 	);
 
-	activeLocked = $derived.by(() => {
+	activeModsLocked = $derived.by(() => {
 		if (this.active === null) return false;
 		if (this.active.sync === null) return false;
-		if (this.active.sync.preserveExtras) return false;
 		if (auth.user === null) return true;
 
 		return this.active.sync.owner.discordId != auth.user.discordId;
 	});
+
+	activeLocked = $derived(this.activeModsLocked && !this.active?.sync?.preserveExtras);
 
 	update = async (info: ManagedGameInfo) => {
 		this.list = info.profiles;

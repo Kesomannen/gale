@@ -102,11 +102,13 @@
 	}
 
 	async function doInstall() {
+		if (installationLocked(installId.packageUuid)) return;
 		await api.profile.install.mod(installId);
 		await refresh();
 	}
 
 	async function install(id: ModId) {
+		if (installationLocked(id.packageUuid)) return;
 		installId = id;
 		const prefs = await api.prefs.get();
 		if (shouldWarnForeignDownload(id, prefs)) {
@@ -136,6 +138,13 @@
 	});
 
 	let locked = $derived(profiles.activeLocked);
+
+	function installationLocked(packageUuid: string) {
+		const mod = mods.find(
+			(mod) => mod.data.thunderstore?.uuid === packageUuid || mod.data.hexium?.uuid === packageUuid
+		);
+		return locked || (profiles.activeModsLocked && mod?.isInstalled === true);
+	}
 </script>
 
 <div class="flex grow overflow-hidden">
@@ -166,7 +175,7 @@
 					mod={shownMod}
 					isInstalled={mod.isInstalled}
 					selected={selectedMod !== null && itemUuid(selectedMod) === shownMod.uuid}
-					locked={profiles.activeLocked}
+					locked={installationLocked(shownMod.uuid)}
 					oninstall={() => installLatest(shownMod)}
 					onclick={(evt) => onModClicked(evt, shownMod)}
 				/>
@@ -182,7 +191,12 @@
 			onclose={() => (selectedMod = null)}
 		>
 			{#snippet children({ mod })}
-				<InstallModButton {mod} isInstalled={selectedMod?.isInstalled} {install} {locked} />
+				<InstallModButton
+					{mod}
+					isInstalled={selectedMod?.isInstalled}
+					{install}
+					locked={installationLocked(mod.uuid)}
+				/>
 			{/snippet}
 		</DeduplicatedModDetails>
 	{/if}
