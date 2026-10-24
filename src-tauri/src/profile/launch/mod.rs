@@ -15,7 +15,7 @@ use walkdir::WalkDir;
 
 use super::ManagedGame;
 use crate::{
-    game::Game,
+    game::{Game, platform::Platform},
     logger::log_webview_err,
     prefs::{GamePrefs, Prefs},
     util::{
@@ -24,11 +24,11 @@ use crate::{
     },
 };
 
-mod custom_args;
+pub mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
 mod mod_loader;
-mod platform;
+pub mod platform;
 
 pub mod commands;
 
@@ -132,44 +132,11 @@ impl ManagedGame {
         }
         .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
 
-        let profile = self.active_profile();
-
         if !vanilla {
-            #[cfg(target_os = "linux")]
-            let is_proton = {
-                use crate::game::platform::Platform;
-                use tracing::warn;
-
-                let is_proton = linux::is_proton(game_dir).unwrap_or_else(|err| {
-                    warn!("failed to determine if game uses proton: {:#}", err);
-                    false
-                });
-
-                if is_proton && let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
-                    command.env("WINEDLLOVERRIDES", format!("{proxy_dll}=n,b"));
-
-                    if let Some(steam) = &self.game.platforms.steam
-                        && matches!(platform, Some(Platform::Steam))
-                        && let Err(err) = linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
-                    {
-                        warn!("failed to ensure wine dll override: {:#}", err);
-                    }
-                }
-
-                is_proton
-            };
-
-            #[cfg(target_os = "windows")]
-            let is_proton = false;
-
-            if is_proton {
-                info!("game appears to be running under proton, using proton launch method");
-            }
-
-            let mut ctx = mod_loader::ArgsContext::new(&mut command, &profile.path, is_proton);
-            ctx.add_args(&self.game.mod_loader)?;
+            self.apply_mod_loader_args(&mut command, game_dir, platform)?;
         }
 
+        let profile = self.active_profile();
         custom_args::add_args(&mut command, game_custom_args)?;
         custom_args::add_args(&mut command, &profile.custom_args)?;
 
@@ -180,7 +147,7 @@ impl ManagedGame {
         Ok((launch_mode, command))
     }
 
-    fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
+    pub fn copy_required_files(&self, game_dir: &Path) -> Result<()> {
         const INCLUDE_DIRS: [&str; 2] = ["doorstop_libs", "dotnet"];
         const EXCLUDES: [&str; 2] = ["profile.json", "mods.yml"];
 
@@ -225,6 +192,47 @@ impl ManagedGame {
         }
 
         Ok(())
+    }
+
+    #[cfg_attr(target_os = "windows", allow(unused_variables))]
+    pub fn apply_mod_loader_args(
+        &self,
+        command: &mut Command,
+        target_dir: &Path,
+        platform: Option<Platform>,
+    ) -> Result<()> {
+        #[cfg(target_os = "linux")]
+        let is_proton = {
+            let is_proton = linux::is_proton(target_dir).unwrap_or_else(|err| {
+                warn!("failed to determine if game uses proton: {:#}", err);
+                false
+            });
+
+            if is_proton && let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
+                command.env("WINEDLLOVERRIDES", format!("{proxy_dll}=n,b"));
+
+                if let Some(steam) = &self.game.platforms.steam
+                    && matches!(platform, Some(Platform::Steam))
+                    && let Err(err) = linux::ensure_wine_override(steam.id, proxy_dll, target_dir)
+                {
+                    warn!("failed to ensure wine dll override: {:#}", err);
+                }
+            }
+
+            is_proton
+        };
+
+        #[cfg(target_os = "windows")]
+        let is_proton = false;
+
+        if is_proton {
+            info!("game appears to be running under proton, using proton launch method");
+        }
+
+        let profile = self.active_profile();
+        let mut ctx = mod_loader::ArgsContext::new(command, &profile.path, is_proton);
+
+        ctx.add_args(&self.game.mod_loader)
     }
 }
 
@@ -296,7 +304,7 @@ const IGNORED_EXES: &[&str] = &[
     "UnityCrashHandler64.exe",
 ];
 
-fn find_executable(game_dir: &Path) -> Result<PathBuf> {
+pub fn find_executable(game_dir: &Path) -> Result<PathBuf> {
     WalkDir::new(game_dir)
         .into_iter()
         .filter_map(Result::ok)
