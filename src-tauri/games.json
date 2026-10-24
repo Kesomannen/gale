@@ -2510,6 +2510,18 @@
 		}
 	},
 	{
+		"name": "Stonewards",
+		"slug": "stonewards",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4502710
+			}
+		}
+	},
+	{
 		"name": "Subnautica",
 		"modLoader": {
 			"name": "BepInEx",
