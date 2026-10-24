@@ -24,7 +24,7 @@ use crate::{
     },
 };
 
-mod custom_args;
+pub(super) mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
 mod mod_loader;
@@ -159,7 +159,7 @@ impl ManagedGame {
                 is_proton
             };
 
-            #[cfg(target_os = "windows")]
+            #[cfg(not(target_os = "linux"))]
             let is_proton = false;
 
             if is_proton {
@@ -297,6 +297,34 @@ const IGNORED_EXES: &[&str] = &[
 ];
 
 fn find_executable(game_dir: &Path) -> Result<PathBuf> {
+    #[cfg(target_os = "macos")]
+    {
+        let bundles = WalkDir::new(game_dir)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry.file_type().is_dir()
+                    && entry.path().extension().is_some_and(|ext| ext == "app")
+            })
+            .sorted_by_key(|entry| entry.depth());
+        for bundle in bundles {
+            let contents = bundle.path().join("Contents");
+            let Ok(info) = plist::Value::from_file(contents.join("Info.plist")) else {
+                continue;
+            };
+            if let Some(executable) = info
+                .as_dictionary()
+                .and_then(|dict| dict.get("CFBundleExecutable"))
+                .and_then(plist::Value::as_string)
+            {
+                let path = contents.join("MacOS").join(executable);
+                if path.is_file() {
+                    return Ok(path);
+                }
+            }
+        }
+    }
+
     WalkDir::new(game_dir)
         .into_iter()
         .filter_map(Result::ok)
@@ -362,4 +390,25 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
     }
 
     Ok(launch_options)
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finds_bundle_executable_from_metadata() {
+        let game_dir = tempfile::tempdir().unwrap();
+        let contents = game_dir.path().join("Test Game.app/Contents");
+        fs::create_dir_all(contents.join("MacOS")).unwrap();
+        let executable = contents.join("MacOS/Actual Game");
+        fs::write(&executable, "").unwrap();
+        fs::write(contents.join("MacOS/Other File"), "").unwrap();
+        let mut info = plist::Dictionary::new();
+        info.insert("CFBundleExecutable".into(), "Actual Game".into());
+        plist::Value::Dictionary(info)
+            .to_file_binary(contents.join("Info.plist"))
+            .unwrap();
+        assert_eq!(find_executable(game_dir.path()).unwrap(), executable);
+    }
 }
