@@ -7,7 +7,10 @@ use tracing::info;
 
 use crate::util;
 use crate::{
-    game::{Game, platform::Platform},
+    game::{
+        Game,
+        platform::{Platform, Platforms},
+    },
     prefs::Prefs,
 };
 
@@ -234,18 +237,35 @@ fn create_epic_command(game: Game) -> Result<Command> {
 
 pub fn locate_game_dir(platform: Option<Platform>, game: Game) -> Result<PathBuf> {
     match platform {
-        Some(Platform::Steam) => steam_game_dir(game),
+        Some(Platform::Steam) => steam_dir(&game.platforms, &game.slug),
         #[cfg(windows)]
-        Some(Platform::XboxStore) => xbox_game_dir(game),
+        Some(Platform::XboxStore) => xbox_dir(&game.platforms, game.name, &game.slug),
         #[cfg(windows)]
-        Some(Platform::EpicGames) => epic_game_dir(game),
+        Some(Platform::EpicGames) => epic_dir(&game.platforms, game.name),
         _ => bail!("game directory not found - you may need to specify it in the settings"),
     }
 }
 
-fn steam_game_dir(game: Game) -> Result<PathBuf> {
-    let Some(steam) = &game.platforms.steam else {
-        bail!("{} is not available on Steam", game.slug);
+pub fn locate_dir(
+    platform: Option<Platform>,
+    platforms: &Platforms<'_>,
+    display_name: &str,
+) -> Result<PathBuf> {
+    match platform {
+        Some(Platform::Steam) => steam_dir(platforms, display_name),
+        #[cfg(windows)]
+        Some(Platform::XboxStore) => xbox_dir(platforms, display_name, display_name),
+        #[cfg(windows)]
+        Some(Platform::EpicGames) => epic_dir(platforms, display_name),
+        _ => bail!(
+            "directory not found for {display_name} - the selected platform cannot be located automatically"
+        ),
+    }
+}
+
+fn steam_dir(platforms: &Platforms<'_>, display_name: &str) -> Result<PathBuf> {
+    let Some(steam) = &platforms.steam else {
+        bail!("{display_name} is not available on Steam");
     };
 
     let steam_dir = steamlocate::SteamDir::locate().context("failed to find steam install")?;
@@ -257,16 +277,16 @@ fn steam_game_dir(game: Game) -> Result<PathBuf> {
 }
 
 #[cfg(windows)]
-fn xbox_game_dir(game: Game) -> Result<PathBuf> {
+fn xbox_dir(platforms: &Platforms<'_>, display_name: &str, log_name: &str) -> Result<PathBuf> {
     use std::process::Command;
 
     use eyre::{Context, ensure};
 
-    let Some(xbox) = &game.platforms.xbox_store else {
-        bail!("{} is not available on Xbox Store", game.name)
+    let Some(xbox) = &platforms.xbox_store else {
+        bail!("{display_name} is not available on Xbox Store")
     };
 
-    let name = xbox.identifier.unwrap_or(game.name);
+    let name = xbox.identifier.unwrap_or(display_name);
     let mut query = Command::new("powershell.exe");
     query.args([
         "get-appxpackage",
@@ -278,7 +298,7 @@ fn xbox_game_dir(game: Game) -> Result<PathBuf> {
         "InstallLocation",
     ]);
 
-    info!("querying path for {} with command {:?}", game.slug, query);
+    info!("querying path for {} with command {:?}", log_name, query);
 
     let out = query.output()?;
 
@@ -294,17 +314,17 @@ fn xbox_game_dir(game: Game) -> Result<PathBuf> {
 }
 
 #[cfg(windows)]
-fn epic_game_dir(game: Game) -> Result<PathBuf, eyre::Error> {
+fn epic_dir(platforms: &Platforms<'_>, display_name: &str) -> Result<PathBuf> {
     use eyre::Context;
     use serde::Deserialize;
 
     use crate::util;
 
-    let Some(epic) = &game.platforms.epic_games else {
-        bail!("{} is not available on Epic Games", game.name)
+    let Some(epic) = &platforms.epic_games else {
+        bail!("{display_name} is not available on Epic Games")
     };
 
-    let name = epic.identifier.unwrap_or(game.name);
+    let name = epic.identifier.unwrap_or(display_name);
     let dat_path: PathBuf =
         PathBuf::from("C:/ProgramData/Epic/UnrealEngineLauncher/LauncherInstalled.dat");
 

@@ -1,10 +1,12 @@
 use tauri::{AppHandle, command};
 use uuid::Uuid;
 
-use crate::{state::ManagerExt, thunderstore::ModId, util::cmd::Result};
+use crate::{profile::server, state::ManagerExt, thunderstore::ModId, util::cmd::Result};
 
 #[command]
 pub async fn change_mod_version(id: ModId, app: AppHandle) -> Result<()> {
+    server::ensure_active_profile_unlocked(&app)?;
+
     super::change_version(id, &app).await?;
 
     Ok(())
@@ -12,6 +14,8 @@ pub async fn change_mod_version(id: ModId, app: AppHandle) -> Result<()> {
 
 #[command]
 pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: AppHandle) -> Result<()> {
+    server::ensure_active_profile_unlocked(&app)?;
+
     super::update_mods(uuids, respect_ignored, &app).await?;
 
     Ok(())
