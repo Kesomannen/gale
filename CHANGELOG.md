@@ -1,15 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Option to manage local mods and keep additional mods and config files when updating synced profiles
+
 ## 1.23.2 (2026-10-14)
 
 ### Changed
 
 - A backup of the database is now created before running migrations
 - Minor UI changes
-
-### Added
-
-- Option to manage local mods and keep additional mods and config files when updating synced profiles
 
 ### Fixed
 
