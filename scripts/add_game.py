@@ -35,22 +35,6 @@ def check_slug(slug, backends):
     return True
 
 
-def get_hexium_icon_url(slug):
-    for extension in ["png", "jpg", "jpeg", "webp"]:
-        url = f"https://hexium.gg/upload/communities/{slug}.{extension}"
-
-        try:
-            with requests.get(url, timeout=15, stream=True) as response:
-                if response.status_code == 404:
-                    continue
-                response.raise_for_status()
-                return url
-        except requests.exceptions.RequestException:
-            continue
-
-    return None
-
-
 def multiple_choice(prompt, options, default=None, title_case=False):
     while True:
         print(prompt)
@@ -231,11 +215,7 @@ if __name__ == "__main__":
     if backends != ["Thunderstore"]:
         game["backends"] = backends
     if "Hexium" in backends:
-        icon_url = get_hexium_icon_url(slug)
-        if icon_url is None:
-            cprint(f"Could not find a Hexium community icon for {slug}", "yellow")
-        else:
-            game["iconUrl"] = icon_url
+        game["iconUrl"] = f"https://hexium.gg/upload/communities/{slug}.png"
 
     (json_path, games) = read_games()
     games.append(game)
