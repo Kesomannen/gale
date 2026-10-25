@@ -6,6 +6,7 @@
 
 - Thunderstore game icons are now always used when a game is available on Thunderstore
 - Icons for Hexium-exclusive games are now fetched from Hexium instead of vendored by Gale
+- `UserData` is now a recognized MelonLoader subdirectory, similar to `UserLibs`
 
 ### Fixed
 
