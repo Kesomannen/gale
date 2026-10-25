@@ -214,8 +214,6 @@ if __name__ == "__main__":
     }
     if backends != ["Thunderstore"]:
         game["backends"] = backends
-    if "Hexium" in backends:
-        game["iconUrl"] = f"https://hexium.gg/upload/communities/{slug}.png"
 
     (json_path, games) = read_games()
     games.append(game)

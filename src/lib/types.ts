@@ -273,7 +273,6 @@ export type Game = {
 	modLoader: ModLoader;
 	popular: boolean;
 	backends: Backend[];
-	iconUrl: string | null;
 };
 
 export enum ModLoader {

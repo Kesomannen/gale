@@ -179,9 +179,6 @@ struct JsonGame<'a> {
 
     #[serde(default)]
     backends: Option<Vec<Backend>>,
-
-    #[serde(default)]
-    icon_url: Option<&'a str>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -195,7 +192,6 @@ pub struct GameData<'a> {
     pub mod_loader: ModLoader<'a>,
     pub platforms: Platforms<'a>,
     pub backends: Vec<Backend>,
-    pub icon_url: Option<&'a str>,
 }
 
 impl<'a> From<JsonGame<'a>> for GameData<'a> {
@@ -209,7 +205,6 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             mod_loader,
             platforms,
             backends,
-            icon_url,
         } = value;
 
         let slug = match slug {
@@ -231,7 +226,6 @@ impl<'a> From<JsonGame<'a>> for GameData<'a> {
             mod_loader,
             platforms,
             backends: backends.unwrap_or(vec![Backend::Thunderstore]),
-            icon_url,
         }
     }
 }
