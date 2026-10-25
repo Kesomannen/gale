@@ -10,10 +10,14 @@ finish-args:
   - --filesystem=home/.var/app/com.valvesoftware.Steam
 
   - --talk-name=org.freedesktop.Flatpak
+  - --talk-name=org.com_kesomannen_gale.SingleInstance
+  - --own-name=org.com_kesomannen_gale.SingleInstance
 
   - --device=dri
+
   - --share=ipc
   - --share=network
+
   - --socket=wayland
   - --socket=fallback-x11
 

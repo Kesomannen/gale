@@ -165,6 +165,7 @@
 	{
 		"name": "R.E.P.O.",
 		"slug": "repo",
+		"r2dirName": "REPO",
 		"popular": true,
 		"modLoader": {
 			"name": "BepInEx"
@@ -177,6 +178,7 @@
 	},
 	{
 		"name": "ROUNDS",
+		"r2dirName": "ROUNDS",
 		"popular": true,
 		"modLoader": {
 			"name": "BepInEx"
@@ -2506,6 +2508,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1330000
+			}
+		}
+	},
+	{
+		"name": "Stonewards",
+		"slug": "stonewards",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4502710
 			}
 		}
 	},
