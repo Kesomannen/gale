@@ -165,6 +165,7 @@
 	{
 		"name": "R.E.P.O.",
 		"slug": "repo",
+		"r2dirName": "REPO",
 		"popular": true,
 		"modLoader": {
 			"name": "BepInEx"
@@ -177,6 +178,7 @@
 	},
 	{
 		"name": "ROUNDS",
+		"r2dirName": "ROUNDS",
 		"popular": true,
 		"modLoader": {
 			"name": "BepInEx"
@@ -1058,6 +1060,19 @@
 				"id": 3293010
 			}
 		}
+	},
+	{
+		"name": "Emberville",
+		"slug": "emberville",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2295170
+			}
+		},
+		"backends": ["Hexium"]
 	},
 	{
 		"name": "Enter the Gungeon",
@@ -2497,6 +2512,18 @@
 		}
 	},
 	{
+		"name": "Stonewards",
+		"slug": "stonewards",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4502710
+			}
+		}
+	},
+	{
 		"name": "Subnautica",
 		"modLoader": {
 			"name": "BepInEx",
@@ -3100,5 +3127,18 @@
 				"id": 3121110
 			}
 		}
+	},
+	{
+		"name": "over the hill",
+		"slug": "over-the-hill",
+		"modLoader": {
+			"name": "MelonLoader"
+		},
+		"platforms": {
+			"steam": {
+				"id": 2929250
+			}
+		},
+		"backends": ["Hexium"]
 	}
 ]

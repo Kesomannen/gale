@@ -16,7 +16,7 @@
 
 <DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger
-		class="group text-primary-700 group-hover:text-primary-800 dark:text-primary-300 dark:group-hover:text-primary-200 dark:hover:bg-primary-800 hover:bg-primary-200 flex shrink items-center overflow-hidden rounded-lg px-4 py-2"
+		class="group text-primary-700 group-hover:text-primary-800 dark:text-primary-300 dark:group-hover:text-primary-200 dark:hover:bg-primary-800 hover:bg-primary-200 flex shrink items-center overflow-hidden rounded-lg py-2 pr-2 pl-4"
 	>
 		<span class="mr-auto shrink truncate font-semibold">
 			{profiles.active?.name}
