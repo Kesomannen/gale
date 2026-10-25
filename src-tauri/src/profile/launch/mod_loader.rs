@@ -16,14 +16,21 @@ pub struct ArgsContext<'a> {
     command: &'a mut Command,
     profile_dir: &'a Path,
     is_proton: bool,
+    vanilla: bool,
 }
 
 impl<'a> ArgsContext<'a> {
-    pub fn new(command: &'a mut Command, profile_dir: &'a Path, is_proton: bool) -> Self {
+    pub fn new(
+        command: &'a mut Command,
+        profile_dir: &'a Path,
+        is_proton: bool,
+        vanilla: bool,
+    ) -> Self {
         Self {
             command,
             profile_dir,
             is_proton,
+            vanilla,
         }
     }
 
@@ -57,6 +64,12 @@ impl<'a> ArgsContext<'a> {
 
     fn add_bepinex_args(&mut self) -> Result<()> {
         let (enable_prefix, target_prefix) = self.doorstop_args(None)?;
+
+        if self.vanilla {
+            self.command.args([enable_prefix, "false"]);
+            return Ok(());
+        }
+
         let preloader_path = self
             .bepinex_preloader_path(None)
             .and_then(|path| self.format_path(path))?;
@@ -69,6 +82,14 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_bepisloader_args(&mut self) -> Result<()> {
+        let (enable_prefix, target_prefix) = self.doorstop_args(Some(4))?;
+
+        if self.vanilla {
+            self.command
+                .args(["--hookfxr-disable", enable_prefix, "false"]);
+            return Ok(());
+        }
+
         // Don't use format_path as BepisLoader escapes Proton and therefore
         // does not recognize the Z: prefix, see https://github.com/Kesomannen/gale/issues/627
         let bepinex_target = self.profile_dir.join("BepInEx");
@@ -84,7 +105,6 @@ impl<'a> ArgsContext<'a> {
 
         match preloader_result {
             Ok(preloader_path) => {
-                let (enable_prefix, target_prefix) = self.doorstop_args(Some(4))?;
                 self.command
                     .arg(enable_prefix)
                     .arg("true")
@@ -164,6 +184,11 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_melon_loader_args(&mut self) -> Result<()> {
+        if self.vanilla {
+            self.command.arg("--no-mods");
+            return Ok(());
+        }
+
         let profile_dir = self.format_path(self.profile_dir)?;
 
         self.command.arg("--melonloader.basedir").arg(profile_dir);
@@ -185,6 +210,11 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_northstar_args(&mut self) -> Result<()> {
+        if self.vanilla {
+            self.command.arg("-nonorthstardll");
+            return Ok(());
+        }
+
         let path = self.format_path(self.profile_dir.join("R2Northstar"))?;
 
         self.command
@@ -195,6 +225,11 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_gd_weave_args(&mut self) -> Result<()> {
+        if self.vanilla {
+            self.command.arg("--gdweave-disable");
+            return Ok(());
+        }
+
         let path = self.format_path(self.profile_dir.join("GDWeave"))?;
 
         self.command
@@ -204,6 +239,11 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_shimloader_args(&mut self) -> Result<()> {
+        if self.vanilla {
+            // Shimloader starts the game with mods disabled when no directories are passed.
+            return Ok(());
+        }
+
         let path = self.profile_dir.join("shimloader");
         let mod_path = self.format_path(path.join("mod"))?;
         let pak_path = self.format_path(path.join("pak"))?;
@@ -221,6 +261,11 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_lovely_args(&mut self) -> Result<()> {
+        if self.vanilla {
+            self.command.arg("--vanilla");
+            return Ok(());
+        }
+
         let path = self.format_path(self.profile_dir.join("mods"))?;
         self.command.arg("--mod-dir").arg(path);
 
@@ -228,6 +273,11 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_return_of_modding_args(&mut self) -> Result<()> {
+        if self.vanilla {
+            self.command.args(["--rom_enabled", "false"]);
+            return Ok(());
+        }
+
         let path = self.format_path(self.profile_dir)?;
 
         self.command.arg("--rom_modding_root_folder").arg(path);
@@ -236,6 +286,11 @@ impl<'a> ArgsContext<'a> {
     }
 
     fn add_nucleus_args(&mut self) -> Result<()> {
+        if self.vanilla {
+            // Nucleus is only loaded when a custom DLL is explicitly passed.
+            return Ok(());
+        }
+
         let path = self.format_path(self.profile_dir.join("mods/u0068-Nucleus/Nucleus.dll"))?;
 
         self.command.arg("--customdll").arg(path);

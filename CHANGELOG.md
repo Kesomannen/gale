@@ -16,6 +16,7 @@
 - Added talk name permissions to the Flatpak build to hopefully solve issues with deep links not working
 - Changelog dialog sometimes scrolling down when opened
 - Profile mod switches being hidden by Windows High Contrast mode
+- Launching vanilla not fully disabling BepInEx and other mod loaders
 
 ## 1.23.2 (2026-10-14)
 
