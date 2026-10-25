@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Thunderstore game icons are now always used when a game is available on Thunderstore
+- Icons for Hexium-exclusive games are now fetched from Hexium instead of vendored by Gale
+
+### Fixed
+
+- Scrolling while dragging a mod sometimes causing the app to freeze
+- The mod drag overlay not being rendered due to a type error
+- r2modman profile import for R.E.P.O and ROUNDS
+- Added talk name permissions to the Flatpak build to hopefully solve issues with deep links not working
+- Changelog dialog sometimes scrolling down when opened
+
 ## 1.23.2 (2026-10-14)
 
 ### Changed
