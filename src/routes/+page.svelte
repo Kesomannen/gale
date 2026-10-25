@@ -255,7 +255,7 @@
 			profileQuery.current.includeDisabled
 	);
 
-	let locked = $derived(profiles.activeModsLocked);
+	let locked = $derived(profiles.activeLocked);
 </script>
 
 <div class="flex grow overflow-hidden">

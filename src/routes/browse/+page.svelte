@@ -137,13 +137,13 @@
 		}
 	});
 
-	let locked = $derived(profiles.activeLocked);
+	let locked = $derived(profiles.activeInstallAndConfigLocked);
 
 	function installationLocked(packageUuid: string) {
 		const mod = mods.find(
 			(mod) => mod.data.thunderstore?.uuid === packageUuid || mod.data.hexium?.uuid === packageUuid
 		);
-		return locked || (profiles.activeModsLocked && mod?.isInstalled === true);
+		return locked || (profiles.activeLocked && mod?.isInstalled === true);
 	}
 </script>
 
