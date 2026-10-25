@@ -20,7 +20,6 @@
 	import config from '$lib/state/config.svelte';
 	import { PersistedState } from '$lib/state/persisted-state.svelte';
 	import Checkbox from '../ui/Checkbox.svelte';
-	import Label from '../ui/Label.svelte';
 	import Info from '../ui/Info.svelte';
 	import ExportFilesDialog from '../dialogs/ExportFilesDialog.svelte';
 
@@ -308,13 +307,14 @@
 
 		{#if !isOwner}
 			<div class="mt-3 flex items-center">
-				<Label>{m.syncer_preserveExtras_title()}</Label>
-				<Info>{m.syncer_preserveExtras_content()}</Info>
 				<Checkbox
+					id="sync-preserve-extras"
 					checked={syncInfo.preserveExtras}
 					disabled={loading}
 					onCheckedChange={setPreserveExtras}
 				/>
+				<label class="ml-3" for="sync-preserve-extras">{m.syncer_preserveExtras_title()}</label>
+				<Info>{m.syncer_preserveExtras_content()}</Info>
 			</div>
 		{/if}
 	{:else if auth.user !== null}
