@@ -487,7 +487,7 @@
 	"syncer_manageFiles_title": "Manage synced files",
 	"syncer_onLoginClicked_message": "Signed in with Discord as {name}.",
 	"syncer_pull_message": "Pulled changes from synced profile.",
-	"syncer_preserveExtras_content": "Allow installing additional mods and editing configuration files. Keep mods and configuration files that are not included in the synced profile when pulling updates. Configuration files included in the synced profile will still be overwritten.",
+	"syncer_preserveExtras_content": "Allow local mod installations and keep additional config files when pulling updates. Config files managed by the owner of the profile will still be overwritten.",
 	"syncer_preserveExtras_title": "Keep additional mods and config",
 	"syncer_push_message": "Pushed update to synced profile.",
 	"syncer_refresh_message": "Refreshed synced profile status.",
