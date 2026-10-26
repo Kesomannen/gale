@@ -7,3 +7,4 @@ export const mods = (packageUuids: string[], respectIgnored: boolean) =>
 export const ignore = (versionUuid: string) => invoke('ignore_update', { versionUuid });
 export const ignorePackage = (packageUuid: string) =>
 	invoke('ignore_package_updates', { packageUuid });
+export const resume = (id: ModId) => invoke('resume_updates', { id });
