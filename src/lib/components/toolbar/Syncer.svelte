@@ -313,7 +313,9 @@
 					disabled={loading}
 					onCheckedChange={setPreserveExtras}
 				/>
-				<label class="ml-3" for="sync-preserve-extras">{m.syncer_preserveExtras_title()}</label>
+				<label class="text-primary-700 dark:text-primary-300 ml-3" for="sync-preserve-extras"
+					>{m.syncer_preserveExtras_title()}</label
+				>
 				<Info>{m.syncer_preserveExtras_content()}</Info>
 			</div>
 		{/if}
