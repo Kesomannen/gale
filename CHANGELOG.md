@@ -6,6 +6,22 @@
 
 - Option to manage local mods and keep additional mods and config files when updating synced profiles
 
+### Changed
+
+- Thunderstore game icons are now always used when a game is available on Thunderstore
+- Icons for Hexium-exclusive games are now fetched from Hexium instead of vendored by Gale
+- `UserData` is now a recognized MelonLoader subdirectory, similar to `UserLibs`
+
+### Fixed
+
+- Scrolling while dragging a mod sometimes causing the app to freeze
+- The mod drag overlay not being rendered due to a type error
+- r2modman profile import for R.E.P.O and ROUNDS
+- Added talk name permissions to the Flatpak build to hopefully solve issues with deep links not working
+- Changelog dialog sometimes scrolling down when opened
+- Profile mod switches being hidden by Windows High Contrast mode
+- Launching vanilla not fully disabling BepInEx and other mod loaders
+
 ## 1.23.2 (2026-10-14)
 
 ### Changed

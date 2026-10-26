@@ -203,8 +203,10 @@ export function modIconSrc(mod: Mod, enabled?: boolean) {
 }
 
 export function gameIconSrc(game: Game) {
-	if (game.backends.length === 1 && game.backends[0] === Backend.Thunderstore) {
+	if (game.backends.includes(Backend.Thunderstore)) {
 		return `https://gcdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
+	} else if (game.backends.includes(Backend.Hexium)) {
+		return `https://hexium.gg/upload/communities/${game.slug}.png`;
 	} else {
 		return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
 	}

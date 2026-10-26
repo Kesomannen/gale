@@ -13,7 +13,7 @@
 	let { open = $bindable(false), content = null, type }: Props = $props();
 </script>
 
-<Dialog large bind:open>
+<Dialog large focusContent bind:open>
 	{#if content}
 		<Markdown source={content} />
 	{:else}

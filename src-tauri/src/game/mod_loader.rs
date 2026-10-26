@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::profile::install::{Subdir, PackageInstaller, BepinexInstaller, SubdirInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, ShimloaderInstaller};
+use crate::profile::install::{
+    BepinexInstaller, ExtractInstaller, FlattenTopLevel, GDWeaveModInstaller, PackageInstaller,
+    ShimloaderInstaller, Subdir, SubdirInstaller,
+};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -168,6 +171,7 @@ impl ModLoader<'static> {
                     Subdir::separated("ModManager", "UserData/ModManager"),
                     Subdir::tracked("MelonLoader", "MelonLoader"),
                     Subdir::tracked("Libs", "MelonLoader/Libs"),
+                    Subdir::tracked("UserData", "UserData"),
                 ];
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
 

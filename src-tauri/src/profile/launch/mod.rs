@@ -81,7 +81,7 @@ impl ManagedGame {
         let game_dir =
             locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
 
-        if let Err(err) = self.copy_required_files(&game_dir) {
+        if !vanilla && let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
 
@@ -134,41 +134,39 @@ impl ManagedGame {
 
         let profile = self.active_profile();
 
-        if !vanilla {
-            #[cfg(target_os = "linux")]
-            let is_proton = {
-                use crate::game::platform::Platform;
-                use tracing::warn;
+        #[cfg(target_os = "linux")]
+        let is_proton = !vanilla && {
+            use crate::game::platform::Platform;
+            use tracing::warn;
 
-                let is_proton = linux::is_proton(game_dir).unwrap_or_else(|err| {
-                    warn!("failed to determine if game uses proton: {:#}", err);
-                    false
-                });
+            let is_proton = linux::is_proton(game_dir).unwrap_or_else(|err| {
+                warn!("failed to determine if game uses proton: {:#}", err);
+                false
+            });
 
-                if is_proton && let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
-                    command.env("WINEDLLOVERRIDES", format!("{proxy_dll}=n,b"));
+            if is_proton && let Some(proxy_dll) = self.game.mod_loader.proxy_dll() {
+                command.env("WINEDLLOVERRIDES", format!("{proxy_dll}=n,b"));
 
-                    if let Some(steam) = &self.game.platforms.steam
-                        && matches!(platform, Some(Platform::Steam))
-                        && let Err(err) = linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
-                    {
-                        warn!("failed to ensure wine dll override: {:#}", err);
-                    }
+                if let Some(steam) = &self.game.platforms.steam
+                    && matches!(platform, Some(Platform::Steam))
+                    && let Err(err) = linux::ensure_wine_override(steam.id, proxy_dll, game_dir)
+                {
+                    warn!("failed to ensure wine dll override: {:#}", err);
                 }
-
-                is_proton
-            };
-
-            #[cfg(target_os = "windows")]
-            let is_proton = false;
-
-            if is_proton {
-                info!("game appears to be running under proton, using proton launch method");
             }
 
-            let mut ctx = mod_loader::ArgsContext::new(&mut command, &profile.path, is_proton);
-            ctx.add_args(&self.game.mod_loader)?;
+            is_proton
+        };
+
+        #[cfg(target_os = "windows")]
+        let is_proton = false;
+
+        if is_proton {
+            info!("game appears to be running under proton, using proton launch method");
         }
+
+        let mut ctx = mod_loader::ArgsContext::new(&mut command, &profile.path, is_proton, vanilla);
+        ctx.add_args(&self.game.mod_loader)?;
 
         custom_args::add_args(&mut command, game_custom_args)?;
         custom_args::add_args(&mut command, &profile.custom_args)?;
