@@ -204,7 +204,7 @@ export function modIconSrc(mod: Mod, enabled?: boolean) {
 
 export function gameIconSrc(game: Game) {
 	if (game.backends.includes(Backend.Thunderstore)) {
-		return `https://gcdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
+		return `https://ccdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
 	} else if (game.backends.includes(Backend.Hexium)) {
 		return `https://hexium.gg/upload/communities/${game.slug}.png`;
 	} else {
@@ -213,7 +213,7 @@ export function gameIconSrc(game: Game) {
 }
 
 export function thunderstoreIconUrl(fullName: string) {
-	return `https://gcdn.thunderstore.io/live/repository/icons/${fullName}.png`;
+	return `https://ccdn.thunderstore.io/live/repository/icons/${fullName}.png`;
 }
 
 export function hexiumIconUrl(pkg: string, name: string, version: string) {
