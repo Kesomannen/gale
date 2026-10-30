@@ -4,7 +4,7 @@
 
 ### Added
 
-- Option to manage local mods and keep additional mods and config files when updating synced profiles
+- Option to manage local mods and keep additional mods and config files when updating synced profiles (thanks [jneb802](https://github.com/jneb802))
 
 ### Changed
 
