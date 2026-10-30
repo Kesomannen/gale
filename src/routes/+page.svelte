@@ -92,6 +92,12 @@
 			}
 		},
 		{
+			label: m.page_modContextItem_resumeUpdates(),
+			icon: 'mdi:bell',
+			onclick: resumeUpdates,
+			showFor: (mod, profileLocked) => updates.get(mod.data.uuid)?.ignore === true && !profileLocked
+		},
+		{
 			label: m.page_modContextItem_showDependants(),
 			icon: 'mdi:source-branch',
 			onclick: openDependants
@@ -223,6 +229,14 @@
 
 	async function updateModToLatest(mod: ProfileMod) {
 		await api.profile.update.mods([mod.data.uuid], false);
+		await refresh();
+	}
+
+	async function resumeUpdates(mod: ProfileMod) {
+		const update = updates.get(mod.data.uuid);
+		if (!update) return;
+
+		await api.profile.update.resume(update.updatedId);
 		await refresh();
 	}
 
