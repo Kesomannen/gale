@@ -5,14 +5,15 @@
 ### Changed
 
 - Thunderstore game icons are now always used when a game is available on Thunderstore
-- Icons for Hexium-exclusive games are now fetched from Hexium instead of vendored by Gale
+- Icons for Hexium-exclusive games are now fetched from Hexium instead of vendored by Gale (thanks [@AzumattDev](https://github.com/AzumattDev))
 - `UserData` is now a recognized MelonLoader subdirectory, similar to `UserLibs`
+- Thunderstore images are now fetched from `ccdn.thunderstore.io` instead of the soon-to-be-deprecated `gcdn.thunderstore.io` (thanks [@ebkr](https://github.com/ebkr))
 
 ### Fixed
 
 - Scrolling while dragging a mod sometimes causing the app to freeze
 - The mod drag overlay not being rendered due to a type error
-- r2modman profile import for R.E.P.O and ROUNDS
+- r2modman profile import for R.E.P.O and ROUNDS (thanks [@MianReplicate](https://github.com/MianReplicate))
 - Added talk name permissions to the Flatpak build to hopefully solve issues with deep links not working
 - Changelog dialog sometimes scrolling down when opened
 - Profile mod switches being hidden by Windows High Contrast mode
