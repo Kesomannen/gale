@@ -4,7 +4,13 @@
 
 	import { Tabs } from 'bits-ui';
 
-	import { Backend, type ImportData, type LegacyImportData, type SyncImportData } from '$lib/types';
+	import {
+		Backend,
+		ImportConfigOption,
+		type ImportData,
+		type LegacyImportData,
+		type SyncImportData
+	} from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { readText } from '@tauri-apps/plugin-clipboard-manager';
 	import { confirm } from '@tauri-apps/plugin-dialog';
@@ -36,7 +42,7 @@
 	let key = $state('');
 	let name = $state('');
 	let loading = $state(false);
-	let importAll = $state(false);
+	let configs: ImportConfigOption = $state(ImportConfigOption.Safe);
 	let merge = $state(false);
 	let mode: 'new' | 'overwrite' = $state('new');
 
@@ -102,13 +108,13 @@
 		if (data.type === 'legacy') {
 			data.manifest.profileName = name;
 
-			await api.profile.import.profile(data, { importAll, merge });
+			await api.profile.import.profile(data, { configs, merge });
 		} else {
 			await api.profile.sync.clone(data.id, name);
 		}
 
 		data = null;
-		importAll = false;
+		configs = ImportConfigOption.Safe;
 
 		pushInfoToast({ message: m.importProfileDialog_importData_message({ name }) });
 	}
@@ -153,6 +159,24 @@
 		() => data?.manifest.mods.some((mod) => mod.source === Backend.Hexium) ?? false
 	);
 
+	let configItems = $derived([
+		{
+			value: ImportConfigOption.All,
+			label: m.importProfileDialog_configs_option_all(),
+			description: m.importProfileDialog_configs_option_all_info()
+		},
+		{
+			value: ImportConfigOption.Safe,
+			label: m.importProfileDialog_configs_option_safe(),
+			description: m.importProfileDialog_configs_option_safe_info()
+		},
+		{
+			value: ImportConfigOption.None,
+			label: m.importProfileDialog_configs_option_none(),
+			description: m.importProfileDialog_configs_option_none_info()
+		}
+	]);
+
 	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
 			name = profiles.list[0].name;
@@ -165,7 +189,7 @@
 	bind:open
 	onclose={() => {
 		data = null;
-		importAll = false;
+		configs = ImportConfigOption.Safe;
 	}}
 >
 	{#if data === null}
@@ -250,12 +274,11 @@
 			>
 
 			<div class="mt-1 flex items-center">
-				<Label>{m.importProfileDialog_importAllFiles_title()}</Label>
+				<Label>{m.importProfileDialog_configs_title()}</Label>
 				<Info>
-					{m.importProfileDialog_importAllFiles_content1()}
-					<b>{m.importProfileDialog_importAllFiles_content2()}</b>
+					{m.importProfileDialog_configs_content()}
 				</Info>
-				<Checkbox bind:checked={importAll} />
+				<Select type="single" triggerClass="grow" items={configItems} bind:value={configs} />
 			</div>
 
 			{#if mode === 'overwrite'}
