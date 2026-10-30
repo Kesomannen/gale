@@ -268,7 +268,7 @@
 			<UpdateAllBanner updates={updates.values().toArray()} />
 		{/if}
 
-		{#if unknownMods.length > 0}
+		{#if unknownMods.length > 0 && !locked}
 			<UnknownModsBanner
 				mods={unknownMods}
 				onUninstall={() => forceUninstall(...unknownMods.map((uuid) => uuid.uuid))}

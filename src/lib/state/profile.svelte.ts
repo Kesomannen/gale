@@ -18,6 +18,8 @@ class ProfilesState {
 		return this.active.sync.owner.discordId != auth.user.discordId;
 	});
 
+	activeInstallAndConfigLocked = $derived(this.activeLocked && !this.active?.sync?.preserveExtras);
+
 	update = async (info: ManagedGameInfo) => {
 		this.list = info.profiles;
 		this.activeId = info.activeId;

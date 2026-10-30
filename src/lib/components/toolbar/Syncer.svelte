@@ -19,6 +19,8 @@
 	import { m } from '$lib/paraglide/messages';
 	import config from '$lib/state/config.svelte';
 	import { PersistedState } from '$lib/state/persisted-state.svelte';
+	import Checkbox from '../ui/Checkbox.svelte';
+	import Info from '../ui/Info.svelte';
 	import ExportFilesDialog from '../dialogs/ExportFilesDialog.svelte';
 
 	type State = 'off' | 'synced' | 'outdated' | 'missing';
@@ -142,6 +144,10 @@
 
 	async function refresh() {
 		await wrapApiCall(api.profile.sync.fetch, m.syncer_refresh_message());
+	}
+
+	async function setPreserveExtras(preserveExtras: boolean) {
+		await wrapApiCall(() => api.profile.sync.setPreserveExtras(preserveExtras));
 	}
 
 	async function disconnect() {
@@ -298,6 +304,21 @@
 				{m.syncer_button_manageFiles()}
 			</Button>
 		</div>
+
+		{#if !isOwner}
+			<div class="mt-3 flex items-center">
+				<Checkbox
+					id="sync-preserve-extras"
+					checked={syncInfo.preserveExtras}
+					disabled={loading}
+					onCheckedChange={setPreserveExtras}
+				/>
+				<label class="text-primary-700 dark:text-primary-300 ml-3" for="sync-preserve-extras"
+					>{m.syncer_preserveExtras_title()}</label
+				>
+				<Info>{m.syncer_preserveExtras_content()}</Info>
+			</div>
+		{/if}
 	{:else if auth.user !== null}
 		<Button onclick={connect} {loading} color="accent" class="mt-2" icon="mdi:cloud-plus">
 			{m.syncer_button_connect()}

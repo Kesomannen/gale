@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Option to manage local mods and keep additional mods and config files when updating synced profiles
+
 ### Changed
 
 - Thunderstore game icons are now always used when a game is available on Thunderstore
