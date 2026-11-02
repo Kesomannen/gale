@@ -91,6 +91,8 @@ winget install Kesomannen.Gale
 > [!NOTE]
 > If macOS blocks Gale because the developer cannot be verified, first confirm you downloaded it from the official release page. After attempting to open Gale, go to `System Settings` → `Privacy & Security`, click `Open Anyway`, and confirm the prompt. See [Apple's instructions](https://support.apple.com/102445) for details.
 
+Gale uses Intel execution when the installed Doorstop library supports it; Apple Silicon Macs need Rosetta for these loaders. Native ARM execution requires an ARM-compatible game and complete BepInEx stack. To remove Gale's Steam integration, remove the `/bin/sh '…/steam-launch.sh'` prefix from the game's Steam launch options. Keep `%command%` if you already used it for another wrapper, or remove it if your original options contained only game arguments.
+
 ### Linux
 
 <details>

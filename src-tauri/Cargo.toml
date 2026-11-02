@@ -104,6 +104,7 @@ windows = { version = "0.62", features = ["UI", "UI_ViewManagement"] }
 winreg = "0.52"
 
 [target.'cfg(target_os="macos")'.dependencies]
+keyvalues-parser = "0.2"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSColor", "NSColorSpace", "objc2-core-foundation"] }
 plist = "1"
 

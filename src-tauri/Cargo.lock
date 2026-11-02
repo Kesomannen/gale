@@ -1996,6 +1996,7 @@ dependencies = [
  "itertools 0.13.0",
  "justerror",
  "keyring",
+ "keyvalues-parser",
  "new-vdf-parser",
  "objc2-app-kit",
  "open",

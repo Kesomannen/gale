@@ -27,6 +27,8 @@ use crate::{
 pub(super) mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "macos")]
+mod macos;
 mod mod_loader;
 mod platform;
 
@@ -91,6 +93,36 @@ impl ManagedGame {
             command.args(args.split_whitespace());
         }
 
+        #[cfg(target_os = "macos")]
+        if !vanilla
+            && matches!(
+                self.game.mod_loader.kind,
+                crate::game::mod_loader::ModLoaderKind::BepInEx { .. }
+            )
+        {
+            let wrapper = self.path.join("steam-launch.sh");
+            macos::write_wrapper(&wrapper)?;
+            if matches!(launch_mode, LaunchMode::Launcher)
+                && matches!(
+                    prefs
+                        .game_prefs
+                        .get(&*self.game.slug)
+                        .and_then(|prefs| prefs.platform)
+                        .or_else(|| self.game.platforms.iter().next()),
+                    Some(crate::game::platform::Platform::Steam)
+                )
+            {
+                let steam_id = self
+                    .game
+                    .platforms
+                    .steam
+                    .as_ref()
+                    .ok_or_eyre("game has no Steam metadata")?
+                    .id;
+                macos::prepare_steam_launch(steam_id, &wrapper)?;
+            }
+        }
+
         info!(game = %self.game.slug, ?command, "launching");
 
         do_launch(command, app, launch_mode)?;
@@ -133,6 +165,20 @@ impl ManagedGame {
         .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
 
         let profile = self.active_profile();
+
+        #[cfg(target_os = "macos")]
+        if !vanilla
+            && matches!(launch_mode, LaunchMode::Direct { .. })
+            && matches!(
+                self.game.mod_loader.kind,
+                crate::game::mod_loader::ModLoaderKind::BepInEx { .. }
+            )
+        {
+            let mut wrapped = Command::new("/bin/sh");
+            wrapped.arg(self.path.join("steam-launch.sh"));
+            wrapped.arg(command.get_program());
+            command = wrapped;
+        }
 
         #[cfg(target_os = "linux")]
         let is_proton = !vanilla && {
