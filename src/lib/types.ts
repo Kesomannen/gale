@@ -359,7 +359,7 @@ export type R2ImportData = {
 };
 
 export type ImportOptions = {
-	configs?: ImportConfigOption;
+	config?: ImportConfigOption;
 	merge?: boolean;
 };
 

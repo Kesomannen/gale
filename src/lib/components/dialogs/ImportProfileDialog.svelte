@@ -42,7 +42,7 @@
 	let key = $state('');
 	let name = $state('');
 	let loading = $state(false);
-	let configs: ImportConfigOption = $state(ImportConfigOption.Safe);
+	let config = $state(ImportConfigOption.Safe);
 	let merge = $state(false);
 	let mode: 'new' | 'overwrite' = $state('new');
 
@@ -108,13 +108,13 @@
 		if (data.type === 'legacy') {
 			data.manifest.profileName = name;
 
-			await api.profile.import.profile(data, { configs, merge });
+			await api.profile.import.profile(data, { config, merge });
 		} else {
 			await api.profile.sync.clone(data.id, name);
 		}
 
 		data = null;
-		configs = ImportConfigOption.Safe;
+		config = ImportConfigOption.Safe;
 
 		pushInfoToast({ message: m.importProfileDialog_importData_message({ name }) });
 	}
@@ -159,7 +159,7 @@
 		() => data?.manifest.mods.some((mod) => mod.source === Backend.Hexium) ?? false
 	);
 
-	let configItems = $derived([
+	const configItems = [
 		{
 			value: ImportConfigOption.All,
 			label: m.importProfileDialog_configs_option_all(),
@@ -175,7 +175,7 @@
 			label: m.importProfileDialog_configs_option_none(),
 			description: m.importProfileDialog_configs_option_none_info()
 		}
-	]);
+	];
 
 	$effect(() => {
 		if (mode === 'overwrite' && isAvailable(name)) {
@@ -189,7 +189,7 @@
 	bind:open
 	onclose={() => {
 		data = null;
-		configs = ImportConfigOption.Safe;
+		config = ImportConfigOption.Safe;
 	}}
 >
 	{#if data === null}
@@ -278,7 +278,7 @@
 				<Info>
 					{m.importProfileDialog_configs_content()}
 				</Info>
-				<Select type="single" triggerClass="grow" items={configItems} bind:value={configs} />
+				<Select type="single" triggerClass="grow" items={configItems} bind:value={config} />
 			</div>
 
 			{#if mode === 'overwrite'}
