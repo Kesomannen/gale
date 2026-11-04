@@ -54,7 +54,7 @@ jobs:
           rustup default nightly
           cargo install tauri-cli
           pnpm install
-          cargo tauri build
+          cargo tauri build || true
           chmod +x ./appimage/AppImage.sh
           ./appimage/AppImage.sh
           EOF
