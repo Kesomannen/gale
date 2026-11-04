@@ -48,9 +48,6 @@ jobs:
           rustup default nightly
           cargo install tauri-cli
           pnpm install
-          cd src-tauri
-          cargo update
-          cd ..
           cargo tauri build
           chmod +x ./appimage/AppImage.sh
           ./appimage/AppImage.sh
