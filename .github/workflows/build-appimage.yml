@@ -25,6 +25,7 @@ jobs:
             patchelf \
             npm \
             rustup
+          rustup default stable
           pacman -Syu --noconfirm
 
           sudo pacman -Syu --noconfirm
