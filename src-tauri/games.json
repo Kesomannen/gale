@@ -205,7 +205,8 @@
 			"epicGames": {
 				"identifier": "4b3dcc5723454a47a9112d8fe8fd5f5c"
 			}
-		}
+		},
+		"backends": ["Thunderstore", "Hexium"]
 	},
 	{
 		"name": "Titanfall 2: Northstar",
