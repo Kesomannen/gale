@@ -25,7 +25,6 @@ jobs:
             patchelf \
             npm \
             rustup
-          rustup default stable
           pacman -Syu --noconfirm
 
           sudo pacman -Syu --noconfirm
@@ -45,6 +44,8 @@ jobs:
         run: |
           sudo -u builder bash <<'EOF'
           set -e
+          rustup toolchain install stable
+          rustup default stable
           npm install
           cargo tauri build
           chmod +x ./appimage/AppImage.sh
