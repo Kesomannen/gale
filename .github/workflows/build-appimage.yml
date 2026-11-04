@@ -2,6 +2,7 @@ name: Build AppImage (Sharun)
 
 on:
   workflow_dispatch:
+  push: 
 
 jobs:
   build:
