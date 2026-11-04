@@ -2,7 +2,6 @@ name: Build AppImage (Sharun)
 
 on:
   workflow_dispatch:
-  push:
 
 jobs:
   build:
@@ -46,6 +45,7 @@ jobs:
           set -e
           rustup toolchain install stable
           rustup default stable
+          cargo install tauri-cli
           npm install
           cargo tauri build
           chmod +x ./appimage/AppImage.sh
