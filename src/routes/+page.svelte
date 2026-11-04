@@ -238,6 +238,9 @@
 
 		await api.profile.update.resume(update.updatedId);
 		await refresh();
+		pushInfoToast({
+			message: m.page_modContextItem_resumeUpdates_message({ name: mod.data.name })
+		});
 	}
 
 	async function onmove(item: ListItem, fromIndex: number, toIndex: number) {
