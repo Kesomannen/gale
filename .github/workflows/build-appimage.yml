@@ -50,10 +50,11 @@ jobs:
         run: |
           sudo -u builder bash <<'EOF'
           set -e
-          rustup toolchain install nightly
-          rustup default nightly
+          rustup toolchain install stable
+          rustup default stable
           cargo install tauri-cli
           pnpm install
+          # errors on this are being suppressed due to the whole requirement for a key which I don't have
           cargo tauri build || true
           chmod +x ./appimage/AppImage.sh
           ./appimage/AppImage.sh
