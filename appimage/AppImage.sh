@@ -13,7 +13,7 @@ SHARUN="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/main/u
 DEBLOATED_PKGS="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/get-debloated-pkgs.sh"
 
 # You might need to comment UPINFO if building locally
-#export UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest|*$ARCH.AppImage.zsync"
+export UPINFO="gh-releases-zsync|${GITHUB_REPOSITORY%/*}|${GITHUB_REPOSITORY#*/}|latest|*$ARCH.AppImage.zsync"
 export OUTNAME=gale-anylinux-"$ARCH".AppImage
 export DESKTOP=$(echo ../src-tauri/target/release/bundle/deb/Gale_*_amd64/data/usr/share/applications/Gale.desktop)
 export ICON=$(echo ../src-tauri/target/release/bundle/deb/Gale_*_amd64/data/usr/share/icons/hicolor/256x256@2/apps/gale.png)
