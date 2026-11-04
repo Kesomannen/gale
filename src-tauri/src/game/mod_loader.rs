@@ -205,6 +205,7 @@ impl ModLoader<'static> {
                     Subdir::separated("ModManager", "UserData/ModManager"),
                     Subdir::tracked("MelonLoader", "MelonLoader"),
                     Subdir::tracked("Libs", "MelonLoader/Libs"),
+                    Subdir::tracked("UserData", "UserData"),
                 ];
                 const IGNORED: &[&str] = &["manifest.json", "icon.png", "README.md"];
 

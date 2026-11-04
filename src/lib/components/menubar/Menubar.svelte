@@ -380,7 +380,7 @@
 			let data = await api.profile.import.readBase64(base64);
 			importProfileDialog.openFor({ type: 'legacy', ...data });
 		} else if (file.name.endsWith('.zip')) {
-			if (profiles.activeLocked) {
+			if (profiles.activeInstallAndConfigLocked) {
 				pushToast({
 					type: 'error',
 					name: m.menuBar_handleFileDrop_activeLocked_title(),

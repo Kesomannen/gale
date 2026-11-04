@@ -81,7 +81,7 @@ impl ManagedGame {
         let game_dir =
             locate_game_dir(self.game, prefs).context("failed to locate game directory")?;
 
-        if let Err(err) = self.copy_required_files(&game_dir) {
+        if !vanilla && let Err(err) = self.copy_required_files(&game_dir) {
             warn!("failed to copy required files to game directory: {:#}", err);
         }
 
@@ -132,9 +132,7 @@ impl ManagedGame {
         }
         .unwrap_or_else(|| find_executable(game_dir).map(Command::new))?;
 
-        if !vanilla {
-            self.apply_mod_loader_args(&mut command, game_dir, platform)?;
-        }
+        self.apply_mod_loader_args(&mut command, game_dir, platform, vanilla)?;
 
         let profile = self.active_profile();
         custom_args::add_args(&mut command, game_custom_args)?;
@@ -200,9 +198,10 @@ impl ManagedGame {
         command: &mut Command,
         target_dir: &Path,
         platform: Option<Platform>,
+        vanilla: bool,
     ) -> Result<()> {
         #[cfg(target_os = "linux")]
-        let is_proton = {
+        let is_proton = !vanilla && {
             let is_proton = linux::is_proton(target_dir).unwrap_or_else(|err| {
                 warn!("failed to determine if game uses proton: {:#}", err);
                 false
@@ -230,7 +229,7 @@ impl ManagedGame {
         }
 
         let profile = self.active_profile();
-        let mut ctx = mod_loader::ArgsContext::new(command, &profile.path, is_proton);
+        let mut ctx = mod_loader::ArgsContext::new(command, &profile.path, is_proton, vanilla);
 
         ctx.add_args(&self.game.mod_loader)
     }

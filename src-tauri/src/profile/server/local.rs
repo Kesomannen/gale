@@ -137,7 +137,7 @@ fn configure_mod_loader(
             .context("failed to prepare mod loader files for dedicated server")?;
 
         return game
-            .apply_mod_loader_args(command, server_dir, Some(server_platform))
+            .apply_mod_loader_args(command, server_dir, Some(server_platform), false)
             .context("failed to configure mod loader");
     }
 

@@ -25,6 +25,9 @@ export type Color =
 
 const root = document.querySelector(':root') as HTMLElement;
 
+// see the .webkitgtk rules in app.css
+root.classList.toggle('webkitgtk', platform() === 'linux');
+
 export class ColorSetting {
 	#name: string;
 	#defaultColor: Color;

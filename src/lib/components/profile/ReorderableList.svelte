@@ -62,7 +62,7 @@
 			{#if item.type === 'folder'}
 				<!-- <ReorderableFolder folder={item.folder} {index} {hovered} /> -->
 			{:else}
-				<ReorderableMod mod={item.mod.data} {index} {hovered} disabled={!reorderable}>
+				<ReorderableMod mod={item.mod} {index} {hovered} disabled={!reorderable}>
 					{@render mod({ mod: item.mod, index })}
 				</ReorderableMod>
 			{/if}

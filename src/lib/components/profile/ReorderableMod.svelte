@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { Mod } from '$lib/types';
+	import type { Mod, ProfileMod } from '$lib/types';
 	import { createSortable } from '@dnd-kit/svelte/sortable';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
-		mod: Mod;
+		mod: ProfileMod;
 		index: number;
 		hovered: boolean;
 		disabled?: boolean;
@@ -15,7 +15,7 @@
 
 	const sortable = createSortable({
 		get id() {
-			return mod.uuid;
+			return mod.data.uuid;
 		},
 		get index() {
 			return index;
@@ -35,7 +35,7 @@
 
 <div
 	{@attach sortable.attach}
-	id={mod.uuid}
+	id={mod.data.uuid}
 	class={['select-none', sortable.isDragging && 'opacity-40']}
 >
 	{@render children?.()}

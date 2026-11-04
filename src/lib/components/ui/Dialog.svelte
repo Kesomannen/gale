@@ -4,7 +4,7 @@
 	import Icon from '@iconify/svelte';
 	import { confirm } from '@tauri-apps/plugin-dialog';
 
-	import type { Snippet } from 'svelte';
+	import { tick, type Snippet } from 'svelte';
 
 	type Props = {
 		open: boolean;
@@ -13,6 +13,7 @@
 		canClose?: boolean;
 		large?: boolean;
 		noscroll?: boolean;
+		focusContent?: boolean;
 		onclose?: () => void;
 		children?: Snippet;
 	};
@@ -24,9 +25,20 @@
 		canClose = true,
 		large = false,
 		noscroll = false,
+		focusContent = false,
 		onclose,
 		children
 	}: Props = $props();
+
+	let contentRef = $state<HTMLElement | null>(null);
+
+	async function handleOpenAutoFocus(event: Event) {
+		if (!focusContent) return;
+
+		event.preventDefault();
+		await tick();
+		contentRef?.focus({ preventScroll: true });
+	}
 
 	async function close(evt: UIEvent) {
 		if (!canClose) {
@@ -65,6 +77,8 @@
 			{/snippet}
 		</Dialog.Overlay>
 		<Dialog.Content
+			bind:ref={contentRef}
+			onOpenAutoFocus={handleOpenAutoFocus}
 			interactOutsideBehavior={canClose && confirmClose === null ? 'close' : 'ignore'}
 			class="pointer-events-none"
 		>

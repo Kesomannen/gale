@@ -102,11 +102,13 @@
 	}
 
 	async function doInstall() {
+		if (locked) return;
 		await api.profile.install.mod(installId);
 		await refresh();
 	}
 
 	async function install(id: ModId) {
+		if (locked) return;
 		installId = id;
 		const prefs = await api.prefs.get();
 		if (shouldWarnForeignDownload(id, prefs)) {
@@ -116,8 +118,9 @@
 		}
 	}
 
-	function onModClicked(evt: MouseEvent, mod: Mod) {
+	function onModClicked(evt: MouseEvent, mod: Mod, isInstalled: boolean) {
 		if (evt.ctrlKey) {
+			if (locked || (profiles.activeLocked && isInstalled)) return;
 			installLatest(mod);
 		} else if (selectedMod && itemUuid(selectedMod) === mod.uuid) {
 			selectedMod = null;
@@ -135,7 +138,7 @@
 		}
 	});
 
-	let locked = $derived(profiles.activeLocked);
+	let locked = $derived(profiles.activeInstallAndConfigLocked);
 </script>
 
 <div class="flex grow overflow-hidden">
@@ -166,9 +169,9 @@
 					mod={shownMod}
 					isInstalled={mod.isInstalled}
 					selected={selectedMod !== null && itemUuid(selectedMod) === shownMod.uuid}
-					locked={profiles.activeLocked}
+					{locked}
 					oninstall={() => installLatest(shownMod)}
-					onclick={(evt) => onModClicked(evt, shownMod)}
+					onclick={(evt) => onModClicked(evt, shownMod, mod.isInstalled)}
 				/>
 			{/snippet}
 		</ModList>

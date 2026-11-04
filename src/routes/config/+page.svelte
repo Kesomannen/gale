@@ -34,7 +34,7 @@
 		{/if}
 
 		<div class="max-w-5xl overflow-y-auto p-4 pt-0 pl-2">
-			{#if profiles.activeLocked}
+			{#if profiles.activeInstallAndConfigLocked}
 				<ProfileLockedBanner class="mt-4 mb-4" />
 			{/if}
 
@@ -56,7 +56,7 @@
 					<ConfigFileEditor
 						file={selectedFile}
 						section={config.selectedSection}
-						locked={profiles.activeLocked}
+						locked={profiles.activeInstallAndConfigLocked}
 					/>
 				{:else if selectedFile.type === 'unsupported'}
 					<div class="text-primary-500 dark:text-primary-400 mt-2 mb-1">

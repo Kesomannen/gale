@@ -17,7 +17,7 @@
 
 <button
 	onclick={() => (gamesOpen = !gamesOpen)}
-	class="group text-primary-700 group-hover:text-primary-800 dark:text-primary-300 dark:group-hover:text-primary-200 dark:hover:bg-primary-800 hover:bg-primary-200 flex shrink-0 items-center rounded-lg px-4 py-1 font-semibold"
+	class="group text-primary-700 group-hover:text-primary-800 dark:text-primary-300 dark:group-hover:text-primary-200 dark:hover:bg-primary-800 hover:bg-primary-200 flex shrink-0 items-center rounded-lg px-2 py-1 font-semibold"
 >
 	<img
 		src={games.active ? gameIconSrc(games.active) : ''}

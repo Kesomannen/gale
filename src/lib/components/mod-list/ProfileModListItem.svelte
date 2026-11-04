@@ -29,10 +29,10 @@
 					disabled={locked}
 					checked={mod.enabled}
 					onCheckedChange={ontoggle}
-					class="group dark:data-[state=checked]:bg-accent-700 dark:data-[state=checked]:hover:bg-accent-600 dark:bg-primary-600 dark:hover:bg-primary-500 data-[state=checked]:bg-accent-500 data-[state=checked]:hover:bg-accent-400 bg-primary-500 hover:bg-primary-400 mr-1 flex h-6 w-12 shrink-0 rounded-full px-1 py-1"
+					class="group dark:data-[state=checked]:bg-accent-700 dark:data-[state=checked]:hover:bg-accent-600 dark:bg-primary-600 dark:hover:bg-primary-500 data-[state=checked]:bg-accent-500 data-[state=checked]:hover:bg-accent-400 bg-primary-500 hover:bg-primary-400 mr-1 flex h-6 w-12 shrink-0 rounded-full px-1 py-1 forced-colors:border-2 forced-colors:data-[state=checked]:border-[color:Highlight] forced-colors:data-[state=checked]:bg-[color:Highlight]"
 				>
 					<Switch.Thumb
-						class="data-[state=checked]:bg-accent-200 bg-primary-300 pointer-events-none h-full w-4 rounded-full transition-transform duration-75 ease-out data-[state=checked]:translate-x-6"
+						class="data-[state=checked]:bg-accent-200 bg-primary-300 pointer-events-none h-full w-4 rounded-full transition-transform duration-75 ease-out data-[state=checked]:translate-x-6 forced-colors:bg-[color:ButtonText] forced-colors:data-[state=checked]:bg-[color:HighlightText]"
 					/>
 				</Switch.Root>
 			</div>

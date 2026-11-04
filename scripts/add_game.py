@@ -4,7 +4,6 @@ import os
 import time
 
 from termcolor import colored, cprint
-from PIL import Image
 import requests
 
 from utils import kebab_case, read_games, write_games
@@ -15,10 +14,25 @@ def bold(str):
     return colored(str, attrs=["bold"])
 
 
-def check_slug(slug):
-    cprint(f"Checking slug {slug} on thunderstore.io", "grey")
-    response = requests.get(f"https://thunderstore.io/c/{slug}/")
-    return response.status_code == 200
+BACKEND_URLS = {
+    "Thunderstore": "https://thunderstore.io/c/{slug}/",
+    "Hexium": "https://{slug}.hexium.gg/",
+}
+
+
+def check_slug(slug, backends):
+    for backend in backends:
+        url = BACKEND_URLS[backend].format(slug=slug)
+        cprint(f"Checking slug {slug} on {backend}", "grey")
+
+        try:
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            cprint(f"Could not find {slug} on {backend}: {e}", "red")
+            return False
+
+    return True
 
 
 def multiple_choice(prompt, options, default=None, title_case=False):
@@ -112,14 +126,26 @@ def insert_into_thunderstore_toml(slug):
 if __name__ == "__main__":
     name = input("Enter the name of the game:\n> ")
     slug = kebab_case(name)
-    if not check_slug(slug):
-        while True:
-            slug = input("Enter the game's slug on thunderstore.io:\n> ")
 
-            if check_slug(slug):
+    backend_choice = multiple_choice(
+        f"Where is {name} hosted?",
+        ["Thunderstore", "Hexium", "Thunderstore and Hexium"],
+        default=0,
+    )
+    backends = (
+        ["Thunderstore", "Hexium"]
+        if backend_choice == "Thunderstore and Hexium"
+        else [backend_choice]
+    )
+
+    if not check_slug(slug, backends):
+        while True:
+            slug = input(f"Enter the game's slug on {' and '.join(backends)}:\n> ")
+
+            if check_slug(slug, backends):
                 break
             else:
-                cprint("Slug not found on thunderstore, try again", "red")
+                cprint("Slug not found, try again", "red")
 
     mod_loader = multiple_choice(
         f"Which mod loader does {name} use?",
@@ -186,6 +212,8 @@ if __name__ == "__main__":
         "modLoader": {"name": mod_loader},
         "platforms": platforms,
     }
+    if backends != ["Thunderstore"]:
+        game["backends"] = backends
 
     (json_path, games) = read_games()
     games.append(game)
@@ -195,8 +223,9 @@ if __name__ == "__main__":
 
     print(f"Inserted {name} into {bold('src-tauri/games.json')}")
 
-    insert_into_thunderstore_toml(slug)
+    if "Thunderstore" in backends:
+        insert_into_thunderstore_toml(slug)
 
-    print(f"Inserted {slug} into {bold('thunderstore.toml')}")
+        print(f"Inserted {slug} into {bold('thunderstore.toml')}")
 
     cprint(f"Done!", "green")

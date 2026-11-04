@@ -192,7 +192,7 @@ export function modIconSrc(mod: Mod, enabled?: boolean) {
 			let fullName = `${mod.author}-${mod.name}-${mod.version}`;
 			return thunderstoreIconUrl(fullName);
 		} else {
-			return hexiumIconUrl(mod.author ?? '', mod.name);
+			return hexiumIconUrl(mod.author ?? '', mod.name, mod.version ?? '');
 		}
 	} else if (mod.icon !== null) {
 		let path = enabled === false ? mod.icon + '.old' : mod.icon;
@@ -203,19 +203,21 @@ export function modIconSrc(mod: Mod, enabled?: boolean) {
 }
 
 export function gameIconSrc(game: Game) {
-	if (game.backends.length === 1 && game.backends[0] === Backend.Thunderstore) {
-		return `https://gcdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
+	if (game.backends.includes(Backend.Thunderstore)) {
+		return `https://ccdn.thunderstore.io/assets/${game.slug}/${game.slug}-icon-192x192.webp`;
+	} else if (game.backends.includes(Backend.Hexium)) {
+		return `https://hexium.gg/upload/communities/${game.slug}.png`;
 	} else {
 		return `https://raw.githubusercontent.com/Kesomannen/gale/refs/heads/master/images/games/${game.slug}.webp`;
 	}
 }
 
 export function thunderstoreIconUrl(fullName: string) {
-	return `https://gcdn.thunderstore.io/live/repository/icons/${fullName}.png`;
+	return `https://ccdn.thunderstore.io/live/repository/icons/${fullName}.png`;
 }
 
-export function hexiumIconUrl(pkg: string, name: string) {
-	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png`;
+export function hexiumIconUrl(pkg: string, name: string, version: string) {
+	return `https://cdn.hexium.gg/uploads/${pkg}/${name}/icon.png?${version}`;
 }
 
 export function capitalize(str: string): string {
