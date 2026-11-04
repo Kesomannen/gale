@@ -23,6 +23,7 @@ jobs:
             xorg-server-xvfb \
             patchelf \
             npm \
+            pnpm \
             rustup
           pacman -Syu --noconfirm
 
@@ -46,7 +47,7 @@ jobs:
           rustup toolchain install nightly
           rustup default nightly
           cargo install tauri-cli
-          npm install
+          pnpm install
           cd src-tauri
           cargo update
           cd ..
