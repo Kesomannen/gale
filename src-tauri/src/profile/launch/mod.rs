@@ -24,9 +24,11 @@ use crate::{
     },
 };
 
-mod custom_args;
+pub(super) mod custom_args;
 #[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "macos")]
+mod macos;
 mod mod_loader;
 mod platform;
 
@@ -91,6 +93,36 @@ impl ManagedGame {
             command.args(args.split_whitespace());
         }
 
+        #[cfg(target_os = "macos")]
+        if !vanilla
+            && matches!(
+                self.game.mod_loader.kind,
+                crate::game::mod_loader::ModLoaderKind::BepInEx { .. }
+            )
+        {
+            let wrapper = self.path.join("steam-launch.sh");
+            macos::write_wrapper(&wrapper)?;
+            if matches!(launch_mode, LaunchMode::Launcher)
+                && matches!(
+                    prefs
+                        .game_prefs
+                        .get(&*self.game.slug)
+                        .and_then(|prefs| prefs.platform)
+                        .or_else(|| self.game.platforms.iter().next()),
+                    Some(crate::game::platform::Platform::Steam)
+                )
+            {
+                let steam_id = self
+                    .game
+                    .platforms
+                    .steam
+                    .as_ref()
+                    .ok_or_eyre("game has no Steam metadata")?
+                    .id;
+                macos::prepare_steam_launch(steam_id, &wrapper)?;
+            }
+        }
+
         info!(game = %self.game.slug, ?command, "launching");
 
         do_launch(command, app, launch_mode)?;
@@ -134,6 +166,20 @@ impl ManagedGame {
 
         let profile = self.active_profile();
 
+        #[cfg(target_os = "macos")]
+        if !vanilla
+            && matches!(launch_mode, LaunchMode::Direct { .. })
+            && matches!(
+                self.game.mod_loader.kind,
+                crate::game::mod_loader::ModLoaderKind::BepInEx { .. }
+            )
+        {
+            let mut wrapped = Command::new("/bin/sh");
+            wrapped.arg(self.path.join("steam-launch.sh"));
+            wrapped.arg(command.get_program());
+            command = wrapped;
+        }
+
         #[cfg(target_os = "linux")]
         let is_proton = !vanilla && {
             use crate::game::platform::Platform;
@@ -158,7 +204,7 @@ impl ManagedGame {
             is_proton
         };
 
-        #[cfg(target_os = "windows")]
+        #[cfg(not(target_os = "linux"))]
         let is_proton = false;
 
         if is_proton {
@@ -295,6 +341,34 @@ const IGNORED_EXES: &[&str] = &[
 ];
 
 fn find_executable(game_dir: &Path) -> Result<PathBuf> {
+    #[cfg(target_os = "macos")]
+    {
+        let bundles = WalkDir::new(game_dir)
+            .into_iter()
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry.file_type().is_dir()
+                    && entry.path().extension().is_some_and(|ext| ext == "app")
+            })
+            .sorted_by_key(|entry| entry.depth());
+        for bundle in bundles {
+            let contents = bundle.path().join("Contents");
+            let Ok(info) = plist::Value::from_file(contents.join("Info.plist")) else {
+                continue;
+            };
+            if let Some(executable) = info
+                .as_dictionary()
+                .and_then(|dict| dict.get("CFBundleExecutable"))
+                .and_then(plist::Value::as_string)
+            {
+                let path = contents.join("MacOS").join(executable);
+                if path.is_file() {
+                    return Ok(path);
+                }
+            }
+        }
+    }
+
     WalkDir::new(game_dir)
         .into_iter()
         .filter_map(Result::ok)
@@ -360,4 +434,25 @@ pub fn parse_steam_launch_options(steam_id: u32) -> Result<Vec<LaunchOption>> {
     }
 
     Ok(launch_options)
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finds_bundle_executable_from_metadata() {
+        let game_dir = tempfile::tempdir().unwrap();
+        let contents = game_dir.path().join("Test Game.app/Contents");
+        fs::create_dir_all(contents.join("MacOS")).unwrap();
+        let executable = contents.join("MacOS/Actual Game");
+        fs::write(&executable, "").unwrap();
+        fs::write(contents.join("MacOS/Other File"), "").unwrap();
+        let mut info = plist::Dictionary::new();
+        info.insert("CFBundleExecutable".into(), "Actual Game".into());
+        plist::Value::Dictionary(info)
+            .to_file_binary(contents.join("Info.plist"))
+            .unwrap();
+        assert_eq!(find_executable(game_dir.path()).unwrap(), executable);
+    }
 }

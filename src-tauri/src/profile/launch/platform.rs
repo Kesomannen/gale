@@ -87,6 +87,22 @@ fn read_steam_registry() -> Result<PathBuf> {
     Ok(PathBuf::from(path))
 }
 
+#[cfg(target_os = "macos")]
+fn create_base_steam_command() -> Result<Command> {
+    use crate::util::fs::PathExt;
+
+    let path = which::which("steam")
+        .unwrap_or_else(|_| PathBuf::from("/Applications/Steam.app/Contents/MacOS/steam_osx"));
+
+    let path = path
+        .exists_or_none()
+        .ok_or_eyre("failed to find Steam installation, is it not installed?")?;
+
+    info!("using steam installation at {}", path.display());
+
+    Ok(Command::new(path))
+}
+
 #[cfg(target_os = "linux")]
 fn create_base_steam_command() -> Result<Command> {
     use crate::util::fs::PathExt;

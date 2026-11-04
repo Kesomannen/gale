@@ -78,6 +78,12 @@ impl<'a> ArgsContext<'a> {
             .args([enable_prefix, "true", target_prefix])
             .arg(preloader_path);
 
+        #[cfg(target_os = "macos")]
+        {
+            let (script, arch) = super::macos::bepinex_launcher(self.profile_dir)?;
+            self.command.arg("--gale-bepinex").arg(script).arg(arch);
+        }
+
         Ok(())
     }
 
