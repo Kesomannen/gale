@@ -1,0 +1,59 @@
+name: Build AppImage (Sharun)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Install base dependencies
+        run: |
+          pacman -Syu --noconfirm archlinux-keyring
+          pacman -Syu --noconfirm \
+            base-devel \
+            git \
+            sudo \
+            wget \
+            zsync \
+            xorg-server-xvfb \
+            patchelf \
+            npm \
+            rustup
+          pacman -Syu --noconfirm
+
+          sudo pacman -Syu --noconfirm
+
+      - name: Create build user
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Fix permissions
+        run: chown -R builder:builder .
+
+      - name: Build package
+        run: |
+          sudo -u builder bash <<'EOF'
+          set -e
+          npm install
+          cargo tauri build
+          chmod +x ./appimage/AppImage.sh
+          ./appimage/AppImage.sh
+          EOF
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: AppImage
+          path: |
+            appimage/dist/*.AppImage
+            appimage/dist/*.zsync
+          archive: false
