@@ -24,7 +24,13 @@ jobs:
             patchelf \
             npm \
             pnpm \
-            rustup
+            rustup \
+            gtk3 \
+            webkit2gtk-4.1 \
+            librsvg \
+            libappindicator-gtk3 \
+            openssl \
+            pkgconf
           pacman -Syu --noconfirm
 
           sudo pacman -Syu --noconfirm
