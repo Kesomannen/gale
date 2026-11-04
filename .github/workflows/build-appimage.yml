@@ -7,6 +7,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
     container:
       image: archlinux:latest
 
@@ -55,6 +59,7 @@ jobs:
           cargo install tauri-cli
           pnpm install
           # errors on this are being suppressed due to the whole requirement for a key which I don't have
+          # you might remove that if you've got TAURI_SIGNING_PRIVATE_KEY & TAURI_SIGNING_PRIVATE_KEY_PASSWORD set
           cargo tauri build || true
           chmod +x ./appimage/AppImage.sh
           ./appimage/AppImage.sh
