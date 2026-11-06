@@ -1,0 +1,75 @@
+name: Build AppImage (Sharun)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: Install base dependencies
+        run: |
+          pacman -Syu --noconfirm archlinux-keyring
+          pacman -Syu --noconfirm \
+            base-devel \
+            git \
+            sudo \
+            wget \
+            zsync \
+            xorg-server-xvfb \
+            patchelf \
+            npm \
+            pnpm \
+            rustup \
+            gtk3 \
+            webkit2gtk-4.1 \
+            librsvg \
+            libappindicator-gtk3 \
+            openssl \
+            pkgconf
+          pacman -Syu --noconfirm
+
+          sudo pacman -Syu --noconfirm
+
+      - name: Create build user
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Fix permissions
+        run: chown -R builder:builder .
+
+      - name: Build package
+        run: |
+          sudo -u builder bash <<'EOF'
+          set -e
+          rustup toolchain install stable
+          rustup default stable
+          cargo install tauri-cli
+          pnpm install
+          # errors on this are being suppressed due to the whole requirement for a key which I don't have
+          # you might remove that if you've got TAURI_SIGNING_PRIVATE_KEY & TAURI_SIGNING_PRIVATE_KEY_PASSWORD set
+          cargo tauri build || true
+          chmod +x ./appimage/AppImage.sh
+          ./appimage/AppImage.sh
+          EOF
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: AppImage
+          path: |
+            appimage/dist/*.AppImage
+            appimage/dist/*.zsync
+          archive: false
