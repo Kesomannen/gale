@@ -124,23 +124,21 @@ impl ModLoader<'_> {
 
     pub fn server_deployment(&self) -> Option<ServerDeployment> {
         match &self.kind {
-            ModLoaderKind::BepInEx { .. } | ModLoaderKind::BepisLoader { .. } => {
-                Some(ServerDeployment {
-                    loader_root: "BepInEx".into(),
-                    managed_directories: vec![
-                        "BepInEx/plugins".into(),
-                        "BepInEx/patchers".into(),
-                        "BepInEx/config".into(),
-                    ],
-                    preserve_untracked_directories: vec!["BepInEx/config".into()],
-                    manifest_directory: "BepInEx/config".into(),
-                    excluded_globs: &[
-                        "BepInEx/{cache,DumpedAssemblies,interop}/**",
-                        "BepInEx/LogOutput.log",
-                        "BepInEx/plugins/*/{README.md,CHANGELOG.md,icon.png}",
-                    ],
-                })
-            }
+            ModLoaderKind::BepInEx { .. } => Some(ServerDeployment {
+                loader_root: "BepInEx".into(),
+                managed_directories: vec![
+                    "BepInEx/plugins".into(),
+                    "BepInEx/patchers".into(),
+                    "BepInEx/config".into(),
+                ],
+                preserve_untracked_directories: vec!["BepInEx/config".into()],
+                manifest_directory: "BepInEx/config".into(),
+                excluded_globs: &[
+                    "BepInEx/{cache,DumpedAssemblies,interop}/**",
+                    "BepInEx/LogOutput.log",
+                    "BepInEx/plugins/*/{README.md,CHANGELOG.md,icon.png}",
+                ],
+            }),
             _ => None,
         }
     }

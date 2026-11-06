@@ -81,12 +81,4 @@ impl ServerSecret {
             Err(err) => Err(err).context("failed to remove credential"),
         })
     }
-
-    pub fn resolve(self, profile_id: i64, value: &str) -> Result<String> {
-        if value.is_empty() {
-            Ok(self.get(profile_id)?.unwrap_or_default())
-        } else {
-            Ok(value.to_owned())
-        }
-    }
 }

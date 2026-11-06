@@ -188,7 +188,7 @@ pub fn connect(settings: &RemoteServerSettings, password: &str) -> Result<Connec
 
 impl RemoteConnection {
     fn connect_ftp(settings: &RemoteServerSettings, password: &str) -> Result<Self> {
-        settings.validate_credential(password)?;
+        settings.validate_credential(Some(password))?;
 
         let address = format!("{}:{}", settings.host.trim(), settings.port);
         let stream = RustlsFtpStream::connect(address.as_str())
@@ -443,7 +443,7 @@ impl RemoteConnection {
 fn remote_path(path: &Path) -> Result<Cow<'_, str>> {
     let path = path
         .to_str()
-        .ok_or_else(|| eyre::eyre!("remote path is not valid Unicode"))?;
+        .ok_or_eyre("remote path is not valid Unicode")?;
 
     if path.contains('\\') {
         Ok(Cow::Owned(path.replace('\\', "/")))
@@ -547,7 +547,7 @@ fn authenticate(
     settings: &RemoteServerSettings,
     credential: &str,
 ) -> Result<()> {
-    settings.validate_credential(credential)?;
+    settings.validate_credential(Some(credential))?;
 
     match settings.authentication {
         RemoteAuthentication::Password => {

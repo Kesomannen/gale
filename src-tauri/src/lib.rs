@@ -172,8 +172,6 @@ pub fn run() {
             profile::server::commands::deploy_remote_server,
             profile::server::commands::preview_remote_server_deployment,
             profile::server::commands::get_dedicated_server_status,
-            profile::server::commands::open_dedicated_server_dir,
-            profile::server::commands::force_stop_dedicated_server,
             profile::launch::commands::get_steam_launch_options,
             profile::install::commands::install_mod,
             profile::install::commands::cancel_all_installs,

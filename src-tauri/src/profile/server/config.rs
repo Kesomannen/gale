@@ -31,7 +31,7 @@ pub enum RemoteProtocol {
     Ftp,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProfileServerSettings {
     pub location: ServerLocation,
@@ -55,26 +55,38 @@ pub fn save_for_profile(
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalServerSettings {
+    pub game: GameServerSettings,
+    pub extra_args: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(
     tag = "type",
     rename_all = "camelCase",
     rename_all_fields = "camelCase"
 )]
-pub enum LocalServerSettings {
+pub enum GameServerSettings {
     Valheim {
         server_name: String,
         world: String,
         port: u16,
         public_server: bool,
         crossplay: bool,
-        extra_args: String,
     },
 }
 
 impl LocalServerSettings {
-    pub fn validate(&self, password: &str) -> Result<()> {
-        match self {
-            Self::Valheim {
+    pub fn game_slug(&self) -> &'static str {
+        match self.game {
+            GameServerSettings::Valheim { .. } => "valheim",
+        }
+    }
+
+    pub fn validate(&self, password: Option<&str>) -> Result<()> {
+        match &self.game {
+            GameServerSettings::Valheim {
                 server_name,
                 world,
                 port,
@@ -89,6 +101,7 @@ impl LocalServerSettings {
                 ensure!(*port != 0, "server port cannot be 0");
 
                 if *public_server {
+                    let password = password.unwrap_or_default();
                     ensure!(
                         password.encode_utf16().count() >= MIN_PASSWORD_LENGTH,
                         "server password must contain at least {MIN_PASSWORD_LENGTH} characters"
@@ -103,12 +116,6 @@ impl LocalServerSettings {
         }
 
         Ok(())
-    }
-
-    pub fn extra_args(&self) -> &str {
-        match self {
-            Self::Valheim { extra_args, .. } => extra_args,
-        }
     }
 }
 
@@ -151,11 +158,17 @@ impl RemoteServerSettings {
         Ok(())
     }
 
-    pub fn validate_credential(&self, credential: &str) -> Result<()> {
+    pub fn validate_credential(&self, credential: Option<&str>) -> Result<()> {
         if self.protocol != RemoteProtocol::Sftp {
-            ensure!(!credential.is_empty(), "FTP password is required");
+            ensure!(
+                credential.is_some_and(|value| !value.is_empty()),
+                "FTP password is required"
+            );
         } else if self.authentication == RemoteAuthentication::Password {
-            ensure!(!credential.is_empty(), "SFTP password is required");
+            ensure!(
+                credential.is_some_and(|value| !value.is_empty()),
+                "SFTP password is required"
+            );
         }
 
         Ok(())
@@ -175,80 +188,25 @@ where
     })
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CurrentProfileServerSettings {
-    location: ServerLocation,
-    local: LocalServerSettings,
-    remote: RemoteServerSettings,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct LegacyProfileServerSettings {
-    location: ServerLocation,
-    server_name: String,
-    world: String,
-    port: u16,
-    public_server: bool,
-    crossplay: bool,
-    extra_args: String,
-    remote: RemoteServerSettings,
-}
-
-impl<'de> Deserialize<'de> for ProfileServerSettings {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Deserialize)]
-        #[serde(untagged)]
-        enum StoredSettings {
-            Current(CurrentProfileServerSettings),
-            Legacy(LegacyProfileServerSettings),
-        }
-
-        Ok(match StoredSettings::deserialize(deserializer)? {
-            StoredSettings::Current(settings) => Self {
-                location: settings.location,
-                local: settings.local,
-                remote: settings.remote,
-            },
-            StoredSettings::Legacy(settings) => Self {
-                location: settings.location,
-                local: LocalServerSettings::Valheim {
-                    server_name: settings.server_name,
-                    world: settings.world,
-                    port: settings.port,
-                    public_server: settings.public_server,
-                    crossplay: settings.crossplay,
-                    extra_args: settings.extra_args,
-                },
-                remote: settings.remote,
-            },
-        })
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use serde_json::json;
 
-    use super::{LocalServerSettings, ProfileServerSettings, RemoteProtocol, ServerLocation};
+    use super::{GameServerSettings, LocalServerSettings, ProfileServerSettings};
 
     #[test]
     fn round_trips_current_settings() {
         let value = json!({
             "location": "local",
             "local": {
-                "type": "valheim",
-                "serverName": "Test Server",
-                "world": "Test World",
-                "port": 2456,
-                "publicServer": true,
-                "crossplay": false,
+                "game": {
+                    "type": "valheim",
+                    "serverName": "Test Server",
+                    "world": "Test World",
+                    "port": 2456,
+                    "publicServer": true,
+                    "crossplay": false
+                },
                 "extraArgs": ""
             },
             "remote": {
@@ -270,69 +228,36 @@ mod tests {
     }
 
     #[test]
-    fn loads_legacy_settings() {
-        let settings: ProfileServerSettings = serde_json::from_value(json!({
-            "location": "remote",
-            "serverName": "Test Server",
-            "world": "Test World",
-            "port": 2456,
-            "publicServer": true,
-            "crossplay": false,
-            "extraArgs": "",
-            "remote": {
-                "protocol": "ftps",
-                "host": "example.com",
-                "port": 22,
-                "username": "user",
-                "serverDirectory": "",
-                "authentication": "password",
-                "privateKeyPath": "",
-                "trustedHostKey": null,
-                "trustedInvalidCertificateHost": null
-            }
-        }))
-        .unwrap();
-
-        assert_eq!(settings.location, ServerLocation::Remote);
-        assert!(matches!(
-            settings.local,
-            LocalServerSettings::Valheim {
-                server_name,
-                world,
-                ..
-            } if server_name == "Test Server" && world == "Test World"
-        ));
-        assert_eq!(settings.remote.protocol, RemoteProtocol::Ftp);
-        assert_eq!(settings.remote.server_directory, PathBuf::from("/"));
-    }
-
-    #[test]
     fn validates_valheim_public_server_password() {
-        let settings = LocalServerSettings::Valheim {
-            server_name: "Test Server".to_owned(),
-            world: "GaleTestingWorld".to_owned(),
-            port: 2456,
-            public_server: true,
-            crossplay: false,
+        let settings = LocalServerSettings {
+            game: GameServerSettings::Valheim {
+                server_name: "Test Server".to_owned(),
+                world: "GaleTestingWorld".to_owned(),
+                port: 2456,
+                public_server: true,
+                crossplay: false,
+            },
             extra_args: String::new(),
         };
 
-        assert!(settings.validate("").is_err());
-        assert!(settings.validate("Testing").is_err());
-        assert!(settings.validate("valid password").is_ok());
+        assert!(settings.validate(None).is_err());
+        assert!(settings.validate(Some("Testing")).is_err());
+        assert!(settings.validate(Some("valid password")).is_ok());
     }
 
     #[test]
     fn allows_valheim_private_server_without_password() {
-        let settings = LocalServerSettings::Valheim {
-            server_name: "Test Server".to_owned(),
-            world: "Test World".to_owned(),
-            port: 2456,
-            public_server: false,
-            crossplay: false,
+        let settings = LocalServerSettings {
+            game: GameServerSettings::Valheim {
+                server_name: "Test Server".to_owned(),
+                world: "Test World".to_owned(),
+                port: 2456,
+                public_server: false,
+                crossplay: false,
+            },
             extra_args: String::new(),
         };
 
-        assert!(settings.validate("").is_ok());
+        assert!(settings.validate(None).is_ok());
     }
 }

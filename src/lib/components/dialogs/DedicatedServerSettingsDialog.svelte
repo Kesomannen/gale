@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LocalServerSettings from './LocalServerSettings.svelte';
+	import LocalServerSettings, { createLocalServerSettings } from './LocalServerSettings.svelte';
 	import RemoteServerSettings from './RemoteServerSettings.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -13,7 +13,6 @@
 	import { Tabs } from 'bits-ui';
 
 	const MAX_PORT = 65535;
-	const DEFAULT_VALHEIM_PORT = 2456;
 	const DEFAULT_SFTP_PORT = 22;
 
 	type Props = {
@@ -27,6 +26,7 @@
 	let remoteCredential = $state('');
 	let activity = $state<'loading' | 'saving' | null>(null);
 	let initialized = $state(false);
+	let localSettings = $state<LocalServerSettings>();
 
 	$effect(() => {
 		if (!open) {
@@ -38,21 +38,10 @@
 
 	function createSettings(): ProfileServerSettings {
 		const game = games.active;
-		const dedicated = game?.dedicatedServer;
 
 		return {
 			location: 'local',
-			local: {
-				type: 'valheim',
-				serverName: m.dedicatedServerSettings_defaultName({
-					game: game?.name ?? m.unknown()
-				}),
-				world: m.dedicatedServerSettings_defaultWorld(),
-				port: dedicated?.defaultPort ?? DEFAULT_VALHEIM_PORT,
-				publicServer: true,
-				crossplay: false,
-				extraArgs: ''
-			},
+			local: createLocalServerSettings(game),
 			remote: {
 				protocol: 'sftp',
 				host: '',
@@ -92,30 +81,33 @@
 	}
 
 	async function save() {
-		const portIsValid =
-			settings.location === 'local'
-				? validPort(settings.local.port, m.dedicatedServerDialog_serverPort())
-				: validPort(
-						settings.remote.port,
-						settings.remote.protocol === 'sftp'
-							? m.dedicatedServerDialog_sshPort()
-							: m.dedicatedServerDialog_ftpPort()
-					);
-		if (!portIsValid) {
+		if (settings.location === 'local' && !localSettings?.prepare()) {
+			return;
+		}
+		if (
+			settings.location === 'remote' &&
+			!validPort(
+				settings.remote.port,
+				settings.remote.protocol === 'sftp'
+					? m.dedicatedServerDialog_sshPort()
+					: m.dedicatedServerDialog_ftpPort()
+			)
+		) {
 			return;
 		}
 
 		activity = 'saving';
 		try {
-			settings.local.serverName = settings.local.serverName.trim();
-			settings.local.world = settings.local.world.trim();
-			settings.local.extraArgs = settings.local.extraArgs.trim();
 			settings.remote.host = settings.remote.host.trim();
 			settings.remote.username = settings.remote.username.trim();
 			settings.remote.serverDirectory = settings.remote.serverDirectory.trim() || '/';
 			settings.remote.privateKeyPath = settings.remote.privateKeyPath.trim();
 
-			await api.profile.server.setSettings(settings, gamePassword, remoteCredential);
+			await api.profile.server.setSettings(
+				settings,
+				gamePassword || null,
+				remoteCredential || null
+			);
 			gamePassword = '';
 			remoteCredential = '';
 			pushInfoToast({ message: m.dedicatedServerDialog_saved() });
@@ -145,7 +137,11 @@
 			]}
 		>
 			<Tabs.Content value="local">
-				<LocalServerSettings bind:settings={settings.local} bind:password={gamePassword} />
+				<LocalServerSettings
+					bind:this={localSettings}
+					bind:settings={settings.local}
+					bind:password={gamePassword}
+				/>
 			</Tabs.Content>
 
 			<Tabs.Content value="remote">

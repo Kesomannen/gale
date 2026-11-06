@@ -10,7 +10,10 @@ use tracing::info;
 use crate::{
     game::{Game, platform::Platform},
     prefs::Prefs,
-    profile::{ManagedGame, launch, server::config::LocalServerSettings},
+    profile::{
+        ManagedGame, launch,
+        server::config::{GameServerSettings, LocalServerSettings},
+    },
 };
 
 pub struct LocalServerProcess {
@@ -23,10 +26,10 @@ pub struct LocalServerProcess {
 pub fn launch(
     game: &ManagedGame,
     settings: &LocalServerSettings,
-    password: &str,
+    password: Option<String>,
     prefs: &Prefs,
 ) -> Result<LocalServerProcess> {
-    settings.validate(password)?;
+    settings.validate(password.as_deref())?;
 
     game.game
         .dedicated_server
@@ -34,10 +37,7 @@ pub fn launch(
         .ok_or_eyre("this game does not define a dedicated server")?;
 
     ensure!(
-        matches!(
-            (game.game.slug.as_ref(), settings),
-            ("valheim", LocalServerSettings::Valheim { .. })
-        ),
+        game.game.slug.as_ref() == settings.game_slug(),
         "dedicated server settings do not match the active game"
     );
 
@@ -48,8 +48,8 @@ pub fn launch(
     let profile = game.active_profile();
     let mut command = Command::new(&executable);
 
-    match settings {
-        LocalServerSettings::Valheim {
+    match &settings.game {
+        GameServerSettings::Valheim {
             server_name,
             world,
             port,
@@ -76,7 +76,7 @@ pub fn launch(
                 .arg("-public")
                 .arg(if *public_server { "1" } else { "0" });
 
-            if !password.is_empty() {
+            if let Some(password) = password.as_deref().filter(|password| !password.is_empty()) {
                 command.arg("-password").arg(password);
             }
 
@@ -89,7 +89,7 @@ pub fn launch(
     command.current_dir(&server_dir);
     configure_mod_loader(game, &mut command, &server_dir, server_platform)?;
 
-    launch::custom_args::add_args(&mut command, settings.extra_args())
+    launch::custom_args::add_args(&mut command, &settings.extra_args)
         .context("failed to apply dedicated server launch arguments")?;
 
     #[cfg(target_os = "windows")]
@@ -127,22 +127,11 @@ fn configure_mod_loader(
     server_dir: &Path,
     server_platform: Platform,
 ) -> Result<()> {
-    if game
-        .active_profile()
-        .mods
-        .iter()
-        .any(|profile_mod| profile_mod.enabled)
-    {
-        game.copy_required_files(server_dir)
-            .context("failed to prepare mod loader files for dedicated server")?;
+    game.copy_required_files(server_dir)
+        .context("failed to prepare mod loader files for dedicated server")?;
 
-        return game
-            .apply_mod_loader_args(command, server_dir, Some(server_platform), false)
-            .context("failed to configure mod loader");
-    }
-
-    info!("active profile has no enabled mods, launching server without mod loader");
-    Ok(())
+    game.apply_mod_loader_args(command, server_dir, Some(server_platform), false)
+        .context("failed to configure mod loader")
 }
 
 pub fn locate_server_dir(game: &ManagedGame, prefs: &Prefs) -> Result<(PathBuf, Platform)> {
@@ -187,25 +176,16 @@ mod tests {
         process::Command,
     };
 
-    use chrono::Utc;
     use tempfile::tempdir;
 
     use super::configure_mod_loader;
     use crate::{
         config::ConfigCache,
         game::{self, platform::Platform},
-        profile::{ManagedGame, Profile, ProfileMod, ProfileModKind},
+        profile::{ManagedGame, Profile},
     };
 
-    fn profile_mod(enabled: bool) -> ProfileMod {
-        ProfileMod {
-            enabled,
-            install_time: Utc::now(),
-            kind: ProfileModKind::Local(Box::default()),
-        }
-    }
-
-    fn managed_game(profile_dir: &Path, mods: Vec<ProfileMod>) -> ManagedGame {
+    fn managed_game(profile_dir: &Path) -> ManagedGame {
         let game = game::from_slug("valheim").unwrap();
 
         ManagedGame {
@@ -216,7 +196,7 @@ mod tests {
                 id: 1,
                 name: "Test".to_owned(),
                 path: profile_dir.to_owned(),
-                mods,
+                mods: Vec::new(),
                 game,
                 ignored_version_updates: HashSet::new(),
                 ignored_package_updates: HashSet::new(),
@@ -235,34 +215,10 @@ mod tests {
     }
 
     #[test]
-    fn empty_profile_launches_without_mod_loader() {
+    fn profile_requires_mod_loader() {
         let profile = tempdir().unwrap();
         let server = tempdir().unwrap();
-        let game = managed_game(profile.path(), Vec::new());
-        let mut command = Command::new("server");
-
-        configure_mod_loader(&game, &mut command, server.path(), Platform::Steam).unwrap();
-
-        assert_eq!(command.get_args().count(), 0);
-    }
-
-    #[test]
-    fn fully_disabled_profile_launches_without_mod_loader() {
-        let profile = tempdir().unwrap();
-        let server = tempdir().unwrap();
-        let game = managed_game(profile.path(), vec![profile_mod(false)]);
-        let mut command = Command::new("server");
-
-        configure_mod_loader(&game, &mut command, server.path(), Platform::Steam).unwrap();
-
-        assert_eq!(command.get_args().count(), 0);
-    }
-
-    #[test]
-    fn enabled_profile_requires_mod_loader() {
-        let profile = tempdir().unwrap();
-        let server = tempdir().unwrap();
-        let game = managed_game(profile.path(), vec![profile_mod(true)]);
+        let game = managed_game(profile.path());
         let mut command = Command::new("server");
 
         let error =
@@ -272,14 +228,14 @@ mod tests {
     }
 
     #[test]
-    fn enabled_profile_configures_mod_loader() {
+    fn profile_configures_mod_loader() {
         let profile = tempdir().unwrap();
         let server = tempdir().unwrap();
         let core = profile.path().join("BepInEx/core");
         fs::create_dir_all(&core).unwrap();
         fs::write(core.join("BepInEx.Unity.Mono.Preloader.dll"), []).unwrap();
         fs::write(profile.path().join(".doorstop_version"), "4.0.0").unwrap();
-        let game = managed_game(profile.path(), vec![profile_mod(true)]);
+        let game = managed_game(profile.path());
         let mut command = Command::new("server");
 
         configure_mod_loader(&game, &mut command, server.path(), Platform::Steam).unwrap();

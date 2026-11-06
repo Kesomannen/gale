@@ -1,4 +1,3 @@
-use eyre::Context;
 use tauri::{AppHandle, Emitter, command};
 use tracing::warn;
 
@@ -29,30 +28,36 @@ pub fn get_dedicated_server_settings(app: AppHandle) -> Option<ProfileServerSett
 #[command]
 pub fn set_dedicated_server_settings(
     settings: ProfileServerSettings,
-    game_password: String,
-    remote_credential: String,
+    game_password: Option<String>,
+    remote_credential: Option<String>,
     app: AppHandle,
 ) -> Result<()> {
     let profile_id = app.lock_manager().active_profile().id;
-    if settings.location == ServerLocation::Local || !game_password.is_empty() {
-        let password = ServerSecret::GamePassword.resolve(profile_id, &game_password)?;
-        settings.local.validate(&password)?;
+    if settings.location == ServerLocation::Local || game_password.is_some() {
+        let password = match game_password.as_deref() {
+            Some(password) => Some(password.to_owned()),
+            None => ServerSecret::GamePassword.get(profile_id)?,
+        };
+        settings.local.validate(password.as_deref())?;
     }
     if settings.location == ServerLocation::Remote {
         settings.remote.validate()?;
         let credential = match ServerSecret::for_remote(&settings.remote) {
-            Some(secret) => secret.resolve(profile_id, &remote_credential)?,
-            None => String::new(),
+            Some(secret) => match remote_credential.as_deref() {
+                Some(credential) => Some(credential.to_owned()),
+                None => secret.get(profile_id)?,
+            },
+            None => None,
         };
-        settings.remote.validate_credential(&credential)?;
+        settings.remote.validate_credential(credential.as_deref())?;
     }
-    if !game_password.is_empty() {
-        ServerSecret::GamePassword.set(profile_id, &game_password)?;
+    if let Some(password) = &game_password {
+        ServerSecret::GamePassword.set(profile_id, password)?;
     }
-    if !remote_credential.is_empty()
+    if let Some(credential) = &remote_credential
         && let Some(secret) = ServerSecret::for_remote(&settings.remote)
     {
-        secret.set(profile_id, &remote_credential)?;
+        secret.set(profile_id, credential)?;
     }
 
     config::save_for_profile(&app, profile_id, settings)?;
@@ -76,15 +81,13 @@ pub async fn launch_dedicated_server(
     ensure_no_pending_installs(&app)?;
 
     let profile_id = app.lock_manager().active_profile().id;
-    let password = ServerSecret::GamePassword
-        .get(profile_id)?
-        .unwrap_or_default();
+    let password = ServerSecret::GamePassword.get(profile_id)?;
 
     let process = {
         let prefs = app.lock_prefs();
         let manager = app.lock_manager();
 
-        local::launch(manager.active_game(), &settings.local, &password, &prefs)?
+        local::launch(manager.active_game(), &settings.local, password, &prefs)?
     };
 
     Ok(runtime::start(app, process)?)
@@ -100,7 +103,7 @@ pub async fn test_remote_server_connection(
     let remote_settings = settings.remote.clone();
 
     let result = remote::run_blocking("remote connection", move || {
-        remote::test_connection(&remote_settings, &password)
+        remote::test_connection(&remote_settings, password.as_deref().unwrap_or_default())
     })
     .await?;
 
@@ -130,7 +133,7 @@ pub async fn deploy_remote_server(
             game,
             client_only_mods,
             &remote_settings,
-            &password,
+            password.as_deref().unwrap_or_default(),
             &selection,
             |progress: DeploymentProgress| {
                 if let Err(err) = progress_app.emit("server_deployment_progress", progress) {
@@ -165,7 +168,7 @@ pub async fn preview_remote_server_deployment(
             game,
             client_only_mods,
             &remote_settings,
-            &password,
+            password.as_deref().unwrap_or_default(),
         )
     })
     .await?;
@@ -182,41 +185,13 @@ pub fn get_dedicated_server_status(app: AppHandle) -> Result<ServerStatus> {
     Ok(app.lock_server_runtime().status())
 }
 
-#[command]
-pub fn open_dedicated_server_dir(app: AppHandle) -> Result<()> {
-    let running_dir = { app.lock_server_runtime().server_dir() };
-
-    let path = match running_dir {
-        Some(path) => path,
-        None => {
-            let prefs = app.lock_prefs();
-            let manager = app.lock_manager();
-
-            local::locate_server_dir(manager.active_game(), &prefs)?.0
-        }
-    };
-
-    open::that(&path).wrap_err_with(|| {
-        format!(
-            "failed to open dedicated server directory {}",
-            path.display()
-        )
-    })?;
-
-    Ok(())
-}
-
-#[command]
-pub async fn force_stop_dedicated_server(app: AppHandle) -> Result<()> {
-    runtime::stop(&app).await?;
-
-    Ok(())
-}
-
-fn remote_credential(profile_id: i64, settings: &RemoteServerSettings) -> eyre::Result<String> {
+fn remote_credential(
+    profile_id: i64,
+    settings: &RemoteServerSettings,
+) -> eyre::Result<Option<String>> {
     let Some(secret) = ServerSecret::for_remote(settings) else {
-        return Ok(String::new());
+        return Ok(None);
     };
 
-    Ok(secret.get(profile_id)?.unwrap_or_default())
+    secret.get(profile_id)
 }

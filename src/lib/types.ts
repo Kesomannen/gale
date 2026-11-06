@@ -275,13 +275,19 @@ export type ServerLocation = 'local' | 'remote';
 export type RemoteAuthentication = 'password' | 'privateKey' | 'agent';
 export type RemoteProtocol = 'sftp' | 'ftp';
 
-export type LocalServerSettings = {
+export type ValheimServerSettings = {
 	type: 'valheim';
 	serverName: string;
 	world: string;
 	port: number;
 	publicServer: boolean;
 	crossplay: boolean;
+};
+
+export type GameServerSettings = ValheimServerSettings;
+
+export type LocalServerSettings = {
+	game: GameServerSettings;
 	extraArgs: string;
 };
 

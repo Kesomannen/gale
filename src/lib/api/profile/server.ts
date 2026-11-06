@@ -13,8 +13,8 @@ export const getSettings = () =>
 
 export const setSettings = (
 	settings: ProfileServerSettings,
-	gamePassword: string,
-	remoteCredential: string
+	gamePassword: string | null,
+	remoteCredential: string | null
 ) => invoke('set_dedicated_server_settings', { settings, gamePassword, remoteCredential });
 
 export const launch = (settings: ProfileServerSettings) =>
@@ -32,7 +32,3 @@ export const previewRemoteDeployment = (settings: ProfileServerSettings) =>
 	invoke<RemoteDeploymentPreviewResult>('preview_remote_server_deployment', { settings });
 
 export const getStatus = () => invoke<DedicatedServerStatus>('get_dedicated_server_status');
-
-export const openDir = () => invoke('open_dedicated_server_dir');
-
-export const forceStop = () => invoke('force_stop_dedicated_server');

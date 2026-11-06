@@ -196,7 +196,7 @@
 	{:else}
 		<p class="text-primary-600 dark:text-primary-300 mt-1">
 			{settings.location === 'local'
-				? m.dedicatedServerDialog_localSummary({ name: settings.local.serverName })
+				? m.dedicatedServerDialog_localSummary({ name: settings.local.game.serverName })
 				: m.dedicatedServerDialog_remoteSummary({ host: settings.remote.host })}
 		</p>
 

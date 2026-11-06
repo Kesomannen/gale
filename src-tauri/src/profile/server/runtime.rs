@@ -29,7 +29,6 @@ pub fn start(app: AppHandle, process: LocalServerProcess) -> Result<ServerStatus
         game: process.game,
         server_dir: process.server_dir,
         pid,
-        child: child.clone(),
     };
     let status = match app.lock_server_runtime().register(running) {
         Ok(status) => status,
@@ -45,31 +44,6 @@ pub fn start(app: AppHandle, process: LocalServerProcess) -> Result<ServerStatus
     tauri::async_runtime::spawn(watch(app, child, pid));
 
     Ok(status)
-}
-
-pub async fn stop(app: &AppHandle) -> Result<()> {
-    let Some((child, pid)) = app
-        .lock_server_runtime()
-        .running
-        .as_ref()
-        .map(|running| (running.child.clone(), running.pid))
-    else {
-        return Ok(());
-    };
-
-    let mut child = child.lock().await;
-
-    if child.try_wait()?.is_none() {
-        child.kill().await?;
-        let _ = child.wait().await;
-    }
-    drop(child);
-
-    if app.lock_server_runtime().clear_if_pid(pid) {
-        emit_status(app, &ServerStatus::Stopped);
-    }
-
-    Ok(())
 }
 
 async fn watch(app: AppHandle, child: SharedChild, pid: u32) {
@@ -113,7 +87,6 @@ struct RunningServer {
     game: Game,
     server_dir: PathBuf,
     pid: u32,
-    child: SharedChild,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -155,12 +128,6 @@ impl ServerRuntime {
 
             None => ServerStatus::Stopped,
         }
-    }
-
-    pub fn server_dir(&self) -> Option<PathBuf> {
-        self.running
-            .as_ref()
-            .map(|running| running.server_dir.clone())
     }
 
     fn register(&mut self, running: RunningServer) -> Result<ServerStatus> {

@@ -1,59 +1,50 @@
+<script module lang="ts">
+	import type { Game, LocalServerSettings as LocalSettingsData } from '$lib/types';
+	import { createValheimServerSettings } from './ValheimServerSettings.svelte';
+
+	export function createLocalServerSettings(game: Game | null): LocalSettingsData {
+		switch (game?.slug) {
+			case 'valheim':
+			case undefined:
+				return {
+					game: createValheimServerSettings(game),
+					extraArgs: ''
+				};
+			default:
+				throw new Error(`unsupported dedicated server game: ${game?.slug ?? 'unknown'}`);
+		}
+	}
+</script>
+
 <script lang="ts">
-	import Checkbox from '$lib/components/ui/Checkbox.svelte';
-	import Info from '$lib/components/ui/Info.svelte';
 	import InputField from '$lib/components/ui/InputField.svelte';
 	import Label from '$lib/components/ui/Label.svelte';
 	import { m } from '$lib/paraglide/messages';
-	import type { LocalServerSettings } from '$lib/types';
+	import type { LocalServerSettings as LocalSettings } from '$lib/types';
+	import ValheimServerSettings from './ValheimServerSettings.svelte';
 
 	type Props = {
-		settings: LocalServerSettings;
+		settings: LocalSettings;
 		password: string;
 	};
 
 	let { settings = $bindable(), password = $bindable() }: Props = $props();
+	let gameSettings = $state<ValheimServerSettings>();
+
+	export function prepare() {
+		settings.extraArgs = settings.extraArgs.trim();
+
+		switch (settings.game.type) {
+			case 'valheim':
+				return gameSettings?.prepare() ?? false;
+		}
+	}
 </script>
 
 <div class="mt-4 flex flex-col gap-2">
-	<div class="flex items-center">
-		<Label>{m.dedicatedServerDialog_serverName()}</Label>
-		<InputField bind:value={settings.serverName} />
-	</div>
-
-	<div class="flex items-center">
-		<Label>{m.dedicatedServerDialog_password()}</Label>
-		<Info>{m.dedicatedServerDialog_credentialInfo()}</Info>
-		<InputField
-			bind:value={password}
-			type="password"
-			placeholder={m.dedicatedServerDialog_savedPassword()}
-		/>
-	</div>
-
-	<div class="flex items-center">
-		<Label>{m.dedicatedServerDialog_world()}</Label>
-		<InputField bind:value={settings.world} />
-	</div>
-
-	<div class="flex items-center">
-		<Label>{m.dedicatedServerDialog_serverPort()}</Label>
-		<InputField
-			bind:value={() => String(settings.port), (value) => (settings.port = Number(value))}
-			inputmode="numeric"
-		/>
-	</div>
-
-	<div class="flex items-center">
-		<Label>{m.dedicatedServerDialog_public()}</Label>
-		<Info>{m.dedicatedServerDialog_publicInfo()}</Info>
-		<Checkbox bind:checked={settings.publicServer} />
-	</div>
-
-	<div class="flex items-center">
-		<Label>{m.dedicatedServerDialog_crossplay()}</Label>
-		<Info>{m.dedicatedServerDialog_crossplayInfo()}</Info>
-		<Checkbox bind:checked={settings.crossplay} />
-	</div>
+	{#if settings.game.type === 'valheim'}
+		<ValheimServerSettings bind:this={gameSettings} bind:settings={settings.game} bind:password />
+	{/if}
 
 	<details>
 		<summary class="text-primary-600 dark:text-primary-300 cursor-pointer">
