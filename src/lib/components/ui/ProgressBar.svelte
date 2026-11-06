@@ -20,7 +20,7 @@
 	]}
 >
 	<div
-		class="bg-accent-600 dark:bg-accent-500 absolute top-0 left-0 h-full transition-[width]"
+		class="bg-accent-700 absolute top-0 left-0 h-full transition-[width]"
 		style:width="{width}%"
 	></div>
 </Progress.Root>

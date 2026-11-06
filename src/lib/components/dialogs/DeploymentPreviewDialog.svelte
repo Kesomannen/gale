@@ -1,15 +1,13 @@
 <script lang="ts">
-	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Checkbox from '$lib/components/ui/Checkbox.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import FileTree from '$lib/components/ui/FileTree.svelte';
+	import InfoBox from '$lib/components/ui/InfoBox.svelte';
+	import { m } from '$lib/paraglide/messages';
 	import type { RemoteDeploymentPreviewResult, RemoteDeploymentSelection } from '$lib/types';
 	import DeploymentStats from './DeploymentStats.svelte';
-	import { m } from '$lib/paraglide/messages';
-	import InfoBox from '$lib/components/ui/InfoBox.svelte';
 
 	type Preview = Extract<RemoteDeploymentPreviewResult, { status: 'preview' }>;
-	type FileEntry = { path: string; name: string };
-	type FileGroup = { directory: string; files: FileEntry[] };
 	type FileOperation = 'upload' | 'remove';
 
 	let open = $state(false);
@@ -28,24 +26,6 @@
 	let selectedUploadBytes = $derived(
 		selectedUploadFiles.reduce((total, path) => total + (preview?.uploadFileSizes[path] ?? 0), 0)
 	);
-	let uploadGroups = $derived(groupFiles(preview?.uploadFiles ?? []));
-	let removalGroups = $derived(groupFiles(preview?.removeFiles ?? []));
-
-	function groupFiles(paths: string[]): FileGroup[] {
-		const groups = new Map<string, FileEntry[]>();
-
-		for (const path of paths) {
-			const normalized = path.endsWith('/') ? path.slice(0, -1) : path;
-			const separator = normalized.lastIndexOf('/');
-			const directory = separator === -1 ? '' : normalized.slice(0, separator);
-			const name = normalized.slice(separator + 1) + (path.endsWith('/') ? '/' : '');
-			const files = groups.get(directory) ?? [];
-			files.push({ path, name });
-			groups.set(directory, files);
-		}
-
-		return Array.from(groups, ([directory, files]) => ({ directory, files }));
-	}
 
 	export function openFor(value: Preview) {
 		preview = value;
@@ -71,10 +51,6 @@
 		else selectedRemoveFiles = changed;
 	}
 
-	function allSelected(operation: FileOperation, paths: string[]) {
-		return paths.every((path) => isSelected(operation, path));
-	}
-
 	function close(selection: RemoteDeploymentSelection | null) {
 		const resolve = resolveReview;
 		resolveReview = null;
@@ -82,85 +58,6 @@
 		open = false;
 	}
 </script>
-
-{#snippet selectionButton(operation: FileOperation, paths: string[])}
-	<button
-		type="button"
-		class="text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300 shrink-0 text-xs hover:underline"
-		onclick={() => setSelected(operation, paths, !allSelected(operation, paths))}
-	>
-		{allSelected(operation, paths)
-			? m.deploymentPreview_selectNone()
-			: m.deploymentPreview_selectAll()}
-	</button>
-{/snippet}
-
-{#snippet fileGroups(groups: FileGroup[], operation: FileOperation)}
-	{#if groups.length > 0}
-		{@const paths = groups.flatMap((group) => group.files.map((file) => file.path))}
-		<div class={operation === 'remove' ? 'mt-4' : ''}>
-			<div class="border-primary-200 dark:border-primary-700 flex items-center border-b pb-2">
-				<div
-					class="text-primary-800 dark:text-primary-200 flex min-w-0 items-center gap-2 font-semibold"
-				>
-					<span
-						class={[
-							'text-base',
-							operation === 'upload'
-								? 'text-green-600 dark:text-green-400'
-								: 'text-red-600 dark:text-red-400'
-						]}
-					>
-						{operation === 'upload' ? '+' : '−'}
-					</span>
-					<span>
-						{operation === 'upload'
-							? m.deploymentPreview_uploads()
-							: m.deploymentPreview_removals()}
-					</span>
-					<span class="text-primary-500 dark:text-primary-400 text-xs font-normal">
-						{paths.filter((path) => isSelected(operation, path)).length}/{paths.length}
-					</span>
-				</div>
-				<div class="ml-auto">{@render selectionButton(operation, paths)}</div>
-			</div>
-
-			{#each groups as group}
-				{@const paths = group.files.map((file) => file.path)}
-				<div class="py-2.5 last:pb-0">
-					<div class="flex min-w-0 items-center gap-3">
-						<span
-							class="text-primary-600 dark:text-primary-300 truncate text-sm font-medium"
-							title={group.directory || m.deploymentPreview_serverRoot()}
-						>
-							{group.directory || m.deploymentPreview_serverRoot()}
-						</span>
-						<span class="text-primary-500 dark:text-primary-400 ml-auto shrink-0 text-xs">
-							{group.files.filter((file) => isSelected(operation, file.path)).length}/{group.files
-								.length}
-						</span>
-						{@render selectionButton(operation, paths)}
-					</div>
-					<div class="mt-1 space-y-0.5">
-						{#each group.files as file}
-							<div
-								class="hover:bg-primary-100 dark:hover:bg-primary-800 text-primary-700 dark:text-primary-200 flex min-w-0 items-center rounded px-2 py-1 text-sm"
-							>
-								<Checkbox
-									size="sm"
-									class="mr-2.5 shrink-0"
-									checked={isSelected(operation, file.path)}
-									onCheckedChange={(selected) => setSelected(operation, [file.path], selected)}
-								/>
-								<span class="wrap-anywhere">{file.name}</span>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/each}
-		</div>
-	{/if}
-{/snippet}
 
 <Dialog title={m.deploymentPreview_title()} bind:open large onclose={() => close(null)}>
 	{#if preview}
@@ -212,11 +109,31 @@
 						count: preview.uploadFiles.length + preview.removeFiles.length
 					})}
 				</summary>
-				<div
-					class="bg-primary-50 dark:bg-primary-900/40 mt-2 max-h-72 overflow-auto rounded-lg p-4"
-				>
-					{@render fileGroups(uploadGroups, 'upload')}
-					{@render fileGroups(removalGroups, 'remove')}
+				<div class="mt-2 space-y-3">
+					{#if preview.uploadFiles.length > 0}
+						<FileTree
+							title={m.deploymentPreview_uploads()}
+							items={preview.uploadFiles}
+							getPath={(path) => path}
+							getSize={(path) => preview?.uploadFileSizes[path] ?? 0}
+							get={(path) => isSelected('upload', path)}
+							set={(path, selected) => setSelected('upload', [path], selected)}
+							setMany={(paths, selected) => setSelected('upload', paths, selected)}
+							maxHeight="sm"
+						/>
+					{/if}
+
+					{#if preview.removeFiles.length > 0}
+						<FileTree
+							title={m.deploymentPreview_removals()}
+							items={preview.removeFiles}
+							getPath={(path) => path}
+							get={(path) => isSelected('remove', path)}
+							set={(path, selected) => setSelected('remove', [path], selected)}
+							setMany={(paths, selected) => setSelected('remove', paths, selected)}
+							maxHeight="sm"
+						/>
+					{/if}
 				</div>
 			</details>
 		{/if}

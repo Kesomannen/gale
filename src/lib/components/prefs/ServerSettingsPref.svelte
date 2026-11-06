@@ -11,7 +11,7 @@
 <div class="flex items-center">
 	<Label>{m.serverSettingsPref_title()}</Label>
 	<Info>{m.serverSettingsPref_content()}</Info>
-	<Button color="primary" icon="mdi:server-cog" onclick={() => (dialogOpen = true)}>
+	<Button color="primary" icon="mdi:database-cog" onclick={() => (dialogOpen = true)}>
 		{m.serverSettingsPref_configure()}
 	</Button>
 </div>
