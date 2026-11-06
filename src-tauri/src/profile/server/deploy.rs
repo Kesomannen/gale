@@ -1,7 +1,5 @@
 use std::{
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-    fs::File,
-    io::{self, BufReader},
+    collections::{BTreeMap, BTreeSet, HashSet},
     path::{Component, Path, PathBuf},
     thread,
     time::Duration,
@@ -97,8 +95,8 @@ pub struct ClientOnlyMods {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeploymentSelection {
-    pub upload_files: Vec<String>,
-    pub remove_files: Vec<String>,
+    pub upload_files: Vec<PathBuf>,
+    pub remove_files: Vec<PathBuf>,
 }
 
 struct LocalFile {
@@ -112,13 +110,17 @@ struct LocalDeployment {
 
 struct DeploymentPlan {
     current: DeploymentManifest,
-    tracked_removals: HashMap<PathBuf, ManifestEntry>,
     uploads: Vec<PathBuf>,
     upload_bytes: u64,
-    removals: Vec<PathBuf>,
+    removals: Vec<FileRemoval>,
     directory_removals: Vec<PathBuf>,
     preserved_files: Vec<PathBuf>,
     unchanged_files: usize,
+}
+
+struct FileRemoval {
+    path: PathBuf,
+    tracked_entry: Option<ManifestEntry>,
 }
 
 struct DeploymentPolicy {
@@ -202,7 +204,7 @@ impl ClientOnlyMods {
     }
 
     fn excludes(&self, path: &Path) -> bool {
-        self.paths.iter().any(|owned| path.starts_with(owned))
+        self.paths.iter().any(|other| path.starts_with(other))
     }
 }
 
@@ -273,12 +275,11 @@ impl RemoteLayout {
 
     fn manifest_path(&self) -> Result<PathBuf> {
         if self.loader_at_root {
-            join_name(
-                &self.path(&self.manifest_directory)?,
-                Path::new(manifest::FILE_NAME),
-            )
+            Ok(self
+                .path(&self.manifest_directory)?
+                .join(manifest::FILE_NAME))
         } else {
-            join_name(&self.base, Path::new(manifest::FILE_NAME))
+            Ok(self.base.join(manifest::FILE_NAME))
         }
     }
 }
@@ -409,11 +410,8 @@ impl<'a> DeploymentSession<'a> {
         directories: &mut BTreeSet<PathBuf>,
     ) -> Result<()> {
         let remote_directory = self.layout.path(directory)?;
-        let manifest_path = join_name(
-            &self.policy.manifest_directory,
-            Path::new(manifest::FILE_NAME),
-        )?;
-        let temporary_manifest = append_suffix(&manifest_path, ".tmp");
+        let manifest_path = self.policy.manifest_directory.join(manifest::FILE_NAME);
+        let temporary_manifest = manifest_path.with_added_extension("tmp");
 
         for entry in self
             .connection
@@ -453,20 +451,23 @@ impl<'a> DeploymentSession<'a> {
         let mut cleanup_warnings = Vec::new();
         let mut manifest = plan.current.clone();
 
-        for relative in &plan.removals {
-            match self.connection.remove_file(&self.layout.path(relative)?) {
+        for removal in &plan.removals {
+            match self
+                .connection
+                .remove_file(&self.layout.path(&removal.path)?)
+            {
                 Ok(true) => removed_files += 1,
                 Ok(false) => {}
                 Err(error) => {
                     let warning = format!(
                         "Could not remove {}: {error}",
-                        display_remote_path(relative)
+                        display_remote_path(&removal.path)
                     );
                     warn!("{warning}");
                     cleanup_warnings.push(warning);
 
-                    if let Some(entry) = plan.tracked_removals.get(relative) {
-                        manifest.files.insert(relative.clone(), entry.clone());
+                    if let Some(entry) = &removal.tracked_entry {
+                        manifest.files.insert(removal.path.clone(), entry.clone());
                     }
                 }
             }
@@ -475,7 +476,7 @@ impl<'a> DeploymentSession<'a> {
             report(progress(
                 completed,
                 total,
-                relative,
+                &removal.path,
                 DeploymentOperation::Remove,
             ));
         }
@@ -521,19 +522,19 @@ impl<'a> DeploymentSession<'a> {
 
     fn upload_with_retry(&mut self, relative: &Path, file: &LocalFile) -> Result<()> {
         let target = self.layout.path(relative)?;
-        let temporary = append_suffix(&target, ".gale-upload");
+        let temporary = target.with_added_extension("gale-upload");
         let base = self.layout.base.clone();
         let settings = self.settings;
         let password = self.password;
         let ensured_directories = &mut self.ensured_directories;
 
-        transfer_with_retry(
+        Self::transfer_with_retry(
             self.connection,
             settings,
             password,
             relative,
             |connection| {
-                upload_file(
+                Self::upload_file(
                     connection,
                     &base,
                     &target,
@@ -548,22 +549,126 @@ impl<'a> DeploymentSession<'a> {
 
     fn write_manifest_with_retry(&mut self, manifest: &DeploymentManifest) -> Result<()> {
         let target = self.layout.manifest_path()?;
-        let temporary = append_suffix(&target, ".tmp");
+        let temporary = target.with_added_extension("tmp");
         let base = self.layout.base.clone();
         let settings = self.settings;
         let password = self.password;
         let ensured_directories = &mut self.ensured_directories;
 
-        transfer_with_retry(
+        Self::transfer_with_retry(
             self.connection,
             settings,
             password,
             Path::new(manifest::FILE_NAME),
             |connection| {
-                ensure_remote_parents(connection, &base, &target, ensured_directories)?;
+                Self::ensure_remote_parents(connection, &base, &target, ensured_directories)?;
                 write_remote_manifest(connection, &target, &temporary, manifest)
             },
         )
+    }
+
+    fn upload_file(
+        connection: &mut RemoteConnection,
+        base: &Path,
+        target: &Path,
+        temporary: &Path,
+        relative: &Path,
+        file: &LocalFile,
+        ensured_directories: &mut HashSet<PathBuf>,
+    ) -> Result<()> {
+        Self::ensure_remote_parents(connection, base, target, ensured_directories)?;
+
+        let bytes = std::fs::read(&file.path)
+            .with_context(|| format!("failed to open {}", file.path.display()))?;
+        let uploaded_hash = blake3::hash(&bytes).to_hex().to_string();
+
+        ensure!(
+            uploaded_hash == file.manifest.hash,
+            "profile file changed during deployment: {}",
+            relative.display()
+        );
+
+        if !connection.supports_atomic_replace() {
+            connection.write_file(target, &bytes).with_context(|| {
+                format!(
+                    "failed to upload remote file {}",
+                    display_remote_path(relative)
+                )
+            })?;
+            return Ok(());
+        }
+
+        connection.write_file(temporary, &bytes).with_context(|| {
+            format!(
+                "failed to create remote temporary file for {}",
+                display_remote_path(relative)
+            )
+        })?;
+        replace_remote_file(connection, temporary, target).with_context(|| {
+            format!(
+                "failed to replace remote file {}",
+                display_remote_path(relative)
+            )
+        })
+    }
+
+    fn ensure_remote_parents(
+        connection: &mut RemoteConnection,
+        base: &Path,
+        target: &Path,
+        ensured_directories: &mut HashSet<PathBuf>,
+    ) -> Result<()> {
+        let mut directories = Vec::new();
+        let mut current = target.parent();
+
+        while let Some(directory) = current {
+            if directory == base {
+                break;
+            }
+
+            ensure!(
+                directory.starts_with(base),
+                "remote path escaped the server directory"
+            );
+            directories.push(directory.to_path_buf());
+            current = directory.parent();
+        }
+
+        for directory in directories.into_iter().rev() {
+            if ensured_directories.contains(&directory) {
+                continue;
+            }
+
+            connection.ensure_directory(&directory).with_context(|| {
+                format!("failed to create remote directory {}", directory.display())
+            })?;
+            ensured_directories.insert(directory);
+        }
+
+        Ok(())
+    }
+
+    fn transfer_with_retry<T>(
+        connection: &mut RemoteConnection,
+        settings: &RemoteServerSettings,
+        password: &str,
+        path: &Path,
+        mut transfer: impl FnMut(&mut RemoteConnection) -> Result<T>,
+    ) -> Result<T> {
+        let mut attempt = 1;
+
+        loop {
+            match transfer(connection) {
+                Ok(result) => return Ok(result),
+                Err(error) if attempt == TRANSFER_ATTEMPTS => return Err(error),
+                Err(error) => {
+                    warn!(%error, path = %path.display(), attempt, "transfer failed; reconnecting");
+                    thread::sleep(RETRY_DELAY * attempt as u32);
+                    *connection = reconnect(settings, password)?;
+                    attempt += 1;
+                }
+            }
+        }
     }
 
     fn read_manifest(&mut self) -> Result<DeploymentManifest> {
@@ -659,7 +764,7 @@ pub fn preview(
         remove_files: plan
             .removals
             .iter()
-            .map(|path| display_remote_path(path))
+            .map(|removal| display_remote_path(&removal.path))
             .collect(),
         preserved_files: plan.preserved_files.len(),
         unchanged_files: plan.unchanged_files,
@@ -775,13 +880,9 @@ fn is_disabled(path: &Path) -> bool {
 }
 
 fn hash_file(path: &Path) -> Result<String> {
-    let mut reader = BufReader::new(
-        File::open(path).with_context(|| format!("failed to open {}", path.display()))?,
-    );
-    let mut hasher = blake3::Hasher::new();
-    io::copy(&mut reader, &mut hasher)?;
-
-    Ok(hasher.finalize().to_hex().to_string())
+    crate::util::fs::checksum(path)
+        .with_context(|| format!("failed to hash {}", path.display()))
+        .map(|hash| hash.to_hex().to_string())
 }
 
 fn build_plan(
@@ -808,7 +909,7 @@ fn build_plan(
         })
         .map(|(path, _)| path.clone())
         .collect::<Vec<_>>();
-    let (mut removals, preserved_files): (Vec<_>, Vec<_>) = remote_files
+    let (removals, preserved_files): (Vec<_>, Vec<_>) = remote_files
         .into_iter()
         .filter(|path| !current.files.contains_key(path))
         .partition(|path| {
@@ -816,15 +917,13 @@ fn build_plan(
                 || !policy.preserves_untracked(path)
                 || is_transfer_artifact(path)
         });
-    let tracked_removals = removals
-        .iter()
-        .filter_map(|path| {
-            previous
-                .files
-                .get(path)
-                .map(|entry| (path.clone(), entry.clone()))
+    let mut removals = removals
+        .into_iter()
+        .map(|path| FileRemoval {
+            tracked_entry: previous.files.get(&path).cloned(),
+            path,
         })
-        .collect();
+        .collect::<Vec<_>>();
     let mut directory_removals = remote_directories
         .into_iter()
         .filter(|directory| policy.manages(directory))
@@ -840,35 +939,39 @@ fn build_plan(
         let selected_uploads = selection
             .upload_files
             .iter()
-            .map(String::as_str)
+            .map(PathBuf::as_path)
             .collect::<HashSet<_>>();
+        // Keep skipped uploads at their last deployed state.
         for path in uploads
             .iter()
-            .filter(|path| !selected_uploads.contains(display_remote_path(path).as_str()))
+            .filter(|path| !selected_uploads.contains(path.as_path()))
         {
             match previous.files.get(path) {
                 Some(entry) => current.files.insert(path.clone(), entry.clone()),
                 None => current.files.remove(path),
             };
         }
-        uploads.retain(|path| selected_uploads.contains(display_remote_path(path).as_str()));
+        uploads.retain(|path| selected_uploads.contains(path.as_path()));
 
         let selected_removals = selection
             .remove_files
             .iter()
-            .map(String::as_str)
+            .map(PathBuf::as_path)
             .collect::<HashSet<_>>();
         let skipped_removals = removals
             .iter()
-            .filter(|path| !selected_removals.contains(display_remote_path(path).as_str()))
-            .cloned()
+            .filter(|removal| !selected_removals.contains(removal.path.as_path()))
+            .map(|removal| removal.path.clone())
             .collect::<Vec<_>>();
-        for path in &skipped_removals {
-            if let Some(entry) = previous.files.get(path) {
-                current.files.insert(path.clone(), entry.clone());
+        // Skipped removals stay tracked for the next deployment.
+        for removal in &removals {
+            if skipped_removals.contains(&removal.path)
+                && let Some(entry) = &removal.tracked_entry
+            {
+                current.files.insert(removal.path.clone(), entry.clone());
             }
         }
-        removals.retain(|path| selected_removals.contains(display_remote_path(path).as_str()));
+        removals.retain(|removal| selected_removals.contains(removal.path.as_path()));
         directory_removals.retain(|path| {
             !skipped_removals
                 .iter()
@@ -883,7 +986,6 @@ fn build_plan(
 
     DeploymentPlan {
         current,
-        tracked_removals,
         uploads,
         upload_bytes,
         removals,
@@ -910,110 +1012,6 @@ fn progress(
         total,
         path: display_remote_path(path),
         operation,
-    }
-}
-
-fn upload_file(
-    connection: &mut RemoteConnection,
-    base: &Path,
-    target: &Path,
-    temporary: &Path,
-    relative: &Path,
-    file: &LocalFile,
-    ensured_directories: &mut HashSet<PathBuf>,
-) -> Result<()> {
-    ensure_remote_parents(connection, base, target, ensured_directories)?;
-
-    let bytes = std::fs::read(&file.path)
-        .with_context(|| format!("failed to open {}", file.path.display()))?;
-    let uploaded_hash = blake3::hash(&bytes).to_hex().to_string();
-
-    ensure!(
-        uploaded_hash == file.manifest.hash,
-        "profile file changed during deployment: {}",
-        relative.display()
-    );
-
-    if !connection.supports_atomic_replace() {
-        connection.write_file(target, &bytes).with_context(|| {
-            format!(
-                "failed to upload remote file {}",
-                display_remote_path(relative)
-            )
-        })?;
-        return Ok(());
-    }
-
-    connection.write_file(temporary, &bytes).with_context(|| {
-        format!(
-            "failed to create remote temporary file for {}",
-            display_remote_path(relative)
-        )
-    })?;
-    replace_remote_file(connection, temporary, target).with_context(|| {
-        format!(
-            "failed to replace remote file {}",
-            display_remote_path(relative)
-        )
-    })
-}
-
-fn ensure_remote_parents(
-    connection: &mut RemoteConnection,
-    base: &Path,
-    target: &Path,
-    ensured_directories: &mut HashSet<PathBuf>,
-) -> Result<()> {
-    let mut directories = Vec::new();
-    let mut current = target.parent();
-
-    while let Some(directory) = current {
-        if directory == base {
-            break;
-        }
-
-        ensure!(
-            directory.starts_with(base),
-            "remote path escaped the server directory"
-        );
-        directories.push(directory.to_path_buf());
-        current = directory.parent();
-    }
-
-    for directory in directories.into_iter().rev() {
-        if ensured_directories.contains(&directory) {
-            continue;
-        }
-
-        connection.ensure_directory(&directory).with_context(|| {
-            format!("failed to create remote directory {}", directory.display())
-        })?;
-        ensured_directories.insert(directory);
-    }
-
-    Ok(())
-}
-
-fn transfer_with_retry<T>(
-    connection: &mut RemoteConnection,
-    settings: &RemoteServerSettings,
-    password: &str,
-    path: &Path,
-    mut transfer: impl FnMut(&mut RemoteConnection) -> Result<T>,
-) -> Result<T> {
-    let mut attempt = 1;
-
-    loop {
-        match transfer(connection) {
-            Ok(result) => return Ok(result),
-            Err(error) if attempt == TRANSFER_ATTEMPTS => return Err(error),
-            Err(error) => {
-                warn!(%error, path = %path.display(), attempt, "transfer failed; reconnecting");
-                thread::sleep(RETRY_DELAY * attempt as u32);
-                *connection = reconnect(settings, password)?;
-                attempt += 1;
-            }
-        }
     }
 }
 
@@ -1056,13 +1054,15 @@ fn replace_remote_file(
     temporary: &Path,
     target: &Path,
 ) -> Result<()> {
+    // Prefer the server's atomic overwrite.
     if connection.rename_file(temporary, target, true).is_ok() {
         return Ok(());
     }
 
     let target_exists = connection.file_exists(target)?;
-    let backup = append_suffix(target, ".gale-backup");
+    let backup = target.with_added_extension("gale-backup");
 
+    // Keep the old file until the replacement lands.
     if target_exists {
         if connection.file_exists(&backup)? {
             connection
@@ -1098,12 +1098,6 @@ fn join_name(base: &Path, name: &Path) -> Result<PathBuf> {
     );
 
     Ok(base.join(name))
-}
-
-fn append_suffix(path: &Path, suffix: &str) -> PathBuf {
-    let mut path = path.as_os_str().to_owned();
-    path.push(suffix);
-    path.into()
 }
 
 fn display_remote_path(path: &Path) -> String {
@@ -1260,8 +1254,11 @@ mod tests {
                 .contains_key(&path("BepInEx/plugins/Example/Enabled.dll"))
         );
         assert_eq!(
-            plan.removals,
-            [path("BepInEx/plugins/Example/Disabled.dll")]
+            plan.removals
+                .iter()
+                .map(|removal| removal.path.as_path())
+                .collect::<Vec<_>>(),
+            [Path::new("BepInEx/plugins/Example/Disabled.dll")]
         );
     }
 
@@ -1379,7 +1376,13 @@ mod tests {
             None,
         );
 
-        assert_eq!(plan.removals, [path("BepInEx/plugins/Example/Delete.dll")]);
+        assert_eq!(
+            plan.removals
+                .iter()
+                .map(|removal| removal.path.as_path())
+                .collect::<Vec<_>>(),
+            [Path::new("BepInEx/plugins/Example/Delete.dll")]
+        );
     }
 
     #[test]
@@ -1410,7 +1413,7 @@ mod tests {
             [path("BepInEx/plugins/Removed")].into_iter().collect(),
             &policy(),
             Some(&DeploymentSelection {
-                upload_files: vec!["BepInEx/plugins/Example/New.dll".to_owned()],
+                upload_files: vec![path("BepInEx/plugins/Example/New.dll")],
                 remove_files: Vec::new(),
             }),
         );
@@ -1445,7 +1448,7 @@ mod tests {
             &policy(),
             Some(&DeploymentSelection {
                 upload_files: Vec::new(),
-                remove_files: vec!["BepInEx/plugins/Removed/Removed.dll".to_owned()],
+                remove_files: vec![path("BepInEx/plugins/Removed/Removed.dll")],
             }),
         );
 
@@ -1489,7 +1492,13 @@ mod tests {
         );
 
         assert_eq!(plan.preserved_files, [generated]);
-        assert_eq!(plan.removals, [artifact, tracked, plugin]);
+        assert_eq!(
+            plan.removals
+                .iter()
+                .map(|removal| removal.path.as_path())
+                .collect::<Vec<_>>(),
+            [artifact.as_path(), tracked.as_path(), plugin.as_path()]
+        );
         assert!(plan.directory_removals.is_empty());
     }
 
