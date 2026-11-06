@@ -10,7 +10,7 @@
 
 	type Props = WithoutChildren<Select.RootProps> & {
 		placeholder?: string;
-		items: { value: string; label: string; disabled?: boolean }[];
+		items: { value: string; label: string; description?: string; disabled?: boolean }[];
 		triggerClass?: string;
 		icon?: string;
 		avoidCollisions?: boolean;
@@ -98,8 +98,9 @@
 						>
 							<Select.Viewport>
 								{#each items as item, i (i + item.value)}
+									{@const { description, ...itemProps } = item}
 									<Select.Item
-										{...item}
+										{...itemProps}
 										class="hover:text-primary-800 group dark:hover:bg-primary-700 dark:hover:text-primary-200 hover:bg-primary-200 flex w-full cursor-default items-center rounded-md px-3 py-1"
 									>
 										{#snippet children({ selected })}
@@ -107,14 +108,22 @@
 												{@render itemSnippet({ ...item, selected })}
 											{/if}
 
-											<span
-												class={[
-													'overflow-hidden text-nowrap',
-													selected
-														? 'text-primary-700 dark:text-primary-300'
-														: 'text-primary-500 group-hover:text-primary-700 dark:text-primary-400 dark:group-hover:text-primary-300'
-												]}>{item.label}</span
-											>
+											<div class="flex grow flex-col overflow-hidden">
+												<span
+													class={[
+														'overflow-hidden text-nowrap',
+														selected
+															? 'text-primary-700 dark:text-primary-300'
+															: 'text-primary-500 group-hover:text-primary-700 dark:text-primary-400 dark:group-hover:text-primary-300'
+													]}>{item.label}</span
+												>
+
+												{#if description}
+													<span class="text-primary-500 dark:text-primary-400 text-xs">
+														{description}
+													</span>
+												{/if}
+											</div>
 
 											{#if selected}
 												<Icon

@@ -145,7 +145,7 @@ async fn read_code_from_backend(backend: Backend, key: Uuid, app: &AppHandle) ->
 #[derive(Debug, Default, Deserialize, Clone)]
 #[serde(default, rename_all = "camelCase")]
 pub struct ImportOptions {
-    import_all: bool,
+    config: ImportConfigOption,
     merge: bool,
     ignore_missing_mods: bool,
 }
@@ -165,6 +165,14 @@ impl ImportOptions {
         self.ignore_missing_mods = ignore_missing_mods;
         self
     }
+}
+
+#[derive(Debug, Default, Deserialize, Clone, PartialEq, Eq)]
+pub enum ImportConfigOption {
+    All,
+    #[default]
+    Safe,
+    None,
 }
 
 pub(super) async fn import_profile(
@@ -190,17 +198,19 @@ pub(super) async fn import_profile(
 
     let result = match result {
         Ok(()) => {
-            let manager = app.lock_manager();
-            let (_, profile) = manager.profile_by_id(profile_id)?;
+            if options.config != ImportConfigOption::None {
+                let manager = app.lock_manager();
+                let (_, profile) = manager.profile_by_id(profile_id)?;
 
-            import_config(
-                &profile_path,
-                &data.path,
-                game.mod_loader.mod_config_dirs(),
-                |path| !profile.excluded_export_files.contains(path),
-                &options,
-            )
-            .context("error importing config")?;
+                import_config(
+                    &profile_path,
+                    &data.path,
+                    game.mod_loader.mod_config_dirs(),
+                    |path| !profile.excluded_export_files.contains(path),
+                    &options,
+                )
+                .context("error importing config")?;
+            }
 
             Ok(profile_id)
         }
@@ -376,7 +386,7 @@ where
     F: FnMut(&Path) -> bool,
 {
     let src_files: HashSet<PathBuf> = super::export::list_files(src)
-        .filter(|path| options.import_all || is_always_imported(path))
+        .filter(|path| options.config == ImportConfigOption::All || is_path_safe(path))
         .collect();
 
     let dest_files: HashSet<PathBuf> = super::export::find_config(dest, config_dirs)
@@ -428,7 +438,7 @@ where
     Ok(())
 }
 
-fn is_always_imported(path: impl AsRef<Path>) -> bool {
+fn is_path_safe(path: impl AsRef<Path>) -> bool {
     static EXCLUDE_SET: LazyLock<GlobSet> = LazyLock::new(|| {
         GlobSetBuilder::new()
             .add(Glob::new("export.r2x").unwrap())
