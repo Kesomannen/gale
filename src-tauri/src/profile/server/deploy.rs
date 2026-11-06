@@ -523,60 +523,30 @@ impl<'a> DeploymentSession<'a> {
     fn upload_with_retry(&mut self, relative: &Path, file: &LocalFile) -> Result<()> {
         let target = self.layout.path(relative)?;
         let temporary = target.with_added_extension("gale-upload");
-        let base = self.layout.base.clone();
-        let settings = self.settings;
-        let password = self.password;
-        let ensured_directories = &mut self.ensured_directories;
 
-        Self::transfer_with_retry(
-            self.connection,
-            settings,
-            password,
-            relative,
-            |connection| {
-                Self::upload_file(
-                    connection,
-                    &base,
-                    &target,
-                    &temporary,
-                    relative,
-                    file,
-                    ensured_directories,
-                )
-            },
-        )
+        self.transfer_with_retry(relative, |session| {
+            session.upload_file(&target, &temporary, relative, file)
+        })
     }
 
     fn write_manifest_with_retry(&mut self, manifest: &DeploymentManifest) -> Result<()> {
         let target = self.layout.manifest_path()?;
         let temporary = target.with_added_extension("tmp");
-        let base = self.layout.base.clone();
-        let settings = self.settings;
-        let password = self.password;
-        let ensured_directories = &mut self.ensured_directories;
 
-        Self::transfer_with_retry(
-            self.connection,
-            settings,
-            password,
-            Path::new(manifest::FILE_NAME),
-            |connection| {
-                Self::ensure_remote_parents(connection, &base, &target, ensured_directories)?;
-                write_remote_manifest(connection, &target, &temporary, manifest)
-            },
-        )
+        self.transfer_with_retry(Path::new(manifest::FILE_NAME), |session| {
+            session.ensure_remote_parents(&target)?;
+            write_remote_manifest(session.connection, &target, &temporary, manifest)
+        })
     }
 
     fn upload_file(
-        connection: &mut RemoteConnection,
-        base: &Path,
+        &mut self,
         target: &Path,
         temporary: &Path,
         relative: &Path,
         file: &LocalFile,
-        ensured_directories: &mut HashSet<PathBuf>,
     ) -> Result<()> {
-        Self::ensure_remote_parents(connection, base, target, ensured_directories)?;
+        self.ensure_remote_parents(target)?;
 
         let bytes = std::fs::read(&file.path)
             .with_context(|| format!("failed to open {}", file.path.display()))?;
@@ -588,23 +558,27 @@ impl<'a> DeploymentSession<'a> {
             relative.display()
         );
 
-        if !connection.supports_atomic_replace() {
-            connection.write_file(target, &bytes).with_context(|| {
-                format!(
-                    "failed to upload remote file {}",
-                    display_remote_path(relative)
-                )
-            })?;
+        if !self.connection.supports_atomic_replace() {
+            self.connection
+                .write_file(target, &bytes)
+                .with_context(|| {
+                    format!(
+                        "failed to upload remote file {}",
+                        display_remote_path(relative)
+                    )
+                })?;
             return Ok(());
         }
 
-        connection.write_file(temporary, &bytes).with_context(|| {
-            format!(
-                "failed to create remote temporary file for {}",
-                display_remote_path(relative)
-            )
-        })?;
-        replace_remote_file(connection, temporary, target).with_context(|| {
+        self.connection
+            .write_file(temporary, &bytes)
+            .with_context(|| {
+                format!(
+                    "failed to create remote temporary file for {}",
+                    display_remote_path(relative)
+                )
+            })?;
+        replace_remote_file(self.connection, temporary, target).with_context(|| {
             format!(
                 "failed to replace remote file {}",
                 display_remote_path(relative)
@@ -612,22 +586,17 @@ impl<'a> DeploymentSession<'a> {
         })
     }
 
-    fn ensure_remote_parents(
-        connection: &mut RemoteConnection,
-        base: &Path,
-        target: &Path,
-        ensured_directories: &mut HashSet<PathBuf>,
-    ) -> Result<()> {
+    fn ensure_remote_parents(&mut self, target: &Path) -> Result<()> {
         let mut directories = Vec::new();
         let mut current = target.parent();
 
         while let Some(directory) = current {
-            if directory == base {
+            if directory == self.layout.base {
                 break;
             }
 
             ensure!(
-                directory.starts_with(base),
+                directory.starts_with(&self.layout.base),
                 "remote path escaped the server directory"
             );
             directories.push(directory.to_path_buf());
@@ -635,36 +604,36 @@ impl<'a> DeploymentSession<'a> {
         }
 
         for directory in directories.into_iter().rev() {
-            if ensured_directories.contains(&directory) {
+            if self.ensured_directories.contains(&directory) {
                 continue;
             }
 
-            connection.ensure_directory(&directory).with_context(|| {
-                format!("failed to create remote directory {}", directory.display())
-            })?;
-            ensured_directories.insert(directory);
+            self.connection
+                .ensure_directory(&directory)
+                .with_context(|| {
+                    format!("failed to create remote directory {}", directory.display())
+                })?;
+            self.ensured_directories.insert(directory);
         }
 
         Ok(())
     }
 
     fn transfer_with_retry<T>(
-        connection: &mut RemoteConnection,
-        settings: &RemoteServerSettings,
-        password: &str,
+        &mut self,
         path: &Path,
-        mut transfer: impl FnMut(&mut RemoteConnection) -> Result<T>,
+        mut transfer: impl FnMut(&mut Self) -> Result<T>,
     ) -> Result<T> {
         let mut attempt = 1;
 
         loop {
-            match transfer(connection) {
+            match transfer(self) {
                 Ok(result) => return Ok(result),
                 Err(error) if attempt == TRANSFER_ATTEMPTS => return Err(error),
                 Err(error) => {
                     warn!(%error, path = %path.display(), attempt, "transfer failed; reconnecting");
                     thread::sleep(RETRY_DELAY * attempt as u32);
-                    *connection = reconnect(settings, password)?;
+                    *self.connection = reconnect(self.settings, self.password)?;
                     attempt += 1;
                 }
             }
