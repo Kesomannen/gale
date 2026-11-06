@@ -29,6 +29,7 @@
 	import ColorPrefs from '$lib/components/prefs/ColorPrefs.svelte';
 	import ExportFilesDialog from '$lib/components/dialogs/ExportFilesDialog.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import ServerSettingsPref from '$lib/components/prefs/ServerSettingsPref.svelte';
 
 	let prefs: Prefs | null = $state(null);
 	let gamePrefs: GamePrefs | null = $state(null);
@@ -242,6 +243,10 @@
 				value={profiles.active.customArgs}
 				setValue={async (value) => await api.profile.setCustomArgs(value)}
 			/>
+
+			{#if games.active?.dedicatedServer}
+				<ServerSettingsPref />
+			{/if}
 
 			<SmallHeading>{m.prefs_miscellaneous_title()}</SmallHeading>
 
