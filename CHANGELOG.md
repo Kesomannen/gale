@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for Lovely 0.10.0+ by adding `winmm.dll` to Lovely's installed files
+  - If you have installed Lovely at that version with a previous version of Gale, you will need to clear your mod cache and reinstall Lovely for the corrected rules to apply
+- Mod context option to resume ignored mod updates (thanks [@AzumattDev](https://github.com/AzumattDev))
+- Ability to ignore config when importing profiles (thanks [@DeveloperBlue](https://github.com/DeveloperBlue))
+
 ## 1.23.3 (2026-10-30)
 
 ### Added
