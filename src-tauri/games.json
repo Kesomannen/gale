@@ -321,6 +321,18 @@
 		}
 	},
 	{
+		"name": "ASKA",
+		"slug": "aska",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 1898300
+			}
+		}
+	},
+	{
 		"name": "ATLYSS",
 		"modLoader": {
 			"name": "BepInEx"
