@@ -2241,6 +2241,18 @@
 		}
 	},
 	{
+		"name": "Rhythm Doctor",
+		"slug": "rhythm-doctor",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 774181
+			}
+		}
+	},
+	{
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
