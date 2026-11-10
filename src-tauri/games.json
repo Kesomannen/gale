@@ -2241,6 +2241,18 @@
 		}
 	},
 	{
+		"name": "Rhythm Doctor",
+		"slug": "rhythm-doctor",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 774181
+			}
+		}
+	},
+	{
 		"name": "Risk Of Rain Returns",
 		"modLoader": {
 			"name": "ReturnOfModding",
@@ -2332,6 +2344,18 @@
 		"platforms": {
 			"steam": {
 				"id": 1764530
+			}
+		}
+	},
+	{
+		"name": "Scam With Your Friends",
+		"slug": "scam-with-your-friends",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4954910
 			}
 		}
 	},
