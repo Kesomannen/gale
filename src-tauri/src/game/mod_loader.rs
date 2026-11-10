@@ -238,7 +238,7 @@ impl ModLoader<'static> {
             }
 
             (true, ModLoaderKind::Lovely {}) => {
-                const FILES: &[&str] = &["version.dll"];
+                const FILES: &[&str] = &["version.dll", "winmm.dll"];
 
                 Box::new(ExtractInstaller::new(FILES, FlattenTopLevel::No))
             }
