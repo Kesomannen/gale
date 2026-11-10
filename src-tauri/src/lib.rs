@@ -176,6 +176,7 @@ pub fn run() {
             profile::update::commands::update_mods,
             profile::update::commands::ignore_update,
             profile::update::commands::ignore_package_updates,
+            profile::update::commands::resume_updates,
             profile::import::commands::import_profile,
             profile::import::commands::read_profile_code,
             profile::import::commands::read_profile_file,

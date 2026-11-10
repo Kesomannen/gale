@@ -38,3 +38,15 @@ pub fn ignore_package_updates(package_uuid: Uuid, app: AppHandle) -> Result<()> 
 
     Ok(())
 }
+
+#[command]
+pub fn resume_updates(id: ModId, app: AppHandle) -> Result<()> {
+    let mut manager = app.lock_manager();
+
+    let profile = manager.active_profile_mut();
+    profile.ignored_version_updates.remove(&id.version_uuid);
+    profile.ignored_package_updates.remove(&id.package_uuid);
+    profile.save(&app, true)?;
+
+    Ok(())
+}

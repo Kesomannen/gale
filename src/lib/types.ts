@@ -360,9 +360,15 @@ export type R2ImportData = {
 };
 
 export type ImportOptions = {
-	importAll?: boolean;
+	config?: ImportConfigOption;
 	merge?: boolean;
 };
+
+export enum ImportConfigOption {
+	All = 'All',
+	Safe = 'Safe',
+	None = 'None'
+}
 
 export type UploadSubmissionResult = {
 	hidden?: boolean;
