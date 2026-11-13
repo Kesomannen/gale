@@ -8,6 +8,13 @@
   - If you have installed Lovely at that version with a previous version of Gale, you will need to clear your mod cache and reinstall Lovely for the corrected rules to apply
 - Mod context option to resume ignored mod updates (thanks [@AzumattDev](https://github.com/AzumattDev))
 - Ability to ignore config when importing profiles (thanks [@DeveloperBlue](https://github.com/DeveloperBlue))
+- Dedicated server support (thanks [@AzumattDev](https://github.com/AzumattDev))
+  - Servers are either launched locally or deployed remotely via SSH or FTP/SFTP
+  - Valheim is currently the only supported game, but other games may be added in the future
+
+### Fixed
+
+- Updated Ukrainian translation (thanks [@VoronUA1](https://github.com/VoronUA1))
 
 ## 1.23.3 (2026-10-30)
 
