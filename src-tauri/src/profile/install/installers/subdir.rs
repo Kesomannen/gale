@@ -296,7 +296,7 @@ impl<'a> SubdirInstaller<'a> {
 
     /// Executes a function for each of a mod's installed files within a profile.
     /// Returns whether any tracked files where scanned.
-    fn scan_mod<F>(&self, profile_mod: &ProfileMod, profile: &Profile, mut scan: F) -> Result<bool>
+    fn scan_mod<F>(&self, package_name: &str, profile: &Profile, mut scan: F) -> Result<bool>
     where
         F: FnMut(&Path) -> Result<()>,
     {
@@ -305,8 +305,6 @@ impl<'a> SubdirInstaller<'a> {
         // with [`SubdirMode::Track`]
         let mut scanned_tracked_files = false;
 
-        let package_name = profile_mod.full_name();
-
         for subdir in self.subdirs() {
             match subdir.mode {
                 SubdirMode::Separate | SubdirMode::SeparateFlatten => {
@@ -314,14 +312,14 @@ impl<'a> SubdirInstaller<'a> {
                     // ex. BepInEx/plugins
                     path.push(subdir.target);
                     // ex. BepInEx/plugins/Author-CoolMod
-                    path.push(&*package_name);
+                    path.push(package_name);
 
                     scan(&path)?;
                 }
                 SubdirMode::Track if !scanned_tracked_files => {
                     scanned_tracked_files = true;
 
-                    let mut state = PackageStateHandle::new(&package_name, profile);
+                    let mut state = PackageStateHandle::new(package_name, profile);
                     for file in state.files() {
                         scan(&profile.path.join(file))?;
                     }
@@ -495,7 +493,7 @@ impl PackageInstaller for SubdirInstaller<'_> {
     }
 
     fn toggle(&mut self, enabled: bool, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        self.scan_mod(profile_mod, profile, |path| {
+        self.scan_mod(&profile_mod.full_name(), profile, |path| {
             install::fs::toggle_any(path, enabled)
         })?;
 
@@ -503,7 +501,7 @@ impl PackageInstaller for SubdirInstaller<'_> {
     }
 
     fn uninstall(&mut self, profile_mod: &ProfileMod, profile: &Profile) -> Result<()> {
-        let has_tracked_files = self.scan_mod(profile_mod, profile, |path| {
+        let has_tracked_files = self.scan_mod(&profile_mod.full_name(), profile, |path| {
             install::fs::uninstall_any(path)
         })?;
 
@@ -526,6 +524,16 @@ impl PackageInstaller for SubdirInstaller<'_> {
         }
 
         Ok(())
+    }
+
+    fn installed_paths(&self, package_name: &str, profile: &Profile) -> Result<Vec<PathBuf>> {
+        let mut paths = Vec::new();
+        self.scan_mod(package_name, profile, |path| {
+            paths.push(path.to_owned());
+            Ok(())
+        })?;
+
+        Ok(paths)
     }
 
     fn mod_dir(&self, package_name: &str, profile: &Profile) -> Option<PathBuf> {

@@ -17,6 +17,7 @@ export * as install from './install';
 export * as launch from './launch';
 export * as sync from './sync';
 export * as update from './update';
+export * as server from './server';
 
 export const getGameInfo = () => invoke<GameInfo>('get_game_info');
 export const favoriteGame = (slug: string) => invoke('favorite_game', { slug });

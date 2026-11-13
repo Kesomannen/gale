@@ -2,7 +2,7 @@
 	import profiles from '$lib/state/profile.svelte';
 	import type { InstallEvent, InstallTask } from '$lib/types';
 	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-	import { Popover, Progress } from 'bits-ui';
+	import { Popover } from 'bits-ui';
 	import { onDestroy, onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 	import { fade, fly, scale } from 'svelte/transition';
@@ -12,6 +12,7 @@
 	import IconButton from '$lib/components/ui/IconButton.svelte';
 	import * as api from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import ProgressBar from '$lib/components/ui/ProgressBar.svelte';
 
 	let shown = $state(false);
 	let showCancel = $state(false);
@@ -173,16 +174,7 @@
 							</div>
 						{/if}
 
-						<Progress.Root
-							value={shownProgress.current}
-							max={1}
-							class="dark:bg-primary-900 bg-primary-200 relative mt-2 h-4 w-full overflow-hidden rounded-full"
-						>
-							<div
-								class="bg-accent-700 absolute top-0 left-0 h-full rounded-l-full"
-								style="width: {shownProgress.current * 100}%"
-							></div>
-						</Progress.Root>
+						<ProgressBar value={shownProgress.current} class="dark:bg-primary-900 mt-2 h-4" />
 					</div>
 				{/if}
 			</div>

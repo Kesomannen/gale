@@ -146,6 +146,7 @@ pub struct ProfileData {
     pub custom_args: String,
     pub ignored_package_updates: Option<HashSet<Uuid>>,
     pub excluded_export_files: Option<HashSet<PathBuf>>,
+    pub server_settings: Option<profile::server::config::ProfileServerSettings>,
 }
 
 pub struct SaveData {
@@ -249,7 +250,8 @@ impl Db {
                     sync_data,
                     custom_args,
                     ignored_package_updates,
-                    excluded_export_files
+                    excluded_export_files,
+                    server_settings
                 FROM profiles",
             )?
             .query_map((), |row| {
@@ -275,6 +277,7 @@ impl Db {
                     custom_args,
                     ignored_package_updates: map_json_option_row(row, 9)?,
                     excluded_export_files: map_json_option_row(row, 10)?,
+                    server_settings: map_json_option_row(row, 11)?,
                 })
             })?
             .collect::<rusqlite::Result<Vec<_>>>()
@@ -393,9 +396,10 @@ impl Db {
                     sync_data,
                     custom_args,
                     ignored_package_updates,
-                    excluded_export_files
+                    excluded_export_files,
+                    server_settings
                 ) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )?;
 
         for profile in profiles {
@@ -413,6 +417,11 @@ impl Db {
                 .transpose()?;
             let ignored_package_updates = serde_json::to_string(&profile.ignored_package_updates)?;
             let excluded_export_files = serde_json::to_string(&profile.excluded_export_files)?;
+            let server_settings = profile
+                .server_settings
+                .as_ref()
+                .map(serde_json::to_string)
+                .transpose()?;
 
             stmt.execute(params![
                 profile.id,
@@ -426,6 +435,7 @@ impl Db {
                 profile.custom_args,
                 ignored_package_updates,
                 excluded_export_files,
+                server_settings
             ])?;
         }
 
