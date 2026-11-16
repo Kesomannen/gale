@@ -79,15 +79,15 @@ Entry3 = Easy
 # Acceptable value range: From 0 to 10
 Entry4 = 5
 
-## Multiplier for a carts content weight. E.g. set to 0 to ignore a cart's content weight
-# Setting type: Single
-# Default value: NaN
-ContentMassMultiplier = NaN
-
 ## This is entry 5
 # Setting type: Double
 # Default value: 2
 Entry5 = 3.13
+
+## This is entry 6
+# Setting type: Single
+# Default value:
+Value = ∞
 
 OrphanedEntry = Hi!
 
@@ -164,26 +164,23 @@ fn test_file() -> File {
                         }),
                     ),
                     EntryKind::normal(
-                        "ContentMassMultiplier",
-                        "Multiplier for a carts content weight. E.g. set to 0 to ignore a cart's content weight",
-                        Some(Value::Single(Num {
-                            value: f32::NAN,
+                        "Entry5",
+                        "This is entry 5",
+                        Some(Value::Double(Num {
+                            value: Float(2.0),
                             range: None,
                         })),
-                        Value::Single(Num {
-                            value: f32::NAN,
+                        Value::Double(Num {
+                            value: Float(3.13),
                             range: None,
                         }),
                     ),
                     EntryKind::normal(
-                        "Entry5",
-                        "This is entry 5",
-                        Some(Value::Double(Num {
-                            value: 2.0,
-                            range: None,
-                        })),
-                        Value::Double(Num {
-                            value: 3.13,
+                        "Value",
+                        "This is entry 6",
+                        None,
+                        Value::Single(Num {
+                            value: Float(f32::INFINITY),
                             range: None,
                         }),
                     ),

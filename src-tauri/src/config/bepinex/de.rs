@@ -8,7 +8,7 @@ use eyre::{Context, OptionExt, Result, anyhow, bail, ensure};
 use itertools::Itertools;
 use serde::Serialize;
 
-use super::{Num, File, Section, Metadata, Entry, Value, EntryKind};
+use super::{Entry, EntryKind, File, Metadata, Num, Section, Value};
 
 pub const FLAGS_MESSAGE: &str =
     "# Multiple values can be set at the same time by separating them with , (e.g. Debug, Warning)";
@@ -20,18 +20,15 @@ where
 {
     fn parse(value: &str, range: Option<&(String, String)>) -> Result<Self> {
         let value = value
-            .replace(',', ".")
             .parse()
             .with_context(|| format!("failed to parse value '{value}'"))?;
 
         let range = match range {
             Some((min, max)) => {
                 let min = min
-                    .replace(',', ".")
                     .parse()
                     .with_context(|| format!("invalid minimum value '{min}'"))?;
                 let max = max
-                    .replace(',', ".")
                     .parse()
                     .with_context(|| format!("invalid maximum value '{max}'"))?;
 
@@ -138,19 +135,23 @@ impl EntryBuilder {
     }
 
     fn parse_enum(string: String, options: Vec<String>, is_flags: bool) -> Value {
-        if is_flags { Value::Flags {
-            indicies: string
-                .split(", ")
-                .filter_map(|value| options.iter().position(|opt| opt == value))
-                .collect(),
-            options,
-        } } else { Value::Enum {
-            index: options
-                .iter()
-                .position(|opt| *opt == string)
-                .unwrap_or_default(),
-            options,
-        } }
+        if is_flags {
+            Value::Flags {
+                indicies: string
+                    .split(", ")
+                    .filter_map(|value| options.iter().position(|opt| opt == value))
+                    .collect(),
+                options,
+            }
+        } else {
+            Value::Enum {
+                index: options
+                    .iter()
+                    .position(|opt| *opt == string)
+                    .unwrap_or_default(),
+                options,
+            }
+        }
     }
 
     fn parse_simple_value(

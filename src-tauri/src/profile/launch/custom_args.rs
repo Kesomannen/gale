@@ -111,7 +111,8 @@ impl FromStr for CustomArgs {
                 }
                 prefix = Some(args);
                 args = Vec::new();
-            } else if let Some((key, value)) = word.split_once('=').filter(|(k, _)| is_env_name(k)) {
+            } else if let Some((key, value)) = word.split_once('=').filter(|(k, _)| is_env_name(k))
+            {
                 env.push((key.to_string(), value.to_string()));
             } else {
                 args.push(word);

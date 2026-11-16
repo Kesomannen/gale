@@ -1,6 +1,11 @@
-use std::io::{BufRead, Write};
+use std::{
+    fmt::Display,
+    io::{BufRead, Write},
+    str::FromStr,
+};
 
 use eyre::{OptionExt, Result, eyre};
+use serde::Serialize;
 
 use super::frontend::{self, Num};
 
@@ -159,8 +164,8 @@ pub enum Value {
     Boolean(bool),
     String(String),
     Int32(Num<i32>),
-    Single(Num<f32>),
-    Double(Num<f64>),
+    Single(Num<Float<f32>>),
+    Double(Num<Float<f64>>),
     Other(String),
     Enum {
         index: usize,
@@ -204,13 +209,8 @@ impl From<Value> for frontend::Value {
             Value::Boolean(bool) => frontend::Value::Bool(bool),
             Value::String(str) => frontend::Value::String(str),
             Value::Int32(num) => frontend::Value::Int(num),
-            Value::Single(num) => frontend::Value::Float(num),
-            Value::Double(num) => frontend::Value::Float(Num {
-                value: num.value as f32,
-                range: num
-                    .range
-                    .map(|range| (range.start as f32)..(range.end as f32)),
-            }),
+            Value::Single(num) => frontend::Value::Float(num.map(Float::into_inner)),
+            Value::Double(num) => frontend::Value::Float(num.map(|f| f.into_inner() as f32)),
             Value::Other(str) => frontend::Value::String(str),
             Value::Enum { index, options } => frontend::Value::Enum { index, options },
             Value::Flags { indicies, options } => frontend::Value::Flags { indicies, options },
@@ -224,9 +224,65 @@ impl From<frontend::Value> for Value {
             frontend::Value::Bool(bool) => Value::Boolean(bool),
             frontend::Value::String(str) => Value::String(str),
             frontend::Value::Int(num) => Value::Int32(num),
-            frontend::Value::Float(num) => Value::Single(num),
+            frontend::Value::Float(num) => Value::Single(num.map(Float)),
             frontend::Value::Enum { index, options } => Value::Enum { index, options },
             frontend::Value::Flags { indicies, options } => Value::Flags { indicies, options },
         }
+    }
+}
+
+#[derive(Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[serde(transparent)]
+pub struct Float<T>(T);
+
+impl<T> Float<T> {
+    fn into_inner(self) -> T {
+        self.0
+    }
+}
+
+impl<T: Infinity + Display> Display for Float<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.0.is_infinite() {
+            write!(f, "∞")
+        } else {
+            write!(f, "{}", self.0)
+        }
+    }
+}
+
+trait Infinity {
+    const INFINITY: Self;
+
+    fn is_infinite(&self) -> bool;
+}
+
+impl Infinity for f32 {
+    const INFINITY: Self = f32::INFINITY;
+
+    fn is_infinite(&self) -> bool {
+        f32::is_infinite(*self)
+    }
+}
+
+impl Infinity for f64 {
+    const INFINITY: Self = f64::INFINITY;
+
+    fn is_infinite(&self) -> bool {
+        f64::is_infinite(*self)
+    }
+}
+
+impl<T: FromStr + Infinity> FromStr for Float<T> {
+    type Err = <T as FromStr>::Err;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s == "∞" {
+            return Ok(Self(T::INFINITY));
+        }
+
+        let s = s.replace(',', ".");
+        let value = s.parse()?;
+        Ok(Self(value))
     }
 }

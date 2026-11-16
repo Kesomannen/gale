@@ -83,3 +83,18 @@ where
     pub value: T,
     pub range: Option<Range<T>>,
 }
+
+impl<T> Num<T>
+where
+    T: Serialize + ToString,
+{
+    pub fn map<U>(self, mut f: impl FnMut(T) -> U) -> Num<U>
+    where
+        U: Serialize + ToString,
+    {
+        Num {
+            value: f(self.value),
+            range: self.range.map(|range| f(range.start)..f(range.end)),
+        }
+    }
+}

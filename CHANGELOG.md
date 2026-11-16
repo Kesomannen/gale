@@ -15,6 +15,7 @@
 ### Fixed
 
 - Updated Ukrainian translation (thanks [@VoronUA1](https://github.com/VoronUA1))
+- Infinite values in BepInEx config files causing a parse error
 
 ## 1.23.3 (2026-10-30)
 
