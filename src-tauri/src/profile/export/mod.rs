@@ -93,11 +93,17 @@ pub struct R2Version {
     pub major: u64,
     pub minor: u64,
     pub patch: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pre: Option<String>,
 }
 
 impl Display for R2Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?;
+        if let Some(pre) = &self.pre {
+            write!(f, "-{}", pre)?;
+        }
+        Ok(())
     }
 }
 
@@ -107,6 +113,11 @@ impl From<semver::Version> for R2Version {
             major: value.major,
             minor: value.minor,
             patch: value.patch,
+            pre: if value.pre.is_empty() {
+                None
+            } else {
+                Some(value.pre.to_string())
+            },
         }
     }
 }
