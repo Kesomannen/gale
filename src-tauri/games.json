@@ -777,6 +777,18 @@
 		}
 	},
 	{
+		"name": "Casualties: Unknown",
+		"slug": "casualties-unknown",
+		"modLoader": {
+			"name": "BepInEx"
+		},
+		"platforms": {
+			"steam": {
+				"id": 4576490
+			}
+		}
+	},
+	{
 		"name": "Cats are Liquid - A Better Place",
 		"slug": "cats-are-liquid",
 		"modLoader": {
