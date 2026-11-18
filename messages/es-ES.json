@@ -77,6 +77,126 @@
 	"configFileList_placeholder": "Buscar archivos...",
 	"configFileListItem_button_deleteFile": "Eliminar archivo",
 	"configFileListItem_button_openFile": "Abrir con un programa externo",
+	"dedicatedServerDialog_additionalArgs": "Argumentos adicionales de lanzamiento",
+	"dedicatedServerDialog_advancedOptions": "Opciones avanzadas",
+	"dedicatedServerDialog_authentication": "Autenticación",
+	"dedicatedServerDialog_cancel": "Cancelar",
+	"dedicatedServerDialog_certificateMessage": "Gale no puede verificar el certificado de seguridad presentado por {host}. Esto suele ocurrir cuando un servidor utiliza un certificado autofirmado.\n\nLa conexión seguirá estando cifrada, pero Gale no puede confirmar que realmente se esté conectando a {host}. Continúa solo si esta es la dirección facilitada por tu proveedor de servidor.\n\n¿Permitir certificados no verificados para este servidor?",
+	"dedicatedServerDialog_certificateTitle": "No se pudo verificar el certificado.",
+	"dedicatedServerDialog_connectionEncrypted": "Conexión establecida con {host} con encriptación. Certificado de verificación omitido en este servidor.",
+	"dedicatedServerDialog_connectionPlain": "Conexión establecida con {host} usando un FTP sin encriptar porque este servidor no admite FTPS.",
+	"dedicatedServerDialog_connectionSecure": "Conexión segura establecida con {host}.",
+	"dedicatedServerDialog_credentialInfo": "Almacenadas de forma segura en el almacén de credenciales de tu sistema operativo.",
+	"dedicatedServerDialog_crossplay": "Crossplay",
+	"dedicatedServerDialog_crossplayInfo": "Habilita la compatibilidad con el juego multiplataforma cuando el juego lo permita.",
+	"dedicatedServerDialog_deploy": "Aplicar perfil",
+	"dedicatedServerDialog_directory": "Server directory",
+	"dedicatedServerDialog_ftpInfo": "Gale tries encrypted FTPS first and uses plain FTP only when the server does not support it. Gale keeps managed mod and configuration folders in sync with this profile.",
+	"dedicatedServerDialog_ftpPort": "Puerto FTP",
+	"dedicatedServerDialog_host": "Anfitrión",
+	"dedicatedServerDialog_keyPassphrase": "Frase de contraseña",
+	"dedicatedServerDialog_launch": "Iniciar servidor",
+	"dedicatedServerDialog_locationLocal": "Este ordenador",
+	"dedicatedServerDialog_locationRemote": "Servidor remoto",
+	"dedicatedServerDialog_localSummary": "Iniciar {name} en este ordenador.",
+	"dedicatedServerDialog_nothingMessage": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"match": {
+				"countPlural=one": "El servidor ya está sincronizado. Un archivo no ha sufrido cambios.",
+				"countPlural=other": "El servidor ya está sincronizado. {count} archivos no han sufrido cambios."
+			},
+			"selectors": ["countPlural"]
+		}
+	],
+	"dedicatedServerDialog_password": "Contraseña",
+	"dedicatedServerDialog_privateKey": "Clave privada",
+	"dedicatedServerDialog_privateKeyFile": "Archivo de clave privada",
+	"dedicatedServerDialog_privateKeyInfo": "Selecciona la clave privada que coincida con la clave pública instalada en el servidor.",
+	"dedicatedServerDialog_privateKeyTitle": "Seleccionar clave privada SSH",
+	"dedicatedServerDialog_portError": "{label} debe estar entre 1 y 65535.",
+	"dedicatedServerDialog_progressRemove": "Eliminando {path}",
+	"dedicatedServerDialog_progressUpload": "Subiendo {path}",
+	"dedicatedServerDialog_protocol": "Protocolo",
+	"dedicatedServerDialog_protocolFtp": "FTP / FTPS (automático)",
+	"dedicatedServerDialog_protocolSftp": "SFTP (SSH)",
+	"dedicatedServerDialog_public": "Servidor público",
+	"dedicatedServerDialog_publicInfo": "Hace que el servidor aparezca en el explorador servidores.",
+	"dedicatedServerDialog_remoteSavedPassphrase": "Déjalo en blanco para conservar la frase de contraseña guardada, o si la clave no tiene frase de contraseña.",
+	"dedicatedServerDialog_remoteSummary": "Aplicar este perfil a {host}.",
+	"dedicatedServerDialog_save": "Guardar configuración",
+	"dedicatedServerDialog_saved": "Configuración de servidor dedicado guardada.",
+	"dedicatedServerDialog_savedPassword": "Dejar en blanco para mantener la contraseña guardada.",
+	"dedicatedServerDialog_serverName": "Nombre del servidor",
+	"dedicatedServerDialog_serverPort": "Puerto",
+	"dedicatedServerDialog_settings": "Configuración",
+	"dedicatedServerDialog_sftpInfo": "Aplica los archivos de perfil modificados a través de SFTP. Gale mantiene sincronizadas las carpetas de módulos y configuración gestionadas con este perfil.",
+	"dedicatedServerDialog_sshAgent": "Agente SSH",
+	"dedicatedServerDialog_sshPort": "Puerto SSH",
+	"dedicatedServerDialog_test": "Probar conexión",
+	"dedicatedServerDialog_title": "Servidor dedicado",
+	"dedicatedServerDialog_trustMessage": "Este servidor aún no ha sido considerado de confianza. Comprueba esta huella digital SHA-256 con tu servidor:\n\n{fingerprint}\n\n¿Confías en este servidor?",
+	"dedicatedServerDialog_trustTitle": "Confiar en el servidor SFTP",
+	"dedicatedServerDialog_username": "Usuario",
+	"dedicatedServerDialog_world": "Mundo",
+	"dedicatedServerSettings_content": "Elige dónde se ejecutará este perfil y configura su conexión al servidor.",
+	"dedicatedServerSettings_defaultName": "Servidor de {game}",
+	"dedicatedServerSettings_defaultWorld": "Dedicado",
+	"dedicatedServerSettings_title": "Configuración de servidor dedicado",
+	"deploymentPreview_cancel": "Cancelar",
+	"deploymentPreview_clientOnlyContent": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"match": {
+				"countPlural=one": "Un mod exclusivo para cliente no se copiará en este servidor.",
+				"countPlural=other": "{count} mods exclusivos para cliente no se copiarán en este servidor."
+			},
+			"selectors": ["countPlural"]
+		}
+	],
+	"deploymentPreview_clientOnlyTitle": "No se necesita en el servidor",
+	"deploymentPreview_content": "Elige qué cambios debe implementar Gale en el servidor.",
+	"deploymentPreview_deploy": "Aplicar cambios",
+	"deploymentPreview_fileChanges": "Elija cambios de archivos ({count})",
+	"deploymentPreview_noChanges": "No es necesario modificar ningún archivo del servidor.",
+	"deploymentPreview_preservedContent": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"match": {
+				"countPlural=one": "Un archivo de configuración que Gale no tiene en cuenta se mantendrá sin cambios.",
+				"countPlural=other": "{count} archivos de configuración que Gale no tiene en cuenta se mantendrá sin cambios."
+			},
+			"selectors": ["countPlural"]
+		}
+	],
+	"deploymentPreview_preservedTitle": "Configuración del servidor conservada",
+	"deploymentPreview_removals": "Eliminaciones",
+	"deploymentPreview_selectAll": "Seleccionar todo",
+	"deploymentPreview_selectNone": "No seleccionar nada",
+	"deploymentPreview_serverRoot": "Raíz del servidor",
+	"deploymentPreview_showMods": "Enseñar mods",
+	"deploymentPreview_title": "Revisar cambios",
+	"deploymentPreview_uploads": "Subidas",
+	"deploymentResult_cleanupContent": "El perfil se ha subido correctamente, pero el servidor no ha permitido a Gale eliminar algunos elementos.",
+	"deploymentResult_cleanupTitle": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"match": {
+				"countPlural=one": "No se ha podido eliminar un elemento del servidor",
+				"countPlural=other": "No se han podido eliminar {count} elementos del servidor"
+			},
+			"selectors": ["countPlural"]
+		}
+	],
+	"deploymentResult_done": "Hecho",
+	"deploymentResult_showDetails": "Enseñar detalles",
+	"deploymentResult_success": "El perfil se ha aplicado correctamente.",
+	"deploymentResult_title": "Completado",
+	"deploymentStats_noTransfer": "No transferir",
+	"deploymentStats_remove": "Eliminar",
+	"deploymentStats_serverFiles": "Archivos del servidor",
+	"deploymentStats_unchanged": "Sin cambios",
+	"deploymentStats_upload": "Subir",
 	"configFileListItem_deleteFile_confirm": "¿Está seguro de querer eliminar {name}?",
 	"configFileListItem_nameLess": "<Nameless section>",
 	"confirmDialog_button_cancel": "Cancelar",
