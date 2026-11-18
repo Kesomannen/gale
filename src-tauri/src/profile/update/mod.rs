@@ -140,10 +140,50 @@ pub async fn update_mods(uuids: Vec<Uuid>, respect_ignored: bool, app: &AppHandl
 }
 
 async fn install_updates(
-    installs: Vec<ModInstall>,
+    mut installs: Vec<ModInstall>,
     profile_id: i64,
     app: &AppHandle,
 ) -> Result<()> {
+    {
+        let manager = app.lock_manager();
+        let thunderstore = app.lock_thunderstore();
+        let (_, profile) = manager.profile_by_id(profile_id)?;
+        let mut pinned = Vec::new();
+
+        for install in &installs {
+            let borrowed = install.mod_id().borrow(&thunderstore)?;
+            if borrowed.package.is_modpack() {
+                for (ident, backend) in borrowed.dependencies() {
+                    pinned.push(thunderstore.find_ident(ident, FromBackend::Prefer(backend))?);
+                }
+            }
+        }
+
+        // Only manifest pins are enforced; unrelated mods keep their normal update behavior.
+        installs.retain(|install| !pinned.iter().any(|dep| dep.package.uuid == install.uuid()));
+        for dependency in pinned.into_iter().unique_by(|dep| dep.package.uuid) {
+            let mut install = ModInstall::new(dependency);
+            if let Some((index, current)) = profile
+                .mods
+                .iter()
+                .enumerate()
+                .find(|(_, current)| current.uuid() == dependency.package.uuid)
+            {
+                if current
+                    .as_thunderstore()
+                    .is_some_and(|(current, _)| current.id == *install.mod_id())
+                {
+                    continue;
+                }
+                install = install
+                    .with_state(current.enabled)
+                    .with_index(index)
+                    .with_time(current.install_time);
+            }
+            installs.push(install);
+        }
+    }
+
     app.install_queue()
         .install_with_deps(
             installs,
