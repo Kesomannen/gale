@@ -11,3 +11,9 @@ vite.config.ts.timestamp-*
 .VSCodeCounter
 /src-tauri/gen
 PRS.md
+
+# sharun
+appimage/dist
+appimage/AppDir/
+quick-sharun
+get-debloated-pkgs
