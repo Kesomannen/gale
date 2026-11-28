@@ -78,8 +78,8 @@
 			onclick={() => (open = false)}
 			class="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 underline"
 		>
-			{m.launchOptionsDialog_help_content2()}</a
-		>.
+			{m.launchOptionsDialog_help_content_2()}</a
+		>{m.launchOptionsDialog_help_content_3()}
 	</div>
 
 	{#snippet buttons()}

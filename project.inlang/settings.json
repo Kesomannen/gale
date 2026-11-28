@@ -14,7 +14,8 @@
 		"de-DE",
 		"tr-TR",
 		"az-AZ",
-		"uk-UA"
+		"uk-UA",
+		"ko-KR"
 	],
 	"modules": [
 		"https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js",

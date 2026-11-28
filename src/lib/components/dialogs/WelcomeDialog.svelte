@@ -72,7 +72,7 @@
 			<p class="mt-1">
 				{m.welcomeDialog_content_importProfiles_2()}<b
 					>{m.welcomeDialog_content_importProfiles_3()}</b
-				>.
+				>{m.welcomeDialog_content_importProfiles_4()}
 			</p>
 
 			<ImportR2Flow bind:importData bind:this={importFlow} />
@@ -91,7 +91,7 @@
 				{m.welcomeDialog_content_settings_1()}
 				<br />
 				{m.welcomeDialog_content_settings_2()}<Icon icon="mdi:settings" class="mb-1 inline" />
-				<b>{m.welcomeDialog_content_settings_3()}</b>.
+				<b>{m.welcomeDialog_content_settings_3()}</b>{m.welcomeDialog_content_settings_4()}
 			</p>
 
 			<div class="mt-3 flex flex-col gap-1">
@@ -131,7 +131,7 @@
 					class="text-accent-600 hover:text-accent-700 dark:text-accent-400 hover:underline"
 				>
 					{m.welcomeDialog_content_end_3()}
-				</a>.
+				</a>{m.welcomeDialog_content_end_4()}
 			</p>
 		{/if}
 	</div>

@@ -154,7 +154,7 @@
 			<br />
 			{m.prefs_miscellaneous_fetchMods_content_2()}<b
 				>{m.prefs_miscellaneous_fetchMods_content_3()}</b
-			>.
+			>{m.prefs_miscellaneous_fetchMods_content_4()}
 		</TogglePref>
 		<TogglePref
 			label={m.backendPref_other_server_title()}
