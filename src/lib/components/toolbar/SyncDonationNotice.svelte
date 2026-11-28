@@ -26,7 +26,7 @@
 	<div class="text-primary-600 dark:text-primary-300">
 		{m.syncDonationNotice_content_2()}<Link href="https://ko-fi.com/kesomannen">Kofi</Link>
 
-		<Icon class="mb-1 inline" icon="mdi:heart" />.
+		<Icon class="mb-1 inline" icon="mdi:heart" />{m.syncDonationNotice_content_3()}
 	</div>
 
 	<button
